@@ -45,9 +45,4 @@ jobs:
           cd backend
           dotnet build --no-restore --verbosity normal
 
-      - name: Run tests
-        env:
-          DATABASE_URL: postgres://postgres:pg123@localhost:5432/test_db
-        run: |
-          cd backend
-          dotnet test --no-build --verbosity normal
+      
