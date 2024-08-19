@@ -36,14 +36,10 @@ jobs:
           dotnet-version: 8.0.x
 
       - name: Restore dependencies
-        run: |
-          cd backend
-          cd CarePro-Api
-          dotnet restore
+        run: dotnet restore
+        working-directory: backend/CarePro-Api
 
       - name: Build
-        run: |
-          cd backend
-          dotnet build --no-restore --verbosity normal
-
+        run: dotnet build --no-restore --verbosity normal
+        working-directory: backend/CarePro-Api
       
