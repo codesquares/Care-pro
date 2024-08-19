@@ -28,6 +28,6 @@ docker-compose.yml
 
 # Node.js (if using Node with .NET)
 node_modules/
-.env*
+
 
 *.pfx
