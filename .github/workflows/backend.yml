@@ -38,6 +38,7 @@ jobs:
       - name: Restore dependencies
         run: |
           cd backend
+          cd CarePro-Api
           dotnet restore
 
       - name: Build
