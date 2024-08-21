@@ -1,7 +1,7 @@
-// src/components/atoms/Button.tsx
+
 
 import React from 'react';
-import './Button.scss';
+import '../../styles/components/atom/button.scss';
 
 type ButtonProps = {
   type?: 'button' | 'submit' | 'reset';
