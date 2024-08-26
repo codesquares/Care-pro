@@ -1,0 +1,76 @@
+.caregiver-process {
+  background-color: var(--primary-color-white);
+  color: #2e4f6b;
+  padding: 1rem;
+  background-image: url('../../assets//background.png');
+  background-size: cover;                 /* Ensures the image covers the entire area */
+  background-position: center;            /* Centers the image */
+  background-repeat: no-repeat; 
+  
+  .head-section {
+
+    h2 {
+      text-align: center;
+      font-size: 1.8rem;
+      color: #2e4f6b;
+      margin: auto;
+      width: 60%;
+      padding: 2rem;
+    }
+
+    .subtitle {
+      display: flex;
+      align-items: center;
+      text-align: center;
+      font-size: 1rem;
+      color: #555;
+      margin: auto;
+      background-color: #F7F7F7;
+      width: 50%;
+      padding: 2rem;
+      border-radius: 10px;
+    }
+    
+  }
+
+  .main-section{
+    display: flex;
+    align-items: center;
+    justify-content: space-evenly;
+  }
+
+  .steps-list {
+    
+
+    background-color:#FFF5D9 ;
+    width: 50%;
+    height: 100vh;
+    border-radius: 2rem;
+    padding: 10px;
+    margin: 20px;
+    
+  }
+
+  .steps-list {
+    .step-item {
+      display: flex;
+      align-items: center;
+      margin-bottom: 15px;
+
+      .icon {
+        font-size: 1.5rem;
+        margin-right: 15px;
+      }
+
+      .text {
+        font-size: 1.1rem;
+        color: #333;
+      }
+    }
+  }
+
+  .image-section {
+    width: 50%;
+    margin: 30px;
+  }
+}

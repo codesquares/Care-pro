@@ -1,0 +1,79 @@
+.header {
+  display: flex;
+  flex-direction: column;
+  background-image: url('../../assets//background.png');
+  background-size: cover;                 /* Ensures the image covers the entire area */
+  background-position: center;            /* Centers the image */
+  background-repeat: no-repeat;           /* Prevents the image from repeating */
+  height: 100vh;                          /* Example height, full viewport */
+  width: 100%; 
+  align-items: center;
+  padding: 50px 20px;
+  color: var(--secondary-color-1);
+  background-color: #f5f5f5;
+
+  &-content {
+      text-align: center;
+      margin-bottom: 30px;
+
+      &-title {
+          font-size: 2.5rem;
+          font-weight: bold;
+          color: #333;
+          margin-bottom: 20px;
+      }
+
+      &-subtitle {
+          font-size: 1.2rem;
+          color: #777;
+          margin-bottom: 30px;
+      }
+
+      &-buttons {
+          display: flex;
+          justify-content: center;
+          gap: 20px;
+
+          .btn-primary, .btn-secondary {
+              padding: 10px 20px;
+              border-radius: 5px;
+              text-decoration: none;
+              font-weight: bold;
+          }
+
+          .btn-main{
+              background-color: var(--secondary-color-7);
+              color: #000;
+          }
+
+          .btn-secondary {
+              background-color: #ffffff;
+              color: #000;
+              border: 1px solid #ccc;
+          }
+      }
+  }
+
+  &-video {
+      position: relative;
+      width: 100%;
+      max-width: 800px;
+
+      .video-thumbnail {
+          width: 100%;
+          border-radius: 15px;
+      }
+
+      .play-button {
+          position: absolute;
+          top: 50%;
+          left: 50%;
+          transform: translate(-50%, -50%);
+          background: none;
+          border: none;
+          font-size: 3rem;
+          color: #fff;
+          cursor: pointer;
+      }
+  }
+}
