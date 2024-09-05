@@ -8,7 +8,6 @@
 
   <ItemGroup>
     <Folder Include="Content\Services\" />
-    <Folder Include="Services\EmailTemplates\" />
   </ItemGroup>
 
   <ItemGroup>
