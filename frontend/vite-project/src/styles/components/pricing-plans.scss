@@ -1,0 +1,108 @@
+.pricing-plans {
+  text-align: center;
+  padding: 40px 20px;
+  background-color: #ffffff;
+
+  h2 {
+    font-size: 2rem;
+    color: #2e4f6b; // Customize as needed
+  }
+
+  .subtitle {
+    background-color:#F7F7F7;
+    padding: 20px;
+    font-size: 1rem;
+    color:#9C9C9C;
+    font-size: larger;
+    margin: auto;
+    margin-bottom: 40px;
+    max-width: 500px;
+    background-color: 20px;
+
+  }
+
+  .plans-list {
+    display: flex;
+    justify-content: space-evenly;
+    flex-wrap: wrap;
+    
+    .plan-item {
+      background-color: #fff;
+      border-radius: 10px;
+      padding: 20px;
+      flex: 1;
+      max-width: 300px;
+      margin: 10px;
+      box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+      position: relative;
+      
+      &.popular {
+        border: 2px solid #FBB040;
+        background-color: #fffbea; // Light yellow background for the popular plan
+      }
+      &:hover {
+        transform: translateY(-10px); // Lifts the card up on hover
+        box-shadow: 0 8px 16px rgba(0, 0, 0, 0.2); // Makes the shadow more prominent
+      }
+
+      .badge {
+        position: absolute;
+        top: -10px;
+        right: 10px;
+        background-color: #FBB040;
+        color: #fff;
+        padding: 5px 10px;
+        border-radius: 5px;
+        font-size: 0.9rem;
+      }
+
+      h3 {
+        font-size: 1.5rem;
+        color: #2e4f6b;
+        margin-bottom: 10px;
+      }
+
+      .price {
+        font-size: 1.8rem;
+        color: #333;
+        margin-bottom: 20px;
+
+        span {
+          font-size: 1rem;
+          color: #777;
+        }
+      }
+
+      .features {
+        text-align: left;
+        margin-bottom: 20px;
+
+        li {
+          font-size: 0.9rem;
+          color: #555;
+          margin-bottom: 10px;
+        }
+      }
+
+      .select-button {
+        display: block;
+        width: 100%;
+        padding: 10px;
+        font-size: 1rem;
+        color: #fff;
+        border: none;
+        border-radius: 5px;
+        cursor: pointer;
+        transition: background-color 0.3s ease;
+
+        &:hover {
+          background-color: darken(grey, 10%);
+        }
+      }
+    }
+
+    .plan-item :hover{
+        
+    }
+  }
+}

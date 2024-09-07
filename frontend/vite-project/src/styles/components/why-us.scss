@@ -1,0 +1,47 @@
+.why-us-section {
+  background-color: #f9f9f9;
+  padding: 50px 0;
+  text-align: center;
+
+  h2 {
+    font-size: 32px;
+    margin-bottom: 40px;
+  }
+
+  .features {
+    display: flex;
+    justify-content: space-around;
+
+    .feature {
+      max-width: 300px;
+      text-align: center;
+
+      img {
+        width: 50px;
+        height: 50px;
+        margin-bottom: 15px;
+      }
+
+      h3 {
+        font-size: 20px;
+        margin-bottom: 10px;
+      }
+
+      p {
+        font-size: 14px;
+        color: #777;
+        line-height: 1.6;
+      }
+    }
+  }
+
+  @media (max-width: 768px) {
+    .features {
+      flex-direction: column;
+
+      .feature {
+        margin-bottom: 30px;
+      }
+    }
+  }
+}

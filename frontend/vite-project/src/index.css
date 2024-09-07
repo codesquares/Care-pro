@@ -1,11 +1,13 @@
 :root {
-  font-family: Inter, system-ui, Avenir, Helvetica, Arial, sans-serif;
-  line-height: 1.5;
-  font-weight: 400;
+  margin: 0;
+  padding: 0;
+  font-family: 'PoppinsBold', Helvetica, sans-serif;
+  background-color: #ffffff;
+  
+
 
   color-scheme: light dark;
   color: rgba(255, 255, 255, 0.87);
-  background-color: #242424;
 
   font-synthesis: none;
   text-rendering: optimizeLegibility;
@@ -36,4 +38,45 @@
   --spacing-small: 8px;
   --spacing-medium: 16px;
   --spacing-large: 24px;
+}
+a {
+  text-decoration: none;
+}
+
+
+@font-face {
+  font-family: Yaro;
+  src: url('./assets//fonts/YaroCut-Black.woff2') format('woff2'),
+        url('./assets//fonts/YaroCut-Black.woff') format('woff');
+  font-weight:normal;
+  font-style: normal;
+}
+
+@font-face {
+  font-family: YaroBold;
+  src: url('./assets//fonts/YaroCut-Bold.woff2') format('woff2'),
+        url('./assets//fonts/YaroCut-Bold.woff') format('woff');
+  font-weight:normal;
+  font-style: normal;
+}
+
+@font-face {
+  font-family: Poppins;
+  src: url('./assets/fonts//poppins/Poppins-Regular.ttf') format('ttf');
+  font-weight:normal;
+  font-style: normal;
+}
+
+@font-face {
+  font-family: PoppinsBold;
+  src: url('./assets/fonts//poppins/Poppins-Bold.ttf') format('ttf');
+  font-weight:normal;
+  font-style: normal;
+}
+
+@font-face {
+  font-family: PoppinsSemiBold;
+  src: url('./assets/fonts//poppins/Poppins-SemiBold.ttf') format('ttf');
+  font-weight:normal;
+  font-style: normal;
 }
