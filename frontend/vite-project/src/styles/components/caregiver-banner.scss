@@ -1,0 +1,39 @@
+.container{
+  padding: 10rem;
+  background-color: #ffffff;
+}
+
+.caregiver-banner {
+  background-color: #015476;
+  padding: 40px;
+  border-radius: 20px;
+  color: #ffffff;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  align-items: center;
+
+    h2 {
+      font-size: 28px;
+      margin-bottom: 20px;
+    }
+
+    p {
+      font-size: 20px;
+      margin-bottom: 20px;
+      padding: 40px;
+      background-color:#E2EEFA99;
+      border-radius: 10px
+      ;
+    }
+
+    .btn-primary {
+      background-color: #fff;
+      color: #06283D;
+      border: none;
+      padding: 15px 20px;
+      border-radius: 5px;
+      font-size: 14px;
+      cursor: pointer;
+    }
+}

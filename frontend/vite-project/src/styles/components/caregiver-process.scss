@@ -1,76 +1,109 @@
 .caregiver-process {
   background-color: var(--primary-color-white);
   color: #2e4f6b;
-  padding: 1rem;
-  background-image: url('../../assets//background.png');
-  background-size: cover;                 /* Ensures the image covers the entire area */
-  background-position: center;            /* Centers the image */
-  background-repeat: no-repeat; 
-  
-  .head-section {
+  padding: 2rem 1rem;
+  background-image: url('../../assets/background.png');
+  background-size: cover; 
+  background-position: center;
+  background-repeat: no-repeat;
 
+  .head-section {
     h2 {
       text-align: center;
-      font-size: 1.8rem;
+      font-size: 2rem;
       color: #2e4f6b;
-      margin: auto;
-      width: 60%;
-      padding: 2rem;
+      margin-bottom: 1.5rem;
+      font-weight: 700;
     }
 
     .subtitle {
       display: flex;
+      justify-content: center;
       align-items: center;
-      text-align: center;
-      font-size: 1rem;
+      font-size: 1.1rem;
       color: #555;
-      margin: auto;
-      background-color: #F7F7F7;
-      width: 50%;
-      padding: 2rem;
+      background-color: #f7f7f7;
+      width: 60%;
+      margin: 0 auto;
+      padding: 1.5rem;
       border-radius: 10px;
+      box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1);
     }
-    
   }
 
-  .main-section{
+  .main-section {
     display: flex;
+    justify-content: space-between;
     align-items: center;
-    justify-content: space-evenly;
+    margin-top: 2rem;
+
+    @media (max-width: 768px) {
+      flex-direction: column;
+    }
   }
 
   .steps-list {
-    
-
-    background-color:#FFF5D9 ;
-    width: 50%;
-    height: 100vh;
+    background-color: #fff5d9;
+    width: 45%;
     border-radius: 2rem;
-    padding: 10px;
-    margin: 20px;
-    
-  }
+    padding: 2rem;
+    margin: 1rem;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
 
-  .steps-list {
+    @media (max-width: 768px) {
+      width: 90%;
+      height: auto;
+    }
+
     .step-item {
       display: flex;
       align-items: center;
-      margin-bottom: 15px;
+      margin-bottom: 1.5rem;
+      padding: 1.5rem;
+      background-color: #ffffff;
+      border-radius: 10px;
+      box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+      transition: transform 0.3s ease;
+
+      &:hover {
+        transform: translateY(-5px);
+      }
 
       .icon {
-        font-size: 1.5rem;
-        margin-right: 15px;
+        font-size: 1.8rem;
+        margin-right: 20px;
+        color: #2e4f6b;
       }
 
       .text {
-        font-size: 1.1rem;
+        font-size: 1.2rem;
         color: #333;
+        font-weight: 500;
       }
     }
   }
 
   .image-section {
-    width: 50%;
+    width: 45%;
     margin: 30px;
+  
+    img {
+      width: 100%;
+      height: 100%;           /* Make the image take full height of its container */
+      //object-fit: cover;       /* Ensures the image covers the container while maintaining aspect ratio */
+      border-radius: 1.5rem;
+      box-shadow: 0 4px 15px rgba(0, 0, 0, 0.2);
+      max-height: 600px;       /* Limit the height to match the card size */
+    }
+  
+
+    @media (max-width: 768px) {
+      width: 90%;
+      margin-bottom: 2rem;
+    }
   }
 }
+

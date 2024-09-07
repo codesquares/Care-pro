@@ -4,6 +4,8 @@ import CaregiverProcess from "../components/LandingPage/CaregiverProcess";
 import HealthcareFacts from "../components/LandingPage/HealthcareFacts";
 import PricingPlans from "../components/LandingPage/PricingPlans";
 import FAQ from "../components/LandingPage/FAQ";
+import ContactForm from "../components/LandingPage/ContactForm";
+import CaregiverBanner from "../components/LandingPage/CaregiverBanner";
 
 const Home = () => {
   return (
@@ -14,6 +16,8 @@ const Home = () => {
 <CaregiverProcess/>
 <PricingPlans/>
 <FAQ/>
+<CaregiverBanner/>
+<ContactForm/>
 </>
   );
 };

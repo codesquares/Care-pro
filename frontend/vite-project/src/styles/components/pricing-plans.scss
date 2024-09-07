@@ -1,7 +1,7 @@
 .pricing-plans {
   text-align: center;
   padding: 40px 20px;
-  background-color: #f9f9f9;
+  background-color: #ffffff;
 
   h2 {
     font-size: 2rem;
@@ -9,14 +9,21 @@
   }
 
   .subtitle {
+    background-color:#F7F7F7;
+    padding: 20px;
     font-size: 1rem;
-    color: #777;
+    color:#9C9C9C;
+    font-size: larger;
+    margin: auto;
     margin-bottom: 40px;
+    max-width: 500px;
+    background-color: 20px;
+
   }
 
   .plans-list {
     display: flex;
-    justify-content: space-between;
+    justify-content: space-evenly;
     flex-wrap: wrap;
     
     .plan-item {
@@ -32,6 +39,10 @@
       &.popular {
         border: 2px solid #FBB040;
         background-color: #fffbea; // Light yellow background for the popular plan
+      }
+      &:hover {
+        transform: translateY(-10px); // Lifts the card up on hover
+        box-shadow: 0 8px 16px rgba(0, 0, 0, 0.2); // Makes the shadow more prominent
       }
 
       .badge {
@@ -88,6 +99,10 @@
           background-color: darken(grey, 10%);
         }
       }
+    }
+
+    .plan-item :hover{
+        
     }
   }
 }

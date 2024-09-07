@@ -1,5 +1,6 @@
 
 import '../../styles/components/healthcare-fact.scss';
+import HeathIcon from '../../assets/HealthIcon.svg'
 
 const HealthcareFacts = () => {
   const facts = [
@@ -25,7 +26,7 @@ const HealthcareFacts = () => {
     <div className="healthcare-facts">
       <div className="header-container">
         <div className="icon">
-          <span role="img" aria-label="Healthcare Icon">🛡️</span>
+          <img src={HeathIcon} alt="Healthcare Icon" />
         </div>
         <h2>Healthcare facts:</h2>
       </div>

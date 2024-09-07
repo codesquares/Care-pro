@@ -1,18 +1,23 @@
 .healthcare-facts {
   text-align: center;
-  padding: 20px;
+  padding: 100px 20px;
   background-color: var(--primary-color-white);
   
   .header-container {
     display: flex;
+    flex-direction: column;
     justify-content: center;
     align-items: center;
     margin-bottom: 20px;
 
     .icon {
-      font-size: 2.5rem; // Adjust as needed
-      margin-right: 10px;
+        height: 50px;
+
+        img {
+          height: 100%;
+        }
     }
+    
 
     h2 {
       font-size: 1.8rem;
