@@ -1,7 +1,10 @@
+import DetailedStoryView from "../components/Blog/DetailedStoryView";
+import StoriesSection from "../components/Blog/StoriesSection";
+
 const Blog = () => {
   return (
     <div>
-      Blog
+      <StoriesSection/>
     </div>
   );
 };

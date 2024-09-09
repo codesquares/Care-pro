@@ -2,6 +2,7 @@
   background-color: #f9f9f9;
   padding: 50px 0;
   text-align: center;
+  color: #777;
 
   h2 {
     font-size: 32px;
@@ -13,13 +14,19 @@
     justify-content: space-around;
 
     .feature {
-      max-width: 300px;
+      max-width: 350px;
+      padding: 10px;
       text-align: center;
+      border: solid #FCCD56;
+      border-radius: 20px;
 
       img {
-        width: 50px;
-        height: 50px;
+        width: 30px;
+        height: 30px;
         margin-bottom: 15px;
+        background-color: #FFDC7F33;
+        padding: 20px;
+        border-radius: 50%;
       }
 
       h3 {
