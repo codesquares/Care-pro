@@ -4,6 +4,11 @@
 }
 
 .caregiver-banner {
+  display: flex;
+  flex-direction: column;
+  background-image: url('../../assets/backImg.png'); /* Fixed the path */
+  background-repeat: no-repeat; /* Prevents the image from repeating */
+  background-size: cover;
   background-color: #015476;
   padding: 40px;
   border-radius: 20px;

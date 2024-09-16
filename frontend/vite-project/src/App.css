@@ -1,4 +1,6 @@
-.App{
-  background-color:#F7F7FB;
-  ;
+.landImage{
+  display: flex;
+  flex-direction: column;
+  background-repeat: no-repeat; /* Prevents the image from repeating */
+  background-size: cover;
 }

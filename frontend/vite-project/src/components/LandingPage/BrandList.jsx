@@ -17,6 +17,11 @@ const BrandList = () => {
   ];
 
   return (
+    <>
+        <div className="ourPartner">
+        Our Partners
+
+    </div>
     <div className="brand-list">
       {brands.map((brand, index) => (
         <div key={index} className="brand-item">
@@ -24,6 +29,8 @@ const BrandList = () => {
         </div>
       ))}
     </div>
+
+    </>
   );
 };
 

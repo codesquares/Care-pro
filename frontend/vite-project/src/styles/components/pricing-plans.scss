@@ -1,5 +1,5 @@
 .pricing-plans {
-  text-align: center;
+  //text-align: center;
   padding: 40px 20px;
   background-color: #ffffff;
 
@@ -29,9 +29,9 @@
     .plan-item {
       background-color: #fff;
       border-radius: 10px;
-      padding: 20px;
+      padding: 20px 50px;
       flex: 1;
-      max-width: 300px;
+      max-width: 390px;
       margin: 10px;
       box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
       position: relative;
@@ -47,9 +47,9 @@
 
       .badge {
         position: absolute;
-        top: -10px;
+        top: -40px;
         right: 10px;
-        background-color: #FBB040;
+        //background-color: #FBB040;
         color: #fff;
         padding: 5px 10px;
         border-radius: 5px;
@@ -75,7 +75,7 @@
 
       .features {
         text-align: left;
-        margin-bottom: 20px;
+        margin-bottom: 20px; 
 
         li {
           font-size: 0.9rem;

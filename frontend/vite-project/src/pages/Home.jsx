@@ -6,18 +6,20 @@ import PricingPlans from "../components/LandingPage/PricingPlans";
 import FAQ from "../components/LandingPage/FAQ";
 import ContactForm from "../components/LandingPage/ContactForm";
 import CaregiverBanner from "../components/LandingPage/CaregiverBanner";
+import LandingImg from "../components/LandingPage/LandingImg";
 
 const Home = () => {
   return (
 <>
 <Header/>
 <BrandList/>
-<HealthcareFacts/>
 <CaregiverProcess/>
 <PricingPlans/>
+<HealthcareFacts/>
 <FAQ/>
 <CaregiverBanner/>
 <ContactForm/>
+<LandingImg/>
 </>
   );
 };

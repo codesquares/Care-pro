@@ -1,5 +1,6 @@
 
 import "../../styles/components/pricing-plans.scss";
+import mostPopular from "../../assets/mostPopular.png"
 
 const PricingPlans = () => {
   const plans = [
@@ -48,8 +49,8 @@ const PricingPlans = () => {
       <div className="plans-list">
         {plans.map((plan, index) => (
           <div key={index} className={`plan-item ${plan.popular ? 'popular' : ''}`}>
-            {plan.popular && <div className="badge">Most Popular</div>}
-            <h3>{plan.type}</h3>
+            {plan.popular && <div className="badge"><img src={mostPopular} alt="most porpular" /></div>}
+            <h3 className="type">{plan.type}</h3>
             <div className="price">{plan.price}<span>/month</span></div>
             <ul className="features">
               {plan.features.map((feature, i) => (

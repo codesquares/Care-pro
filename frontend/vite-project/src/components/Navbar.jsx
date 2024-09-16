@@ -24,11 +24,11 @@ const Navbar = () => {
             </button>
 
             <ul className={`navbar-links ${isMenuOpen ? 'active' : ''}`}>
-                <li><Link to="/about-us">About us</Link></li>
-                <li><Link to="/blog">Blog</Link></li>
-                <li><Link to="/care-facts">Care facts</Link></li>
                 <li><Link to="/our-process">Our Process</Link></li>
                 <li><Link to="/plans">Plans</Link></li>
+                <li><Link to="/about-us">About us</Link></li>
+                <li><Link to="/blog">Blog</Link></li>
+                {/* <li><Link to="/care-facts">Care facts</Link></li> */}
             </ul>
 
             <div className="navbar-cta">

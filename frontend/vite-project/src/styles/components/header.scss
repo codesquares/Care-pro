@@ -1,93 +1,134 @@
 .header {
   display: flex;
   flex-direction: column;
-  background-image: url('../../assets//background.png');
- // background-size: cover;                 /* Ensures the image covers the entire area */
- // background-position: center;            /* Centers the image */
-  background-repeat: no-repeat;           /* Prevents the image from repeating */
-  height: 100vh;                          /* Example height, full viewport */
-  width: 100%; 
+  background-image: url('../../assets/background.png'); /* Fixed the path */
+  background-repeat: no-repeat; /* Prevents the image from repeating */
+  background-size: cover; /* Ensures the image covers the entire header */
+  //height: 100vh; /* Full viewport height */
+  width: 100%;
   align-items: center;
   padding: 50px 20px;
-  color: var(--secondary-color-1);
-  background-color: #ffffff;
+  color: var(--secondary-color-1); /* Ensure text contrast */
+  background-color: #ffffff; /* Background color in case image does not load */
 
   &-content {
-      text-align: center;
-      margin-bottom: 30px;
+    text-align: center;
+    margin-top: 150px;
   }
+
   &-title {
     max-width: 40rem;
     font-size: 3.5rem;
     font-weight: bold;
-    color: #02445F;
+    color: #02445F; /* Ensure this color stands out */
     margin-bottom: 20px;
-}
+  }
 
-&-subtitle {
+  &-subtitle {
     font-size: 1.2rem;
-    color: #777;
-    margin-bottom: 30px;
-}
+    color: #777; /* Light gray for subtitle */
+    margin-bottom: 50px;
+  }
 
-&-buttons {
+  &-buttons {
     display: flex;
     justify-content: center;
     gap: 20px;
 
     .btn-main, .btn-secondary {
-        padding: 10px 20px;
-        border-radius: 5px;
-        text-decoration: none;
-        font-weight: bold;
+      padding: 10px 20px;
+      border-radius: 5px;
+      text-decoration: none;
+      font-weight: bold;
+      transition: background-color 0.3s ease, transform 0.3s ease; /* Added transition for both buttons */
     }
 
     .btn-main {
-        background-color: #EFB214;
-        color: #ffffff;
-        transition: background-color 0.3s ease, transform 0.3s ease;
+      background-color: #EFB214;
+      color: #ffffff;
       
-        &:hover {
-          background-color: darken(#EFB214, 10%); // Darkens the button on hover
-          transform: scale(1.05); // Slightly enlarges the button on hover
-        }
+      &:hover {
+        background-color: #d8a813; /* Darker shade of #EFB214 */
+        transform: scale(1.05); /* Slightly enlarges the button on hover */
       }
-      
-      .btn-secondary {
-        background-color: #ffffff;
-        color: #000;
-        border: 1px solid #ccc;
-        transition: background-color 0.3s ease, border-color 0.3s ease, transform 0.3s ease;
-      
-        &:hover {
-          background-color: #f5f5f5; // Light gray background on hover
-          border-color: #999; // Darkens the border on hover
-          transform: scale(1.05); // Slightly enlarges the button on hover
-        }
+    }
+
+    .btn-secondary {
+      background-color: #ffffff;
+      color: #000;
+      border: 1px solid #ccc;
+      margin: 50px 0px;
+
+      &:hover {
+        background-color: #f5f5f5; /* Light gray background on hover */
+        border-color: #999; /* Darkens the border on hover */
+        transform: scale(1.05); /* Slightly enlarges the button on hover */
       }
-      
-}
+    }
+  }
 
   &-video {
-      position: relative;
-      width: 100%;
-      max-width: 800px;
+    margin-top: 20px;
+    display: flex;
+    justify-content: center;
+    width: 100%;
+    
+    .video-thumbnail {
+      max-width: 100%;
+      height: auto; /* Maintain aspect ratio */
+      border-radius: 8px; /* Optional: adds rounded corners to the image */
+    }
+  }
 
+  @media (max-width: 768px) {
+    padding: 30px 15px; /* Adjust padding for smaller screens */
+    height: auto; /* Allow height to adjust based on content */
+
+    &-content {
+      margin-top: 100px; /* Adjust margin for mobile */
+    }
+
+    &-title {
+      font-size: 2.5rem; /* Adjust font size for mobile */
+      max-width: 90%; /* Adjust width for mobile */
+    }
+
+    &-subtitle {
+      font-size: 1rem; /* Adjust font size for mobile */
+      margin-bottom: 30px; /* Adjust margin for mobile */
+    }
+
+    &-buttons {
+      flex-direction: column; /* Stack buttons vertically on mobile */
+      gap: 10px; /* Adjust gap for mobile */
+
+      .btn-main, .btn-secondary {
+        width: 100%; /* Make buttons full-width on mobile */
+        padding: 15px; /* Adjust padding for mobile */
+      }
+    }
+
+    &-video {
+      margin-top: 10px; /* Adjust margin for mobile */
       .video-thumbnail {
-          width: 100%;
-          border-radius: 15px;
+        max-width: 90%; /* Ensure image doesn't exceed container width on mobile */
       }
+    }
+  }
 
-      .play-button {
-          position: absolute;
-          top: 50%;
-          left: 50%;
-          transform: translate(-50%, -50%);
-          background: none;
-          border: none;
-          font-size: 3rem;
-          color: #fff;
-          cursor: pointer;
+  @media (max-width: 480px) {
+    &-title {
+      font-size: 2rem; /* Further adjust font size for very small screens */
+    }
+
+    &-subtitle {
+      font-size: 0.9rem; /* Further adjust font size for very small screens */
+    }
+
+    &-video {
+      .video-thumbnail {
+        max-width: 100%; /* Ensure image is fully responsive on very small screens */
       }
+    }
   }
 }
