@@ -42,7 +42,7 @@ const PricingPlans = () => {
 
   return (
     <div className="pricing-plans">
-      <h2>Our Plans</h2>
+      <h2 className="title">Our Plans</h2>
       <p className="subtitle">
         These are our packages tailored to your unique needs and requirements.
       </p>

@@ -1,12 +1,17 @@
 import "../../styles/components/caregiver-process.scss";
 import caregiverImg from "../../assets/careGiver.png";
+import tdesign from "../../assets/tdesign_money.svg";
+import solar from "../../assets/solar_health-broken.svg";
+import ep_select from "../../assets/ep_select.svg";
+import bi_stars from "../../assets/bi_stars.svg";
+import clarity from "../../assets/clarity_talk-bubbles-line.svg";
 const CaregiverProcess = () => {
   const steps = [
-    { icon: "✓", text: "Select a Care package" },
-    { icon: "➕", text: "Receive suggestions" },
-    { icon: "💳", text: "Make payment" },
-    { icon: "👥", text: "Interview suggested caregivers" },
-    { icon: "❤️", text: "Select preferred caregiver" },
+    { icon: ep_select  , text: "Select a Care package" },
+    { icon:  bi_stars , text: "Receive suggestions" },
+    { icon:  tdesign , text: "Make payment" },
+    { icon: clarity, text: "Interview suggested caregivers" },
+    { icon: solar , text: "Select preferred caregiver" },
   ];
 
   return (
@@ -22,7 +27,7 @@ const CaregiverProcess = () => {
         <div className="steps-list">
           {steps.map((step, index) => (
             <div key={index} className="step-item">
-              <div className="icon">{step.icon}</div>
+              <div className="icon"><img src={step.icon} alt={step.text} /></div>
               <div className="text">{step.text}</div>
             </div>
           ))}

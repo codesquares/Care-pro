@@ -1,55 +1,61 @@
 .pricing-plans {
-  //text-align: center;
   padding: 40px 20px;
   background-color: #ffffff;
 
-  h2 {
+  ul {
+    list-style-type: none; /* Remove default bullets */
+    padding-left: 0; /* Remove default padding */
+  }
+
+  .title {
+    margin-bottom: 10px;
     font-size: 2rem;
-    color: #2e4f6b; // Customize as needed
+    color: #2e4f6b;
+    text-align: center; /* Center-align title */
   }
 
   .subtitle {
-    background-color:#F7F7F7;
+    background-color: #F7F7F7;
     padding: 20px;
     font-size: 1rem;
-    color:#9C9C9C;
-    font-size: larger;
-    margin: auto;
-    margin-bottom: 40px;
+    color: #9C9C9C;
+    margin: 0 auto 40px;
     max-width: 500px;
-    background-color: 20px;
-
+    border-radius: 10px;
+    text-align: center;
   }
 
   .plans-list {
     display: flex;
     justify-content: space-evenly;
     flex-wrap: wrap;
-    
+    gap: 20px; /* Added gap for spacing between cards */
+
     .plan-item {
       background-color: #fff;
       border-radius: 10px;
-      padding: 20px 50px;
-      flex: 1;
+      padding: 20px;
+      flex: 1 1 100%; /* Adjusts for responsiveness */
       max-width: 390px;
-      margin: 10px;
       box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
       position: relative;
-      
+      transition: transform 0.3s ease, box-shadow 0.3s ease; /* Smooth transition for hover effects */
+
       &.popular {
         border: 2px solid #FBB040;
-        background-color: #fffbea; // Light yellow background for the popular plan
+        background-color: #fffbea; /* Light yellow background for the popular plan */
       }
+
       &:hover {
-        transform: translateY(-10px); // Lifts the card up on hover
-        box-shadow: 0 8px 16px rgba(0, 0, 0, 0.2); // Makes the shadow more prominent
+        transform: translateY(-10px); /* Lifts the card up on hover */
+        box-shadow: 0 8px 16px rgba(0, 0, 0, 0.2); /* More prominent shadow on hover */
       }
 
       .badge {
         position: absolute;
-        top: -40px;
+        top: -20px;
         right: 10px;
-        //background-color: #FBB040;
+        background-color: #FBB040;
         color: #fff;
         padding: 5px 10px;
         border-radius: 5px;
@@ -75,12 +81,15 @@
 
       .features {
         text-align: left;
-        margin-bottom: 20px; 
+        margin-bottom: 20px;
 
         li {
           font-size: 0.9rem;
           color: #555;
           margin-bottom: 10px;
+          background: url('../../assets/bullet.png') no-repeat left center;
+          padding-left: 30px; /* Space for custom bullet */
+          background-size: 15px 15px;
         }
       }
 
@@ -96,13 +105,20 @@
         transition: background-color 0.3s ease;
 
         &:hover {
-          background-color: darken(grey, 10%);
+          background-color: darken(#555555, 10%); /* Darkens button color on hover */
         }
       }
     }
+  }
 
-    .plan-item :hover{
-        
+  @media (max-width: 768px) {
+    .plans-list {
+      flex-direction: column;
+      align-items: center;
+    }
+
+    .plan-item {
+      width: 90%; /* Ensures full width for smaller screens */
     }
   }
 }

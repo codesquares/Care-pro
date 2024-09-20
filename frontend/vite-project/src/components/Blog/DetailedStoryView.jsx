@@ -8,7 +8,7 @@ const DetailedStoryView = ({ story, goBack }) => {
         ← Back to Stories
       </button>
       <div className="story-content">
-        <h2>{story.title}</h2>
+        <h2 className="main-title">{story.title}</h2>
         <img src={story.imgSrc} alt={story.title} className="story-image" />
         <p>{story.fullContent}</p>
       </div>

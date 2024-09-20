@@ -4,3 +4,11 @@
   background-repeat: no-repeat; /* Prevents the image from repeating */
   background-size: cover;
 }
+
+.App{
+  background-color: #ffffff;
+}
+
+.main-title {
+  font-family: PoppinsBold;
+}

@@ -16,7 +16,7 @@
       font-size: 1rem;
       color: #555;
       margin: auto;
-      width: 60%;
+      width: 80%; /* Wider width on mobile */
       background-color: #f7f7f7;
       padding: 1rem;
       border-radius: 10px;
@@ -57,12 +57,24 @@
         margin: 0.5rem 0;
         font-size: 1.2rem;
         color: #2e4f6b;
+        text-align: start;
       }
 
       p {
         margin: 0;
         font-size: 1rem;
         color: #555;
+        text-align: start;
+      }
+    }
+  }
+
+  /* Tablet and mobile styles */
+  @media (max-width: 768px) {
+    .heading-section {
+      .philosophy {
+        width: 90%; /* Adjust width for tablet and mobile */
+        margin: 0 auto; /* Center the text */
       }
     }
   }

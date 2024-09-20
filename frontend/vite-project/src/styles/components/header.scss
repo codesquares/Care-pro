@@ -1,46 +1,51 @@
 .header {
+  background-image: url();
   display: flex;
   flex-direction: column;
-  background-image: url('../../assets/background.png'); /* Fixed the path */
-  background-repeat: no-repeat; /* Prevents the image from repeating */
-  background-size: cover; /* Ensures the image covers the entire header */
-  //height: 100vh; /* Full viewport height */
+  background-repeat: no-repeat;
+  background-size: cover;
   width: 100%;
   align-items: center;
   padding: 50px 20px;
-  color: var(--secondary-color-1); /* Ensure text contrast */
-  background-color: #ffffff; /* Background color in case image does not load */
+  font-size: 50px;
+  color: var(--secondary-color-1);
+  background-color: #ffffff;
 
   &-content {
     text-align: center;
-    margin-top: 150px;
+    margin-top: 150px; /* Desktop spacing */
   }
 
   &-title {
-    max-width: 40rem;
-    font-size: 3.5rem;
+    font-family: PoppinsSemiBold;
+    max-width: 50rem; /* Maximum width for readability */
+    font-size: 3.5rem; /* Larger font size for desktop */
     font-weight: bold;
-    color: #02445F; /* Ensure this color stands out */
+    color: #02445F;
+    padding-left: 40px;
     margin-bottom: 20px;
+    line-height: 1.2; /* Ensures good line spacing */
   }
 
   &-subtitle {
-    font-size: 1.2rem;
-    color: #777; /* Light gray for subtitle */
+    font-size: 1.2rem; /* Good for desktop readability */
+    color: #777;
     margin-bottom: 50px;
   }
 
   &-buttons {
     display: flex;
     justify-content: center;
-    gap: 20px;
+    gap: 20px; /* Space between buttons */
+    margin-bottom: 50px; /* Extra space below buttons */
 
     .btn-main, .btn-secondary {
-      padding: 10px 20px;
-      border-radius: 5px;
+      padding: 15px 30px; /* Bigger buttons for desktop */
+      border-radius: 10px;
       text-decoration: none;
       font-weight: bold;
-      transition: background-color 0.3s ease, transform 0.3s ease; /* Added transition for both buttons */
+      font-size: 1.1rem; /* Button text size for better readability */
+      transition: background-color 0.3s ease, transform 0.3s ease;
     }
 
     .btn-main {
@@ -48,86 +53,91 @@
       color: #ffffff;
       
       &:hover {
-        background-color: #d8a813; /* Darker shade of #EFB214 */
-        transform: scale(1.05); /* Slightly enlarges the button on hover */
+        background-color: #d8a813;
+        transform: scale(1.05);
       }
     }
 
     .btn-secondary {
+      margin-top: 30px;
       background-color: #ffffff;
       color: #000;
       border: 1px solid #ccc;
-      margin: 50px 0px;
 
       &:hover {
-        background-color: #f5f5f5; /* Light gray background on hover */
-        border-color: #999; /* Darkens the border on hover */
-        transform: scale(1.05); /* Slightly enlarges the button on hover */
+        background-color: #f5f5f5;
+        border-color: #999;
+        transform: scale(1.05);
       }
     }
   }
 
   &-video {
-    margin-top: 20px;
+    margin-top: 50px; /* Extra space for desktop */
     display: flex;
     justify-content: center;
-    width: 100%;
-    
+    width: 80%; /* Ensures proper scaling for desktop */
+
     .video-thumbnail {
       max-width: 100%;
-      height: auto; /* Maintain aspect ratio */
-      border-radius: 8px; /* Optional: adds rounded corners to the image */
+      height: auto;
+      border-radius: 8px;
     }
   }
 
+  /* Mobile styling */
   @media (max-width: 768px) {
-    padding: 30px 15px; /* Adjust padding for smaller screens */
-    height: auto; /* Allow height to adjust based on content */
+    padding: 30px 15px;
+    height: auto;
 
     &-content {
-      margin-top: 100px; /* Adjust margin for mobile */
+      margin-top: 80px; /* Less margin for smaller screens */
     }
 
     &-title {
+      text-align: center;
+      font-family: PoppinsSemiBold;
       font-size: 2.5rem; /* Adjust font size for mobile */
-      max-width: 90%; /* Adjust width for mobile */
+      max-width: 100%; /* Ensure text fits the screen */
     }
 
     &-subtitle {
-      font-size: 1rem; /* Adjust font size for mobile */
-      margin-bottom: 30px; /* Adjust margin for mobile */
+      font-size: 1rem;
+      margin-bottom: 30px;
     }
 
     &-buttons {
-      flex-direction: column; /* Stack buttons vertically on mobile */
-      gap: 10px; /* Adjust gap for mobile */
+      flex-direction: column; /* Stack buttons vertically */
+      gap: 10px; /* Reduced space between buttons */
+      margin-bottom: 30px;
 
       .btn-main, .btn-secondary {
-        width: 100%; /* Make buttons full-width on mobile */
-        padding: 15px; /* Adjust padding for mobile */
+        width: 100%; /* Full-width buttons on mobile */
+        padding: 12px; /* Adjust padding for mobile */
       }
     }
 
     &-video {
-      margin-top: 10px; /* Adjust margin for mobile */
+      margin-top: 20px;
       .video-thumbnail {
-        max-width: 90%; /* Ensure image doesn't exceed container width on mobile */
+        max-width: 100%; /* Ensure video scales correctly */
       }
     }
   }
 
+  /* Extra small devices */
   @media (max-width: 480px) {
     &-title {
-      font-size: 2rem; /* Further adjust font size for very small screens */
+      font-size: 2rem; /* Further reduce font size */
     }
 
     &-subtitle {
-      font-size: 0.9rem; /* Further adjust font size for very small screens */
+      font-size: 0.9rem; /* Smaller font for subtitle */
     }
 
     &-video {
       .video-thumbnail {
-        max-width: 100%; /* Ensure image is fully responsive on very small screens */
+        max-width: 100%;
       }
     }
   }

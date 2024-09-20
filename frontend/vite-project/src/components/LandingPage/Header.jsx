@@ -1,6 +1,7 @@
 import React from 'react';
 import '../../styles/components/header.scss'; 
 import video from '../../assets/Video.png'
+import arrow from '../../assets/arrow-right.svg'
 import Button from '../atoms/Button'
 
 const Header = () => {
@@ -14,7 +15,7 @@ const Header = () => {
                 <img src={video} alt="Caregiver helping elderly" className="video-thumbnail" />
             </div>
             <div className="header-buttons">
-                    <a href="/become-caregiver" className="btn-secondary">Become a Caregiver</a>
+                    <a href="/become-caregiver" className="btn-secondary">Book Caregiver</a>
                 </div>
         </header>
     );

@@ -5,7 +5,7 @@ import storyImage from '../../assets/storyImage.svg'
 const StorySection = () => {
   return (
     <section className="story-section">
-      <h2>This is our story</h2>
+      <h2 className='main-title'>This is our story</h2>
       <div className="story-content">
         <div className="story-text">
           <h2 className='title'>On the quest to care for you anytime, anywhere. On the quest to care for you anytime.</h2>

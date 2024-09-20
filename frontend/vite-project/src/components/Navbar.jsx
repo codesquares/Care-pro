@@ -1,15 +1,28 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { Link } from 'react-router-dom';
-import logo from '../assets/careproLogo.svg'
-import hambugerImg from '../assets/ci_hamburger-md.svg'
+import logo from '../assets/careproLogo.svg';
+import arrow from '../assets/arrow-right.svg';
+import hambugerImg from '../assets/ci_hamburger-md.svg';
 import '../styles/components/nav-bar.scss'; // Ensure this SCSS file contains your styles
 
 const Navbar = () => {
     const [isMenuOpen, setIsMenuOpen] = useState(false);
+    const menuRef = useRef(null);
 
     const toggleMenu = () => {
         setIsMenuOpen(!isMenuOpen);
     };
+
+    const handleClickOutside = (event) => {
+        if (menuRef.current && !menuRef.current.contains(event.target)) {
+            setIsMenuOpen(false);
+        }
+    };
+
+    useEffect(() => {
+        document.addEventListener('mousedown', handleClickOutside);
+        return () => document.removeEventListener('mousedown', handleClickOutside);
+    }, []);
 
     return (
         <nav className="navbar">
@@ -20,10 +33,10 @@ const Navbar = () => {
             </div>
 
             <button className="navbar-toggle" onClick={toggleMenu}>
-                <img src={hambugerImg} alt='Hambuger'/>
+                <img src={hambugerImg} alt='Hamburger' />
             </button>
 
-            <ul className={`navbar-links ${isMenuOpen ? 'active' : ''}`}>
+            <ul ref={menuRef} className={`navbar-links ${isMenuOpen ? 'active' : ''}`}>
                 <li><Link to="/our-process">Our Process</Link></li>
                 <li><Link to="/plans">Plans</Link></li>
                 <li><Link to="/about-us">About us</Link></li>
@@ -33,7 +46,7 @@ const Navbar = () => {
 
             <div className="navbar-cta">
                 <Link to="/book-caregiver" className="btn-primary">
-                    Book Caregiver <span className="calendar-icon">📅</span>
+                    Book Caregiver <span className="calendar-icon"><img src={arrow} alt="arrow-right" /></span>
                 </Link>
             </div>
         </nav>

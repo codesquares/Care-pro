@@ -25,7 +25,7 @@ const BrandList = () => {
     <div className="brand-list">
       {brands.map((brand, index) => (
         <div key={index} className="brand-item">
-          <img src={brand.logo} alt={brand.name} />
+          <img src={brand.logo} alt={brand.name} loading='lazy' />
         </div>
       ))}
     </div>
