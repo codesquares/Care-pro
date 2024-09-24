@@ -1,49 +1,53 @@
 .footer {
   background-color: #06283D;
   padding: 40px 0;
-  padding-top: 50px;
   color: #ffffff;
   font-family: 'Arial', sans-serif;
 
   .footer-container {
     display: flex;
-    flex-wrap: wrap;
+    flex-wrap: wrap; /* Allows columns to stack on smaller screens */
     justify-content: space-between;
     align-items: flex-start;
     max-width: 1200px;
     margin: 0 auto;
-    padding: 0 20px;
-    
+    padding: 40px 20px;
+
     .footer-column {
-      flex: 1 1 45%; /* Adjust width to fit 2 columns per row */
-      margin-bottom: 20px;
+      flex: 1;
+      margin-right: 20px;
       
       h4 {
         font-size: 16px;
         font-weight: bold;
         margin-bottom: 15px;
       }
-      
+
       ul {
         list-style-type: none;
         padding: 0;
         margin: 0;
-        
+
         li {
           font-size: 14px;
           margin-bottom: 10px;
+          transition: color 0.3s ease;
+
+          &:hover {
+            color: #ffc107; /* Highlight color on hover */
+            cursor: pointer;
+          }
         }
       }
     }
-    
+
     .footer-logo {
-      flex: 1 1 100%; /* Span full width */
+      flex: 0.5;
       display: flex;
-      justify-content: center;
-      margin-bottom: 20px;
-      
+      justify-content: flex-end;
+
       img {
-        width: 180px; /* Adjust size if needed */
+        width: 120px;
         height: auto;
       }
     }
@@ -54,25 +58,52 @@
     text-align: center;
     margin-top: 20px;
     padding-top: 10px;
-    
+
     p {
       font-size: 12px;
     }
   }
+}
 
-  @media (max-width: 768px) {
-    .footer-container {
-      .footer-column {
-        flex: 1 1 50%; /* 2 columns per row on tablets */
-      }
-    }
+// Responsive Styles
+@media (max-width: 768px) {
+  .footer {
+    padding: 20px 0;
   }
 
-  @media (max-width: 480px) {
-    .footer-container {
-      .footer-column {
-        flex: 1 1 100%; /* 1 column per row on mobile */
-      }
+  .footer-container {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    grid-template-rows: repeat(2, auto);
+    gap: 20px;
+    align-items: start;
+    text-align: center;
+
+    .footer-column {
+      margin-right: 0; // Remove margin on mobile
+    }
+
+    .footer-logo {
+      grid-column: span 2; // Make the logo span across both columns
+      display: flex;
+      justify-content: center;
+      margin-top: 20px;
+    }
+  }
+}
+
+@media (max-width: 480px) {
+  .footer {
+    padding: 15px 0;
+  }
+
+  .footer-container {
+    .footer-column {
+      font-size: 12px;
+    }
+
+    .footer-logo img {
+      width: 100px;
     }
   }
 }
