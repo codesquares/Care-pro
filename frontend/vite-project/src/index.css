@@ -1,35 +1,36 @@
-:root {
+/* Global Reset */
+* {
   margin: 0;
   padding: 0;
-  font-family: 'PoppinsBold', Helvetica, sans-serif;
-  background-color: #ffffff;
-  
+  box-sizing: border-box;
+  font-family: 'Poppins', Helvetica, sans-serif;
+}
 
-
+:root {
   color-scheme: light dark;
-  color: rgba(255, 255, 255, 0.87);
+  color: rgba(255, 255, 255, 0.87); /* Adjust this for contrast */
 
   font-synthesis: none;
   text-rendering: optimizeLegibility;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
 
+  /* Color Variables */
   --primary-color-1: #05668D;
   --primary-color-2: #3EDDCD;
   --primary-color-white: #ffffff;
   --secondary-color-1: #02445F;
   --secondary-color-2: #015476;
-  --secondary-color-3: #015476;
-  --secondary-color-4: #00CAB6;
+  --secondary-color-3: #00CAB6;
   --secondary-color-4: #99FFF5;
-  --secondary-color-4: #B6FBF4;
-  --secondary-color-4: #FCCD56;
-  --secondary-color-4: #FFE5A1;
-  --secondary-color-4: #FFF7E4;
+  --secondary-color-5: #B6FBF4;
+  --secondary-color-6: #FCCD56;
+  --secondary-color-7: #FFE5A1;
+  --secondary-color-8: #FFF7E4;
   --background-color: #ffffff;
-  
   --text-color: #2c3e50;
 
+  /* Font and Spacing Variables */
   --font-family-base: 'Arial, sans-serif';
   --font-size-base: 16px;
   --font-size-large: 20px;
@@ -39,44 +40,45 @@
   --spacing-medium: 16px;
   --spacing-large: 24px;
 }
+
 a {
   text-decoration: none;
 }
 
-
+/* Font Faces */
 @font-face {
   font-family: Yaro;
-  src: url('./assets//fonts/YaroCut-Black.woff2') format('woff2'),
-        url('./assets//fonts/YaroCut-Black.woff') format('woff');
-  font-weight:normal;
+  src: url('./assets/fonts/YaroCut-Black.woff2') format('woff2'),
+       url('./assets/fonts/YaroCut-Black.woff') format('woff');
+  font-weight: normal;
   font-style: normal;
 }
 
 @font-face {
   font-family: YaroBold;
-  src: url('./assets//fonts/YaroCut-Bold.woff2') format('woff2'),
-        url('./assets//fonts/YaroCut-Bold.woff') format('woff');
-  font-weight:normal;
+  src: url('./assets/fonts/YaroCut-Bold.woff2') format('woff2'),
+       url('./assets/fonts/YaroCut-Bold.woff') format('woff');
+  font-weight: normal;
   font-style: normal;
 }
 
 @font-face {
   font-family: Poppins;
-  src: url('./assets/fonts//poppins/Poppins-Regular.ttf') format('ttf');
-  font-weight:normal;
+  src: url('./assets/fonts/poppins/Poppins-Regular.ttf') format('truetype');
+  font-weight: normal;
   font-style: normal;
 }
 
 @font-face {
   font-family: PoppinsBold;
-  src: url('./assets/fonts//poppins/Poppins-Bold.ttf') format('ttf');
-  font-weight:normal;
+  src: url('./assets/fonts/poppins/Poppins-Bold.ttf') format('truetype');
+  font-weight: normal;
   font-style: normal;
 }
 
 @font-face {
   font-family: PoppinsSemiBold;
-  src: url('./assets/fonts//poppins/Poppins-SemiBold.ttf') format('ttf');
-  font-weight:normal;
+  src: url('./assets/fonts/poppins/Poppins-SemiBold.ttf') format('truetype');
+  font-weight: normal;
   font-style: normal;
 }

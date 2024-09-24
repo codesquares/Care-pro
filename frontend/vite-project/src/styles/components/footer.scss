@@ -6,16 +6,17 @@
 
   .footer-container {
     display: flex;
+    flex-wrap: wrap; /* Allows columns to stack on smaller screens */
     justify-content: space-between;
     align-items: flex-start;
     max-width: 1200px;
     margin: 0 auto;
-    padding: 0 20px;
+    padding: 40px 20px;
 
     .footer-column {
       flex: 1;
       margin-right: 20px;
-
+      
       h4 {
         font-size: 16px;
         font-weight: bold;
@@ -30,6 +31,12 @@
         li {
           font-size: 14px;
           margin-bottom: 10px;
+          transition: color 0.3s ease;
+
+          &:hover {
+            color: #ffc107; /* Highlight color on hover */
+            cursor: pointer;
+          }
         }
       }
     }
@@ -54,6 +61,49 @@
 
     p {
       font-size: 12px;
+    }
+  }
+}
+
+// Responsive Styles
+@media (max-width: 768px) {
+  .footer {
+    padding: 20px 0;
+  }
+
+  .footer-container {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    grid-template-rows: repeat(2, auto);
+    gap: 20px;
+    align-items: start;
+    text-align: center;
+
+    .footer-column {
+      margin-right: 0; // Remove margin on mobile
+    }
+
+    .footer-logo {
+      grid-column: span 2; // Make the logo span across both columns
+      display: flex;
+      justify-content: center;
+      margin-top: 20px;
+    }
+  }
+}
+
+@media (max-width: 480px) {
+  .footer {
+    padding: 15px 0;
+  }
+
+  .footer-container {
+    .footer-column {
+      font-size: 12px;
+    }
+
+    .footer-logo img {
+      width: 100px;
     }
   }
 }

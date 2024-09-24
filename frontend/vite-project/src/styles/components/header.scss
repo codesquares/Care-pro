@@ -1,94 +1,144 @@
 .header {
+  background-image: url();
   display: flex;
   flex-direction: column;
-  background-image: url('../../assets//background.png');
- // background-size: cover;                 /* Ensures the image covers the entire area */
- // background-position: center;            /* Centers the image */
-  background-repeat: no-repeat;           /* Prevents the image from repeating */
-  height: 100vh;                          /* Example height, full viewport */
-  width: 100%; 
+  background-repeat: no-repeat;
+  background-size: cover;
+  width: 100%;
   align-items: center;
   padding: 50px 20px;
+  font-size: 50px;
   color: var(--secondary-color-1);
   background-color: #ffffff;
 
   &-content {
-      text-align: center;
-      margin-bottom: 30px;
+    text-align: center;
+    margin-top: 150px; /* Desktop spacing */
   }
+
   &-title {
-    max-width: 40rem;
-    font-size: 3.5rem;
+    font-family: PoppinsSemiBold;
+    max-width: 50rem; /* Maximum width for readability */
+    font-size: 3.5rem; /* Larger font size for desktop */
     font-weight: bold;
     color: #02445F;
-
+    padding-left: 40px;
     margin-bottom: 20px;
-}
+    line-height: 1.2; /* Ensures good line spacing */
+  }
 
-&-subtitle {
-    font-size: 1.2rem;
+  &-subtitle {
+    font-size: 1.2rem; /* Good for desktop readability */
     color: #777;
-    margin-bottom: 30px;
-}
+    margin-bottom: 50px;
+  }
 
-&-buttons {
+  &-buttons {
     display: flex;
     justify-content: center;
-    gap: 20px;
+    gap: 20px; /* Space between buttons */
+    margin-bottom: 50px; /* Extra space below buttons */
 
     .btn-main, .btn-secondary {
-        padding: 10px 20px;
-        border-radius: 5px;
-        text-decoration: none;
-        font-weight: bold;
+      padding: 15px 30px; /* Bigger buttons for desktop */
+      border-radius: 10px;
+      text-decoration: none;
+      font-weight: bold;
+      font-size: 1.1rem; /* Button text size for better readability */
+      transition: background-color 0.3s ease, transform 0.3s ease;
     }
 
     .btn-main {
-        background-color: #EFB214;
-        color: #ffffff;
-        transition: background-color 0.3s ease, transform 0.3s ease;
+      background-color: #EFB214;
+      color: #ffffff;
       
-        &:hover {
-          background-color: darken(#EFB214, 10%); // Darkens the button on hover
-          transform: scale(1.05); // Slightly enlarges the button on hover
-        }
+      &:hover {
+        background-color: #d8a813;
+        transform: scale(1.05);
       }
-      
-      .btn-secondary {
-        background-color: #ffffff;
-        color: #000;
-        border: 1px solid #ccc;
-        transition: background-color 0.3s ease, border-color 0.3s ease, transform 0.3s ease;
-      
-        &:hover {
-          background-color: #f5f5f5; // Light gray background on hover
-          border-color: #999; // Darkens the border on hover
-          transform: scale(1.05); // Slightly enlarges the button on hover
-        }
+    }
+
+    .btn-secondary {
+      margin-top: 30px;
+      background-color: #ffffff;
+      color: #000;
+      border: 1px solid #ccc;
+
+      &:hover {
+        background-color: #f5f5f5;
+        border-color: #999;
+        transform: scale(1.05);
       }
-      
-}
+    }
+  }
 
   &-video {
-      position: relative;
-      width: 100%;
-      max-width: 800px;
+    margin-top: 50px; /* Extra space for desktop */
+    display: flex;
+    justify-content: center;
+    width: 80%; /* Ensures proper scaling for desktop */
 
+    .video-thumbnail {
+      max-width: 100%;
+      height: auto;
+      border-radius: 8px;
+    }
+  }
+
+  /* Mobile styling */
+  @media (max-width: 768px) {
+    padding: 30px 15px;
+    height: auto;
+
+    &-content {
+      margin-top: 80px; /* Less margin for smaller screens */
+    }
+
+    &-title {
+      text-align: center;
+      font-family: PoppinsSemiBold;
+      font-size: 2.5rem; /* Adjust font size for mobile */
+      max-width: 100%; /* Ensure text fits the screen */
+    }
+
+    &-subtitle {
+      font-size: 1rem;
+      margin-bottom: 30px;
+    }
+
+    &-buttons {
+      flex-direction: column; /* Stack buttons vertically */
+      gap: 10px; /* Reduced space between buttons */
+      margin-bottom: 30px;
+
+      .btn-main, .btn-secondary {
+        width: 100%; /* Full-width buttons on mobile */
+        padding: 12px; /* Adjust padding for mobile */
+      }
+    }
+
+    &-video {
+      margin-top: 20px;
       .video-thumbnail {
-          width: 100%;
-          border-radius: 15px;
+        max-width: 100%; /* Ensure video scales correctly */
       }
+    }
+  }
 
-      .play-button {
-          position: absolute;
-          top: 50%;
-          left: 50%;
-          transform: translate(-50%, -50%);
-          background: none;
-          border: none;
-          font-size: 3rem;
-          color: #fff;
-          cursor: pointer;
+  /* Extra small devices */
+  @media (max-width: 480px) {
+    &-title {
+      font-size: 2rem; /* Further reduce font size */
+    }
+
+    &-subtitle {
+      font-size: 0.9rem; /* Smaller font for subtitle */
+    }
+
+    &-video {
+      .video-thumbnail {
+        max-width: 100%;
       }
+    }
   }
 }

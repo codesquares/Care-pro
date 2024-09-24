@@ -20,6 +20,21 @@ const FAQ = () => {
       answer:
         'Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat aute irure dolor.',
     },
+    {
+      question: 'How can I get onboarded as a caregiver?',
+      answer:
+        'Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat aute irure dolor.',
+    },
+    {
+      question: 'How can I get onboarded as a caregiver?',
+      answer:
+        'Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat aute irure dolor.',
+    },
+    {
+      question: 'How can I get onboarded as a caregiver?',
+      answer:
+        'Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat aute irure dolor.',
+    },
     // Add more questions as needed
   ];
 

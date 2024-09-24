@@ -1,6 +1,7 @@
 import "../../styles/components/expert-team.scss";
 import expertImg from "../../assets/expert-placeholder.jpg"; // Placeholder for expert images
 
+
 const ExpertTeam = () => {
   const experts = [
     { name: "James Gordon", role: "Research specialist", imgSrc: expertImg },

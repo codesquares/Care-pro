@@ -1,4 +1,14 @@
+.landImage{
+  display: flex;
+  flex-direction: column;
+  background-repeat: no-repeat; /* Prevents the image from repeating */
+  background-size: cover;
+}
+
 .App{
-  background-color:#F7F7FB;
-  ;
+  background-color: #ffffff;
+}
+
+.main-title {
+  font-family: PoppinsBold;
 }
