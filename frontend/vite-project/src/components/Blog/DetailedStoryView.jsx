@@ -5,7 +5,7 @@ const DetailedStoryView = ({ story, goBack }) => {
   return (
     <div className="detailed-story-view">
       <button className="back-button" onClick={goBack}>
-        ← Back to Stories
+        ← Back
       </button>
       <div className="story-content">
         <h2 className="main-title">{story.title}</h2>
