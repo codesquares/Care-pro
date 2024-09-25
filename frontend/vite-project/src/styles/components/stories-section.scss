@@ -10,6 +10,14 @@
     margin: auto;
     text-align: center;
     margin-bottom: 20px;
+
+    @media (max-width: 768px) {
+      font-size: 2.5rem;  // Adjust font size for tablets
+    }
+
+    @media (max-width: 576px) {
+      font-size: 2rem;  // Adjust font size for mobile
+    }
   }
 
   .subtitle {
@@ -19,6 +27,14 @@
     margin: auto;
     text-align: center;
     margin-bottom: 30px;
+
+    @media (max-width: 768px) {
+      font-size: 1rem;  // Adjust font size for tablets
+    }
+
+    @media (max-width: 576px) {
+      font-size: 0.875rem;  // Adjust font size for mobile
+    }
   }
 
   .categories {
@@ -42,6 +58,10 @@
         background-color: #f6d572;
         color: #fff;
       }
+
+      @media (max-width: 576px) {
+        padding: 0.4rem 0.8rem;  // Adjust padding for mobile
+      }
     }
   }
 
@@ -49,6 +69,14 @@
     display: grid;
     grid-template-columns: repeat(auto-fit, minmax(330px, 1fr));
     gap: 1.5rem;
+
+    @media (max-width: 768px) {
+      grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));  // Adjust for tablets
+    }
+
+    @media (max-width: 576px) {
+      grid-template-columns: 1fr;  // Single column for mobile
+    }
   }
 
   .story-card {
@@ -67,6 +95,10 @@
       width: 100%;
       height: 200px;
       object-fit: cover;
+
+      @media (max-width: 576px) {
+        height: 150px;  // Adjust image height for mobile
+      }
     }
 
     h3 {
@@ -80,6 +112,14 @@
       &:hover {
         color: #046685;
       }
+
+      @media (max-width: 768px) {
+        font-size: 1.25rem;  // Adjust font size for tablets
+      }
+
+      @media (max-width: 576px) {
+        font-size: 1.1rem;  // Adjust font size for mobile
+      }
     }
 
     p {
@@ -87,6 +127,14 @@
       color: #6e6e6e;
       margin: 0 1rem 1.5rem;
       line-height: 1.6;
+
+      @media (max-width: 768px) {
+        font-size: 0.9rem;  // Adjust font size for tablets
+      }
+
+      @media (max-width: 576px) {
+        font-size: 0.875rem;  // Adjust font size for mobile
+      }
     }
   }
 
@@ -99,6 +147,14 @@
     background-color: #f9f9f9;
     border-radius: 10px;
     box-shadow: 0 2px 10px rgba(0, 0, 0, 0.05);
+
+    @media (max-width: 768px) {
+      font-size: 1.2rem;  // Adjust font size for tablets
+    }
+
+    @media (max-width: 576px) {
+      font-size: 1rem;  // Adjust font size for mobile
+    }
   }
 
   .pagination {
@@ -125,11 +181,23 @@
       &:hover:not(:disabled) {
         background-color: #046685;
       }
+
+      @media (max-width: 576px) {
+        padding: 0.4rem 0.8rem;  // Adjust padding for mobile
+      }
     }
 
     span {
       font-size: 1rem;
       color: #6e6e6e;
+
+      @media (max-width: 768px) {
+        font-size: 0.875rem;  // Adjust font size for tablets
+      }
+
+      @media (max-width: 576px) {
+        font-size: 0.75rem;  // Adjust font size for mobile
+      }
     }
   }
 }
