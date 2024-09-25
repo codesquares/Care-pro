@@ -1,68 +1,84 @@
-:root {
-  font-family: Inter, system-ui, Avenir, Helvetica, Arial, sans-serif;
-  line-height: 1.5;
-  font-weight: 400;
+/* Global Reset */
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+  font-family: 'Poppins', Helvetica, sans-serif;
+}
 
+:root {
   color-scheme: light dark;
-  color: rgba(255, 255, 255, 0.87);
-  background-color: #242424;
+  color: rgba(255, 255, 255, 0.87); /* Adjust this for contrast */
 
   font-synthesis: none;
   text-rendering: optimizeLegibility;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
+
+  /* Color Variables */
+  --primary-color-1: #05668D;
+  --primary-color-2: #3EDDCD;
+  --primary-color-white: #ffffff;
+  --secondary-color-1: #02445F;
+  --secondary-color-2: #015476;
+  --secondary-color-3: #00CAB6;
+  --secondary-color-4: #99FFF5;
+  --secondary-color-5: #B6FBF4;
+  --secondary-color-6: #FCCD56;
+  --secondary-color-7: #FFE5A1;
+  --secondary-color-8: #FFF7E4;
+  --background-color: #ffffff;
+  --text-color: #2c3e50;
+
+  /* Font and Spacing Variables */
+  --font-family-base: 'Arial, sans-serif';
+  --font-size-base: 16px;
+  --font-size-large: 20px;
+  --font-size-small: 12px;
+
+  --spacing-small: 8px;
+  --spacing-medium: 16px;
+  --spacing-large: 24px;
 }
 
 a {
-  font-weight: 500;
-  color: #646cff;
-  text-decoration: inherit;
-}
-a:hover {
-  color: #535bf2;
+  text-decoration: none;
 }
 
-body {
-  margin: 0;
-  display: flex;
-  place-items: center;
-  min-width: 320px;
-  min-height: 100vh;
+/* Font Faces */
+@font-face {
+  font-family: Yaro;
+  src: url('./assets/fonts/YaroCut-Black.woff2') format('woff2'),
+       url('./assets/fonts/YaroCut-Black.woff') format('woff');
+  font-weight: normal;
+  font-style: normal;
 }
 
-h1 {
-  font-size: 3.2em;
-  line-height: 1.1;
+@font-face {
+  font-family: YaroBold;
+  src: url('./assets/fonts/YaroCut-Bold.woff2') format('woff2'),
+       url('./assets/fonts/YaroCut-Bold.woff') format('woff');
+  font-weight: normal;
+  font-style: normal;
 }
 
-button {
-  border-radius: 8px;
-  border: 1px solid transparent;
-  padding: 0.6em 1.2em;
-  font-size: 1em;
-  font-weight: 500;
-  font-family: inherit;
-  background-color: #1a1a1a;
-  cursor: pointer;
-  transition: border-color 0.25s;
-}
-button:hover {
-  border-color: #646cff;
-}
-button:focus,
-button:focus-visible {
-  outline: 4px auto -webkit-focus-ring-color;
+@font-face {
+  font-family: Poppins;
+  src: url('./assets/fonts/poppins/Poppins-Regular.ttf') format('truetype');
+  font-weight: normal;
+  font-style: normal;
 }
 
-@media (prefers-color-scheme: light) {
-  :root {
-    color: #213547;
-    background-color: #ffffff;
-  }
-  a:hover {
-    color: #747bff;
-  }
-  button {
-    background-color: #f9f9f9;
-  }
+@font-face {
+  font-family: PoppinsBold;
+  src: url('./assets/fonts/poppins/Poppins-Bold.ttf') format('truetype');
+  font-weight: normal;
+  font-style: normal;
+}
+
+@font-face {
+  font-family: PoppinsSemiBold;
+  src: url('./assets/fonts/poppins/Poppins-SemiBold.ttf') format('truetype');
+  font-weight: normal;
+  font-style: normal;
 }
