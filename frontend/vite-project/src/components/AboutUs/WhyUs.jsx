@@ -8,18 +8,18 @@ const WhyUsSection = () => {
   const features = [
     {
       icon: trustImg,
-      title: 'Trustworthiness',
-      description: 'Ut enim ad minim veniam quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat aute irure dolor.',
+      title: 'Devoted & Reliable',
+      description: 'We prioritise your well-being always and provide compassionate care that supports you through all phases of your healthcare journey. ',
     },
     {
       icon: verifiedImg,
-      title: 'Verified Caregivers',
-      description: 'Ut enim ad minim veniam quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat aute irure dolor.',
+      title: 'Ethical',
+      description: 'We uphold high ethical standards, with emphasis to your security, confidentiality, and respect. Your rights and dignity are always a priority.',
     },
     {
       icon: healthExpertImg,
-      title: 'Access to health experts',
-      description: 'Ut enim ad minim veniam quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat aute irure dolor.',
+      title: 'Professional',
+      description: 'Our team of skilled professionals are highly vetted and dedicated to providing knowledgeable, respectful, and attentive care.',
     },
   ];
 

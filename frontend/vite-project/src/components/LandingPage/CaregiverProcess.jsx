@@ -7,11 +7,12 @@ import bi_stars from "../../assets/bi_stars.svg";
 import clarity from "../../assets/clarity_talk-bubbles-line.svg";
 const CaregiverProcess = () => {
   const steps = [
-    { icon: ep_select  , text: "Select a Care package" },
-    { icon:  bi_stars , text: "Receive suggestions" },
-    { icon:  tdesign , text: "Make payment" },
-    { icon: clarity, text: "Interview suggested caregivers" },
-    { icon: solar , text: "Select preferred caregiver" },
+    { icon: ep_select  , text: "Select a Package: Choose the luxury care package that suits your needs." },
+    { icon:  bi_stars , text: "Answer Some Basic Questions: Provide essential details to help us understand your preferences and requirements." },
+    { icon:  tdesign , text: "Get Caregiver Match Suggestions: Receive personalized caregiver matches based on your unique needs." },
+    { icon: clarity, text: "Payment: Secure your premium care experience with a seamless payment process." },
+    { icon: solar , text: "Interview Matched Caregivers: Meet with your matched caregivers to ensure the perfect fit."},
+    { icon: solar , text: "Hire and Get Your Care Plan: Finalize your choice, and receive a customized care plan tailored to your comfort and well-being."},
   ];
 
   return (
@@ -19,8 +20,7 @@ const CaregiverProcess = () => {
       <div className="head-section">
         <h2>Process to get a Caregiver</h2>
         <p className="subtitle">
-          In 5 simple steps pick a care package and get caregiver
-          recommendations based on your unique needs
+        6 Steps to an Unforgettable Carepro Experience:
         </p>
       </div>
       <div className="main-section">

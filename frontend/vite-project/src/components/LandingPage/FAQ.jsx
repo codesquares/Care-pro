@@ -6,34 +6,34 @@ const FAQ = () => {
 
   const questions = [
     {
-      question: 'How can I get onboarded as a caregiver?',
+      question: 'Can I upgrade my package?',
       answer:
-        'Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat aute irure dolor.',
+        'Yes, you can upgrade your package! Clients can choose to upgrade their care plan at the start of every new month, ensuring a seamless transition without the need to recalculate fees. This flexible option allows you to elevate your care experience as your needs evolve.',
     },
     {
-      question: 'How can I get onboarded as a caregiver?',
+      question: 'Can I request for other services not listed in the catalog?',
       answer:
-        'Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat aute irure dolor.',
+        'Yes, you can request additional services not listed in the catalog. However, this option is available exclusively to premium clients. If you need to manage other illnesses or specific care requirements, any extra services may incur additional costs. Your personal care administrator will assess these requests and provide guidance on the necessary adjustments to your care plan.',
     },
     {
-      question: 'How can I get onboarded as a caregiver?',
+      question: 'How will I be charged?',
       answer:
-        'Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat aute irure dolor.',
+        'Clients are charged automatically at the beginning of every new month for their selected care package, unless the plan is canceled prior to renewal. If a plan is canceled after care has been accessed within a month, that month\'s subscription remains valid, and the cancellation will take effect from the following month. If care has not been accessed, a full reimbursement will be issued, minus any applicable taxes and electronic charges.',
     },
     {
-      question: 'How can I get onboarded as a caregiver?',
+      question: 'Who are my caregivers?',
       answer:
-        'Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat aute irure dolor.',
+        'Your caregivers are vetted professionals with extensive experience in the caregiving field. They undergo thorough background checks to ensure safety and security, and each caregiver provides three guarantors with permanent addresses in the state of operation. Our caregivers are well-trained to deliver a top-notch experience that guarantees value for your investment.',
     },
     {
-      question: 'How can I get onboarded as a caregiver?',
+      question: 'Can I pause my plan?',
       answer:
-        'Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat aute irure dolor.',
+        'Yes, you can pause your plan. Clients have the flexibility to temporarily suspend their care package for a specified period. Please reach out to your personal care administrator to discuss the details and arrange for the pause, ensuring your care needs are managed effectively during this time.',
     },
     {
-      question: 'How can I get onboarded as a caregiver?',
+      question: 'Can I switch caregivers?',
       answer:
-        'Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat aute irure dolor.',
+        'Yes, you can switch caregivers at any time. If you feel that a different caregiver would better meet your needs, simply contact your personal care administrator to facilitate the transition. Your satisfaction and comfort are our top priorities.',
     },
     // Add more questions as needed
   ];
