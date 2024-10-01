@@ -15,10 +15,10 @@
   }
 
   .subtitle {
-    background-color: #F7F7F7;
+    background-color: #f7f7f7;
     padding: 20px;
     font-size: 1rem;
-    color: #9C9C9C;
+    color: #9c9c9c;
     margin: 0 auto 40px;
     max-width: 500px;
     border-radius: 10px;
@@ -42,7 +42,7 @@
       transition: transform 0.3s ease, box-shadow 0.3s ease; /* Smooth transition for hover effects */
 
       &.popular {
-        border: 2px solid #FBB040;
+        border: 2px solid #fbb040;
         background-color: #fffbea; /* Light yellow background for the popular plan */
       }
 
@@ -55,7 +55,7 @@
         position: absolute;
         top: -20px;
         right: 10px;
-        background-color: #FBB040;
+        background-color: #fbb040;
         color: #fff;
         padding: 5px 10px;
         border-radius: 5px;

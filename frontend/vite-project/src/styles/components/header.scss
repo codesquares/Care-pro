@@ -99,6 +99,7 @@
       font-family: PoppinsSemiBold;
       font-size: 2.5rem; /* Adjust font size for mobile */
       max-width: 100%; /* Ensure text fits the screen */
+      padding-left: 0px;
     }
 
     &-subtitle {
@@ -129,6 +130,7 @@
   @media (max-width: 480px) {
     &-title {
       font-size: 2rem; /* Further reduce font size */
+      padding-left: 00px;
     }
 
     &-subtitle {

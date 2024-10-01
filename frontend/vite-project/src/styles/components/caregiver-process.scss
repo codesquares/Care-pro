@@ -7,6 +7,10 @@
   background-position: center;
   background-repeat: no-repeat;
 
+  @media (max-width: 768px) {
+    padding: 4rem 1.5rem; // Reduce padding for mobile
+  }
+
   .head-section {
     text-align: center;
     margin-bottom: 2rem;
@@ -16,6 +20,10 @@
       color: #2e4f6b;
       margin-bottom: 1.5rem;
       font-weight: 700;
+
+      @media (max-width: 768px) {
+        font-size: 1.5rem; // Reduce font size for mobile
+      }
     }
 
     .subtitle {
@@ -29,6 +37,11 @@
       border-radius: 10px;
       box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1);
       text-align: center;
+
+      @media (max-width: 768px) {
+        font-size: 1rem; // Adjust subtitle size
+        padding: 1rem; // Reduce padding on mobile
+      }
     }
   }
 
@@ -75,12 +88,20 @@
         font-size: 1.8rem;
         margin-right: 1rem;
         color: #2e4f6b;
+
+        @media (max-width: 768px) {
+          font-size: 1.5rem; // Reduce icon size for mobile
+        }
       }
 
       .text {
         font-size: 1.2rem;
         color: #333;
         font-weight: 500;
+
+        @media (max-width: 768px) {
+          font-size: 1rem; // Adjust text size for mobile
+        }
       }
     }
   }
@@ -100,6 +121,7 @@
 
     @media (max-width: 768px) {
       margin-top: 2rem;
+      max-height: 300px; // Reduce image height for mobile
     }
   }
 }

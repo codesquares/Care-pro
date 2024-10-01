@@ -13,10 +13,9 @@ const ExpertTeam = () => {
   return (
     <section className="expert-team">
       <div className="heading-section">
-        <h2>Meet our amazing team of experts</h2>
+        <h2>The brains behind Carepro</h2>
         <p className="philosophy">
-          Our philosophy is: hire great people and give them the resources and
-          support to give the best service.
+        Your Trusted Partners, providing all you need for a better healthcare experience.
         </p>
       </div>
       <div className="team-grid">

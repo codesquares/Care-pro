@@ -5,19 +5,19 @@ import HeathIcon from '../../assets/HealthIcon.svg'
 const HealthcareFacts = () => {
   const facts = [
     {
-      text: "Mental health disorders are among the leading causes of disability worldwide",
+      text: "Post-surgical care significantly reduces readmission rates for patients with chronic conditions.",
       color: '#FDE7E7',
     },
     {
-      text: "Approximately half of the world's population still lacks access to essential health services.",
+      text: "Quality sleep (7-9 hours) lowers the risk of illness, emphasising a serene environment.",
       color: '#D3E9FF',
     },
     {
-      text: "Mental health disorders are among the leading causes of disability worldwide",
+      text: "Chronic stress increases cortisol, leading to weight gain and unhealthy cravings.",
       color: '#E6E3FF',
     },
     {
-      text: "Mental health disorders are among the leading causes of disability worldwide",
+      text: "Mentally stimulating activities can reduce risk of  dementia in older adults.",
       color: '#FDE7E7',
     },
   ];
