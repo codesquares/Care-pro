@@ -11,7 +11,7 @@ const StorySection = () => {
           <h2 className='title'>Dignified Care that puts your Health, Privacy and Comfort first.</h2>
           <p>
           Carepro is on a mission to change the narrative in healthcare using a personalised approach that prioritises health, comfort and privacy. 
-          Therefore, we redesigned the healthcare experience to create an environment where every individual is not just another statistic but valued and understood. 
+          Therefore, we redesigned the healthcare experience to create an environment where every individual is not just another statistic but valued and understood.
           </p>
         </div>
         <div className="story-image">
