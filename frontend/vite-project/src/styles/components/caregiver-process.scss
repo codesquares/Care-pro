@@ -53,6 +53,7 @@
     height: auto; // Let the main section adjust height based on content
 
     @media (max-width: 768px) {
+      margin-top: 2rem;
       flex-direction: column;
       gap: 1rem;
       height: auto; // Let height auto-adjust for mobile
