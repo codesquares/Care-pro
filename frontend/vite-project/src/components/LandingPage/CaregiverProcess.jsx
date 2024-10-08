@@ -1,5 +1,5 @@
 import "../../styles/components/caregiver-process.scss";
-import caregiverImg from "../../assets/careGiver.png";
+import caregiverImg from "../../assets/grandimg.png";
 import tdesign from "../../assets/tdesign_money.svg";
 import solar from "../../assets/solar_health-broken.svg";
 import ep_select from "../../assets/ep_select.svg";

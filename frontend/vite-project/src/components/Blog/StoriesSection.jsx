@@ -21,123 +21,50 @@ const categories = [
 
 const storiesData = [
   {
-    title: "Top Tips for Preventing Caregiver Burnout",
-    description:
-      "Discusses strategies caregivers can use to manage stress, maintain their well-being, and prevent burnout...",
-    fullContent:
-      "Burnout is a common issue among caregivers. Here's how to prevent it by following specific strategies...",
+    title: "Luxury Care: Why Premium Concierge Healthcare Services Are Worth the Investment",
+    description: "Quality and comfort is supreme for the best healthcare experience...",
+    fullContent: `Quality and comfort is supreme for the best healthcare experience. Luxury care has become an essential offering...`, 
     imgSrc: storyImage1,
     category: "Healthcare stories",
   },
   {
     title: "Understanding Dementia: A Caregiver’s Perspective",
-    description:
-      "Insights into dementia from a caregiver’s perspective, highlighting the challenges...",
-    fullContent:
-      "Dementia is a complex condition that affects millions of people worldwide. This blog offers...",
+    description: "Insights into dementia from a caregiver’s perspective, highlighting the challenges...",
+    fullContent: `Dementia is a complex condition that affects millions of people worldwide...`, 
     imgSrc: storyImage2,
     category: "Healthcare stories",
   },
   {
     title: "Understanding Dementia: A Caregiver’s Perspective",
-    description:
-      "Insights into dementia from a caregiver’s perspective, highlighting the challenges...",
-    fullContent:
-      "Dementia is a complex condition that affects millions of people worldwide. This blog offers...",
+    description: "Insights into dementia from a caregiver’s perspective, highlighting the challenges...",
+    fullContent: `Dementia is a complex condition that affects millions of people worldwide...`, 
     imgSrc: storyImage3,
     category: "Teeth care",
   },
   {
     title: "Understanding Dementia: A Caregiver’s Perspective",
-    description:
-      "Insights into dementia from a caregiver’s perspective, highlighting the challenges...",
-    fullContent:
-      "Dementia is a complex condition that affects millions of people worldwide. This blog offers...",
+    description: "Insights into dementia from a caregiver’s perspective, highlighting the challenges...",
+    fullContent: `Dementia is a complex condition that affects millions of people worldwide...`, 
     imgSrc: storyImage4,
     category: "Healthcare stories",
   },
   {
     title: "Understanding Dementia: A Caregiver’s Perspective",
-    description:
-      "Insights into dementia from a caregiver’s perspective, highlighting the challenges...",
-    fullContent:
-      "Dementia is a complex condition that affects millions of people worldwide. This blog offers...",
+    description: "Insights into dementia from a caregiver’s perspective, highlighting the challenges...",
+    fullContent: `Dementia is a complex condition that affects millions of people worldwide...`, 
     imgSrc: storyImage5,
     category: "Teeth care",
   },
   {
     title: "Understanding Dementia: A Caregiver’s Perspective",
-    description:
-      "Insights into dementia from a caregiver’s perspective, highlighting the challenges...",
-    fullContent:
-      "Dementia is a complex condition that affects millions of people worldwide. This blog offers...",
-    imgSrc: storyImage2,
-    category: "Healthcare stories",
-  },
-  {
-    title: "Understanding Dementia: A Caregiver’s Perspective",
-    description:
-      "Insights into dementia from a caregiver’s perspective, highlighting the challenges...",
-    fullContent:
-      "Dementia is a complex condition that affects millions of people worldwide. This blog offers...",
-    imgSrc: storyImage2,
-    category: "Healthcare stories",
-  },
-  {
-    title: "Understanding Dementia: A Caregiver’s Perspective",
-    description:
-      "Insights into dementia from a caregiver’s perspective, highlighting the challenges...",
-    fullContent:
-      "Dementia is a complex condition that affects millions of people worldwide. This blog offers...",
-    imgSrc: storyImage2,
-    category: "Teeth care",
-  },
-  {
-    title: "Understanding Dementia: A Caregiver’s Perspective",
-    description:
-      "Insights into dementia from a caregiver’s perspective, highlighting the challenges...",
-    fullContent:
-      "Dementia is a complex condition that affects millions of people worldwide. This blog offers...",
-    imgSrc: storyImage2,
-    category: "Teeth care",
-  },
-  {
-    title: "Understanding Dementia: A Caregiver’s Perspective",
-    description:
-      "Insights into dementia from a caregiver’s perspective, highlighting the challenges...",
-    fullContent:
-      "Dementia is a complex condition that affects millions of people worldwide. This blog offers...",
-    imgSrc: storyImage2,
-    category: "Teeth care",
-  },
-  {
-    title: "Understanding Dementia: A Caregiver’s Perspective",
-    description:
-      "Insights into dementia from a caregiver’s perspective, highlighting the challenges...",
-    fullContent:
-      "Dementia is a complex condition that affects millions of people worldwide. This blog offers...",
+    description: "Insights into dementia from a caregiver’s perspective, highlighting the challenges...",
+    fullContent: `Dementia is a complex condition that affects millions of people worldwide...`, 
     imgSrc: storyImage2,
     category: "Good nutrition",
   },
-  {
-    title: "Understanding Dementia: A Caregiver’s Perspective",
-    description:
-      "Insights into dementia from a caregiver’s perspective, highlighting the challenges...",
-    fullContent:
-      "Dementia is a complex condition that affects millions of people worldwide. This blog offers...",
-    imgSrc: storyImage2,
-    category: "Good nutrition",
-  },  {
-    title: "Understanding Dementia: A Caregiver’s Perspective",
-    description:
-      "Insights into dementia from a caregiver’s perspective, highlighting the challenges...",
-    fullContent:
-      "Dementia is a complex condition that affects millions of people worldwide. This blog offers...",
-    imgSrc: storyImage2,
-    category: "Good nutrition",
-  },
-  // Add more stories as needed
+  // Add more unique stories as needed
 ];
+
 
 const StoriesSection = () => {
   const [selectedCategory, setSelectedCategory] = useState("All");
@@ -215,7 +142,7 @@ const StoriesSection = () => {
                     className="story-image"
                   />
                   <h3>{story.title}</h3>
-                  <p>{story.description}</p>
+                  <p>{story.description}</p> {/* Only short description is shown here */}
                 </div>
               ))}
             </div>
@@ -242,7 +169,7 @@ const StoriesSection = () => {
         </>
       ) : (
         <DetailedStoryView
-          story={selectedStory}
+          story={selectedStory}  // Pass the full story object including fullContent
           goBack={() => setSelectedStory(null)}
         />
       )}
@@ -251,3 +178,4 @@ const StoriesSection = () => {
 };
 
 export default StoriesSection;
+

@@ -54,7 +54,6 @@
 /* Mobile devices */
 @media (max-width: 480px) {
   .brand-list {
-    flex-direction: column; /* Stack logos vertically */
     gap: 10px;
 
     .brand-item {

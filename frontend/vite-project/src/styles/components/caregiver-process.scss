@@ -2,7 +2,6 @@
   background-color: var(--primary-color-white);
   color: #2e4f6b;
   padding: 8rem 5rem;
-  background-image: url('../../assets/background.png');
   background-size: cover;
   background-position: center;
   background-repeat: no-repeat;
@@ -48,25 +47,37 @@
   .main-section {
     display: flex;
     justify-content: space-between;
-    align-items: center;
+    align-items: stretch; // Ensure both sections stretch equally
     gap: 2rem;
-    margin-top: 2rem;
+    margin-top: 8rem;
+    height: auto; // Let the main section adjust height based on content
 
     @media (max-width: 768px) {
       flex-direction: column;
       gap: 1rem;
+      height: auto; // Let height auto-adjust for mobile
+    }
+  }
+
+  .steps-list, .image-section {
+    flex: 1; // Make both sections take equal width
+    display: flex;
+    flex-direction: column; // Ensure content stacks properly
+    justify-content: space-between; // Ensure content fills the section evenly
+    max-width: 50%; // Ensure equal width
+
+    @media (max-width: 768px) {
+      max-width: 100%; // On mobile, both sections take full width
     }
   }
 
   .steps-list {
-    background-color: #fff5d9;
-    border-radius: 2rem;
-    padding: 2rem;
-    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
-    flex: 1;
+    // background-color: #f7f7f7;
+    // border-radius: 10px;
+    // padding: 2rem;
+    // box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
 
     @media (max-width: 768px) {
-      width: 100%;
       padding: 1.5rem;
     }
 
@@ -107,21 +118,25 @@
   }
 
   .image-section {
-    flex: 1;
     margin: 0;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    height: 100%; // Make sure the image section takes full height
 
     img {
       width: 100%;
-      height: auto;
+      height: 100%; // Ensure image fills the entire section
       border-radius: 1.5rem;
       box-shadow: 0 4px 15px rgba(0, 0, 0, 0.2);
-      max-height: 600px;
       object-fit: cover;
+      margin-bottom: 1.5rem; // Maintain image aspect ratio while covering
     }
 
     @media (max-width: 768px) {
       margin-top: 2rem;
-      max-height: 300px; // Reduce image height for mobile
+      height: auto; // Auto height for mobile
+      max-height: 300px; // Limit image height for mobile
     }
   }
 }

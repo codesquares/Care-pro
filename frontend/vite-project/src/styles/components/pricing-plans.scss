@@ -9,18 +9,18 @@
 
   .title {
     margin-bottom: 10px;
-    font-size: 2rem;
+    font-size: 2.5rem; /* Increased size for emphasis */
     color: #2e4f6b;
     text-align: center; /* Center-align title */
   }
 
   .subtitle {
-    background-color: #f7f7f7;
+    background-color: #F7F7F7;
     padding: 20px;
-    font-size: 1rem;
-    color: #9c9c9c;
+    font-size: 1.2rem; /* Increased size for better visibility */
+    color: #9C9C9C;
     margin: 0 auto 40px;
-    max-width: 500px;
+    max-width: 600px; /* Increased max-width for subtitle */
     border-radius: 10px;
     text-align: center;
   }
@@ -35,31 +35,31 @@
       background-color: #fff;
       border-radius: 10px;
       padding: 20px;
-      flex: 1 1 100%; /* Adjusts for responsiveness */
-      max-width: 390px;
+      flex: 1 1 30%; /* Adjusts for responsiveness */
+      max-width: 400px; /* Adjust width */
       box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
       position: relative;
-      transition: transform 0.3s ease, box-shadow 0.3s ease; /* Smooth transition for hover effects */
+      transition: transform 0.3s ease, box-shadow 0.3s ease;
 
       &.popular {
-        border: 2px solid #fbb040;
-        background-color: #fffbea; /* Light yellow background for the popular plan */
+        border: 2px solid #FBB040; /* Highlighted border for popular plan */
       }
 
       &:hover {
-        transform: translateY(-10px); /* Lifts the card up on hover */
+        transform: translateY(-5px); /* Slight lift on hover */
         box-shadow: 0 8px 16px rgba(0, 0, 0, 0.2); /* More prominent shadow on hover */
       }
 
       .badge {
         position: absolute;
-        top: -20px;
+        top: 10px; /* Align badge above the title */
         right: 10px;
-        background-color: #fbb040;
-        color: #fff;
+        color: #FBB040; /* Change text color */
         padding: 5px 10px;
         border-radius: 5px;
         font-size: 0.9rem;
+        font-weight: bold; /* Bold text for emphasis */
+        /* Removed background color */
       }
 
       h3 {
@@ -87,9 +87,8 @@
           font-size: 0.9rem;
           color: #555;
           margin-bottom: 10px;
-          background: url('../../assets/bullet.png') no-repeat left center;
-          padding-left: 30px; /* Space for custom bullet */
-          background-size: 15px 15px;
+          padding-left: 0; /* Remove padding */
+          background: none; /* Remove custom bullet */
         }
       }
 
@@ -97,16 +96,22 @@
         display: block;
         width: 100%;
         padding: 10px;
-        font-size: 1rem;
+        font-size: 1.1rem; /* Increased size for buttons */
         color: #fff;
         border: none;
         border-radius: 5px;
         cursor: pointer;
-        transition: background-color 0.3s ease;
+        transition: background-color 0.3s ease, transform 0.3s ease;
+        background-color: #FBB040; /* Standard button color */
 
         &:hover {
-          background-color: darken(#555555, 10%); /* Darkens button color on hover */
+          background-color: darken(#FBB040, 10%); /* Darkens button color on hover */
+          transform: scale(1.05); /* Slightly enlarge button on hover */
         }
+      }
+
+      hr {
+        margin: 20px 0; /* Added spacing after the horizontal line */
       }
     }
   }
