@@ -4,10 +4,14 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace Application.DTOs.Account
+namespace Domain
 {
-    public class RevokeToken
+    public enum Roles
     {
-        public string? Token { get; set; }
+        SuperAdmin,
+        Admin,
+        User,
+        Caregiver,
+        Client,
     }
 }
