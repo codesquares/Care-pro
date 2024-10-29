@@ -22,41 +22,8 @@ namespace Infrastructure.Content.Services.Authentication
         {
             this.careProDbContext = careProDbContext;
         }
-
-        public async Task<Caregiver> AddCaregiverUserAsync(AddCaregiverRequest addCaregiverRequest)
-        {
-            var hashedPassword = BCrypt.Net.BCrypt.HashPassword(addCaregiverRequest.Password);
-
-            var caregiverUserExist = await careProDbContext.CareGivers.FirstOrDefaultAsync(x => x.Email == addCaregiverRequest.Email);
-
-            if (caregiverUserExist != null)
-            {
-                throw new AuthenticationException("User already exist, Kindly Login or use forget password!");
-            }
-
-            /// CONVERT DTO TO DOMAIN OBJECT            
-            var caregiverUserDomain = new Caregiver
-            {
-                FirstName = addCaregiverRequest.FirstName,
-                MiddleName = addCaregiverRequest.MiddleName,
-                LastName = addCaregiverRequest.LastName,
-                Email = addCaregiverRequest.Email.ToLower(),
-                Password = hashedPassword,
-                
-                // Assign new ID
-                Role = Roles.Caregiver.ToString(),
-                Status = true,
-                IsDeleted = false,
-                CreatedAt = DateTime.Now,
-            };
-
-            await careProDbContext.CareGivers.AddAsync(caregiverUserDomain);
-            await careProDbContext.SaveChangesAsync();
-
-            return caregiverUserDomain;
-
-        }
-
+        
+        
         public async Task<AppUser> AuthenticateUserAsync(LoginRequest loginRequest)
         {      
             var appUser = await careProDbContext.AppUsers

@@ -29,11 +29,13 @@ namespace Infrastructure.Content.Data
             Database.AutoTransactionBehavior = AutoTransactionBehavior.Never;
             modelBuilder.Entity<Caregiver>().ToCollection("CareGivers");
             modelBuilder.Entity<AppUser>().ToCollection("AppUsers");
+            modelBuilder.Entity<Client>().ToCollection("Clients");
             
         }
 
         
         public DbSet<Caregiver> CareGivers { get; set; }
         public DbSet<AppUser> AppUsers { get; set; }
+        public DbSet<Client> Clients { get; set; }
     }
 }

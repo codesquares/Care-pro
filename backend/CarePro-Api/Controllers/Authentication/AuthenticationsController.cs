@@ -87,52 +87,7 @@ namespace CarePro_Api.Controllers.Authentication
 
         }
 
-        /// ENDPOINT TO CREATE  CARE GIVER USERS TO THE DATABASE
-        [HttpPost]
-        [Route("AddCaregiverUser")]
-        public async Task<IActionResult> AddCaregiverUserAsync([FromBody] AddCaregiverRequest addCaregiverRequest)
-        {
-            try
-            {
-                // Pass Domain Object to Repository, to Persisit this
-                var clientUserDomain = await authService.AddCaregiverUserAsync(addCaregiverRequest);
-
-                // Convert the Domain Object back to DTO
-                var careGiverUserDTO = new CaregiverResponse
-                {
-                    Id = clientUserDomain.Id.ToString(),
-                    FirstName = clientUserDomain.FirstName,
-                    MiddleName = clientUserDomain.MiddleName,
-                    LastName = clientUserDomain.LastName,
-                    Email = clientUserDomain.Email,
-                    Role = clientUserDomain.Role,
-                    Status = clientUserDomain.Status,
-                    IsDeleted = clientUserDomain.IsDeleted,
-                    CreatedAt = clientUserDomain.CreatedAt
-                };
-
-                // Send DTO response back to ClientUser
-                return Ok(careGiverUserDTO);
-
-            }
-            catch (ApplicationException appEx)
-            {
-                // Handle application-specific exceptions
-                return BadRequest(new { ErrorMessage = appEx.Message });
-            }
-            catch (HttpRequestException httpEx)
-            {
-                // Handle HTTP request-related exceptions
-                return StatusCode(500, new { ErrorMessage = httpEx.Message });
-            }
-            catch (Exception ex)
-            {
-                // Handle other exceptions
-                return StatusCode(500, new { ex /*ErrorMessage = "An error occurred on the server."*/ });
-            }
-
-        }
-
+        
 
     }
 }

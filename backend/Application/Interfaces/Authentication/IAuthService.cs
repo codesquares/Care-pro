@@ -13,7 +13,5 @@ namespace Application.Interfaces.Authentication
     {
         Task<AppUser> AuthenticateUserAsync(LoginRequest loginRequest);
 
-        Task<Caregiver> AddCaregiverUserAsync(AddCaregiverRequest addCaregiverRequest);
-
     }
 }

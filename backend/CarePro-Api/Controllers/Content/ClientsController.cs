@@ -1,7 +1,6 @@
 ﻿using Application.DTOs;
 using Application.Interfaces.Content;
-using Infrastructure.Content.Services.Authentication;
-using Microsoft.AspNetCore.Authorization;
+using Infrastructure.Content.Services;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 
@@ -9,29 +8,29 @@ namespace CarePro_Api.Controllers.Content
 {
     [Route("api/[controller]")]
     [ApiController]
-    public class CareGiversController : ControllerBase
+    public class ClientsController : ControllerBase
     {
-        private readonly ICareGiverService careGiverService;
+        private readonly IClientService clientService;
 
-        public CareGiversController(ICareGiverService careGiverService)
+        public ClientsController(IClientService clientService)
         {
-            this.careGiverService = careGiverService;
+            this.clientService = clientService;
         }
 
-        /// ENDPOINT TO CREATE  CARE GIVER USERS TO THE DATABASE
+        /// ENDPOINT TO CREATE  CLIENT USERS TO THE DATABASE
         [HttpPost]
-        [Route("AddCaregiverUser")]
-       // [Authorize(Roles = "Caregiver")]
-        public async Task<IActionResult> AddCaregiverUserAsync([FromBody] AddCaregiverRequest addCaregiverRequest)
+        [Route("AddClientUser")]
+        // [Authorize(Roles = "Caregiver")]
+        public async Task<IActionResult> AddClientUserAsync([FromBody] AddClientUserRequest  addClientUserRequest)
         {
             try
             {
                 // Pass Domain Object to Repository, to Persisit this
-                var careGiverUser = await careGiverService.CreateCaregiverUserAsync(addCaregiverRequest);
-                                
+                var clientUser = await clientService.CreateClientUserAsync(addClientUserRequest);
+
 
                 // Send DTO response back to ClientUser
-                return Ok(careGiverUser);
+                return Ok(clientUser);
 
             }
             catch (ApplicationException appEx)

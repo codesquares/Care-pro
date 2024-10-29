@@ -23,7 +23,7 @@ namespace Infrastructure.Content.Services
             this.careProDbContext = careProDbContext;
         }
 
-        public async Task<string> CreateCaregiverUserAsync(AddCaregiverRequest addCaregiverRequest)
+        public async Task<CaregiverDTO> CreateCaregiverUserAsync(AddCaregiverRequest addCaregiverRequest)
         {
             var hashedPassword = BCrypt.Net.BCrypt.HashPassword(addCaregiverRequest.Password);
 
@@ -64,15 +64,25 @@ namespace Infrastructure.Content.Services
                 AppUserId = caregiver.Id,
                 Role = Roles.Caregiver.ToString(),
                 IsDeleted = false,
-                CreatedAt = DateTime.Now,
+                CreatedAt = caregiver.CreatedAt,
             };
 
             await careProDbContext.AppUsers.AddAsync(careProAppUser);
 
-
             await careProDbContext.SaveChangesAsync();
 
-            return caregiver.Id.ToString();
+            var careGiverUserDTO = new CaregiverDTO()
+            {
+                Id = caregiver.Id.ToString(),
+                FirstName = caregiver.FirstName,
+                LastName = caregiver.LastName,
+                MiddleName = caregiver.MiddleName,
+                Email = caregiver.Email,
+                Role = caregiver.Role,
+                CreatedAt = caregiver.CreatedAt,
+            };
+
+            return careGiverUserDTO;
         }
     }
 }
