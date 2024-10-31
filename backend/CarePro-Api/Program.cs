@@ -85,7 +85,20 @@ builder.Services.AddCors(options =>
     {
         builder.WithOrigins("https://localhost:3000", "http://localhost:3000")
                .AllowAnyMethod()
-               .AllowAnyHeader();
+               .AllowAnyHeader()
+               .AllowCredentials();
+    });
+});
+
+//Handle CORS
+builder.Services.AddCors(options =>
+{
+    options.AddPolicy("default", builder =>
+    {
+        builder.WithOrigins("https://localhost:3000", "http://localhost:3000")
+               .AllowAnyMethod()
+               .AllowAnyHeader()
+               .AllowCredentials();
     });
 });
 
