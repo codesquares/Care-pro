@@ -12,7 +12,7 @@ const Header = () => {
                 <p className="header-subtitle">Hire caregivers who have been vetted, evaluated and trained to fit your caregiving needs at home.</p>
             </div>
             <div className="header-buttons">
-                    <a href="/become-caregiver" className="btn-main">Hire a Caregiver</a>
+                    <a href="/book-caregiver" className="btn-main">Hire a Caregiver</a>
                     <a href="/become-caregiver" className="btn-secondary">Become a Caregiver</a>
                 </div>
             <div className="header-video">

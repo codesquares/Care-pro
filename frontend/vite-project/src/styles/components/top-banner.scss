@@ -1,0 +1,111 @@
+/* Default styles for desktop */
+.banner {
+    display: flex;
+    padding-top: 100px;
+    justify-content: space-between;
+    background-color: #f0f0f0;
+    align-items: center;
+}
+
+.content {
+    padding: 20px;
+    margin-left: 2rem;
+    width: 40%;
+}
+
+.content h1 {
+    font-size: 70px;
+    margin-bottom: 30px;
+}
+
+.content p {
+    font-size: 25px;
+    margin-bottom: 40px;
+}
+
+.hire-button {
+    padding: 20px 20px;
+    background-color: #fff;
+    color: #000;
+    border: none;
+    border-radius: 5px;
+    cursor: pointer;
+    font-size: 20px;
+    transition: background-color 0.3s ease;
+}
+
+.image-content {
+    width: 40%;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+}
+
+.image-content img {
+    width: 100%;
+    height: 50%;
+    border-radius: 50% 0 0 50%;
+    object-fit: cover;
+}
+
+/* Tablet Styles (max-width: 768px) */
+@media (max-width: 768px) {
+    .banner {
+        flex-direction: column;
+        align-items: flex-start;
+    }
+
+    .content {
+        width: 100%;
+        margin-left: 0;
+        padding: 15px;
+    }
+
+    .content h1 {
+        font-size: 45px; /* Reduced font size for tablet */
+    }
+
+    .content p {
+        font-size: 18px; /* Reduced font size for tablet */
+    }
+
+    .hire-button {
+        font-size: 14px;
+        padding: 8px 15px;
+    }
+
+    .image-content {
+        width: 100%;
+        margin-top: 20px;
+    }
+}
+
+/* Mobile Styles (max-width: 480px) */
+@media (max-width: 480px) {
+    .banner {
+        flex-direction: column;
+        align-items: center;
+    }
+
+    .content {
+        width: 100%;
+        padding: 10px;
+    }
+
+    .content h1 {
+        font-size: 35px;
+    }
+
+    .content p {
+        font-size: 16px;
+    }
+
+    .hire-button {
+        font-size: 14px;
+        padding: 8px 15px;
+    }
+
+    .image-content {
+        width: 100%;
+    }
+}

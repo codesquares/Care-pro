@@ -43,12 +43,12 @@ const Navbar = () => {
 
             <ul ref={menuRef} className={`navbar-links ${isMenuOpen ? 'active' : ''}`}>
                 <li>
-                    <Link to="/our-process" onClick={handleLinkClick}>
+                    <Link to="/book-caregiver" onClick={handleLinkClick}>
                         Hire Caregiver
                     </Link>
                 </li>
                 <li>
-                    <Link to="/plans" onClick={handleLinkClick}>
+                    <Link to="/become-caregiver" onClick={handleLinkClick}>
                         Become a caregiver
                     </Link>
                 </li>

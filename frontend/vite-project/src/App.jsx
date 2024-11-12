@@ -10,6 +10,7 @@ import OurProcess from './pages/OurProcess';
 import Plans from './pages/Plans';
 import BookCaregiver from './pages/BookCaregiver';
 import Home from './pages/Home';
+import BecomeCaregiver from './pages/BecomeCaregiver';
 
 function App() {
     return (
@@ -25,6 +26,7 @@ function App() {
                     <Route path="/our-process" element={<OurProcess />} />
                     <Route path="/plans" element={<Plans />} />
                     <Route path="/book-caregiver" element={<BookCaregiver />} />
+                    <Route path="/become-caregiver" element={<BecomeCaregiver/>} />
                     {/* Add other routes as needed */}
                 </Routes>
                 <Footer/>

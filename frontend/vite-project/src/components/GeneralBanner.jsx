@@ -6,19 +6,18 @@ const GenaralBanner = ({
   buttonText = 'Hire a Caregiver',
   imageUrl,
   onButtonClick,
-  borderRadius = false,
   backgroundColor = '#f0f0f0',
 }) => {
   return (
-    <div className={`general-banner ${borderRadius ? 'border-radius' : ''}`}
+    <div className={`general-banner`}
     style={{ backgroundColor }} 
     >
-      <div className="content">
-        <h2>{title}</h2>
+      <div className="general-banner-content">
+        <h1>{title}</h1>
         <p>{description}</p>
         <button onClick={onButtonClick}>{buttonText}</button>
       </div>
-      <div className="image-container">
+      <div className="image-content">
         <img src={imageUrl} alt="Caregiver with client" />
       </div>
     </div>
