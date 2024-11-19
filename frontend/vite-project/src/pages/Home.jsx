@@ -40,7 +40,7 @@ const Home = () => {
 
 {/* <CaregiverProcess/> */}
 {/* <PricingPlans/> */}
-{/* <HealthcareFacts/> */}
+<HealthcareFacts/>
 {/* <FAQ/> */}
 {/* <CaregiverBanner/> */}
 {/* <ContactForm/> */}

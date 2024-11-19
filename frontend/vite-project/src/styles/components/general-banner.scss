@@ -3,6 +3,7 @@
   align-items: center;
   justify-content: space-between;
   border-radius: 20px;
+  margin: 5rem;
   
 }
 
@@ -12,9 +13,10 @@
   width: 40%;
 
   h1 {
-    font-size: 50px;
+    font-size: 40px;
+    font-weight: bold;
     margin-bottom: 20px;
-    width: 80%;
+    width: 90%;
   }
 
   p {
@@ -24,14 +26,15 @@
   }
 
   button {
-    padding: 10px 20px;
+    font-size: 16px;
+    padding: 15px 20px;
     background-color: #fff;
     color: #000;
     border: none;
-    border-radius: 5px;
+    border-radius: 10px;
     cursor: pointer;
     transition: background-color 0.3s ease;
-    width: 30%;
+    width: 40%;
   }
 
 }
