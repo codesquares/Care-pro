@@ -12,3 +12,14 @@
 .main-title {
   font-family: PoppinsBold;
 }
+.withpadding {
+  padding: 5rem;
+}
+
+/* for mobile view */
+@media (max-width: 768px) {
+  .withpadding {
+    padding: 2rem;
+  }
+}
+

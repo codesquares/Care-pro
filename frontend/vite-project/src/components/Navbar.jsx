@@ -43,13 +43,13 @@ const Navbar = () => {
 
             <ul ref={menuRef} className={`navbar-links ${isMenuOpen ? 'active' : ''}`}>
                 <li>
-                    <Link to="/our-process" onClick={handleLinkClick}>
-                        Our Process
+                    <Link to="/book-caregiver" onClick={handleLinkClick}>
+                        Hire Caregiver
                     </Link>
                 </li>
                 <li>
-                    <Link to="/plans" onClick={handleLinkClick}>
-                        Plans
+                    <Link to="/become-caregiver" onClick={handleLinkClick}>
+                        Become a caregiver
                     </Link>
                 </li>
                 <li>
@@ -66,7 +66,7 @@ const Navbar = () => {
 
             <div className="navbar-cta">
                 <Link to="/book-caregiver" className="btn-primary">
-                    Book Caregiver <span className="calendar-icon"><img src={arrow} alt="arrow-right" /></span>
+                    Join the waitlist <span className="calendar-icon"><img src={arrow} alt="arrow-right" /></span>
                 </Link>
             </div>
         </nav>

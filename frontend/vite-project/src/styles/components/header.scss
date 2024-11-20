@@ -50,15 +50,19 @@
       transition: background-color 0.3s ease, transform 0.3s ease;
     }
 
-    .btn-main {
-      background-color: #EFB214;
-      color: #ffffff;
-
-      &:hover {
-        background-color: #d8a813;
-        transform: scale(1.05);
+      .btn-main {
+        margin-top: 30px;
+        background-color: var(--primary-color-yellow);
+        color: var(--primary-color-white);
+        border: 1px solid #ccc;
+  
+        &:hover {
+          background-color: #f5f5f5;
+          color: #000;
+          border-color: #999;
+          transform: scale(1.05);
+        }
       }
-    }
 
     .btn-secondary {
       margin-top: 30px;
@@ -67,7 +71,8 @@
       border: 1px solid #ccc;
 
       &:hover {
-        background-color: #f5f5f5;
+        background-color: var(--primary-color-yellow);
+        color: var(--primary-color-white);
         border-color: #999;
         transform: scale(1.05);
       }
@@ -114,7 +119,8 @@
 
       .btn-main, .btn-secondary {
         width: 100%; /* Full-width buttons on mobile */
-        padding: 12px; /* Adjust padding for mobile */
+        padding: 12px;
+        text-align: center; /* Adjust padding for mobile */
       }
     }
 

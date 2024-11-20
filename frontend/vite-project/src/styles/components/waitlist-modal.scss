@@ -1,0 +1,157 @@
+.waitlist-modal {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100vw;
+    height: 100vh;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    z-index: 1000000000;
+  }
+  
+  .waitlist-modal__overlay {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: rgba(0, 0, 0, 0.5);
+  }
+  
+  .waitlist-modal__content {
+    position: relative;
+    background: #fff;
+    border-radius: 12px;
+    padding: 2rem;
+    width: 90%;
+    max-width: 600px;
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+    text-align: center;
+  }
+  
+  .waitlist-modal__close {
+    position: absolute;
+    top: 1rem;
+    right: 1rem;
+    background: none;
+    border: none;
+    font-size: 1.5rem;
+    cursor: pointer;
+  }
+  
+  .waitlist-modal__title {
+    font-size: 1.5rem;
+    font-weight: bold;
+    margin-bottom: 0.5rem;
+  }
+  
+  .waitlist-modal__subtitle {
+    font-size: 1rem;
+    margin-bottom: 1.5rem;
+    color: #666;
+  }
+  
+  .waitlist-modal__form {
+    display: flex;
+    flex-direction: column;
+    gap: 1rem;
+  }
+  
+  .waitlist-modal__form-field {
+    text-align: left;
+    margin-bottom: 1.5rem; /* Add space between form fields */
+  }
+  
+  .waitlist-modal__label {
+    display: block;
+    font-size: 1rem;
+    margin-bottom: 0.5rem;
+    font-weight: 600; /* Make labels bold */
+    color: #444;
+    text-align: start; /* Darker shade for better contrast */
+  }
+  
+  .waitlist-modal__form-field-input {
+    width: 100%;
+    padding: 0.9rem; /* Slightly increase padding for better spacing */
+    border: 1px solid #ccc;
+    border-radius: 8px;
+    font-size: 1rem;
+    color: #333; /* Text color for better readability */
+    background-color: #f9f9f9; /* Light gray background for inputs */
+    transition: border-color 0.3s, background-color 0.3s; /* Smooth transitions */
+  }
+  
+  .waitlist-modal__form-field-input:focus {
+    outline: none;
+    border-color: #007bff; /* Highlight border on focus */
+    background-color: #fff; /* Change background color on focus */
+    box-shadow: 0 0 4px rgba(0, 123, 255, 0.3); /* Subtle glow */
+  }
+  
+  .waitlist-modal__form-field input::placeholder {
+    color: #aaa; /* Lighter text for placeholder */
+    font-style: italic; /* Italicize placeholder for differentiation */
+  }
+  
+  
+  .waitlist-modal__options {
+    display: flex;
+    gap: 1rem;
+    justify-content: space-between;
+  }
+  
+  .waitlist-modal__options label {
+    font-size: 0.9rem;
+    display: flex;
+    align-items: center;
+    color: #666;
+  }
+  
+  .waitlist-modal__options input {
+    margin-right: 0.5rem;
+  }
+  
+  .waitlist-modal__submit {
+    background: #000;
+    color: #fff;
+    padding: 0.75rem;
+    font-size: 1rem;
+    border: none;
+    border-radius: 8px;
+    cursor: pointer;
+    transition: background 0.3s;
+  }
+  
+  .waitlist-modal__submit:hover {
+    background: #333;
+  }
+
+  /* Add this to your SCSS for the spinner */
+.waitlist-modal__submit.loading {
+    position: relative;
+    padding-left: 30px;
+    
+  }
+  
+  .waitlist-modal__submit.loading:before {
+    content: '';
+    position: absolute;
+    left: 20px;
+    top: 50%;
+    width: 20px;
+    height: 20px;
+    border: 3px solid #fff;
+    border-top: 3px solid transparent;
+    border-radius: 50%;
+    animation: spin 1s linear infinite;
+    margin-top: -15px;
+  }
+  
+  @keyframes spin {
+    0% { transform: rotate(0deg); }
+    100% { transform: rotate(360deg); }
+  }
+  
+  

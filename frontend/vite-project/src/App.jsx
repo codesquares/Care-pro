@@ -1,4 +1,5 @@
-import React from 'react';
+import  { useEffect } from 'react';
+import { useLocation } from 'react-router-dom';
 import './App.css'
 import { BrowserRouter as Router, Route, Routes } from 'react-router-dom';
 import Navbar from './components/Navbar';
@@ -10,12 +11,27 @@ import OurProcess from './pages/OurProcess';
 import Plans from './pages/Plans';
 import BookCaregiver from './pages/BookCaregiver';
 import Home from './pages/Home';
+import BecomeCaregiver from './pages/BecomeCaregiver';
+import LoginPage from './main-app/page/LoginPage';
+import RegisterPage from './main-app/page/RegisterPage';
+import { ToastContainer, toast } from 'react-toastify';
+import 'react-toastify/dist/ReactToastify.css'; 
+
+
+function ScrollToTop() {
+    const location = useLocation();
+    useEffect(() => {
+        window.scrollTo(0, 0);
+    }, [location]);
+    return null;
+}
 
 function App() {
     return (
         <Router>
             <div className="App">
                 <Navbar />
+                <ScrollToTop />
                 <Routes>
                     {/* Update to use 'Routes' and 'Route' components */}
                     <Route path="/" element={<Home />} />
@@ -25,9 +41,23 @@ function App() {
                     <Route path="/our-process" element={<OurProcess />} />
                     <Route path="/plans" element={<Plans />} />
                     <Route path="/book-caregiver" element={<BookCaregiver />} />
+                    <Route path="/become-caregiver" element={<BecomeCaregiver/>} />
+                    <Route path = "/login" element={<LoginPage />} />
+                    <Route path = "Register" element={<RegisterPage />} />
                     {/* Add other routes as needed */}
                 </Routes>
                 <Footer/>
+                <ToastContainer 
+                position="bottom-right"
+                autoClose={5000}
+                hideProgressBar={false}
+                newestOnTop={false}
+                closeOnClick
+                rtl={false}
+                pauseOnFocusLoss
+                draggable
+                pauseOnHover
+                />
             </div>
         </Router>
     );

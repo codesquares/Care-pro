@@ -1,0 +1,134 @@
+/* Default styles for desktop */
+.banner {
+    display: flex;
+    padding-top: 100px;
+    justify-content: space-between;
+    background-color: #f0f0f0;
+    align-items: center;
+}
+
+.content {
+    padding: 20px;
+    margin-left: 2rem;
+    width: 50%;
+}
+
+.content h1 {
+    font-size: 50px;
+    margin-bottom: 30px;
+    width: 65%;
+    word-wrap: break-word;
+}
+
+.content p {
+    font-size: 23px;
+    margin-bottom: 40px;
+}
+
+.hire-button {
+    padding: 20px 20px;
+    background-color: #fff;
+    color: #000;
+    border: none;
+    border-radius: 10px;
+    cursor: pointer;
+    font-size: 20px;
+    transition: background-color 0.3s ease;
+}
+
+.image-content {
+    width: 40%;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+}
+
+.image-content img {
+    width: 100%;
+    height: 50%;
+    border-radius: 50% 0 0 50%;
+    object-fit: cover;
+}
+
+/* Tablet Styles (max-width: 768px) */
+@media (max-width: 768px) {
+    .banner {
+        flex-direction: column;
+        align-items: center; /* Center align items */
+    }
+
+    .content {
+        width: 100%;
+        margin-left: 0;
+        padding: 15px;
+        text-align: center; /* Center-align text for better readability */
+    }
+
+    .content h1 {
+        font-size: 40px; /* Adjusted font size */
+        width: 100%;
+        word-wrap: break-word;
+    }
+
+    .content p {
+        font-size: 18px; /* Adjusted font size */
+    }
+
+    .hire-button {
+        font-size: 16px;
+        padding: 12px 20px; /* Slightly larger padding */
+        width: 70%; /* Increase button width */
+    }
+
+    .image-content {
+        width: 100%;
+        margin-top: 20px;
+    }
+
+    .image-content img {
+        height: auto; /* Maintain aspect ratio */
+        width: 80%; /* Reduce image size for better layout */
+    }
+}
+
+/* Mobile Styles (max-width: 480px) */
+@media (max-width: 480px) {
+    .banner {
+        flex-direction: column;
+        align-items: center; /* Center align items */
+        padding: 4rem 10px 20px 10px; /* Add padding for mobile */
+    }
+
+    .content {
+        width: 100%;
+        padding: 15px;
+        text-align: center; /* Center-align text */
+    }
+
+    .content h1 {
+        font-size: 30px; /* Reduced font size for smaller screens */
+        width: 100%;
+        word-wrap: break-word;
+    }
+
+    .content p {
+        font-size: 14px; /* Reduced font size for smaller screens */
+    }
+
+    .hire-button {
+        font-size: 14px;
+        padding: 10px 15px; /* Add padding for better touch interaction */
+        width: 90%; /* Make button width larger */
+    }
+
+    .image-content {
+        width: 100%;
+        margin-top: 15px;
+    }
+
+    .image-content img {
+        height: auto; /* Maintain aspect ratio */
+        width: 90%; /* Further reduce image size */
+        border-radius: 20px; /* Adjust border radius for smaller screens */
+    }
+}

@@ -10,6 +10,21 @@
     padding: 4rem 1.5rem; // Reduce padding for mobile
   }
 
+  .hire-button {
+    padding: 0.75rem 1.5rem;
+    background-color: #2e4f6b;
+    color: #fff;
+    border: none;
+    border-radius: 5px;
+    cursor: pointer;
+    transition: background-color 0.3s ease;
+    width: 40%;
+
+    @media (max-width: 768px) {
+      width: 100%; // Reduce font size for mobile
+    }
+  }
+
   .head-section {
     text-align: center;
     margin-bottom: 2rem;
