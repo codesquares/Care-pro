@@ -4,7 +4,7 @@
   justify-content: space-between;
   border-radius: 20px;
   margin: 5rem;
-  
+  flex-wrap: wrap; /* Allow items to wrap for smaller screens */
 }
 
 .general-banner-content {
@@ -36,7 +36,6 @@
     transition: background-color 0.3s ease;
     width: 40%;
   }
-
 }
 
 .image-content {
@@ -54,8 +53,69 @@
   object-fit: cover;
 }
 
+/* Responsive Styles */
+@media (max-width: 768px) {
+  .general-banner {
+    flex-direction: column; /* Stack items vertically */
+    align-items: center; /* Center items vertically */
+    justify-content: center; /* Center items horizontally */
+    margin: 0.5rem; /* Reduce margin for smaller screens */
+    padding: 20px 0;
+  }
 
+  .general-banner-content {
+    width: 100%; /* Take full width on smaller screens */
+    padding: 20px;
+    text-align: center; /* Center-align the text */
 
+    h1 {
+      font-size: 20px; /* Adjust font size */
+      width: 100%;
+      word-wrap: break-word;
+    }
 
+    p {
+      font-size: 16px;
+      width: 100%;
+    }
 
+    button {
+      font-size: 14px;
+      width: 80%; /* Make the button larger */
+    }
+  }
 
+  .image-content {
+    width: 90%; /* Full width for the image section */
+    margin-top: 20px;
+  }
+
+  .image-content img {
+    height: auto; /* Maintain aspect ratio */
+    width: 80%; /* Reduce image size */
+    border-radius: 20px; /* Adjust border radius */
+  }
+}
+
+@media (max-width: 480px) {
+  .general-banner-content {
+    padding: 10px;
+
+    h1 {
+      font-size: 25px; /* Smaller font size for very small screens */
+    }
+
+    p {
+      font-size: 14px;
+    }
+
+    button {
+      font-size: 12px;
+      width: 100%; /* Make the button fill the container */
+    }
+  }
+
+  .image-content img {
+    width: 100%; /* Further reduce image size */
+  }
+}

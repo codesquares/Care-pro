@@ -12,6 +12,8 @@ import Plans from './pages/Plans';
 import BookCaregiver from './pages/BookCaregiver';
 import Home from './pages/Home';
 import BecomeCaregiver from './pages/BecomeCaregiver';
+import LoginPage from './main-app/page/LoginPage';
+import RegisterPage from './main-app/page/RegisterPage';
 import { ToastContainer, toast } from 'react-toastify';
 import 'react-toastify/dist/ReactToastify.css'; 
 
@@ -40,6 +42,8 @@ function App() {
                     <Route path="/plans" element={<Plans />} />
                     <Route path="/book-caregiver" element={<BookCaregiver />} />
                     <Route path="/become-caregiver" element={<BecomeCaregiver/>} />
+                    <Route path = "/login" element={<LoginPage />} />
+                    <Route path = "Register" element={<RegisterPage />} />
                     {/* Add other routes as needed */}
                 </Routes>
                 <Footer/>

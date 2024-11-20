@@ -1,3 +1,4 @@
+import { useNavigate } from "react-router-dom";
 import Header from "../components/LandingPage/Header";
 import BrandList from "../components/LandingPage/BrandList";
 import CaregiverProcess from "../components/LandingPage/CaregiverProcess";
@@ -12,6 +13,14 @@ import genralImg from "../assets/nurseAndWoman.png";
 import nurse from "../assets/nurse.png";
 
 const Home = () => {
+  const navigate = useNavigate();
+  const handleButtonClick1 = () => {
+    navigate('/book-caregiver');
+  };
+
+  const handleButtonClick2 = () => {
+    navigate('/become-caregiver');
+  };
   return (
 <>
 <Header/>
@@ -22,7 +31,7 @@ const Home = () => {
   description="As a Carepro caregiver, you have the opportunity to make an incredible difference the minute you walk through the door, helping your clients live a happier life in their own home."
   buttonText="Hire a Caregiver"
   imageUrl={genralImg}
-  onButtonClick={() => console.log('Button clicked')}
+  onButtonClick={handleButtonClick1}
   backgroundColor="#373732"
 />
 </div>
@@ -33,7 +42,7 @@ const Home = () => {
   description="As a Carepro caregiver, you have the opportunity to make an incredible difference the minute you walk through the door, helping your clients live a happier life in their own home."
   buttonText="Become a Caregiver"
   imageUrl={nurse}
-  onButtonClick={() => console.log('Button clicked')}
+  onButtonClick={handleButtonClick2}
   backgroundColor="#015476"
 />
 </div>
