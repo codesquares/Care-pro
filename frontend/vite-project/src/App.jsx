@@ -42,9 +42,9 @@ function App() {
                     <Route path="/plans" element={<Plans />} />
                     <Route path="/book-caregiver" element={<BookCaregiver />} />
                     <Route path="/become-caregiver" element={<BecomeCaregiver/>} />
-                    {/* <Route path = "/login" element={<LoginPage />} />
-                    <Route path = "Register" element={<RegisterPage />} /> */}
-                    {/* Add other routes as needed */}
+                    <Route path = "/login" element={<LoginPage />} />
+                    <Route path = "Register" element={<RegisterPage />} /> 
+                  
                 </Routes>
                 <Footer/>
                 <ToastContainer 
