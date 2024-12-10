@@ -1,3 +1,4 @@
+using Application.Interfaces;
 using Application.Interfaces.Authentication;
 using Application.Interfaces.Content;
 using Application.Interfaces.Email;
@@ -21,6 +22,8 @@ var builder = WebApplication.CreateBuilder(args);
 builder.Services.AddDbContext<CareProDbContext>(options =>
 {
     options.UseMongoDB("mongodb://localhost:27017", "Care-Pro_DB");
+    //options.UseMongoDB("mongodb+srv://codesquareltd:fqWU47mw0Coyfp5n@cluster0.c9g7a.mongodb.net/?retryWrites=true&w=majority&appName=Cluster0", "Care-pro_db");
+    //options.UseMongoDB("mongodb+srv://codesquareltd:fqWU47mw0Coyfp5n@cluster0.c9g7a.mongodb.net/Care-pro_db?retryWrites=true&w=majority", "Care-pro_db");
 });
 
 /// Configure JWT
@@ -48,6 +51,8 @@ builder.Services.AddScoped<IEmailService, EmailService>();
 builder.Services.AddScoped<IAuthService, AuthService>();
 builder.Services.AddScoped<ICareGiverService, CareGiverService>();
 builder.Services.AddScoped<IClientService, ClientService>();
+builder.Services.AddScoped<IServiceServices, ServiceServices>();
+
 builder.Services.AddScoped<ITokenHandler, Infrastructure.Content.Services.Authentication.TokenHandler>();
 
 
@@ -77,18 +82,6 @@ builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
 
 
 
-
-//Handle CORS
-builder.Services.AddCors(options =>
-{
-    options.AddPolicy("default", builder =>
-    {
-        builder.WithOrigins("https://localhost:3000", "http://localhost:3000")
-               .AllowAnyMethod()
-               .AllowAnyHeader()
-               .AllowCredentials();
-    });
-});
 
 //Handle CORS
 builder.Services.AddCors(options =>
