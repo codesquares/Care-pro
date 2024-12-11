@@ -71,7 +71,7 @@ namespace Infrastructure.Content.Services
             return serviceDTO;
         }
 
-        public async Task<IEnumerable<ServiceDTO>> GetAllServicesAsync(string caregiverId)
+        public async Task<IEnumerable<ServiceDTO>> GetAllCaregiverServicesAsync(string caregiverId)
         {
             var services = await careProDbContext.Services
                 .Where(x => x.CaregiverId == caregiverId)
@@ -92,6 +92,35 @@ namespace Infrastructure.Content.Services
                     Location = service.Location,
                     ServiceCategory = service.ServiceCategory,
                     CaregiverId= service.CaregiverId,
+                    //Image = service.Image,
+                };
+                serviceDTOs.Add(serviceDTO);
+            }
+
+            return serviceDTOs;
+        }
+
+        public async Task<IEnumerable<ServiceDTO>> GetAllServicesAsync()
+        {
+            var services = await careProDbContext.Services
+               // .Where(x => x.CaregiverId == caregiverId)
+                .OrderBy(x => x.Pricing)
+                .ToListAsync();
+
+            var serviceDTOs = new List<ServiceDTO>();
+
+            foreach (var service in services)
+            {
+                var serviceDTO = new ServiceDTO()
+                {
+                    Id = service.Id.ToString(),
+                    Title = service.Title,
+                    Description = service.Description,
+                    Pricing = service.Pricing,
+                    ServiceWorkItems = service.ServiceWorkItems,
+                    Location = service.Location,
+                    ServiceCategory = service.ServiceCategory,
+                    CaregiverId = service.CaregiverId,
                     //Image = service.Image,
                 };
                 serviceDTOs.Add(serviceDTO);

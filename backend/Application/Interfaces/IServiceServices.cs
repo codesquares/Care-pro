@@ -11,7 +11,9 @@ namespace Application.Interfaces
     {
         Task<ServiceDTO> CreateServiceAsync(AddServiceRequest addServiceRequest);
 
-        Task<IEnumerable<ServiceDTO>> GetAllServicesAsync(string caregiverId);
+        Task<IEnumerable<ServiceDTO>> GetAllCaregiverServicesAsync(string caregiverId);
+
+        Task<IEnumerable<ServiceDTO>> GetAllServicesAsync();
 
         Task<ServiceDTO> GetServiceAsync(string serviceId);
 

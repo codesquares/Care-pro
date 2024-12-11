@@ -57,11 +57,25 @@ namespace CarePro_Api.Controllers.Content
 
         [HttpGet]
        // [Authorize(Roles = "Caregiver, Admin")]
-        public async Task<IActionResult> GetAllServicessAsync(string caregiverId)
+        public async Task<IActionResult> GetAllServicessAsync()
+        {
+            logger.LogInformation($"Retrieving all Services available");
+
+            var services = await serviceServices.GetAllServicesAsync();
+
+            return Ok(services);
+
+        }
+
+
+        [HttpGet]
+        [Route("caregiver/caregiverId")]
+        // [Authorize(Roles = "Caregiver, Admin")]
+        public async Task<IActionResult> GetAllCaregiverServicessAsync(string caregiverId)
         {
             logger.LogInformation($"Retrieving all Services for Caregiver with Id: {caregiverId}");
 
-            var services = await serviceServices.GetAllServicesAsync(caregiverId);
+            var services = await serviceServices.GetAllCaregiverServicesAsync(caregiverId);
 
             return Ok(services);
 
