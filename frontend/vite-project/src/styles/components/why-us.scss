@@ -1,0 +1,58 @@
+.why-us-section {
+  background-color: #f9f9f9;
+  padding: 6rem 0;
+  text-align: center;
+  color: #777;
+
+  h2 {
+    font-size: 2rem; // Responsive font size
+    margin-bottom: 40px;
+  }
+
+  .features {
+    display: flex;
+    justify-content: space-around;
+    flex-wrap: wrap; // Ensure items wrap on smaller screens
+
+    .feature {
+      max-width: 350px;
+      padding: 20px;
+      text-align: center;
+      border: 2px solid #FCCD56; // Added border width
+      border-radius: 20px;
+      background-color: #fff; // Background for feature blocks
+      margin: 15px; // Small margin between features
+
+      img {
+        width: 40px; // Slightly larger image
+        height: 40px;
+        margin-bottom: 15px;
+        background-color: #FFDC7F33;
+        padding: 5px; // Adjust padding
+        border-radius: 50%;
+      }
+
+      h3 {
+        font-size: 1.25rem; // Responsive font size
+        margin-bottom: 10px;
+      }
+
+      p {
+        font-size: 0.875rem; // Responsive font size
+        color: #777;
+        line-height: 1.6;
+      }
+    }
+  }
+
+  @media (max-width: 768px) {
+    .features {
+      flex-direction: column;
+
+      .feature {
+        margin-bottom: 20px; // Adjust margin for mobile
+        max-width: none; // Allow full width on small screens
+      }
+    }
+  }
+}

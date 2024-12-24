@@ -1,35 +1,66 @@
-import { useState } from 'react'
-import reactLogo from './assets/react.svg'
-import viteLogo from '/vite.svg'
+import  { useEffect } from 'react';
+import { useLocation } from 'react-router-dom';
 import './App.css'
+import { BrowserRouter as Router, Route, Routes } from 'react-router-dom';
+import Navbar from './components/Navbar';
+import Footer from './components/Footer';
+import AboutUs from './pages/AboutUs';
+import Blog from './pages/Blog';
+import CareFacts from './pages/CareFacts';
+import OurProcess from './pages/OurProcess';
+import Plans from './pages/Plans';
+import BookCaregiver from './pages/BookCaregiver';
+import Home from './pages/Home';
+import BecomeCaregiver from './pages/BecomeCaregiver';
+import LoginPage from './main-app/page/LoginPage';
+import RegisterPage from './main-app/page/RegisterPage';
+import { ToastContainer, toast } from 'react-toastify';
+import 'react-toastify/dist/ReactToastify.css'; 
 
-function App() {
-  const [count, setCount] = useState(0)
 
-  return (
-    <>
-      <div>
-        <a href="https://vitejs.dev" target="_blank">
-          <img src={viteLogo} className="logo" alt="Vite logo" />
-        </a>
-        <a href="https://react.dev" target="_blank">
-          <img src={reactLogo} className="logo react" alt="React logo" />
-        </a>
-      </div>
-      <h1>Vite + React</h1>
-      <div className="card">
-        <button onClick={() => setCount((count) => count + 1)}>
-          count is {count}
-        </button>
-        <p>
-          Edit <code>src/App.jsx</code> and save to test HMR
-        </p>
-      </div>
-      <p className="read-the-docs">
-        Click on the Vite and React logos to learn more
-      </p>
-    </>
-  )
+function ScrollToTop() {
+    const location = useLocation();
+    useEffect(() => {
+        window.scrollTo(0, 0);
+    }, [location]);
+    return null;
 }
 
-export default App
+function App() {
+    return (
+        <Router>
+            <div className="App">
+                <Navbar />
+                <ScrollToTop />
+                <Routes>
+                    {/* Update to use 'Routes' and 'Route' components */}
+                    <Route path="/" element={<Home />} />
+                    <Route path="/about-us" element={<AboutUs />} />
+                    <Route path="/blog" element={<Blog />} />
+                    <Route path="/care-facts" element={<CareFacts />} />
+                    <Route path="/our-process" element={<OurProcess />} />
+                    <Route path="/plans" element={<Plans />} />
+                    <Route path="/book-caregiver" element={<BookCaregiver />} />
+                    <Route path="/become-caregiver" element={<BecomeCaregiver/>} />
+                    <Route path = "/login" element={<LoginPage />} />
+                    <Route path = "Register" element={<RegisterPage />} /> 
+                  
+                </Routes>
+                <Footer/>
+                <ToastContainer 
+                position="bottom-right"
+                autoClose={5000}
+                hideProgressBar={false}
+                newestOnTop={false}
+                closeOnClick
+                rtl={false}
+                pauseOnFocusLoss
+                draggable
+                pauseOnHover
+                />
+            </div>
+        </Router>
+    );
+}
+
+export default App;
