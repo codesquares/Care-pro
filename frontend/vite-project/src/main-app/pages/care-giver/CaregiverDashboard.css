@@ -1,0 +1,11 @@
+.main-content {
+    display: flex;
+    justify-content: space-evenly;
+    margin: 2%;
+}
+
+.sidebar {
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
+}
