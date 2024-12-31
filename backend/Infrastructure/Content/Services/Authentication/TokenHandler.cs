@@ -1,4 +1,5 @@
-﻿using Application.Interfaces.Authentication;
+﻿using Application.DTOs;
+using Application.Interfaces.Authentication;
 using Domain.Entities;
 using Microsoft.Extensions.Configuration;
 using Microsoft.IdentityModel.Tokens;
@@ -21,14 +22,14 @@ namespace Infrastructure.Content.Services.Authentication
             this.configuration = configuration;
         }
 
-        public Task<string> CreateTokenAsync(AppUser appUser)
+        public Task<string> CreateTokenAsync(AppUserDTO  appUserDTO)
         {
             // Create Claims
             var claims = new List<Claim>();
             //claims.Add(new Claim(ClaimTypes.GivenName, appUser.FirstName));
             //claims.Add(new Claim(ClaimTypes.Surname, appUser.LastName));
-            claims.Add(new Claim(ClaimTypes.Email, appUser.Email));
-            claims.Add(new Claim(ClaimTypes.Role, appUser.Role));
+            claims.Add(new Claim(ClaimTypes.Email, appUserDTO.Email));
+            claims.Add(new Claim(ClaimTypes.Role, appUserDTO.Role));
 
             var key = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(configuration["Jwt:Key"]));
             var credentials = new SigningCredentials(key, SecurityAlgorithms.HmacSha256);

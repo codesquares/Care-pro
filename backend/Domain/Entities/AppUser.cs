@@ -14,7 +14,7 @@ namespace Domain.Entities
         public ObjectId AppUserId { get; set; }    
         
         public string Email { get; set; } = null!;
-
+         
         public string Role { get; set; }
 
         public string Password { get; set; } = null!;

@@ -24,21 +24,46 @@ namespace Infrastructure.Content.Services.Authentication
         }
         
         
-        public async Task<AppUser> AuthenticateUserAsync(LoginRequest loginRequest)
+        public async Task<AppUserDTO> AuthenticateUserAsync(LoginRequest loginRequest)
         {      
             var appUser = await careProDbContext.AppUsers
                 .FirstOrDefaultAsync(x => x.Email.ToLower() == loginRequest.Email.ToLower());
 
            
 
-            if (appUser == null)
-            {                
-                return appUser;
+            if (appUser != null)
+            {
+                //return appUser;
+                var careGiverAppUser = await careProDbContext.CareGivers.FirstOrDefaultAsync(x => x.Id == appUser.AppUserId);
+                var clientAppUser = await careProDbContext.Clients.FirstOrDefaultAsync(x => x.Id == appUser.AppUserId);
+
+                if (careGiverAppUser != null || clientAppUser != null)
+                {
+                    var appUserDetails = new AppUserDTO()
+                    {
+                        AppUserId = appUser.AppUserId.ToString(),
+                        Email = appUser.Email,
+                        FirstName = careGiverAppUser?.FirstName ?? clientAppUser?.FirstName,
+                        MiddleName = careGiverAppUser?.MiddleName ?? clientAppUser?.MiddleName,
+                        LastName = careGiverAppUser?.LastName ?? clientAppUser?.LastName,
+                        // Use PhoneNo from caregiver if available; otherwise, fallback to a default or null
+                        PhoneNo = careGiverAppUser?.PhoneNo ?? clientAppUser?.PhoneNo ?? "Not Provided",
+                        // Use HomeAddress from client if available; otherwise, fallback to a default or null
+                        HomeAddress = clientAppUser?.HomeAddress ?? careGiverAppUser?.HomeAddress ?? "Not Provided",
+
+                        
+                        Role = appUser.Role,
+                        Password = appUser.Password,
+                        CreatedAt = appUser.CreatedAt,
+                    };
+
+                    return appUserDetails;
+                }
             }
 
-
+            
           
-            return appUser;
+            return null;
         }
 
 

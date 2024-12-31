@@ -10,30 +10,30 @@ namespace CarePro_Api.Controllers.Content
 {
     [Route("api/[controller]")]
     [ApiController]
-    public class ServicesController : ControllerBase
+    public class GigsController : ControllerBase
     {
-        private readonly IServiceServices serviceServices;
-        private readonly ILogger<ServicesController> logger;
+        private readonly IGigServices gigServices;
+        private readonly ILogger<GigsController> logger;
 
-        public ServicesController(IServiceServices serviceServices, ILogger<ServicesController> logger)
+        public GigsController(IGigServices gigServices, ILogger<GigsController> logger)
         {
-            this.serviceServices = serviceServices;
+            this.gigServices = gigServices;
             this.logger = logger;
         }
 
         /// ENDPOINT TO CREATE  CLIENT USERS TO THE DATABASE
         [HttpPost]
         // [Authorize(Roles = "Caregiver")]
-        public async Task<IActionResult> AddServiceAsync([FromBody] AddServiceRequest  addServiceRequest)
+        public async Task<IActionResult> AddGigAsync([FromBody] AddGigRequest  addGigRequest)
         {
             try
             {
                 // Pass Domain Object to Repository, to Persisit this
-                var service = await serviceServices.CreateServiceAsync(addServiceRequest);
+                var gig = await gigServices.CreateGigAsync(addGigRequest);
 
 
                 // Send DTO response back to ClientUser
-                return Ok(service);
+                return Ok(gig);
 
             }
             catch (ApplicationException appEx)
@@ -57,13 +57,13 @@ namespace CarePro_Api.Controllers.Content
 
         [HttpGet]
        // [Authorize(Roles = "Caregiver, Admin")]
-        public async Task<IActionResult> GetAllServicessAsync()
+        public async Task<IActionResult> GetAllGigsAsync()
         {
-            logger.LogInformation($"Retrieving all Services available");
+            logger.LogInformation($"Retrieving all Gigs available");
 
-            var services = await serviceServices.GetAllServicesAsync();
+            var gigs = await gigServices.GetAllGigsAsync();
 
-            return Ok(services);
+            return Ok(gigs);
 
         }
 
@@ -71,26 +71,26 @@ namespace CarePro_Api.Controllers.Content
         [HttpGet]
         [Route("caregiver/caregiverId")]
         // [Authorize(Roles = "Caregiver, Admin")]
-        public async Task<IActionResult> GetAllCaregiverServicessAsync(string caregiverId)
+        public async Task<IActionResult> GetAllCaregiverGigsAsync(string caregiverId)
         {
-            logger.LogInformation($"Retrieving all Services for Caregiver with Id: {caregiverId}");
+            logger.LogInformation($"Retrieving all Gigs for Caregiver with Id: {caregiverId}");
 
-            var services = await serviceServices.GetAllCaregiverServicesAsync(caregiverId);
+            var services = await gigServices.GetAllCaregiverGigsAsync(caregiverId);
 
             return Ok(services);
 
         }
 
         [HttpGet]
-        [Route("serviceId")]
+        [Route("gigId")]
        // [Authorize(Roles = "Caregiver, Admin")]
-        public async Task<IActionResult> GetServiceAsync(string serviceId)
+        public async Task<IActionResult> GetGigAsync(string gigId)
         {
-            logger.LogInformation($"Retrieving  Service with Id: {serviceId}");
+            logger.LogInformation($"Retrieving  Service with Id: {gigId}");
 
-            var service = await serviceServices.GetServiceAsync(serviceId);            
+            var gig = await gigServices.GetGigAsync(gigId);            
 
-            return Ok(service);
+            return Ok(gig);
         }
 
     }

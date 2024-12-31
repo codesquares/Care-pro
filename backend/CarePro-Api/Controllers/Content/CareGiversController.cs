@@ -4,6 +4,8 @@ using Infrastructure.Content.Services.Authentication;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.EntityFrameworkCore;
+using System.Security.Authentication;
 
 namespace CarePro_Api.Controllers.Content
 {
@@ -18,39 +20,41 @@ namespace CarePro_Api.Controllers.Content
             this.careGiverService = careGiverService;
         }
 
-        /// ENDPOINT TO CREATE  CARE GIVER USERS TO THE DATABASE
+        /// ENDPOINT TO CREATE  CARE GIVER USERS TO THE DATABASE        
         [HttpPost]
         [Route("AddCaregiverUser")]
-       // [Authorize(Roles = "Caregiver")]
         public async Task<IActionResult> AddCaregiverUserAsync([FromBody] AddCaregiverRequest addCaregiverRequest)
         {
             try
             {
-                // Pass Domain Object to Repository, to Persisit this
+                // Pass Domain Object to Repository to Persist this
                 var careGiverUser = await careGiverService.CreateCaregiverUserAsync(addCaregiverRequest);
-                                
 
                 // Send DTO response back to ClientUser
                 return Ok(careGiverUser);
-
             }
-            catch (ApplicationException appEx)
+            catch (AuthenticationException authEx)
             {
-                // Handle application-specific exceptions
-                return BadRequest(new { ErrorMessage = appEx.Message });
+                // Handle authentication-related exceptions
+                return BadRequest(new { StatusCode = 400, ErrorMessage = authEx.Message });
             }
             catch (HttpRequestException httpEx)
             {
                 // Handle HTTP request-related exceptions
-                return StatusCode(500, new { ErrorMessage = httpEx.Message });
+                return StatusCode(500, new { StatusCode = 500, ErrorMessage = httpEx.Message });
+            }
+            catch (DbUpdateException dbEx)
+            {
+                // Handle database update-related exceptions
+                return StatusCode(500, new { StatusCode = 500, ErrorMessage = dbEx.Message });
             }
             catch (Exception ex)
             {
                 // Handle other exceptions
-                return StatusCode(500, new { ex /*ErrorMessage = "An error occurred on the server."*/ });
+                return StatusCode(500, new { StatusCode = 500, ErrorMessage = ex.Message });
             }
-
         }
+
 
     }
 }
