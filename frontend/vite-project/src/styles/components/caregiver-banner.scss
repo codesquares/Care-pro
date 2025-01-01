@@ -1,0 +1,97 @@
+.container {
+  padding: 10rem;
+  background-color: #ffffff;
+}
+
+.caregiver-banner {
+  display: flex;
+  flex-direction: column;
+  background-image: url('../../assets/backImg.png');
+  background-repeat: no-repeat;
+  background-size: cover;
+  background-color: #015476;
+  padding: 40px;
+  border-radius: 20px;
+  color: #ffffff;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+
+  h2 {
+    font-size: 2rem; /* Updated for consistency */
+    margin-bottom: 20px;
+  }
+
+  p {
+    font-size: 1.25rem; /* Updated for consistency */
+    margin-bottom: 20px;
+    padding: 20px; /* Adjusted for better spacing */
+    background-color: #E2EEFA99;
+    border-radius: 10px;
+    text-align: center; /* Center text for better readability */
+  }
+
+  .btn-primary {
+    background-color: #fff;
+    color: #06283D;
+    border: none;
+    padding: 15px 20px;
+    border-radius: 5px;
+    font-size: 1rem; /* Updated for consistency */
+    cursor: pointer;
+    transition: background-color 0.3s ease;
+
+    &:hover {
+      background-color: #f0f0f0; /* Light hover effect */
+    }
+  }
+}
+
+@media (max-width: 768px) {
+  .container {
+    padding: 5rem; /* Reduced padding for tablets */
+  }
+
+  .caregiver-banner {
+    padding: 30px;
+    
+    h2 {
+      font-size: 1.5rem;
+    }
+
+    p {
+      font-size: 1rem;
+      padding: 15px; /* Reduced padding for tablets */
+    }
+
+    .btn-primary {
+      padding: 12px 15px;
+      font-size: 0.9rem;
+    }
+  }
+}
+
+@media (max-width: 480px) {
+  .container {
+    padding: 2rem; /* Further reduced padding for mobile */
+  }
+
+  .caregiver-banner {
+    padding: 20px;
+    
+    h2 {
+      font-size: 1.25rem;
+    }
+
+    p {
+      font-size: 0.9rem;
+      padding: 10px; /* Further reduced padding for mobile */
+    }
+
+    .btn-primary {
+      padding: 10px 12px;
+      font-size: 0.8rem;
+    }
+  }
+}
