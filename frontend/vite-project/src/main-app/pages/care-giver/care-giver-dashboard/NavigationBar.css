@@ -63,6 +63,7 @@
 
   .profile-avatar span {
     padding-left: 35px;
+    cursor: pointer;
   }
   
   .profile-avatar img {
