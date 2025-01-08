@@ -12,5 +12,11 @@ namespace Application.Interfaces.Content
     {
         Task<CaregiverDTO> CreateCaregiverUserAsync(AddCaregiverRequest addCaregiverRequest);
 
+        Task<IEnumerable<CaregiverResponse>> GetAllCaregiverUserAsync();
+        Task<CaregiverResponse> GetCaregiverUserAsync(string caregiverId);
+
+        Task<string> UpdateCaregiverInfornmationAsync(string caregiverId, UpdateCaregiverAdditionalInfoRequest updateCaregiverAdditionalInfoRequest);
+
+
     }
 }
