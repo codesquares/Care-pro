@@ -19,7 +19,7 @@ namespace Domain.Entities
         public string PackageDetails { get; set; }
         public string DeliveryTime { get; set; }
         public int Price { get; set; }
-        public byte[] Image1 { get; set; }
+        public byte[]? Image1 { get; set; }
         public byte[]? Image2 { get; set; }
         public byte[]? Image3 { get; set; }
         public string? VideoURL { get; set; }
