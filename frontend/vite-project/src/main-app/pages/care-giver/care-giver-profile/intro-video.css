@@ -1,0 +1,22 @@
+.intro-video {
+    text-align: start;
+    padding: 30px;
+    background: #fff;
+    border-top: 1px solid #f0f0f0;
+  }
+  
+  .intro-video h3 {
+    font-size: 1rem;
+    margin-bottom: 10px;
+  }
+  
+  .intro-video button {
+    padding: 8px 12px;
+    width: 100%;
+    border: none;
+    border-radius: 4px;
+    background: #373732;
+    color: #fff;
+    cursor: pointer;
+  }
+  

@@ -1,4 +1,5 @@
 import React from "react";
+import "./intro-video.css";
 
 const IntroVideo = () => {
   return (

@@ -49,7 +49,10 @@ namespace CarePro_Api.Controllers.Authentication
                     // Return both token and clientUserDomain
                     var response = new LoginResponse
                     {
-                        Id = careProUserDomain.Id.ToString(),
+                        Id = careProUserDomain.AppUserId.ToString(),
+                        FirstName = careProUserDomain.FirstName,
+                        MiddleName = careProUserDomain.LastName,
+                        LastName = careProUserDomain.LastName,
                         Email = loginRequest.Email,
                         Role = careProUserDomain.Role,
                         Token = token,

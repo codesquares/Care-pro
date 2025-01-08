@@ -1,7 +1,7 @@
 .user-profile {
     display: flex;
     gap: 20px;
-    padding: 20px;
+    padding:2rem 10rem 2rem;
     color: black;
   }
   

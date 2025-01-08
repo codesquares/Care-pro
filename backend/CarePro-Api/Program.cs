@@ -51,7 +51,7 @@ builder.Services.AddScoped<IEmailService, EmailService>();
 builder.Services.AddScoped<IAuthService, AuthService>();
 builder.Services.AddScoped<ICareGiverService, CareGiverService>();
 builder.Services.AddScoped<IClientService, ClientService>();
-builder.Services.AddScoped<IServiceServices, ServiceServices>();
+builder.Services.AddScoped<IGigServices, GigServices>();
 
 builder.Services.AddScoped<ITokenHandler, Infrastructure.Content.Services.Authentication.TokenHandler>();
 
@@ -88,7 +88,7 @@ builder.Services.AddCors(options =>
 {
     options.AddPolicy("default", builder =>
     {
-        builder.WithOrigins("https://localhost:3000", "http://localhost:3000")
+        builder.WithOrigins("https://localhost:5173", "http://localhost:5173")
                .AllowAnyMethod()
                .AllowAnyHeader()
                .AllowCredentials();

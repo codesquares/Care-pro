@@ -11,7 +11,7 @@ namespace Application.Interfaces.Authentication
 {
     public interface IAuthService
     {
-        Task<AppUser> AuthenticateUserAsync(LoginRequest loginRequest);
+        Task<AppUserDTO> AuthenticateUserAsync(LoginRequest loginRequest);
 
     }
 }

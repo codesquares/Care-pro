@@ -18,6 +18,8 @@ namespace Application.DTOs
 
         public string Email { get; set; } = null!;
 
+        public string PhoneNo { get; set; }
+
         public string Role { get; set; }
 
         public string Password { get; set; } = null!;
@@ -40,6 +42,8 @@ namespace Application.DTOs
 
         public string Email { get; set; } = null!;
 
+        public string PhoneNo { get; set; }
+
         public string Password { get; set; } = null!;
 
        
@@ -56,6 +60,9 @@ namespace Application.DTOs
         public string LastName { get; set; } = null!;
 
         public string Email { get; set; } = null!;
+
+        public string PhoneNo { get; set; } = null!;
+
 
         public string Role { get; set; }
 

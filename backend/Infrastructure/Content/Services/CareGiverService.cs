@@ -41,6 +41,7 @@ namespace Infrastructure.Content.Services
                 MiddleName = addCaregiverRequest.MiddleName,
                 LastName = addCaregiverRequest.LastName,
                 Email = addCaregiverRequest.Email.ToLower(),
+                PhoneNo = addCaregiverRequest.PhoneNo,
                 Password = hashedPassword,
 
                 // Assign new ID
@@ -78,6 +79,7 @@ namespace Infrastructure.Content.Services
                 LastName = caregiver.LastName,
                 MiddleName = caregiver.MiddleName,
                 Email = caregiver.Email,
+                PhoneNo = caregiver.PhoneNo,
                 Role = caregiver.Role,
                 CreatedAt = caregiver.CreatedAt,
             };

@@ -55,7 +55,7 @@ const NavigationBar = () => {
         >
           View Orders
         </button>
-        <div className="earnings">
+        <div className="earnings"  onClick={() => navigate(`${basePath}/earnings`)}>
           <span>Earned:</span>
           <strong>₦300,000.00</strong>
         </div>

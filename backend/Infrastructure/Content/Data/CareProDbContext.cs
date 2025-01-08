@@ -30,7 +30,7 @@ namespace Infrastructure.Content.Data
             modelBuilder.Entity<Caregiver>().ToCollection("CareGivers");
             modelBuilder.Entity<AppUser>().ToCollection("AppUsers");
             modelBuilder.Entity<Client>().ToCollection("Clients");
-            modelBuilder.Entity<Service>().ToCollection("Services");
+            modelBuilder.Entity<Gig>().ToCollection("Gigs");
             
         }
 
@@ -38,6 +38,6 @@ namespace Infrastructure.Content.Data
         public DbSet<Caregiver> CareGivers { get; set; }
         public DbSet<AppUser> AppUsers { get; set; }
         public DbSet<Client> Clients { get; set; }
-        public DbSet<Service> Services { get; set; }
+        public DbSet<Gig> Gigs { get; set; }
     }
 }
