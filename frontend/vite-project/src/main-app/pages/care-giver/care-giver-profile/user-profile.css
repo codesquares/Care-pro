@@ -1,0 +1,28 @@
+.user-profile {
+    display: flex;
+    gap: 20px;
+    padding:2rem 10rem 2rem;
+    color: black;
+  }
+  
+  .profile-left,
+  .profile-right {
+    padding: 20px;
+    background-color: #f9f9f9;
+    border-radius: 8px;
+  }
+  
+  .profile-left {
+    flex: 1; /* Occupy more space */
+    display: flex;
+    flex-direction: column;
+    gap: 15px;
+  }
+  
+  .profile-right {
+    flex: 2; /* Occupy less space */
+    display: flex;
+    flex-direction: column;
+    gap: 15px;
+  }
+  

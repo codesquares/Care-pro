@@ -1,15 +1,11 @@
-import React from 'react';
 import { Routes, Route } from 'react-router-dom';
-import Dashboard from './pages/Dashboard';
-import Profile from './pages/Profile';
-import CaregiverDashboard from './pages/care-giver/CaregiverDashboard ';
+import CareGiverRoutes from './pages/care-giver/care-giver-routes';
+
 
 function MainAppRoutes() {
     return (
         <Routes>
-            <Route path='/CareGiverDashboard' element={<CaregiverDashboard />} />
-            <Route path="/" element={<Dashboard />} />
-            <Route path="/profile" element={<Profile />} />
+            <Route path='caregiver/*' element= {<CareGiverRoutes/>} />
         </Routes>
     );
 }
