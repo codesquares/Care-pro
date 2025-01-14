@@ -1,0 +1,220 @@
+*{
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+  
+}
+*::-webkit-scrollbar {
+  display: none; /* For Chrome, Safari, and Edge, hide scrollbar */
+}
+.create-gig-wrapper{
+  display: flex;
+  flex-wrap: wrap;
+  padding-top: 3rem;
+  width: 100%;
+  height: 1080px;
+  flex-direction: column;
+  margin-bottom: 100px;
+  
+}
+
+.gigs-form{
+  display:flex;
+  flex-direction: column;
+
+
+}
+.gigs-form-body{
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  align-items: center;
+  margin-top: 5px;
+  width: 100%;
+  flex-direction: column; 
+}
+.gigs-form-header{
+ 
+ margin-bottom:80px;
+}
+.gigs-header{
+  
+  display:flex;
+  height: 60px;
+  width:100%;
+  justify-content:space-between;
+  flex-wrap: wrap;
+ padding-top:3rem;
+
+  color:black;
+  margin:auto;
+  
+  
+}
+
+.nav-item a{
+  text-decoration: none;
+  font-size: 1.5rem;
+  margin-right: 1rem;
+  color:black;
+  font-size: medium;
+
+}
+.nav-icons{
+  display: flex;
+  justify-content: center;
+  margin:5px;
+  align-items: center;
+}
+.nav-class-icons{
+  display: flex;
+  justify-content: center;
+  margin:5px;
+  justify-content: center;
+  align-items: center;
+  border-radius: 8%;
+  padding: 5px;
+}
+ .icon{
+  color: black;
+  background-color: #f4f4f4;
+}
+.nav-image{
+  display:flex;
+  background-color: white;
+  margin-left:5px;
+}
+.nav-image img{
+  height:30px;
+  width:30px;
+  border-radius: 50%;
+}
+.logo-area{
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  margin-left: 5px;
+  
+}
+.logo-area img{
+  height: 100px;
+  width: 100px;
+  border-radius: 50%;
+  margin-right: 30px;
+}
+.nav-item{
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  margin-left: 5px;
+}
+/* Specific styling for the first page number (with a tick mark) */
+.page-number.complete {
+  background: green; /* Green background for completed step */
+  color: white; /* White tick color */
+  font-size: 20px; /* Slightly larger for the tick */
+  font-weight: bold; /* Make tick mark bold */
+}
+
+/* Styling for the entire page-bar container */
+.page-bar {
+  display: flex; /* Layout pages in a row */
+  gap: 10px; /* Add spacing between pages */
+  align-items: center; /* Center items vertically */
+  padding: 10px; /* Add some padding around the bar */
+  background: white; /* Optional: Background color for the bar */
+  width:80%; /* Set a fixed width for the bar */
+  border-radius: 16;
+  overflow: 'hidden';
+   border: 2px solid #f4f4f4;
+   
+}
+
+/* Styling for individual page containers */
+.page {
+  display: flex; /* Allows number and header to align horizontally */
+  align-items: center; /* Vertically centers the number and header */
+  gap: 8px; /* Space between the number and header */
+}
+
+/* Circle styling for page numbers */
+.page-number {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 50%; /* Makes it a circle */
+  background: rgb(69, 67, 67); /* Circle background color */
+  color: white; /* Text color */
+  width: 40px; /* Fixed width for the circle */
+  height: 40px; /* Fixed height for the circle */
+  font-size: 16px; /* Font size for the number */
+  font-weight: bold; /* Makes the number bold */
+}
+
+/* Styling for the page headers */
+.page-header {
+  font-size: 16px; /* Adjust font size */
+  color: #333; /* Text color */
+}
+.page-bar > .page:last-child {
+  margin-left: auto;
+}
+.btn{
+  color:white;
+}
+.gigs-card{
+  margin-top:3rem;
+  background:white;
+  width:80%;
+  padding:100px;
+  border-radius: 16;
+  box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+  border:2px solid #f4f4f4;
+  
+}
+.gigs-card-section{
+  display: flex;
+  flex-wrap: wrap;
+  gap:100px;
+  justify-content: space-between; /* Ensures details and input are spaced apart */
+  align-items: center; /* Aligns both items vertically */
+  
+}
+.gigs-card-details {
+  display: flex;
+  flex-direction: column;
+  color: black;
+  width: 40%; /* Fixed width for the details */
+  gap: 5px;
+}
+.gigs-card-title-instructions{
+  font-size: smaller;
+  font-weight:100;
+  color:rgb(196, 188, 188);
+  
+}
+
+.gigs-card-category-instructions{
+  font-size: smaller;
+  font-weight:100;
+  color:rgb(196, 188, 188);
+}
+
+.gigs-card-search-tags-instructions{
+  font-size: smaller;
+  font-weight:100;
+  color:rgb(196, 188, 188);
+}
+.gigs-card-input {
+   margin-right: auto; /* Pushes the input to the flex-end of the section */
+  display: flex; /* Ensures the input content aligns properly */
+  justify-content: flex-end; /* Aligns content within the input container */
+  // width: 50%; /* Adjust width as per your requirement */
+}
+.gigs-form-buttons{
+  display: flex;
+  width:80%;
+  justify-content: flex-end;
+  margin-top: 20px;
+  gap:5px;
+}

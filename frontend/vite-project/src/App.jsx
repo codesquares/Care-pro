@@ -14,6 +14,7 @@ import Home from './pages/Home';
 import BecomeCaregiver from './pages/BecomeCaregiver';
 import LoginPage from './main-app/page/LoginPage';
 import RegisterPage from './main-app/page/RegisterPage';
+import CreateGig from './main-app/page/CreateGig';
 import { ToastContainer, toast } from 'react-toastify';
 import 'react-toastify/dist/ReactToastify.css'; 
 
@@ -44,6 +45,7 @@ function App() {
                     <Route path="/become-caregiver" element={<BecomeCaregiver/>} />
                     <Route path = "/login" element={<LoginPage />} />
                     <Route path = "Register" element={<RegisterPage />} /> 
+                    <Route path = "/create-gig" element={<CreateGig />} />
                   
                 </Routes>
                 <Footer/>
