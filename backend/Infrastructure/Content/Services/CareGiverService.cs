@@ -86,5 +86,103 @@ namespace Infrastructure.Content.Services
 
             return careGiverUserDTO;
         }
+
+        public async Task<IEnumerable<CaregiverResponse>> GetAllCaregiverUserAsync()
+        {
+            var caregivers = await careProDbContext.CareGivers
+                .Where(x => x.Status == true && x.IsDeleted == false)
+                .OrderBy(x => x.CreatedAt)
+                .ToListAsync();
+
+            var caregiversDTOs = new List<CaregiverResponse>();
+
+            foreach (var caregiver in caregivers)
+            {
+                var caregiverDTO = new CaregiverResponse()
+                {
+                    Id = caregiver.Id.ToString(),
+                    FirstName = caregiver.FirstName,
+                    MiddleName = caregiver.MiddleName,
+                    LastName = caregiver.LastName,
+                    Email = caregiver.Email,
+                    PhoneNo = caregiver.PhoneNo,
+                    Role = caregiver.Role,
+                    IsDeleted = caregiver.IsDeleted,
+                    Status = caregiver.Status,
+                    HomeAddress = caregiver.HomeAddress,
+                    Introduction = caregiver.Introduction,
+                    Description = caregiver.Description,
+                    Services = caregiver.Services,
+                    Location = caregiver.Location,
+                    //CertificationIDs = caregiver.CertificationIDs,
+                    IntroVideoUrl = caregiver.IntroVideoUrl,
+                    CreatedAt = caregiver.CreatedAt,
+                };
+                caregiversDTOs.Add(caregiverDTO);
+            }
+
+            return caregiversDTOs;
+        }
+
+        public async Task<CaregiverResponse> GetCaregiverUserAsync(string caregiverId)
+        {
+            var caregiver = await careProDbContext.CareGivers.FirstOrDefaultAsync(x => x.Id.ToString() == caregiverId);
+
+            if (caregiver == null)
+            {
+                throw new KeyNotFoundException($"Caregiver with ID '{caregiverId}' not found.");
+            }
+
+            var caregiverDTO = new CaregiverResponse()
+            {
+                Id = caregiver.Id.ToString(),
+                FirstName = caregiver.FirstName,
+                MiddleName = caregiver.MiddleName,
+                LastName = caregiver.LastName,
+                Email = caregiver.Email,
+                PhoneNo = caregiver.PhoneNo,
+                Role = caregiver.Role,
+                IsDeleted = caregiver.IsDeleted,
+                Status = caregiver.Status,
+                HomeAddress = caregiver.HomeAddress,
+                Introduction = caregiver.Introduction,
+                Description = caregiver.Description,
+                Services = caregiver.Services,
+                Location = caregiver.Location,
+                //CertificationIDs = caregiver.CertificationIDs,
+                IntroVideoUrl = caregiver.IntroVideoUrl,
+                CreatedAt = caregiver.CreatedAt,
+            };
+
+            return caregiverDTO;
+        }
+
+        public async Task<string> UpdateCaregiverInfornmationAsync(string caregiverId, UpdateCaregiverAdditionalInfoRequest updateCaregiverAdditionalInfoRequest)
+        {
+            try
+            {
+                var existingCareGiver = await careProDbContext.CareGivers.FindAsync(caregiverId);
+
+                if (existingCareGiver == null)
+                {
+                    throw new KeyNotFoundException($"Caregiver with ID '{caregiverId}' not found.");
+                }
+
+                existingCareGiver.Introduction = updateCaregiverAdditionalInfoRequest.Introduction;
+                existingCareGiver.Description = updateCaregiverAdditionalInfoRequest.Description;
+                existingCareGiver.Location = updateCaregiverAdditionalInfoRequest.Location;
+                existingCareGiver.IntroVideoUrl = updateCaregiverAdditionalInfoRequest.IntroVideoUrl;
+                existingCareGiver.Services = updateCaregiverAdditionalInfoRequest.Services;
+
+                careProDbContext.CareGivers.Update(existingCareGiver);
+                await careProDbContext.SaveChangesAsync();
+
+                return $"Caregiver with ID '{caregiverId}' Additional Information Updated successfully.";
+            }
+            catch (Exception ex)
+            {
+                throw new Exception(ex.Message);               
+            }
+        }
     }
 }

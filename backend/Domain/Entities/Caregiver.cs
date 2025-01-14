@@ -26,11 +26,20 @@ namespace Domain.Entities
 
         public string Password { get; set; }
 
-        public bool IsDeleted { get; set; }
+        public string? Introduction { get; set; }
+        public string? Description { get; set; }
+        public string[]? Services { get; set; }
+        public string? Location { get; set; }
+       // public string[]? CertificationIDs { get; set; }
+        public string? ReasonForDeactivation { get; set; }
+        public string? IntroVideoUrl { get; set; }
 
-        public DateTime CreatedAt { get; set; }
+        public bool IsDeleted { get; set; }       
 
         public bool Status { get; set; }
         
+
+        public DateTime CreatedAt { get; set; }
+
     }
 }

@@ -1,4 +1,5 @@
-﻿using System;
+﻿using MongoDB.Bson;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
@@ -29,6 +30,19 @@ namespace Application.DTOs
         public DateTime CreatedAt { get; set; }
 
         public bool Status { get; set; }
+
+        
+        public string? HomeAddress { get; set; }
+
+        
+        public string? Introduction { get; set; }
+        public string? Description { get; set; }
+        public string[]? Services { get; set; }
+        public string? Location { get; set; }
+        public string[]? CertificationIDs { get; set; }
+        public string? ReasonForDeactivation { get; set; }
+        public string? IntroVideoUrl { get; set; }
+        
     }
 
     public class AddCaregiverRequest
@@ -61,7 +75,7 @@ namespace Application.DTOs
 
         public string Email { get; set; } = null!;
 
-        public string PhoneNo { get; set; } = null!;
+        public string? PhoneNo { get; set; } = null!;
 
 
         public string Role { get; set; }
@@ -73,6 +87,32 @@ namespace Application.DTOs
         public DateTime CreatedAt { get; set; }
 
         public bool Status { get; set; }
+
+
+        
+        public string? HomeAddress { get; set; }
+
+
+        public string? Introduction { get; set; }
+        public string? Description { get; set; }
+        public string[]? Services { get; set; }
+        public string? Location { get; set; }
+        public string[]? CertificationIDs { get; set; }
+        public string? ReasonForDeactivation { get; set; }
+        public string? IntroVideoUrl { get; set; }
+
+
+    }
+
+    public class UpdateCaregiverAdditionalInfoRequest
+    {
+        public string? Introduction { get; set; }
+        public string? Description { get; set; }
+        public string[]? Services { get; set; }
+        public string? Location { get; set; }
+        //public string[]? CertificationIDs { get; set; }
+       // public string? ReasonForDeactivation { get; set; }
+        public string? IntroVideoUrl { get; set; }
     }
 
 }
