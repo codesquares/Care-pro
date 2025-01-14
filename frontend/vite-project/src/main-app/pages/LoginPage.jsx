@@ -39,7 +39,8 @@ const LoginPage = () => {
 
       const { data } = response;
       toast.success("Login successful");
-
+      console.log("Login successful:", data);
+      localStorage.setItem("userDetails", JSON.stringify(data));
       // Store token in localStorage
       localStorage.setItem("authToken", data.token);
 
@@ -47,9 +48,9 @@ const LoginPage = () => {
       if (data.role === "Admin") {
         window.location.href = "/admin";
       } else if (data.role === "Client") {
-        window.location.href = "/app/ClientDashboard";
+        window.location.href = "/app/client/dashboard";
       } else {
-        window.location.href = "/app/CareGiverDashboard";
+        window.location.href = "/app/caregiver/dashboard";
       }
     } catch (err) {
       console.error("Login error:", err);

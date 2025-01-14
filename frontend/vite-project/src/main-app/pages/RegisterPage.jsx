@@ -3,20 +3,30 @@ import "../../styles/main-app/pages/RegisterPage.scss";
 import authImage from "../../assets/authImage.png";
 import useApi from "../services/useApi";
 import { toast } from "react-toastify";
-
+import Modal from "../components/modal/Modal";
+import { useNavigate } from "react-router-dom"; // Import Modal component
 
 const CreateAccount = () => {
   const { data, error, loading, fetchData } = useApi("/CareGivers/AddCaregiverUser", "post");
+  const navigate = useNavigate(); // Hook to navigate
   const [formValues, setFormValues] = useState({
     firstName: "",
     lastName: "",
     email: "",
     password: "",
-
+    phone: "",
+    confirmPassword: "",
   });
 
   const [errors, setErrors] = useState({});
   const [isSubmitted, setIsSubmitted] = useState(false);
+
+  // Modal state
+  const [isModalOpen, setIsModalOpen] = useState(false);
+  const [modalTitle, setModalTitle] = useState("");
+  const [modalDescription, setModalDescription] = useState("");
+  const [buttonText, setButtonText] = useState("Okay");
+  const [buttonBgColor, setButtonBgColor] = useState("#34A853");
 
   const validate = () => {
     const newErrors = {};
@@ -70,12 +80,31 @@ const CreateAccount = () => {
 
     try {
       const response = await fetchData(payload);
-      toast.success("Registration successful!");
-      console.log("Response:", response);
+
+      // Show success modal
+      setModalTitle("Success!");
+      setModalDescription("Your account has been created successfully.");
+      setButtonBgColor("#34A853");
+      setButtonText("Proceed"); // Update button text for success case
+      setIsModalOpen(true);
+      
     } catch (err) {
       console.error("Registration failed:", err);
       toast.error("Registration failed. Please try again.");
+      
+      // Show error modal
+      setModalTitle("Error!");
+      setModalDescription("Something went wrong during registration. Please try again.");
+      setButtonBgColor("#FF0000");
+      setButtonText("Okay"); // Keep "Okay" for the error case
+      setIsModalOpen(true);
     }
+  };
+
+  // On modal proceed, navigate to success page
+  const handleProceed = () => {
+    setIsModalOpen(false);
+    navigate("/login"); // Navigate to success page
   };
 
   return (
@@ -157,22 +186,22 @@ const CreateAccount = () => {
             </button>
           </form>
           {error && <p className="error-text">Error: {error.message}</p>}
-          <div className="alternate-login">
-            <p>or</p>
-            <button className="btn google">Google</button>
-            <button className="btn apple">Apple</button>
-          </div>
-          <p className="signin-text">
-            Already have an account? <a href="/login">Sign in</a>
-          </p>
-          <p className="terms">
-            By creating an account, you agree to the <a href="#">Terms of Use</a> and <a href="#">Privacy Policy</a>.
-          </p>
         </div>
         <div className="image-container">
           <img src={authImage} alt="Mental health awareness" />
         </div>
       </div>
+      
+      {/* Modal */}
+      <Modal
+        isOpen={isModalOpen}
+        onClose={() => setIsModalOpen(false)}
+        onProceed={handleProceed} // Call handleProceed on modal proceed
+        title={modalTitle}
+        description={modalDescription}
+        buttonText={buttonText}
+        buttonBgColor={buttonBgColor}
+      />
     </div>
   );
 };
