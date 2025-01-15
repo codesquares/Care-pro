@@ -10,13 +10,24 @@ import { useState } from "react";
 import PublishGig from "./Publish";
 import axios from "axios";
 import validateFormData from "../../Vadlidations/GigCreationValidation";
+import { toast } from "react-toastify";
+import Modal from "../../components/modal/Modal";
+import { useNavigate } from "react-router-dom";
+
 const GigsForm = () => {
   const pages = ["Overview", "Pricing", "Gallery", "Publish"];
   const [currentPage, setCurrentPage] = useState(0);
+  const [isModalOpen, setIsModalOpen] = useState(false);
+  const [modalTitle, setModalTitle] = useState("");
+  const [modalDescription, setModalDescription] = useState("");
+  const [buttonText, setButtonText] = useState("okay");
+  const [buttonBgColor, setButtonBgColor] = useState("#34A853");
   const source = "/src/assets/dog_on_a_leash.jpg";
   const alt = "Dog on a leash";
   const [serverMessage, setServerMessage] = useState("");
-  const [submittedData, setSubmittedData] = useState(null);
+  const [isSubmitted, setIsSubmitted] = useState(null);
+  const navigate = useNavigate();
+
   const goToNextPage = () => {
     if (currentPage < pages.length - 1) {
       setCurrentPage((prev) => prev + 1);
@@ -105,6 +116,7 @@ const GigsForm = () => {
 
   const handleSubmit = async (e) => {
     e.preventDefault();
+    setIsSubmitted(true);
 
     try {
       const formDataPayload = new FormData();
@@ -146,8 +158,12 @@ const GigsForm = () => {
 
       if (response.status === 200) {
         setServerMessage("Gig published successfully!");
-        setSubmittedData(response.data);
-        alert("Gig submitted successfully!");
+        // Show success modal
+        setModalTitle("Success!");
+        setModalDescription("Your Gig has been successfully created.");
+        setButtonBgColor("#34A853");
+        setButtonText("Proceed"); // Update button text for success case
+        setIsModalOpen(true);
       }
     } catch (err) {
       if (err.response) {
@@ -155,15 +171,23 @@ const GigsForm = () => {
         setServerMessage(
           `Error: ${err.response.data.title || "Submission failed."}`
         );
-        alert("Submission failed.");
+        toast.error("Submission failed. Please try again.");
       } else {
         console.error("Unexpected Error:", err);
         setServerMessage("An unexpected error occurred.");
-        alert("An unexpected error occurred.");
+        toast.error("An unexpected error occurred. Please try again.");
+        setModalTitle("Error!");
+        setModalDescription("Something went wrong during registration. Please try again.");
+        setButtonBgColor("#FF0000");
+        setButtonText("Okay"); // Keep "Okay" for the error case
+        setIsModalOpen(true);
       }
     }
   };
-
+  const handleProceed = () => {
+    setIsModalOpen(false);
+    navigate("/"); // Navigate to success page
+  }  
 
 
   const [files, setFiles] = useState([]);
@@ -191,7 +215,6 @@ const GigsForm = () => {
       // console.log("File uploaded:", file);
     }
   };
-
 
   return (
     <div className="gigs-form">
@@ -245,7 +268,15 @@ const GigsForm = () => {
 
       </div>
 
-
+      <Modal
+        isOpen={isModalOpen}
+        onClose={() => setIsModalOpen(false)}
+        onProceed={handleProceed} // Call handleProceed on modal proceed
+        title={modalTitle}
+        description={modalDescription}
+        buttonText={buttonText}
+        buttonBgColor={buttonBgColor}
+      />
 
     </div>
   );

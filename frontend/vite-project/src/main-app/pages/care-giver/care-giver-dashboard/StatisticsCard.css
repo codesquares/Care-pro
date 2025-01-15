@@ -1,0 +1,40 @@
+.statistics-card {
+    background-color: #ffffff;
+    padding: 20px;
+    border-radius: 10px;
+    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+    display: flex;
+    flex-direction: column;
+    gap: 20px;
+    max-width: 300px;
+    margin-top: 20px;
+  }
+  
+  .stat {
+    display: flex;
+    align-items: center;
+    gap: 15px;
+  }
+  
+  .icon {
+    font-size: 2rem;
+    color: #3498db;
+  }
+  
+  .stat-details {
+    display: flex;
+    flex-direction: column;
+  }
+  
+  .stat-title {
+    font-size: 1rem;
+    color: #7f8c8d;
+    margin: 0;
+  }
+  
+  .stat-value {
+    font-size: 1.2rem;
+    font-weight: bold;
+    margin: 5px 0 0;
+  }
+  

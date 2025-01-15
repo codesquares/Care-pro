@@ -1,0 +1,43 @@
+.profile-header {
+    text-align: center;
+    padding: 20px;
+    background: #fff;
+  }
+  
+  .profile-header img {
+    width: 100px;
+    height: 100px;
+    border-radius: 50%;
+    margin-bottom: 10px;
+  }
+  
+  .profile-header h2 {
+    font-size: 1.2rem;
+    margin: 5px 0;
+  }
+  
+  .profile-header p {
+    font-size: 0.9rem;
+    color: #666;
+  }
+  
+  .profile-header .rating {
+    margin: 10px 0;
+    color: #f5a623;
+  }
+  
+  .profile-header .details {
+    font-size: 0.85rem;
+    margin: 10px 0;
+  }
+  
+  .availability-btn {
+    margin-top: 10px;
+    padding: 8px 12px;
+    border: none;
+    border-radius: 4px;
+    background: #34d399;
+    color: #fff;
+    cursor: pointer;
+  }
+  
