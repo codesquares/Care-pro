@@ -24,7 +24,7 @@ namespace CarePro_Api.Controllers.Content
         /// ENDPOINT TO CREATE  CLIENT USERS TO THE DATABASE
         [HttpPost]
         // [Authorize(Roles = "Caregiver")]
-        public async Task<IActionResult> AddGigAsync([FromBody] AddGigRequest  addGigRequest)
+        public async Task<IActionResult> AddGigAsync([FromForm] AddGigRequest  addGigRequest)
         {
             try
             {
