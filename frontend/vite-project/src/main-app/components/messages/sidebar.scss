@@ -1,0 +1,132 @@
+.sidebar {
+  width: 300px;
+  background-color: #fff;
+  border-right: 1px solid #ddd;
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+}
+
+// .sidebar-header {
+//   padding: 15px 20px;
+//   border-bottom: 1px solid #ddd;
+//   font-size: 16px;
+//   font-weight: bold;
+//   color: #333;
+//   background-color: #f9f9f9;
+// }
+
+.search-bar {
+  padding: 15px 20px;
+  border-bottom: 1px solid #ddd;
+}
+
+.search-bar input {
+  width: 100%;
+  padding: 10px 15px;
+  border: 1px solid #ddd;
+  border-radius: 20px;
+  font-size: 14px;
+  outline: none;
+  transition: border-color 0.3s ease;
+}
+
+.search-bar input:focus {
+  border-color: #007bff;
+}
+
+.chat-list {
+  flex: 1;
+  overflow-y: auto;
+  padding: 10px 0;
+  background-color: #fff;
+}
+
+.chat-item {
+  display: flex;
+  align-items: center;
+  justify-items: center;
+  padding: 10px 20px;
+  cursor: pointer;
+  transition: background-color 0.3s ease;
+  color:#333;
+  border: 2px solid #f1f1f1;
+}
+
+.chat-item:hover {
+  background-color: #f1f1f1;
+}
+
+.chat-item.active {
+  background-color: #007bff;
+  color: white;
+}
+
+.chat-item.active .chat-name {
+  font-weight: bold;
+}
+
+.chat-item .avatar {
+  width: 40px;
+  height: 40px;
+  border-radius: 50%;
+  margin-right: 15px;
+}
+
+.chat-item .chat-details {
+  flex: 1;
+  overflow: hidden;
+}
+
+.chat-item .chat-name {
+  font-size: 14px;
+  font-weight: 500;
+  color: #333;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.chat-item .chat-preview {
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  justify-content: flex-start;
+  align-items: flex-start;
+  display: flex;
+  flex-direction: column;
+  padding: 2px;
+  margin: 20px 0 0 0;
+  
+}
+.chat-item .chat-preview p {
+  font-size: 10px;
+  color: #777;
+}
+.chat-item .chat-preview h4{
+  font-size: 12px;
+  color: #777;
+  font-weight: bold;
+}
+@media (max-width: 768px) {
+  .sidebar {
+    width: 100%;
+    height: auto;
+    border-right: none;
+    border-bottom: 1px solid #ddd;
+  }
+
+  .chat-list-item .avatar {
+    width: 30px;
+    height: 30px;
+    margin-right: 10px;
+  }
+
+  .chat-list-item .chat-name {
+    font-size: 13px;
+  }
+
+  .chat-list-item .chat-preview {
+    font-size: 11px;
+  }
+}
