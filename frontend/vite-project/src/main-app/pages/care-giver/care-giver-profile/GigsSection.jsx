@@ -1,40 +1,59 @@
-import React from "react";
+import React, { useEffect, useState } from "react";
 import "./gigs-section.css";
 
-const gigs = [
-  {
-    id: 1,
-    image: "https://via.placeholder.com/150",
-    title: "I will clean your house and do laundry",
-  },
-  {
-    id: 2,
-    image: "https://via.placeholder.com/150",
-    title: "Training and taking care of your pets",
-  },
-  {
-    id: 3,
-    image: "https://via.placeholder.com/150",
-    title: "Support and companionship for elders",
-  },
-];
+const GigsSection = () => {
+  const [gigs, setGigs] = useState([]);
+  const [isLoading, setIsLoading] = useState(true);
+  const [error, setError] = useState("");
 
-const GigsSection = () => (
-  <div className="gigs-section">
-    <h3>Active Gigs</h3>
-    <div className="gigs-grid">
-      {gigs.map((gig) => (
-        <div key={gig.id} className="gig-card">
-          <img src={gig.image} alt={gig.title} className="gig-image" />
-          <h4 className="gig-title">{gig.title}</h4>
+  useEffect(() => {
+    const fetchGigs = async () => {
+      try {
+        const userDetails = JSON.parse(localStorage.getItem("userDetails"));
+        if (!userDetails?.id) {
+          throw new Error("Caregiver ID not found in local storage.");
+        }
+
+        const response = await fetch(
+          `https://carepro-api20241118153443.azurewebsites.net/api/Gigs/caregiver/caregiverId?caregiverId=${userDetails.id}`
+        );
+        if (!response.ok) {
+          throw new Error("Failed to fetch gigs data.");
+        }
+
+        const data = await response.json();
+        console.log(data);
+        setGigs(data); // Assuming the API returns an array of gigs
+        setIsLoading(false);
+      } catch (err) {
+        setError(err.message);
+        setIsLoading(false);
+      }
+    };
+
+    fetchGigs();
+  }, []);
+
+  if (isLoading) return <p>Loading gigs...</p>;
+  if (error) return <p>Error: {error}</p>;
+
+  return (
+    <div className="gigs-section">
+      <h3>Active Gigs</h3>
+      <div className="gigs-grid">
+        {gigs.map((gig) => (
+          <div key={gig.id} className="gig-card">
+            <img src={gig.image1 || "https://via.placeholder.com/150"} alt={gig.title} className="gig-image" />
+            <h4 className="gig-title">{gig.title}</h4>
+          </div>
+        ))}
+        <div className="gig-card create-new">
+          <div className="create-icon">+</div>
+          <p>Create a new Gig</p>
         </div>
-      ))}
-      <div className="gig-card create-new">
-        <div className="create-icon">+</div>
-        <p>Create a new Gig</p>
       </div>
     </div>
-  </div>
-);
+  );
+};
 
 export default GigsSection;

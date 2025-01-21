@@ -6,8 +6,11 @@ const NavigationBar = () => {
   const navigate = useNavigate();
   const basePath = "/app/caregiver"; // Base path for your routes
 
-  // Replace this with the actual user's name
-  const userName = "Ahmed Rufai";
+  //get the user name from local storage
+  const user = JSON.parse(localStorage.getItem("userDetails"));
+  const userName = user?.firstName
+    ? `${user.firstName} ${user.lastName}`
+    : "";
 
   // Function to generate initials from the name
   const getInitials = (name) => {
