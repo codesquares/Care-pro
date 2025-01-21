@@ -1,9 +1,24 @@
 .message-input {
   display: flex;
-  align-items: center;
   padding: 10px;
-  border-top: 1px solid #ccc;
-  background-color: #fff;
+  // border-top: 1px solid #ccc;
+  // background-color: #fff;
+  width:100%;
+  justify-content: space-between;
+  align-items: center;
+  
+
+}
+
+.message-input button{
+  background-color:  #15586ea7;
+  color: white;
+ 
+  border-radius: 8%;
+  padding: 10px 15px;
+  width: 140px;
+  align-items: center;
+  margin-bottom: 10px;
 }
 
 .input-field {
@@ -16,6 +31,11 @@
   outline: none;
   margin-right: 10px;
   min-height: 40px;
+}
+
+textarea.input-field {
+  min-height: 40px;
+  width:50%;
 }
 
 .input-field:focus {
@@ -31,6 +51,7 @@
   font-size: 14px;
   cursor: pointer;
   transition: background-color 0.2s;
+  width:10%;
 }
 
 .send-button:hover {

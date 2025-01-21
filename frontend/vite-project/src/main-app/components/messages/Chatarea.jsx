@@ -2,6 +2,7 @@
 import React from 'react';
 import MessageInput from './MessageInput';
 import './chatarea.scss';
+import Button from "../button/Button";
 
 const ChatArea = ({ messages, recipient, onSendMessage }) => {
   return (
@@ -10,18 +11,20 @@ const ChatArea = ({ messages, recipient, onSendMessage }) => {
         <img src={recipient.avatar} alt={recipient.name} className="avatar" />
         <h4>{recipient.name}</h4>
         <div className="actions">
-          <button>Create Offer</button>
-          <button>Report</button>
+          <Button>Offer</Button>
+          <Button>Report</Button>
         </div>
       </header>
-      <div className="messages">
+      <div className="messages-area">
         {messages.map((msg, index) => (
           <div key={index} className={`message ${msg.isSender ? 'sent' : 'received'}`}>
             <p>{msg.text}</p>
           </div>
         ))}
-      </div>
+        <div className="message-input">
       <MessageInput onSendMessage={onSendMessage} />
+      </div>
+      </div>
     </div>
   );
 };
