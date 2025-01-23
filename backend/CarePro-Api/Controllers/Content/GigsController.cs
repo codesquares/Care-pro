@@ -21,7 +21,7 @@ namespace CarePro_Api.Controllers.Content
             this.logger = logger;
         }
 
-        /// ENDPOINT TO CREATE  CLIENT USERS TO THE DATABASE
+        /// ENDPOINT TO CREATE  Gigs Services TO THE DATABASE
         [HttpPost]
         // [Authorize(Roles = "Caregiver")]
         public async Task<IActionResult> AddGigAsync([FromForm] AddGigRequest  addGigRequest)
@@ -56,7 +56,7 @@ namespace CarePro_Api.Controllers.Content
 
 
         [HttpGet]
-       // [Authorize(Roles = "Caregiver, Admin")]
+       // [Authorize(Roles = "Caregiver, Client, Admin")]
         public async Task<IActionResult> GetAllGigsAsync()
         {
             logger.LogInformation($"Retrieving all Gigs available");
@@ -81,6 +81,34 @@ namespace CarePro_Api.Controllers.Content
 
         }
 
+
+        [HttpGet]
+        [Route("caregiverId/paused")]
+        // [Authorize(Roles = "Caregiver, Admin")]
+        public async Task<IActionResult> GetAllCaregiverPausedGigsAsync(string caregiverId)
+        {
+            logger.LogInformation($"Retrieving all Gigs for Caregiver with Id: {caregiverId}");
+
+            var services = await gigServices.GetAllCaregiverPausedGigsAsync(caregiverId);
+
+            return Ok(services);
+
+        }
+
+
+        [HttpGet]
+        [Route("caregiverId/draft")]
+        // [Authorize(Roles = "Caregiver, Admin")]
+        public async Task<IActionResult> GetAllCaregiverDraftGigsAsync(string caregiverId)
+        {
+            logger.LogInformation($"Retrieving all Gigs for Caregiver with Id: {caregiverId}");
+
+            var services = await gigServices.GetAllCaregiverDraftGigsAsync(caregiverId);
+
+            return Ok(services);
+
+        }
+
         [HttpGet]
         [Route("gigId")]
        // [Authorize(Roles = "Caregiver, Admin")]
@@ -91,6 +119,18 @@ namespace CarePro_Api.Controllers.Content
             var gig = await gigServices.GetGigAsync(gigId);            
 
             return Ok(gig);
+        }
+
+
+
+        [HttpPut]
+        [Route("UpdateGigStatusToPause/gigId")]
+       // [Authorize(Roles = "Caregiver, Admin")]
+        public async Task<ActionResult<string>> UpdateGigStatusToPauseAsync(string gigId, UpdateGigStatusToPauseRequest  updateGigStatusToPauseRequest)
+        {
+            var result = await gigServices.UpdateGigStatusToPauseAsync(gigId, updateGigStatusToPauseRequest);
+            logger.LogInformation($"Gig Status with ID: {gigId} updated.");
+            return Ok(result);
         }
 
     }

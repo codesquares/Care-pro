@@ -13,9 +13,16 @@ namespace Application.Interfaces
 
         Task<IEnumerable<GigDTO>> GetAllCaregiverGigsAsync(string caregiverId);
 
+        Task<IEnumerable<GigDTO>> GetAllCaregiverPausedGigsAsync(string caregiverId);
+
+        Task<IEnumerable<GigDTO>> GetAllCaregiverDraftGigsAsync(string caregiverId);
+
         Task<IEnumerable<GigDTO>> GetAllGigsAsync();
 
         Task<GigDTO> GetGigAsync(string serviceId);
+
+        Task<string> UpdateGigStatusToPauseAsync(string gigId, UpdateGigStatusToPauseRequest updateGigStatusToPauseRequest);
+
 
     }
 }

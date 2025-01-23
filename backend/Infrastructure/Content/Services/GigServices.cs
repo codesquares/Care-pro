@@ -13,6 +13,8 @@ using System.Text;
 using System.Threading.Tasks;
 using System.Threading;
 using Application.Interfaces.Content;
+using Microsoft.AspNetCore.Builder;
+using Microsoft.Extensions.Logging;
 
 namespace Infrastructure.Content.Services
 {
@@ -20,11 +22,13 @@ namespace Infrastructure.Content.Services
     {
         private readonly CareProDbContext careProDbContext;
         private readonly ICareGiverService careGiverService;
+        private readonly ILogger<GigServices> logger;
 
-        public GigServices(CareProDbContext careProDbContext, ICareGiverService careGiverService)
+        public GigServices(CareProDbContext careProDbContext, ICareGiverService careGiverService, ILogger<GigServices> logger)
         {
             this.careProDbContext = careProDbContext;
             this.careGiverService = careGiverService;
+            this.logger = logger;
         }
 
         public async Task<GigDTO> CreateGigAsync(AddGigRequest addGigRequest)
@@ -73,7 +77,7 @@ namespace Infrastructure.Content.Services
 
                 // Assign new ID
                 Id = ObjectId.GenerateNewId(),
-                
+                IsUpdatedToPause = false,
                 CreatedAt = DateTime.Now,
             };
 
@@ -113,11 +117,58 @@ namespace Infrastructure.Content.Services
             return gigDTO;
         }
 
+        public async Task<IEnumerable<GigDTO>> GetAllCaregiverDraftGigsAsync(string caregiverId)
+        {
+            var gigs = await careProDbContext.Gigs
+                .Where(x => x.CaregiverId == caregiverId && x.Status == "Draft")
+                .OrderBy(x => x.CreatedAt)
+                .ToListAsync();
+
+            var gigsDTOs = new List<GigDTO>();
+
+            foreach (var gig in gigs)
+            {
+                // Determine the image format based on the binary data
+                string logoBase64 = null;
+                if (gig.Image1 != null)
+                {
+                    string imageFormat = GetImageFormat(gig.Image1);  // This method detects the image format
+                    logoBase64 = $"data:image/{imageFormat};base64,{Convert.ToBase64String(gig.Image1)}";
+                }
+
+                var gigDTO = new GigDTO()
+                {
+                    Id = gig.Id.ToString(),
+                    Title = gig.Title,
+
+                    Category = gig.Category,
+                    SubCategory = gig.SubCategory,
+                    Tags = gig.Tags,
+                    PackageType = gig.PackageType,
+                    PackageName = gig.PackageName,
+                    PackageDetails = gig.PackageDetails,
+                    DeliveryTime = gig.DeliveryTime,
+                    Price = gig.Price,
+                    Image1 = logoBase64,
+                    Image2 = gig.Image2,
+                    Image3 = gig.Image3,
+                    VideoURL = gig.VideoURL,
+                    Status = gig.Status,
+                    CaregiverId = gig.CaregiverId,
+                    CreatedAt = gig.CreatedAt,
+
+                };
+                gigsDTOs.Add(gigDTO);
+            }
+
+            return gigsDTOs;
+        }
+
         public async Task<IEnumerable<GigDTO>> GetAllCaregiverGigsAsync(string caregiverId)
         {
             var gigs = await careProDbContext.Gigs
                 .Where(x => x.CaregiverId == caregiverId)
-                .OrderBy(x => x.Title)
+                .OrderBy(x => x.CreatedAt)
                 .ToListAsync();
 
             var gigsDTOs = new List<GigDTO>();
@@ -160,11 +211,60 @@ namespace Infrastructure.Content.Services
             return gigsDTOs;
         }
 
+        public async Task<IEnumerable<GigDTO>> GetAllCaregiverPausedGigsAsync(string caregiverId)
+        {
+            var gigs = await careProDbContext.Gigs
+                .Where(x => x.CaregiverId == caregiverId && x.Status == "Paused")
+                .OrderBy(x => x.CreatedAt)
+                .ToListAsync();
+
+            var gigsDTOs = new List<GigDTO>();
+
+            foreach (var gig in gigs)
+            {
+                // Determine the image format based on the binary data
+                string logoBase64 = null;
+                if (gig.Image1 != null)
+                {
+                    string imageFormat = GetImageFormat(gig.Image1);  // This method detects the image format
+                    logoBase64 = $"data:image/{imageFormat};base64,{Convert.ToBase64String(gig.Image1)}";
+                }
+
+                var gigDTO = new GigDTO()
+                {
+                    Id = gig.Id.ToString(),
+                    Title = gig.Title,
+
+                    Category = gig.Category,
+                    SubCategory = gig.SubCategory,
+                    Tags = gig.Tags,
+                    PackageType = gig.PackageType,
+                    PackageName = gig.PackageName,
+                    PackageDetails = gig.PackageDetails,
+                    DeliveryTime = gig.DeliveryTime,
+                    Price = gig.Price,
+                    Image1 = logoBase64,
+                    Image2 = gig.Image2,
+                    Image3 = gig.Image3,
+                    VideoURL = gig.VideoURL,
+                    Status = gig.Status,
+                    CaregiverId = gig.CaregiverId,
+                    CreatedAt = gig.CreatedAt,
+                    UpdatedOn = gig.UpdatedOn,
+                    IsUpdatedToPause = gig.IsUpdatedToPause,
+
+                };
+                gigsDTOs.Add(gigDTO);
+            }
+
+            return gigsDTOs;
+        }
+
         public async Task<IEnumerable<GigDTO>> GetAllGigsAsync()
         {
             var gigs = await careProDbContext.Gigs
-               // .Where(x => x.CaregiverId == caregiverId)
-                .OrderBy(x => x.PackageType)
+                .Where(x => x.Status == "Published" || x.Status == "Active")
+                .OrderBy(x => x.CreatedAt)
                 .ToListAsync();
 
             var gigDTOs = new List<GigDTO>();
@@ -197,6 +297,8 @@ namespace Infrastructure.Content.Services
                     VideoURL = gig.VideoURL,
                     Status = gig.Status,
                     CaregiverId = gig.CaregiverId,
+                    UpdatedOn = gig.UpdatedOn,
+                    IsUpdatedToPause = gig.IsUpdatedToPause,
                     CreatedAt = gig.CreatedAt,
                 };
                 gigDTOs.Add(serviceDTO);
@@ -240,12 +342,43 @@ namespace Infrastructure.Content.Services
                 VideoURL = gig.VideoURL,
                 Status = gig.Status,
                 CaregiverId = gig.CaregiverId,
+                UpdatedOn = gig.UpdatedOn,
+                IsUpdatedToPause = gig.IsUpdatedToPause,
                 CreatedAt = gig.CreatedAt,
             };
 
             return gigDTO;
         }
 
+        public async Task<string> UpdateGigStatusToPauseAsync(string gigId, UpdateGigStatusToPauseRequest updateGigStatusToPauseRequest)
+        {
+            try
+            {
+                var existingGig = await careProDbContext.Gigs.FindAsync(gigId);
+
+                if (existingGig == null)
+                {
+                    throw new KeyNotFoundException($"Gigs with ID '{gigId}' not found.");
+                }
+
+
+                existingGig.Status = updateGigStatusToPauseRequest.Status;
+                existingGig.UpdatedOn = DateTime.Now;
+                existingGig.IsUpdatedToPause = true;
+                
+
+                careProDbContext.Gigs.Update(existingGig);
+                await careProDbContext.SaveChangesAsync();
+
+                LogAuditEvent($"Gig Status updated (ID: {gigId})", updateGigStatusToPauseRequest.CaregiverId);
+                return $"Gig with ID '{gigId}' updated successfully.";
+            }
+            catch (Exception ex)
+            {
+                LogException(ex);
+                throw new Exception(ex.Message);
+            }
+        }
 
 
         public string GetImageFormat(byte[] imageData)
@@ -267,5 +400,17 @@ namespace Infrastructure.Content.Services
             }
             return "jpeg";  // Default to jpeg if format is not identifiable
         }
+
+
+        private void LogException(Exception ex)
+        {
+            logger.LogError(ex, "Exception occurred");
+        }
+
+        private void LogAuditEvent(object message, string? caregiverId)
+        {
+            logger.LogInformation($"Audit Event: {message}. User ID: {caregiverId}. Timestamp: {DateTime.UtcNow}");
+        }
+
     }
 }
