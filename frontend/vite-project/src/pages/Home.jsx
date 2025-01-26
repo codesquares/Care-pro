@@ -1,3 +1,4 @@
+import { useNavigate } from "react-router-dom";
 import Header from "../components/LandingPage/Header";
 import BrandList from "../components/LandingPage/BrandList";
 import CaregiverProcess from "../components/LandingPage/CaregiverProcess";
@@ -7,18 +8,51 @@ import FAQ from "../components/LandingPage/FAQ";
 import ContactForm from "../components/LandingPage/ContactForm";
 import CaregiverBanner from "../components/LandingPage/CaregiverBanner";
 import LandingImg from "../components/LandingPage/LandingImg";
+import GenaralBanner from "../components/GeneralBanner";
+import genralImg from "../assets/nurseAndWoman.png";
+import nurse from "../assets/nurse.png";
 
 const Home = () => {
+  const navigate = useNavigate();
+  const handleButtonClick1 = () => {
+    navigate('/book-caregiver');
+  };
+
+  const handleButtonClick2 = () => {
+    navigate('/become-caregiver');
+  };
   return (
 <>
 <Header/>
 <BrandList/>
-<CaregiverProcess/>
-<PricingPlans/>
+<div className="withpadding">
+<GenaralBanner
+  title="Hire a Caregiver today!"
+  description="As a Carepro caregiver, you have the opportunity to make an incredible difference the minute you walk through the door, helping your clients live a happier life in their own home."
+  buttonText="Hire a Caregiver"
+  imageUrl={genralImg}
+  onButtonClick={handleButtonClick1}
+  backgroundColor="#373732"
+/>
+</div>
+
+<div className="withpadding">
+<GenaralBanner
+  title="Become a Caregiver today!"
+  description="As a Carepro caregiver, you have the opportunity to make an incredible difference the minute you walk through the door, helping your clients live a happier life in their own home."
+  buttonText="Become a Caregiver"
+  imageUrl={nurse}
+  onButtonClick={handleButtonClick2}
+  backgroundColor="#015476"
+/>
+</div>
+
+{/* <CaregiverProcess/> */}
+{/* <PricingPlans/> */}
 <HealthcareFacts/>
-<FAQ/>
-<CaregiverBanner/>
-<ContactForm/>
+{/* <FAQ/> */}
+{/* <CaregiverBanner/> */}
+{/* <ContactForm/> */}
 <LandingImg/>
 </>
   );

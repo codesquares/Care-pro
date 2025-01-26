@@ -1,0 +1,51 @@
+/* CaregiverDashboard.css */
+
+.main-content {
+    display: flex;
+    justify-content: space-evenly; /* Distributes space evenly between items */
+    margin: 2%;
+  }
+  
+  .sidebar {
+    display: flex;
+    flex-direction: column; /* Arranges child elements vertically */
+    justify-content: space-between;
+    width: 25%; /* Ensures the sidebar takes up a specific portion of the screen */
+  }
+  
+  .select-container {
+    display: flex;
+    flex-direction: column;
+    margin: 20px 0;
+    margin-left: auto; /* Aligns the select dropdown to the right */
+  }
+  
+  .select-container label {
+    margin-bottom: 10px;
+    font-size: 16px;
+  }
+  
+  .custom-select {
+    padding: 10px;
+    font-size: 16px;
+    border: 1px solid #ccc;
+    border-radius: 4px;
+    outline: none;
+    background-color: #fff;
+    width: 200px;
+    cursor: pointer;
+    transition: border-color 0.3s ease;
+  }
+  
+  .custom-select:hover {
+    border-color: #007BFF;
+  }
+  
+  .custom-select:focus {
+    border-color: #0056b3;
+  }
+  
+  .order-list-container {
+    width: 70%; /* Takes up the remaining width for the OrderList component */
+  }
+  

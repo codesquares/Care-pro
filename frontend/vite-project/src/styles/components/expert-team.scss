@@ -1,10 +1,10 @@
 .expert-team {
-  padding: 6rem 2rem;
+  padding: 6rem 4rem;
   background-color: var(--primary-color-white);
   text-align: center;
 
   .heading-section {
-    margin-bottom: 2rem;
+    margin-bottom: 4rem;
 
     h2 {
       font-size: 2rem;
@@ -55,26 +55,29 @@
 
       h3 {
         margin: 0.5rem 0;
-        font-size: 1.2rem;
+        font-size: 1.8rem;
         color: #2e4f6b;
-        text-align: start;
+        //text-align: start;
       }
 
       p {
         margin: 0;
         font-size: 1rem;
         color: #555;
-        text-align: start;
+        //text-align: start;
+        padding-bottom: 2rem;
       }
     }
   }
 
   /* Tablet and mobile styles */
   @media (max-width: 768px) {
+    padding: 4rem 2rem;
     .heading-section {
       .philosophy {
         width: 90%; /* Adjust width for tablet and mobile */
         margin: 0 auto; /* Center the text */
+        
       }
     }
   }

@@ -3,7 +3,7 @@ import { Link } from 'react-router-dom';
 import logo from '../assets/careproLogo.svg';
 import arrow from '../assets/arrow-right.svg';
 import hambugerImg from '../assets/ci_hamburger-md.svg';
-import '../styles/components/nav-bar.scss'; // Ensure this SCSS file contains your styles
+import '../styles/components/nav-bar.scss';
 
 const Navbar = () => {
     const [isMenuOpen, setIsMenuOpen] = useState(false);
@@ -24,6 +24,11 @@ const Navbar = () => {
         return () => document.removeEventListener('mousedown', handleClickOutside);
     }, []);
 
+    // Function to close the menu when a link is clicked
+    const handleLinkClick = () => {
+        setIsMenuOpen(false); // Close menu after clicking a link
+    };
+
     return (
         <nav className="navbar">
             <div className="navbar-logo">
@@ -37,16 +42,31 @@ const Navbar = () => {
             </button>
 
             <ul ref={menuRef} className={`navbar-links ${isMenuOpen ? 'active' : ''}`}>
-                <li><Link to="/our-process">Our Process</Link></li>
-                <li><Link to="/plans">Plans</Link></li>
-                <li><Link to="/about-us">About us</Link></li>
-                <li><Link to="/blog">Blog</Link></li>
-                {/* <li><Link to="/care-facts">Care facts</Link></li> */}
+                <li>
+                    <Link to="/book-caregiver" onClick={handleLinkClick}>
+                        Hire Caregiver
+                    </Link>
+                </li>
+                <li>
+                    <Link to="/become-caregiver" onClick={handleLinkClick}>
+                        Become a caregiver
+                    </Link>
+                </li>
+                <li>
+                    <Link to="/about-us" onClick={handleLinkClick}>
+                        About us
+                    </Link>
+                </li>
+                <li>
+                    <Link to="/blog" onClick={handleLinkClick}>
+                        Blog
+                    </Link>
+                </li>
             </ul>
 
             <div className="navbar-cta">
                 <Link to="/book-caregiver" className="btn-primary">
-                    Book Caregiver <span className="calendar-icon"><img src={arrow} alt="arrow-right" /></span>
+                    Join the waitlist <span className="calendar-icon"><img src={arrow} alt="arrow-right" /></span>
                 </Link>
             </div>
         </nav>

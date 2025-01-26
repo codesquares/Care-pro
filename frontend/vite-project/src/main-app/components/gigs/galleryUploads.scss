@@ -1,0 +1,105 @@
+/* General styling for the gallery uploads section */
+.galleryUploads {
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+  margin: 20px;
+  font-family: Arial, sans-serif;
+}
+
+.uploads-card-section {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 20px;
+  align-items: flex-start;
+  
+}
+
+.uploads-card-details {
+  // flex: 1 1 30%;
+  color: black;
+  width:30%;
+}
+
+.uploads-card-details h3 {
+  margin: 0;
+  font-size: 20px;
+  color: #333;
+}
+
+.uploads-card-details p {
+  font-size: 14px;
+  color: #666;
+  margin: 5px 0;
+}
+.uploads-card-area{
+  display:flex;
+  
+}
+.uploads-card-input {
+  // flex: 1 1 50%;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+}
+
+/* Drag-and-drop area styling */
+.file-upload {
+  width: 100%;
+  max-width: 200px;
+  border: 2px  #ccc;
+  border-radius: 8px;
+  padding: 20px;
+  text-align: center;
+  background-color: #f9f9f9;
+  cursor: pointer;
+  position: relative;
+  transition: border-color 0.3s, background-color 0.3s;
+}
+
+.file-upload:hover {
+  border-color: #007bff;
+  background-color: #f4f9ff;
+}
+
+.file-upload .upload-area {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 10px;
+}
+
+.file-upload span {
+  font-size: 16px;
+  color: #333;
+}
+
+.file-upload .browse-button {
+  padding: 10px 20px;
+  background-color: #007bff;
+  color: white;
+  border: none;
+  border-radius: 4px;
+  cursor: pointer;
+  transition: background-color 0.3s;
+}
+
+.file-upload .browse-button:hover {
+  background-color: #0056b3;
+}
+
+/* Hidden input for file selection */
+.file-upload input {
+  position: absolute;
+  width: 100%;
+  height: 100%;
+  top: 0;
+  left: 0;
+  opacity: 0;
+  cursor: pointer;
+}
+.video-area{
+  display:flex;
+  justify-content: flex-start;
+  align-items: flex-start;
+}
