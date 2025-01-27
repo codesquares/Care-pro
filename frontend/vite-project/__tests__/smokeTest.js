@@ -20,7 +20,7 @@ describe("Smoke Test", () => {
       console.log("Starting the Vite dev server...");
 
       const viteProcess = spawn("npm", ["run", "dev"], {
-        // stdio: "inherit",
+        stdio: "inherit",
         cwd: frontendPath,
       });
 
