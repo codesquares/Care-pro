@@ -4,6 +4,7 @@ import {jest, it, describe, expect}from '@jest/globals';
 import { execSync, spawn } from "node:child_process";
 import { join } from "path";
 import waitOn from "wait-on"; // Add wait-on module
+import kill from "tree-kill"; // Add tree-kill module
 
 
 
@@ -31,6 +32,7 @@ describe("Smoke Test", () => {
 
       // Kill the server process gracefully
       viteProcess.kill("SIGTERM");
+      kill(viteProcess.pid); // Ensure the child processes are killed as well
 
       // Wait for the process to exit
       await new Promise((resolve, reject) => {
