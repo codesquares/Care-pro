@@ -72,7 +72,7 @@ function App() {
           <Route path="/blog" element={<Blog />} />
           <Route path="/care-facts" element={<CareFacts />} />
           <Route path="/our-process" element={<OurProcess />} />
-          <Route path="/create-gig" element={<CreateGig />} />
+          {/* <Route path="/create-gig" element={<CreateGig />} /> */}
           <Route path="/messages" element={<Messages />} />
           <Route path="/plans" element={<Plans />} />
           <Route path="/book-caregiver" element={<BookCaregiver />} />
