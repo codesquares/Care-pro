@@ -18,6 +18,7 @@ const CreateAccount = () => {
     confirmPassword: "",
   });
 
+  const [userType, setUserType] = useState(""); // New state for user type
   const [errors, setErrors] = useState({});
   const [isSubmitted, setIsSubmitted] = useState(false);
 
@@ -36,18 +37,11 @@ const CreateAccount = () => {
       newErrors.email = "Valid email address is required.";
     if (!formValues.phone.trim() || !/^\+?\d{10,15}$/.test(formValues.phone))
       newErrors.phone = "Valid phone number is required.";
-    if (
-      !formValues.password ||
-      formValues.password.length < 8 ||
-      !/[A-Z]/.test(formValues.password) ||
-      !/[a-z]/.test(formValues.password) ||
-      !/\d/.test(formValues.password) ||
-      !/[!@#$%^&*]/.test(formValues.password)
-    ) {
-      newErrors.password = "Password must be at least 8 characters long, include an uppercase letter, a lowercase letter, a number, and a special character.";
-    }
+    if (!formValues.password || formValues.password.length < 8) 
+      newErrors.password = "Password must be at least 8 characters long.";
     if (formValues.password !== formValues.confirmPassword)
       newErrors.confirmPassword = "Passwords do not match.";
+    if (!userType) newErrors.userType = "Please select a role."; // Validate user type
     return newErrors;
   };
 
@@ -55,8 +49,7 @@ const CreateAccount = () => {
     const { name, value } = e.target;
     setFormValues((prev) => ({ ...prev, [name]: value }));
     if (isSubmitted) {
-      const fieldErrors = validate();
-      setErrors(fieldErrors);
+      setErrors(validate());
     }
   };
 
@@ -73,38 +66,33 @@ const CreateAccount = () => {
       firstName: formValues.firstName,
       lastName: formValues.lastName,
       email: formValues.email,
-      PhoneNo: formValues.phone,
+      phoneNo: formValues.phone,
       middleName: "testing",
       password: formValues.password,
+      role: userType, // Include selected user type
     };
 
     try {
-      const response = await fetchData(payload);
+      await fetchData(payload);
 
       // Show success modal
       setModalTitle("Success!");
       setModalDescription("Your account has been created successfully.");
       setButtonBgColor("#34A853");
-      setButtonText("Proceed"); // Update button text for success case
+      setButtonText("Proceed");
       setIsModalOpen(true);
       
     } catch (err) {
       console.error("Registration failed:", err);
       toast.error("Registration failed. Please try again.");
-      
+
       // Show error modal
       setModalTitle("Error!");
       setModalDescription("Something went wrong during registration. Please try again.");
       setButtonBgColor("#FF0000");
-      setButtonText("Okay"); // Keep "Okay" for the error case
+      setButtonText("Okay");
       setIsModalOpen(true);
     }
-  };
-
-  // On modal proceed, navigate to success page
-  const handleProceed = () => {
-    setIsModalOpen(false);
-    navigate("/login"); // Navigate to success page
   };
 
   return (
@@ -181,6 +169,31 @@ const CreateAccount = () => {
               />
               {errors.confirmPassword && <p className="error-text">{errors.confirmPassword}</p>}
             </div>
+            <div className="radio-group">
+              <label className="radio-label">
+                <input
+                  type="radio"
+                  name="userType"
+                  value="Caregiver"
+                  checked={userType === "Caregiver"}
+                  onChange={(e) => setUserType(e.target.value)}
+                />
+                <span className="custom-radio"></span>
+                Caregiver
+              </label>
+              <label className="radio-label">
+                <input
+                  type="radio"
+                  name="userType"
+                  value="Client"
+                  checked={userType === "Client"}
+                  onChange={(e) => setUserType(e.target.value)}
+                />
+                 <span className="custom-radio"></span>
+                Client
+              </label>
+            </div>
+            {errors.userType && <p className="error-text">{errors.userType}</p>}
             <button type="submit" className="btn" disabled={loading}>
               {loading ? "Creating Account..." : "Create Account"}
             </button>
@@ -196,7 +209,6 @@ const CreateAccount = () => {
       <Modal
         isOpen={isModalOpen}
         onClose={() => setIsModalOpen(false)}
-        onProceed={handleProceed} // Call handleProceed on modal proceed
         title={modalTitle}
         description={modalDescription}
         buttonText={buttonText}

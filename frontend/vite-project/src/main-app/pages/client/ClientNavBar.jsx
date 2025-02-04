@@ -37,17 +37,17 @@ const ClientNavBar = () => {
       <div className="nav-actions">
         <button
           className="view-orders"
-          onClick={() => navigate(`${basePath}/orders`)}
+          // onClick={() => navigate(`${basePath}/orders`)}
         >
           View Orders
         </button>
-        <div className="earnings"  onClick={() => navigate(`${basePath}/earnings`)}>
+        {/* <div className="earnings"  onClick={() => navigate(`${basePath}/earnings`)}>
           <span>Earned:</span>
           <strong>₦300,000.00</strong>
-        </div>
+        </div> */}
         <div
           className="profile-avatar"
-          onClick={() => navigate(`${basePath}/profile`)}
+          // onClick={() => navigate(`${basePath}/profile`)}
         >
           <span>{userName}</span>
           {/* Avatar with initials */}

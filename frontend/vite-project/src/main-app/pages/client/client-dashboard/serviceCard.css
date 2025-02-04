@@ -9,4 +9,10 @@
     display: flex;
     justify-content: space-evenly;
   }
+
+  .service-title {
+    font-size: 20px;
+    font-weight: bold;
+    color: black;
+  }
   

@@ -41,6 +41,7 @@ const LoginPage = () => {
       toast.success("Login successful");
       console.log("Login successful:", data);
       localStorage.setItem("userDetails", JSON.stringify(data));
+      localStorage.setItem("userId", data.id);
       // Store token in localStorage
       localStorage.setItem("authToken", data.token);
 

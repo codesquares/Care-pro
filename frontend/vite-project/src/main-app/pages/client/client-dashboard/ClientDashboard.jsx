@@ -8,7 +8,12 @@ const ClientDashboard = () => {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
 
+      //get user data from local storage
+      const user = JSON.parse(localStorage.getItem("userDetails"));
+
   useEffect(() => {
+
+
     const fetchExpertSupport = async () => {
       try {
         const response = await fetch("https://carepro-api20241118153443.azurewebsites.net/api/Gigs"); // Replace with your actual API URL
@@ -29,7 +34,7 @@ const ClientDashboard = () => {
 
   return (
     <div className="dashboard">
-      <Banner />
+      <Banner name={user.firstName + " " + user.lastName}  />
       {loading && <p>Loading...</p>}
       {error && <p className="error">{error}</p>}
       {!loading && !error && <ServiceCategory title="Expert Medical Support" services={expertSupport} />}

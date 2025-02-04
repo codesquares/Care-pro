@@ -1,13 +1,13 @@
 import React from "react";
 import "./banner.css";
 
-const Banner = () => (
+const Banner = ({ name }) => (
   <div className="banner">
     <div>
-      <h2>Welcome back, John</h2>
+      <h2>Welcome back, {name}</h2>
       <p>Let CarePro do the searching</p>
     </div>
-    <button className="btn-yellow">View your orders</button>
+    {/* <button className="btn-yellow">View your orders</button> */}
   </div>
 );
 

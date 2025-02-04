@@ -46,6 +46,9 @@ const GigsForm = () => {
     }));
   };
 
+  //get caregiver id from local storage
+  const caregiverId = localStorage.getItem("userId");
+
   const [formData, setFormData] = useState({
     title: "",
     category: "",
@@ -59,7 +62,7 @@ const GigsForm = () => {
     image1: "",
     video: "https://www.youtube.com/watch?v=RVFAyFWO4go",
     status: "",
-    caregiverId: "1",
+    caregiverId: caregiverId,
   });
 
   const searchtags = formData.searchTags.length > 0
@@ -89,7 +92,7 @@ const GigsForm = () => {
       } else if (key === "searchTags") {
         formDataPayload.append("Tags", searchtags);
       } else if (key === "status") {
-        formDataPayload.append("status", "draft");
+        formDataPayload.append("status", "Draft");
       } 
       else if (key === "pricing") {
         Object.keys(formData.pricing).forEach((packageType) => {
@@ -179,7 +182,7 @@ const GigsForm = () => {
           formDataPayload.append("Tags", searchtags);
         }
         else if (key === "status") {
-          formDataPayload.append("status", "published");
+          formDataPayload.append("status", "Published");
         }
         else if (key === "pricing") {
           // Handle pricing object
