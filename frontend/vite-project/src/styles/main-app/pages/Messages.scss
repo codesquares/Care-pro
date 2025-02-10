@@ -1,0 +1,14 @@
+.messages{
+  width:80vw;
+  // height:100vh;
+  margin: 0 auto;
+  display: flex;
+}
+.placeholder{
+  background-color: rgb(189, 189, 216);
+  color:white;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  flex: 1;
+}

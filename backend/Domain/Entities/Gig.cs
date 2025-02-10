@@ -27,5 +27,7 @@ namespace Domain.Entities
 
         public string CaregiverId { get; set; }
         public DateTime CreatedAt { get; set; }
+        public DateTime? UpdatedOn { get; set; }
+        public bool? IsUpdatedToPause { get; set; }
     }
 }

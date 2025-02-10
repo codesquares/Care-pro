@@ -1,0 +1,146 @@
+.publish-gig{
+  display: flex;
+  padding-top: 3rem;
+  justify-content: space-between;
+  width:80%;
+  gap:20px;
+  
+}
+.publish-gig-main {
+  padding:20px;
+  width: 80%;
+  // max-width: 500px;
+  height: 400px;
+  background-color: #f9f9f9;
+  border-radius: 10px;
+  box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1);
+  font-family: Arial, sans-serif;
+  
+}
+
+.publish-gig-main h2 {
+  font-size: 24px;
+  color: #333;
+  margin-bottom: 10px;
+}
+
+.publish-gig-main p {
+  font-size: 16px;
+  color: #555;
+  margin-bottom: 20px;
+}
+
+.publish-gig-buttons {
+  display: flex;
+  justify-content: center;
+  gap: 20px;
+}
+
+.publish-gig-buttons .draft-button,
+.publish-gig-buttons .publish-button {
+  padding: 10px 20px;
+  font-size: 16px;
+  border: none;
+  border-radius: 5px;
+  cursor: pointer;
+  transition: background-color 0.3s, transform 0.2s;
+}
+
+.publish-gig-buttons .draft-button {
+  background-color: #f4f4f4;
+  color: #555;
+}
+
+.publish-gig-buttons .draft-button:hover {
+  background-color: #ddd;
+  transform: scale(1.05);
+}
+
+.publish-gig-buttons .publish-button {
+  background-color: #16ffaa;
+  color: white;
+}
+
+.publish-gig-buttons .publish-button:hover {
+  background-color: #0056b3;
+  transform: scale(1.05);
+}
+.publish-gig-sidebar {
+  width:30%;
+  height: 300px;
+  display: flex;
+  flex-direction: column;
+  border-radius: 10px;
+  overflow: hidden;
+  box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1);
+  background-color: #fff;
+  font-family: Arial, sans-serif;
+}
+
+/* Image Section */
+.publish-card-image {
+  flex: 8; /* 80% of the card height */
+  position: relative;
+}
+
+.publish-card-image img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+/* Text and Controls Section */
+.publish-card-bottom {
+  flex: 2; /* 20% of the card height */
+  padding: 10px;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.publish-card-title {
+  font-size: 16px;
+  font-weight: bold;
+  color: #333;
+  text-align: center;
+  margin-bottom: 10px;
+}
+
+.publish-card-controls {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.control-button {
+  background: none;
+  border: none;
+  color: #007bff;
+  font-size: 20px;
+  cursor: pointer;
+  transition: color 0.3s, transform 0.2s;
+}
+
+.control-button:hover {
+  color: #0056b3;
+  transform: scale(1.1);
+}
+
+/* Dots for Swipe Indicators */
+.dots {
+  display: flex;
+  gap: 5px;
+}
+
+.dot {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background-color: #ddd;
+  transition: background-color 0.3s;
+}
+
+.dot.active {
+  background-color: #007bff;
+}
