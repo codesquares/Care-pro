@@ -1,0 +1,18 @@
+.service-card {
+    border: 1px solid #ddd;
+    padding: 15px;
+    border-radius: 5px;
+    background-color: white;
+  }
+
+  .category-header {
+    display: flex;
+    justify-content: space-evenly;
+  }
+
+  .service-title {
+    font-size: 20px;
+    font-weight: bold;
+    color: black;
+  }
+  

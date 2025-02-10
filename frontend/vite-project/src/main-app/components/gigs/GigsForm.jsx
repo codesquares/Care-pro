@@ -46,6 +46,9 @@ const GigsForm = () => {
     }));
   };
 
+  //get caregiver id from local storage
+  const caregiverId = localStorage.getItem("userId");
+
   const [formData, setFormData] = useState({
     title: "",
     category: "",
@@ -58,8 +61,8 @@ const GigsForm = () => {
     },
     image1: "",
     video: "https://www.youtube.com/watch?v=RVFAyFWO4go",
-    status: "draft",
-    caregiverId: "1",
+    status: "",
+    caregiverId: caregiverId,
   });
 
   const searchtags = formData.searchTags.length > 0
@@ -74,6 +77,55 @@ const GigsForm = () => {
     "Home Care": ["Cleaning", "Cooking"],
     "Special Needs Care": ["Dementia", "Autism"],
   };
+
+  const handleSaveAsDraft = async (e) => {
+  e.preventDefault();
+  setIsSubmitted(true);
+
+  try {
+    const formDataPayload = new FormData();
+
+    // Append all formData keys
+    Object.keys(formData).forEach((key) => {
+      if (key === "image1" && formData.image1) {
+        formDataPayload.append("Image1", formData.image1);
+      } else if (key === "searchTags") {
+        formDataPayload.append("Tags", searchtags);
+      } else if (key === "status") {
+        formDataPayload.append("status", "Draft");
+      } 
+      else if (key === "pricing") {
+        Object.keys(formData.pricing).forEach((packageType) => {
+          const packageData = formData.pricing[packageType];
+          formDataPayload.append("PackageType", packageType);
+          formDataPayload.append("PackageName", packageData.name);
+          formDataPayload.append("PackageDetails", packageData.details);
+          formDataPayload.append("DeliveryTime", packageData.deliveryTime);
+          formDataPayload.append("Price", packageData.amount);
+        });
+      } else {
+        formDataPayload.append(key, formData[key]);
+      }
+    });
+
+
+    const response = await axios.post("https://carepro-api20241118153443.azurewebsites.net/api/Gigs", formDataPayload, {
+      headers: {
+        "Content-Type": "multipart/form-data",
+      },
+    });
+
+    if (response.status === 200) {
+      setServerMessage("Gig saved as draft successfully!");
+      toast.success("Gig saved as draft!");
+    }
+  } catch (err) {
+    console.error("Error saving draft:", err);
+    setServerMessage("Failed to save draft.");
+    toast.error("Failed to save draft. Please try again.");
+  }
+};
+
 
   const handleCategoryChange = (category) => {
     setFormData((prev) => ({
@@ -129,6 +181,9 @@ const GigsForm = () => {
         } else if (key === "searchTags") {
           formDataPayload.append("Tags", searchtags);
         }
+        else if (key === "status") {
+          formDataPayload.append("status", "Published");
+        }
         else if (key === "pricing") {
           // Handle pricing object
           Object.keys(formData.pricing).forEach((packageType) => {
@@ -150,7 +205,7 @@ const GigsForm = () => {
         console.log(key, value);
       }
 
-      const response = await axios.post("/api/Gigs", formDataPayload, {
+      const response = await axios.post("https://carepro-api20241118153443.azurewebsites.net/api/Gigs", formDataPayload, {
         headers: {
           "Content-Type": "multipart/form-data",
         },
@@ -248,7 +303,7 @@ const GigsForm = () => {
           <PublishGig
             image={source}
             title={alt}
-            onSaveAsDraft={() => alert("Gig saved as draft!")}
+            onSaveAsDraft={handleSaveAsDraft}
             onPublish={handleSubmit}
           />
         )}

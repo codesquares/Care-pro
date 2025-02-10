@@ -1,10 +1,17 @@
 import React, { useEffect, useState } from "react";
+import { useNavigate } from "react-router-dom";
 import "./gigs-section.css";
 
 const GigsSection = () => {
   const [gigs, setGigs] = useState([]);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState("");
+  const navigate = useNavigate();
+  const basePath = "/app/caregiver";
+
+  const handleNavigateToCreateGig = () => {
+    navigate(`${basePath}/create-gigs`);
+  };
 
   useEffect(() => {
     const fetchGigs = async () => {
@@ -47,7 +54,7 @@ const GigsSection = () => {
             <h4 className="gig-title">{gig.title}</h4>
           </div>
         ))}
-        <div className="gig-card create-new">
+        <div className="gig-card create-new" onClick={handleNavigateToCreateGig}>
           <div className="create-icon">+</div>
           <p>Create a new Gig</p>
         </div>
