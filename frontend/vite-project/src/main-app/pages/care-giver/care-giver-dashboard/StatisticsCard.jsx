@@ -1,5 +1,6 @@
 import React from "react";
 import "./StatisticsCard.css";
+import money from "../../../../assets/money.svg";
 
 const StatisticsCard = () => {
   return (
@@ -12,7 +13,7 @@ const StatisticsCard = () => {
         </div>
       </div>
       <div className="stat">
-        <span className="icon">📋</span>
+        <span className="icon"><img src={money} alt="Carepro Logo" /></span>
         <div className="stat-details">
           <p className="stat-title">No. of Orders</p>
           <h4 className="stat-value">1250</h4>

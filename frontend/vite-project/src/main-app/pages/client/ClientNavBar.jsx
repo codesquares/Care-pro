@@ -1,8 +1,9 @@
 import React from "react";
 import { useNavigate } from "react-router-dom";
-import "./NavigationBar.css";
+import "../care-giver/care-giver-dashboard/NavigationBar.css";
+import { FaSearch, FaUser, FaShoppingCart } from "react-icons/fa";
 
-const NavigationBar = () => {
+const ClientNavBar = () => {
   const navigate = useNavigate();
   const basePath = "/app/caregiver"; // Base path for your routes
 
@@ -25,46 +26,28 @@ const NavigationBar = () => {
         <img src="https://via.placeholder.com/50" alt="CarePro Logo" />
         <span>CarePro</span>
       </div>
-      <ul className="nav-links">
-        <li
-          className="nav-link"
-          onClick={() => navigate(`${basePath}/dashboard`)}
-        >
-          Dashboard
-        </li>
-        <li
-          className="nav-link"
-          onClick={() => navigate(`${basePath}/settings`)}
-        >
-          Settings
-        </li>
-        <li
-          className="nav-link"
-          onClick={() => navigate(`${basePath}/favorites`)}
-        >
-          <i className="icon heart-icon">❤️</i>
-        </li>
-        <li
-          className="nav-link"
-          onClick={() => navigate(`${basePath}/notifications`)}
-        >
-          <i className="icon bell-icon">🔔</i>
-        </li>
-      </ul>
+      <div className="search-bar">
+              <FaSearch size={20} />
+              <input type="text" placeholder="What are you looking for today?" />
+            </div>
+            <div className="icons">
+              <FaShoppingCart size={20} />
+              <FaUser size={20} />
+            </div>
       <div className="nav-actions">
         <button
           className="view-orders"
-          onClick={() => navigate(`${basePath}/orders`)}
+          // onClick={() => navigate(`${basePath}/orders`)}
         >
           View Orders
         </button>
-        <div className="earnings"  onClick={() => navigate(`${basePath}/earnings`)}>
+        {/* <div className="earnings"  onClick={() => navigate(`${basePath}/earnings`)}>
           <span>Earned:</span>
           <strong>₦300,000.00</strong>
-        </div>
+        </div> */}
         <div
           className="profile-avatar"
-          onClick={() => navigate(`${basePath}/profile`)}
+          // onClick={() => navigate(`${basePath}/profile`)}
         >
           <span>{userName}</span>
           {/* Avatar with initials */}
@@ -75,4 +58,4 @@ const NavigationBar = () => {
   );
 };
 
-export default NavigationBar;
+export default ClientNavBar;
