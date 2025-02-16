@@ -58,7 +58,7 @@ const Navbar = () => {
                     </Link>
                 </li>
                 <li>
-                    <Link to="/blog" onClick={handleLinkClick}>
+                    <Link to="/contentful-blog" onClick={handleLinkClick}>
                         Blog
                     </Link>
                 </li>
