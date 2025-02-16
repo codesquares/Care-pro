@@ -1,7 +1,5 @@
 import React, { useContext, useState } from "react";
-import { createClient } from "contentful";
 import { Link } from "react-router-dom";
-import BlogPost from "./BlogPost";
 import "./styles.scss";
 import { BlogContext } from "../../main-app/context/BlogContext";
 

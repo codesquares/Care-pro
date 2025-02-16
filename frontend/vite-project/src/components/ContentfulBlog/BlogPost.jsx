@@ -1,6 +1,5 @@
 import React, { useContext, useState } from "react";
 import { useParams } from "react-router-dom";
-import { createClient } from "contentful";
 import { BlogContext } from "../../main-app/context/BlogContext";
 import "./styles.scss";
 import ReactMarkdown from "react-markdown";
