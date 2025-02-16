@@ -12,27 +12,20 @@ import Plans from './pages/Plans';
 import BookCaregiver from './pages/BookCaregiver';
 import Home from './pages/Home';
 import BecomeCaregiver from './pages/BecomeCaregiver';
-<<<<<<< HEAD
 import LoginPage from './main-app/page/LoginPage';
 import RegisterPage from './main-app/page/RegisterPage';
 import { ToastContainer, toast } from 'react-toastify';
 import 'react-toastify/dist/ReactToastify.css'; 
 
-=======
-import LoginPage from './main-app/pages/LoginPage';
-import RegisterPage from './main-app/pages/RegisterPage';
-import { ToastContainer } from 'react-toastify';
-import 'react-toastify/dist/ReactToastify.css';
 import ProtectedRoute from './main-app/components/auth/ProtectedRoute';
 import MainAppRoutes from './main-app/routes';
 import { logout } from './main-app/services/auth';
 import { AuthProvider } from './main-app/context/AuthContext';
-import CreateGig from './main-app/pages/care-giver/CreateGig';
 import Messages from './main-app/pages/Messages';
 import ContentBlog from './components/ContentfulBlog/Blog';
 import ContentBlogPost from './components/ContentfulBlog/BlogPost';
 import {BlogProvider} from './main-app/context/BlogContext';
->>>>>>> 8dfef6d... integrating contentful to the blog section
+
 
 function ScrollToTop() {
     const location = useLocation();
@@ -44,11 +37,10 @@ function ScrollToTop() {
 
 function App() {
     return (
-<<<<<<< HEAD
-=======
+
       <AuthProvider>
         <BlogProvider>
->>>>>>> 8dfef6d... integrating contentful to the blog section
+
         <Router>
             <div className="App">
                 <Navbar />
@@ -81,8 +73,7 @@ function App() {
                 />
             </div>
         </Router>
-<<<<<<< HEAD
-=======
+
         </BlogProvider>
       </AuthProvider>
     );
@@ -157,7 +148,6 @@ function App() {
           pauseOnHover
         />
       </div>
->>>>>>> 8dfef6d... integrating contentful to the blog section
     );
 }
 
