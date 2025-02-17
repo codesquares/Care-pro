@@ -8,7 +8,6 @@
     "dev": "vite",
     "build": "vite build",
     "deploy": "gh-pages -d build",
-    "start": "react-scripts start",
     "lint": "eslint .",
     "preview": "vite preview"
   },

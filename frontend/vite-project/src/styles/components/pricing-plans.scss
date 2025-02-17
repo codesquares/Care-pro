@@ -1,3 +1,4 @@
+@use "sass:color";
 .pricing-plans {
   padding: 50px 20px;
   background-color: #ffffff;
@@ -105,7 +106,8 @@
         background-color: #FBB040; /* Standard button color */
 
         &:hover {
-          background-color: darken(#FBB040, 10%); /* Darkens button color on hover */
+          background-color: color.scale(#FBB040, $lightness: -16.19%);
+ /* Darkens button color on hover */
           transform: scale(1.05); /* Slightly enlarge button on hover */
         }
       }
