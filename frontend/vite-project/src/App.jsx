@@ -23,7 +23,9 @@ import { AuthProvider } from './main-app/context/AuthContext';
 import CreateGig from './main-app/pages/care-giver/CreateGig';
 import Messages from './main-app/pages/Messages';
 import Notifications from './main-app/components/Notifications/Notifications';
-
+import ContentBlog from './components/ContentfulBlog/Blog';
+import ContentBlogPost from './components/ContentfulBlog/BlogPost';
+import {BlogProvider} from './main-app/context/BlogContext';
 
 function ScrollToTop() {
   const location = useLocation();
@@ -36,9 +38,11 @@ function ScrollToTop() {
 function App() {
     return (
       <AuthProvider>
+        <BlogProvider>
         <Router>
           <AppContent />
         </Router>
+        </BlogProvider>
       </AuthProvider>
     );
   }
@@ -51,6 +55,7 @@ function App() {
       '/',
       '/about-us',
       '/blog',
+      '/contentful-blog',
       '/care-facts',
       '/our-process',
       '/plans',
@@ -72,9 +77,11 @@ function App() {
           <Route path="/" element={<Home />} />
           <Route path="/about-us" element={<AboutUs />} />
           <Route path="/blog" element={<Blog />} />
+          <Route path="/contentful-blog" element={<ContentBlog />} />
+          <Route path="/contentful-blog/:id" element={<ContentBlogPost />} />
           <Route path="/care-facts" element={<CareFacts />} />
           <Route path="/our-process" element={<OurProcess />} />
-          <Route path="/create-gig" element={<CreateGig />} />
+          {/* <Route path="/create-gig" element={<CreateGig />} /> */}
           <Route path="/messages" element={<Messages />} />
           <Route path="/plans" element={<Plans />} />
           <Route path="/book-caregiver" element={<BookCaregiver />} />
