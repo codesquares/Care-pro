@@ -22,6 +22,7 @@ import { logout } from './main-app/services/auth';
 import { AuthProvider } from './main-app/context/AuthContext';
 import CreateGig from './main-app/pages/care-giver/CreateGig';
 import Messages from './main-app/pages/Messages';
+import Notifications from './main-app/components/Notifications/Notifications';
 import ContentBlog from './components/ContentfulBlog/Blog';
 import ContentBlogPost from './components/ContentfulBlog/BlogPost';
 import {BlogProvider} from './main-app/context/BlogContext';
@@ -62,6 +63,7 @@ function App() {
       '/become-caregiver',
       '/login',
       '/register',
+      '/Notifications',
     ];
   
     // Check if current path is unprotected
@@ -86,6 +88,7 @@ function App() {
           <Route path="/become-caregiver" element={<BecomeCaregiver />} />
           <Route path="/login" element={<LoginPage />} />
           <Route path="/register" element={<RegisterPage />} />
+          <Route path="/Notifications" element={<Notifications />} />
           <Route
             path="/app/*"
             element={
