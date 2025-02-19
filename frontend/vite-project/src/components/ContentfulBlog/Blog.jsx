@@ -1,6 +1,6 @@
 import React, { useContext, useState } from "react";
 import { Link } from "react-router-dom";
-import "./styles.scss";
+import "./blogStyles.scss";
 import { BlogContext } from "../../main-app/context/BlogContext";
 
 export default function Blog() {
@@ -11,27 +11,27 @@ export default function Blog() {
   return (
     <div className="blog-view">
 
-      <ul className="post-list">
+      <ul className="blog-list">
         {posts.map((post) => (
-          <li key={post.sys.id} className="post">
-            <Link to={`/contentful-blog/${post.sys.id}`} className="post-link">
+          <li key={post.sys.id} className="blog">
+            <Link to={`/contentful-blog/${post.sys.id}`} className="blog-link">
               <div className="side1">
                 
 
-                <div className="post-image-container">
+                <div className="blog-image-container">
                   <img
                     src={post.fields.featuredImage[0].fields.file.url}
                     alt={post.fields.title}
-                    className="post-image"
+                    className="blog-image"
                   />
                 </div>
               </div>
 
-              <div className="post-content">
-              <div className="post-title-container">
-                  <h2 className="post-title">{post.fields.title}</h2>
+              <div className="blog-content">
+              <div className="blog-title-container">
+                  <h2 className="blog-title">{post.fields.title}</h2>
                 </div>
-                <p className="post-short-content">{post.fields.content.content[0].content[0].value}</p>
+                <p className="blog-short-content">{post.fields.content.content[0].content[0].value}</p>
               </div>
 
             </Link>
