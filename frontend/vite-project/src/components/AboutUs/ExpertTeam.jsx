@@ -6,6 +6,7 @@ import victor from "../../assets/victor.jpeg"; // Placeholder for expert images
 // Placeholder for expert images
 
 
+
 const ExpertTeam = () => {
   const experts = [
     { name: "Ifeoluwa Adelokun", role: "Chief Finance Officer", discription: "4+ of experience in finance, specializing in export sectors.", imgSrc: ifeoluwa },
