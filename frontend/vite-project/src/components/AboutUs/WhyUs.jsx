@@ -8,24 +8,24 @@ const WhyUsSection = () => {
   const features = [
     {
       icon: trustImg,
-      title: 'Devoted & Reliable',
-      description: 'We prioritise your well-being always and provide compassionate care that supports you through all phases of your healthcare journey. ',
+      title: 'Reliable',
+      description: 'We believe in providing healthcare you trust and ensure you recieve the attention you deserve without barriers. ',
     },
     {
       icon: verifiedImg,
-      title: 'Ethical',
-      description: 'We uphold high ethical standards, with emphasis to your security, confidentiality, and respect. Your rights and dignity are always a priority.',
+      title: 'Innovation',
+      description: 'We are dedicated to continuosly improving the healthacre experience by embracing solutions that make healthcare faster,smarter, and more efficient.',
     },
     {
       icon: healthExpertImg,
-      title: 'Professional',
-      description: 'Our team of skilled professionals are highly vetted and dedicated to providing knowledgeable, respectful, and attentive care.',
+      title: 'integrity',
+      description: 'we uphold honesty,transparency,and high ethical conduct to give you healthacre that ensures your safety.',
     },
   ];
 
   return (
     <section className="why-us-section">
-      <h2>Why Us?</h2>
+      <h2>Our Values?</h2>
       <div className="features">
         {features.map((feature, index) => (
           <div key={index} className="feature">
