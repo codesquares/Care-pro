@@ -64,6 +64,7 @@ function App() {
       '/login',
       '/register',
       '/Notifications',
+      '/create-gig'
     ];
   
     // Check if current path is unprotected
@@ -81,7 +82,7 @@ function App() {
           <Route path="/contentful-blog/:id" element={<ContentBlogPost />} />
           <Route path="/care-facts" element={<CareFacts />} />
           <Route path="/our-process" element={<OurProcess />} />
-          {/* <Route path="/create-gig" element={<CreateGig />} /> */}
+          <Route path="/create-gig" element={<CreateGig />} />
           <Route path="/messages" element={<Messages />} />
           <Route path="/plans" element={<Plans />} />
           <Route path="/book-caregiver" element={<BookCaregiver />} />

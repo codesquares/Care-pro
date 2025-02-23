@@ -18,8 +18,7 @@ const GigsCard = ({ categories, onSearchTagChange, onCategoryChange, onSubCatego
           </div>
           <div className="gigs-card-input">
             <Input
-              label="Title"
-              name="title"
+              name="titleInput"
               type="text"
               value={formData.title}
               onChange={(e) => onTitleChange(e.target.value)}
@@ -77,6 +76,7 @@ const GigsCard = ({ categories, onSearchTagChange, onCategoryChange, onSubCatego
           </div>
           <div className="gigs-card-input">
             <Input
+              name="searchTags"
               type="text"
               onChange={(e) => onSearchTagChange(e.target.value.split(","))}
               placeholder="Add search tags separated by a comma"

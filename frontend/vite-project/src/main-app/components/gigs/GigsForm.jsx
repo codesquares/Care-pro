@@ -279,6 +279,7 @@ const GigsForm = () => {
 
       <div className="gigs-form-body">
         <PageBar pages={pages} currentPage={currentPage} />
+        <br></br>
         {currentPage === 0 && (<GigsCard
           categories={categories}
           onCategoryChange={handleCategoryChange}

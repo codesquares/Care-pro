@@ -5,7 +5,6 @@ const CreateGig = () => {
   return (
     <div className="create-gig-wrapper">
       <GigsForm 
-       
       />
     </div>
   )

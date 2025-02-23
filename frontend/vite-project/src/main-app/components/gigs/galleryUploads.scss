@@ -1,4 +1,15 @@
 /* General styling for the gallery uploads section */
+.gallery{
+  background-color: white;
+  padding: 25px;
+}
+
+.galleryImage {
+  width: 50px;
+  height: 50px;
+  border-radius: 50%;
+}
+
 .galleryUploads {
   display: flex;
   flex-direction: column;
@@ -41,6 +52,19 @@
   display: flex;
   justify-content: center;
   align-items: center;
+  padding: 10px;
+}
+
+.upload-area {
+  p {
+    color: blue;
+    text-decoration: underline;
+  }
+
+  span{
+    color: gray !important;
+    font-size: 14px !important;
+  }
 }
 
 /* Drag-and-drop area styling */
@@ -51,7 +75,7 @@
   border-radius: 8px;
   padding: 20px;
   text-align: center;
-  background-color: #f9f9f9;
+  background-color: white;
   cursor: pointer;
   position: relative;
   transition: border-color 0.3s, background-color 0.3s;
