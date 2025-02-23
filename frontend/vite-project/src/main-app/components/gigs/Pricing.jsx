@@ -13,7 +13,7 @@ const PricingTable = ({ onPricingChange }) => {
     setPricing(updatedPricing);
     onPricingChange(updatedPricing);
   };
-  
+
 
   return (
     <div className="pricing-table">
@@ -21,7 +21,8 @@ const PricingTable = ({ onPricingChange }) => {
         <h3>Price and Packages</h3>
         <p>Create packages and select prices for each offering.</p>
       </div>
-      <table>
+
+      <table className="table-styles">
         <thead>
           <tr>
             <th>Basic</th>
@@ -122,35 +123,96 @@ const PricingTable = ({ onPricingChange }) => {
 
           {/* Minimum Amount */}
           <tr>
-            <td>
+            <td className="amount-row">
               <input
                 type="number"
                 value={pricing.Basic.amount}
                 onChange={(e) => handleInputChange("Basic", "amount", e.target.value)}
-                placeholder="0.00"
+                placeholder="₦0.00"
               />
             </td>
-            <td>
+            <td className="amount-row">
               <input
                 type="number"
                 value={pricing.Standard.amount}
                 onChange={(e) => handleInputChange("Standard", "amount", e.target.value)}
-                placeholder="0.00"
+                placeholder="₦0.00"
               />
             </td>
-            <td>
+            <td className="amount-row">
               <input
                 type="number"
                 value={pricing.Premium.amount}
                 onChange={(e) => handleInputChange("Premium", "amount", e.target.value)}
-                placeholder="0.00"
+                placeholder="₦0.00"
               />
             </td>
           </tr>
         </tbody>
       </table>
+      /* This is the table that appears bellow the text */
+      <div className="table-style-left">
+        <table>
+          <thead>
+            <tr>
+              <th>Basic</th>
+            </tr>
+          </thead>
+          <tbody>
+            {/* Name Your Package */}
+            <tr>
+              <td>
+                <input
+                  type="text"
+                  value={pricing.Basic.name}
+                  onChange={(e) => handleInputChange("Basic", "name", e.target.value)}
+                  placeholder="Basic Package"
+                />
+              </td>
+            </tr>
+
+            {/* Describe Details */}
+            <tr>
+              <td>
+                <textarea
+                  value={pricing.Basic.details}
+                  onChange={(e) => handleInputChange("Basic", "details", e.target.value)}
+                  placeholder="Describe your Basic package"
+                />
+              </td>
+            </tr>
+
+            {/* Delivery Time */}
+            <tr>
+              <td>
+                <select
+                  value={pricing.Basic.deliveryTime}
+                  onChange={(e) => handleInputChange("Basic", "deliveryTime", e.target.value)}
+                >
+                  <option value="">Select Delivery Time</option>
+                  <option value="1 Day">1 Day</option>
+                  <option value="3 Days">3 Days</option>
+                  <option value="7 Days">7 Days</option>
+                </select>
+              </td>
+            </tr>
+
+            {/* Minimum Amount */}
+            <tr>
+              <td className="amount-row">
+                <input
+                  type="number"
+                  value={pricing.Basic.amount}
+                  onChange={(e) => handleInputChange("Basic", "amount", e.target.value)}
+                  placeholder="₦0.00"
+                />
+              </td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
     </div>
   );
-};
+}
 
 export default PricingTable;
