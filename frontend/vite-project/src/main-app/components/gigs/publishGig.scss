@@ -22,23 +22,26 @@
   font-size: 24px;
   color: #333;
   margin-bottom: 10px;
+  width: 55%;
 }
 
 .publish-gig-main p {
   font-size: 16px;
   color: #555;
   margin-bottom: 20px;
+  width: 55%;
 }
 
 .publish-gig-buttons {
   display: flex;
-  justify-content: center;
+  justify-content: flex-start;
   gap: 20px;
+  width: 50%;
 }
 
 .publish-gig-buttons .draft-button,
 .publish-gig-buttons .publish-button {
-  padding: 10px 20px;
+  padding: 10px 0px 10px 0px;
   font-size: 16px;
   border: none;
   border-radius: 5px;
@@ -57,7 +60,7 @@
 }
 
 .publish-gig-buttons .publish-button {
-  background-color: #16ffaa;
+  background-color: #00CAB6;
   color: white;
 }
 
