@@ -2,7 +2,7 @@ import React from 'react';
 import "../styles/components/expert-team.scss";
 import ifeoluwa from "../assets/ifeoluwa.jpeg"; // Placeholder for expert images
 import faniyi from "../assets/faniyi.jpeg"; // Placeholder for expert images
-import funmilola from "../assets/funmilola.jpeg"; // Placeholder for expert images
+import funmilola from "../assets/lolaidowu2.jpg"; // Placeholder for expert images
 import victor from "../assets/victor.jpeg"; // Placeholder for expert images
 import { FaInstagram, FaTwitter, FaLinkedin } from 'react-icons/fa'; // Import social media icons
 
@@ -39,7 +39,7 @@ const AbaoutUsTeam = () => {
           }
         },
         { 
-          name: "Mrs. Oluwafunmilola", 
+          name: "Lola Idowu", 
           role: "Director of Home Care", 
           imgSrc: funmilola,
           socialLinks: {
