@@ -18,14 +18,7 @@ const AboutUs = () => {
       <WhyUsSection/>
       <AboutUsTeam/>
       <BrandList/>
-      <BottomBanner
-        title="Become Caregiver today!"
-        description="As a Carepro caregiver, you have the opportunity to make an incredible difference the minute you walk through the door, helping your clients live a happier life in their own home."
-        buttonText="Become a Caregiver"
-        imageUrl={genralImg}
-        onButtonClick={() => setIsModalOpen(true)}
-        backgroundColor="#015476"
-      />
+      <BottomBanner/>
       
     </div>
 

@@ -1,6 +1,4 @@
 import React from 'react';
-import '../../styles/components/story-section.scss';
-import '../../styles/components/story-section.scss';
 import story4 from '../../assets/story4.png'
 
 
@@ -33,11 +31,7 @@ const OurApproach = () => {
             max-width: 100%; /* Ensure the image is responsive */
             height: auto; /* Maintain aspect ratio */
           }
-  
-          .title {
-            font-size: 24px; /* Adjust title size */
-            margin-bottom: 10px; /* Space below title */
-          }
+
         `}</style>
         
         <div className="story-content">

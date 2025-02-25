@@ -1,12 +1,13 @@
-import '../styles/components/top-banner.scss';
-
+//import '../styles/components/top-banner.scss';
+import solarhealth from "../assets/solar_health-broken.svg"
+import genralImg from "../assets/nurse.png";
 
 const BottomBanner = ({ 
-    title = "Hire a Caregiver today!", 
+    title = "Become a Caregiver today!", 
     description = "As a Carepro caregiver, you have the opportunity to make an incredible difference the minute you walk through the door, helping your clients live a happier life in their own home.",
-    buttonText = "Hire a Caregiver",
-    imageUrl,
-    backgroundColor = "#373732",
+    buttonText = "Become a Caregiver",
+    imageUrl= genralImg,
+    backgroundColor = "#015476",
     onButtonClick 
   }) => {
     return (
@@ -15,10 +16,10 @@ const BottomBanner = ({
         <div className='banner' style={{ backgroundColor, borderRadius: '50px', overflow: 'hidden' }}>
           <div className='content'>
             <div className='text-content'>
-              <h1 style={{ color: 'white' }}>{title}</h1>
+              <h1 style={{ maxWidth: '120%', width: '120%', fontFamily:'PoppinsSemiBold',color:'white'}}>{title}</h1>
               <p style={{ color: 'white' }}>{description}</p>
               <button className='hire-button' onClick={onButtonClick}>
-                {buttonText} <span className='arrow'>→</span>
+                {buttonText} <img src={solarhealth} alt="Solar Health img" />
               </button>
             </div>
           </div>

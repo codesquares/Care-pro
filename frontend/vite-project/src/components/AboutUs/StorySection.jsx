@@ -1,6 +1,5 @@
 import React from 'react';
 import '../../styles/components/story-section.scss';
-import storyImage from '../../assets/storyImage.svg'
 import nurseAndWomen from '../../assets/nurseAndWoman.png'
 
 const StorySection = () => {
