@@ -13,7 +13,7 @@ const AboutUsTopBanner = () => {
         <img src={storyImage} alt="Elderly man and caregiver" className="banner-image" />
       </div>
       <div className="banner-content">
-        <h1 className="banner-title">{title}</h1>
+        <h1 className="banner-title" >{title}</h1>
       </div>
 
       <style jsx>{`
@@ -49,6 +49,7 @@ const AboutUsTopBanner = () => {
           font-size: 3rem; 
           color: white;
           margin: 0; /* Remove default margin */
+          font-family: PoppinsSemiBold;
         }
 
         .banner-description {

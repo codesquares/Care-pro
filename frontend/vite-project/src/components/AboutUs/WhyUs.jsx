@@ -25,7 +25,7 @@ const WhyUsSection = () => {
 
   return (
     <section className="why-us-section">
-      <h2>Our Values?</h2>
+      <h2 style={{ fontFamily:'PoppinsSemiBold' }}>Our Values</h2>
       <div className="features">
         {features.map((feature, index) => (
           <div key={index} className="feature">
