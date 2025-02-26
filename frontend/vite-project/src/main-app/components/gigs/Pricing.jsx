@@ -13,7 +13,7 @@ const PricingTable = ({ onPricingChange }) => {
     setPricing(updatedPricing);
     onPricingChange(updatedPricing);
   };
-  
+
 
   return (
     <div className="pricing-table">
@@ -21,7 +21,8 @@ const PricingTable = ({ onPricingChange }) => {
         <h3>Price and Packages</h3>
         <p>Create packages and select prices for each offering.</p>
       </div>
-      <table>
+
+      <table className="table-styles">
         <thead>
           <tr>
             <th>Basic</th>
@@ -122,28 +123,28 @@ const PricingTable = ({ onPricingChange }) => {
 
           {/* Minimum Amount */}
           <tr>
-            <td>
+            <td className="amount-row">
               <input
                 type="number"
                 value={pricing.Basic.amount}
                 onChange={(e) => handleInputChange("Basic", "amount", e.target.value)}
-                placeholder="0.00"
+                placeholder="₦0.00"
               />
             </td>
-            <td>
+            <td className="amount-row">
               <input
                 type="number"
                 value={pricing.Standard.amount}
                 onChange={(e) => handleInputChange("Standard", "amount", e.target.value)}
-                placeholder="0.00"
+                placeholder="₦0.00"
               />
             </td>
-            <td>
+            <td className="amount-row">
               <input
                 type="number"
                 value={pricing.Premium.amount}
                 onChange={(e) => handleInputChange("Premium", "amount", e.target.value)}
-                placeholder="0.00"
+                placeholder="₦0.00"
               />
             </td>
           </tr>
@@ -151,6 +152,6 @@ const PricingTable = ({ onPricingChange }) => {
       </table>
     </div>
   );
-};
+}
 
 export default PricingTable;
