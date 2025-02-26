@@ -4,7 +4,7 @@ import trustImg from '../../assets/trust-icon.png'
 import verifiedImg from '../../assets/verified-icon.png'
 import healthExpertImg from '../../assets/health-expert-icon.png'
 
-const WhyUsSection = () => {
+const OurValues = () => {
   const features = [
     {
       icon: trustImg,
@@ -39,4 +39,4 @@ const WhyUsSection = () => {
   );
 };
 
-export default WhyUsSection;
+export default OurValues;

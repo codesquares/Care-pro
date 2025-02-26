@@ -1,25 +1,22 @@
 import StorySection from "../components/AboutUs/StorySection";
-import WhyUsSection from "../components/AboutUs/WhyUs";
+import OurValues from "../components/AboutUs/OurValues.jsx";
 import BrandList from "../components/LandingPage/BrandList";
-import OurApproach from "../main-app/components/OurApproach";
-import genralImg from "../assets/nurse.png";
-import BottomBanner from "../components/BottomBanner.jsx";
-import AboutUsTopBanner from "../components/AboutUsTopBanner.jsx";
-import AboutUsTeam from "../components/AbaoutUsTeam.jsx";
+import OurApproach from "../components/AboutUs/OurApproach.jsx";
+import BottomBanner from "../components/AboutUs/BottomBanner.jsx";
+import AboutUsTopBanner from "../components/AboutUs/AboutUsTopBanner.jsx";
+import AboutUsTeam from "../components/AboutUs/AbaoutUsTeam.jsx";
 
 
 const AboutUs = () => {
   return (
     <div>
-    
       <AboutUsTopBanner/>
       <StorySection/>
       <OurApproach/>
-      <WhyUsSection/>
+      <OurValues/>
       <AboutUsTeam/>
       <BrandList/>
-      <BottomBanner/>
-      
+      <BottomBanner/> 
     </div>
 
   );
