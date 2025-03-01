@@ -22,7 +22,10 @@ import { logout } from './main-app/services/auth';
 import { AuthProvider } from './main-app/context/AuthContext';
 import CreateGig from './main-app/pages/care-giver/CreateGig';
 import Messages from './main-app/pages/Messages';
-
+import Notifications from './main-app/components/Notifications/Notifications';
+import ContentBlog from './components/ContentfulBlog/Blog';
+import ContentBlogPost from './components/ContentfulBlog/BlogPost';
+import {BlogProvider} from './main-app/context/BlogContext';
 
 function ScrollToTop() {
   const location = useLocation();
@@ -35,9 +38,11 @@ function ScrollToTop() {
 function App() {
     return (
       <AuthProvider>
+        <BlogProvider>
         <Router>
           <AppContent />
         </Router>
+        </BlogProvider>
       </AuthProvider>
     );
   }
@@ -50,6 +55,7 @@ function App() {
       '/',
       '/about-us',
       '/blog',
+      '/contentful-blog',
       '/care-facts',
       '/our-process',
       '/plans',
@@ -57,6 +63,7 @@ function App() {
       '/become-caregiver',
       '/login',
       '/register',
+      '/Notifications',
     ];
   
     // Check if current path is unprotected
@@ -70,6 +77,8 @@ function App() {
           <Route path="/" element={<Home />} />
           <Route path="/about-us" element={<AboutUs />} />
           <Route path="/blog" element={<Blog />} />
+          <Route path="/contentful-blog" element={<ContentBlog />} />
+          <Route path="/contentful-blog/:id" element={<ContentBlogPost />} />
           <Route path="/care-facts" element={<CareFacts />} />
           <Route path="/our-process" element={<OurProcess />} />
           {/* <Route path="/create-gig" element={<CreateGig />} /> */}
@@ -79,6 +88,7 @@ function App() {
           <Route path="/become-caregiver" element={<BecomeCaregiver />} />
           <Route path="/login" element={<LoginPage />} />
           <Route path="/register" element={<RegisterPage />} />
+          <Route path="/Notifications" element={<Notifications />} />
           <Route
             path="/app/*"
             element={
