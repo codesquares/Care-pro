@@ -28,6 +28,7 @@ import ContentBlogPost from './components/ContentfulBlog/BlogPost';
 import {BlogProvider} from './main-app/context/BlogContext';
 //Added for viewing Order Pages
 import Order from './main-app/components/orders/MyOrders';
+import Order2 from './main-app/components/orders/OrderTasks&Details';
 
 function ScrollToTop() {
   const location = useLocation();
@@ -67,7 +68,8 @@ function App() {
       '/register',
       '/Notifications',
       '/create-gig',
-      '/MyOrders'
+      '/MyOrders',
+      '/OrderTasks&Details'
     ];
   
     // Check if current path is unprotected
@@ -94,6 +96,7 @@ function App() {
           <Route path="/register" element={<RegisterPage />} />
           <Route path="/Notifications" element={<Notifications />} />
           <Route path="/MyOrders" element={<Order />} />
+          <Route path="/OrderTasks&Details" element={<Order2 />} />
           <Route
             path="/app/*"
             element={
