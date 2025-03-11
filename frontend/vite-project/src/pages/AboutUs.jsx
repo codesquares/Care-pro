@@ -1,19 +1,27 @@
-import ExpertTeam from "../components/AboutUs/ExpertTeam";
 import StorySection from "../components/AboutUs/StorySection";
 import WhyUsSection from "../components/AboutUs/WhyUs";
 import BrandList from "../components/LandingPage/BrandList";
-import CaregiverBanner from "../components/LandingPage/CaregiverBanner";
+import OurApproach from "../main-app/components/OurApproach";
+import genralImg from "../assets/nurse.png";
+import BottomBanner from "../components/BottomBanner.jsx";
+import AboutUsTopBanner from "../components/AboutUsTopBanner.jsx";
+import AboutUsTeam from "../components/AbaoutUsTeam.jsx";
 
 
 const AboutUs = () => {
   return (
     <div>
+    
+      <AboutUsTopBanner/>
       <StorySection/>
+      <OurApproach/>
       <WhyUsSection/>
-      <ExpertTeam/>
+      <AboutUsTeam/>
       <BrandList/>
-      <CaregiverBanner/>
+      <BottomBanner/>
+      
     </div>
+
   );
 };
 

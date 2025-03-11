@@ -11,8 +11,9 @@
 
   .features {
     display: flex;
-    justify-content: space-around;
+    justify-content: center;
     flex-wrap: wrap; // Ensure items wrap on smaller screens
+   
 
     .feature {
       max-width: 350px;

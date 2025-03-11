@@ -4,14 +4,15 @@
   font-family: Arial, sans-serif;
   display: flex;
   gap:10px;
-  width:80%;
-  height:400px;
+  width:90%;
+  height:800px;
   background-color: white;
   border-radius: 10px;
   box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1);
   padding:20px;
+  position: relative;
+  padding-bottom: 60px; /* Height for bottom table */
   
-
   .pricing-table-header {
     display: flex;
     align-items: center;
@@ -34,17 +35,24 @@
   }
   }
 
+  .table-style-left{
+    position: absolute;
+    bottom: 0;
+    left: 0;
+    padding: 30px;
+  }
+
   table {
     width: 100%;
-    border-collapse: collapse;
     height:70%;
+    border: 1px solid;
+    border-color: black;
+    border-collapse: collapse;
 
-    th,
-    td {
-      
+    th,td {
+      border: 1px solid black;
       padding: 8px;
       text-align: flex-start;
-
       input, textarea, select {
         width: 100%;
         padding: 4px;
@@ -57,17 +65,26 @@
       color:black;
     }
     
-
   textarea {
     resize: vertical;
     height: 60px;
+    border: 0;
   }
 
   select {
     cursor: pointer;
+    border: 0;
+  }  
   }
+}
 
-   
+/*Class for the black text on the bottom row */
+.amount-row{
+  input{
+    color: black;
+  }
+  ::placeholder {
+    color: black;
   }
 }
 
