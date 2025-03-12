@@ -1,6 +1,5 @@
-//import '../styles/components/top-banner.scss';
-import solarhealth from "../assets/solar_health-broken.svg"
-import genralImg from "../assets/nurse.png";
+import solarhealth from "../../assets/solar_health-broken.svg"
+import genralImg from "../../assets/nurse.png";
 
 const BottomBanner = ({ 
     title = "Become a Caregiver today!", 

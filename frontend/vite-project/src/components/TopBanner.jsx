@@ -1,8 +1,10 @@
 import '../styles/components/top-banner.scss';
+import solarhealth from "../assets/solar_health-broken.svg"
+import star from "../assets/bi_stars.svg"
 
 const TopBanner = ({ 
   title = "Hire a Caregiver today!", 
-  description = "As a Carepro caregiver, you have the opportunity to make an incredible difference the minute you walk through the door, helping your clients live a happier life in their own home.",
+  description = "As a Carepro caregiver, you have the opportunity to support your patients while also building a rewarding career in healthcare. Take the first step today!.",
   buttonText = "Hire a Caregiver",
   imageUrl,
   backgroundColor = "#373732",
@@ -12,10 +14,10 @@ const TopBanner = ({
     <div className='banner' style={{ backgroundColor }}>
       <div className='content'>
         <div className='text-content'>
-          <h1>{title}</h1>
-          <p>{description}</p>
+          <h1 style={{ maxWidth: '120%', width: '120%', fontFamily:'PoppinsSemiBold',color:'white'}}><img src={star} alt="star img" />{title}</h1>
+          <p style={{ color: 'white' }}>{description}</p>
           <button className='hire-button' onClick={onButtonClick}>
-            {buttonText} <span className='arrow'>→</span>
+            {buttonText} <img src={solarhealth} alt="Solar Health img" />
           </button>
         </div>
       </div>
