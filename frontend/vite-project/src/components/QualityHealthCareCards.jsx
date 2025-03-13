@@ -8,7 +8,7 @@ import QHCC5 from "../assets/QHCC5.jpg";
 import QHCC6 from "../assets/QHCC6.jpg";
 import QHCC7 from "../assets/QHCC7.jpg";
 import QHCC8 from "../assets/QHCC8.jpg";
-import "../../styles/components/qualityhealthcarecards.scss";
+import "../styles/components/qualityHealthCareCards.scss";
 
 const services = [
   {

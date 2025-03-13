@@ -5,7 +5,7 @@ import story5 from "../assets/story5.png";
 import nurseandwomen from "../assets/nurseAndWoman.png";
 import arrow from "../assets/arrow-right.svg"; // Import your arrow image
 import expandIcon from "../assets/ExpandIcon .png"
-import "../../styles/components/ourblog.scss";
+import "../styles/components/ourblog.scss";
 
 const OurBlogs = () => {
   const [isModalOpen, setIsModalOpen] = useState(false);
