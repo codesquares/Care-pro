@@ -27,6 +27,9 @@ import Notifications from './main-app/components/Notifications/Notifications';
 import ContentBlog from './components/ContentfulBlog/Blog';
 import ContentBlogPost from './components/ContentfulBlog/BlogPost';
 import {BlogProvider} from './main-app/context/BlogContext';
+//Added for viewing Order Pages
+import Order from './main-app/components/orders/MyOrders';
+import Order2 from './main-app/components/orders/OrderTasks&Details';
 
 function ScrollToTop() {
   const location = useLocation();
@@ -65,6 +68,9 @@ function App() {
       '/login',
       '/register',
       '/Notifications',
+      '/create-gig',
+      '/MyOrders',
+      '/OrderTasks&Details',
       '/order-faq', 
     ];
   
@@ -83,7 +89,7 @@ function App() {
           <Route path="/contentful-blog/:id" element={<ContentBlogPost />} />
           <Route path="/care-facts" element={<CareFacts />} />
           <Route path="/our-process" element={<OurProcess />} />
-          {/* <Route path="/create-gig" element={<CreateGig />} /> */}
+          <Route path="/create-gig" element={<CreateGig />} />
           <Route path="/messages" element={<Messages />} />
           <Route path="/plans" element={<Plans />} />
           <Route path="/book-caregiver" element={<BookCaregiver />} />
@@ -91,6 +97,8 @@ function App() {
           <Route path="/login" element={<LoginPage />} />
           <Route path="/register" element={<RegisterPage />} />
           <Route path="/Notifications" element={<Notifications />} />
+          <Route path="/MyOrders" element={<Order />} />
+          <Route path="/OrderTasks&Details" element={<Order2 />} />
           <Route path="/order-faq" element={<OrderFaq />} /> 
           <Route
             path="/app/*"
