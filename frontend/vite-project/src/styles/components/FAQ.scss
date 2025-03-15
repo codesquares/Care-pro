@@ -14,7 +14,7 @@
     flex-wrap: wrap;
     justify-content: space-between;
 
-    .faq-item {
+    .faq-item { 
       background-color: #fff;
       border-radius: 10px;
       padding: 20px;
@@ -29,17 +29,18 @@
       }
 
       &.active {
-        background-color: #e7f0f7;
+        background-color: white;
       }
 
       .faq-question {
         display: flex;
         justify-content: space-between;
         align-items: center;
-        font-size: 1.2rem;
+        font-size: 1.5rem;
         color: #2e4f6b;
         font-weight: 600;
         margin-bottom: 10px;
+        text-align: left;
       }
 
       .faq-icon {
@@ -51,6 +52,11 @@
         font-size: 1rem;
         color: #777;
         text-align: left;
+        display: none; // Hide by default
+
+        &.active {
+          display: block; // Show when active
+        }
       }
     }
   }

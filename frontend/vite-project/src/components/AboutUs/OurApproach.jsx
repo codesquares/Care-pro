@@ -1,39 +1,12 @@
 import React from 'react';
-import story4 from '../../assets/story4.png'
+import story4 from '../../assets/story4.png';
+import '../../styles/components/OurApproach.scss';
 
 
 const OurApproach = () => { 
 
-
-
     return (
       <section className="story-section">
-        <style jsx>{`
-          .story-section {
-            padding: 20px; /* Adjust padding as needed */
-          }
-  
-          .story-content {
-            display: flex; /* Use flexbox for layout */
-            align-items: center; /* Center items vertically */
-          }
-  
-          .story-text {
-            flex: 2; /* Allow the text to take up more space */
-            margin-left: 20px; /* Space between image and text */
-          }
-  
-          .story-image1 {
-            flex: 2; /* Allow the image to take up space */
-          }
-  
-          .story-image1 img {
-            max-width: 100%; /* Ensure the image is responsive */
-            height: auto; /* Maintain aspect ratio */
-          }
-
-        `}</style>
-        
         <div className="story-content">
           <div className="story-image1">
             <img src={story4} alt="Elderly man and caregiver" />
@@ -51,8 +24,6 @@ const OurApproach = () => {
         </div>
       </section>
     );
- 
-  
 };
 
 export default OurApproach;
