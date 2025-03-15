@@ -12,6 +12,7 @@ import Plans from './pages/Plans';
 import BookCaregiver from './pages/BookCaregiver';
 import Home from './pages/Home';
 import BecomeCaregiver from './pages/BecomeCaregiver';
+import OrderFaq from './main-app/pages/care-giver/OrderFaq';
 import LoginPage from './main-app/pages/LoginPage';
 import RegisterPage from './main-app/pages/RegisterPage';
 import { ToastContainer } from 'react-toastify';
@@ -22,9 +23,13 @@ import { logout } from './main-app/services/auth';
 import { AuthProvider } from './main-app/context/AuthContext';
 import CreateGig from './main-app/pages/care-giver/CreateGig';
 import Messages from './main-app/pages/Messages';
+import Notifications from './main-app/components/Notifications/Notifications';
 import ContentBlog from './components/ContentfulBlog/Blog';
 import ContentBlogPost from './components/ContentfulBlog/BlogPost';
 import {BlogProvider} from './main-app/context/BlogContext';
+//Added for viewing Order Pages
+import Order from './main-app/components/orders/MyOrders';
+import Order2 from './main-app/components/orders/OrderTasks&Details';
 
 function ScrollToTop() {
   const location = useLocation();
@@ -62,6 +67,11 @@ function App() {
       '/become-caregiver',
       '/login',
       '/register',
+      '/Notifications',
+      '/create-gig',
+      '/MyOrders',
+      '/OrderTasks&Details',
+      '/order-faq', 
     ];
   
     // Check if current path is unprotected
@@ -79,13 +89,17 @@ function App() {
           <Route path="/contentful-blog/:id" element={<ContentBlogPost />} />
           <Route path="/care-facts" element={<CareFacts />} />
           <Route path="/our-process" element={<OurProcess />} />
-          {/* <Route path="/create-gig" element={<CreateGig />} /> */}
+          <Route path="/create-gig" element={<CreateGig />} />
           <Route path="/messages" element={<Messages />} />
           <Route path="/plans" element={<Plans />} />
           <Route path="/book-caregiver" element={<BookCaregiver />} />
           <Route path="/become-caregiver" element={<BecomeCaregiver />} />
           <Route path="/login" element={<LoginPage />} />
           <Route path="/register" element={<RegisterPage />} />
+          <Route path="/Notifications" element={<Notifications />} />
+          <Route path="/MyOrders" element={<Order />} />
+          <Route path="/OrderTasks&Details" element={<Order2 />} />
+          <Route path="/order-faq" element={<OrderFaq />} /> 
           <Route
             path="/app/*"
             element={

@@ -6,12 +6,14 @@
   
     &__title {
       font-size: 1.8rem;
-      font-weight: bold;
+      font-family: PoppinsSemiBold;
       margin-bottom: 6rem;
       @media (max-width: 768px) {
         margin-bottom: 2rem;
       }
     }
+
+
   
     &__card-container {
       display: flex;
@@ -38,16 +40,20 @@
       &:hover {
         transform: translateY(-5px);
         background-color:#324CA6;
-        ;
         color: #fff;
   
         .why-carepro__card-title {
           color: #fff;
         }
+        .why-carepro__card-description {
+          color: #fff;
+        }
+     
       }
     }
   
     &__card-title {
+     
       font-size: 1.2rem;
       margin-bottom: 1rem;
     }
