@@ -267,6 +267,10 @@
               "target": "Package",
               "version": "[8.1.1, )"
             },
+            "Newtonsoft.Json": {
+              "target": "Package",
+              "version": "[13.0.3, )"
+            },
             "NuGet.Common": {
               "target": "Package",
               "version": "[6.11.0, )"
@@ -274,6 +278,10 @@
             "NuGet.Protocol": {
               "target": "Package",
               "version": "[6.11.0, )"
+            },
+            "RestSharp": {
+              "target": "Package",
+              "version": "[112.1.0, )"
             },
             "System.Net.Http": {
               "target": "Package",

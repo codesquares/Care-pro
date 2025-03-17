@@ -7,10 +7,8 @@ using System.Threading.Tasks;
 
 namespace Application.Interfaces.Content
 {
-    public interface IClientService
+    public interface IClientOrderService
     {
-        Task<ClientDTO> CreateClientUserAsync(AddClientUserRequest addClientUserRequest);
-
-        Task<ClientResponse> GetClientUserAsync(string clientId);
+        Task<ClientOrderDTO> CreateClientOrderAsync(AddClientOrderRequest addClientOrderRequest);
     }
 }

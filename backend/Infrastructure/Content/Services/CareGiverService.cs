@@ -46,7 +46,8 @@ namespace Infrastructure.Content.Services
 
                 // Assign new ID
                 Id = ObjectId.GenerateNewId(),
-                Role = Roles.Caregiver.ToString(),
+               // Role = Roles.Caregiver.ToString(),
+                Role = addCaregiverRequest.Role,
                 Status = true,
                 IsDeleted = false,
                 CreatedAt = DateTime.Now,
@@ -63,7 +64,8 @@ namespace Infrastructure.Content.Services
                 // Assign new ID
                 Id = ObjectId.GenerateNewId(),
                 AppUserId = caregiver.Id,
-                Role = Roles.Caregiver.ToString(),
+                //Role = Roles.Caregiver.ToString(),
+                Role = caregiver.Role,
                 IsDeleted = false,
                 CreatedAt = caregiver.CreatedAt,
             };

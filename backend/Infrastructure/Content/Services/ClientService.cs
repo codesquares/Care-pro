@@ -86,5 +86,31 @@ namespace Infrastructure.Content.Services
 
             return clientUserDTO;
         }
+
+        public async Task<ClientResponse> GetClientUserAsync(string clientId)
+        {
+            var client = await careProDbContext.Clients.FirstOrDefaultAsync(x => x.Id.ToString() == clientId);
+
+            if (client == null)
+            {
+                throw new KeyNotFoundException($"Caregiver with ID '{clientId}' not found.");
+            }
+
+            var clientDTO = new ClientResponse()
+            {
+                Id = client.Id.ToString(),
+                FirstName = client.FirstName,
+                MiddleName = client.MiddleName,
+                LastName = client.LastName,
+                Email = client.Email,
+                Role = client.Role,
+                Status = client.Status,
+                HomeAddress = client.HomeAddress,
+                
+                CreatedAt = client.CreatedAt,
+            };
+
+            return clientDTO;
+        }
     }
 }

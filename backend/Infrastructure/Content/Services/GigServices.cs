@@ -41,7 +41,7 @@ namespace Infrastructure.Content.Services
             }
 
             var careGiver = await careGiverService.GetCaregiverUserAsync(addGigRequest.CaregiverId);
-            if (careGiver != null)
+            if (careGiver == null)
             {
                 throw new AuthenticationException("The CaregiverID entered is not a Valid ID");
             }

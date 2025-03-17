@@ -47,4 +47,26 @@ namespace Application.DTOs
         public string HomeAddress { get; set; }
                 
     }
+
+    public class ClientResponse
+    {
+        public string Id { get; set; }
+
+        public string FirstName { get; set; }
+
+        public string? MiddleName { get; set; }
+
+        public string LastName { get; set; }
+
+        public string Email { get; set; }
+
+        public string Role { get; set; }
+
+        public string HomeAddress { get; set; }
+
+
+        public bool Status { get; set; }
+
+        public DateTime CreatedAt { get; set; }
+    }
 }

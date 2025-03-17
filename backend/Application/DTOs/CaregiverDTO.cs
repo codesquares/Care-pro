@@ -56,6 +56,8 @@ namespace Application.DTOs
 
         public string Email { get; set; } = null!;
 
+        public string Role { get; set; } = null!;
+
         public string PhoneNo { get; set; }
 
         public string Password { get; set; } = null!;
