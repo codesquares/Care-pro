@@ -3,6 +3,7 @@ using Application.Interfaces;
 using Application.Interfaces.Content;
 using Domain.Entities;
 using Infrastructure.Content.Data;
+using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging;
 using MongoDB.Bson;
 using System;
@@ -56,6 +57,7 @@ namespace Infrastructure.Content.Services
 
                 // Assign new ID
                 Id = ObjectId.GenerateNewId(),
+                CaregiverId = gig.CaregiverId,
                 OrderCreatedAt = DateTime.Now,
             };
 
@@ -68,6 +70,7 @@ namespace Infrastructure.Content.Services
             {
                 Id = clientOrder.Id.ToString(),
                 ClientId = clientOrder.ClientId,
+                CaregiverId = clientOrder.CaregiverId,
                 GigId = clientOrder.GigId,
                 PaymentOption = clientOrder.PaymentOption,
                 Amount = clientOrder.Amount,
@@ -78,6 +81,108 @@ namespace Infrastructure.Content.Services
 
             return clientOrderDTO;
 
+        }
+
+        public async Task<IEnumerable<ClientOrderResponse>> GetAllCaregiverOrderAsync(string caregiverId)
+        {
+
+            var orders = await careProDbContext.ClientOrders
+               .Where(x => x.CaregiverId == caregiverId)
+               .OrderBy(x => x.OrderCreatedAt)
+               .ToListAsync();
+
+            var caregiverOrders = new List<ClientOrderResponse>();
+
+            foreach (var caregiverOrder in orders)
+            {
+                var gig = await gigServices.GetGigAsync(caregiverOrder.GigId);
+                if (gig == null)
+                {
+                    throw new AuthenticationException("The GigID entered is not a Valid ID");
+                }
+                var caregiverOrderDTO = new ClientOrderResponse()
+                {
+                    Id = caregiverOrder.Id.ToString(),
+                    ClientId = caregiverOrder.ClientId,
+                    CaregiverId = gig.CaregiverId,
+                    GigId = caregiverOrder.GigId,
+                    PaymentOption = caregiverOrder.PaymentOption,
+                    Amount = caregiverOrder.Amount,
+                    TransactionId = caregiverOrder.TransactionId,
+                    OrderCreatedOn = caregiverOrder.OrderCreatedAt,
+
+                };
+
+                caregiverOrders.Add(caregiverOrderDTO);
+            }
+
+            return caregiverOrders;
+        }
+
+        public async Task<IEnumerable<ClientOrderResponse>> GetAllClientOrderAsync(string clientUserId)
+        {
+            var orders = await careProDbContext.ClientOrders
+               .Where(x => x.ClientId == clientUserId)
+               .OrderBy(x => x.OrderCreatedAt)
+               .ToListAsync();
+
+            var clientOrdersDTOs = new List<ClientOrderResponse>();
+
+            foreach (var clientOrder in orders)
+            {
+                var gig = await gigServices.GetGigAsync(clientOrder.GigId);
+                if (gig == null)
+                {
+                    throw new AuthenticationException("The GigID entered is not a Valid ID");
+                }
+                var clientOrderDTO = new ClientOrderResponse()
+                {
+                    Id = clientOrder.Id.ToString(),
+                    ClientId = clientOrder.ClientId,
+                    CaregiverId = gig.CaregiverId,
+                    GigId = clientOrder.GigId,
+                    PaymentOption = clientOrder.PaymentOption,
+                    Amount = clientOrder.Amount,
+                    TransactionId = clientOrder.TransactionId,
+                    OrderCreatedOn = clientOrder.OrderCreatedAt,
+                    
+                };
+
+                clientOrdersDTOs.Add(clientOrderDTO);
+            }
+
+            return clientOrdersDTOs;
+        }
+
+        public async Task<ClientOrderResponse> GetClientOrderAsync(string orderId)
+        {
+            var order = await careProDbContext.ClientOrders.FirstOrDefaultAsync(x => x.Id.ToString() == orderId);
+
+            if (order == null)
+            {
+                throw new KeyNotFoundException($"Gig with ID '{orderId}' not found.");
+            }
+
+            var gig = await gigServices.GetGigAsync(order.GigId);
+            if (gig == null)
+            {
+                throw new AuthenticationException("The GigID entered is not a Valid ID");
+            }
+
+            var clientOrderDTO = new ClientOrderResponse()
+            {
+                Id = order.Id.ToString(),
+                ClientId = order.ClientId,
+                GigId = order.GigId,
+                CaregiverId = gig.CaregiverId,
+                PaymentOption = order.PaymentOption,
+                Amount = order.Amount,
+                TransactionId = order.TransactionId,
+                OrderCreatedOn = order.OrderCreatedAt,
+                
+            };
+
+            return clientOrderDTO;
         }
     }
 }

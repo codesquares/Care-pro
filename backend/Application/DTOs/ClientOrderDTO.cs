@@ -11,11 +11,25 @@ namespace Application.DTOs
     {
         public string Id { get; set; }
         public string ClientId { get; set; }
+        public string CaregiverId { get; set; }
         public string GigId { get; set; }
         public string PaymentOption { get; set; }
         public int Amount { get; set; }
         public string TransactionId { get; set; }
         public DateTime OrderCreatedAt { get; set; }
+    }
+
+
+    public class ClientOrderResponse
+    {
+        public string Id { get; set; }
+        public string ClientId { get; set; }
+        public string CaregiverId { get; set; }
+        public string GigId { get; set; }
+        public string PaymentOption { get; set; }
+        public int Amount { get; set; }
+        public string TransactionId { get; set; }
+        public DateTime OrderCreatedOn { get; set; }
     }
 
     public class AddClientOrderRequest

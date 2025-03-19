@@ -53,5 +53,107 @@ namespace CarePro_Api.Controllers.Content
 
         }
 
+
+        [HttpGet]
+        [Route("clientUserId")]
+        // [Authorize(Roles = "Caregiver, Client, Admin")]
+        public async Task<IActionResult> GetAllClientOrdersAsync(string clientUserId)
+        {           
+
+            try
+            {
+                logger.LogInformation($"Retrieving all Orders for Client available");
+
+                var clientOrders = await clientOrderService.GetAllClientOrderAsync(clientUserId);
+
+                return Ok(clientOrders);
+
+            }
+            catch (ApplicationException appEx)
+            {
+                // Handle application-specific exceptions
+                return BadRequest(new { ErrorMessage = appEx.Message });
+            }
+            catch (HttpRequestException httpEx)
+            {
+                // Handle HTTP request-related exceptions
+                return StatusCode(500, new { ErrorMessage = httpEx.Message });
+            }
+            catch (Exception ex)
+            {
+                // Handle other exceptions
+                return StatusCode(500, new { ex /*ErrorMessage = "An error occurred on the server."*/ });
+            }
+
+        }
+
+
+        [HttpGet]
+        [Route("caregiverId")]
+        // [Authorize(Roles = "Caregiver, Client, Admin")]
+        public async Task<IActionResult> GetAllCaregiverOrdersAsync(string caregiverId)
+        {
+
+            try
+            {
+                logger.LogInformation($"Retrieving all Orders for Client available");
+
+                var caregiverOrders = await clientOrderService.GetAllCaregiverOrderAsync(caregiverId);
+
+                return Ok(caregiverOrders);
+
+            }
+            catch (ApplicationException appEx)
+            {
+                // Handle application-specific exceptions
+                return BadRequest(new { ErrorMessage = appEx.Message });
+            }
+            catch (HttpRequestException httpEx)
+            {
+                // Handle HTTP request-related exceptions
+                return StatusCode(500, new { ErrorMessage = httpEx.Message });
+            }
+            catch (Exception ex)
+            {
+                // Handle other exceptions
+                return StatusCode(500, new { ex /*ErrorMessage = "An error occurred on the server."*/ });
+            }
+
+        }
+
+
+        [HttpGet]
+        [Route("orderId")]
+        // [Authorize(Roles = "Caregiver, Client, Admin")]
+        public async Task<IActionResult> GetOrderAsync(string orderId)
+        {
+
+            try
+            {
+                logger.LogInformation($"Retrieving all Orders for Client available");
+
+                var clientOrder = await clientOrderService.GetClientOrderAsync(orderId);
+
+                return Ok(clientOrder);
+
+            }
+            catch (ApplicationException appEx)
+            {
+                // Handle application-specific exceptions
+                return BadRequest(new { ErrorMessage = appEx.Message });
+            }
+            catch (HttpRequestException httpEx)
+            {
+                // Handle HTTP request-related exceptions
+                return StatusCode(500, new { ErrorMessage = httpEx.Message });
+            }
+            catch (Exception ex)
+            {
+                // Handle other exceptions
+                return StatusCode(500, new { ex /*ErrorMessage = "An error occurred on the server."*/ });
+            }
+
+        }
+
     }
 }
