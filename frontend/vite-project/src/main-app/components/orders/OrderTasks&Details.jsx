@@ -143,11 +143,11 @@ const MyOrders = () => {
                         <div className="support-section">
                             <h3>Support</h3>
                             <div className="support-item">
-                                <span>📋 FAQs</span>
+                                <a href = "http://localhost:5173/order-faq">📋 FAQs</a>
                                 <span>Find needed answers</span>
                             </div>
                             <div className="support-item">
-                                <span>📞 Resolution Center</span>
+                                <a href = "http://localhost:5173/ResolutionCenter">📞 Resolution Center</a>
                                 <span>Resolve order issues</span>
                             </div>
                         </div>
