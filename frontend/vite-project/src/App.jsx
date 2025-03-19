@@ -30,6 +30,7 @@ import {BlogProvider} from './main-app/context/BlogContext';
 //Added for viewing Order Pages
 import Order from './main-app/components/orders/MyOrders';
 import Order2 from './main-app/components/orders/OrderTasks&Details';
+import ResolutionCenter from './main-app/components/orders/ResolutionCenter';
 
 function ScrollToTop() {
   const location = useLocation();
@@ -72,6 +73,7 @@ function App() {
       '/MyOrders',
       '/OrderTasks&Details',
       '/order-faq', 
+      '/ResolutionCenter',
     ];
   
     // Check if current path is unprotected
@@ -100,6 +102,7 @@ function App() {
           <Route path="/MyOrders" element={<Order />} />
           <Route path="/OrderTasks&Details" element={<Order2 />} />
           <Route path="/order-faq" element={<OrderFaq />} /> 
+          <Route path="/ResolutionCenter" element={<ResolutionCenter />} />
           <Route
             path="/app/*"
             element={
