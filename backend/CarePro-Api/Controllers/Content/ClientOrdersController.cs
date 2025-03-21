@@ -20,38 +20,55 @@ namespace CarePro_Api.Controllers.Content
             this.logger = logger;
         }
 
+        ///// ENDPOINT TO CREATE  ClientOrder Services TO THE DATABASE
+        ////[HttpPost]
+        //// [Authorize(Roles = "Client")]
+        ////public async Task<IActionResult> AddClientOrderAsync([FromBody] AddClientOrderRequest addClientOrderRequest)
+        ////{
+        ////    try
+        ////    {
+        ////        // Pass Domain Object to Repository, to Persisit this
+        ////        var clientOrder = await clientOrderService.CreateClientOrderAsync(addClientOrderRequest);
+
+
+        ////        // Send DTO response back to ClientUser
+        ////        return Ok(clientOrder);
+
+        ////    }
+        ////    catch (ApplicationException appEx)
+        ////    {
+        ////        // Handle application-specific exceptions
+        ////        return BadRequest(new { ErrorMessage = appEx.Message });
+        ////    }
+        ////    catch (HttpRequestException httpEx)
+        ////    {
+        ////        // Handle HTTP request-related exceptions
+        ////        return StatusCode(500, new { ErrorMessage = httpEx.Message });
+        ////    }
+        ////    catch (Exception ex)
+        ////    {
+        ////        // Handle other exceptions
+        ////        return StatusCode(500, new { ex /*ErrorMessage = "An error occurred on the server."*/ });
+        ////    }
+
+        ////}
+
+
         /// ENDPOINT TO CREATE  ClientOrder Services TO THE DATABASE
         [HttpPost]
         // [Authorize(Roles = "Client")]
         public async Task<IActionResult> AddClientOrderAsync([FromBody] AddClientOrderRequest addClientOrderRequest)
         {
-            try
-            {
-                // Pass Domain Object to Repository, to Persisit this
-                var clientOrder = await clientOrderService.CreateClientOrderAsync(addClientOrderRequest);
+            var result = await clientOrderService.CreateClientOrderAsync(addClientOrderRequest);
 
-
-                // Send DTO response back to ClientUser
-                return Ok(clientOrder);
-
-            }
-            catch (ApplicationException appEx)
+            if (!result.IsSuccess)
             {
-                // Handle application-specific exceptions
-                return BadRequest(new { ErrorMessage = appEx.Message });
-            }
-            catch (HttpRequestException httpEx)
-            {
-                // Handle HTTP request-related exceptions
-                return StatusCode(500, new { ErrorMessage = httpEx.Message });
-            }
-            catch (Exception ex)
-            {
-                // Handle other exceptions
-                return StatusCode(500, new { ex /*ErrorMessage = "An error occurred on the server."*/ });
+                return BadRequest(new { Errors = result.Errors });
             }
 
+            return Ok(result.Value);
         }
+
 
 
         [HttpGet]

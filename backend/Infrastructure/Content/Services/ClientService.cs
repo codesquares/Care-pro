@@ -93,7 +93,7 @@ namespace Infrastructure.Content.Services
 
             if (client == null)
             {
-                throw new KeyNotFoundException($"Caregiver with ID '{clientId}' not found.");
+                throw new KeyNotFoundException($"Client with ID '{clientId}' not found.");
             }
 
             var clientDTO = new ClientResponse()

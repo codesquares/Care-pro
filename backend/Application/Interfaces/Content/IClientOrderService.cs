@@ -9,7 +9,10 @@ namespace Application.Interfaces.Content
 {
     public interface IClientOrderService
     {
-        Task<ClientOrderDTO> CreateClientOrderAsync(AddClientOrderRequest addClientOrderRequest);
+        //Task<ClientOrderDTO> CreateClientOrderAsync(AddClientOrderRequest addClientOrderRequest);
+        Task<Result<ClientOrderDTO>> CreateClientOrderAsync(AddClientOrderRequest addClientOrderRequest);
+       // Task<Result<ClientOrderDTO>> CreateClientOrderAsync(AddClientOrderRequest addClientOrderRequest);
+
 
         Task<IEnumerable<ClientOrderResponse>> GetAllClientOrderAsync(string clientUserId);
 

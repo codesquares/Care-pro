@@ -13,10 +13,12 @@ namespace CarePro_Api.Controllers.Content
     public class ClientsController : ControllerBase
     {
         private readonly IClientService clientService;
+        private readonly ILogger<ClientsController> logger;
 
-        public ClientsController(IClientService clientService)
+        public ClientsController(IClientService clientService, ILogger<ClientsController> logger)
         {
             this.clientService = clientService;
+            this.logger = logger;
         }
 
         /// ENDPOINT TO CREATE  CLIENT USERS TO THE DATABASE
@@ -56,6 +58,17 @@ namespace CarePro_Api.Controllers.Content
                 return StatusCode(500, new { StatusCode = 500, ErrorMessage = ex.Message });
             }
 
+        }
+
+
+        [HttpGet]
+        [Route("{clientId}")]
+        //[Authorize(Roles = "Client,Admin")]
+        public async Task<IActionResult> GetCaregiverAsync(string clientId)
+        {
+            logger.LogInformation($"Retrieving Client with ID : {clientId}");
+            var client = await clientService.GetClientUserAsync(clientId);
+            return Ok(client);
         }
 
     }

@@ -32,21 +32,28 @@ namespace Infrastructure.Content.Services
             this.logger = logger;
         }
 
-        public async Task<ClientOrderDTO> CreateClientOrderAsync(AddClientOrderRequest addClientOrderRequest)
+        public async Task<Result<ClientOrderDTO>> CreateClientOrderAsync(AddClientOrderRequest addClientOrderRequest)
         {
-            var client = await careGiverService.GetCaregiverUserAsync(addClientOrderRequest.ClientId);
+            var errors = new List<string>();
+
+            var client = await clientService.GetClientUserAsync(addClientOrderRequest.ClientId);
             if (client == null)
             {
-                throw new AuthenticationException("The ClientID entered is not a Valid ID");
+                errors.Add("The ClientID entered is not a valid ID.");
             }
 
             var gig = await gigServices.GetGigAsync(addClientOrderRequest.GigId);
             if (gig == null)
             {
-                throw new AuthenticationException("The GigID entered is not a Valid ID");
+                errors.Add("The GigID entered is not a valid ID.");
             }
 
-            /// CONVERT DTO TO DOMAIN OBJECT            
+            if (errors.Any())
+            {
+                return Result<ClientOrderDTO>.Failure(errors);
+            }
+
+            // Convert DTO to domain object            
             var clientOrder = new ClientOrder
             {
                 ClientId = client.Id,
@@ -62,11 +69,9 @@ namespace Infrastructure.Content.Services
             };
 
             await careProDbContext.ClientOrders.AddAsync(clientOrder);
-
             await careProDbContext.SaveChangesAsync();
-                       
 
-            var clientOrderDTO = new ClientOrderDTO()
+            var clientOrderDTO = new ClientOrderDTO
             {
                 Id = clientOrder.Id.ToString(),
                 ClientId = clientOrder.ClientId,
@@ -76,12 +81,63 @@ namespace Infrastructure.Content.Services
                 Amount = clientOrder.Amount,
                 TransactionId = clientOrder.TransactionId,
                 OrderCreatedAt = clientOrder.OrderCreatedAt,
-                
             };
 
-            return clientOrderDTO;
-
+            return Result<ClientOrderDTO>.Success(clientOrderDTO);
         }
+
+
+
+        //public async Task<ClientOrderDTO> CreateClientOrderAsync(AddClientOrderRequest addClientOrderRequest)
+        //{
+        //    var client = await clientService.GetClientUserAsync(addClientOrderRequest.ClientId);
+        //    if (client == null)
+        //    {
+        //        throw new AuthenticationException("The ClientID entered is not a Valid ID");
+        //    }
+
+        //    var gig = await gigServices.GetGigAsync(addClientOrderRequest.GigId);
+        //    if (gig == null)
+        //    {
+        //        throw new AuthenticationException("The GigID entered is not a Valid ID");
+        //    }
+
+        //    /// CONVERT DTO TO DOMAIN OBJECT            
+        //    var clientOrder = new ClientOrder
+        //    {
+        //        ClientId = client.Id,
+        //        GigId = gig.Id,
+        //        PaymentOption = addClientOrderRequest.PaymentOption,
+        //        Amount = addClientOrderRequest.Amount,
+        //        TransactionId = addClientOrderRequest.TransactionId,
+
+        //        // Assign new ID
+        //        Id = ObjectId.GenerateNewId(),
+        //        CaregiverId = gig.CaregiverId,
+        //        OrderCreatedAt = DateTime.Now,
+        //    };
+
+        //    await careProDbContext.ClientOrders.AddAsync(clientOrder);
+
+        //    await careProDbContext.SaveChangesAsync();
+
+
+        //    var clientOrderDTO = new ClientOrderDTO()
+        //    {
+        //        Id = clientOrder.Id.ToString(),
+        //        ClientId = clientOrder.ClientId,
+        //        CaregiverId = clientOrder.CaregiverId,
+        //        GigId = clientOrder.GigId,
+        //        PaymentOption = clientOrder.PaymentOption,
+        //        Amount = clientOrder.Amount,
+        //        TransactionId = clientOrder.TransactionId,
+        //        OrderCreatedAt = clientOrder.OrderCreatedAt,
+
+        //    };
+
+        //    return clientOrderDTO;
+
+        //}
 
         public async Task<IEnumerable<ClientOrderResponse>> GetAllCaregiverOrderAsync(string caregiverId)
         {
@@ -184,5 +240,9 @@ namespace Infrastructure.Content.Services
 
             return clientOrderDTO;
         }
+
+        
+
+       
     }
 }
