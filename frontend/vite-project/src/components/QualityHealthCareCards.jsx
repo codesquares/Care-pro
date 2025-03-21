@@ -1,4 +1,5 @@
 import React from 'react';
+import "../styles/components/qualityHealthcareCards.scss"
 import star from "../assets/rating_star.png"; // Import the star image
 import QHCC1 from "../assets/QHCC1.jpg";
 import QHCC2 from "../assets/QHCC2.jpg";
@@ -8,7 +9,6 @@ import QHCC5 from "../assets/QHCC5.jpg";
 import QHCC6 from "../assets/QHCC6.jpg";
 import QHCC7 from "../assets/QHCC7.jpg";
 import QHCC8 from "../assets/QHCC8.jpg";
-import "../../styles/components/qualityhealthcarecards.scss";
 
 const services = [
   {
@@ -85,15 +85,12 @@ const services = [
   },
 ];
 
-const Card = ({ title, rating, caregivers, image, alt, bgColor, titleColor, index }) => {
-  // Define a marginTop style for specific indices
-  const imageStyle = {
-    marginTop:  index === 2 || index === 3 || index === 7 ? '2rem' : '0', // Cards 3, 4, and 8 (0-based index)
-  };
-
+const Card = ({ title, rating, caregivers, image, alt, bgColor, titleColor }) => {
   return (
     <div className="quality-healthcare-card" style={{ backgroundColor: bgColor }}>
-      <h3 className="quality-healthcare-card__title" style={{ color: titleColor }}>{title}</h3>
+      <div className="quality-healthcare-card__title" style={{ color: titleColor }}>
+        {title}
+      </div>
       <div className="quality-healthcare-card__rating-container">
         <div className="quality-healthcare-card__rating">
           <img src={star} alt="Star" className="quality-healthcare-card__star" />
@@ -105,31 +102,31 @@ const Card = ({ title, rating, caregivers, image, alt, bgColor, titleColor, inde
         src={image} 
         alt={alt} 
         className="quality-healthcare-card__image" 
-        style={imageStyle} // Apply the conditional style here
       />
     </div>
   );
 };
 
-const QualityHealthCareCards = () => (
-  <div className="quality-healthcare-cards" style={{ padding: '0 2rem' }}> {/* Add padding to the edges */}
-    <h2 className="quality-healthcare-title">Quality healthcare at your Fingertips</h2>
-    <div style={{ display: 'flex', flexWrap: 'wrap', justifyContent: 'space-between' }}>
-      {services.map((service, index) => (
-        <Card 
-          key={index} 
-          title={service.title} 
-          rating={service.rating} 
-          caregivers={service.caregivers} 
-          image={service.image} 
-          alt={service.alt} 
-          bgColor={service.bgColor} 
-          titleColor={service.titleColor} 
-          index={index} // Pass the index here
-        />
-      ))}
-    </div> 
-  </div>
-);
+const QualityHealthCareCards = () => {
+  return (
+    <div className="quality-healthcare-cards" style={{ padding: '0 2rem' }}>
+      <h2 className="quality-healthcare-title">Quality healthcare at your Fingertips</h2>
+      <div style={{ display: 'flex', flexWrap: 'wrap', justifyContent: 'space-between' }}>
+        {services.map((service, index) => (
+          <Card 
+            key={index} 
+            title={service.title} 
+            rating={service.rating} 
+            caregivers={service.caregivers} 
+            image={service.image} 
+            alt={service.alt} 
+            bgColor={service.bgColor} 
+            titleColor={service.titleColor} 
+          />
+        ))}
+      </div> 
+    </div>
+  );
+};
 
 export default QualityHealthCareCards;
