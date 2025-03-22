@@ -1,0 +1,60 @@
+/* QualityHealthCareCards.css */
+
+.quality-healthcare-card {
+  padding: 1.5rem;
+  text-align: left;
+  border-radius: 8px;
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+  flex: 1 1 22%;
+  margin: 1rem;
+  transition: transform 0.3s ease;
+}
+
+.quality-healthcare-card__title {
+  font-family: PoppinsSemiBold;
+  font-size: 1.5rem;
+  margin-bottom: 0.5rem;
+  min-height: 3rem; /* Minimum height for title */
+}
+
+.quality-healthcare-card__rating-container {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 0.5rem;
+}
+
+.quality-healthcare-card__rating {
+  display: flex;
+  align-items: center;
+  background-color: #fff8e1;
+  border: 1.5px solid #ffc107;
+  border-radius: 20px;
+  color: black;
+  padding: 0.3rem 0.5rem;
+}
+
+.quality-healthcare-card__star {
+  width: 1rem;
+  height: auto;
+  margin-right: 0.5rem;
+}
+
+.quality-healthcare-card__caregivers {
+  color: black;
+}
+
+.quality-healthcare-card__image {
+  width: 100%;
+  height: auto;
+  border-radius: 8px;
+  margin-top: 0.5rem;
+}
+
+.quality-healthcare-title {
+  text-align: center;
+  font-family: PoppinsSemiBold;
+  font-size: 3rem;
+  margin-bottom: 2rem;
+  color: black;
+}
