@@ -89,7 +89,7 @@ namespace Infrastructure.Content.Services
 
         public async Task<ClientResponse> GetClientUserAsync(string clientId)
         {
-            var client = await careProDbContext.Clients.FirstOrDefaultAsync(x => x.Id.ToString() == clientId);
+            var client = await careProDbContext.CareGivers.FirstOrDefaultAsync(x => x.Id.ToString() == clientId);
 
             if (client == null)
             {

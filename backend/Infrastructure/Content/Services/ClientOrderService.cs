@@ -65,6 +65,7 @@ namespace Infrastructure.Content.Services
                 // Assign new ID
                 Id = ObjectId.GenerateNewId(),
                 CaregiverId = gig.CaregiverId,
+                ClientOrderStatus = "In Progress",
                 OrderCreatedAt = DateTime.Now,
             };
 
@@ -156,15 +157,32 @@ namespace Infrastructure.Content.Services
                 {
                     throw new AuthenticationException("The GigID entered is not a Valid ID");
                 }
+
+                var caregiver = await careGiverService.GetCaregiverUserAsync(caregiverId);
+                if (caregiver == null)
+                {
+                    throw new AuthenticationException("The CaregiverId entered is not a Valid ID");
+                }
+
                 var caregiverOrderDTO = new ClientOrderResponse()
                 {
                     Id = caregiverOrder.Id.ToString(),
                     ClientId = caregiverOrder.ClientId,
+
                     CaregiverId = gig.CaregiverId,
+                    CaregiverName = caregiver.FirstName + " " + caregiver.LastName,
+
                     GigId = caregiverOrder.GigId,
+                    GigTitle = gig.Title,
+                    GigPackageDetails = gig.PackageDetails,
+                    GigImage = gig.Image1,
+                    GigStatus = gig.Status,
+                    
+
                     PaymentOption = caregiverOrder.PaymentOption,
                     Amount = caregiverOrder.Amount,
                     TransactionId = caregiverOrder.TransactionId,
+                    ClientOrderStatus = caregiverOrder.ClientOrderStatus,
                     OrderCreatedOn = caregiverOrder.OrderCreatedAt,
 
                 };
@@ -191,15 +209,32 @@ namespace Infrastructure.Content.Services
                 {
                     throw new AuthenticationException("The GigID entered is not a Valid ID");
                 }
+
+                var caregiver = await careGiverService.GetCaregiverUserAsync(gig.CaregiverId);
+                if (caregiver == null)
+                {
+                    throw new AuthenticationException("The CaregiverId entered is not a Valid ID");
+                }
+
                 var clientOrderDTO = new ClientOrderResponse()
                 {
                     Id = clientOrder.Id.ToString(),
                     ClientId = clientOrder.ClientId,
+
                     CaregiverId = gig.CaregiverId,
+                    CaregiverName = caregiver.FirstName + " " + caregiver.LastName,
+
                     GigId = clientOrder.GigId,
+                    GigTitle = gig.Title,
+                    GigImage = gig.Image1,
+                    GigPackageDetails = gig.PackageDetails,
+                    GigStatus = gig.Status,
+                    
+
                     PaymentOption = clientOrder.PaymentOption,
                     Amount = clientOrder.Amount,
                     TransactionId = clientOrder.TransactionId,
+                    ClientOrderStatus = clientOrder.ClientOrderStatus,
                     OrderCreatedOn = clientOrder.OrderCreatedAt,
                     
                 };
@@ -225,15 +260,31 @@ namespace Infrastructure.Content.Services
                 throw new AuthenticationException("The GigID entered is not a Valid ID");
             }
 
+            var caregiver = await careGiverService.GetCaregiverUserAsync(gig.CaregiverId);
+            if (caregiver == null)
+            {
+                throw new AuthenticationException("The CaregiverId entered is not a Valid ID");
+            }
+
             var clientOrderDTO = new ClientOrderResponse()
             {
                 Id = order.Id.ToString(),
                 ClientId = order.ClientId,
+
                 GigId = order.GigId,
+                GigTitle = gig.Title,
+                GigPackageDetails = gig.PackageDetails,
+                GigStatus = gig.Status,
+                GigImage = gig.Image1,
+
+
                 CaregiverId = gig.CaregiverId,
+                CaregiverName = caregiver.FirstName + " " + caregiver.LastName,
+
                 PaymentOption = order.PaymentOption,
                 Amount = order.Amount,
                 TransactionId = order.TransactionId,
+                ClientOrderStatus = order.ClientOrderStatus,
                 OrderCreatedOn = order.OrderCreatedAt,
                 
             };

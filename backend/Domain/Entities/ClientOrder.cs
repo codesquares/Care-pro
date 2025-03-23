@@ -16,6 +16,7 @@ namespace Domain.Entities
         public string PaymentOption { get; set; }
         public int Amount { get; set; }
         public string TransactionId { get; set; }        
+        public string? ClientOrderStatus { get; set; }        
         public DateTime OrderCreatedAt { get; set; }
     }
 }

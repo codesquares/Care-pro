@@ -16,6 +16,8 @@ namespace Application.DTOs
         public string PaymentOption { get; set; }
         public int Amount { get; set; }
         public string TransactionId { get; set; }
+        public string ClientOrderStatus { get; set; }
+
         public DateTime OrderCreatedAt { get; set; }
     }
 
@@ -24,11 +26,21 @@ namespace Application.DTOs
     {
         public string Id { get; set; }
         public string ClientId { get; set; }
+
         public string CaregiverId { get; set; }
+        public string CaregiverName { get; set; }
+
         public string GigId { get; set; }
+        public string GigTitle { get; set; }
+        public string GigPackageDetails { get; set; }
+        public string GigImage { get; set; }
+        public string GigStatus { get; set; }
+
+
         public string PaymentOption { get; set; }
         public int Amount { get; set; }
         public string TransactionId { get; set; }
+        public string? ClientOrderStatus { get; set; }
         public DateTime OrderCreatedOn { get; set; }
     }
 
