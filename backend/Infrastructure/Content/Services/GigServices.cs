@@ -65,7 +65,16 @@ namespace Infrastructure.Content.Services
                 Tags = addGigRequest.Tags,
                 PackageType = addGigRequest.PackageType,
                 PackageName = addGigRequest.PackageName,
-                PackageDetails = addGigRequest.PackageDetails,
+                //PackageDetails = addGigRequest.PackageDetails,
+                //PackageDetails = addGigRequest.PackageDetails
+                //        .Split(',', StringSplitOptions.RemoveEmptyEntries)
+                //        .Select(x => x.Trim())
+                //        .ToList(),
+
+                PackageDetails = addGigRequest.PackageDetails
+                        .Split(';', StringSplitOptions.RemoveEmptyEntries)
+                        .Select(x => x.Trim())
+                        .ToList(),
                 DeliveryTime = addGigRequest.DeliveryTime,
                 Price = addGigRequest.Price,
                 Image1 = imageBytes,

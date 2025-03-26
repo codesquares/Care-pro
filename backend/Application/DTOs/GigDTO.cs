@@ -19,7 +19,7 @@ namespace Application.DTOs
         public string Tags { get; set; }
         public string PackageType { get; set; }
         public string PackageName { get; set; }
-        public string PackageDetails { get; set; }
+        public List<string> PackageDetails { get; set; }
         public string DeliveryTime { get; set; }
         public int Price { get; set; }
         public string Image1 { get; set; }

@@ -11,7 +11,6 @@ namespace Application.Interfaces.Content
     {
         //Task<ClientOrderDTO> CreateClientOrderAsync(AddClientOrderRequest addClientOrderRequest);
         Task<Result<ClientOrderDTO>> CreateClientOrderAsync(AddClientOrderRequest addClientOrderRequest);
-       // Task<Result<ClientOrderDTO>> CreateClientOrderAsync(AddClientOrderRequest addClientOrderRequest);
 
 
         Task<IEnumerable<ClientOrderResponse>> GetAllClientOrderAsync(string clientUserId);
@@ -19,6 +18,12 @@ namespace Application.Interfaces.Content
         Task<ClientOrderResponse> GetClientOrderAsync(string orderId);
 
         Task<IEnumerable<ClientOrderResponse>> GetAllCaregiverOrderAsync(string caregiverId);
+
+        Task<string> UpdateClientOrderStatusAsync(string orderId, UpdateClientOrderStatusRequest  updateClientOrderStatusRequest);
+
+
+        Task<string> UpdateClientOrderStatusHasDisputeAsync(string orderId, UpdateClientOrderStatusHasDisputeRequest updateClientOrderStatusDeclinedRequest);
+
 
     }
 }

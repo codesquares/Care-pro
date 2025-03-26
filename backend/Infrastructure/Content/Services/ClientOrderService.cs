@@ -66,6 +66,7 @@ namespace Infrastructure.Content.Services
                 Id = ObjectId.GenerateNewId(),
                 CaregiverId = gig.CaregiverId,
                 ClientOrderStatus = "In Progress",
+                HasDispute = false,
                 OrderCreatedAt = DateTime.Now,
             };
 
@@ -87,58 +88,6 @@ namespace Infrastructure.Content.Services
             return Result<ClientOrderDTO>.Success(clientOrderDTO);
         }
 
-
-
-        //public async Task<ClientOrderDTO> CreateClientOrderAsync(AddClientOrderRequest addClientOrderRequest)
-        //{
-        //    var client = await clientService.GetClientUserAsync(addClientOrderRequest.ClientId);
-        //    if (client == null)
-        //    {
-        //        throw new AuthenticationException("The ClientID entered is not a Valid ID");
-        //    }
-
-        //    var gig = await gigServices.GetGigAsync(addClientOrderRequest.GigId);
-        //    if (gig == null)
-        //    {
-        //        throw new AuthenticationException("The GigID entered is not a Valid ID");
-        //    }
-
-        //    /// CONVERT DTO TO DOMAIN OBJECT            
-        //    var clientOrder = new ClientOrder
-        //    {
-        //        ClientId = client.Id,
-        //        GigId = gig.Id,
-        //        PaymentOption = addClientOrderRequest.PaymentOption,
-        //        Amount = addClientOrderRequest.Amount,
-        //        TransactionId = addClientOrderRequest.TransactionId,
-
-        //        // Assign new ID
-        //        Id = ObjectId.GenerateNewId(),
-        //        CaregiverId = gig.CaregiverId,
-        //        OrderCreatedAt = DateTime.Now,
-        //    };
-
-        //    await careProDbContext.ClientOrders.AddAsync(clientOrder);
-
-        //    await careProDbContext.SaveChangesAsync();
-
-
-        //    var clientOrderDTO = new ClientOrderDTO()
-        //    {
-        //        Id = clientOrder.Id.ToString(),
-        //        ClientId = clientOrder.ClientId,
-        //        CaregiverId = clientOrder.CaregiverId,
-        //        GigId = clientOrder.GigId,
-        //        PaymentOption = clientOrder.PaymentOption,
-        //        Amount = clientOrder.Amount,
-        //        TransactionId = clientOrder.TransactionId,
-        //        OrderCreatedAt = clientOrder.OrderCreatedAt,
-
-        //    };
-
-        //    return clientOrderDTO;
-
-        //}
 
         public async Task<IEnumerable<ClientOrderResponse>> GetAllCaregiverOrderAsync(string caregiverId)
         {
@@ -292,8 +241,77 @@ namespace Infrastructure.Content.Services
             return clientOrderDTO;
         }
 
-        
+        public async Task<string> UpdateClientOrderStatusAsync(string orderId, UpdateClientOrderStatusRequest updateClientOrderStatusRequest)
+        {
+            try
+            {
+                var existingOrder = await careProDbContext.ClientOrders.FindAsync(orderId);
+
+                if (existingOrder == null)
+                {
+                    throw new KeyNotFoundException($"Order with ID '{orderId}' not found.");
+                }
+
+
+                existingOrder.ClientOrderStatus = updateClientOrderStatusRequest.ClientOrderStatus;
+                existingOrder.OrderUpdatedOn = DateTime.Now;
+
+
+                careProDbContext.ClientOrders.Update(existingOrder);
+                await careProDbContext.SaveChangesAsync();
+
+                LogAuditEvent($"Order Status updated (ID: {orderId})", updateClientOrderStatusRequest.UserId);
+                return $"Order with ID '{orderId}' updated successfully.";
+            }
+            catch (Exception ex)
+            {
+                LogException(ex);
+                throw new Exception(ex.Message);
+            }
+        }
 
        
+        public async Task<string> UpdateClientOrderStatusHasDisputeAsync(string orderId, UpdateClientOrderStatusHasDisputeRequest updateClientOrderStatusHasDisputeRequest)
+        {
+            try
+            {
+                var existingOrder = await careProDbContext.ClientOrders.FindAsync(orderId);
+
+                if (existingOrder == null)
+                {
+                    throw new KeyNotFoundException($"Order with ID '{orderId}' not found.");
+                }
+
+
+                existingOrder.ClientOrderStatus = updateClientOrderStatusHasDisputeRequest.ClientOrderStatus;
+                existingOrder.HasDispute = true;
+                existingOrder.DisputeReason = updateClientOrderStatusHasDisputeRequest.DisputeReason;
+                existingOrder.OrderUpdatedOn = DateTime.Now;
+
+
+                careProDbContext.ClientOrders.Update(existingOrder);
+                await careProDbContext.SaveChangesAsync();
+
+                LogAuditEvent($"Order Status updated (ID: {orderId})", updateClientOrderStatusHasDisputeRequest.UserId);
+                return $"Order with ID '{orderId}' updated successfully.";
+            }
+            catch (Exception ex)
+            {
+                LogException(ex);
+                throw new Exception(ex.Message);
+            }
+        }
+
+
+        private void LogException(Exception ex)
+        {
+            logger.LogError(ex, "Exception occurred");
+        }
+
+        private void LogAuditEvent(object message, string? userId)
+        {
+            logger.LogInformation($"Audit Event: {message}. User ID: {userId}. Timestamp: {DateTime.UtcNow}");
+        }
+
     }
 }

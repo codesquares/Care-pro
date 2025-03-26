@@ -32,7 +32,7 @@ namespace Application.DTOs
 
         public string GigId { get; set; }
         public string GigTitle { get; set; }
-        public string GigPackageDetails { get; set; }
+        public List<string> GigPackageDetails { get; set; }
         public string GigImage { get; set; }
         public string GigStatus { get; set; }
 
@@ -42,6 +42,9 @@ namespace Application.DTOs
         public string TransactionId { get; set; }
         public string? ClientOrderStatus { get; set; }
         public DateTime OrderCreatedOn { get; set; }
+
+        public string? DeclineReason { get; set; }
+        public bool? IsDeclined { get; set; }
     }
 
     public class AddClientOrderRequest
@@ -51,5 +54,19 @@ namespace Application.DTOs
         public string PaymentOption { get; set; }
         public int Amount { get; set; }
         public string TransactionId { get; set; }
+    }
+
+    public class UpdateClientOrderStatusRequest
+    {
+        public string ClientOrderStatus { get; set; }
+        public string UserId { get; set; }        
+    }
+
+
+    public class UpdateClientOrderStatusHasDisputeRequest
+    {
+        public string ClientOrderStatus { get; set; }
+        public string DisputeReason { get; set; }
+        public string UserId { get; set; }
     }
 }

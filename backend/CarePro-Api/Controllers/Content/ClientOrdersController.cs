@@ -20,40 +20,7 @@ namespace CarePro_Api.Controllers.Content
             this.logger = logger;
         }
 
-        ///// ENDPOINT TO CREATE  ClientOrder Services TO THE DATABASE
-        ////[HttpPost]
-        //// [Authorize(Roles = "Client")]
-        ////public async Task<IActionResult> AddClientOrderAsync([FromBody] AddClientOrderRequest addClientOrderRequest)
-        ////{
-        ////    try
-        ////    {
-        ////        // Pass Domain Object to Repository, to Persisit this
-        ////        var clientOrder = await clientOrderService.CreateClientOrderAsync(addClientOrderRequest);
-
-
-        ////        // Send DTO response back to ClientUser
-        ////        return Ok(clientOrder);
-
-        ////    }
-        ////    catch (ApplicationException appEx)
-        ////    {
-        ////        // Handle application-specific exceptions
-        ////        return BadRequest(new { ErrorMessage = appEx.Message });
-        ////    }
-        ////    catch (HttpRequestException httpEx)
-        ////    {
-        ////        // Handle HTTP request-related exceptions
-        ////        return StatusCode(500, new { ErrorMessage = httpEx.Message });
-        ////    }
-        ////    catch (Exception ex)
-        ////    {
-        ////        // Handle other exceptions
-        ////        return StatusCode(500, new { ex /*ErrorMessage = "An error occurred on the server."*/ });
-        ////    }
-
-        ////}
-
-
+      
         /// ENDPOINT TO CREATE  ClientOrder Services TO THE DATABASE
         [HttpPost]
         // [Authorize(Roles = "Client")]
@@ -172,5 +139,27 @@ namespace CarePro_Api.Controllers.Content
 
         }
 
+
+
+        [HttpPut]
+        [Route("UpdateClientOrderStatus/orderId")]
+        // [Authorize(Roles = "Caregiver, Admin")]
+        public async Task<ActionResult<string>> UpdateClientOrderStatusAsync(string orderId, UpdateClientOrderStatusRequest updateClientOrderStatusRequest )
+        {
+            var result = await clientOrderService.UpdateClientOrderStatusAsync(orderId, updateClientOrderStatusRequest);
+            logger.LogInformation($"Client Order Status with ID: {orderId} updated.");
+            return Ok(result);
+        }
+
+
+        [HttpPut]
+        [Route("UpdateClientOrderStatusHasDispute/orderId")]
+        // [Authorize(Roles = "Caregiver, Admin")]
+        public async Task<ActionResult<string>> UpdateClientOrderStatusHasDisputeAsync(string orderId, UpdateClientOrderStatusHasDisputeRequest  updateClientOrderStatusHasDisputeRequest)
+        {
+            var result = await clientOrderService.UpdateClientOrderStatusHasDisputeAsync(orderId, updateClientOrderStatusHasDisputeRequest);
+            logger.LogInformation($"Client Order Status with ID: {orderId} updated.");
+            return Ok(result);
+        }
     }
 }

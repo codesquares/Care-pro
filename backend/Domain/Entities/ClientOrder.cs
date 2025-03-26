@@ -18,5 +18,9 @@ namespace Domain.Entities
         public string TransactionId { get; set; }        
         public string? ClientOrderStatus { get; set; }        
         public DateTime OrderCreatedAt { get; set; }
+
+        public DateTime? OrderUpdatedOn { get; set; }
+        public string? DisputeReason { get; set; }
+        public bool? HasDispute { get; set; }
     }
 }
