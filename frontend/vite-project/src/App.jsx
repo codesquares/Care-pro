@@ -31,6 +31,9 @@ import {BlogProvider} from './main-app/context/BlogContext';
 import Order from './main-app/components/orders/MyOrders';
 import Order2 from './main-app/components/orders/OrderTasks&Details';
 import ResolutionCenter from './main-app/components/orders/ResolutionCenter';
+//Added for viewing Caregiver Profile
+import CaregiverProfile from './main-app/components/caregiver_settings/CaregiverProfile';
+import CaregiverSettings from './main-app/components/caregiver_settings/CaregiverSettings';
 
 function ScrollToTop() {
   const location = useLocation();
@@ -74,6 +77,8 @@ function App() {
       '/OrderTasks&Details',
       '/order-faq', 
       '/ResolutionCenter',
+      '/CaregiverProfile',
+      '/CaregiverSettings',
     ];
   
     // Check if current path is unprotected
@@ -103,6 +108,8 @@ function App() {
           <Route path="/OrderTasks&Details" element={<Order2 />} />
           <Route path="/order-faq" element={<OrderFaq />} /> 
           <Route path="/ResolutionCenter" element={<ResolutionCenter />} />
+          <Route path="/CaregiverProfile" element={<CaregiverProfile />} />
+          <Route path="/CaregiverSettings" element={<CaregiverSettings />} />
           <Route
             path="/app/*"
             element={
