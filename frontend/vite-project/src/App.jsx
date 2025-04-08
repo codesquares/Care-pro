@@ -27,6 +27,10 @@ import ContentBlog from './components/ContentfulBlog/Blog';
 import ContentBlogPost from './components/ContentfulBlog/BlogPost';
 import {BlogProvider} from './main-app/context/BlogContext';
 
+import Caregivergigpage from './main-app/components/Caregivergigpage/Caregivergigpage';
+
+
+
 function ScrollToTop() {
   const location = useLocation();
   useEffect(() => {
@@ -64,7 +68,8 @@ function App() {
       '/login',
       '/register',
       '/Notifications',
-      '/create-gig'
+      '/create-gig',
+      '/Caregivergigpage',
     ];
   
     // Check if current path is unprotected
@@ -90,6 +95,8 @@ function App() {
           <Route path="/login" element={<LoginPage />} />
           <Route path="/register" element={<RegisterPage />} />
           <Route path="/Notifications" element={<Notifications />} />
+          <Route path="/Caregivergigpage" element={<Caregivergigpage />} />
+
           <Route
             path="/app/*"
             element={
