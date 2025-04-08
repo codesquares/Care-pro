@@ -36,6 +36,10 @@ import CaregiverProfile from './main-app/components/caregiver_settings/Caregiver
 import CaregiverSettings from './main-app/components/caregiver_settings/CaregiverSettings';
 import CaregiverDashboard from './main-app/pages/care-giver/care-giver-dashboard/CaregiverDashboard ';
 
+import Caregivergigpage from './main-app/components/Caregivergigpage/Caregivergigpage';
+
+
+
 function ScrollToTop() {
   const location = useLocation();
   useEffect(() => {
@@ -81,6 +85,7 @@ function App() {
       '/CaregiverProfile',
       '/CaregiverSettings',
       '/Caregiver-Dashboard',
+      '/Caregivergigpage',
     ];
   
     // Check if current path is unprotected
@@ -113,6 +118,8 @@ function App() {
           <Route path="/CaregiverProfile" element={<CaregiverProfile />} />
           <Route path="/CaregiverSettings" element={<CaregiverSettings />} />
           <Route path="/Caregiver-Dashboard" element={<CaregiverDashboard />} />
+          <Route path="/Caregivergigpage" element={<Caregivergigpage />} />
+
           <Route
             path="/app/*"
             element={
