@@ -1,6 +1,10 @@
 import React from "react";
  import OrderCard from "./OrderCard";
 import "./OrderList.css";
+import caregiver1 from "../../../../assets/caregiver1.png";
+import caregiver2 from "../../../../assets/caregiver2.png";
+import caregiver3 from "../../../../assets/caregiver3.png";
+import caregiver4 from "../../../../assets/caregiver4.png";
 
 const orders = [
   {
@@ -8,28 +12,28 @@ const orders = [
     user: "Sarah Adebayo",
     price: "₦14,000",
     status: "In Progress",
-    image: "https://via.placeholder.com/150",
+    image: caregiver1,
   },
   {
     title: "Training and taking care of your pets",
     user: "Mark Roberts",
     price: "₦14,000",
     status: "In Progress",
-    image: "https://via.placeholder.com/150",
+    image: caregiver2,
   },
   {
     title: "Support and companionship for elders",
     user: "Anthonia Marwa",
     price: "₦14,000",
     status: "In Progress",
-    image: "https://via.placeholder.com/150",
+    image: caregiver3,
   },
   {
     title: "Cooking local and international dishes",
     user: "Sarah Adebayo",
     price: "₦14,000",
     status: "In Progress",
-    image: "https://via.placeholder.com/150",
+    image: caregiver4,
   },
 ];
 

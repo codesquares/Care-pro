@@ -1,26 +1,28 @@
 import React from "react";
 import "./StatisticsCard.css";
-import money from "../../../../assets/money.svg";
+import StatisticCard1 from "../../../../assets/statisticCard1.png";
+import StatisticCard2 from "../../../../assets/statisticCard2.png";
+import StatisticCard3 from "../../../../assets/statisticCard3.png";
 
 const StatisticsCard = () => {
   return (
     <div className="statistics-card">
       <div className="stat">
-        <span className="icon">🕒</span>
+        <img src={StatisticCard1} alt="card1" className="card-image" />  
         <div className="stat-details">
           <p className="stat-title">Total Earnings</p>
           <h4 className="stat-value">₦350,500.00</h4>
         </div>
       </div>
       <div className="stat">
-        <span className="icon"><img src={money} alt="Carepro Logo" /></span>
+        <img src={StatisticCard2} alt="card2" className="card-image" />  
         <div className="stat-details">
           <p className="stat-title">No. of Orders</p>
           <h4 className="stat-value">1250</h4>
         </div>
       </div>
       <div className="stat">
-        <span className="icon">⏳</span>
+        <img src={StatisticCard3} alt="card3" className="card-image" />  
         <div className="stat-details">
           <p className="stat-title">Hours Spent</p>
           <h4 className="stat-value">32.5 hours</h4>
