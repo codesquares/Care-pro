@@ -2,10 +2,11 @@ import React from "react";
 import { useNavigate } from "react-router-dom";
 import "../care-giver/care-giver-dashboard/NavigationBar.css";
 import { FaSearch, FaUser, FaShoppingCart } from "react-icons/fa";
+import logo from '../../../assets/careproLogo.svg';
 
 const ClientNavBar = () => {
   const navigate = useNavigate();
-  const basePath = "/app/caregiver"; // Base path for your routes
+  const basePath = "/app/client"; // Base path for your routes
 
   //get the user name from local storage
   const user = JSON.parse(localStorage.getItem("userDetails"));
@@ -23,8 +24,7 @@ const ClientNavBar = () => {
   return (
     <nav className="navigation-bar">
       <div className="logo" onClick={() => navigate(`${basePath}/dashboard`)}>
-        <img src="https://via.placeholder.com/50" alt="CarePro Logo" />
-        <span>CarePro</span>
+        <img src={logo} alt="CarePro Logo" />
       </div>
       <div className="search-bar">
               <FaSearch size={20} />
@@ -37,7 +37,7 @@ const ClientNavBar = () => {
       <div className="nav-actions">
         <button
           className="view-orders"
-          // onClick={() => navigate(`${basePath}/orders`)}
+          onClick={() => navigate(`${basePath}/my-order`)}
         >
           View Orders
         </button>

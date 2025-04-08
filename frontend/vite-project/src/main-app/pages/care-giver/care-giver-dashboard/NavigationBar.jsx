@@ -1,6 +1,7 @@
 import React from "react";
 import { useNavigate } from "react-router-dom";
 import "./NavigationBar.css";
+import logo from '../../../../assets/careproLogo.svg';
 
 const NavigationBar = () => {
   const navigate = useNavigate();
@@ -22,8 +23,7 @@ const NavigationBar = () => {
   return (
     <nav className="navigation-bar">
       <div className="logo" onClick={() => navigate(`${basePath}/dashboard`)}>
-        <img src="https://via.placeholder.com/50" alt="CarePro Logo" />
-        <span>CarePro</span>
+        <img src={logo} alt="CarePro Logo" />
       </div>
       <ul className="nav-links">
         <li

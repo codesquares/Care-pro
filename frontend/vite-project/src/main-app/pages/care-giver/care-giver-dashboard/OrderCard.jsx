@@ -10,7 +10,7 @@ const OrderCard = ({ title, user, price, status, image }) => {
         <h4>{title}</h4>
         <p>{user}</p>
         <div className="order-footer">
-          <span className={`status ${status.toLowerCase()}`}>{status}</span>
+          {/* <span className={`status ${status.toLowerCase()}`}>{status}</span> */}
           <span className="price">{price}</span>
         </div>
       </div>

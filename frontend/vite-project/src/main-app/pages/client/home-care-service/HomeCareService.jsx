@@ -1,6 +1,7 @@
 import { useState, useEffect } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import "./home-care-service.css";
+import { use } from "react";
 
 const HomeCareService = () => {
   const { id } = useParams();
@@ -11,21 +12,53 @@ const HomeCareService = () => {
   const basePath = "/app/client"; // Base path for your routes
 
 
-  const handleHire = () => {
-    navigate(`${basePath}/payment`, {
-      state: {
-        service: {
-          provider: providerName,
-          orderFee: service.price,
-          serviceFee: "₦3,270",
-          totalAmount: price + 3270,
-          orderNumber: `#F${Math.floor(Math.random() * 1000000000)}`,
-          description: title,
-          image: image1 || "/default-image.jpg",
-        },
-      },
-    });
+  const handleHire = async () => {
+    if (!service) return;
+    const user = JSON.parse(localStorage.getItem("userDetails"));
+    //set the gig id to the local storage
+    localStorage.setItem("gigId", id);
+    //set the amount to the local storage
+    localStorage.setItem("amount", service.price);
+
+    console.log(user);
+  
+    try {
+      const payload = {
+        amount: service.price,
+        email: user?.email,
+        currency: "NIGN",
+        redirectUrl: `${window.location.origin}/app/client/payment-success`,
+      };
+  
+      const response = await fetch(
+        "https://carepro-api20241118153443.azurewebsites.net/api/payments/initiate",
+        {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify(payload),
+        }
+      );
+  
+      if (!response.ok) {
+        throw new Error("Payment initiation failed");
+      }
+  
+      const data = await response.json();
+      console.log("Payment Response:", data);
+  
+      if (data.status === "success" && data.data?.link) {
+        window.location.href = data.data.link; // Redirect to payment gateway
+      } else {
+        throw new Error("Failed to get payment link");
+      }
+    } catch (error) {
+      console.error("Payment error:", error);
+      setError(error.message);
+    }
   };
+  
 
   const handleMessage = () => {
     navigate(`${basePath}/message`, {
@@ -37,6 +70,9 @@ const HomeCareService = () => {
   };
 
   useEffect(() => {
+
+    //get user details from local storage
+ 
     const fetchServiceDetails = async () => {
       try {
         const response = await fetch(
