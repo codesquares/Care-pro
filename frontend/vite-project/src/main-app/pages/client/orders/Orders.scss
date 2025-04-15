@@ -1,11 +1,11 @@
-.orders-container {
+.client-orders-container {
     padding: 20px;
     max-width: 800px;
     margin-left: auto;
     margin-right: auto;
   }
   
-  .orders-page {
+  .client-orders-page {
     background: #f9f9f9;
   
     .page-title {
@@ -56,7 +56,7 @@
       display: grid;
       gap: 15px;
   
-      .order-card {
+      .client-order-card {
         display: flex;
         align-items: center;
         background: #fff;
@@ -65,7 +65,7 @@
         padding: 10px;
         border: 1px solid #e0e0e0;
   
-        .order-image {
+        .client-order-image {
           width: 120px;
           height: 80px;
           object-fit: cover;
@@ -73,7 +73,7 @@
           margin-right: 15px;
         }
   
-        .order-details {
+        .client-order-details {
           flex: 1;
   
           h3 {

@@ -2,13 +2,21 @@ import React, { useEffect, useState } from "react";
 import OrderCard from "./OrderCard";
 import "./OrderList.css";
 
-const caregiverId = "67729731c002ee2ec46d82bd"; // Replace with dynamic ID if needed
-const API_URL = `https://carepro-api20241118153443.azurewebsites.net/api/ClientOrders/caregiverId?caregiverId=${caregiverId}`;
 
-const OrderList = () => {
+
+const OrderList = ({ filter }) => {
   const [orders, setOrders] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
+
+    // Retrieve user details from localStorage
+    const userDetails = JSON.parse(localStorage.getItem("userDetails"));
+    const caregiverId = userDetails?.id;
+
+    const API_URL = `https://carepro-api20241118153443.azurewebsites.net/api/ClientOrders/caregiverId?caregiverId=${caregiverId}`;
+  
+
+  
 
   useEffect(() => {
     const fetchOrders = async () => {
@@ -32,17 +40,22 @@ const OrderList = () => {
   if (loading) return <p>Loading orders...</p>;
   if (error) return <p>Error: {error}</p>;
 
+  // Filter orders based on the selected filter option
+  const filteredOrders = orders.filter((order) =>
+    filter === "All Orders" || order.clientOrderStatus === filter
+  );
+
   return (
     <div className="order-list">
-      {orders.length > 0 ? (
-        orders.map((order, index) => (
+      {filteredOrders.length > 0 ? (
+        filteredOrders.map((order, index) => (
           <OrderCard
             key={index}
-            title={order.title}  // Ensure API response contains "title"
-            user={order.user}    // Ensure API response contains "user"
-            price={order.price}  // Ensure API response contains "price"
-            status={order.status} // Ensure API response contains "status"
-            image={order.image || "https://via.placeholder.com/150"} // Fallback image
+            title={order.gigTitle} // Ensure API response contains "title"
+            user={order.clientName} // Ensure API response contains "user"
+            price={order.amount} // Ensure API response contains "price"
+            status={order.clientOrderStatus} // Ensure API response contains "status"
+            image={order.gigImage || "https://via.placeholder.com/150"} // Fallback image
           />
         ))
       ) : (

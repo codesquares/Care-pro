@@ -1,30 +1,49 @@
-import React from 'react';
+import React, { useState } from 'react';
+import { useNavigate } from 'react-router-dom';
 import NavigationBar from './NavigationBar';
 import ProfileCard from './ProfileCard';
 import StatisticsCard from './StatisticsCard';
 import OrderList from './OrderList';
 import './CaregiverDashboard.css';
+import setting from '../../../../assets/setting.png';
 
 const CaregiverDashboard = () => {
+  const [filter, setFilter] = useState('All Orders'); // Default filter is 'All Orders'
+      const navigate = useNavigate();
+      const basePath = "/app/caregiver";
+
+  const handleFilterChange = (e) => {
+    setFilter(e.target.value); // Update the filter state based on the selected option
+  };
+
   return (
     <>
       {/* <NavigationBar /> */}
-      <div className='main-content'>
-        <div className='sidebar'>
+      <div className="caregiver-dashboard">
+        <div className="leftbar">
           <ProfileCard />
           <StatisticsCard />
+          <div className="setting-container" style={{ cursor: "pointer" }} onClick={() => navigate(`${basePath}/settings`)}>
+            <img src={setting} alt="Setting" className="setting-image" />
+            <span className="setting-text">Account Settings</span>
+          </div>
         </div>
-        <div className="order-list">
-        <div className="select-container">
-          <label htmlFor="dropdown">Select an Option:</label>
-          <select id="dropdown" className="custom-select">
-            <option value="option1">All Orders</option>
-            <option value="option2">In Progress</option>
-            <option value="option3">Completed</option>
-            <option value="option3">Cancelled</option>
-          </select>
-        </div>
-        <OrderList />
+
+        <div className="rightbar">
+          <div className="select-container">
+            <select
+              id="dropdown"
+              className="custom-select"
+              value={filter} // Set the selected option based on filter state
+              onChange={handleFilterChange} // Update state on change
+            >
+              <option value="All Orders">All Orders</option>
+              <option value="In Progress">In Progress</option>
+              <option value="Completed">Completed</option>
+              <option value="Cancelled">Cancelled</option>
+            </select>
+          </div>
+          <OrderList filter={filter} /> {/* Pass the selected filter to OrderList */}
         </div>
       </div>
     </>

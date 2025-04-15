@@ -1,51 +1,96 @@
 /* CaregiverDashboard.css */
 
-.main-content {
-    display: flex;
-    justify-content: space-evenly; /* Distributes space evenly between items */
-    margin: 2%;
-  }
-  
-  .sidebar {
-    display: flex;
-    flex-direction: column; /* Arranges child elements vertically */
-    justify-content: space-between;
-    width: 25%; /* Ensures the sidebar takes up a specific portion of the screen */
-  }
-  
-  .select-container {
-    display: flex;
+.caregiver-dashboard {
+  display: flex;
+  padding: 20px;
+  margin-bottom: 500px;
+  background-color: #f8f9fa;
+  font-family: 'Segoe UI', sans-serif;
+}
+
+.leftbar {
+  width: 300px;
+  margin-top: 20px;
+  margin-right: 10px;
+  margin-left: 150px;
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+}
+
+.rightbar {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  margin-top: 30px;
+  margin-right: 100px;
+}
+
+.select-container {
+  display: flex;
+  justify-content: flex-end;
+  align-items: center;
+  margin-bottom: 10px;
+}
+
+.custom-select {
+  padding: 4px 10px;
+  margin-right: 20px;
+  margin-top: 10px;
+  font-size: 13px;
+  border-radius: 6px;
+  border: 1px solid #ccc;
+  width: auto;
+  height: 32px;
+  background-color: #f4f4f4;
+  color: #333;
+  cursor: pointer;
+}
+
+.setting-image {
+  width: 10%;
+  height: auto;
+}
+
+.setting-container {
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  justify-content: left;
+  background-color: white;
+  padding: 16px;
+  border-radius: 12px;
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.1);
+}
+
+.setting-text {
+  margin-left: 10px;
+  font-weight: 500;
+  font-size: 16px;
+  text-decoration: none;
+  color: #333;
+}
+
+.setting-text:hover {
+  color: #007bff;
+}
+
+@media (max-width: 768px) {
+  .dashboard {
     flex-direction: column;
-    margin: 20px 0;
-    margin-left: auto; /* Aligns the select dropdown to the right */
   }
-  
-  .select-container label {
-    margin-bottom: 10px;
-    font-size: 16px;
+
+  .leftbar {
+    width: 100%;
+    margin-right: 0;
   }
-  
-  .custom-select {
-    padding: 10px;
-    font-size: 16px;
-    border: 1px solid #ccc;
-    border-radius: 4px;
-    outline: none;
-    background-color: #fff;
-    width: 200px;
-    cursor: pointer;
-    transition: border-color 0.3s ease;
+
+  .rightbar {
+    width: 100%;
   }
-  
-  .custom-select:hover {
-    border-color: #007BFF;
+
+  .select-container {
+    justify-content: center;
   }
-  
-  .custom-select:focus {
-    border-color: #0056b3;
-  }
-  
-  .order-list-container {
-    width: 70%; /* Takes up the remaining width for the OrderList component */
-  }
-  
+}
+

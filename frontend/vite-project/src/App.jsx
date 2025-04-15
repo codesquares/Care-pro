@@ -12,6 +12,7 @@ import Plans from './pages/Plans';
 import BookCaregiver from './pages/BookCaregiver';
 import Home from './pages/Home';
 import BecomeCaregiver from './pages/BecomeCaregiver';
+import OrderFaq from './main-app/pages/care-giver/OrderFaq';
 import LoginPage from './main-app/pages/LoginPage';
 import RegisterPage from './main-app/pages/RegisterPage';
 import { ToastContainer } from 'react-toastify';
@@ -69,8 +70,17 @@ function App() {
       '/register',
       '/Notifications',
       '/create-gig',
+
+      '/Caregivergigpage',
+
       '/MyOrders',
-      '/OrderTasks&Details'
+      '/OrderTasks&Details',
+      '/order-faq', 
+      '/ResolutionCenter',
+      '/CaregiverProfile',
+      '/CaregiverSettings',
+      '/Caregiver-Dashboard',
+
     ];
   
     // Check if current path is unprotected
@@ -96,8 +106,18 @@ function App() {
           <Route path="/login" element={<LoginPage />} />
           <Route path="/register" element={<RegisterPage />} />
           <Route path="/Notifications" element={<Notifications />} />
+
+          {/* <Route path="/Caregivergigpage" element={<Caregivergigpage />} /> */}
+
+
           <Route path="/MyOrders" element={<Order />} />
           <Route path="/OrderTasks&Details" element={<Order2 />} />
+          <Route path="/order-faq" element={<OrderFaq />} /> 
+          {/* <Route path="/ResolutionCenter" element={<ResolutionCenter />} /> */}
+          {/* <Route path="/CaregiverProfile" element={<CaregiverProfile />} /> */}
+          {/* <Route path="/CaregiverSettings" element={<CaregiverSettings />} /> */}
+          {/* <Route path="/Caregiver-Dashboard" element={<CaregiverDashboard />} /> */}
+
           <Route path="/app/client/payment-success" element={<PaymentSuccess />} />
           <Route
             path="/app/*"

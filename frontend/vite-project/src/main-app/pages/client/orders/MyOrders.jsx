@@ -53,8 +53,8 @@ const MyOrders = () => {
       : orders.filter((order) => order.clientOrderStatus  === filter);
 
   return (
-    <div className="orders-page">
-      <div className="orders-container">
+    <div className="client-orders-page">
+      <div className="client-orders-container">
         <h2 className="page-title">My Orders</h2>
 
         <div className="tabs">
@@ -78,15 +78,15 @@ const MyOrders = () => {
         ) : (
           <div className="orders-list">
             {filteredOrders.map((order, index) => (
-              <div key={index} className="order-card"
+              <div key={index} className="client-order-card"
               onClick={() => handleOrderClick(order.id)}
               style={{ cursor: "pointer" }}
               >
-                <img src={order.gigImage || "default-image.png"} alt="Order" className="order-image" />
-                <div className="order-details">
+                <img src={order.gigImage || "default-image.png"} alt="Order" className="client-order-image" />
+                <div className="client-order-details">
                   <h3>{order.gigTitle}</h3>
                   <p>{order.caregiverName || "Unknown Client"}</p>
-                  <div className="order-meta">
+                  <div className="client-order-meta">
                     <span className={`status ${statusColors[order.status] || ""}`}>
                       {order.clientOrderStatus}
                     </span>

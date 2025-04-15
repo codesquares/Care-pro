@@ -1,44 +1,76 @@
 .order-card {
-    display: flex;
-    gap: 16px;
-    padding: 16px;
-    background-color: #ffffff;
-    border-radius: 8px;
-    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
-    color: #000000;
-  }
+  display: flex;
+  gap: 16px;
+  padding: 16px;
+  background-color: #fff;
+  border-bottom: 1px solid #eee;
+  border-radius: 10px;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
+  align-items: flex-start;
+}
+
+.image-wrapper {
+  width: 200px;
+  height: 100px;
+  flex-shrink: 0;
+  border-radius: 10px;
+  overflow: hidden;
+  background-color: #f0f0f0;
+
   
-  .order-card img {
-    width: 80px;
-    height: 80px;
-    border-radius: 8px;
-    object-fit: cover;
-  }
-  
-  .order-content {
-    flex: 1;
-  }
-  
-  .order-title {
-    font-size: 1rem;
-    font-weight: bold;
-  }
-  
-  .order-author {
-    font-size: 0.875rem;
-    color: #7f8c8d;
-  }
-  
-  .order-status {
-    font-size: 0.875rem;
-    color: #f39c12;
-    margin-top: 8px;
-  }
-  
-  .order-price {
-    font-size: 1rem;
-    font-weight: bold;
-    color: #2c3e50;
-    margin-top: 16px;
-  }
-  
+}
+
+.order-image {
+  width: 100% !important;
+  height: 100% !important;
+  object-fit: cover !important;
+  display: block !important;
+}
+
+.order-content {
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  flex: 1;
+  gap: 12px;
+}
+
+.order-main {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.order-title {
+  font-size: 16px;
+  font-weight: 600;
+  color: #2c2c2c;
+  margin: 0;
+}
+
+.order-user {
+  font-size: 14px;
+  color: #4f4f4f;
+  margin: 0;
+}
+
+.order-footer {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.status {
+  background-color: #fff3cd;
+  color: #f4b400;
+  font-size: 13px;
+  padding: 4px 10px;
+  border-radius: 8px;
+  font-weight: 500;
+}
+
+.order-price {
+  font-size: 15px;
+  font-weight: 600;
+  color: #1a1a1a;
+}

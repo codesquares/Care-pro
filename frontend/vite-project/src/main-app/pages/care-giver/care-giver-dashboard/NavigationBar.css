@@ -1,94 +1,125 @@
 .navigation-bar {
-    display: flex;
-    align-items: center;
-    justify-content: space-evenly;
-    padding: 16px 24px;
-    background-color: #ffffff;
-    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
-    color: #2c3e50;
-  }
-  
-  .logo {
-    display: flex;
-    align-items: center;
-    gap: 8px;
-    font-size: 1.25rem;
-    font-weight: bold;
-    color: #2c3e50;
-  }
-  
-  .nav-links {
-    display: flex;
-    align-items: center;
-    gap: 16px;
-  }
-  
-  .nav-link {
-    display: inline-block;
-    font-size: 1rem;
-    color: #2c3e50;
-    cursor: pointer;
-  }
-  
-  .icon {
-    font-size: 1.25rem;
-  }
-  
-  .nav-actions {
-    display: flex;
-    align-items: center;
-    gap: 16px;
-  }
-  
-  .view-orders {
-    padding: 8px 16px;
-    border: none;
-    background-color: #2c3e50;
-    color: #ffffff;
-    border-radius: 4px;
-    cursor: pointer;
-  }
-  
-  .earnings {
-    font-size: 0.875rem;
-    margin: 10px;
-    background-color: #FDCF68;
-    padding: 10px;
-    border-radius: 5px;
-    color: #2c3e50;
-    cursor: pointer;
-    
-  }
-  
-  .profile-avatar {
-    display: flex;
-    align-items: center;
-    gap: 8px;
-    margin: 10px
-  }
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 16px 6rem;
+  background-color: #ffffff;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+  color: #2c3e50;
+}
 
-  .profile-avatar span {
-    padding-left: 35px;
-    cursor: pointer;
-  }
-  
-  .profile-avatar img {
-    border-radius: 50%;
-    width: 40px;
-    height: 40px;
-  }
+.logo {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  cursor: pointer;
+}
 
-  .avatar {
-    width: 40px;
-    height: 40px;
-    border-radius: 50%; /* Makes it a circle */
-    background-color: #007bff; /* Replace with your preferred color */
-    color: #fff; /* Text color for initials */
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    font-weight: bold;
-    font-size: 1.2rem;
-  }
-  
-  
+.logo img {
+  height: 40px;
+}
+
+.nav-links {
+  display: flex;
+  align-items: center;
+  gap: 24px;
+  list-style: none;
+  margin: 0;
+  padding: 0;
+}
+
+.nav-link {
+  cursor: pointer;
+  transition: background-color 0.2s ease;
+  border-radius: 8px;
+}
+
+.nav-link:hover {
+  background-color: #f0f0f0;
+}
+
+.text-link {
+  font-size: 1rem;
+  padding: 8px 12px;
+  color: #2c3e50;
+}
+
+.icon-link {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 40px;
+  height: 40px;
+}
+
+.icon-link img {
+  height: 20px;
+  width: 20px;
+  object-fit: contain;
+}
+
+.nav-actions {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+}
+
+.earnings {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 0.875rem;
+  background-color:#F4F4F4;
+  padding: 10px 12px;
+  border-radius: 5px;
+  color: #8C8C8C;
+  cursor: pointer;
+}
+
+.earnings img {
+  height: 20px;
+  width: 20px;
+}
+
+.profile-avatar {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  cursor: pointer;
+}
+
+.profile-avatar span {
+  font-size: 0.9rem;
+  color: #2c3e50;
+}
+
+.avatar {
+  width: 40px;
+  height: 40px;
+  border-radius: 50%;
+  background-color: #007bff;
+  color: #fff;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-weight: bold;
+  font-size: 1.2rem;
+}
+
+.nav-icons {
+  display: flex;
+  align-items: center;
+  gap: 8px; /* tighter spacing between icons */
+  list-style: none;
+  margin: 0;
+  padding: 0;
+}
+.nav-links {
+  display: flex;
+  align-items: center;
+  gap: 16px; /* was 24px */
+  list-style: none;
+  margin: 0;
+  padding: 0;
+}
+
