@@ -1,11 +1,9 @@
 import React, { useState } from "react";
-import faniyi from "../assets/faniyi.jpeg"; // Placeholder for blog images
 import story4 from "../assets/story4.png";
 import story5 from "../assets/story5.png";
-import nurseandwomen from "../assets/nurseAndWoman.png";
-import arrow from "../assets/arrow-right.svg"; // Import your arrow image
+import arrow from "../assets/arrow-right.svg"; 
 import expandIcon from "../assets/ExpandIcon .png"
-import "../styles/components/ourblog.scss";
+import "../styles/components/ourBlogs.scss";
 
 const OurBlogs = () => {
   const [isModalOpen, setIsModalOpen] = useState(false);

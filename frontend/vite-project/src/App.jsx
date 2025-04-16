@@ -30,6 +30,15 @@ import {BlogProvider} from './main-app/context/BlogContext';
 //Added for viewing Order Pages
 import Order from './main-app/components/orders/MyOrders';
 import Order2 from './main-app/components/orders/OrderTasks&Details';
+import ResolutionCenter from './main-app/components/orders/ResolutionCenter';
+//Added for viewing Caregiver Profile
+import CaregiverProfile from './main-app/components/caregiver_settings/CaregiverProfile';
+import CaregiverSettings from './main-app/components/caregiver_settings/CaregiverSettings';
+import CaregiverDashboard from './main-app/pages/care-giver/care-giver-dashboard/CaregiverDashboard ';
+
+import Caregivergigpage from './main-app/components/Caregivergigpage/Caregivergigpage';
+
+
 
 function ScrollToTop() {
   const location = useLocation();
@@ -69,9 +78,17 @@ function App() {
       '/register',
       '/Notifications',
       '/create-gig',
+
+      '/Caregivergigpage',
+
       '/MyOrders',
       '/OrderTasks&Details',
       '/order-faq', 
+      '/ResolutionCenter',
+      '/CaregiverProfile',
+      '/CaregiverSettings',
+      '/Caregiver-Dashboard',
+
     ];
   
     // Check if current path is unprotected
@@ -97,9 +114,18 @@ function App() {
           <Route path="/login" element={<LoginPage />} />
           <Route path="/register" element={<RegisterPage />} />
           <Route path="/Notifications" element={<Notifications />} />
+
+          <Route path="/Caregivergigpage" element={<Caregivergigpage />} />
+
+
           <Route path="/MyOrders" element={<Order />} />
           <Route path="/OrderTasks&Details" element={<Order2 />} />
           <Route path="/order-faq" element={<OrderFaq />} /> 
+          <Route path="/ResolutionCenter" element={<ResolutionCenter />} />
+          <Route path="/CaregiverProfile" element={<CaregiverProfile />} />
+          <Route path="/CaregiverSettings" element={<CaregiverSettings />} />
+          <Route path="/Caregiver-Dashboard" element={<CaregiverDashboard />} />
+
           <Route
             path="/app/*"
             element={
