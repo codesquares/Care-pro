@@ -27,18 +27,10 @@ import Notifications from './main-app/components/Notifications/Notifications';
 import ContentBlog from './components/ContentfulBlog/Blog';
 import ContentBlogPost from './components/ContentfulBlog/BlogPost';
 import {BlogProvider} from './main-app/context/BlogContext';
+import PaymentSuccess from './main-app/pages/client/home-care-service/PaymentSuccess';
 //Added for viewing Order Pages
-import Order from './main-app/components/orders/MyOrders';
-import Order2 from './main-app/components/orders/OrderTasks&Details';
-import ResolutionCenter from './main-app/components/orders/ResolutionCenter';
-//Added for viewing Caregiver Profile
-import CaregiverProfile from './main-app/components/caregiver_settings/CaregiverProfile';
-import CaregiverSettings from './main-app/components/caregiver_settings/CaregiverSettings';
-import CaregiverDashboard from './main-app/pages/care-giver/care-giver-dashboard/CaregiverDashboard ';
-
-import Caregivergigpage from './main-app/components/Caregivergigpage/Caregivergigpage';
-
-
+import Order from './main-app/pages/client/orders/MyOrders';
+import Order2 from './main-app/pages/client/orders/OrderTasks&Details';
 
 function ScrollToTop() {
   const location = useLocation();
@@ -115,17 +107,18 @@ function App() {
           <Route path="/register" element={<RegisterPage />} />
           <Route path="/Notifications" element={<Notifications />} />
 
-          <Route path="/Caregivergigpage" element={<Caregivergigpage />} />
+          {/* <Route path="/Caregivergigpage" element={<Caregivergigpage />} /> */}
 
 
           <Route path="/MyOrders" element={<Order />} />
           <Route path="/OrderTasks&Details" element={<Order2 />} />
           <Route path="/order-faq" element={<OrderFaq />} /> 
-          <Route path="/ResolutionCenter" element={<ResolutionCenter />} />
-          <Route path="/CaregiverProfile" element={<CaregiverProfile />} />
-          <Route path="/CaregiverSettings" element={<CaregiverSettings />} />
-          <Route path="/Caregiver-Dashboard" element={<CaregiverDashboard />} />
+          {/* <Route path="/ResolutionCenter" element={<ResolutionCenter />} /> */}
+          {/* <Route path="/CaregiverProfile" element={<CaregiverProfile />} /> */}
+          {/* <Route path="/CaregiverSettings" element={<CaregiverSettings />} /> */}
+          {/* <Route path="/Caregiver-Dashboard" element={<CaregiverDashboard />} /> */}
 
+          <Route path="/app/client/payment-success" element={<PaymentSuccess />} />
           <Route
             path="/app/*"
             element={
