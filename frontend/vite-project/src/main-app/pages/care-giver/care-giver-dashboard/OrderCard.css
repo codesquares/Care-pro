@@ -2,61 +2,75 @@
   display: flex;
   gap: 16px;
   padding: 16px;
-  padding-bottom: 40px;
-  background-color: #ffffff;
-  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
-  color: #000000;
-  border-bottom: 1px solid #eee; 
-}
-
-.order-list .order-card:last-child {
-  border-bottom: none;
-}
-
-.order-card img {
-  width: 100px;
-  height: 100px;
+  background-color: #fff;
+  border-bottom: 1px solid #eee;
   border-radius: 10px;
-  object-fit: cover;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
+  align-items: flex-start;
 }
 
-.order-details {
+.image-wrapper {
+  width: 200px;
+  height: 100px;
+  flex-shrink: 0;
+  border-radius: 10px;
+  overflow: hidden;
+  background-color: #f0f0f0;
+
+  
+}
+
+.order-image {
+  width: 100% !important;
+  height: 100% !important;
+  object-fit: cover !important;
+  display: block !important;
+}
+
+.order-content {
   display: flex;
+  flex-direction: column;
   justify-content: space-between;
-  align-items: flex-end;
   flex: 1;
+  gap: 12px;
 }
 
 .order-main {
   display: flex;
   flex-direction: column;
-  gap: 8px;
+  gap: 6px;
 }
 
 .order-title {
   font-size: 16px;
   font-weight: 600;
   color: #2c2c2c;
+  margin: 0;
 }
 
-.order-author {
+.order-user {
   font-size: 14px;
   color: #4f4f4f;
+  margin: 0;
+}
+
+.order-footer {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
 }
 
 .status {
   background-color: #fff3cd;
   color: #f4b400;
-  font-size: 14px;
+  font-size: 13px;
   padding: 4px 10px;
   border-radius: 8px;
   font-weight: 500;
-  width: fit-content;
 }
 
 .order-price {
-  font-size: 20px;
+  font-size: 15px;
+  font-weight: 600;
   color: #1a1a1a;
-  font-weight: bold;
-  margin-left: auto;
 }

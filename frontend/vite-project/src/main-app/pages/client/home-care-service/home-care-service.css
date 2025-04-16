@@ -1,184 +1,232 @@
+/* General Container Styling */
 .container {
-    max-width: 900px;
+    color: black;
+    max-width: 1100px;
     margin: auto;
     padding: 20px;
     font-family: Arial, sans-serif;
-  }
-  
-  .title {
-    font-size: 24px;
-    font-weight: bold;
-    margin-bottom: 15px;
-  }
-  
-  .profile {
-    display: flex;
-    align-items: center;
-    gap: 15px;
-    margin-bottom: 20px;
-  }
-  
-  .avatar {
-    width: 50px;
-    height: 50px;
-    border-radius: 50%;
-  }
-  
-  .name {
-    font-size: 18px;
-    font-weight: bold;
-  }
-  
-  .rating {
-    font-size: 14px;
-    color: #777;
-  }
-  
-  .video-container {
+    margin-top: 80px; /* Ensures content doesn't overlap navbar */
+}
+
+/* Navbar Styling */
+.navbar {
+    position: fixed;
+    top: 0;
+    left: 0;
     width: 100%;
-    height: 250px;
-    background: url('/video-thumbnail.jpg') center/cover no-repeat;
-    position: relative;
-    border-radius: 10px;
-    margin-bottom: 15px;
-  }
-  
-  .play-button {
-    position: absolute;
-    top: 50%;
-    left: 50%;
-    transform: translate(-50%, -50%);
-    font-size: 30px;
-    background: rgba(0, 0, 0, 0.6);
-    color: white;
-    border: none;
-    border-radius: 50%;
-    width: 50px;
-    height: 50px;
-    cursor: pointer;
-  }
-  
-  .description {
-    font-size: 14px;
-    color: #555;
-    margin-bottom: 10px;
-  }
-  
-  .message-button {
-    display: block;
-    width: 100%;
-    background: #007bff;
-    color: white;
-    padding: 10px;
-    text-align: center;
-    border-radius: 5px;
-    margin-bottom: 20px;
-  }
-  
-  .pricing-card {
-    padding: 15px;
-    border-radius: 10px;
-    background: #f8f8f8;
-    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
-    margin-bottom: 20px;
-  }
-  
-  .plans {
+    height: 60px; /* Adjust to actual navbar height */
+    background: white;
+    box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+    z-index: 1000;
+}
+
+/* Top Section Layout */
+.top-section {
     display: flex;
     justify-content: space-between;
-    margin-bottom: 10px;
-  }
-  
-  .plan-button {
+    align-items: flex-start;
+    gap: 20px;
+}
+
+/* Profile Section */
+.profile-container {
     flex: 1;
-    padding: 10px;
+}
+
+.title {
+    font-size: 26px;
+    font-weight: bold;
+    margin-bottom: 10px;
+}
+
+.profile {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    margin-bottom: 15px;
+}
+
+.avatar {
+    width: 45px;
+    height: 45px;
+    border-radius: 50%;
+}
+
+.name {
+    font-size: 18px;
+    font-weight: bold;
+}
+
+.rating {
+    font-size: 14px;
+    color: #777;
+}
+
+/* Pricing Card - Positioned at the Top Right */
+.pricing-card {
+    padding: 20px;
+    border-radius: 10px;
+    background: white;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+    width: 350px;
+    flex-shrink: 0; /* Prevents shrinking */
+}
+
+.plans {
+    display: flex;
+    justify-content: space-between;
+    margin-bottom: 15px;
+}
+
+.plan-button {
+    color: black;
+    flex: 1;
+    padding: 8px;
     border: none;
     cursor: pointer;
     background: none;
     border-bottom: 2px solid transparent;
     font-size: 14px;
-  }
-  
-  .plan-button.active {
+}
+
+.plan-button.active {
     font-weight: bold;
     border-bottom: 2px solid #007bff;
-  }
-  
-  .plan-details {
-    text-align: center;
-  }
-  
-  .price {
-    font-size: 18px;
+}
+
+.plan-details {
+    text-align: left;
+}
+
+.price {
+    font-size: 20px;
     font-weight: bold;
     margin-bottom: 10px;
-  }
-  
-  .features {
+}
+
+.features {
     list-style: none;
     padding: 0;
     font-size: 14px;
     color: #555;
-  }
-  
-  .hire-button {
+}
+
+.hire-button {
     background: #007bff;
     color: white;
-    padding: 10px;
+    padding: 12px;
     border-radius: 5px;
-    margin-top: 10px;
+    margin-top: 15px;
     width: 100%;
-  }
-  
-  .reviews {
-    margin-top: 20px;
-  }
-  
-  .review-title {
+    font-size: 16px;
+    font-weight: bold;
+    border: none;
+    cursor: pointer;
+}
+
+/* Video Section */
+.video-container {
+    width: 100%;
+    height: 300px;
+    border-radius: 10px;
+    overflow: hidden;
+    position: relative;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.video-container img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+}
+
+.play-button {
+    font-size: 35px;
+    background: rgba(0, 0, 0, 0.6);
+    color: white;
+    border: none;
+    border-radius: 50%;
+    width: 60px;
+    height: 60px;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+}
+
+/* Service Description */
+.description {
+    font-size: 14px;
+    color: #555;
+    margin-top: 15px;
+}
+
+/* Message Button */
+.message-button {
+    display: flex;
+    align-items: center;
+    background: #007bff;
+    color: white;
+    padding: 10px 15px;
+    border-radius: 20px;
+    font-size: 14px;
+    border: none;
+    cursor: pointer;
+    gap: 10px;
+    width: fit-content;
+}
+
+/* Reviews Section */
+.reviews {
+    margin-top: 30px;
+}
+
+.review-title {
     font-size: 18px;
     font-weight: bold;
     margin-bottom: 10px;
-  }
-  
-  .review-card {
+}
+
+.review-card {
     padding: 15px;
     border-radius: 10px;
     background: white;
     box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
     margin-bottom: 15px;
-  }
-  
-  .review-header {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+}
+
+.review-header {
     display: flex;
     align-items: center;
     gap: 10px;
-    margin-bottom: 10px;
-  }
-  
-  .review-avatar {
+}
+
+.review-avatar {
     width: 40px;
     height: 40px;
     border-radius: 50%;
-  }
-  
-  .reviewer-name {
+}
+
+.reviewer-name {
     font-weight: bold;
-  }
-  
-  .stars {
+}
+
+.stars {
     display: flex;
     gap: 2px;
     color: gold;
-  }
-  
-  .star {
-    width: 16px;
-    height: 16px;
-    fill: gold;
-  }
-  
-  .review-text {
+}
+
+.review-text {
     font-size: 14px;
     color: #555;
-  }
-  
+}

@@ -1,12 +1,10 @@
 import React, { useState, useEffect } from "react";
-import Navbar from "../../../components/Navbar";
+// import Navbar from "../../../components/Navbar";
 import "./ResolutionCenter.scss";
 
 const ResolutionCenter = () => {
     return (
       <div className="resolution-center-container">
-        {/* I commented this out since it overlaps with the layout and im not sure how to fix <Navbar />*/}
-        {/* Back Arrow */}
         <div className="back-arrow">
           <span>←</span>
         </div>
