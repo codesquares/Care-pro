@@ -42,11 +42,11 @@ const Reviews = () => (
     <div className="review-list">
       {reviews.map((review) => (
         <div key={review.id} className="review-card">
-          <img
-            src={review.image}
+          {/* <img
+            // src={review.image}
             alt={review.name}
             className="review-avatar"
-          />
+          /> */}
           <div className="review-content">
             <div className="review-header">
               <h4 className="review-name">{review.name}</h4>

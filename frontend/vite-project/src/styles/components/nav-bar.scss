@@ -10,7 +10,8 @@
   align-items: center;
   background-color: var(--primary-color-white);
   box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
-
+  justify-content: space-between; // ✅ Pushes logo left and hamburger right
+  align-items: center;
   // Logo
   &-logo {
     padding-left: 50px;
@@ -147,6 +148,48 @@
       margin-right: 15px; // Align the button properly
     }
   }
+
+  // Update this inside .navbar class (mobile specific styles)
+@media (max-width: 768px) {
+  &-links {
+    display: none;
+    flex-direction: column;
+    width: 100%;
+    position: absolute;
+    top: 100%;
+    left: 0;
+    background-color: var(--primary-color-white);
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+    padding: 1.5rem 1.5rem;
+    z-index: 9999;
+    transition: all 0.3s ease-in-out;
+    opacity: 0;
+    pointer-events: none;
+    transform: translateY(-10px);
+
+    li {
+      padding: 10px 0;
+
+      a {
+        font-size: 1rem;
+        font-weight: 500;
+        color: #222;
+
+        &:hover {
+          color: var(--primary-color-2);
+        }
+      }
+    }
+
+    &.active {
+      display: flex;
+      opacity: 1;
+      pointer-events: all;
+      transform: translateY(0);
+    }
+  }
+}
+
 }
 
 // Navbar Toggle (Hamburger Menu)
@@ -157,9 +200,15 @@
     display: block;
     background: none;
     border: none;
-    font-size: 1.5rem;
     cursor: pointer;
-    padding: 0; // Ensure no extra padding on the toggle button
-    margin-left: auto; // Push the toggle button to the right side
+    padding: 0;
+    margin: 0;
+    margin-left: auto; // ✅ Pushes it to the far right
   }
 }
+
+// Add this to ensure body doesn't scroll when menu is open
+body.menu-open {
+  overflow: hidden;
+}
+

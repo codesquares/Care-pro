@@ -6,8 +6,11 @@
   background-color: #ffffff;
   box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
   color: #2c3e50;
+  flex-wrap: wrap; /* Allow wrapping on smaller screens */
+  gap: 1rem;
 }
 
+/* Logo */
 .logo {
   display: flex;
   align-items: center;
@@ -19,10 +22,11 @@
   height: 40px;
 }
 
+/* Text Links */
 .nav-links {
   display: flex;
   align-items: center;
-  gap: 24px;
+  gap: 20px;
   list-style: none;
   margin: 0;
   padding: 0;
@@ -44,6 +48,15 @@
   color: #2c3e50;
 }
 
+/* Icons */
+.nav-icons {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  list-style: none;
+  margin-left: 32px;
+}
+
 .icon-link {
   display: flex;
   align-items: center;
@@ -58,21 +71,24 @@
   object-fit: contain;
 }
 
+/* Right Side Actions */
 .nav-actions {
   display: flex;
   align-items: center;
-  gap: 16px;
+  gap: 20px;
+  margin-left: auto; /* Pushes nav-actions to the far right */
 }
 
+/* Earnings */
 .earnings {
   display: flex;
   align-items: center;
   gap: 8px;
   font-size: 0.875rem;
-  background-color:#F4F4F4;
+  background-color: #f4f4f4;
   padding: 10px 12px;
   border-radius: 5px;
-  color: #8C8C8C;
+  color: #8c8c8c;
   cursor: pointer;
 }
 
@@ -81,6 +97,7 @@
   width: 20px;
 }
 
+/* Profile */
 .profile-avatar {
   display: flex;
   align-items: center;
@@ -106,20 +123,52 @@
   font-size: 1.2rem;
 }
 
-.nav-icons {
-  display: flex;
-  align-items: center;
-  gap: 8px; /* tighter spacing between icons */
-  list-style: none;
-  margin: 0;
-  padding: 0;
-}
-.nav-links {
-  display: flex;
-  align-items: center;
-  gap: 16px; /* was 24px */
-  list-style: none;
-  margin: 0;
-  padding: 0;
+/* Responsive Styling */
+@media (max-width: 1024px) {
+  .navigation-bar {
+    padding: 16px 2rem;
+  }
+
+  .nav-links {
+    gap: 16px;
+  }
+
+  .nav-icons {
+    gap: 10px;
+    margin-left: 20px;
+  }
+
+  .earnings span,
+  .earnings strong {
+    display: none; /* Hide text on smaller screens */
+  }
+
+  .earnings {
+    padding: 8px;
+  }
+
+  .profile-avatar span {
+    display: none; /* Optional: hide name, just show avatar */
+  }
 }
 
+@media (max-width: 768px) {
+  .navigation-bar {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 1.5rem;
+    padding: 16px 1.5rem;
+  }
+
+  .nav-actions {
+    margin-left: 0;
+    width: 100%;
+    justify-content: space-between;
+  }
+
+  .nav-links,
+  .nav-icons {
+    width: 100%;
+    justify-content: flex-start;
+  }
+}

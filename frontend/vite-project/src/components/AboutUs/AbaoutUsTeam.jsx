@@ -1,5 +1,5 @@
 import React from 'react';
-import "../../styles/components/expert-team.scss";
+import "./expert-team.scss";
 import '../../styles/components/AboutUsTeam.scss';
 import ifeoluwa from "../../assets/ifeoluwa.jpeg"; // Placeholder for expert images
 import faniyi from "../../assets/faniyi.jpeg"; // Placeholder for expert images

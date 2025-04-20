@@ -1,5 +1,6 @@
 import solarhealth from "../../assets/solar_health-broken.svg"
 import genralImg from "../../assets/nurse.png";
+import "./BottomBanner.scss"; // Import your CSS file for styling
 
 const BottomBanner = ({ 
     title = "Become a Caregiver today!", 

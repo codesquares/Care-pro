@@ -18,6 +18,8 @@ const CreateAccount = () => {
     confirmPassword: "",
   });
 
+  //please generate a unique username, add middlename ensure middle name is not null so that a random middlename is not added
+
   const [userType, setUserType] = useState(""); // New state for user type
   const [errors, setErrors] = useState({});
   const [isSubmitted, setIsSubmitted] = useState(false);

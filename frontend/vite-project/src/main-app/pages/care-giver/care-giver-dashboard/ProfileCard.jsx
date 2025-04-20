@@ -35,9 +35,11 @@ const ProfileCard = () => {
 
     fetchProfile();
   }, []);
-
+  
   if (loading) return <p>Loading profile...</p>;
   if (error) return <p>Error: {error}</p>;
+  console.log("Profile data:", profile); // Log the fetched profile data
+  
 
   return (
     <div className="profile-card">
