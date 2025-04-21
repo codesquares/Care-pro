@@ -27,7 +27,7 @@ const PublishGig = ({ onSaveAsDraft, onPublish,image, title, onPrev, onNext  }) 
       {/* Text and Controls Section */}
       <div className="publish-card-bottom">
         <p className="publish-card-title">{title}</p>
-        <div className="publish-card-controls">
+        {/* <div className="publish-card-controls">
           <button className="control-button" onClick={onPrev}>
             &#10094;
           </button>
@@ -39,7 +39,7 @@ const PublishGig = ({ onSaveAsDraft, onPublish,image, title, onPrev, onNext  }) 
           <button className="control-button" onClick={onNext}>
             &#10095;
           </button>
-        </div>
+        </div> */}
       </div>
       </div>
     </div>

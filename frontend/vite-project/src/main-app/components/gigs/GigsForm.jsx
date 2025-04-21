@@ -316,7 +316,7 @@ const handleSubCategoryChange = (updatedSubcategories) => {
   };
   const handleProceed = () => {
     setIsModalOpen(false);
-    navigate("/"); // Navigate to success page
+    navigate("/app/caregiver/profile"); // Navigate to success page
   }  
 
 
@@ -377,7 +377,7 @@ const handleSubCategoryChange = (updatedSubcategories) => {
         />)}
         {currentPage === 3 && (
           <PublishGig
-            image={source}
+            image={`data:image/jpeg;base64,${formData.image1}`}
             title={alt}
             onSaveAsDraft={handleSaveAsDraft}
             onPublish={handleSubmit}

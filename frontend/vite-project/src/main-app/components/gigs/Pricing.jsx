@@ -65,21 +65,21 @@ const PricingTable = ({ onPricingChange }) => {
               <textarea
                 value={pricing.Basic.details}
                 onChange={(e) => handleInputChange("Basic", "details", e.target.value)}
-                placeholder="Describe your Basic package"
+                placeholder="Describe tasks for Basic package and sepreate with ;"
               />
             </td>
             <td>
               <textarea
                 value={pricing.Standard.details}
                 onChange={(e) => handleInputChange("Standard", "details", e.target.value)}
-                placeholder="Describe your Standard package"
+                placeholder="Describe tasks for Standard package and sepreate with ;"
               />
             </td>
             <td>
               <textarea
                 value={pricing.Premium.details}
                 onChange={(e) => handleInputChange("Premium", "details", e.target.value)}
-                placeholder="Describe your Premium package"
+                placeholder="Describe tasks for Premium package and sepreate with ;"
               />
             </td>
           </tr>

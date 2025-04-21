@@ -2,9 +2,14 @@ import { useState } from "react";
 import "./gigs.scss";
 import Input from "../input/Input";
 
-const GigsCard = ({ categories, onSearchTagChange, onCategoryChange, onSubCategoryChange, onTitleChange, formData }) => {
-
-
+const GigsCard = ({
+  categories,
+  onSearchTagChange,
+  onCategoryChange,
+  onSubCategoryChange,
+  onTitleChange,
+  formData,
+}) => {
   return (
     <div className="gigs-card">
       <form>
@@ -40,8 +45,9 @@ const GigsCard = ({ categories, onSearchTagChange, onCategoryChange, onSubCatego
               id="category"
               onChange={(e) => {
                 const selectedCategory = e.target.value;
-                onCategoryChange(selectedCategory); // Notify parent of category change
+                onCategoryChange(selectedCategory);
               }}
+              value={formData.category}
             >
               <option value="">Select a category</option>
               {Object.keys(categories).map((category) => (
@@ -50,11 +56,17 @@ const GigsCard = ({ categories, onSearchTagChange, onCategoryChange, onSubCatego
                 </option>
               ))}
             </select>
-            {formData.category && (
+          </div>
+
+          {/* Subcategory */}
+          {formData.category && (
+            <div className="subcategory-section">
+              <h4>Select Subcategories</h4>
               <div className="subcategory-checkbox-group">
                 {categories[formData.category]?.map((subCategory) => (
                   <label key={subCategory} className="subcategory-checkbox">
                     <input
+                      className="checkbox-input"
                       type="checkbox"
                       value={subCategory}
                       checked={formData.subcategory.includes(subCategory)}
@@ -73,12 +85,8 @@ const GigsCard = ({ categories, onSearchTagChange, onCategoryChange, onSubCatego
                   </label>
                 ))}
               </div>
-            )}
-
-
-
-
-          </div>
+            </div>
+          )}
         </div>
 
         {/* Search Tags Section */}
@@ -91,7 +99,7 @@ const GigsCard = ({ categories, onSearchTagChange, onCategoryChange, onSubCatego
           </div>
           <div className="gigs-card-input">
             <Input
-              name="searchTags"
+              name="searchTags" 
               type="text"
               onChange={(e) => onSearchTagChange(e.target.value.split(","))}
               placeholder="Add search tags separated by a comma"
