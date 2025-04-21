@@ -1,5 +1,6 @@
 import React, { useEffect, useState } from "react";
 import "./profile-header.css";
+import profilecard1 from '../../../../assets/profilecard1.png'; // Placeholder image
 
 const ProfileHeader = () => {
   const [profile, setProfile] = useState({
@@ -11,7 +12,7 @@ const ProfileHeader = () => {
     location: "",
     memberSince: "",
     lastDelivery: "",
-    picture: "profile-pic.jpg",
+    picture: "",
   });
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState("");
@@ -21,7 +22,7 @@ const ProfileHeader = () => {
       try {
         // Retrieve userDetails from local storage and parse it
         const userDetails = JSON.parse(localStorage.getItem("userDetails"));
-        console.log(userDetails.id);
+        // console.log(userDetails.id);
         if (!userDetails || !userDetails.id) {
           throw new Error("No caregiver ID found in local storage.");
         }
@@ -37,9 +38,11 @@ const ProfileHeader = () => {
         }
 
         const data = await response.json();
-        console.log(data);
+        // console.log(data);
 
         // Map API response to the state
+        const timeCreated = new Date(data.createdAt);
+        const formattedDate = `${timeCreated.getFullYear()}-${String(timeCreated.getMonth() + 1).padStart(2, '0')}-${String(timeCreated.getDate()).padStart(2, '0')}`;
         setProfile({
           name: `${data.firstName} ${data.lastName}` || "N/A", // Use firstName and lastName if available, otherwise use "N/A"data.firstName || "N/A",
           username: data.email || "N/A",
@@ -47,7 +50,7 @@ const ProfileHeader = () => {
           rating: data.rating || 0,
           reviews: data.reviews || 0,
           location: data.location || "N/A",
-          memberSince: data.createdAt || "N/A",
+          memberSince:formattedDate || "N/A",
           lastDelivery: data.lastDelivery || "N/A",
           picture: data.picture || "profile-pic.jpg",
         });
@@ -63,10 +66,11 @@ const ProfileHeader = () => {
 
   if (isLoading) return <p>Loading...</p>;
   if (error) return <p>Error: {error}</p>;
+ 
 
   return (
     <div className="profile-header">
-      <img src={profile.picture} alt="Profile" className="profile-img" />
+      <img src={profilecard1 || profile.picture} alt="Profile" className="profile-img" />
       <h2>{profile.name}</h2>
       <p>@{profile.username}</p>
       <p>{profile.bio}</p>

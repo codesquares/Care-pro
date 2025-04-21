@@ -29,7 +29,7 @@ const GigsSection = () => {
         }
 
         const data = await response.json();
-        console.log(data);
+        // console.log(data);
         setGigs(data); // Assuming the API returns an array of gigs
         setIsLoading(false);
       } catch (err) {

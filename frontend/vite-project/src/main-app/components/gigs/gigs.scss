@@ -252,9 +252,60 @@ textarea {
 }
 
 //Style added for the select inputs on the gig card
-.gigs-card-input select { 
-  width: 100%; 
+
+  /* Style for select boxes (category and subcategory dropdowns) */
+.gigs-card-input select {
+  width: 100%;
+  max-width: 400px;
   padding: 10px;
-  box-sizing: border-box;
+  height: 45px;
+  font-size: 14px;
+  border-radius: 8px;
+  border: 1px solid #ccc;
+  background-color: #fff;
+  appearance: none; /* Hides the native arrow for custom UI, optional */
+  margin-bottom: 12px;
+  white-space: normal; /* Allow text to wrap */
+  text-overflow: unset; /* Don't truncate text */
+  overflow: visible; /* Ensure content is fully visible */
 }
 
+/* Subcategory checkbox group */
+.subcategory-checkbox-group {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(180px, 1fr)); /* Responsive grid for checkboxes */
+  gap: 12px;
+  margin-top: 10px;
+  max-width: 100%;
+}
+
+/* Style for individual subcategory checkboxes */
+.subcategory-checkbox {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 10px;
+  background-color: #f1e9e9;
+  border: 1px solid #ccc;
+  border-radius: 8px;
+  cursor: pointer;
+  font-size: 14px;
+  min-height: 45px;
+  white-space: normal; /* Allow text to wrap */
+  overflow: unset; /* Don't hide any content */
+  text-overflow: unset; /* Remove ellipsis truncation */
+  color: black;
+}
+
+/* Subcategory checkbox input */
+.subcategory-checkbox input {
+  cursor: pointer;
+}
+
+/* Subcategory checkbox label */
+.subcategory-checkbox span {
+  flex: 1;
+  white-space: normal; /* Allow text to wrap */
+  overflow: unset; /* Don't hide any content */
+  text-overflow: unset; /* No ellipsis truncation */
+}

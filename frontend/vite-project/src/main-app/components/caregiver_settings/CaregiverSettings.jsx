@@ -1,16 +1,75 @@
 import React from "react";
 import "./CaregiverSettings.scss";
+import { useEffect, useState } from "react";
+import profileCardImage from "../../../assets/profilecard1.png"; // Placeholder image
 
 const CaregiverSettings = () => {
+    const [profile, setProfile] = useState({
+            name: "",
+        
+            location: "",
+            memberSince: "",
+            username: "",
+            
+        });
+        const [isLoading, setIsLoading] = useState(true);
+        const [error, setError] = useState("");
+          useEffect(() => {
+            const fetchProfile = async () => {
+              try {
+                // Retrieve userDetails from local storage and parse it
+                const userDetails = JSON.parse(localStorage.getItem("userDetails"));
+                console.log(userDetails.id);
+                if (!userDetails || !userDetails.id) {
+                  throw new Error("No caregiver ID found in local storage.");
+                }
+        
+                // Use the id from userDetails
+                const response = await fetch(
+                  `https://carepro-api20241118153443.azurewebsites.net/api/CareGivers/${userDetails.id}`
+                );
+                
+        
+                if (!response.ok) {
+                  throw new Error("Failed to fetch profile data.");
+                }
+        
+                const data = await response.json();
+                console.log(data);
+        
+                // Map API response to the state
+                setProfile({
+                  name: `${data.firstName} ${data.lastName}` || "N/A", // Use firstName and lastName if available, otherwise use "N/A"data.firstName || "N/A",
+                  username: data.email || "N/A",
+                //   bio: data.introduction || "“Interested in giving the best healthcare services to your taste?”",
+                //   rating: data.rating || 0,
+                //   reviews: data.reviews || 0,
+                  location: data.location || "N/A",
+                  memberSince: data.createdAt || "N/A",
+                //   lastDelivery: data.lastDelivery || "N/A",
+                  picture: data.picture || profileCardImage,
+                });
+                setIsLoading(false);
+              } catch (err) {
+                setError(err.message);
+                setIsLoading(false);
+              }
+            };
+        
+            fetchProfile();
+          }, []);
+        
+          if (isLoading) return <p>Loading...</p>;
+          if (error) return <p>Error: {error}</p>;
     return (
         <div className="settings-container">
             {/* I commented this out since it overlaps with the layout and im not sure how to fix <Navbar />*/}
             <div className="profile-settings-wrapper">
                 {/* Profile Section */}
                 <div className="profile-info-section">
-                    <img src="https://via.placeholder.com/100" alt="Profile" className="profile-image" />
-                    <h2 className="profile-name">John Manfredi</h2>
-                    <p className="profile-email">@johnmanfredi20</p>
+                    <img src={profileCardImage} alt="Profile" className="profile-image" />
+                    <h2 className="profile-name">{profile.name}</h2>
+                    <p className="profile-email">{profile.username}</p>
                     <div className="profile-rating">★★★★☆ (29 reviews)</div>
                     {/*I know the spaces arent the cleanest solution but they seemed the easiest if you need me to change it please let me know*/}
                     <p className="profile-location">Location                             Lagos, Nigeria</p>
@@ -23,9 +82,9 @@ const CaregiverSettings = () => {
                 {/* Profile Info */}
                 <div className="settings-box">
                     <h3>Full Name</h3>
-                    <input type="text" placeholder="Ahmed Rufai" />
+                    <input type="text" placeholder={profile.name} />
                     <h3>Email</h3>
-                    <input type="email" placeholder="ahmedrufai@gmail.com" />
+                    <input type="email" placeholder={profile.username} />
                     <h3>Account Status</h3>
                     <div className="status-buttons">
                         <button className="active">Available</button>

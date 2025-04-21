@@ -3,7 +3,7 @@ import "./gigs.scss";
 import Input from "../input/Input";
 
 const GigsCard = ({ categories, onSearchTagChange, onCategoryChange, onSubCategoryChange, onTitleChange, formData }) => {
-  
+
 
   return (
     <div className="gigs-card">
@@ -50,19 +50,34 @@ const GigsCard = ({ categories, onSearchTagChange, onCategoryChange, onSubCatego
                 </option>
               ))}
             </select>
-            <select
-              id="subcategory"
-              onChange={(e) => onSubCategoryChange(e.target.value)}
-              disabled={!categories}
-            >
-              <option value="">Select a subcategory</option>
-              {categories[formData.category] &&
-                categories[formData.category].map((subCategory) => (
-                  <option key={subCategory} value={subCategory}>
-                    {subCategory}
-                  </option>
+            {formData.category && (
+              <div className="subcategory-checkbox-group">
+                {categories[formData.category]?.map((subCategory) => (
+                  <label key={subCategory} className="subcategory-checkbox">
+                    <input
+                      type="checkbox"
+                      value={subCategory}
+                      checked={formData.subcategory.includes(subCategory)}
+                      onChange={(e) => {
+                        const isChecked = e.target.checked;
+                        if (isChecked) {
+                          onSubCategoryChange([...formData.subcategory, subCategory]);
+                        } else {
+                          onSubCategoryChange(
+                            formData.subcategory.filter((s) => s !== subCategory)
+                          );
+                        }
+                      }}
+                    />
+                    <span>{subCategory}</span>
+                  </label>
                 ))}
-            </select>
+              </div>
+            )}
+
+
+
+
           </div>
         </div>
 

@@ -52,7 +52,7 @@ const GigsForm = () => {
   const [formData, setFormData] = useState({
     title: "",
     category: "",
-    subcategory: "",
+    subcategory: [],
     searchTags: [],
     pricing: {
       Basic: { name: "", details: "", deliveryTime: "", amount: "" },
@@ -69,15 +69,87 @@ const GigsForm = () => {
     ? formData.searchTags.join(", ")
     : null;
 
-  const categories = {
-    "Adult Care": ["Companionship", "Personal Care"],
-    "Post Surgery Care": ["wound care", "medication management"],
-    "Child Care": ["Respite", "Babysitting"],
-    "Pet Care": ["Pet minding", "Dog walking"],
-    "Home Care": ["Cleaning", "Cooking"],
-    "Special Needs Care": ["Dementia", "Autism"],
-  };
-
+    const categories = {
+      "Adult Care": [
+        "Companionship",
+        "Meal preparation",
+        "Mobility assistance",
+        "Medication reminders",
+        "Bathing and grooming",
+        "Dressing assistance",
+        "Toileting and hygiene support",
+        "Incontinence care",
+        "Overnight supervision",
+        "Chronic illness management"
+      ],
+      "Post Surgery Care": [
+        "Wound care",
+        "Medication management",
+        "Post-surgery care",
+        "Mobility assistance",
+        "Home safety assessment",
+        "Feeding assistance"
+      ],
+      "Child Care": [
+        "Respite",
+        "Babysitting",
+        "Meal preparation",
+        "Recreational activities assistance",
+        "Emotional support and check-ins"
+      ],
+      "Pet Care": [
+        "Pet minding",
+        "Dog walking",
+        "Feeding assistance",
+        "Companionship" // for emotional comfort animals
+      ],
+      "Home Care": [
+        "Light housekeeping",
+        "Cleaning",
+        "Cooking",
+        "Home safety assessment",
+        "Errands and shopping",
+        "Transportation to appointments"
+      ],
+      "Special Needs Care": [
+        "Dementia care",
+        "Autism support",
+        "Behavioral support",
+        "Disability support services",
+        "Assistive device training",
+        "Language or communication support"
+      ],
+      "Medical Support": [
+        "Nursing care",
+        "Medication reminders",
+        "Medical appointment coordination",
+        "Palliative care support",
+        "Chronic illness management"
+      ],
+      "Mobility Support": [
+        "Mobility assistance",
+        "Fall prevention monitoring",
+        "Exercise and fitness support",
+        "Assistive device training",
+        "Transportation to appointments"
+      ],
+      "Therapy & Wellness": [
+        "Physical therapy support",
+        "Cognitive stimulation activities",
+        "Emotional support and check-ins",
+        "Recreational activities assistance",
+        "Acupuncture",
+        "Massage therapy"
+      ],
+      "End of Life Care": [
+        "Palliative care support",
+        "Overnight supervision",
+        "Emotional support and check-ins",
+        "Home safety assessment"
+      ]
+    };
+    
+  console.log("services:", formData.subcategory);
   const handleSaveAsDraft = async (e) => {
   e.preventDefault();
   setIsSubmitted(true);
@@ -127,20 +199,23 @@ const GigsForm = () => {
 };
 
 
-  const handleCategoryChange = (category) => {
-    setFormData((prev) => ({
-      ...prev,
-      category,
-      subcategory: "",
-    }));
-  };
-  const subcategory = categories[formData.category] || [];
-  const handleSubCategoryChange = (subcategory) => {
-    setFormData((prev) => ({
-      ...prev,
-      subcategory,
-    }));
-  };
+const handleCategoryChange = (category) => {
+  setFormData((prev) => ({
+    ...prev,
+    category,
+    subcategory: [], // ← reset as an array
+  }));
+};
+
+const handleSubCategoryChange = (updatedSubcategories) => {
+  setFormData((prev) => ({
+    ...prev,
+    subcategory: updatedSubcategories,
+  }));
+};
+
+
+
 
   const handleSearchTagChange = (tags) => {
     setFormData((prev) => ({
