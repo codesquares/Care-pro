@@ -1,10 +1,10 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import "../../styles/main-app/pages/RegisterPage.scss";
 import authImage from "../../assets/authImage.png";
 import useApi from "../services/useApi";
 import { toast } from "react-toastify";
 import Modal from "../components/modal/Modal";
-import { useNavigate } from "react-router-dom"; // Import Modal component
+import { useNavigate } from "react-router-dom"; 
 
 const CreateAccount = () => {
   const { data, error, loading, fetchData } = useApi("/CareGivers/AddCaregiverUser", "post");
@@ -17,6 +17,19 @@ const CreateAccount = () => {
     phone: "",
     confirmPassword: "",
   });
+
+  useEffect(() => {
+    const user = JSON.parse(localStorage.getItem("userDetails"));
+    if (user && user.role) {
+      if (user.role === "Caregiver") {
+        navigate("/app/caregiver/dashboard", { replace: true });
+      } else if (user.role === "Client") {
+        navigate("/app/client/dashboard", { replace: true });
+      } else {
+        navigate("/app", { replace: true }); // fallback for unknown roles
+      }
+    }
+  }, []);
 
   const [userType, setUserType] = useState(""); // New state for user type
   const [errors, setErrors] = useState({});
