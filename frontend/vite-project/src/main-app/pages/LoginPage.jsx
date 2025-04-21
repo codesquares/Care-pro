@@ -1,4 +1,5 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
+import { useNavigate } from "react-router-dom";
 import axios from "axios";
 import "../../styles/main-app/pages/RegisterPage.scss";
 import authImage from "../../assets/authImage.png";
@@ -10,6 +11,20 @@ const LoginPage = () => {
   const [password, setPassword] = useState("");
   const [error, setError] = useState(null);
   const [loading, setLoading] = useState(false);
+  const navigate = useNavigate();
+
+  useEffect(() => {
+    const user = JSON.parse(localStorage.getItem("userDetails"));
+    if (user && user.role) {
+      if (user.role === "Admin") {
+        navigate("/admin", { replace: true });
+      } else if (user.role === "Client") {
+        navigate("/app/client/dashboard", { replace: true });
+      } else {
+        navigate("/app/caregiver/dashboard", { replace: true });
+      }
+    }
+  }, []);
 
   // Handle form submission
   const handleSubmit = async (e) => {
