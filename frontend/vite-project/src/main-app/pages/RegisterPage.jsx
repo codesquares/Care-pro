@@ -7,7 +7,7 @@ import Modal from "../components/modal/Modal";
 import { useNavigate } from "react-router-dom"; 
 
 const CreateAccount = () => {
-  const { data, error, loading, fetchData } = useApi("/CareGivers/AddCaregiverUser", "post");
+  const { data, error, loading, fetchData } = useApi("", "post");
   const navigate = useNavigate(); // Hook to navigate
   const [formValues, setFormValues] = useState({
     firstName: "",
@@ -87,7 +87,8 @@ const CreateAccount = () => {
     };
 
     try {
-      await fetchData(payload);
+      const endpoint = userType === "Caregiver" ? "/CareGivers/AddCaregiverUser" : "/Clients/AddClientUser";
+      await fetchData(payload, endpoint);
 
       // Show success modal
       setModalTitle("Success!");
@@ -108,6 +109,11 @@ const CreateAccount = () => {
       setIsModalOpen(true);
     }
   };
+
+  const handleProceed = () => {
+    setIsModalOpen(false);
+    navigate("/login"); // Navigate to success page
+  }  
 
   return (
     <div className="register-page">
@@ -227,6 +233,7 @@ const CreateAccount = () => {
         description={modalDescription}
         buttonText={buttonText}
         buttonBgColor={buttonBgColor}
+        onProceed={handleProceed}
       />
     </div>
   );

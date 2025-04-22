@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import NavigationBar from './NavigationBar';
 import ProfileCard from './ProfileCard';
@@ -9,6 +9,11 @@ import setting from '../../../../assets/setting.png';
 
 const CaregiverDashboard = () => {
   const [filter, setFilter] = useState('All Orders'); // Default filter is 'All Orders'
+  const [orders, setOrders] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(null);
+  const [totalOrders, setTotalOrders] = useState(0);
+  const [totalEarnings, setTotalEarnings] = useState(0);
       const navigate = useNavigate();
       const basePath = "/app/caregiver";
 
@@ -16,13 +21,41 @@ const CaregiverDashboard = () => {
     setFilter(e.target.value); // Update the filter state based on the selected option
   };
 
+   // Retrieve user details from localStorage
+   const userDetails = JSON.parse(localStorage.getItem("userDetails"));
+   const caregiverId = userDetails?.id;
+ 
+   const API_URL = `https://carepro-api20241118153443.azurewebsites.net/api/ClientOrders/caregiverId?caregiverId=${caregiverId}`;
+ 
+   useEffect(() => {
+     const fetchOrders = async () => {
+       try {
+         const response = await fetch(API_URL);
+         if (!response.ok) {
+           throw new Error("Failed to fetch orders");
+         }
+         const data = await response.json();
+ 
+         setOrders(data.clientOrders);
+          setTotalOrders(data.noOfOrders);
+          setTotalEarnings(data.totalEarning);
+       } catch (error) {
+         setError(error.message);
+       } finally {
+         setLoading(false);
+       }
+     };
+ 
+     fetchOrders();
+   }, []);
+
   return (
     <>
       {/* <NavigationBar /> */}
       <div className="caregiver-dashboard">
         <div className="leftbar">
           <ProfileCard />
-          <StatisticsCard />
+          <StatisticsCard totalOrders={totalOrders} totalEarnings={totalEarnings} />
           <div className="setting-container" style={{ cursor: "pointer" }} onClick={() => navigate(`${basePath}/settings`)}>
             <img src={setting} alt="Setting" className="setting-image" />
             <span className="setting-text">Account Settings</span>
@@ -43,7 +76,7 @@ const CaregiverDashboard = () => {
               <option value="Cancelled">Cancelled</option>
             </select>
           </div>
-          <OrderList filter={filter} /> {/* Pass the selected filter to OrderList */}
+          <OrderList filter={filter} orders={orders} loading={loading} error={error} /> {/* Pass the selected filter to OrderList */}
         </div>
       </div>
     </>
