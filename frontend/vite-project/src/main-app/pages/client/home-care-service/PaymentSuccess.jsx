@@ -66,10 +66,15 @@ const PaymentSuccess = () => {
         <div>
           <p>Transaction ID: {transactionId}</p>
           <p>Reference: {txRef}</p>
-          <button onClick={() => navigate("/app/client/home")}>Go to Home</button>
+          <button onClick={() => navigate("/app/client/my-order")}>Go to Order</button>
         </div>
       ) : (
-        <p>Something went wrong with your payment.</p>
+        <div>
+          <p>Something went wrong with your payment.</p>
+          <button onClick={() => navigate("/app/client/home")}>Go to Home</button>
+        </div>
+        
+        
       )}
     </div>
   );

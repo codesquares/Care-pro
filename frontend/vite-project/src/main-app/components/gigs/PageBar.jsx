@@ -2,15 +2,23 @@ import React from "react";
 import "./pagebar.scss";
 import Button from "../button/Button";
 
-const PageBar = ({ pages, currentPage }) => {
+const PageBar = ({ pages, currentPage, onPageClick }) => {
   return (
     <div className="page-bar">
       <div className="page-bar-item">
         {pages.map((page, index) => (
-          <div key={index} className="page-bar-item">
+          <div
+            key={index}
+            className="page-bar-item"
+            onClick={() => {
+              if (index <= currentPage) {
+                onPageClick(index);
+              }
+            }}
+            style={{ cursor: index <= currentPage ? "pointer" : "default" }}
+          >
             {index <= currentPage ? (
               <div className="page-bar-icon completed">&#10003;</div> // Green tick
-      
             ) : (
               <div className="page-bar-icon">{index + 1}</div> // Page number
             )}
@@ -22,7 +30,7 @@ const PageBar = ({ pages, currentPage }) => {
         ))}
       </div>
       <div className="page-bar-btn">
-         <Button>Save</Button>
+         {/* <Button>Save</Button> */}
       </div>
     </div>
   );
