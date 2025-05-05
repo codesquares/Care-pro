@@ -2,7 +2,7 @@ import React from "react";
 import { useNavigate } from "react-router-dom"; // Import navigation hook
 import "./serviceCard.css";
 
-const ServiceCard = ({ id, image1, title, location, packageDetails, rating }) => {
+const ServiceCard = ({ id, image1, title, location, packageDetails, rating,}) => {
   const navigate = useNavigate();
   const basePath = "/app/client"; // Base path for your routes
 

@@ -41,3 +41,13 @@
     cursor: pointer;
   }
   
+  .availability-btn.available {
+    background-color: #28a745;
+    color: white;
+  }
+  
+  .availability-btn.unavailable {
+    background-color: #dc3545;
+    color: white;
+  }
+  

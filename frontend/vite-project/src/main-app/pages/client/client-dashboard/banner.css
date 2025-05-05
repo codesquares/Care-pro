@@ -1,12 +1,12 @@
-.banner {
+.banner-top {
   background: url('../../../../assets/main-app/clientBanner.svg') center/cover no-repeat;
   padding: 40px 30px;
   display: flex;
   flex-direction: column;
   align-items: flex-start;
-  border-radius: 16px;
   gap: 20px;
   min-height: 250px;
+
 }
 
 .welcome-section {

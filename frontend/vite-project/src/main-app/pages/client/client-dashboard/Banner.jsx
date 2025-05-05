@@ -3,7 +3,7 @@ import "./banner.css";
 
 const Banner = ({ name }) => {
   return (
-    <div className="banner">
+    <div className="banner-top">
       <div className="welcome-section">
         <div className="avatar-circle">
           <span className="avatar-initial">{name.charAt(0)}</span>

@@ -11,8 +11,6 @@ const UserProfile = () => {
     <div className="user-profile">
       <div className="profile-left">
         <ProfileHeader />
-        <IntroVideo />
-        <ProfileInformation />
       </div>
       <div className="profile-right">
         <GigsSection />

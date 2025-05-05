@@ -6,6 +6,7 @@ import { use } from "react";
 const HomeCareService = () => {
   const { id } = useParams();
   const [service, setService] = useState(null);
+  const [videoPreviewUrl, setVideoPreviewUrl] = useState("");
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   const navigate = useNavigate();
@@ -98,7 +99,7 @@ const HomeCareService = () => {
   if (error) return <p className="error">{error}</p>;
 
   // Extract service details
-  const { title, providerName, rating, packageDetails, image1, plan, price, features } = service;
+  const { title, providerName, rating, packageDetails, image1, plan, price, features, videoURL } = service;
 
   return (
     <div className="container">
@@ -133,12 +134,25 @@ const HomeCareService = () => {
 
       {/* Video Section */}
       <div className="video-container">
-        <img src="/video-thumbnail.jpg" alt="Service Video" />
-        <button className="play-button">▶</button>
+      <video width="570" height="260" controls>
+            <source src={videoURL} type="video/mp4" />
+            Your browser does not support the video tag.
+          </video>
       </div>
 
       {/* Service Description & Message Button */}
-      <p className="description">{packageDetails}</p>
+      <div className="package-details">
+          <h2 className="section-title">What this package includes:</h2>
+          <ul className="package-list">
+            {packageDetails?.map((item, index) => (
+              <li key={index} className="package-item">
+                {item}
+              </li>
+            ))}
+          </ul>
+      </div>
+
+
       <button className="message-button" onClick={handleMessage}>Message {providerName}</button>
 
       {/* Reviews Section */}
