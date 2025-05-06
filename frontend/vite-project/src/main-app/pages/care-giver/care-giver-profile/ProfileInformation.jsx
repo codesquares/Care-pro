@@ -7,16 +7,22 @@ const ProfileInformation = ({ profileDescription, onUpdate }) => {
   const [editedAboutMe, setEditedAboutMe] = useState(profileDescription);
   const [loading, setLoading] = useState(false);
 
+  const [showCertModal, setShowCertModal] = useState(false);
+  const [certificateFile, setCertificateFile] = useState(null);
+  const [certificateName, setCertificateName] = useState('');
+  const [certificateIssuer, setCertificateIssuer] = useState('');
+  const [certificateYear, setCertificateYear] = useState('');
+
   const userDetails = JSON.parse(localStorage.getItem("userDetails"));
 
   const handleSave = async () => {
     try {
       setLoading(true);
       await axios.put(`https://carepro-api20241118153443.azurewebsites.net/api/CareGivers/UpdateCaregiverInfo/${userDetails.id}`, {
-        AboutMe: editedAboutMe,
+        aboutMe: editedAboutMe,
       });
       setShowModal(false);
-      onUpdate(editedAboutMe); // trigger parent update if needed
+      onUpdate(editedAboutMe);
     } catch (err) {
       console.error('Failed to update About Me:', err);
     } finally {
@@ -24,7 +30,34 @@ const ProfileInformation = ({ profileDescription, onUpdate }) => {
     }
   };
 
-  const caregiverServices = [/* ...your existing caregiverServices array... */];
+  const handleUploadCertificate = async () => {
+    if (!certificateFile || !certificateName || !certificateIssuer || !certificateYear) {
+      alert("Please complete all fields");
+      return;
+    }
+
+    const formData = new FormData();
+    formData.append("file", certificateFile);
+    formData.append("name", certificateName);
+    formData.append("issuer", certificateIssuer);
+    formData.append("year", certificateYear);
+    formData.append("caregiverId", userDetails.id);
+
+    try {
+      await axios.post("https://carepro-api20241118153443.azurewebsites.net/api/certificates", formData, {
+        headers: { "Content-Type": "multipart/form-data" }
+      });
+      setShowCertModal(false);
+      // Reset fields
+      setCertificateFile(null);
+      setCertificateName('');
+      setCertificateIssuer('');
+      setCertificateYear('');
+      // Optionally refresh list
+    } catch (err) {
+      console.error("Upload failed", err);
+    }
+  };
 
   const services = [
     "Rehabilitation services", "Dental care", "Cooking",
@@ -59,12 +92,13 @@ const ProfileInformation = ({ profileDescription, onUpdate }) => {
         <h3>Certifications</h3>
         <ul>
           {certifications.map((c, i) => (
-            <li key={i}><a href={c.link}>{c.name}</a></li>
+            <li key={i}><a href={c.link} target="_blank" rel="noreferrer">{c.name}</a></li>
           ))}
         </ul>
+        <button onClick={() => setShowCertModal(true)}>Add Certificate</button>
       </div>
 
-      {/* Modal */}
+      {/* Edit About Me Modal */}
       {showModal && (
         <div className="modal-overlay">
           <div className="modal-content">
@@ -80,6 +114,42 @@ const ProfileInformation = ({ profileDescription, onUpdate }) => {
               <button onClick={handleSave} disabled={loading}>
                 {loading ? 'Saving...' : 'Save'}
               </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Certificate Upload Modal */}
+      {showCertModal && (
+        <div className="modal-overlay">
+          <div className="modal-content">
+            <h3>Upload Certificate</h3>
+            <input
+              type="text"
+              placeholder="Certificate Name"
+              value={certificateName}
+              onChange={(e) => setCertificateName(e.target.value)}
+            />
+            <input
+              type="text"
+              placeholder="Certificate Issuer"
+              value={certificateIssuer}
+              onChange={(e) => setCertificateIssuer(e.target.value)}
+            />
+            <input
+              type="number"
+              placeholder="Year Obtained"
+              value={certificateYear}
+              onChange={(e) => setCertificateYear(e.target.value)}
+            />
+            <input
+              type="file"
+              onChange={(e) => setCertificateFile(e.target.files[0])}
+              accept=".pdf,.jpg,.jpeg,.png"
+            />
+            <div className="modal-actions">
+              <button onClick={() => setShowCertModal(false)}>Cancel</button>
+              <button onClick={handleUploadCertificate}>Upload</button>
             </div>
           </div>
         </div>
