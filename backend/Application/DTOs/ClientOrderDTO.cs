@@ -25,7 +25,9 @@ namespace Application.DTOs
     public class ClientOrderResponse
     {
         public string Id { get; set; }
+
         public string ClientId { get; set; }
+        public string ClientName { get; set; }
 
         public string CaregiverId { get; set; }
         public string CaregiverName { get; set; }
@@ -45,7 +47,20 @@ namespace Application.DTOs
 
         public string? DeclineReason { get; set; }
         public bool? IsDeclined { get; set; }
+
+
+        public decimal TotalEarning { get; set; }
+        public int NoOfOrders { get; set; }
+        public int NoOfHoursSpent { get; set; }
     }
+
+    public class CaregiverClientOrdersSummaryResponse
+    {
+        public int NoOfOrders { get; set; }
+        public decimal TotalEarning { get; set; }
+        public List<ClientOrderResponse> ClientOrders { get; set; }
+    }
+
 
     public class AddClientOrderRequest
     {

@@ -12,5 +12,10 @@ namespace Application.Interfaces.Content
         Task<ClientDTO> CreateClientUserAsync(AddClientUserRequest addClientUserRequest);
 
         Task<ClientResponse> GetClientUserAsync(string clientId);
+
+        Task<IEnumerable<ClientResponse>> GetAllClientUserAsync();
+
+        Task<string> UpdateClientUserAsync(string clientId, UpdateClientUserRequest updateClientUserRequest );
+
     }
 }

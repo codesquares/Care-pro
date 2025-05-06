@@ -37,13 +37,19 @@ namespace Infrastructure.Content.Services
 
             if (gigExist != null)
             {
-                throw new AuthenticationException("This Gig already exist");
+                throw new ArgumentException("This Gig already exist");
             }
 
             var careGiver = await careGiverService.GetCaregiverUserAsync(addGigRequest.CaregiverId);
             if (careGiver == null)
             {
-                throw new AuthenticationException("The CaregiverID entered is not a Valid ID");
+                throw new KeyNotFoundException("The CaregiverID entered is not a Valid ID");
+            }
+
+            /// Check if caregiver select a category or sub-category before creating a gig
+            if (string.IsNullOrWhiteSpace(addGigRequest.Category) || addGigRequest.SubCategory == null || !addGigRequest.SubCategory.Any(s => !string.IsNullOrWhiteSpace(s)))
+            {
+                throw new ArgumentException("At least A Service and Sub-Category must be selected before you create a new Gig");
             }
 
             //// Convert the IFormFile to a byte array
@@ -61,16 +67,15 @@ namespace Infrastructure.Content.Services
             {
                 Title = addGigRequest.Title,
                 Category = addGigRequest.Category,
-                SubCategory = addGigRequest.SubCategory,
+               // SubCategory = addGigRequest.SubCategory,
+                SubCategory = string.Join(",", addGigRequest.SubCategory
+                    .Where(x => !string.IsNullOrWhiteSpace(x))
+                    .Select(x => x.Trim())),
+
                 Tags = addGigRequest.Tags,
                 PackageType = addGigRequest.PackageType,
                 PackageName = addGigRequest.PackageName,
-                //PackageDetails = addGigRequest.PackageDetails,
-                //PackageDetails = addGigRequest.PackageDetails
-                //        .Split(',', StringSplitOptions.RemoveEmptyEntries)
-                //        .Select(x => x.Trim())
-                //        .ToList(),
-
+                
                 PackageDetails = addGigRequest.PackageDetails
                         .Split(';', StringSplitOptions.RemoveEmptyEntries)
                         .Select(x => x.Trim())
@@ -107,7 +112,10 @@ namespace Infrastructure.Content.Services
                 Id = gig.Id.ToString(),
                 Title = gig.Title,
                 Category= gig.Category,
-                SubCategory= gig.SubCategory,
+                SubCategory= gig.SubCategory
+                    .Split(',', StringSplitOptions.RemoveEmptyEntries)
+                    .Select(x => x.Trim())
+                    .ToList(),
                 Tags= gig.Tags,
                 PackageType= gig.PackageType,
                 PackageName= gig.PackageName,
@@ -128,6 +136,8 @@ namespace Infrastructure.Content.Services
 
         public async Task<IEnumerable<GigDTO>> GetAllCaregiverDraftGigsAsync(string caregiverId)
         {
+            var caregiver = await careGiverService.GetCaregiverUserAsync(caregiverId);
+
             var gigs = await careProDbContext.Gigs
                 .Where(x => x.CaregiverId == caregiverId && x.Status == "Draft")
                 .OrderBy(x => x.CreatedAt)
@@ -151,7 +161,11 @@ namespace Infrastructure.Content.Services
                     Title = gig.Title,
 
                     Category = gig.Category,
-                    SubCategory = gig.SubCategory,
+                    //SubCategory = gig.SubCategory,
+                    SubCategory = gig.SubCategory
+                        .Split(',', StringSplitOptions.RemoveEmptyEntries)
+                        .Select(x => x.Trim())
+                        .ToList(),
                     Tags = gig.Tags,
                     PackageType = gig.PackageType,
                     PackageName = gig.PackageName,
@@ -161,7 +175,8 @@ namespace Infrastructure.Content.Services
                     Image1 = logoBase64,
                     Image2 = gig.Image2,
                     Image3 = gig.Image3,
-                    VideoURL = gig.VideoURL,
+                    //VideoURL = gig.VideoURL,
+                    VideoURL = caregiver.IntroVideo,
                     Status = gig.Status,
                     CaregiverId = gig.CaregiverId,
                     CreatedAt = gig.CreatedAt,
@@ -175,6 +190,14 @@ namespace Infrastructure.Content.Services
 
         public async Task<IEnumerable<GigDTO>> GetAllCaregiverGigsAsync(string caregiverId)
         {
+            var caregiver = await careGiverService.GetCaregiverUserAsync(caregiverId);
+
+            if (caregiver == null)
+            {
+                throw new KeyNotFoundException($"Caregiver with ID:{caregiverId} Not found");
+            }
+
+
             var gigs = await careProDbContext.Gigs
                 .Where(x => x.CaregiverId == caregiverId)
                 .OrderBy(x => x.CreatedAt)
@@ -198,7 +221,11 @@ namespace Infrastructure.Content.Services
                     Title = gig.Title,
 
                     Category = gig.Category,
-                    SubCategory = gig.SubCategory,
+                    //SubCategory = gig.SubCategory,
+                    SubCategory = gig.SubCategory
+                        .Split(',', StringSplitOptions.RemoveEmptyEntries)
+                        .Select(x => x.Trim())
+                        .ToList(),
                     Tags = gig.Tags,
                     PackageType = gig.PackageType,
                     PackageName = gig.PackageName,
@@ -208,7 +235,8 @@ namespace Infrastructure.Content.Services
                     Image1 = logoBase64,
                     Image2 = gig.Image2,
                     Image3 = gig.Image3,
-                    VideoURL = gig.VideoURL,
+                    //VideoURL = gig.VideoURL,
+                    VideoURL = caregiver.IntroVideo,
                     Status = gig.Status,
                     CaregiverId = gig.CaregiverId,
                     CreatedAt = gig.CreatedAt,
@@ -245,7 +273,11 @@ namespace Infrastructure.Content.Services
                     Title = gig.Title,
 
                     Category = gig.Category,
-                    SubCategory = gig.SubCategory,
+                    //SubCategory = gig.SubCategory,
+                    SubCategory = gig.SubCategory
+                        .Split(',', StringSplitOptions.RemoveEmptyEntries)
+                        .Select(x => x.Trim())
+                        .ToList(),
                     Tags = gig.Tags,
                     PackageType = gig.PackageType,
                     PackageName = gig.PackageName,
@@ -293,7 +325,11 @@ namespace Infrastructure.Content.Services
                     Id = gig.Id.ToString(),
                     Title = gig.Title,
                     Category = gig.Category,
-                    SubCategory = gig.SubCategory,
+                    //SubCategory = gig.SubCategory,
+                    SubCategory = gig.SubCategory
+                        .Split(',', StringSplitOptions.RemoveEmptyEntries)
+                        .Select(x => x.Trim())
+                        .ToList(),
                     Tags = gig.Tags,
                     PackageType = gig.PackageType,
                     PackageName = gig.PackageName,
@@ -316,14 +352,44 @@ namespace Infrastructure.Content.Services
             return gigDTOs;
         }
 
+
+
+        public async Task<List<string>> GetAllSubCategoriesForCaregiverAsync(string caregiverId)
+        {
+            var subCategories = await careProDbContext.Gigs
+                .Where(x => (x.Status == "Published" || x.Status == "Active") && x.CaregiverId == caregiverId)
+                .Select(x => x.SubCategory)
+                .ToListAsync();
+
+            var allSubCategories = subCategories
+                .Where(sc => !string.IsNullOrEmpty(sc))
+                .SelectMany(sc => sc.Split(',', StringSplitOptions.RemoveEmptyEntries))
+                .Select(sc => sc.Trim())
+                .Distinct()
+                .ToList();
+
+            return allSubCategories;
+        }
+
+
         public async Task<GigDTO> GetGigAsync(string gigId)
         {
+            
+
             var gig = await careProDbContext.Gigs.FirstOrDefaultAsync(x => x.Id.ToString() == gigId);
 
             if (gig == null)
             {
                 throw new KeyNotFoundException($"Gig with ID '{gigId}' not found.");
             }
+
+            var caregiver = await careGiverService.GetCaregiverUserAsync(gig.CaregiverId);
+
+            if (caregiver == null)
+            {
+                throw new KeyNotFoundException($"Caregiver with ID:{gig.CaregiverId} Not found");
+            }
+
 
             // Determine the image format based on the binary data
             string logoBase64 = null;
@@ -338,7 +404,11 @@ namespace Infrastructure.Content.Services
                 Id = gig.Id.ToString(),
                 Title = gig.Title,
                 Category = gig.Category,
-                SubCategory = gig.SubCategory,
+                //SubCategory = gig.SubCategory,
+                SubCategory = gig.SubCategory
+                        .Split(',', StringSplitOptions.RemoveEmptyEntries)
+                        .Select(x => x.Trim())
+                        .ToList(),
                 Tags = gig.Tags,
                 PackageType = gig.PackageType,
                 PackageName = gig.PackageName,
@@ -348,7 +418,8 @@ namespace Infrastructure.Content.Services
                 Image1 = logoBase64,
                 Image2 = gig.Image2,
                 Image3 = gig.Image3,
-                VideoURL = gig.VideoURL,
+                //VideoURL = gig.VideoURL,
+                VideoURL = caregiver.IntroVideo,
                 Status = gig.Status,
                 CaregiverId = gig.CaregiverId,
                 UpdatedOn = gig.UpdatedOn,
@@ -363,12 +434,25 @@ namespace Infrastructure.Content.Services
         {
             try
             {
-                var existingGig = await careProDbContext.Gigs.FindAsync(gigId);
+                if (!ObjectId.TryParse(gigId, out var objectId))
+                {
+                    throw new ArgumentException("Invalid Gig ID format.");
+                }
+
+                var existingGig = await careProDbContext.Gigs.FindAsync(objectId);
 
                 if (existingGig == null)
                 {
-                    throw new KeyNotFoundException($"Gigs with ID '{gigId}' not found.");
+                    throw new KeyNotFoundException($"Gig with ID '{gigId}' not found.");
                 }
+
+
+                //var existingGig = await careProDbContext.Gigs.FindAsync(gigId);
+
+                //if (existingGig == null)
+                //{
+                //    throw new KeyNotFoundException($"Gigs with ID '{gigId}' not found.");
+                //}
 
 
                 existingGig.Status = updateGigStatusToPauseRequest.Status;
@@ -389,6 +473,71 @@ namespace Infrastructure.Content.Services
             }
         }
 
+
+        public async Task<string> UpdateGigAsync(string gigId, UpdateGigRequest updateGigRequest)
+        {
+            if (!ObjectId.TryParse(gigId, out var objectId))
+            {
+                throw new ArgumentException("Invalid Gig ID format.");
+            }
+
+            var existingGig = await careProDbContext.Gigs.FindAsync(objectId);
+
+            if (existingGig == null)
+            {
+                throw new KeyNotFoundException($"Gig with ID '{gigId}' not found.");
+            }
+
+
+            /// Check if caregiver select a category or sub-category before creating a gig
+            if (string.IsNullOrWhiteSpace(updateGigRequest.Category) || updateGigRequest.SubCategory == null || !updateGigRequest.SubCategory.Any(s => !string.IsNullOrWhiteSpace(s)))
+            {
+                throw new ArgumentException("At least A Service and Sub-Category must be selected before you update this Gig");
+            }
+
+
+            if (!string.IsNullOrWhiteSpace(updateGigRequest.Image1))
+            {
+                try
+                {
+                    existingGig.Image1 = Convert.FromBase64String(updateGigRequest.Image1);
+                }
+                catch (FormatException)
+                {
+                    throw new ArgumentException("Image1 is not a valid Base64 string.");
+                }
+            }
+
+
+            //// Convert the Base 64 string to a byte array
+            //var imageBytes = Convert.FromBase64String(updateGigRequest.Image1);
+
+
+
+            existingGig.Category = updateGigRequest.Category;
+            existingGig.SubCategory = string.Join(",", updateGigRequest.SubCategory
+                                        .Where(x => !string.IsNullOrWhiteSpace(x))
+                                        .Select(x => x.Trim()));
+            existingGig.Tags = updateGigRequest.Tags;
+            existingGig.PackageType = updateGigRequest.PackageType;
+            existingGig.PackageName = updateGigRequest.PackageName;
+            existingGig.PackageDetails = updateGigRequest.PackageDetails
+                                        .Split(';', StringSplitOptions.RemoveEmptyEntries)
+                                                .Select(x => x.Trim())
+                                                .ToList();
+            existingGig.DeliveryTime = updateGigRequest.DeliveryTime;
+            existingGig.Price = updateGigRequest.Price;
+           // existingGig.Image1 = imageBytes;
+            existingGig.UpdatedOn = DateTime.Now;
+            
+
+            careProDbContext.Gigs.Update(existingGig);
+            await careProDbContext.SaveChangesAsync();
+
+            LogAuditEvent($"Gig with (ID: {gigId}) successfully updated", updateGigRequest.CaregiverId);
+            return $"Gig with ID '{gigId}' updated successfully.";
+
+        }
 
         public string GetImageFormat(byte[] imageData)
         {
@@ -421,5 +570,6 @@ namespace Infrastructure.Content.Services
             logger.LogInformation($"Audit Event: {message}. User ID: {caregiverId}. Timestamp: {DateTime.UtcNow}");
         }
 
+        
     }
 }

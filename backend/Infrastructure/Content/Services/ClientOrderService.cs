@@ -6,6 +6,7 @@ using Infrastructure.Content.Data;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging;
 using MongoDB.Bson;
+using Org.BouncyCastle.Asn1.X509;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -89,7 +90,7 @@ namespace Infrastructure.Content.Services
         }
 
 
-        public async Task<IEnumerable<ClientOrderResponse>> GetAllCaregiverOrderAsync(string caregiverId)
+        public async Task<CaregiverClientOrdersSummaryResponse> GetAllCaregiverOrderAsync(string caregiverId)
         {
 
             var orders = await careProDbContext.ClientOrders
@@ -98,25 +99,36 @@ namespace Infrastructure.Content.Services
                .ToListAsync();
 
             var caregiverOrders = new List<ClientOrderResponse>();
+            decimal totalEarning = 0;
 
             foreach (var caregiverOrder in orders)
             {
                 var gig = await gigServices.GetGigAsync(caregiverOrder.GigId);
                 if (gig == null)
                 {
-                    throw new AuthenticationException("The GigID entered is not a Valid ID");
+                    throw new KeyNotFoundException("The GigID entered is not a Valid ID");
                 }
 
                 var caregiver = await careGiverService.GetCaregiverUserAsync(caregiverId);
                 if (caregiver == null)
                 {
-                    throw new AuthenticationException("The CaregiverId entered is not a Valid ID");
+                    throw new KeyNotFoundException("The CaregiverId entered is not a Valid ID");
                 }
+
+                //var client = await careGiverService.GetCaregiverUserAsync(caregiverOrder.ClientId);
+                var client = await clientService.GetClientUserAsync(caregiverOrder.ClientId);
+                if (client == null)
+                {
+                    throw new KeyNotFoundException("The ClientId entered is not a Valid ID");
+                }
+
+                totalEarning += caregiverOrder.Amount;
 
                 var caregiverOrderDTO = new ClientOrderResponse()
                 {
                     Id = caregiverOrder.Id.ToString(),
                     ClientId = caregiverOrder.ClientId,
+                    ClientName = client.FirstName + " " + client.LastName,
 
                     CaregiverId = gig.CaregiverId,
                     CaregiverName = caregiver.FirstName + " " + caregiver.LastName,
@@ -139,7 +151,12 @@ namespace Infrastructure.Content.Services
                 caregiverOrders.Add(caregiverOrderDTO);
             }
 
-            return caregiverOrders;
+            return new CaregiverClientOrdersSummaryResponse
+            {
+                NoOfOrders = caregiverOrders.Count,
+                TotalEarning = totalEarning,
+                ClientOrders = caregiverOrders,
+            };
         }
 
         public async Task<IEnumerable<ClientOrderResponse>> GetAllClientOrderAsync(string clientUserId)
@@ -156,19 +173,27 @@ namespace Infrastructure.Content.Services
                 var gig = await gigServices.GetGigAsync(clientOrder.GigId);
                 if (gig == null)
                 {
-                    throw new AuthenticationException("The GigID entered is not a Valid ID");
+                    throw new KeyNotFoundException("The GigID entered is not a Valid ID");
                 }
 
                 var caregiver = await careGiverService.GetCaregiverUserAsync(gig.CaregiverId);
                 if (caregiver == null)
                 {
-                    throw new AuthenticationException("The CaregiverId entered is not a Valid ID");
+                    throw new KeyNotFoundException("The CaregiverId entered is not a Valid ID");
+                }
+
+                //var client = await careGiverService.GetCaregiverUserAsync(clientOrder.ClientId);
+                var client = await clientService.GetClientUserAsync(clientOrder.ClientId);
+                if (client == null)
+                {
+                    throw new KeyNotFoundException("The ClientId entered is not a Valid ID");
                 }
 
                 var clientOrderDTO = new ClientOrderResponse()
                 {
                     Id = clientOrder.Id.ToString(),
                     ClientId = clientOrder.ClientId,
+                    ClientName = client.FirstName + " " + client.LastName,
 
                     CaregiverId = gig.CaregiverId,
                     CaregiverName = caregiver.FirstName + " " + caregiver.LastName,
@@ -206,19 +231,27 @@ namespace Infrastructure.Content.Services
             var gig = await gigServices.GetGigAsync(order.GigId);
             if (gig == null)
             {
-                throw new AuthenticationException("The GigID entered is not a Valid ID");
+                throw new KeyNotFoundException("The GigID entered is not a Valid ID");
             }
 
             var caregiver = await careGiverService.GetCaregiverUserAsync(gig.CaregiverId);
             if (caregiver == null)
             {
-                throw new AuthenticationException("The CaregiverId entered is not a Valid ID");
+                throw new KeyNotFoundException("The CaregiverId entered is not a Valid ID");
+            }
+
+            //var client = await careGiverService.GetCaregiverUserAsync(order.ClientId);
+            var client = await clientService.GetClientUserAsync(order.ClientId);
+            if (client == null)
+            {
+                throw new KeyNotFoundException("The ClientId entered is not a Valid ID");
             }
 
             var clientOrderDTO = new ClientOrderResponse()
             {
                 Id = order.Id.ToString(),
                 ClientId = order.ClientId,
+                ClientName = client.FirstName + " " + client.LastName,
 
                 GigId = order.GigId,
                 GigTitle = gig.Title,
@@ -243,9 +276,17 @@ namespace Infrastructure.Content.Services
 
         public async Task<string> UpdateClientOrderStatusAsync(string orderId, UpdateClientOrderStatusRequest updateClientOrderStatusRequest)
         {
+           
+           
+
             try
             {
-                var existingOrder = await careProDbContext.ClientOrders.FindAsync(orderId);
+                if (!ObjectId.TryParse(orderId, out var objectId))
+                {
+                    throw new ArgumentException("Invalid order ID format.");
+                }
+
+                var existingOrder = await careProDbContext.ClientOrders.FindAsync(objectId);
 
                 if (existingOrder == null)
                 {
@@ -275,12 +316,26 @@ namespace Infrastructure.Content.Services
         {
             try
             {
-                var existingOrder = await careProDbContext.ClientOrders.FindAsync(orderId);
+                if (!ObjectId.TryParse(orderId, out var objectId))
+                {
+                    throw new ArgumentException("Invalid order ID format.");
+                }
+
+                var existingOrder = await careProDbContext.ClientOrders.FindAsync(objectId);
 
                 if (existingOrder == null)
                 {
                     throw new KeyNotFoundException($"Order with ID '{orderId}' not found.");
                 }
+
+
+
+                //var existingOrder = await careProDbContext.ClientOrders.FindAsync(orderId);
+
+                //if (existingOrder == null)
+                //{
+                //    throw new KeyNotFoundException($"Order with ID '{orderId}' not found.");
+                //}
 
 
                 existingOrder.ClientOrderStatus = updateClientOrderStatusHasDisputeRequest.ClientOrderStatus;

@@ -1,7 +1,9 @@
+using Application.DTOs;
 using Application.Interfaces;
 using Application.Interfaces.Authentication;
 using Application.Interfaces.Content;
 using Application.Interfaces.Email;
+using CloudinaryDotNet;
 using Domain.Settings;
 using Infrastructure.Content.Data;
 using Infrastructure.Content.Services;
@@ -22,14 +24,16 @@ var builder = WebApplication.CreateBuilder(args);
 
 builder.Services.AddDbContext<CareProDbContext>(options =>
 {
-     //options.UseMongoDB("mongodb://localhost:27017", "Care-Pro_DB");
+    //options.UseMongoDB("mongodb://localhost:27017", "Care-Pro_DB");
     //////options.UseMongoDB("mongodb+srv://codesquareltd:fqWU47mw0Coyfp5n@cluster0.c9g7a.mongodb.net/?retryWrites=true&w=majority&appName=Cluster0", "Care-pro_db");
-   options.UseMongoDB("mongodb+srv://codesquareltd:fqWU47mw0Coyfp5n@cluster0.c9g7a.mongodb.net/Care-pro_db?retryWrites=true&w=majority", "Care-pro_db");
+  options.UseMongoDB("mongodb+srv://codesquareltd:fqWU47mw0Coyfp5n@cluster0.c9g7a.mongodb.net/Care-pro_db?retryWrites=true&w=majority", "Care-pro_db");
 });
 
 /// Configure JWT
 
 builder.Services.Configure<JWT>(builder.Configuration.GetSection("JWT"));
+
+//builder.Services.Configure<JWT>(builder.Configuration.GetSection("JwtSettings"));
 
 
 
@@ -40,6 +44,31 @@ builder.Services.Configure<DataProtectionTokenProviderOptions>(options =>
 
 
 
+var cloudinarySettings = builder.Configuration.GetSection("CloudinarySettings");
+var account = new Account(
+    cloudinarySettings["CloudName"],
+    cloudinarySettings["ApiKey"],
+    cloudinarySettings["ApiSecret"]
+);
+
+var cloudinary = new Cloudinary(account)
+{
+    Api = { Secure = true }
+};
+
+builder.Services.AddSingleton(cloudinary);
+builder.Services.AddScoped<CloudinaryService>();
+
+// Register your services that use CloudinaryService here
+//builder.Services.AddScoped<ICareGiverService, CareGiverService>();
+
+builder.Services.Configure<CloudinarySettings>(builder.Configuration.GetSection("CloudinarySettings"));
+builder.Services.AddSingleton(x =>
+{
+    var config = builder.Configuration.GetSection("CloudinarySettings").Get<CloudinarySettings>();
+    var account = new Account(config.CloudName, config.ApiKey, config.ApiSecret);
+    return new Cloudinary(account);
+});
 
 
 
@@ -54,8 +83,13 @@ builder.Services.AddScoped<ICareGiverService, CareGiverService>();
 builder.Services.AddScoped<IClientService, ClientService>();
 builder.Services.AddScoped<IGigServices, GigServices>();
 builder.Services.AddScoped<IClientOrderService, ClientOrderService>();
+builder.Services.AddScoped<ICertificationService, CertificationService>();
+builder.Services.AddScoped<IChatRepository, ChatRepository>();
 
 builder.Services.AddScoped<ITokenHandler, Infrastructure.Content.Services.Authentication.TokenHandler>();
+
+
+
 
 ///Flutterwave dependency injection
 builder.Services.AddSingleton<FlutterwaveService>();
@@ -138,11 +172,24 @@ builder.Services.AddCors(options =>
     options.AddPolicy("default", builder =>
     {
         builder.WithOrigins("https://localhost:5173", "http://localhost:5173", "https://localhost:5174", "http://localhost:5174")
-               .AllowAnyMethod()
                .AllowAnyHeader()
+               .AllowAnyMethod()
                .AllowCredentials();
     });
 });
+
+
+//// Handle CORS
+//builder.Services.AddCors(options =>
+//{
+//    options.AddPolicy("default", builder =>
+//    {
+//        builder.AllowAnyOrigin() // Allows requests from any origin
+//               .AllowAnyMethod()  // Allows any HTTP method (GET, POST, PUT, DELETE, etc.)
+//               .AllowAnyHeader(); // Allows any header
+//    });
+//});
+
 
 
 
@@ -187,6 +234,7 @@ var app = builder.Build();
 
 /// Configure SignalR Continues
 app.UseRouting();
+app.UseCors("default");
 app.UseEndpoints(endpoints =>
 {
     endpoints.MapHub<ChatHub>("/chathub");
@@ -205,7 +253,7 @@ app.UseSwaggerUI();
 
 app.UseHttpsRedirection();
 
-app.UseCors("default");
+//app.UseCors("default");
 
 app.UseAuthentication();
 

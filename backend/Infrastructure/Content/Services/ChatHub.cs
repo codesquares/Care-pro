@@ -19,17 +19,28 @@ namespace Infrastructure.Content.Services
 
         public async Task SendMessage(string senderId, string receiverId, string message)
         {
-            var chatMessage = new ChatMessage
+            try
             {
-                SenderId = senderId,
-                ReceiverId = receiverId,
-                Message = message
-            };
+                var chatMessage = new ChatMessage
+                {
+                    SenderId = senderId,
+                    ReceiverId = receiverId,
+                    Message = message,
+                    Timestamp = DateTime.UtcNow
+                };
 
-            await _chatRepository.SaveMessageAsync(chatMessage);
+                await _chatRepository.SaveMessageAsync(chatMessage);
 
-            await Clients.User(receiverId).SendAsync("ReceiveMessage", senderId, message);
-        }
+                await Clients.User(receiverId).SendAsync("ReceiveMessage", senderId, message);
+
+            }
+            catch (Exception)
+            {
+
+                await Clients.Caller.SendAsync("Error", "Message failed to send.");
+            }
+
+               }
        
     }
 }

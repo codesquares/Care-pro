@@ -1,4 +1,5 @@
-﻿using MongoDB.Bson;
+﻿using Microsoft.AspNetCore.Http;
+using MongoDB.Bson;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -82,11 +83,10 @@ namespace Application.DTOs
 
         public string Role { get; set; }
 
-        public string Password { get; set; } = null!;
+       // public string Password { get; set; } = null!;
 
         public bool IsDeleted { get; set; }
 
-        public DateTime CreatedAt { get; set; }
 
         public bool Status { get; set; }
 
@@ -94,27 +94,65 @@ namespace Application.DTOs
         
         public string? HomeAddress { get; set; }
 
+        public string? AboutMe { get; set; }
+        public string? AboutMeIntro { get; set; }
 
-        public string? Introduction { get; set; }
-        public string? Description { get; set; }
-        public string[]? Services { get; set; }
+        // public string? Introduction { get; set; }
+        //public string? AboutMe { get; set; }
+        //public string[]? Services { get; set; }
         public string? Location { get; set; }
-        public string[]? CertificationIDs { get; set; }
+        //public string[]? CertificationIDs { get; set; }
         public string? ReasonForDeactivation { get; set; }
-        public string? IntroVideoUrl { get; set; }
+        //public string? IntroVideo { get; set; }
+
+
+        public bool IsAvailable { get; set; }
+        
+        public string? IntroVideo { get; set; }
+        public decimal TotalEarning { get; set; }
+        public int NoOfOrders { get; set; }
+        public int NoOfHoursSpent { get; set; }
+
+
+        public DateTime CreatedAt { get; set; }
 
 
     }
 
     public class UpdateCaregiverAdditionalInfoRequest
     {
-        public string? Introduction { get; set; }
-        public string? Description { get; set; }
-        public string[]? Services { get; set; }
-        public string? Location { get; set; }
-        //public string[]? CertificationIDs { get; set; }
-       // public string? ReasonForDeactivation { get; set; }
-        public string? IntroVideoUrl { get; set; }
+        
+        public string? AboutMe { get; set; }        
+        public string? Location { get; set; }        
+        //public string? IntroVideo { get; set; }
+        public IFormFile? IntroVideo { get; set; }
     }
+
+    public class UpdateCaregiverAvailabilityRequest
+    {
+        public bool IsAvailable { get; set; }        
+    }
+
+    public class ResetPasswordRequest
+    {       
+        public string Email { get; init; }
+        
+        public string CurrentPassword { get; init; }
+        
+        public string NewPassword { get; init; }
+    }
+
+    public class PasswordResetRequestDto
+    {
+        public string Email { get; set; }
+    }
+
+    public class PasswordResetDto
+    {
+        public string Token { get; set; }
+        public string NewPassword { get; set; }
+    }
+
+
 
 }

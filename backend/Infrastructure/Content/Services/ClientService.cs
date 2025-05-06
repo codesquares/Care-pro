@@ -31,7 +31,7 @@ namespace Infrastructure.Content.Services
 
             if (clientUserExist != null)
             {
-                throw new AuthenticationException("User already exist, Kindly Login or use forget password!");
+                throw new InvalidOperationException("User already exist, Kindly Login or use forget password!");
             }
 
             /// CONVERT DTO TO DOMAIN OBJECT            
@@ -89,7 +89,7 @@ namespace Infrastructure.Content.Services
 
         public async Task<ClientResponse> GetClientUserAsync(string clientId)
         {
-            var client = await careProDbContext.CareGivers.FirstOrDefaultAsync(x => x.Id.ToString() == clientId);
+            var client = await careProDbContext.Clients.FirstOrDefaultAsync(x => x.Id.ToString() == clientId);
 
             if (client == null)
             {
@@ -103,6 +103,7 @@ namespace Infrastructure.Content.Services
                 MiddleName = client.MiddleName,
                 LastName = client.LastName,
                 Email = client.Email,
+                PhoneNo = client.PhoneNo,
                 Role = client.Role,
                 Status = client.Status,
                 HomeAddress = client.HomeAddress,
@@ -111,6 +112,49 @@ namespace Infrastructure.Content.Services
             };
 
             return clientDTO;
+        }
+
+
+        public async Task<IEnumerable<ClientResponse>> GetAllClientUserAsync()
+        {
+            var clientUsers = await careProDbContext.Clients
+                .Where(x => x.Status == true && x.IsDeleted == false)
+                .OrderBy(x => x.FirstName)
+                .ToListAsync();
+
+            var clientUsersDTOs = new List<ClientResponse>();
+
+            foreach (var clientUser in clientUsers)
+            {
+                var clientUserDTO = new ClientResponse()
+                {
+                    Id = clientUser.Id.ToString(),
+                    FirstName = clientUser.FirstName,
+                    MiddleName = clientUser.MiddleName,
+                    LastName = clientUser.LastName,
+                    Email = clientUser.Email,
+                    PhoneNo = clientUser.PhoneNo,
+                    Role = clientUser.Role,
+                    IsDeleted = clientUser.IsDeleted,
+                    Status = clientUser.Status,
+                    HomeAddress = clientUser.HomeAddress,
+                    //Introduction = clientUser.Introduction,
+                    //AboutMe = clientUser.AboutMe,
+                    //Services = clientUser.Services,
+                    //Location = clientUser.Location,
+                    //CertificationIDs = clientUser.CertificationIDs,
+                    //IntroVideo = clientUser.IntroVideo,
+                    CreatedAt = clientUser.CreatedAt,
+                };
+                clientUsersDTOs.Add(clientUserDTO);
+            }
+
+            return clientUsersDTOs;
+        }
+
+        public Task<string> UpdateClientUserAsync(string clientId, UpdateClientUserRequest updateClientUserRequest)
+        {
+            throw new NotImplementedException();
         }
     }
 }

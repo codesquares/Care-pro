@@ -1,6 +1,7 @@
 ﻿using Application.DTOs;
 using Application.Interfaces;
 using Application.Interfaces.Content;
+using Infrastructure.Content.Data;
 using Infrastructure.Content.Services;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
@@ -11,11 +12,13 @@ namespace CarePro_Api.Controllers.Content
     [ApiController]
     public class ClientOrdersController : ControllerBase
     {
+        private readonly CareProDbContext careProDbContext;
         private readonly IClientOrderService clientOrderService;
         private readonly ILogger<ClientOrdersController> logger;
 
-        public ClientOrdersController(IClientOrderService clientOrderService, ILogger<ClientOrdersController> logger)
+        public ClientOrdersController(CareProDbContext careProDbContext, IClientOrderService clientOrderService, ILogger<ClientOrdersController> logger)
         {
+            this.careProDbContext = careProDbContext;
             this.clientOrderService = clientOrderService;
             this.logger = logger;
         }
@@ -53,6 +56,10 @@ namespace CarePro_Api.Controllers.Content
                 return Ok(clientOrders);
 
             }
+            catch (KeyNotFoundException ex)
+            {
+                return NotFound(new { message = ex.Message });
+            }
             catch (ApplicationException appEx)
             {
                 // Handle application-specific exceptions
@@ -87,6 +94,10 @@ namespace CarePro_Api.Controllers.Content
                 return Ok(caregiverOrders);
 
             }
+            catch (KeyNotFoundException ex)
+            {
+                return NotFound(new { message = ex.Message });
+            }            
             catch (ApplicationException appEx)
             {
                 // Handle application-specific exceptions
@@ -121,6 +132,10 @@ namespace CarePro_Api.Controllers.Content
                 return Ok(clientOrder);
 
             }
+            catch (KeyNotFoundException ex)
+            {
+                return NotFound(new { message = ex.Message });
+            }
             catch (ApplicationException appEx)
             {
                 // Handle application-specific exceptions
@@ -146,9 +161,25 @@ namespace CarePro_Api.Controllers.Content
         // [Authorize(Roles = "Caregiver, Admin")]
         public async Task<ActionResult<string>> UpdateClientOrderStatusAsync(string orderId, UpdateClientOrderStatusRequest updateClientOrderStatusRequest )
         {
-            var result = await clientOrderService.UpdateClientOrderStatusAsync(orderId, updateClientOrderStatusRequest);
-            logger.LogInformation($"Client Order Status with ID: {orderId} updated.");
-            return Ok(result);
+            try
+            {
+                var result = await clientOrderService.UpdateClientOrderStatusAsync(orderId, updateClientOrderStatusRequest);
+                logger.LogInformation($"Client Order Status with ID: {orderId} updated.");
+                return Ok(result);
+            }
+            catch (ArgumentException ex)
+            {
+                return BadRequest(new { Message = ex.Message }); // Returns 400 Bad Request
+            }
+            catch (KeyNotFoundException ex)
+            {
+                return NotFound(new { message = ex.Message });
+            }
+            catch (Exception ex)
+            {
+                return StatusCode(500, new { message = ex.Message });
+            }
+            
         }
 
 
@@ -157,9 +188,28 @@ namespace CarePro_Api.Controllers.Content
         // [Authorize(Roles = "Caregiver, Admin")]
         public async Task<ActionResult<string>> UpdateClientOrderStatusHasDisputeAsync(string orderId, UpdateClientOrderStatusHasDisputeRequest  updateClientOrderStatusHasDisputeRequest)
         {
-            var result = await clientOrderService.UpdateClientOrderStatusHasDisputeAsync(orderId, updateClientOrderStatusHasDisputeRequest);
-            logger.LogInformation($"Client Order Status with ID: {orderId} updated.");
-            return Ok(result);
+            try
+            {
+                var result = await clientOrderService.UpdateClientOrderStatusHasDisputeAsync(orderId, updateClientOrderStatusHasDisputeRequest);
+                logger.LogInformation($"Client Order Status with ID: {orderId} updated.");
+                return Ok(result);
+            }
+            catch (ArgumentException ex)
+            {
+                return BadRequest(new { Message = ex.Message }); // Returns 400 Bad Request
+            }
+            catch (KeyNotFoundException ex)
+            {
+                return NotFound(new { message = ex.Message });
+            }
+            catch (Exception ex)
+            {
+                return StatusCode(500, new { message = ex.Message });
+            }
+            
         }
+
+
+       
     }
 }

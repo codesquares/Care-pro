@@ -32,6 +32,8 @@ namespace Infrastructure.Content.Data
             modelBuilder.Entity<Client>().ToCollection("Clients");
             modelBuilder.Entity<Gig>().ToCollection("Gigs");
             modelBuilder.Entity<ClientOrder>().ToCollection("ClientOrders");
+            modelBuilder.Entity<Certification>().ToCollection("Certifications");
+            modelBuilder.Entity<ChatMessage>().ToCollection("ChatMessages");
             
         }
 
@@ -41,5 +43,7 @@ namespace Infrastructure.Content.Data
         public DbSet<Client> Clients { get; set; }
         public DbSet<Gig> Gigs { get; set; }
         public DbSet<ClientOrder> ClientOrders { get; set; }
+        public DbSet<Certification> Certifications { get; set; }
+        public DbSet<ChatMessage> ChatMessages { get; set; }
     }
 }
