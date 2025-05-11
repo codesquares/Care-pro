@@ -7,6 +7,7 @@ import CaregiverProfile from '../../components/caregiver_settings/CaregiverProfi
 import Earnings from './Earnings';
 import Order from './Order';
 import CreateGig from './CreateGig';
+import { MessagesPage } from '../../features/messaging';
 
 function CareGiverRoutes() {
     return (
@@ -20,6 +21,7 @@ function CareGiverRoutes() {
             <Route path='/create-gigs' element={<CreateGig/>} />
             <Route path='/settings' element={<CaregiverSettings />} />
             <Route path="/CaregiverProfile" element={<CaregiverProfile />} />
+            <Route path="/message" element={<MessagesPage userId={localStorage.getItem('userId')} token={localStorage.getItem('token')} />} />
         </Routes>
         </>
     );

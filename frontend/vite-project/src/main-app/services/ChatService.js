@@ -1,7 +1,11 @@
+/**
+ * This file is kept for backward compatibility.
+ * Please use the new implementation in features/messaging/utils/ChatService.js 
+ */
 import * as signalR from "@microsoft/signalr";
 import config from "../config";
 
-const API_URL = `https://carepro-api20241118153443.azurewebsites.net/chathub` // Replace with your actual API URL
+const API_URL = `https://carepro-api20241118153443.azurewebsites.net/chathub` // API URL
 
 let connection = null;
 

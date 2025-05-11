@@ -1,0 +1,16 @@
+.message-status {
+  display: inline-flex;
+  margin-left: 4px;
+  
+  &.sent {
+    color: #9ca3af;
+  }
+  
+  &.delivered {
+    color: #60a5fa;
+  }
+  
+  &.read {
+    color: #10b981;
+  }
+}

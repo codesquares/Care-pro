@@ -22,11 +22,11 @@ import MainAppRoutes from './main-app/routes';
 import { logout } from './main-app/services/auth';
 import { AuthProvider } from './main-app/context/AuthContext';
 import CreateGig from './main-app/pages/care-giver/CreateGig';
-import Messages from './main-app/pages/Messages';
 import Notifications from './main-app/components/Notifications/Notifications';
 import ContentBlog from './components/ContentfulBlog/Blog';
 import ContentBlogPost from './components/ContentfulBlog/BlogPost';
-import {BlogProvider} from './main-app/context/BlogContext';
+import { BlogProvider } from './main-app/context/BlogContext';
+import { MessageProvider, NotificationProvider } from './main-app/features/messaging';
 import PaymentSuccess from './main-app/pages/client/home-care-service/PaymentSuccess';
 //Added for viewing Order Pages
 import Order from './main-app/pages/client/orders/MyOrders';
@@ -44,9 +44,13 @@ function App() {
     return (
       <AuthProvider>
         <BlogProvider>
-        <Router>
-          <AppContent />
-        </Router>
+          <NotificationProvider>
+            <MessageProvider>
+              <Router>
+                <AppContent />
+              </Router>
+            </MessageProvider>
+          </NotificationProvider>
         </BlogProvider>
       </AuthProvider>
     );
