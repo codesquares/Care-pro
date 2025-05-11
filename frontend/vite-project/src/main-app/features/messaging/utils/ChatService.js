@@ -65,14 +65,26 @@ export const connectToChat = (userToken, onMessageReceived, onUserStatusChanged)
   });
 
   // Set up message handler
-  connection.on("ReceiveMessage", (senderId, message, messageId) => {
-    console.log(`New message from ${senderId}: ${message}`);
-    onMessageReceived(senderId, message, messageId);
+  connection.on("ReceiveMessage", (senderId, message, messageId, status = 'sent') => {
+    console.log(`New message from ${senderId}: ${message}, status: ${status}`);
+    onMessageReceived(senderId, message, messageId, status);
     
     // Send delivery confirmation back to server
     connection.invoke("MessageReceived", messageId).catch(err => {
       console.error("Failed to confirm message receipt:", err);
     });
+    
+    // Trigger browser notification if not in focus
+    if (document.visibilityState !== 'visible') {
+      const event = new CustomEvent('new-message', { 
+        detail: { 
+          title: 'New Message', 
+          message: message, 
+          senderId 
+        }
+      });
+      window.dispatchEvent(event);
+    }
   });
   
   // Set up user status handler
@@ -195,4 +207,34 @@ export const isUserOnline = (userId) => {
 export const getConnectionState = () => {
   if (!connection) return "Disconnected";
   return signalR.HubConnectionState[connection.state];
+};
+
+/**
+ * Update message status for a specific message
+ * @param {string} messageId - ID of the message
+ * @param {string} status - New status (sent, delivered, read)
+ */
+export const updateMessageStatus = async (messageId, status) => {
+  if (!connection || connection.state !== signalR.HubConnectionState.Connected) {
+    console.warn("Connection not established, message status update pending");
+    return false;
+  }
+  
+  try {
+    switch (status) {
+      case 'delivered':
+        await connection.invoke("MessageReceived", messageId);
+        break;
+      case 'read':
+        await connection.invoke("MessageRead", messageId);
+        break;
+      default:
+        console.warn(`Unknown message status: ${status}`);
+        return false;
+    }
+    return true;
+  } catch (error) {
+    console.error(`Error updating message status to ${status}:`, error);
+    return false;
+  }
 };

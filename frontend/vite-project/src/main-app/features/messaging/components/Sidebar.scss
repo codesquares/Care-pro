@@ -1,4 +1,4 @@
-@import '../../../../../styles/variables';
+// Variables are now globally imported in vite.config.js
 
 .sidebar {
   display: flex;
@@ -149,6 +149,20 @@
             border-radius: 50%;
             background-color: #10b981;
             border: 2px solid #fff;
+            box-shadow: 0 1px 2px rgba(0, 0, 0, 0.2);
+            animation: pulse 2s infinite;
+          }
+          
+          @keyframes pulse {
+            0% {
+              box-shadow: 0 0 0 0 rgba(16, 185, 129, 0.7);
+            }
+            70% {
+              box-shadow: 0 0 0 5px rgba(16, 185, 129, 0);
+            }
+            100% {
+              box-shadow: 0 0 0 0 rgba(16, 185, 129, 0);
+            }
           }
         }
         
@@ -199,13 +213,21 @@
               display: flex;
               align-items: center;
               justify-content: center;
-              width: 18px;
-              height: 18px;
-              border-radius: 50%;
-              background-color: #4f46e5;
+              min-width: 20px;
+              height: 20px;
+              border-radius: 10px;
+              background-color: #FF4757;
               color: #fff;
-              font-size: 0.7rem;
+              font-size: 0.75rem;
               font-weight: 600;
+              padding: 0 6px;
+              box-shadow: 0 2px 4px rgba(255, 71, 87, 0.3);
+              transform: scale(1);
+              transition: transform 0.2s ease;
+            }
+            
+            &:hover .unread-count {
+              transform: scale(1.1);
             }
           }
         }

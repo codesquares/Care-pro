@@ -1,11 +1,11 @@
 import React, { useEffect, useState } from 'react';
 import { useSearchParams } from 'react-router-dom';
-import Sidebar from '../features/messaging/components/Sidebar';
-import ChatArea from '../features/messaging/components/ChatArea';
-import ToastContainer from '../features/messaging/components/toast/ToastContainer';
-import { useMessageContext } from '../features/messaging/context/MessageContext';
-import { useNotificationContext } from '../features/messaging/context/NotificationContext';
-import '../../styles/main-app/pages/Messages.scss';
+import Sidebar from '../components/Sidebar';
+import ChatArea from '../components/ChatArea';
+import ToastContainer from '../components/toast/ToastContainer';
+import { useMessageContext } from '../context/MessageContext';
+import { useNotificationContext } from '../context/NotificationContext';
+import '../../../../styles/main-app/pages/Messages.scss';
 
 const Messages = ({ userId, token }) => {
   const [searchParams] = useSearchParams();
@@ -56,7 +56,27 @@ const Messages = ({ userId, token }) => {
       
       {error && (
         <div className="error-message">
-          {error}
+          <div className="error-icon">
+            <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+              <circle cx="12" cy="12" r="10"></circle>
+              <line x1="12" y1="8" x2="12" y2="12"></line>
+              <line x1="12" y1="16" x2="12.01" y2="16"></line>
+            </svg>
+          </div>
+          <div className="error-content">
+            <h3>Connection Error</h3>
+            <p>{error}</p>
+            <button onClick={() => initializeChat(userId, token)}>
+              Retry Connection
+            </button>
+          </div>
+        </div>
+      )}
+      
+      {isLoading && !error && (
+        <div className="loading-indicator">
+          <div className="spinner"></div>
+          <p>Connecting to messaging service...</p>
         </div>
       )}
       

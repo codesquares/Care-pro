@@ -1,5 +1,5 @@
 import React, { createContext, useContext, useState, useEffect, useCallback } from 'react';
-import { connectToChat, sendMessage, disconnectFromChat } from '../services/ChatService';
+import { connectToChat, sendMessage, disconnectFromChat } from '../utils/ChatService';
 import axios from 'axios';
 import config from '../../../config';
 
@@ -107,34 +107,60 @@ export const MessageProvider = ({ children }) => {
     if (!messageText.trim() || !senderId || !receiverId) return;
     
     try {
-      await sendMessage(senderId, receiverId, messageText);
-      
-      // Optimistically update the UI
+      // Add message to local state first with temporary ID and 'sending' status
+      const tempMessageId = `temp-${Date.now()}`;
       const newMessage = { 
+        id: tempMessageId,
         senderId, 
         text: messageText, 
-        status: 'sent',
+        status: 'sending',
         timestamp: new Date().toISOString()
       };
       
       setMessages(prev => [...prev, newMessage]);
+      
+      // Send via SignalR
+      const messageId = await sendMessage(senderId, receiverId, messageText);
+      
+      // Update message with real ID and 'sent' status
+      setMessages(prev => prev.map(msg => {
+        if (msg.id === tempMessageId) {
+          return { ...msg, id: messageId, status: 'sent' };
+        }
+        return msg;
+      }));
+      
       setMessage('');
+      
+      // Update conversations list if needed
+      if (!conversations.some(c => c.id === receiverId)) {
+        fetchConversations(senderId);
+      }
     } catch (err) {
       console.error('Failed to send message:', err);
       setError('Failed to send your message. Please try again.');
+      
+      // Mark the message as failed
+      setMessages(prev => prev.map(msg => {
+        if (msg.status === 'sending') {
+          return { ...msg, status: 'failed' };
+        }
+        return msg;
+      }));
     }
   }, []);
 
   // Handle incoming message
-  const handleIncomingMessage = useCallback((senderId, messageText) => {
+  const handleIncomingMessage = useCallback((senderId, messageText, messageId, status = 'delivered') => {
     // Add message to conversation if it's the active one
     if (selectedChatId === senderId) {
       setMessages(prev => [
         ...prev, 
         { 
+          id: messageId,
           senderId, 
           text: messageText, 
-          status: 'delivered',
+          status, // Use the status from server
           timestamp: new Date().toISOString()
         }
       ]);
@@ -165,8 +191,16 @@ export const MessageProvider = ({ children }) => {
 
   // Initialize chat connection
   const initializeChat = useCallback((userId, token) => {
-    // Connect to SignalR hub
-    connectToChat(token, handleIncomingMessage);
+    // Handle user status changes
+    const handleUserStatusChange = (userId, status) => {
+      setOnlineUsers(prev => ({
+        ...prev,
+        [userId]: status === 'Online'
+      }));
+    };
+    
+    // Connect to SignalR hub with both message and status handlers
+    connectToChat(token, handleIncomingMessage, handleUserStatusChange);
     
     // Fetch conversations on init
     fetchConversations(userId);

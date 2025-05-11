@@ -6,6 +6,7 @@ import hear from "../../../../assets/main-app/heart.svg";
 import bell from "../../../../assets/main-app/notification-bing.svg";
 import message from "../../../../assets/main-app/message.svg";
 import receipt from "../../../../assets/main-app/receipt.svg";
+import useMessaging from "../../../hooks/useMessaging";
 
 const NavigationBar = () => {
   const navigate = useNavigate();
@@ -15,7 +16,11 @@ const NavigationBar = () => {
   const [showDropdown, setShowDropdown] = useState(false);
 
   const user = JSON.parse(localStorage.getItem("userDetails"));
+  const userId = user?.id || localStorage.getItem("userId");
   const userName = user?.firstName ? `${user.firstName} ${user.lastName}` : "";
+  
+  // Get messaging features - including unread messages count
+  const { totalUnreadMessages } = useMessaging(userId);
 
   const getInitials = (name) => {
     const names = name.split(" ");
@@ -64,7 +69,14 @@ const NavigationBar = () => {
 
       <ul className="nav-icons">
         <IconLink to={`${basePath}/notifications`} icon={bell} alt="Notifications" />
-        <IconLink to={`${basePath}/messages`} icon={message} alt="Messages" />
+        <li className="nav-link icon-link" onClick={() => navigate(`${basePath}/messages`)}>
+          <div className="icon-with-badge">
+            <img src={message} alt="Messages" />
+            {totalUnreadMessages > 0 && (
+              <span className="badge">{totalUnreadMessages > 9 ? '9+' : totalUnreadMessages}</span>
+            )}
+          </div>
+        </li>
         <IconLink to={`${basePath}/favorites`} icon={hear} alt="Favorites" />
       </ul>
 

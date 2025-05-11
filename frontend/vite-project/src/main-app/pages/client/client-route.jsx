@@ -17,7 +17,7 @@ function ClientRoutes() {
             <Route path='/dashboard' element={<ClientDashboard />} />
             <Route path="/service/:id" element={<HomeCareService />} />
             <Route path="/payment" element={<PaymentPage />} />
-            <Route path="/message" element={<MessagesPage userId={localStorage.getItem('userId')} token={localStorage.getItem('token')} />} />
+            <Route path="/messages" element={<MessagesPage userId={localStorage.getItem('userId')} token={localStorage.getItem('token')} />} />
             <Route path="/app/client/payment-success" element={<PaymentSuccess />} />
             <Route path="/my-order" element={<MyOrders />} />
             <Route path="/my-order/:orderId" element={<OrderDetails />} />

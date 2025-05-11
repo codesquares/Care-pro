@@ -21,7 +21,7 @@ function CareGiverRoutes() {
             <Route path='/create-gigs' element={<CreateGig/>} />
             <Route path='/settings' element={<CaregiverSettings />} />
             <Route path="/CaregiverProfile" element={<CaregiverProfile />} />
-            <Route path="/message" element={<MessagesPage userId={localStorage.getItem('userId')} token={localStorage.getItem('token')} />} />
+            <Route path="/messages" element={<MessagesPage userId={localStorage.getItem('userId')} token={localStorage.getItem('token')} />} />
         </Routes>
         </>
     );
