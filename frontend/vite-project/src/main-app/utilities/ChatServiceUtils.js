@@ -113,9 +113,9 @@ export const connectToChat = (userToken, onMessageReceived, onUserStatusChanged)
       window.dispatchEvent(event);
       
       // Send presence notification
-      return connection.invoke("SetUserOnline").catch(err => {
-        console.error("Failed to set online status:", err);
-      });
+      // return connection.invoke("SetUserOnline").catch(err => {
+      //   console.error("Failed to set online status:", err);
+      // });
     })
     .catch(err => {
       console.error("Connection failed:", err);
@@ -180,9 +180,9 @@ export const markMessageAsRead = async (messageId) => {
 export const disconnectFromChat = () => {
   if (connection) {
     // Set user as offline
-    connection.invoke("SetUserOffline").catch(err => {
-      console.error("Failed to set offline status:", err);
-    });
+    // connection.invoke("SetUserOffline").catch(err => {
+    //   console.error("Failed to set offline status:", err);
+    // });
     
     connection.stop();
     console.log("Disconnected from chat");

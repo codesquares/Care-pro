@@ -7,9 +7,13 @@ import { useMessageContext } from '../context/MessageContext.jsx';
 import { useNotificationContext } from '../context/NotificationsContext.jsx';
 import '../components/messages/messages.scss';
 
-const Messages = ({ userId, token }) => {
+const Messages = ({ userId: propsUserId, token: propsToken }) => {
   const [searchParams] = useSearchParams();
   const { requestPermission } = useNotificationContext();
+  
+  // Use props userId and token or default values to ensure we have something
+  const userId = propsUserId || localStorage.getItem('userId') || "currentUser";
+  const token = propsToken || localStorage.getItem('token') || "mock-token";
   
   const {
     conversations,
