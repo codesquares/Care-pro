@@ -10,10 +10,16 @@ import '../components/messages/messages.scss';
 const Messages = ({ userId: propsUserId, token: propsToken }) => {
   const [searchParams] = useSearchParams();
   const { requestPermission } = useNotificationContext();
-  
+
+    const user = JSON.parse(localStorage.getItem("userDetails"));
+    const userId = user?.id;
+    console.log("user from image component",userId);
+
+    // const token = localStorage.getItem('authToken');
   // Use props userId and token or default values to ensure we have something
-  const userId = propsUserId || localStorage.getItem('userId') || "currentUser";
-  const token = propsToken || localStorage.getItem('token') || "mock-token";
+  // const userId = propsUserId || localStorage.getItem('userId') || "currentUser";
+  const token = propsToken || localStorage.getItem('authToken') || "mock-token";
+  console.log("userId from image component",token);
   
   const {
     conversations,

@@ -29,6 +29,12 @@ export const MessageProvider = ({ children }) => {
   // Fetch conversations (users you have chatted with)
   const fetchConversations = useCallback(async (userId) => {
     // If no userId provided, use a default "currentUser" to ensure we can load mock data
+    // const user = JSON.parse(localStorage.getItem("userDetails"));
+
+    // console.log(user);
+    // localStorage.setItem("userId", user.caregiverId);
+    // console.log("userId",user.caregiverId);
+    // console.log("userId===>", userId);
     if (!userId) {
       console.log('No userId provided, using default "currentUser"');
       userId = "currentUser";
