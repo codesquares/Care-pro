@@ -26,8 +26,10 @@ import Messages from './main-app/pages/Messages';
 import Notifications from './main-app/components/Notifications/Notifications';
 import ContentBlog from './components/ContentfulBlog/Blog';
 import ContentBlogPost from './components/ContentfulBlog/BlogPost';
-import {BlogProvider} from './main-app/context/BlogContext';
+import { BlogProvider } from './main-app/context/BlogContext';
 import PaymentSuccess from './main-app/pages/client/home-care-service/PaymentSuccess';
+import { MessageProvider } from './main-app/context/MessageContext';
+import { NotificationProvider } from './main-app/context/NotificationsContext';
 //Added for viewing Order Pages
 import Order from './main-app/pages/client/orders/MyOrders';
 import Order2 from './main-app/pages/client/orders/OrderTasks&Details';
@@ -41,114 +43,118 @@ function ScrollToTop() {
 }
 
 function App() {
-    return (
-      <AuthProvider>
-        <BlogProvider>
-        <Router>
-          <AppContent />
-        </Router>
-        </BlogProvider>
-      </AuthProvider>
-    );
-  }
-  
-  function AppContent() {
-    const location = useLocation();
-  
-    // Define unprotected routes
-    const unprotectedRoutes = [
-      '/',
-      '/about-us',
-      '/blog',
-      '/contentful-blog',
-      '/care-facts',
-      '/our-process',
-      '/plans',
-      '/book-caregiver',
-      '/become-caregiver',
-      '/login',
-      '/register',
-      '/Notifications',
-      '/create-gig',
+  return (
+    <AuthProvider>
+      <BlogProvider>
+        <NotificationProvider>
+          <MessageProvider>
+            <Router>
+              <AppContent />
+            </Router>
+          </MessageProvider>
+        </NotificationProvider>
+      </BlogProvider>
+    </AuthProvider>
+  );
+}
 
-      '/Caregivergigpage',
+function AppContent() {
+  const location = useLocation();
 
-      '/MyOrders',
-      '/OrderTasks&Details',
-      '/order-faq', 
-      '/ResolutionCenter',
-      '/CaregiverProfile',
-      '/CaregiverSettings',
-      '/Caregiver-Dashboard',
+  // Define unprotected routes
+  const unprotectedRoutes = [
+    '/',
+    '/about-us',
+    '/blog',
+    '/contentful-blog',
+    '/care-facts',
+    '/our-process',
+    '/plans',
+    '/book-caregiver',
+    '/become-caregiver',
+    '/login',
+    '/register',
+    '/Notifications',
+    '/create-gig',
 
-    ];
-  
-    // Check if current path is unprotected
-    const isUnprotectedRoute = unprotectedRoutes.includes(location.pathname.toLowerCase());
-  
-    return (
-      <div className="App">
-        {isUnprotectedRoute && <Navbar />}
-        <ScrollToTop />
-        <Routes>
-          <Route path="/" element={<Home />} />
-          <Route path="/about-us" element={<AboutUs />} />
-          <Route path="/blog" element={<Blog />} />
-          <Route path="/contentful-blog" element={<ContentBlog />} />
-          <Route path="/contentful-blog/:id" element={<ContentBlogPost />} />
-          <Route path="/care-facts" element={<CareFacts />} />
-          <Route path="/our-process" element={<OurProcess />} />
-          <Route path="/create-gig" element={<CreateGig />} />
-          <Route path="/messages" element={<Messages />} />
-          <Route path="/plans" element={<Plans />} />
-          <Route path="/book-caregiver" element={<BookCaregiver />} />
-          <Route path="/become-caregiver" element={<BecomeCaregiver />} />
-          <Route path="/login" element={<LoginPage />} />
-          <Route path="/register" element={<RegisterPage />} />
-          <Route path="/Notifications" element={<Notifications />} />
+    '/Caregivergigpage',
 
-          {/* <Route path="/Caregivergigpage" element={<Caregivergigpage />} /> */}
+    '/MyOrders',
+    '/OrderTasks&Details',
+    '/order-faq',
+    '/ResolutionCenter',
+    '/CaregiverProfile',
+    '/CaregiverSettings',
+    '/Caregiver-Dashboard',
+
+  ];
+
+  // Check if current path is unprotected
+  const isUnprotectedRoute = unprotectedRoutes.includes(location.pathname.toLowerCase());
+
+  return (
+    <div className="App">
+      {isUnprotectedRoute && <Navbar />}
+      <ScrollToTop />
+      <Routes>
+        <Route path="/" element={<Home />} />
+        <Route path="/about-us" element={<AboutUs />} />
+        <Route path="/blog" element={<Blog />} />
+        <Route path="/contentful-blog" element={<ContentBlog />} />
+        <Route path="/contentful-blog/:id" element={<ContentBlogPost />} />
+        <Route path="/care-facts" element={<CareFacts />} />
+        <Route path="/our-process" element={<OurProcess />} />
+        <Route path="/create-gig" element={<CreateGig />} />
+        <Route path="/messages" element={<Messages />} />
+        <Route path="/plans" element={<Plans />} />
+        <Route path="/book-caregiver" element={<BookCaregiver />} />
+        <Route path="/become-caregiver" element={<BecomeCaregiver />} />
+        <Route path="/login" element={<LoginPage />} />
+        <Route path="/register" element={<RegisterPage />} />
+        <Route path="/Notifications" element={<Notifications />} />
+
+        {/* <Route path="/Caregivergigpage" element={<Caregivergigpage />} /> */}
 
 
-          <Route path="/MyOrders" element={<Order />} />
-          <Route path="/OrderTasks&Details" element={<Order2 />} />
-          <Route path="/order-faq" element={<OrderFaq />} /> 
-          {/* <Route path="/ResolutionCenter" element={<ResolutionCenter />} /> */}
-          {/* <Route path="/CaregiverProfile" element={<CaregiverProfile />} /> */}
-          {/* <Route path="/CaregiverSettings" element={<CaregiverSettings />} /> */}
-          {/* <Route path="/Caregiver-Dashboard" element={<CaregiverDashboard />} /> */}
+        <Route path="/MyOrders" element={<Order />} />
+        <Route path="/OrderTasks&Details" element={<Order2 />} />
+        <Route path="/order-faq" element={<OrderFaq />} />
+        {/* <Route path="/ResolutionCenter" element={<ResolutionCenter />} /> */}
+        {/* <Route path="/CaregiverProfile" element={<CaregiverProfile />} /> */}
+        {/* <Route path="/CaregiverSettings" element={<CaregiverSettings />} /> */}
+        {/* <Route path="/Caregiver-Dashboard" element={<CaregiverDashboard />} /> */}
 
-          <Route path="/app/client/payment-success" element={<PaymentSuccess />} />
-          <Route
-            path="/app/*"
-            element={
-              <ProtectedRoute>
-                <MainAppRoutes />
-              </ProtectedRoute>
-            }
-          />
-          <Route
-            path="/logout"
-            element={() => {
-              logout();
-              return <Navigate to="/login" replace />;
-            }}
-          />
-        </Routes>
-        <Footer />
-        <ToastContainer
-          position="bottom-right"
-          autoClose={5000}
-          hideProgressBar={false}
-          newestOnTop={false}
-          closeOnClick
-          rtl={false}
-          pauseOnFocusLoss
-          draggable
-          pauseOnHover
+        <Route path="/app/client/payment-success" element={<PaymentSuccess />} />
+        <Route
+          path="/app/*"
+          element={
+            <ProtectedRoute>
+              <MainAppRoutes />
+            </ProtectedRoute>
+          }
         />
-      </div>
-    );
-  }
-  
-  export default App;  
+        <Route
+          path="/logout"
+          element={() => {
+            logout();
+            return <Navigate to="/login" replace />;
+          }}
+        />
+      </Routes>
+      <Footer />
+      <ToastContainer
+        position="bottom-right"
+        autoClose={5000}
+        hideProgressBar={false}
+        newestOnTop={false}
+        closeOnClick
+        rtl={false}
+        pauseOnFocusLoss
+        draggable
+        pauseOnHover
+      />
+    </div>
+  );
+}
+
+export default App;  
