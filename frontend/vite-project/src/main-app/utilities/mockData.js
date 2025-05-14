@@ -10,7 +10,44 @@ export const conversations = [
       text: "Continuing our discussion on my availability",
       timestamp: new Date(Date.now() - 15 * 60000).toISOString(),
       status: "read"
-    }
+    },
+    messages: [
+      {
+        id: "msg1-1",
+        senderId: "user1",
+        text: "Hello, I'm available to provide home care services next week.",
+        status: "delivered",
+        timestamp: new Date(Date.now() - 2 * 60 * 60000).toISOString()
+      },
+      {
+        id: "msg1-2",
+        senderId: "currentUser",
+        text: "That's great! What days are you available?",
+        status: "sent",
+        timestamp: new Date(Date.now() - 1.8 * 60 * 60000).toISOString()
+      },
+      {
+        id: "msg1-3",
+        senderId: "user1",
+        text: "I can do Monday, Wednesday, and Friday afternoons.",
+        status: "delivered",
+        timestamp: new Date(Date.now() - 1.5 * 60 * 60000).toISOString()
+      },
+      {
+        id: "msg1-4",
+        senderId: "currentUser",
+        text: "Perfect! Let's schedule for Monday at 2pm then.",
+        status: "sent",
+        timestamp: new Date(Date.now() - 1 * 60 * 60000).toISOString()
+      },
+      {
+        id: "msg1-5",
+        senderId: "user1",
+        text: "Continuing our discussion on my availability",
+        status: "delivered",
+        timestamp: new Date(Date.now() - 15 * 60000).toISOString()
+      }
+    ]
   },
   {
     id: "user2",
@@ -23,7 +60,51 @@ export const conversations = [
       text: "When can we schedule our next appointment?",
       timestamp: new Date(Date.now() - 3 * 60 * 60000).toISOString(),
       status: "delivered"
-    }
+    },
+    messages: [
+      {
+        id: "msg2-1",
+        senderId: "currentUser",
+        text: "Hi Chloe, how are you doing today?",
+        status: "read",
+        timestamp: new Date(Date.now() - 1 * 24 * 60 * 60000).toISOString()
+      },
+      {
+        id: "msg2-2",
+        senderId: "user2",
+        text: "I'm doing well! Thank you for asking.",
+        status: "delivered",
+        timestamp: new Date(Date.now() - 23 * 60 * 60000).toISOString()
+      },
+      {
+        id: "msg2-3",
+        senderId: "currentUser",
+        text: "I'd like to schedule a home care session for my mother next week.",
+        status: "read",
+        timestamp: new Date(Date.now() - 22 * 60 * 60000).toISOString()
+      },
+      {
+        id: "msg2-4",
+        senderId: "user2",
+        text: "Of course. What days would work best for you?",
+        status: "delivered",
+        timestamp: new Date(Date.now() - 21 * 60 * 60000).toISOString()
+      },
+      {
+        id: "msg2-5",
+        senderId: "currentUser",
+        text: "Tuesday or Thursday afternoon would be ideal.",
+        status: "read",
+        timestamp: new Date(Date.now() - 4 * 60 * 60000).toISOString()
+      },
+      {
+        id: "msg2-6",
+        senderId: "user2",
+        text: "When can we schedule our next appointment?",
+        status: "delivered",
+        timestamp: new Date(Date.now() - 3 * 60 * 60000).toISOString()
+      }
+    ]
   },
   {
     id: "user3",
@@ -36,7 +117,58 @@ export const conversations = [
       text: "Thanks for sending the medical report",
       timestamp: new Date(Date.now() - 24 * 60 * 60000).toISOString(),
       status: "sent"
-    }
+    },
+    messages: [
+      {
+        id: "msg3-1",
+        senderId: "user3",
+        text: "Hello, I've reviewed your mother's care needs.",
+        status: "read",
+        timestamp: new Date(Date.now() - 3 * 24 * 60 * 60000).toISOString()
+      },
+      {
+        id: "msg3-2",
+        senderId: "currentUser",
+        text: "Great! What do you recommend?",
+        status: "read",
+        timestamp: new Date(Date.now() - 3 * 24 * 60 * 60000 + 30 * 60000).toISOString()
+      },
+      {
+        id: "msg3-3",
+        senderId: "user3",
+        text: "Based on her needs, I'd suggest our comprehensive care package that includes medication management and mobility assistance.",
+        status: "read",
+        timestamp: new Date(Date.now() - 3 * 24 * 60 * 60000 + 60 * 60000).toISOString()
+      },
+      {
+        id: "msg3-4",
+        senderId: "currentUser",
+        text: "That sounds good. Could you please send me more details about that package?",
+        status: "read",
+        timestamp: new Date(Date.now() - 2 * 24 * 60 * 60000).toISOString()
+      },
+      {
+        id: "msg3-5",
+        senderId: "user3",
+        text: "I've just emailed you the full details of our care package along with pricing.",
+        status: "read",
+        timestamp: new Date(Date.now() - 36 * 60 * 60000).toISOString()
+      },
+      {
+        id: "msg3-6",
+        senderId: "currentUser",
+        text: "I'm attaching her updated medical report for your review.",
+        status: "read",
+        timestamp: new Date(Date.now() - 25 * 60 * 60000).toISOString()
+      },
+      {
+        id: "msg3-7",
+        senderId: "user3",
+        text: "Thanks for sending the medical report",
+        status: "delivered",
+        timestamp: new Date(Date.now() - 24 * 60 * 60000).toISOString()
+      }
+    ]
   },
   {
     id: "user4",

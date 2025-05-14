@@ -13,4 +13,25 @@
   &.read {
     color: #10b981;
   }
+  
+  &.pending {
+    color: #f59e0b;
+    animation: pulse 1.5s infinite;
+  }
+  
+  &.failed {
+    color: #ef4444;
+  }
+}
+
+@keyframes pulse {
+  0% {
+    opacity: 1;
+  }
+  50% {
+    opacity: 0.5;
+  }
+  100% {
+    opacity: 1;
+  }
 }

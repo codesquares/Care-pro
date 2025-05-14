@@ -1,7 +1,7 @@
 import React from 'react';
 import './messageInput.scss';
 
-const MessageInput = ({ message, setMessage, onSendMessage, onKeyPress }) => {
+const MessageInput = ({ message, setMessage, onSendMessage, onKeyPress, placeholder = "Type a message..." }) => {
   return (
     <div className="message-input-container">
       <div className="message-input-actions">
@@ -17,7 +17,7 @@ const MessageInput = ({ message, setMessage, onSendMessage, onKeyPress }) => {
           value={message}
           onChange={(e) => setMessage(e.target.value)}
           onKeyDown={onKeyPress}
-          placeholder="Type a message..."
+          placeholder={placeholder}
           rows={1}
           className="input-field"
         />

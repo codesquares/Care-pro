@@ -80,6 +80,55 @@
     }
   }
 
+  // Actions (including message icon)
+  &-actions {
+    display: flex;
+    align-items: center;
+    gap: 20px;
+    padding-right: 50px;
+
+    @media (max-width: 768px) {
+      padding-right: 10px;
+    }
+  }
+
+  // Message Icon
+  &-message-icon {
+    cursor: pointer;
+    position: relative;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    
+    img {
+      width: 24px;
+      height: 24px;
+      transition: transform 0.2s ease;
+    }
+    
+    &:hover img {
+      transform: scale(1.1);
+    }
+    
+    // Add notification badge if needed
+    &::after {
+      content: "";
+      position: absolute;
+      top: -2px;
+      right: -2px;
+      width: 8px;
+      height: 8px;
+      background-color: var(--secondary-color-1);
+      border-radius: 50%;
+      display: none; // Hidden by default, enable when there are notifications
+    }
+    
+    // Show badge when has-notification class is added
+    &.has-notification::after {
+      display: block;
+    }
+  }
+
   // Mobile Styles
   @media (max-width: 768px) {
     flex-direction: row; // Keep items in a row for mobile

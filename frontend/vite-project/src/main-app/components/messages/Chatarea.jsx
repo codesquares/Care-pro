@@ -1,12 +1,20 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import './chatarea.scss';
 import MessageInput from './MessageInput';
 import MessageStatus from './MessageStatus';
 import { formatDistanceToNow } from 'date-fns';
 
-const ChatArea = ({ messages, recipient, userId, onSendMessage }) => {
+const ChatArea = ({ messages, recipient, userId, onSendMessage, isOfflineMode = false }) => {
   const [message, setMessage] = useState('');
-  
+  const messagesEndRef = useRef(null);
+
+  // Scroll to bottom when messages change
+  useEffect(() => {
+    if (messagesEndRef.current) {
+      messagesEndRef.current.scrollIntoView({ behavior: 'smooth' });
+    }
+  }, [messages]);
+
   const handleSendMessage = () => {
     if (message.trim()) {
       onSendMessage(recipient.id, message);
@@ -20,56 +28,66 @@ const ChatArea = ({ messages, recipient, userId, onSendMessage }) => {
       handleSendMessage();
     }
   };
-  
+
   // Group messages by date
   const groupMessagesByDate = (messages) => {
     const groups = {};
-    
-    messages.forEach(msg => {
-      const date = new Date(msg.timestamp);
-      const dateKey = date.toDateString();
-      
-      if (!groups[dateKey]) {
-        groups[dateKey] = [];
+
+    // If messages is undefined or not an array, return empty object
+    if (!messages || !Array.isArray(messages)) {
+      return groups;
+    }
+
+    messages.forEach((msg) => {
+      if (!msg.timestamp) {
+        const now = new Date();
+        const dateKey = now.toDateString();
+        if (!groups[dateKey]) groups[dateKey] = [];
+        groups[dateKey].push({ ...msg, timestamp: now.toISOString() });
+      } else {
+        try {
+          const date = new Date(msg.timestamp);
+          if (isNaN(date.getTime())) throw new Error('Invalid date');
+          const dateKey = date.toDateString();
+          if (!groups[dateKey]) groups[dateKey] = [];
+          groups[dateKey].push(msg);
+        } catch (error) {
+          console.error('Error parsing message timestamp:', error);
+          const now = new Date();
+          const dateKey = now.toDateString();
+          if (!groups[dateKey]) groups[dateKey] = [];
+          groups[dateKey].push({ ...msg, timestamp: now.toISOString() });
+        }
       }
-      
-      groups[dateKey].push(msg);
     });
-    
+
     return groups;
   };
-  
+
   const messageGroups = groupMessagesByDate(messages);
-  
-  // Format the date for display
+  const isNewConversation = !messages || messages.length === 0;
+
   const formatMessageDate = (dateString) => {
     const date = new Date(dateString);
     const today = new Date();
     const yesterday = new Date();
     yesterday.setDate(yesterday.getDate() - 1);
-    
-    if (date.toDateString() === today.toDateString()) {
-      return 'Today';
-    } else if (date.toDateString() === yesterday.toDateString()) {
-      return 'Yesterday';
-    } else {
-      return date.toLocaleDateString('en-US', { 
-        month: 'short',
-        day: 'numeric',
-        year: date.getFullYear() !== today.getFullYear() ? 'numeric' : undefined
-      });
-    }
+
+    if (date.toDateString() === today.toDateString()) return 'Today';
+    if (date.toDateString() === yesterday.toDateString()) return 'Yesterday';
+
+    return date.toLocaleDateString('en-US', {
+      month: 'short',
+      day: 'numeric',
+      year: date.getFullYear() !== today.getFullYear() ? 'numeric' : undefined,
+    });
   };
-  
+
   return (
     <div className="chat-area">
       <header className="chat-header">
         <div className="recipient-info">
-          <img 
-            src={recipient.avatar} 
-            alt={recipient.name} 
-            className="avatar"
-          />
+          <img src={recipient.avatar} alt={recipient.name} className="avatar" />
           <div className="recipient-details">
             <h3>{recipient.name}</h3>
             <div className="status-indicator">
@@ -77,7 +95,9 @@ const ChatArea = ({ messages, recipient, userId, onSendMessage }) => {
                 <span className="status online">Online</span>
               ) : (
                 <span className="status offline">
-                  Last active {formatDistanceToNow(new Date(recipient.lastActive), { addSuffix: true })}
+                  {recipient.lastActive
+                    ? `Last active ${formatDistanceToNow(new Date(recipient.lastActive), { addSuffix: true })}`
+                    : 'Not recently active'}
                 </span>
               )}
             </div>
@@ -95,40 +115,64 @@ const ChatArea = ({ messages, recipient, userId, onSendMessage }) => {
       </header>
 
       <div className="messages-container">
+        {isOfflineMode && (
+          <div className="offline-mode-banner">
+            <i className="offline-icon">⚠️</i>
+            <span>You're in offline mode. Messages will sync when connection is restored.</span>
+          </div>
+        )}
+
         <div className="messages-area">
-          {Object.keys(messageGroups).map(dateKey => (
-            <div key={dateKey} className="message-group">
-              <div className="message-date">
-                <span>{formatMessageDate(dateKey)}</span>
+          {isNewConversation ? (
+            <div className="new-conversation-message">
+              <div className="welcome-message">
+                <img src={recipient.avatar} alt={recipient.name} className="welcome-avatar" />
+                <h3>Start a conversation with {recipient.name}</h3>
+                <p>Send a message to begin chatting</p>
+                {isOfflineMode && (
+                  <div className="offline-note">
+                    <small>Note: You're currently offline. Your messages will be delivered when you're back online.</small>
+                  </div>
+                )}
               </div>
-              
-              {messageGroups[dateKey].map((msg, index) => (
-                <div 
-                  key={`${dateKey}-${index}`} 
-                  className={`message ${msg.senderId === userId ? 'sent' : 'received'}`}
-                >
-                  <div className="message-bubble">
-                    <p>{msg.text}</p>
-                    <div className="message-meta">
-                      <span className="message-time">
-                        {new Date(msg.timestamp).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
-                      </span>
-                      {msg.senderId === userId && <MessageStatus status={msg.status || 'sent'} />}
+            </div>
+          ) : (
+            Object.keys(messageGroups).map((dateKey) => (
+              <div key={dateKey} className="message-group">
+                <div className="message-date">
+                  <span>{formatMessageDate(dateKey)}</span>
+                </div>
+                {messageGroups[dateKey].map((msg, index) => (
+                  <div key={`${dateKey}-${index}`} className={`message ${msg.senderId === userId ? 'sent' : 'received'}`}>
+                    <div className="message-bubble">
+                      <p>{msg.text}</p>
+                      <div className="message-meta">
+                        <span className="message-time">
+                          {msg.timestamp && !isNaN(new Date(msg.timestamp).getTime())
+                            ? new Date(msg.timestamp).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
+                            : new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
+                        </span>
+                        {msg.senderId === userId && (
+                          <MessageStatus status={isOfflineMode && msg.status === 'sending' ? 'pending' : (msg.status || 'sent')} />
+                        )}
+                      </div>
                     </div>
                   </div>
-                </div>
-              ))}
-            </div>
-          ))}
+                ))}
+              </div>
+            ))
+          )}
+          <div ref={messagesEndRef} />
         </div>
       </div>
 
       <div className="chat-input-area">
-        <MessageInput 
-          message={message} 
+        <MessageInput
+          message={message}
           setMessage={setMessage}
           onSendMessage={handleSendMessage}
           onKeyPress={handleKeyPress}
+          placeholder={isOfflineMode ? 'Compose message (offline mode)' : 'Type your message...'}
         />
       </div>
     </div>
