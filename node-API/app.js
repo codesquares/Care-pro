@@ -1,7 +1,7 @@
 const express = require('express');
 const dotenv = require('dotenv');
 const cors = require('cors');
-const connectDB = require('./src/config/db');
+// const connectDB = require('./src/config/db');
 const authRoutes = require('./src/routes/authRoutes');
 const kycRoutes = require('./src/routes/kycRoutes');
 const webhookRoutes = require('./src/routes/webhookRoutes');
@@ -11,16 +11,7 @@ const providerServiceRoutes = require('./src/routes/providerServiceRoutes');
 // Load environment variables
 dotenv.config();
 
-// Import models to ensure they are registered with Mongoose
-require('./src/models/userModel');
-require('./src/models/assessmentModel');
-require('./src/models/verificationModel');
-require('./src/models/clientServiceRequestModel');
-require('./src/models/providerServiceModel');
-require('./src/models/gigModel');
 
-// Connect to MongoDB
-connectDB();
 
 const app = express();
 const PORT = process.env.PORT || 3000;
@@ -34,6 +25,7 @@ app.use('/webhook/webhook', express.raw({ type: 'application/json' }));
 
 // Import integration routes
 const integrationRoutes = require('./src/routes/integrationRoutes');
+const recommendationRoutes = require('./src/routes/recommendationRoutes');
 const { apiKeyAuth } = require('./src/middleware/apiKeyMiddleware');
 
 // Routes
@@ -43,6 +35,7 @@ app.use('/api/webhook', webhookRoutes);
 app.use('/api/client-services', clientServiceRoutes);
 app.use('/api/provider-services', providerServiceRoutes);
 app.use('/api/integration', apiKeyAuth, integrationRoutes);
+app.use('/api/recommendations', recommendationRoutes);
 
 // Home route
 app.get('/', (req, res) => {

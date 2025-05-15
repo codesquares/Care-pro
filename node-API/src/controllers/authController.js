@@ -1,163 +1,63 @@
 // src/controllers/authController.js
-const jwt = require('jsonwebtoken');
-const bcrypt = require('bcryptjs');
-const User = require('../models/userModel');
+const axios = require('axios');
 const { configDotenv } = require('dotenv');
+const { protectUser } = require('../middleware/authMiddleware');
 configDotenv();
 
-// Generate JWT token
-const generateToken = (id) => {
-  return jwt.sign({ id }, process.env.JWT_SECRET, {
-    expiresIn: process.env.JWT_EXPIRES_IN || '30d'
-  });
-};
+// External API base URL
+const External_API = process.env.API_URL || 'https://carepro-api20241118153443.azurewebsites.net/api';
 
-// Verify if a user exists by email
+// Verify if a user exists by making a request to the external API
 const verifyUser = async (req, res) => {
   try {
-    const { email } = req.body;
+    const { userId, token } = req.body;
 
-    if (!email) {
+    if (!userId || !token) {
       return res.status(400).json({
         status: 'error',
-        message: 'Please provide an email address'
+        message: 'User ID and token are required for verification.'
       });
     }
 
-    // Check if user exists
-    const user = await User.findOne({ email });
-    
-    if (!user) {
-      return res.status(404).json({
+    // Use protect middleware for verification
+    const verifiedUser = await protectUser(userId, token);
+
+    if (!verifiedUser) {
+      return res.status(401).json({
         status: 'error',
-        message: 'User not found. This API is only for verifying existing users.'
+        message: 'Verification denied. You are not a logged-in user.'
       });
     }
 
-    // Don't send back user data, just confirm existence
+    // If verification is successful
     res.status(200).json({
       status: 'success',
-      message: 'User exists and can proceed with login'
+      message: 'User exists and can proceed with verification',
+      user: verifiedUser
     });
   } catch (error) {
     console.error('User verification error:', error);
     res.status(500).json({
       status: 'error',
-      message: 'An error occurred during user verification'
+      message: 'An error occurred during user verification',
+      error: error.message
     });
   }
 };
 
-// Login user
-const login = async (req, res) => {
+// Update user verification status in the external API
+const updateUserVerificationStatus = async (userId, status, verificationData = {}) => {
   try {
-    const { email, password } = req.body;
-
-    // Check if email and password are provided
-    if (!email || !password) {
-      return res.status(400).json({
-        status: 'error',
-        message: 'Please provide email and password'
-      });
-    }
-
-    // Check if user exists
-    const user = await User.findOne({ email }).select('+password');
-    if (!user) {
-      return res.status(401).json({
-        status: 'error',
-        message: 'Invalid credentials'
-      });
-    }
-
-    // Check if password is correct
-    const isPasswordCorrect = await user.comparePassword(password);
-    if (!isPasswordCorrect) {
-      return res.status(401).json({
-        status: 'error',
-        message: 'Invalid credentials'
-      });
-    }
-
-    // Generate token
-    const token = generateToken(user._id);
-
-    // Remove password from output
-    user.password = undefined;
-
-    res.status(200).json({
-      status: 'success',
-      token,
-      data: {
-        user
-      }
+    const response = await axios.put(`${External_API}/CareGivers/UpdateCaregiverInfo/${userId}`, {
+      verificationStatus: status,
+      verificationData: verificationData
     });
+    
+    return response.data;
   } catch (error) {
-    console.error('Login error:', error);
-    res.status(500).json({
-      status: 'error',
-      message: 'An error occurred during login'
-    });
+    console.error('Update verification status error:', error.message);
+    throw new Error('Failed to update user verification status');
   }
 };
 
-// Get current user profile
-const getMe = async (req, res) => {
-  try {
-    const user = await User.findById(req.user.id);
-
-    res.status(200).json({
-      status: 'success',
-      data: {
-        user
-      }
-    });
-  } catch (error) {
-    console.error('Get profile error:', error);
-    res.status(500).json({
-      status: 'error',
-      message: 'An error occurred while fetching profile'
-    });
-  }
-};
-
-// Update user profile
-const updateProfile = async (req, res) => {
-  try {
-    const { firstName, lastName, phone } = req.body;
-
-    // Find and update user
-    const updatedUser = await User.findByIdAndUpdate(
-      req.user.id,
-      { firstName, lastName, phone },
-      { new: true, runValidators: true }
-    );
-
-    if (!updatedUser) {
-      return res.status(404).json({
-        status: 'error',
-        message: 'User not found'
-      });
-    }
-
-    res.status(200).json({
-      status: 'success',
-      data: {
-        user: updatedUser
-      }
-    });
-  } catch (error) {
-    console.error('Update profile error:', error);
-    res.status(500).json({
-      status: 'error',
-      message: 'An error occurred while updating profile'
-    });
-  }
-};
-
-module.exports = {
-  login,
-  getMe,
-  updateProfile,
-  verifyUser
-};
+module.exports = { verifyUser, updateUserVerificationStatus };

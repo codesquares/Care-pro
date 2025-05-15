@@ -1,12 +1,16 @@
 // src/controllers/kycController.js
 const { evaluateResponses, generateQuestions } = require('../services/openAIService');
 const axios = require('axios');
-const dojahService = require('../services/dojahService');
-const User = require('../models/userModel');
-const CaregiverAssessment = require('../models/assessmentModel');
-const Verification = require('../models/verificationModel');
+const DojahService = require('../services/dojahService');
+const { updateUserVerificationStatus } = require('./authController');
 const { configDotenv } = require('dotenv');
 configDotenv();
+
+// Create Dojah service instance
+const dojahService = new DojahService();
+
+// External API base URL
+const External_API = process.env.API_URL || 'https://carepro-api20241118153443.azurewebsites.net/api';
 
 // Default questions for caregivers (fallback if OpenAI generation fails)
 const defaultQuestions = {
@@ -62,19 +66,21 @@ const defaultQuestions = {
 
 const startKYC = async (req, res) => {
   try {
-    // Get user ID from authenticated request object
-    const userId = req.user._id;
+    // Get user from auth middleware
+    const user = req.user;
     
-    // User is already authenticated, so we know they exist
-    let user = req.user;
+    // Check if user is authorized
+    if (!user || !user.id) {
+      return res.status(401).json({ 
+        status: 'error', 
+        message: 'User is not authorized to start KYC process.' 
+      });
+    }
     
-    // Update user status to indicate KYC process has started
-    user.profileStatus = 'incomplete';
-    await user.save();
-    
+    // Return success response
     res.status(200).json({ 
       status: 'success', 
-      userId: userId, 
+      userId: user.id, 
       message: 'KYC process started successfully.' 
     });
   } catch (error) {
@@ -88,27 +94,20 @@ const startKYC = async (req, res) => {
 
 const getQuestions = async (req, res) => {
   try {
-    // User is already authenticated by middleware
-    const userId = req.user._id;
+    // Get user from auth middleware
     const user = req.user;
+    
+    if (!user || !user.id) {
+      return res.status(401).json({
+        status: 'error',
+        message: 'User is not authorized to get assessment questions.'
+      });
+    }
     
     // Get provider type from request or default to caregiver
     const providerType = req.query.providerType || user.role || 'caregiver';
     
-    // Check if we already have assessment questions for this user
-    const existingAssessment = await CaregiverAssessment.findOne({ user: userId });
-    
-    if (existingAssessment && existingAssessment.questions && existingAssessment.questions.length > 0) {
-      // If assessment exists and has questions, return those questions
-      return res.status(200).json({
-        status: 'success',
-        userId: userId,
-        providerType: providerType,
-        questions: existingAssessment.questions.map(q => q.question)
-      });
-    }
-    
-    // Otherwise generate new questions
+    // Generate new questions
     let assessmentQuestions;
     
     try {
@@ -120,23 +119,10 @@ const getQuestions = async (req, res) => {
       assessmentQuestions = defaultQuestions[providerType] || defaultQuestions.caregiver;
     }
     
-    // Create or update assessment record with the questions (without answers yet)
-    if (!existingAssessment) {
-      await CaregiverAssessment.create({
-        user: userId,
-        providerType: providerType,
-        questions: assessmentQuestions.map(q => ({ question: q, answer: '' }))
-      });
-    } else {
-      existingAssessment.providerType = providerType;
-      existingAssessment.questions = assessmentQuestions.map(q => ({ question: q, answer: '' }));
-      await existingAssessment.save();
-    }
-    
-    // Return questions list with user ID and provider type
+    // Return questions
     res.status(200).json({ 
       status: 'success', 
-      userId: userId,
+      userId: user.id,
       providerType: providerType,
       questions: assessmentQuestions
     });
