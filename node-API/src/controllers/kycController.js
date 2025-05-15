@@ -6,8 +6,8 @@ const { updateUserVerificationStatus } = require('./authController');
 const { configDotenv } = require('dotenv');
 configDotenv();
 
-// Create Dojah service instance
-const dojahService = new DojahService();
+// Import Dojah service instance (already instantiated in the service file)
+const dojahService = DojahService;
 
 // External API base URL
 const External_API = process.env.API_URL || 'https://carepro-api20241118153443.azurewebsites.net/api';

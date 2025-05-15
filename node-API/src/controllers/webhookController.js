@@ -1,10 +1,11 @@
 // src/controllers/webhookController.js
-const User = require('../models/userModel');
-const Verification = require('../models/verificationModel');
 const axios = require('axios');
 const dojahService = require('../services/dojahService');
 const { configDotenv } = require('dotenv');
 configDotenv();
+
+// External API base URL
+const External_API = process.env.API_URL || 'https://carepro-api20241118153443.azurewebsites.net/api';
 
 // Store webhook events for debugging
 const webhookEvents = [];
@@ -19,192 +20,157 @@ const processWebhook = async (req, res) => {
     // const isValid = validateSignature(req.body, signature, process.env.DOJAH_WEBHOOK_SECRET);
     // if (!isValid) throw new Error('Invalid webhook signature');
     
-    const event = req.body;
-    
-    // Store event for debugging
+    // Store the webhook event for debugging
     webhookEvents.unshift({
-      id: event.id || Date.now(),
-      type: event.type,
-      data: event.data,
-      receivedAt: new Date()
+      timestamp: new Date(),
+      event: req.body,
+      headers: req.headers
     });
     
-    // Keep only the last 100 events
-    if (webhookEvents.length > 100) {
-      webhookEvents.length = 100;
+    // Keep only the latest 10 events
+    if (webhookEvents.length > 10) {
+      webhookEvents.pop();
     }
     
-    // Handle different event types
-    switch (event.type) {
+    // Process webhook event
+    const event = req.body;
+    
+    if (!event || !event.event) {
+      throw new Error('Invalid webhook payload');
+    }
+    
+    // Switch based on event type
+    switch (event.event) {
       case 'verification.completed':
         await handleVerificationCompleted(event.data);
         break;
-      
       case 'verification.failed':
         await handleVerificationFailed(event.data);
         break;
-        
-      // Add other event types as needed
-        
       default:
-        console.log(`Unhandled webhook event type: ${event.type}`);
+        console.log(`Unhandled webhook event type: ${event.event}`);
     }
     
-    res.status(200).json({ status: 'success' });
+    // Acknowledge receipt of webhook
+    return res.status(200).json({ 
+      status: 'success', 
+      message: 'Webhook processed successfully' 
+    });
   } catch (error) {
     console.error('Webhook processing error:', error);
-    res.status(400).json({ status: 'error', message: error.message });
+    return res.status(500).json({ 
+      status: 'error', 
+      message: 'Error processing webhook', 
+      error: error.message 
+    });
   }
 };
 
-// Handle completed verification
+// Handle verification.completed event
 const handleVerificationCompleted = async (data) => {
   try {
-    const { reference_id, verification_type, verification_status } = data;
-    
-    // Find the verification record
-    const verification = await Verification.findOne({ referenceId: reference_id });
-    
-    if (!verification) {
-      console.error(`No verification found with reference ID: ${reference_id}`);
-      return;
+    if (!data || !data.reference_id) {
+      throw new Error('Invalid verification completed data');
     }
     
-    // Update verification status
-    verification.status = verification_status === 'approved' ? 'verified' : 'failed';
-    verification.verificationData = data;
-    verification.completedAt = new Date();
-    await verification.save();
+    // Extract user ID from reference ID (assuming format like: user_123456)
+    const userId = data.reference_id.startsWith('user_') 
+      ? data.reference_id.split('user_')[1]
+      : data.reference_id;
     
-    // Update user verification status
-    if (verification.user) {
-      const user = await User.findById(verification.user);
-      
-      if (user) {
-        // Initialize verification status if not exists
-        if (!user.verificationStatus) {
-          user.verificationStatus = {
-            idVerified: false,
-            addressVerified: false,
-            qualificationVerified: false
-          };
+    if (!userId) {
+      throw new Error('Invalid reference ID format');
+    }
+    
+    // Determine verification result based on Dojah response
+    const verificationResult = {
+      status: 'verified',
+      resultData: data,
+      completedAt: new Date().toISOString()
+    };
+    
+    // Update user verification status in Azure API
+    await axios.patch(
+      `${External_API}/users/${userId}/verification`, 
+      verificationResult,
+      {
+        headers: {
+          'Authorization': `Bearer ${process.env.INTERNAL_API_KEY}`,
+          'Content-Type': 'application/json'
         }
-        
-        // Update specific verification type
-        if (verification.type === 'nin' || verification.type === 'bvn') {
-          user.verificationStatus.idVerified = verification.status === 'verified';
-        } else if (verification.type === 'address') {
-          user.verificationStatus.addressVerified = verification.status === 'verified';
-        }
-        
-        // Check if all required verifications are complete
-        if (user.verificationStatus.idVerified && 
-            user.verificationStatus.addressVerified && 
-            user.verificationStatus.qualificationVerified) {
-          user.profileStatus = 'verified';
-        } else if (verification.status === 'failed') {
-          user.profileStatus = 'incomplete';
-        }
-        
-        await user.save();
-        
-        // Sync with Azure API
-        await syncWithAzureAPI(user._id, verification.status, verification.type);
       }
-    }
+    );
+    
+    console.log(`Verification completed for user ${userId}`);
   } catch (error) {
     console.error('Error handling verification completed:', error);
   }
 };
 
-// Handle failed verification
+// Handle verification.failed event
 const handleVerificationFailed = async (data) => {
   try {
-    const { reference_id } = data;
-    
-    // Find the verification record
-    const verification = await Verification.findOne({ referenceId: reference_id });
-    
-    if (!verification) {
-      console.error(`No verification found with reference ID: ${reference_id}`);
-      return;
+    if (!data || !data.reference_id) {
+      throw new Error('Invalid verification failed data');
     }
     
-    // Update verification status
-    verification.status = 'failed';
-    verification.verificationData = data;
-    await verification.save();
+    // Extract user ID from reference ID
+    const userId = data.reference_id.startsWith('user_') 
+      ? data.reference_id.split('user_')[1]
+      : data.reference_id;
     
-    // Update user status if needed
-    const user = await User.findById(verification.user);
-    if (user && user.profileStatus !== 'rejected') {
-      user.profileStatus = 'incomplete';
-      await user.save();
-      
-      // Sync with Azure API
-      await syncWithAzureAPI(user._id, 'failed', verification.verificationType);
+    if (!userId) {
+      throw new Error('Invalid reference ID format');
     }
+    
+    // Determine failure reason from Dojah response
+    const verificationResult = {
+      status: 'failed',
+      resultData: data,
+      failureReason: data.failure_reason || 'Verification failed',
+      completedAt: new Date().toISOString()
+    };
+    
+    // Update user verification status in Azure API
+    await axios.patch(
+      `${External_API}/users/${userId}/verification`, 
+      verificationResult,
+      {
+        headers: {
+          'Authorization': `Bearer ${process.env.INTERNAL_API_KEY}`,
+          'Content-Type': 'application/json'
+        }
+      }
+    );
+    
+    console.log(`Verification failed for user ${userId}`);
   } catch (error) {
     console.error('Error handling verification failed:', error);
   }
 };
 
-// Sync verification status with Azure API
-const syncWithAzureAPI = async (userId, status, verificationType) => {
-  try {
-    if (!process.env.AZURE_API_ENDPOINT) {
-      console.log('AZURE_API_ENDPOINT not configured, skipping sync');
-      return;
-    }
-    
-    const user = await User.findById(userId).lean();
-    if (!user) {
-      console.error(`User not found for ID: ${userId}`);
-      return;
-    }
-    
-    // Compile verification status data to send to Azure API
-    const verificationData = {
-      userId: userId,
-      email: user.email,
-      verificationType: verificationType,
-      status: status,
-      timestamp: new Date(),
-      details: {
-        idVerified: user.verificationStatus?.idVerified || false,
-        addressVerified: user.verificationStatus?.addressVerified || false,
-        qualificationVerified: user.verificationStatus?.qualificationVerified || false,
-        overallStatus: user.profileStatus || 'pending'
-      }
-    };
-    
-    // Send status update to Azure API
-    await axios.post(
-      `${process.env.AZURE_API_ENDPOINT}/api/users/verification-update`,
-      verificationData,
-      {
-        headers: {
-          'Authorization': `ApiKey ${process.env.AZURE_API_KEY}`,
-          'Content-Type': 'application/json',
-          'x-api-source': 'care-pro-node-api'
-        }
-      }
-    );
-    
-    console.log(`Verification status synced with Azure API for user ${userId}`);
-  } catch (error) {
-    console.error('Failed to sync verification status with Azure API:', error.message);
-    // Don't throw error, as we don't want to break the webhook flow
-  }
-};
-
-// Get webhook events (for debugging)
+// Get recent webhook events for debugging (admin only)
 const getWebhookEvents = (req, res) => {
-  res.status(200).json({
-    status: 'success',
-    results: webhookEvents.length,
-    data: webhookEvents
-  });
+  try {
+    if (req.user.role !== 'admin') {
+      return res.status(403).json({
+        status: 'error',
+        message: 'Unauthorized access'
+      });
+    }
+    
+    return res.status(200).json({
+      status: 'success',
+      data: webhookEvents
+    });
+  } catch (error) {
+    console.error('Get webhook events error:', error);
+    return res.status(500).json({
+      status: 'error',
+      message: 'Error getting webhook events',
+      error: error.message
+    });
+  }
 };
 
 module.exports = {

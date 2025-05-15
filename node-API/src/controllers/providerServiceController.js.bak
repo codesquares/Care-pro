@@ -1,4 +1,3 @@
-// src/controllers/providerServiceController.js
 const axios = require('axios');
 const { findMatchingProviders } = require('../services/clientAiService');
 const { configDotenv } = require('dotenv');
@@ -353,102 +352,111 @@ const addProviderReview = async (req, res) => {
     const token = req.headers.authorization.split(' ')[1];
     
     // Find the provider service via external API
-    const providerResponse = await axios.get(`${External_API}/provider-services?providerId=${providerId}`, {
-      headers: {
-        'Authorization': `Bearer ${token}`
-      }
-    });
-    
-    const providerService = providerResponse.data?.data?.[0];
-    
-    if (!providerService) {
-      return res.status(404).json({
-        status: 'error',
-        message: 'Provider service profile not found'
-      });
-    }
-    
-    // Check if client has worked with this provider before via external API
-    const workHistoryResponse = await axios.get(
-      `${External_API}/client-service-requests?clientId=${clientId}&providerId=${providerId}&status=completed,in_progress,matched`, 
-      {
+    try {
+      const providerResponse = await axios.get(`${External_API}/provider-services?providerId=${providerId}`, {
         headers: {
           'Authorization': `Bearer ${token}`
         }
+      });
+      
+      const providerService = providerResponse.data?.data?.[0];
+      
+      if (!providerService) {
+        return res.status(404).json({
+          status: 'error',
+          message: 'Provider service profile not found'
+        });
       }
-    );
-    
-    const hasWorkedTogether = workHistoryResponse.data?.data?.length > 0;
-    
-    if (!hasWorkedTogether) {
-      return res.status(403).json({
+      
+      // Check if client has worked with this provider before via external API
+      const workHistoryResponse = await axios.get(
+        `${External_API}/client-service-requests?clientId=${clientId}&providerId=${providerId}&status=completed,in_progress,matched`, 
+        {
+          headers: {
+            'Authorization': `Bearer ${token}`
+          }
+        }
+      );
+      
+      const hasWorkedTogether = workHistoryResponse.data?.data?.length > 0;
+      
+      if (!hasWorkedTogether) {
+        return res.status(403).json({
+          status: 'error',
+          message: 'You can only review providers you have worked with'
+        });
+      }
+      
+      // Get existing reviews to check if client has already reviewed this provider
+      const existingReviews = providerService.reviews || [];
+      const existingReviewIndex = existingReviews.findIndex(
+        review => review.client === clientId
+      );
+      
+      // Prepare review data for the API call
+      const reviewData = {
+        rating,
+        comment: comment || '',
+        date: new Date().toISOString()
+      };
+      
+      let reviews;
+      
+      if (existingReviewIndex !== -1) {
+        // Update existing review
+        reviews = [...existingReviews];
+        reviews[existingReviewIndex] = {
+          ...reviews[existingReviewIndex],
+          ...reviewData
+        };
+      } else {
+        // Add new review
+        reviews = [
+          ...existingReviews,
+          {
+            client: clientId,
+            ...reviewData
+          }
+        ];
+      }
+      
+      // Calculate new average rating
+      const totalRating = reviews.reduce((sum, review) => sum + review.rating, 0);
+      const averageRating = reviews.length > 0 ? totalRating / reviews.length : 0;
+      
+      // Update the provider service with the new reviews and average rating via API
+      const updateResponse = await axios.patch(
+        `${External_API}/provider-services/${providerService.id}`,
+        { 
+          reviews,
+          averageRating 
+        },
+        {
+          headers: {
+            'Authorization': `Bearer ${token}`,
+            'Content-Type': 'application/json'
+          }
+        }
+      );
+      
+      const updatedProviderService = updateResponse.data?.data;
+      
+      res.status(200).json({
+        status: 'success',
+        message: 'Review added successfully',
+        data: {
+          averageRating: updatedProviderService.averageRating,
+          reviewCount: updatedProviderService.reviews.length
+        }
+      });
+    } catch (error) {
+      console.error('Add provider review API error:', error);
+      res.status(500).json({
         status: 'error',
-        message: 'You can only review providers you have worked with'
+        message: 'An error occurred while adding the review',
+        error: error.message
       });
     }
-    
-    // Get existing reviews to check if client has already reviewed this provider
-    const existingReviews = providerService.reviews || [];
-    const existingReviewIndex = existingReviews.findIndex(
-      review => review.client === clientId
-    );
-    
-    // Prepare review data for the API call
-    const reviewData = {
-      rating,
-      comment: comment || '',
-      date: new Date().toISOString()
-    };
-    
-    let reviews;
-    
-    if (existingReviewIndex !== -1) {
-      // Update existing review
-      reviews = [...existingReviews];
-      reviews[existingReviewIndex] = {
-        ...reviews[existingReviewIndex],
-        ...reviewData
-      };
-    } else {
-      // Add new review
-      reviews = [
-        ...existingReviews,
-        {
-          client: clientId,
-          ...reviewData
-        }
-      ];
-    }
-    
-    // Calculate new average rating
-    const totalRating = reviews.reduce((sum, review) => sum + review.rating, 0);
-    const averageRating = reviews.length > 0 ? totalRating / reviews.length : 0;
-    
-    // Update the provider service with the new reviews and average rating via API
-    const updateResponse = await axios.patch(
-      `${External_API}/provider-services/${providerService.id}`,
-      { 
-        reviews,
-        averageRating 
-      },
-      {
-        headers: {
-          'Authorization': `Bearer ${token}`,
-          'Content-Type': 'application/json'
-        }
-      }
-    );
-    
-    const updatedProviderService = updateResponse.data?.data;
-    
-    res.status(200).json({
-      status: 'success',
-      message: 'Review added successfully',
-      data: {
-        averageRating: updatedProviderService.averageRating,
-        reviewCount: updatedProviderService.reviews.length
-      }
-    });
   } catch (error) {
     console.error('Add provider review error:', error);
     res.status(500).json({
@@ -510,7 +518,7 @@ const toggleActiveStatus = async (req, res) => {
       status: 'success',
       message: `Service profile is now ${active ? 'active' : 'inactive'}`,
       data: {
-        active: updateResponse.data.data.active
+        active: providerService.active
       }
     });
   } catch (error) {
@@ -557,8 +565,6 @@ const getRecommendedRequests = async (req, res) => {
       }
     );
     
-    const openRequests = requestsResponse.data?.data || [];
-    
     if (!openRequests || openRequests.length === 0) {
       return res.status(200).json({
         status: 'success',
@@ -571,14 +577,14 @@ const getRecommendedRequests = async (req, res) => {
     // Score each request for this provider
     const scoredRequests = await Promise.all(openRequests.map(async (request) => {
       // Check if provider is already in matchedProviders
-      const alreadyMatched = request.matchedProviders?.some(
-        match => match.provider === providerId
+      const alreadyMatched = request.matchedProviders.some(
+        match => match.provider.toString() === providerId.toString()
       );
       
       if (alreadyMatched) {
         // Skip scoring if already matched
         const match = request.matchedProviders.find(
-          m => m.provider === providerId
+          m => m.provider.toString() === providerId.toString()
         );
         
         return {
@@ -588,6 +594,13 @@ const getRecommendedRequests = async (req, res) => {
           matchStatus: match.status
         };
       }
+      
+      // Simulate a match to get score
+      const matchParams = {
+        ...request.toObject(),
+        provider: providerId,
+        providerService
+      };
       
       // Score the request based on provider's profile
       let matchScore = 0;
@@ -636,7 +649,7 @@ const getRecommendedRequests = async (req, res) => {
     
     // Prepare response data
     const recommendedRequests = sortedRequests.map(item => ({
-      id: item.request.id,
+      _id: item.request._id,
       title: item.request.title,
       description: item.request.description,
       location: item.request.location,
@@ -671,7 +684,7 @@ const calculateDistance = (lat1, lon1, lat2, lon2) => {
   const R = 6371; // Earth's radius in km
   const dLat = (lat2 - lat1) * Math.PI / 180;
   const dLon = (lon2 - lon1) * Math.PI / 180;
-  const a = 
+  const a 
     Math.sin(dLat/2) * Math.sin(dLat/2) +
     Math.cos(lat1 * Math.PI / 180) * Math.cos(lat2 * Math.PI / 180) * 
     Math.sin(dLon/2) * Math.sin(dLon/2);

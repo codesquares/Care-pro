@@ -10,7 +10,7 @@ const {
   getProviderServiceRequests,
   respondToServiceRequestMatch
 } = require('../controllers/clientServiceController');
-const { protect, restrictTo } = require('../middleware/authMiddleware');
+const { protect } = require('../middleware/authMiddleware');
 
 const router = express.Router();
 
@@ -18,16 +18,16 @@ const router = express.Router();
 router.use(protect);
 
 // Client routes
-router.post('/create', restrictTo('client'), createServiceRequest);
-router.get('/my-requests', restrictTo('client'), getClientServiceRequests);
+router.post('/create', createServiceRequest);
+router.get('/my-requests', getClientServiceRequests);
 router.get('/request/:requestId', getServiceRequestById);
-router.patch('/update/:requestId', restrictTo('client'), updateServiceRequest);
-router.patch('/cancel/:requestId', restrictTo('client'), cancelServiceRequest);
-router.get('/matches/:requestId', restrictTo('client'), getMatchedProviders);
-router.post('/select-provider/:requestId/:providerId', restrictTo('client'), selectProvider);
+router.patch('/update/:requestId', updateServiceRequest);
+router.patch('/cancel/:requestId', cancelServiceRequest);
+router.get('/matches/:requestId', getMatchedProviders);
+router.post('/select-provider/:requestId/:providerId',selectProvider);
 
 // Provider routes
-router.get('/provider-requests', restrictTo('caregiver', 'nurse', 'doctor', 'dietician'), getProviderServiceRequests);
-router.post('/respond/:requestId', restrictTo('caregiver', 'nurse', 'doctor', 'dietician'), respondToServiceRequestMatch);
+router.get('/provider-requests',getProviderServiceRequests);
+router.post('/respond/:requestId',  respondToServiceRequestMatch);
 
 module.exports = router;

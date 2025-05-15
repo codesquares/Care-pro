@@ -1,12 +1,15 @@
-const ClientServiceRequest = require('../models/clientServiceRequestModel');
-const ProviderService = require('../models/providerServiceModel');
-const Gig = require('../models/gigModel');
-const User = require('../models/userModel');
+const axios = require('axios');
+const { configDotenv } = require('dotenv');
 const { 
   analyzeClientServiceRequest,
   findMatchingProviders,
   generatePriorityRecommendations 
 } = require('../services/clientAiService');
+
+configDotenv();
+
+// External API base URL
+const External_API = process.env.API_URL || 'https://carepro-api20241118153443.azurewebsites.net/api';
 
 /**
  * Create a new service request
@@ -14,7 +17,7 @@ const {
 const createServiceRequest = async (req, res) => {
   try {
     // Get client ID from authenticated user
-    const clientId = req.user._id;
+    const clientId = req.user.id;
     
     // Make sure user is a client
     if (req.user.role !== 'client') {
@@ -40,21 +43,19 @@ const createServiceRequest = async (req, res) => {
       });
     }
 
-    // Create the initial service request
-    const serviceRequest = new ClientServiceRequest(serviceRequestData);
-    
     // Use AI to analyze the service request
+    let analysis = null;
     try {
-      const analysis = await analyzeClientServiceRequest({
-        title: serviceRequest.title,
-        description: serviceRequest.description
+      analysis = await analyzeClientServiceRequest({
+        title: serviceRequestData.title,
+        description: serviceRequestData.description
       });
       
-      // Add AI analysis to the service request
-      serviceRequest.requiredProviderTypes = analysis.requiredProviderTypes;
-      serviceRequest.serviceTags = analysis.serviceTags;
-      serviceRequest.serviceBreakdown = analysis.serviceBreakdown;
-      serviceRequest.aiAnalysis = {
+      // Add AI analysis to the service request data
+      serviceRequestData.requiredProviderTypes = analysis.requiredProviderTypes;
+      serviceRequestData.serviceTags = analysis.serviceTags;
+      serviceRequestData.serviceBreakdown = analysis.serviceBreakdown;
+      serviceRequestData.aiAnalysis = {
         rawAnalysis: analysis.rawAnalysis,
         confidenceScore: analysis.confidenceScore,
         notesForClient: analysis.notesForClient,
@@ -65,25 +66,42 @@ const createServiceRequest = async (req, res) => {
       // Continue without AI analysis if it fails
     }
 
-    // Save the service request
-    await serviceRequest.save();
+    // Create the service request through the external API
+    const response = await axios.post(`${External_API}/client-services`, serviceRequestData, {
+      headers: {
+        'Authorization': `Bearer ${req.headers.authorization.split(' ')[1]}`,
+        'Content-Type': 'application/json'
+      }
+    });
 
-    // Find matching providers
-    const matchedProviders = await findMatchingProviders(serviceRequest);
-    
-    if (matchedProviders && matchedProviders.length > 0) {
-      // Generate priority recommendations
-      const priorityRecommendations = generatePriorityRecommendations(matchedProviders);
+    const serviceRequest = response.data;
+
+    // Find matching providers if we have analysis
+    if (analysis) {
+      const matchedProviders = await findMatchingProviders(serviceRequest);
       
-      // Update the service request with matched providers
-      serviceRequest.matchedProviders = priorityRecommendations.map(item => ({
-        provider: item.provider._id,
-        matchScore: item.matchScore,
-        priority: item.priority,
-        status: 'recommended'
-      }));
-      
-      await serviceRequest.save();
+      if (matchedProviders && matchedProviders.length > 0) {
+        // Generate priority recommendations
+        const priorityRecommendations = generatePriorityRecommendations(matchedProviders);
+        
+        // Update the service request with matched providers through the external API
+        const matchedProvidersData = priorityRecommendations.map(item => ({
+          provider: item.provider.id,
+          matchScore: item.matchScore,
+          priority: item.priority,
+          status: 'recommended'
+        }));
+        
+        await axios.patch(`${External_API}/client-services/${serviceRequest.id}/matched-providers`, 
+          { matchedProviders: matchedProvidersData },
+          {
+            headers: {
+              'Authorization': `Bearer ${req.headers.authorization.split(' ')[1]}`,
+              'Content-Type': 'application/json'
+            }
+          }
+        );
+      }
     }
     
     res.status(201).json({
@@ -106,12 +124,16 @@ const createServiceRequest = async (req, res) => {
  */
 const getClientServiceRequests = async (req, res) => {
   try {
-    const clientId = req.user._id;
+    const clientId = req.user.id;
     
-    // Find all service requests for this client
-    const serviceRequests = await ClientServiceRequest.find({ client: clientId })
-      .sort({ createdAt: -1 })
-      .select('-aiAnalysis.rawAnalysis'); // Exclude raw analysis to reduce payload size
+    // Fetch all service requests for this client from external API
+    const response = await axios.get(`${External_API}/client-services?clientId=${clientId}`, {
+      headers: {
+        'Authorization': `Bearer ${req.headers.authorization.split(' ')[1]}`
+      }
+    });
+    
+    const serviceRequests = response.data.data || [];
     
     res.status(200).json({
       status: 'success',
@@ -134,10 +156,16 @@ const getClientServiceRequests = async (req, res) => {
 const getServiceRequestById = async (req, res) => {
   try {
     const { requestId } = req.params;
-    const userId = req.user._id;
+    const userId = req.user.id;
     
-    // Find the service request
-    const serviceRequest = await ClientServiceRequest.findById(requestId);
+    // Fetch the service request from external API
+    const response = await axios.get(`${External_API}/client-services/${requestId}`, {
+      headers: {
+        'Authorization': `Bearer ${req.headers.authorization.split(' ')[1]}`
+      }
+    });
+    
+    const serviceRequest = response.data.data;
     
     if (!serviceRequest) {
       return res.status(404).json({
@@ -148,30 +176,14 @@ const getServiceRequestById = async (req, res) => {
     
     // Security check: Only allow clients to view their own requests,
     // or providers to see requests that have matched them
-    const isOwner = serviceRequest.client.equals(userId);
+    const isOwner = serviceRequest.client === userId;
     const isMatchedProvider = req.user.role === 'caregiver' && 
-      serviceRequest.matchedProviders.some(match => match.provider.equals(userId));
+      serviceRequest.matchedProviders.some(match => match.provider === userId);
       
     if (!isOwner && !isMatchedProvider && req.user.role !== 'admin') {
       return res.status(403).json({
         status: 'error',
         message: 'You do not have permission to view this service request'
-      });
-    }
-    
-    // If it's a provider viewing, populate client info but remove sensitive data
-    if (isMatchedProvider) {
-      await serviceRequest.populate({
-        path: 'client',
-        select: 'firstName lastName'
-      });
-    }
-    
-    // If it's the client viewing, populate provider info
-    if (isOwner && serviceRequest.matchedProviders.length > 0) {
-      await serviceRequest.populate({
-        path: 'matchedProviders.provider',
-        select: 'firstName lastName profileStatus verificationStatus'
       });
     }
     
@@ -195,10 +207,16 @@ const getServiceRequestById = async (req, res) => {
 const updateServiceRequest = async (req, res) => {
   try {
     const { requestId } = req.params;
-    const clientId = req.user._id;
+    const clientId = req.user.id;
     
-    // Find the service request
-    const serviceRequest = await ClientServiceRequest.findById(requestId);
+    // Fetch the current service request from external API
+    const getResponse = await axios.get(`${External_API}/client-services/${requestId}`, {
+      headers: {
+        'Authorization': `Bearer ${req.headers.authorization.split(' ')[1]}`
+      }
+    });
+    
+    const serviceRequest = getResponse.data.data;
     
     if (!serviceRequest) {
       return res.status(404).json({
@@ -208,7 +226,7 @@ const updateServiceRequest = async (req, res) => {
     }
     
     // Security check: Only the client who created the request can update it
-    if (!serviceRequest.client.equals(clientId)) {
+    if (serviceRequest.client !== clientId) {
       return res.status(403).json({
         status: 'error',
         message: 'You do not have permission to update this service request'
@@ -224,6 +242,7 @@ const updateServiceRequest = async (req, res) => {
     }
     
     // Apply updates from the request body
+    const updateData = {};
     const allowedFields = [
       'title', 'description', 'location', 'maxDistance', 
       'serviceDate', 'budget', 'status'
@@ -231,7 +250,7 @@ const updateServiceRequest = async (req, res) => {
     
     allowedFields.forEach(field => {
       if (req.body[field] !== undefined) {
-        serviceRequest[field] = req.body[field];
+        updateData[field] = req.body[field];
       }
     });
     
@@ -239,15 +258,15 @@ const updateServiceRequest = async (req, res) => {
     if (req.body.description !== undefined || req.body.title !== undefined) {
       try {
         const analysis = await analyzeClientServiceRequest({
-          title: serviceRequest.title,
-          description: serviceRequest.description
+          title: updateData.title || serviceRequest.title,
+          description: updateData.description || serviceRequest.description
         });
         
         // Update with new AI analysis
-        serviceRequest.requiredProviderTypes = analysis.requiredProviderTypes;
-        serviceRequest.serviceTags = analysis.serviceTags;
-        serviceRequest.serviceBreakdown = analysis.serviceBreakdown;
-        serviceRequest.aiAnalysis = {
+        updateData.requiredProviderTypes = analysis.requiredProviderTypes;
+        updateData.serviceTags = analysis.serviceTags;
+        updateData.serviceBreakdown = analysis.serviceBreakdown;
+        updateData.aiAnalysis = {
           rawAnalysis: analysis.rawAnalysis,
           confidenceScore: analysis.confidenceScore,
           notesForClient: analysis.notesForClient,
@@ -255,15 +274,18 @@ const updateServiceRequest = async (req, res) => {
         };
         
         // Find matching providers again based on new analysis
-        const matchedProviders = await findMatchingProviders(serviceRequest);
+        const matchedProviders = await findMatchingProviders({
+          ...serviceRequest,
+          ...updateData
+        });
         
         if (matchedProviders && matchedProviders.length > 0) {
           // Generate priority recommendations
           const priorityRecommendations = generatePriorityRecommendations(matchedProviders);
           
-          // Update the service request with matched providers
-          serviceRequest.matchedProviders = priorityRecommendations.map(item => ({
-            provider: item.provider._id,
+          // Update the matched providers
+          updateData.matchedProviders = priorityRecommendations.map(item => ({
+            provider: item.provider.id,
             matchScore: item.matchScore,
             priority: item.priority,
             status: 'recommended'
@@ -275,12 +297,19 @@ const updateServiceRequest = async (req, res) => {
       }
     }
     
-    // Save the updated request
-    await serviceRequest.save();
+    // Update the service request through the external API
+    const updateResponse = await axios.patch(`${External_API}/client-services/${requestId}`, updateData, {
+      headers: {
+        'Authorization': `Bearer ${req.headers.authorization.split(' ')[1]}`,
+        'Content-Type': 'application/json'
+      }
+    });
+    
+    const updatedServiceRequest = updateResponse.data.data;
     
     res.status(200).json({
       status: 'success',
-      data: serviceRequest,
+      data: updatedServiceRequest,
       message: 'Service request updated successfully'
     });
   } catch (error) {
@@ -299,10 +328,16 @@ const updateServiceRequest = async (req, res) => {
 const cancelServiceRequest = async (req, res) => {
   try {
     const { requestId } = req.params;
-    const userId = req.user._id;
+    const userId = req.user.id;
     
-    // Find the service request
-    const serviceRequest = await ClientServiceRequest.findById(requestId);
+    // Fetch the service request from external API
+    const getResponse = await axios.get(`${External_API}/client-services/${requestId}`, {
+      headers: {
+        'Authorization': `Bearer ${req.headers.authorization.split(' ')[1]}`
+      }
+    });
+    
+    const serviceRequest = getResponse.data.data;
     
     if (!serviceRequest) {
       return res.status(404).json({
@@ -312,7 +347,7 @@ const cancelServiceRequest = async (req, res) => {
     }
     
     // Security check: Only the client who created the request can cancel it
-    if (!serviceRequest.client.equals(userId) && req.user.role !== 'admin') {
+    if (serviceRequest.client !== userId && req.user.role !== 'admin') {
       return res.status(403).json({
         status: 'error',
         message: 'You do not have permission to cancel this service request'
@@ -327,18 +362,26 @@ const cancelServiceRequest = async (req, res) => {
       });
     }
     
-    // Update status to cancelled
-    serviceRequest.status = 'cancelled';
-    await serviceRequest.save();
+    // Cancel the service request through the external API
+    await axios.patch(`${External_API}/client-services/${requestId}`, 
+      { status: 'cancelled' },
+      {
+        headers: {
+          'Authorization': `Bearer ${req.headers.authorization.split(' ')[1]}`,
+          'Content-Type': 'application/json'
+        }
+      }
+    );
     
     // If there are any active gigs for this request, cancel those as well
-    await Gig.updateMany(
-      { 
-        serviceRequest: requestId,
-        status: { $in: ['accepted', 'in_progress'] }
-      },
-      { status: 'cancelled' }
-    );
+    if (serviceRequest.hasActiveGigs) {
+      await axios.post(`${External_API}/gigs/cancel-by-request/${requestId}`, {}, {
+        headers: {
+          'Authorization': `Bearer ${req.headers.authorization.split(' ')[1]}`,
+          'Content-Type': 'application/json'
+        }
+      });
+    }
     
     res.status(200).json({
       status: 'success',
@@ -360,10 +403,16 @@ const cancelServiceRequest = async (req, res) => {
 const getMatchedProviders = async (req, res) => {
   try {
     const { requestId } = req.params;
-    const clientId = req.user._id;
+    const clientId = req.user.id;
     
-    // Find the service request
-    const serviceRequest = await ClientServiceRequest.findById(requestId);
+    // Fetch the service request from external API
+    const getResponse = await axios.get(`${External_API}/client-services/${requestId}`, {
+      headers: {
+        'Authorization': `Bearer ${req.headers.authorization.split(' ')[1]}`
+      }
+    });
+    
+    const serviceRequest = getResponse.data.data;
     
     if (!serviceRequest) {
       return res.status(404).json({
@@ -373,7 +422,7 @@ const getMatchedProviders = async (req, res) => {
     }
     
     // Security check: Only the client who created the request can view matches
-    if (!serviceRequest.client.equals(clientId) && req.user.role !== 'admin') {
+    if (serviceRequest.client !== clientId && req.user.role !== 'admin') {
       return res.status(403).json({
         status: 'error',
         message: 'You do not have permission to view matches for this service request'
@@ -388,47 +437,67 @@ const getMatchedProviders = async (req, res) => {
         // Generate priority recommendations
         const priorityRecommendations = generatePriorityRecommendations(matchedProviders);
         
-        // Update the service request with matched providers
-        serviceRequest.matchedProviders = priorityRecommendations.map(item => ({
-          provider: item.provider._id,
+        // Update the service request with matched providers through the external API
+        const matchedProvidersData = priorityRecommendations.map(item => ({
+          provider: item.provider.id,
           matchScore: item.matchScore,
           priority: item.priority,
           status: 'recommended'
         }));
         
-        await serviceRequest.save();
+        await axios.patch(`${External_API}/client-services/${requestId}/matched-providers`, 
+          { matchedProviders: matchedProvidersData },
+          {
+            headers: {
+              'Authorization': `Bearer ${req.headers.authorization.split(' ')[1]}`,
+              'Content-Type': 'application/json'
+            }
+          }
+        );
+        
+        // Refetch the service request to get updated matches
+        const updatedResponse = await axios.get(`${External_API}/client-services/${requestId}`, {
+          headers: {
+            'Authorization': `Bearer ${req.headers.authorization.split(' ')[1]}`
+          }
+        });
+        
+        serviceRequest.matchedProviders = updatedResponse.data.data.matchedProviders;
       }
     }
     
-    // Populate provider details
-    await serviceRequest.populate({
-      path: 'matchedProviders.provider',
-      select: 'firstName lastName role profileStatus verificationStatus'
-    });
-    
-    // Get provider service details for each match
-    const providerIds = serviceRequest.matchedProviders.map(match => match.provider._id);
-    const providerServices = await ProviderService.find({
-      provider: { $in: providerIds }
-    });
-    
-    // Merge provider service details with matches
-    const enrichedMatches = serviceRequest.matchedProviders.map(match => {
-      const providerService = providerServices.find(ps => 
-        ps.provider.toString() === match.provider._id.toString()
-      );
-      
-      return {
-        ...match.toObject(),
-        providerDetails: providerService || null
-      };
-    });
+    // Get provider details for each match
+    const enrichedMatches = await Promise.all(serviceRequest.matchedProviders.map(async match => {
+      try {
+        // Get provider service details
+        const providerResponse = await axios.get(`${External_API}/providers/${match.provider}`, {
+          headers: {
+            'Authorization': `Bearer ${req.headers.authorization.split(' ')[1]}`
+          }
+        });
+        
+        const providerServiceResponse = await axios.get(`${External_API}/provider-services?providerId=${match.provider}`, {
+          headers: {
+            'Authorization': `Bearer ${req.headers.authorization.split(' ')[1]}`
+          }
+        });
+        
+        return {
+          ...match,
+          provider: providerResponse.data.data,
+          providerDetails: providerServiceResponse.data.data[0] || null
+        };
+      } catch (err) {
+        console.error(`Error fetching provider ${match.provider} details:`, err.message);
+        return match;
+      }
+    }));
     
     res.status(200).json({
       status: 'success',
       data: {
         serviceRequest: {
-          _id: serviceRequest._id,
+          _id: serviceRequest.id,
           title: serviceRequest.title,
           status: serviceRequest.status
         },
@@ -451,10 +520,16 @@ const getMatchedProviders = async (req, res) => {
 const selectProvider = async (req, res) => {
   try {
     const { requestId, providerId } = req.params;
-    const clientId = req.user._id;
+    const clientId = req.user.id;
     
-    // Find the service request
-    const serviceRequest = await ClientServiceRequest.findById(requestId);
+    // Fetch the service request from external API
+    const getResponse = await axios.get(`${External_API}/client-services/${requestId}`, {
+      headers: {
+        'Authorization': `Bearer ${req.headers.authorization.split(' ')[1]}`
+      }
+    });
+    
+    const serviceRequest = getResponse.data.data;
     
     if (!serviceRequest) {
       return res.status(404).json({
@@ -464,7 +539,7 @@ const selectProvider = async (req, res) => {
     }
     
     // Security check: Only the client who created the request can select a provider
-    if (!serviceRequest.client.equals(clientId)) {
+    if (serviceRequest.client !== clientId) {
       return res.status(403).json({
         status: 'error',
         message: 'You do not have permission to select a provider for this request'
@@ -481,7 +556,7 @@ const selectProvider = async (req, res) => {
     
     // Check if the provider is in the matched providers list
     const matchedProvider = serviceRequest.matchedProviders.find(
-      match => match.provider.toString() === providerId
+      match => match.provider === providerId
     );
     
     if (!matchedProvider) {
@@ -491,58 +566,20 @@ const selectProvider = async (req, res) => {
       });
     }
     
-    // Update the provider's status to accepted
-    matchedProvider.status = 'accepted';
-    
-    // Update the service request status to matched
-    serviceRequest.status = 'matched';
-    
-    await serviceRequest.save();
-    
-    // Create a new gig for this match
-    const provider = await User.findById(providerId);
-    
-    if (!provider) {
-      return res.status(404).json({
-        status: 'error',
-        message: 'Selected provider not found'
-      });
-    }
-    
-    // Create the gig with initial task breakdown from service request
-    const newGig = new Gig({
-      serviceRequest: serviceRequest._id,
-      provider: providerId,
-      client: clientId,
-      taskBreakdown: serviceRequest.serviceBreakdown.map(task => ({
-        task: task.task,
-        description: task.description,
-        status: 'pending'
-      }))
+    // Update the service request to select the provider through the external API
+    const updateResponse = await axios.post(`${External_API}/client-services/${requestId}/select-provider/${providerId}`, {}, {
+      headers: {
+        'Authorization': `Bearer ${req.headers.authorization.split(' ')[1]}`,
+        'Content-Type': 'application/json'
+      }
     });
     
-    // Add scheduled times based on service date
-    if (serviceRequest.serviceDate) {
-      newGig.scheduledTimes.push({
-        startTime: serviceRequest.serviceDate.startDate,
-        endTime: serviceRequest.serviceDate.endDate || new Date(serviceRequest.serviceDate.startDate.getTime() + (2 * 60 * 60 * 1000)), // Default 2 hours if no end date
-        status: 'scheduled'
-      });
-    }
-    
-    await newGig.save();
+    const result = updateResponse.data.data;
     
     res.status(200).json({
       status: 'success',
       message: 'Provider selected and gig created successfully',
-      data: {
-        serviceRequest: serviceRequest._id,
-        gig: newGig._id,
-        provider: {
-          id: provider._id,
-          name: `${provider.firstName} ${provider.lastName}`
-        }
-      }
+      data: result
     });
   } catch (error) {
     console.error('Select provider error:', error);
@@ -559,27 +596,25 @@ const selectProvider = async (req, res) => {
  */
 const getProviderServiceRequests = async (req, res) => {
   try {
-    const providerId = req.user._id;
+    const providerId = req.user.id;
     
-    // Find all service requests where this provider is matched
-    const serviceRequests = await ClientServiceRequest.find({
-      'matchedProviders.provider': providerId,
-      status: { $in: ['open', 'matched'] } // Only get active requests
-    })
-    .select('-aiAnalysis.rawAnalysis')
-    .populate({
-      path: 'client',
-      select: 'firstName lastName'
+    // Fetch all service requests where this provider is matched from external API
+    const response = await axios.get(`${External_API}/client-services/provider/${providerId}?status=open,matched`, {
+      headers: {
+        'Authorization': `Bearer ${req.headers.authorization.split(' ')[1]}`
+      }
     });
+    
+    const serviceRequests = response.data.data || [];
     
     // For each service request, determine if this provider has been selected
     const enrichedRequests = serviceRequests.map(request => {
       const providerMatch = request.matchedProviders.find(
-        match => match.provider.toString() === providerId.toString()
+        match => match.provider === providerId
       );
       
       return {
-        _id: request._id,
+        _id: request.id,
         title: request.title,
         description: request.description,
         location: request.location,
@@ -616,7 +651,7 @@ const respondToServiceRequestMatch = async (req, res) => {
   try {
     const { requestId } = req.params;
     const { response, feedback } = req.body; // response should be 'accept' or 'decline'
-    const providerId = req.user._id;
+    const providerId = req.user.id;
     
     // Validate response
     if (!['accept', 'decline'].includes(response)) {
@@ -626,86 +661,24 @@ const respondToServiceRequestMatch = async (req, res) => {
       });
     }
     
-    // Find the service request
-    const serviceRequest = await ClientServiceRequest.findById(requestId);
-    
-    if (!serviceRequest) {
-      return res.status(404).json({
-        status: 'error',
-        message: 'Service request not found'
-      });
-    }
-    
-    // Check if the provider is in the matched providers list
-    const matchIndex = serviceRequest.matchedProviders.findIndex(
-      match => match.provider.toString() === providerId.toString()
+    // Respond to the service request through the external API
+    const updateResponse = await axios.post(
+      `${External_API}/client-services/${requestId}/respond/${providerId}`,
+      { response, feedback },
+      {
+        headers: {
+          'Authorization': `Bearer ${req.headers.authorization.split(' ')[1]}`,
+          'Content-Type': 'application/json'
+        }
+      }
     );
     
-    if (matchIndex === -1) {
-      return res.status(404).json({
-        status: 'error',
-        message: 'You are not matched with this service request'
-      });
-    }
-    
-    // Update the provider's status based on response
-    serviceRequest.matchedProviders[matchIndex].status = response === 'accept' ? 'accepted' : 'declined';
-    
-    // Add feedback if provided
-    if (feedback) {
-      serviceRequest.matchedProviders[matchIndex].feedback = feedback;
-    }
-    
-    await serviceRequest.save();
-    
-    // If the provider accepted and the service request status is still open,
-    // create a provisional gig that's pending client confirmation
-    if (response === 'accept' && serviceRequest.status === 'open') {
-      // Check if a gig already exists
-      const existingGig = await Gig.findOne({
-        serviceRequest: requestId,
-        provider: providerId
-      });
-      
-      if (!existingGig) {
-        // Create a new gig with provisional status
-        const newGig = new Gig({
-          serviceRequest: serviceRequest._id,
-          provider: providerId,
-          client: serviceRequest.client,
-          status: 'provisional', // This is a custom status we need to add to the gigModel
-          taskBreakdown: serviceRequest.serviceBreakdown.map(task => ({
-            task: task.task,
-            description: task.description,
-            status: 'pending'
-          })),
-          notes: [{
-            author: providerId,
-            text: 'Provider has accepted the service request match. Waiting for client confirmation.',
-            createdAt: new Date()
-          }]
-        });
-        
-        // Add scheduled times based on service date
-        if (serviceRequest.serviceDate) {
-          newGig.scheduledTimes.push({
-            startTime: serviceRequest.serviceDate.startDate,
-            endTime: serviceRequest.serviceDate.endDate || new Date(serviceRequest.serviceDate.startDate.getTime() + (2 * 60 * 60 * 1000)), // Default 2 hours if no end date
-            status: 'scheduled'
-          });
-        }
-        
-        await newGig.save();
-      }
-    }
+    const result = updateResponse.data;
     
     res.status(200).json({
       status: 'success',
       message: `Service request ${response === 'accept' ? 'accepted' : 'declined'} successfully`,
-      data: {
-        serviceRequestId: serviceRequest._id,
-        matchStatus: response === 'accept' ? 'accepted' : 'declined'
-      }
+      data: result.data
     });
   } catch (error) {
     console.error('Respond to service request error:', error);

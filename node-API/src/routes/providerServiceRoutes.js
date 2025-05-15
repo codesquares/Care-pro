@@ -9,7 +9,7 @@ const {
   toggleActiveStatus,
   getRecommendedRequests
 } = require('../controllers/providerServiceController');
-const { protect, restrictTo } = require('../middleware/authMiddleware');
+const { protect } = require('../middleware/authMiddleware');
 
 const router = express.Router();
 
@@ -21,13 +21,13 @@ router.get('/view/:providerId', getProviderServiceById);
 router.use(protect);
 
 // Provider routes - only for healthcare providers
-router.post('/create-update', restrictTo('caregiver', 'nurse', 'doctor', 'dietician'), createOrUpdateProviderService);
-router.get('/my-service', restrictTo('caregiver', 'nurse', 'doctor', 'dietician'), getMyProviderService);
-router.patch('/update-availability', restrictTo('caregiver', 'nurse', 'doctor', 'dietician'), updateAvailability);
-router.patch('/toggle-active', restrictTo('caregiver', 'nurse', 'doctor', 'dietician'), toggleActiveStatus);
-router.get('/recommended-requests', restrictTo('caregiver', 'nurse', 'doctor', 'dietician'), getRecommendedRequests);
+router.post('/create-update', createOrUpdateProviderService);
+router.get('/my-service', getMyProviderService);
+router.patch('/update-availability', updateAvailability);
+router.patch('/toggle-active', toggleActiveStatus);
+router.get('/recommended-requests', getRecommendedRequests);
 
 // Client routes - only for clients (to add reviews)
-router.post('/review/:providerId', restrictTo('client'), addProviderReview);
+router.post('/review/:providerId', addProviderReview);
 
 module.exports = router;
