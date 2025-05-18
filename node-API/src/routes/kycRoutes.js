@@ -11,6 +11,7 @@ const {
   verifyAddress,
   getVerificationStatus
 } = require('../controllers/kycController');
+const verifyIdSelfie = require('../controllers/idSelfieController');
 const { protect } = require('../middleware/authMiddleware');
 
 const router = express.Router();
@@ -27,6 +28,7 @@ router.post('/verification-session', protect, createVerificationSession);
 router.post('/verify-nin', protect, verifyNIN);
 router.post('/verify-bvn', protect, verifyBVN);
 router.post('/verify-address', protect, verifyAddress);
+router.post('/verify-id-selfie', protect, verifyIdSelfie);
 
 // Get verification status
 router.get('/status', protect, getVerificationStatus);

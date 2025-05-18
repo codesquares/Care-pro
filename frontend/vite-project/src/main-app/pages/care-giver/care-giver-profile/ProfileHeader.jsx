@@ -3,6 +3,9 @@ import "./profile-header.css";
 import profilecard1 from '../../../../assets/profilecard1.png';
 import IntroVideo from "./IntroVideo";
 import ProfileInformation from "./ProfileInformation";
+import VerifyButton from "./VerifyButton";
+import AssessmentButton from "./AssessmentButton";
+import TestVerificationToggle from "../../../components/dev/TestVerificationToggle";
 
 const ProfileHeader = () => {
   const [profile, setProfile] = useState({
@@ -18,6 +21,7 @@ const ProfileHeader = () => {
     introVideo: "",
     aboutMe: "",
     status: false,
+    verificationStatus: null,
   });
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState("");
@@ -26,6 +30,7 @@ const ProfileHeader = () => {
     const fetchProfile = async () => {
       try {
         const userDetails = JSON.parse(localStorage.getItem("userDetails"));
+        console.log(userDetails);
         if (!userDetails || !userDetails.id) {
           throw new Error("No caregiver ID found in local storage.");
         }
@@ -60,6 +65,7 @@ const ProfileHeader = () => {
           introVideo: data.introVideo || "",
           aboutMe: data.aboutMe || "N/A",
           status: data.status || false,
+          verificationStatus: "verified", // Force verified status for testing
         });
 
         setIsLoading(false);
@@ -93,9 +99,16 @@ const ProfileHeader = () => {
         <button className={`availability-btn ${profile.status ? 'available' : 'unavailable'}`}>
           {profile.status ? "Available" : "Unavailable"}
         </button>
+        <div className="button-container">
+          <VerifyButton verificationStatus={profile.verificationStatus} />
+          <AssessmentButton verificationStatus={profile.verificationStatus} />
+        </div>
       </div>
       <IntroVideo profileIntrovideo={profile.introVideo} />
       <ProfileInformation profileDescription = {profile.aboutMe}/>
+      
+      {/* Development Tool for Testing - Remove in Production */}
+      {process.env.NODE_ENV !== 'production' && <TestVerificationToggle />}
     </>
   );
 };

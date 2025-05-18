@@ -9,6 +9,8 @@ import Order from './Order';
 import CreateGig from './CreateGig';
 import Messages from '../Messages';
 import DirectMessage from '../../components/messages/DirectMessage';
+import VerificationPage from './verification/VerificationPage';
+import AssessmentPage from './verification/AssessmentPage';
 
 function CareGiverRoutes() {
     return (
@@ -24,6 +26,8 @@ function CareGiverRoutes() {
             <Route path="/CaregiverProfile" element={<CaregiverProfile />} />
             <Route path="/message" element={<Messages />} />
             <Route path="/message/:recipientId" element={<DirectMessage />} />
+            <Route path="/verification" element={<VerificationPage />} />
+            <Route path="/assessment" element={<AssessmentPage />} />
         </Routes>
         </>
     );

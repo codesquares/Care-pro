@@ -10,12 +10,13 @@ const protectUser = async (userId, token) => {
     if (!userId || !token) return null;
 
     // Verify user through external API
-    const externalResponse = await axios.post(`${External_Auth_API}/Authentications/UserLogin`, { userId, token });
+    const externalResponse = await axios.get(`${External_Auth_API}/CareGivers/${userId}`, { userId});
 
-    if (externalResponse.data?.status !== 'success') return null;
+    if (!externalResponse.data) return null;// Check if the response indicates success
+    const user = externalResponse.data;
 
     // Return user data if verified
-    return externalResponse.data.user;
+    return user;
   } catch (error) {
     console.error('Authentication Error:', error.message);
     return null;

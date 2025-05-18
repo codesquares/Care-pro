@@ -7,6 +7,7 @@ const kycRoutes = require('./src/routes/kycRoutes');
 const webhookRoutes = require('./src/routes/webhookRoutes');
 const clientServiceRoutes = require('./src/routes/clientServiceRoutes');
 const providerServiceRoutes = require('./src/routes/providerServiceRoutes');
+const assessmentRoutes = require('./src/routes/assessmentRoutes');
 
 // Load environment variables
 dotenv.config();
@@ -19,6 +20,15 @@ const PORT = process.env.PORT || 3000;
 // Middleware
 app.use(cors());
 app.use(express.json());
+
+// Add request logging middleware
+app.use((req, res, next) => {
+  // Skip logging for verification status checks to reduce console clutter
+  if (req.originalUrl.indexOf('/api/kyc/status') === -1) {
+    console.log(`${new Date().toISOString()} - ${req.method} ${req.originalUrl}`);
+  }
+  next();
+});
 
 // Setup webhook raw body parser before other middlewares
 app.use('/webhook/webhook', express.raw({ type: 'application/json' }));
@@ -36,6 +46,7 @@ app.use('/api/client-services', clientServiceRoutes);
 app.use('/api/provider-services', providerServiceRoutes);
 app.use('/api/integration', apiKeyAuth, integrationRoutes);
 app.use('/api/recommendations', recommendationRoutes);
+app.use('/api/assessment', assessmentRoutes);
 
 // Home route
 app.get('/', (req, res) => {
