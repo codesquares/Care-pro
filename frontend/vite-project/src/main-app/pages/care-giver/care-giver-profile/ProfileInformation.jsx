@@ -1,6 +1,7 @@
 import './profile-information.css'
 import { useState } from 'react'
 import axios from 'axios'
+import { toast } from 'react-toastify';
 
 const ProfileInformation = ({ profileDescription, onUpdate, services}) => {
   const [showModal, setShowModal] = useState(false);
@@ -18,13 +19,15 @@ const ProfileInformation = ({ profileDescription, onUpdate, services}) => {
   const handleSave = async () => {
     try {
       setLoading(true);
-      await axios.put(`https://carepro-api20241118153443.azurewebsites.net/api/CareGivers/UpdateCaregiverInfo/${userDetails.id}`, {
-        aboutMe: editedAboutMe,
+      await axios.put(`https://carepro-api20241118153443.azurewebsites.net/api/CareGivers/UpdateCaregiverAboutMeInfo/${userDetails.id}?AboutMe=${encodeURIComponent(editedAboutMe)}`, {
+        AboutMe: editedAboutMe,
       });
       setShowModal(false);
+      toast.success("About Me updated successfully!");
       onUpdate(editedAboutMe);
     } catch (err) {
       console.error('Failed to update About Me:', err);
+      toast.error("Failed to update About Me");
     } finally {
       setLoading(false);
     }
@@ -53,6 +56,7 @@ const ProfileInformation = ({ profileDescription, onUpdate, services}) => {
       setCertificateName('');
       setCertificateIssuer('');
       setCertificateYear('');
+      toast.success("Certificate uploaded successfully!");
       // Optionally refresh list
     } catch (err) {
       console.error("Upload failed", err);

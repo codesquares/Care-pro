@@ -30,6 +30,8 @@
     font-size: 0.85rem;
     margin: 10px 0;
   }
+
+
   
   .availability-btn {
     margin-top: 10px;
@@ -38,7 +40,7 @@
     border-radius: 4px;
     background: #34d399;
     color: #fff;
-    cursor: pointer;
+
   }
   
   .availability-btn.available {

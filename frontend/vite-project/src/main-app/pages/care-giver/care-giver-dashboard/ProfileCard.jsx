@@ -57,10 +57,10 @@ const ProfileCard = () => {
       >
         View Profile
       </div>
-      <div className="availability-buttons">
+      {/* <div className="availability-buttons">
         <button className="availability-button available">Available</button>
         <button className="availability-button unavailable">Unavailable</button>
-      </div>
+      </div> */}
     </div>
   );
 };

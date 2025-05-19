@@ -19,6 +19,7 @@ const ProfileHeader = () => {
     aboutMe: "",
     services:[],
     status: false,
+    isAvailable: false,
   });
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState("");
@@ -62,6 +63,7 @@ const ProfileHeader = () => {
           aboutMe: data.aboutMe || "N/A",
           services: data.services || [],
           status: data.status || false,
+          isAvailable: data.isAvailable || false,
         });
 
         setIsLoading(false);
@@ -92,12 +94,14 @@ const ProfileHeader = () => {
           <p>📅 Member since: {profile.memberSince}</p>
           <p>📦 Last Delivery: {profile.lastDelivery}</p>
         </div>
-        <button className={`availability-btn ${profile.status ? 'available' : 'unavailable'}`}>
-          {profile.status ? "Available" : "Unavailable"}
-        </button>
+        <div className={`availability-btn ${profile.isAvailable ? 'available' : 'unavailable'}`}>
+          {profile.isAvailable ? "Available" : "Unavailable"}
+        </div>
       </div>
       <IntroVideo profileIntrovideo={profile.introVideo} />
-      <ProfileInformation profileDescription = {profile.aboutMe} services={profile.services}/>
+      <ProfileInformation profileDescription = {profile.aboutMe} services={profile.services}
+      onUpdate={(newAboutMe) => setProfile(prev => ({ ...prev, aboutMe: newAboutMe }))}
+      />
     </>
   );
 };
