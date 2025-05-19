@@ -414,6 +414,61 @@
     width: 100%;
     margin-bottom: 1rem;
   }
+
+  .verification-status-card {
+    flex-direction: column;
+    text-align: center;
+    padding: 1.5rem;
+  }
+
+  .status-icon {
+    margin-right: 0;
+    margin-bottom: 1rem;
+  }
+
+  .form-group input[type="text"],
+  .form-group input[type="file"] {
+    font-size: 16px; /* Prevent zoom on mobile */
+    padding: 10px 14px;
+  }
+
+  .submit-btn {
+    padding: 12px 16px;
+  }
+}
+
+@media (max-width: 480px) {
+  .verification-container {
+    padding: 0.5rem;
+    margin: 1rem auto;
+  }
+
+  .verification-card {
+    padding: 1rem;
+    border-radius: 8px;
+  }
+
+  .verification-card h2 {
+    font-size: 1.4rem;
+  }
+
+  .verification-intro {
+    font-size: 0.9rem;
+  }
+
+  .method-icon {
+    width: 60px;
+    height: 60px;
+    font-size: 1.5rem;
+  }
+
+  .method-title {
+    font-size: 1rem;
+  }
+
+  .method-description {
+    font-size: 0.8rem;
+  }
 }
 
 /* Progress Indicator */

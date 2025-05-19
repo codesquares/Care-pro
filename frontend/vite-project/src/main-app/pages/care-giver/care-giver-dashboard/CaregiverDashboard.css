@@ -102,26 +102,46 @@
   }
 
   .setting-container {
-    flex: 1 1 100%;
+    flex: 1 1 48%; /* Two items per row on tablet */
+    min-width: calc(50% - 10px);
   }
 }
 
 @media (max-width: 600px) {
+  .caregiver-dashboard {
+    padding: 16px 4vw;
+    gap: 20px;
+  }
+  
   .leftbar {
     flex-direction: column;
-    align-items: center;
-    gap: 20px;
+    align-items: stretch;
+    gap: 12px;
   }
 
   .setting-container {
-    justify-content: center;
+    flex: 1 1 100%;
+    padding: 12px;
+    width: 100%;
   }
 
   .custom-select {
     width: 100%;
+    padding: 10px;
+    font-size: 16px; /* Prevent zoom on mobile */
   }
 
   .select-container {
-    justify-content: center;
+    width: 100%;
+    margin-bottom: 15px;
+  }
+  
+  .setting-text {
+    font-size: 14px;
+  }
+  
+  .setting-image {
+    width: 20px;
+    height: 20px;
   }
 }

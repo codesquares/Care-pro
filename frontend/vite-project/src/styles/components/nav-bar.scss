@@ -23,6 +23,7 @@
     @media (max-width: 768px) {
       padding-left: 10px; // Reduce padding on mobile
       margin-right: auto; // Ensure logo stays on the left
+      height: 30px; // Smaller logo on mobile
     }
   }
 
@@ -77,6 +78,20 @@
 
     @media (max-width: 768px) {
       display: none; // Hide CTA on mobile
+    }
+
+    &.mobile-visible {
+      display: block;
+      width: 100%;
+      padding: 15px;
+      text-align: center;
+
+      .btn-primary {
+        width: 100%;
+        margin-right: 0;
+        justify-content: center;
+        margin-top: 10px;
+      }
     }
   }
 
@@ -134,7 +149,7 @@
     flex-direction: row; // Keep items in a row for mobile
     align-items: center;
     padding: 10px 15px;
-    height: auto; // Adjust height for mobile
+    height: 70px; // Adjust height for mobile
     justify-content: space-between; // Ensure space between logo and hamburger menu
 
     &-links {
@@ -142,15 +157,44 @@
       flex-direction: column;
       width: 100%;
       position: absolute;
-      top: 100%;
+      top: 70px; // Match the navbar height
       left: 0;
       background-color: var(--primary-color-white);
       box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
-      padding: 10px 15px;
-      transition: transform 0.3s ease;
+      padding: 15px;
+      z-index: 9999;
+      transition: all 0.3s ease-in-out;
+      opacity: 0;
+      pointer-events: none;
+      transform: translateY(-10px);
+
+      li {
+        padding: 12px 0;
+        border-bottom: 1px solid #f0f0f0;
+        width: 100%;
+        text-align: center;
+
+        &:last-child {
+          border-bottom: none;
+        }
+
+        a {
+          font-size: 1rem;
+          display: block;
+          width: 100%;
+          padding: 5px 0;
+
+          &:hover {
+            color: var(--primary-color-2);
+          }
+        }
+      }
 
       &.active {
         display: flex; // Show links when the menu is active
+        opacity: 1;
+        pointer-events: all;
+        transform: translateY(0);
       }
     }
   }
@@ -254,6 +298,37 @@
     margin: 0;
     margin-left: auto; // ✅ Pushes it to the far right
   }
+}
+
+// Add mobile menu animation
+@keyframes menuFadeIn {
+  from {
+    opacity: 0;
+    transform: translateY(-10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes menuFadeOut {
+  from {
+    opacity: 1;
+    transform: translateY(0);
+  }
+  to {
+    opacity: 0;
+    transform: translateY(-10px);
+  }
+}
+
+.navbar-links.active {
+  animation: menuFadeIn 0.3s forwards;
+}
+
+.navbar-links.closing {
+  animation: menuFadeOut 0.3s forwards;
 }
 
 // Add this to ensure body doesn't scroll when menu is open
