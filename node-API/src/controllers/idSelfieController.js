@@ -1,5 +1,6 @@
 // Verify ID and Selfie method
 const DojahService = require('../services/dojahService');
+// const UserModel = require('../models/userModel'); // Commented out as we don't have this model
 
 // Import Dojah service instance (already instantiated in the service file)
 const dojahService = DojahService;
@@ -7,7 +8,7 @@ const dojahService = DojahService;
 const verifyIdSelfie = async (req, res) => {
   try {
     // Get user ID from authenticated request object
-    const userId = req.user._id;
+    const userId = req.user.id;
     const { idImage, selfieImage } = req.body;
     
     if (!idImage || !selfieImage) {
@@ -30,6 +31,26 @@ const verifyIdSelfie = async (req, res) => {
       confidence: verificationResult.entity?.confidence || 0
     };
     
+    // If verification is successful, update user verification status
+    if (verificationResult.status && 
+        verificationResult.entity?.verification_status === 'verified' || 
+        verificationResult.entity?.verified === true) {
+      
+      // Database update removed as we don't use UserModel
+      /*
+      try {
+        // Update user's verification status in the database
+        await UserModel.findByIdAndUpdate(userId, {
+          'verification.idVerified': true,
+          'verification.status': 'verified'
+        });
+      } catch (dbError) {
+        console.error('Error updating user verification status:', dbError);
+        // Continue despite DB error as the verification itself was successful
+      }
+      */
+    }
+    
     // If there was an API or server error
     if (verificationResult.error) {
       return res.status(200).json({
@@ -43,7 +64,8 @@ const verifyIdSelfie = async (req, res) => {
     // Return success or failure based on actual result
     res.status(200).json({
       status: verificationResult.status ? 'success' : 'failed',
-      verified: verificationResult.entity?.verification_status === 'verified',
+      verified: verificationResult.entity?.verification_status === 'verified' || 
+               verificationResult.entity?.verified === true,
       message: verificationResult.entity?.message,
       data: verification
     });

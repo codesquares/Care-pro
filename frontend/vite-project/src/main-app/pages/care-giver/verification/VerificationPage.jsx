@@ -63,7 +63,7 @@ const VerificationPage = () => {
     checkStatus();
     
     // Don't start polling immediately, wait for initial check to complete
-    setTimeout(() => {
+    const pollingTimeout = setTimeout(() => {
       // Start polling for verification status updates only if not already verified
       if (!verificationStatus?.verified) {
         setIsPolling(true);
@@ -76,36 +76,40 @@ const VerificationPage = () => {
             setProgressMessage("Waiting for verification result...");
             progressCounter += 5;
           }
-        }, 5000); // Increase progress more slowly - every 5 seconds
+        }, 10000); // Increased from 5000 to 10000 ms (10 seconds) to reduce frequency
         
-        pollRef.current = verificationService.pollVerificationStatus((status) => {
-          setVerificationStatus(status);
-          
-          if (status.verified === true) {
-            clearInterval(progressIntervalRef.current);
-            setIsPolling(false);
-            setProgress(100);
-            setProgressMessage("Verification successful!");
-            setSuccess("Your account has been verified successfully!");
-            setTimeout(() => {
-              navigate("/app/caregiver/profile");
-            }, 3000);
-          } else if (status.verificationStatus === "pending") {
-            // Use the progress from the polling service
-            if (status.progress) {
-              setProgress(status.progress);
-              setProgressMessage(`Verification in progress (attempt ${status.pollingAttempt || 1}/${status.maxAttempts || 10})...`);
+        // Pass a longer polling interval (15 seconds instead of 10 seconds)
+        pollRef.current = verificationService.pollVerificationStatus(
+          (status) => {
+            setVerificationStatus(status);
+            
+            if (status.verified === true) {
+              clearInterval(progressIntervalRef.current);
+              setIsPolling(false);
+              setProgress(100);
+              setProgressMessage("Verification successful!");
+              setSuccess("Your account has been verified successfully!");
+              setTimeout(() => {
+                navigate("/app/caregiver/profile");
+              }, 3000);
+            } else if (status.verificationStatus === "pending") {
+              // Use the progress from the polling service
+              if (status.progress) {
+                setProgress(status.progress);
+                setProgressMessage(`Verification in progress (attempt ${status.pollingAttempt || 1}/${status.maxAttempts || 10})...`);
+              }
+            } else if (status.verificationStatus === "failed") {
+              clearInterval(progressIntervalRef.current);
+              setIsPolling(false);
+              setProgress(100);
+              setProgressMessage("Verification failed");
+              setError("Verification failed. Please try again.");
             }
-          } else if (status.verificationStatus === "failed") {
-            clearInterval(progressIntervalRef.current);
-            setIsPolling(false);
-            setProgress(100);
-            setProgressMessage("Verification failed");
-            setError("Verification failed. Please try again.");
-          }
-        });
+          },
+          15000 // 15 seconds polling interval
+        );
       }
-    }, 1000); // Wait 1 second before starting polling
+    }, 3000); // Increased from 1 second to 3 seconds wait before starting polling
     
     // Clean up polling when component unmounts
     return () => {
@@ -113,6 +117,7 @@ const VerificationPage = () => {
         pollRef.current();
       }
       clearInterval(progressIntervalRef.current);
+      clearTimeout(pollingTimeout);
     };
   }, [token, userDetails, navigate]);
 
@@ -187,6 +192,13 @@ const VerificationPage = () => {
           setProgressMessage("Verification successful!");
           setSuccess("ID verification successful! Your identity has been verified.");
           
+          // Save verification status to ensure it persists
+          verificationService.saveVerificationStatus(
+            true, 
+            'verified', 
+            'ID verification successful'
+          );
+          
           // Update local verification status to display in UI
           setVerificationStatus({
             verified: true,
@@ -240,6 +252,13 @@ const VerificationPage = () => {
           setProgress(100);
           setProgressMessage("Verification successful!");
           setSuccess(`Your ${verificationMethod.toUpperCase()} has been verified successfully! You can now proceed with your profile.`);
+          
+          // Save verification status to ensure it persists
+          verificationService.saveVerificationStatus(
+            true, 
+            'verified', 
+            `${verificationMethod.toUpperCase()} verification successful`
+          );
           
           // Update local verification status to display in UI
           setVerificationStatus({

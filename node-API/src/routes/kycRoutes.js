@@ -5,13 +5,15 @@ const {
   generateProviderQuestions,
   submitResponses,
   evalResponse,
-  createVerificationSession,
+  createVerificationSession
+} = require('../controllers/kycController');
+const {
   verifyNIN,
   verifyBVN,
-  verifyAddress,
   getVerificationStatus
-} = require('../controllers/kycController');
+} = require('../controllers/verificationController');
 const verifyIdSelfie = require('../controllers/idSelfieController');
+const verifyAddress = require('../controllers/addressController');
 const { protect } = require('../middleware/authMiddleware');
 
 const router = express.Router();

@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useRef } from "react";
 import { useNavigate } from "react-router-dom";
 import "./verification-page.css";
 import "./assessment-page.css";
@@ -13,10 +13,73 @@ const AssessmentPage = () => {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [error, setError] = useState("");
   const [success, setSuccess] = useState("");
+  const [questions, setQuestions] = useState([]);
+  const [isLoading, setIsLoading] = useState(true);
 
   // Get token and user ID from localStorage
   const userDetails = JSON.parse(localStorage.getItem("userDetails") || "{}");
   const token = localStorage.getItem("authToken");
+  
+  // To track and abort ongoing fetch requests
+  const abortControllerRef = useRef(null);
+
+  // Declare fetchQuestions outside of useEffect so it can be called from other functions
+  const fetchQuestions = async () => {
+    try {
+      // Cancel any ongoing requests first
+      if (abortControllerRef.current) {
+        abortControllerRef.current.abort();
+      }
+
+      // Create a new AbortController for this request
+      abortControllerRef.current = new AbortController();
+      
+      // Only set loading state if we're actually going to fetch
+      if (questions.length === 0) {
+        setIsLoading(true);
+        
+        // Create a promise that will reject after 30 seconds
+        // This ensures we never get stuck in loading state
+        const timeoutPromise = new Promise((_, reject) => {
+          setTimeout(() => {
+            reject(new Error("Loading timeout exceeded"));
+          }, 30000);
+        });
+        
+        const providerType = userDetails.role || 'caregiver';
+        try {
+          // Race between the service call and our timeout
+          const response = await Promise.race([
+            assessmentService.getAssessmentQuestions(providerType, { signal: abortControllerRef.current.signal }),
+            timeoutPromise
+          ]);
+          
+          if (response?.success && response?.data && response?.data.length > 0) {
+            setQuestions(response.data);
+            setError(""); // Clear any previous errors
+            
+            // Display data source message (for development purposes)
+            if (response.fromAPI) {
+              console.info("Using questions from backend API");
+            } else if (response.cachedOnly) {
+              console.info("Using cached or locally generated questions");
+            }
+          } else {
+            setError("Could not load assessment questions. Please try again.");
+          }
+        } catch (err) {
+          console.error("Error fetching assessment questions:", err);
+          setError(err.message || "Failed to load assessment questions. Please try again later.");
+        } finally {
+          setIsLoading(false);
+        }
+      }
+    } catch (outerErr) {
+      console.error("Unexpected error in fetchQuestions:", outerErr);
+      setIsLoading(false);
+      setError("An unexpected error occurred. Please refresh the page and try again.");
+    }
+  };
   
   useEffect(() => {
     // Redirect if no token or user ID
@@ -33,58 +96,36 @@ const AssessmentPage = () => {
       return;
     }
     */
-  }, [token, userDetails, navigate]);
-
-  // Sample assessment questions
-  const questions = [
-    {
-      id: "q1",
-      text: "How many years of experience do you have in caregiving?",
-      type: "radio",
-      options: [
-        "Less than 1 year",
-        "1-3 years",
-        "3-5 years",
-        "5-10 years",
-        "More than 10 years"
-      ]
-    },
-    {
-      id: "q2",
-      text: "Which of the following caregiving skills do you possess? (Select all that apply)",
-      type: "checkbox",
-      options: [
-        "Medication management",
-        "Mobility assistance",
-        "Personal hygiene care",
-        "Meal preparation",
-        "Vital signs monitoring",
-        "Dementia care",
-        "Wound care"
-      ]
-    },
-    {
-      id: "q3",
-      text: "How would you handle a situation where a client refuses to take their medication?",
-      type: "textarea"
-    },
-    {
-      id: "q4",
-      text: "What would you do if a client has a fall while under your care?",
-      type: "textarea"
-    },
-    {
-      id: "q5",
-      text: "Which of these statements best describes your approach to caregiving?",
-      type: "radio",
-      options: [
-        "I focus on completing tasks efficiently",
-        "I prioritize the client's emotional well-being alongside physical care",
-        "I follow care plans exactly as written",
-        "I believe in encouraging maximum independence"
-      ]
+    
+    // Check if user is already qualified or has assessment restrictions
+    const qualificationStatus = assessmentService.getQualificationStatus();
+    
+    // If user is already qualified, show a message and redirect to profile
+    if (qualificationStatus.isQualified) {
+      alert("You are already qualified as a caregiver! No need to retake the assessment.");
+      navigate("/app/caregiver/profile");
+      return;
     }
-  ];
+    
+    // If user has completed assessment but cannot retake yet
+    if (qualificationStatus.assessmentCompleted && !qualificationStatus.canRetake) {
+      const retakeDate = new Date(qualificationStatus.canRetakeAfter);
+      const formattedDate = retakeDate.toLocaleDateString();
+      alert(`You can retake the assessment after ${formattedDate}. Please try again later.`);
+      navigate("/app/caregiver/profile");
+      return;
+    }
+    
+    // Fetch questions when component mounts
+    fetchQuestions();
+    
+    // Cleanup function to abort any ongoing requests when unmounting
+    return () => {
+      if (abortControllerRef.current) {
+        abortControllerRef.current.abort();
+      }
+    };
+  }, [navigate, token, userDetails.id]);
 
   const handleAnswerChange = (questionId, value, isCheckbox = false) => {
     if (isCheckbox) {
@@ -151,6 +192,21 @@ const AssessmentPage = () => {
   };
 
   const startAssessment = () => {
+    // When starting assessment, clear any previous answers
+    setAnswers({});
+    
+    // If this is a retake, mark it as such in localStorage
+    const qualificationStatus = assessmentService.getQualificationStatus();
+    if (qualificationStatus.assessmentCompleted) {
+      // Update qualification status to indicate this is a retake
+      const updatedStatus = {
+        ...qualificationStatus,
+        isRetaking: true,
+        retakeStarted: new Date().toISOString()
+      };
+      localStorage.setItem('qualificationStatus', JSON.stringify(updatedStatus));
+    }
+    
     setCurrentStep("instructions");
   };
 
@@ -166,6 +222,7 @@ const AssessmentPage = () => {
       // Prepare assessment data
       const assessmentData = {
         userId: userDetails.id,
+        providerType: userDetails.role || 'caregiver',
         timestamp: new Date().toISOString(),
         questions: questions.map(q => ({
           id: q.id,
@@ -178,15 +235,63 @@ const AssessmentPage = () => {
       // Submit to API (in test mode this will save to localStorage)
       const response = await assessmentService.submitAssessment(assessmentData);
       
-      // In test mode, we'll always get a success response
-      setSuccess(response.message || "Assessment submitted successfully!");
-      setCurrentStep("thank-you");
+      // Evaluate the assessment to determine qualification status
+      try {
+        const evaluationResult = await assessmentService.evaluateAssessment(assessmentData);
+        
+        if (evaluationResult.success) {
+          // Store evaluation results
+          const assessmentResult = {
+            timestamp: new Date().toISOString(),
+            score: evaluationResult.score,
+            isPassing: evaluationResult.score >= 50 || evaluationResult.passThreshold === true,
+            feedback: evaluationResult.feedback,
+            improvements: evaluationResult.improvements,
+            canRetakeAfter: new Date(Date.now() + (30 * 24 * 60 * 60 * 1000)).toISOString(), // 30 days from now
+            wasTimeout: evaluationResult.timeout || false
+          };
+
+          // Save qualification status to localStorage
+          const qualificationStatus = {
+            isQualified: assessmentResult.isPassing,
+            assessmentCompleted: true,
+            lastAssessmentDate: assessmentResult.timestamp,
+            score: assessmentResult.score,
+            canRetakeAfter: assessmentResult.canRetakeAfter
+          };
+          
+          localStorage.setItem('qualificationStatus', JSON.stringify(qualificationStatus));
+          
+          // Update userDetails with assessment information
+          const currentUserDetails = JSON.parse(localStorage.getItem('userDetails') || '{}');
+          currentUserDetails.assessmentCompleted = true;
+          currentUserDetails.isQualified = assessmentResult.isPassing;
+          localStorage.setItem('userDetails', JSON.stringify(currentUserDetails));
+          
+          // Set results for display
+          setSuccess(
+            assessmentResult.isPassing 
+              ? "Congratulations! You've successfully qualified as a caregiver." 
+              : "Assessment completed. Review your feedback to improve your skills."
+          );
+          
+          // Store the complete assessment data with results
+          localStorage.setItem('lastSubmittedAssessment', JSON.stringify({
+            timestamp: assessmentResult.timestamp,
+            data: assessmentData,
+            result: assessmentResult
+          }));
+        } else {
+          throw new Error("Assessment evaluation failed");
+        }
+      } catch (evalError) {
+        console.error("Error evaluating assessment:", evalError);
+        // Still consider the submission successful even if evaluation fails
+        setSuccess("Assessment submitted successfully!");
+      }
       
-      // Store the lastSubmittedAssessment in localStorage for reference
-      localStorage.setItem('lastSubmittedAssessment', JSON.stringify({
-        timestamp: new Date().toISOString(),
-        data: assessmentData
-      }));
+      // Move to thank you page
+      setCurrentStep("thank-you");
       
     } catch (err) {
       console.error("Assessment submission error:", err);
@@ -196,27 +301,91 @@ const AssessmentPage = () => {
     }
   };
 
-  const renderWelcomeScreen = () => (
-    <div className="assessment-welcome">
-      <div className="welcome-icon">
-        <i className="fas fa-clipboard-check"></i>
+  const renderWelcomeScreen = () => {
+    // Check if this is a retake
+    const qualificationStatus = assessmentService.getQualificationStatus();
+    const isRetake = qualificationStatus.assessmentCompleted && qualificationStatus.canRetake;
+    
+    return (
+      <div className="assessment-welcome">
+        <div className="welcome-icon">
+          <i className={`fas ${isRetake ? 'fa-sync-alt' : 'fa-clipboard-check'}`}></i>
+        </div>
+        <h2>{isRetake ? 'Caregiver Assessment Retake' : 'Welcome to the Caregiver Assessment'}</h2>
+        {isLoading ? (
+          <div className="loading-indicator">
+            <i className="fas fa-spinner fa-spin"></i>
+            <p>Loading assessment questions... Please wait.</p>
+            <p className="loading-tip">This may take a moment as we generate personalized questions.</p>
+            {/* This button becomes visible after 15 seconds via CSS animation */}
+            <button 
+              className="retry-btn"
+              id="loading-retry-button"
+              onClick={() => {
+                // Force reset loading state and fetch again
+                setIsLoading(false);
+                setTimeout(() => {
+                  setError("");
+                  setQuestions([]);
+                  fetchQuestions();
+                }, 100);
+              }}
+            >
+              <i className="fas fa-sync"></i> Cancel and retry
+            </button>
+          </div>
+        ) : error ? (
+          <div className="error-message">
+            <i className="fas fa-exclamation-circle"></i>
+            <p>{error}</p>
+            <button 
+              className="retry-btn"
+              onClick={() => {
+                setError("");
+                setQuestions([]);
+                fetchQuestions();
+              }}
+            >
+              <i className="fas fa-sync"></i> Retry
+            </button>
+          </div>
+        ) : (
+          <>
+            {isRetake ? (
+              <div className="retake-info-container">
+                <p>
+                  Welcome back! You now have the opportunity to retake the caregiver assessment.
+                  Your previous score was below our qualification threshold, but we appreciate your
+                  continued interest in providing care through our platform.
+                </p>
+                <p>
+                  This assessment will help us understand how your caregiving skills have developed.
+                  Please answer thoughtfully to demonstrate your expertise.
+                </p>
+              </div>
+            ) : (
+              <>
+                <p>
+                  This assessment will help us understand your caregiving experience, skills, and approach.
+                  Your responses will be used to match you with clients who need your specific expertise.
+                </p>
+                <p>
+                  The assessment consists of {questions.length} questions and should take approximately 10-15 minutes to complete.
+                </p>
+              </>
+            )}
+            <button 
+              className="start-btn"
+              onClick={startAssessment}
+              disabled={isLoading || questions.length === 0}
+            >
+              <i className="fas fa-play-circle"></i> {isRetake ? 'Start Retake Assessment' : 'Start Assessment'}
+            </button>
+          </>
+        )}
       </div>
-      <h2>Welcome to the Caregiver Assessment</h2>
-      <p>
-        This assessment will help us understand your caregiving experience, skills, and approach.
-        Your responses will be used to match you with clients who need your specific expertise.
-      </p>
-      <p>
-        The assessment consists of {questions.length} questions and should take approximately 10-15 minutes to complete.
-      </p>
-      <button 
-        className="start-btn"
-        onClick={startAssessment}
-      >
-        <i className="fas fa-play-circle"></i> Start Assessment
-      </button>
-    </div>
-  );
+    );
+  };
 
   const renderInstructionsScreen = () => (
     <div className="assessment-instructions">
@@ -364,47 +533,108 @@ const AssessmentPage = () => {
     );
   };
 
-  const renderThankYouScreen = () => (
-    <div className="assessment-thank-you">
-      <div className="thank-you-icon">
-        <i className="fas fa-check-circle"></i>
-      </div>
-      <h2>Thank You for Completing the Assessment!</h2>
-      <p>
-        Your responses have been submitted successfully. Our team will review your assessment 
-        to better match you with clients who need your specific caregiving skills.
-      </p>
-      {success && <div className="success-message"><i className="fas fa-check-circle"></i> {success}</div>}
-      {process.env.NODE_ENV !== 'production' && (
-        <div className="test-info" style={{ 
-          margin: '15px 0', 
-          padding: '10px', 
-          background: '#f8f9fa', 
-          border: '1px solid #ddd',
-          borderRadius: '5px',
-          fontSize: '14px'
-        }}>
-          <p><strong>Testing Mode Info:</strong> Your assessment data has been saved to localStorage.</p>
-          <p style={{ marginTop: '5px' }}>You can view it in the browser console with:</p>
-          <pre style={{ 
-            background: '#eee', 
-            padding: '8px', 
-            borderRadius: '3px',
-            overflow: 'auto',
-            fontSize: '12px'
-          }}>
-            localStorage.getItem('cachedAssessments')
-          </pre>
+  const renderThankYouScreen = () => {
+    // Get the assessment result from localStorage
+    const lastAssessment = JSON.parse(localStorage.getItem('lastSubmittedAssessment') || '{}');
+    const result = lastAssessment.result || {};
+    const isPassing = result.isPassing || false;
+    const score = result.score || 0;
+    
+    return (
+      <div className="assessment-thank-you">
+        <div className="thank-you-icon">
+          <i className={`fas ${isPassing ? 'fa-check-circle' : 'fa-info-circle'}`} 
+             style={{ color: isPassing ? '#28a745' : '#ffc107' }}></i>
         </div>
-      )}
-      <button 
-        className="profile-btn"
-        onClick={() => navigate("/app/caregiver/profile")}
-      >
-        <i className="fas fa-user-circle"></i> Return to Profile
-      </button>
-    </div>
-  );
+        <h2>Thank You for Completing the Assessment!</h2>
+        
+        {success && <div className="success-message"><i className="fas fa-check-circle"></i> {success}</div>}
+        
+        <div className="assessment-results">
+          {result.score !== undefined && (
+            <div className="score-display">
+              <div className="score-circle" style={{ 
+                backgroundColor: isPassing ? '#d4edda' : '#fff3cd',
+                color: isPassing ? '#155724' : '#856404' 
+              }}>
+                <span className="score-value">{score}%</span>
+              </div>
+              <p className="score-label">{
+                isPassing 
+                  ? "Congratulations! You've met our qualification threshold." 
+                  : "You didn't meet the qualification threshold of 50%."
+              }</p>
+              {result.wasTimeout && (
+                <p className="timeout-note">
+                  <i className="fas fa-exclamation-triangle"></i> Note: Due to a connection issue, we've provided a provisional evaluation.
+                </p>
+              )}
+            </div>
+          )}
+          
+          {result.feedback && (
+            <div className="feedback-section">
+              <h3>Assessment Feedback</h3>
+              <p>{result.feedback}</p>
+            </div>
+          )}
+          
+          {!isPassing && result.improvements && (
+            <div className="improvements-section">
+              <h3>Areas for Improvement</h3>
+              <p>{result.improvements}</p>
+              <p className="retake-info">
+                You can retake the assessment after 30 days to improve your qualification status.
+              </p>
+            </div>
+          )}
+          
+          {isPassing && (
+            <div className="next-steps">
+              <h3>Next Steps</h3>
+              <p>
+                Now that you're qualified, you can start searching for caregiving opportunities 
+                that match your skills and experience.
+              </p>
+            </div>
+          )}
+        </div>
+        
+        {process.env.NODE_ENV !== 'production' && (
+          <div className="test-info" style={{ 
+            margin: '15px 0', 
+            padding: '10px', 
+            background: '#f8f9fa', 
+            border: '1px solid #ddd',
+            borderRadius: '5px',
+            fontSize: '14px'
+          }}>
+            <p><strong>Testing Mode Info:</strong> Your assessment data has been saved.</p>
+            {localStorage.getItem('cachedAssessments') && (
+              <>
+                <p style={{ marginTop: '5px' }}>You can view it in the browser console with:</p>
+                <pre style={{ 
+                  background: '#eee', 
+                  padding: '8px', 
+                  borderRadius: '3px',
+                  overflow: 'auto',
+                  fontSize: '12px'
+                }}>
+                  localStorage.getItem('cachedAssessments')
+                </pre>
+              </>
+            )}
+          </div>
+        )}
+        <button 
+          className="profile-btn"
+          onClick={() => navigate("/app/caregiver/profile")}
+        >
+          <i className="fas fa-user-circle"></i> Return to Profile
+        </button>
+      </div>
+    );
+  };
 
   return (
     <div className="assessment-container">

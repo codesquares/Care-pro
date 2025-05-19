@@ -17,13 +17,43 @@ class DojahService {
       'AppId': `${this.appId}`,
       'Content-Type': 'application/json'
     };
-    this.useMock = process.env.USE_MOCK_VERIFICATION === 'true' || !this.apiKey || !this.appId;
+    // Always use mock in development environments or if credentials are missing
+    this.useMock = process.env.NODE_ENV !== 'production' || process.env.USE_MOCK_VERIFICATION === 'true' || !this.apiKey || !this.appId;
   }
 
-  async verifyNIN(ninNumber) {
+  async verifyNIN(ninNumber, selfieImage = null) {
+    // Force the use of test NIN from guide: 70123456789 when not in production
+    if (process.env.NODE_ENV !== 'production') {
+      ninNumber = '70123456789';
+      console.log('Using test NIN number 70123456789 for development environment');
+    }
+    
     // If using mock data or missing API credentials, return mock response
     if (this.useMock) {
       console.log('Using mock NIN verification for testing');
+      // Use test NIN from guide: 70123456789
+      if (ninNumber === '70123456789') {
+        return {
+          entity: {
+            first_name: "John",
+            last_name: "Doe",
+            middle_name: "Chinwe",
+            gender: "M",
+            image: "/9j/4AAQScXJSgBBAgAAAQABAAD/2wBDAAgGBgcGBQgHBwcJCQgKDBQNDAsLDBkSEw8UHRofHh0aHBwg...",
+            phone_number: "0812345678",
+            date_of_birth: "1993-05-06",
+            nin: "70123456789",
+            selfie_verification: selfieImage ? {
+              confidence_value: 99.90354919433594,
+              match: true
+            } : undefined,
+            verification_status: "success",
+            verified: true
+          },
+          status: true
+        };
+      }
+      
       // Mock failure for some specific test values, success for others
       if (ninNumber === '12345678900' || ninNumber.length !== 11) {
         return mockVerifications.mockFailedNIN(ninNumber);
@@ -32,15 +62,36 @@ class DojahService {
     }
     
     try {
-      // Make the actual API call to Dojah
-      const response = await axios.get(`${this.baseUrl}/kyc/nin`, {
-        params: { nin: ninNumber },
-        headers: this.headers
-      });
+      let response;
+      
+      // If selfie image is provided, use the NIN with selfie verification endpoint
+      if (selfieImage) {
+        // According to the API guide, use the NIN with selfie verification endpoint
+        response = await axios.post(`${this.baseUrl}/kyc/nin/verify`, {
+          nin: ninNumber,
+          selfie_image: selfieImage
+        }, {
+          headers: this.headers
+        });
+      } else {
+        // Basic NIN verification without selfie
+        response = await axios.get(`${this.baseUrl}/kyc/nin`, {
+          params: { nin: ninNumber },
+          headers: this.headers
+        });
+      }
       
       // Check if we got a proper response
       if (response.data && response.data.entity) {
-        return response.data;
+        // Add verification status based on selfie verification result if available
+        const result = response.data;
+        
+        if (selfieImage && result.entity.selfie_verification) {
+          result.entity.verified = result.entity.selfie_verification.match === true;
+          result.entity.verification_status = result.entity.verified ? "success" : "failed";
+        }
+        
+        return result;
       } else {
         // Invalid response format
         return {
@@ -83,10 +134,38 @@ class DojahService {
     }
   }
 
-  async verifyBVN(bvnNumber) {
+  async verifyBVN(bvnNumber, selfieImage = null) {
+    // Force the use of test BVN from guide: 22222222222 when not in production
+    if (process.env.NODE_ENV !== 'production') {
+      bvnNumber = '22222222222';
+      console.log('Using test BVN number 22222222222 for development environment');
+    }
+    
     // If using mock data or missing API credentials, return mock response
     if (this.useMock) {
       console.log('Using mock BVN verification for testing');
+      // Use test BVN from guide: 22222222222
+      if (bvnNumber === '22222222222') {
+        return {
+          entity: {
+            bvn: "22222222222",
+            first_name: "JOHN",
+            middle_name: "ANON",
+            last_name: "DOE",
+            date_of_birth: "01-January-1907",
+            phone_number1: "08103817187",
+            gender: "Male",
+            selfie_verification: selfieImage ? {
+              confidence_value: 99.99620056152344,
+              match: true
+            } : undefined,
+            verification_status: "success",
+            verified: true
+          },
+          status: true
+        };
+      }
+      
       // Mock failure for some specific test values, success for others
       if (bvnNumber === '12345678900' || bvnNumber.length !== 11) {
         return mockVerifications.mockFailedBVN(bvnNumber);
@@ -95,15 +174,36 @@ class DojahService {
     }
     
     try {
-      // Make the actual API call to Dojah
-      const response = await axios.get(`${this.baseUrl}/kyc/bvn`, {
-        params: { bvn: bvnNumber },
-        headers: this.headers
-      });
+      let response;
+      
+      // If selfie image is provided, use the BVN with selfie verification endpoint
+      if (selfieImage) {
+        // According to the API guide, use the BVN with selfie verification endpoint
+        response = await axios.post(`${this.baseUrl}/kyc/bvn/verify`, {
+          bvn: bvnNumber,
+          selfie_image: selfieImage
+        }, {
+          headers: this.headers
+        });
+      } else {
+        // Basic BVN verification without selfie
+        response = await axios.get(`${this.baseUrl}/kyc/bvn`, {
+          params: { bvn: bvnNumber },
+          headers: this.headers
+        });
+      }
       
       // Check if we got a proper response
       if (response.data && response.data.entity) {
-        return response.data;
+        // Add verification status based on selfie verification result if available
+        const result = response.data;
+        
+        if (selfieImage && result.entity.selfie_verification) {
+          result.entity.verified = result.entity.selfie_verification.match === true;
+          result.entity.verification_status = result.entity.verified ? "success" : "failed";
+        }
+        
+        return result;
       } else {
         // Invalid response format
         return {

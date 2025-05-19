@@ -589,10 +589,6 @@ const assessmentService = {
       const providerType = assessmentData.providerType || 'caregiver';
       const responses = assessmentData.questions.map(q => `Question: ${q.text}\nAnswer: ${q.answer || 'No answer provided'}`);
       
-      // Add a timeout for the fetch request
-      const controller = new AbortController();
-      const timeoutId = setTimeout(() => controller.abort(), 30000); // 30 second timeout
-      
       // Call evaluation endpoint
       const response = await fetch(`${PROD_API_URL}/kyc/evaluate`, {
         method: 'POST',
@@ -600,26 +596,15 @@ const assessmentService = {
           'Content-Type': 'application/json',
           'Authorization': `Bearer ${token}`
         },
-        body: JSON.stringify({ userId, providerType, responses }),
-        signal: controller.signal
+        body: JSON.stringify({ userId, providerType, responses })
       });
       
-      // Clear the timeout since the request completed
-      clearTimeout(timeoutId);
-      
       if (!response.ok) {
-        const errorData = await response.json().catch(() => ({ message: `HTTP error ${response.status}` }));
+        const errorData = await response.json();
         throw new Error(errorData.message || 'Evaluation failed');
       }
-    
-      // Parse the response body only once
-      const evaluationData = await response.json();
       
-      // Check if we have the expected data structure
-      if (!evaluationData || typeof evaluationData.score !== 'number') {
-        console.warn('Unexpected evaluation response format:', evaluationData);
-        throw new Error('Invalid evaluation response format');
-      }
+      const evaluationData = await response.json();
       
       return {
         success: true,
@@ -632,21 +617,7 @@ const assessmentService = {
     } catch (error) {
       console.error('Assessment evaluation error:', error);
       
-      // Check if this was an abort error (timeout)
-      if (error.name === 'AbortError') {
-        console.warn('API request timed out after 30 seconds');
-        return {
-          success: true,
-          score: 65, // Default passing score for fallback
-          feedback: 'Your responses show an understanding of basic caregiving concepts. Due to a technical issue, we\'ve provided a provisional evaluation.',
-          improvements: 'Please ensure a stable internet connection for future assessments.',
-          passThreshold: true,
-          cachedOnly: true,
-          timeout: true
-        };
-      }
-      
-      // Return a fallback evaluation for testing or when API fails
+      // Return a fallback evaluation for testing
       return {
         success: true,
         score: 75,

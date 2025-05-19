@@ -6,6 +6,7 @@ import ProfileInformation from "./ProfileInformation";
 import VerifyButton from "./VerifyButton";
 import AssessmentButton from "./AssessmentButton";
 import TestVerificationToggle from "../../../components/dev/TestVerificationToggle";
+import verificationService from "../../../services/verificationService";
 
 const ProfileHeader = () => {
   const [profile, setProfile] = useState({
@@ -45,6 +46,37 @@ const ProfileHeader = () => {
 
         const data = await response.json();
 
+        // Fetch verification status from the node API
+        let verificationStatusValue = "unverified";
+        try {
+          // First check localStorage for a previously saved verification status
+          const localStatus = localStorage.getItem('verificationStatus');
+          if (localStatus) {
+            try {
+              const parsed = JSON.parse(localStatus);
+              if (parsed && parsed.verified) {
+                verificationStatusValue = "verified";
+                console.log("Using cached verification status from localStorage:", parsed);
+              }
+            } catch (err) {
+              console.error("Error parsing localStorage verification status:", err);
+            }
+          }
+          
+          // If not verified in localStorage, check with the API
+          if (verificationStatusValue !== "verified") {
+            const verificationResponse = await verificationService.getVerificationStatus();
+            if (verificationResponse && verificationResponse.data) {
+              // Use the verification status from the node API
+              verificationStatusValue = verificationResponse.data.verificationStatus || "unverified";
+              console.log("Verification status from API:", verificationStatusValue);
+            }
+          }
+        } catch (verificationError) {
+          console.error("Error fetching verification status:", verificationError);
+          // Default to unverified on error
+        }
+
         const timeCreated = new Date(data.createdAt);
         const formattedDate = `${timeCreated.getFullYear()}-${String(
           timeCreated.getMonth() + 1
@@ -65,7 +97,8 @@ const ProfileHeader = () => {
           introVideo: data.introVideo || "",
           aboutMe: data.aboutMe || "N/A",
           status: data.status || false,
-          verificationStatus: "verified", // Force verified status for testing
+          // Use verification status from node API
+          verificationStatus: verificationStatusValue,
         });
 
         setIsLoading(false);

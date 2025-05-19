@@ -1,19 +1,45 @@
-import React, { useState } from "react";
-import { setVerificationStatus, getVerificationStatus } from "../../utilities/testingUtils";
+import React, { useState, useEffect } from "react";
+import verificationService from "../../services/verificationService";
 
 /**
+ * DEVELOPER TESTING TOOL
+ * 
  * Testing component for toggling verification status
- * This component should only be used during development
+ * This component should only be used during development and MUST be removed in production
  */
 const TestVerificationToggle = () => {
-  const [status, setStatus] = useState(getVerificationStatus() || "unverified");
+  const [status, setStatus] = useState("unknown");
 
-  const toggleStatus = () => {
-    const newStatus = status === "verified" ? "unverified" : "verified";
-    if (setVerificationStatus(newStatus)) {
-      setStatus(newStatus);
-      // Refresh the page to see changes
+  useEffect(() => {
+    // Get the current verification status on mount
+    const checkStatus = async () => {
+      try {
+        const result = await verificationService.getVerificationStatus();
+        setStatus(result?.verificationStatus || "unknown");
+      } catch (err) {
+        console.error("Failed to get verification status", err);
+      }
+    };
+    
+    checkStatus();
+  }, []);
+
+  const toggleStatus = async () => {
+    try {
+      if (status === "verified") {
+        // Set to unverified
+        verificationService.saveVerificationStatus(false, "unverified", "Verification status reset by developer");
+        setStatus("unverified");
+      } else {
+        // Set to verified
+        await verificationService.forceVerification();
+        setStatus("verified");
+      }
+      
+      // Refresh the page to reflect changes
       window.location.reload();
+    } catch (err) {
+      console.error("Error toggling verification status", err);
     }
   };
 
@@ -32,7 +58,7 @@ const TestVerificationToggle = () => {
       }}
     >
       <div style={{ marginBottom: "5px" }}>
-        <strong>Dev Tools</strong>
+        <strong>Dev Tools - TEST ONLY</strong>
       </div>
       <div style={{ fontSize: "14px", marginBottom: "10px" }}>
         Verification: <span style={{ fontWeight: "bold" }}>{status}</span>
@@ -50,6 +76,9 @@ const TestVerificationToggle = () => {
       >
         {status === "verified" ? "Set to Unverified" : "Set to Verified"}
       </button>
+      <div style={{ fontSize: "10px", marginTop: "5px", color: "red" }}>
+        Remove in production!
+      </div>
     </div>
   );
 };
