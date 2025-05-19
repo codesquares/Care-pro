@@ -1,6 +1,7 @@
 import React, { useEffect, useState } from "react";
 import "./CaregiverSettings.scss";
 import profileCardImage from "../../../assets/profilecard1.png"; // Placeholder image
+import { toast } from "react-toastify";
 
 const CaregiverSettings = () => {
   const [profile, setProfile] = useState({
@@ -13,6 +14,11 @@ const CaregiverSettings = () => {
   const [isAvailable, setIsAvailable] = useState(true);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState("");
+
+  const [currentPassword, setCurrentPassword] = useState("");
+  const [newPassword, setNewPassword] = useState("");
+  const [confirmNewPassword, setConfirmNewPassword] = useState("");
+  const [passwordMessage, setPasswordMessage] = useState("");
 
   useEffect(() => {
     const fetchProfile = async () => {
@@ -40,7 +46,7 @@ const CaregiverSettings = () => {
           picture: data.picture || profileCardImage,
         });
 
-        setIsAvailable(data.isAvailable); // assuming this field exists in API
+        setIsAvailable(data.isAvailable);
         setIsLoading(false);
       } catch (err) {
         setError(err.message);
@@ -70,8 +76,54 @@ const CaregiverSettings = () => {
       if (!response.ok) throw new Error("Failed to update availability");
 
       setIsAvailable(newAvailability);
+      toast.success(`Status changed to ${newAvailability ? "Available" : "Unavailable"}`);
     } catch (err) {
       console.error(err.message);
+    }
+  };
+
+  const handlePasswordChange = async () => {
+    const userDetails = JSON.parse(localStorage.getItem("userDetails"));
+    const email = userDetails?.email;
+
+    if (!email) {
+      setPasswordMessage("User email not found.");
+      return;
+    }
+
+    if (newPassword !== confirmNewPassword) {
+      setPasswordMessage("New passwords do not match.");
+      return;
+    }
+
+    try {
+      const response = await fetch(
+        "https://carepro-api20241118153443.azurewebsites.net/api/CareGivers/reset-password",
+        {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify({
+            email,
+            currentPassword,
+            newPassword,
+          }),
+        }
+      );
+
+      if (!response.ok) {
+        const errorData = await response.json();
+        toast.error(errorData.message || "Failed to update password");
+      }
+
+      setPasswordMessage("Password updated successfully.");
+      toast.success("Password updated successfully.");
+      setCurrentPassword("");
+      setNewPassword("");
+      setConfirmNewPassword("");
+    } catch (err) {
+      setPasswordMessage(`Error: ${err.message}`);
     }
   };
 
@@ -88,7 +140,9 @@ const CaregiverSettings = () => {
           <p className="profile-email">{profile.username}</p>
           <div className="profile-rating">★★★★☆ (29 reviews)</div>
           <p className="profile-location">Location: {profile.location}</p>
-          <p className="profile-membership">Member since: {new Date(profile.memberSince).toDateString()}</p>
+          <p className="profile-membership">
+            Member since: {new Date(profile.memberSince).toDateString()}
+          </p>
         </div>
       </div>
 
@@ -117,19 +171,39 @@ const CaregiverSettings = () => {
               Unavailable
             </button>
           </div>
-          <button className="save-button" disabled>Save Changes</button>
+          <button className="save-button" disabled>
+            Save Changes
+          </button>
         </div>
 
         {/* Update Password */}
         <div className="settings-box">
           <h3>Update Password</h3>
-          <input type="password" placeholder="Current Password" />
-          <input type="password" placeholder="New Password" />
-          <input type="password" placeholder="Confirm New Password" />
+          <input
+            type="password"
+            placeholder="Current Password"
+            value={currentPassword}
+            onChange={(e) => setCurrentPassword(e.target.value)}
+          />
+          <input
+            type="password"
+            placeholder="New Password"
+            value={newPassword}
+            onChange={(e) => setNewPassword(e.target.value)}
+          />
+          <input
+            type="password"
+            placeholder="Confirm New Password"
+            value={confirmNewPassword}
+            onChange={(e) => setConfirmNewPassword(e.target.value)}
+          />
           <p className="password-hint">
             * 8 characters or longer. Combine upper and lowercase letters and numbers.
           </p>
-          <button className="save-button">Save Changes</button>
+          {passwordMessage && <p className="status-message">{passwordMessage}</p>}
+          <button className="save-button" onClick={handlePasswordChange}>
+            Save Changes
+          </button>
         </div>
 
         {/* Account Deactivation */}
