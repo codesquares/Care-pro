@@ -17,6 +17,7 @@ const ProfileHeader = () => {
     picture: "",
     introVideo: "",
     aboutMe: "",
+    services:[],
     status: false,
   });
   const [isLoading, setIsLoading] = useState(true);
@@ -59,6 +60,7 @@ const ProfileHeader = () => {
           picture: data.picture || profilecard1,
           introVideo: data.introVideo || "",
           aboutMe: data.aboutMe || "N/A",
+          services: data.services || [],
           status: data.status || false,
         });
 
@@ -95,7 +97,7 @@ const ProfileHeader = () => {
         </button>
       </div>
       <IntroVideo profileIntrovideo={profile.introVideo} />
-      <ProfileInformation profileDescription = {profile.aboutMe}/>
+      <ProfileInformation profileDescription = {profile.aboutMe} services={profile.services}/>
     </>
   );
 };

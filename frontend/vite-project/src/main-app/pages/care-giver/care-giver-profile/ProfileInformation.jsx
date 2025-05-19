@@ -2,7 +2,7 @@ import './profile-information.css'
 import { useState } from 'react'
 import axios from 'axios'
 
-const ProfileInformation = ({ profileDescription, onUpdate }) => {
+const ProfileInformation = ({ profileDescription, onUpdate, services}) => {
   const [showModal, setShowModal] = useState(false);
   const [editedAboutMe, setEditedAboutMe] = useState(profileDescription);
   const [loading, setLoading] = useState(false);
@@ -59,10 +59,10 @@ const ProfileInformation = ({ profileDescription, onUpdate }) => {
     }
   };
 
-  const services = [
-    "Rehabilitation services", "Dental care", "Cooking",
-    "Acupuncture", "Nursing care", "Emergency response", "Home care"
-  ];
+  // const services = [
+  //   "Rehabilitation services", "Dental care", "Cooking",
+  //   "Acupuncture", "Nursing care", "Emergency response", "Home care"
+  // ];
 
   const certifications = [
     { name: "WHO nursing certificate 2021", link: "#" },
