@@ -1,6 +1,6 @@
 import React from 'react';
 import storyImage from "../../assets/storyImage.svg"
-import '../../styles/components/AboutUs-Banner.scss';
+import './AboutUs-Banner.scss';
 
 
 const AboutUsTopBanner = () => {

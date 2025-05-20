@@ -127,3 +127,18 @@
   justify-content: flex-start;
   align-items: flex-start;
 }
+
+.galleryImage {
+  width: 100px;
+  height: 100px;
+  object-fit: cover;
+  border-radius: 6px;
+  margin-bottom: 10px;
+}
+.videoPreview {
+  width: 100%;
+  max-width: 200px;
+  border-radius: 8px;
+  margin-bottom: 10px;
+}
+

@@ -1,64 +1,78 @@
-.message-input {
+// Variables are now globally imported in vite.config.js
+
+.message-input-container {
   display: flex;
-  padding: 10px;
-  // border-top: 1px solid #ccc;
-  // background-color: #fff;
-  width:100%;
-  justify-content: space-between;
   align-items: center;
+  background-color: #f9fafb;
+  border-radius: 12px;
+  padding: 0.5rem;
   
-
-}
-
-.message-input button{
-  background-color:  #15586ea7;
-  color: white;
- 
-  border-radius: 8%;
-  padding: 10px 15px;
-  width: 140px;
-  align-items: center;
-  margin-bottom: 10px;
-}
-
-.input-field {
-  flex: 1;
-  resize: none;
-  border: 1px solid #ddd;
-  border-radius: 20px;
-  padding: 10px 15px;
-  font-size: 14px;
-  outline: none;
-  margin-right: 10px;
-  min-height: 40px;
-}
-
-textarea.input-field {
-  min-height: 40px;
-  width:50%;
-}
-
-.input-field:focus {
-  border-color: #007bff;
-}
-
-.send-button {
-  background-color: #007bff;
-  color: white;
-  border: none;
-  border-radius: 20px;
-  padding: 10px 20px;
-  font-size: 14px;
-  cursor: pointer;
-  transition: background-color 0.2s;
-  width:10%;
-}
-
-.send-button:hover {
-  background-color: #0056b3;
-}
-
-.send-button:disabled {
-  background-color: #ccc;
-  cursor: not-allowed;
+  .message-input-actions {
+    margin-right: 0.5rem;
+    
+    .input-action-button {
+      background: none;
+      border: none;
+      color: #6b7280;
+      cursor: pointer;
+      padding: 0.5rem;
+      border-radius: 50%;
+      transition: all 0.2s ease;
+      
+      &:hover {
+        background-color: #f3f4f6;
+        color: #4b5563;
+      }
+    }
+  }
+  
+  .message-input-field {
+    flex: 1;
+    
+    .input-field {
+      width: 100%;
+      border: none;
+      background-color: transparent;
+      resize: none;
+      padding: 0.75rem;
+      font-size: 0.875rem;
+      color: #1f2937;
+      max-height: 120px;
+      
+      &:focus {
+        outline: none;
+      }
+      
+      &::placeholder {
+        color: #9ca3af;
+      }
+    }
+  }
+  
+  .message-input-send {
+    margin-left: 0.5rem;
+    
+    .send-button {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      width: 40px;
+      height: 40px;
+      border-radius: 50%;
+      background-color: #4f46e5;
+      color: #ffffff;
+      border: none;
+      cursor: pointer;
+      transition: all 0.2s ease;
+      
+      &:hover {
+        background-color: #4338ca;
+      }
+      
+      &:disabled {
+        background-color: #9ca3af;
+        cursor: default;
+      }
+    }
+  }
 }

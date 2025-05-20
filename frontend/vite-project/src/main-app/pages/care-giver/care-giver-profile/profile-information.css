@@ -89,3 +89,91 @@ hr {
 .certifications a:hover {
   text-decoration: underline;
 }
+
+
+.modal-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: rgba(0, 0, 0, 0.5);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 999;
+}
+
+.modal-content {
+  background: white;
+  padding: 20px;
+  border-radius: 8px;
+  width: 400px;
+  max-width: 90%;
+}
+
+.modal-actions {
+  margin-top: 1rem;
+  display: flex;
+  justify-content: flex-end;
+  gap: 1rem;
+}
+
+/* Responsive Styles */
+@media (max-width: 768px) {
+  .description,
+  .services,
+  .certifications {
+    padding: 12px 15px;
+  }
+  
+  .description h3,
+  .services h3,
+  .certifications h3 {
+    font-size: 0.95rem;
+  }
+  
+  .description p,
+  .services li,
+  .certifications a {
+    font-size: 0.85rem;
+  }
+  
+  .description button {
+    padding: 6px 10px;
+    font-size: 0.85rem;
+  }
+  
+  .modal-content {
+    width: 350px;
+    padding: 15px;
+  }
+}
+
+@media (max-width: 480px) {
+  .description,
+  .services,
+  .certifications {
+    padding: 10px;
+  }
+  
+  .description p {
+    line-height: 1.4;
+  }
+  
+  .services li::before {
+    font-size: 0.8rem;
+  }
+  
+  .modal-content {
+    width: 100%;
+    max-width: 300px;
+    padding: 12px;
+  }
+  
+  .modal-actions {
+    flex-direction: column;
+    gap: 0.5rem;
+  }
+}
+

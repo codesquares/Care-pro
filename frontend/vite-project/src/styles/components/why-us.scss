@@ -1,58 +1,125 @@
 .why-us-section {
   background-color: #f9f9f9;
-  padding: 6rem 0;
+  padding: 3rem 1.5rem;
   text-align: center;
   color: #777;
 
+  @media (min-width: 768px) {
+    padding: 5rem 2rem;
+  }
+
+  @media (min-width: 1024px) {
+    padding: 6rem 4rem;
+  }
+
+  @media (max-width: 480px) {
+    padding: 2.5rem 1rem;
+  }
+
   h2 {
-    font-size: 2rem; // Responsive font size
-    margin-bottom: 40px;
+    font-size: 1.75rem;
+    margin-bottom: 2rem;
+
+    @media (min-width: 768px) {
+      font-size: 2rem;
+    }
+
+    @media (min-width: 1024px) {
+      font-size: 2.25rem;
+    }
+
+    @media (max-width: 480px) {
+      font-size: 1.5rem;
+      margin-bottom: 1.5rem;
+    }
   }
 
   .features {
     display: flex;
-    justify-content: center;
-    flex-wrap: wrap; // Ensure items wrap on smaller screens
-   
+    flex-direction: column;
+    align-items: center;
+    gap: 1.5rem;
+
+    @media (min-width: 768px) {
+      flex-direction: row;
+      flex-wrap: wrap;
+      justify-content: center;
+      gap: 2rem;
+    }
+
+    @media (max-width: 480px) {
+      gap: 1.25rem;
+    }
 
     .feature {
+      width: 100%;
       max-width: 350px;
-      padding: 20px;
+      padding: 1.5rem;
       text-align: center;
-      border: 2px solid #FCCD56; // Added border width
+      border: 2px solid #FCCD56;
       border-radius: 20px;
-      background-color: #fff; // Background for feature blocks
-      margin: 15px; // Small margin between features
+      background-color: #fff;
+      transition: transform 0.3s ease, box-shadow 0.3s ease;
+
+      &:hover {
+        transform: translateY(-4px);
+        box-shadow: 0 10px 20px rgba(0, 0, 0, 0.05);
+      }
 
       img {
-        width: 40px; // Slightly larger image
-        height: 40px;
-        margin-bottom: 15px;
+        width: 48px;
+        height: 48px;
+        margin-bottom: 1rem;
         background-color: #FFDC7F33;
-        padding: 5px; // Adjust padding
+        padding: 0.5rem;
         border-radius: 50%;
       }
 
       h3 {
-        font-size: 1.25rem; // Responsive font size
-        margin-bottom: 10px;
+        font-size: 1.2rem;
+        margin-bottom: 0.75rem;
+
+        @media (min-width: 768px) {
+          font-size: 1.3rem;
+        }
       }
 
       p {
-        font-size: 0.875rem; // Responsive font size
+        font-size: 0.9rem;
         color: #777;
         line-height: 1.6;
       }
+
+      @media (max-width: 480px) {
+        padding: 1.25rem;
+
+        img {
+          width: 40px;
+          height: 40px;
+        }
+
+        h3 {
+          font-size: 1.1rem;
+          margin-bottom: 0.5rem;
+        }
+
+        p {
+          font-size: 0.85rem;
+          line-height: 1.5;
+        }
+      }
     }
-  }
 
-  @media (max-width: 768px) {
-    .features {
-      flex-direction: column;
-
+    @media (min-width: 768px) and (max-width: 1023px) {
       .feature {
-        margin-bottom: 20px; // Adjust margin for mobile
-        max-width: none; // Allow full width on small screens
+        width: calc(50% - 1rem);
+        max-width: 300px;
+      }
+    }
+
+    @media (min-width: 1024px) {
+      .feature {
+        width: calc(33.333% - 1.5rem);
       }
     }
   }

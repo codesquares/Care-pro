@@ -1,6 +1,6 @@
 import React from 'react';
 import story4 from '../../assets/story4.png';
-import '../../styles/components/OurApproach.scss';
+import './OurApproach.scss';
 
 
 const OurApproach = () => { 

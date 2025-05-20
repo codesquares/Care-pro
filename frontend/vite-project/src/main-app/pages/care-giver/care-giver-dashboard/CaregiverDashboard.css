@@ -1,73 +1,76 @@
-/* CaregiverDashboard.css */
-
 .caregiver-dashboard {
   display: flex;
-  padding: 20px;
-  margin-bottom: 500px;
+  padding: 32px 6vw;
   background-color: #f8f9fa;
   font-family: 'Segoe UI', sans-serif;
+  gap: 40px;
+  flex-wrap: wrap;
 }
 
 .leftbar {
   width: 300px;
-  margin-top: 20px;
-  margin-right: 10px;
-  margin-left: 150px;
   display: flex;
   flex-direction: column;
-  gap: 20px;
+  gap: 24px;
 }
 
 .rightbar {
   flex: 1;
   display: flex;
   flex-direction: column;
-  margin-top: 30px;
-  margin-right: 100px;
+  gap: 16px;
 }
 
+/* Dropdown Container */
 .select-container {
   display: flex;
   justify-content: flex-end;
-  align-items: center;
   margin-bottom: 10px;
 }
 
+/* Dropdown Styles */
 .custom-select {
-  padding: 4px 10px;
-  margin-right: 20px;
-  margin-top: 10px;
-  font-size: 13px;
-  border-radius: 6px;
+  padding: 8px 12px;
+  font-size: 14px;
+  border-radius: 8px;
   border: 1px solid #ccc;
-  width: auto;
-  height: 32px;
-  background-color: #f4f4f4;
+  background-color: #fff;
   color: #333;
   cursor: pointer;
+  transition: border-color 0.3s ease;
+}
+
+.custom-select:hover,
+.custom-select:focus {
+  border-color: #007bff;
+  outline: none;
+}
+
+/* Settings Block */
+.setting-container {
+  display: flex;
+  align-items: center;
+  background-color: #ffffff;
+  padding: 16px;
+  border-radius: 12px;
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.08);
+  cursor: pointer;
+  transition: box-shadow 0.3s ease;
+}
+
+.setting-container:hover {
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
 }
 
 .setting-image {
-  width: 10%;
-  height: auto;
-}
-
-.setting-container {
-  display: flex;
-  flex-direction: row;
-  align-items: center;
-  justify-content: left;
-  background-color: white;
-  padding: 16px;
-  border-radius: 12px;
-  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.1);
+  width: 24px;
+  height: 24px;
 }
 
 .setting-text {
-  margin-left: 10px;
+  margin-left: 12px;
   font-weight: 500;
-  font-size: 16px;
-  text-decoration: none;
+  font-size: 15px;
   color: #333;
 }
 
@@ -75,14 +78,19 @@
   color: #007bff;
 }
 
-@media (max-width: 768px) {
-  .dashboard {
+/* Responsive Layout */
+@media (max-width: 1024px) {
+  .caregiver-dashboard {
     flex-direction: column;
+    padding: 24px 5vw;
   }
 
   .leftbar {
     width: 100%;
-    margin-right: 0;
+    flex-direction: row;
+    flex-wrap: wrap;
+    justify-content: space-between;
+    gap: 16px;
   }
 
   .rightbar {
@@ -90,7 +98,50 @@
   }
 
   .select-container {
-    justify-content: center;
+    justify-content: flex-start;
+  }
+
+  .setting-container {
+    flex: 1 1 48%; /* Two items per row on tablet */
+    min-width: calc(50% - 10px);
   }
 }
 
+@media (max-width: 600px) {
+  .caregiver-dashboard {
+    padding: 16px 4vw;
+    gap: 20px;
+  }
+  
+  .leftbar {
+    flex-direction: column;
+    align-items: stretch;
+    gap: 12px;
+  }
+
+  .setting-container {
+    flex: 1 1 100%;
+    padding: 12px;
+    width: 100%;
+  }
+
+  .custom-select {
+    width: 100%;
+    padding: 10px;
+    font-size: 16px; /* Prevent zoom on mobile */
+  }
+
+  .select-container {
+    width: 100%;
+    margin-bottom: 15px;
+  }
+  
+  .setting-text {
+    font-size: 14px;
+  }
+  
+  .setting-image {
+    width: 20px;
+    height: 20px;
+  }
+}

@@ -69,25 +69,45 @@
 @media (max-width: 768px) {
   .footer {
     padding: 20px 0;
-  }
-
-  .footer-container {
-    display: grid;
-    grid-template-columns: repeat(2, 1fr);
-    grid-template-rows: repeat(2, auto);
-    gap: 20px;
-    align-items: start;
-    text-align: center;
-
-    .footer-column {
-      margin-right: 0; // Remove margin on mobile
+    
+    .footer-container {
+      display: grid;
+      grid-template-columns: repeat(2, 1fr);
+      grid-gap: 20px;
+      padding: 20px;
+      
+      .footer-column {
+        margin-right: 0;
+        
+        h4 {
+          font-size: 15px;
+          margin-bottom: 12px;
+        }
+        
+        ul li {
+          font-size: 13px;
+          margin-bottom: 8px;
+        }
+      }
+      
+      .footer-logo {
+        grid-column: span 2;
+        justify-content: center;
+        margin-top: 20px;
+        
+        img {
+          width: 100px;
+        }
+      }
     }
-
-    .footer-logo {
-      grid-column: span 2; // Make the logo span across both columns
-      display: flex;
-      justify-content: center;
-      margin-top: 20px;
+    
+    .footer-bottom {
+      margin-top: 15px;
+      padding-top: 8px;
+      
+      p {
+        font-size: 11px;
+      }
     }
   }
 }
@@ -95,15 +115,40 @@
 @media (max-width: 480px) {
   .footer {
     padding: 15px 0;
-  }
-
-  .footer-container {
-    .footer-column {
-      font-size: 12px;
-    }
-
-    .footer-logo img {
-      width: 100px;
+    
+    .footer-container {
+      grid-template-columns: 1fr;
+      text-align: center;
+      padding: 15px;
+      
+      .footer-column {
+        margin-bottom: 15px;
+        
+        h4 {
+          font-size: 14px;
+        }
+        
+        ul {
+          display: flex;
+          flex-wrap: wrap;
+          justify-content: center;
+          gap: 15px;
+          
+          li {
+            font-size: 12px;
+            margin-bottom: 0;
+          }
+        }
+      }
+      
+      .footer-logo {
+        grid-column: 1;
+        margin: 10px 0;
+        
+        img {
+          width: 90px;
+        }
+      }
     }
   }
 }
