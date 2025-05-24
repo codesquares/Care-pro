@@ -34,6 +34,9 @@ namespace Infrastructure.Content.Data
             modelBuilder.Entity<ClientOrder>().ToCollection("ClientOrders");
             modelBuilder.Entity<Certification>().ToCollection("Certifications");
             modelBuilder.Entity<ChatMessage>().ToCollection("ChatMessages");
+            modelBuilder.Entity<Verification>().ToCollection("Verifications");
+            modelBuilder.Entity<Assessment>().ToCollection("Assessments");
+            modelBuilder.Entity<ClientPreference>().ToCollection("ClientPreferences");
             
         }
 
@@ -45,5 +48,8 @@ namespace Infrastructure.Content.Data
         public DbSet<ClientOrder> ClientOrders { get; set; }
         public DbSet<Certification> Certifications { get; set; }
         public DbSet<ChatMessage> ChatMessages { get; set; }
+        public DbSet<Verification> Verifications { get; set; }
+        public DbSet<Assessment> Assessments { get; set; }
+        public DbSet<ClientPreference> ClientPreferences { get; set; }
     }
 }

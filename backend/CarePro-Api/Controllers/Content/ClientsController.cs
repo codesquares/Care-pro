@@ -1,6 +1,7 @@
 ﻿using Application.DTOs;
 using Application.Interfaces.Content;
 using Infrastructure.Content.Services;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
@@ -130,6 +131,80 @@ namespace CarePro_Api.Controllers.Content
             }
 
         }
+
+
+        [HttpPut]
+        [Route("SoftDeleteClient/{clientId}")]
+        //[Authorize(Roles = "Client, Admin")]
+        public async Task<IActionResult> SoftDeleteClientAsync(string clientId)
+        {
+            try
+            {
+                logger.LogInformation($"Client with ID: {clientId} Soft Deleted");
+                var client = await clientService.SoftDeleteClientAsync(clientId);
+                return Ok(client);
+            }
+            catch (KeyNotFoundException ex)
+            {
+                return NotFound(new { message = ex.Message });
+            }
+            catch (Exception ex)
+            {
+                return StatusCode(500, new { message = ex.Message });
+            }
+
+        }
+
+
+        [HttpPost("reset-password")]
+        public async Task<IActionResult> ResetPassword([FromBody] ResetPasswordRequest request)
+        {
+            if (!ModelState.IsValid)
+                return BadRequest(ModelState);
+
+            try
+            {
+                await clientService.ResetPasswordAsync(request);
+                return Ok(new { message = "Password reset successful." });
+            }
+            catch (InvalidOperationException ex)
+            {
+                return NotFound(new { message = ex.Message });
+            }
+            catch (UnauthorizedAccessException ex)
+            {
+                return Unauthorized(new { message = ex.Message });
+            }
+            catch (Exception ex)
+            {
+                // Log exception here if needed
+                return StatusCode(500, new { message = "An unexpected error occurred.", details = ex.Message });
+            }
+        }
+
+
+
+
+        // ✅ This is for generating the token and sending the reset email
+        [HttpPost("request-reset")]
+        [AllowAnonymous] // Allow unauthenticated access
+        public async Task<IActionResult> RequestPasswordReset([FromBody] PasswordResetRequestDto request)
+        {
+            await clientService.GeneratePasswordResetTokenAsync(request);
+            return Ok(new { message = "A reset link has been sent to the registered Email ." });
+        }
+
+
+        // ✅ This is for resetting the password using the token
+        [HttpPost("resetPassword")]
+        [AllowAnonymous] // Allow unauthenticated access
+        public async Task<IActionResult> ResetPassword([FromBody] PasswordResetDto request)
+        {
+            await clientService.ResetPasswordWithJwtAsync(request);
+            return Ok(new { message = "Password reset successful." });
+        }
+
+
 
     }
 }

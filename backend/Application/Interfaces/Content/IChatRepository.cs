@@ -1,4 +1,5 @@
-﻿using Domain.Entities;
+﻿using Application.DTOs;
+using Domain.Entities;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -12,6 +13,8 @@ namespace Application.Interfaces.Content
         Task SaveMessageAsync(ChatMessage chatMessage);
 
         Task<List<ChatMessage>> GetChatHistoryAsync(string user1, string user2);
+
+        Task<IEnumerable<ChatPreviewResponse>> GetChatUserPreviewAsync(string userId);
 
 
     }

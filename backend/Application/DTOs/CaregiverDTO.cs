@@ -113,6 +113,9 @@ namespace Application.DTOs
         public int NoOfOrders { get; set; }
         public int NoOfHoursSpent { get; set; }
 
+        public List<string> Services { get; set; }
+
+
 
         public DateTime CreatedAt { get; set; }
 

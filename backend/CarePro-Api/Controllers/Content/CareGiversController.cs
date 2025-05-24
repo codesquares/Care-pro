@@ -36,7 +36,7 @@ namespace CarePro_Api.Controllers.Content
             try
             {
                 // Validate the incoming request
-                if (!(await ValidateAddJobCaregiverAsync(addCaregiverRequest)))
+                if (!(await ValidateAddCaregiverAsync(addCaregiverRequest)))
                 {
                     return BadRequest(ModelState);
                 }
@@ -160,6 +160,35 @@ namespace CarePro_Api.Controllers.Content
         }
 
 
+
+        [HttpPut]
+        [Route("UpdateCaregiverAboutMeInfo/{caregiverId}")]
+        //[Authorize(Roles = "Caregiver, Client, Admin")]
+        public async Task<IActionResult> UpdateCaregiverAboutMeAsync(string caregiverId, UpdateCaregiverAdditionalInfoRequest updateCaregiverAdditionalInfoRequest)
+        {
+            try
+            {
+                logger.LogInformation($"Caregiver with ID: {caregiverId} additional Information has been updated.");
+                var caregiver = await careGiverService.UpdateCaregiverInfornmationAsync(caregiverId, updateCaregiverAdditionalInfoRequest);
+                return Ok(caregiver);
+            }
+            catch (ArgumentException ex)
+            {
+                return BadRequest(new { message = ex.Message });
+            }
+            catch (KeyNotFoundException ex)
+            {
+                return NotFound(new { message = ex.Message });
+            }
+            catch (Exception ex)
+            {
+                return StatusCode(500, new { message = ex.Message });
+            }
+
+        }
+
+
+
         [HttpPut]
         [Route("UpdateCaregiverAvailability/{caregiverId}")]
         //[Authorize(Roles = "Caregiver, Client, Admin")]
@@ -260,7 +289,7 @@ namespace CarePro_Api.Controllers.Content
 
         #region Validation Region
 
-        private async Task<bool> ValidateAddJobCaregiverAsync(AddCaregiverRequest addCaregiverRequest)
+        private async Task<bool> ValidateAddCaregiverAsync(AddCaregiverRequest addCaregiverRequest)
         {
             if (addCaregiverRequest == null)
             {

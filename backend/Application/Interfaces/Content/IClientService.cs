@@ -17,5 +17,14 @@ namespace Application.Interfaces.Content
 
         Task<string> UpdateClientUserAsync(string clientId, UpdateClientUserRequest updateClientUserRequest );
 
+
+        Task<string> SoftDeleteClientAsync(string clientId);
+
+        Task ResetPasswordAsync(ResetPasswordRequest resetPasswordRequest);
+
+        Task GeneratePasswordResetTokenAsync(PasswordResetRequestDto passwordResetRequestDto);
+
+        Task ResetPasswordWithJwtAsync(PasswordResetDto request);
+
     }
 }

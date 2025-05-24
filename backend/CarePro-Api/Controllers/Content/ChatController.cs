@@ -21,5 +21,13 @@ namespace CarePro_Api.Controllers.Content
             var messages = await _chatRepository.GetChatHistoryAsync(user1, user2);
             return Ok(messages);
         }
+
+
+        [HttpGet("ChatPreview")]
+        public async Task<IActionResult> GetChatUsersHistory(string userId)
+        {
+            var messages = await _chatRepository.GetChatUserPreviewAsync(userId);
+            return Ok(messages);
+        }
     }
 }

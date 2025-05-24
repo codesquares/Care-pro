@@ -30,6 +30,7 @@ namespace Infrastructure.Content.Services
         private readonly ITokenHandler tokenHandler;
         private readonly IEmailService emailService;
         private readonly IConfiguration configuration;
+        //private readonly IGigServices gigServices;
 
         //  private readonly IClientOrderService clientOrderService;
 
@@ -40,6 +41,7 @@ namespace Infrastructure.Content.Services
             this.tokenHandler = tokenHandler;
             this.emailService = emailService;
             this.configuration = configuration;
+           // this.gigServices = gigServices;
             // this.clientOrderService = clientOrderService;
         }
 
@@ -89,6 +91,8 @@ namespace Infrastructure.Content.Services
 
                 Email = addCaregiverRequest.Email.ToLower(),
                 Password = hashedPassword,
+                FirstName = addCaregiverRequest.FirstName,
+                LastName = addCaregiverRequest.LastName,
 
                 // Assign new ID
                 Id = ObjectId.GenerateNewId(),
@@ -174,7 +178,20 @@ namespace Infrastructure.Content.Services
                 throw new KeyNotFoundException($"Caregiver with ID '{caregiverId}' not found.");
             }
 
-           // var clientOrder = await clientOrderService.GetAllCaregiverOrderAsync(caregiverId);
+            //var services = await gigServices.GetAllSubCategoriesForCaregiverAsync(caregiverId);
+            var subCategories = await careProDbContext.Gigs
+                .Where(x => (x.Status == "Published" || x.Status == "Active") && x.CaregiverId == caregiverId)
+                .Select(x => x.SubCategory)
+                .ToListAsync();
+
+            var allSubCategories = subCategories
+                .Where(sc => !string.IsNullOrEmpty(sc))
+                .SelectMany(sc => sc.Split(',', StringSplitOptions.RemoveEmptyEntries))
+                .Select(sc => sc.Trim())
+                .Distinct()
+                .ToList();
+
+            // var clientOrder = await clientOrderService.GetAllCaregiverOrderAsync(caregiverId);
             //var clientOrder = await careProDbContext.ClientOrders(caregiverId);
             var clientOrders = await careProDbContext.ClientOrders
                .Where(x => x.CaregiverId == caregiverId)
@@ -218,6 +235,7 @@ namespace Infrastructure.Content.Services
                 IsAvailable = caregiver.IsAvailable,
                 IntroVideo = caregiver.IntroVideo,
                 //IntroVideo = await cloudinaryService.DownloadVideoAsBase64Async(caregiver.IntroVideo),
+                Services = allSubCategories,
 
                 TotalEarning = totalEarning,
                // NoOfHoursSpent = noOfHoursSpent,
@@ -333,6 +351,67 @@ namespace Infrastructure.Content.Services
             return $"Caregiver with ID '{caregiverId}' Additional Information Updated successfully.";
             
         }
+
+
+        public async Task<string> UpdateCaregiverAboutMeAsync(string caregiverId, UpdateCaregiverAdditionalInfoRequest updateCaregiverAdditionalInfoRequest)
+        {
+            if (updateCaregiverAdditionalInfoRequest.IntroVideo == null &&
+                string.IsNullOrWhiteSpace(updateCaregiverAdditionalInfoRequest.AboutMe) &&
+                string.IsNullOrWhiteSpace(updateCaregiverAdditionalInfoRequest.Location))
+
+            {
+                throw new ArgumentException("At least one field must be provided to update caregiver information.");
+            }
+
+
+
+            if (!ObjectId.TryParse(caregiverId, out var objectId))
+            {
+                throw new ArgumentException("Invalid Caregiver ID format.");
+            }
+
+
+            var existingCareGiver = await careProDbContext.CareGivers.FindAsync(objectId);
+
+            if (existingCareGiver == null)
+            {
+                throw new KeyNotFoundException($"Caregiver with ID '{caregiverId}' not found.");
+            }
+
+
+            if (updateCaregiverAdditionalInfoRequest.IntroVideo != null)
+            {
+                using var memoryStream = new MemoryStream();
+                await updateCaregiverAdditionalInfoRequest.IntroVideo.CopyToAsync(memoryStream);
+                var videoBytes = memoryStream.ToArray();
+
+                // Now upload videoBytes to Cloudinary
+                var videoUrl = await cloudinaryService.UploadVideoAsync(videoBytes, $"intro_{existingCareGiver.FirstName}{existingCareGiver.LastName}");
+
+                existingCareGiver.IntroVideo = videoUrl; // Save Cloudinary URL to DB
+            }
+
+            // Update AboutMe if provided
+            if (!string.IsNullOrWhiteSpace(updateCaregiverAdditionalInfoRequest.AboutMe))
+            {
+                existingCareGiver.AboutMe = updateCaregiverAdditionalInfoRequest.AboutMe;
+            }
+
+            // Update Location if provided
+            if (!string.IsNullOrWhiteSpace(updateCaregiverAdditionalInfoRequest.Location))
+            {
+                existingCareGiver.Location = updateCaregiverAdditionalInfoRequest.Location;
+            }
+
+
+            careProDbContext.CareGivers.Update(existingCareGiver);
+            await careProDbContext.SaveChangesAsync();
+
+            return $"Caregiver with ID '{caregiverId}' Additional Information Updated successfully.";
+
+        }
+
+
 
         public async Task ResetPasswordAsync(ResetPasswordRequest resetPasswordRequest)
         {
