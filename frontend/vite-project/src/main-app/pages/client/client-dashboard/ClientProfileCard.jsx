@@ -56,7 +56,7 @@ const ClientProfileCard = () => {
         <Link to="/app/client/profile" className="profile-nav-item">
           <i className="fas fa-user"></i> Profile
         </Link>
-        <Link to="/app/client/verifications" className="profile-nav-item">
+        <Link to="/app/client/verification" className="profile-nav-item">
           <i className="fas fa-check-circle"></i> Verifications
         </Link>
         <Link to="/app/client/settings" className="profile-nav-item">

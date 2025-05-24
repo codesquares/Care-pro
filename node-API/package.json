@@ -5,7 +5,9 @@
   "main": "app.js",
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1",
-    "start": "nodemon app.js"
+    "start": "nodemon app.js",
+    "start:clean": "npx kill-port 3000 && nodemon app.js",
+    "start:alt": "nodemon app.js --port=3001"
   },
   "keywords": [
     "caregiver",
@@ -29,6 +31,7 @@
     "validator": "^13.11.0"
   },
   "devDependencies": {
-    "axios-mock-adapter": "^2.1.0"
+    "axios-mock-adapter": "^2.1.0",
+    "kill-port": "^2.0.1"
   }
 }

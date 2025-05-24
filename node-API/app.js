@@ -12,10 +12,21 @@ const assessmentRoutes = require('./src/routes/assessmentRoutes');
 // Load environment variables
 dotenv.config();
 
+// Process command line arguments for port override
+const args = process.argv.slice(2);
+let portArg;
 
+// Check for --port flag in command line arguments
+for (let i = 0; i < args.length; i++) {
+  if (args[i].startsWith('--port=')) {
+    portArg = parseInt(args[i].split('=')[1], 10);
+    break;
+  }
+}
 
 const app = express();
-const PORT = process.env.PORT || 3000;
+// Priority: 1. Command line arg, 2. Environment variable, 3. Default 3000
+const PORT = portArg || process.env.PORT || 3000;
 
 // Middleware
 app.use(cors());
@@ -86,7 +97,22 @@ app.use((err, req, res, next) => {
   });
 });
 
-// Start server
-app.listen(PORT, () => {
-  console.log(`Server running on http://localhost:${PORT}`);
-});
+// Start server with auto port fallback
+const startServer = (port) => {
+  const server = app.listen(port)
+    .on('listening', () => {
+      console.log(`✅ Server running on http://localhost:${port}`);
+    })
+    .on('error', (err) => {
+      if (err.code === 'EADDRINUSE') {
+        console.log(`⚠️ Port ${port} is busy, trying port ${port + 1}...`);
+        startServer(port + 1);
+      } else {
+        console.error('Server error:', err);
+      }
+    });
+  
+  return server;
+};
+
+startServer(PORT);

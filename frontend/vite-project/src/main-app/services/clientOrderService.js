@@ -12,7 +12,7 @@ const ClientOrderService = {
     try {
       // In a real implementation, this would make an API call
       // For now, we'll use mock data
-      const API_URL = `https://carepro-api20241118153443.azurewebsites.net/api/Orders/client/${clientId}`;
+      const API_URL = `https://carepro-api20241118153443.azurewebsites.net/api/ClientOrders/clientUserId?clientUserId=${clientId}`;
       
       const response = await fetch(API_URL);
       
