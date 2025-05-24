@@ -48,6 +48,26 @@ app.use('/api/integration', apiKeyAuth, integrationRoutes);
 app.use('/api/recommendations', recommendationRoutes);
 app.use('/api/assessment', assessmentRoutes);
 
+// Basic health check endpoint
+app.get('/api/health', (req, res) => {
+  res.status(200).json({
+    status: 'success',
+    message: 'API is healthy',
+    endpoints: {
+      kyc: {
+        verification: [
+          '/api/kyc/verify-bvn',
+          '/api/kyc/verify-nin', 
+          '/api/kyc/verify-id-selfie',
+          '/api/kyc/verify-bvn-with-id-selfie',
+          '/api/kyc/verify-nin-with-selfie',
+          '/api/kyc/status'
+        ]
+      }
+    }
+  });
+});
+
 // Home route
 app.get('/', (req, res) => {
   res.status(200).json({ 

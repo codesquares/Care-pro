@@ -8,6 +8,11 @@ import DirectMessage from '../../components/messages/DirectMessage';
 import PaymentSuccess from './home-care-service/PaymentSuccess';
 import MyOrders from './orders/MyOrders';
 import OrderDetails from './orders/OrderTasks&Details';
+import OrderHistory from './orders/OrderHistory';
+import ClientSettings from './client-settings/ClientSettings';
+import ClientPreferences from './preferences/ClientPreferences';
+import ClientVerificationPage from './verification/VerificationPage';
+import CareNeedsSettings from './care-needs/CareNeedsSettings';
 
 
 function ClientRoutes() {
@@ -23,8 +28,11 @@ function ClientRoutes() {
             <Route path="/app/client/payment-success" element={<PaymentSuccess />} />
             <Route path="/my-order" element={<MyOrders />} />
             <Route path="/my-order/:orderId" element={<OrderDetails />} />
-
-
+            <Route path="/order-history" element={<OrderHistory />} />
+            <Route path="/settings" element={<ClientSettings />} />
+            <Route path="/preferences" element={<ClientPreferences />} />
+            <Route path="/verification" element={<ClientVerificationPage />} />
+            <Route path="/care-needs" element={<CareNeedsSettings />} />
         </Routes>
         </>
     );

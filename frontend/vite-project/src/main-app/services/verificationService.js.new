@@ -1,7 +1,8 @@
+// filepath: /home/labber/Care-pro-new/frontend/vite-project/src/main-app/services/verificationService.js
 import axios from 'axios';
 import api from './api';
 
-// Create a separate Axios instance for verification API calls
+// Create a separate Axios instance for verification API
 const verificationApi = axios.create({
   baseURL: 'http://localhost:3000/api',
   headers: {
@@ -114,10 +115,10 @@ const verificationService = {
   _lastVerificationRequest: 0,
 
   /**
-   * Helper function to get test values for different verification types
-   * @param {string} type - Type of verification data (bvn, nin, etc.)
-   * @param {string} value - Original value
-   * @returns {string} - Test value for development environment or original value for production
+   * Helper function to handle test environment data
+   * @param {string} type - Type of data ('bvn' or 'nin')
+   * @param {string} value - The actual value
+   * @returns {string} - The value to use (test value in development, actual value in production)
    */
   _getTestValue(type, value) {
     const testEnvironment = process.env.NODE_ENV !== 'production';
@@ -129,6 +130,50 @@ const verificationService = {
     };
     
     return testValues[type] || value;
+  },
+  
+  /**
+   * Save a verification status explicitly
+   * This can be used when verification is completed successfully
+   * @param {boolean} verified - Whether the user is verified
+   * @param {string} status - The verification status (verified, pending, etc.)
+   * @param {string} message - Optional message
+   * @param {string} userId - User ID (optional)
+   * @param {string} userType - Type of user (caregiver or client)
+   */
+  saveVerificationStatus(verified = true, status = 'verified', message = '', userId = null, userType = 'caregiver') {
+    // Save to cache for the current session
+    this._cachedStatus = {
+      verified,
+      verificationStatus: status,
+      message,
+      userId,
+      userType
+    };
+    
+    // Also try to save in localStorage for persistence between refreshes
+    try {
+      const localStatus = {
+        verified,
+        verificationStatus: status,
+        message,
+        userId,
+        userType,
+        timestamp: new Date().toISOString()
+      };
+      
+      // Use a specific key for each user type if userId is provided
+      const storageKey = userId 
+        ? `verificationStatus_${userType}_${userId}` 
+        : 'verificationStatus';
+        
+      localStorage.setItem(storageKey, JSON.stringify(localStatus));
+      
+      // Also update the general verification status
+      localStorage.setItem('verificationStatus', JSON.stringify(localStatus));
+    } catch (err) {
+      console.error('Could not save verification status to localStorage', err);
+    }
   },
 
   /**
@@ -284,21 +329,21 @@ const verificationService = {
     try {
       const payload = { 
         bvnNumber: this._getTestValue('bvn', bvnNumber),
-        selfieImage: selfieImage,
-        idImage: idImage,
-        idType: idType,
-        userType: userType
+        selfieImage,
+        idImage,
+        idType,
+        userType
       };
       
       try {
         const response = await verificationApi.post('/kyc/verify-bvn-with-id-selfie', payload);
         
         // Cache the verification status on success
-        if (response.data && (response.data.status === 'success' || response.data.status === 'pending')) {
+        if (response.data?.status === 'success' || response.data?.status === 'pending') {
           this.saveVerificationStatus(
             response.data.status === 'success', 
             response.data.status === 'success' ? 'verified' : 'pending', 
-            response.data.message || 'BVN with ID and Selfie verification ' + response.data.status,
+            response.data.message || `BVN with ID and Selfie verification ${response.data.status}`,
             userId,
             userType
           );
@@ -353,19 +398,19 @@ const verificationService = {
     try {
       const payload = { 
         ninNumber: this._getTestValue('nin', ninNumber),
-        selfieImage: selfieImage,
-        userType: userType
+        selfieImage,
+        userType
       };
       
       try {
         const response = await verificationApi.post('/kyc/verify-nin-with-selfie', payload);
         
         // Cache the verification status on success
-        if (response.data && (response.data.status === 'success' || response.data.status === 'pending')) {
+        if (response.data?.status === 'success' || response.data?.status === 'pending') {
           this.saveVerificationStatus(
             response.data.status === 'success', 
             response.data.status === 'success' ? 'verified' : 'pending', 
-            response.data.message || 'NIN with Selfie verification ' + response.data.status,
+            response.data.message || `NIN with Selfie verification ${response.data.status}`,
             userId,
             userType
           );
@@ -441,50 +486,6 @@ const verificationService = {
       'Verification completed successfully (forced)'
     );
     return this._cachedStatus;
-  },
-
-  /**
-   * Save a verification status explicitly
-   * This can be used when verification is completed successfully
-   * @param {boolean} verified - Whether the user is verified
-   * @param {string} status - The verification status (verified, pending, etc.)
-   * @param {string} message - Optional message
-   * @param {string} userId - User ID (optional)
-   * @param {string} userType - Type of user (caregiver or client)
-   */
-  saveVerificationStatus(verified = true, status = 'verified', message = '', userId = null, userType = 'caregiver') {
-    // Save to cache for the current session
-    this._cachedStatus = {
-      verified,
-      verificationStatus: status,
-      message,
-      userId,
-      userType
-    };
-    
-    // Also try to save in localStorage for persistence between refreshes
-    try {
-      const localStatus = {
-        verified,
-        verificationStatus: status,
-        message,
-        userId,
-        userType,
-        timestamp: new Date().toISOString()
-      };
-      
-      // Use a specific key for each user type if userId is provided
-      const storageKey = userId 
-        ? `verificationStatus_${userType}_${userId}` 
-        : 'verificationStatus';
-        
-      localStorage.setItem(storageKey, JSON.stringify(localStatus));
-      
-      // Also update the general verification status
-      localStorage.setItem('verificationStatus', JSON.stringify(localStatus));
-    } catch (err) {
-      console.error('Could not save verification status to localStorage', err);
-    }
   },
   
   /**
@@ -717,33 +718,6 @@ const verificationService = {
         message: 'Verification data stored successfully for future submission',
         data: verificationData
       };
-
-      /*
-      // This is the implementation that would be used when the Azure endpoint is available
-      const externalApiUrl = 'https://carepro-api20241118153443.azurewebsites.net/api';
-      
-      // Choose endpoint based on user type
-      const endpoint = verificationData.userType === 'client'
-        ? `${externalApiUrl}/clients/${verificationData.userId}/verification`
-        : `${externalApiUrl}/caregivers/${verificationData.userId}/verification`;
-      
-      const response = await axios.post(
-        endpoint,
-        verificationData.azureData,
-        {
-          headers: {
-            'Authorization': `Bearer ${process.env.INTERNAL_API_KEY}`,
-            'Content-Type': 'application/json'
-          }
-        }
-      );
-
-      return {
-        status: 'success',
-        message: 'Verification data submitted to Azure successfully',
-        data: response.data
-      };
-      */
     } catch (error) {
       console.error('Failed to submit verification data to Azure:', error);
       
@@ -785,28 +759,6 @@ const verificationService = {
     
     for (const data of pendingData) {
       try {
-        // Attempt to submit each verification record
-        // When Azure endpoint is available, uncomment the code below
-        /*
-        const externalApiUrl = 'https://carepro-api20241118153443.azurewebsites.net/api';
-        
-        // Choose endpoint based on user type
-        const endpoint = data.userType === 'client'
-          ? `${externalApiUrl}/clients/${data.userId}/verification`
-          : `${externalApiUrl}/caregivers/${data.userId}/verification`;
-          
-        await axios.post(
-          endpoint,
-          data.azureData,
-          {
-            headers: {
-              'Authorization': `Bearer ${process.env.INTERNAL_API_KEY}`,
-              'Content-Type': 'application/json'
-            }
-          }
-        );
-        */
-        
         // For now, just simulate success
         console.log('Would submit verification data to Azure:', data);
         successCount++;

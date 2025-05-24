@@ -1,7 +1,9 @@
 import React from "react";
+import { useNavigate } from 'react-router-dom';
 import "./banner.css";
 
-const Banner = ({ name }) => {
+const Banner = ({ name, careNeedsSet }) => {
+  const navigate = useNavigate();
   return (
     <div className="banner-top">
       <div className="welcome-section">
@@ -11,16 +13,23 @@ const Banner = ({ name }) => {
         <h2 className="welcome-text" style={{ color: "white" }}>Welcome back, {name.split(" ")[0]}</h2>
       </div>
 
-      {/* <div className="search-box">
-        <div className="search-info">
-          <span className="search-icon">⭐</span>
-          <div>
-            <h4 className="search-title">Relax and get matched with caregivers easily!</h4>
-            <p className="search-subtitle">Let carepro do the searching</p>
+      {!careNeedsSet && (
+        <div className="search-box">
+          <div className="search-info">
+            <span className="search-icon">⭐</span>
+            <div>
+              <h4 className="search-title">Complete your care needs profile</h4>
+              <p className="search-subtitle">Get personalized caregiver recommendations</p>
+            </div>
           </div>
+          <button 
+            className="view-orders"
+            onClick={() => navigate('/app/client/care-needs')}
+          >
+            Set Care Needs
+          </button>
         </div>
-        <button className="view-orders">🧾 View your active orders</button>
-      </div> */}
+      )}
     </div>
   );
 };

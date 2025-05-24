@@ -1,7 +1,7 @@
 import axios from 'axios';
 import api from './api';
 
-// Create a separate Axios instance for verification API calls
+// Create a separate Axios instance for verification API
 const verificationApi = axios.create({
   baseURL: 'http://localhost:3000/api',
   headers: {
@@ -15,26 +15,13 @@ verificationApi.interceptors.request.use(
     const token = localStorage.getItem('authToken');
     const userDetails = JSON.parse(localStorage.getItem('userDetails') || '{}');
     
-    // Add auth token to all requests if available
     if (token) {
       config.headers.Authorization = `Bearer ${token}`;
-    } else {
-      console.warn('No auth token found for verification API request:', config.url);
     }
     
     // Add verification force header if we have verification status in localStorage
     try {
-      // Try to get user-specific verification status if userId is in params
-      let storageKey = 'verificationStatus';
-      if (config.params?.userId && config.params?.userType) {
-        storageKey = `verificationStatus_${config.params.userType}_${config.params.userId}`;
-      } else if (userDetails && userDetails.id) {
-        // Default to user-specific key if not in params but user is available
-        const userType = userDetails.userType || 'caregiver';
-        storageKey = `verificationStatus_${userType}_${userDetails.id}`;
-      }
-      
-      const localStatus = localStorage.getItem(storageKey) || localStorage.getItem('verificationStatus');
+      const localStatus = localStorage.getItem('verificationStatus');
       if (localStatus) {
         const parsed = JSON.parse(localStatus);
         if (parsed && parsed.verified) {
@@ -45,53 +32,30 @@ verificationApi.interceptors.request.use(
       console.error("Error parsing verification status from localStorage", err);
     }
     
-    // Add userId and userType to all requests if available
+    // Add userId to query params for all requests if available
     if (userDetails && userDetails.id) {
-      // Get user type with a fallback
-      const userType = userDetails.userType || 'caregiver';
-      
       // For GET requests, append to params
       if (!config.params) {
         config.params = {};
       }
-      
-      // Only set these if they're not already set
-      if (!config.params.userId) {
-        config.params.userId = userDetails.id;
-      }
-      if (!config.params.userType) {
-        config.params.userType = userType;
-      }
+      config.params.userId = userDetails.id;
       
       // For POST requests, add to body if it's JSON
-      if (config.method === 'post' && config.data && config.headers['Content-Type'].includes('application/json')) {
-        let data = config.data;
-        
-        // Parse if it's a string
-        if (typeof data === 'string') {
-          try {
-            data = JSON.parse(data);
-          } catch (e) {
-            console.error('Error parsing request data as JSON:', e);
-          }
-        }
-        
-        // Only if it's an object, add the properties
-        if (typeof data === 'object' && data !== null) {
-          // Add userId and userType if not already present
-          if (!data.userId) {
-            data.userId = userDetails.id;
-          }
-          if (!data.userType) {
-            data.userType = userType;
-          }
+      if (config.data && config.headers['Content-Type'] === 'application/json') {
+        const data = typeof config.data === 'string' 
+          ? JSON.parse(config.data) 
+          : config.data;
           
-          // Convert back to string if it was originally a string
-          if (typeof config.data === 'string') {
-            config.data = JSON.stringify(data);
-          } else {
-            config.data = data;
-          }
+        config.data = {
+          ...data,
+          userId: userDetails.id,
+          // Include userType if it's not already specified
+          userType: data.userType || (userDetails.userType || 'caregiver')
+        };
+        
+        // Convert back to string if it was originally a string
+        if (typeof config.data === 'string') {
+          config.data = JSON.stringify(config.data);
         }
       }
     }
@@ -107,42 +71,22 @@ verificationApi.interceptors.request.use(
  * Service for handling verification API calls for both caregivers and clients
  */
 const verificationService = {
-  // Cache for the most recent verification status
-  _cachedStatus: null,
-  
-  // Track last verification request timestamp for debouncing
-  _lastVerificationRequest: 0,
-
-  /**
-   * Helper function to get test values for different verification types
-   * @param {string} type - Type of verification data (bvn, nin, etc.)
-   * @param {string} value - Original value
-   * @returns {string} - Test value for development environment or original value for production
-   */
-  _getTestValue(type, value) {
-    const testEnvironment = process.env.NODE_ENV !== 'production';
-    if (!testEnvironment) return value;
-    
-    const testValues = {
-      bvn: '22222222222',
-      nin: '70123456789'
-    };
-    
-    return testValues[type] || value;
-  },
-
   /**
    * Submit BVN verification
    * @param {string} bvnNumber - The BVN number
    * @param {string} selfieImage - Base64 encoded selfie image (optional)
    * @param {string} idImage - Base64 encoded ID image (optional)
    * @param {string} userType - Type of user ('caregiver' or 'client')
+   * @param {string} userId - User ID (optional)
    * @returns {Promise} - API response
    */
-  async verifyBVN(bvnNumber, selfieImage = null, idImage = null, userType = 'caregiver') {
+  verifyBVN: async (bvnNumber, selfieImage = null, idImage = null, userType = 'caregiver', userId = null) => {
     try {
+      // Use test BVN for development purposes: 22222222222
+      // This is for testing only and will be replaced with actual BVN in production
+      const testEnvironment = process.env.NODE_ENV !== 'production';
       const payload = { 
-        bvnNumber: this._getTestValue('bvn', bvnNumber),
+        bvnNumber: testEnvironment ? '22222222222' : bvnNumber,
         userType
       };
       
@@ -151,32 +95,20 @@ const verificationService = {
         payload.selfieImage = selfieImage;
         payload.idImage = idImage;
         
-        try {
-          const response = await verificationApi.post('/kyc/verify-bvn-with-id-selfie', payload);
-          
-          // Cache the verification status on success
-          if (response.data?.status === 'success') {
-            this.saveVerificationStatus(
-              true, 
-              'verified', 
-              response.data.message || 'BVN with ID and Selfie verification successful',
-              null,
-              userType
-            );
-          }
-          
-          return response.data;
-        } catch (error) {
-          console.error('Error with BVN + ID + Selfie verification:', error);
-          
-          // If we get a 404, try falling back to regular BVN verification
-          if (error.response?.status === 404) {
-            console.log('Combined endpoint not found, falling back to regular BVN verification...');
-            // Continue with regular verification (below)
-          } else {
-            throw error;
-          }
+        const response = await verificationApi.post('/kyc/verify-bvn-with-id-selfie', payload);
+        
+        // Cache the verification status on success
+        if (response.data && response.data.status === 'success') {
+          verificationService.saveVerificationStatus(
+            true, 
+            'verified', 
+            response.data.message || 'BVN with ID and Selfie verification successful',
+            userId,
+            userType
+          );
         }
+        
+        return response.data;
       }
       
       // Add selfie image if provided (for backward compatibility)
@@ -187,12 +119,12 @@ const verificationService = {
       const response = await verificationApi.post('/kyc/verify-bvn', payload);
       
       // Cache the verification status on success
-      if (response.data?.status === 'success') {
-        this.saveVerificationStatus(
+      if (response.data && response.data.status === 'success') {
+        verificationService.saveVerificationStatus(
           true, 
           'verified', 
           response.data.message || 'BVN verification successful',
-          null,
+          userId,
           userType
         );
       }
@@ -208,12 +140,16 @@ const verificationService = {
    * @param {string} ninNumber - The NIN number
    * @param {string} selfieImage - Base64 encoded selfie image (optional)
    * @param {string} userType - Type of user ('caregiver' or 'client')
+   * @param {string} userId - User ID (optional)
    * @returns {Promise} - API response
    */
-  async verifyNIN(ninNumber, selfieImage = null, userType = 'caregiver') {
+  verifyNIN: async (ninNumber, selfieImage = null, userType = 'caregiver', userId = null) => {
     try {
+      // Use test NIN for development purposes: 70123456789
+      // This is for testing only and will be replaced with actual NIN in production
+      const testEnvironment = process.env.NODE_ENV !== 'production';
       const payload = { 
-        ninNumber: this._getTestValue('nin', ninNumber),
+        ninNumber: testEnvironment ? '70123456789' : ninNumber,
         userType
       };
       
@@ -221,44 +157,32 @@ const verificationService = {
       if (selfieImage) {
         payload.selfieImage = selfieImage;
         
-        try {
-          const response = await verificationApi.post('/kyc/verify-nin-with-selfie', payload);
-          
-          // Cache the verification status on success
-          if (response.data?.status === 'success') {
-            this.saveVerificationStatus(
-              true, 
-              'verified', 
-              response.data.message || 'NIN with Selfie verification successful',
-              null,
-              userType
-            );
-          }
-          
-          return response.data;
-        } catch (error) {
-          console.error('Error with NIN + Selfie verification:', error);
-          
-          // If we get a 404, try falling back to regular NIN verification
-          if (error.response?.status === 404) {
-            console.log('Combined endpoint not found, falling back to regular NIN verification...');
-            // Continue with regular verification (below)
-          } else {
-            throw error;
-          }
+        const response = await verificationApi.post('/kyc/verify-nin-with-selfie', payload);
+        
+        // Cache the verification status on success
+        if (response.data && response.data.status === 'success') {
+          verificationService.saveVerificationStatus(
+            true, 
+            'verified', 
+            response.data.message || 'NIN with Selfie verification successful',
+            userId,
+            userType
+          );
         }
+        
+        return response.data;
       }
       
       // Use standard NIN verification endpoint
       const response = await verificationApi.post('/kyc/verify-nin', payload);
       
       // Cache the verification status on success
-      if (response.data?.status === 'success') {
-        this.saveVerificationStatus(
+      if (response.data && response.data.status === 'success') {
+        verificationService.saveVerificationStatus(
           true, 
           'verified', 
           response.data.message || 'NIN verification successful',
-          null,
+          userId,
           userType
         );
       }
@@ -270,152 +194,15 @@ const verificationService = {
   },
 
   /**
-   * Submit a complete BVN verification with ID and selfie in one request
-   * This should be the primary verification method for both clients and caregivers
-   * @param {string} bvnNumber - The BVN number
-   * @param {string} selfieImage - Base64 encoded selfie image
-   * @param {string} idImage - Base64 encoded ID image
-   * @param {string} idType - Type of ID document
-   * @param {string} userType - Type of user ('caregiver' or 'client')
-   * @param {string} userId - User ID for tracking
-   * @returns {Promise} - API response
-   */
-  async verifyBVNComplete(bvnNumber, selfieImage, idImage, idType = 'generic', userType = 'caregiver', userId = null) {
-    try {
-      const payload = { 
-        bvnNumber: this._getTestValue('bvn', bvnNumber),
-        selfieImage: selfieImage,
-        idImage: idImage,
-        idType: idType,
-        userType: userType
-      };
-      
-      try {
-        const response = await verificationApi.post('/kyc/verify-bvn-with-id-selfie', payload);
-        
-        // Cache the verification status on success
-        if (response.data && (response.data.status === 'success' || response.data.status === 'pending')) {
-          this.saveVerificationStatus(
-            response.data.status === 'success', 
-            response.data.status === 'success' ? 'verified' : 'pending', 
-            response.data.message || 'BVN with ID and Selfie verification ' + response.data.status,
-            userId,
-            userType
-          );
-        }
-        
-        return response.data;
-      } catch (error) {
-        console.error('Error with complete BVN verification:', error);
-        
-        // If we get a 404, try falling back to regular BVN verification
-        if (error.response?.status === 404) {
-          console.log('Combined endpoint not found, falling back to separate verifications...');
-          
-          // First verify BVN
-          const bvnResponse = await this.verifyBVN(bvnNumber, null, null, userType, userId);
-          
-          if (bvnResponse.status !== 'success') {
-            return bvnResponse; // Return BVN verification error
-          }
-          
-          // Then verify ID + Selfie
-          const idSelfieResponse = await this.verifyID(idImage, selfieImage, idType, userType);
-          
-          // Combine responses
-          return {
-            status: idSelfieResponse.status,
-            message: 'Combined verification process completed',
-            data: {
-              ...bvnResponse.data,
-              idSelfie: idSelfieResponse.data
-            }
-          };
-        } else {
-          throw error;
-        }
-      }
-    } catch (error) {
-      throw error.response?.data || { message: 'Complete BVN verification failed' };
-    }
-  },
-  
-  /**
-   * Submit a complete NIN verification with selfie in one request
-   * This should be used for NIN verification for both clients and caregivers
-   * @param {string} ninNumber - The NIN number
-   * @param {string} selfieImage - Base64 encoded selfie image
-   * @param {string} userType - Type of user ('caregiver' or 'client')
-   * @param {string} userId - User ID for tracking
-   * @returns {Promise} - API response
-   */
-  async verifyNINComplete(ninNumber, selfieImage, userType = 'caregiver', userId = null) {
-    try {
-      const payload = { 
-        ninNumber: this._getTestValue('nin', ninNumber),
-        selfieImage: selfieImage,
-        userType: userType
-      };
-      
-      try {
-        const response = await verificationApi.post('/kyc/verify-nin-with-selfie', payload);
-        
-        // Cache the verification status on success
-        if (response.data && (response.data.status === 'success' || response.data.status === 'pending')) {
-          this.saveVerificationStatus(
-            response.data.status === 'success', 
-            response.data.status === 'success' ? 'verified' : 'pending', 
-            response.data.message || 'NIN with Selfie verification ' + response.data.status,
-            userId,
-            userType
-          );
-        }
-        
-        return response.data;
-      } catch (error) {
-        console.error('Error with complete NIN verification:', error);
-        
-        // If we get a 404, try falling back to regular NIN verification
-        if (error.response?.status === 404) {
-          console.log('Combined endpoint not found, falling back to separate verifications...');
-          
-          // First verify NIN
-          const ninResponse = await this.verifyNIN(ninNumber, null, userType, userId);
-          
-          if (ninResponse.status !== 'success') {
-            return ninResponse; // Return NIN verification error
-          }
-          
-          // Then verify Selfie
-          const selfieResponse = await this.verifyID(null, selfieImage, 'nin', userType);
-          
-          // Combine responses
-          return {
-            status: selfieResponse.status,
-            message: 'Combined verification process completed',
-            data: {
-              ...ninResponse.data,
-              selfie: selfieResponse.data
-            }
-          };
-        } else {
-          throw error;
-        }
-      }
-    } catch (error) {
-      throw error.response?.data || { message: 'Complete NIN verification failed' };
-    }
-  },
-
-  /**
    * Upload ID verification documents
    * @param {string} idImage - Base64 encoded ID image
    * @param {string} selfieImage - Base64 encoded selfie image
    * @param {string} idType - Type of ID document (optional)
    * @param {string} userType - Type of user ('caregiver' or 'client')
+   * @param {string} userId - User ID (optional)
    * @returns {Promise} - API response
    */
-  async verifyID(idImage, selfieImage, idType = 'generic', userType = 'caregiver') {
+  verifyID: async (idImage, selfieImage, idType = 'generic', userType = 'caregiver', userId = null) => {
     try {
       const response = await verificationApi.post('/kyc/verify-id-selfie', { 
         idImage, 
@@ -423,6 +210,18 @@ const verificationService = {
         idType,
         userType
       });
+      
+      // Cache the verification status on success
+      if (response.data && response.data.status === 'success') {
+        verificationService.saveVerificationStatus(
+          true, 
+          'verified', 
+          response.data.message || 'ID and Selfie verification successful',
+          userId,
+          userType
+        );
+      }
+      
       return response.data;
     } catch (error) {
       throw error.response?.data || { message: 'ID verification failed' };
@@ -432,15 +231,19 @@ const verificationService = {
   /**
    * Force verification (primarily for testing purposes)
    * This method can be used to force a user to be verified
+   * @param {string} userId - User ID (optional)
+   * @param {string} userType - Type of user (caregiver or client)
    * @returns {Promise} - The updated verification status
    */
-  async forceVerification() {
-    this.saveVerificationStatus(
+  forceVerification: async (userId = null, userType = 'caregiver') => {
+    verificationService.saveVerificationStatus(
       true, 
       'verified', 
-      'Verification completed successfully (forced)'
+      'Verification completed successfully (forced)',
+      userId,
+      userType
     );
-    return this._cachedStatus;
+    return verificationService._cachedStatus;
   },
 
   /**
@@ -452,9 +255,9 @@ const verificationService = {
    * @param {string} userId - User ID (optional)
    * @param {string} userType - Type of user (caregiver or client)
    */
-  saveVerificationStatus(verified = true, status = 'verified', message = '', userId = null, userType = 'caregiver') {
+  saveVerificationStatus: (verified = true, status = 'verified', message = '', userId = null, userType = 'caregiver') => {
     // Save to cache for the current session
-    this._cachedStatus = {
+    verificationService._cachedStatus = {
       verified,
       verificationStatus: status,
       message,
@@ -493,7 +296,8 @@ const verificationService = {
    * @param {string} userType - Type of user ('caregiver' or 'client')
    * @returns {Promise} - API response with verification status
    */
-  async getVerificationStatus(userId = null, userType = 'caregiver') {
+  getVerificationStatus: async (userId = null, userType = 'caregiver') => {
+    let lastVerificationRequest = 0;
     const minRequestInterval = 2000; // Minimum 2 seconds between requests
     
     // Check localStorage first
@@ -514,7 +318,7 @@ const verificationService = {
         
         if (hoursSinceVerification < 24) {
           console.log(`Using cached verification status for ${userType} ${userId} from localStorage`);
-          this._cachedStatus = parsed;
+          verificationService._cachedStatus = parsed;
           return parsed;
         }
       }
@@ -530,7 +334,7 @@ const verificationService = {
           
           if (hoursSinceVerification < 24) {
             console.log("Using cached general verification status from localStorage");
-            this._cachedStatus = parsed;
+            verificationService._cachedStatus = parsed;
             return parsed;
           }
         }
@@ -542,88 +346,36 @@ const verificationService = {
     try {
       // Implement debouncing to prevent excessive requests
       const now = Date.now();
-      if (now - this._lastVerificationRequest < minRequestInterval) {
+      if (now - lastVerificationRequest < minRequestInterval) {
         // If called too soon, return cached response if available
-        if (this._cachedStatus) {
-          return this._cachedStatus;
+        if (verificationService._cachedStatus) {
+          return verificationService._cachedStatus;
         }
         // Otherwise, wait until the minimum interval has passed
-        await new Promise(resolve => setTimeout(resolve, minRequestInterval - (now - this._lastVerificationRequest)));
+        await new Promise(resolve => setTimeout(resolve, minRequestInterval - (now - lastVerificationRequest)));
       }
       
-      this._lastVerificationRequest = Date.now();
+      lastVerificationRequest = Date.now();
       
       // Use verification API to get status with userType query parameter
-      try {
-        // Ensure we have a valid token before making the request
-        const token = localStorage.getItem('authToken');
-        if (!token) {
-          console.warn('No auth token found in localStorage for verification status request');
-          throw new Error('Authentication token missing');
+      const verificationResponse = await verificationApi.get('/kyc/status', {
+        params: {
+          userType
         }
-        
-        // Add auth token explicitly for this request
-        const verificationResponse = await verificationApi.get('/kyc/status', {
-          params: {
-            userType,
-            userId
-          },
-          headers: {
-            'Authorization': `Bearer ${token}`
-          }
-        });
-        
-        // Extract and normalize response data
-        const status = {
-          ...verificationResponse.data,
-          verified: verificationResponse.data?.data?.verified || false,
-          verificationStatus: verificationResponse.data?.data?.verificationStatus || 'unverified',
-          message: verificationResponse.data?.message || ''
-        };
-        
-        // Cache the response for future quick access
-        this._cachedStatus = status;
-        
-        // Also update the localStorage cache for this user
-        if (userId) {
-          const storageKey = `verificationStatus_${userType}_${userId}`;
-          const cacheData = {
-            ...status,
-            timestamp: new Date().toISOString()
-          };
-          localStorage.setItem(storageKey, JSON.stringify(cacheData));
-        }
-        
-        return status;
-      } catch (requestError) {
-        console.error('Error getting verification status from API:', requestError);
-        
-        // Check if it's an authentication error
-        if (requestError.response?.status === 401) {
-          console.warn('Authentication error (401) while getting verification status');
-          
-          // Check if we have a cached status in localStorage for this specific user
-          const userSpecificKey = userId ? `verificationStatus_${userType}_${userId}` : 'verificationStatus';
-          const cachedData = localStorage.getItem(userSpecificKey) || localStorage.getItem('verificationStatus');
-          
-          if (cachedData) {
-            try {
-              const parsedCache = JSON.parse(cachedData);
-              return parsedCache;
-            } catch (e) {
-              // Ignore parsing errors and continue to default response
-              console.error('Error parsing cached verification data:', e);
-            }
-          }
-        }
-        
-        // Return a default status if API request fails
-        return {
-          verified: false,
-          verificationStatus: 'unverified',
-          message: 'Unable to retrieve verification status. Please try again.'
-        };
-      }
+      });
+      
+      // Extract and normalize response data
+      const status = {
+        ...verificationResponse.data,
+        verified: verificationResponse.data?.data?.verified || false,
+        verificationStatus: verificationResponse.data?.data?.verificationStatus || 'unverified',
+        message: verificationResponse.data?.message || ''
+      };
+      
+      // Cache the response for future quick access
+      verificationService._cachedStatus = status;
+      
+      return status;
     } catch (error) {
       // If verification API fails, return unverified status
       console.error('Error getting verification status:', error);
@@ -643,7 +395,7 @@ const verificationService = {
    * @param {string} userType - Type of user ('caregiver' or 'client')
    * @returns {function} - Function to cancel polling
    */
-  pollVerificationStatus(callback, intervalMs = 10000, userId = null, userType = 'caregiver') {
+  pollVerificationStatus: (callback, intervalMs = 10000, userId = null, userType = 'caregiver') => {
     let lastStatus = null;
     let attempts = 0;
     const maxAttempts = 6; // Reduced from 12 to 6 attempts (60 seconds at 10s interval)
@@ -651,7 +403,7 @@ const verificationService = {
     const intervalId = setInterval(async () => {
       try {
         attempts++;
-        const status = await this.getVerificationStatus(userId, userType);
+        const status = await verificationService.getVerificationStatus(userId, userType);
         
         // Add polling metadata to help with progress indication
         status.pollingAttempt = attempts;
@@ -693,7 +445,10 @@ const verificationService = {
     }, intervalMs);
     
     // Return function to cancel polling
-    return () => clearInterval(intervalId);
+    return () => {
+      clearInterval(intervalId);
+      console.log('Polling cancelled');
+    };
   },
 
   /**
@@ -703,7 +458,7 @@ const verificationService = {
    * @param {object} verificationData - The verification data to submit
    * @returns {Promise} - API response
    */
-  async submitVerificationDataToAzure(verificationData) {
+  submitVerificationDataToAzure: async (verificationData) => {
     // Check if we have saved verification data to process
     const pendingData = JSON.parse(localStorage.getItem('pendingVerificationData') || '[]');
     
@@ -768,7 +523,7 @@ const verificationService = {
    * Call this periodically to try submitting any cached verification data
    * @returns {Promise} - Result of processing attempts
    */
-  async processPendingVerifications() {
+  processPendingVerifications: async () => {
     const pendingData = JSON.parse(localStorage.getItem('pendingVerificationData') || '[]');
     
     if (pendingData.length === 0) {

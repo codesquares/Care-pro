@@ -1,0 +1,890 @@
+import React, { useState, useEffect, useRef } from "react";
+import { useNavigate } from "react-router-dom";
+import axios from "axios";
+import "./ClientSettings.css";
+import defaultAvatar from "../../../../assets/profilecard1.png";
+
+/**
+ * Client Settings Page Component
+ * 
+ * Allows clients to:
+ * - Update their account information
+ * - Change their password
+ * - Manage notification preferences
+ * - Upload a profile picture
+ * - Deactivate their account
+ */
+const ClientSettings = () => {
+  const navigate = useNavigate();
+  const [activeTab, setActiveTab] = useState("account");
+  const [isLoading, setIsLoading] = useState(false);
+  const [message, setMessage] = useState({ type: "", text: "" });
+  const fileInputRef = useRef(null);
+  
+  // Modal state
+  const [showModal, setShowModal] = useState(false);
+  const [modalConfig, setModalConfig] = useState({
+    title: "",
+    text: "",
+    confirmAction: () => {},
+  });
+  
+  // Image upload state
+  const [selectedFile, setSelectedFile] = useState(null);
+  const [previewUrl, setPreviewUrl] = useState(null);
+  const [uploadingImage, setUploadingImage] = useState(false);
+  
+  // Form states
+  const [accountForm, setAccountForm] = useState({
+    firstName: "",
+    lastName: "",
+    email: "",
+    phoneNumber: ""
+  });
+  
+  const [passwordForm, setPasswordForm] = useState({
+    currentPassword: "",
+    newPassword: "",
+    confirmPassword: ""
+  });
+  
+  const [notificationPreferences, setNotificationPreferences] = useState({
+    emailNotifications: true,
+    smsNotifications: true,
+    orderUpdates: true,
+    marketingMessages: false
+  });
+  
+  // Input validation states
+  const [validationStates, setValidationStates] = useState({
+    firstName: { isValid: true, message: "" },
+    lastName: { isValid: true, message: "" },
+    email: { isValid: true, message: "" },
+    phoneNumber: { isValid: true, message: "" },
+    currentPassword: { isValid: true, message: "" },
+    newPassword: { isValid: true, message: "" },
+    confirmPassword: { isValid: true, message: "" }
+  });
+  
+  // Get user details from local storage
+  const userDetails = JSON.parse(localStorage.getItem("userDetails") || "{}");
+  
+  // Calculate account age
+  const joinDate = userDetails.createdAt 
+    ? new Date(userDetails.createdAt).toLocaleDateString('en-US', { 
+        year: 'numeric', 
+        month: 'long', 
+        day: 'numeric' 
+      }) 
+    : "Member since recently";
+  
+  // Fetch user data on component mount
+  useEffect(() => {
+    const fetchUserData = async () => {
+      if (!userDetails.id) return;
+      
+      try {
+        setIsLoading(true);
+        const response = await axios.get(
+          `https://carepro-api20241118153443.azurewebsites.net/api/Clients/${userDetails.id}`
+        );
+        
+        if (response.data) {
+          setAccountForm({
+            firstName: response.data.firstName || "",
+            lastName: response.data.lastName || "",
+            email: response.data.email || "",
+            phoneNumber: response.data.phoneNumber || ""
+          });
+          
+          // If the API provides notification preferences, set them here
+          if (response.data.notificationPreferences) {
+            setNotificationPreferences(response.data.notificationPreferences);
+          }
+        }
+      } catch (err) {
+        console.error("Error fetching client data:", err);
+        setMessage({
+          type: "error",
+          text: "Failed to load your account information. Please try again later."
+        });
+      } finally {
+        setIsLoading(false);
+      }
+    };
+    
+    fetchUserData();
+  }, [userDetails.id]);
+  
+  // Handle account form changes
+  const handleAccountChange = (e) => {
+    const { name, value } = e.target;
+    setAccountForm(prev => ({
+      ...prev,
+      [name]: value
+    }));
+    
+    // Validate field
+    validateField(name, value);
+  };
+  
+  // Validate individual field
+  const validateField = (name, value) => {
+    let isValid = true;
+    let message = "";
+    
+    switch (name) {
+      case "firstName":
+      case "lastName":
+        if (!value.trim()) {
+          isValid = false;
+          message = "This field is required";
+        }
+        break;
+      
+      case "email":
+        const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+        if (!emailRegex.test(value)) {
+          isValid = false;
+          message = "Please enter a valid email address";
+        }
+        break;
+        
+      case "phoneNumber":
+        const phoneRegex = /^\+?[1-9]\d{9,14}$/;
+        if (value && !phoneRegex.test(value.replace(/[\s()-]/g, ''))) {
+          isValid = false;
+          message = "Please enter a valid phone number";
+        }
+        break;
+        
+      case "currentPassword":
+        if (!value) {
+          isValid = false;
+          message = "Current password is required";
+        }
+        break;
+        
+      case "newPassword":
+        const passwordRegex = /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[@$!%*?&])[A-Za-z\d@$!%*?&]{8,}$/;
+        if (!passwordRegex.test(value)) {
+          isValid = false;
+          message = "Password doesn't meet requirements";
+        }
+        break;
+        
+      case "confirmPassword":
+        if (value !== passwordForm.newPassword) {
+          isValid = false;
+          message = "Passwords don't match";
+        }
+        break;
+        
+      default:
+        break;
+    }
+    
+    setValidationStates(prev => ({
+      ...prev,
+      [name]: { isValid, message }
+    }));
+    
+    return isValid;
+  };
+  
+  // Handle password form changes
+  const handlePasswordChange = (e) => {
+    const { name, value } = e.target;
+    setPasswordForm(prev => ({
+      ...prev,
+      [name]: value
+    }));
+    
+    // For confirmPassword, we need to validate against the current newPassword
+    if (name === "confirmPassword") {
+      validateField(name, value);
+    } else if (name === "newPassword") {
+      // If newPassword changes, we need to re-validate confirmPassword
+      validateField(name, value);
+      if (passwordForm.confirmPassword) {
+        validateField("confirmPassword", passwordForm.confirmPassword);
+      }
+    } else {
+      validateField(name, value);
+    }
+  };
+  
+  // Handle notification preference changes
+  const handleNotificationChange = (e) => {
+    const { name, checked } = e.target;
+    setNotificationPreferences(prev => ({
+      ...prev,
+      [name]: checked
+    }));
+  };
+  
+  // Handle image file selection
+  const handleFileChange = (e) => {
+    const file = e.target.files[0];
+    if (!file) return;
+    
+    // Validate file type and size
+    const validTypes = ['image/jpeg', 'image/png', 'image/jpg'];
+    const maxSize = 5 * 1024 * 1024; // 5MB
+    
+    if (!validTypes.includes(file.type)) {
+      setMessage({
+        type: "error",
+        text: "Please select a valid image file (JPG, JPEG, or PNG)"
+      });
+      return;
+    }
+    
+    if (file.size > maxSize) {
+      setMessage({
+        type: "error",
+        text: "File size should be less than 5MB"
+      });
+      return;
+    }
+    
+    setSelectedFile(file);
+    
+    // Create a preview URL
+    const fileReader = new FileReader();
+    fileReader.onload = () => {
+      setPreviewUrl(fileReader.result);
+    };
+    fileReader.readAsDataURL(file);
+  };
+  
+  // Upload profile picture
+  const handleImageUpload = async () => {
+    if (!selectedFile || !userDetails.id) return;
+    
+    try {
+      setUploadingImage(true);
+      
+      // Create form data for file upload
+      const formData = new FormData();
+      formData.append('file', selectedFile);
+      formData.append('userId', userDetails.id);
+      
+      const response = await axios.post(
+        `https://carepro-api20241118153443.azurewebsites.net/api/Upload/ProfilePicture`,
+        formData,
+        {
+          headers: {
+            'Content-Type': 'multipart/form-data'
+          }
+        }
+      );
+      
+      if (response.status === 200) {
+        // Update user details in local storage
+        const updatedUserDetails = {
+          ...userDetails,
+          profilePicture: response.data.imageUrl
+        };
+        localStorage.setItem("userDetails", JSON.stringify(updatedUserDetails));
+        
+        setMessage({
+          type: "success",
+          text: "Profile picture updated successfully"
+        });
+        
+        // Reset states
+        setSelectedFile(null);
+        setPreviewUrl(null);
+      }
+    } catch (err) {
+      console.error("Error uploading profile picture:", err);
+      setMessage({
+        type: "error",
+        text: "Failed to upload profile picture. Please try again later."
+      });
+    } finally {
+      setUploadingImage(false);
+    }
+  };
+  
+  // Trigger file input click
+  const handleChooseFile = () => {
+    fileInputRef.current.click();
+  };
+  
+  // Show confirmation modal
+  const showConfirmationModal = (title, text, confirmAction) => {
+    setModalConfig({ title, text, confirmAction });
+    setShowModal(true);
+  };
+  
+  // Handle account deactivation
+  const handleDeactivateAccount = async () => {
+    try {
+      setIsLoading(true);
+      const response = await axios.post(
+        `https://carepro-api20241118153443.azurewebsites.net/api/Clients/DeactivateAccount/${userDetails.id}`
+      );
+      
+      if (response.status === 200) {
+        // Clear local storage and redirect to login
+        localStorage.removeItem("userDetails");
+        localStorage.removeItem("token");
+        
+        setMessage({
+          type: "success",
+          text: "Your account has been deactivated. You will be redirected to the login page."
+        });
+        
+        // Redirect after a short delay
+        setTimeout(() => {
+          navigate("/login");
+        }, 3000);
+      }
+    } catch (err) {
+      console.error("Error deactivating account:", err);
+      setMessage({
+        type: "error",
+        text: "Failed to deactivate your account. Please try again later."
+      });
+    } finally {
+      setIsLoading(false);
+      setShowModal(false);
+    }
+  };
+  
+  // Submit account form
+  const handleAccountSubmit = async (e) => {
+    e.preventDefault();
+    
+    // Validate all fields
+    const isFirstNameValid = validateField("firstName", accountForm.firstName);
+    const isLastNameValid = validateField("lastName", accountForm.lastName);
+    const isEmailValid = validateField("email", accountForm.email);
+    const isPhoneValid = validateField("phoneNumber", accountForm.phoneNumber);
+    
+    if (!isFirstNameValid || !isLastNameValid || !isEmailValid || !isPhoneValid) {
+      setMessage({
+        type: "error",
+        text: "Please fix the errors in the form before submitting."
+      });
+      return;
+    }
+    
+    try {
+      setIsLoading(true);
+      const response = await axios.put(
+        `https://carepro-api20241118153443.azurewebsites.net/api/Clients/UpdateClientInfo/${userDetails.id}`,
+        accountForm
+      );
+      
+      if (response.status === 200) {
+        // Update user details in local storage if email changed
+        if (accountForm.email !== userDetails.email) {
+          const updatedUserDetails = {
+            ...userDetails,
+            email: accountForm.email
+          };
+          localStorage.setItem("userDetails", JSON.stringify(updatedUserDetails));
+        }
+        
+        setMessage({
+          type: "success",
+          text: "Your account information has been updated successfully."
+        });
+      }
+    } catch (err) {
+      console.error("Error updating account information:", err);
+      setMessage({
+        type: "error",
+        text: "Failed to update your account information. Please try again later."
+      });
+    } finally {
+      setIsLoading(false);
+    }
+  };
+  
+  // Submit password form
+  const handlePasswordSubmit = async (e) => {
+    e.preventDefault();
+    
+    // Validate all fields
+    const isCurrentPasswordValid = validateField("currentPassword", passwordForm.currentPassword);
+    const isNewPasswordValid = validateField("newPassword", passwordForm.newPassword);
+    const isConfirmPasswordValid = validateField("confirmPassword", passwordForm.confirmPassword);
+    
+    if (!isCurrentPasswordValid || !isNewPasswordValid || !isConfirmPasswordValid) {
+      setMessage({
+        type: "error",
+        text: "Please fix the errors in the form before submitting."
+      });
+      return;
+    }
+    
+    try {
+      setIsLoading(true);
+      const response = await axios.post(
+        `https://carepro-api20241118153443.azurewebsites.net/api/Auth/change-password`,
+        {
+          userId: userDetails.id,
+          currentPassword: passwordForm.currentPassword,
+          newPassword: passwordForm.newPassword
+        }
+      );
+      
+      if (response.status === 200) {
+        setPasswordForm({
+          currentPassword: "",
+          newPassword: "",
+          confirmPassword: ""
+        });
+        
+        setMessage({
+          type: "success",
+          text: "Your password has been changed successfully."
+        });
+      }
+    } catch (err) {
+      console.error("Error changing password:", err);
+      setMessage({
+        type: "error",
+        text: err.response?.data?.message || "Failed to change your password. Please check your current password and try again."
+      });
+    } finally {
+      setIsLoading(false);
+    }
+  };
+  
+  // Submit notification preferences
+  const handleNotificationSubmit = async (e) => {
+    e.preventDefault();
+    
+    try {
+      setIsLoading(true);
+      const response = await axios.put(
+        `https://carepro-api20241118153443.azurewebsites.net/api/Clients/UpdateNotificationPreferences/${userDetails.id}`,
+        notificationPreferences
+      );
+      
+      if (response.status === 200) {
+        setMessage({
+          type: "success",
+          text: "Your notification preferences have been updated successfully."
+        });
+      }
+    } catch (err) {
+      console.error("Error updating notification preferences:", err);
+      setMessage({
+        type: "error",
+        text: "Failed to update your notification preferences. Please try again later."
+      });
+    } finally {
+      setIsLoading(false);
+    }
+  };
+  
+  // Clear messages after 5 seconds
+  useEffect(() => {
+    if (message.text) {
+      const timer = setTimeout(() => {
+        setMessage({ type: "", text: "" });
+      }, 5000);
+      
+      return () => clearTimeout(timer);
+    }
+  }, [message]);
+  
+  return (
+    <div className="settings-container">
+      {/* Profile Section */}
+      <div className="profile-settings-wrapper">
+        <div className="profile-section">
+          <div className="profile-image-container">
+            <img 
+              src={previewUrl || userDetails.profilePicture || defaultAvatar} 
+              alt="Profile" 
+              className="profile-image" 
+            />
+            <div className="change-photo-overlay" onClick={handleChooseFile}>
+              <i className="fas fa-camera"></i>
+            </div>
+            <input 
+              type="file" 
+              ref={fileInputRef} 
+              className="hidden-file-input" 
+              accept="image/jpeg, image/png, image/jpg" 
+              onChange={handleFileChange} 
+            />
+          </div>
+          
+          <h3>{`${accountForm.firstName} ${accountForm.lastName}`}</h3>
+          <p>{accountForm.email}</p>
+          <p className="profile-status">Client Account</p>
+          <p className="profile-join-date">Joined {joinDate}</p>
+          
+          {selectedFile && (
+            <div className="profile-upload-form">
+              <p className="file-selected">{selectedFile.name}</p>
+              <button 
+                className="upload-button"
+                onClick={handleImageUpload}
+                disabled={uploadingImage}
+              >
+                {uploadingImage ? "Uploading..." : "Upload Photo"}
+              </button>
+            </div>
+          )}
+          
+          <div className="status-buttons left-aligned">
+            <button className="active">Active</button>
+            <div className="verified-badge">
+              <i className="fas fa-check-circle"></i> Verified
+            </div>
+          </div>
+        </div>
+      </div>
+      
+      {/* Settings Section */}
+      <div className="settings-section">
+        {/* Display messages */}
+        {message.text && (
+          <div className={`message ${message.type}`}>
+            {message.text}
+          </div>
+        )}
+        
+        {/* Settings Tabs */}
+        <div className="settings-box">
+          <h2 className="settings-title">Settings</h2>
+          
+          <div className="settings-tabs">
+            <button 
+              className={`tab-button ${activeTab === "account" ? "active" : ""}`}
+              onClick={() => setActiveTab("account")}
+            >
+              Account Information
+            </button>
+            <button 
+              className={`tab-button ${activeTab === "password" ? "active" : ""}`}
+              onClick={() => setActiveTab("password")}
+            >
+              Change Password
+            </button>
+            <button 
+              className={`tab-button ${activeTab === "notifications" ? "active" : ""}`}
+              onClick={() => setActiveTab("notifications")}
+            >
+              Notification Preferences
+            </button>
+          </div>
+          
+          {/* Settings Content based on active tab */}
+          <div className="settings-content">
+            {/* Account Information Form */}
+            {activeTab === "account" && (
+              <form className="settings-form" onSubmit={handleAccountSubmit}>
+                <div className="form-group">
+                  <label htmlFor="firstName">First Name</label>
+                  <input 
+                    type="text"
+                    id="firstName"
+                    name="firstName"
+                    value={accountForm.firstName}
+                    onChange={handleAccountChange}
+                    className={`input-validated ${
+                      accountForm.firstName && 
+                      (validationStates.firstName.isValid ? "valid" : "invalid")
+                    }`}
+                    required
+                  />
+                  {accountForm.firstName && validationStates.firstName.isValid && (
+                    <i className="fas fa-check validation-icon"></i>
+                  )}
+                  {!validationStates.firstName.isValid && (
+                    <p className="password-hint">{validationStates.firstName.message}</p>
+                  )}
+                </div>
+                
+                <div className="form-group">
+                  <label htmlFor="lastName">Last Name</label>
+                  <input 
+                    type="text"
+                    id="lastName"
+                    name="lastName"
+                    value={accountForm.lastName}
+                    onChange={handleAccountChange}
+                    className={`input-validated ${
+                      accountForm.lastName && 
+                      (validationStates.lastName.isValid ? "valid" : "invalid")
+                    }`}
+                    required
+                  />
+                  {accountForm.lastName && validationStates.lastName.isValid && (
+                    <i className="fas fa-check validation-icon"></i>
+                  )}
+                  {!validationStates.lastName.isValid && (
+                    <p className="password-hint">{validationStates.lastName.message}</p>
+                  )}
+                </div>
+                
+                <div className="form-group">
+                  <label htmlFor="email">Email Address</label>
+                  <input 
+                    type="email"
+                    id="email"
+                    name="email"
+                    value={accountForm.email}
+                    onChange={handleAccountChange}
+                    className={`input-validated ${
+                      accountForm.email && 
+                      (validationStates.email.isValid ? "valid" : "invalid")
+                    }`}
+                    required
+                  />
+                  {accountForm.email && validationStates.email.isValid && (
+                    <i className="fas fa-check validation-icon"></i>
+                  )}
+                  {!validationStates.email.isValid && (
+                    <p className="password-hint">{validationStates.email.message}</p>
+                  )}
+                </div>
+                
+                <div className="form-group">
+                  <label htmlFor="phoneNumber">Phone Number</label>
+                  <input 
+                    type="tel"
+                    id="phoneNumber"
+                    name="phoneNumber"
+                    value={accountForm.phoneNumber}
+                    onChange={handleAccountChange}
+                    className={`input-validated ${
+                      accountForm.phoneNumber && 
+                      (validationStates.phoneNumber.isValid ? "valid" : "invalid")
+                    }`}
+                    required
+                  />
+                  {accountForm.phoneNumber && validationStates.phoneNumber.isValid && (
+                    <i className="fas fa-check validation-icon"></i>
+                  )}
+                  {!validationStates.phoneNumber.isValid && (
+                    <p className="password-hint">{validationStates.phoneNumber.message}</p>
+                  )}
+                </div>
+                
+                <div className="status-buttons right-aligned">
+                  <button 
+                    type="submit" 
+                    className="save-button"
+                    disabled={isLoading}
+                  >
+                    {isLoading ? "Saving..." : "Save Changes"}
+                  </button>
+                </div>
+              </form>
+            )}
+            
+            {/* Password Form */}
+            {activeTab === "password" && (
+              <form className="settings-form" onSubmit={handlePasswordSubmit}>
+                <div className="form-group">
+                  <label htmlFor="currentPassword">Current Password</label>
+                  <input 
+                    type="password"
+                    id="currentPassword"
+                    name="currentPassword"
+                    value={passwordForm.currentPassword}
+                    onChange={handlePasswordChange}
+                    className={`input-validated ${
+                      passwordForm.currentPassword && 
+                      (validationStates.currentPassword.isValid ? "valid" : "invalid")
+                    }`}
+                    required
+                  />
+                  {!validationStates.currentPassword.isValid && (
+                    <p className="password-hint">{validationStates.currentPassword.message}</p>
+                  )}
+                </div>
+                
+                <div className="form-group">
+                  <label htmlFor="newPassword">New Password</label>
+                  <input 
+                    type="password"
+                    id="newPassword"
+                    name="newPassword"
+                    value={passwordForm.newPassword}
+                    onChange={handlePasswordChange}
+                    className={`input-validated ${
+                      passwordForm.newPassword && 
+                      (validationStates.newPassword.isValid ? "valid" : "invalid")
+                    }`}
+                    required
+                  />
+                  {!validationStates.newPassword.isValid && (
+                    <p className="password-hint">{validationStates.newPassword.message}</p>
+                  )}
+                </div>
+                
+                <div className="form-group">
+                  <label htmlFor="confirmPassword">Confirm New Password</label>
+                  <input 
+                    type="password"
+                    id="confirmPassword"
+                    name="confirmPassword"
+                    value={passwordForm.confirmPassword}
+                    onChange={handlePasswordChange}
+                    className={`input-validated ${
+                      passwordForm.confirmPassword && 
+                      (validationStates.confirmPassword.isValid ? "valid" : "invalid")
+                    }`}
+                    required
+                  />
+                  {!validationStates.confirmPassword.isValid && (
+                    <p className="password-hint">{validationStates.confirmPassword.message}</p>
+                  )}
+                </div>
+                
+                <div className="password-requirements">
+                  <p>Password must contain:</p>
+                  <ul>
+                    <li>At least 8 characters</li>
+                    <li>At least one uppercase letter (A-Z)</li>
+                    <li>At least one lowercase letter (a-z)</li>
+                    <li>At least one number (0-9)</li>
+                    <li>At least one special character (@$!%*?&)</li>
+                  </ul>
+                </div>
+                
+                <div className="status-buttons right-aligned">
+                  <button 
+                    type="submit" 
+                    className="save-button"
+                    disabled={isLoading}
+                  >
+                    {isLoading ? "Updating..." : "Update Password"}
+                  </button>
+                </div>
+              </form>
+            )}
+            
+            {/* Notification Preferences Form */}
+            {activeTab === "notifications" && (
+              <form className="settings-form" onSubmit={handleNotificationSubmit}>
+                <div className="checkbox-group">
+                  <input
+                    type="checkbox"
+                    id="emailNotifications"
+                    name="emailNotifications"
+                    checked={notificationPreferences.emailNotifications}
+                    onChange={handleNotificationChange}
+                  />
+                  <label htmlFor="emailNotifications">Email Notifications</label>
+                </div>
+                
+                <div className="checkbox-group">
+                  <input
+                    type="checkbox"
+                    id="smsNotifications"
+                    name="smsNotifications"
+                    checked={notificationPreferences.smsNotifications}
+                    onChange={handleNotificationChange}
+                  />
+                  <label htmlFor="smsNotifications">SMS Notifications</label>
+                </div>
+                
+                <div className="checkbox-group">
+                  <input
+                    type="checkbox"
+                    id="orderUpdates"
+                    name="orderUpdates"
+                    checked={notificationPreferences.orderUpdates}
+                    onChange={handleNotificationChange}
+                  />
+                  <label htmlFor="orderUpdates">Order Status Updates</label>
+                </div>
+                
+                <div className="checkbox-group">
+                  <input
+                    type="checkbox"
+                    id="marketingMessages"
+                    name="marketingMessages"
+                    checked={notificationPreferences.marketingMessages}
+                    onChange={handleNotificationChange}
+                  />
+                  <label htmlFor="marketingMessages">Marketing Messages</label>
+                </div>
+                
+                <div className="status-buttons right-aligned">
+                  <button 
+                    type="submit" 
+                    className="save-button"
+                    disabled={isLoading}
+                  >
+                    {isLoading ? "Saving..." : "Save Preferences"}
+                  </button>
+                </div>
+              </form>
+            )}
+          </div>
+        </div>
+        
+        {/* Account Deactivation Box */}
+        <div className="settings-box">
+          <h3>Account Deactivation</h3>
+          <p className="deactivation-info">
+            Deactivating your account will temporarily disable your profile and services. You can reactivate at any time by logging in.
+          </p>
+          <div className="status-buttons right-aligned">
+            <button 
+              className="deactivate-button"
+              onClick={() => showConfirmationModal(
+                "Deactivate Account", 
+                "Are you sure you want to deactivate your account? You can reactivate it at any time by logging in again.",
+                handleDeactivateAccount
+              )}
+              disabled={isLoading}
+            >
+              Deactivate Account
+            </button>
+          </div>
+        </div>
+        
+        <div className="settings-footer">
+          <button 
+            className="back-button"
+            onClick={() => navigate("/app/client/profile")}
+          >
+            Back to Profile
+          </button>
+        </div>
+      </div>
+      
+      {/* Confirmation Modal */}
+      {showModal && (
+        <div className="modal-overlay">
+          <div className="modal-content">
+            <h3 className="modal-title">{modalConfig.title}</h3>
+            <p className="modal-text">{modalConfig.text}</p>
+            <div className="modal-buttons">
+              <button 
+                className="cancel-button"
+                onClick={() => setShowModal(false)}
+              >
+                Cancel
+              </button>
+              <button 
+                className="confirm-button"
+                onClick={modalConfig.confirmAction}
+                disabled={isLoading}
+              >
+                Confirm
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+    </div>
+  );
+};
+
+export default ClientSettings;

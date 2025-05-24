@@ -10,7 +10,9 @@ const {
 const {
   verifyNIN,
   verifyBVN,
-  getVerificationStatus
+  getVerificationStatus,
+  verifyBVNWithIdSelfie,
+  verifyNINWithSelfie
 } = require('../controllers/verificationController');
 const verifyIdSelfie = require('../controllers/idSelfieController');
 const verifyAddress = require('../controllers/addressController');
@@ -31,6 +33,10 @@ router.post('/verify-nin', protect, verifyNIN);
 router.post('/verify-bvn', protect, verifyBVN);
 router.post('/verify-address', protect, verifyAddress);
 router.post('/verify-id-selfie', protect, verifyIdSelfie);
+
+// Combined verification routes
+router.post('/verify-bvn-with-id-selfie', protect, verifyBVNWithIdSelfie);
+router.post('/verify-nin-with-selfie', protect, verifyNINWithSelfie);
 
 // Get verification status
 router.get('/status', protect, getVerificationStatus);
