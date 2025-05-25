@@ -333,7 +333,39 @@ const ClientVerificationPage = () => {
         }
       };
       
-      // Save to localStorage for later submission when endpoint is available
+      // Check if verification uses test values - don't save to Azure in that case
+      const isTestBvn = verificationMethod.includes('bvn') && isTestValue('BVN', verificationData.bvn);
+      const isTestNin = verificationMethod.includes('nin') && isTestValue('NIN', verificationData.nin);
+      const isTestData = isTestBvn || isTestNin;
+      
+      if (!isTestData) {
+        // Only save to Azure if not using test values
+        verificationService.saveVerificationData(verificationRecord)
+          .then((response) => {
+            console.log('Client verification data saved to Azure:', verificationRecord);
+            if (response.status === 'success') {
+              console.log('Azure API response:', response.data);
+            } else {
+              // Display error message to user if submission fails
+              console.warn('Azure submission returned non-success status:', response.status);
+              setError(`There was an issue saving your verification data: ${response.message}`);
+              
+              // Hide the error after 5 seconds
+              setTimeout(() => setError(""), 5000);
+            }
+          })
+          .catch((error) => {
+            console.error('Failed to save client verification data to Azure:', error);
+            setError("Unable to save verification data at this time. Your data will be automatically saved later.");
+            
+            // Hide the error after 5 seconds
+            setTimeout(() => setError(""), 5000);
+          });
+      } else {
+        console.log('Using test data - skipping Azure submission:', verificationRecord);
+      }
+      
+      // Always save to localStorage for later submission when endpoint is available
       const previousRecords = JSON.parse(localStorage.getItem('pendingVerificationData') || '[]');
       previousRecords.push(verificationRecord);
       localStorage.setItem('pendingVerificationData', JSON.stringify(previousRecords));
@@ -341,6 +373,10 @@ const ClientVerificationPage = () => {
       console.log('Saved client verification data for future submission to Azure:', verificationRecord);
     } catch (error) {
       console.error('Failed to save verification data:', error);
+      setError("There was an issue processing your verification data. Please try again later.");
+      
+      // Hide the error after 5 seconds
+      setTimeout(() => setError(""), 5000);
     }
   };
   

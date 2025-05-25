@@ -86,6 +86,7 @@ const ClientPreferences = () => {
     const fetchPreferences = async () => {
       try {
         setLoading(true);
+        setError(null);
         
         const userDetails = JSON.parse(localStorage.getItem("userDetails") || "{}");
         if (!userDetails.id) {
@@ -93,6 +94,14 @@ const ClientPreferences = () => {
         }
         const clientId = userDetails.id;
         
+        // Check for authentication token
+        const token = localStorage.getItem("authToken");
+        if (!token) {
+          setOfflineMode(true);
+          console.warn("No authentication token found, operating in offline mode");
+        }
+        
+        // Attempt to fetch preferences from service
         const fetchedPreferences = await ClientPreferenceService.getPreferences(clientId);
         setPreferences(fetchedPreferences);
         
@@ -112,7 +121,18 @@ const ClientPreferences = () => {
         setLoading(false);
       } catch (err) {
         console.error('Error fetching client preferences:', err);
-        setError('Failed to load your preferences. Please try again later.');
+        
+        // More descriptive error messages based on error type
+        if (err.message && err.message.includes('Authentication')) {
+          setError('Authentication error: Please log in again to view your preferences.');
+        } else if (err.message && err.message.includes('401')) {
+          setError('Your session has expired. Please log in again.');
+          setOfflineMode(true); // Set to offline mode when auth fails
+        } else {
+          setError('Failed to load your preferences from the Care Pro system. Using locally stored preferences instead.');
+          setOfflineMode(true); // Fall back to offline mode on error
+        }
+        
         setLoading(false);
       }
     };
@@ -188,6 +208,14 @@ const ClientPreferences = () => {
       }
       const clientId = userDetails.id;
       
+      // Validate preferences before submission
+      if (!preferences.serviceType) {
+        setError('Please select a service type');
+        setLoading(false);
+        return;
+      }
+      
+      // Submit preferences to Azure API
       await ClientPreferenceService.savePreferences(clientId, preferences);
       
       // Update recommendations based on new preferences
@@ -197,15 +225,27 @@ const ClientPreferences = () => {
       );
       setRecommendations(updatedRecommendations);
       
-      setSuccess('Your preferences have been saved successfully!');
-      
+      setSuccess('Your preferences have been saved successfully to the Care Pro system!');
       // Clear success message after 5 seconds
       setTimeout(() => setSuccess(null), 5000);
       
       setLoading(false);
     } catch (err) {
       console.error('Error saving preferences:', err);
-      setError('Failed to save your preferences. Please try again later.');
+      
+      // Provide more descriptive error messages based on the error type
+      if (err.message && err.message.includes('Authentication')) {
+        setError('Authentication error: Please log in again to save your preferences.');
+      } else if (err.message && err.message.includes('401')) {
+        setError('Your session has expired. Please log in again.');
+      } else if (err.message && err.message.includes('400')) {
+        setError('Invalid preference data. Please check your inputs and try again.');
+      } else if (err.message && err.message.includes('500')) {
+        setError('Server error. Our team has been notified. Please try again later.');
+      } else {
+        setError('Failed to save your preferences to the Care Pro system. Please try again later.');
+      }
+      
       setLoading(false);
     }
   };

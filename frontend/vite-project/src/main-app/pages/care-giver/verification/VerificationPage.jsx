@@ -327,6 +327,48 @@ useEffect(() => {
               setProgressMessage("Verification successful!");
               setSuccess("Your identity has been verified successfully!");
               
+              // Check if verification uses test values - handle differently
+              const isTestBvn = isTestValue('BVN', bvnNumber);
+              if (isTestBvn) {
+                console.log('🧪 Test BVN detected - Saving verification status but skipping Azure submission');
+              } else {
+                // Save verification data to Azure via verificationService
+                try {
+                  const verificationRecord = {
+                    method: 'bvn_id_selfie',
+                    userId: userDetails.id,
+                    userType: 'caregiver',
+                    timestamp: new Date().toISOString(),
+                    status: 'verified',
+                    azureData: {
+                      userId: userDetails.id,
+                      userType: 'caregiver',
+                      verificationType: 'bvn_id_selfie',
+                      status: 'verified',
+                      verificationMethod: 'bvn',
+                      methodDetails: {
+                        bvnNumber: bvnNumber,
+                        withSelfie: true
+                      },
+                      userData: data.data?.userData || {},
+                      completedAt: new Date().toISOString()
+                    }
+                  };
+                  
+                  verificationService.saveVerificationData(verificationRecord)
+                    .then(response => {
+                      if (response.status !== 'success') {
+                        console.warn('Azure submission returned non-success status:', response.status);
+                      }
+                    })
+                    .catch(error => {
+                      console.error('Failed to save caregiver verification data to Azure:', error);
+                    });
+                } catch (err) {
+                  console.error('Error preparing verification data for Azure:', err);
+                }
+              }
+              
               verificationService.saveVerificationStatus(
                 true, 
                 'verified', 
@@ -412,6 +454,48 @@ useEffect(() => {
               setProgressMessage("Verification successful!");
               setSuccess("Your identity has been verified successfully!");
               
+              // Check if verification uses test values - handle differently
+              const isTestNin = isTestValue('NIN', ninNumber);
+              if (isTestNin) {
+                console.log('🧪 Test NIN detected - Saving verification status but skipping Azure submission');
+              } else {
+                // Save verification data to Azure via verificationService
+                try {
+                  const verificationRecord = {
+                    method: 'nin_selfie',
+                    userId: userDetails.id,
+                    userType: 'caregiver',
+                    timestamp: new Date().toISOString(),
+                    status: 'verified',
+                    azureData: {
+                      userId: userDetails.id,
+                      userType: 'caregiver',
+                      verificationType: 'nin_selfie',
+                      status: 'verified',
+                      verificationMethod: 'nin',
+                      methodDetails: {
+                        ninNumber: ninNumber,
+                        withSelfie: true
+                      },
+                      userData: data.data?.userData || {},
+                      completedAt: new Date().toISOString()
+                    }
+                  };
+                  
+                  verificationService.saveVerificationData(verificationRecord)
+                    .then(response => {
+                      if (response.status !== 'success') {
+                        console.warn('Azure submission returned non-success status:', response.status);
+                      }
+                    })
+                    .catch(error => {
+                      console.error('Failed to save caregiver verification data to Azure:', error);
+                    });
+                } catch (err) {
+                  console.error('Error preparing verification data for Azure:', err);
+                }
+              }
+              
               verificationService.saveVerificationStatus(
                 true, 
                 'verified', 
@@ -464,6 +548,43 @@ useEffect(() => {
             setProgressMessage("Verification successful!");
             setSuccess("Your identity has been verified successfully!");
             
+            // For ID verification, we'll always save to Azure as there's no test value
+            // but we'll still catch and handle errors properly
+            try {
+              const verificationRecord = {
+                method: 'id_selfie',
+                userId: userDetails.id,
+                userType: 'caregiver',
+                timestamp: new Date().toISOString(),
+                status: 'verified',
+                azureData: {
+                  userId: userDetails.id,
+                  userType: 'caregiver',
+                  verificationType: 'id_selfie',
+                  status: 'verified',
+                  verificationMethod: 'id',
+                  methodDetails: {
+                    idType: idType,
+                    withSelfie: true
+                  },
+                  userData: data.data?.userData || {},
+                  completedAt: new Date().toISOString()
+                }
+              };
+              
+              verificationService.saveVerificationData(verificationRecord)
+                .then(response => {
+                  if (response.status !== 'success') {
+                    console.warn('Azure submission returned non-success status:', response.status);
+                  }
+                })
+                .catch(error => {
+                  console.error('Failed to save caregiver verification data to Azure:', error);
+                });
+            } catch (err) {
+              console.error('Error preparing verification data for Azure:', err);
+            }
+            
             verificationService.saveVerificationStatus(
               true, 
               'verified', 
@@ -498,7 +619,29 @@ useEffect(() => {
     } catch (err) {
       setProgress(100);
       setProgressMessage("Verification failed");
-      setError(err.message || "Verification failed. Please try again later.");
+      
+      // Provide more specific error messages based on error type
+      if (err.response) {
+        // The request was made and server responded with an error status code
+        if (err.response.status === 401) {
+          setError("Authentication error. Please log in again and retry.");
+        } else if (err.response.status === 400) {
+          setError("Invalid data format: " + (err.message || "Please check your information and try again."));
+        } else if (err.response.status === 500) {
+          setError("Server error: The verification service is currently unavailable. Please try again later.");
+        } else {
+          setError(err.message || "Verification failed. Please check your information and try again.");
+        }
+      } else if (err.request) {
+        // The request was made but no response received (network issue)
+        setError("Network issue: Unable to connect to verification service. Please check your internet connection.");
+      } else {
+        // Something happened in setting up the request
+        setError(err.message || "Verification failed. Please try again later.");
+      }
+      
+      // Log detailed error for debugging
+      console.error("Verification error details:", err);
     } finally {
       setIsSubmitting(false);
     }

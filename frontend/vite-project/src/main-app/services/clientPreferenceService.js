@@ -16,17 +16,36 @@ const ClientPreferenceService = {
         return JSON.parse(storedPreferences);
       }
     
-      // In a real implementation, this would make an API call
-      const API_URL = `https://carepro-api20241118153443.azurewebsites.net/api/Clients/${clientId}/preferences`;
+      // Get authentication token
+      const token = localStorage.getItem('authToken');
+      if (!token) {
+        console.warn('No authentication token found, using default preferences');
+        return this.getDefaultPreferences();
+      }
       
-      const response = await fetch(API_URL);
+      // Use the Azure API endpoint
+      const API_URL = `https://carepro-api20241118153443.azurewebsites.net/api/ClientPreferences/${clientId}`;
+      
+      const response = await fetch(API_URL, {
+        method: 'GET',
+        headers: {
+          'Authorization': `Bearer ${token}`
+        }
+      });
       
       if (!response.ok) {
+        // If not found on server (404), return default preferences instead of error
+        if (response.status === 404) {
+          console.log('No preferences found on server, using defaults');
+          return this.getDefaultPreferences();
+        }
         throw new Error(`Error fetching preferences: ${response.status}`);
       }
       
       const data = await response.json();
-      return data || this.getDefaultPreferences();
+      // If data is in different format than expected, extract preferences
+      const preferences = data.preferences || data;
+      return preferences || this.getDefaultPreferences();
       
     } catch (error) {
       console.error("Error in getPreferences:", error);
@@ -46,19 +65,42 @@ const ClientPreferenceService = {
       // Store in local storage for offline/testing mode
       localStorage.setItem(`client_preferences_${clientId}`, JSON.stringify(preferences));
       
-      // In a real implementation, this would make an API call
-      const API_URL = `https://carepro-api20241118153443.azurewebsites.net/api/Clients/${clientId}/preferences`;
+      // Get token from localStorage
+      const token = localStorage.getItem('authToken');
+      if (!token) {
+        throw new Error('Authentication token not found');
+      }
+      
+      // Use the Azure API endpoint
+      const API_URL = 'https://carepro-api20241118153443.azurewebsites.net/api/ClientPreferences';
+      
+      // Prepare the payload for Azure API endpoint
+      const payload = {
+        clientId: clientId,
+        preferences: preferences,
+        timestamp: new Date().toISOString()
+      };
       
       const response = await fetch(API_URL, {
-        method: 'PUT',
+        method: 'POST',
         headers: {
           'Content-Type': 'application/json',
+          'Authorization': `Bearer ${token}`
         },
-        body: JSON.stringify(preferences)
+        body: JSON.stringify(payload)
       });
       
       if (!response.ok) {
-        throw new Error(`Error saving preferences: ${response.status}`);
+        // Get more detailed error information
+        let errorMessage = `Error saving preferences: ${response.status}`;
+        try {
+          const errorData = await response.json();
+          errorMessage = errorData.message || errorMessage;
+        } catch (jsonError) {
+          console.error('Failed to parse error response:', jsonError);
+        }
+        
+        throw new Error(errorMessage);
       }
       
       const data = await response.json();
@@ -66,8 +108,8 @@ const ClientPreferenceService = {
       
     } catch (error) {
       console.error("Error in savePreferences:", error);
-      // Return the preferences that were attempted to be saved
-      return preferences;
+      // Re-throw the error for the component to handle
+      throw error;
     }
   },
   

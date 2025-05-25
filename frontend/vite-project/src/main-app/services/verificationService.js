@@ -548,6 +548,84 @@ const verificationService = {
   },
   
   /**
+   * Save verification data to Azure API
+   * @param {object} verificationData - The verification data to save
+   * @returns {Promise} - API response
+   */
+  async saveVerificationData(verificationData) {
+    try {
+      console.log('Saving verification data to Azure:', verificationData);
+
+      const token = localStorage.getItem('authToken');
+      if (!token) {
+        throw new Error('Authentication token missing');
+      }
+
+      // Azure API endpoint
+      const externalApiUrl = 'https://carepro-api20241118153443.azurewebsites.net/api';
+      
+      // Choose endpoint based on user type
+      const endpoint = verificationData.userType === 'client'
+        ? `${externalApiUrl}/verifications`
+        : `${externalApiUrl}/verifications`;
+      
+      const response = await axios.post(
+        endpoint,
+        verificationData.azureData,
+        {
+          headers: {
+            'Authorization': `Bearer ${token}`,
+            'Content-Type': 'application/json'
+          }
+        }
+      );
+
+      console.log('Successfully saved verification data to Azure:', response.data);
+
+      return {
+        status: 'success',
+        message: 'Verification data submitted to Azure successfully',
+        data: response.data
+      };
+    } catch (error) {
+      console.error('Failed to submit verification data to Azure:', error);
+      
+      // Store the failed submission attempt for retry later
+      const pendingData = JSON.parse(localStorage.getItem('pendingVerificationData') || '[]');
+      if (verificationData && !pendingData.some(data => 
+          data.userId === verificationData.userId && 
+          data.timestamp === verificationData.timestamp)) {
+        pendingData.push(verificationData);
+        localStorage.setItem('pendingVerificationData', JSON.stringify(pendingData));
+      }
+      
+      // Provide more specific error messages based on the error type
+      let errorMessage = 'Failed to submit verification data to Azure. Data stored for later submission.';
+      
+      if (error.response) {
+        // The request was made and the server responded with a status code outside of 2xx
+        if (error.response.status === 401) {
+          errorMessage = 'Authorization error: Please log in again and retry.';
+        } else if (error.response.status === 400) {
+          errorMessage = 'Invalid verification data format. Please try again.';
+        } else if (error.response.status === 500) {
+          errorMessage = 'Server error: Unable to save verification data at this time. Will retry automatically.';
+        }
+      } else if (error.request) {
+        // The request was made but no response was received
+        errorMessage = 'Network issue: Unable to connect to verification service. Data will be saved once connectivity is restored.';
+      }
+      
+      return {
+        status: 'error',
+        message: errorMessage,
+        error: error.message,
+        originalError: error
+      };
+    }
+  },
+
+  /**
    * Get verification status
    * @param {string} userId - User ID to check verification status
    * @param {string} userType - Type of user ('caregiver' or 'client')
@@ -868,73 +946,6 @@ const verificationService = {
         error: error.message
       };
     }
-  },
-  
-  /**
-   * Process any pending verification submissions
-   * Call this periodically to try submitting any cached verification data
-   * @returns {Promise} - Result of processing attempts
-   */
-  async processPendingVerifications() {
-    const pendingData = JSON.parse(localStorage.getItem('pendingVerificationData') || '[]');
-    
-    if (pendingData.length === 0) {
-      return {
-        status: 'success',
-        message: 'No pending verification data to process',
-        processed: 0
-      };
-    }
-    
-    let successCount = 0;
-    let failCount = 0;
-    const remainingData = [];
-    
-    for (const data of pendingData) {
-      try {
-        // Attempt to submit each verification record
-        // When Azure endpoint is available, uncomment the code below
-        /*
-        const externalApiUrl = 'https://carepro-api20241118153443.azurewebsites.net/api';
-        
-        // Choose endpoint based on user type
-        const endpoint = data.userType === 'client'
-          ? `${externalApiUrl}/clients/${data.userId}/verification`
-          : `${externalApiUrl}/caregivers/${data.userId}/verification`;
-          
-        await axios.post(
-          endpoint,
-          data.azureData,
-          {
-            headers: {
-              'Authorization': `Bearer ${process.env.INTERNAL_API_KEY}`,
-              'Content-Type': 'application/json'
-            }
-          }
-        );
-        */
-        
-        // For now, just simulate success
-        console.log('Would submit verification data to Azure:', data);
-        successCount++;
-      } catch (error) {
-        console.error('Failed to process pending verification:', error);
-        failCount++;
-        remainingData.push(data);
-      }
-    }
-    
-    // Update localStorage with only the failed items
-    localStorage.setItem('pendingVerificationData', JSON.stringify(remainingData));
-    
-    return {
-      status: 'success',
-      message: `Processed ${successCount + failCount} pending verifications`,
-      processed: successCount + failCount,
-      successful: successCount,
-      failed: failCount,
-      remaining: remainingData.length
-    };
   },
 };
 
