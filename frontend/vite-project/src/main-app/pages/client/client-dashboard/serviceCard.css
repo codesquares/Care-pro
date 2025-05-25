@@ -1,18 +1,224 @@
 .service-card {
-    border: 1px solid #ddd;
-    padding: 15px;
-    border-radius: 5px;
-    background-color: white;
+  border: none;
+  border-radius: 16px;
+  background-color: white;
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.08);
+  transition: all 0.3s cubic-bezier(0.25, 0.8, 0.25, 1);
+  overflow: hidden;
+  position: relative;
+  margin-bottom: 24px;
+  max-width: 100%;
+  display: flex;
+  flex-direction: column;
+  height: 380px; /* Fixed height for consistency */
+}
+
+.service-card:hover {
+  transform: translateY(-6px);
+  box-shadow: 0 15px 35px rgba(32, 87, 215, 0.15);
+}
+
+.service-img-container {
+  position: relative;
+  overflow: hidden;
+  height: 180px; /* Fixed consistent height for all images */
+  width: 100%;
+}
+
+.service-img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  transition: transform 0.5s ease;
+}
+
+.service-card:hover .service-img {
+  transform: scale(1.05);
+}
+
+.service-content {
+  padding: 16px;
+  position: relative;
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+}
+
+.category-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 4px;
+}
+
+.location {
+  display: flex;
+  align-items: center;
+  font-size: 13px;
+  color: #667085;
+  margin-bottom: 6px;
+  font-weight: 500;
+  letter-spacing: 0.3px;
+}
+
+.location::before {
+  content: "📍";
+  margin-right: 6px;
+  font-size: 16px;
+}
+
+.service-title {
+  font-size: 18px;
+  font-weight: 700;
+  color: #101828;
+  margin-bottom: 8px;
+  line-height: 1.2;
+  letter-spacing: -0.01em;
+  transition: color 0.2s ease;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.service-card:hover .service-title {
+  color: #2557D6;
+}
+
+.rating {
+  display: inline-flex;
+  align-items: center;
+  padding: 4px 8px;
+  background: linear-gradient(135deg, #F9FAFB 0%, #F0F2F5 100%);
+  border-radius: 16px;
+  font-weight: 600;
+  color: #344054;
+  margin-top: 0;
+  box-shadow: 0 2px 6px rgba(16, 24, 40, 0.05);
+  font-size: 13px;
+}
+
+.rating-text {
+  font-size: 13px;
+  margin-left: 3px;
+  font-weight: 500;
+  color: #667085;
+}
+
+.service-card p {
+  color: #4D5761;
+  font-size: 14px;
+  line-height: 1.4;
+  margin-bottom: 10px;
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  line-clamp: 2;  /* Standard property for compatibility */
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  max-height: 40px;
+}
+
+/* Premium badge for special services */
+.service-card::after {
+  content: "";
+  background: linear-gradient(135deg, #2557D6 0%, #6C8EE6 100%);
+  width: 100%;
+  height: 4px;
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  transform: scaleX(0);
+  transform-origin: left;
+  transition: transform 0.3s ease;
+}
+
+.service-card:hover::after {
+  transform: scaleX(1);
+}
+
+/* Premium badge styling */
+.service-img-container {
+  position: relative;
+  overflow: hidden;
+}
+
+.premium-badge {
+  position: absolute;
+  top: 12px;
+  right: 12px;
+  background: linear-gradient(135deg, #FFAB2D 0%, #FFD700 100%);
+  color: #222;
+  padding: 5px 12px;
+  font-size: 12px;
+  font-weight: 700;
+  text-transform: uppercase;
+  border-radius: 20px;
+  box-shadow: 0 2px 10px rgba(255, 171, 45, 0.3);
+  letter-spacing: 0.5px;
+}
+
+/* Card footer styling */
+.card-footer {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-top: auto;
+  padding-top: 10px;
+  border-top: 1px solid #f0f0f0;
+}
+
+.new-service {
+  background: linear-gradient(135deg, #32D89E 0%, #5AFFB4 100%);
+  color: #075E40;
+  padding: 4px 8px;
+  border-radius: 16px;
+  font-size: 12px;
+  font-weight: 600;
+}
+
+.view-details {
+  color: #2557D6;
+  font-weight: 600;
+  font-size: 13px;
+  display: flex;
+  align-items: center;
+  transition: transform 0.2s ease;
+}
+
+.view-details:after {
+  content: "→";
+  margin-left: 5px;
+  transition: transform 0.2s ease;
+}
+
+.service-card:hover .view-details:after {
+  transform: translateX(3px);
+}
+
+/* Responsive adjustments */
+@media (max-width: 768px) {
+  .service-card {
+    height: 350px;
   }
 
-  .category-header {
-    display: flex;
-    justify-content: space-evenly;
+  .service-content {
+    padding: 12px;
   }
-
+  
   .service-title {
-    font-size: 20px;
-    font-weight: bold;
-    color: black;
+    font-size: 16px;
   }
+  
+  .service-img-container {
+    height: 160px;
+  }
+  
+  .card-footer {
+    padding-top: 8px;
+  }
+  
+  .view-details {
+    font-size: 12px;
+  }
+}
   
