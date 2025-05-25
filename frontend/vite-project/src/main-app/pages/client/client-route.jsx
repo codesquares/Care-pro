@@ -4,6 +4,7 @@ import HomeCareService from './home-care-service/HomeCareService';
 import NavigationBar from './ClientNavBar';
 import PaymentPage from './payment/PaymentPage';
 import Messages from '../Messages';
+import DirectMessage from '../../components/messages/DirectMessage';
 import PaymentSuccess from './home-care-service/PaymentSuccess';
 import MyOrders from './orders/MyOrders';
 import OrderDetails from './orders/OrderTasks&Details';
@@ -18,6 +19,7 @@ function ClientRoutes() {
             <Route path="/service/:id" element={<HomeCareService />} />
             <Route path="/payment" element={<PaymentPage />} />
             <Route path="/message" element={<Messages />} />
+            <Route path="/message/:recipientId" element={<DirectMessage />} />
             <Route path="/app/client/payment-success" element={<PaymentSuccess />} />
             <Route path="/my-order" element={<MyOrders />} />
             <Route path="/my-order/:orderId" element={<OrderDetails />} />

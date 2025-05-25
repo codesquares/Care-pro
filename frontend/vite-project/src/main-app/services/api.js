@@ -3,7 +3,7 @@ import { refreshToken, logout } from './auth';
 
 // Create an Axios instance
 const api = axios.create({
-    baseURL: 'https://your-api-url.com', //API base URL to be replaced
+    baseURL: 'https://carepro-api20241118153443.azurewebsites.net/api',
     headers: {
         'Content-Type': 'application/json',
     },

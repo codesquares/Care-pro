@@ -20,6 +20,7 @@ const HomeCareService = () => {
     localStorage.setItem("gigId", id);
     //set the amount to the local storage
     localStorage.setItem("amount", service.price);
+    localStorage.setItem("providerId", service.caregiverId);
 
     console.log(user);
   
@@ -62,11 +63,11 @@ const HomeCareService = () => {
   
 
   const handleMessage = () => {
-    navigate(`${basePath}/message`, {
+    // Navigate directly to conversation with this caregiver
+    navigate(`${basePath}/message/${service.caregiverId}`, {
       state: {
-        recipient: providerName,
-        recipientId: service.providerId,
-        },
+        recipientName: providerName,
+      },
     });
   };
 

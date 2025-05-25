@@ -16,11 +16,21 @@
   }
 }
 
+/* Import responsive utilities */
+@import "./styles/responsive-utilities.css";
+
 .App {
   background-color: #FAFAFA;
   min-height: 100vh;
   display: flex;
   flex-direction: column;
+}
+
+/* Additional responsive adjustments for App container */
+@media (max-width: 480px) {
+  .App {
+    font-size: 0.9rem;
+  }
 }
 
 .main-title {
@@ -51,7 +61,7 @@
 }
 
 
- 
- 
+
+
 
 

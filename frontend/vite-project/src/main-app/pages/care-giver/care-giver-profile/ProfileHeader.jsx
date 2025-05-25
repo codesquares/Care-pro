@@ -3,6 +3,10 @@ import "./profile-header.css";
 import profilecard1 from '../../../../assets/profilecard1.png';
 import IntroVideo from "./IntroVideo";
 import ProfileInformation from "./ProfileInformation";
+import VerifyButton from "./VerifyButton";
+import AssessmentButton from "./AssessmentButton";
+import TestVerificationToggle from "../../../components/dev/TestVerificationToggle";
+import verificationService from "../../../services/verificationService";
 
 const ProfileHeader = () => {
   const [profile, setProfile] = useState({
@@ -19,6 +23,7 @@ const ProfileHeader = () => {
     aboutMe: "",
     services:[],
     status: false,
+    verificationStatus: null,
     isAvailable: false,
   });
   const [isLoading, setIsLoading] = useState(true);
@@ -28,6 +33,7 @@ const ProfileHeader = () => {
     const fetchProfile = async () => {
       try {
         const userDetails = JSON.parse(localStorage.getItem("userDetails"));
+        console.log(userDetails);
         if (!userDetails || !userDetails.id) {
           throw new Error("No caregiver ID found in local storage.");
         }
@@ -41,6 +47,37 @@ const ProfileHeader = () => {
         }
 
         const data = await response.json();
+
+        // Fetch verification status from the node API
+        let verificationStatusValue = "unverified";
+        try {
+          // First check localStorage for a previously saved verification status
+          const localStatus = localStorage.getItem('verificationStatus');
+          if (localStatus) {
+            try {
+              const parsed = JSON.parse(localStatus);
+              if (parsed && parsed.verified) {
+                verificationStatusValue = "verified";
+                console.log("Using cached verification status from localStorage:", parsed);
+              }
+            } catch (err) {
+              console.error("Error parsing localStorage verification status:", err);
+            }
+          }
+          
+          // If not verified in localStorage, check with the API
+          if (verificationStatusValue !== "verified") {
+            const verificationResponse = await verificationService.getVerificationStatus();
+            if (verificationResponse && verificationResponse.data) {
+              // Use the verification status from the node API
+              verificationStatusValue = verificationResponse.data.verificationStatus || "unverified";
+              console.log("Verification status from API:", verificationStatusValue);
+            }
+          }
+        } catch (verificationError) {
+          console.error("Error fetching verification status:", verificationError);
+          // Default to unverified on error
+        }
 
         const timeCreated = new Date(data.createdAt);
         const formattedDate = `${timeCreated.getFullYear()}-${String(
@@ -64,6 +101,8 @@ const ProfileHeader = () => {
           services: data.services || [],
           status: data.status || false,
           isAvailable: data.isAvailable || false,
+          // Use verification status from node API
+          verificationStatus: verificationStatusValue,
         });
 
         setIsLoading(false);
@@ -97,11 +136,19 @@ const ProfileHeader = () => {
         <div className={`availability-btn ${profile.isAvailable ? 'available' : 'unavailable'}`}>
           {profile.isAvailable ? "Available" : "Unavailable"}
         </div>
+        <div className="button-container">
+          <VerifyButton verificationStatus={profile.verificationStatus} />
+          <AssessmentButton verificationStatus={profile.verificationStatus} />
+        </div>
       </div>
       <IntroVideo profileIntrovideo={profile.introVideo} />
       <ProfileInformation profileDescription = {profile.aboutMe} services={profile.services}
       onUpdate={(newAboutMe) => setProfile(prev => ({ ...prev, aboutMe: newAboutMe }))}
       />
+        
+      
+      {/* Development Tool for Testing - Remove in Production */}
+      {process.env.NODE_ENV !== 'production' && <TestVerificationToggle />}
     </>
   );
 };

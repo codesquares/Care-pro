@@ -26,6 +26,49 @@
     box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
 }
 
+.profile-messages-section {
+    background: #fff;
+    padding: 20px;
+    border-radius: 10px;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+    margin-top: 20px;
+}
+
+.profile-messages-section h2 {
+    color: #333;
+    font-size: 1.5rem;
+    margin-bottom: 15px;
+    border-bottom: 1px solid #eee;
+    padding-bottom: 10px;
+}
+
+.messages-preview {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    padding: 15px 0;
+}
+
+.messages-preview p {
+    margin-bottom: 15px;
+    color: #666;
+}
+
+.view-messages-btn {
+    background-color: #4a90e2;
+    color: white;
+    border: none;
+    border-radius: 5px;
+    padding: 10px 20px;
+    cursor: pointer;
+    font-weight: 500;
+    transition: background-color 0.3s;
+}
+
+.view-messages-btn:hover {
+    background-color: #3a7bc8;
+}
+
 .profile-image {
     width: 100px;
     height: 100px;

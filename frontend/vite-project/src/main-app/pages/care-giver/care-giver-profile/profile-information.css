@@ -119,3 +119,61 @@ hr {
   gap: 1rem;
 }
 
+/* Responsive Styles */
+@media (max-width: 768px) {
+  .description,
+  .services,
+  .certifications {
+    padding: 12px 15px;
+  }
+  
+  .description h3,
+  .services h3,
+  .certifications h3 {
+    font-size: 0.95rem;
+  }
+  
+  .description p,
+  .services li,
+  .certifications a {
+    font-size: 0.85rem;
+  }
+  
+  .description button {
+    padding: 6px 10px;
+    font-size: 0.85rem;
+  }
+  
+  .modal-content {
+    width: 350px;
+    padding: 15px;
+  }
+}
+
+@media (max-width: 480px) {
+  .description,
+  .services,
+  .certifications {
+    padding: 10px;
+  }
+  
+  .description p {
+    line-height: 1.4;
+  }
+  
+  .services li::before {
+    font-size: 0.8rem;
+  }
+  
+  .modal-content {
+    width: 100%;
+    max-width: 300px;
+    padding: 12px;
+  }
+  
+  .modal-actions {
+    flex-direction: column;
+    gap: 0.5rem;
+  }
+}
+

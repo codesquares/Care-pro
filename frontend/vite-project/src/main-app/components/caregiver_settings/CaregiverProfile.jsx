@@ -95,6 +95,15 @@ const ProfilePage = () => {
                 <div className="profile-settings-section">
                     <button className="account-settings">⚙️ Account settings</button>
                 </div>
+                
+                {/* Messages Section */}
+                <div className="profile-messages-section">
+                    <h2>Messages</h2>
+                    <div className="messages-preview">
+                        <p>View your conversations with clients</p>
+                        <button className="view-messages-btn" onClick={() => window.location.href = "/app/caregiver/message"}>View All Messages</button>
+                    </div>
+                </div>
             </div>
             {/* Right Section - Reviews */}
             <div className="reviews-section">
