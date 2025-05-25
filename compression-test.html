@@ -1,0 +1,198 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Image Compression Test</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+        .container {
+            display: flex;
+            flex-direction: column;
+            gap: 20px;
+        }
+        .images {
+            display: flex;
+            gap: 20px;
+        }
+        .image-container {
+            flex: 1;
+        }
+        img {
+            max-width: 100%;
+            border: 1px solid #ccc;
+        }
+        .stats {
+            background-color: #f5f5f5;
+            padding: 15px;
+            border-radius: 5px;
+        }
+        pre {
+            background-color: #eee;
+            padding: 10px;
+            overflow: auto;
+        }
+        button {
+            padding: 10px 15px;
+            background-color: #4a6bdf;
+            color: white;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+        }
+        input[type="file"] {
+            margin-bottom: 15px;
+        }
+    </style>
+</head>
+<body>
+    <h1>Image Compression Test</h1>
+    <p>This page tests the image compression function implemented in the Care-pro app.</p>
+    
+    <div class="container">
+        <div>
+            <h2>Choose an image to compress</h2>
+            <input type="file" id="imageInput" accept="image/*">
+            <button id="compressButton">Compress Image</button>
+        </div>
+
+        <div class="stats" id="stats">
+            <h2>Compression Stats</h2>
+            <p>Select an image to see compression statistics.</p>
+        </div>
+
+        <div class="images">
+            <div class="image-container">
+                <h2>Original Image</h2>
+                <img id="originalImage" src="" alt="Original image will appear here">
+                <p id="originalSize">Size: -</p>
+            </div>
+            <div class="image-container">
+                <h2>Compressed Image</h2>
+                <img id="compressedImage" src="" alt="Compressed image will appear here">
+                <p id="compressedSize">Size: -</p>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // The same image compression function used in the verification pages
+        const convertFileToBase64WithCompression = (file) => {
+            return new Promise((resolve, reject) => {
+                // For image files, compress before converting to base64
+                if (file.type.startsWith('image/')) {
+                    const reader = new FileReader();
+                    reader.readAsDataURL(file);
+                    reader.onload = (event) => {
+                        const img = new Image();
+                        img.src = event.target.result;
+                        img.onload = () => {
+                            // Create canvas for compression
+                            const canvas = document.createElement('canvas');
+                            
+                            // Calculate new dimensions - maintain aspect ratio but limit max dimensions
+                            let width = img.width;
+                            let height = img.height;
+                            const MAX_WIDTH = 1200;
+                            const MAX_HEIGHT = 1200;
+                            
+                            if (width > height) {
+                                if (width > MAX_WIDTH) {
+                                    height *= MAX_WIDTH / width;
+                                    width = MAX_WIDTH;
+                                }
+                            } else {
+                                if (height > MAX_HEIGHT) {
+                                    width *= MAX_HEIGHT / height;
+                                    height = MAX_HEIGHT;
+                                }
+                            }
+                            
+                            canvas.width = width;
+                            canvas.height = height;
+                            
+                            // Draw and compress
+                            const ctx = canvas.getContext('2d');
+                            ctx.drawImage(img, 0, 0, width, height);
+                            
+                            // Get compressed image as base64 string (0.7 quality)
+                            const compressedBase64 = canvas.toDataURL('image/jpeg', 0.7);
+                            console.log(`Image compressed: ${Math.round((compressedBase64.length * 0.75) / 1024)}KB`);
+                            
+                            // Return the complete data URL for display purposes
+                            resolve(compressedBase64);
+                        };
+                    };
+                    reader.onerror = error => reject(error);
+                } else {
+                    reject(new Error("Not an image file"));
+                }
+            });
+        };
+
+        // UI functionality
+        document.getElementById('compressButton').addEventListener('click', async () => {
+            const fileInput = document.getElementById('imageInput');
+            const statsEl = document.getElementById('stats');
+            
+            if (!fileInput.files || fileInput.files.length === 0) {
+                alert('Please select an image file first.');
+                return;
+            }
+            
+            const file = fileInput.files[0];
+            
+            if (!file.type.startsWith('image/')) {
+                alert('Please select an image file.');
+                return;
+            }
+            
+            try {
+                // Display original image
+                const originalImage = document.getElementById('originalImage');
+                const originalUrl = URL.createObjectURL(file);
+                originalImage.src = originalUrl;
+                
+                // Get original file size
+                const originalSizeMB = file.size / (1024 * 1024);
+                document.getElementById('originalSize').textContent = `Size: ${originalSizeMB.toFixed(2)} MB`;
+                
+                // Compress image
+                const compressedDataUrl = await convertFileToBase64WithCompression(file);
+                
+                // Display compressed image
+                const compressedImage = document.getElementById('compressedImage');
+                compressedImage.src = compressedDataUrl;
+                
+                // Calculate compressed size (data URL length * 0.75 because base64 is 33% larger than binary)
+                const base64Data = compressedDataUrl.split(',')[1];
+                const compressedSizeBytes = base64Data.length * 0.75;
+                const compressedSizeMB = compressedSizeBytes / (1024 * 1024);
+                document.getElementById('compressedSize').textContent = `Size: ${compressedSizeMB.toFixed(2)} MB`;
+                
+                // Show stats
+                const compressionRatio = originalSizeMB / compressedSizeMB;
+                const percentReduction = ((originalSizeMB - compressedSizeMB) / originalSizeMB) * 100;
+                
+                statsEl.innerHTML = `
+                    <h2>Compression Stats</h2>
+                    <p><strong>Original Size:</strong> ${originalSizeMB.toFixed(2)} MB</p>
+                    <p><strong>Compressed Size:</strong> ${compressedSizeMB.toFixed(2)} MB</p>
+                    <p><strong>Size Reduction:</strong> ${percentReduction.toFixed(2)}%</p>
+                    <p><strong>Compression Ratio:</strong> ${compressionRatio.toFixed(2)}:1</p>
+                    <p><strong>New Dimensions:</strong> ${compressedImage.naturalWidth} x ${compressedImage.naturalHeight} pixels</p>
+                `;
+                
+            } catch (error) {
+                console.error('Error compressing image:', error);
+                alert('Error compressing image: ' + error.message);
+            }
+        });
+    </script>
+</body>
+</html>

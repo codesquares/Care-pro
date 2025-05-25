@@ -7,11 +7,11 @@ import { AuthProvider } from "./main-app/context/AuthContext.jsx";
 
 
 createRoot(document.getElementById('root')).render(
-  <StrictMode>
+  // <StrictMode>
     <HelmetProvider>
       <AuthProvider>
         <App />
       </AuthProvider>
     </HelmetProvider>
-  </StrictMode>,
+  // </StrictMode>,
 );

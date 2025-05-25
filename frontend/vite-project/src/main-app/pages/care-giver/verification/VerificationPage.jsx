@@ -4,14 +4,29 @@ import "./verification-page.css";
 import "./verification-page-footer.css";
 import verificationService from "../../../services/verificationService";
 import { Helmet } from "react-helmet-async";
+import convertFileToBase64 from "./convertFileToBase64";
 
 const VerificationPage = () => {
+  // Constants for test values - matching client implementation
+  const TEST_VALUES = {
+    BVN: '22222222222',
+    NIN: '70123456789'
+  };
+  
+  // Helper to check if a value is a test value
+  const isTestValue = (type, value) => {
+    if (!value) return false;
+    const testValue = TEST_VALUES[type.toUpperCase()];
+    return testValue && testValue === value;
+  };
+
   const navigate = useNavigate();
   const [verificationMethod, setVerificationMethod] = useState("bvn");
   const [bvnNumber, setBvnNumber] = useState("");
   const [ninNumber, setNinNumber] = useState("");
   const [idImage, setIdImage] = useState(null);
   const [selfieImage, setSelfieImage] = useState(null);
+  const [idType, setIdType] = useState("generic");
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [error, setError] = useState("");
   const [success, setSuccess] = useState("");
@@ -19,6 +34,12 @@ const VerificationPage = () => {
   const [isPolling, setIsPolling] = useState(false);
   const [progress, setProgress] = useState(0);
   const [progressMessage, setProgressMessage] = useState("");
+  
+  // Multi-step verification state - matching client implementation
+  const [verificationStep, setVerificationStep] = useState(1);
+  const [showIdSelfieStep, setShowIdSelfieStep] = useState(false);
+  const [bvnResult, setBvnResult] = useState(null);
+  const [ninResult, setNinResult] = useState(null);
 
   // Get token and user ID from localStorage
   const userDetails = JSON.parse(localStorage.getItem("userDetails") || "{}");
@@ -28,102 +49,168 @@ const VerificationPage = () => {
   const pollRef = useRef(null);
   const progressIntervalRef = useRef(null);
   
-  useEffect(() => {
-    // Redirect if no token or user ID
-    if (!token || !userDetails.id) {
-      navigate("/login");
-      return;
-    }
-    
-    // Check initial verification status
-    const checkStatus = async () => {
-      try {
+
+
+const effectRan = useRef(false);
+
+useEffect(() => {
+  // Skip the second run caused by Strict Mode in development
+  if (effectRan.current) return;
+  effectRan.current = true;
+
+  // Redirect if no token or user ID
+  if (!token || !userDetails.id) {
+    navigate("/login");
+    return;
+  }
+
+  // Track if component is mounted to prevent state updates after unmounting
+  let isMounted = true;
+
+  // Check initial verification status
+  const checkStatus = async () => {
+    try {
+      if (isMounted) {
         setProgress(10);
         setProgressMessage("Checking verification status...");
-        const status = await verificationService.getVerificationStatus();
-        // If already verified, redirect to profile page
-        if (status.verified === true) {
-          setProgress(100);
-          setProgressMessage("Account already verified!");
-          setSuccess("Your account is already verified!");
-          setTimeout(() => {
+      }
+
+      const status = await verificationService.getVerificationStatus(
+        userDetails.id,
+        "caregiver"
+      );
+
+      if (!isMounted) return;
+
+      setVerificationStatus(status);
+
+      if (status.verified === true) {
+        setProgress(100);
+        setProgressMessage("Account already verified!");
+        setSuccess("Your account is already verified!");
+        setTimeout(() => {
+          if (isMounted) {
             navigate("/app/caregiver/profile");
-          }, 3000);
-        } else {
-          setProgress(0);
-          setProgressMessage("");
-        }
-      } catch (err) {
-        console.error("Failed to check verification status", err);
+          }
+        }, 3000);
+      } else {
         setProgress(0);
         setProgressMessage("");
       }
-    };
-    
-    checkStatus();
-    
-    // Don't start polling immediately, wait for initial check to complete
-    const pollingTimeout = setTimeout(() => {
-      // Start polling for verification status updates only if not already verified
-      if (!verificationStatus?.verified) {
-        setIsPolling(true);
-        
-        // If polling starts, show a progress indicator that gradually increases
-        let progressCounter = 20;
-        progressIntervalRef.current = setInterval(() => {
-          if (progressCounter < 90) {
-            setProgress(progressCounter);
-            setProgressMessage("Waiting for verification result...");
-            progressCounter += 5;
-          }
-        }, 10000); // Increased from 5000 to 10000 ms (10 seconds) to reduce frequency
-        
-        // Pass a longer polling interval (15 seconds instead of 10 seconds)
-        pollRef.current = verificationService.pollVerificationStatus(
-          (status) => {
-            setVerificationStatus(status);
-            
-            if (status.verified === true) {
-              clearInterval(progressIntervalRef.current);
-              setIsPolling(false);
-              setProgress(100);
-              setProgressMessage("Verification successful!");
-              setSuccess("Your account has been verified successfully!");
-              setTimeout(() => {
-                navigate("/app/caregiver/profile");
-              }, 3000);
-            } else if (status.verificationStatus === "pending") {
-              // Use the progress from the polling service
-              if (status.progress) {
-                setProgress(status.progress);
-                setProgressMessage(`Verification in progress (attempt ${status.pollingAttempt || 1}/${status.maxAttempts || 10})...`);
-              }
-            } else if (status.verificationStatus === "failed") {
-              clearInterval(progressIntervalRef.current);
-              setIsPolling(false);
-              setProgress(100);
-              setProgressMessage("Verification failed");
-              setError("Verification failed. Please try again.");
-            }
-          },
-          15000 // 15 seconds polling interval
-        );
+    } catch (err) {
+      console.error("Failed to check verification status", err);
+      if (isMounted) {
+        setProgress(0);
+        setProgressMessage("");
       }
-    }, 3000); // Increased from 1 second to 3 seconds wait before starting polling
-    
-    // Clean up polling when component unmounts
-    return () => {
+    }
+  };
+
+  checkStatus();
+
+  let pollingTimeout = null;
+
+  const setupPolling = () => {
+    if (isPolling || verificationStatus?.verified) {
+      return;
+    }
+
+    if (isMounted) {
+      setIsPolling(true);
+
+      let progressCounter = 20;
+
+      if (progressIntervalRef.current) {
+        clearInterval(progressIntervalRef.current);
+      }
+
+      progressIntervalRef.current = setInterval(() => {
+        if (!isMounted) {
+          clearInterval(progressIntervalRef.current);
+          return;
+        }
+
+        if (progressCounter < 90) {
+          setProgress(progressCounter);
+          setProgressMessage("Waiting for verification result...");
+          progressCounter += 5;
+        }
+      }, 10000);
+
       if (pollRef.current) {
         pollRef.current();
+        pollRef.current = null;
       }
+
+      pollRef.current = verificationService.pollVerificationStatus(
+        (status) => {
+          if (!isMounted) return;
+
+          setVerificationStatus(status);
+
+          if (status.verified === true) {
+            clearInterval(progressIntervalRef.current);
+            setIsPolling(false);
+            setProgress(100);
+            setProgressMessage("Verification successful!");
+            setSuccess("Your account has been verified successfully!");
+            setTimeout(() => {
+              if (isMounted) {
+                navigate("/app/caregiver/profile");
+              }
+            }, 3000);
+          } else if (status.verificationStatus === "pending") {
+            if (status.progress) {
+              setProgress(status.progress);
+              setProgressMessage(
+                `Verification in progress (attempt ${status.pollingAttempt || 1}/${
+                  status.maxAttempts || 10
+                })...`
+              );
+            }
+          } else if (status.verificationStatus === "failed") {
+            clearInterval(progressIntervalRef.current);
+            setIsPolling(false);
+            setProgress(100);
+            setProgressMessage("Verification failed");
+            setError("Verification failed. Please try again.");
+          }
+        },
+        15000,
+        userDetails.id,
+        "caregiver"
+      );
+    }
+  };
+
+  pollingTimeout = setTimeout(setupPolling, 3000);
+
+  return () => {
+    isMounted = false;
+
+    if (pollRef.current) {
+      pollRef.current();
+      pollRef.current = null;
+    }
+
+    if (progressIntervalRef.current) {
       clearInterval(progressIntervalRef.current);
+      progressIntervalRef.current = null;
+    }
+
+    if (pollingTimeout) {
       clearTimeout(pollingTimeout);
-    };
-  }, [token, userDetails, navigate]);
+    }
+  };
+}, []);
 
   const handleVerificationMethodChange = (e) => {
     setVerificationMethod(e.target.value);
     setError(""); // Clear errors when changing method
+  };
+
+  const handleIdTypeChange = (e) => {
+    setIdType(e.target.value);
   };
 
   const handleImageChange = (e, setImageFunc) => {
@@ -134,19 +221,13 @@ const VerificationPage = () => {
         setError("Image size should be less than 5MB");
         return;
       }
+      
+      // Log original file size
+      console.log(`Original image size: ${Math.round(file.size / 1024)}KB`);
+      
       setImageFunc(file);
       setError("");
     }
-  };
-
-  // Helper function to convert file to base64
-  const convertFileToBase64 = (file) => {
-    return new Promise((resolve, reject) => {
-      const reader = new FileReader();
-      reader.readAsDataURL(file);
-      reader.onload = () => resolve(reader.result.split(',')[1]); // Remove data:image/jpeg;base64, part
-      reader.onerror = error => reject(error);
-    });
   };
 
   const handleSubmit = async (e) => {
@@ -157,161 +238,269 @@ const VerificationPage = () => {
     setProgress(10);
     setProgressMessage("Starting verification process...");
 
+    // Clear any existing polling first
+    if (pollRef.current) {
+      pollRef.current();
+      pollRef.current = null;
+    }
+    
+    if (progressIntervalRef.current) {
+      clearInterval(progressIntervalRef.current);
+      progressIntervalRef.current = null;
+    }
+
     try {
-      // Validate inputs based on verification method
-      if (verificationMethod === "bvn" && !bvnNumber) {
-        throw new Error("BVN number is required");
-      } else if (verificationMethod === "nin" && !ninNumber) {
-        throw new Error("NIN number is required");
+      // Validate inputs based on verification method and step
+      if (verificationMethod === "bvn") {
+        if (verificationStep === 1 && !bvnNumber) {
+          throw new Error("BVN number is required");
+        } else if (verificationStep === 2 && (!idImage || !selfieImage)) {
+          throw new Error("Both ID image and selfie are required for BVN verification");
+        }
+      } else if (verificationMethod === "nin") {
+        if (verificationStep === 1 && !ninNumber) {
+          throw new Error("NIN number is required");
+        } else if (verificationStep === 2 && !selfieImage) {
+          throw new Error("Selfie image is required for NIN verification");
+        }
       } else if (verificationMethod === "id" && (!idImage || !selfieImage)) {
-        throw new Error("Both ID image and selfie are required");
+        throw new Error("Both ID image and selfie are required for ID verification");
       }
 
       setProgress(30);
-      setProgressMessage(`Processing ${verificationMethod.toUpperCase()} verification...`);
-
-      // Create form data for ID verification method
-      if (verificationMethod === "id") {
-        // Convert image files to base64 if needed
-        setProgress(50);
-        setProgressMessage("Converting and uploading images...");
+      
+      if (verificationMethod === "bvn") {
+        if (verificationStep === 1) {
+          // First step: BVN verification
+          setProgressMessage("Processing BVN verification...");
+          
+          // Check if using a test BVN value
+          const isTestBvn = isTestValue('BVN', bvnNumber);
+          if (isTestBvn) {
+            console.log('🧪 Using test BVN value:', bvnNumber);
+          }
+          
+          const data = await verificationService.verifyBVN(
+            bvnNumber, 
+            null, 
+            null, 
+            'caregiver', 
+            userDetails.id
+          );
+          
+          if (data.status === "success") {
+            // BVN verified successfully, now need ID + selfie
+            setVerificationStep(2);
+            setShowIdSelfieStep(true);
+            setBvnResult(data);
+            setProgress(50);
+            setProgressMessage("BVN verified successfully! Please complete ID and selfie verification.");
+            setSuccess("BVN verification successful! Please proceed with ID and selfie verification.");
+          } else {
+            // BVN verification failed
+            setProgress(100);
+            setProgressMessage("BVN verification failed");
+            setError(data.message || "BVN verification failed. Please check your information and try again.");
+          }
+        } else if (verificationStep === 2) {
+          // Second step: ID + Selfie verification after BVN
+          setProgressMessage("Processing ID and selfie verification for BVN...");
+          
+          const idImageBase64 = idImage ? await convertFileToBase64(idImage) : null;
+          const selfieImageBase64 = selfieImage ? await convertFileToBase64(selfieImage) : null;
+          
+          console.log("Using complete BVN verification with ID and selfie for caregiver");
+          
+          // Use the combined verification endpoint
+          const data = await verificationService.verifyBVNComplete(
+            bvnNumber, 
+            selfieImageBase64, 
+            idImageBase64,
+            idType,
+            'caregiver', 
+            userDetails.id
+          );
+          
+          if (data.status === "success" || data.status === "pending") {
+            if (data.status === "success") {
+              setProgress(100);
+              setProgressMessage("Verification successful!");
+              setSuccess("Your identity has been verified successfully!");
+              
+              verificationService.saveVerificationStatus(
+                true, 
+                'verified', 
+                'BVN with ID and Selfie verification successful',
+                userDetails.id,
+                'caregiver'
+              );
+              
+              setVerificationStatus({
+                verified: true,
+                verificationStatus: 'verified'
+              });
+              
+              setTimeout(() => {
+                navigate("/app/caregiver/profile");
+              }, 3000);
+            } else {
+              // Pending verification
+              setProgress(70);
+              setProgressMessage("Verification submitted and pending review...");
+              setSuccess("Your verification is being processed. You'll be notified when it's complete.");
+              // Start polling for status
+              setIsPolling(true);
+            }
+          } else {
+            // Verification failed
+            setProgress(100);
+            setProgressMessage("Verification failed");
+            setError(data.message || "Verification failed. Please check your information and try again.");
+          }
+        }
+      } else if (verificationMethod === "nin") {
+        if (verificationStep === 1) {
+          // First step: NIN verification
+          setProgressMessage("Processing NIN verification...");
+          
+          // Check if using a test NIN value
+          const isTestNin = isTestValue('NIN', ninNumber);
+          if (isTestNin) {
+            console.log('🧪 Using test NIN value:', ninNumber);
+          }
+          
+          const data = await verificationService.verifyNIN(
+            ninNumber, 
+            null, 
+            'caregiver', 
+            userDetails.id
+          );
+          
+          if (data.status === "success") {
+            // NIN verified successfully, now need selfie
+            setVerificationStep(2);
+            setShowIdSelfieStep(true);
+            setNinResult(data);
+            setProgress(50);
+            setProgressMessage("NIN verified successfully! Please complete the selfie verification.");
+            setSuccess("NIN verification successful! Please proceed with selfie verification.");
+          } else {
+            // NIN verification failed
+            setProgress(100);
+            setProgressMessage("NIN verification failed");
+            setError(data.message || "NIN verification failed. Please check your information and try again.");
+          }
+        } else if (verificationStep === 2) {
+          // Second step: Selfie verification after NIN
+          setProgressMessage("Processing selfie verification for NIN...");
+          
+          const selfieImageBase64 = selfieImage ? await convertFileToBase64(selfieImage) : null;
+          
+          console.log("Using complete NIN verification with selfie for caregiver");
+          
+          // Use the combined verification endpoint
+          const data = await verificationService.verifyNINComplete(
+            ninNumber, 
+            selfieImageBase64, 
+            'caregiver', 
+            userDetails.id
+          );
+          
+          if (data.status === "success" || data.status === "pending") {
+            if (data.status === "success") {
+              setProgress(100);
+              setProgressMessage("Verification successful!");
+              setSuccess("Your identity has been verified successfully!");
+              
+              verificationService.saveVerificationStatus(
+                true, 
+                'verified', 
+                'NIN with Selfie verification successful',
+                userDetails.id,
+                'caregiver'
+              );
+              
+              setVerificationStatus({
+                verified: true,
+                verificationStatus: 'verified'
+              });
+              
+              setTimeout(() => {
+                navigate("/app/caregiver/profile");
+              }, 3000);
+            } else {
+              // Pending verification
+              setProgress(70);
+              setProgressMessage("Verification submitted and pending review...");
+              setSuccess("Your verification is being processed. You'll be notified when it's complete.");
+              // Start polling for status
+              setIsPolling(true);
+            }
+          } else {
+            // Verification failed
+            setProgress(100);
+            setProgressMessage("Verification failed");
+            setError(data.message || "Verification failed. Please check your information and try again.");
+          }
+        }
+      } else if (verificationMethod === "id") {
+        // ID + Selfie verification
+        setProgressMessage("Processing ID and selfie verification...");
         
         const idImageBase64 = idImage ? await convertFileToBase64(idImage) : null;
         const selfieImageBase64 = selfieImage ? await convertFileToBase64(selfieImage) : null;
         
-        setProgress(70);
-        setProgressMessage("Submitting verification data...");
+        const data = await verificationService.verifyID(
+          idImageBase64, 
+          selfieImageBase64,
+          idType,
+          'caregiver', 
+          userDetails.id
+        );
         
-        const data = await verificationService.verifyID(idImageBase64, selfieImageBase64);
-        
-        setProgress(90);
-        setProgressMessage("Processing verification results...");
-        
-        if (data.verified) {
-          setProgress(100);
-          setProgressMessage("Verification successful!");
-          setSuccess("ID verification successful! Your identity has been verified.");
-          
-          // Save verification status to ensure it persists
-          verificationService.saveVerificationStatus(
-            true, 
-            'verified', 
-            'ID verification successful'
-          );
-          
-          // Update local verification status to display in UI
-          setVerificationStatus({
-            verified: true,
-            verificationStatus: 'verified'
-          });
-          
-          // If verification was successful, wait a moment then redirect
-          setTimeout(() => {
-            navigate("/app/caregiver/profile");
-          }, 3000);
-        } else if (data.status === "error") {
-          setProgress(100);
-          setProgressMessage("Verification service error");
-          setError(data.message || "There was an error with the verification service. Please try again later.");
-          
-          // Update local verification status to display in UI
-          setVerificationStatus({
-            verified: false,
-            verificationStatus: 'failed',
-            message: data.message
-          });
+        if (data.status === "success" || data.status === "pending") {
+          if (data.status === "success") {
+            setProgress(100);
+            setProgressMessage("Verification successful!");
+            setSuccess("Your identity has been verified successfully!");
+            
+            verificationService.saveVerificationStatus(
+              true, 
+              'verified', 
+              'ID and Selfie verification successful',
+              userDetails.id,
+              'caregiver'
+            );
+            
+            setVerificationStatus({
+              verified: true,
+              verificationStatus: 'verified'
+            });
+            
+            setTimeout(() => {
+              navigate("/app/caregiver/profile");
+            }, 3000);
+          } else {
+            // Pending verification
+            setProgress(70);
+            setProgressMessage("Verification submitted and pending review...");
+            setSuccess("Your verification is being processed. You'll be notified when it's complete.");
+            // Start polling for status
+            setIsPolling(true);
+          }
         } else {
+          // Verification failed
           setProgress(100);
           setProgressMessage("Verification failed");
-          setError(data.message || "ID verification failed. Please ensure your documents are clear and valid.");
-          
-          // Update local verification status to display in UI
-          setVerificationStatus({
-            verified: false,
-            verificationStatus: 'failed',
-            message: data.message || "ID verification failed. Please ensure your documents are clear and valid."
-          });
-        }
-      } else {
-        // Handle BVN/NIN verification
-        let data;
-        
-        setProgress(50);
-        setProgressMessage(`Verifying ${verificationMethod.toUpperCase()} number...`);
-        
-        if (verificationMethod === "bvn") {
-          data = await verificationService.verifyBVN(bvnNumber);
-        } else {
-          data = await verificationService.verifyNIN(ninNumber);
-        }
-        
-        setProgress(90);
-        setProgressMessage("Processing verification results...");
-        
-        if (data.verified) {
-          setProgress(100);
-          setProgressMessage("Verification successful!");
-          setSuccess(`Your ${verificationMethod.toUpperCase()} has been verified successfully! You can now proceed with your profile.`);
-          
-          // Save verification status to ensure it persists
-          verificationService.saveVerificationStatus(
-            true, 
-            'verified', 
-            `${verificationMethod.toUpperCase()} verification successful`
-          );
-          
-          // Update local verification status to display in UI
-          setVerificationStatus({
-            verified: true,
-            verificationStatus: 'verified'
-          });
-          
-          // If verification was successful, wait a moment then redirect
-          setTimeout(() => {
-            navigate("/app/caregiver/profile");
-          }, 3000);
-        } else if (data.status === "error") {
-          setProgress(100);
-          setProgressMessage("Verification service error");
-          setError(data.message || "There was an error with the verification service. Please try again later.");
-          
-          // Update local verification status to display in UI
-          setVerificationStatus({
-            verified: false,
-            verificationStatus: 'failed',
-            message: data.message
-          });
-        } else {
-          setProgress(100);
-          setProgressMessage("Verification failed");
-          setError(data.message || `${verificationMethod.toUpperCase()} verification failed. Please check your information and try again.`);
-          
-          // Update local verification status to display in UI
-          setVerificationStatus({
-            verified: false,
-            verificationStatus: 'failed',
-            message: data.message || `${verificationMethod.toUpperCase()} verification failed. Please check your information and try again.`
-          });
+          setError(data.message || "Verification failed. Please check your information and try again.");
         }
       }
     } catch (err) {
       setProgress(100);
-      setProgressMessage("Verification failed.");
+      setProgressMessage("Verification failed");
       setError(err.message || "Verification failed. Please try again later.");
-      
-      // Update local verification status to display in UI
-      setVerificationStatus({
-        verified: false,
-        verificationStatus: 'failed',
-        message: err.message || "Verification failed. Please try again later."
-      });
     } finally {
       setIsSubmitting(false);
-      // Stop polling if we have the result from direct verification
-      if (pollRef.current) {
-        pollRef.current();
-      }
-      setIsPolling(false);
     }
   };
 
@@ -370,142 +559,268 @@ const VerificationPage = () => {
           </div>
         )}
 
-        <form onSubmit={handleSubmit}>
-          <div className="verification-methods">
-            <div className="method-selection">
-              <input
-                type="radio"
-                id="bvn-method"
-                value="bvn"
-                checked={verificationMethod === "bvn"}
-                onChange={handleVerificationMethodChange}
-              />
-              <label htmlFor="bvn-method" className={verificationMethod === "bvn" ? "selected" : ""}>
-                <div className="method-icon bvn-icon">
-                  <i className="fas fa-university"></i>
-                </div>
-                <div className="method-title">BVN Verification</div>
-                <div className="method-description">Verify with your Bank Verification Number</div>
-              </label>
-              
-              <input
-                type="radio"
-                id="nin-method"
-                value="nin"
-                checked={verificationMethod === "nin"}
-                onChange={handleVerificationMethodChange}
-              />
-              <label htmlFor="nin-method" className={verificationMethod === "nin" ? "selected" : ""}>
-                <div className="method-icon nin-icon">
-                  <i className="fas fa-id-card"></i>
-                </div>
-                <div className="method-title">NIN Verification</div>
-                <div className="method-description">Verify with your National ID Number</div>
-              </label>
-              
-              <input
-                type="radio"
-                id="id-method"
-                value="id"
-                checked={verificationMethod === "id"}
-                onChange={handleVerificationMethodChange}
-              />
-              <label htmlFor="id-method" className={verificationMethod === "id" ? "selected" : ""}>
-                <div className="method-icon id-icon">
-                  <i className="fas fa-camera"></i>
-                </div>
-                <div className="method-title">ID & Selfie</div>
-                <div className="method-description">Upload your ID and a selfie with it</div>
-              </label>
-            </div>
-
-            {/* BVN Verification Form */}
-            {verificationMethod === "bvn" && (
-              <div className="verification-form">
-                <div className="form-group">
-                  <label htmlFor="bvn">
+        {/* Show different forms based on the verification stage */}
+        {!showIdSelfieStep ? (
+          <form onSubmit={handleSubmit}>
+            <div className="verification-methods">
+              <div className="method-selection">
+                <input
+                  type="radio"
+                  id="bvn-method"
+                  value="bvn"
+                  checked={verificationMethod === "bvn"}
+                  onChange={handleVerificationMethodChange}
+                />
+                <label htmlFor="bvn-method" className={verificationMethod === "bvn" ? "selected" : ""}>
+                  <div className="method-icon bvn-icon">
                     <i className="fas fa-university"></i>
-                    Bank Verification Number (BVN)
-                  </label>
-                  <input
-                    type="text"
-                    id="bvn"
-                    value={bvnNumber}
-                    onChange={(e) => setBvnNumber(e.target.value)}
-                    placeholder="Enter your 11-digit BVN"
-                    pattern="[0-9]{11}"
-                    maxLength={11}
-                    required
-                  />
-                  <small>
-                    <i className="fas fa-info-circle"></i>
-                    Your BVN is a unique 11-digit number from your bank
-                  </small>
-                </div>
-              </div>
-            )}
-
-            {/* NIN Verification Form */}
-            {verificationMethod === "nin" && (
-              <div className="verification-form">
-                <div className="form-group">
-                  <label htmlFor="nin">
+                  </div>
+                  <div className="method-title">BVN Verification</div>
+                  <div className="method-description">Verify with your Bank Verification Number</div>
+                </label>
+                
+                <input
+                  type="radio"
+                  id="nin-method"
+                  value="nin"
+                  checked={verificationMethod === "nin"}
+                  onChange={handleVerificationMethodChange}
+                />
+                <label htmlFor="nin-method" className={verificationMethod === "nin" ? "selected" : ""}>
+                  <div className="method-icon nin-icon">
                     <i className="fas fa-id-card"></i>
-                    National Identification Number (NIN)
-                  </label>
-                  <input
-                    type="text"
-                    id="nin"
-                    value={ninNumber}
-                    onChange={(e) => setNinNumber(e.target.value)}
-                    placeholder="Enter your 11-digit NIN"
-                    pattern="[0-9]{11}"
-                    maxLength={11}
-                    required
-                  />
-                  <small>
-                    <i className="fas fa-info-circle"></i>
-                    Your NIN is a unique 11-digit number from your national ID card
-                  </small>
-                </div>
+                  </div>
+                  <div className="method-title">NIN Verification</div>
+                  <div className="method-description">Verify with your National ID Number</div>
+                </label>
+                
+                <input
+                  type="radio"
+                  id="id-method"
+                  value="id"
+                  checked={verificationMethod === "id"}
+                  onChange={handleVerificationMethodChange}
+                />
+                <label htmlFor="id-method" className={verificationMethod === "id" ? "selected" : ""}>
+                  <div className="method-icon id-icon">
+                    <i className="fas fa-camera"></i>
+                  </div>
+                  <div className="method-title">ID & Selfie</div>
+                  <div className="method-description">Upload your ID and a selfie with it</div>
+                </label>
               </div>
-            )}
 
-            {/* ID Document Verification Form */}
-            {verificationMethod === "id" && (
-              <div className="verification-form">
-                <div className="form-group">
-                  <label htmlFor="id-image">
-                    <i className="fas fa-id-card"></i>
-                    Upload your ID (National ID, Driver's License, Passport)
-                  </label>
-                  <div className="file-input-wrapper">
-                    <div className="file-input-button">Choose File</div>
+              {/* BVN Verification Form */}
+              {verificationMethod === "bvn" && (
+                <div className="verification-form">
+                  <div className="form-group">
+                    <label htmlFor="bvn">
+                      <i className="fas fa-university"></i>
+                      Bank Verification Number (BVN)
+                    </label>
                     <input
-                      type="file"
-                      id="id-image"
-                      accept="image/*"
-                      onChange={(e) => handleImageChange(e, setIdImage)}
+                      type="text"
+                      id="bvn"
+                      value={bvnNumber}
+                      onChange={(e) => setBvnNumber(e.target.value)}
+                      placeholder="Enter your 11-digit BVN"
+                      pattern="[0-9]{11}"
+                      maxLength={11}
                       required
                     />
+                    <small>
+                      <i className="fas fa-info-circle"></i>
+                      Your BVN is a unique 11-digit number from your bank
+                    </small>
                   </div>
-                  {idImage && <div className="file-name">{idImage.name}</div>}
-                  <small>
-                    <i className="fas fa-info-circle"></i>
-                    Supported formats: JPG, PNG, PDF. Max size: 5MB
-                  </small>
                 </div>
+              )}
 
+              {/* NIN Verification Form */}
+              {verificationMethod === "nin" && (
+                <div className="verification-form">
+                  <div className="form-group">
+                    <label htmlFor="nin">
+                      <i className="fas fa-id-card"></i>
+                      National Identification Number (NIN)
+                    </label>
+                    <input
+                      type="text"
+                      id="nin"
+                      value={ninNumber}
+                      onChange={(e) => setNinNumber(e.target.value)}
+                      placeholder="Enter your 11-digit NIN"
+                      pattern="[0-9]{11}"
+                      maxLength={11}
+                      required
+                    />
+                    <small>
+                      <i className="fas fa-info-circle"></i>
+                      Your NIN is a unique 11-digit number from your national ID card
+                    </small>
+                  </div>
+                </div>
+              )}
+
+              {/* ID Document Verification Form */}
+              {verificationMethod === "id" && (
+                <div className="verification-form">
+                  <div className="form-group">
+                    <label htmlFor="id-type">
+                      <i className="fas fa-id-card"></i>
+                      ID Document Type
+                    </label>
+                    <select
+                      id="id-type"
+                      value={idType}
+                      onChange={handleIdTypeChange}
+                      required
+                    >
+                      <option value="generic">Generic ID</option>
+                      <option value="nin">National ID (NIN)</option>
+                      <option value="dl">Driver's License</option>
+                      <option value="passport">International Passport</option>
+                      <option value="voter">Voter's Card</option>
+                    </select>
+                  </div>
+
+                  <div className="form-group">
+                    <label htmlFor="id-image">
+                      <i className="fas fa-id-card"></i>
+                      Upload your ID Document
+                    </label>
+                    <div className="file-input-wrapper">
+                      <div className="file-input-button">Choose File</div>
+                      <input
+                        type="file"
+                        id="id-image"
+                        accept="image/*"
+                        onChange={(e) => handleImageChange(e, setIdImage)}
+                        required
+                      />
+                    </div>
+                    {idImage && <div className="file-name">{idImage.name}</div>}
+                    <small>
+                      <i className="fas fa-info-circle"></i>
+                      Supported formats: JPG, PNG, PDF. Max size: 5MB
+                    </small>
+                  </div>
+
+                  <div className="form-group">
+                    <label htmlFor="selfie-image">
+                      <i className="fas fa-camera"></i>
+                      Upload a selfie with your ID document
+                    </label>
+                    <div className="file-input-wrapper">
+                      <div className="file-input-button">Choose File</div>
+                      <input
+                        type="file"
+                        id="selfie-image"
+                        accept="image/*"
+                        onChange={(e) => handleImageChange(e, setSelfieImage)}
+                        required
+                      />
+                    </div>
+                    {selfieImage && <div className="file-name">{selfieImage.name}</div>}
+                    <small>
+                      <i className="fas fa-info-circle"></i>
+                      Hold your ID next to your face for verification
+                    </small>
+                  </div>
+                </div>
+              )}
+
+              <button 
+                type="submit" 
+                className="submit-btn"
+                disabled={isSubmitting}
+              >
+                {isSubmitting ? (
+                  <>
+                    <i className="fas fa-circle-notch fa-spin"></i> Processing...
+                  </>
+                ) : (
+                  <>
+                    <i className="fas fa-check-circle"></i> Submit Verification
+                  </>
+                )}
+              </button>
+            </div>
+          </form>
+        ) : (
+          // Second step form for ID and Selfie uploads
+          <form onSubmit={handleSubmit}>
+            <div className="verification-methods">
+              <h3>
+                {verificationMethod === "bvn" ? "BVN Verification - Step 2" :
+                 verificationMethod === "nin" ? "NIN Verification - Step 2" :
+                 "ID Verification"}
+              </h3>
+              
+              <p className="verification-step-intro">
+                {verificationMethod === "bvn" ? 
+                  "Your BVN has been verified. Please complete the process by uploading your ID and a selfie." :
+                  "Your NIN has been verified. Please complete the process by uploading a selfie."}
+              </p>
+              
+              <div className="verification-form">
+                {/* Only show ID document upload for BVN verification */}
+                {verificationMethod === "bvn" && (
+                  <>
+                    <div className="form-group">
+                      <label htmlFor="id-type-step2">
+                        <i className="fas fa-id-card"></i>
+                        ID Document Type
+                      </label>
+                      <select
+                        id="id-type-step2"
+                        value={idType}
+                        onChange={handleIdTypeChange}
+                        required
+                      >
+                        <option value="generic">Generic ID</option>
+                        <option value="nin">National ID (NIN)</option>
+                        <option value="dl">Driver's License</option>
+                        <option value="passport">International Passport</option>
+                        <option value="voter">Voter's Card</option>
+                      </select>
+                    </div>
+                    
+                    <div className="form-group">
+                      <label htmlFor="id-image-step2">
+                        <i className="fas fa-id-card"></i>
+                        Upload your ID Document
+                      </label>
+                      <div className="file-input-wrapper">
+                        <div className="file-input-button">Choose File</div>
+                        <input
+                          type="file"
+                          id="id-image-step2"
+                          accept="image/*"
+                          onChange={(e) => handleImageChange(e, setIdImage)}
+                          required
+                        />
+                      </div>
+                      {idImage && <div className="file-name">{idImage.name}</div>}
+                      <small>
+                        <i className="fas fa-info-circle"></i>
+                        Supported formats: JPG, PNG, PDF. Max size: 5MB
+                      </small>
+                    </div>
+                  </>
+                )}
+                
+                {/* Selfie upload for both BVN and NIN */}
                 <div className="form-group">
-                  <label htmlFor="selfie-image">
+                  <label htmlFor="selfie-image-step2">
                     <i className="fas fa-camera"></i>
-                    Upload a selfie with your ID document
+                    Upload a selfie{verificationMethod === "bvn" ? " with your ID document" : ""}
                   </label>
                   <div className="file-input-wrapper">
                     <div className="file-input-button">Choose File</div>
                     <input
                       type="file"
-                      id="selfie-image"
+                      id="selfie-image-step2"
                       accept="image/*"
                       onChange={(e) => handleImageChange(e, setSelfieImage)}
                       required
@@ -514,29 +829,46 @@ const VerificationPage = () => {
                   {selfieImage && <div className="file-name">{selfieImage.name}</div>}
                   <small>
                     <i className="fas fa-info-circle"></i>
-                    Hold your ID next to your face for verification
+                    {verificationMethod === "bvn" 
+                      ? "Hold your ID next to your face for verification"
+                      : "Take a clear selfie for identity verification"}
                   </small>
                 </div>
               </div>
-            )}
-
-            <button 
-              type="submit" 
-              className="submit-btn"
-              disabled={isSubmitting}
-            >
-              {isSubmitting ? (
-                <>
-                  <i className="fas fa-circle-notch fa-spin"></i> Processing...
-                </>
-              ) : (
-                <>
-                  <i className="fas fa-check-circle"></i> Submit Verification
-                </>
-              )}
-            </button>
-          </div>
-        </form>
+              
+              <div className="button-group">
+                <button
+                  type="button"
+                  className="back-btn"
+                  onClick={() => {
+                    setVerificationStep(1);
+                    setShowIdSelfieStep(false);
+                    setBvnResult(null);
+                    setNinResult(null);
+                  }}
+                >
+                  <i className="fas fa-arrow-left"></i> Back
+                </button>
+                
+                <button 
+                  type="submit" 
+                  className="submit-btn"
+                  disabled={isSubmitting}
+                >
+                  {isSubmitting ? (
+                    <>
+                      <i className="fas fa-circle-notch fa-spin"></i> Processing...
+                    </>
+                  ) : (
+                    <>
+                      <i className="fas fa-check-circle"></i> Complete Verification
+                    </>
+                  )}
+                </button>
+              </div>
+            </div>
+          </form>
+        )}
 
         <div className="verification-footer">
           <p>

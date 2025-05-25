@@ -6,6 +6,20 @@ import verificationService from "../../../services/verificationService";
 import { Helmet } from "react-helmet-async";
 
 const ClientVerificationPage = () => {
+  // Constants for test values
+  const TEST_VALUES = {
+    BVN: '22222222222',
+    NIN: '70123456789'
+  };
+  
+  // Helper to check if a value is a test value
+  const isTestValue = (type, value) => {
+    if (!value) return false;
+    const testValue = TEST_VALUES[type.toUpperCase()];
+    return testValue && testValue === value;
+  };
+  
+  // State variables
   const navigate = useNavigate();
   const [verificationMethod, setVerificationMethod] = useState("bvn");
   const [bvnNumber, setBvnNumber] = useState("");
@@ -209,6 +223,29 @@ const ClientVerificationPage = () => {
       };
     }
     
+    // Check for test BVN/NIN values and auto-approve without name check
+    // Use the isTestValue helper for more consistent test value detection
+    if (isTestValue('BVN', verificationData.bvn) || isTestValue('NIN', verificationData.nin)) {
+      console.log('🧪 Test BVN/NIN detected - Bypassing name match validation');
+      return {
+        isMatch: true,
+        message: "Using test verification value - name match validation bypassed",
+        details: {
+          firstNameMatch: true,
+          lastNameMatch: true,
+          stored: {
+            firstName: storedUserDetails.firstName || storedUserDetails.firstname,
+            lastName: storedUserDetails.lastName || storedUserDetails.lastname
+          },
+          verified: {
+            firstName: verificationData.first_name || verificationData.firstName || 'Test',
+            lastName: verificationData.last_name || verificationData.lastName || 'User',
+            isTestValue: true
+          }
+        }
+      };
+    }
+    
     // Create normalized versions of names for comparison (lowercase, trim whitespace)
     const normalizeText = (text) => {
       return (text || "").toLowerCase().trim();
@@ -335,13 +372,59 @@ const ClientVerificationPage = () => {
     }
   };
 
-  // Helper function to convert file to base64
+  // Helper function to convert file to base64 with compression
   const convertFileToBase64 = (file) => {
     return new Promise((resolve, reject) => {
-      const reader = new FileReader();
-      reader.readAsDataURL(file);
-      reader.onload = () => resolve(reader.result.split(',')[1]); // Remove data:image/jpeg;base64, part
-      reader.onerror = error => reject(error);
+      // For image files, compress before converting to base64
+      if (file.type.startsWith('image/')) {
+        const reader = new FileReader();
+        reader.readAsDataURL(file);
+        reader.onload = (event) => {
+          const img = new Image();
+          img.src = event.target.result;
+          img.onload = () => {
+            // Create canvas for compression
+            const canvas = document.createElement('canvas');
+            
+            // Calculate new dimensions - maintain aspect ratio but limit max dimensions
+            let width = img.width;
+            let height = img.height;
+            const MAX_WIDTH = 1200;
+            const MAX_HEIGHT = 1200;
+            
+            if (width > height) {
+              if (width > MAX_WIDTH) {
+                height *= MAX_WIDTH / width;
+                width = MAX_WIDTH;
+              }
+            } else {
+              if (height > MAX_HEIGHT) {
+                width *= MAX_HEIGHT / height;
+                height = MAX_HEIGHT;
+              }
+            }
+            
+            canvas.width = width;
+            canvas.height = height;
+            
+            // Draw and compress
+            const ctx = canvas.getContext('2d');
+            ctx.drawImage(img, 0, 0, width, height);
+            
+            // Get compressed image as base64 string (0.8 quality - good balance of quality and size)
+            const compressedBase64 = canvas.toDataURL('image/jpeg', 0.8).split(',')[1];
+            console.log(`Image compressed: ${Math.round((compressedBase64.length * 0.75) / 1024)}KB`);
+            resolve(compressedBase64);
+          };
+        };
+        reader.onerror = error => reject(error);
+      } else {
+        // For non-image files, proceed without compression
+        const reader = new FileReader();
+        reader.readAsDataURL(file);
+        reader.onload = () => resolve(reader.result.split(',')[1]); // Remove data:image/jpeg;base64, part
+        reader.onerror = error => reject(error);
+      }
     });
   };
 
@@ -402,7 +485,10 @@ const ClientVerificationPage = () => {
             const matchResult = validateUserDetails(data.data);
             console.log("BVN verification user match:", matchResult);
             
-            if (!matchResult.isMatch) {
+            // Check if this is a test BVN value using the consistent helper function
+            const isTestBvn = isTestValue('BVN', bvnNumber) || (data.data && isTestValue('BVN', data.data.bvn));
+            
+            if (!matchResult.isMatch && !isTestBvn) {
               setProgress(100);
               setProgressMessage("Verification failed: User details mismatch");
               setError(`The name on your BVN (${data.data.first_name || data.data.firstName} ${data.data.last_name || data.data.lastName}) does not match your profile. Please contact support.`);
@@ -513,7 +599,10 @@ const ClientVerificationPage = () => {
             const matchResult = validateUserDetails(data.data);
             console.log("NIN verification user match:", matchResult);
             
-            if (!matchResult.isMatch) {
+            // Check if this is a test NIN value using the consistent helper function
+            const isTestNin = isTestValue('NIN', ninNumber) || (data.data && isTestValue('NIN', data.data.nin));
+            
+            if (!matchResult.isMatch && !isTestNin) {
               setProgress(100);
               setProgressMessage("Verification failed: User details mismatch");
               setError(`The name on your NIN (${data.data.first_name || data.data.firstName} ${data.data.last_name || data.data.lastName}) does not match your profile. Please contact support.`);

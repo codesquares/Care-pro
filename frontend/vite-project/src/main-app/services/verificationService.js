@@ -15,9 +15,18 @@ verificationApi.interceptors.request.use(
     const token = localStorage.getItem('authToken');
     const userDetails = JSON.parse(localStorage.getItem('userDetails') || '{}');
     
+    // Log outgoing requests for debugging
+    console.log(`Verification API Request: ${config.method} ${config.url}`);
+    console.log('Request config:', { 
+      headers: config.headers,
+      params: config.params,
+      data: config.data
+    });
+    
     // Add auth token to all requests if available
     if (token) {
       config.headers.Authorization = `Bearer ${token}`;
+      console.log('Authorization token added to request');
     } else {
       console.warn('No auth token found for verification API request:', config.url);
     }
@@ -48,20 +57,25 @@ verificationApi.interceptors.request.use(
     // Add userId and userType to all requests if available
     if (userDetails && userDetails.id) {
       // Get user type with a fallback
-      const userType = userDetails.userType || 'caregiver';
+      let userType = userDetails.userType || 'caregiver';
+      
+      // Normalize userType to standard formats
+      if (userType.toLowerCase().includes('client')) {
+        userType = 'client';
+      } else if (userType.toLowerCase().includes('care')) {
+        userType = 'caregiver';
+      }
+      
+      console.log(`Adding auth data to request: userId=${userDetails.id}, userType=${userType}`);
       
       // For GET requests, append to params
       if (!config.params) {
         config.params = {};
       }
       
-      // Only set these if they're not already set
-      if (!config.params.userId) {
-        config.params.userId = userDetails.id;
-      }
-      if (!config.params.userType) {
-        config.params.userType = userType;
-      }
+      // Always set these values to ensure consistency
+      config.params.userId = userDetails.id;
+      config.params.userType = userType;
       
       // For POST requests, add to body if it's JSON
       if (config.method === 'post' && config.data && config.headers['Content-Type'].includes('application/json')) {
@@ -78,13 +92,9 @@ verificationApi.interceptors.request.use(
         
         // Only if it's an object, add the properties
         if (typeof data === 'object' && data !== null) {
-          // Add userId and userType if not already present
-          if (!data.userId) {
-            data.userId = userDetails.id;
-          }
-          if (!data.userType) {
-            data.userType = userType;
-          }
+          // Always set userId and userType for consistency with query params
+          data.userId = userDetails.id;
+          data.userType = userType;
           
           // Convert back to string if it was originally a string
           if (typeof config.data === 'string') {
@@ -99,6 +109,26 @@ verificationApi.interceptors.request.use(
     return config;
   },
   (error) => {
+    return Promise.reject(error);
+  }
+);
+
+// Response interceptor for debugging
+verificationApi.interceptors.response.use(
+  (response) => {
+    console.log(`Verification API Response (${response.config.url}):`, {
+      status: response.status,
+      data: response.data
+    });
+    return response;
+  },
+  (error) => {
+    console.error('Verification API Error:', {
+      message: error.message,
+      url: error.config?.url,
+      status: error.response?.status,
+      data: error.response?.data
+    });
     return Promise.reject(error);
   }
 );
@@ -139,11 +169,27 @@ const verificationService = {
    * @param {string} userType - Type of user ('caregiver' or 'client')
    * @returns {Promise} - API response
    */
-  async verifyBVN(bvnNumber, selfieImage = null, idImage = null, userType = 'caregiver') {
+  async verifyBVN(bvnNumber, selfieImage = null, idImage = null, userType = null) {
     try {
+      // Get user details for authentication
+      const userDetails = JSON.parse(localStorage.getItem('userDetails') || '{}');
+      
+      // If userType is not provided, get it from userDetails or default to 'caregiver'
+      if (!userType) {
+        userType = userDetails.userType || 'caregiver';
+      }
+      
+      console.log(`Verifying BVN for user: ${userDetails.id}, type: ${userType}`);
+      
+      // Create a consistent payload with all necessary auth information
       const payload = { 
         bvnNumber: this._getTestValue('bvn', bvnNumber),
-        userType
+        userType,
+        // Explicitly include userId in payload to ensure it's available to auth middleware
+        userId: userDetails.id,
+        // Include name information to help with debugging
+        firstName: userDetails.firstName || '',
+        lastName: userDetails.lastName || ''
       };
       
       // If both selfie and ID images are provided, use the combined verification endpoint
@@ -201,20 +247,34 @@ const verificationService = {
     } catch (error) {
       throw error.response?.data || { message: 'BVN verification failed' };
     }
-  },
-
-  /**
+  },  /**
    * Submit NIN verification
    * @param {string} ninNumber - The NIN number
    * @param {string} selfieImage - Base64 encoded selfie image (optional)
    * @param {string} userType - Type of user ('caregiver' or 'client')
    * @returns {Promise} - API response
    */
-  async verifyNIN(ninNumber, selfieImage = null, userType = 'caregiver') {
+  async verifyNIN(ninNumber, selfieImage = null, userType = null) {
     try {
-      const payload = { 
+      // Get user details for authentication
+      const userDetails = JSON.parse(localStorage.getItem('userDetails') || '{}');
+      
+      // If userType is not provided, get it from userDetails or default to 'caregiver'
+      if (!userType) {
+        userType = userDetails.userType || 'caregiver';
+      }
+      
+      console.log(`Verifying NIN for user: ${userDetails.id}, type: ${userType}`);
+      
+      // Create a consistent payload with all necessary auth information
+      const payload = {
         ninNumber: this._getTestValue('nin', ninNumber),
-        userType
+        userType,
+        // Explicitly include userId in payload to ensure it's available to auth middleware
+        userId: userDetails.id,
+        // Include name information to help with debugging
+        firstName: userDetails.firstName || '',
+        lastName: userDetails.lastName || ''
       };
       
       // If selfie image is provided, use the combined verification endpoint
@@ -631,6 +691,53 @@ const verificationService = {
         verified: false,
         verificationStatus: 'unverified',
         message: 'Unable to retrieve verification status. Please try again.'
+      };
+    }
+  },
+  
+  /**
+   * Get verification status from cache only (no server request)
+   * This is useful for components that need to display verification status
+   * without triggering an infinite loop of API requests
+   * 
+   * @param {string} userId - User ID to check verification status
+   * @param {string} userType - Type of user ('caregiver' or 'client')
+   * @returns {Object} - Cached verification status or default unverified status
+   */
+  getCachedVerificationStatus(userId = null, userType = 'caregiver') {
+    try {
+      // Try to get user-specific verification status first if userId is provided
+      const storageKey = userId 
+        ? `verificationStatus_${userType}_${userId}` 
+        : 'verificationStatus';
+        
+      const localStatus = localStorage.getItem(storageKey);
+      
+      if (localStatus) {
+        const parsed = JSON.parse(localStatus);
+        return parsed;
+      }
+      
+      // Fall back to general verification status if no user-specific status found
+      if (!localStatus && !userId) {
+        const generalStatus = localStorage.getItem('verificationStatus');
+        if (generalStatus) {
+          return JSON.parse(generalStatus);
+        }
+      }
+      
+      // If no cached status found, return default unverified status
+      return {
+        verified: false,
+        verificationStatus: 'unverified',
+        message: 'No cached verification status available.'
+      };
+    } catch (err) {
+      console.error("Error reading verification status from localStorage", err);
+      return {
+        verified: false,
+        verificationStatus: 'unverified',
+        message: 'Error reading cached verification status.'
       };
     }
   },
