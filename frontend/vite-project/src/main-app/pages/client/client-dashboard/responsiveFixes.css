@@ -1,0 +1,136 @@
+/* Responsive Fixes CSS */
+@media (max-width: 1200px) {
+  .client-dashboard {
+    padding: 15px;
+  }
+  
+  .client-dashboard-flex {
+    gap: 15px;
+  }
+  
+  .leftbar {
+    flex: 0 0 250px;
+  }
+}
+
+@media (max-width: 992px) {
+  .client-dashboard-flex {
+    flex-direction: column;
+  }
+  
+  .leftbar {
+    flex: 0 0 auto;
+    width: 100%;
+    display: flex;
+    gap: 20px;
+  }
+  
+  .leftbar > * {
+    flex: 1;
+  }
+  
+  .sidebar-content {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 20px;
+  }
+  
+  .service-categories {
+    grid-template-columns: repeat(2, 1fr);
+  }
+}
+
+@media (max-width: 992px) {
+  .dashboard-content {
+    padding: 15px;
+  }
+  
+  .service-grid {
+    grid-template-columns: repeat(2, 1fr);
+  }
+  
+  .service-card {
+    height: auto;
+  }
+}
+
+@media (max-width: 768px) {
+  .leftbar {
+    flex-direction: column;
+  }
+  
+  .service-categories {
+    grid-template-columns: 1fr;
+  }
+  
+  .sidebar-content {
+    grid-template-columns: 1fr;
+  }
+  
+  .service-grid {
+    grid-template-columns: 1fr;
+  }
+  
+  .dashboard-header {
+    flex-direction: column;
+    align-items: flex-start;
+  }
+  
+  .dashboard-title {
+    margin-bottom: 10px;
+  }
+  
+  .filter-bar-header {
+    flex-direction: column;
+    align-items: flex-start;
+  }
+  
+  .filter-bar-title {
+    margin-bottom: 10px;
+  }
+}
+
+@media (max-width: 576px) {
+  .client-dashboard {
+    padding: 10px;
+  }
+  
+  .dashboard-content {
+    padding: 10px;
+  }
+  
+  .service-card {
+    padding: 15px;
+  }
+  
+  .filter-bar, .profile-card, .sidebar-actions {
+    padding: 15px;
+  }
+  
+  .filter-toggle-button {
+    padding: 6px 10px;
+    font-size: 0.8rem;
+  }
+  
+  .active-filters-badge {
+    font-size: 0.7rem;
+    padding: 2px 6px;
+  }
+}
+
+/* Fix for FontAwesome icons when they're not loading properly */
+.fa, .fas, .far, .fab {
+  font-family: "Font Awesome 5 Free", sans-serif;
+  display: inline-block;
+}
+
+/* Default icon fallbacks when FontAwesome is not available */
+i[class^="fa-"]:before {
+  content: "";
+  display: inline-block;
+  width: 16px;
+  height: 16px;
+  background-color: currentColor;
+  margin-right: 5px;
+  mask-size: cover;
+}

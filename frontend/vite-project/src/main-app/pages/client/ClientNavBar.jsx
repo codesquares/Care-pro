@@ -76,6 +76,9 @@ const ClientNavBar = () => {
               <div className="dropdown-item" onClick={() => navigate(`${basePath}/profile`)}>
                 View Profile
               </div>
+              <div className="dropdown-item" onClick={() => navigate(`${basePath}/verification`)}>
+                Verify Account
+              </div>
               <div className="dropdown-item" onClick={handleSignOut}>
                 Sign Out
               </div>

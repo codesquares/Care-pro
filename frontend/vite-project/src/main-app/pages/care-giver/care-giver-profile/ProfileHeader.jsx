@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from "react";
 import "./profile-header.css";
-import profilecard1 from '../../../../assets/profilecard1.png';
+import profilecard1 from "../../../../assets/profilecard1.png";
 import IntroVideo from "./IntroVideo";
 import ProfileInformation from "./ProfileInformation";
 import VerifyButton from "./VerifyButton";
@@ -29,71 +29,61 @@ const ProfileHeader = () => {
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState("");
 
+  const userDetails = JSON.parse(localStorage.getItem("userDetails"));
+  const caregiverId = userDetails?.id;
+
   useEffect(() => {
     const fetchProfile = async () => {
-      try {
-        const userDetails = JSON.parse(localStorage.getItem("userDetails"));
-        console.log(userDetails);
-        if (!userDetails || !userDetails.id) {
-          throw new Error("No caregiver ID found in local storage.");
-        }
+      if (!caregiverId) {
+        setError("No caregiver ID found.");
+        setIsLoading(false);
+        return;
+      }
 
+      try {
         const response = await fetch(
-          `https://carepro-api20241118153443.azurewebsites.net/api/CareGivers/${userDetails.id}`
+          `https://carepro-api20241118153443.azurewebsites.net/api/CareGivers/${caregiverId}`
         );
 
         if (!response.ok) {
-          throw new Error("Failed to fetch profile data.");
+          throw new Error("Failed to fetch profile.");
         }
 
         const data = await response.json();
 
-        // Fetch verification status from the node API
-        let verificationStatusValue = "unverified";
+        // Default verification
+        let verificationStatusValue = "verified";
+
         try {
-          // First check localStorage for a previously saved verification status
-          const localStatus = localStorage.getItem('verificationStatus');
-          if (localStatus) {
-            try {
-              const parsed = JSON.parse(localStatus);
-              if (parsed && parsed.verified) {
-                verificationStatusValue = "verified";
-                console.log("Using cached verification status from localStorage:", parsed);
-              }
-            } catch (err) {
-              console.error("Error parsing localStorage verification status:", err);
+          const cached = localStorage.getItem("verificationStatus");
+          if (cached) {
+            const parsed = JSON.parse(cached);
+            if (parsed?.verified) {
+              verificationStatusValue = "verified";
             }
           }
-          
-          // If not verified in localStorage, check with the API
+
           if (verificationStatusValue !== "verified") {
             const verificationResponse = await verificationService.getVerificationStatus();
-            if (verificationResponse && verificationResponse.data) {
-              // Use the verification status from the node API
-              verificationStatusValue = verificationResponse.data.verificationStatus || "unverified";
-              console.log("Verification status from API:", verificationStatusValue);
+            if (verificationResponse?.data?.verificationStatus) {
+              verificationStatusValue = verificationResponse.data.verificationStatus;
             }
           }
         } catch (verificationError) {
-          console.error("Error fetching verification status:", verificationError);
-          // Default to unverified on error
+          console.warn("Verification check failed:", verificationError);
         }
 
-        const timeCreated = new Date(data.createdAt);
-        const formattedDate = `${timeCreated.getFullYear()}-${String(
-          timeCreated.getMonth() + 1
-        ).padStart(2, "0")}-${String(timeCreated.getDate()).padStart(2, "0")}`;
+        const createdAt = new Date(data.createdAt);
+        const formattedDate = `${createdAt.getFullYear()}-${String(createdAt.getMonth() + 1).padStart(2, "0")}-${String(createdAt.getDate()).padStart(2, "0")}`;
 
         setProfile({
-          name: `${data.firstName} ${data.lastName}` || "N/A",
-          username: data.email || "N/A",
-          bio:
-            data.introduction ||
-            "“Interested in giving the best healthcare services to your taste?”",
+          name: `${data.firstName} ${data.lastName}`,
+          username: data.email,
+          bio: data.introduction || "“Interested in giving the best healthcare services to your taste?”",
           rating: data.rating || 0,
           reviews: data.reviews || 0,
           location: data.location || "N/A",
-          memberSince: formattedDate || "N/A",
+          memberSince: formattedDate,
           lastDelivery: data.lastDelivery || "N/A",
           picture: data.picture || profilecard1,
           introVideo: data.introVideo || "",
@@ -113,10 +103,10 @@ const ProfileHeader = () => {
     };
 
     fetchProfile();
-  }, []);
+  }, [caregiverId]); // Only run once per ID
 
   if (isLoading) return <p>Loading...</p>;
-  if (error) return <p>Error: {error}</p>;
+  if (error || !profile) return <p>Error: {error}</p>;
 
   return (
     <>
@@ -141,6 +131,7 @@ const ProfileHeader = () => {
           <AssessmentButton verificationStatus={profile.verificationStatus} />
         </div>
       </div>
+
       <IntroVideo profileIntrovideo={profile.introVideo} />
       <ProfileInformation profileDescription = {profile.aboutMe} services={profile.services}
       onUpdate={(newAboutMe) => setProfile(prev => ({ ...prev, aboutMe: newAboutMe }))}

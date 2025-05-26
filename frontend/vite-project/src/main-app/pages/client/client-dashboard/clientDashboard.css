@@ -2,8 +2,66 @@
   padding: 20px;
   background-color: #f4f4f4;
   min-height: 100vh;
+}
+
+/* Client dashboard specific layout */
+.client-dashboard-flex {
   display: flex;
-  flex-direction: column;
+  flex-direction: row;
+  gap: 20px;
+}
+
+.leftbar {
+  flex: 0 0 300px;
+}
+
+.rightbar {
+  flex: 1;
+}
+
+/* Filter toggle button styles */
+.filter-toggle-container {
+  display: flex;
+  align-items: center;
+  margin-bottom: 15px;
+}
+
+.filter-toggle-button {
+  background-color: #f8f9fa;
+  border: 1px solid #e9ecef;
+  border-radius: 5px;
+  padding: 8px 15px;
+  font-size: 0.9rem;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  color: #555;
+  transition: all 0.3s ease;
+}
+
+.filter-toggle-button:hover {
+  background-color: #e9ecef;
+}
+
+.filter-toggle-button.active {
+  background-color: #4a90e2;
+  border-color: #4a90e2;
+  color: white;
+}
+
+.filter-toggle-button i {
+  font-size: 0.85rem;
+}
+
+/* Badge to show when filters are active but hidden */
+.active-filters-badge {
+  background-color: #dc3545;
+  color: white;
+  border-radius: 20px;
+  font-size: 0.75rem;
+  padding: 3px 8px;
+  margin-left: 10px;
 }
 
 /* Filters */

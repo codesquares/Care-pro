@@ -44,7 +44,7 @@ function ScrollToTop() {
 
 function App() {
   return (
-    <AuthProvider>
+    
       <BlogProvider>
         <NotificationProvider>
           <MessageProvider>
@@ -54,7 +54,7 @@ function App() {
           </MessageProvider>
         </NotificationProvider>
       </BlogProvider>
-    </AuthProvider>
+    
   );
 }
 

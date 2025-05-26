@@ -312,6 +312,91 @@ class DojahService {
     }
   }
 
+  async verifyIdWithSelfie(selfieImage, idImage, idType = 'generic', referenceId = null) {
+    // If using mock data or missing API credentials, return mock response
+    if (this.useMock) {
+      console.log('Using mock ID with Selfie verification for testing');
+      
+      // Mock failure for very small images (likely invalid)
+      if (!selfieImage || !idImage || selfieImage.length < 100 || idImage.length < 100) {
+        return mockVerifications.mockFailedIdSelfie();
+      }
+      
+      return mockVerifications.mockSuccessIdSelfie();
+    }
+    
+    try {
+      // Determine which Dojah endpoint to use based on ID type
+      let endpoint = `${this.baseUrl}/kyc/id`;
+      let payload = {
+        selfie_image: selfieImage,
+        id_image: idImage
+      };
+      
+      // Add reference ID if provided for tracking webhook callbacks
+      if (referenceId) {
+        payload.reference_id = referenceId;
+      }
+      
+      // Make the actual API call to Dojah
+      const response = await axios.post(
+        endpoint,
+        payload,
+        { headers: this.headers }
+      );
+      
+      // Check if we got a proper response
+      if (response.data && response.data.entity) {
+        const result = response.data;
+        
+        // Add verification status if not already present
+        if (!result.entity.verification_status) {
+          const isVerified = result.entity.selfie_verification && 
+                            result.entity.selfie_verification.match === true;
+          result.entity.verified = isVerified;
+          result.entity.verification_status = isVerified ? "success" : "failed";
+        }
+        
+        return result;
+      } else {
+        // Invalid response format
+        return {
+          entity: {
+            verification_status: "failed",
+            verified: false,
+            message: "Invalid response from verification service"
+          },
+          status: false
+        };
+      }
+    } catch (error) {
+      console.error('ID with Selfie verification error:', error.response?.data || error.message);
+      
+      // Check if it's a validation error (invalid images)
+      if (error.response && error.response.status === 400) {
+        return {
+          entity: {
+            verification_status: "failed",
+            verified: false,
+            message: "Invalid image data provided. Please ensure your ID and selfie are clear and properly formatted."
+          },
+          status: false
+        };
+      }
+      
+      // Server or API error
+      return {
+        entity: {
+          verification_status: "error",
+          verified: false,
+          message: "Verification service temporarily unavailable. Please try again later."
+        },
+        status: false,
+        error: error.message
+      };
+    }
+  }
+
   async verifyAddress(address) {
     try {
       const response = await axios.post(

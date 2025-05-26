@@ -1,0 +1,33 @@
+import React from "react";
+import ServiceCard from "./ServiceCard";
+import "./serviceCategory.css";
+import { Link } from "react-router-dom";
+
+/**
+ * ServiceCategory component displays a group of services under a category title
+ * @param {Object} props - Component props
+ * @param {string} props.title - Category title
+ * @param {Array} props.services - Array of service objects
+ * @param {string} props.seeMoreLink - Optional link for "See more" button
+ */
+const ServiceCategory = ({ title, services, seeMoreLink }) => {
+  return (
+    <div className="service-category" style={{display: 'block', visibility: 'visible'}}>
+      <div className="category-header">
+        <h2>{title}</h2>
+        {seeMoreLink && (
+          <Link to={seeMoreLink} className="see-more-link">
+            See more <i className="fas fa-chevron-right"></i>
+          </Link>
+        )}
+      </div>
+      <div className="services-container" style={{display: 'grid', visibility: 'visible'}}>
+        {services.map((service, index) => (
+          <ServiceCard key={service.id || index} service={service} />
+        ))}
+      </div>
+    </div>
+  );
+};
+
+export default ServiceCategory;

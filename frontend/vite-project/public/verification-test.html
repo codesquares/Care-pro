@@ -1,0 +1,211 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Verification System Test</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            line-height: 1.6;
+            margin: 20px;
+            max-width: 800px;
+        }
+        h1 {
+            color: #333;
+            border-bottom: 1px solid #ddd;
+            padding-bottom: 10px;
+        }
+        .test-section {
+            margin-bottom: 30px;
+            padding: 15px;
+            border: 1px solid #ddd;
+            border-radius: 5px;
+        }
+        button {
+            background-color: #4CAF50;
+            color: white;
+            border: none;
+            padding: 10px 15px;
+            text-align: center;
+            text-decoration: none;
+            display: inline-block;
+            font-size: 16px;
+            margin: 10px 2px;
+            cursor: pointer;
+            border-radius: 5px;
+        }
+        .output {
+            background-color: #f5f5f5;
+            padding: 10px;
+            border: 1px solid #ddd;
+            margin-top: 10px;
+            min-height: 100px;
+            white-space: pre-wrap;
+            font-family: monospace;
+        }
+        .instructions {
+            background-color: #e6f7ff;
+            padding: 15px;
+            border-left: 4px solid #1890ff;
+            margin: 20px 0;
+        }
+    </style>
+</head>
+<body>
+    <h1>Verification System Manual Test Tool</h1>
+    
+    <div class="instructions">
+        <h3>Instructions</h3>
+        <p>This tool helps you test the fixed verification system. Follow these steps:</p>
+        <ol>
+            <li>Open your browser's developer tools (F12 or right-click and select "Inspect")</li>
+            <li>Go to the "Network" tab</li>
+            <li>Click the test buttons below and observe the network requests</li>
+            <li>Look for the "kyc/status" request and check its response</li>
+            <li>Verify that no 401 Unauthorized errors occur</li>
+        </ol>
+    </div>
+    
+    <div class="test-section">
+        <h2>Test 1: Caregiver Verification Status</h2>
+        <button onclick="testVerificationStatus('caregiver', '12345')">Test Caregiver Verification</button>
+        <div id="caregiver-output" class="output">Results will appear here...</div>
+    </div>
+    
+    <div class="test-section">
+        <h2>Test 2: Client Verification Status</h2>
+        <button onclick="testVerificationStatus('client', '67890')">Test Client Verification</button>
+        <div id="client-output" class="output">Results will appear here...</div>
+    </div>
+    
+    <div class="test-section">
+        <h2>Test 3: Test with Mock Data</h2>
+        <button onclick="testVerificationWithMock('caregiver')">Test with Mock Data (Caregiver)</button>
+        <button onclick="testVerificationWithMock('client')">Test with Mock Data (Client)</button>
+        <div id="mock-output" class="output">Results will appear here...</div>
+    </div>
+
+    <script>
+        // Mock localStorage functions for testing
+        function setupMockStorage() {
+            const mockStorage = {};
+            
+            // Mock authentication token
+            mockStorage.authToken = "mock_test_token_12345";
+            
+            // Mock user details
+            mockStorage.userDetails = JSON.stringify({
+                id: "test_user_123",
+                name: "Test User",
+                userType: "caregiver"
+            });
+            
+            // Mock verification status
+            mockStorage.verificationStatus = JSON.stringify({
+                verified: true,
+                verificationStatus: "verified",
+                message: "User is verified",
+                timestamp: new Date().toISOString()
+            });
+            
+            // Override localStorage getItem
+            const originalGetItem = localStorage.getItem;
+            localStorage.getItem = function(key) {
+                console.log(`Getting item: ${key}`);
+                if (mockStorage[key]) {
+                    return mockStorage[key];
+                }
+                return originalGetItem.call(localStorage, key);
+            };
+        }
+
+        // Test verification status
+        async function testVerificationStatus(userType, userId) {
+            const outputId = userType === 'caregiver' ? 'caregiver-output' : 'client-output';
+            const outputElem = document.getElementById(outputId);
+            
+            outputElem.textContent = `Testing ${userType} verification status...`;
+            
+            try {
+                // Get the token from localStorage or use a mock one
+                const token = localStorage.getItem('authToken') || 'mock_token_for_testing';
+                
+                // Make the API request
+                const response = await fetch(`http://localhost:3000/api/kyc/status?userType=${userType}&userId=${userId}`, {
+                    method: 'GET',
+                    headers: {
+                        'Authorization': `Bearer ${token}`,
+                        'Content-Type': 'application/json'
+                    }
+                });
+                
+                const data = await response.json();
+                
+                outputElem.textContent = `Status: ${response.status} ${response.statusText}\n\n${JSON.stringify(data, null, 2)}`;
+            } catch (error) {
+                outputElem.textContent = `Error: ${error.message}`;
+                console.error('Error testing verification status:', error);
+            }
+        }
+
+        // Test with mock data
+        function testVerificationWithMock(userType) {
+            const outputElem = document.getElementById('mock-output');
+            
+            // Set up mock localStorage
+            setupMockStorage();
+            
+            // Create a mock verification service
+            const verificationService = {
+                _cachedStatus: null,
+                _lastVerificationRequest: 0,
+                
+                _getTestValue(type, value) {
+                    const testValues = {
+                        bvn: '22222222222',
+                        nin: '70123456789'
+                    };
+                    return testValues[type] || value;
+                },
+                
+                async getVerificationStatus(userId, userType) {
+                    // Simulates the verification service logic
+                    // First check localStorage
+                    const storageKey = userId 
+                        ? `verificationStatus_${userType}_${userId}` 
+                        : 'verificationStatus';
+                    
+                    const localStatus = localStorage.getItem(storageKey) || localStorage.getItem('verificationStatus');
+                    
+                    if (localStatus) {
+                        try {
+                            return JSON.parse(localStatus);
+                        } catch (e) {
+                            console.error('Error parsing verification status from localStorage', e);
+                        }
+                    }
+                    
+                    // Return a mock API response
+                    return {
+                        verified: true,
+                        verificationStatus: 'verified',
+                        message: `Mock verification status for ${userType}`,
+                        mockData: true,
+                        timestamp: new Date().toISOString()
+                    };
+                }
+            };
+            
+            // Test the verification service
+            verificationService.getVerificationStatus(`mock_${userType}_id`, userType)
+                .then(result => {
+                    outputElem.textContent = `Mock Test Result (${userType}):\n\n${JSON.stringify(result, null, 2)}`;
+                })
+                .catch(error => {
+                    outputElem.textContent = `Error: ${error.message}`;
+                });
+        }
+    </script>
+</body>
+</html>

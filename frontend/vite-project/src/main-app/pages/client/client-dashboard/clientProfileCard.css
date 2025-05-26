@@ -1,0 +1,102 @@
+/* Client Profile Card CSS */
+.profile-card {
+  background-color: white;
+  border-radius: 10px;
+  padding: 20px;
+  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.05);
+  margin-bottom: 20px;
+  transition: all 0.3s ease;
+}
+
+.profile-card:hover {
+  box-shadow: 0 5px 15px rgba(0, 0, 0, 0.1);
+}
+
+.profile-card.loading, .profile-card.error {
+  text-align: center;
+  padding: 30px 20px;
+  color: #666;
+}
+
+.profile-card.error {
+  color: #e74c3c;
+}
+
+.profile-picture {
+  width: 80px;
+  height: 80px;
+  border-radius: 50%;
+  object-fit: cover;
+  margin-bottom: 15px;
+  border: 3px solid #f0f0f0;
+}
+
+.profile-details {
+  margin-bottom: 20px;
+}
+
+.profile-name {
+  font-size: 1.2rem;
+  margin: 0 0 5px 0;
+  font-weight: 600;
+  color: #333;
+}
+
+.profile-username {
+  font-size: 0.9rem;
+  color: #666;
+  margin: 0;
+}
+
+.profile-navigation {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  margin-bottom: 20px;
+}
+
+.profile-nav-item {
+  display: flex;
+  align-items: center;
+  text-decoration: none;
+  color: #555;
+  padding: 8px 0;
+  font-size: 0.9rem;
+  transition: color 0.2s ease;
+}
+
+.profile-nav-item i {
+  margin-right: 10px;
+  color: #4a90e2;
+}
+
+.profile-nav-item:hover {
+  color: #4a90e2;
+}
+
+.view-profile-btn {
+  background-color: #4a90e2;
+  color: white;
+  border: none;
+  border-radius: 5px;
+  padding: 10px 15px;
+  font-size: 0.9rem;
+  cursor: pointer;
+  width: 100%;
+  transition: background-color 0.3s ease;
+}
+
+.view-profile-btn:hover {
+  background-color: #3a7bc8;
+}
+
+@media (max-width: 768px) {
+  .profile-card {
+    padding: 15px;
+  }
+  
+  .profile-picture {
+    width: 60px;
+    height: 60px;
+  }
+}

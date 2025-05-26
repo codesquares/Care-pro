@@ -1,0 +1,71 @@
+import React from "react";
+import { useNavigate } from "react-router-dom";
+import "./serviceCard.css";
+import profilecard1 from "../../../../assets/profilecard1.png"; // Using an existing image as placeholder
+
+const ServiceCard = (props) => {
+  const navigate = useNavigate();
+  const basePath = "/app/client"; // Base path for your routes
+  
+  // Handle both ways of passing props: as individual props or as a service object
+  const service = props.service || props;
+  const { 
+    id, 
+    image1, 
+    title, 
+    location, 
+    packageDetails, 
+    rating,
+    price 
+  } = service;
+  
+  // Log the service data for debugging purposes
+  console.log('Service data:', { id, title, price, typeof_price: typeof price });
+
+  const handleClick = () => {
+    navigate(`${basePath}/service/${id}`); // Navigate to service details page
+  };
+
+  const truncateText = (text, maxLength = 100) => {
+    if (!text) return "";
+    if (text.length <= maxLength) return text;
+    return text.substring(0, maxLength) + "...";
+  };
+
+  return (
+    <div className="service-card" onClick={handleClick} style={{display: 'flex', visibility: 'visible'}}>
+      <img 
+        src={image1 || profilecard1} 
+        alt={title} 
+        className="service-img" 
+        onError={(e) => {
+          e.target.onerror = null;
+          e.target.src = profilecard1;
+        }}
+      />
+      <div className="service-content">
+        <div className="location">{location || "Location not specified"}</div>
+        <h3 className="service-title">{title}</h3>
+        <p>{truncateText(packageDetails)}</p>
+        
+        <div className="card-footer">
+          <div className="rating">⭐ {rating || "N/A"}</div>
+          <div className="price">
+            ₦{(() => {
+              // Handle different possible price formats
+              if (typeof price === 'number') {
+                return price.toLocaleString();
+              } else if (typeof price === 'string' && !isNaN(parseFloat(price))) {
+                return parseFloat(price).toLocaleString();
+              } else {
+                return price || "Price unavailable";
+              }
+            })()}
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+};
+
+export default ServiceCard;
