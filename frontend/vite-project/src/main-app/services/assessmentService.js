@@ -5,7 +5,7 @@ import config from '../config';
 // Production API base URL (from config)
 const PROD_API_URL = config.BASE_URL;
 // Local Node.js API URL
-const LOCAL_API_URL = 'http://localhost:3000/api';
+const LOCAL_API_URL = config.LOCAL_API_URL;
 
 // Helper function to determine question type based on content analysis
 const getQuestionType = (questionText) => {
