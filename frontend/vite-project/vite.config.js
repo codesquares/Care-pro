@@ -13,5 +13,14 @@ export default defineConfig({
         // rewrite: (path) => path.replace(/^\/api/, ''), // Rewrite the path, if necessary
       },
     },
+    host: true, // Allows access from other devices on the network
+    strictPort: false, // Ensures the server will not start if the port is already in use
+
   },
+  preview:{
+    host: '0.0.0.0',
+    port: process.env.PORT || 5173,
+    strictPort: false,
+    allowedHosts: 'all'
+  }
 })
