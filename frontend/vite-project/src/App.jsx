@@ -22,7 +22,7 @@ import MainAppRoutes from './main-app/routes';
 import { logout } from './main-app/services/auth';
 import { AuthProvider } from './main-app/context/AuthContext';
 import CreateGig from './main-app/pages/care-giver/CreateGig';
-import Messages from './main-app/pages/Messages';
+// import Messages from './main-app/pages/Messages';
 import Notifications from './main-app/components/Notifications/Notifications';
 import ContentBlog from './components/ContentfulBlog/Blog';
 import ContentBlogPost from './components/ContentfulBlog/BlogPost';
@@ -30,6 +30,7 @@ import { BlogProvider } from './main-app/context/BlogContext';
 import PaymentSuccess from './main-app/pages/client/home-care-service/PaymentSuccess';
 import { MessageProvider } from './main-app/context/MessageContext';
 import { NotificationProvider } from './main-app/context/NotificationsContext';
+import SplashScreen from './main-app/components/SplashScreen/SplashScreen';
 //Added for viewing Order Pages
 import Order from './main-app/pages/client/orders/MyOrders';
 import Order2 from './main-app/pages/client/orders/OrderTasks&Details';
@@ -76,6 +77,7 @@ function AppContent() {
     '/register',
     '/Notifications',
     '/create-gig',
+    // '/splash',
 
     '/Caregivergigpage',
 
@@ -90,14 +92,16 @@ function AppContent() {
   ];
 
   // Check if current path is unprotected
-  const isUnprotectedRoute = unprotectedRoutes.includes(location.pathname.toLowerCase());
+  const isUnprotectedRoute = unprotectedRoutes.includes(location.pathname.toLowerCase()) && location.pathname !== '/' && location.pathname !== '/register' && location.pathname !== '/login';
+
+  
 
   return (
     <div className="App">
       {isUnprotectedRoute && <Navbar />}
       <ScrollToTop />
       <Routes>
-        <Route path="/" element={<Home />} />
+        {/* <Route path="/" element={<Home />} /> */}
         <Route path="/about-us" element={<AboutUs />} />
         <Route path="/blog" element={<Blog />} />
         <Route path="/contentful-blog" element={<ContentBlog />} />
@@ -105,13 +109,14 @@ function AppContent() {
         <Route path="/care-facts" element={<CareFacts />} />
         <Route path="/our-process" element={<OurProcess />} />
         <Route path="/create-gig" element={<CreateGig />} />
-        <Route path="/messages" element={<Messages />} />
+        {/* <Route path="/messages" element={<Messages />} /> */}
         <Route path="/plans" element={<Plans />} />
         <Route path="/book-caregiver" element={<BookCaregiver />} />
         <Route path="/become-caregiver" element={<BecomeCaregiver />} />
         <Route path="/login" element={<LoginPage />} />
         <Route path="/register" element={<RegisterPage />} />
         <Route path="/Notifications" element={<Notifications />} />
+        <Route path="/" element={<SplashScreen />} />
 
         {/* <Route path="/Caregivergigpage" element={<Caregivergigpage />} /> */}
 
@@ -157,4 +162,4 @@ function AppContent() {
   );
 }
 
-export default App;  
+export default App;

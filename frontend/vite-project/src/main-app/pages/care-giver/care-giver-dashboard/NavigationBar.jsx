@@ -64,7 +64,7 @@ const NavigationBar = () => {
 
       <ul className="nav-icons">
         <IconLink to={`${basePath}/notifications`} icon={bell} alt="Notifications" />
-        <IconLink to={`${basePath}/message`} icon={message} alt="Messages" />
+        {/* <IconLink to={`${basePath}/message`} icon={message} alt="Messages" /> */}
         <IconLink to={`${basePath}/favorites`} icon={hear} alt="Favorites" />
       </ul>
 
