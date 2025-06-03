@@ -24,5 +24,8 @@ namespace Domain.Entities
         public bool IsDeleted { get; set; }
 
         public DateTime CreatedAt { get; set; }
+
+        public bool? IsOnline { get; set; }
+        public string? ConnectionId { get; set; }
     }
 }

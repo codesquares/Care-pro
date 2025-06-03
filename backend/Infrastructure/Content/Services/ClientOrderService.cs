@@ -112,7 +112,7 @@ namespace Infrastructure.Content.Services
                 var caregiver = await careGiverService.GetCaregiverUserAsync(caregiverId);
                 if (caregiver == null)
                 {
-                    throw new KeyNotFoundException("The CaregiverId entered is not a Valid ID");
+                    throw new KeyNotFoundException("The UserId entered is not a Valid ID");
                 }
 
                 //var client = await careGiverService.GetCaregiverUserAsync(caregiverOrder.ClientId);
@@ -179,7 +179,7 @@ namespace Infrastructure.Content.Services
                 var caregiver = await careGiverService.GetCaregiverUserAsync(gig.CaregiverId);
                 if (caregiver == null)
                 {
-                    throw new KeyNotFoundException("The CaregiverId entered is not a Valid ID");
+                    throw new KeyNotFoundException("The UserId entered is not a Valid ID");
                 }
 
                 //var client = await careGiverService.GetCaregiverUserAsync(clientOrder.ClientId);
@@ -237,7 +237,7 @@ namespace Infrastructure.Content.Services
             var caregiver = await careGiverService.GetCaregiverUserAsync(gig.CaregiverId);
             if (caregiver == null)
             {
-                throw new KeyNotFoundException("The CaregiverId entered is not a Valid ID");
+                throw new KeyNotFoundException("The UserId entered is not a Valid ID");
             }
 
             //var client = await careGiverService.GetCaregiverUserAsync(order.ClientId);

@@ -13,7 +13,7 @@ namespace Application.Interfaces.Content
 
       //  Task<IEnumerable<VerificationResponse>> GetAllCaregiverCertificateAsync();
 
-        Task<VerificationResponse> GetVerificationAsync(string caregiverId);
+        Task<VerificationResponse> GetVerificationAsync(string appUserId);
 
         Task<string> UpdateVerificationAsync(string verificationId, UpdateVerificationRequest updateVerificationRequest );
 

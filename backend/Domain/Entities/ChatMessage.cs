@@ -22,6 +22,8 @@ namespace Domain.Entities
 
         [BsonElement("message")]
         public string Message { get; set; }
+        public string? MessageId { get; set; }
+        public string? Status { get; set; }
 
         [BsonElement("timestamp")]
         public DateTime Timestamp { get; set; } = DateTime.UtcNow;

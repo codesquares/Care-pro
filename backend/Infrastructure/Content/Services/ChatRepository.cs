@@ -140,6 +140,76 @@ namespace Infrastructure.Content.Services
         }
 
 
+        public async Task UpdateUserConnectionStatus(string userId, bool isOnline, string connectionId)
+        {
+            var user = await careProDbContext.AppUsers
+                .FirstOrDefaultAsync(u => u.Id.ToString() == userId || u.AppUserId.ToString() == userId);
+
+            if (user != null)
+            {
+                user.IsOnline = isOnline;
+                user.ConnectionId = isOnline ? connectionId : null;
+                await careProDbContext.SaveChangesAsync();
+            }
+        }
+
+
+        public async Task<List<MessageDTO>> GetMessageHistory(string user1Id, string user2Id, int skip, int take)
+        {
+            var messages = await careProDbContext.ChatMessages
+                .Where(m => (m.SenderId == user1Id && m.ReceiverId == user2Id) ||
+                            (m.SenderId == user2Id && m.ReceiverId == user1Id))
+                .OrderByDescending(m => m.Timestamp) // newest first
+                .Skip(skip)
+                .Take(take)
+                .Select(m => new MessageDTO
+                {
+                    SenderId = m.SenderId,
+                    ReceiverId = m.ReceiverId,
+                    Message = m.Message,
+                    Timestamp = m.Timestamp
+                })
+                .ToListAsync();
+
+            // Optional: reverse to return messages oldest to newest
+            messages.Reverse();
+
+            return messages;
+        }
+
+
+        public async Task<bool> IsUserOnline(string userId)
+        {
+            var user = await careProDbContext.AppUsers
+                .FirstOrDefaultAsync(u => u.Id.ToString() == userId || u.AppUserId.ToString() == userId);
+
+            return user?.IsOnline ?? false;
+        }
+
+        public async Task<List<string>> GetOnlineUsers()
+        {
+            return await careProDbContext.AppUsers
+                .Where(u => (bool)u.IsOnline)
+                //.Select(u => u.AppUserId.ToString())
+                .Select(u => u.FirstName + " " + u.LastName)
+                .ToListAsync();
+        }
+
+        public async Task<ChatMessage?> UpdateMessageStatus(string messageId, string newStatus)
+        {
+            var message = await careProDbContext.ChatMessages
+                .FirstOrDefaultAsync(m => m.Id.ToString() == messageId);
+
+            if (message == null)
+                return null;
+
+            message.Status = newStatus;
+            await careProDbContext.SaveChangesAsync();
+
+            return message;
+        }
+
+       
 
     }
 

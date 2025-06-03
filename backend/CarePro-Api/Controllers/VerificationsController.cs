@@ -60,16 +60,16 @@ namespace CarePro_Api.Controllers
         }
 
         [HttpGet]
-        [Route("careGiverId")]
+        [Route("userId")]
         // [Authorize(Roles = "Caregiver, Client, Admin")]
-        public async Task<IActionResult> GetCaregiverVerificationAsync(string careGiverId)
+        public async Task<IActionResult> GetCaregiverVerificationAsync(string userId)
         {
 
             try
             {
-                logger.LogInformation($"Retrieving Verification for caregiver with ID '{careGiverId}'.");
+                logger.LogInformation($"Retrieving Verification for caregiver with ID '{userId}'.");
 
-                var verification  = await verificationService.GetVerificationAsync(careGiverId);
+                var verification  = await verificationService.GetVerificationAsync(userId);
 
                 return Ok(verification);
 

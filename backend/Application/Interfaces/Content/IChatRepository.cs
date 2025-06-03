@@ -16,6 +16,20 @@ namespace Application.Interfaces.Content
 
         Task<IEnumerable<ChatPreviewResponse>> GetChatUserPreviewAsync(string userId);
 
+        Task UpdateUserConnectionStatus(string userId, bool isOnline, string connectionId);
+
+        Task<List<MessageDTO>> GetMessageHistory(string user1Id, string user2Id, int skip, int take);
+
+        Task<bool> IsUserOnline(string userId);
+
+        Task<List<string>> GetOnlineUsers();
+
+        Task<ChatMessage?> UpdateMessageStatus(string messageId, string newStatus);
+
+        
+
 
     }
+
 }
+

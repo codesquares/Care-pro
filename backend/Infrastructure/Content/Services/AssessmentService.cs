@@ -35,7 +35,7 @@ namespace Infrastructure.Content.Services
                 throw new KeyNotFoundException("The CaregiverID entered is not a Valid ID");
             }
 
-            //var existingAssessment = await careProDbContext.Assessments.FirstOrDefaultAsync(x => x.CaregiverId == addAssessmentRequest.CaregiverId);
+            //var existingAssessment = await careProDbContext.Assessments.FirstOrDefaultAsync(x => x.UserId == addAssessmentRequest.UserId);
 
             //if (existingAssessment != null)
             //{

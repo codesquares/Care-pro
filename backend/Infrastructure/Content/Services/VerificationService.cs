@@ -29,21 +29,28 @@ namespace Infrastructure.Content.Services
 
         public async Task<string> CreateVerificationAsync(AddVerificationRequest addVerificationRequest)
         {
-            var careGiver = await careGiverService.GetCaregiverUserAsync(addVerificationRequest.CaregiverId);
-            if (careGiver == null)
+            //var appUser = await careGiverService.GetCaregiverUserAsync(addVerificationRequest.UserId);
+            var appUser = await careProDbContext.AppUsers.FirstOrDefaultAsync(x => x.AppUserId.ToString() == addVerificationRequest.UserId);
+            if (appUser == null)
             {
-                throw new KeyNotFoundException("The CaregiverID entered is not a Valid ID");
+                throw new KeyNotFoundException("The User Id entered is not a Valid ID");
             }
 
-            var existingVerification = await careProDbContext.Verifications.FirstOrDefaultAsync(x => x.CaregiverId == addVerificationRequest.CaregiverId);
+            if (appUser.FirstName != addVerificationRequest.VerifiedFirstName && appUser.LastName != addVerificationRequest.VerifiedLastName)
+            {
+                throw new InvalidOperationException("The Verified data and saved data do not match.");
+            }
+
+
+            var existingVerification = await careProDbContext.Verifications.FirstOrDefaultAsync(x => x.UserId == addVerificationRequest.UserId);
 
             if (existingVerification != null)
             {
                 // Option 1: Prompt or return message to update instead
-                throw new InvalidOperationException("This caregiver has already been verified. Please update the existing verification.");
+                throw new InvalidOperationException("This User has already been verified. Please update the existing verification.");
 
                 // OR Option 2: Update existing verification here instead of throwing
-                // existingVerification.VerificationMode = addVerificationRequest.VerificationMode;
+                // existingVerification.VerificationMethod = addVerificationRequest.VerificationMethod;
                 // existingVerification.VerificationStatus = addVerificationRequest.VerificationStatus;
                 // existingVerification.UpdatedOn = DateTime.Now;
                 // await careProDbContext.SaveChangesAsync();
@@ -54,12 +61,14 @@ namespace Infrastructure.Content.Services
             /// CONVERT DTO TO DOMAIN OBJECT            
             var verification = new Verification
             {
-                VerificationMode = addVerificationRequest.VerificationMode,
+                VerificationMethod = addVerificationRequest.VerificationMethod,
+                VerificationNo = addVerificationRequest.VerificationNo,
                 VerificationStatus = addVerificationRequest.VerificationStatus,
-                CaregiverId = addVerificationRequest.CaregiverId,
+                UserId = addVerificationRequest.UserId,
 
                 // Assign new ID
                 VerificationId = ObjectId.GenerateNewId(),
+                IsVerified = true,
                 VerifiedOn = DateTime.Now,
             };
 
@@ -71,22 +80,24 @@ namespace Infrastructure.Content.Services
 
         }
 
-        public async Task<VerificationResponse> GetVerificationAsync(string caregiverId)
+        public async Task<VerificationResponse> GetVerificationAsync(string userId)
         {
-            var verification = await careProDbContext.Verifications.FirstOrDefaultAsync(x => x.CaregiverId.ToString() == caregiverId);
+            var verification = await careProDbContext.Verifications.FirstOrDefaultAsync(x => x.UserId.ToString() == userId);
 
             if (verification == null)
             {
-                throw new KeyNotFoundException($"User with ID '{caregiverId}' has not been verified.");
+                throw new KeyNotFoundException($"User with ID '{userId}' has not been verified.");
             }
                         
 
             var verificationDTO = new VerificationResponse()
             {
                 VerificationId = verification.VerificationId.ToString(),
-                CaregiverId = verification.CaregiverId,
-                VerificationMode = verification.VerificationMode,
+                UserId = verification.UserId,
+                VerificationMethod = verification.VerificationMethod,
+                VerificationNo = verification.VerificationNo,
                 VerificationStatus = verification.VerificationStatus,
+                IsVerified = verification.IsVerified,
                 VerifiedOn = verification.VerifiedOn,
                 UpdatedOn = verification.UpdatedOn,
 
@@ -107,7 +118,7 @@ namespace Infrastructure.Content.Services
             {
                 throw new KeyNotFoundException($"Verification with ID '{verificationId}' not found.");
             }
-            existingVerification.VerificationMode = updateVerificationRequest.VerificationMode;
+            existingVerification.VerificationMethod = updateVerificationRequest.VerificationMode;
             existingVerification.VerificationStatus = updateVerificationRequest.VerificationStatus;
             existingVerification.UpdatedOn = DateTime.Now;
 

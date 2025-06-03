@@ -163,7 +163,7 @@ namespace CarePro_Api.Controllers.Content
             if (user == null)
             {
                 ModelState.AddModelError(nameof(addCertificationRequest.CaregiverId),
-                    "CaregiverId entered is Invalid or does not exist");
+                    "UserId entered is Invalid or does not exist");
                 return false;
             }
 

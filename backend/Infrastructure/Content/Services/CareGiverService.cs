@@ -426,11 +426,11 @@ namespace Infrastructure.Content.Services
             user.Password = BCrypt.Net.BCrypt.HashPassword(resetPasswordRequest.NewPassword);
 
 
-            var caregiver = await careProDbContext.CareGivers.FirstOrDefaultAsync(c => c.Email == resetPasswordRequest.Email.ToLower());
-            if (caregiver != null)
-            {
-                caregiver.Password = user.Password; // Keep both in sync
-            }
+            //var caregiver = await careProDbContext.CareGivers.FirstOrDefaultAsync(c => c.Email == resetPasswordRequest.Email.ToLower());
+            //if (caregiver != null)
+            //{
+            //    caregiver.Password = user.Password; // Keep both in sync
+            //}
 
             await careProDbContext.SaveChangesAsync();
         }
@@ -479,11 +479,11 @@ namespace Infrastructure.Content.Services
                 var hashedPassword = BCrypt.Net.BCrypt.HashPassword(request.NewPassword);
                 user.Password = hashedPassword;
 
-                var caregiver = await careProDbContext.CareGivers.FirstOrDefaultAsync(c => c.Email == user.Email);
-                if (caregiver != null)
-                {
-                    caregiver.Password = hashedPassword;
-                }
+                //var caregiver = await careProDbContext.CareGivers.FirstOrDefaultAsync(c => c.Email == user.Email);
+                //if (caregiver != null)
+                //{
+                //    caregiver.Password = hashedPassword;
+                //}
 
                 await careProDbContext.SaveChangesAsync();
             }
