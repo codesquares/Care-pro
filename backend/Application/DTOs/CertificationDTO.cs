@@ -12,6 +12,9 @@ namespace Application.DTOs
     {
         public string Id { get; set; }
 
+        public string CaregiverId { get; set; }
+
+
         public string CertificateName { get; set; }
 
         public string CertificateIssuer { get; set; }
@@ -31,15 +34,18 @@ namespace Application.DTOs
     {
         public string Id { get; set; }
 
+        public string CaregiverId { get; set; }
+
+
         public string CertificateName { get; set; }
 
         public string CertificateIssuer { get; set; }
 
-        public string CertificateUrl { get; set; }
+        public string Certificate { get; set; }
 
         public bool IsVerified { get; set; }
 
-        public string VerificationStatus { get; set; }
+       // public string VerificationStatus { get; set; }
 
         public DateTime YearObtained { get; set; }
 
@@ -51,16 +57,13 @@ namespace Application.DTOs
     {
         public string CertificateName { get; set; }
 
+        public string CaregiverId { get; set; }
+
         public string CertificateIssuer { get; set; }
 
-        public IFormFile Certificate { get; set; }
-
-       // public bool IsVerified { get; set; }
-
-       // public string VerificationStatus { get; set; }
+        public string Certificate { get; set; }
 
         public DateTime YearObtained { get; set; }
 
-       // public DateTime SubmittedOn { get; set; }
     }
 }

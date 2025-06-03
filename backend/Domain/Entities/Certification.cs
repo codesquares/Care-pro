@@ -11,15 +11,17 @@ namespace Domain.Entities
     {
         public ObjectId Id { get; set; }
 
+        public string CaregiverId { get; set; }
+
         public string CertificateName { get; set; }
 
         public string CertificateIssuer { get; set; }
 
-        public string CertificateUrl { get; set; }
+        public byte[] Certificate { get; set; }
 
         public bool IsVerified { get; set; }
 
-        public string VerificationStatus { get; set; }
+        //public string VerificationStatus { get; set; }
 
         public DateTime YearObtained { get; set; }
 
