@@ -92,7 +92,7 @@ function AppContent() {
   ];
 
   // Check if current path is unprotected
-  const isUnprotectedRoute = unprotectedRoutes.includes(location.pathname.toLowerCase()) && location.pathname !== '/' && location.pathname !== '/register' && location.pathname !== '/login';
+  const isUnprotectedRoute = unprotectedRoutes.includes(location.pathname.toLowerCase()) && location.pathname !== '/';
 
   
 
