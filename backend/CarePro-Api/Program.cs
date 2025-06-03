@@ -175,7 +175,7 @@ builder.Services.AddCors(options =>
 {
     options.AddPolicy("default", builder =>
     {
-        builder.WithOrigins("https://care-pro-frontend.onrender.com/", "https://localhost:5173", "http://localhost:5173", "https://localhost:5174", "http://localhost:5174")
+        builder.WithOrigins("https://care-pro-frontend.onrender.com", "https://localhost:5173", "http://localhost:5173", "https://localhost:5174", "http://localhost:5174")
                .AllowAnyHeader()
                .AllowAnyMethod()
                .AllowCredentials();
