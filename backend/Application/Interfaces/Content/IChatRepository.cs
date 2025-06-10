@@ -16,7 +16,7 @@ namespace Application.Interfaces.Content
 
         Task<IEnumerable<ChatPreviewResponse>> GetChatUserPreviewAsync(string userId);
 
-        Task UpdateUserConnectionStatus(string userId, bool isOnline, string connectionId);
+        Task<bool> UpdateUserConnectionStatus(string userId, bool isOnline, string connectionId);
 
         Task<List<MessageDTO>> GetMessageHistory(string user1Id, string user2Id, int skip, int take);
 
@@ -25,11 +25,16 @@ namespace Application.Interfaces.Content
         Task<List<string>> GetOnlineUsers();
 
         Task<ChatMessage?> UpdateMessageStatus(string messageId, string newStatus);
-
         
-
-
+        // Message deletion methods
+        Task<ChatMessage> GetMessageByIdAsync(string messageId);
+        Task<bool> DeleteMessageAsync(string messageId);
+        
+        // Read receipt methods
+        Task<bool> MarkMessageAsReadAsync(string messageId, string receiverId);
+        Task<bool> MarkAllMessagesAsReadAsync(string receiverId, string senderId);
+        Task<int> GetUnreadMessageCountAsync(string userId);
+        Task<bool> MarkMessageAsDeliveredAsync(string messageId, string receiverId);
     }
-
 }
 

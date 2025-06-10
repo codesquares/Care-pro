@@ -3,10 +3,14 @@ import './chatarea.scss';
 import MessageInput from './MessageInput';
 import MessageStatus from './MessageStatus';
 import { formatDistanceToNow } from 'date-fns';
+import { useMessageContext } from '../../context/MessageContext';
 
 const ChatArea = ({ messages, recipient, userId, onSendMessage, isOfflineMode = false }) => {
   const [message, setMessage] = useState('');
   const messagesEndRef = useRef(null);
+  const { handleDeleteMessage } = useMessageContext();
+  const [showDeleteMenu, setShowDeleteMenu] = useState(null);
+  const [visibleMessages, setVisibleMessages] = useState([]);
 
   // Scroll to bottom when messages change
   useEffect(() => {
@@ -14,6 +18,55 @@ const ChatArea = ({ messages, recipient, userId, onSendMessage, isOfflineMode = 
       messagesEndRef.current.scrollIntoView({ behavior: 'smooth' });
     }
   }, [messages]);
+  
+  // Process messages to add read receipt info for display
+  useEffect(() => {
+    if (messages && Array.isArray(messages)) {
+      const processedMessages = messages.map(msg => {
+        let statusText = '';
+        
+        if (msg.senderId === userId) {
+          // Only show status for messages sent by current user
+          if (msg.status === 'read') {
+            statusText = msg.readAt 
+              ? `Read ${new Date(msg.readAt).toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'})}` 
+              : 'Read';
+          } else if (msg.status === 'delivered') {
+            statusText = 'Delivered';
+          } else if (msg.status === 'sent') {
+            statusText = 'Sent';
+          } else if (msg.status === 'sending') {
+            statusText = 'Sending...';
+          } else if (msg.status === 'failed') {
+            statusText = 'Failed to send';
+          } else if (msg.status === 'pending') {
+            statusText = 'Waiting to send (offline)';
+          }
+        }
+        
+        return {
+          ...msg,
+          statusText
+        };
+      });
+      
+      setVisibleMessages(processedMessages);
+    } else {
+      setVisibleMessages([]);
+    }
+  }, [messages, userId]);
+
+  // Close menu when clicking outside
+  useEffect(() => {
+    const handleClickOutside = (e) => {
+      if (showDeleteMenu && !e.target.closest('.message-actions-menu')) {
+        setShowDeleteMenu(null);
+      }
+    };
+    
+    document.addEventListener('click', handleClickOutside);
+    return () => document.removeEventListener('click', handleClickOutside);
+  }, [showDeleteMenu]);
 
   const handleSendMessage = () => {
     if (message.trim()) {
@@ -27,6 +80,16 @@ const ChatArea = ({ messages, recipient, userId, onSendMessage, isOfflineMode = 
       e.preventDefault();
       handleSendMessage();
     }
+  };
+  
+  const handleMessageActions = (e, messageId) => {
+    e.stopPropagation();
+    setShowDeleteMenu(prev => prev === messageId ? null : messageId);
+  };
+  
+  const deleteMessage = async (messageId) => {
+    await handleDeleteMessage(messageId);
+    setShowDeleteMenu(null);
   };
 
   // Group messages by date
@@ -64,8 +127,8 @@ const ChatArea = ({ messages, recipient, userId, onSendMessage, isOfflineMode = 
     return groups;
   };
 
-  const messageGroups = groupMessagesByDate(messages);
-  const isNewConversation = !messages || messages.length === 0;
+  const messageGroups = groupMessagesByDate(visibleMessages);
+  const isNewConversation = !visibleMessages || visibleMessages.length === 0;
 
   const formatMessageDate = (dateString) => {
     const date = new Date(dateString);
@@ -143,20 +206,44 @@ const ChatArea = ({ messages, recipient, userId, onSendMessage, isOfflineMode = 
                   <span>{formatMessageDate(dateKey)}</span>
                 </div>
                 {messageGroups[dateKey].map((msg, index) => (
-                  <div key={`${dateKey}-${index}`} className={`message ${msg.senderId === userId ? 'sent' : 'received'}`}>
+                  <div key={`${dateKey}-${index}`} className={`message ${msg.senderId === userId ? 'sent' : 'received'} ${msg.isDeleted ? 'deleted' : ''}`}>
                     <div className="message-bubble">
-                      <p>{msg.text}</p>
+                      {msg.isDeleted ? (
+                        <p className="deleted-message-text">This message was deleted</p>
+                      ) : (
+                        <p>{msg.text || msg.content}</p>
+                      )}
                       <div className="message-meta">
                         <span className="message-time">
                           {msg.timestamp && !isNaN(new Date(msg.timestamp).getTime())
                             ? new Date(msg.timestamp).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
                             : new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
                         </span>
-                        {msg.senderId === userId && (
-                          <MessageStatus status={isOfflineMode && msg.status === 'sending' ? 'pending' : (msg.status || 'sent')} />
+                        {msg.senderId === userId && !msg.isDeleted && (
+                          <div className="message-status-container">
+                            <MessageStatus status={isOfflineMode && msg.status === 'sending' ? 'pending' : (msg.status || 'sent')} />
+                            {msg.statusText && <span className="status-text" title={msg.statusText}>{msg.statusText}</span>}
+                          </div>
                         )}
                       </div>
                     </div>
+                    {/* Only show actions for your own messages that are not deleted */}
+                    {msg.senderId === userId && !msg.isDeleted && (
+                      <div className="message-actions">
+                        <button className="action-button" onClick={(e) => handleMessageActions(e, msg.id)}>
+                          <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" className="bi bi-three-dots" viewBox="0 0 16 16">
+                            <path d="M3 9.5a.5.5 0 1 1 0-1 .5.5 0 0 1 0 1zm4.5 0a.5.5 0 1 1 0-1 .5.5 0 0 1 0 1zm4.5 0a.5.5 0 1 1 0-1 .5.5 0 0 1 0 1z"/>
+                          </svg>
+                        </button>
+                        {showDeleteMenu === msg.id && (
+                          <div className="message-actions-menu">
+                            <button className="delete-message-button" onClick={() => deleteMessage(msg.id)}>
+                              Delete Message
+                            </button>
+                          </div>
+                        )}
+                      </div>
+                    )}
                   </div>
                 ))}
               </div>

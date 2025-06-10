@@ -170,5 +170,158 @@ namespace Infrastructure.Content.Services
         }
 
 
+        /// <summary>
+        /// Delete a message and notify participants
+        /// </summary>
+        public async Task<bool> DeleteMessage(string messageId, string userId)
+        {
+            try
+            {
+                // Get the message first to verify ownership
+                var message = await _chatRepository.GetMessageByIdAsync(messageId);
+                
+                // Check if message exists
+                if (message == null)
+                {
+                    throw new HubException("Message not found");
+                }
+
+                // Verify the user is authorized to delete this message
+                if (message.SenderId != userId)
+                {
+                    throw new HubException("You can only delete your own messages");
+                }
+
+                // Delete the message
+                bool deleted = await _chatRepository.DeleteMessageAsync(messageId);
+                
+                if (deleted)
+                {
+                    // Notify both the sender and receiver that the message was deleted
+                    await Clients.Group(message.SenderId).SendAsync("MessageDeleted", messageId);
+                    await Clients.Group(message.ReceiverId).SendAsync("MessageDeleted", messageId);
+                    
+                    return true;
+                }
+                
+                return false;
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine($"Error deleting message: {ex.Message}");
+                throw new HubException($"Failed to delete message: {ex.Message}");
+            }
+        }
+        
+        /// <summary>
+        /// Mark a message as read and notify the sender
+        /// </summary>
+        public async Task<bool> MarkMessageAsRead(string messageId, string userId)
+        {
+            try
+            {
+                // Get the message to verify the recipient
+                var message = await _chatRepository.GetMessageByIdAsync(messageId);
+                
+                // Check if message exists
+                if (message == null)
+                {
+                    throw new HubException("Message not found");
+                }
+
+                // Verify the user is the recipient
+                if (message.ReceiverId != userId)
+                {
+                    throw new HubException("You can only mark messages sent to you as read");
+                }
+
+                // Mark as read
+                bool success = await _chatRepository.MarkMessageAsReadAsync(messageId, userId);
+                
+                if (success)
+                {
+                    // Notify the sender that the message was read
+                    await Clients.Group(message.SenderId).SendAsync("MessageRead", messageId, DateTime.UtcNow);
+                    
+                    return true;
+                }
+                
+                return false;
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine($"Error marking message as read: {ex.Message}");
+                throw new HubException($"Failed to mark message as read: {ex.Message}");
+            }
+        }
+        
+        /// <summary>
+        /// Mark all messages from a specific sender as read
+        /// </summary>
+        public async Task<bool> MarkAllMessagesAsRead(string senderId, string receiverId)
+        {
+            try
+            {
+                // Mark all messages as read
+                bool success = await _chatRepository.MarkAllMessagesAsReadAsync(receiverId, senderId);
+                
+                if (success)
+                {
+                    // Notify the sender that all messages were read
+                    await Clients.Group(senderId).SendAsync("AllMessagesRead", receiverId, DateTime.UtcNow);
+                    
+                    return true;
+                }
+                
+                return false;
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine($"Error marking all messages as read: {ex.Message}");
+                throw new HubException($"Failed to mark all messages as read: {ex.Message}");
+            }
+        }
+        
+        /// <summary>
+        /// Mark a message as delivered (received but not read yet)
+        /// </summary>
+        public async Task<bool> MarkMessageAsDelivered(string messageId, string userId)
+        {
+            try
+            {
+                // Get the message to verify the recipient
+                var message = await _chatRepository.GetMessageByIdAsync(messageId);
+                
+                // Check if message exists
+                if (message == null)
+                {
+                    throw new HubException("Message not found");
+                }
+
+                // Verify the user is the recipient
+                if (message.ReceiverId != userId)
+                {
+                    throw new HubException("You can only mark messages sent to you as delivered");
+                }
+
+                // Mark as delivered
+                bool success = await _chatRepository.MarkMessageAsDeliveredAsync(messageId, userId);
+                
+                if (success)
+                {
+                    // Notify the sender that the message was delivered
+                    await Clients.Group(message.SenderId).SendAsync("MessageDelivered", messageId, DateTime.UtcNow);
+                    
+                    return true;
+                }
+                
+                return false;
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine($"Error marking message as delivered: {ex.Message}");
+                throw new HubException($"Failed to mark message as delivered: {ex.Message}");
+            }
+        }
     }
 }

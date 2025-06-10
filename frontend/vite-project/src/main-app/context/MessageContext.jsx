@@ -215,7 +215,7 @@ export const MessageProvider = ({ children }) => {
         }),
         
         // New message handler
-        chatService.on('onMessage', (messageData) => {
+        chatService.on('onMessage', async (messageData) => {
           const { senderId, message, messageId, status } = messageData;
           
           // Add to messages if this is the active chat
@@ -229,15 +229,32 @@ export const MessageProvider = ({ children }) => {
               status: status || 'delivered'
             }]);
             
-            // Mark as read if this is the active chat
-            chatService.markMessageRead(messageId)
-              .catch(err => console.error('Error marking message as read:', err));
+            // First mark as delivered
+            try {
+              await chatService.markMessageAsDelivered(messageId, userId);
+            } catch (err) {
+              console.error('Error marking message as delivered:', err);
+            }
+            
+            // Then mark as read if this is the active chat
+            try {
+              await chatService.markMessageRead(messageId);
+            } catch (err) {
+              console.error('Error marking message as read:', err);
+            }
           } else {
             // Update unread count
             setUnreadMessages(prevCounts => ({
               ...prevCounts,
               [senderId]: (prevCounts[senderId] || 0) + 1
             }));
+            
+            // For messages not in active chat, just mark as delivered but not read
+            try {
+              await chatService.markMessageAsDelivered(messageId, userId);
+            } catch (err) {
+              console.error('Error marking message as delivered:', err);
+            }
             
             // Trigger browser notification
             const event = new CustomEvent('new-message', {
@@ -252,6 +269,72 @@ export const MessageProvider = ({ children }) => {
           
           // Update conversations list if needed
           updateConversationsList(senderId);
+        }),
+
+        // Message read receipt handler
+        chatService.on('onMessageRead', (data) => {
+          const { messageId, timestamp, status } = data;
+          
+          // Update message status in state
+          setMessages(prevMessages => 
+            prevMessages.map(msg => 
+              msg.id === messageId 
+                ? { ...msg, status: 'read', readAt: timestamp } 
+                : msg
+            )
+          );
+          
+          console.log(`Message ${messageId} marked as read at ${timestamp}`);
+        }),
+        
+        // Message delivered receipt handler
+        chatService.on('onMessageDelivered', (data) => {
+          const { messageId, timestamp, status } = data;
+          
+          // Update message status in state
+          setMessages(prevMessages => 
+            prevMessages.map(msg => 
+              msg.id === messageId && msg.status !== 'read'
+                ? { ...msg, status: 'delivered', deliveredAt: timestamp } 
+                : msg
+            )
+          );
+          
+          console.log(`Message ${messageId} marked as delivered at ${timestamp}`);
+        }),
+
+        // Message deleted handler
+        chatService.on('onMessageDeleted', (data) => {
+          const { messageId } = data;
+          
+          // Update message in state
+          setMessages(prevMessages => 
+            prevMessages.map(msg => 
+              msg.id === messageId 
+                ? { ...msg, isDeleted: true, content: "This message was deleted" } 
+                : msg
+            )
+          );
+          
+          console.log(`Message ${messageId} was deleted`);
+        }),
+        
+        // All messages read handler
+        chatService.on('onAllMessagesRead', (data) => {
+          const { userId, timestamp } = data;
+          
+          // Update all messages from this user to read
+          if (userId === selectedChatId) {
+            setMessages(prevMessages => 
+              prevMessages.map(msg => 
+                msg.senderId === userId && !msg.isDeleted
+                  ? { ...msg, status: 'read', readAt: timestamp } 
+                  : msg
+              )
+            );
+            
+            console.log(`All messages from ${userId} marked as read at ${timestamp}`);
+          }
         }),
         
         // User status change handler
@@ -373,6 +456,50 @@ export const MessageProvider = ({ children }) => {
     }
   }, []);
 
+  // Delete message
+  const handleDeleteMessage = useCallback(async (messageId) => {
+    if (!currentUserId || !messageId) return false;
+    
+    try {
+      // Find the message to verify ownership
+      const message = messages.find(m => m.id === messageId);
+      if (!message) {
+        console.error('Message not found:', messageId);
+        return false;
+      }
+      
+      // Verify user is the sender
+      if (message.senderId !== currentUserId) {
+        console.error('Cannot delete messages sent by others');
+        return false;
+      }
+      
+      // Optimistically update UI
+      setMessages(prev => prev.map(message => 
+        message.id === messageId 
+          ? { ...message, isDeleted: true, content: "This message was deleted" } 
+          : message
+      ));
+      
+      // Send delete request to server
+      const success = await chatService.deleteMessage(messageId, currentUserId);
+      
+      if (!success) {
+        // Revert optimistic update if delete failed
+        setMessages(prev => prev.map(message => 
+          message.id === messageId && message.isDeleted
+            ? { ...message, isDeleted: false, content: message.originalContent } 
+            : message
+        ));
+      }
+      
+      return success;
+    } catch (error) {
+      console.error('Error deleting message:', error);
+      return false;
+    }
+  }, [currentUserId, messages]);
+  
   // Select chat
   const selectChat = useCallback(async (chatId) => {
     setSelectedChatId(chatId);
@@ -411,13 +538,21 @@ export const MessageProvider = ({ children }) => {
           
           setMessages(processedMessages);
           
-          // Mark unread messages as read
-          processedMessages.forEach(message => {
-            if (message.senderId === chatId && message.status !== 'read') {
-              chatService.markMessageRead(message.id)
-                .catch(err => console.error('Error marking message as read:', err));
-            }
-          });
+          // Mark all messages from this sender as read in one batch operation
+          if (processedMessages.some(message => message.senderId === chatId && message.status !== 'read')) {
+            chatService.markAllMessagesAsRead(chatId, currentUserId)
+              .then(() => {
+                // Update local message statuses
+                setMessages(prevMessages => 
+                  prevMessages.map(msg => 
+                    msg.senderId === chatId && !msg.isDeleted && msg.status !== 'read'
+                      ? { ...msg, status: 'read', readAt: new Date().toISOString() } 
+                      : msg
+                  )
+                );
+              })
+              .catch(err => console.error('Error marking all messages as read:', err));
+          }
         } catch (historyError) {
           console.error('Failed to load message history:', historyError);
           setMessages([]);
@@ -448,7 +583,8 @@ export const MessageProvider = ({ children }) => {
     initializeChat,
     handleSendMessage,
     selectChat,
-    fetchConversations
+    fetchConversations,
+    handleDeleteMessage
   };
 
   return (

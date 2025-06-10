@@ -292,16 +292,63 @@ class SignalRChatService {
   /**
    * Mark a message as read
    * @param {string} messageId - ID of the message to mark
+   * @returns {Promise<boolean>} - Promise that resolves to success status
    */
   async markMessageRead(messageId) {
+    // If not connected, try to mark as read via REST API
     if (!this.connection || this.connection.state !== signalR.HubConnectionState.Connected) {
-      throw new Error('Connection is not established');
+      try {
+        // Fall back to REST API
+        const userId = this._userId;
+        if (!userId) throw new Error('User ID is required to mark message as read');
+        
+        const response = await axios.post(`${API_BASE_URL}/api/chat/mark-read/${messageId}?userId=${userId}`);
+        return response.data.success;
+      } catch (error) {
+        console.error('Error marking message as read via API:', error);
+        return false;
+      }
     }
 
     try {
-      await this.connection.invoke('MessageRead', messageId);
+      // Use the ChatHub method to mark as read
+      const success = await this.connection.invoke('MarkMessageAsRead', messageId, this._userId);
+      return success;
     } catch (error) {
       console.error('Error marking message as read:', error);
+      return false;
+    }
+  }
+
+  /**
+   * Mark all messages from a sender as read
+   * @param {string} senderId - Sender user ID
+   * @param {string} receiverId - Recipient user ID (current user)
+   * @returns {Promise<boolean>} - Promise that resolves to success status
+   */
+  async markAllMessagesAsRead(senderId, receiverId) {
+    // If not connected, try to mark as read via REST API
+    if (!this.connection || this.connection.state !== signalR.HubConnectionState.Connected) {
+      try {
+        // Fall back to REST API
+        const response = await axios.post(`${API_BASE_URL}/api/chat/mark-all-read`, {
+          senderId,
+          receiverId
+        });
+        return response.data.success;
+      } catch (error) {
+        console.error('Error marking all messages as read via API:', error);
+        return false;
+      }
+    }
+
+    try {
+      // Use the ChatHub method to mark all as read
+      const success = await this.connection.invoke('MarkAllMessagesAsRead', senderId, receiverId);
+      return success;
+    } catch (error) {
+      console.error('Error marking all messages as read:', error);
+      return false;
     }
   }
 
@@ -434,6 +481,33 @@ class SignalRChatService {
   }
 
   /**
+   * Register an event handler for a specific SignalR event
+   * @param {string} eventName - The name of the event to listen for
+   * @param {Function} callback - The function to call when the event occurs
+   */
+  on(eventName, callback) {
+    if (!this.connection) {
+      console.warn(`Cannot register handler for ${eventName}: No connection available`);
+      return;
+    }
+    
+    this.connection.on(eventName, callback);
+  }
+  
+  /**
+   * Remove an event handler for a specific SignalR event
+   * @param {string} eventName - The name of the event to stop listening for
+   * @param {Function} callback - The function to remove
+   */
+  off(eventName, callback) {
+    if (!this.connection) {
+      return;
+    }
+    
+    this.connection.off(eventName, callback);
+  }
+  
+  /**
    * Set up connection state change handlers
    * @private
    */
@@ -474,32 +548,39 @@ class SignalRChatService {
   }
 
   /**
-   * Set up message handlers for server-sent messages
+   * Set up message handlers for SignalR hub
    * @private
    */
   _setupMessageHandlers() {
-    // Handle incoming messages
+    if (!this.connection) return;
+
+    // Handle received messages
     this.connection.on('ReceiveMessage', (senderId, message, messageId, status) => {
-      console.log(`New message from ${senderId}:`, message);
-      const messageData = {
-        senderId,
-        message,
-        messageId,
-        status,
-        received: new Date().toISOString()
-      };
-      
-      // Mark message as received
-      this.markMessageReceived(messageId)
-        .catch(error => console.error('Error marking message as received:', error));
-      
-      this._notifyHandlers('onMessage', messageData);
+      this._notifyHandlers('onMessage', { senderId, message, messageId, status });
     });
 
-    // Handle user status changes
+    // Handle message status changes (read/delivered)
+    this.connection.on('MessageRead', (messageId, timestamp) => {
+      this._notifyHandlers('onMessageRead', { messageId, timestamp, status: 'read' });
+    });
+
+    this.connection.on('MessageDelivered', (messageId, timestamp) => {
+      this._notifyHandlers('onMessageDelivered', { messageId, timestamp, status: 'delivered' });
+    });
+
+    // Handle deleted messages
+    this.connection.on('MessageDeleted', (messageId) => {
+      this._notifyHandlers('onMessageDeleted', { messageId });
+    });
+
+    // Handle user status change notifications
     this.connection.on('UserStatusChanged', (userId, status) => {
-      console.log(`User ${userId} status changed to ${status}`);
       this._notifyHandlers('onUserStatusChanged', { userId, status });
+    });
+
+    // Handle all messages read notifications
+    this.connection.on('AllMessagesRead', (userId, timestamp) => {
+      this._notifyHandlers('onAllMessagesRead', { userId, timestamp });
     });
   }
 
@@ -582,6 +663,67 @@ class SignalRChatService {
         return delay;
       }
     };
+  }
+
+  /**
+   * Delete a message
+   * @param {string} messageId - ID of the message to delete
+   * @param {string} userId - ID of the user requesting deletion (must be sender)
+   * @returns {Promise<boolean>} - Promise that resolves to success status
+   */
+  async deleteMessage(messageId, userId) {
+    try {
+      // First try through SignalR if connected
+      if (this.connection && this.connection.state === signalR.HubConnectionState.Connected) {
+        try {
+          // Call the DeleteMessage method on the hub
+          const success = await this.connection.invoke('DeleteMessage', messageId, userId);
+          return success;
+        } catch (signalRError) {
+          console.warn('SignalR message deletion failed, falling back to REST API:', signalRError);
+          // Continue to REST API fallback
+        }
+      }
+      
+      // Fallback to REST API
+      const axios = (await import('axios')).default;
+      const response = await axios.delete(`${API_BASE_URL}/api/chat/delete/${messageId}?userId=${userId}`);
+      
+      return response.data.success || false;
+    } catch (error) {
+      console.error('Error deleting message:', error);
+      this._notifyHandlers('onError', error);
+      throw error;
+    }
+  }
+
+  /**
+   * Mark a message as delivered (but not read)
+   * @param {string} messageId - ID of the message to mark
+   * @param {string} userId - ID of the current user (receiver)
+   * @returns {Promise<boolean>} - Promise that resolves to success status
+   */
+  async markMessageAsDelivered(messageId, userId) {
+    // If not connected, try to mark as delivered via REST API
+    if (!this.connection || this.connection.state !== signalR.HubConnectionState.Connected) {
+      try {
+        // Fall back to REST API if available
+        const response = await axios.post(`${API_BASE_URL}/api/chat/mark-delivered/${messageId}?userId=${userId}`);
+        return response.data.success;
+      } catch (error) {
+        console.error('Error marking message as delivered via API:', error);
+        return false;
+      }
+    }
+
+    try {
+      // Use the ChatHub method to mark as delivered
+      const success = await this.connection.invoke('MarkMessageAsDelivered', messageId, userId);
+      return success;
+    } catch (error) {
+      console.error('Error marking message as delivered:', error);
+      return false;
+    }
   }
 }
 

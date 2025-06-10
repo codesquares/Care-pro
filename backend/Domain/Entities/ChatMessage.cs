@@ -27,6 +27,24 @@ namespace Domain.Entities
 
         [BsonElement("timestamp")]
         public DateTime Timestamp { get; set; } = DateTime.UtcNow;
+        
+        [BsonElement("isDeleted")]
+        public bool IsDeleted { get; set; } = false;
+        
+        [BsonElement("deletedAt")]
+        public DateTime? DeletedAt { get; set; }
+        
+        [BsonElement("isRead")]
+        public bool IsRead { get; set; } = false;
+        
+        [BsonElement("readAt")]
+        public DateTime? ReadAt { get; set; }
+        
+        [BsonElement("isDelivered")]
+        public bool IsDelivered { get; set; } = false;
+        
+        [BsonElement("deliveredAt")]
+        public DateTime? DeliveredAt { get; set; }
     }
 
 }

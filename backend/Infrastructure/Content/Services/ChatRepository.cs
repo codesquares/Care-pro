@@ -31,10 +31,44 @@ namespace Infrastructure.Content.Services
         public async Task<List<ChatMessage>> GetChatHistoryAsync(string user1, string user2)
         {           
             return await careProDbContext.ChatMessages
-                .Where(m => (m.SenderId == user1 && m.ReceiverId == user2) ||
-                            (m.SenderId == user2 && m.ReceiverId == user1))
+                .Where(m => ((m.SenderId == user1 && m.ReceiverId == user2) ||
+                            (m.SenderId == user2 && m.ReceiverId == user1)) &&
+                           !m.IsDeleted) // Only include non-deleted messages
                 .OrderBy(m => m.Timestamp)
                 .ToListAsync();
+        }
+        
+        // Get a single message by ID
+        public async Task<ChatMessage> GetMessageByIdAsync(string messageId)
+        {
+            return await careProDbContext.ChatMessages
+                .FirstOrDefaultAsync(m => m.Id == messageId);
+        }
+        
+        // Delete a message (soft delete)
+        public async Task<bool> DeleteMessageAsync(string messageId)
+        {
+            try
+            {
+                var message = await GetMessageByIdAsync(messageId);
+                if (message == null)
+                {
+                    return false;
+                }
+                
+                // Soft delete: mark as deleted
+                message.IsDeleted = true;
+                message.DeletedAt = DateTime.UtcNow;
+                
+                // Update the message
+                careProDbContext.ChatMessages.Update(message);
+                await careProDbContext.SaveChangesAsync();
+                return true;
+            }
+            catch (Exception)
+            {
+                return false;
+            }
         }
 
 
@@ -209,8 +243,130 @@ namespace Infrastructure.Content.Services
             return message;
         }
 
-       
+        // Update user connection status
+        public async Task<bool> UpdateUserConnectionStatus(string userId, bool isOnline, string connectionId)
+        {
+            try
+            {
+                // In a real implementation, you would typically store this in a separate collection
+                // or a distributed cache like Redis. For simplicity, we'll just return true here.
+                // TODO: Implement proper connection tracking
+                
+                return true;
+            }
+            catch (Exception)
+            {
+                return false;
+            }
+        }
 
+        // Mark message as read
+        public async Task<bool> MarkMessageAsReadAsync(string messageId, string receiverId)
+        {
+            try
+            {
+                var message = await GetMessageByIdAsync(messageId);
+                if (message == null || message.ReceiverId != receiverId)
+                {
+                    return false; // Message doesn't exist or user is not the recipient
+                }
+
+                // Don't update if already marked as read
+                if (message.IsRead)
+                {
+                    return true;
+                }
+
+                // Mark as read
+                message.IsRead = true;
+                message.ReadAt = DateTime.UtcNow;
+
+                // Update the message
+                careProDbContext.ChatMessages.Update(message);
+                await careProDbContext.SaveChangesAsync();
+                return true;
+            }
+            catch (Exception)
+            {
+                return false;
+            }
+        }
+
+        // Mark all messages from a specific sender as read
+        public async Task<bool> MarkAllMessagesAsReadAsync(string receiverId, string senderId)
+        {
+            try
+            {
+                // Get all unread messages from sender to receiver
+                var unreadMessages = await careProDbContext.ChatMessages
+                    .Where(m => m.SenderId == senderId && 
+                                m.ReceiverId == receiverId && 
+                                !m.IsRead &&
+                                !m.IsDeleted)
+                    .ToListAsync();
+
+                if (!unreadMessages.Any())
+                {
+                    return true; // No unread messages
+                }
+
+                // Mark all as read
+                var now = DateTime.UtcNow;
+                foreach (var message in unreadMessages)
+                {
+                    message.IsRead = true;
+                    message.ReadAt = now;
+                }
+
+                await careProDbContext.SaveChangesAsync();
+                return true;
+            }
+            catch (Exception)
+            {
+                return false;
+            }
+        }
+
+        // Get unread message count for a user
+        public async Task<int> GetUnreadMessageCountAsync(string userId)
+        {
+            return await careProDbContext.ChatMessages
+                .CountAsync(m => m.ReceiverId == userId && 
+                                !m.IsRead && 
+                                !m.IsDeleted);
+        }
+        
+        // Mark message as delivered (when user receives but hasn't read yet)
+        public async Task<bool> MarkMessageAsDeliveredAsync(string messageId, string receiverId)
+        {
+            try
+            {
+                var message = await GetMessageByIdAsync(messageId);
+                if (message == null || message.ReceiverId != receiverId)
+                {
+                    return false; // Message doesn't exist or user is not the recipient
+                }
+
+                // Don't update if already delivered or read
+                if (message.IsDelivered || message.IsRead)
+                {
+                    return true;
+                }
+
+                // Mark as delivered
+                message.IsDelivered = true;
+                message.DeliveredAt = DateTime.UtcNow;
+
+                // Update the message
+                careProDbContext.ChatMessages.Update(message);
+                await careProDbContext.SaveChangesAsync();
+                return true;
+            }
+            catch (Exception)
+            {
+                return false;
+            }
+        }
     }
 
 }
