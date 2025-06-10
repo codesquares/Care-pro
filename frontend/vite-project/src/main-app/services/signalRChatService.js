@@ -8,10 +8,15 @@
  * https://learn.microsoft.com/en-us/aspnet/signalr/overview/guide-to-the-api/hubs-api-guide-javascript-client
  */
 import * as signalR from '@microsoft/signalr';
+import { connectionLogger } from '../utils/chatLogger';
+import connectionManager from './connectionManager';
 
 // Constants
 const API_BASE_URL = "https://carepro-api20241118153443.azurewebsites.net";
 const HUB_URL = `${API_BASE_URL}/chathub`;
+
+// Message and history cache
+const MESSAGE_CACHE_TTL = 5 * 60 * 1000; // 5 minutes in milliseconds
 
 class SignalRChatService {
   constructor() {
@@ -29,10 +34,15 @@ class SignalRChatService {
     this.connectionId = null;
     this._userId = null;
     this._isConnecting = false;
+    
+    // Add cache for message history and status
+    this._messageCache = new Map(); // Map of conversation IDs to cached message history
+    this._statusCache = new Map();  // Map of user IDs to online status
+    this._lastCacheCleanup = Date.now();
   }
 
   /**
-   * Initializes the connection to the SignalR hub
+   * Initializes the connection to the SignalR hub with limits on retries
    * @param {string} userId - The current user's ID
    * @param {string} token - JWT authentication token
    * @returns {Promise} - Connection promise
@@ -47,10 +57,10 @@ class SignalRChatService {
     // Save user ID to use in reconnection
     this._userId = userId;
 
-    // Prevent multiple connection attempts
-    if (this._isConnecting) {
-      console.log('Connection attempt already in progress');
-      return this.reconnectPromise;
+    // Use the central connection manager to track connection state
+    if (connectionManager.connectionAttemptInProgress) {
+      console.log('Connection attempt already in progress (tracked by ConnectionManager)');
+      return this.reconnectPromise || Promise.resolve(this.connection);
     }
     
     // Use existing connection if it's already connected
@@ -63,12 +73,17 @@ class SignalRChatService {
     this._isConnecting = true;
     
     try {
+      // Create custom retry policy
+      const retryPolicy = this._createRetryPolicy();
+      
       // Build the connection
       this.connection = new signalR.HubConnectionBuilder()
         .withUrl(HUB_URL, {
-          accessTokenFactory: () => token
+          accessTokenFactory: () => token,
+          skipNegotiation: false, // Allow negotiation to find best transport
+          transport: signalR.HttpTransportType.WebSockets | signalR.HttpTransportType.LongPolling // Try WebSockets first, fallback to long polling
         })
-        .withAutomaticReconnect([0, 2000, 5000, 10000, null]) // Reconnect policy with backoff
+        .withAutomaticReconnect(retryPolicy) // Use our custom policy with max attempts
         .configureLogging(signalR.LogLevel.Information)
         .build();
         
@@ -78,9 +93,18 @@ class SignalRChatService {
       // Set up message handlers
       this._setupMessageHandlers();
       
-      // Start the connection
-      this.reconnectPromise = this.connection.start();
-      await this.reconnectPromise;
+      // Start the connection with timeout
+      const connectWithTimeout = async (timeoutMs = 15000) => {
+        const connectPromise = this.connection.start();
+        const timeoutPromise = new Promise((_, reject) => 
+          setTimeout(() => reject(new Error('Connection timeout')), timeoutMs)
+        );
+        
+        this.reconnectPromise = Promise.race([connectPromise, timeoutPromise]);
+        return this.reconnectPromise;
+      };
+      
+      await connectWithTimeout();
       
       // Store the connection ID for later use
       this.connectionId = this.connection.connectionId;
@@ -95,6 +119,9 @@ class SignalRChatService {
         // Don't fail the connection just because this method isn't available
       }
       
+      // Update the connection manager state
+      connectionManager.endConnectionAttempt(this.connectionId);
+      
       // Notify connection handlers
       this._notifyHandlers('onConnected', { connectionId: this.connectionId });
       
@@ -102,9 +129,14 @@ class SignalRChatService {
     } catch (error) {
       console.error('Error connecting to SignalR hub:', error);
       this._notifyHandlers('onError', error);
+      
+      // Mark connection attempt as failed in the manager
+      connectionManager.endConnectionAttempt(null);
+      
       throw error;
     } finally {
       this._isConnecting = false;
+      this.reconnectPromise = null;
     }
   }
 
@@ -117,11 +149,31 @@ class SignalRChatService {
     }
 
     try {
+      // Make sure we're not trying to connect at the same time
+      this._isConnecting = false;
+      this.reconnectPromise = null;
+      
+      // Use connection manager to track state
+      connectionManager.clearConnectionTimeout();
+      
+      // If connection is already closing or closed, don't try to stop it again
+      if (this.connection.state === signalR.HubConnectionState.Disconnected ||
+          this.connection.state === signalR.HubConnectionState.Disconnecting) {
+        console.log('Connection already disconnected or disconnecting');
+        return;
+      }
+      
+      // Add a small timeout to prevent race conditions with reconnect attempts
+      await new Promise(resolve => setTimeout(resolve, 300));
+      
       await this.connection.stop();
       console.log('Disconnected from SignalR hub');
       this._notifyHandlers('onDisconnected', { reason: 'User disconnected' });
     } catch (error) {
       console.error('Error disconnecting from SignalR hub:', error);
+    } finally {
+      this.connectionId = null;
+      this.connection = null;
     }
   }
 
@@ -133,14 +185,29 @@ class SignalRChatService {
    * @returns {Promise<string>} - Promise that resolves to message ID
    */
   async sendMessage(senderId, receiverId, message) {
-    if (!this.connection || this.connection.state !== signalR.HubConnectionState.Connected) {
-      throw new Error('Connection is not established');
-    }
-
     try {
-      // Call the SendMessage method on the hub
-      const messageId = await this.connection.invoke('SendMessage', senderId, receiverId, message);
-      return messageId;
+      // First try through SignalR if connected
+      if (this.connection && this.connection.state === signalR.HubConnectionState.Connected) {
+        try {
+          // Call the SendMessage method on the hub
+          const messageId = await this.connection.invoke('SendMessage', senderId, receiverId, message);
+          return messageId;
+        } catch (signalRError) {
+          console.warn('SignalR message send failed, falling back to REST API:', signalRError);
+          // Continue to REST API fallback
+        }
+      }
+      
+      // Fallback to REST API
+      const axios = (await import('axios')).default;
+      const response = await axios.post(`${API_BASE_URL}/api/chat/send`, {
+        senderId,
+        receiverId,
+        message,
+        timestamp: new Date().toISOString()
+      });
+      
+      return response.data.messageId || response.data.id || `fallback-${Date.now()}`;
     } catch (error) {
       console.error('Error sending message:', error);
       this._notifyHandlers('onError', error);
@@ -157,18 +224,52 @@ class SignalRChatService {
    * @returns {Promise<Array>} - Promise that resolves to an array of message objects
    */
   async getMessageHistory(user1Id, user2Id, skip = 0, take = 50) {
-    if (!this.connection || this.connection.state !== signalR.HubConnectionState.Connected) {
-      throw new Error('Connection is not established');
-    }
-
     try {
-      // Call the GetMessageHistory method on the hub
-      const messages = await this.connection.invoke('GetMessageHistory', user1Id, user2Id, skip, take);
-      return messages;
+      // Generate a cache key for this conversation
+      const cacheKey = this._getCacheKey(user1Id, user2Id);
+      
+      // Check if we have cached data
+      if (this._messageCache.has(cacheKey)) {
+        const cachedEntry = this._messageCache.get(cacheKey);
+        console.log('Returning cached message history for', cacheKey);
+        
+        // Return cached messages, applying skip and take
+        return cachedEntry.messages.slice(skip, skip + take);
+      }
+      
+      // First try to get history through SignalR if connected
+      if (this.connection && this.connection.state === signalR.HubConnectionState.Connected) {
+        try {
+          // Call the GetMessageHistory method on the hub
+          const messages = await this.connection.invoke('GetMessageHistory', user1Id, user2Id, skip, take);
+          
+          // Cache the message history
+          this._messageCache.set(cacheKey, { messages, timestamp: Date.now() });
+          console.log('Cached new message history for', cacheKey);
+          
+          return messages;
+        } catch (signalRError) {
+          console.warn('SignalR message history failed, falling back to REST API:', signalRError);
+          // Continue to REST API fallback
+        }
+      }
+      
+      // Fallback to REST API
+      const axios = (await import('axios')).default;
+      const response = await axios.get(`${API_BASE_URL}/api/chat/history?user1Id=${user1Id}&user2Id=${user2Id}&skip=${skip}&take=${take}`);
+      
+      // Cache the retrieved message history
+      this._messageCache.set(cacheKey, { messages: response.data, timestamp: Date.now() });
+      console.log('Cached message history from REST API for', cacheKey);
+      
+      return response.data;
     } catch (error) {
       console.error('Error fetching message history:', error);
       this._notifyHandlers('onError', error);
       throw error;
+    } finally {
+      // Clean up cache regularly
+      this._cleanupCache();
     }
   }
 
@@ -209,17 +310,49 @@ class SignalRChatService {
    * @returns {Promise<Array>} - Promise that resolves to array of online user IDs
    */
   async getOnlineUsers() {
-    if (!this.connection || this.connection.state !== signalR.HubConnectionState.Connected) {
-      throw new Error('Connection is not established');
+    // If not connected or connecting, return empty array
+    if (!this.connection) {
+      console.warn('Cannot get online users: No connection available');
+      return [];
+    }
+    
+    // If in connecting or reconnecting state, don't try to invoke methods
+    if (this.connection.state === signalR.HubConnectionState.Connecting || 
+        this.connection.state === signalR.HubConnectionState.Reconnecting) {
+      console.warn('Cannot get online users: Connection is in transition state:', this.connection.state);
+      return [];
     }
 
-    try {
-      const onlineUsers = await this.connection.invoke('GetOnlineUsers');
-      return onlineUsers;
-    } catch (error) {
-      console.error('Error getting online users:', error);
-      throw error;
+    // Only invoke if in connected state
+    if (this.connection.state === signalR.HubConnectionState.Connected) {
+      try {
+        // Add timeout to prevent this call from hanging
+        const timeoutPromise = new Promise((_, reject) => 
+          setTimeout(() => reject(new Error('GetOnlineUsers timed out')), 5000)
+        );
+        
+        // Race the actual call against the timeout
+        const onlineUsers = await Promise.race([
+          this.connection.invoke('GetOnlineUsers'),
+          timeoutPromise
+        ]);
+        
+        // Ensure we return an array even if null/undefined is returned from the server
+        return Array.isArray(onlineUsers) ? onlineUsers : [];
+      } catch (error) {
+        // For "no chat history" error, log but don't treat as critical
+        if (error.message?.includes('No chat history')) {
+          console.log('No chat history available yet');
+        } else {
+          console.log('No online users found or error getting online users:', error.message);
+        }
+        // Return empty array on error instead of throwing
+        return [];
+      }
     }
+    
+    // Default return empty array for any other state
+    return [];
   }
 
   /**
@@ -228,17 +361,57 @@ class SignalRChatService {
    * @returns {Promise<boolean>} - Promise that resolves to boolean indicating online status
    */
   async isUserOnline(userId) {
-    if (!this.connection || this.connection.state !== signalR.HubConnectionState.Connected) {
-      throw new Error('Connection is not established');
-    }
-
-    try {
-      const isOnline = await this.connection.invoke('GetOnlineStatus', userId);
-      return isOnline;
-    } catch (error) {
-      console.error('Error checking user status:', error);
+    // If not connected or connecting, return false
+    if (!this.connection) {
+      console.warn('Cannot check user status: No connection available');
       return false;
     }
+    
+    // If in connecting or reconnecting state, don't try to invoke methods
+    if (this.connection.state === signalR.HubConnectionState.Connecting || 
+        this.connection.state === signalR.HubConnectionState.Reconnecting) {
+      console.warn('Cannot check user status: Connection is in transition state:', this.connection.state);
+      return false;
+    }
+    
+    // Only invoke if in connected state
+    if (this.connection.state === signalR.HubConnectionState.Connected) {
+      try {
+        // Check cache first
+        if (this._statusCache.has(userId)) {
+          const cachedStatus = this._statusCache.get(userId);
+          console.log('Returning cached status for', userId);
+          return cachedStatus.status;
+        }
+        
+        // Try first with GetOnlineStatus method
+        const isOnline = await this.connection.invoke('GetOnlineStatus', userId);
+        
+        // Cache the result
+        this._statusCache.set(userId, { status: isOnline, timestamp: Date.now() });
+        console.log('Cached online status for', userId);
+        
+        return isOnline;
+      } catch (firstError) {
+        try {
+          // If that fails, try with IsUserOnline (method name difference between backend and frontend)
+          const isOnline = await this.connection.invoke('IsUserOnline', userId);
+          
+          // Cache the result
+          this._statusCache.set(userId, { status: isOnline, timestamp: Date.now() });
+          console.log('Cached online status (fallback) for', userId);
+          
+          return isOnline;
+        } catch (secondError) {
+          // Log but don't throw an error
+          console.warn('Error checking user status, assuming offline:', firstError);
+          return false;
+        }
+      }
+    }
+    
+    // Default return false for any other state
+    return false;
   }
 
   /**
@@ -373,6 +546,42 @@ class SignalRChatService {
       default:
         return 'Unknown';
     }
+  }
+
+  /**
+   * Creates an automatic reconnect policy with maximum attempts
+   * @returns {signalR.IRetryPolicy} - The retry policy
+   * @private
+   */
+  _createRetryPolicy() {
+    let retryCount = 0;
+    const MAX_RETRY_ATTEMPTS = 5;
+    
+    return {
+      nextRetryDelayInMilliseconds: (retryContext) => {
+        // Don't retry if we've reached the limit
+        if (retryCount >= MAX_RETRY_ATTEMPTS) {
+          console.log(`[SignalR] Max retry attempts (${MAX_RETRY_ATTEMPTS}) reached, stopping reconnection`);
+          // Return null to stop retry
+          return null;
+        }
+        
+        // Count retry attempts
+        retryCount++;
+        
+        // Use exponential backoff with jitter
+        let delay = 1000 * Math.pow(2, retryCount); // 2, 4, 8, 16, 32 seconds
+        
+        // Add some randomness to prevent all clients from retrying at the exact same time
+        delay += Math.random() * 1000;
+        
+        // Cap at 30 seconds
+        delay = Math.min(delay, 30000);
+        
+        console.log(`[SignalR] Retry attempt ${retryCount}/${MAX_RETRY_ATTEMPTS} in ${Math.round(delay / 1000)}s`);
+        return delay;
+      }
+    };
   }
 }
 

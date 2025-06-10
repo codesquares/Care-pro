@@ -58,7 +58,7 @@ const Sidebar = ({ conversations, selectedChatId, onSelectChat, unreadMessages }
       <div className="chat-list-container">
         {filteredConversations.length === 0 ? (
           <div className="no-conversations">
-            {searchTerm ? 'No conversations matching your search' : 'No conversations yet'}
+            {searchTerm ? 'No conversations matching your search' : 'You cannot chat with anyone as of this moment'}
           </div>
         ) : (
           <ul className="chat-list">

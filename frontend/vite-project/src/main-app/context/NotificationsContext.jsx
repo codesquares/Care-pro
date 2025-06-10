@@ -62,11 +62,15 @@ export const NotificationProvider = ({ children }) => {
   }, []);
   
   // Request permission for browser notifications
+  // This should ONLY be called in response to a user interaction (click, etc.)
   const requestPermission = useCallback(() => {
     if ("Notification" in window) {
       Notification.requestPermission().then(permission => {
         if (permission === "granted") {
           setPermissionGranted(true);
+          console.log("Notification permission granted");
+        } else {
+          console.log("Notification permission denied");
         }
       });
     }

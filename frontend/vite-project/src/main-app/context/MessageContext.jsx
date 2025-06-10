@@ -30,12 +30,19 @@ export const MessageProvider = ({ children }) => {
   const [connectionState, setConnectionState] = useState('Disconnected');
   const [currentUserId, setCurrentUserId] = useState(null);
   
-  // Effect to update connection state periodically
+  // Effect to update connection state periodically (now with much longer interval)
   useEffect(() => {
+    // Only poll if we have an active connection
+    if (!chatService || !chatService.connection) {
+      return () => {};
+    }
+    
+    // Reduce polling frequency to once every 30 seconds to reduce network traffic
     const interval = setInterval(() => {
       setConnectionState(chatService.getConnectionState());
-    }, 5000);
+    }, 30000); // 30 seconds instead of 5 seconds
     
+    // Clean up interval on unmount
     return () => clearInterval(interval);
   }, []);
   
@@ -80,45 +87,84 @@ export const MessageProvider = ({ children }) => {
     }
   }, [conversations, currentUserId, onlineUsers, unreadMessages]);
   
-  // Fetch conversations
+  // Fetch conversations with caching, timeout and rate limiting
   const fetchConversations = useCallback(async (userId) => {
     if (!userId) return;
     
+    // Prevent excessive requests by using a debounce mechanism
+    const now = Date.now();
+    const lastFetch = fetchConversations.lastFetchTime || 0;
+    const minInterval = 5000; // Minimum 5 seconds between fetches
+    
+    // Skip if we've recently fetched and already have data
+    if (now - lastFetch < minInterval && conversations.length > 0) {
+      console.log('Skipping conversation fetch - too soon since last fetch');
+      return;
+    }
+    
+    // Mark the last fetch time
+    fetchConversations.lastFetchTime = now;
+    
     setIsLoading(true);
     
+    // Create an abort controller for the request
+    const controller = new AbortController();
+    const timeoutId = setTimeout(() => {
+      controller.abort();
+    }, 10000); // 10 second timeout
+    
     try {
-      const response = await axios.get(`${API_BASE_URL}/api/messages/conversations/${userId}`);
+      const response = await axios.get(`${API_BASE_URL}/api/chat/ChatPreview?userId=${userId}`, {
+        signal: controller.signal
+      });
       
-      // Process conversations and add online status
-      const conversationsWithStatus = await Promise.all(
-        response.data.map(async (conversation) => {
-          // Try to get online status for each user
-          let isOnline = false;
+      // Successfully got data, clear the timeout
+      clearTimeout(timeoutId);
+      
+      // Limit processing conversations to avoid excessive API calls
+      const maxConversationsToProcess = 10;
+      const limitedConversations = response.data.slice(0, maxConversationsToProcess);
+      
+      // Process conversations and add online status - avoid parallel API calls
+      const conversationsWithStatus = [];
+      for (const conversation of limitedConversations) {
+        // Default to false for online status rather than making API calls
+        let isOnline = false;
+        
+        // Only check online status for selected conversation to reduce API calls
+        if (conversation.id === selectedChatId) {
           try {
             isOnline = await chatService.isUserOnline(conversation.id);
           } catch (e) {
-            console.warn('Error getting online status:', e);
+            console.warn('Error getting online status, assuming offline:', e);
           }
-          
-          return {
-            ...conversation,
-            isOnline,
-            unreadCount: unreadMessages[conversation.id] || 0
-          };
-        })
-      );
+        }
+        
+        conversationsWithStatus.push({
+          ...conversation,
+          isOnline,
+          unreadCount: unreadMessages[conversation.id] || 0
+        });
+      }
       
       setConversations(conversationsWithStatus);
     } catch (error) {
-      console.error('Failed to fetch conversations:', error);
-      setError('Failed to load conversations: ' + (error.message || 'Unknown error'));
-      
-      // Use empty array in case of error
-      setConversations([]);
+      if (error.name === 'AbortError') {
+        console.warn('Conversation fetch timed out, using cached data');
+        // Don't update state on timeout, keep existing conversations
+      } else {
+        console.error('Failed to fetch conversations:', error);
+        setError('Failed to load conversations: ' + (error.message || 'Unknown error'));
+        
+        // Use empty array in case of error
+        setConversations([]);
+      }
     } finally {
+      // Clear timeout if it hasn't fired yet
+      clearTimeout(timeoutId);
       setIsLoading(false);
     }
-  }, [unreadMessages]);
+  }, [selectedChatId, unreadMessages]);
 
   // Initialize chat connection
   const initializeChat = useCallback(async (userId, token) => {
@@ -139,12 +185,30 @@ export const MessageProvider = ({ children }) => {
           console.log('Connected to chat');
           try {
             // When connected, fetch online users
-            const users = await chatService.getOnlineUsers();
-            const onlineUsersMap = {};
-            users.forEach(user => {
-              onlineUsersMap[user] = true;
-            });
-            setOnlineUsers(onlineUsersMap);
+            try {
+              const users = await chatService.getOnlineUsers();
+              const onlineUsersMap = {};
+              // Check if users is an array before proceeding
+              if (Array.isArray(users)) {
+                users.forEach(user => {
+                  onlineUsersMap[user] = true;
+                });
+                setOnlineUsers(onlineUsersMap);
+              } else {
+                // If no users are online or there's no chat history, that's okay
+                console.log('No online users found or empty chat history');
+                setOnlineUsers({});
+              }
+              
+              // Clear any error message related to online users
+              if (error && error.includes('failed to get online users')) {
+                setError(null);
+              }
+            } catch (e) {
+              // This is expected when there's no chat history, so don't treat as an error
+              console.log('No chat history available yet, continuing without online status');
+              setOnlineUsers({});
+            }
           } catch (err) {
             console.error('Error fetching online users:', err);
           }
@@ -329,34 +393,40 @@ export const MessageProvider = ({ children }) => {
       
       // Fetch message history if we have both users
       if (chatId && currentUserId) {
-        const messageHistory = await chatService.getMessageHistory(currentUserId, chatId);
-        
-        // Process and sort messages
-        const processedMessages = messageHistory
-          .map(message => ({
-            id: message.id,
-            senderId: message.senderId,
-            receiverId: message.receiverId,
-            content: message.content,
-            timestamp: message.timestamp,
-            status: message.status || 'delivered'
-          }))
-          .sort((a, b) => new Date(a.timestamp) - new Date(b.timestamp));
-        
-        setMessages(processedMessages);
-        
-        // Mark unread messages as read
-        processedMessages.forEach(message => {
-          if (message.senderId === chatId && message.status !== 'read') {
-            chatService.markMessageRead(message.id)
-              .catch(err => console.error('Error marking message as read:', err));
-          }
-        });
+        try {
+          const messageHistory = await chatService.getMessageHistory(currentUserId, chatId);
+          
+          // Process and sort messages - ensure messageHistory is an array
+          const processedMessages = Array.isArray(messageHistory) ? messageHistory
+            .map(message => ({
+              id: message.id || message.messageId,
+              senderId: message.senderId,
+              receiverId: message.receiverId,
+              content: message.content || message.message, // Handle different property names
+              timestamp: message.timestamp,
+              status: message.status || 'delivered'
+            }))
+            .sort((a, b) => new Date(a.timestamp) - new Date(b.timestamp))
+          : [];
+          
+          setMessages(processedMessages);
+          
+          // Mark unread messages as read
+          processedMessages.forEach(message => {
+            if (message.senderId === chatId && message.status !== 'read') {
+              chatService.markMessageRead(message.id)
+                .catch(err => console.error('Error marking message as read:', err));
+            }
+          });
+        } catch (historyError) {
+          console.error('Failed to load message history:', historyError);
+          setMessages([]);
+          // Don't fail the entire chat selection just because history failed
+        }
       }
     } catch (error) {
       console.error('Failed to select chat:', error);
       setError('Failed to load messages: ' + (error.message || 'Unknown error'));
-      setMessages([]);
     } finally {
       setIsLoading(false);
     }
