@@ -29,7 +29,7 @@ import ContentBlogPost from './components/ContentfulBlog/BlogPost';
 import { BlogProvider } from './main-app/context/BlogContext';
 import PaymentSuccess from './main-app/pages/client/home-care-service/PaymentSuccess';
 import { MessageProvider } from './main-app/context/MessageContext';
-import { NotificationProvider } from './main-app/context/NotificationsContext';
+import { NotificationProvider } from './main-app/context/NotificationContext';
 import SplashScreen from './main-app/components/SplashScreen/SplashScreen';
 //Added for viewing Order Pages
 import Order from './main-app/pages/client/orders/MyOrders';

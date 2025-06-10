@@ -89,9 +89,12 @@ builder.Services.AddScoped<IVerificationService, VerificationService>();
 builder.Services.AddScoped<IAssessmentService, AssessmentService>();
 builder.Services.AddScoped<IClientPreferenceService, ClientPreferenceService>();
 builder.Services.AddScoped<IClientRecommendationService, ClientRecommendationService>();
+builder.Services.AddScoped<INotificationService, NotificationService>();
 
 builder.Services.AddScoped<ITokenHandler, Infrastructure.Content.Services.Authentication.TokenHandler>();
 
+// Add SignalR
+builder.Services.AddSignalR();
 
 
 
@@ -242,6 +245,7 @@ app.UseCors("default");
 app.UseEndpoints(endpoints =>
 {
     endpoints.MapHub<ChatHub>("/chathub");
+    endpoints.MapHub<NotificationHub>("/notificationHub");
 });
 
 

@@ -23,14 +23,22 @@ namespace Infrastructure.Content.Services
         private readonly ICareGiverService careGiverService;
         private readonly IClientService clientService;
         private readonly ILogger<GigServices> logger;
+        private readonly INotificationService notificationService;
 
-        public ClientOrderService(CareProDbContext careProDbContext, IGigServices gigServices, ICareGiverService careGiverService, IClientService clientService, ILogger<GigServices> logger)
+        public ClientOrderService(
+            CareProDbContext careProDbContext, 
+            IGigServices gigServices, 
+            ICareGiverService careGiverService, 
+            IClientService clientService, 
+            ILogger<GigServices> logger,
+            INotificationService notificationService)
         {
             this.careProDbContext = careProDbContext;
             this.gigServices = gigServices;
             this.careGiverService = careGiverService;
             this.clientService = clientService;
             this.logger = logger;
+            this.notificationService = notificationService;
         }
 
         public async Task<Result<ClientOrderDTO>> CreateClientOrderAsync(AddClientOrderRequest addClientOrderRequest)
@@ -73,6 +81,21 @@ namespace Infrastructure.Content.Services
 
             await careProDbContext.ClientOrders.AddAsync(clientOrder);
             await careProDbContext.SaveChangesAsync();
+
+            // Create notification for the caregiver
+            var caregiver = await careGiverService.GetCaregiverUserAsync(clientOrder.CaregiverId);
+            if (caregiver != null)
+            {
+                string notificationContent = $"New order received for your service: {gig.GigTitle} - Amount: ${clientOrder.Amount}";
+                
+                await notificationService.CreateNotificationAsync(
+                    clientOrder.CaregiverId,
+                    clientOrder.ClientId,
+                    NotificationType.Payment,
+                    notificationContent,
+                    clientOrder.Id.ToString()
+                );
+            }
 
             var clientOrderDTO = new ClientOrderDTO
             {

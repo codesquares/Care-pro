@@ -462,36 +462,30 @@ class SignalRChatService {
   }
 
   /**
-   * Register event handlers for different connection events
-   * @param {string} event - Event name (onConnected, onDisconnected, onMessage, etc.)
+   * Register event handlers for either service events or SignalR events
+   * @param {string} event - Event name 
    * @param {function} handler - Function to call when event occurs
-   * @returns {function} - Function to call to unregister handler
+   * @returns {function|undefined} - Function to call to unregister handler (only for service events)
    */
   on(event, handler) {
-    if (!this.eventHandlers[event]) {
-      throw new Error(`Unknown event: ${event}`);
+    // Handle internal service events (onConnected, onDisconnected, etc.)
+    if (this.eventHandlers && this.eventHandlers[event]) {
+      this.eventHandlers[event].push(handler);
+      
+      // Return a function to unregister this handler
+      return () => {
+        this.eventHandlers[event] = this.eventHandlers[event].filter(h => h !== handler);
+      };
     }
     
-    this.eventHandlers[event].push(handler);
-    
-    // Return a function to unregister this handler
-    return () => {
-      this.eventHandlers[event] = this.eventHandlers[event].filter(h => h !== handler);
-    };
-  }
-
-  /**
-   * Register an event handler for a specific SignalR event
-   * @param {string} eventName - The name of the event to listen for
-   * @param {Function} callback - The function to call when the event occurs
-   */
-  on(eventName, callback) {
-    if (!this.connection) {
-      console.warn(`Cannot register handler for ${eventName}: No connection available`);
+    // Handle SignalR connection events
+    if (this.connection) {
+      this.connection.on(event, handler);
+      return;
+    } else {
+      console.warn(`Cannot register handler for ${event}: No connection available`);
       return;
     }
-    
-    this.connection.on(eventName, callback);
   }
   
   /**

@@ -6,7 +6,8 @@ import ChatMetrics from '../components/messages/ChatMetrics.jsx';
 import EmptyMessageState from '../components/messages/EmptyMessageState.jsx';
 import ToastContainer from '../components/toast/ToastContainer.jsx';
 import { useMessageContext } from '../context/MessageContext.jsx';
-import { useNotificationContext } from '../context/NotificationsContext.jsx';
+// Note: Previously this was using NotificationsContext.jsx, now consolidated into NotificationContext.jsx
+import { useNotificationContext } from '../context/NotificationContext.jsx';
 import connectionManager from '../services/connectionManager.js';
 import '../components/messages/messages.scss';
 import '../components/messages/connection-status.scss';

@@ -5,6 +5,7 @@ import hear from "../../../assets/main-app/heart.svg";
 import bell from "../../../assets/main-app/notification-bing.svg";
 import message from "../../../assets/main-app/message.svg";
 import receipt from "../../../assets/main-app/receipt.svg";
+import NotificationBell from "../../components/notifications/NotificationBell";
 import "../care-giver/care-giver-dashboard/NavigationBar.css";
 
 const ClientNavBar = () => {
@@ -57,7 +58,9 @@ const ClientNavBar = () => {
       </div>
 
       <ul className="nav-icons">
-        <IconLink to={`${basePath}/notifications`} icon={bell} alt="Notifications" />
+        <li className="nav-link icon-link">
+          <NotificationBell navigateTo={(path) => navigate(path)} />
+        </li>
         <IconLink to={`${basePath}/message`} icon={message} alt="Messages" />
         <IconLink to={`${basePath}/favorites`} icon={hear} alt="Favorites" />
       </ul>

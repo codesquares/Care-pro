@@ -383,8 +383,26 @@ export const MessageProvider = ({ children }) => {
       
       // Return cleanup function
       return () => {
-        // Remove all event handlers
-        handlersToRemove.forEach(remove => remove());
+        // Remove all event handlers by using chatService.off
+        // Instead of trying to call the returned values which might not be functions
+        if (chatService) {
+          // List of events we need to unregister
+          const events = [
+            'onConnected', 'onMessage', 'onMessageRead', 'onMessageDelivered', 
+            'onMessageDeleted', 'onAllMessagesRead', 'onUserStatusChanged', 
+            'onError', 'onDisconnected', 'onReconnecting', 'onReconnected'
+          ];
+          
+          // Unregister all events (we can't access the specific handlers,
+          // but this will remove all handlers for these events)
+          events.forEach(eventName => {
+            try {
+              chatService.off(eventName);
+            } catch (e) {
+              console.warn(`Error removing handler for ${eventName}:`, e);
+            }
+          });
+        }
         
         // Disconnect from hub
         chatService.disconnect()

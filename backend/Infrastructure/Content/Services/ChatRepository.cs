@@ -3,6 +3,7 @@ using Application.Interfaces.Content;
 using Domain.Entities;
 using Infrastructure.Content.Data;
 using Microsoft.EntityFrameworkCore;
+using MongoDB.Bson;
 using MongoDB.Driver;
 using System;
 using System.Collections.Generic;
@@ -15,17 +16,37 @@ namespace Infrastructure.Content.Services
     public class ChatRepository : IChatRepository
     {
         private readonly CareProDbContext careProDbContext;
+        private readonly INotificationService notificationService;
 
 
-        public ChatRepository(CareProDbContext careProDbContext)
+        public ChatRepository(CareProDbContext careProDbContext, INotificationService notificationService)
         {
             this.careProDbContext = careProDbContext;
+            this.notificationService = notificationService;
         }
 
         public async Task SaveMessageAsync(ChatMessage chatMessage)
         {
             await careProDbContext.ChatMessages.AddAsync(chatMessage);
             await careProDbContext.SaveChangesAsync();
+            
+            // Create a notification for the recipient
+            var sender = await careProDbContext.AppUsers.FirstOrDefaultAsync(u => 
+                u.Id.ToString() == chatMessage.SenderId || u.AppUserId.ToString() == chatMessage.SenderId);
+            
+            if (sender != null)
+            {
+                string senderName = $"{sender.FirstName} {sender.LastName}";
+                string notificationContent = $"{senderName} sent you a message";
+                
+                await notificationService.CreateNotificationAsync(
+                    chatMessage.ReceiverId,
+                    chatMessage.SenderId,
+                    NotificationType.Message,
+                    notificationContent,
+                    chatMessage.MessageId
+                );
+            }
         }
 
         public async Task<List<ChatMessage>> GetChatHistoryAsync(string user1, string user2)
