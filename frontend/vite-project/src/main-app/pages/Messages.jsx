@@ -53,12 +53,28 @@ const Messages = ({ userId: propsUserId, token: propsToken }) => {
   // Track whether we're online for better error handling
   const [isOnline, setIsOnline] = useState(navigator.onLine);
 
-  const user = JSON.parse(localStorage.getItem("userDetails"));
-  const userId = user?.id;
-  console.log("user from image component", userId);
+  // Get user details with better error handling
+  let userId = null;
+  let user = null;
+  try {
+    const userString = localStorage.getItem("userDetails");
+    if (userString) {
+      user = JSON.parse(userString);
+      userId = user?.id;
+      if (!userId) {
+        console.error("User ID is missing from userDetails in localStorage");
+      } else {
+        console.log("User ID loaded successfully:", userId);
+      }
+    } else {
+      console.error("No userDetails found in localStorage");
+    }
+  } catch (error) {
+    console.error("Error parsing userDetails from localStorage:", error);
+  }
 
   const token = propsToken || localStorage.getItem('authToken') || "mock-token";
-  console.log("userId from image component", token);
+  console.log("Auth token loaded:", token?.substring(0, 10) + "...");
   
   // Monitor online/offline status
   useEffect(() => {

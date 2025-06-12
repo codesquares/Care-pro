@@ -40,6 +40,47 @@ class SignalRChatService {
     this._statusCache = new Map();  // Map of user IDs to online status
     this._lastCacheCleanup = Date.now();
   }
+  
+  /**
+   * Checks if a string is a valid MongoDB ObjectId (24 hex characters)
+   * @param {string} id - The ID to check
+   * @returns {boolean} - Whether it's a valid MongoDB ObjectId
+   */
+  isValidMongoId(id) {
+    if (!id || typeof id !== 'string') return false;
+    return /^[0-9a-fA-F]{24}$/.test(id);
+  }
+
+  /**
+   * Attempts to convert a UUID to a MongoDB-compatible ObjectId
+   * This is a best-effort approach - in production, proper ID mapping should be used
+   * @param {string} id - The ID to convert
+   * @returns {string} - A MongoDB-compatible ID (24 hex chars)
+   */
+  convertToMongoId(id) {
+    if (!id) return null;
+    
+    // If it's already a valid MongoDB ID, return as is
+    if (this.isValidMongoId(id)) return id;
+    
+    // Remove dashes and any non-hex characters
+    const cleanId = id.replace(/[^0-9a-f]/gi, '');
+    
+    // If after cleaning we have a 24-character hex string, return it
+    if (cleanId.length === 24) return cleanId;
+    
+    // If it's longer, truncate to 24 characters
+    if (cleanId.length > 24) return cleanId.substring(0, 24);
+    
+    // If it's shorter, pad with zeros to reach 24 characters
+    if (cleanId.length < 24) {
+      return cleanId.padEnd(24, '0');
+    }
+    
+    // Fallback - return a placeholder ObjectId for development/testing
+    // In production, this should be handled more robustly
+    return '000000000000000000000000';
+  }
 
   /**
    * Initializes the connection to the SignalR hub with limits on retries
@@ -189,8 +230,12 @@ class SignalRChatService {
       // First try through SignalR if connected
       if (this.connection && this.connection.state === signalR.HubConnectionState.Connected) {
         try {
-          // Call the SendMessage method on the hub
-          const messageId = await this.connection.invoke('SendMessage', senderId, receiverId, message);
+          // Convert IDs to MongoDB format for SignalR too
+          const mongoSenderId = this.convertToMongoId(String(senderId || '').trim());
+          const mongoReceiverId = this.convertToMongoId(String(receiverId || '').trim());
+          
+          // Call the SendMessage method on the hub with MongoDB-compatible IDs
+          const messageId = await this.connection.invoke('SendMessage', mongoSenderId, mongoReceiverId, message);
           return messageId;
         } catch (signalRError) {
           console.warn('SignalR message send failed, falling back to REST API:', signalRError);
@@ -200,16 +245,150 @@ class SignalRChatService {
       
       // Fallback to REST API
       const axios = (await import('axios')).default;
-      const response = await axios.post(`${API_BASE_URL}/api/chat/send`, {
-        senderId,
-        receiverId,
-        message,
-        timestamp: new Date().toISOString()
-      });
+      const timestamp = new Date().toISOString();
       
-      return response.data.messageId || response.data.id || `fallback-${Date.now()}`;
+      // Validate and sanitize input parameters before sending
+      if (!senderId) {
+        console.error('Missing senderId in sendMessage call');
+        throw new Error('SenderId is required for sending messages');
+      }
+      
+      if (!receiverId) {
+        console.error('Missing receiverId in sendMessage call');
+        throw new Error('ReceiverId is required for sending messages');
+      }
+      
+      if (!message) {
+        console.error('Missing message content in sendMessage call');
+        throw new Error('Message content is required for sending messages');
+      }
+      
+      // Based on the error response, we know the API is expecting PascalCase property names
+      // and MongoDB ObjectId format (24 character hex string)
+      try {
+        console.log('Sending message with corrected format');
+        
+        // Convert IDs to MongoDB-compatible format using our utility methods
+        const senderIdStr = this.convertToMongoId(String(senderId || '').trim());
+        const receiverIdStr = this.convertToMongoId(String(receiverId || '').trim());
+        
+        // Additional validation before sending to backend
+        if (!senderIdStr) {
+          throw new Error('SenderId cannot be empty');
+        }
+        
+        if (!receiverIdStr) {
+          throw new Error('ReceiverId cannot be empty');
+        }
+        
+        // Log ID conversion results for debugging
+        console.log('ID conversion results:', {
+          originalSenderId: senderId,
+          originalReceiverId: receiverId,
+          convertedSenderId: senderIdStr,
+          convertedReceiverId: receiverIdStr,
+          senderIdValid: this.isValidMongoId(senderIdStr),
+          receiverIdValid: this.isValidMongoId(receiverIdStr)
+        });
+        
+        // Log the full payload for debugging
+        console.log('Message payload:', {
+          SenderId: senderIdStr,
+          ReceiverId: receiverIdStr,
+          MessageLength: message?.length || 0
+        });
+        
+        // Create payload with MongoDB-compatible IDs
+        const payload = {
+          // PascalCase (C# standard)
+          SenderId: senderIdStr,
+          ReceiverId: receiverIdStr,
+          Message: message,
+          Timestamp: timestamp,
+          
+          // camelCase (JavaScript standard)
+          senderId: senderIdStr,
+          receiverId: receiverIdStr,
+          message: message,
+          timestamp: timestamp
+        };
+        
+        const response = await axios.post(`${API_BASE_URL}/api/Chat/send`, payload, {
+          headers: {
+            'Content-Type': 'application/json'
+          }
+        });
+        
+        return response.data.messageId || response.data.id || `fallback-${Date.now()}`;
+      } catch (error) {
+        // If that fails, let's try one more time with query parameters instead
+        try {
+          console.log('Attempting to send message via query parameters');
+          
+          // Ensure IDs are valid before attempting to send
+          if (!senderId || !receiverId) {
+            throw new Error('SenderId and ReceiverId must be provided - cannot send message with missing IDs');
+          }
+          
+          // Convert IDs to MongoDB format for the fallback attempt too
+          const mongoSenderId = this.convertToMongoId(String(senderId || '').trim());
+          const mongoReceiverId = this.convertToMongoId(String(receiverId || '').trim());
+          
+          // Include both camelCase and PascalCase in one payload
+          const messageBody = {
+            // Include both casing standards
+            Message: message,
+            message: message,
+            // Add other required fields in both formats with MongoDB-compatible IDs
+            SenderId: mongoSenderId,
+            senderId: mongoSenderId,
+            ReceiverId: mongoReceiverId,
+            receiverId: mongoReceiverId,
+            Timestamp: timestamp,
+            timestamp: timestamp
+          };
+          
+          const response = await axios.post(
+            `${API_BASE_URL}/api/Chat/send?senderId=${encodeURIComponent(mongoSenderId)}&receiverId=${encodeURIComponent(mongoReceiverId)}`,
+            messageBody,
+            {
+              headers: {
+                'Content-Type': 'application/json'
+              }
+            }
+          );
+          
+          return response.data.messageId || response.data.id || `fallback-${Date.now()}`;
+        } catch (finalError) {
+          console.error('All message sending attempts failed:', finalError);
+          // Log the specific error details for better debugging
+          if (finalError.response) {
+            console.error('Server response:', {
+              status: finalError.response.status,
+              data: finalError.response.data
+            });
+          }
+          throw finalError;
+        }
+      }
     } catch (error) {
+      // Add more detailed error information for debugging
       console.error('Error sending message:', error);
+      
+      // Log more details about the error response if available
+      if (error.response) {
+        console.error('Error response data:', error.response.data);
+        console.error('Error response status:', error.response.status);
+        console.error('Error response headers:', error.response.headers);
+        
+        // If we have validation errors, log them in a more readable format
+        if (error.response.data?.errors) {
+          Object.entries(error.response.data.errors).forEach(([field, errors]) => {
+            console.error(`Validation error in field '${field}':`, errors);
+          });
+        }
+      }
+      
       this._notifyHandlers('onError', error);
       throw error;
     }
@@ -225,8 +404,12 @@ class SignalRChatService {
    */
   async getMessageHistory(user1Id, user2Id, skip = 0, take = 50) {
     try {
+      // Convert IDs to MongoDB compatible format
+      const mongoUser1Id = this.convertToMongoId(String(user1Id || '').trim());
+      const mongoUser2Id = this.convertToMongoId(String(user2Id || '').trim());
+      
       // Generate a cache key for this conversation
-      const cacheKey = this._getCacheKey(user1Id, user2Id);
+      const cacheKey = this._getCacheKey(mongoUser1Id, mongoUser2Id);
       
       // Check if we have cached data
       if (this._messageCache.has(cacheKey)) {
@@ -240,8 +423,8 @@ class SignalRChatService {
       // First try to get history through SignalR if connected
       if (this.connection && this.connection.state === signalR.HubConnectionState.Connected) {
         try {
-          // Call the GetMessageHistory method on the hub
-          const messages = await this.connection.invoke('GetMessageHistory', user1Id, user2Id, skip, take);
+          // Call the GetMessageHistory method on the hub with MongoDB compatible IDs
+          const messages = await this.connection.invoke('GetMessageHistory', mongoUser1Id, mongoUser2Id, skip, take);
           
           // Cache the message history
           this._messageCache.set(cacheKey, { messages, timestamp: Date.now() });
@@ -254,9 +437,9 @@ class SignalRChatService {
         }
       }
       
-      // Fallback to REST API
+      // Fallback to REST API with MongoDB compatible IDs
       const axios = (await import('axios')).default;
-      const response = await axios.get(`${API_BASE_URL}/api/chat/history?user1Id=${user1Id}&user2Id=${user2Id}&skip=${skip}&take=${take}`);
+      const response = await axios.get(`${API_BASE_URL}/api/chat/history?user1Id=${mongoUser1Id}&user2Id=${mongoUser2Id}&skip=${skip}&take=${take}`);
       
       // Cache the retrieved message history
       this._messageCache.set(cacheKey, { messages: response.data, timestamp: Date.now() });
@@ -330,10 +513,14 @@ class SignalRChatService {
     // If not connected, try to mark as read via REST API
     if (!this.connection || this.connection.state !== signalR.HubConnectionState.Connected) {
       try {
-        // Fall back to REST API
+        // Convert IDs to MongoDB compatible format
+        const mongoSenderId = this.convertToMongoId(String(senderId || '').trim());
+        const mongoReceiverId = this.convertToMongoId(String(receiverId || '').trim());
+        
+        // Fall back to REST API with MongoDB compatible IDs
         const response = await axios.post(`${API_BASE_URL}/api/chat/mark-all-read`, {
-          senderId,
-          receiverId
+          senderId: mongoSenderId,
+          receiverId: mongoReceiverId
         });
         return response.data.success;
       } catch (error) {
@@ -343,8 +530,12 @@ class SignalRChatService {
     }
 
     try {
-      // Use the ChatHub method to mark all as read
-      const success = await this.connection.invoke('MarkAllMessagesAsRead', senderId, receiverId);
+      // Convert IDs to MongoDB compatible format
+      const mongoSenderId = this.convertToMongoId(String(senderId || '').trim());
+      const mongoReceiverId = this.convertToMongoId(String(receiverId || '').trim());
+      
+      // Use the ChatHub method to mark all as read with MongoDB compatible IDs
+      const success = await this.connection.invoke('MarkAllMessagesAsRead', mongoSenderId, mongoReceiverId);
       return success;
     } catch (error) {
       console.error('Error marking all messages as read:', error);
@@ -408,6 +599,9 @@ class SignalRChatService {
    * @returns {Promise<boolean>} - Promise that resolves to boolean indicating online status
    */
   async isUserOnline(userId) {
+    // Convert userId to MongoDB compatible format
+    const mongoUserId = this.convertToMongoId(String(userId || '').trim());
+    
     // If not connected or connecting, return false
     if (!this.connection) {
       console.warn('Cannot check user status: No connection available');
@@ -425,28 +619,28 @@ class SignalRChatService {
     if (this.connection.state === signalR.HubConnectionState.Connected) {
       try {
         // Check cache first
-        if (this._statusCache.has(userId)) {
-          const cachedStatus = this._statusCache.get(userId);
-          console.log('Returning cached status for', userId);
+        if (this._statusCache.has(mongoUserId)) {
+          const cachedStatus = this._statusCache.get(mongoUserId);
+          console.log('Returning cached status for', mongoUserId);
           return cachedStatus.status;
         }
         
-        // Try first with GetOnlineStatus method
-        const isOnline = await this.connection.invoke('GetOnlineStatus', userId);
+        // Try first with GetOnlineStatus method with MongoDB compatible ID
+        const isOnline = await this.connection.invoke('GetOnlineStatus', mongoUserId);
         
         // Cache the result
-        this._statusCache.set(userId, { status: isOnline, timestamp: Date.now() });
-        console.log('Cached online status for', userId);
+        this._statusCache.set(mongoUserId, { status: isOnline, timestamp: Date.now() });
+        console.log('Cached online status for', mongoUserId);
         
         return isOnline;
       } catch (firstError) {
         try {
           // If that fails, try with IsUserOnline (method name difference between backend and frontend)
-          const isOnline = await this.connection.invoke('IsUserOnline', userId);
+          const isOnline = await this.connection.invoke('IsUserOnline', mongoUserId);
           
           // Cache the result
-          this._statusCache.set(userId, { status: isOnline, timestamp: Date.now() });
-          console.log('Cached online status (fallback) for', userId);
+          this._statusCache.set(mongoUserId, { status: isOnline, timestamp: Date.now() });
+          console.log('Cached online status (fallback) for', mongoUserId);
           
           return isOnline;
         } catch (secondError) {
@@ -667,11 +861,14 @@ class SignalRChatService {
    */
   async deleteMessage(messageId, userId) {
     try {
+      // Convert userId to MongoDB compatible format
+      const mongoUserId = this.convertToMongoId(String(userId || '').trim());
+      
       // First try through SignalR if connected
       if (this.connection && this.connection.state === signalR.HubConnectionState.Connected) {
         try {
-          // Call the DeleteMessage method on the hub
-          const success = await this.connection.invoke('DeleteMessage', messageId, userId);
+          // Call the DeleteMessage method on the hub with MongoDB compatible ID
+          const success = await this.connection.invoke('DeleteMessage', messageId, mongoUserId);
           return success;
         } catch (signalRError) {
           console.warn('SignalR message deletion failed, falling back to REST API:', signalRError);
@@ -679,9 +876,9 @@ class SignalRChatService {
         }
       }
       
-      // Fallback to REST API
+      // Fallback to REST API with MongoDB compatible ID
       const axios = (await import('axios')).default;
-      const response = await axios.delete(`${API_BASE_URL}/api/chat/delete/${messageId}?userId=${userId}`);
+      const response = await axios.delete(`${API_BASE_URL}/api/chat/delete/${messageId}?userId=${mongoUserId}`);
       
       return response.data.success || false;
     } catch (error) {

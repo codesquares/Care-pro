@@ -30,6 +30,25 @@ export const MessageProvider = ({ children }) => {
   const [connectionState, setConnectionState] = useState('Disconnected');
   const [currentUserId, setCurrentUserId] = useState(null);
   
+  // Add a function to refresh the current user ID from localStorage if needed
+  const refreshCurrentUserId = useCallback(() => {
+    if (!currentUserId) {
+      try {
+        const userDetails = localStorage.getItem("userDetails");
+        if (userDetails) {
+          const user = JSON.parse(userDetails);
+          if (user?.id) {
+            setCurrentUserId(user.id);
+            return user.id;
+          }
+        }
+      } catch (e) {
+        console.error("Error refreshing user ID from localStorage:", e);
+      }
+    }
+    return currentUserId;
+  }, [currentUserId]);
+  
   // Effect to update connection state periodically (now with much longer interval)
   useEffect(() => {
     // Only poll if we have an active connection
@@ -418,7 +437,50 @@ export const MessageProvider = ({ children }) => {
 
   // Send message
   const handleSendMessage = useCallback(async (senderId, receiverId, messageText) => {
-    if (!messageText.trim()) return;
+    if (!messageText?.trim()) {
+      console.warn('Empty message, not sending.');
+      return;
+    }
+    
+    // Make sure we have valid IDs before proceeding
+    if (!senderId || !receiverId) {
+      console.error('Missing required IDs for message:', { senderId, receiverId });
+      
+      // Try to use current user ID if sender is missing
+      if (!senderId) {
+        // First try the currentUserId state
+        // Then try our refresh function that checks localStorage
+        const effectiveSenderId = currentUserId || refreshCurrentUserId();
+        
+        if (effectiveSenderId) {
+          console.log('Using user ID from state/localStorage as fallback:', effectiveSenderId);
+          senderId = effectiveSenderId;
+        } else {
+          console.error('Failed to get user ID from any source');
+          return;
+        }
+      }
+      
+      // Try to recover receiverId from recipient object as a fallback
+      if (!receiverId && recipient?.id) {
+        console.log('Using recipient.id as fallback for receiverId:', recipient.id);
+        receiverId = recipient.id;
+      }
+      
+      // Cannot proceed without both IDs
+      if (!senderId || !receiverId) {
+        console.error('Cannot send message: Missing required IDs after fallback attempts', {
+          finalSenderId: senderId,
+          finalReceiverId: receiverId,
+          recipient: recipient
+        });
+        return;
+      }
+    }
+    
+    // Ensure both IDs are strings and trim any whitespace
+    senderId = String(senderId).trim();
+    receiverId = String(receiverId).trim();
     
     // Add message to UI immediately for better UX
     const tempId = `temp-${Date.now()}`;
@@ -462,17 +524,47 @@ export const MessageProvider = ({ children }) => {
     } catch (error) {
       console.error('Failed to send message:', error);
       
-      // Update message status to failed
+      // Extract user-friendly error message
+      let userFriendlyError = 'Message sending failed';
+      
+      if (error.response) {
+        console.error('Error response data:', error.response.data);
+        console.error('Error response status:', error.response.status);
+        console.error('Error status text:', error.response.statusText);
+        
+        // Extract validation errors if available
+        if (error.response.data?.errors) {
+          const errorFields = Object.keys(error.response.data.errors);
+          if (errorFields.length > 0) {
+            userFriendlyError = `Validation failed: ${errorFields.join(', ')}`;
+          }
+        }
+      }
+      
+      // Update message status to failed with detailed error information
       setMessages(prev => prev.map(message => 
         message.id === tempId ? { 
           ...message, 
-          status: 'failed' 
+          status: 'failed',
+          errorDetails: userFriendlyError,
+          errorObject: error,  // Store the full error object for potential retry logic
+          retryCount: 0        // Initialize retry count for future retry capability
         } : message
       ));
       
-      throw error;
+      // Trigger a UI notification if needed
+      const event = new CustomEvent('message-error', {
+        detail: {
+          error: userFriendlyError,
+          messageId: tempId
+        }
+      });
+      window.dispatchEvent(event);
+      
+      // Don't throw error to prevent unhandled promise rejection
+      return null;
     }
-  }, []);
+  }, [currentUserId, refreshCurrentUserId]);
 
   // Delete message
   const handleDeleteMessage = useCallback(async (messageId) => {
@@ -596,13 +688,15 @@ export const MessageProvider = ({ children }) => {
     isLoading,
     error,
     connectionState,
+    currentUserId,
     
     // Methods
     initializeChat,
     handleSendMessage,
     selectChat,
     fetchConversations,
-    handleDeleteMessage
+    handleDeleteMessage,
+    refreshCurrentUserId
   };
 
   return (
