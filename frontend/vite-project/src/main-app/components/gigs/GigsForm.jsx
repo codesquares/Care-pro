@@ -106,7 +106,7 @@ const GigsForm = () => {
       "Physical therapy support", "Cognitive stimulation activities", "Emotional support and check-ins",
       "Recreational activities assistance", "Acupuncture", "Massage therapy"
     ],
-    "End of Life Care": [
+    "Palliative": [
       "Palliative care support", "Overnight supervision", "Emotional support and check-ins",
       "Home safety assessment"
     ],

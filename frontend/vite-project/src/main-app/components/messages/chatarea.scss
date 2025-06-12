@@ -383,4 +383,41 @@
     background-color: white;
     border-top: 1px solid #f3f4f6;
   }
+  
+  // Error state styling
+  .error-state {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    padding: 3rem;
+    text-align: center;
+    height: 100%;
+    
+    h3 {
+      color: #e53e3e;
+      margin-bottom: 1rem;
+      font-size: 1.25rem;
+    }
+    
+    p {
+      margin-bottom: 1.5rem;
+      color: #4a5568;
+      max-width: 400px;
+    }
+    
+    button {
+      padding: 0.5rem 1rem;
+      background-color: #4299e1;
+      color: white;
+      border: none;
+      border-radius: 4px;
+      cursor: pointer;
+      font-weight: 500;
+      
+      &:hover {
+        background-color: #3182ce;
+      }
+    }
+  }
 }

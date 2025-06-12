@@ -11,6 +11,16 @@ const ChatArea = ({ messages, recipient, userId, onSendMessage, isOfflineMode = 
   const { handleDeleteMessage } = useMessageContext();
   const [showDeleteMenu, setShowDeleteMenu] = useState(null);
   const [visibleMessages, setVisibleMessages] = useState([]);
+  
+  // Define safeRecipient at component level to ensure it's available throughout
+  // This prevents the undefined safeRecipient issue in handleSendMessage
+  const safeRecipient = recipient ? {
+    avatar: recipient.avatar || '/avatar.jpg',
+    name: recipient.name || 'Care Provider',
+    isOnline: recipient.isOnline || false,
+    lastActive: recipient.lastActive || new Date().toISOString(),
+    id: recipient.id || null
+  } : null;
 
   // Scroll to bottom when messages change
   useEffect(() => {
@@ -70,7 +80,57 @@ const ChatArea = ({ messages, recipient, userId, onSendMessage, isOfflineMode = 
 
   const handleSendMessage = () => {
     if (message.trim()) {
-      onSendMessage(recipient.id, message);
+      // Use the component-level safeRecipient variable
+      // Extract recipient ID with fallbacks
+      let effectiveRecipientId = safeRecipient?.id;
+      
+      // If no ID in safeRecipient, check original recipient
+      if (!effectiveRecipientId && recipient) {
+        console.log('No ID in safeRecipient, checking original recipient object');
+        
+        // Check all possible ID fields in the original recipient object
+        const possibleIdFields = ['id', 'caregiverId', 'userId', '_id', 'recipientId'];
+        
+        for (const field of possibleIdFields) {
+          if (recipient[field]) {
+            effectiveRecipientId = recipient[field];
+            console.log(`Found ID in original recipient.${field}:`, effectiveRecipientId);
+            break;
+          }
+        }
+      }
+      
+      // Check URL if no ID found yet
+      if (!effectiveRecipientId) {
+        console.log('No ID found in recipient objects, checking URL');
+        const pathSegments = window.location.pathname.split('/');
+        const lastSegment = pathSegments[pathSegments.length - 1];
+        
+        // Simple validation that it looks like an ID format
+        if (lastSegment && lastSegment.length > 8) {
+          effectiveRecipientId = lastSegment;
+          console.log('Using ID from URL path:', effectiveRecipientId);
+        }
+      }
+      
+      // Final decision
+      if (!effectiveRecipientId) {
+        console.error('Failed to find any valid recipient ID for messaging');
+        alert('Unable to send message: Missing recipient information. Please refresh the page or try accessing this conversation again from your messages list.');
+        return;
+      }
+      
+      // Log the final decision for debugging
+      console.log('Sending message to recipient:', {
+        recipientId: effectiveRecipientId,
+        recipientName: safeRecipient?.name || 'Unknown',
+        originalRecipientId: safeRecipient?.id,
+        fromUrlParams: effectiveRecipientId !== safeRecipient?.id,
+        senderId: userId
+      });
+      
+      // Send message with our best determined ID - ensure both userId and recipientId are passed
+      onSendMessage(userId, effectiveRecipientId, message);
       setMessage('');
     }
   };
@@ -146,20 +206,33 @@ const ChatArea = ({ messages, recipient, userId, onSendMessage, isOfflineMode = 
     });
   };
 
+  // Add safety check for recipient object
+  if (!recipient || typeof recipient !== 'object' || !safeRecipient) {
+    return (
+      <div className="chat-area">
+        <div className="error-state">
+          <h3>Unable to load conversation</h3>
+          <p>Recipient information is missing or invalid. Please try refreshing the page.</p>
+          <button onClick={() => window.location.reload()}>Refresh Page</button>
+        </div>
+      </div>
+    );
+  }
+
   return (
     <div className="chat-area">
       <header className="chat-header">
         <div className="recipient-info">
-          <img src={recipient.avatar} alt={recipient.name} className="avatar" />
+          <img src={safeRecipient.avatar} alt={safeRecipient.name} className="avatar" />
           <div className="recipient-details">
-            <h3>{recipient.name}</h3>
+            <h3>{safeRecipient.name}</h3>
             <div className="status-indicator">
-              {recipient.isOnline ? (
+              {safeRecipient.isOnline ? (
                 <span className="status online">Online</span>
               ) : (
                 <span className="status offline">
-                  {recipient.lastActive
-                    ? `Last active ${formatDistanceToNow(new Date(recipient.lastActive), { addSuffix: true })}`
+                  {safeRecipient.lastActive
+                    ? `Last active ${formatDistanceToNow(new Date(safeRecipient.lastActive), { addSuffix: true })}`
                     : 'Not recently active'}
                 </span>
               )}
@@ -189,8 +262,8 @@ const ChatArea = ({ messages, recipient, userId, onSendMessage, isOfflineMode = 
           {isNewConversation ? (
             <div className="new-conversation-message">
               <div className="welcome-message">
-                <img src={recipient.avatar} alt={recipient.name} className="welcome-avatar" />
-                <h3>Start a conversation with {recipient.name}</h3>
+                <img src={safeRecipient.avatar} alt={safeRecipient.name} className="welcome-avatar" />
+                <h3>Start a conversation with {safeRecipient.name}</h3>
                 <p>Send a message to begin chatting</p>
                 {isOfflineMode && (
                   <div className="offline-note">
