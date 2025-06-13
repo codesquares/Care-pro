@@ -2,6 +2,7 @@
 using Infrastructure.Content.Services;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
+using MongoDB.Bson;
 using System;
 
 namespace CarePro_Api.Controllers.Content
@@ -45,7 +46,8 @@ namespace CarePro_Api.Controllers.Content
                 // Create a new chat message
                 var chatMessage = new ChatMessage
                 {
-                    Id = Guid.NewGuid().ToString(),
+                    //Id = Guid.NewGuid().ToString(),
+                    Id = ObjectId.GenerateNewId(),
                     SenderId = request.SenderId,
                     ReceiverId = request.ReceiverId,
                     Message = request.Message,

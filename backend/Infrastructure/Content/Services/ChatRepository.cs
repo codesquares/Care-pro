@@ -63,7 +63,7 @@ namespace Infrastructure.Content.Services
         public async Task<ChatMessage> GetMessageByIdAsync(string messageId)
         {
             return await careProDbContext.ChatMessages
-                .FirstOrDefaultAsync(m => m.Id == messageId);
+                .FirstOrDefaultAsync(m => m.Id.ToString() == messageId);
         }
         
         // Delete a message (soft delete)

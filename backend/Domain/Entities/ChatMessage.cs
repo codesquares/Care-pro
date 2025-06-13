@@ -12,7 +12,7 @@ namespace Domain.Entities
     {
         [BsonId]
         [BsonRepresentation(BsonType.ObjectId)]
-        public string Id { get; set; }
+        public ObjectId Id { get; set; }
 
         [BsonElement("senderId")]
         public string SenderId { get; set; }
