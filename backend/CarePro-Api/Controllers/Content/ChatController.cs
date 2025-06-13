@@ -19,9 +19,9 @@ namespace CarePro_Api.Controllers.Content
         }
 
         [HttpGet("history")]
-        public async Task<IActionResult> GetChatHistory(string user1, string user2)
+        public async Task<IActionResult> GetChatHistory(string user1, string user2, int skip = 0, int take = 50)
         {
-            var messages = await _chatRepository.GetChatHistoryAsync(user1, user2);
+            var messages = await _chatRepository.GetChatHistoryAsync(user1, user2, skip, take);
             return Ok(messages);
         }
 
@@ -200,6 +200,29 @@ namespace CarePro_Api.Controllers.Content
             catch (Exception ex)
             {
                 return StatusCode(500, new { error = "Failed to get unread message count", message = ex.Message });
+            }
+        }
+
+        [HttpGet("conversations/{userId}")]
+        public async Task<IActionResult> GetUserConversations(string userId)
+        {
+            try
+            {
+                // Validate request
+                if (string.IsNullOrEmpty(userId))
+                {
+                    return BadRequest(new { error = "UserId is required" });
+                }
+
+                // Get all conversations for this user
+                var conversations = await _chatRepository.GetAllUserConversationsAsync(userId);
+
+                // Return conversations sorted by most recent message
+                return Ok(conversations);
+            }
+            catch (Exception ex)
+            {
+                return StatusCode(500, new { error = "Failed to get user conversations", message = ex.Message });
             }
         }
 

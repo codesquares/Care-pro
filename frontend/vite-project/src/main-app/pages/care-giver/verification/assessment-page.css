@@ -1,156 +1,111 @@
-/* Assessment Page Styling - Extends verification-page.css styling */
+/* Assessment Page Styling - Updated for multiple-choice format */
 
-/* Container styles - similar to verification container */
+/* Container styles */
 .assessment-container {
   max-width: 800px;
-  margin: 2rem auto;
-  padding: 1rem;
+  margin: 40px auto;
+  padding: 30px;
+  background-color: #ffffff;
+  border-radius: 12px;
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.08);
+  min-height: 500px;
+  display: flex;
+  flex-direction: column;
 }
 
-.assessment-card {
-  background-color: #fff;
-  border-radius: 10px;
-  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
-  padding: 2rem;
-}
-
-.assessment-card h2 {
-  color: #333;
-  text-align: center;
-  margin-bottom: 1rem;
-  font-weight: 700;
-}
-
-/* Welcome screen styles */
+/* Welcome Screen */
 .assessment-welcome {
+  text-align: center;
   display: flex;
   flex-direction: column;
   align-items: center;
-  text-align: center;
 }
 
 .welcome-icon {
-  font-size: 4rem;
+  font-size: 3rem;
   color: #4a90e2;
-  margin-bottom: 1.5rem;
+  margin-bottom: 20px;
+}
+
+.assessment-welcome h2 {
+  color: #333;
+  margin-bottom: 20px;
+  font-size: 2rem;
 }
 
 .assessment-welcome p {
-  color: #666;
-  line-height: 1.6;
-  margin-bottom: 1.5rem;
+  font-size: 1.1rem;
+  color: #555;
+  margin-bottom: 20px;
   max-width: 600px;
-}
-
-.start-btn {
-  background-color: #4a90e2;
-  color: white;
-  border: none;
-  border-radius: 5px;
-  padding: 0.8rem 2rem;
-  font-size: 1rem;
-  cursor: pointer;
-  transition: background-color 0.3s;
-  display: flex;
-  align-items: center;
-  gap: 0.5rem;
-}
-
-.start-btn:hover {
-  background-color: #3a7bc8;
-}
-
-/* Retake information styling */
-.retake-info-container {
-  background-color: #f8f9fa;
-  border-left: 4px solid #ffc107;
-  padding: 1rem 1.5rem;
-  margin-bottom: 1.5rem;
-  border-radius: 0 4px 4px 0;
-  text-align: left;
-}
-
-.retake-info-container p {
-  margin-bottom: 1rem;
-}
-
-.retake-info-container p:last-child {
-  margin-bottom: 0;
+  line-height: 1.6;
 }
 
 /* Instructions screen styles */
 .assessment-instructions {
-  padding: 1rem;
+  text-align: left;
+  width: 100%;
+  max-width: 600px;
+  margin: 0 auto 30px;
+  background-color: #f9f9f9;
+  padding: 20px;
+  border-radius: 8px;
+  border-left: 4px solid #4a90e2;
 }
 
-.instructions-list {
+.assessment-instructions ul {
+  margin-top: 10px;
+  padding-left: 20px;
+}
+
+.assessment-instructions li {
+  margin-bottom: 8px;
+}
+
+/* Loading indicator styles */
+.loading-indicator {
   display: flex;
   flex-direction: column;
-  gap: 1.5rem;
-  margin: 2rem 0;
-}
-
-.instruction-item {
-  display: flex;
-  align-items: flex-start;
-  gap: 1rem;
-  padding: 1rem;
-  border-radius: 8px;
-  background-color: #f8f9fa;
-}
-
-.instruction-icon {
-  font-size: 1.5rem;
-  color: #4a90e2;
-  min-width: 40px;
-  display: flex;
-  justify-content: center;
-}
-
-.instruction-text h3 {
-  margin: 0 0 0.5rem 0;
-  color: #333;
-}
-
-.instruction-text p {
-  margin: 0;
-  color: #666;
-  line-height: 1.5;
-}
-
-.begin-btn {
-  background-color: #4a90e2;
-  color: white;
-  border: none;
-  border-radius: 5px;
-  padding: 0.8rem 2rem;
-  font-size: 1rem;
-  cursor: pointer;
-  transition: background-color 0.3s;
-  display: flex;
   align-items: center;
-  gap: 0.5rem;
-  margin: 0 auto;
-  margin-bottom: 1rem;
+  margin: 30px 0;
 }
 
-.back-btn {
-  background-color: transparent;
+.loading-indicator i {
+  font-size: 2rem;
   color: #4a90e2;
-  border: 1px solid #4a90e2;
-  border-radius: 5px;
-  padding: 0.6rem 1.5rem;
+  margin-bottom: 20px;
+}
+
+.loading-indicator p {
+  margin: 10px 0;
+}
+
+.loading-tip {
+  color: #777;
   font-size: 0.9rem;
-  cursor: pointer;
-  transition: all 0.3s;
-  display: flex;
-  align-items: center;
-  gap: 0.5rem;
-  margin: 0 auto;
 }
 
-.back-btn:hover {
-  background-color: #f0f7ff;
+.retry-button {
+  padding: 8px 16px;
+  background-color: #e4e4e4;
+  color: #333;
+  border: none;
+  border-radius: 4px;
+  cursor: pointer;
+  margin-top: 20px;
+  opacity: 0;
+  animation: fadeIn 0.5s ease forwards;
+  animation-delay: 15s;
+}
+
+.retry-button:hover {
+  background-color: #d4d4d4;
+}
+
+@keyframes fadeIn {
+  to {
+    opacity: 1;
+  }
 }
 
 /* Question screen styles */
@@ -165,331 +120,231 @@
 }
 
 .progress-text {
+  margin-bottom: 8px;
   font-size: 0.9rem;
-  color: #666;
-  margin-bottom: 0.5rem;
+  color: #777;
 }
 
-.progress-bar-container {
+.progress-bar {
   height: 8px;
-  background-color: #e9ecef;
+  background-color: #e4e4e4;
   border-radius: 4px;
   overflow: hidden;
 }
 
-.progress-bar-fill {
+.progress-fill {
   height: 100%;
   background-color: #4a90e2;
-  transition: width 0.3s ease-in-out;
+  transition: width 0.3s ease;
 }
 
-.question-card {
-  background-color: #f8f9fa;
+.question-container {
+  background-color: #f9f9f9;
+  padding: 25px;
   border-radius: 8px;
-  padding: 1.5rem;
-  margin-bottom: 1rem;
+  margin-bottom: 20px;
 }
 
-.question-card h3 {
-  margin-top: 0;
-  margin-bottom: 1.5rem;
+.question-text {
+  font-size: 1.2rem;
   color: #333;
-  font-size: 1.1rem;
+  margin-bottom: 20px;
+  line-height: 1.5;
 }
 
-.radio-options, .checkbox-options {
+.answer-options {
   display: flex;
   flex-direction: column;
-  gap: 0.8rem;
+  gap: 15px;
+  margin-bottom: 30px;
 }
 
-.radio-option, .checkbox-option {
+.answer-option {
   display: flex;
-  align-items: center;
-  gap: 0.5rem;
+  align-items: flex-start;
+  background-color: white;
+  padding: 12px 15px;
+  border-radius: 6px;
+  border: 1px solid #ddd;
+  transition: all 0.2s ease;
 }
 
-.radio-option input, .checkbox-option input {
+.answer-option:hover {
+  border-color: #4a90e2;
+  box-shadow: 0 2px 5px rgba(0, 0, 0, 0.05);
+}
+
+.answer-option input[type="radio"] {
+  margin-right: 12px;
+  margin-top: 3px;
+}
+
+.answer-option label {
+  flex: 1;
   cursor: pointer;
-}
-
-.radio-option label, .checkbox-option label {
-  cursor: pointer;
-  font-size: 1rem;
-  color: #333;
-}
-
-.textarea-container {
-  width: 100%;
-}
-
-.textarea-container textarea {
-  width: 100%;
-  padding: 1rem;
-  border: 1px solid #ced4da;
-  border-radius: 4px;
-  font-size: 1rem;
-  resize: vertical;
-  min-height: 150px;
-}
-
-.question-navigation {
-  display: flex;
-  justify-content: space-between;
-  margin-top: 1rem;
-}
-
-.prev-btn, .next-btn {
-  background-color: #4a90e2;
-  color: white;
-  border: none;
-  border-radius: 5px;
-  padding: 0.8rem 1.5rem;
-  font-size: 0.9rem;
-  cursor: pointer;
-  transition: background-color 0.3s;
-  display: flex;
-  align-items: center;
-  gap: 0.5rem;
-}
-
-.prev-btn {
-  background-color: #6c757d;
-}
-
-.prev-btn:hover {
-  background-color: #5a6268;
-}
-
-.next-btn:hover {
-  background-color: #3a7bc8;
-}
-
-.prev-btn:disabled {
-  background-color: #adb5bd;
-  cursor: not-allowed;
+  line-height: 1.5;
 }
 
 /* Thank you screen styles */
 .assessment-thank-you {
   text-align: center;
-  padding: 2rem 1rem;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
 }
 
-.thank-you-icon {
-  font-size: 4rem;
-  color: #28a745;
-  margin-bottom: 1.5rem;
+.result-icon {
+  font-size: 3rem;
+  margin-bottom: 20px;
 }
 
-.assessment-thank-you h2 {
-  color: #333;
-  margin-bottom: 1.5rem;
+.result-icon.passed {
+  color: #4CAF50;
 }
 
-.assessment-thank-you p {
-  color: #666;
-  line-height: 1.6;
-  margin-bottom: 2rem;
-  max-width: 600px;
-  margin-left: auto;
-  margin-right: auto;
+.result-icon.failed {
+  color: #F44336;
 }
 
-/* Assessment Results Styling */
-.assessment-results {
-  padding: 1.5rem;
-  border-radius: 8px;
-  background-color: #f8f9fa;
-  margin: 1.5rem 0;
-  text-align: left;
-  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.1);
+.result-details {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  margin: 20px 0 30px;
 }
 
 .score-display {
   display: flex;
   flex-direction: column;
   align-items: center;
-  margin-bottom: 2rem;
+  margin-bottom: 20px;
 }
 
 .score-circle {
-  width: 120px;
-  height: 120px;
+  width: 100px;
+  height: 100px;
   border-radius: 50%;
+  background-color: #f9f9f9;
   display: flex;
-  align-items: center;
   justify-content: center;
-  margin-bottom: 1rem;
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+  align-items: center;
+  border: 3px solid #4a90e2;
+  margin-bottom: 10px;
 }
 
 .score-value {
-  font-size: 2rem;
+  font-size: 1.8rem;
   font-weight: bold;
+  color: #333;
 }
 
 .score-label {
-  font-size: 1.2rem;
-  text-align: center;
-  font-weight: 600;
+  font-size: 1rem;
+  color: #555;
 }
 
-.timeout-note {
-  background-color: #fff3cd;
-  color: #856404;
-  border-radius: 5px;
-  padding: 0.75rem 1rem;
-  margin-top: 1rem;
-  font-size: 0.9rem;
-  text-align: center;
+.pass-threshold {
+  background-color: #f9f9f9;
+  padding: 10px 20px;
+  border-radius: 6px;
+  margin-bottom: 20px;
+}
+
+/* Shared Button Styles */
+.button-row {
+  display: flex;
+  justify-content: space-between;
+  margin-top: 20px;
+  width: 100%;
+  max-width: 400px;
+}
+
+.primary-button, .secondary-button {
+  padding: 12px 24px;
+  border: none;
+  border-radius: 6px;
+  font-size: 1rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s ease;
   display: flex;
   align-items: center;
   justify-content: center;
-  gap: 0.5rem;
-  max-width: 80%;
-  border-left: 4px solid #ffc107;
 }
 
-.feedback-section, .improvements-section, .next-steps {
-  margin-bottom: 1.5rem;
-  padding-bottom: 1.5rem;
-  border-bottom: 1px solid #dee2e6;
-}
-
-.feedback-section:last-child, .improvements-section:last-child, .next-steps:last-child {
-  border-bottom: none;
-  padding-bottom: 0;
-}
-
-.feedback-section h3, .improvements-section h3, .next-steps h3 {
-  color: #444;
-  margin-bottom: 0.75rem;
-  font-size: 1.1rem;
-  font-weight: 600;
-  border-left: 3px solid #4a90e2;
-  padding-left: 10px;
-}
-
-.retake-info {
-  margin-top: 1rem;
-  padding: 0.75rem;
-  background-color: #fff3cd;
-  border: 1px solid #ffeeba;
-  border-radius: 4px;
-  font-weight: 500;
-  color: #856404;
-}
-
-.profile-btn {
+.primary-button {
   background-color: #4a90e2;
   color: white;
-  border: none;
-  border-radius: 5px;
-  padding: 0.8rem 2rem;
-  font-size: 1rem;
-  cursor: pointer;
-  transition: background-color 0.3s;
-  display: inline-flex;
-  align-items: center;
-  gap: 0.5rem;
 }
 
-.profile-btn:hover {
-  background-color: #3a7bc8;
+.primary-button:hover:not(:disabled) {
+  background-color: #357dcb;
+  box-shadow: 0 3px 8px rgba(0, 0, 0, 0.1);
 }
 
-/* Error and success messages */
+.secondary-button {
+  background-color: #f2f2f2;
+  color: #555;
+}
+
+.secondary-button:hover:not(:disabled) {
+  background-color: #e4e4e4;
+  box-shadow: 0 3px 8px rgba(0, 0, 0, 0.1);
+}
+
+button:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+/* Status Messages */
 .error-message, .success-message {
-  padding: 0.75rem 1rem;
-  border-radius: 5px;
-  margin: 1rem 0;
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  gap: 0.5rem;
+  padding: 12px;
+  border-radius: 6px;
+  margin: 20px 0;
+  font-weight: 600;
+  text-align: center;
   width: 100%;
-  max-width: 500px;
 }
 
 .error-message {
-  background-color: #fff8f8;
-  color: #721c24;
-  border: 1px solid #ffebeb;
-  padding: 1.5rem;
-}
-
-.error-message i {
-  font-size: 2rem;
-  color: #dc3545;
-  margin-bottom: 1rem;
+  background-color: #FFEBEE;
+  color: #D32F2F;
+  border: 1px solid #FFCDD2;
 }
 
 .success-message {
-  background-color: #d4edda;
-  color: #155724;
-  border: 1px solid #c3e6cb;
+  background-color: #E8F5E9;
+  color: #2E7D32;
+  border: 1px solid #C8E6C9;
 }
 
-.loading-indicator {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  margin: 2rem 0;
-  padding: 1.5rem;
-  background-color: #f8f9fa;
-  border-radius: 8px;
-  width: 100%;
-  max-width: 500px;
+/* Spinner for loading states */
+.fa-spin {
+  margin-left: 8px;
 }
 
-.loading-indicator i {
-  font-size: 2.5rem;
-  color: #4a90e2;
-  margin-bottom: 1rem;
+.ml-2 {
+  margin-left: 8px;
 }
 
-.loading-indicator p {
-  margin-bottom: 0.5rem;
-  color: #666;
-}
-
-.loading-tip {
-  font-size: 0.9rem;
-  color: #888;
-  font-style: italic;
-}
-
-/* Show the loading retry button after 15 seconds */
-@keyframes showButton {
-  from { opacity: 0; height: 0; margin-top: 0; visibility: hidden; }
-  to { opacity: 1; height: auto; margin-top: 1rem; visibility: visible; }
-}
-
-.retry-btn {
-  background-color: #6c757d;
-  color: white;
-  border: none;
-  border-radius: 5px;
-  padding: 0.6rem 1.5rem;
-  font-size: 0.9rem;
-  cursor: pointer;
-  margin-top: 1rem;
-  display: flex;
-  align-items: center;
-  gap: 0.5rem;
-  transition: background-color 0.2s;
-}
-
-.retry-btn:hover {
-  background-color: #5a6268;
-}
-
-#loading-retry-button {
-  opacity: 0;
-  height: 0;
-  margin-top: 0;
-  visibility: hidden;
-  animation: showButton 0.5s ease-in forwards;
-  animation-delay: 15s; /* Show the button after 15 seconds */
+/* Mobile Responsiveness */
+@media (max-width: 768px) {
+  .assessment-container {
+    margin: 20px;
+    padding: 20px;
+  }
+  
+  .question-text {
+    font-size: 1.1rem;
+  }
+  
+  .button-row {
+    flex-direction: column;
+    gap: 10px;
+  }
+  
+  .button-row button {
+    width: 100%;
+  }
 }

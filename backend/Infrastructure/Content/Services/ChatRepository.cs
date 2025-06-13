@@ -49,13 +49,15 @@ namespace Infrastructure.Content.Services
             }
         }
 
-        public async Task<List<ChatMessage>> GetChatHistoryAsync(string user1, string user2)
+        public async Task<List<ChatMessage>> GetChatHistoryAsync(string user1, string user2, int skip = 0, int take = 50)
         {           
             return await careProDbContext.ChatMessages
                 .Where(m => ((m.SenderId == user1 && m.ReceiverId == user2) ||
                             (m.SenderId == user2 && m.ReceiverId == user1)) &&
                            !m.IsDeleted) // Only include non-deleted messages
                 .OrderBy(m => m.Timestamp)
+                .Skip(skip)
+                .Take(take)
                 .ToListAsync();
         }
         
@@ -386,6 +388,80 @@ namespace Infrastructure.Content.Services
             catch (Exception)
             {
                 return false;
+            }
+        }
+
+        // Get all conversations for a specific user
+        public async Task<List<ConversationDTO>> GetAllUserConversationsAsync(string userId)
+        {
+            try
+            {
+                // Step 1: Get all messages involving the user
+                var messages = await careProDbContext.ChatMessages
+                    .Where(m => m.SenderId == userId || m.ReceiverId == userId)
+                    .OrderByDescending(m => m.Timestamp)
+                    .ToListAsync();
+
+                // Step 2: Find distinct conversation partners
+                var conversationPartners = messages
+                    .Select(m => m.SenderId == userId ? m.ReceiverId : m.SenderId)
+                    .Distinct()
+                    .ToList();
+
+                // Step 3: Get user information for all conversation partners
+                var partnerUsers = await careProDbContext.AppUsers
+                    .Where(u => conversationPartners.Contains(u.Id.ToString()))
+                    .ToListAsync();
+
+                // Step 4: Build conversation DTOs
+                var conversations = new List<ConversationDTO>();
+                foreach (var partnerId in conversationPartners)
+                {
+                    // Get partner user info
+                    var partnerUser = partnerUsers.FirstOrDefault(u => u.Id.ToString() == partnerId);
+                    if (partnerUser == null) continue; // Skip if user not found
+
+                    // Get latest message in this conversation
+                    var latestMessage = messages
+                        .Where(m => (m.SenderId == userId && m.ReceiverId == partnerId) || 
+                                  (m.SenderId == partnerId && m.ReceiverId == userId))
+                        .OrderByDescending(m => m.Timestamp)
+                        .FirstOrDefault();
+
+                    if (latestMessage == null) continue; // Skip if no messages found
+
+                    // Count unread messages
+                    var unreadCount = messages
+                        .Count(m => m.SenderId == partnerId && 
+                                  m.ReceiverId == userId && 
+                                  !m.IsRead && 
+                                  !m.IsDeleted);
+
+                    // Create conversation dto
+                    conversations.Add(new ConversationDTO
+                    {
+                        UserId = partnerId,
+                        FullName = $"{partnerUser.FirstName} {partnerUser.LastName}",
+                        Email = partnerUser.Email,
+                        Role = partnerUser.Role,
+                        IsOnline = partnerUser.IsOnline ?? false,
+                        LastMessage = latestMessage.Message,
+                        LastMessageTimestamp = latestMessage.Timestamp,
+                        IsRead = latestMessage.SenderId == partnerId ? 
+                            latestMessage.IsRead : true, // Messages from the current user are considered read
+                        UnreadCount = unreadCount
+                    });
+                }
+
+                // Sort conversations by most recent message
+                return conversations
+                    .OrderByDescending(c => c.LastMessageTimestamp)
+                    .ToList();
+            }
+            catch (Exception ex)
+            {
+                Console.Error.WriteLine($"Error getting user conversations: {ex.Message}");
+                return new List<ConversationDTO>();
             }
         }
     }

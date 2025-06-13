@@ -1,5 +1,5 @@
 // src/controllers/kycController.js
-const { evaluateResponses, generateQuestions } = require('../services/openAIService');
+const { evaluateResponses, generateQuestions, generateMultipleChoiceQuestions } = require('../services/openAIService');
 const axios = require('axios');
 const DojahService = require('../services/dojahService');
 const { updateUserVerificationStatus } = require('./authController');
@@ -278,8 +278,8 @@ const evalResponse = async (req, res) => {
       status: 'success',
       score,
       qualificationStatus,
-      passed: score >= 50,
-      passThreshold: 50,
+      passed: score >= 70,
+      passThreshold: 70,
       feedback: feedback,
       improvements: qualificationStatus === 'not_qualified' ? improvements : null,
       providerType: providerType
@@ -612,6 +612,91 @@ const generateProviderQuestions = async (req, res) => {
 };
 
 /**
+ * Generates a batch of questions for the question bank and sends them to the backend
+ * @param {Request} req - Express request object
+ * @param {Response} res - Express response object
+ */
+const generateQuestionBank = async (req, res) => {
+  try {
+    // Admin authorization check would go here
+    // This should be restricted to admin users only
+    
+    const { userType, category, count = 10 } = req.body;
+    
+    if (!userType || !category) {
+      return res.status(400).json({
+        status: 'error',
+        message: 'User type and category are required'
+      });
+    }
+    
+    // Validate user type
+    if (!['Cleaner', 'Caregiver', 'Both'].includes(userType)) {
+      return res.status(400).json({
+        status: 'error',
+        message: 'User type must be Cleaner, Caregiver, or Both'
+      });
+    }
+    
+    // Generate multiple choice questions using OpenAI
+    const questions = await generateMultipleChoiceQuestions(userType, category, count);
+    
+    // Format questions for the backend
+    const formattedQuestions = questions.map(q => ({
+      category: q.category,
+      userType: q.userType,
+      question: q.question,
+      options: q.options,
+      correctAnswer: q.correctAnswer,
+      explanation: q.explanation
+    }));
+    
+    // Send questions to the .NET backend
+    try {
+      const response = await axios.post(
+        `${External_API}/QuestionBank/batch`,
+        { questions: formattedQuestions },
+        {
+          headers: {
+            'Content-Type': 'application/json',
+            // Authorization token would go here if required
+          }
+        }
+      );
+      
+      // Check response and return appropriate status
+      if (response.status === 200) {
+        res.status(200).json({
+          status: 'success',
+          message: `Successfully generated and saved ${questions.length} questions`,
+          category,
+          userType,
+          questionsGenerated: questions.length
+        });
+      } else {
+        throw new Error('Backend server returned an unexpected response');
+      }
+    } catch (apiError) {
+      console.error('Error sending questions to backend:', apiError);
+      // If the questions were generated but not saved, return them to avoid losing the work
+      res.status(500).json({
+        status: 'error',
+        message: 'Generated questions but failed to save them to the database',
+        error: apiError.message,
+        questions: formattedQuestions // Return the questions for potential manual saving
+      });
+    }
+  } catch (error) {
+    console.error('Question bank generation error:', error);
+    res.status(500).json({
+      status: 'error',
+      message: 'An error occurred while generating the question bank',
+      error: error.message
+    });
+  }
+};
+
+/**
  * Syncs assessment results with Azure API
  * @param {string} userId - User ID
  * @param {object} assessmentData - Assessment data to sync
@@ -666,14 +751,10 @@ const syncAssessmentWithAzureAPI = async (userId, assessmentData) => {
 
 module.exports = { 
   startKYC, 
-  getQuestions,
-  generateProviderQuestions, 
+  getQuestions, 
   submitResponses, 
   evalResponse, 
+  generateProviderQuestions, 
   createVerificationSession,
-  verifyNIN,
-  verifyBVN,
-  verifyAddress,
-  getVerificationStatus,
-  syncAssessmentWithAzureAPI
+  generateQuestionBank
 };
