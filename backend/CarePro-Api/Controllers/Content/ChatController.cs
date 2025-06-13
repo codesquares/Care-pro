@@ -18,9 +18,9 @@ namespace CarePro_Api.Controllers.Content
         }
 
         [HttpGet("history")]
-        public async Task<IActionResult> GetChatHistory(string user1, string user2)
+        public async Task<IActionResult> GetChatHistory(string user1, string user2, int skip = 0, int take = 50)
         {
-            var messages = await _chatRepository.GetChatHistoryAsync(user1, user2);
+            var messages = await _chatRepository.GetChatHistoryAsync(user1, user2, skip, take);
             return Ok(messages);
         }
 

@@ -197,6 +197,12 @@ export const MessageProvider = ({ children }) => {
     setCurrentUserId(userId);
     
     try {
+      // Check if already connected - if so, start by disconnecting to ensure clean state
+      if (chatService.isConnectionReady && chatService.isConnectionReady()) {
+        console.log('Already connected. Disconnecting first to ensure clean state');
+        await chatService.disconnect().catch(e => console.error('Error during disconnect before reconnect:', e));
+      }
+      
       // Set up SignalR event handlers
       const handlersToRemove = [
         // Connection established handler
@@ -239,6 +245,10 @@ export const MessageProvider = ({ children }) => {
           
           // Add to messages if this is the active chat
           if (senderId === selectedChatId || senderId === recipient.id) {
+
+            console.log(`New message from ${senderId}:`, message);
+            console.log(`Message ID: ${messageId}, Status: ${status}`);
+            console.log(`Current user ID: ${userId}`);
             setMessages(prevMessages => [...prevMessages, {
               id: messageId,
               senderId,
@@ -497,6 +507,8 @@ export const MessageProvider = ({ children }) => {
     
     try {
       // Send message through SignalR
+      console.log("About to send message with IDs:", { senderId, receiverId });
+      console.log("Message text:", messageText);
       const messageId = await chatService.sendMessage(senderId, receiverId, messageText);
       
       // Update message with real ID and status

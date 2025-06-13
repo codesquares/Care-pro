@@ -88,7 +88,7 @@ Your task is to:
 4. Be particularly thorough about safety protocols and patient care best practices.
 5. Format your response with "Score: X/100" at the beginning followed by detailed feedback.
 
-The qualification threshold is 50/100. If the candidate scores below this, provide specific recommendations on what they should study or practice to improve their score.`,
+The qualification threshold is 70/100. If the candidate scores below this, provide specific recommendations on what they should study or practice to improve their score.`,
       },
       {
         role: 'user',
@@ -120,7 +120,7 @@ The qualification threshold is 50/100. If the candidate scores below this, provi
     const score = extractScore(evaluation.trim());
     const { feedback, improvements } = extractFeedback(evaluation, score);
 
-    return { evaluation, score, feedback, improvements, passThreshold: score >= 50 };
+    return { evaluation, score, feedback, improvements, passThreshold: score >= 70 };
   } catch (error) {
     console.error('OpenAI API error:', error.response?.data || error.message);
     throw new Error(`OpenAI API error: ${error.message}`);
@@ -151,7 +151,7 @@ const extractFeedback = (evaluation, score) => {
   let feedback = content;
   let improvements = '';
 
-  if (score < 50) {
+  if (score < 70) {
     const improvementMatch = content.match(/(?:improvements|recommendations|suggestions|to improve):([\s\S]+)$/i);
     if (improvementMatch) {
       improvements = improvementMatch[1].trim();
@@ -168,4 +168,101 @@ const extractFeedback = (evaluation, score) => {
   return { feedback, improvements };
 };
 
-module.exports = { evaluateResponses, generateQuestions };
+/**
+ * Generates a batch of multiple-choice questions for the assessment system
+ * @param {string} userType - Type of user ('Cleaner' or 'Caregiver')
+ * @param {string} category - Category of questions to generate
+ * @param {number} count - Number of questions to generate in this batch
+ * @returns {Promise<Array<Object>>} Array of question objects with options and answers
+ */
+const generateMultipleChoiceQuestions = async (userType, category, count = 10) => {
+  try {
+    const prompt = `You are an expert in adult social care training and assessment. Generate ${count} diverse and well-balanced multiple-choice questions for evaluating ${userType}s in the category: "${category}".
+
+Each question should:
+- Be multiple choice with exactly 4 options (A, B, C, D)
+- Have only one correct answer
+- Include a brief explanation for the correct answer
+- Use simple, clear language suitable for people with basic literacy skills
+
+Format each question as a JSON object:
+{
+  "question": "Question text here?",
+  "options": ["Option A", "Option B", "Option C", "Option D"],
+  "correctAnswer": "A", // Just the letter (A, B, C, or D)
+  "explanation": "Brief explanation of why this is correct",
+  "category": "${category}",
+  "userType": "${userType}"
+}
+
+Ensure questions are practical, relevant to real-world scenarios, and cover important knowledge areas for ${userType}s.`;
+
+    const messages = [
+      {
+        role: 'system',
+        content: prompt,
+      },
+      {
+        role: 'user',
+        content: `Please generate ${count} multiple-choice questions for ${userType}s in the category "${category}". Format them as JSON objects as specified.`,
+      },
+    ];
+
+    const result = await axios.post(
+      'https://api.openai.com/v1/chat/completions',
+      {
+        model: 'gpt-4',
+        messages,
+        max_tokens: 2000,
+        temperature: 0.7,
+      },
+      {
+        headers: {
+          Authorization: `Bearer ${process.env.OPENAI_API_KEY}`,
+          'Content-Type': 'application/json',
+        },
+      }
+    );
+
+    if (!result.data.choices?.[0]?.message) {
+      throw new Error('Invalid OpenAI API response');
+    }
+
+    const content = result.data.choices[0].message.content;
+    try {
+      // Extract JSON objects from the content
+      const jsonPattern = /\{[\s\S]*?\}/g;
+      const jsonMatches = content.match(jsonPattern) || [];
+      
+      const questions = jsonMatches.map(jsonStr => {
+        try {
+          const question = JSON.parse(jsonStr);
+          // Validate question format
+          if (!question.question || !Array.isArray(question.options) || 
+              question.options.length !== 4 || !question.correctAnswer || 
+              !question.explanation || !question.category || !question.userType) {
+            throw new Error('Invalid question format');
+          }
+          return question;
+        } catch (e) {
+          console.error('Error parsing question JSON:', e);
+          return null;
+        }
+      }).filter(q => q !== null);
+
+      if (questions.length === 0) {
+        throw new Error('No valid questions generated');
+      }
+
+      return questions;
+    } catch (error) {
+      console.error('Error parsing questions:', error);
+      throw new Error(`Failed to parse questions: ${error.message}`);
+    }
+  } catch (error) {
+    console.error('Error generating multiple-choice questions:', error.response?.data || error.message);
+    throw new Error(`Failed to generate multiple-choice questions: ${error.message}`);
+  }
+};
+
+module.exports = { evaluateResponses, generateQuestions, generateMultipleChoiceQuestions };

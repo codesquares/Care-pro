@@ -130,6 +130,13 @@ const DirectMessage = () => {
     }
   };
   
+  console.log('DirectMessage component rendering with state:', {
+    recipientId,
+    caregiverId,
+    recipientName,
+    loading,
+    
+  })
   const {
     messages,
     selectedChatId,
@@ -162,19 +169,42 @@ const DirectMessage = () => {
 
   // Handle sending a new message
   const handleSendNewMessage = (receiverId, messageText) => {
+    // Check parameter types to catch parameter order issues
+    if (typeof messageText !== 'string') {
+      console.error('handleSendNewMessage: messageText is not a string:', {
+        messageText,
+        typeOfMessageText: typeof messageText,
+        receiverId
+      });
+      
+      // If parameters are swapped, fix them
+      if (typeof receiverId === 'string' && receiverId.length > 0 && 
+          (typeof messageText === 'object' || messageText === undefined)) {
+        console.warn('Parameters appear to be swapped, attempting to correct...');
+        // Try to recover by treating receiverId as messageText
+        messageText = receiverId;
+        receiverId = null; // Will be handled by effectiveReceiverId below
+      } else {
+        // Can't recover
+        alert('Invalid message format. Please try again.');
+        return;
+      }
+    }
+    
     // Use caregiverId from state if this is a gig-related message
     // Fall back to receiverId from params if needed
     // This ensures we use the correct receiver in all navigation scenarios
     const effectiveReceiverId = caregiverId || receiverId || recipientId;
 
     // Log this to help with debugging
-    console.log('Sending message with:', {
+    console.log('Sending message in handleSendMessage with:', {
       senderId: userId,
       receiverId: effectiveReceiverId,
       originalReceiverId: receiverId,
       caregiverId: caregiverId, 
       recipientId: recipientId,
-      messageLength: messageText?.length || 0
+      messageLength: messageText?.length || 0,
+      messagePreview: messageText ? (messageText.length > 20 ? `${messageText.substring(0, 20)}...` : messageText) : null
     });
     
     // Detailed validation to help identify the exact issue
@@ -283,6 +313,9 @@ const DirectMessage = () => {
     recipientName,
     finalId: recipientObj.id
   });
+
+  console.log('recipientObj before final checks:', recipientObj);
+
   
   // Extra validation - use recipientId as ultimate fallback if nothing else works
   // This handles the case where caregiverId might still be null in a race condition
@@ -300,11 +333,24 @@ const DirectMessage = () => {
   if (!recipientObj.id && recipientId) {
     console.log('Forcing recipientObj to use recipientId as fallback:', recipientId);
     recipientObj.id = recipientId;
+    console.log("final userId:", userId);
   }
   
   // Log the recipient object to help with debugging
   console.log('Using recipient:', recipientObj);
+  const validMessageObject = {
+    senderId: userId,
+    receiverId: recipientId || caregiverId || recipientObj.id,
+    recipientName: recipientName,
+    messageText: '',
+    timestamp: new Date().toISOString(),
+    avatar: recipientObj.avatar || "/avatar.jpg",
+    isOnline: recipientObj.isOnline || false,
+    lastActive: recipientObj.lastActive || new Date().toISOString(),
+    isRead: false,
+  }
 
+  console.log('validMessageObject created:', validMessageObject);
   return (
     <div className="messages">
       <div className="direct-message-container">
@@ -320,7 +366,7 @@ const DirectMessage = () => {
         <div className="direct-chat-area">
           <ChatArea
             messages={messages || []}
-            recipient={recipientObj}
+            recipient={validMessageObject}
             userId={userId}
             onSendMessage={handleSendNewMessage}
             isOfflineMode={!!error}

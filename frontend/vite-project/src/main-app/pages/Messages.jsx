@@ -138,6 +138,7 @@ const Messages = ({ userId: propsUserId, token: propsToken }) => {
     const setupConnection = async () => {
       // Start connection attempt and abort if another is in progress
       if (!connectionManager.startConnectionAttempt()) {
+        console.log('[MessagesPage] Connection attempt already in progress, skipping');
         return;
       }
       
@@ -150,13 +151,15 @@ const Messages = ({ userId: propsUserId, token: propsToken }) => {
       
       console.log(`[MessagesPage] Initializing chat connection`);
       
-      // Set a timeout for connection
+      // Set a timeout for connection with a longer timeout to account for slow networks
       connectionManager.setConnectionTimeout(() => {
-        console.log('[MessagesPage] Connection attempt timed out after 15 seconds');
+        console.log('[MessagesPage] Connection attempt timed out after 20 seconds');
         if (isMounted.current) {
           setError('Connection timed out. The server may be unavailable.');
+          // Force reset the connection manager state to allow retry
+          connectionManager.reset();
         }
-      });
+      }, 20000); // 20 seconds timeout
       
       try {
         // Initialize chat and store cleanup function
@@ -170,9 +173,21 @@ const Messages = ({ userId: propsUserId, token: propsToken }) => {
         
         // Mark connection as successful
         connectionManager.endConnectionAttempt('success');
+        
+        console.log('[MessagesPage] Chat connection successfully initialized');
       } catch (err) {
         console.error("[MessagesPage] Error setting up chat connection:", err);
         connectionManager.endConnectionAttempt(null);
+        
+        // Set a timeout to retry connection after a delay if still mounted
+        if (isMounted.current) {
+          setTimeout(() => {
+            if (isMounted.current && !connectionManager.hasInitialized) {
+              console.log('[MessagesPage] Retrying connection...');
+              setupConnection();
+            }
+          }, 5000); // Retry after 5 seconds
+        }
       }
     };
     
@@ -185,18 +200,31 @@ const Messages = ({ userId: propsUserId, token: propsToken }) => {
       isMounted.current = false;
       connectionManager.clearConnectionTimeout();
       
+      // Ensure we call the cleanup function to remove event handlers
       if (typeof cleanup === 'function') {
-        cleanup();
+        try {
+          cleanup();
+        } catch (e) {
+          console.error('[MessagesPage] Error during cleanup:', e);
+        }
       }
       
-      // Only destroy connection manager when actually navigating away
-      setTimeout(() => {
-        // Check if component is completely gone from DOM
-        if (!document.querySelector('.messages')) {
-          console.log("[MessagesPage] Destroying connection manager");
-          connectionManager.destroy();
-        }
-      }, 500);
+      // Implement a more reliable way to check if we should fully destroy the connection
+      const isNavigatingAway = !document.querySelector('.messages');
+      
+      if (isNavigatingAway) {
+        console.log("[MessagesPage] Destroying connection manager immediately");
+        connectionManager.destroy();
+      } else {
+        // Only destroy connection manager when actually navigating away
+        setTimeout(() => {
+          // Double-check if component is completely gone from DOM
+          if (!document.querySelector('.messages')) {
+            console.log("[MessagesPage] Destroying connection manager after delay");
+            connectionManager.destroy();
+          }
+        }, 500);
+      }
     };
   }, [userId, token, initializeChat, requestPermission]);
   
@@ -216,6 +244,16 @@ const Messages = ({ userId: propsUserId, token: propsToken }) => {
   
   // Handle sending a new message
   const handleSendNewMessage = (receiverId, messageText) => {
+    // Log parameters to help debug
+    console.log("handleSendNewMessage parameters:", { userId, receiverId, messageText });
+    
+    // Check and validate message text first
+    if (!messageText || typeof messageText !== 'string') {
+      console.error("Invalid message text:", messageText);
+      return;
+    }
+    
+    // Make sure parameters are correctly ordered - sometimes they get swapped
     handleSendMessage(userId, receiverId, messageText);
   };
   
@@ -309,6 +347,34 @@ const Messages = ({ userId: propsUserId, token: propsToken }) => {
       </div>
     );
   };
+  
+  // Debug helper
+  const logChatServiceDebug = () => {
+    import('../services/signalRChatService').then(module => {
+      const chatService = module.default;
+      if (chatService && typeof chatService.getDebugInfo === 'function') {
+        console.log('=== SignalR Chat Service Debug Info ===');
+        console.log(chatService.getDebugInfo());
+        console.log('=====================================');
+      } else {
+        console.warn('Chat service debug method not available');
+      }
+    }).catch(err => {
+      console.error('Error loading chat service for debug:', err);
+    });
+  };
+  
+  // Add debug logging
+  useEffect(() => {
+    if (isLoading) return;
+    
+    // Log debug info once after initial loading
+    const debugTimer = setTimeout(() => {
+      logChatServiceDebug();
+    }, 3000);
+    
+    return () => clearTimeout(debugTimer);
+  }, [isLoading]);
   
   return (
     <div className="messages">

@@ -86,6 +86,7 @@ builder.Services.AddScoped<IClientOrderService, ClientOrderService>();
 builder.Services.AddScoped<ICertificationService, CertificationService>();
 builder.Services.AddScoped<IChatRepository, ChatRepository>();
 builder.Services.AddScoped<IVerificationService, VerificationService>();
+builder.Services.AddScoped<IQuestionBankService, QuestionBankService>();
 builder.Services.AddScoped<IAssessmentService, AssessmentService>();
 builder.Services.AddScoped<IClientPreferenceService, ClientPreferenceService>();
 builder.Services.AddScoped<IClientRecommendationService, ClientRecommendationService>();

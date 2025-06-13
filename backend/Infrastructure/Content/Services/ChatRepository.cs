@@ -49,13 +49,15 @@ namespace Infrastructure.Content.Services
             }
         }
 
-        public async Task<List<ChatMessage>> GetChatHistoryAsync(string user1, string user2)
+        public async Task<List<ChatMessage>> GetChatHistoryAsync(string user1, string user2, int skip = 0, int take = 50)
         {           
             return await careProDbContext.ChatMessages
                 .Where(m => ((m.SenderId == user1 && m.ReceiverId == user2) ||
                             (m.SenderId == user2 && m.ReceiverId == user1)) &&
                            !m.IsDeleted) // Only include non-deleted messages
                 .OrderBy(m => m.Timestamp)
+                .Skip(skip)
+                .Take(take)
                 .ToListAsync();
         }
         

@@ -16,7 +16,7 @@ const API_BASE_URL = "https://carepro-api20241118153443.azurewebsites.net";
 const HUB_URL = `${API_BASE_URL}/chathub`;
 
 // Message and history cache
-const MESSAGE_CACHE_TTL = 5 * 60 * 1000; // 5 minutes in milliseconds
+const MESSAGE_CACHE_TTL = 30 * 60 * 1000; // 30 minutes in milliseconds
 
 class SignalRChatService {
   constructor() {
@@ -52,36 +52,29 @@ class SignalRChatService {
   }
 
   /**
-   * Attempts to convert a UUID to a MongoDB-compatible ObjectId
-   * This is a best-effort approach - in production, proper ID mapping should be used
-   * @param {string} id - The ID to convert
-   * @returns {string} - A MongoDB-compatible ID (24 hex chars)
+   * Validates an ID parameter without trying to convert it to a different format
+   * This prevents UUID to MongoDB ObjectId conversion issues
+   * @param {string} id - The ID to validate
+   * @param {string} paramName - Name of the parameter for error messages
+   * @returns {string} - The validated ID
    */
-  convertToMongoId(id) {
-    if (!id) return null;
-    
-    // If it's already a valid MongoDB ID, return as is
-    if (this.isValidMongoId(id)) return id;
-    
-    // Remove dashes and any non-hex characters
-    const cleanId = id.replace(/[^0-9a-f]/gi, '');
-    
-    // If after cleaning we have a 24-character hex string, return it
-    if (cleanId.length === 24) return cleanId;
-    
-    // If it's longer, truncate to 24 characters
-    if (cleanId.length > 24) return cleanId.substring(0, 24);
-    
-    // If it's shorter, pad with zeros to reach 24 characters
-    if (cleanId.length < 24) {
-      return cleanId.padEnd(24, '0');
+  validateId(id, paramName = 'ID') {
+    if (!id) {
+      throw new Error(`${paramName} cannot be empty`);
     }
-    
-    // Fallback - return a placeholder ObjectId for development/testing
-    // In production, this should be handled more robustly
-    return '000000000000000000000000';
-  }
 
+    if (typeof id !== 'string') {
+      id = String(id);
+    }
+
+    // Simple check to catch common mistakes where message text is passed as an ID
+    if (id.includes(' ') || id.length > 100) {
+      throw new Error(`${paramName} appears to be message text. Parameter order might be incorrect.`);
+    }
+
+    return id.trim();
+  }
+  
   /**
    * Initializes the connection to the SignalR hub with limits on retries
    * @param {string} userId - The current user's ID
@@ -105,19 +98,25 @@ class SignalRChatService {
     }
     
     // Use existing connection if it's already connected
-    if (this.connection && this.connection.state === signalR.HubConnectionState.Connected) {
+    if (this.isConnectionReady()) {
       console.log('Using existing connection');
+      
+      // Make sure any pending handlers get registered with the existing connection
+      this._registerPendingHandlers();
+      
       return Promise.resolve(this.connection);
     }
 
     // Mark that we are connecting
     this._isConnecting = true;
+    connectionLogger.info('Starting new connection attempt');
     
     try {
       // Create custom retry policy
       const retryPolicy = this._createRetryPolicy();
       
-      // Build the connection
+      // Build the connection - with additional logging for debugging
+      console.log('Building SignalR connection to:', HUB_URL);
       this.connection = new signalR.HubConnectionBuilder()
         .withUrl(HUB_URL, {
           accessTokenFactory: () => token,
@@ -134,8 +133,9 @@ class SignalRChatService {
       // Set up message handlers
       this._setupMessageHandlers();
       
-      // Start the connection with timeout
-      const connectWithTimeout = async (timeoutMs = 15000) => {
+      // Start the connection with timeout - increased timeout for slow networks
+      const connectWithTimeout = async (timeoutMs = 20000) => {
+        console.log(`Starting connection with ${timeoutMs}ms timeout`);
         const connectPromise = this.connection.start();
         const timeoutPromise = new Promise((_, reject) => 
           setTimeout(() => reject(new Error('Connection timeout')), timeoutMs)
@@ -149,11 +149,13 @@ class SignalRChatService {
       
       // Store the connection ID for later use
       this.connectionId = this.connection.connectionId;
-      console.log('Connected to SignalR hub', this.connectionId);
+      console.log('Connected to SignalR hub with ID:', this.connectionId);
       
       // Register with the server that this user is online
       try {
+        console.log('Registering user connection with server:', userId);
         await this.connection.invoke('RegisterConnection', userId);
+        console.log('User registered successfully');
       } catch (err) {
         // The backend method might not be implemented yet, handle this gracefully
         console.warn('RegisterConnection method not available on server, continuing without registration', err);
@@ -162,6 +164,10 @@ class SignalRChatService {
       
       // Update the connection manager state
       connectionManager.endConnectionAttempt(this.connectionId);
+      
+      // Register any pending handlers now that connection is established
+      console.log('Connection established, registering pending handlers');
+      this._registerPendingHandlers();
       
       // Notify connection handlers
       this._notifyHandlers('onConnected', { connectionId: this.connectionId });
@@ -174,10 +180,11 @@ class SignalRChatService {
       // Mark connection attempt as failed in the manager
       connectionManager.endConnectionAttempt(null);
       
-      throw error;
-    } finally {
+      // Clear connection state
       this._isConnecting = false;
       this.reconnectPromise = null;
+      
+      return Promise.reject(error);
     }
   }
 
@@ -215,6 +222,14 @@ class SignalRChatService {
     } finally {
       this.connectionId = null;
       this.connection = null;
+      
+      // Reset connection manager state to ensure future connection attempts can proceed
+      connectionManager.endConnectionAttempt(null);
+      
+      // Clear any pending handlers on disconnect
+      if (this._pendingHandlers) {
+        this._pendingHandlers.clear();
+      }
     }
   }
 
@@ -227,15 +242,41 @@ class SignalRChatService {
    */
   async sendMessage(senderId, receiverId, message) {
     try {
+      // Add safety checks to prevent parameter order issues
+      if (typeof message !== 'string') {
+        console.error('Message must be a string but received:', typeof message, message);
+        throw new Error('Invalid message format: Message must be a string');
+      }
+      
+      // Check for potential parameter order issues - message content shouldn't look like an ID
+      if (message && (message.length === 24 || message.length === 36) && 
+          (message.includes('-') || /^[0-9a-f]+$/i.test(message))) {
+        console.warn('Warning: Message content appears to be an ID. Check parameter order!', {
+          messageContent: message,
+          senderId,
+          receiverId
+        });
+      }
+      
       // First try through SignalR if connected
       if (this.connection && this.connection.state === signalR.HubConnectionState.Connected) {
         try {
-          // Convert IDs to MongoDB format for SignalR too
-          const mongoSenderId = this.convertToMongoId(String(senderId || '').trim());
-          const mongoReceiverId = this.convertToMongoId(String(receiverId || '').trim());
+          // Simply validate IDs without conversion
+          const validSenderId = this.validateId(senderId, 'SenderId');
+          const validReceiverId = this.validateId(receiverId, 'ReceiverId');
           
-          // Call the SendMessage method on the hub with MongoDB-compatible IDs
-          const messageId = await this.connection.invoke('SendMessage', mongoSenderId, mongoReceiverId, message);
+          console.log('Sending message via SignalR:', {
+            senderId: validSenderId,
+            receiverId: validReceiverId,
+            messagePreview: message?.length > 20 ? message.substring(0, 20) + '...' : message
+          });
+          
+          // Call the SendMessage method on the hub with validated IDs
+          const messageId = await this.connection.invoke('SendMessage', validSenderId, validReceiverId, message);
+          
+          // Invalidate cache for this conversation to ensure fresh data on next fetch
+          this.invalidateConversationCache(validSenderId, validReceiverId);
+          
           return messageId;
         } catch (signalRError) {
           console.warn('SignalR message send failed, falling back to REST API:', signalRError);
@@ -268,27 +309,15 @@ class SignalRChatService {
       try {
         console.log('Sending message with corrected format');
         
-        // Convert IDs to MongoDB-compatible format using our utility methods
-        const senderIdStr = this.convertToMongoId(String(senderId || '').trim());
-        const receiverIdStr = this.convertToMongoId(String(receiverId || '').trim());
+        // Validate IDs without conversion
+        const senderIdStr = this.validateId(senderId, 'SenderId');
+        const receiverIdStr = this.validateId(receiverId, 'ReceiverId');
         
-        // Additional validation before sending to backend
-        if (!senderIdStr) {
-          throw new Error('SenderId cannot be empty');
-        }
-        
-        if (!receiverIdStr) {
-          throw new Error('ReceiverId cannot be empty');
-        }
-        
-        // Log ID conversion results for debugging
-        console.log('ID conversion results:', {
-          originalSenderId: senderId,
-          originalReceiverId: receiverId,
-          convertedSenderId: senderIdStr,
-          convertedReceiverId: receiverIdStr,
-          senderIdValid: this.isValidMongoId(senderIdStr),
-          receiverIdValid: this.isValidMongoId(receiverIdStr)
+        // Log details for debugging
+        console.log('Sending message with validated IDs:', {
+          senderId: senderIdStr,
+          receiverId: receiverIdStr,
+          messagePreview: message?.length > 20 ? message.substring(0, 20) + '...' : message
         });
         
         // Log the full payload for debugging
@@ -319,6 +348,9 @@ class SignalRChatService {
           }
         });
         
+        // Invalidate cache for this conversation to ensure fresh data on next fetch
+        this.invalidateConversationCache(senderIdStr, receiverIdStr);
+        
         return response.data.messageId || response.data.id || `fallback-${Date.now()}`;
       } catch (error) {
         // If that fails, let's try one more time with query parameters instead
@@ -330,26 +362,26 @@ class SignalRChatService {
             throw new Error('SenderId and ReceiverId must be provided - cannot send message with missing IDs');
           }
           
-          // Convert IDs to MongoDB format for the fallback attempt too
-          const mongoSenderId = this.convertToMongoId(String(senderId || '').trim());
-          const mongoReceiverId = this.convertToMongoId(String(receiverId || '').trim());
+          // Validate IDs without conversion for the fallback attempt
+          const validSenderId = this.validateId(senderId, 'SenderId');
+          const validReceiverId = this.validateId(receiverId, 'ReceiverId');
           
           // Include both camelCase and PascalCase in one payload
           const messageBody = {
             // Include both casing standards
             Message: message,
             message: message,
-            // Add other required fields in both formats with MongoDB-compatible IDs
-            SenderId: mongoSenderId,
-            senderId: mongoSenderId,
-            ReceiverId: mongoReceiverId,
-            receiverId: mongoReceiverId,
+            // Add other required fields in both formats with validated IDs
+            SenderId: validSenderId,
+            senderId: validSenderId,
+            ReceiverId: validReceiverId,
+            receiverId: validReceiverId,
             Timestamp: timestamp,
             timestamp: timestamp
           };
           
           const response = await axios.post(
-            `${API_BASE_URL}/api/Chat/send?senderId=${encodeURIComponent(mongoSenderId)}&receiverId=${encodeURIComponent(mongoReceiverId)}`,
+            `${API_BASE_URL}/api/Chat/send?senderId=${encodeURIComponent(validSenderId)}&receiverId=${encodeURIComponent(validReceiverId)}`,
             messageBody,
             {
               headers: {
@@ -404,12 +436,21 @@ class SignalRChatService {
    */
   async getMessageHistory(user1Id, user2Id, skip = 0, take = 50) {
     try {
-      // Convert IDs to MongoDB compatible format
-      const mongoUser1Id = this.convertToMongoId(String(user1Id || '').trim());
-      const mongoUser2Id = this.convertToMongoId(String(user2Id || '').trim());
+      // Validate inputs
+      if (!user1Id || !user2Id) {
+        console.warn('Missing user IDs for message history:', { user1Id, user2Id });
+        return [];
+      }
+      
+      // Validate IDs without conversion
+      const validUser1Id = this.validateId(user1Id, 'User1Id');
+      const validUser2Id = this.validateId(user2Id, 'User2Id');
       
       // Generate a cache key for this conversation
-      const cacheKey = this._getCacheKey(mongoUser1Id, mongoUser2Id);
+      const cacheKey = this._getCacheKey(validUser1Id, validUser2Id);
+      
+      // Clean cache occasionally
+      this._cleanupCache();
       
       // Check if we have cached data
       if (this._messageCache.has(cacheKey)) {
@@ -421,38 +462,121 @@ class SignalRChatService {
       }
       
       // First try to get history through SignalR if connected
-      if (this.connection && this.connection.state === signalR.HubConnectionState.Connected) {
+      if (this.isConnectionReady()) {
         try {
-          // Call the GetMessageHistory method on the hub with MongoDB compatible IDs
-          const messages = await this.connection.invoke('GetMessageHistory', mongoUser1Id, mongoUser2Id, skip, take);
+          console.log('Fetching message history via SignalR for:', { user1Id, user2Id });
+          // Call the GetMessageHistory method on the hub with validated IDs
+          const messages = await this.connection.invoke('GetMessageHistory', validUser1Id, validUser2Id, skip, take);
+          
+          // Safety check - ensure messages is an array
+          const messageArray = Array.isArray(messages) ? messages : [];
           
           // Cache the message history
-          this._messageCache.set(cacheKey, { messages, timestamp: Date.now() });
-          console.log('Cached new message history for', cacheKey);
+          this._messageCache.set(cacheKey, { messages: messageArray, timestamp: Date.now() });
+          console.log(`Cached ${messageArray.length} messages for conversation`, cacheKey);
           
-          return messages;
+          return messageArray;
         } catch (signalRError) {
           console.warn('SignalR message history failed, falling back to REST API:', signalRError);
           // Continue to REST API fallback
         }
+      } else {
+        console.log('SignalR not connected, using REST API for message history');
       }
-      
-      // Fallback to REST API with MongoDB compatible IDs
+
+      // Fallback to REST API with validated IDs
       const axios = (await import('axios')).default;
-      const response = await axios.get(`${API_BASE_URL}/api/chat/history?user1Id=${mongoUser1Id}&user2Id=${mongoUser2Id}&skip=${skip}&take=${take}`);
+      console.log('Fetching message history via REST API for:', { user1Id, user2Id });
+      const response = await axios.get(`${API_BASE_URL}/api/chat/history?user1=${validUser1Id}&user2=${validUser2Id}&skip=${skip}&take=${take}`);
+      
+      // Safety check - ensure response.data is an array
+      const messages = Array.isArray(response.data) ? response.data : [];
       
       // Cache the retrieved message history
-      this._messageCache.set(cacheKey, { messages: response.data, timestamp: Date.now() });
-      console.log('Cached message history from REST API for', cacheKey);
+      this._messageCache.set(cacheKey, { messages, timestamp: Date.now() });
+      console.log(`Cached ${messages.length} messages from REST API for conversation`, cacheKey);
       
-      return response.data;
+      return messages;
     } catch (error) {
       console.error('Error fetching message history:', error);
-      this._notifyHandlers('onError', error);
-      throw error;
-    } finally {
-      // Clean up cache regularly
-      this._cleanupCache();
+      
+      // Add detailed logging for better debugging
+      console.error('Message history fetch failed with details:', {
+        user1Id,
+        user2Id,
+        skip,
+        take,
+        connectionState: this.connection ? this.connection.state : 'No connection',
+        errorMessage: error.message,
+        errorStack: error.stack
+      });
+      
+      if (error.response) {
+        console.error('Server response error:', {
+          status: error.response.status,
+          statusText: error.response.statusText,
+          data: error.response.data
+        });
+      }
+      
+      // Return empty array instead of throwing - this prevents UI errors
+      return [];
+    }
+  }
+
+  /**
+   * Invalidate conversation cache between two users to ensure fresh data
+   * @param {string} user1Id - First user ID
+   * @param {string} user2Id - Second user ID
+   */
+  invalidateConversationCache(user1Id, user2Id) {
+    try {
+      // Validate IDs
+      const validUser1Id = this.validateId(user1Id, 'User1Id');
+      const validUser2Id = this.validateId(user2Id, 'User2Id');
+      
+      // Generate cache key for this conversation
+      const cacheKey = this._getCacheKey(validUser1Id, validUser2Id);
+      
+      // Remove from cache if exists
+      if (this._messageCache.has(cacheKey)) {
+        console.log(`Invalidating message cache for conversation: ${cacheKey}`);
+        this._messageCache.delete(cacheKey);
+        return true;
+      }
+      
+      return false;
+    } catch (error) {
+      console.warn('Error invalidating conversation cache:', error);
+      return false;
+    }
+  }
+
+  /**
+   * Clean up message and status caches to prevent memory leaks
+   * @private
+   */
+  _cleanupCache() {
+    // Only perform cleanup occasionally to avoid overhead
+    const now = Date.now();
+    if (now - this._lastCacheCleanup < 60000) { // Run cleanup at most once per minute
+      return;
+    }
+    
+    this._lastCacheCleanup = now;
+    
+    // Clean up message cache
+    for (const [key, entry] of this._messageCache.entries()) {
+      if (now - entry.timestamp > MESSAGE_CACHE_TTL) {
+        this._messageCache.delete(key);
+      }
+    }
+    
+    // Clean up status cache
+    for (const [key, entry] of this._statusCache.entries()) {
+      if (now - entry.timestamp > 60000) { // Status cache TTL: 1 minute
+        this._statusCache.delete(key);
+      }
     }
   }
 
@@ -485,6 +609,7 @@ class SignalRChatService {
         const userId = this._userId;
         if (!userId) throw new Error('User ID is required to mark message as read');
         
+        const axios = (await import('axios')).default;
         const response = await axios.post(`${API_BASE_URL}/api/chat/mark-read/${messageId}?userId=${userId}`);
         return response.data.success;
       } catch (error) {
@@ -513,14 +638,14 @@ class SignalRChatService {
     // If not connected, try to mark as read via REST API
     if (!this.connection || this.connection.state !== signalR.HubConnectionState.Connected) {
       try {
-        // Convert IDs to MongoDB compatible format
-        const mongoSenderId = this.convertToMongoId(String(senderId || '').trim());
-        const mongoReceiverId = this.convertToMongoId(String(receiverId || '').trim());
+        // Validate IDs without conversion
+        const validSenderId = this.validateId(senderId, 'SenderId');
+        const validReceiverId = this.validateId(receiverId, 'ReceiverId');
         
-        // Fall back to REST API with MongoDB compatible IDs
+        // Fall back to REST API with validated IDs
         const response = await axios.post(`${API_BASE_URL}/api/chat/mark-all-read`, {
-          senderId: mongoSenderId,
-          receiverId: mongoReceiverId
+          senderId: validSenderId,
+          receiverId: validReceiverId
         });
         return response.data.success;
       } catch (error) {
@@ -530,12 +655,12 @@ class SignalRChatService {
     }
 
     try {
-      // Convert IDs to MongoDB compatible format
-      const mongoSenderId = this.convertToMongoId(String(senderId || '').trim());
-      const mongoReceiverId = this.convertToMongoId(String(receiverId || '').trim());
+      // Validate IDs without conversion
+      const validSenderId = this.validateId(senderId, 'SenderId');
+      const validReceiverId = this.validateId(receiverId, 'ReceiverId');
       
-      // Use the ChatHub method to mark all as read with MongoDB compatible IDs
-      const success = await this.connection.invoke('MarkAllMessagesAsRead', mongoSenderId, mongoReceiverId);
+      // Use the ChatHub method to mark all as read with validated IDs
+      const success = await this.connection.invoke('MarkAllMessagesAsRead', validSenderId, validReceiverId);
       return success;
     } catch (error) {
       console.error('Error marking all messages as read:', error);
@@ -599,8 +724,8 @@ class SignalRChatService {
    * @returns {Promise<boolean>} - Promise that resolves to boolean indicating online status
    */
   async isUserOnline(userId) {
-    // Convert userId to MongoDB compatible format
-    const mongoUserId = this.convertToMongoId(String(userId || '').trim());
+    // Validate userId without conversion
+    const validUserId = this.validateId(userId, 'UserId');
     
     // If not connected or connecting, return false
     if (!this.connection) {
@@ -619,28 +744,28 @@ class SignalRChatService {
     if (this.connection.state === signalR.HubConnectionState.Connected) {
       try {
         // Check cache first
-        if (this._statusCache.has(mongoUserId)) {
-          const cachedStatus = this._statusCache.get(mongoUserId);
-          console.log('Returning cached status for', mongoUserId);
+        if (this._statusCache.has(validUserId)) {
+          const cachedStatus = this._statusCache.get(validUserId);
+          console.log('Returning cached status for', validUserId);
           return cachedStatus.status;
         }
         
-        // Try first with GetOnlineStatus method with MongoDB compatible ID
-        const isOnline = await this.connection.invoke('GetOnlineStatus', mongoUserId);
+        // Try first with GetOnlineStatus method with validated ID
+        const isOnline = await this.connection.invoke('GetOnlineStatus', validUserId);
         
         // Cache the result
-        this._statusCache.set(mongoUserId, { status: isOnline, timestamp: Date.now() });
-        console.log('Cached online status for', mongoUserId);
+        this._statusCache.set(validUserId, { status: isOnline, timestamp: Date.now() });
+        console.log('Cached online status for', validUserId);
         
         return isOnline;
       } catch (firstError) {
         try {
           // If that fails, try with IsUserOnline (method name difference between backend and frontend)
-          const isOnline = await this.connection.invoke('IsUserOnline', mongoUserId);
+          const isOnline = await this.connection.invoke('IsUserOnline', validUserId);
           
           // Cache the result
-          this._statusCache.set(mongoUserId, { status: isOnline, timestamp: Date.now() });
-          console.log('Cached online status (fallback) for', mongoUserId);
+          this._statusCache.set(validUserId, { status: isOnline, timestamp: Date.now() });
+          console.log('Cached online status (fallback) for', validUserId);
           
           return isOnline;
         } catch (secondError) {
@@ -672,14 +797,39 @@ class SignalRChatService {
       };
     }
     
-    // Handle SignalR connection events
-    if (this.connection) {
-      this.connection.on(event, handler);
-      return;
-    } else {
-      console.warn(`Cannot register handler for ${event}: No connection available`);
-      return;
+    // Store pending handlers for SignalR events that will be registered once connection is established
+    // This solves the "Cannot register handler" errors when trying to register before connection is ready
+    if (!this.connection) {
+      // Initialize pending handlers structure if it doesn't exist
+      this._pendingHandlers = this._pendingHandlers || new Map();
+      
+      // Get or create array of handlers for this event
+      if (!this._pendingHandlers.has(event)) {
+        this._pendingHandlers.set(event, []);
+      }
+      
+      // Add this handler to pending list
+      this._pendingHandlers.get(event).push(handler);
+      console.log(`Handler for ${event} queued - will be registered when connection is established`);
+      
+      // Return function to remove from pending handlers
+      return () => {
+        if (this._pendingHandlers && this._pendingHandlers.has(event)) {
+          this._pendingHandlers.set(
+            event,
+            this._pendingHandlers.get(event).filter(h => h !== handler)
+          );
+        }
+      };
     }
+    
+    // If connection exists, register directly
+    this.connection.on(event, handler);
+    return () => {
+      if (this.connection) {
+        this.connection.off(event, handler);
+      }
+    };
   }
   
   /**
@@ -721,6 +871,9 @@ class SignalRChatService {
           });
       }
       
+      // Re-register any pending handlers that were queued during reconnection
+      this._registerPendingHandlers();
+      
       this._notifyHandlers('onReconnected', { connectionId });
     });
 
@@ -731,6 +884,10 @@ class SignalRChatService {
         console.error('Connection closed with error:', error);
         this._notifyHandlers('onError', error);
       }
+      
+      // Reset connection manager state to ensure future connection attempts can proceed
+      connectionManager.endConnectionAttempt(null);
+      
       this._notifyHandlers('onDisconnected', { error });
     });
   }
@@ -744,21 +901,42 @@ class SignalRChatService {
 
     // Handle received messages
     this.connection.on('ReceiveMessage', (senderId, message, messageId, status) => {
+      // Invalidate the cache for this conversation to ensure fresh data on next fetch
+      if (this._userId) {
+        this.invalidateConversationCache(senderId, this._userId);
+      }
+      
+      // Notify message handlers
       this._notifyHandlers('onMessage', { senderId, message, messageId, status });
     });
 
     // Handle message status changes (read/delivered)
-    this.connection.on('MessageRead', (messageId, timestamp) => {
-      this._notifyHandlers('onMessageRead', { messageId, timestamp, status: 'read' });
+    this.connection.on('MessageRead', (messageId, timestamp, userId, recipientId) => {
+      // If user IDs are provided, invalidate the conversation cache
+      if (userId && recipientId) {
+        this.invalidateConversationCache(userId, recipientId);
+      }
+      
+      this._notifyHandlers('onMessageRead', { messageId, timestamp, status: 'read', userId, recipientId });
     });
 
-    this.connection.on('MessageDelivered', (messageId, timestamp) => {
-      this._notifyHandlers('onMessageDelivered', { messageId, timestamp, status: 'delivered' });
+    this.connection.on('MessageDelivered', (messageId, timestamp, userId, recipientId) => {
+      // If user IDs are provided, invalidate the conversation cache
+      if (userId && recipientId) {
+        this.invalidateConversationCache(userId, recipientId);
+      }
+      
+      this._notifyHandlers('onMessageDelivered', { messageId, timestamp, status: 'delivered', userId, recipientId });
     });
 
     // Handle deleted messages
-    this.connection.on('MessageDeleted', (messageId) => {
-      this._notifyHandlers('onMessageDeleted', { messageId });
+    this.connection.on('MessageDeleted', (messageId, userId, recipientId) => {
+      // If user IDs are provided, invalidate the conversation cache
+      if (userId && recipientId) {
+        this.invalidateConversationCache(userId, recipientId);
+      }
+      
+      this._notifyHandlers('onMessageDeleted', { messageId, userId, recipientId });
     });
 
     // Handle user status change notifications
@@ -861,14 +1039,14 @@ class SignalRChatService {
    */
   async deleteMessage(messageId, userId) {
     try {
-      // Convert userId to MongoDB compatible format
-      const mongoUserId = this.convertToMongoId(String(userId || '').trim());
+      // Validate userId without conversion
+      const validUserId = this.validateId(userId, 'UserId');
       
       // First try through SignalR if connected
       if (this.connection && this.connection.state === signalR.HubConnectionState.Connected) {
         try {
-          // Call the DeleteMessage method on the hub with MongoDB compatible ID
-          const success = await this.connection.invoke('DeleteMessage', messageId, mongoUserId);
+          // Call the DeleteMessage method on the hub with validated ID
+          const success = await this.connection.invoke('DeleteMessage', messageId, validUserId);
           return success;
         } catch (signalRError) {
           console.warn('SignalR message deletion failed, falling back to REST API:', signalRError);
@@ -876,9 +1054,9 @@ class SignalRChatService {
         }
       }
       
-      // Fallback to REST API with MongoDB compatible ID
+      // Fallback to REST API with validated ID
       const axios = (await import('axios')).default;
-      const response = await axios.delete(`${API_BASE_URL}/api/chat/delete/${messageId}?userId=${mongoUserId}`);
+      const response = await axios.delete(`${API_BASE_URL}/api/chat/delete/${messageId}?userId=${validUserId}`);
       
       return response.data.success || false;
     } catch (error) {
@@ -899,6 +1077,7 @@ class SignalRChatService {
     if (!this.connection || this.connection.state !== signalR.HubConnectionState.Connected) {
       try {
         // Fall back to REST API if available
+        const axios = (await import('axios')).default;
         const response = await axios.post(`${API_BASE_URL}/api/chat/mark-delivered/${messageId}?userId=${userId}`);
         return response.data.success;
       } catch (error) {
@@ -915,6 +1094,111 @@ class SignalRChatService {
       console.error('Error marking message as delivered:', error);
       return false;
     }
+  }
+
+  /**
+   * Checks if the connection is established and ready to use
+   * @returns {boolean} - Whether the connection is ready
+   */
+  isConnectionReady() {
+    return this.connection && this.connection.state === signalR.HubConnectionState.Connected;
+  }
+
+  /**
+   * Register any pending event handlers that were queued while no connection was available
+   * @private
+   */
+  _registerPendingHandlers() {
+    if (!this._pendingHandlers || !this.connection) {
+      return;
+    }
+    
+    // Only register handlers if connection is in Connected state
+    if (this.connection.state !== signalR.HubConnectionState.Connected) {
+      console.log(`Connection not in Connected state (current: ${this.connection.state}), delaying handler registration`);
+      return;
+    }
+    
+    console.log(`Registering ${this._pendingHandlers.size} pending event handler types`);
+    
+    // Iterate through all pending handlers and register them
+    this._pendingHandlers.forEach((handlers, event) => {
+      handlers.forEach(handler => {
+        if (this.connection) {
+          console.log(`Registering pending handler for ${event}`);
+          this.connection.on(event, handler);
+        }
+      });
+    });
+    
+    // Clear pending handlers now that they're registered
+    this._pendingHandlers.clear();
+  }
+
+  /**
+   * Generate a consistent cache key for conversation between two users regardless of order
+   * @param {string} user1Id - First user ID
+   * @param {string} user2Id - Second user ID
+   * @returns {string} - Cache key for conversation history
+   * @private
+   */
+  _getCacheKey(user1Id, user2Id) {
+    // Sort IDs alphabetically to ensure consistent caching regardless of parameter order
+    const sortedIds = [user1Id, user2Id].sort();
+    return `chat:${sortedIds[0]}:${sortedIds[1]}`;
+  }
+
+  /**
+   * Debug method to help investigate issues with connection and handlers
+   * @returns {Object} Debug information about the service state
+   */
+  getDebugInfo() {
+    const pendingHandlerCounts = {};
+    if (this._pendingHandlers) {
+      this._pendingHandlers.forEach((handlers, event) => {
+        pendingHandlerCounts[event] = handlers.length;
+      });
+    }
+    
+    // Count registered event handlers for each event type
+    const eventHandlerCounts = {};
+    for (const [event, handlers] of Object.entries(this.eventHandlers)) {
+      eventHandlerCounts[event] = handlers.length;
+    }
+    
+    // Count hub event handlers if available
+    const hubHandlers = {};
+    if (this.connection) {
+      // This is tricky since SignalR doesn't expose registered handlers
+      hubHandlers.note = "SignalR doesn't expose registered handlers directly";
+    }
+    
+    // Get cache statistics
+    const cacheStats = {
+      conversationCount: this._messageCache ? this._messageCache.size : 0,
+      statusCount: this._statusCache ? this._statusCache.size : 0,
+      lastCleanup: this._lastCacheCleanup ? new Date(this._lastCacheCleanup).toISOString() : 'never'
+    };
+    
+    return {
+      connection: {
+        exists: !!this.connection,
+        state: this.connection ? this.connection.state : 'None',
+        connectionId: this.connectionId,
+        isConnecting: this._isConnecting,
+      },
+      userId: this._userId,
+      pendingHandlers: pendingHandlerCounts,
+      eventHandlers: eventHandlerCounts,
+      hubHandlers,
+      cache: cacheStats,
+      connectionManager: {
+        connectionAttemptInProgress: connectionManager.connectionAttemptInProgress,
+        hasInitialized: connectionManager.hasInitialized,
+        isDestroyed: connectionManager.isDestroyed,
+        connectionId: connectionManager.connectionId
+      }
+    };
   }
 }
 

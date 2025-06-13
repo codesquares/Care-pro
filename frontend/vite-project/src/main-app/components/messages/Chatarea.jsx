@@ -16,10 +16,10 @@ const ChatArea = ({ messages, recipient, userId, onSendMessage, isOfflineMode = 
   // This prevents the undefined safeRecipient issue in handleSendMessage
   const safeRecipient = recipient ? {
     avatar: recipient.avatar || '/avatar.jpg',
-    name: recipient.name || 'Care Provider',
+    name: recipient.recipientName || 'Care Provider',
     isOnline: recipient.isOnline || false,
     lastActive: recipient.lastActive || new Date().toISOString(),
-    id: recipient.id || null
+    id: recipient.receiverId || null
   } : null;
 
   // Scroll to bottom when messages change
@@ -129,8 +129,26 @@ const ChatArea = ({ messages, recipient, userId, onSendMessage, isOfflineMode = 
         senderId: userId
       });
       
-      // Send message with our best determined ID - ensure both userId and recipientId are passed
-      onSendMessage(userId, effectiveRecipientId, message);
+      // Send message with our best determined ID - ensure both userId and recipientId are passed correctly
+      if (message && typeof message === 'string' && 
+          effectiveRecipientId && typeof effectiveRecipientId === 'string') {
+        console.log("Sending message from ChatArea:", { 
+          userId, 
+          recipientId: effectiveRecipientId, 
+          messagePreview: message.length > 20 ? message.substring(0, 20) + '...' : message 
+        });
+        
+        // Based on the error stack trace, onSendMessage should receive recipientId and message
+        // onSendMessage is a prop passed from parent that should handle the userId internally
+        onSendMessage(effectiveRecipientId, message);
+      } else {
+        console.error("Invalid parameters for sending message:", { 
+          userId, 
+          recipientId: effectiveRecipientId, 
+          messageType: typeof message,
+          message: message ? (message.length > 20 ? message.substring(0, 20) + '...' : message) : null
+        });
+      }
       setMessage('');
     }
   };
