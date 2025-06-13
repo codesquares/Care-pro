@@ -132,7 +132,7 @@ namespace Infrastructure.Content.Services
                     StartTimestamp = DateTime.UtcNow,
                     EndTimestamp = DateTime.UtcNow,
                     Status = assessmentRequest.Status,
-                    CreatedAt = DateTime.UtcNow,
+                    AssessedDate = DateTime.UtcNow,
                     UpdatedAt = DateTime.UtcNow,
                     Questions = new List<AssessmentQuestion>()
                 };
@@ -266,9 +266,9 @@ namespace Infrastructure.Content.Services
                 Score = assessment.Score,
                 Passed = assessment.Passed,
                 Status = assessment.Status,
-                CreatedAt = assessment.CreatedAt,
+                AssessedDate = assessment.AssessedDate,
                 UpdatedAt = assessment.UpdatedAt,
-                Questions = assessment.Questions?.Select(q => new AssessmentQuestionDTO
+                Questions = assessment.Questions?.Select(q => new AssessmentQuestion
                 {
                     QuestionId = q.QuestionId,
                     Question = q.Question,
@@ -276,7 +276,7 @@ namespace Infrastructure.Content.Services
                     CorrectAnswer = q.CorrectAnswer,
                     UserAnswer = q.UserAnswer,
                     IsCorrect = q.IsCorrect
-                }).ToList() ?? new List<AssessmentQuestionDTO>()
+                }).ToList() ?? new List<AssessmentQuestion>()
             };
         }
     }

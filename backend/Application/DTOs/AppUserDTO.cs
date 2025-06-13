@@ -64,7 +64,7 @@ namespace Application.DTOs
 
         //public bool IsDeleted { get; set; }
 
-        //public DateTime CreatedAt { get; set; }
+        //public DateTime AssessedDate { get; set; }
 
         //public string HomeAddress { get; set; }
     }

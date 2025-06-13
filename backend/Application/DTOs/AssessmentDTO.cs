@@ -1,4 +1,5 @@
-﻿using MongoDB.Bson;
+﻿using Domain.Entities;
+using MongoDB.Bson;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -17,9 +18,9 @@ namespace Application.DTOs
         public DateTime EndTimestamp { get; set; }
         public int Score { get; set; }
         public bool Passed { get; set; }
-        public List<AssessmentQuestionDTO> Questions { get; set; }
+        public List<AssessmentQuestion> Questions { get; set; }
         public string Status { get; set; }
-        public DateTime CreatedAt { get; set; }
+        public DateTime AssessedDate { get; set; }
         public DateTime UpdatedAt { get; set; }
     }
 
@@ -38,12 +39,14 @@ namespace Application.DTOs
         public string UserId { get; set; }
         public string CaregiverId { get; set; }
         public string UserType { get; set; } // "Cleaner" or "Caregiver"
-        public List<AssessmentQuestionSubmitDTO> Questions { get; set; }
+        public List<AssessmentQuestion> Questions { get; set; }
         public string Status { get; set; }
+        public int Score { get; set; }
     }
 
     public class AssessmentQuestionSubmitDTO
     {
+
         public string QuestionId { get; set; }
         public string UserAnswer { get; set; }
     }

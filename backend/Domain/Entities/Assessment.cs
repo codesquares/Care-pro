@@ -19,9 +19,10 @@ namespace Domain.Entities
         public bool Passed { get; set; } // Based on 70% threshold
         public List<AssessmentQuestion> Questions { get; set; }
         public string Status { get; set; }
-        public DateTime CreatedAt { get; set; }
+        public DateTime AssessedDate { get; set; }
         public DateTime UpdatedAt { get; set; }
     }
+
 
     public class AssessmentQuestion
     {

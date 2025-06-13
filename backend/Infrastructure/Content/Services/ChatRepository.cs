@@ -464,6 +464,11 @@ namespace Infrastructure.Content.Services
                 return new List<ConversationDTO>();
             }
         }
+
+        public Task<List<ChatMessage>> GetChatHistoryAsync(string user1, string user2)
+        {
+            throw new NotImplementedException();
+        }
     }
 
 }
