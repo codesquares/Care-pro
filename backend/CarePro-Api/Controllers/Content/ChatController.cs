@@ -201,6 +201,29 @@ namespace CarePro_Api.Controllers.Content
             }
         }
 
+        [HttpGet("conversations/{userId}")]
+        public async Task<IActionResult> GetUserConversations(string userId)
+        {
+            try
+            {
+                // Validate request
+                if (string.IsNullOrEmpty(userId))
+                {
+                    return BadRequest(new { error = "UserId is required" });
+                }
+
+                // Get all conversations for this user
+                var conversations = await _chatRepository.GetAllUserConversationsAsync(userId);
+
+                // Return conversations sorted by most recent message
+                return Ok(conversations);
+            }
+            catch (Exception ex)
+            {
+                return StatusCode(500, new { error = "Failed to get user conversations", message = ex.Message });
+            }
+        }
+
         [HttpPost("mark-delivered/{messageId}")]
         public async Task<IActionResult> MarkMessageAsDelivered(string messageId, [FromQuery] string userId)
         {

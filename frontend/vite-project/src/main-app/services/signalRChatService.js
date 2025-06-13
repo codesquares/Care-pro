@@ -167,7 +167,9 @@ class SignalRChatService {
       
       // Register any pending handlers now that connection is established
       console.log('Connection established, registering pending handlers');
+      console.log('Pending handlers before registration:', this._pendingHandlers ? [...this._pendingHandlers.keys()] : 'none');
       this._registerPendingHandlers();
+      console.log('Pending handlers after registration:', this._pendingHandlers ? [...this._pendingHandlers.keys()] : 'none');
       
       // Notify connection handlers
       this._notifyHandlers('onConnected', { connectionId: this.connectionId });
@@ -461,7 +463,30 @@ class SignalRChatService {
         return cachedEntry.messages.slice(skip, skip + take);
       }
       
-      // First try to get history through SignalR if connected
+      // Always try to get history through REST API first, regardless of connection state
+      // This ensures we can get message history even if SignalR connection isn't established
+      try {
+        const axios = (await import('axios')).default;
+        console.log('Fetching message history via REST API for:', { user1Id, user2Id });
+        const response = await axios.get(`${API_BASE_URL}/api/Chat/history?user1=${validUser1Id}&user2=${validUser2Id}&skip=${skip}&take=${take}`);
+        
+        // Safety check - ensure response.data is an array
+        const messages = Array.isArray(response.data) ? response.data : [];
+        
+        // Cache the retrieved message history if we got any messages
+        if (messages.length > 0) {
+          console.log(`Caching ${messages.length} messages from REST API for conversation`, cacheKey);
+          this._messageCache.set(cacheKey, { messages, timestamp: Date.now() });
+          return messages;
+        } else {
+          console.log('No messages returned from REST API');
+        }
+      } catch (restError) {
+        console.warn('REST API message history failed:', restError);
+        // Continue to SignalR fallback if available
+      }
+      
+      // Then try to get history through SignalR if connected
       if (this.isConnectionReady()) {
         try {
           console.log('Fetching message history via SignalR for:', { user1Id, user2Id });
@@ -477,26 +502,28 @@ class SignalRChatService {
           
           return messageArray;
         } catch (signalRError) {
-          console.warn('SignalR message history failed, falling back to REST API:', signalRError);
-          // Continue to REST API fallback
+          console.warn('SignalR message history failed:', signalRError);
+          // Continue to return empty array
         }
       } else {
-        console.log('SignalR not connected, using REST API for message history');
+        console.log('SignalR not connected, can\'t fetch message history via SignalR');
       }
 
-      // Fallback to REST API with validated IDs
-      const axios = (await import('axios')).default;
-      console.log('Fetching message history via REST API for:', { user1Id, user2Id });
-      const response = await axios.get(`${API_BASE_URL}/api/chat/history?user1=${validUser1Id}&user2=${validUser2Id}&skip=${skip}&take=${take}`);
+      // If we have pending handlers, try to force register them
+      // This could help with future SignalR calls
+      if (this._pendingHandlers && this._pendingHandlers.size > 0) {
+        console.log('Attempting to force-register pending handlers before giving up');
+        try {
+          await this.forceRegisterPendingHandlers();
+        } catch (err) {
+          console.warn('Could not register pending handlers:', err);
+        }
+      }
       
-      // Safety check - ensure response.data is an array
-      const messages = Array.isArray(response.data) ? response.data : [];
-      
-      // Cache the retrieved message history
-      this._messageCache.set(cacheKey, { messages, timestamp: Date.now() });
-      console.log(`Cached ${messages.length} messages from REST API for conversation`, cacheKey);
-      
-      return messages;
+      // We've already tried both methods above and neither worked
+      // Return empty array to avoid UI errors
+      console.log('All message history fetch methods failed');
+      return [];
     } catch (error) {
       console.error('Error fetching message history:', error);
       
@@ -799,7 +826,7 @@ class SignalRChatService {
     
     // Store pending handlers for SignalR events that will be registered once connection is established
     // This solves the "Cannot register handler" errors when trying to register before connection is ready
-    if (!this.connection) {
+    if (!this.connection || this.connection.state !== signalR.HubConnectionState.Connected) {
       // Initialize pending handlers structure if it doesn't exist
       this._pendingHandlers = this._pendingHandlers || new Map();
       
@@ -823,7 +850,8 @@ class SignalRChatService {
       };
     }
     
-    // If connection exists, register directly
+    // If connection exists and is in Connected state, register directly
+    console.log(`Registering handler for ${event} directly as connection is established`);
     this.connection.on(event, handler);
     return () => {
       if (this.connection) {
@@ -1032,173 +1060,50 @@ class SignalRChatService {
   }
 
   /**
-   * Delete a message
-   * @param {string} messageId - ID of the message to delete
-   * @param {string} userId - ID of the user requesting deletion (must be sender)
-   * @returns {Promise<boolean>} - Promise that resolves to success status
+   * Get all conversations for the current user
+   * @returns {Promise<Array>} - Promise that resolves to an array of conversation objects
    */
-  async deleteMessage(messageId, userId) {
+  async getAllConversations() {
+    const userId = this._userId;
+    if (!userId) {
+      console.warn('Cannot get conversations: No user ID available');
+      return [];
+    }
+
     try {
-      // Validate userId without conversion
-      const validUserId = this.validateId(userId, 'UserId');
-      
-      // First try through SignalR if connected
-      if (this.connection && this.connection.state === signalR.HubConnectionState.Connected) {
+      // First try to get conversations through SignalR if connected
+      if (this.isConnectionReady()) {
         try {
-          // Call the DeleteMessage method on the hub with validated ID
-          const success = await this.connection.invoke('DeleteMessage', messageId, validUserId);
-          return success;
+          console.log('Fetching all conversations via SignalR');
+          const conversations = await this.connection.invoke('GetUserConversations', userId);
+          return Array.isArray(conversations) ? conversations : [];
         } catch (signalRError) {
-          console.warn('SignalR message deletion failed, falling back to REST API:', signalRError);
-          // Continue to REST API fallback
+          console.warn('SignalR conversations fetch failed, falling back to REST API:', signalRError);
         }
       }
       
-      // Fallback to REST API with validated ID
+      // Fallback to REST API
       const axios = (await import('axios')).default;
-      const response = await axios.delete(`${API_BASE_URL}/api/chat/delete/${messageId}?userId=${validUserId}`);
+      console.log('Fetching all conversations via REST API');
+      const response = await axios.get(`${API_BASE_URL}/api/Chat/conversations/${userId}`);
       
-      return response.data.success || false;
+      // Return conversations (ensure we always return an array)
+      return Array.isArray(response.data) ? response.data : [];
     } catch (error) {
-      console.error('Error deleting message:', error);
-      this._notifyHandlers('onError', error);
-      throw error;
-    }
-  }
-
-  /**
-   * Mark a message as delivered (but not read)
-   * @param {string} messageId - ID of the message to mark
-   * @param {string} userId - ID of the current user (receiver)
-   * @returns {Promise<boolean>} - Promise that resolves to success status
-   */
-  async markMessageAsDelivered(messageId, userId) {
-    // If not connected, try to mark as delivered via REST API
-    if (!this.connection || this.connection.state !== signalR.HubConnectionState.Connected) {
-      try {
-        // Fall back to REST API if available
-        const axios = (await import('axios')).default;
-        const response = await axios.post(`${API_BASE_URL}/api/chat/mark-delivered/${messageId}?userId=${userId}`);
-        return response.data.success;
-      } catch (error) {
-        console.error('Error marking message as delivered via API:', error);
-        return false;
+      console.error('Error fetching conversations:', error);
+      
+      // Add detailed logging for better debugging
+      if (error.response) {
+        console.error('Server response error:', {
+          status: error.response.status,
+          statusText: error.response.statusText,
+          data: error.response.data
+        });
       }
+      
+      // Return empty array instead of throwing - this prevents UI errors
+      return [];
     }
-
-    try {
-      // Use the ChatHub method to mark as delivered
-      const success = await this.connection.invoke('MarkMessageAsDelivered', messageId, userId);
-      return success;
-    } catch (error) {
-      console.error('Error marking message as delivered:', error);
-      return false;
-    }
-  }
-
-  /**
-   * Checks if the connection is established and ready to use
-   * @returns {boolean} - Whether the connection is ready
-   */
-  isConnectionReady() {
-    return this.connection && this.connection.state === signalR.HubConnectionState.Connected;
-  }
-
-  /**
-   * Register any pending event handlers that were queued while no connection was available
-   * @private
-   */
-  _registerPendingHandlers() {
-    if (!this._pendingHandlers || !this.connection) {
-      return;
-    }
-    
-    // Only register handlers if connection is in Connected state
-    if (this.connection.state !== signalR.HubConnectionState.Connected) {
-      console.log(`Connection not in Connected state (current: ${this.connection.state}), delaying handler registration`);
-      return;
-    }
-    
-    console.log(`Registering ${this._pendingHandlers.size} pending event handler types`);
-    
-    // Iterate through all pending handlers and register them
-    this._pendingHandlers.forEach((handlers, event) => {
-      handlers.forEach(handler => {
-        if (this.connection) {
-          console.log(`Registering pending handler for ${event}`);
-          this.connection.on(event, handler);
-        }
-      });
-    });
-    
-    // Clear pending handlers now that they're registered
-    this._pendingHandlers.clear();
-  }
-
-  /**
-   * Generate a consistent cache key for conversation between two users regardless of order
-   * @param {string} user1Id - First user ID
-   * @param {string} user2Id - Second user ID
-   * @returns {string} - Cache key for conversation history
-   * @private
-   */
-  _getCacheKey(user1Id, user2Id) {
-    // Sort IDs alphabetically to ensure consistent caching regardless of parameter order
-    const sortedIds = [user1Id, user2Id].sort();
-    return `chat:${sortedIds[0]}:${sortedIds[1]}`;
-  }
-
-  /**
-   * Debug method to help investigate issues with connection and handlers
-   * @returns {Object} Debug information about the service state
-   */
-  getDebugInfo() {
-    const pendingHandlerCounts = {};
-    if (this._pendingHandlers) {
-      this._pendingHandlers.forEach((handlers, event) => {
-        pendingHandlerCounts[event] = handlers.length;
-      });
-    }
-    
-    // Count registered event handlers for each event type
-    const eventHandlerCounts = {};
-    for (const [event, handlers] of Object.entries(this.eventHandlers)) {
-      eventHandlerCounts[event] = handlers.length;
-    }
-    
-    // Count hub event handlers if available
-    const hubHandlers = {};
-    if (this.connection) {
-      // This is tricky since SignalR doesn't expose registered handlers
-      hubHandlers.note = "SignalR doesn't expose registered handlers directly";
-    }
-    
-    // Get cache statistics
-    const cacheStats = {
-      conversationCount: this._messageCache ? this._messageCache.size : 0,
-      statusCount: this._statusCache ? this._statusCache.size : 0,
-      lastCleanup: this._lastCacheCleanup ? new Date(this._lastCacheCleanup).toISOString() : 'never'
-    };
-    
-    return {
-      connection: {
-        exists: !!this.connection,
-        state: this.connection ? this.connection.state : 'None',
-        connectionId: this.connectionId,
-        isConnecting: this._isConnecting,
-      },
-      userId: this._userId,
-      pendingHandlers: pendingHandlerCounts,
-      eventHandlers: eventHandlerCounts,
-      hubHandlers,
-      cache: cacheStats,
-      connectionManager: {
-        connectionAttemptInProgress: connectionManager.connectionAttemptInProgress,
-        hasInitialized: connectionManager.hasInitialized,
-        isDestroyed: connectionManager.isDestroyed,
-        connectionId: connectionManager.connectionId
-      }
-    };
   }
 }
 

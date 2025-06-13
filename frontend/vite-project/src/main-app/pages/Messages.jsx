@@ -364,6 +364,29 @@ const Messages = ({ userId: propsUserId, token: propsToken }) => {
     });
   };
   
+  // Message history debug helper
+  const logMessageHistory = async () => {
+    try {
+      const { fetchAndLogConversationHistory } = await import('../services/messageDebugger');
+      // Use the actual user ID loaded from localStorage
+      const userDetails = localStorage.getItem("userDetails");
+      if (userDetails) {
+        const user = JSON.parse(userDetails);
+        if (user?.id) {
+          // First log all conversations for this user
+          await fetchAndLogConversationHistory(user.id);
+          
+          // Then if there's a selected chat, log that specific conversation
+          if (selectedChatId) {
+            await fetchAndLogConversationHistory(user.id, selectedChatId);
+          }
+        }
+      }
+    } catch (err) {
+      console.error('Error using message debugger:', err);
+    }
+  };
+  
   // Add debug logging
   useEffect(() => {
     if (isLoading) return;

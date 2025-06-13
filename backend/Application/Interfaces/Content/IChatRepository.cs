@@ -35,6 +35,9 @@ namespace Application.Interfaces.Content
         Task<bool> MarkAllMessagesAsReadAsync(string receiverId, string senderId);
         Task<int> GetUnreadMessageCountAsync(string userId);
         Task<bool> MarkMessageAsDeliveredAsync(string messageId, string receiverId);
+        
+        // Get all conversations for a user
+        Task<List<ConversationDTO>> GetAllUserConversationsAsync(string userId);
     }
 }
 

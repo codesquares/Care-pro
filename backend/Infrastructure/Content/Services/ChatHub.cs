@@ -323,5 +323,27 @@ namespace Infrastructure.Content.Services
                 throw new HubException($"Failed to mark message as delivered: {ex.Message}");
             }
         }
+        
+        /// <summary>
+        /// Get all conversations for a user
+        /// </summary>
+        public async Task<List<ConversationDTO>> GetUserConversations(string userId)
+        {
+            try
+            {
+                if (string.IsNullOrEmpty(userId))
+                {
+                    throw new HubException("UserId is required");
+                }
+                
+                var conversations = await _chatRepository.GetAllUserConversationsAsync(userId);
+                return conversations;
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine($"Error getting user conversations: {ex.Message}");
+                throw new HubException($"Failed to get user conversations: {ex.Message}");
+            }
+        }
     }
 }
