@@ -239,6 +239,9 @@ const Messages = ({ userId: propsUserId, token: propsToken }) => {
   }, [searchParams, selectedChatId, selectChat]);
   
   const handleSelectChat = (chatId) => {
+    console.log("Messages.jsx: handleSelectChat called with chatId:", chatId);
+    console.log("Before selectChat - Current selectedChatId:", selectedChatId);
+    console.log("Current recipient:", recipient);
     selectChat(chatId);
   };
   
@@ -482,8 +485,8 @@ const Messages = ({ userId: propsUserId, token: propsToken }) => {
           <EmptyMessageState isConnecting={isLoading} />
         ) : selectedChatId ? (
           <ChatArea 
-            messages={messages}
-            recipient={recipient}
+            messages={messages || []}
+            recipient={recipient || conversations.find(c => c.id === selectedChatId)}
             userId={userId}
             onSendMessage={handleSendNewMessage}
           />

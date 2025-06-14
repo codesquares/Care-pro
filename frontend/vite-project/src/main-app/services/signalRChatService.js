@@ -580,7 +580,20 @@ class SignalRChatService {
   }
 
   /**
-   * Clean up message and status caches to prevent memory leaks
+   * Generates a consistent cache key for a conversation between two users
+   * Ensures that the key is the same regardless of the order of the user IDs
+   * @param {string} user1Id - The first user ID
+   * @param {string} user2Id - The second user ID
+   * @returns {string} - A consistent cache key
+   */
+  _getCacheKey(user1Id, user2Id) {
+    // Sort to ensure that user1_user2 and user2_user1 yield the same key
+    const orderedIds = [user1Id, user2Id].sort();
+    return orderedIds.join('_');
+  }
+
+  /**
+   * Cleans up expired entries from the message cache
    * @private
    */
   _cleanupCache() {
@@ -665,6 +678,9 @@ class SignalRChatService {
     // If not connected, try to mark as read via REST API
     if (!this.connection || this.connection.state !== signalR.HubConnectionState.Connected) {
       try {
+        // Dynamically import axios
+        const axios = (await import('axios')).default;
+        
         // Use IDs directly without validation
         const validSenderId = senderId ? String(senderId).trim() : senderId;
         const validReceiverId = receiverId ? String(receiverId).trim() : receiverId;

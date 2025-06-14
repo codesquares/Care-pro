@@ -63,13 +63,19 @@ const Sidebar = ({ conversations, selectedChatId, onSelectChat, unreadMessages }
         ) : (
           <ul className="chat-list">
             {filteredConversations.map((chat) => {
-              const unreadCount = unreadMessages?.[chat.id] || 0;
+              // Use chat.id if available, otherwise fall back to chat.userId
+              const chatId = chat.id || chat.userId;
+              const unreadCount = unreadMessages?.[chatId] || 0;
+              
+              if (!chatId) {
+                console.error("Chat without ID:", chat);
+              }
               
               return (
                 <li 
-                  key={chat.id} 
-                  className={`chat-item ${selectedChatId === chat.id ? 'active' : ''} ${unreadCount > 0 ? 'unread' : ''}`}
-                  onClick={() => onSelectChat(chat.id)}
+                  key={chatId || `chat-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`}
+                  className={`chat-item ${selectedChatId === chatId ? 'active' : ''} ${unreadCount > 0 ? 'unread' : ''}`}
+                  onClick={() => chatId && onSelectChat(chatId)}
                 >
                   <div className="avatar-container">
                     <img 

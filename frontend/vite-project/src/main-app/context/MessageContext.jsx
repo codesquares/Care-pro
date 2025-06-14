@@ -186,13 +186,21 @@ export const MessageProvider = ({ children }) => {
       // Process conversations and add online status - avoid parallel API calls
       const conversationsWithStatus = [];
       for (const conversation of limitedConversations) {
+        // Normalize ID field - ensure each conversation has an id property
+        const conversationId = conversation.id || conversation.userId;
+        
+        if (!conversationId) {
+          console.error("Received conversation without ID:", conversation);
+          continue; // Skip conversations without any ID
+        }
+        
         // Default to false for online status rather than making API calls
         let isOnline = false;
         
         // Only check online status for selected conversation to reduce API calls
-        if (conversation.id === selectedChatId) {
+        if (conversationId === selectedChatId) {
           try {
-            isOnline = await chatService.isUserOnline(conversation.id);
+            isOnline = await chatService.isUserOnline(conversationId);
           } catch (e) {
             console.warn('Error getting online status, assuming offline:', e);
           }
@@ -200,8 +208,10 @@ export const MessageProvider = ({ children }) => {
         
         conversationsWithStatus.push({
           ...conversation,
+          // Ensure id field exists
+          id: conversationId,
           isOnline,
-          unreadCount: unreadMessages[conversation.id] || 0
+          unreadCount: unreadMessages[conversationId] || 0
         });
       }
       
@@ -689,14 +699,28 @@ export const MessageProvider = ({ children }) => {
   
   // Select chat
   const selectChat = useCallback(async (chatId) => {
+    console.log("MessageContext: selectChat called with chatId:", chatId);
+    console.log("Current conversations:", conversations);
+    
     setSelectedChatId(chatId);
     setIsLoading(true);
     
     try {
-      // Find recipient in conversations
-      const selectedRecipient = conversations.find(c => c.id === chatId);
+      // Find recipient in conversations using either id or userId
+      const selectedRecipient = conversations.find(c => 
+        c.id === chatId || c.userId === chatId
+      );
+      console.log("Found selectedRecipient:", selectedRecipient);
+      
       if (selectedRecipient) {
-        setRecipient(selectedRecipient);
+        // Ensure the recipient object has an id field
+        const recipientWithId = {
+          ...selectedRecipient,
+          id: selectedRecipient.id || selectedRecipient.userId
+        };
+        setRecipient(recipientWithId);
+      } else {
+        console.error("Recipient not found in conversations for chatId:", chatId);
       }
       
       // Reset unread count for this chat
@@ -707,22 +731,37 @@ export const MessageProvider = ({ children }) => {
       
       // Fetch message history if we have both users
       if (chatId && currentUserId) {
+        console.log("Fetching message history for currentUserId:", currentUserId, "and chatId:", chatId);
         try {
           const messageHistory = await chatService.getMessageHistory(currentUserId, chatId);
+          console.log("Got message history:", messageHistory);
           
           // Process and sort messages - ensure messageHistory is an array
           const processedMessages = Array.isArray(messageHistory) ? messageHistory
-            .map(message => ({
-              id: message.id || message.messageId,
-              senderId: message.senderId,
-              receiverId: message.receiverId,
-              content: message.content || message.message, // Handle different property names
-              timestamp: message.timestamp,
-              status: message.status || 'delivered'
-            }))
+            .map((message, index) => {
+              // For debugging
+              if (!message.id && !message.messageId) {
+                console.log('Message without ID:', message);
+              }
+              
+              // Create a safe message with guaranteed unique ID
+              return {
+                // Ensure every message has a unique ID as a string
+                id: message.id ? String(message.id) : 
+                    message.messageId ? String(message.messageId) : 
+                    `generated-${message.senderId}-${index}-${Date.now()}`,
+                // Ensure all properties are valid
+                senderId: String(message.senderId || ''),
+                receiverId: String(message.receiverId || ''),
+                content: message.content || message.message || '', // Handle different property names
+                timestamp: message.timestamp || new Date().toISOString(),
+                status: message.status || 'delivered'
+              };
+            })
             .sort((a, b) => new Date(a.timestamp) - new Date(b.timestamp))
           : [];
           
+          console.log("Setting messages with processedMessages:", processedMessages);
           setMessages(processedMessages);
           
           // Mark all messages from this sender as read in one batch operation
