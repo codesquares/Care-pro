@@ -65,7 +65,7 @@ namespace Infrastructure.Content.Services
         public async Task<ChatMessage> GetMessageByIdAsync(string messageId)
         {
             return await careProDbContext.ChatMessages
-                .FirstOrDefaultAsync(m => m.Id == messageId);
+                .FirstOrDefaultAsync(m => m.Id.ToString() == messageId);
         }
         
         // Delete a message (soft delete)
@@ -197,18 +197,18 @@ namespace Infrastructure.Content.Services
         }
 
 
-        public async Task UpdateUserConnectionStatus(string userId, bool isOnline, string connectionId)
-        {
-            var user = await careProDbContext.AppUsers
-                .FirstOrDefaultAsync(u => u.Id.ToString() == userId || u.AppUserId.ToString() == userId);
+        //public async Task UpdateUserConnectionStatus(string userId, bool isOnline, string connectionId)
+        //{
+        //    var user = await careProDbContext.AppUsers
+        //        .FirstOrDefaultAsync(u => u.Id.ToString() == userId || u.AppUserId.ToString() == userId);
 
-            if (user != null)
-            {
-                user.IsOnline = isOnline;
-                user.ConnectionId = isOnline ? connectionId : null;
-                await careProDbContext.SaveChangesAsync();
-            }
-        }
+        //    if (user != null)
+        //    {
+        //        user.IsOnline = isOnline;
+        //        user.ConnectionId = isOnline ? connectionId : null;
+        //        await careProDbContext.SaveChangesAsync();
+        //    }
+        //}
 
 
         public async Task<List<MessageDTO>> GetMessageHistory(string user1Id, string user2Id, int skip, int take)
@@ -274,7 +274,7 @@ namespace Infrastructure.Content.Services
                 // In a real implementation, you would typically store this in a separate collection
                 // or a distributed cache like Redis. For simplicity, we'll just return true here.
                 // TODO: Implement proper connection tracking
-                
+
                 return true;
             }
             catch (Exception)
@@ -463,6 +463,11 @@ namespace Infrastructure.Content.Services
                 Console.Error.WriteLine($"Error getting user conversations: {ex.Message}");
                 return new List<ConversationDTO>();
             }
+        }
+
+        public Task<List<ChatMessage>> GetChatHistoryAsync(string user1, string user2)
+        {
+            throw new NotImplementedException();
         }
     }
 

@@ -86,7 +86,7 @@ namespace Infrastructure.Content.Services
             var caregiver = await careGiverService.GetCaregiverUserAsync(clientOrder.CaregiverId);
             if (caregiver != null)
             {
-                string notificationContent = $"New order received for your service: {gig.GigTitle} - Amount: ${clientOrder.Amount}";
+                string notificationContent = $"New order received for your service: {gig.Title} - Amount: ${clientOrder.Amount}";
                 
                 await notificationService.CreateNotificationAsync(
                     clientOrder.CaregiverId,
