@@ -58,22 +58,22 @@ class SignalRChatService {
    * @param {string} paramName - Name of the parameter for error messages
    * @returns {string} - The validated ID
    */
-  validateId(id, paramName = 'ID') {
-    if (!id) {
-      throw new Error(`${paramName} cannot be empty`);
-    }
+  // validateId(id, paramName = 'ID') {
+  //   if (!id) {
+  //     throw new Error(`${paramName} cannot be empty`);
+  //   }
 
-    if (typeof id !== 'string') {
-      id = String(id);
-    }
+  //   if (typeof id !== 'string') {
+  //     id = String(id);
+  //   }
 
-    // Simple check to catch common mistakes where message text is passed as an ID
-    if (id.includes(' ') || id.length > 100) {
-      throw new Error(`${paramName} appears to be message text. Parameter order might be incorrect.`);
-    }
+  //   // Simple check to catch common mistakes where message text is passed as an ID
+  //   if (id.includes(' ') || id.length > 100) {
+  //     throw new Error(`${paramName} appears to be message text. Parameter order might be incorrect.`);
+  //   }
 
-    return id.trim();
-  }
+  //   return id.trim();
+  // }
   
   /**
    * Initializes the connection to the SignalR hub with limits on retries
@@ -263,9 +263,9 @@ class SignalRChatService {
       // First try through SignalR if connected
       if (this.connection && this.connection.state === signalR.HubConnectionState.Connected) {
         try {
-          // Simply validate IDs without conversion
-          const validSenderId = this.validateId(senderId, 'SenderId');
-          const validReceiverId = this.validateId(receiverId, 'ReceiverId');
+          // Use IDs directly without validation
+          const validSenderId = senderId ? String(senderId).trim() : senderId;
+          const validReceiverId = receiverId ? String(receiverId).trim() : receiverId;
           
           console.log('Sending message via SignalR:', {
             senderId: validSenderId,
@@ -311,9 +311,9 @@ class SignalRChatService {
       try {
         console.log('Sending message with corrected format');
         
-        // Validate IDs without conversion
-        const senderIdStr = this.validateId(senderId, 'SenderId');
-        const receiverIdStr = this.validateId(receiverId, 'ReceiverId');
+        // Use IDs directly without validation
+        const senderIdStr = senderId ? String(senderId).trim() : senderId;
+        const receiverIdStr = receiverId ? String(receiverId).trim() : receiverId;
         
         // Log details for debugging
         console.log('Sending message with validated IDs:', {
@@ -364,9 +364,9 @@ class SignalRChatService {
             throw new Error('SenderId and ReceiverId must be provided - cannot send message with missing IDs');
           }
           
-          // Validate IDs without conversion for the fallback attempt
-          const validSenderId = this.validateId(senderId, 'SenderId');
-          const validReceiverId = this.validateId(receiverId, 'ReceiverId');
+          // Use IDs directly without validation
+          const validSenderId = senderId ? String(senderId).trim() : senderId;
+          const validReceiverId = receiverId ? String(receiverId).trim() : receiverId;
           
           // Include both camelCase and PascalCase in one payload
           const messageBody = {
@@ -444,9 +444,9 @@ class SignalRChatService {
         return [];
       }
       
-      // Validate IDs without conversion
-      const validUser1Id = this.validateId(user1Id, 'User1Id');
-      const validUser2Id = this.validateId(user2Id, 'User2Id');
+      // Use IDs directly without validation
+      const validUser1Id = user1Id ? String(user1Id).trim() : user1Id;
+      const validUser2Id = user2Id ? String(user2Id).trim() : user2Id;
       
       // Generate a cache key for this conversation
       const cacheKey = this._getCacheKey(validUser1Id, validUser2Id);
@@ -558,9 +558,9 @@ class SignalRChatService {
    */
   invalidateConversationCache(user1Id, user2Id) {
     try {
-      // Validate IDs
-      const validUser1Id = this.validateId(user1Id, 'User1Id');
-      const validUser2Id = this.validateId(user2Id, 'User2Id');
+      // Use IDs directly without validation
+      const validUser1Id = user1Id ? String(user1Id).trim() : user1Id;
+      const validUser2Id = user2Id ? String(user2Id).trim() : user2Id;
       
       // Generate cache key for this conversation
       const cacheKey = this._getCacheKey(validUser1Id, validUser2Id);
@@ -665,11 +665,11 @@ class SignalRChatService {
     // If not connected, try to mark as read via REST API
     if (!this.connection || this.connection.state !== signalR.HubConnectionState.Connected) {
       try {
-        // Validate IDs without conversion
-        const validSenderId = this.validateId(senderId, 'SenderId');
-        const validReceiverId = this.validateId(receiverId, 'ReceiverId');
+        // Use IDs directly without validation
+        const validSenderId = senderId ? String(senderId).trim() : senderId;
+        const validReceiverId = receiverId ? String(receiverId).trim() : receiverId;
         
-        // Fall back to REST API with validated IDs
+        // Fall back to REST API with direct IDs
         const response = await axios.post(`${API_BASE_URL}/api/chat/mark-all-read`, {
           senderId: validSenderId,
           receiverId: validReceiverId
@@ -682,11 +682,11 @@ class SignalRChatService {
     }
 
     try {
-      // Validate IDs without conversion
-      const validSenderId = this.validateId(senderId, 'SenderId');
-      const validReceiverId = this.validateId(receiverId, 'ReceiverId');
+      // Use IDs directly without validation
+      const validSenderId = senderId ? String(senderId).trim() : senderId;
+      const validReceiverId = receiverId ? String(receiverId).trim() : receiverId;
       
-      // Use the ChatHub method to mark all as read with validated IDs
+      // Use the ChatHub method to mark all as read with direct IDs
       const success = await this.connection.invoke('MarkAllMessagesAsRead', validSenderId, validReceiverId);
       return success;
     } catch (error) {
@@ -751,8 +751,8 @@ class SignalRChatService {
    * @returns {Promise<boolean>} - Promise that resolves to boolean indicating online status
    */
   async isUserOnline(userId) {
-    // Validate userId without conversion
-    const validUserId = this.validateId(userId, 'UserId');
+    // Use ID directly without validation
+    const validUserId = userId ? String(userId).trim() : userId;
     
     // If not connected or connecting, return false
     if (!this.connection) {
