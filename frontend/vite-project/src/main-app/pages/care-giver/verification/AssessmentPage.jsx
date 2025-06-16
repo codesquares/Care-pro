@@ -199,18 +199,23 @@ const AssessmentPage = () => {
     setError("");
     
     try {
-      // Prepare assessment data
+      // Prepare assessment data to exactly match the AddAssessmentRequest model in the backend
       const userType = userDetails.role?.toLowerCase() || 'caregiver';
       
       const assessmentData = {
         userId: userDetails.id,
+        caregiverId: userDetails.id, // Using the same ID for caregiverId field
         userType: userType.charAt(0).toUpperCase() + userType.slice(1), // Capitalize for API
-        timestamp: new Date().toISOString(),
         questions: questions.map(q => ({
-          id: q.id,
-          text: q.text,
-          answer: answers[q.id] || ""
-        }))
+          questionId: q.id,
+          question: q.text,
+          options: q.options || [], // Include options array
+          correctAnswer: "", // Leave empty as we don't know the correct answer
+          userAnswer: answers[q.id] || "",
+          isCorrect: false // Default to false, will be determined by backend
+        })),
+        status: "Completed",
+        score: 0 // Score will be calculated on the backend
       };
       
       // Submit to API
@@ -220,9 +225,11 @@ const AssessmentPage = () => {
         // Store the result for display
         const assessmentResult = {
           timestamp: new Date().toISOString(),
-          score: response.data.score,
-          isPassing: response.data.passed, // Using 70% threshold from backend
-          canRetakeAfter: new Date(Date.now() + (30 * 24 * 60 * 60 * 1000)).toISOString(), // 30 days from now
+          score: response.data.score || 0,
+          isPassing: response.data.passed || false, // Using threshold from backend
+          assessmentId: response.data.id || '',
+          // Check if this is the third failed attempt
+          attemptNumber: response.data.attemptNumber || 1
         };
         
         setAssessmentResult(assessmentResult);
@@ -236,13 +243,35 @@ const AssessmentPage = () => {
         
         setQuestionsWithAnswers(questionsWithAnswersData);
 
+        // Get attempt history
+        const attemptHistory = JSON.parse(localStorage.getItem('assessmentAttempts') || '{"attempts": [], "count": 0}');
+        
+        // Determine if user needs to wait before retaking
+        let canRetakeAfter = null;
+        
+        if (assessmentResult.isPassing) {
+          // If passed, no need to wait
+          canRetakeAfter = null;
+        } else {
+          if (attemptHistory.count >= 3) {
+            // After 3 failed attempts, set 15-day waiting period
+            canRetakeAfter = new Date(Date.now() + (15 * 24 * 60 * 60 * 1000)).toISOString();
+            console.log("User has failed 3 attempts. Must wait 15 days before retrying.");
+          } else {
+            // Can retake immediately if less than 3 attempts
+            canRetakeAfter = null;
+            console.log(`User has failed ${attemptHistory.count} attempt(s). Can retry immediately.`);
+          }
+        }
+        
         // Save qualification status to localStorage
         const qualificationStatus = {
           isQualified: assessmentResult.isPassing,
           assessmentCompleted: true,
           lastAssessmentDate: assessmentResult.timestamp,
           score: assessmentResult.score,
-          canRetakeAfter: assessmentResult.canRetakeAfter
+          attemptCount: attemptHistory.count,
+          canRetakeAfter: canRetakeAfter
         };
         
         localStorage.setItem('qualificationStatus', JSON.stringify(qualificationStatus));
@@ -257,7 +286,9 @@ const AssessmentPage = () => {
         setSuccess(
           assessmentResult.isPassing 
             ? "Congratulations! You've successfully qualified as a caregiver." 
-            : "Assessment completed. You didn't meet the required passing score of 70%. You can retake the assessment after 30 days."
+            : assessmentResult.attemptNumber >= 3 
+            ? "Assessment completed. You didn't meet the required passing score of 70%. You've completed 3 attempts and must wait 15 days before trying again." 
+            : `Assessment completed. You didn't meet the required passing score of 70%. You have ${3 - assessmentResult.attemptNumber} attempt(s) remaining.`
         );
         
         // Store the complete assessment data with results
@@ -408,6 +439,7 @@ const AssessmentPage = () => {
         <div className="question-container">
           <h3 className="question-text">
             {/* Display question text from the correct field - backend uses "Question" not "text" */}
+            <span className="question-number">Question {currentQuestion + 1}:</span>
             {currentQ.question || currentQ.Question || currentQ.text || "Question text not available"}
           </h3>
           
@@ -427,7 +459,7 @@ const AssessmentPage = () => {
                     onChange={() => handleAnswerChange(currentQ.id, optionLetter)}
                   />
                   <label htmlFor={`option-${index}`}>
-                    <span className="option-letter">{optionLetter}.</span> {option}
+                    <span className="option-letter">{optionLetter}</span> {option}
                   </label>
                 </div>
               );
@@ -474,10 +506,52 @@ const AssessmentPage = () => {
               <span className="score-value">{assessmentResult?.score}%</span>
             </div>
             <p className="score-label">Your Score</p>
+            
+            {assessmentResult?.assessmentId && (
+              <button 
+                className="refresh-score-btn" 
+                onClick={async () => {
+                  try {
+                    const scoreResult = await assessmentService.calculateAssessmentScore(assessmentResult.assessmentId);
+                    if (scoreResult.success) {
+                      setAssessmentResult({
+                        ...assessmentResult,
+                        score: scoreResult.data.score,
+                        isPassing: scoreResult.data.passed
+                      });
+                      
+                      // Update localStorage
+                      const qualificationStatus = JSON.parse(localStorage.getItem('qualificationStatus') || '{}');
+                      qualificationStatus.score = scoreResult.data.score;
+                      qualificationStatus.isQualified = scoreResult.data.passed;
+                      localStorage.setItem('qualificationStatus', JSON.stringify(qualificationStatus));
+                      
+                      setSuccess("Score has been refreshed.");
+                    } else {
+                      setError("Failed to refresh score. Please try again.");
+                    }
+                  } catch (err) {
+                    console.error("Error refreshing score:", err);
+                    setError("An error occurred while refreshing the score.");
+                  }
+                }}
+              >
+                Refresh Score
+              </button>
+            )}
           </div>
           
           <div className="pass-threshold">
             <p><strong>Passing threshold:</strong> 70%</p>
+            <p><strong>Attempt:</strong> {assessmentResult?.attemptNumber || 1} of 3 allowed</p>
+            
+            {!assessmentResult?.isPassing && assessmentResult?.attemptNumber < 3 && (
+              <p className="retake-info">You may retake the assessment immediately.</p>
+            )}
+            
+            {!assessmentResult?.isPassing && assessmentResult?.attemptNumber >= 3 && (
+              <p className="waiting-period-info">You must wait 15 days before your next attempt.</p>
+            )}
           </div>
         </div>
         
@@ -494,6 +568,13 @@ const AssessmentPage = () => {
                   <span className="question-number">{index + 1}.</span> {q.text}
                 </div>
                 
+                <div className="result-status">
+                  {q.isCorrect ? 
+                    <div className="correct-badge"><i className="fas fa-check-circle"></i> Correct</div> : 
+                    <div className="incorrect-badge"><i className="fas fa-times-circle"></i> Incorrect</div>
+                  }
+                </div>
+                
                 <div className="result-options">
                   {q.options.map((option, optIndex) => {
                     const optionLetter = String.fromCharCode(65 + optIndex);
@@ -505,17 +586,22 @@ const AssessmentPage = () => {
                         key={optIndex} 
                         className={`result-option ${isUserAnswer ? 'user-answer' : ''} ${isCorrectAnswer ? 'correct-answer' : ''}`}
                       >
-                        <span className="option-letter">{optionLetter}.</span> {option}
-                        {isUserAnswer && <i className="fas fa-user ml-2 user-icon"></i>}
-                        {isCorrectAnswer && <i className="fas fa-check ml-2 correct-icon"></i>}
+                        <div className="option-content">
+                          <span className="option-letter">{optionLetter}</span>
+                          <span className="option-text">{option}</span>
+                        </div>
+                        <div className="option-indicator">
+                          {isUserAnswer && <span className="user-answer-indicator"><i className="fas fa-user"></i> Your answer</span>}
+                          {isCorrectAnswer && <span className="correct-answer-indicator"><i className="fas fa-check"></i> Correct</span>}
+                        </div>
                       </div>
                     );
                   })}
                 </div>
                 
-                {!q.isCorrect && q.explanation && (
+                {q.explanation && (
                   <div className="result-explanation">
-                    <strong>Explanation:</strong> {q.explanation}
+                    {q.explanation}
                   </div>
                 )}
               </div>

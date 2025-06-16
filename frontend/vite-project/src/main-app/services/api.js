@@ -2,11 +2,16 @@ import axios from 'axios';
 import { refreshToken, logout } from './auth';
 
 // Create an Axios instance
+const baseURL = 'https://carepro-api20241118153443.azurewebsites.net/api';
+console.log('API base URL:', baseURL);
+
 const api = axios.create({
-    baseURL: 'https://carepro-api20241118153443.azurewebsites.net/api',
+    baseURL: baseURL,
     headers: {
         'Content-Type': 'application/json',
     },
+    // Add timeout to prevent hanging requests
+    timeout: 10000
 });
 
 // Request Interceptor (Attach Token to Every Request)

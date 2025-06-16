@@ -178,6 +178,7 @@ const assessmentService = {
         data: assessmentData
       });
       
+      console.log('Submitting assessment data:', JSON.stringify(assessmentData, null, 2));
       // Submit to backend API
       const token = localStorage.getItem('authToken');
       if (!token) {
@@ -185,40 +186,181 @@ const assessmentService = {
       }
       
       try {
-        // Submit to the backend API
-        // Remove the leading /api since the baseURL already includes it
+        // Submit to the exact endpoint
+        console.log('Submitting to endpoint: /Assessments');
         const response = await api.post(
-          '/assessment/submit', 
-          assessmentData, // Send the assessment data as-is
+          '/Assessments', 
+          assessmentData, 
           { headers: { Authorization: `Bearer ${token}` } }
         );
         
-        // The API now returns a standardized response format
-        if (response.data && response.data.success && response.data.data) {
-          const result = response.data.data;
+        // Process the API response
+        // The API may return just an ID or the full assessment object
+        let result = {};
+        const assessmentId = typeof response.data === 'string' ? response.data : (response.data.id || '');
+        
+        if (assessmentId) {
+          console.log(`Assessment submitted successfully with ID: ${assessmentId}`);
           
-          // Cache the most recent result
-          localStorage.setItem('lastAssessmentResult', JSON.stringify({
-            timestamp: new Date().toISOString(),
-            score: result.score,
-            passed: result.passed
-          }));
+          try {
+            // Wait for a brief moment to let the backend process the assessment
+            await new Promise(resolve => setTimeout(resolve, 1000));
+            
+            // Use our dedicated method to calculate the score for this assessment
+            console.log(`Calculating score for assessment ID: ${assessmentId}`);
+            const scoreResult = await assessmentService.calculateAssessmentScore(assessmentId);
+            
+            if (scoreResult.success) {
+              result = scoreResult.data;
+              console.log(`Retrieved assessment score: ${result.score}%, Passed: ${result.passed}`);
+            } else {
+              console.warn("Failed to calculate score, using basic information");
+              result = {
+                id: assessmentId,
+                score: 0,
+                passed: false
+              };
+            }
+          } catch (fetchError) {
+            console.warn("Error fetching assessment details:", fetchError);
+            // If fetch fails, use basic info
+            result = {
+              id: assessmentId,
+              score: 0,
+              passed: false
+            };
+          }
+        }
+        // If response contains the full assessment object
+        else if (response.data) {
+          result = {
+            id: response.data.id || '',
+            score: response.data.score || 0,
+            passed: response.data.passed || false
+          };
+        }
+        
+        // Update the assessment attempt count tracking
+        const attemptHistory = JSON.parse(localStorage.getItem('assessmentAttempts') || '{"attempts": [], "count": 0}');
+        attemptHistory.attempts.push({
+          date: new Date().toISOString(),
+          score: result.score,
+          passed: result.passed,
+          assessmentId: result.id
+        });
+        attemptHistory.count = attemptHistory.attempts.length;
+        localStorage.setItem('assessmentAttempts', JSON.stringify(attemptHistory));
+        
+        // Cache the most recent result
+        localStorage.setItem('lastAssessmentResult', JSON.stringify({
+          timestamp: new Date().toISOString(),
+          score: result.score,
+          passed: result.passed,
+          attemptNumber: attemptHistory.count
+        }));
           
           return {
             success: true,
             data: result
           };
-        } else {
+        
+        // If no valid result data
+        if (!response.data) {
           console.warn('Invalid assessment result format:', response.data);
           throw new Error('Invalid assessment result format');
         }
       } catch (err) {
         console.error('Error submitting assessment to API:', err);
+        console.log('Error details:', err.response?.data || 'No response data');
+        console.log('Error status:', err.response?.status || 'No status code');
+        console.log('API URL used:', err.config?.url || 'Unknown URL');
         throw err;
       }
     } catch (err) {
       console.error('Assessment submission error:', err);
+      // Try to get more information about the API request
+      if (err.isAxiosError) {
+        console.log('Full request config:', err.config);
+        console.log('Request data sent:', err.config?.data);
+        console.log('Response received:', err.response?.data);
+      }
       throw err;
+    }
+  },
+
+  /**
+   * Calculate or fetch the score for a specific assessment
+   * @param {string} assessmentId - The ID of the assessment to calculate score for
+   * @returns {Promise<Object>} - The assessment result with score and pass status
+   */
+  calculateAssessmentScore: async (assessmentId) => {
+    try {
+      if (!assessmentId) {
+        throw new Error('Assessment ID is required');
+      }
+      
+      console.log(`Calculating score for assessment ID: ${assessmentId}`);
+      const token = localStorage.getItem('authToken');
+      
+      if (!token) {
+        throw new Error('No authentication token available');
+      }
+
+      // Call the specific calculate-score endpoint
+      const response = await api.post(
+        `/Assessments/calculate-score/${assessmentId}`, 
+        {}, // Empty body for POST request
+        { headers: { Authorization: `Bearer ${token}` } }
+      );
+      
+      console.log('Score calculation response:', response.data);
+      
+      if (response.data) {
+        // Extract score and passing status
+        let score = 0;
+        let passed = false;
+        
+        // Check different possible response structures
+        if (typeof response.data.score === 'number') {
+          score = response.data.score;
+          passed = response.data.passed !== undefined ? response.data.passed : (score >= 70);
+        } 
+        // Check if the response contains the score under data property
+        else if (response.data.data && typeof response.data.data.score === 'number') {
+          score = response.data.data.score;
+          passed = response.data.data.passed !== undefined ? response.data.data.passed : (score >= 70);
+        }
+        
+        // Update the last assessment result in localStorage
+        const lastResult = JSON.parse(localStorage.getItem('lastAssessmentResult') || '{}');
+        if (lastResult && lastResult.timestamp) {
+          lastResult.score = score;
+          lastResult.passed = passed;
+          localStorage.setItem('lastAssessmentResult', JSON.stringify(lastResult));
+        }
+        
+        return {
+          success: true,
+          data: {
+            id: assessmentId,
+            score: score,
+            passed: passed
+          }
+        };
+      } else {
+        throw new Error('Invalid response format from calculate-score endpoint');
+      }
+    } catch (err) {
+      console.error('Error calculating assessment score:', err);
+      return {
+        success: false,
+        error: err.message,
+        data: {
+          id: assessmentId,
+          score: 0,
+          passed: false
+        }
+      };
     }
   },
 
@@ -229,16 +371,36 @@ const assessmentService = {
   getQualificationStatus: () => {
     try {
       const storedStatus = localStorage.getItem('qualificationStatus');
+      const attemptHistory = JSON.parse(localStorage.getItem('assessmentAttempts') || '{"attempts": [], "count": 0}');
+      
       if (storedStatus) {
         const status = JSON.parse(storedStatus);
         
-        // Check if user can retake the assessment
-        if (status.canRetakeAfter) {
+        // Add attempt information
+        status.attemptCount = attemptHistory.count;
+        status.attempts = attemptHistory.attempts;
+        status.remainingAttempts = Math.max(0, 3 - attemptHistory.count);
+        
+        // Check if user is in waiting period after 3 failed attempts
+        if (status.canRetakeAfter && !status.isQualified) {
           const retakeDate = new Date(status.canRetakeAfter);
           const now = new Date();
           status.canRetake = now >= retakeDate;
+          
+          if (!status.canRetake) {
+            // Calculate days remaining in waiting period
+            const daysRemaining = Math.ceil((retakeDate - now) / (1000 * 60 * 60 * 24));
+            status.waitingPeriodDays = daysRemaining;
+            status.retakeDate = retakeDate.toLocaleDateString();
+          }
+        } else if (!status.isQualified) {
+          // Can retake if not qualified and still has attempts remaining or waiting period is over
+          status.canRetake = attemptHistory.count < 3 || !status.canRetakeAfter;
+          status.waitingPeriodDays = 0;
         } else {
-          status.canRetake = !status.isQualified; // Can retake if not qualified
+          // Already qualified
+          status.canRetake = false;
+          status.waitingPeriodDays = 0;
         }
         
         return status;
@@ -248,7 +410,11 @@ const assessmentService = {
       return {
         isQualified: false,
         assessmentCompleted: false,
-        canRetake: true
+        canRetake: true,
+        attemptCount: 0,
+        attempts: [],
+        remainingAttempts: 3,
+        waitingPeriodDays: 0
       };
     } catch (err) {
       console.error('Error getting qualification status:', err);
