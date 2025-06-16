@@ -14,6 +14,7 @@ namespace Domain.Entities
         public string SenderId { get; set; } // User who triggered the notification (optional)
         public NotificationType Type { get; set; } // Message, Payment, etc.
         public string Content { get; set; } // Notification text
+        public string? Title { get; set; } // Notification title
         public DateTime CreatedAt { get; set; } = DateTime.UtcNow;
         public bool IsRead { get; set; } = false;
         public string RelatedEntityId { get; set; } // ID of message/payment/gig
@@ -24,7 +25,11 @@ namespace Domain.Entities
         Message,
         Payment,
         SystemNotice,
-        NewGig
+        NewGig,
+        WithdrawalRequest,
+        WithdrawalVerified,
+        WithdrawalCompleted,
+        WithdrawalRejected
         // Add more types as needed
     }
 }

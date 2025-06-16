@@ -20,6 +20,13 @@ const AdminDashboard = () => {
       total: 0,
       caregiver: 0,
       cleaner: 0
+    },
+    withdrawals: {
+      total: 0,
+      pending: 0,
+      verified: 0,
+      completed: 0,
+      rejected: 0
     }
   });
   
@@ -46,6 +53,13 @@ const AdminDashboard = () => {
           total: 200,
           caregiver: 150,
           cleaner: 50
+        },
+        withdrawals: {
+          total: 43,
+          pending: 12,
+          verified: 8,
+          completed: 20,
+          rejected: 3
         }
       });
       setLoading(false);
@@ -94,6 +108,24 @@ const AdminDashboard = () => {
                   <span>Failed: {stats.assessments.failed}</span>
                   <span>Pending: {stats.assessments.pending}</span>
                 </div>
+              </div>
+            </div>
+            
+            <div className="stat-card">
+              <div className="stat-icon">
+                <i className="fas fa-money-bill-wave"></i>
+              </div>
+              <div className="stat-content">
+                <h3>Withdrawals</h3>
+                <p className="stat-number">{stats.withdrawals.total}</p>
+                <div className="stat-breakdown">
+                  <span>Pending: {stats.withdrawals.pending}</span>
+                  <span>Verified: {stats.withdrawals.verified}</span>
+                  <span>Completed: {stats.withdrawals.completed}</span>
+                </div>
+                <a href="/app/admin/withdrawals" className="view-all-link">
+                  Manage Withdrawals &rarr;
+                </a>
               </div>
             </div>
             

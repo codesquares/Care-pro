@@ -39,6 +39,12 @@ const AdminNavigationBar = () => {
             </Link>
           </li>
           <li>
+            <Link to="/app/admin/withdrawals" className="nav-link">
+              <i className="fas fa-money-bill-wave"></i>
+              <span>Withdrawals</span>
+            </Link>
+          </li>
+          <li>
             <Link to="/app/admin/users" className="nav-link">
               <i className="fas fa-users"></i>
               <span>Users</span>

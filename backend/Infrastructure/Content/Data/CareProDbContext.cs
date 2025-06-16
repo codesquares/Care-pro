@@ -39,6 +39,8 @@ namespace Infrastructure.Content.Data
             modelBuilder.Entity<ClientPreference>().ToCollection("ClientPreferences");
             modelBuilder.Entity<Notification>().ToCollection("Notifications");
             modelBuilder.Entity<QuestionBank>().ToCollection("QuestionBank");
+            modelBuilder.Entity<Earnings>().ToCollection("Earnings");
+            modelBuilder.Entity<WithdrawalRequest>().ToCollection("WithdrawalRequests");
             
         }
 
@@ -55,5 +57,7 @@ namespace Infrastructure.Content.Data
         public DbSet<ClientPreference> ClientPreferences { get; set; }
         public DbSet<Notification> Notifications { get; set; }
         public DbSet<QuestionBank> QuestionBank { get; set; }
+        public DbSet<Earnings> Earnings { get; set; }
+        public DbSet<WithdrawalRequest> WithdrawalRequests { get; set; }
     }
 }
