@@ -85,9 +85,11 @@ const assessmentService = {
               // Normalize user type to match backend expectations (capitalize first letter)
               const normalizedUserType = userType.charAt(0).toUpperCase() + userType.slice(1);
               
-              // Use the new backend endpoint for the question bank
+              // Use the API endpoint for assessment questions
+              // Remove the leading /api since the baseURL already includes it
+              // Using the correct plural endpoint: /Assessments/questions/{userType}
               const response = await api.get(
-                `/api/assessment/questions/${normalizedUserType}`, 
+                `/Assessments/questions/${normalizedUserType}`, 
                 { 
                   headers: { Authorization: `Bearer ${token}` },
                   signal,
@@ -100,21 +102,16 @@ const assessmentService = {
               // Reset the pending request
               pendingQuestionRequest = null;
               
-              if (response.data && Array.isArray(response.data)) {
-                // Format the data to match our frontend structure
-                const formattedQuestions = response.data.map((q, index) => ({
-                  id: q.questionId || q.id,
-                  text: q.question,
-                  type: 'radio', // All questions are now multiple choice
-                  options: q.options || [], // A, B, C, D options
-                  correctAnswer: q.correctAnswer, // The correct answer (A, B, C, D)
-                  category: q.category,
-                  explanation: q.explanation || ''
-                }));
-                
+              // Handle both old and new response formats
+              if (response.data && response.data.success && Array.isArray(response.data.data)) {
+                // The API provides data in the wrapped format (success + data)
+                return response.data;
+              } else if (Array.isArray(response.data)) {
+                // The API returns directly an array of questions
+                console.log('Converting raw question array to expected format');
                 return {
                   success: true,
-                  data: formattedQuestions,
+                  data: response.data,
                   fromAPI: true
                 };
               } else {
@@ -175,18 +172,6 @@ const assessmentService = {
     try {
       logAssessment(assessmentData);
       
-      // Format the submission for the updated backend API
-      const submission = {
-        userId: assessmentData.userId,
-        caregiverId: assessmentData.userId, // Same as userId for now
-        userType: assessmentData.userType,
-        questions: assessmentData.questions.map(q => ({
-          questionId: q.id,
-          userAnswer: q.answer
-        })),
-        status: 'Completed'
-      };
-      
       // Add to in-memory cache (useful for debugging)
       assessmentCache.push({
         timestamp: new Date().toISOString(),
@@ -201,24 +186,27 @@ const assessmentService = {
       
       try {
         // Submit to the backend API
+        // Remove the leading /api since the baseURL already includes it
         const response = await api.post(
-          '/api/assessment/submit', 
-          submission,
+          '/assessment/submit', 
+          assessmentData, // Send the assessment data as-is
           { headers: { Authorization: `Bearer ${token}` } }
         );
         
-        // The API should return a result with a score and passed status
-        if (response.data && typeof response.data.score !== 'undefined') {
+        // The API now returns a standardized response format
+        if (response.data && response.data.success && response.data.data) {
+          const result = response.data.data;
+          
           // Cache the most recent result
           localStorage.setItem('lastAssessmentResult', JSON.stringify({
             timestamp: new Date().toISOString(),
-            score: response.data.score,
-            passed: response.data.passed
+            score: result.score,
+            passed: result.passed
           }));
           
           return {
             success: true,
-            data: response.data
+            data: result
           };
         } else {
           console.warn('Invalid assessment result format:', response.data);
@@ -226,31 +214,7 @@ const assessmentService = {
         }
       } catch (err) {
         console.error('Error submitting assessment to API:', err);
-        
-        // For testing only - simulate a valid response
-        // REMOVE THIS IN PRODUCTION
-        console.warn('Using simulated assessment result for testing');
-        
-        // Calculate a simulated score based on random performance
-        // Will be removed once the API is fully functional
-        const correctCount = assessmentData.questions.length * (Math.random() * 0.5 + 0.5); // 50-100% correct
-        const score = Math.round((correctCount / assessmentData.questions.length) * 100);
-        const passed = score >= 70; // Using new 70% threshold
-        
-        const simulatedResult = {
-          score,
-          passed,
-          timestamp: new Date().toISOString()
-        };
-        
-        // Store simulated result in localStorage
-        localStorage.setItem('lastAssessmentResult', JSON.stringify(simulatedResult));
-        
-        return {
-          success: true,
-          data: simulatedResult,
-          simulated: true // Flag to indicate this is a simulated result
-        };
+        throw err;
       }
     } catch (err) {
       console.error('Assessment submission error:', err);

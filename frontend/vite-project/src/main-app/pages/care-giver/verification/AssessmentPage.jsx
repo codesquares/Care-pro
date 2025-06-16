@@ -62,7 +62,20 @@ const AssessmentPage = () => {
             // The questions are already filtered by the backend for the appropriate user type
             const assessmentQuestions = response.data;
             
-            setQuestions(assessmentQuestions);
+            // Map the backend field names to what the frontend expects
+            const formattedQuestions = assessmentQuestions.map(q => ({
+              id: q.id || q.Id,
+              text: q.question || q.Question, // Using question field from backend
+              options: q.options || q.Options, // Using options field from backend
+              correctAnswer: q.correctAnswer || q.CorrectAnswer,
+              explanation: q.explanation || q.Explanation,
+              category: q.category || q.Category
+            }));
+            
+            console.log('Original question format:', assessmentQuestions[0]);
+            console.log('Formatted question:', formattedQuestions[0]);
+            
+            setQuestions(formattedQuestions);
             setError(""); // Clear any previous errors
             
             // Display data source message (for development purposes)
@@ -375,6 +388,9 @@ const AssessmentPage = () => {
     
     const currentQ = questions[currentQuestion];
     
+    // Debug the question object structure
+    console.log('Current Question Structure:', currentQ);
+    
     return (
       <div className="assessment-questions-screen">
         <div className="assessment-progress">
@@ -391,11 +407,12 @@ const AssessmentPage = () => {
         
         <div className="question-container">
           <h3 className="question-text">
-            {currentQ.text}
+            {/* Display question text from the correct field - backend uses "Question" not "text" */}
+            {currentQ.question || currentQ.Question || currentQ.text || "Question text not available"}
           </h3>
           
           <div className="answer-options">
-            {currentQ.options.map((option, index) => {
+            {(currentQ.options || currentQ.Options || []).map((option, index) => {
               // Determine the option letter (A, B, C, D)
               const optionLetter = String.fromCharCode(65 + index); // 65 is ASCII for 'A'
               

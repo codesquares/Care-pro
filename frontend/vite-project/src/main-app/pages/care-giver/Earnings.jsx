@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { earningsService } from '../../services/withdrawalService';
-import { useAuth } from '../../context/authContext'; // Assuming you have an auth context
+// import { useAuth } from '../../context/authContext'; // Assuming you have an auth context
 import './earnings.css';
 import WithdrawalModal from './components/WithdrawalModal';
 
