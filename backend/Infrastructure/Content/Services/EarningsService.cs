@@ -2,6 +2,7 @@ using Application.DTOs;
 using Application.Interfaces.Content;
 using Domain.Entities;
 using Infrastructure.Content.Data;
+using Microsoft.EntityFrameworkCore;
 using MongoDB.Bson;
 using MongoDB.Driver;
 using System;
@@ -26,11 +27,16 @@ namespace Infrastructure.Content.Services
 
         public async Task<EarningsResponse> GetEarningsByIdAsync(string id)
         {
-            var earnings = await _dbContext.Earnings.Find(e => e.Id == ObjectId.Parse(id)).FirstOrDefaultAsync();
+           // var earnings = await _dbContext.Earnings.Find(e => e.Id == ObjectId.Parse(id)).FirstOrDefaultAsync();
+           // var filter = Builders<Earnings>.Filter.Eq(e => e.Id, ObjectId.Parse(id));
+           // var earnings = await _dbContext.Earnings.Find(filter).FirstOrDefaultAsync();
+            var earnings = await _dbContext.Earnings.FirstOrDefaultAsync(e => e.Id == ObjectId.Parse(id));
+
+
             if (earnings == null)
                 return null;
 
-            var caregiver = await _careGiverService.GetCareGiverByIdAsync(earnings.CaregiverId);
+            var caregiver = await _careGiverService.GetCaregiverUserAsync(earnings.CaregiverId);
             
             return new EarningsResponse
             {
@@ -46,11 +52,12 @@ namespace Infrastructure.Content.Services
 
         public async Task<EarningsResponse> GetEarningsByCaregiverIdAsync(string caregiverId)
         {
-            var earnings = await _dbContext.Earnings.Find(e => e.CaregiverId == caregiverId).FirstOrDefaultAsync();
+            //var earnings = await _dbContext.Earnings.Find(e => e.CaregiverId == caregiverId).FirstOrDefaultAsync();
+            var earnings = await _dbContext.Earnings.FirstOrDefaultAsync (e => e.CaregiverId == caregiverId);
             if (earnings == null)
                 return null;
 
-            var caregiver = await _careGiverService.GetCareGiverByIdAsync(caregiverId);
+            var caregiver = await _careGiverService.GetCaregiverUserAsync(caregiverId);
 
             return new EarningsResponse
             {
@@ -76,7 +83,10 @@ namespace Infrastructure.Content.Services
                 UpdatedAt = DateTime.UtcNow
             };
 
-            await _dbContext.Earnings.InsertOneAsync(earnings);
+            //await _dbContext.Earnings.InsertOneAsync(earnings);
+
+            _dbContext.Earnings.Add(earnings); 
+            await _dbContext.SaveChangesAsync(); 
 
             return new EarningsDTO
             {
@@ -90,33 +100,27 @@ namespace Infrastructure.Content.Services
             };
         }
 
+        
         public async Task<EarningsDTO> UpdateEarningsAsync(string id, UpdateEarningsRequest request)
         {
-            var earnings = await _dbContext.Earnings.Find(e => e.Id == ObjectId.Parse(id)).FirstOrDefaultAsync();
+            var earnings = await _dbContext.Earnings.FirstOrDefaultAsync(e => e.Id == ObjectId.Parse(id));
+
             if (earnings == null)
                 return null;
 
-            var update = Builders<Earnings>.Update;
-            var updates = new List<UpdateDefinition<Earnings>>();
-
             if (request.TotalEarned.HasValue)
-                updates.Add(update.Set(e => e.TotalEarned, request.TotalEarned.Value));
+                earnings.TotalEarned = request.TotalEarned.Value;
 
             if (request.WithdrawableAmount.HasValue)
-                updates.Add(update.Set(e => e.WithdrawableAmount, request.WithdrawableAmount.Value));
+                earnings.WithdrawableAmount = request.WithdrawableAmount.Value;
 
             if (request.WithdrawnAmount.HasValue)
-                updates.Add(update.Set(e => e.WithdrawnAmount, request.WithdrawnAmount.Value));
+                earnings.WithdrawnAmount = request.WithdrawnAmount.Value;
 
-            updates.Add(update.Set(e => e.UpdatedAt, DateTime.UtcNow));
+            earnings.UpdatedAt = DateTime.UtcNow;
 
-            await _dbContext.Earnings.UpdateOneAsync(
-                e => e.Id == ObjectId.Parse(id),
-                update.Combine(updates)
-            );
-
-            // Get updated earnings
-            earnings = await _dbContext.Earnings.Find(e => e.Id == ObjectId.Parse(id)).FirstOrDefaultAsync();
+            _dbContext.Earnings.Update(earnings);
+            await _dbContext.SaveChangesAsync();
 
             return new EarningsDTO
             {
@@ -130,29 +134,58 @@ namespace Infrastructure.Content.Services
             };
         }
 
+
+
+        //public async Task<bool> UpdateWithdrawalAmountsAsync(string caregiverId, decimal withdrawalAmount)
+        //{
+        //  //  var earnings = await _dbContext.Earnings.Find(e => e.CaregiverId == caregiverId).FirstOrDefaultAsync();
+        //    var earnings = await _dbContext.Earnings.FirstOrDefaultAsync(e => e.Id == ObjectId.Parse(caregiverId));
+        //    if (earnings == null || earnings.WithdrawableAmount < withdrawalAmount)
+        //        return false;
+
+        //    var update = Builders<Earnings>.Update
+        //        .Inc(e => e.WithdrawableAmount, -withdrawalAmount)
+        //        .Inc(e => e.WithdrawnAmount, withdrawalAmount)
+        //        .Set(e => e.UpdatedAt, DateTime.UtcNow);
+
+        //    var result = await _dbContext.Earnings.UpdateOneAsync(
+        //        e => e.CaregiverId == caregiverId,
+        //        update
+        //    );
+
+        //    return result.ModifiedCount > 0;
+        //}
+
+
         public async Task<bool> UpdateWithdrawalAmountsAsync(string caregiverId, decimal withdrawalAmount)
         {
-            var earnings = await _dbContext.Earnings.Find(e => e.CaregiverId == caregiverId).FirstOrDefaultAsync();
+            // Find earnings by caregiver ID
+            var earnings = await _dbContext.Earnings
+                .FirstOrDefaultAsync(e => e.CaregiverId == caregiverId);
+
             if (earnings == null || earnings.WithdrawableAmount < withdrawalAmount)
                 return false;
 
-            var update = Builders<Earnings>.Update
-                .Inc(e => e.WithdrawableAmount, -withdrawalAmount)
-                .Inc(e => e.WithdrawnAmount, withdrawalAmount)
-                .Set(e => e.UpdatedAt, DateTime.UtcNow);
+            // Update values
+            earnings.WithdrawableAmount -= withdrawalAmount;
+            earnings.WithdrawnAmount += withdrawalAmount;
+            earnings.UpdatedAt = DateTime.UtcNow;
 
-            var result = await _dbContext.Earnings.UpdateOneAsync(
-                e => e.CaregiverId == caregiverId,
-                update
-            );
+            // Save changes
+            _dbContext.Earnings.Update(earnings);
+            await _dbContext.SaveChangesAsync();
 
-            return result.ModifiedCount > 0;
+            return true;
         }
+
+
 
         public async Task<bool> DoesEarningsExistForCaregiverAsync(string caregiverId)
         {
-            var count = await _dbContext.Earnings.CountDocumentsAsync(e => e.CaregiverId == caregiverId);
-            return count > 0;
+            //var count = await _dbContext.Earnings.CountDocumentsAsync(e => e.CaregiverId == caregiverId);
+            //return count > 0;
+            return await _dbContext.Earnings
+                .AnyAsync(e => e.CaregiverId == caregiverId);
         }
     }
 }

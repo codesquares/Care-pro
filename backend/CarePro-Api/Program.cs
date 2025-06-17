@@ -93,6 +93,7 @@ builder.Services.AddScoped<IClientRecommendationService, ClientRecommendationSer
 builder.Services.AddScoped<INotificationService, NotificationService>();
 builder.Services.AddScoped<IEarningsService, EarningsService>();
 builder.Services.AddScoped<IWithdrawalRequestService, WithdrawalRequestService>();
+builder.Services.AddScoped<IAdminUserService, AdminUserService>();
 
 builder.Services.AddScoped<ITokenHandler, Infrastructure.Content.Services.Authentication.TokenHandler>();
 
