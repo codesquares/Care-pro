@@ -1,6 +1,7 @@
 ﻿using Application.DTOs;
 using Domain.Entities;
 using Microsoft.AspNetCore.SignalR;
+using MongoDB.Bson;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -106,7 +107,7 @@ namespace Infrastructure.Content.Services
                 SenderId = senderId,
                 ReceiverId = receiverId,
                 Message = message,
-                MessageId = Guid.NewGuid().ToString(),
+                MessageId = ObjectId.GenerateNewId(),
                 Timestamp = DateTime.UtcNow
             };
 
@@ -114,10 +115,10 @@ namespace Infrastructure.Content.Services
             await _chatRepository.SaveMessageAsync(chatMessage);
 
             // Send to recipient if online (their connection ID is in their user group)
-            await Clients.Group(receiverId).SendAsync("ReceiveMessage", senderId, message, chatMessage.MessageId, "sent");
+            await Clients.Group(receiverId).SendAsync("ReceiveMessage", senderId, message, chatMessage.MessageId.ToString(), "sent");
 
             // Return message ID to sender for tracking
-            return chatMessage.MessageId;
+            return chatMessage.MessageId.ToString();
         }
 
 

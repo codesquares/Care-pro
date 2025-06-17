@@ -46,8 +46,8 @@ namespace CarePro_Api.Controllers.Content
                 // Create a new chat message
                 var chatMessage = new ChatMessage
                 {
-                    //Id = Guid.NewGuid().ToString(),
-                    Id = ObjectId.GenerateNewId(),
+                    //MessageId = Guid.NewGuid().ToString(),
+                    MessageId = ObjectId.GenerateNewId(),
                     SenderId = request.SenderId,
                     ReceiverId = request.ReceiverId,
                     Message = request.Message,
@@ -58,7 +58,7 @@ namespace CarePro_Api.Controllers.Content
                 await _chatRepository.SaveMessageAsync(chatMessage);
 
                 // Return the message ID for the frontend
-                return Ok(new { messageId = chatMessage.Id });
+                return Ok(new { messageId = chatMessage.MessageId });
             }
             catch (Exception ex)
             {

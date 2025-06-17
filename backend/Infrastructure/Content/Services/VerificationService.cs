@@ -33,7 +33,7 @@ namespace Infrastructure.Content.Services
             var appUser = await careProDbContext.AppUsers.FirstOrDefaultAsync(x => x.AppUserId.ToString() == addVerificationRequest.UserId);
             if (appUser == null)
             {
-                throw new KeyNotFoundException("The User Id entered is not a Valid ID");
+                throw new KeyNotFoundException("The User MessageId entered is not a Valid ID");
             }
 
             if (appUser.FirstName != addVerificationRequest.VerifiedFirstName && appUser.LastName != addVerificationRequest.VerifiedLastName)

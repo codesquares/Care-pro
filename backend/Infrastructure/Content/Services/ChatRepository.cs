@@ -44,7 +44,7 @@ namespace Infrastructure.Content.Services
                     chatMessage.SenderId,
                     NotificationType.Message,
                     notificationContent,
-                    chatMessage.MessageId
+                    chatMessage.MessageId.ToString()
                 );
             }
         }
@@ -65,7 +65,7 @@ namespace Infrastructure.Content.Services
         public async Task<ChatMessage> GetMessageByIdAsync(string messageId)
         {
             return await careProDbContext.ChatMessages
-                .FirstOrDefaultAsync(m => m.Id.ToString() == messageId);
+                .FirstOrDefaultAsync(m => m.MessageId.ToString() == messageId);
         }
         
         // Delete a message (soft delete)
@@ -112,14 +112,14 @@ namespace Infrastructure.Content.Services
         //        .ToList();
 
         //    var appUsers = await careProDbContext.AppUsers
-        //        .Where(u => userIds.Contains(u.Id.ToString()))
+        //        .Where(u => userIds.Contains(u.MessageId.ToString()))
         //        .ToListAsync();
 
         //    var result = latestMessages
         //        .Select(m =>
         //        {
         //            var chatPartnerId = m.SenderId == userId ? m.ReceiverId : m.SenderId;
-        //            var user = appUsers.FirstOrDefault(u => u.Id.ToString() == chatPartnerId);
+        //            var user = appUsers.FirstOrDefault(u => u.MessageId.ToString() == chatPartnerId);
 
         //            if (user == null) return null;
 
@@ -200,7 +200,7 @@ namespace Infrastructure.Content.Services
         //public async Task UpdateUserConnectionStatus(string userId, bool isOnline, string connectionId)
         //{
         //    var user = await careProDbContext.AppUsers
-        //        .FirstOrDefaultAsync(u => u.Id.ToString() == userId || u.AppUserId.ToString() == userId);
+        //        .FirstOrDefaultAsync(u => u.MessageId.ToString() == userId || u.AppUserId.ToString() == userId);
 
         //    if (user != null)
         //    {
@@ -255,7 +255,7 @@ namespace Infrastructure.Content.Services
         public async Task<ChatMessage?> UpdateMessageStatus(string messageId, string newStatus)
         {
             var message = await careProDbContext.ChatMessages
-                .FirstOrDefaultAsync(m => m.Id.ToString() == messageId);
+                .FirstOrDefaultAsync(m => m.MessageId.ToString() == messageId);
 
             if (message == null)
                 return null;
@@ -396,11 +396,13 @@ namespace Infrastructure.Content.Services
         {
             try
             {
-                // Step 1: Get all messages involving the user
+                // Get messages
                 var messages = await careProDbContext.ChatMessages
                     .Where(m => m.SenderId == userId || m.ReceiverId == userId)
                     .OrderByDescending(m => m.Timestamp)
                     .ToListAsync();
+
+                if (!messages.Any()) return new List<ConversationDTO>();
 
                 // Step 2: Find distinct conversation partners
                 var conversationPartners = messages
@@ -408,17 +410,40 @@ namespace Infrastructure.Content.Services
                     .Distinct()
                     .ToList();
 
-                // Step 3: Get user information for all conversation partners
+                // Step 3: Parse to ObjectId and get user information
+                var partnerObjectIds = conversationPartners
+                    .Select(id => ObjectId.Parse(id))
+                    .ToList();
+
                 var partnerUsers = await careProDbContext.AppUsers
-                    .Where(u => conversationPartners.Contains(u.Id.ToString()))
+                    .Where(u => partnerObjectIds.Contains(u.AppUserId))
                     .ToListAsync();
+
+
+
+                //// Step 1: Get all messages involving the user
+                //var messages = await careProDbContext.ChatMessages
+                //    .Where(m => m.SenderId == userId || m.ReceiverId == userId)
+                //    .OrderByDescending(m => m.Timestamp)
+                //    .ToListAsync();
+
+                //// Step 2: Find distinct conversation partners
+                //var conversationPartners = messages
+                //    .Select(m => m.SenderId == userId ? m.ReceiverId : m.SenderId)
+                //    .Distinct()
+                //    .ToList();
+
+                //// Step 3: Get user information for all conversation partners
+                //var partnerUsers = await careProDbContext.AppUsers
+                //    .Where(u => conversationPartners.Contains(u.Id.ToString()))
+                //    .ToListAsync();
 
                 // Step 4: Build conversation DTOs
                 var conversations = new List<ConversationDTO>();
                 foreach (var partnerId in conversationPartners)
                 {
                     // Get partner user info
-                    var partnerUser = partnerUsers.FirstOrDefault(u => u.Id.ToString() == partnerId);
+                    var partnerUser = partnerUsers.FirstOrDefault(u => u.AppUserId.ToString() == partnerId);
                     if (partnerUser == null) continue; // Skip if user not found
 
                     // Get latest message in this conversation

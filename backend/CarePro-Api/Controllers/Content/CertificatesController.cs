@@ -81,7 +81,7 @@ namespace CarePro_Api.Controllers.Content
         {
             try
             {
-                logger.LogInformation($"Retrieving all Certification for Caregiver with Id: {caregiverId}");
+                logger.LogInformation($"Retrieving all Certification for Caregiver with MessageId: {caregiverId}");
 
                 var certificates = await certificationService.GetAllCaregiverCertificateAsync(caregiverId);
 
@@ -118,7 +118,7 @@ namespace CarePro_Api.Controllers.Content
         {
             try
             {
-                logger.LogInformation($"Retrieving Certificate for Caregiver with Id: {certificateId}");
+                logger.LogInformation($"Retrieving Certificate for Caregiver with MessageId: {certificateId}");
 
                 var certificate = await certificationService.GetCertificateAsync(certificateId);
 
