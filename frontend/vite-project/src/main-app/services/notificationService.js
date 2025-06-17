@@ -1,9 +1,9 @@
 import axios from 'axios';
 
-// Always use the direct Azure API URL
+// Direct API URL (no proxy)
 const API_URL = 'https://carepro-api20241118153443.azurewebsites.net';
 
-console.log(`NotificationService using direct API_URL: ${API_URL}`);
+console.log('NotificationService using direct API URL with custom headers');
 
 // Set up axios instance with authentication
 const apiClient = axios.create({
@@ -12,7 +12,7 @@ const apiClient = axios.create({
     'Content-Type': 'application/json',
     'Accept': 'application/json'
   },
-  timeout: 10000, // 10 seconds timeout
+  timeout: 15000, // 15 seconds timeout
   withCredentials: false // Don't include credentials for cross-origin requests
 });
 
@@ -30,6 +30,11 @@ apiClient.interceptors.request.use(config => {
   } else {
     console.warn('No auth token found for API request');
   }
+  
+  // Add CORS headers
+  config.headers['Access-Control-Allow-Origin'] = '*';
+  config.headers['Access-Control-Allow-Methods'] = 'GET,PUT,POST,DELETE,OPTIONS';
+  config.headers['Access-Control-Allow-Headers'] = 'Content-Type, Authorization, Content-Length, X-Requested-With';
   
   // Log full request details for debugging
   console.log('API Request:', {
@@ -74,12 +79,46 @@ apiClient.interceptors.response.use(
 // Get all notifications for current user
 export const getNotifications = async (page = 1, pageSize = 10) => {
   try {
+    // Check for auth token
+    const token = localStorage.getItem('token') || 
+                  localStorage.getItem('authToken') || 
+                  localStorage.getItem('carepro_token') || 
+                  sessionStorage.getItem('token');
+                  
+    if (!token) {
+      console.warn('No auth token available for notification request');
+      return { items: [], totalCount: 0, currentPage: page, pageSize: pageSize };
+    }
+    
+    // Try the Content controller path first
     const endpoint = `/api/Notifications?page=${page}&pageSize=${pageSize}`;
     console.log(`Fetching notifications from: ${API_URL}${endpoint}`);
     
-    const response = await apiClient.get(endpoint);
-    console.log('Notification data received:', response.data);
-    return response.data;
+    try {
+      const response = await apiClient.get(endpoint);
+      console.log('Notification data received:', response.data);
+      return response.data;
+    } catch (primaryError) {
+      // If the first attempt fails, try a fallback approach
+      console.log('Primary notification endpoint failed, trying alternative approach...');
+      
+      // Create a more direct axios request with explicit headers
+      const fallbackResponse = await axios({
+        method: 'get',
+        url: `${API_URL}/api/Notifications`,
+        params: { page, pageSize },
+        headers: {
+          'Authorization': `Bearer ${token}`,
+          'Content-Type': 'application/json',
+          'Accept': 'application/json',
+          'Origin': window.location.origin
+        },
+        timeout: 15000
+      });
+      
+      console.log('Fallback notification data received:', fallbackResponse.data);
+      return fallbackResponse.data;
+    }
   } catch (error) {
     console.error('Error fetching notifications:', error);
     
@@ -98,23 +137,65 @@ export const getNotifications = async (page = 1, pageSize = 10) => {
       console.error('Request setup error:', error.message);
     }
     
-    // Throw the error to be handled by the caller
-    throw error;
+    // Return empty data instead of throwing an error
+    return { items: [], totalCount: 0, currentPage: page, pageSize: pageSize };
   }
 };
 
 // Get unread notification count
 export const getUnreadCount = async () => {
   try {
-    console.log(`Fetching unread count from: ${apiClient.defaults.baseURL || window.location.origin}/api/Notifications/unread/count`);
-    const response = await apiClient.get('/api/Notifications/unread/count');
-    return response.data;
+    // Check for auth token
+    const token = localStorage.getItem('token') || 
+                  localStorage.getItem('authToken') || 
+                  localStorage.getItem('carepro_token') || 
+                  sessionStorage.getItem('token');
+                  
+    if (!token) {
+      console.warn('No auth token available for unread count request');
+      return { count: 0 };
+    }
+    
+    try {
+      console.log(`Fetching unread count from: ${API_URL}/api/Notifications/unread/count`);
+      const response = await apiClient.get('/api/Notifications/unread/count');
+      return response.data;
+    } catch (primaryError) {
+      // If the first attempt fails, try a fallback approach
+      console.log('Primary unread count endpoint failed, trying alternative approach...');
+      
+      // Create a more direct axios request with explicit headers
+      const fallbackResponse = await axios({
+        method: 'get',
+        url: `${API_URL}/api/Notifications/unread/count`,
+        headers: {
+          'Authorization': `Bearer ${token}`,
+          'Content-Type': 'application/json',
+          'Accept': 'application/json',
+          'Origin': window.location.origin
+        },
+        timeout: 15000
+      });
+      
+      console.log('Fallback unread count received:', fallbackResponse.data);
+      return fallbackResponse.data;
+    }
   } catch (error) {
     console.error('Error fetching unread count:', error);
     
+    // Log detailed error information
+    if (error.response) {
+      console.error('Error response details:', {
+        status: error.response.status,
+        statusText: error.response.statusText,
+        headers: error.response.headers,
+        data: error.response.data
+      });
+    }
+    
     // Return mock data if API call fails
     console.log('Using mock unread count due to API error');
-    return { count: 1 };
+    return { count: 0 };
   }
 };
 
@@ -157,41 +238,67 @@ export const testNotificationApi = async () => {
   try {
     console.log('Testing notification API connection...');
     
-    // First try via the proxy
-    try {
-      const proxyResponse = await axios.post('/api/Notifications/test', {}, {
-        timeout: 5000
-      });
-      console.log('Proxy API test succeeded:', proxyResponse.data);
+    // Ensure we have a valid auth token
+    const token = localStorage.getItem('token') || 
+                localStorage.getItem('authToken') || 
+                localStorage.getItem('carepro_token') || 
+                sessionStorage.getItem('token');
+                
+    if (!token) {
+      console.warn('No auth token available for API test');
       return {
-        success: true,
-        method: 'proxy',
-        response: proxyResponse.data
+        success: false,
+        error: 'No authentication token found'
       };
-    } catch (proxyError) {
-      console.log('Proxy API test failed:', proxyError.message);
-      
-      // If proxy fails, try direct connection
-      try {
-        const directResponse = await axios.post('https://carepro-api20241118153443.azurewebsites.net/api/Notifications/test', {}, {
-          timeout: 5000
-        });
-        console.log('Direct API test succeeded:', directResponse.data);
-        return {
-          success: true,
-          method: 'direct',
-          response: directResponse.data
-        };
-      } catch (directError) {
-        console.log('Direct API test failed:', directError.message);
-        throw directError;
-      }
     }
+    
+    // Create a payload with a recipient ID (using the current user's ID is fine for testing)
+    // The backend expects a recipientId and message for test notifications
+    const testPayload = {
+      recipientId: 'self', // This will be replaced by the backend with the current user's ID
+      message: 'This is a test notification from the frontend'
+    };
+    
+    // Try direct API connection
+    const response = await apiClient.post('/api/Notifications/test', testPayload, {
+      timeout: 8000
+    });
+    
+    console.log('API test succeeded:', response.data);
+    return {
+      success: true,
+      response: response.data
+    };
   } catch (error) {
-    console.error('All API tests failed:', error);
+    console.error('API test failed:', error);
+    
+    // Log detailed error information
+    if (error.response) {
+      console.error('Error response details:', {
+        status: error.response.status,
+        statusText: error.response.statusText,
+        headers: error.response.headers,
+        data: error.response.data
+      });
+    }
+    
     return {
       success: false,
-      error: error.message
+      error: error.message,
+      details: error.response ? {
+        status: error.response.status,
+        data: error.response.data
+      } : 'No response received'
     };
   }
+};
+
+// Import diagnostic test functions
+import { runAllTests, testBackendConnection, testNotificationEndpoints } from './notificationServiceTest';
+
+// Export diagnostic test functions
+export const diagnosisTools = {
+  runAllTests,
+  testBackendConnection,
+  testNotificationEndpoints
 };

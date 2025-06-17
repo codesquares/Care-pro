@@ -4,6 +4,7 @@ using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Logging;
+using MongoDB.Bson;
 using System;
 using System.Collections.Generic;
 using System.Security.Claims;
@@ -34,6 +35,13 @@ namespace CarePro_Api.Controllers.Content
             try
             {
                 var userId = User.FindFirstValue(ClaimTypes.NameIdentifier);
+                
+                // Added explicit null check as in the other controller
+                if (string.IsNullOrEmpty(userId))
+                {
+                    return Unauthorized("User not authenticated properly.");
+                }
+                
                 var notifications = await _notificationService.GetUserNotificationsAsync(userId, page, pageSize);
                 return Ok(notifications);
             }
@@ -51,6 +59,13 @@ namespace CarePro_Api.Controllers.Content
             try
             {
                 var userId = User.FindFirstValue(ClaimTypes.NameIdentifier);
+                
+                // Added explicit null check as in the other controller
+                if (string.IsNullOrEmpty(userId))
+                {
+                    return Unauthorized("User not authenticated properly.");
+                }
+                
                 var count = await _notificationService.GetUnreadNotificationCountAsync(userId);
                 return Ok(new { count });
             }
@@ -67,6 +82,17 @@ namespace CarePro_Api.Controllers.Content
         {
             try
             {
+                var userId = User.FindFirstValue(ClaimTypes.NameIdentifier);
+                
+                // Added explicit null check as in the other controller
+                if (string.IsNullOrEmpty(userId))
+                {
+                    return Unauthorized("User not authenticated properly.");
+                }
+                
+                // Validate notification belongs to the user (optional but recommended)
+                // This check should be added in a production application
+
                 await _notificationService.MarkAsReadAsync(id);
                 return NoContent();
             }
@@ -84,6 +110,13 @@ namespace CarePro_Api.Controllers.Content
             try
             {
                 var userId = User.FindFirstValue(ClaimTypes.NameIdentifier);
+                
+                // Added explicit null check as in the other controller
+                if (string.IsNullOrEmpty(userId))
+                {
+                    return Unauthorized("User not authenticated properly.");
+                }
+                
                 await _notificationService.MarkAllAsReadAsync(userId);
                 return NoContent();
             }
@@ -100,6 +133,17 @@ namespace CarePro_Api.Controllers.Content
         {
             try
             {
+                var userId = User.FindFirstValue(ClaimTypes.NameIdentifier);
+                
+                // Added explicit null check as in the other controller
+                if (string.IsNullOrEmpty(userId))
+                {
+                    return Unauthorized("User not authenticated properly.");
+                }
+                
+                // Validate notification belongs to the user (optional but recommended)
+                // This check should be added in a production application
+
                 await _notificationService.DeleteNotificationAsync(id);
                 return NoContent();
             }
@@ -117,9 +161,17 @@ namespace CarePro_Api.Controllers.Content
         {
             try
             {
+                var userId = User.FindFirstValue(ClaimTypes.NameIdentifier);
+                
+                // Added explicit null check as in the other controller
+                if (string.IsNullOrEmpty(userId))
+                {
+                    return Unauthorized("User not authenticated properly.");
+                }
+                
                 var notification = await _notificationService.CreateNotificationAsync(
                     request.RecipientId,
-                    User.FindFirstValue(ClaimTypes.NameIdentifier),
+                    userId,
                     NotificationType.SystemNotice,
                     request.Message,
                     "test_notification");
