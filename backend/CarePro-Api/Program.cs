@@ -181,10 +181,20 @@ builder.Services.AddCors(options =>
 {
     options.AddPolicy("default", builder =>
     {
-        builder.WithOrigins("https://care-pro-frontend.onrender.com", "https://localhost:5173", "http://localhost:5173", "https://localhost:5174", "http://localhost:5174")
-               .AllowAnyHeader()
-               .AllowAnyMethod()
-               .AllowCredentials();
+        builder.WithOrigins(
+                "https://care-pro-frontend.onrender.com", 
+                "https://localhost:5173", 
+                "http://localhost:5173", 
+                "https://localhost:5174", 
+                "http://localhost:5174",
+                // Add additional development origins if needed
+                "http://localhost:3000",
+                "https://localhost:3000"
+            )
+            .AllowAnyHeader()
+            .AllowAnyMethod()
+            .AllowCredentials()
+            .SetIsOriginAllowed(_ => true); // This is a more permissive setting that should be used only in development
     });
 });
 

@@ -6,31 +6,55 @@ import { getNotifications, getUnreadCount, markAsRead, markAllAsRead } from '../
 const NotificationContext = createContext();
 
 export const NotificationProvider = ({ children }) => {
-  const { user, isAuthenticated } = useAuth();
+  const { user, isAuthenticated, token } = useAuth();
   const [notifications, setNotifications] = useState([]);
   const [unreadCount, setUnreadCount] = useState(0);
   const [connection, setConnection] = useState(null);
   const [loading, setLoading] = useState(true);
   const [permissionGranted, setPermissionGranted] = useState(false);
+  const [connectionError, setConnectionError] = useState(null);
 
   // Initialize SignalR connection
   useEffect(() => {
-    if (isAuthenticated && user) {
-      const newConnection = new HubConnectionBuilder()
-        .withUrl(`${process.env.VITE_API_BASE_URL}/notificationHub`, {
-          skipNegotiation: true,
-          transport: HttpTransportType.WebSockets
-        })
-        .withAutomaticReconnect()
-        .configureLogging(LogLevel.Information)
-        .build();
+    if (isAuthenticated && user && token) {
+      try {
+        // In development mode, use relative URL to leverage Vite's proxy
+        // In production, use the full URL from the environment variable
+        const isDev = import.meta.env.DEV;
+        const hubUrl = isDev 
+          ? '/notificationHub' // This will be proxied by Vite
+          : `${import.meta.env.VITE_API_BASE_URL || 'https://carepro-api20241118153443.azurewebsites.net'}/notificationHub`;
+        
+        console.log(`Connecting to SignalR hub at: ${hubUrl} (${isDev ? 'development proxy' : 'direct connection'})`);
+        
+        const newConnection = new HubConnectionBuilder()
+          .withUrl(hubUrl, {
+            accessTokenFactory: () => token,
+            skipNegotiation: true,
+            transport: HttpTransportType.WebSockets
+          })
+          .withAutomaticReconnect([0, 2000, 5000, 10000, 20000]) // Retry with backoff
+          .configureLogging(LogLevel.Information)
+          .build();
 
-      setConnection(newConnection);
+        setConnection(newConnection);
+        setConnectionError(null);
+      } catch (error) {
+        console.error('Error creating SignalR connection:', error);
+        setConnectionError('Failed to create notification connection');
+      }
     }
+    
     return () => {
-      connection?.stop();
+      if (connection) {
+        try {
+          connection.stop();
+        } catch (err) {
+          console.error('Error stopping connection:', err);
+        }
+      }
     };
-  }, [isAuthenticated, user]);
+  }, [isAuthenticated, user, token]);
 
   // Check if browser permissions are granted for notifications
   useEffect(() => {
@@ -58,11 +82,25 @@ export const NotificationProvider = ({ children }) => {
   // Start connection and set up listeners
   useEffect(() => {
     if (connection && isAuthenticated) {
+      // Detect if we're in development mode and provide debug info
+      const isDev = import.meta.env.DEV;
+      if (isDev) {
+        console.log('Running in development mode with the following config:');
+        console.log('API URL:', import.meta.env.VITE_API_BASE_URL);
+        console.log('Using authentication token:', token ? 'Yes (token exists)' : 'No (missing token)');
+      }
+      
       connection.start()
         .then(() => {
-          console.log('NotificationHub connected');
+          console.log('NotificationHub connected successfully');
+          setConnectionError(null);
           
+          // Remove any existing handler to avoid duplicates
+          connection.off('ReceiveNotification');
+          
+          // Add the notification handler
           connection.on('ReceiveNotification', notification => {
+            console.log('Received notification:', notification);
             setNotifications(prev => [notification, ...prev]);
             setUnreadCount(prev => prev + 1);
             
@@ -86,10 +124,46 @@ export const NotificationProvider = ({ children }) => {
               };
             }
           });
+          
+          // Set up reconnection handler
+          connection.onreconnecting(error => {
+            console.log('SignalR reconnecting:', error);
+            setConnectionError('Connection lost. Reconnecting...');
+          });
+          
+          connection.onreconnected(connectionId => {
+            console.log('SignalR reconnected:', connectionId);
+            setConnectionError(null);
+          });
+          
+          connection.onclose(error => {
+            console.log('SignalR connection closed:', error);
+            setConnectionError('Connection closed. Please refresh the page.');
+          });
         })
-        .catch(err => console.error('Error starting NotificationHub connection:', err));
+        .catch(err => {
+          console.error('Error starting NotificationHub connection:', err);
+          
+          // Handle CORS errors specifically
+          if (err.toString().includes('Failed to fetch') || 
+              err.toString().includes('CORS') ||
+              err.toString().includes('NetworkError')) {
+            setConnectionError('CORS or network error. The app may still work but notifications will be unavailable.');
+            
+            // If in development mode, show more helpful message
+            if (isDev) {
+              console.warn('CORS ERROR DETECTED: This is likely because the backend API is not configured to accept connections from your development server.');
+              console.warn('Options to fix this:');
+              console.warn('1. Ensure backend API CORS policy allows http://localhost:5173');
+              console.warn('2. Use a local proxy in your development server');
+              console.warn('3. Run frontend on an allowed origin like https://care-pro-frontend.onrender.com');
+            }
+          } else {
+            setConnectionError(`Failed to connect to notifications: ${err.message}`);
+          }
+        });
     }
-  }, [connection, isAuthenticated, permissionGranted, user]);
+  }, [connection, isAuthenticated, permissionGranted, user, token]);
 
   // Load initial notifications
   useEffect(() => {
@@ -99,21 +173,39 @@ export const NotificationProvider = ({ children }) => {
       // Get notifications from API
       getNotifications()
         .then(data => {
+          console.log('Notifications loaded:', data);
           setNotifications(data);
           setLoading(false);
         })
         .catch(err => {
           console.error('Error fetching notifications:', err);
+          // In development mode, provide fallback data
+          if (import.meta.env.DEV) {
+            setNotifications([
+              {
+                id: 'dev-1',
+                type: 'System',
+                content: 'Welcome to CarePro! This is a development mode notification.',
+                isRead: false,
+                createdAt: new Date().toISOString()
+              }
+            ]);
+          }
           setLoading(false);
         });
       
       // Get unread count
       getUnreadCount()
         .then(data => {
+          console.log('Unread count:', data);
           setUnreadCount(data.count);
         })
         .catch(err => {
           console.error('Error fetching unread count:', err);
+          // Set default value in development mode
+          if (import.meta.env.DEV) {
+            setUnreadCount(1);
+          }
         });
     }
   }, [isAuthenticated, user]);
@@ -187,7 +279,9 @@ export const NotificationProvider = ({ children }) => {
         permissionGranted,
         requestPermission,
         addNotification,
-        removeNotification
+        removeNotification,
+        // Add error state
+        connectionError
       }}
     >
       {children}

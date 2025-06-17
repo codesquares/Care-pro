@@ -15,6 +15,7 @@ import BecomeCaregiver from './pages/BecomeCaregiver';
 import OrderFaq from './main-app/pages/care-giver/OrderFaq';
 import LoginPage from './main-app/pages/LoginPage';
 import RegisterPage from './main-app/pages/RegisterPage';
+import UnauthorizedPage from './main-app/pages/UnauthorizedPage';
 import { ToastContainer } from 'react-toastify';
 import 'react-toastify/dist/ReactToastify.css';
 import ProtectedRoute from './main-app/components/auth/ProtectedRoute';
@@ -31,6 +32,7 @@ import PaymentSuccess from './main-app/pages/client/home-care-service/PaymentSuc
 import { MessageProvider } from './main-app/context/MessageContext';
 import { NotificationProvider } from './main-app/context/NotificationContext';
 import SplashScreen from './main-app/components/SplashScreen/SplashScreen';
+import ConnectionStatusIndicator from './main-app/components/notification/ConnectionStatusIndicator';
 //Added for viewing Order Pages
 import Order from './main-app/pages/client/orders/MyOrders';
 import Order2 from './main-app/pages/client/orders/OrderTasks&Details';
@@ -77,6 +79,7 @@ function AppContent() {
     '/register',
     '/Notifications',
     '/create-gig',
+    '/unauthorized',
     // '/splash',
 
     '/Caregivergigpage',
@@ -100,6 +103,8 @@ function AppContent() {
     <div className="App">
       {isUnprotectedRoute && <Navbar />}
       <ScrollToTop />
+      <ToastContainer position="top-right" autoClose={5000} />
+      <ConnectionStatusIndicator />
       <Routes>
         {/* <Route path="/" element={<Home />} /> */}
         <Route path="/about-us" element={<AboutUs />} />
@@ -130,6 +135,7 @@ function AppContent() {
         {/* <Route path="/Caregiver-Dashboard" element={<CaregiverDashboard />} /> */}
 
         <Route path="/app/client/payment-success" element={<PaymentSuccess />} />
+        <Route path="/unauthorized" element={<UnauthorizedPage />} />
         <Route
           path="/app/*"
           element={

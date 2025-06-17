@@ -10,8 +10,15 @@ export default defineConfig({
         target: 'https://carepro-api20241118153443.azurewebsites.net', // Target backend API URL
         changeOrigin: true,  // Ensures the correct "origin" header is sent with the request
         secure: false,       // Disable SSL verification if needed
-        // rewrite: (path) => path.replace(/^\/api/, ''), // Rewrite the path, if necessary
+        // Preserve case in the path for API requests
+        rewrite: (path) => path, // Don't modify the path
       },
+      '/notificationHub': {
+        target: 'https://carepro-api20241118153443.azurewebsites.net',
+        changeOrigin: true,
+        secure: false,
+        ws: true, // Enable WebSocket proxying
+      }
     },
     host: true, // Allows access from other devices on the network
     strictPort: false, // Ensures the server will not start if the port is already in use
