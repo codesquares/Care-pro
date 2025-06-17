@@ -567,8 +567,8 @@ const verificationService = {
       
       // Choose endpoint based on user type
       const endpoint = verificationData.userType === 'client'
-        ? `${externalApiUrl}/verifications`
-        : `${externalApiUrl}/verifications`;
+        ? `${externalApiUrl}/Verifications`
+        : `${externalApiUrl}/Verifications`;
       
       const response = await axios.post(
         endpoint,

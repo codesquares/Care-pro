@@ -67,37 +67,72 @@ export const MessageProvider = ({ children }) => {
   
   // Function to update conversations list with a new message
   const updateConversationsList = useCallback(async (senderId) => {
+    console.log('Updating conversations list with senderId:', senderId);
+    
+    // Store the last updated senderId for use in the refresh effect
+    updateConversationsList.lastUpdatedSenderId = senderId;
+    
     // Check if we already have this conversation
     const existingConversation = conversations.find(c => c.id === senderId);
     
     if (!existingConversation && currentUserId) {
       try {
+        console.log('Fetching user info for new conversation partner:', senderId);
         // Fetch user info
         const response = await axios.get(`${API_BASE_URL}/api/users/${senderId}`);
         const userData = response.data;
+        console.log('User data received for new conversation:', userData);
         
         // Add to conversations
-        setConversations(prev => [
-          {
+        setConversations(prev => {
+          const newConversation = {
             id: senderId,
-            name: userData.fullName || userData.username,
+            name: userData.fullName || userData.username || userData.firstName + ' ' + userData.lastName,
             avatar: userData.profileImage || '/default-avatar.png',
             lastMessage: 'New message',
+            timestamp: new Date().toISOString(),
             unreadCount: unreadMessages[senderId] || 0,
             isOnline: onlineUsers[senderId] || false
-          },
-          ...prev
-        ]);
+          };
+          console.log('Adding new conversation to list:', newConversation);
+          return [newConversation, ...prev];
+        });
+        
+        // We'll refresh conversations in a separate effect
+        // Don't call fetchConversations here to avoid dependency cycle
       } catch (error) {
         console.error('Error fetching user info:', error);
+        
+        // Try to create a fallback conversation to ensure visibility
+        setConversations(prev => {
+          // Only add fallback if the conversation doesn't already exist
+          if (!prev.some(c => c.id === senderId)) {
+            console.log('Creating fallback conversation entry for ID:', senderId);
+            return [
+              {
+                id: senderId,
+                name: `User ${senderId.substring(0, 5)}...`,
+                avatar: '/default-avatar.png',
+                lastMessage: 'New message',
+                timestamp: new Date().toISOString(),
+                unreadCount: unreadMessages[senderId] || 0,
+                isOnline: false
+              },
+              ...prev
+            ];
+          }
+          return prev;
+        });
       }
     } else if (existingConversation) {
       // Update existing conversation
+      console.log('Updating existing conversation:', existingConversation);
       setConversations(prev => prev.map(c => {
         if (c.id === senderId) {
           return {
             ...c,
             lastMessage: 'New message',
+            timestamp: new Date().toISOString(),
             unreadCount: unreadMessages[senderId] || 0
           };
         }
@@ -133,9 +168,13 @@ export const MessageProvider = ({ children }) => {
     }, 10000); // 10 second timeout
     
     try {
-      const response = await axios.get(`${API_BASE_URL}/api/chat/ChatPreview?userId=${userId}`, {
+      console.log(`Fetching conversations for user ID: ${userId}`);
+      const response = await axios.get(`${API_BASE_URL}/api/Chat/conversations/${userId}`, {
         signal: controller.signal
       });
+      
+      // Log conversations data received from API for debugging
+      console.log('Conversations data received from API:', response.data);
       
       // Successfully got data, clear the timeout
       clearTimeout(timeoutId);
@@ -147,13 +186,21 @@ export const MessageProvider = ({ children }) => {
       // Process conversations and add online status - avoid parallel API calls
       const conversationsWithStatus = [];
       for (const conversation of limitedConversations) {
+        // Normalize ID field - ensure each conversation has an id property
+        const conversationId = conversation.id || conversation.userId;
+        
+        if (!conversationId) {
+          console.error("Received conversation without ID:", conversation);
+          continue; // Skip conversations without any ID
+        }
+        
         // Default to false for online status rather than making API calls
         let isOnline = false;
         
         // Only check online status for selected conversation to reduce API calls
-        if (conversation.id === selectedChatId) {
+        if (conversationId === selectedChatId) {
           try {
-            isOnline = await chatService.isUserOnline(conversation.id);
+            isOnline = await chatService.isUserOnline(conversationId);
           } catch (e) {
             console.warn('Error getting online status, assuming offline:', e);
           }
@@ -161,8 +208,10 @@ export const MessageProvider = ({ children }) => {
         
         conversationsWithStatus.push({
           ...conversation,
+          // Ensure id field exists
+          id: conversationId,
           isOnline,
-          unreadCount: unreadMessages[conversation.id] || 0
+          unreadCount: unreadMessages[conversationId] || 0
         });
       }
       
@@ -185,6 +234,7 @@ export const MessageProvider = ({ children }) => {
     }
   }, [selectedChatId, unreadMessages]);
 
+  console.log("conversations of this user:", conversations);
   // Initialize chat connection
   const initializeChat = useCallback(async (userId, token) => {
     if (!userId || !token) {
@@ -406,7 +456,14 @@ export const MessageProvider = ({ children }) => {
       await chatService.connect(userId, token);
       
       // Fetch conversations after successful connection
+      console.log('Initializing chat complete - fetching initial conversations for userId:', userId);
       fetchConversations(userId);
+      
+      // Schedule a follow-up fetch after a delay to catch any late-arriving data
+      setTimeout(() => {
+        console.log('Follow-up conversations fetch after initialization');
+        fetchConversations(userId);
+      }, 3000);
       
       setIsLoading(false);
       
@@ -521,16 +578,34 @@ export const MessageProvider = ({ children }) => {
       ));
       
       // Update conversations list
-      setConversations(prev => prev.map(conversation => {
-        if (conversation.id === receiverId) {
-          return {
-            ...conversation,
-            lastMessage: messageText,
-            timestamp: new Date().toISOString()
-          };
+      setConversations(prev => {
+        // Check if conversation with this receiverId already exists
+        const existingConversationIndex = prev.findIndex(conv => conv.id === receiverId);
+        
+        if (existingConversationIndex !== -1) {
+          // Update existing conversation
+          return prev.map(conversation => {
+            if (conversation.id === receiverId) {
+              console.log(`Updating conversation with ${receiverId}:`, messageText);
+              return {
+                ...conversation,
+                lastMessage: messageText,
+                timestamp: new Date().toISOString()
+              };
+            }
+            return conversation;
+          });
+        } else {
+          // Conversation doesn't exist yet, call updateConversationsList to add it
+          console.log(`Creating new conversation with ${receiverId}`);
+          updateConversationsList(receiverId);
+          return prev;
         }
-        return conversation;
-      }));
+      });
+      
+      // Trigger refresh by updating the last sender ID
+      // This will activate the refresh effect without direct dependency on fetchConversations
+      updateConversationsList.lastUpdatedSenderId = receiverId;
       
       return messageId;
     } catch (error) {
@@ -624,14 +699,28 @@ export const MessageProvider = ({ children }) => {
   
   // Select chat
   const selectChat = useCallback(async (chatId) => {
+    console.log("MessageContext: selectChat called with chatId:", chatId);
+    console.log("Current conversations:", conversations);
+    
     setSelectedChatId(chatId);
     setIsLoading(true);
     
     try {
-      // Find recipient in conversations
-      const selectedRecipient = conversations.find(c => c.id === chatId);
+      // Find recipient in conversations using either id or userId
+      const selectedRecipient = conversations.find(c => 
+        c.id === chatId || c.userId === chatId
+      );
+      console.log("Found selectedRecipient:", selectedRecipient);
+      
       if (selectedRecipient) {
-        setRecipient(selectedRecipient);
+        // Ensure the recipient object has an id field
+        const recipientWithId = {
+          ...selectedRecipient,
+          id: selectedRecipient.id || selectedRecipient.userId
+        };
+        setRecipient(recipientWithId);
+      } else {
+        console.error("Recipient not found in conversations for chatId:", chatId);
       }
       
       // Reset unread count for this chat
@@ -642,22 +731,37 @@ export const MessageProvider = ({ children }) => {
       
       // Fetch message history if we have both users
       if (chatId && currentUserId) {
+        console.log("Fetching message history for currentUserId:", currentUserId, "and chatId:", chatId);
         try {
           const messageHistory = await chatService.getMessageHistory(currentUserId, chatId);
+          console.log("Got message history:", messageHistory);
           
           // Process and sort messages - ensure messageHistory is an array
           const processedMessages = Array.isArray(messageHistory) ? messageHistory
-            .map(message => ({
-              id: message.id || message.messageId,
-              senderId: message.senderId,
-              receiverId: message.receiverId,
-              content: message.content || message.message, // Handle different property names
-              timestamp: message.timestamp,
-              status: message.status || 'delivered'
-            }))
+            .map((message, index) => {
+              // For debugging
+              if (!message.id && !message.messageId) {
+                console.log('Message without ID:', message);
+              }
+              
+              // Create a safe message with guaranteed unique ID
+              return {
+                // Ensure every message has a unique ID as a string
+                id: message.id ? String(message.id) : 
+                    message.messageId ? String(message.messageId) : 
+                    `generated-${message.senderId}-${index}-${Date.now()}`,
+                // Ensure all properties are valid
+                senderId: String(message.senderId || ''),
+                receiverId: String(message.receiverId || ''),
+                content: message.content || message.message || '', // Handle different property names
+                timestamp: message.timestamp || new Date().toISOString(),
+                status: message.status || 'delivered'
+              };
+            })
             .sort((a, b) => new Date(a.timestamp) - new Date(b.timestamp))
           : [];
           
+          console.log("Setting messages with processedMessages:", processedMessages);
           setMessages(processedMessages);
           
           // Mark all messages from this sender as read in one batch operation
@@ -688,6 +792,41 @@ export const MessageProvider = ({ children }) => {
       setIsLoading(false);
     }
   }, [conversations, currentUserId]);
+
+  // Add listener for refresh-conversations event triggered by DirectMessage component
+  useEffect(() => {
+    const handleRefreshConversations = (event) => {
+      const userId = event.detail?.userId || currentUserId || refreshCurrentUserId();
+      console.log('MessageContext: Received refresh-conversations event for userId:', userId);
+      
+      // Store this to trigger the refresh effect
+      updateConversationsList.lastUpdatedSenderId = event.detail?.senderId || 'event-triggered';
+    };
+
+    window.addEventListener('refresh-conversations', handleRefreshConversations);
+    
+    return () => {
+      window.removeEventListener('refresh-conversations', handleRefreshConversations);
+    };
+  }, [currentUserId, refreshCurrentUserId]);
+  
+  // Separate effect to refresh conversations when updates happen
+  useEffect(() => {
+    // Store the last senderId that triggered an update
+    const lastUpdatedSenderId = updateConversationsList.lastUpdatedSenderId;
+    
+    // If we have an updated senderId and a current user, refresh conversations
+    if (lastUpdatedSenderId && currentUserId) {
+      console.log(`Refreshing conversations after update for sender: ${lastUpdatedSenderId}`);
+      
+      const refreshTimer = setTimeout(() => {
+        console.log('Executing delayed conversation refresh');
+        fetchConversations(currentUserId);
+      }, 1500); // Delay to ensure backend has processed the change
+      
+      return () => clearTimeout(refreshTimer);
+    }
+  }, [currentUserId, conversations, updateConversationsList.lastUpdatedSenderId]);
 
   // Context value
   const value = {

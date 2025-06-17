@@ -16,6 +16,7 @@ const AssessmentPage = () => {
   const [questions, setQuestions] = useState([]);
   const [isLoading, setIsLoading] = useState(true);
   const [assessmentResult, setAssessmentResult] = useState(null);
+  const [questionsWithAnswers, setQuestionsWithAnswers] = useState([]);
 
   // Get token and user ID from localStorage
   const userDetails = JSON.parse(localStorage.getItem("userDetails") || "{}");
@@ -58,19 +59,23 @@ const AssessmentPage = () => {
           ]);
           
           if (response?.success && response?.data && response?.data.length > 0) {
-            // Get the appropriate number of questions based on user type
-            // 10 questions for cleaners, 30 questions for caregivers
-            let assessmentQuestions = [...response.data];
+            // The questions are already filtered by the backend for the appropriate user type
+            const assessmentQuestions = response.data;
             
-            if (userType.toLowerCase() === 'cleaner') {
-              // Shuffle and select 10 questions for cleaners
-              assessmentQuestions = shuffleArray(assessmentQuestions).slice(0, 10);
-            } else {
-              // Shuffle and select 30 questions for caregivers
-              assessmentQuestions = shuffleArray(assessmentQuestions).slice(0, 30);
-            }
+            // Map the backend field names to what the frontend expects
+            const formattedQuestions = assessmentQuestions.map(q => ({
+              id: q.id || q.Id,
+              text: q.question || q.Question, // Using question field from backend
+              options: q.options || q.Options, // Using options field from backend
+              correctAnswer: q.correctAnswer || q.CorrectAnswer,
+              explanation: q.explanation || q.Explanation,
+              category: q.category || q.Category
+            }));
             
-            setQuestions(assessmentQuestions);
+            console.log('Original question format:', assessmentQuestions[0]);
+            console.log('Formatted question:', formattedQuestions[0]);
+            
+            setQuestions(formattedQuestions);
             setError(""); // Clear any previous errors
             
             // Display data source message (for development purposes)
@@ -96,31 +101,12 @@ const AssessmentPage = () => {
     }
   };
   
-  // Function to shuffle an array (for randomizing questions)
-  const shuffleArray = (array) => {
-    const newArray = [...array];
-    for (let i = newArray.length - 1; i > 0; i--) {
-      const j = Math.floor(Math.random() * (i + 1));
-      [newArray[i], newArray[j]] = [newArray[j], newArray[i]];
-    }
-    return newArray;
-  };
-  
   useEffect(() => {
     // Redirect if no token or user ID
     if (!token || !userDetails.id) {
       navigate("/login");
       return;
     }
-    
-    // TESTING: This commented section would normally check verification status
-    // We're bypassing this check for testing purposes
-    /*
-    if (userDetails.verificationStatus !== "verified") {
-      navigate("/app/caregiver/profile");
-      return;
-    }
-    */
     
     // Check if user is already qualified or has assessment restrictions
     const qualificationStatus = assessmentService.getQualificationStatus();
@@ -153,7 +139,7 @@ const AssessmentPage = () => {
   }, [navigate, token, userDetails.id]);
 
   const handleAnswerChange = (questionId, value) => {
-    // For multiple-choice answers (all questions are now radio buttons)
+    // For multiple-choice answers (radio buttons)
     setAnswers(prev => ({
       ...prev,
       [questionId]: value
@@ -213,41 +199,79 @@ const AssessmentPage = () => {
     setError("");
     
     try {
-      // Prepare assessment data
+      // Prepare assessment data to exactly match the AddAssessmentRequest model in the backend
       const userType = userDetails.role?.toLowerCase() || 'caregiver';
       
       const assessmentData = {
         userId: userDetails.id,
+        caregiverId: userDetails.id, // Using the same ID for caregiverId field
         userType: userType.charAt(0).toUpperCase() + userType.slice(1), // Capitalize for API
-        timestamp: new Date().toISOString(),
         questions: questions.map(q => ({
-          id: q.id,
-          text: q.text,
-          answer: answers[q.id] || ""
-        }))
+          questionId: q.id,
+          question: q.text,
+          options: q.options || [], // Include options array
+          correctAnswer: "", // Leave empty as we don't know the correct answer
+          userAnswer: answers[q.id] || "",
+          isCorrect: false // Default to false, will be determined by backend
+        })),
+        status: "Completed",
+        score: 0 // Score will be calculated on the backend
       };
       
-      // Submit to API (in test mode this will save to localStorage)
+      // Submit to API
       const response = await assessmentService.submitAssessment(assessmentData);
       
       if (response.success) {
         // Store the result for display
         const assessmentResult = {
           timestamp: new Date().toISOString(),
-          score: response.data.score,
-          isPassing: response.data.passed, // Using 70% threshold from backend
-          canRetakeAfter: new Date(Date.now() + (30 * 24 * 60 * 60 * 1000)).toISOString(), // 30 days from now
+          score: response.data.score || 0,
+          isPassing: response.data.passed || false, // Using threshold from backend
+          assessmentId: response.data.id || '',
+          // Check if this is the third failed attempt
+          attemptNumber: response.data.attemptNumber || 1
         };
         
         setAssessmentResult(assessmentResult);
+        
+        // Prepare questions with answers and explanations for the results page
+        const questionsWithAnswersData = questions.map(q => ({
+          ...q,
+          userAnswer: answers[q.id] || "",
+          isCorrect: q.correctAnswer === answers[q.id],
+        }));
+        
+        setQuestionsWithAnswers(questionsWithAnswersData);
 
+        // Get attempt history
+        const attemptHistory = JSON.parse(localStorage.getItem('assessmentAttempts') || '{"attempts": [], "count": 0}');
+        
+        // Determine if user needs to wait before retaking
+        let canRetakeAfter = null;
+        
+        if (assessmentResult.isPassing) {
+          // If passed, no need to wait
+          canRetakeAfter = null;
+        } else {
+          if (attemptHistory.count >= 3) {
+            // After 3 failed attempts, set 15-day waiting period
+            canRetakeAfter = new Date(Date.now() + (15 * 24 * 60 * 60 * 1000)).toISOString();
+            console.log("User has failed 3 attempts. Must wait 15 days before retrying.");
+          } else {
+            // Can retake immediately if less than 3 attempts
+            canRetakeAfter = null;
+            console.log(`User has failed ${attemptHistory.count} attempt(s). Can retry immediately.`);
+          }
+        }
+        
         // Save qualification status to localStorage
         const qualificationStatus = {
           isQualified: assessmentResult.isPassing,
           assessmentCompleted: true,
           lastAssessmentDate: assessmentResult.timestamp,
           score: assessmentResult.score,
-          canRetakeAfter: assessmentResult.canRetakeAfter
+          attemptCount: attemptHistory.count,
+          canRetakeAfter: canRetakeAfter
         };
         
         localStorage.setItem('qualificationStatus', JSON.stringify(qualificationStatus));
@@ -262,7 +286,9 @@ const AssessmentPage = () => {
         setSuccess(
           assessmentResult.isPassing 
             ? "Congratulations! You've successfully qualified as a caregiver." 
-            : "Assessment completed. You didn't meet the required passing score of 70%. You can retake the assessment after 30 days."
+            : assessmentResult.attemptNumber >= 3 
+            ? "Assessment completed. You didn't meet the required passing score of 70%. You've completed 3 attempts and must wait 15 days before trying again." 
+            : `Assessment completed. You didn't meet the required passing score of 70%. You have ${3 - assessmentResult.attemptNumber} attempt(s) remaining.`
         );
         
         // Store the complete assessment data with results
@@ -298,52 +324,29 @@ const AssessmentPage = () => {
         <h2>{isRetake ? 'Caregiver Assessment Retake' : 'Welcome to the Caregiver Assessment'}</h2>
         {isLoading ? (
           <div className="loading-indicator">
-            <i className="fas fa-spinner fa-spin"></i>
-            <p>Loading assessment questions... Please wait.</p>
-            <p className="loading-tip">This may take a moment as we prepare your assessment.</p>
-            <button 
-              className="retry-button delayed-visibility" 
-              onClick={fetchQuestions}
-            >
-              Retry Loading
-            </button>
+            <div className="spinner"></div>
+            <p>Loading assessment questions...</p>
           </div>
         ) : (
           <>
-            <p>
-              This assessment will test your knowledge of caregiving practices and protocols.
-              {isRetake 
-                ? ' Since you did not pass the previous attempt, you can now retake the assessment.' 
-                : ' You must pass this assessment to be qualified as a caregiver on our platform.'}
-            </p>
-            
-            <p className="assessment-instructions">
-              <strong>Important Information:</strong>
-              <ul>
-                <li>The assessment consists of {userDetails.role?.toLowerCase() === 'cleaner' ? '10' : '30'} multiple-choice questions</li>
-                <li>You must score at least 70% to pass</li>
-                <li>You can only take this assessment once every 30 days</li>
-                <li>Make sure you have 15-20 minutes of uninterrupted time</li>
-              </ul>
-            </p>
-            
-            <div className="button-row">
-              <button 
-                className="secondary-button"
-                onClick={() => navigate('/app/caregiver/profile')}
-              >
-                Return to Profile
-              </button>
-              <button 
-                className="primary-button"
-                onClick={startAssessment}
-                disabled={isLoading || questions.length === 0}
-              >
-                Begin Assessment
-              </button>
+            <div className="welcome-info">
+              <p>This assessment will test your knowledge and skills as a caregiver.</p>
+              <p>
+                You will be presented with {userDetails.role?.toLowerCase() === 'cleaner' ? '10' : '30'} multiple-choice questions.
+              </p>
+              <p>You must score at least <strong>70%</strong> to pass.</p>
+              <p>Please allocate 20-30 minutes to complete this assessment without interruptions.</p>
             </div>
             
             {error && <div className="error-message">{error}</div>}
+            
+            <button 
+              className="primary-button"
+              onClick={startAssessment}
+              disabled={isLoading || questions.length === 0}
+            >
+              Start Assessment
+            </button>
           </>
         )}
       </div>
@@ -352,40 +355,49 @@ const AssessmentPage = () => {
 
   const renderInstructionsScreen = () => {
     return (
-      <div className="assessment-instructions-screen">
-        <div className="instructions-icon">
-          <i className="fas fa-info-circle"></i>
-        </div>
+      <div className="assessment-instructions">
         <h2>Assessment Instructions</h2>
+        
         <div className="instructions-content">
-          <p>Please read the following instructions carefully:</p>
+          <div className="instruction-item">
+            <div className="instruction-icon"><i className="fas fa-lightbulb"></i></div>
+            <div className="instruction-text">
+              <h3>Multiple Choice Format</h3>
+              <p>All questions have multiple-choice answers. Select the best answer for each question.</p>
+            </div>
+          </div>
           
-          <ol>
-            <li>This assessment contains {questions.length} multiple-choice questions.</li>
-            <li>You must select one answer for each question.</li>
-            <li>You can move between questions using the Previous and Next buttons.</li>
-            <li>Your progress is saved as you move between questions.</li>
-            <li>You must score at least 70% to pass the assessment.</li>
-            <li>Once you've answered all questions, you can submit your assessment.</li>
-          </ol>
+          <div className="instruction-item">
+            <div className="instruction-icon"><i className="fas fa-clock"></i></div>
+            <div className="instruction-text">
+              <h3>No Time Limit</h3>
+              <p>Take your time to consider each question carefully before answering.</p>
+            </div>
+          </div>
           
-          <p>When you're ready to begin, click the Start button below.</p>
+          <div className="instruction-item">
+            <div className="instruction-icon"><i className="fas fa-undo"></i></div>
+            <div className="instruction-text">
+              <h3>Navigation</h3>
+              <p>You can go back to previous questions to review your answers before submitting.</p>
+            </div>
+          </div>
+          
+          <div className="instruction-item">
+            <div className="instruction-icon"><i className="fas fa-check-double"></i></div>
+            <div className="instruction-text">
+              <h3>Passing Score</h3>
+              <p>You need to answer at least 70% of questions correctly to pass this assessment.</p>
+            </div>
+          </div>
         </div>
         
-        <div className="button-row">
-          <button 
-            className="secondary-button"
-            onClick={() => setCurrentStep('welcome')}
-          >
-            Back
-          </button>
-          <button 
-            className="primary-button"
-            onClick={beginQuestions}
-          >
-            Start
-          </button>
-        </div>
+        <button 
+          className="primary-button"
+          onClick={beginQuestions}
+        >
+          Begin Assessment
+        </button>
       </div>
     );
   };
@@ -407,6 +419,9 @@ const AssessmentPage = () => {
     
     const currentQ = questions[currentQuestion];
     
+    // Debug the question object structure
+    console.log('Current Question Structure:', currentQ);
+    
     return (
       <div className="assessment-questions-screen">
         <div className="assessment-progress">
@@ -423,23 +438,32 @@ const AssessmentPage = () => {
         
         <div className="question-container">
           <h3 className="question-text">
-            {currentQ.text}
+            {/* Display question text from the correct field - backend uses "Question" not "text" */}
+            <span className="question-number">Question {currentQuestion + 1}:</span>
+            {currentQ.question || currentQ.Question || currentQ.text || "Question text not available"}
           </h3>
           
           <div className="answer-options">
-            {currentQ.options.map((option, index) => (
-              <div className="answer-option" key={index}>
-                <input 
-                  type="radio"
-                  id={`option-${index}`}
-                  name={`question-${currentQ.id}`}
-                  value={option}
-                  checked={answers[currentQ.id] === option}
-                  onChange={() => handleAnswerChange(currentQ.id, option)}
-                />
-                <label htmlFor={`option-${index}`}>{option}</label>
-              </div>
-            ))}
+            {(currentQ.options || currentQ.Options || []).map((option, index) => {
+              // Determine the option letter (A, B, C, D)
+              const optionLetter = String.fromCharCode(65 + index); // 65 is ASCII for 'A'
+              
+              return (
+                <div className="answer-option" key={index}>
+                  <input 
+                    type="radio"
+                    id={`option-${index}`}
+                    name={`question-${currentQ.id}`}
+                    value={optionLetter}
+                    checked={answers[currentQ.id] === optionLetter}
+                    onChange={() => handleAnswerChange(currentQ.id, optionLetter)}
+                  />
+                  <label htmlFor={`option-${index}`}>
+                    <span className="option-letter">{optionLetter}</span> {option}
+                  </label>
+                </div>
+              );
+            })}
           </div>
           
           {error && <div className="error-message">{error}</div>}
@@ -482,16 +506,110 @@ const AssessmentPage = () => {
               <span className="score-value">{assessmentResult?.score}%</span>
             </div>
             <p className="score-label">Your Score</p>
+            
+            {assessmentResult?.assessmentId && (
+              <button 
+                className="refresh-score-btn" 
+                onClick={async () => {
+                  try {
+                    const scoreResult = await assessmentService.calculateAssessmentScore(assessmentResult.assessmentId);
+                    if (scoreResult.success) {
+                      setAssessmentResult({
+                        ...assessmentResult,
+                        score: scoreResult.data.score,
+                        isPassing: scoreResult.data.passed
+                      });
+                      
+                      // Update localStorage
+                      const qualificationStatus = JSON.parse(localStorage.getItem('qualificationStatus') || '{}');
+                      qualificationStatus.score = scoreResult.data.score;
+                      qualificationStatus.isQualified = scoreResult.data.passed;
+                      localStorage.setItem('qualificationStatus', JSON.stringify(qualificationStatus));
+                      
+                      setSuccess("Score has been refreshed.");
+                    } else {
+                      setError("Failed to refresh score. Please try again.");
+                    }
+                  } catch (err) {
+                    console.error("Error refreshing score:", err);
+                    setError("An error occurred while refreshing the score.");
+                  }
+                }}
+              >
+                Refresh Score
+              </button>
+            )}
           </div>
           
           <div className="pass-threshold">
             <p><strong>Passing threshold:</strong> 70%</p>
+            <p><strong>Attempt:</strong> {assessmentResult?.attemptNumber || 1} of 3 allowed</p>
+            
+            {!assessmentResult?.isPassing && assessmentResult?.attemptNumber < 3 && (
+              <p className="retake-info">You may retake the assessment immediately.</p>
+            )}
+            
+            {!assessmentResult?.isPassing && assessmentResult?.attemptNumber >= 3 && (
+              <p className="waiting-period-info">You must wait 15 days before your next attempt.</p>
+            )}
           </div>
         </div>
         
         {success && <div className="success-message">{success}</div>}
         
-        <div className="button-row">
+        {/* Display question results with explanations */}
+        <div className="assessment-results-summary">
+          <h3>Questions & Answers</h3>
+          
+          <div className="results-list">
+            {questionsWithAnswers.map((q, index) => (
+              <div key={index} className={`result-item ${q.isCorrect ? 'correct' : 'incorrect'}`}>
+                <div className="result-question">
+                  <span className="question-number">{index + 1}.</span> {q.text}
+                </div>
+                
+                <div className="result-status">
+                  {q.isCorrect ? 
+                    <div className="correct-badge"><i className="fas fa-check-circle"></i> Correct</div> : 
+                    <div className="incorrect-badge"><i className="fas fa-times-circle"></i> Incorrect</div>
+                  }
+                </div>
+                
+                <div className="result-options">
+                  {q.options.map((option, optIndex) => {
+                    const optionLetter = String.fromCharCode(65 + optIndex);
+                    const isUserAnswer = optionLetter === q.userAnswer;
+                    const isCorrectAnswer = optionLetter === q.correctAnswer;
+                    
+                    return (
+                      <div 
+                        key={optIndex} 
+                        className={`result-option ${isUserAnswer ? 'user-answer' : ''} ${isCorrectAnswer ? 'correct-answer' : ''}`}
+                      >
+                        <div className="option-content">
+                          <span className="option-letter">{optionLetter}</span>
+                          <span className="option-text">{option}</span>
+                        </div>
+                        <div className="option-indicator">
+                          {isUserAnswer && <span className="user-answer-indicator"><i className="fas fa-user"></i> Your answer</span>}
+                          {isCorrectAnswer && <span className="correct-answer-indicator"><i className="fas fa-check"></i> Correct</span>}
+                        </div>
+                      </div>
+                    );
+                  })}
+                </div>
+                
+                {q.explanation && (
+                  <div className="result-explanation">
+                    {q.explanation}
+                  </div>
+                )}
+              </div>
+            ))}
+          </div>
+        </div>
+        
+        <div className="thank-you-actions">
           <button 
             className="primary-button"
             onClick={() => navigate('/app/caregiver/profile')}
@@ -504,10 +622,9 @@ const AssessmentPage = () => {
   };
 
   return (
-    <>
+    <div className="assessment-page">
       <Helmet>
-        <title>Caregiver Assessment | Care Pro</title>
-        <meta name="description" content="Complete your caregiver assessment to start working on our platform" />
+        <title>Caregiver Assessment | CarePro</title>
       </Helmet>
       
       <div className="assessment-container">
@@ -516,7 +633,7 @@ const AssessmentPage = () => {
         {currentStep === 'questions' && renderQuestionsScreen()}
         {currentStep === 'thank-you' && renderThankYouScreen()}
       </div>
-    </>
+    </div>
   );
 };
 

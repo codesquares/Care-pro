@@ -247,7 +247,26 @@ const DirectMessage = () => {
       // No need for alert here as UI typically prevents this
     } else {
       // All required fields present
-      handleSendMessage(userId, effectiveReceiverId, messageText);
+      handleSendMessage(userId, effectiveReceiverId, messageText)
+        .then(messageId => {
+          console.log('Message sent successfully, messageId:', messageId);
+          
+          // Explicitly fetch conversations to update the UI
+          setTimeout(() => {
+            console.log('DirectMessage: Explicitly refreshing conversations list');
+            // Trigger custom event that MessageContext can listen for
+            const refreshEvent = new CustomEvent('refresh-conversations', {
+              detail: { 
+                userId, 
+                senderId: effectiveReceiverId
+              }
+            });
+            window.dispatchEvent(refreshEvent);
+          }, 1500);
+        })
+        .catch(err => {
+          console.error('Error sending message:', err);
+        });
     }
   };
 

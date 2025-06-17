@@ -1,0 +1,150 @@
+.withdrawal-management {
+  padding: 20px;
+  max-width: 1200px;
+  margin: 0 auto;
+}
+
+.page-title {
+  font-size: 24px;
+  margin-bottom: 20px;
+  color: #333;
+}
+
+.loading-spinner {
+  text-align: center;
+  margin: 50px 0;
+  font-size: 16px;
+  color: #666;
+}
+
+.error-message {
+  background-color: #ffecec;
+  color: #cc0000;
+  border: 1px solid #cc0000;
+  border-radius: 5px;
+  padding: 15px;
+  margin: 20px 0;
+  text-align: center;
+}
+
+.filter-container {
+  margin-bottom: 20px;
+  display: flex;
+  align-items: center;
+}
+
+.filter-container label {
+  margin-right: 10px;
+  font-weight: 500;
+}
+
+.status-filter {
+  padding: 8px;
+  border-radius: 4px;
+  border: 1px solid #ddd;
+  font-size: 14px;
+  min-width: 150px;
+}
+
+.no-withdrawals {
+  text-align: center;
+  padding: 40px;
+  color: #888;
+  font-style: italic;
+  background-color: #f9f9f9;
+  border-radius: 8px;
+}
+
+.withdrawals-table-container {
+  overflow-x: auto;
+}
+
+.withdrawals-table {
+  width: 100%;
+  border-collapse: collapse;
+  margin-top: 10px;
+}
+
+.withdrawals-table th,
+.withdrawals-table td {
+  padding: 12px;
+  text-align: left;
+  border-bottom: 1px solid #eee;
+}
+
+.withdrawals-table th {
+  background-color: #f5f5f5;
+  font-weight: 600;
+}
+
+.withdrawals-table tr:hover {
+  background-color: #fafafa;
+}
+
+.bank-info {
+  font-size: 13px;
+  line-height: 1.4;
+}
+
+.status-badge {
+  display: inline-block;
+  padding: 6px 10px;
+  border-radius: 20px;
+  font-size: 12px;
+  font-weight: 600;
+  text-transform: uppercase;
+}
+
+.status-badge.pending {
+  background-color: #fff8e1;
+  color: #f39c12;
+}
+
+.status-badge.verified {
+  background-color: #e3f2fd;
+  color: #2980b9;
+}
+
+.status-badge.completed {
+  background-color: #e8f5e9;
+  color: #27ae60;
+}
+
+.status-badge.rejected {
+  background-color: #ffebee;
+  color: #e74c3c;
+}
+
+.token {
+  font-family: monospace;
+  background-color: #f5f5f5;
+  padding: 3px 6px;
+  border-radius: 4px;
+  font-size: 14px;
+}
+
+.action-btn {
+  padding: 8px 12px;
+  border: none;
+  border-radius: 4px;
+  cursor: pointer;
+  font-size: 13px;
+  font-weight: 500;
+}
+
+.action-btn.verify {
+  background-color: #3498db;
+  color: white;
+}
+
+.action-btn.complete {
+  background-color: #2ecc71;
+  color: white;
+}
+
+.action-complete,
+.action-rejected {
+  font-size: 13px;
+  font-style: italic;
+  color: #888;
+}

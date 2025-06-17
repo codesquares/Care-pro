@@ -11,16 +11,23 @@ const ChatArea = ({ messages, recipient, userId, onSendMessage, isOfflineMode = 
   const { handleDeleteMessage } = useMessageContext();
   const [showDeleteMenu, setShowDeleteMenu] = useState(null);
   const [visibleMessages, setVisibleMessages] = useState([]);
+  const [isLoading, setIsLoading] = useState(messages === undefined); // Add loading state
+  const [isRecipientTyping, setIsRecipientTyping] = useState(false);
   
   // Define safeRecipient at component level to ensure it's available throughout
   // This prevents the undefined safeRecipient issue in handleSendMessage
+  console.log("ChatArea received recipient:", recipient);
+  console.log("ChatArea received messages:", messages);
+  
   const safeRecipient = recipient ? {
     avatar: recipient.avatar || '/avatar.jpg',
-    name: recipient.recipientName || 'Care Provider',
+    name: recipient.recipientName || recipient.name || recipient.fullName || 'Care Provider',
     isOnline: recipient.isOnline || false,
     lastActive: recipient.lastActive || new Date().toISOString(),
-    id: recipient.receiverId || null
+    id: recipient.receiverId || recipient.id || recipient.userId || null
   } : null;
+  
+  console.log("ChatArea created safeRecipient:", safeRecipient);
 
   // Scroll to bottom when messages change
   useEffect(() => {
@@ -31,35 +38,48 @@ const ChatArea = ({ messages, recipient, userId, onSendMessage, isOfflineMode = 
   
   // Process messages to add read receipt info for display
   useEffect(() => {
+    setIsLoading(messages === undefined); // Update loading state
+    
     if (messages && Array.isArray(messages)) {
-      const processedMessages = messages.map(msg => {
+      // Log received messages for debugging
+      console.log('Processing messages in ChatArea:', messages);
+      setIsLoading(false); // Messages loaded
+      
+      const processedMessages = messages.map((msg, index) => {
+        // Ensure each message has an id
+        const msgWithId = {
+          ...msg,
+          id: msg.id || `generated-id-${index}-${Date.now()}-${Math.random().toString(36).substring(2, 9)}`
+        };
+        
         let statusText = '';
         
-        if (msg.senderId === userId) {
+        if (msgWithId.senderId === userId) {
           // Only show status for messages sent by current user
-          if (msg.status === 'read') {
-            statusText = msg.readAt 
-              ? `Read ${new Date(msg.readAt).toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'})}` 
+          if (msgWithId.status === 'read') {
+            statusText = msgWithId.readAt 
+              ? `Read ${new Date(msgWithId.readAt).toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'})}` 
               : 'Read';
-          } else if (msg.status === 'delivered') {
+          } else if (msgWithId.status === 'delivered') {
             statusText = 'Delivered';
-          } else if (msg.status === 'sent') {
+          } else if (msgWithId.status === 'sent') {
             statusText = 'Sent';
-          } else if (msg.status === 'sending') {
+          } else if (msgWithId.status === 'sending') {
             statusText = 'Sending...';
-          } else if (msg.status === 'failed') {
+          } else if (msgWithId.status === 'failed') {
             statusText = 'Failed to send';
-          } else if (msg.status === 'pending') {
+          } else if (msgWithId.status === 'pending') {
             statusText = 'Waiting to send (offline)';
           }
         }
         
         return {
-          ...msg,
+          ...msgWithId,
           statusText
         };
       });
       
+      console.log('Processed messages with IDs:', processedMessages);
       setVisibleMessages(processedMessages);
     } else {
       setVisibleMessages([]);
@@ -77,6 +97,36 @@ const ChatArea = ({ messages, recipient, userId, onSendMessage, isOfflineMode = 
     document.addEventListener('click', handleClickOutside);
     return () => document.removeEventListener('click', handleClickOutside);
   }, [showDeleteMenu]);
+
+  // Handle sending animation
+  const handleSendMessageWithAnimation = () => {
+    if (message.trim()) {
+      // Add the message locally for immediate feedback
+      const tempMsg = {
+        id: `temp-${Date.now()}-${Math.random().toString(36).substring(2, 9)}`,
+        text: message,
+        senderId: userId,
+        timestamp: new Date().toISOString(),
+        status: 'sending',
+        statusText: 'Sending...',
+        // Add animation class flag
+        isNewlySent: true
+      };
+      
+      // Update local state (visibleMessages)
+      setVisibleMessages(prev => [...prev, tempMsg]);
+      
+      // Actually send the message
+      handleSendMessage();
+      
+      // Clear animation flag after animation completes
+      setTimeout(() => {
+        setVisibleMessages(prev => 
+          prev.map(m => m.id === tempMsg.id ? {...m, isNewlySent: false} : m)
+        );
+      }, 500);
+    }
+  };
 
   const handleSendMessage = () => {
     if (message.trim()) {
@@ -156,7 +206,7 @@ const ChatArea = ({ messages, recipient, userId, onSendMessage, isOfflineMode = 
   const handleKeyPress = (e) => {
     if (e.key === 'Enter' && !e.shiftKey) {
       e.preventDefault();
-      handleSendMessage();
+      handleSendMessageWithAnimation();
     }
   };
   
@@ -176,29 +226,58 @@ const ChatArea = ({ messages, recipient, userId, onSendMessage, isOfflineMode = 
 
     // If messages is undefined or not an array, return empty object
     if (!messages || !Array.isArray(messages)) {
+      console.warn("ChatArea: Messages is not an array:", messages);
       return groups;
     }
+    
+    console.log("GroupMessagesByDate received messages:", messages.length);
 
-    messages.forEach((msg) => {
-      if (!msg.timestamp) {
-        const now = new Date();
-        const dateKey = now.toDateString();
-        if (!groups[dateKey]) groups[dateKey] = [];
-        groups[dateKey].push({ ...msg, timestamp: now.toISOString() });
-      } else {
-        try {
-          const date = new Date(msg.timestamp);
-          if (isNaN(date.getTime())) throw new Error('Invalid date');
-          const dateKey = date.toDateString();
-          if (!groups[dateKey]) groups[dateKey] = [];
-          groups[dateKey].push(msg);
-        } catch (error) {
-          console.error('Error parsing message timestamp:', error);
+    // Debug all message objects
+    console.log("Message objects:", JSON.stringify(messages.map(m => ({
+      id: m.id, 
+      timestamp: m.timestamp,
+      senderId: m.senderId
+    })), null, 2));
+
+    messages.forEach((msg, index) => {
+      // Make sure each message has all required properties
+      const safeMsg = { 
+        ...msg,
+        id: msg.id || `fallback-id-${index}-${Date.now()}`,
+        senderId: msg.senderId || 'unknown-sender',
+        timestamp: msg.timestamp || new Date().toISOString()
+      };
+      
+      try {
+        let dateKey;
+        if (!safeMsg.timestamp) {
           const now = new Date();
-          const dateKey = now.toDateString();
-          if (!groups[dateKey]) groups[dateKey] = [];
-          groups[dateKey].push({ ...msg, timestamp: now.toISOString() });
+          dateKey = now.toDateString();
+          safeMsg.timestamp = now.toISOString();
+        } else {
+          const date = new Date(safeMsg.timestamp);
+          if (isNaN(date.getTime())) {
+            console.warn('Invalid timestamp for message:', safeMsg);
+            const now = new Date();
+            dateKey = now.toDateString();
+            safeMsg.timestamp = now.toISOString();
+          } else {
+            dateKey = date.toDateString();
+          }
         }
+        
+        // Initialize group array if needed
+        if (!groups[dateKey]) {
+          groups[dateKey] = [];
+        }
+        
+        groups[dateKey].push(safeMsg);
+      } catch (error) {
+        console.error('Error processing message in groupMessagesByDate:', error, safeMsg);
+        // Add to "Unknown" group as fallback
+        const fallbackKey = "Unknown Date";
+        if (!groups[fallbackKey]) groups[fallbackKey] = [];
+        groups[fallbackKey].push(safeMsg);
       }
     });
 
@@ -237,29 +316,116 @@ const ChatArea = ({ messages, recipient, userId, onSendMessage, isOfflineMode = 
     );
   }
 
+  // Add this function before the return statement
+  const detectMessageType = (text) => {
+    if (!text) return '';
+    
+    // Emoji detection - this is a simplified approach
+    // Using a common emoji regex pattern
+    const emojiRegex = /^([\u{1F300}-\u{1F6FF}\u{2600}-\u{26FF}\u{2700}-\u{27BF}\u{1F900}-\u{1F9FF}\u{1F1E0}-\u{1F1FF}]|\p{Emoji}){1,3}$/u;
+    
+    try {
+      // If message is only emojis and 1-3 characters, treat as emoji-only
+      if (text.match(emojiRegex)) return 'emoji-only';
+    } catch (e) {
+      console.warn("Error checking emoji regex:", e);
+    }
+    
+    // Short messages (less than 5 characters) might be emphasis or contain emojis
+    if (text.length <= 5) return 'short-message';
+    
+    return '';
+  };
+
+  // Add this function before the return statement
+  const formatLastActive = (lastActiveDate) => {
+    try {
+      if (!lastActiveDate) return 'Not recently active';
+      
+      const lastActive = new Date(lastActiveDate);
+      if (isNaN(lastActive.getTime())) return 'Not recently active';
+      
+      const now = new Date();
+      const diffInSeconds = Math.floor((now - lastActive) / 1000);
+      
+      // If active within the last minute
+      if (diffInSeconds < 60) {
+        return 'Active just now';
+      }
+      
+      // If active within the last hour
+      if (diffInSeconds < 3600) {
+        const minutes = Math.floor(diffInSeconds / 60);
+        return `Active ${minutes} ${minutes === 1 ? 'minute' : 'minutes'} ago`;
+      }
+      
+      // If active today
+      if (lastActive.toDateString() === now.toDateString()) {
+        return `Active today at ${lastActive.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}`;
+      }
+      
+      // If active yesterday
+      const yesterday = new Date();
+      yesterday.setDate(yesterday.getDate() - 1);
+      if (lastActive.toDateString() === yesterday.toDateString()) {
+        return `Active yesterday at ${lastActive.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}`;
+      }
+      
+      // If active within the last week
+      if (now - lastActive < 7 * 24 * 60 * 60 * 1000) {
+        const options = { weekday: 'long' };
+        return `Active on ${lastActive.toLocaleDateString(undefined, options)} at ${lastActive.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}`;
+      }
+      
+      // Otherwise show the date
+      return `Active on ${lastActive.toLocaleDateString()} at ${lastActive.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}`;
+    } catch (error) {
+      console.error('Error formatting last active time:', error);
+      return 'Last seen status unavailable';
+    }
+  };
+
   return (
     <div className="chat-area">
       <header className="chat-header">
         <div className="recipient-info">
-          <img src={safeRecipient.avatar} alt={safeRecipient.name} className="avatar" />
+          <div className="avatar-container">
+            <img src={safeRecipient.avatar} alt={safeRecipient.name} className="avatar" />
+            {safeRecipient.isOnline && <span className="avatar-online-indicator"></span>}
+          </div>
           <div className="recipient-details">
             <h3>{safeRecipient.name}</h3>
             <div className="status-indicator">
               {safeRecipient.isOnline ? (
                 <span className="status online">Online</span>
               ) : (
-                <span className="status offline">
-                  {safeRecipient.lastActive
-                    ? `Last active ${formatDistanceToNow(new Date(safeRecipient.lastActive), { addSuffix: true })}`
-                    : 'Not recently active'}
+                <span 
+                  className="status offline"
+                  data-full-time={safeRecipient.lastActive ? 
+                    new Date(safeRecipient.lastActive).toLocaleString(undefined, {
+                      weekday: 'long',
+                      year: 'numeric',
+                      month: 'long',
+                      day: 'numeric',
+                      hour: '2-digit',
+                      minute: '2-digit'
+                    }) : 'Last seen unavailable'
+                  }
+                >
+                  {formatLastActive(safeRecipient.lastActive)}
                 </span>
               )}
             </div>
           </div>
         </div>
         <div className="chat-actions">
-          <button className="action-button">
-            <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+          <button className="action-button" title="Call">
+            <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+              <path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6 19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72 12.84 12.84 0 0 0 .7 2.81 2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45 12.84 12.84 0 0 0 2.81.7A2 2 0 0 1 22 16.92z"></path>
+            </svg>
+          </button>
+          <button className="action-button" title="More options">
+            <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
               <circle cx="12" cy="12" r="1"></circle>
               <circle cx="19" cy="12" r="1"></circle>
               <circle cx="5" cy="12" r="1"></circle>
@@ -273,6 +439,13 @@ const ChatArea = ({ messages, recipient, userId, onSendMessage, isOfflineMode = 
           <div className="offline-mode-banner">
             <i className="offline-icon">⚠️</i>
             <span>You're in offline mode. Messages will sync when connection is restored.</span>
+          </div>
+        )}
+        
+        {isLoading && (
+          <div className="messages-loading-state">
+            <div className="loading-spinner"></div>
+            <p>Loading messages...</p>
           </div>
         )}
 
@@ -291,18 +464,43 @@ const ChatArea = ({ messages, recipient, userId, onSendMessage, isOfflineMode = 
               </div>
             </div>
           ) : (
-            Object.keys(messageGroups).map((dateKey) => (
-              <div key={dateKey} className="message-group">
+            Object.keys(messageGroups).map((dateKey) => {
+              // Ensure the dateKey is a proper string for use as a React key
+              const groupKey = typeof dateKey === 'object' ? `group-${JSON.stringify(dateKey)}` : `group-${String(dateKey)}`;
+              
+              return (
+              <div key={groupKey} className="message-group">
                 <div className="message-date">
                   <span>{formatMessageDate(dateKey)}</span>
                 </div>
-                {messageGroups[dateKey].map((msg, index) => (
-                  <div key={`${dateKey}-${index}`} className={`message ${msg.senderId === userId ? 'sent' : 'received'} ${msg.isDeleted ? 'deleted' : ''}`}>
+                {messageGroups[dateKey].map((msg, index) => {
+                  // Debug the msg object to see what's causing issues
+                  console.log('Message object for key generation:', msg);
+                  
+                  // Convert all components to strings safely
+                  const idStr = msg.id ? String(msg.id) : 'no-id';
+                  const senderIdStr = msg.senderId ? String(msg.senderId) : 'no-sender';
+                  const timestampStr = msg.timestamp 
+                    ? (typeof msg.timestamp === 'string' ? msg.timestamp.substring(0, 19) : String(msg.timestamp))
+                    : 'no-timestamp';
+                  
+                  // Ensure dateKey is a string
+                  const dateKeyStr = typeof dateKey === 'object' ? JSON.stringify(dateKey) : String(dateKey);
+                  
+                  // Create a guaranteed unique key with string values
+                  const messageKey = `msg-${idStr}-${index}-${senderIdStr}`;
+                  
+                  console.log("Generated message key:", messageKey);
+                  
+                  return (
+                  <div key={messageKey} className={`message ${msg.senderId === userId ? 'sent' : 'received'} ${msg.isDeleted ? 'deleted' : ''} ${msg.isNewlySent ? 'isNewlySent' : ''}`}>
                     <div className="message-bubble">
                       {msg.isDeleted ? (
                         <p className="deleted-message-text">This message was deleted</p>
                       ) : (
-                        <p>{msg.text || msg.content}</p>
+                        <p className={`message-text ${detectMessageType(msg.text || msg.content)}`}>
+                          {msg.text || msg.content}
+                        </p>
                       )}
                       <div className="message-meta">
                         <span className="message-time">
@@ -336,19 +534,34 @@ const ChatArea = ({ messages, recipient, userId, onSendMessage, isOfflineMode = 
                       </div>
                     )}
                   </div>
-                ))}
+                  );
+                })}
               </div>
-            ))
+            );
+            })
           )}
           <div ref={messagesEndRef} />
         </div>
+
+        {/* Typing indicator - show when recipient is typing */}
+        {isRecipientTyping && (
+          <div className="message received typing-indicator">
+            <div className="message-bubble">
+              <div className="typing-dots">
+                <span></span>
+                <span></span>
+                <span></span>
+              </div>
+            </div>
+          </div>
+        )}
       </div>
 
       <div className="chat-input-area">
         <MessageInput
           message={message}
           setMessage={setMessage}
-          onSendMessage={handleSendMessage}
+          onSendMessage={handleSendMessageWithAnimation}
           onKeyPress={handleKeyPress}
           placeholder={isOfflineMode ? 'Compose message (offline mode)' : 'Type your message...'}
         />
