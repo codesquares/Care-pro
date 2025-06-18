@@ -41,6 +41,7 @@ namespace Infrastructure.Content.Data
             modelBuilder.Entity<QuestionBank>().ToCollection("QuestionBank");
             modelBuilder.Entity<Earnings>().ToCollection("Earnings");
             modelBuilder.Entity<WithdrawalRequest>().ToCollection("WithdrawalRequests");
+            modelBuilder.Entity<TransactionHistory>().ToCollection("TransactionHistory");
             
         }
 
@@ -59,5 +60,6 @@ namespace Infrastructure.Content.Data
         public DbSet<QuestionBank> QuestionBank { get; set; }
         public DbSet<Earnings> Earnings { get; set; }
         public DbSet<WithdrawalRequest> WithdrawalRequests { get; set; }
+        public DbSet<TransactionHistory> TransactionHistory { get; set; }
     }
 }

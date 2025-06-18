@@ -93,6 +93,7 @@ builder.Services.AddScoped<IClientRecommendationService, ClientRecommendationSer
 builder.Services.AddScoped<INotificationService, NotificationService>();
 builder.Services.AddScoped<IEarningsService, EarningsService>();
 builder.Services.AddScoped<IWithdrawalRequestService, WithdrawalRequestService>();
+builder.Services.AddScoped<ITransactionHistoryService, TransactionHistoryService>();
 
 builder.Services.AddScoped<ITokenHandler, Infrastructure.Content.Services.Authentication.TokenHandler>();
 
@@ -187,14 +188,15 @@ builder.Services.AddCors(options =>
                 "http://localhost:5173", 
                 "https://localhost:5174", 
                 "http://localhost:5174",
-                // Add additional development origins if needed
                 "http://localhost:3000",
-                "https://localhost:3000"
+                "https://localhost:3000",
+                // Add your production frontend URL here if not included above
+                "https://carepro-frontend.azurewebsites.net"
             )
             .AllowAnyHeader()
             .AllowAnyMethod()
-            .AllowCredentials()
-            .SetIsOriginAllowed(_ => true); // This is a more permissive setting that should be used only in development
+            .AllowCredentials(); 
+            // Removed the SetIsOriginAllowed(_ => true) which was conflicting with WithOrigins
     });
 });
 
@@ -248,39 +250,30 @@ builder.Services.AddSwaggerGen(options =>
 builder.Services.AddSignalR();
 
 
-//builder.Services.AddSwaggerGen();
-
 var app = builder.Build();
 
-/// Configure SignalR Continues
-app.UseRouting();
+// Configure the HTTP request pipeline - Order matters!
+app.UseSwagger();
+app.UseSwaggerUI();
+
+// Apply CORS policy before other middleware
 app.UseCors("default");
+
+// Then handle routing
+app.UseRouting();
+
+app.UseHttpsRedirection();
+app.UseAuthentication();
+app.UseAuthorization();
+
+// Map endpoints after all middleware is configured
 app.UseEndpoints(endpoints =>
 {
     endpoints.MapHub<ChatHub>("/chathub");
     endpoints.MapHub<NotificationHub>("/notificationHub");
+    endpoints.MapControllers();
 });
 
-
-
-
-
-// Configure the HTTP request pipeline.
-
-app.UseSwagger();
-app.UseSwaggerUI();
-
-
-
-app.UseHttpsRedirection();
-
-//app.UseCors("default");
-
-app.UseAuthentication();
-
-app.UseAuthorization();
-
-app.MapControllers();
 
 
 app.Run();

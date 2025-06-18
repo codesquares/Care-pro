@@ -4,9 +4,12 @@ import { formatDistanceToNow } from 'date-fns';
 import './NotificationBell.css';
 
 const NotificationBell = ({ navigateTo }) => {
-  const { notifications, unreadCount, markAsRead, markAllAsRead, loading } = useNotifications();
+  const { notifications = [], unreadCount = 0, markAsRead, markAllAsRead, loading } = useNotifications();
   const [isOpen, setIsOpen] = useState(false);
   const dropdownRef = useRef(null);
+
+  // Ensure notifications is always an array
+  const safeNotifications = Array.isArray(notifications) ? notifications : [];
 
   const toggleNotifications = () => {
     setIsOpen(!isOpen);
@@ -50,23 +53,23 @@ const NotificationBell = ({ navigateTo }) => {
   };
 
   return (
-    <div className="notification-bell-container">
+    <div className="notification-bell-container" ref={dropdownRef}>
       <button 
         className="notification-bell" 
         onClick={toggleNotifications}
         aria-label="Notifications"
       >
-        <span className="bell-icon">🔔</span>
+        <span className="material-symbols-outlined">notifications</span>
         {unreadCount > 0 && (
-          <span className="unread-badge">{unreadCount}</span>
+          <span className="notification-badge">{unreadCount > 9 ? '9+' : unreadCount}</span>
         )}
       </button>
-      
+
       {isOpen && (
         <div className="notification-dropdown">
           <div className="notification-header">
             <h3>Notifications</h3>
-            {unreadCount > 0 && (
+            {safeNotifications.length > 0 && (
               <button 
                 className="mark-all-read" 
                 onClick={handleMarkAllAsRead}
@@ -76,44 +79,31 @@ const NotificationBell = ({ navigateTo }) => {
             )}
           </div>
 
-          <div className="notification-list">
+          <div className="notification-content">
             {loading ? (
               <div className="notification-loading">Loading notifications...</div>
-            ) : notifications.length === 0 ? (
+            ) : safeNotifications.length === 0 ? (
               <div className="no-notifications">No notifications</div>
             ) : (
-              notifications.map(notification => (
+              safeNotifications.map(notification => (
                 <div 
                   key={notification.id} 
                   className={`notification-item ${!notification.isRead ? 'unread' : ''}`}
                   onClick={() => handleMarkAsRead(notification.id)}
                 >
-                  <div className="notification-icon">
-                    {getNotificationTypeIcon(notification.type)}
-                  </div>
                   <div className="notification-content">
                     <p>{notification.content}</p>
-                    <span className="notification-time">
-                      {formatDistanceToNow(new Date(notification.createdAt), { addSuffix: true })}
-                    </span>
+                    <span className="notification-time">{formatDistanceToNow(new Date(notification.createdAt), { addSuffix: true })}</span>
                   </div>
-                  {!notification.isRead && (
-                    <div className="unread-dot"></div>
-                  )}
+                  {!notification.isRead && <span className="unread-indicator"></span>}
                 </div>
               ))
             )}
           </div>
-
+          
           <div className="notification-footer">
-            <button 
-              className="view-all-notifications"
-              onClick={() => {
-                navigateTo('/notifications');
-                setIsOpen(false);
-              }}
-            >
-              View all
+            <button onClick={() => navigateTo && navigateTo('/notifications')}>
+              See all notifications
             </button>
           </div>
         </div>

@@ -1,0 +1,153 @@
+.transaction-history {
+  background-color: white;
+  border-radius: 8px;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+  padding: 20px;
+  margin-bottom: 25px;
+}
+
+.section-title {
+  font-size: 1.5rem;
+  color: #333;
+  margin-bottom: 20px;
+  padding-bottom: 10px;
+  border-bottom: 1px solid #eee;
+}
+
+.loading-spinner {
+  text-align: center;
+  padding: 20px;
+  color: #666;
+}
+
+.error-message {
+  background-color: #fff1f1;
+  border-left: 4px solid #d32f2f;
+  padding: 12px;
+  margin-bottom: 20px;
+  color: #d32f2f;
+}
+
+.no-transactions {
+  text-align: center;
+  padding: 30px 0;
+  color: #666;
+}
+
+.transactions-table-container {
+  overflow-x: auto;
+}
+
+.transactions-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 0.9rem;
+}
+
+.transactions-table th {
+  background-color: #f5f5f5;
+  text-align: left;
+  padding: 12px;
+  border-bottom: 2px solid #ddd;
+  color: #555;
+}
+
+.transactions-table td {
+  padding: 12px;
+  border-bottom: 1px solid #eee;
+  vertical-align: middle;
+}
+
+.transactions-table tr:hover {
+  background-color: #f9f9f9;
+}
+
+.transaction-type {
+  display: inline-block;
+  padding: 4px 8px;
+  border-radius: 4px;
+  font-size: 0.8rem;
+  font-weight: 500;
+}
+
+.transaction-type.earning {
+  background-color: #e8f5e9;
+  color: #2e7d32;
+}
+
+.transaction-type.withdrawal {
+  background-color: #e3f2fd;
+  color: #1565c0;
+}
+
+.transaction-type.fee {
+  background-color: #fff8e1;
+  color: #f57f17;
+}
+
+.amount {
+  font-weight: 500;
+}
+
+.amount.positive {
+  color: #2e7d32;
+}
+
+.amount.negative {
+  color: #c62828;
+}
+
+.description {
+  max-width: 250px;
+}
+
+.reference {
+  font-size: 0.8rem;
+  color: #666;
+  max-width: 120px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.pagination {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  margin-top: 20px;
+  gap: 10px;
+}
+
+.pagination-btn {
+  background-color: #f0f0f0;
+  border: none;
+  padding: 8px 15px;
+  border-radius: 4px;
+  cursor: pointer;
+  transition: background-color 0.2s;
+}
+
+.pagination-btn:hover:not(:disabled) {
+  background-color: #e0e0e0;
+}
+
+.pagination-btn:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.page-info {
+  font-size: 0.9rem;
+  color: #555;
+}
+
+@media (max-width: 768px) {
+  .transactions-table th,
+  .transactions-table td {
+    padding: 8px;
+    font-size: 0.85rem;
+  }
+  
+  .description {
+    max-width: 150px;
+  }
+}

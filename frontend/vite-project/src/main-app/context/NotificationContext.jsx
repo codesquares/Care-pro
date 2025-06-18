@@ -165,50 +165,69 @@ export const NotificationProvider = ({ children }) => {
     }
   }, [connection, isAuthenticated, permissionGranted, user, token]);
 
-  // Load initial notifications
-  useEffect(() => {
+  // Load notifications from API
+  const fetchNotifications = useCallback(async () => {
     if (isAuthenticated && user) {
       setLoading(true);
       
-      // Get notifications from API
-      getNotifications()
-        .then(data => {
-          console.log('Notifications loaded:', data);
+      try {
+        // Get notifications from API
+        const data = await getNotifications();
+        console.log('Notifications loaded:', data);
+        
+        // Ensure we always set an array, even if the API returns unexpected data
+        if (data && data.items && Array.isArray(data.items)) {
+          setNotifications(data.items);
+        } else if (Array.isArray(data)) {
           setNotifications(data);
-          setLoading(false);
-        })
-        .catch(err => {
-          console.error('Error fetching notifications:', err);
-          // In development mode, provide fallback data
-          if (import.meta.env.DEV) {
-            setNotifications([
-              {
-                id: 'dev-1',
-                type: 'System',
-                content: 'Welcome to CarePro! This is a development mode notification.',
-                isRead: false,
-                createdAt: new Date().toISOString()
-              }
-            ]);
-          }
-          setLoading(false);
-        });
+        } else {
+          console.warn('Unexpected notification data format, using empty array', data);
+          setNotifications([]);
+        }
+      } catch (err) {
+        console.error('Error fetching notifications:', err);
+        // In development mode, provide fallback data
+        if (import.meta.env.DEV) {
+          setNotifications([
+            {
+              id: 'dev-1',
+              type: 'System',
+              content: 'Welcome to CarePro! This is a development mode notification.',
+              isRead: false,
+              createdAt: new Date().toISOString()
+            }
+          ]);
+        } else {
+          setNotifications([]);
+        }
+      } finally {
+        setLoading(false);
+      }
       
       // Get unread count
-      getUnreadCount()
-        .then(data => {
-          console.log('Unread count:', data);
-          setUnreadCount(data.count);
-        })
-        .catch(err => {
-          console.error('Error fetching unread count:', err);
-          // Set default value in development mode
-          if (import.meta.env.DEV) {
-            setUnreadCount(1);
-          }
-        });
+      try {
+        const countData = await getUnreadCount();
+        console.log('Unread count:', countData);
+        
+        if (countData && typeof countData.count === 'number') {
+          setUnreadCount(countData.count);
+        } else if (typeof countData === 'number') {
+          setUnreadCount(countData);
+        } else {
+          console.warn('Unexpected unread count format, using 0', countData);
+          setUnreadCount(0);
+        }
+      } catch (err) {
+        console.error('Error fetching unread count:', err);
+        setUnreadCount(0);
+      }
     }
   }, [isAuthenticated, user]);
+
+  // Fetch notifications when auth state changes
+  useEffect(() => {
+    fetchNotifications();
+  }, [fetchNotifications]);
 
   // Handle marking notification as read
   const handleMarkAsRead = async (notificationId) => {

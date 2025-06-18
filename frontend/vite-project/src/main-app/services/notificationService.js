@@ -1,9 +1,11 @@
 import axios from 'axios';
 
-// Direct API URL (no proxy)
-const API_URL = 'https://carepro-api20241118153443.azurewebsites.net';
+// Use a relative URL to leverage the Vite development proxy
+const isDev = import.meta.env ? import.meta.env.DEV : true;
+// In development mode, use relative URLs for proxy. In production, use the full API URL
+const API_URL = isDev ? '' : 'https://carepro-api20241118153443.azurewebsites.net';
 
-console.log('NotificationService using direct API URL with custom headers');
+console.log('NotificationService using ' + (isDev ? 'proxy URL' : 'direct API URL'));
 
 // Set up axios instance with authentication
 const apiClient = axios.create({
@@ -13,7 +15,7 @@ const apiClient = axios.create({
     'Accept': 'application/json'
   },
   timeout: 15000, // 15 seconds timeout
-  withCredentials: false // Don't include credentials for cross-origin requests
+  withCredentials: true // Enable sending credentials (cookies, authorization headers) for CORS requests
 });
 
 // Add request interceptor for authentication
@@ -31,18 +33,12 @@ apiClient.interceptors.request.use(config => {
     console.warn('No auth token found for API request');
   }
   
-  // Add CORS headers
-  config.headers['Access-Control-Allow-Origin'] = '*';
-  config.headers['Access-Control-Allow-Methods'] = 'GET,PUT,POST,DELETE,OPTIONS';
-  config.headers['Access-Control-Allow-Headers'] = 'Content-Type, Authorization, Content-Length, X-Requested-With';
-  
-  // Log full request details for debugging
+  // Log request details for debugging
   console.log('API Request:', {
     url: config.url,
     baseURL: config.baseURL,
     fullURL: `${config.baseURL}${config.url}`,
     method: config.method?.toUpperCase(),
-    headers: Object.keys(config.headers).join(', '),
     hasAuthHeader: !!config.headers.Authorization
   });
   
@@ -90,59 +86,61 @@ export const getNotifications = async (page = 1, pageSize = 10) => {
       return { items: [], totalCount: 0, currentPage: page, pageSize: pageSize };
     }
     
-    // Try the Content controller path first
+    // Always properly capitalize API endpoint - matching the controller's name
     const endpoint = `/api/Notifications?page=${page}&pageSize=${pageSize}`;
-    console.log(`Fetching notifications from: ${API_URL}${endpoint}`);
+    console.log(`Fetching notifications from: ${endpoint}`);
     
     try {
       const response = await apiClient.get(endpoint);
-      console.log('Notification data received:', response.data);
-      return response.data;
-    } catch (primaryError) {
-      // If the first attempt fails, try a fallback approach
-      console.log('Primary notification endpoint failed, trying alternative approach...');
+      console.log('Notification raw data received:', response.data);
       
-      // Create a more direct axios request with explicit headers
-      const fallbackResponse = await axios({
-        method: 'get',
-        url: `${API_URL}/api/Notifications`,
-        params: { page, pageSize },
-        headers: {
-          'Authorization': `Bearer ${token}`,
-          'Content-Type': 'application/json',
-          'Accept': 'application/json',
-          'Origin': window.location.origin
-        },
-        timeout: 15000
-      });
+      // Process the response data to ensure it has the right format
+      let formattedResponse;
       
-      console.log('Fallback notification data received:', fallbackResponse.data);
-      return fallbackResponse.data;
+      if (Array.isArray(response.data)) {
+        // If the backend returns an array (likely scenario), wrap it in the expected structure
+        formattedResponse = {
+          items: response.data,
+          totalCount: response.data.length,
+          currentPage: page,
+          pageSize: pageSize
+        };
+        console.log('Converted array response to paginated format');
+      } else if (response.data && typeof response.data === 'object') {
+        // If it's already an object, ensure it has the required properties
+        formattedResponse = {
+          items: Array.isArray(response.data.items) ? response.data.items : 
+                (Array.isArray(response.data) ? response.data : []),
+          totalCount: response.data.totalCount || 0,
+          currentPage: response.data.currentPage || page,
+          pageSize: response.data.pageSize || pageSize
+        };
+      } else {
+        // Fallback for unexpected data format
+        console.warn('Unexpected notification response format:', response.data);
+        formattedResponse = { 
+          items: [], 
+          totalCount: 0, 
+          currentPage: page, 
+          pageSize: pageSize 
+        };
+      }
+      
+      console.log('Formatted notification data:', formattedResponse);
+      return formattedResponse;
+    } catch (error) {
+      console.error('Error fetching notifications:', error);
+      console.error('Server responded with error:', error.response?.data || error.message);
+      // Provide fallback data structure in case of error
+      return { items: [], totalCount: 0, currentPage: page, pageSize: pageSize };
     }
-  } catch (error) {
-    console.error('Error fetching notifications:', error);
-    
-    if (error.response) {
-      // The server responded with an error status code
-      console.error('Server responded with error:', {
-        status: error.response.status,
-        statusText: error.response.statusText,
-        data: error.response.data
-      });
-    } else if (error.request) {
-      // The request was made but no response received
-      console.error('No response received from server');
-    } else {
-      // Something happened in setting up the request
-      console.error('Request setup error:', error.message);
-    }
-    
-    // Return empty data instead of throwing an error
+  } catch (outerError) {
+    console.error('Unexpected error in getNotifications:', outerError);
     return { items: [], totalCount: 0, currentPage: page, pageSize: pageSize };
   }
 };
 
-// Get unread notification count
+// Get count of unread notifications
 export const getUnreadCount = async () => {
   try {
     // Check for auth token
@@ -156,45 +154,30 @@ export const getUnreadCount = async () => {
       return { count: 0 };
     }
     
+    const endpoint = '/api/Notifications/unread/count';
+    console.log(`Fetching unread count from: ${API_URL}${endpoint}`);
+    
     try {
-      console.log(`Fetching unread count from: ${API_URL}/api/Notifications/unread/count`);
-      const response = await apiClient.get('/api/Notifications/unread/count');
-      return response.data;
-    } catch (primaryError) {
-      // If the first attempt fails, try a fallback approach
-      console.log('Primary unread count endpoint failed, trying alternative approach...');
+      const response = await apiClient.get(endpoint);
+      console.log('Unread count received:', response.data);
       
-      // Create a more direct axios request with explicit headers
-      const fallbackResponse = await axios({
-        method: 'get',
-        url: `${API_URL}/api/Notifications/unread/count`,
-        headers: {
-          'Authorization': `Bearer ${token}`,
-          'Content-Type': 'application/json',
-          'Accept': 'application/json',
-          'Origin': window.location.origin
-        },
-        timeout: 15000
-      });
+      // Ensure we return an object with a count property
+      if (typeof response.data === 'object' && response.data !== null) {
+        return {
+          count: typeof response.data.count === 'number' ? response.data.count : 0
+        };
+      } else if (typeof response.data === 'number') {
+        return { count: response.data };
+      }
       
-      console.log('Fallback unread count received:', fallbackResponse.data);
-      return fallbackResponse.data;
+      return { count: 0 };
+    } catch (error) {
+      console.error('Error fetching unread count:', error);
+      console.error('Error response details:', error.response?.data || error.message);
+      return { count: 0 };
     }
-  } catch (error) {
-    console.error('Error fetching unread count:', error);
-    
-    // Log detailed error information
-    if (error.response) {
-      console.error('Error response details:', {
-        status: error.response.status,
-        statusText: error.response.statusText,
-        headers: error.response.headers,
-        data: error.response.data
-      });
-    }
-    
-    // Return mock data if API call fails
-    console.log('Using mock unread count due to API error');
+  } catch (outerError) {
+    console.error('Unexpected error in getUnreadCount:', outerError);
     return { count: 0 };
   }
 };
@@ -203,7 +186,7 @@ export const getUnreadCount = async () => {
 export const markAsRead = async (notificationId) => {
   try {
     console.log(`Marking notification as read: ${notificationId}`);
-    const response = await apiClient.put(`/api/Notifications/${notificationId}/read`);
+    const response = await apiClient.put(`/api/notifications/${notificationId}/read`);
     return response.data;
   } catch (error) {
     console.error('Error marking notification as read:', error);
@@ -214,7 +197,7 @@ export const markAsRead = async (notificationId) => {
 // Mark all notifications as read
 export const markAllAsRead = async () => {
   try {
-    const response = await apiClient.put('/api/Notifications/read-all');
+    const response = await apiClient.put('/api/notifications/read-all');
     return response.data;
   } catch (error) {
     console.error('Error marking all notifications as read:', error);
@@ -225,7 +208,7 @@ export const markAllAsRead = async () => {
 // Delete a notification
 export const deleteNotification = async (notificationId) => {
   try {
-    const response = await apiClient.delete(`/api/Notifications/${notificationId}`);
+    const response = await apiClient.delete(`/api/notifications/${notificationId}`);
     return response.data;
   } catch (error) {
     console.error('Error deleting notification:', error);
@@ -260,7 +243,7 @@ export const testNotificationApi = async () => {
     };
     
     // Try direct API connection
-    const response = await apiClient.post('/api/Notifications/test', testPayload, {
+    const response = await apiClient.post('/api/notifications/test', testPayload, {
       timeout: 8000
     });
     

@@ -7,21 +7,29 @@ export default defineConfig({
   plugins: [react()],
   server: {
     proxy: {
-      // Keep general API proxy for other endpoints
+      // Proxy all API requests including notifications with detailed logging
       '/api': {
         target: 'https://carepro-api20241118153443.azurewebsites.net',
         changeOrigin: true,
         secure: false,
-        bypass: (req) => {
-          // Skip proxying notification requests since we're handling them directly
-          if (req.url.includes('/api/Notifications')) {
-            console.log('Bypassing proxy for notification request:', req.url);
-            return req.url;
-          }
+        rewrite: (path) => {
+          console.log(`Proxying API request: ${path}`);
+          return path;
         },
         configure: (proxy, _options) => {
-          proxy.on('error', (err, _req, _res) => {
+          proxy.on('error', (err, req, res) => {
             console.log('Proxy error:', err);
+            // Try to send a more friendly error to client
+            if (!res.headersSent && req.url.includes('/api/Notifications')) {
+              res.writeHead(200, { 'Content-Type': 'application/json' });
+              res.end(JSON.stringify({
+                items: [],
+                totalCount: 0,
+                currentPage: 1,
+                pageSize: 10,
+                error: "API proxy error"
+              }));
+            }
           });
           proxy.on('proxyReq', (proxyReq, req, _res) => {
             console.log('Sending proxy request:', req.method, req.url);
@@ -41,7 +49,6 @@ export default defineConfig({
     },
     host: true, // Allows access from other devices on the network
     strictPort: false, // Ensures the server will not start if the port is already in use
-
   },
   preview:{
     host: '0.0.0.0',

@@ -19,17 +19,20 @@ namespace Infrastructure.Content.Services
         private readonly IEarningsService _earningsService;
         private readonly ICareGiverService _careGiverService;
         private readonly INotificationService _notificationService;
+        private readonly ITransactionHistoryService _transactionHistoryService;
 
         public WithdrawalRequestService(
             CareProDbContext dbContext, 
             IEarningsService earningsService, 
             ICareGiverService careGiverService,
-            INotificationService notificationService)
+            INotificationService notificationService,
+            ITransactionHistoryService transactionHistoryService)
         {
             _dbContext = dbContext;
             _earningsService = earningsService;
             _careGiverService = careGiverService;
             _notificationService = notificationService;
+            _transactionHistoryService = transactionHistoryService;
         }
 
         public async Task<WithdrawalRequestResponse> GetWithdrawalRequestByIdAsync(string id)
@@ -186,6 +189,14 @@ namespace Infrastructure.Content.Services
 
             // Get updated withdrawal
             withdrawal = await _dbContext.WithdrawalRequests.Find(w => w.Id == withdrawal.Id).FirstOrDefaultAsync();
+
+            // Create transaction history records for withdrawal and service fee
+            await _transactionHistoryService.AddWithdrawalTransactionsAsync(
+                withdrawal.CaregiverId,
+                withdrawal.AmountRequested,
+                withdrawal.ServiceCharge,
+                withdrawal.Id.ToString()
+            );
 
             // Notify caregiver that their withdrawal has been completed
             await NotifyCaregiverAboutWithdrawalStatusChange(withdrawal, "Withdrawal Completed", 

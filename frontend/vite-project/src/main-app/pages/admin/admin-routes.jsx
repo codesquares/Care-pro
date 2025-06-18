@@ -14,8 +14,8 @@ function AdminRoutes() {
         // Check if user has admin role
         const userDetails = JSON.parse(localStorage.getItem('userDetails') || '{}');
         const userRole = userDetails?.role;
-        
-        if (!userRole || (userRole !== 'Admin' && userRole !== 'SuperAdmin')) {
+
+        if (userRole !== "Client" || userRole !== "Admin") {
             navigate('/unauthorized', { replace: true });
         }
     }, [navigate]);
