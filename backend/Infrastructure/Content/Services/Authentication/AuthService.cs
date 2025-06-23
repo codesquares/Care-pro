@@ -35,8 +35,9 @@ namespace Infrastructure.Content.Services.Authentication
                 //return appUser;
                 var careGiverAppUser = await careProDbContext.CareGivers.FirstOrDefaultAsync(x => x.Id == appUser.AppUserId);
                 var clientAppUser = await careProDbContext.Clients.FirstOrDefaultAsync(x => x.Id == appUser.AppUserId);
+                var adminAppUser = await careProDbContext.AdminUsers.FirstOrDefaultAsync(x => x.Id == appUser.AppUserId);
 
-                if (careGiverAppUser != null || clientAppUser != null)
+                if (careGiverAppUser != null || clientAppUser != null || adminAppUser != null)
                 {
                     var appUserDetails = new AppUserDTO()
                     {
