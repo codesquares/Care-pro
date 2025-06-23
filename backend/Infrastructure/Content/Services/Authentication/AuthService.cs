@@ -53,6 +53,7 @@ namespace Infrastructure.Content.Services.Authentication
                         HomeAddress = clientAppUser?.HomeAddress ?? careGiverAppUser?.HomeAddress ?? "Not Provided",
 
                         
+
                         Role = appUser.Role,
                         Password = appUser.Password,
                         CreatedAt = appUser.CreatedAt,
