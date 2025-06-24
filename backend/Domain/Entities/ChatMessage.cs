@@ -12,7 +12,7 @@ namespace Domain.Entities
     {
         [BsonId]
         [BsonRepresentation(BsonType.ObjectId)]
-        public ObjectId Id { get; set; }
+        public ObjectId MessageId { get; set; }
 
         [BsonElement("senderId")]
         public string SenderId { get; set; }
@@ -22,7 +22,7 @@ namespace Domain.Entities
 
         [BsonElement("message")]
         public string Message { get; set; }
-        public string? MessageId { get; set; }
+       // public string? MessageId { get; set; }
         public string? Status { get; set; }
 
         [BsonElement("timestamp")]

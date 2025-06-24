@@ -114,7 +114,7 @@ namespace CarePro_Api.Controllers.Content
         {
             try
             {
-                logger.LogInformation($"Retrieving all Gigs for Caregiver with Id: {caregiverId}");
+                logger.LogInformation($"Retrieving all Gigs for Caregiver with MessageId: {caregiverId}");
 
                 var services = await gigServices.GetAllCaregiverGigsAsync(caregiverId);
 
@@ -150,7 +150,7 @@ namespace CarePro_Api.Controllers.Content
         {
             try
             {
-                logger.LogInformation($"Retrieving all Services for Caregiver with Id: {caregiverId}");
+                logger.LogInformation($"Retrieving all Services for Caregiver with MessageId: {caregiverId}");
 
                 var services = await gigServices.GetAllSubCategoriesForCaregiverAsync(caregiverId);
 
@@ -188,7 +188,7 @@ namespace CarePro_Api.Controllers.Content
         {
             try
             {
-                logger.LogInformation($"Retrieving all Gigs for Caregiver with Id: {caregiverId}");
+                logger.LogInformation($"Retrieving all Gigs for Caregiver with MessageId: {caregiverId}");
 
                 var services = await gigServices.GetAllCaregiverPausedGigsAsync(caregiverId);
 
@@ -225,7 +225,7 @@ namespace CarePro_Api.Controllers.Content
         {
             try
             {
-                logger.LogInformation($"Retrieving all Gigs for Caregiver with Id: {caregiverId}");
+                logger.LogInformation($"Retrieving all Gigs for Caregiver with MessageId: {caregiverId}");
 
                 var services = await gigServices.GetAllCaregiverDraftGigsAsync(caregiverId);
 
@@ -261,7 +261,7 @@ namespace CarePro_Api.Controllers.Content
         {
             try
             {
-                logger.LogInformation($"Retrieving  Service with Id: {gigId}");
+                logger.LogInformation($"Retrieving  Service with MessageId: {gigId}");
 
                 var gig = await gigServices.GetGigAsync(gigId);
 
