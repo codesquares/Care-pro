@@ -1,3 +1,4 @@
+using Application.DTOs;
 using Application.Interfaces.Content;
 using Domain.Entities;
 using Microsoft.AspNetCore.Authorization;
@@ -13,7 +14,7 @@ namespace CarePro_Api.Controllers.Content
 {
     [Route("api/[controller]")]
     [ApiController]
-    [Authorize]
+    //[Authorize]
     public class NotificationsController : ControllerBase
     {
         private readonly INotificationService _notificationService;
@@ -29,12 +30,12 @@ namespace CarePro_Api.Controllers.Content
 
         // GET: api/Notifications
         [HttpGet]
-        public async Task<IActionResult> GetUserNotifications([FromQuery] int page = 1, [FromQuery] int pageSize = 10)
+        public async Task<IActionResult> GetUserNotifications(string userId)
         {
             try
             {
-                var userId = User.FindFirstValue(ClaimTypes.NameIdentifier);
-                var notifications = await _notificationService.GetUserNotificationsAsync(userId, page, pageSize);
+               // var userId = User.FindFirstValue(ClaimTypes.NameIdentifier);
+                var notifications = await _notificationService.GetUserNotificationsAsync(userId);
                 return Ok(notifications);
             }
             catch (Exception ex)
@@ -46,11 +47,11 @@ namespace CarePro_Api.Controllers.Content
 
         // GET: api/Notifications/unread/count
         [HttpGet("unread/count")]
-        public async Task<IActionResult> GetUnreadCount()
+        public async Task<IActionResult> GetUnreadCount(string userId)
         {
             try
             {
-                var userId = User.FindFirstValue(ClaimTypes.NameIdentifier);
+               // var userId = User.FindFirstValue(ClaimTypes.NameIdentifier);
                 var count = await _notificationService.GetUnreadNotificationCountAsync(userId);
                 return Ok(new { count });
             }
@@ -79,11 +80,11 @@ namespace CarePro_Api.Controllers.Content
 
         // PUT: api/Notifications/read-all
         [HttpPut("read-all")]
-        public async Task<IActionResult> MarkAllAsRead()
+        public async Task<IActionResult> MarkAllAsRead(string userId)
         {
             try
             {
-                var userId = User.FindFirstValue(ClaimTypes.NameIdentifier);
+                //var userId = User.FindFirstValue(ClaimTypes.NameIdentifier);
                 await _notificationService.MarkAllAsReadAsync(userId);
                 return NoContent();
             }
@@ -112,7 +113,7 @@ namespace CarePro_Api.Controllers.Content
 
         // POST: api/Notifications/test (for testing purposes)
         [HttpPost("test")]
-        [Authorize(Roles = "Admin")]
+        //[Authorize(Roles = "Admin")]
         public async Task<IActionResult> TestNotification([FromBody] TestNotificationRequest request)
         {
             try
@@ -120,9 +121,10 @@ namespace CarePro_Api.Controllers.Content
                 var notification = await _notificationService.CreateNotificationAsync(
                     request.RecipientId,
                     User.FindFirstValue(ClaimTypes.NameIdentifier),
-                    NotificationType.SystemNotice,
+                    "System Notice",
                     request.Message,
-                    "test_notification");
+                    "test_notification",
+                    "");
 
                 return Ok(new { message = "Notification sent", notification });
             }
@@ -130,6 +132,31 @@ namespace CarePro_Api.Controllers.Content
             {
                 _logger.LogError(ex, "Error sending test notification");
                 return StatusCode(500, new { message = "Failed to send test notification", error = ex.Message });
+            }
+        }
+
+
+        // POST: api/Notifications/
+        [HttpPost]
+       // [Authorize(Roles = "Admin")]
+        public async Task<IActionResult> CreateNotification([FromBody] AddNotificationRequest  addNotificationRequest)
+        {
+            try
+            {
+                var notification = await _notificationService.CreateNotificationAsync(
+                    addNotificationRequest.RecipientId,
+                    addNotificationRequest.SenderId,
+                    addNotificationRequest.Type,
+                    addNotificationRequest.Content,
+                    addNotificationRequest.Title,
+                    addNotificationRequest.RelatedEntityId);
+
+                return Ok(new { message = "Notification sent", notification });
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error sending notification");
+                return StatusCode(500, new { message = "Failed to send notification", error = ex.Message });
             }
         }
     }

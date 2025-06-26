@@ -42,8 +42,9 @@ namespace Infrastructure.Content.Services
                 await notificationService.CreateNotificationAsync(
                     chatMessage.ReceiverId,
                     chatMessage.SenderId,
-                    NotificationType.Message,
+                    "Chat Message",
                     notificationContent,
+                    "New Message Alert",
                     chatMessage.MessageId.ToString()
                 );
             }

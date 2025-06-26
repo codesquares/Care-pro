@@ -1,3 +1,4 @@
+using Application.DTOs;
 using Application.Interfaces.Content;
 using Domain.Entities;
 using Infrastructure.Content.Data;
@@ -29,7 +30,7 @@ namespace Infrastructure.Content.Services
             _logger = logger;
         }
 
-        public async Task<Notification> CreateNotificationAsync(string recipientId, string senderId, NotificationType type, string content, string relatedEntityId)
+        public async Task<string> CreateNotificationAsync(string recipientId, string senderId, string type, string content, string? Title, string relatedEntityId)
         {
             try
             {
@@ -40,6 +41,7 @@ namespace Infrastructure.Content.Services
                     SenderId = senderId,
                     Type = type,
                     Content = content,
+                    Title = Title,
                     CreatedAt = DateTime.UtcNow,
                     IsRead = false,
                     RelatedEntityId = relatedEntityId
@@ -51,7 +53,7 @@ namespace Infrastructure.Content.Services
                 // Send real-time notification
                 await SendRealTimeNotificationAsync(recipientId, notification);
 
-                return notification;
+                return notification.Id.ToString();
             }
             catch (Exception ex)
             {
@@ -60,16 +62,85 @@ namespace Infrastructure.Content.Services
             }
         }
 
-        public async Task<List<Notification>> GetUserNotificationsAsync(string userId, int page = 1, int pageSize = 10)
+
+        //public async Task<string> CCreateNotificationAsync(AddNotificationRequest addNotificationRequest )
+        //{
+        //    /// CONVERT DTO TO DOMAIN OBJECT            
+        //    var notification = new Notification
+        //    {
+        //        RecipientId = addNotificationRequest.RecipientId,
+        //        SenderId = addNotificationRequest.SenderId,
+        //        Type = addNotificationRequest.Type,
+        //        Content = addNotificationRequest.Content,
+        //        Title = addNotificationRequest.Title,
+        //        RelatedEntityId = addNotificationRequest.RelatedEntityId,
+
+        //        // Assign new ID
+        //        Id = ObjectId.GenerateNewId(),
+        //        IsRead = false,
+        //        CreatedAt = DateTime.Now,
+        //    };
+
+        //    await _dbContext.Notifications.AddAsync(notification);
+        //    await _dbContext.SaveChangesAsync();
+
+        //    return notification.Id.ToString();
+
+        //}
+
+
+        //public async Task<List<Notification>> GetUserNotificationsAsync(string userId)
+        //{
+        //    try
+        //    {
+        //        return await _dbContext.Notifications
+        //            .Where(n => n.RecipientId == userId)
+        //            .OrderByDescending(n => n.CreatedAt)
+        //            //.Skip((page - 1) * pageSize)
+        //            //.Take(pageSize)
+        //            .ToListAsync();
+        //    }
+        //    catch (Exception ex)
+        //    {
+        //        _logger.LogError(ex, "Error retrieving notifications for user {UserId}", userId);
+        //        throw;
+        //    }
+        //}
+
+
+        public async Task<List<NotificationResponse>> GetUserNotificationsAsync(string userId )
         {
             try
             {
-                return await _dbContext.Notifications
+                var notifications = await _dbContext.Notifications
                     .Where(n => n.RecipientId == userId)
                     .OrderByDescending(n => n.CreatedAt)
-                    .Skip((page - 1) * pageSize)
-                    .Take(pageSize)
+                    //.Skip((page - 1) * pageSize)
+                    //.Take(pageSize)
                     .ToListAsync();
+
+                var notificationsDTO = new List<NotificationResponse>();
+
+                foreach (var notification in notifications)
+                {
+                    var notificationDTO = new NotificationResponse()
+                    {
+                        Id = notification.Id.ToString(),
+                        UserId = notification.RecipientId,
+                        Type = notification.Type,
+                        Content = notification.Content,
+                        Title = notification.Title,
+                        IsRead = notification.IsRead,
+                        RelatedEntityId = notification.RelatedEntityId,
+                        
+                        CreatedAt = notification.CreatedAt,
+                    };
+
+
+                    notificationsDTO.Add(notificationDTO);
+                }
+
+                return notificationsDTO;
             }
             catch (Exception ex)
             {
@@ -78,12 +149,14 @@ namespace Infrastructure.Content.Services
             }
         }
 
+
+
         public async Task<int> GetUnreadNotificationCountAsync(string userId)
         {
             try
             {
                 return await _dbContext.Notifications
-                    .CountAsync(n => n.RecipientId == userId && !n.IsRead);
+                    .CountAsync(n => n.RecipientId == userId && n.IsRead == false);
             }
             catch (Exception ex)
             {
@@ -92,16 +165,31 @@ namespace Infrastructure.Content.Services
             }
         }
 
+
+
+
+
         public async Task MarkAsReadAsync(string notificationId)
         {
             try
             {
-                var notification = await _dbContext.Notifications.FindAsync(ObjectId.Parse(notificationId));
-                if (notification != null)
+                if (!ObjectId.TryParse(notificationId, out var objectId))
                 {
-                    notification.IsRead = true;
-                    await _dbContext.SaveChangesAsync();
+                    throw new ArgumentException("Invalid Notification ID format.");
                 }
+
+                var existingNotification = await _dbContext.Notifications.FindAsync(objectId);
+                if (existingNotification == null)
+                {
+                    throw new KeyNotFoundException($"Notification with ID '{notificationId}' not found.");
+                }
+
+                existingNotification.IsRead = true;
+
+                _dbContext.Notifications.Update(existingNotification);
+                await _dbContext.SaveChangesAsync();
+                              
+               
             }
             catch (Exception ex)
             {
@@ -145,10 +233,11 @@ namespace Infrastructure.Content.Services
             }
             catch (Exception ex)
             {
-                _logger.LogError(ex, "Error deleting notification {NotificationId}", notificationId);
+                _logger.LogError(ex, $"Error deleting notification {notificationId}", notificationId);
                 throw;
             }
         }
+
 
         public async Task<bool> SendRealTimeNotificationAsync(string userId, Notification notification)
         {
@@ -185,5 +274,7 @@ namespace Infrastructure.Content.Services
                 return false;
             }
         }
+
+        
     }
 }

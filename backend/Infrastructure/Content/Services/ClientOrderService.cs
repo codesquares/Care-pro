@@ -91,8 +91,9 @@ namespace Infrastructure.Content.Services
                 await notificationService.CreateNotificationAsync(
                     clientOrder.CaregiverId,
                     clientOrder.ClientId,
-                    NotificationType.Payment,
+                    "Payment",
                     notificationContent,
+                    "New Order Received",
                     clientOrder.Id.ToString()
                 );
             }

@@ -1,3 +1,4 @@
+using Application.DTOs;
 using Domain.Entities;
 using System;
 using System.Collections.Generic;
@@ -9,12 +10,26 @@ namespace Application.Interfaces.Content
 {
     public interface INotificationService
     {
-        Task<Notification> CreateNotificationAsync(string recipientId, string senderId, NotificationType type, string content, string relatedEntityId);
-        Task<List<Notification>> GetUserNotificationsAsync(string userId, int page = 1, int pageSize = 10);
+        Task<string> CreateNotificationAsync(string recipientId, string senderId, string type, string content, string Title, string relatedEntityId);
+       // Task<string> CCreateNotificationAsync(AddNotificationRequest addNotificationRequest );
+
+
+       // Task<List<Notification>> GetUserNotificationsAsync(string userId);
+        Task<List<NotificationResponse>> GetUserNotificationsAsync(string userId );
+
+
         Task<int> GetUnreadNotificationCountAsync(string userId);
+
+
+
+
         Task MarkAsReadAsync(string notificationId);
+
+
         Task MarkAllAsReadAsync(string userId);
+
         Task DeleteNotificationAsync(string notificationId);
+
         Task<bool> SendRealTimeNotificationAsync(string userId, Notification notification);
     }
 }

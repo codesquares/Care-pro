@@ -463,7 +463,7 @@ namespace Infrastructure.Content.Services
             {
                 RecipientId = "admin", // This should be replaced with actual admin IDs in production
                 SenderId = withdrawal.CaregiverId,
-                Type = NotificationType.WithdrawalRequest,
+                Type = "Withdrawal Request",
                 Title = "New Withdrawal Request",
                 Content = $"Caregiver {caregiverName} has requested a withdrawal of {withdrawal.AmountRequested:C}. " +
                           $"Service charge: {withdrawal.ServiceCharge:C}. Final amount: {withdrawal.FinalAmount:C}. " +
@@ -485,7 +485,7 @@ namespace Infrastructure.Content.Services
             {
                 RecipientId = withdrawal.CaregiverId,
                 SenderId = withdrawal.AdminId ?? "system",
-                Type = NotificationType.WithdrawalRequest,
+                Type = "Withdrawal Request",
                 Title = title,
                 Content = message,
                 CreatedAt = DateTime.UtcNow,
