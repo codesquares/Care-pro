@@ -16,8 +16,9 @@ const Earnings = () => {
   const [hasPendingWithdrawal, setHasPendingWithdrawal] = useState(false);
   const [error, setError] = useState(null);
 
-  // Get the current user from auth context
-  const { currentUser } = useAuth();
+  // Get the current user from local storage
+  const currentUser = JSON.parse(localStorage.getItem('userDetails')) || {};
+  
   
   useEffect(() => {
     const fetchEarningsData = async () => {
@@ -26,14 +27,18 @@ const Earnings = () => {
         setError(null);
         
         // Load earnings data
-        const earningsData = await earningsService.getCaregiverEarnings(currentUser.id);
-        setEarnings(earningsData);
+        // const earningsData = await earningsService.getCaregiverEarnings(currentUser.id);
+        setEarnings({
+          totalEarned: 3000, // earningsData.totalEarned,
+          withdrawableAmount: 2000, // earningsData.withdrawableAmount,
+          withdrawnAmount: 1000, // earningsData.withdrawnAmount
+        });
         
-        // Check if there's a pending withdrawal
-        const pendingStatus = await earningsService.hasPendingWithdrawal(currentUser.id);
-        setHasPendingWithdrawal(pendingStatus.hasPendingRequest);
+        // // Check if there's a pending withdrawal
+        // const pendingStatus = await earningsService.hasPendingWithdrawal(currentUser.id);
+        // setHasPendingWithdrawal(pendingStatus.hasPendingRequest);
         
-        // Load withdrawal history
+         // Load withdrawal history
         const history = await earningsService.getWithdrawalHistory(currentUser.id);
         setWithdrawalHistory(history);
       } catch (err) {
@@ -46,8 +51,9 @@ const Earnings = () => {
 
     if (currentUser?.id) {
       fetchEarningsData();
+      
     }
-  }, [currentUser]);
+  }, []);
 
   const formatCurrency = (amount) => {
     return new Intl.NumberFormat('en-NG', {
@@ -81,7 +87,7 @@ const Earnings = () => {
       setShowWithdrawalModal(false);
       setHasPendingWithdrawal(true);
       
-      // Refresh withdrawal history
+     // Refresh withdrawal history
       const history = await earningsService.getWithdrawalHistory(currentUser.id);
       setWithdrawalHistory(history);
       
@@ -91,7 +97,7 @@ const Earnings = () => {
       alert(err.response?.data?.errorMessage || "Failed to submit withdrawal request. Please try again.");
     }
   };
-
+ console.log("withdrawal history", withdrawalHistory);
   if (isLoading) {
     return (
       <div className="earnings-container">
@@ -130,7 +136,7 @@ const Earnings = () => {
       </div>
 
       <h3 className="transactions-title">Withdrawal History</h3>
-      {withdrawalHistory.length > 0 ? (
+      {withdrawalHistory?.length > 0 ? (
         <table className="transactions-table">
           <thead>
             <tr>

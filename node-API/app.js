@@ -8,6 +8,7 @@ const webhookRoutes = require('./src/routes/webhookRoutes');
 const clientServiceRoutes = require('./src/routes/clientServiceRoutes');
 const providerServiceRoutes = require('./src/routes/providerServiceRoutes');
 const assessmentRoutes = require('./src/routes/assessmentRoutes');
+const withdrawalRoutes = require('./src/routes/withdrawalRoutes');
 
 // Load environment variables
 dotenv.config();
@@ -70,6 +71,7 @@ app.use('/api/provider-services', providerServiceRoutes);
 app.use('/api/integration', apiKeyAuth, integrationRoutes);
 app.use('/api/recommendations', recommendationRoutes);
 app.use('/api/assessment', assessmentRoutes);
+app.use('/api/withdrawal', withdrawalRoutes);
 
 // Basic health check endpoint
 app.get('/api/health', (req, res) => {

@@ -19,7 +19,7 @@ const WithdrawalModal = ({ onClose, onSubmit, maxAmount }) => {
     // Calculate service charge and final amount when amount changes
     if (name === 'amountRequested' && !isNaN(value) && value > 0) {
       const amount = parseFloat(value);
-      const charge = amount * 0.1; // 10% service charge
+      const charge = amount * 0.2; // 20% service charge
       setServiceCharge(charge);
       setFinalAmount(amount - charge);
     } else if (name === 'amountRequested') {

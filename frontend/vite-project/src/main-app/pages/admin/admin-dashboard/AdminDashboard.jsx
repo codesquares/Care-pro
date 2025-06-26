@@ -1,8 +1,10 @@
 import React, { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import './admin-dashboard.css';
+import axios from 'axios';
 
 const AdminDashboard = () => {
+  const apiUrl = import.meta.env.VITE_API_URL //Use environment variable or default to localhost
   const [stats, setStats] = useState({
     users: {
       total: 0,
@@ -29,7 +31,34 @@ const AdminDashboard = () => {
       rejected: 0
     }
   });
+  const [caregivers, setCaregivers] = useState(0);
+  const [clients, setClients] = useState(0);
+  const [cleaners, setCleaners] = useState(0);
+  useEffect(async () => {
+   const careGivers = await axios.get(`${apiUrl}/CareGivers/AllCareGivers`,{
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': `Bearer ${localStorage.getItem('authToken')}`
+      }
+   })
+   const caregivers = careGivers.data.filter(user => user.role === 'Caregiver').length;
+   setCaregivers(caregivers);
+  }, []);
+  useEffect(async () => {
+    const clientData = await axios.get(`${apiUrl}/Clients/AllClientUsers`,{
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': `Bearer ${localStorage.getItem('authToken')}`
+      }
+    })
+    const clients = clientData.data.filter(user => user.role === 'Client').length;
+    setClients(clients);
+  }, []);
   
+  // const assessments = {};//load assessment data from API.
+
+  // const questions = {};//load question data from API.
+  // const withdrawals = {};//load withdrawal data from API.
   const [loading, setLoading] = useState(true);
   
   useEffect(() => {
@@ -38,10 +67,10 @@ const AdminDashboard = () => {
       // Mock data for development
       setStats({
         users: {
-          total: 245,
-          caregivers: 148,
-          clients: 92,
-          cleaners: 5
+          total: caregivers + clients + cleaners,
+          caregivers: caregivers,
+          clients: clients,
+          cleaners: cleaners
         },
         assessments: {
           total: 127,

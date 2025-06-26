@@ -1,11 +1,19 @@
-import api from './api';
+// import api from './api';
+
+const BASE_API_URL = 'https://carepro-api20241118153443.azurewebsites.net/api';
 
 export const earningsService = {
   // Get earnings for the current caregiver
   getCaregiverEarnings: async (caregiverId) => {
     try {
-      const response = await api.get(`/Earnings/caregiver/${caregiverId}`);
-      return response.data;
+      const response = await fetch(`${BASE_API_URL}/Earnings/caregiver/${caregiverId}`,{
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${localStorage.getItem('authToken')}`
+        }
+      });
+      // return response.data;
+      return 0;
     } catch (error) {
       throw error;
     }
@@ -13,9 +21,19 @@ export const earningsService = {
 
   // Get withdrawal history for the caregiver
   getWithdrawalHistory: async (caregiverId) => {
+    const api_to_use = `http://localhost:3000/api/withdrawal`;
+    const authToken = localStorage.getItem('authToken');
+    console.log("Auth Token:", authToken);
+    
     try {
-      const response = await api.get(`/WithdrawalRequests/caregiver/${caregiverId}`);
-      return response.data;
+      const response = await fetch(`${api_to_use}/${caregiverId}?userId=${caregiverId}`, {
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${localStorage.getItem('authToken')}`
+        }
+      });
+      const responseData = await response.json();
+      return responseData;
     } catch (error) {
       throw error;
     }
@@ -24,7 +42,12 @@ export const earningsService = {
   // Check if caregiver has pending withdrawal request
   hasPendingWithdrawal: async (caregiverId) => {
     try {
-      const response = await api.get(`/WithdrawalRequests/has-pending/${caregiverId}`);
+      const response = await fetch(`${BASE_API_URL}/WithdrawalRequests/has-pending/${caregiverId}`, {
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${localStorage.getItem('authToken')}`
+        }
+      });
       return response.data;
     } catch (error) {
       throw error;
@@ -33,9 +56,25 @@ export const earningsService = {
 
   // Create a new withdrawal request
   createWithdrawalRequest: async (withdrawalData) => {
+    console.log("Withdrawal Data:", withdrawalData);
+    if (!withdrawalData || !withdrawalData.amountRequested || !withdrawalData.caregiverId) {
+      throw new Error('Invalid withdrawal data');
+    }
+    
     try {
-      const response = await api.post('/WithdrawalRequests', withdrawalData);
-      return response.data;
+      const response = await fetch(`${BASE_API_URL}/WithdrawalRequests`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${localStorage.getItem('authToken')}`
+        },
+        body: JSON.stringify(withdrawalData)
+      });
+      const responseData = await response.json();
+      if (!response.ok) {
+        throw new Error(responseData.errorMessage || 'Failed to create withdrawal request');
+      }
+      return responseData;
     } catch (error) {
       throw error;
     }
@@ -46,7 +85,12 @@ export const adminWithdrawalService = {
   // Get all withdrawal requests
   getAllWithdrawalRequests: async () => {
     try {
-      const response = await api.get('/WithdrawalRequests');
+      const response = await fetch(`${BASE_API_URL}/WithdrawalRequests`, {
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${localStorage.getItem('authToken')}`
+        }
+      });
       return response.data;
     } catch (error) {
       throw error;
@@ -56,7 +100,12 @@ export const adminWithdrawalService = {
   // Get withdrawal requests by status
   getWithdrawalRequestsByStatus: async (status) => {
     try {
-      const response = await api.get(`/WithdrawalRequests/status/${status}`);
+      const response = await fetch(`${BASE_API_URL}/WithdrawalRequests/status/${status}`, {
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${localStorage.getItem('authToken')}`
+        }
+      });
       return response.data;
     } catch (error) {
       throw error;
@@ -66,7 +115,12 @@ export const adminWithdrawalService = {
   // Get withdrawal request by token
   getWithdrawalRequestByToken: async (token) => {
     try {
-      const response = await api.get(`/WithdrawalRequests/token/${token}`);
+      const response = await fetch(`${BASE_API_URL}/WithdrawalRequests/token/${token}`, {
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${localStorage.getItem('authToken')}`
+        }
+      });
       return response.data;
     } catch (error) {
       throw error;
@@ -76,7 +130,14 @@ export const adminWithdrawalService = {
   // Verify a withdrawal request
   verifyWithdrawalRequest: async (verificationData) => {
     try {
-      const response = await api.post('/WithdrawalRequests/verify', verificationData);
+      const response = await fetch(`${BASE_API_URL}/WithdrawalRequests/verify`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${localStorage.getItem('authToken')}`
+        },
+        body: JSON.stringify(verificationData)
+      });
       return response.data;
     } catch (error) {
       throw error;
@@ -86,7 +147,13 @@ export const adminWithdrawalService = {
   // Complete a withdrawal request
   completeWithdrawalRequest: async (token) => {
     try {
-      const response = await api.post(`/WithdrawalRequests/complete/${token}`);
+      const response = await fetch(`${BASE_API_URL}/WithdrawalRequests/complete/${token}`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${localStorage.getItem('authToken')}`
+        }
+      });
       return response.data;
     } catch (error) {
       throw error;
@@ -96,7 +163,14 @@ export const adminWithdrawalService = {
   // Reject a withdrawal request
   rejectWithdrawalRequest: async (rejectionData) => {
     try {
-      const response = await api.post('/WithdrawalRequests/reject', rejectionData);
+      const response = await fetch(`${BASE_API_URL}/WithdrawalRequests/reject`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${localStorage.getItem('authToken')}`
+        },
+        body: JSON.stringify(rejectionData)
+      });
       return response.data;
     } catch (error) {
       throw error;
