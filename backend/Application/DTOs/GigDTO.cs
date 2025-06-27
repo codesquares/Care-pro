@@ -29,6 +29,7 @@ namespace Application.DTOs
         public string Status { get; set; }
 
         public string CaregiverId { get; set; }
+        public string CaregiverName { get; set; }
         public DateTime CreatedAt { get; set; }
         public DateTime? UpdatedOn { get; set; }
         public bool? IsUpdatedToPause { get; set; }

@@ -63,51 +63,7 @@ namespace Infrastructure.Content.Services
         }
 
 
-        //public async Task<string> CCreateNotificationAsync(AddNotificationRequest addNotificationRequest )
-        //{
-        //    /// CONVERT DTO TO DOMAIN OBJECT            
-        //    var notification = new Notification
-        //    {
-        //        RecipientId = addNotificationRequest.RecipientId,
-        //        SenderId = addNotificationRequest.SenderId,
-        //        Type = addNotificationRequest.Type,
-        //        Content = addNotificationRequest.Content,
-        //        Title = addNotificationRequest.Title,
-        //        RelatedEntityId = addNotificationRequest.RelatedEntityId,
-
-        //        // Assign new ID
-        //        Id = ObjectId.GenerateNewId(),
-        //        IsRead = false,
-        //        CreatedAt = DateTime.Now,
-        //    };
-
-        //    await _dbContext.Notifications.AddAsync(notification);
-        //    await _dbContext.SaveChangesAsync();
-
-        //    return notification.Id.ToString();
-
-        //}
-
-
-        //public async Task<List<Notification>> GetUserNotificationsAsync(string userId)
-        //{
-        //    try
-        //    {
-        //        return await _dbContext.Notifications
-        //            .Where(n => n.RecipientId == userId)
-        //            .OrderByDescending(n => n.CreatedAt)
-        //            //.Skip((page - 1) * pageSize)
-        //            //.Take(pageSize)
-        //            .ToListAsync();
-        //    }
-        //    catch (Exception ex)
-        //    {
-        //        _logger.LogError(ex, "Error retrieving notifications for user {UserId}", userId);
-        //        throw;
-        //    }
-        //}
-
-
+        
         public async Task<List<NotificationResponse>> GetUserNotificationsAsync(string userId )
         {
             try
@@ -164,9 +120,6 @@ namespace Infrastructure.Content.Services
                 throw;
             }
         }
-
-
-
 
 
         public async Task MarkAsReadAsync(string notificationId)

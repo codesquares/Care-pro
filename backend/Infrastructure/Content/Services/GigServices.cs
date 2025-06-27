@@ -422,6 +422,7 @@ namespace Infrastructure.Content.Services
                 VideoURL = caregiver.IntroVideo,
                 Status = gig.Status,
                 CaregiverId = gig.CaregiverId,
+                CaregiverName = caregiver.FirstName + " " + caregiver.LastName,
                 UpdatedOn = gig.UpdatedOn,
                 IsUpdatedToPause = gig.IsUpdatedToPause,
                 CreatedAt = gig.CreatedAt,

@@ -42,6 +42,7 @@ namespace Infrastructure.Content.Data
             modelBuilder.Entity<Earnings>().ToCollection("Earnings");
             modelBuilder.Entity<WithdrawalRequest>().ToCollection("WithdrawalRequests");
             modelBuilder.Entity<AdminUser>().ToCollection("AdminUsers");
+            modelBuilder.Entity<Review>().ToCollection("Reviews");
             
         }
 
@@ -61,5 +62,6 @@ namespace Infrastructure.Content.Data
         public DbSet<Earnings> Earnings { get; set; }
         public DbSet<WithdrawalRequest> WithdrawalRequests { get; set; }
         public DbSet<AdminUser> AdminUsers { get; set; }
+        public DbSet<Review> Reviews { get; set; }
     }
 }
