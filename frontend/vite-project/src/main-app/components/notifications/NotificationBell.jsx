@@ -1,110 +1,63 @@
 import React, { useState, useRef, useEffect } from 'react';
-import { useNotifications } from '../../context/NotificationContext';
-import { formatDistanceToNow } from 'date-fns';
+import { useSelector, useDispatch } from 'react-redux';
+import { markNotificationAsRead, markAllNotificationsAsRead } from '../../Redux/slices/notificationSlice';
 import './NotificationBell.css';
 
 const NotificationBell = ({ navigateTo }) => {
-  const { notifications = [], unreadCount = 0, markAsRead, markAllAsRead, loading } = useNotifications();
+  const { notifications, unreadCount, loading } = useSelector((state) => state.notifications);
+  const dispatch = useDispatch();
   const [isOpen, setIsOpen] = useState(false);
   const dropdownRef = useRef(null);
 
-  // Ensure notifications is always an array
-  const safeNotifications = Array.isArray(notifications) ? notifications : [];
+  const toggleNotifications = () => setIsOpen(!isOpen);
 
-  const toggleNotifications = () => {
-    setIsOpen(!isOpen);
-  };
-  
-  // Handle click outside of notification dropdown
   useEffect(() => {
-    const handleClickOutside = (event) => {
-      if (dropdownRef.current && !dropdownRef.current.contains(event.target)) {
+    const handleClickOutside = (e) => {
+      if (dropdownRef.current && !dropdownRef.current.contains(e.target)) {
         setIsOpen(false);
       }
     };
-    
     document.addEventListener('mousedown', handleClickOutside);
-    return () => {
-      document.removeEventListener('mousedown', handleClickOutside);
-    };
+    return () => document.removeEventListener('mousedown', handleClickOutside);
   }, []);
-
-  const handleMarkAsRead = (notificationId) => {
-    markAsRead(notificationId);
-  };
-
-  const handleMarkAllAsRead = () => {
-    markAllAsRead();
-  };
-
-  const getNotificationTypeIcon = (type) => {
-    switch (type) {
-      case 'Message':
-        return '💬';
-      case 'Payment':
-        return '💰';
-      case 'SystemNotice':
-        return '🔔';
-      case 'NewGig':
-        return '🛠️';
-      default:
-        return '📝';
-    }
-  };
 
   return (
     <div className="notification-bell-container" ref={dropdownRef}>
-      <button 
-        className="notification-bell" 
-        onClick={toggleNotifications}
-        aria-label="Notifications"
-      >
-        <span className="material-symbols-outlined">notifications</span>
-        {unreadCount > 0 && (
-          <span className="notification-badge">{unreadCount > 9 ? '9+' : unreadCount}</span>
-        )}
+      <button className="notification-bell" onClick={toggleNotifications}>
+        🔔
+        {unreadCount > 0 && <span className="notification-badge">{unreadCount > 9 ? '9+' : unreadCount}</span>}
       </button>
 
       {isOpen && (
         <div className="notification-dropdown">
           <div className="notification-header">
             <h3>Notifications</h3>
-            {safeNotifications.length > 0 && (
-              <button 
-                className="mark-all-read" 
-                onClick={handleMarkAllAsRead}
-              >
+            {notifications.length > 0 && (
+              <button onClick={() => dispatch(markAllNotificationsAsRead())}>
                 Mark all as read
               </button>
             )}
           </div>
-
           <div className="notification-content">
             {loading ? (
-              <div className="notification-loading">Loading notifications...</div>
-            ) : safeNotifications.length === 0 ? (
-              <div className="no-notifications">No notifications</div>
+              <p>Loading...</p>
+            ) : notifications.length === 0 ? (
+              <p>No notifications</p>
             ) : (
-              safeNotifications.map(notification => (
-                <div 
-                  key={notification.id} 
-                  className={`notification-item ${!notification.isRead ? 'unread' : ''}`}
-                  onClick={() => handleMarkAsRead(notification.id)}
+              notifications.map((n) => (
+                <div
+                  key={n.id}
+                  className={`notification-item ${!n.isRead ? 'unread' : ''}`}
+                  onClick={() => {
+                    if (!n.isRead) dispatch(markNotificationAsRead(n.id));
+                    if (navigateTo && n.link) navigateTo(n.link);
+                  }}
                 >
-                  <div className="notification-content">
-                    <p>{notification.content}</p>
-                    <span className="notification-time">{formatDistanceToNow(new Date(notification.createdAt), { addSuffix: true })}</span>
-                  </div>
-                  {!notification.isRead && <span className="unread-indicator"></span>}
+                  <p>{n.title}</p>
+                  <small>{n.message}</small>
                 </div>
               ))
             )}
-          </div>
-          
-          <div className="notification-footer">
-            <button onClick={() => navigateTo && navigateTo('/notifications')}>
-              See all notifications
-            </button>
           </div>
         </div>
       )}

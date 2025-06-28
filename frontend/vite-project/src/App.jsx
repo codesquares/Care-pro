@@ -32,10 +32,11 @@ import PaymentSuccess from './main-app/pages/client/home-care-service/PaymentSuc
 import { MessageProvider } from './main-app/context/MessageContext';
 import { NotificationProvider } from './main-app/context/NotificationContext';
 import SplashScreen from './main-app/components/SplashScreen/SplashScreen';
-import ConnectionStatusIndicator from './main-app/components/notification/ConnectionStatusIndicator';
+// import ConnectionStatusIndicator from './main-app/components/notification/ConnectionStatusIndicator';
 //Added for viewing Order Pages
 import Order from './main-app/pages/client/orders/MyOrders';
 import Order2 from './main-app/pages/client/orders/OrderTasks&Details';
+import NotificationPoller from "./NotificationPoller"
 
 function ScrollToTop() {
   const location = useLocation();
@@ -49,6 +50,7 @@ function App() {
   return (
     
       <BlogProvider>
+        <NotificationPoller />
         <NotificationProvider>
           <MessageProvider>
             <Router>
@@ -104,7 +106,7 @@ function AppContent() {
       {isUnprotectedRoute && <Navbar />}
       <ScrollToTop />
       <ToastContainer position="top-right" autoClose={5000} />
-      <ConnectionStatusIndicator />
+      {/* <ConnectionStatusIndicator /> */}
       <Routes>
         {/* <Route path="/" element={<Home />} /> */}
         <Route path="/about-us" element={<AboutUs />} />

@@ -3,7 +3,7 @@ import { useNavigate } from "react-router-dom";
 import "./NavigationBar.css";
 import logo from '../../../../assets/careproLogo.svg';
 import hear from "../../../../assets/main-app/heart.svg";
-import bell from "../../../../assets/main-app/notification-bing.svg";
+import Bell from "../../../../assets/main-app/notification-bing.svg";
 import message from "../../../../assets/main-app/message.svg";
 import receipt from "../../../../assets/main-app/receipt.svg";
 import NotificationBell from "../../../components/notifications/NotificationBell";

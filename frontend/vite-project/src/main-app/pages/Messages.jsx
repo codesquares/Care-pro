@@ -7,10 +7,14 @@ import EmptyMessageState from '../components/messages/EmptyMessageState.jsx';
 import ToastContainer from '../components/toast/ToastContainer.jsx';
 import { useMessageContext } from '../context/MessageContext.jsx';
 // Note: Previously this was using NotificationsContext.jsx, now consolidated into NotificationContext.jsx
-import { useNotificationContext } from '../context/NotificationContext.jsx';
+// import { useNotifications } from '../context/NotificationContext.jsx';
 import connectionManager from '../services/connectionManager.js';
 import '../components/messages/messages.scss';
 import '../components/messages/connection-status.scss';
+import { useSelector, useDispatch } from 'react-redux';
+import { markNotificationAsRead } from '../Redux/slices/notificationSlice';
+import { toast } from 'react-toastify';
+
 
 // Add new styles for notification permission button
 const notificationStyles = `
@@ -42,6 +46,27 @@ const notificationStyles = `
 }
 `;
 
+const NotificationPermissionButton = ({ permissionGranted, requestPermission }) => {
+  
+
+  if (permission === 'granted' || !("Notification" in window)) {
+    return null;
+  }
+
+  return (
+    <div className="notification-permission">
+      <button className="permission-button" onClick={requestPermission}>
+        <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24"
+             fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+          <path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"></path>
+          <path d="M13.73 21a2 2 0 0 1-3.46 0"></path>
+        </svg>
+        Enable Message Notifications
+      </button>
+    </div>
+  );
+};
+
 // Inject styles
 const styleElement = document.createElement('style');
 styleElement.textContent = notificationStyles;
@@ -49,9 +74,10 @@ document.head.appendChild(styleElement);
 
 const Messages = ({ userId: propsUserId, token: propsToken }) => {
   const [searchParams] = useSearchParams();
-  const { requestPermission } = useNotificationContext();
   // Track whether we're online for better error handling
   const [isOnline, setIsOnline] = useState(navigator.onLine);
+ const dispatch = useDispatch();
+const { notifications } = useSelector((state) => state.notifications);
 
   // Get user details with better error handling
   let userId = null;
@@ -91,7 +117,7 @@ const Messages = ({ userId: propsUserId, token: propsToken }) => {
       window.removeEventListener('offline', handleOnlineStatus);
     };
   }, []);
-  
+
   const {
     conversations,
     selectedChatId,
@@ -104,9 +130,51 @@ const Messages = ({ userId: propsUserId, token: propsToken }) => {
     handleSendMessage,
     initializeChat,
   } = useMessageContext();
+
+  useEffect(() => {
+  const unreadChatNotification = notifications.find(n => n.type === 'chat' && !n.readAt);
+
+  if (unreadChatNotification) {
+    // Show toast
+    toast.info(`💬 New message from ${unreadChatNotification.senderName || 'someone'}`, {
+      position: 'bottom-left',
+      autoClose: 3000,
+    });
+
+    // Native browser notification if permitted
+    if (Notification.permission === 'granted') {
+      new Notification('New Message', {
+        body: unreadChatNotification.message || 'You have a new message',
+        icon: '/notification-icon.png',
+      });
+    }
+  }
+}, [notifications]);
+
+useEffect(() => {
+  if (!selectedChatId) return;
+
+  const relatedNotifications = notifications.filter(
+    n => n.type === 'chat' &&
+         n.relatedEntityId === selectedChatId &&
+         !n.readAt
+  );
+
+  relatedNotifications.forEach(n => dispatch(markNotificationAsRead(n.id)));
+}, [selectedChatId, notifications, dispatch]);
+
+  const [permissionGranted, setPermissionGranted] = useState(Notification.permission === 'granted');
+
+const requestPermission = async () => {
+  try {
+    const result = await Notification.requestPermission();
+    setPermissionGranted(result === 'granted');
+  } catch (err) {
+    console.error('Error requesting notification permission:', err);
+  }
+};
+
   
-  // Get notification permission status from context
-  const { permissionGranted } = useNotificationContext();
   
   // Initialize chat connection on component mount with strict retry limits
   useEffect(() => {
@@ -379,11 +447,18 @@ const Messages = ({ userId: propsUserId, token: propsToken }) => {
     
     return () => clearTimeout(debugTimer);
   }, [isLoading]);
+
+  const hasUnreadChat = notifications.some(n => n.type === 'chat' && !n.readAt);
+
   
   return (
     <div className="messages">
-      <h1>Messaging Dashboard</h1>
       
+      {hasUnreadChat && <NotificationPermissionButton 
+      permissionGranted={permissionGranted}
+  requestPermission={requestPermission}
+      />}
+
       {/* Add metrics component for monitoring and debugging chat performance */}
       <ChatMetrics />
       

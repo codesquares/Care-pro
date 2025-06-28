@@ -55,5 +55,11 @@ export default defineConfig({
     port: process.env.PORT || 5173,
     strictPort: false,
     allowedHosts: 'all'
-  }
+  },
+  esbuild: {
+    legalComments: 'none',
+  },
+  build: {
+    sourcemap: false, // avoid eval-based source maps
+  },
 })
