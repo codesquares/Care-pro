@@ -24,13 +24,13 @@ import { logout } from './main-app/services/auth';
 import { AuthProvider } from './main-app/context/AuthContext';
 import CreateGig from './main-app/pages/care-giver/CreateGig';
 // import Messages from './main-app/pages/Messages';
-import Notifications from './main-app/components/Notifications/Notifications';
+// import Notifications from './main-app/components/Notifications/Notifications';
 import ContentBlog from './components/ContentfulBlog/Blog';
 import ContentBlogPost from './components/ContentfulBlog/BlogPost';
 import { BlogProvider } from './main-app/context/BlogContext';
 import PaymentSuccess from './main-app/pages/client/home-care-service/PaymentSuccess';
 import { MessageProvider } from './main-app/context/MessageContext';
-import { NotificationProvider } from './main-app/context/NotificationContext';
+// import { NotificationProvider } from './main-app/context/NotificationContext';
 import SplashScreen from './main-app/components/SplashScreen/SplashScreen';
 // import ConnectionStatusIndicator from './main-app/components/notification/ConnectionStatusIndicator';
 //Added for viewing Order Pages
@@ -51,13 +51,13 @@ function App() {
     
       <BlogProvider>
         <NotificationPoller />
-        <NotificationProvider>
+        {/* <NotificationProvider> */}
           <MessageProvider>
             <Router>
               <AppContent />
             </Router>
           </MessageProvider>
-        </NotificationProvider>
+        {/* </NotificationProvider> */}
       </BlogProvider>
     
   );
@@ -122,7 +122,7 @@ function AppContent() {
         <Route path="/become-caregiver" element={<BecomeCaregiver />} />
         <Route path="/login" element={<LoginPage />} />
         <Route path="/register" element={<RegisterPage />} />
-        <Route path="/Notifications" element={<Notifications />} />
+        {/* <Route path="/Notifications" element={<Notifications />} /> */}
         <Route path="/" element={<SplashScreen />} />
 
         {/* <Route path="/Caregivergigpage" element={<Caregivergigpage />} /> */}
