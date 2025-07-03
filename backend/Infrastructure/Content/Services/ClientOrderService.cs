@@ -75,6 +75,7 @@ namespace Infrastructure.Content.Services
                 Id = ObjectId.GenerateNewId(),
                 CaregiverId = gig.CaregiverId,
                 ClientOrderStatus = "In Progress",
+                IsOrderStatusApproved = false,
                 HasDispute = false,
                 OrderCreatedAt = DateTime.Now,
             };
@@ -117,10 +118,22 @@ namespace Infrastructure.Content.Services
         public async Task<CaregiverClientOrdersSummaryResponse> GetAllCaregiverOrderAsync(string caregiverId)
         {
 
+            //var orders = await careProDbContext.ClientOrders
+            //   .Where(x => x.CaregiverId == caregiverId && x.ClientOrderStatus == "Completed"  &&( x.IsOrderStatusApproved == true || x.OrderUpdatedOn >= x.OrderUpdatedOn.Ad))
+            //   .OrderBy(x => x.OrderCreatedAt)
+            //   .ToListAsync();
+
+
+            var sevenDaysAgo = DateTime.UtcNow.AddDays(-7);
+
             var orders = await careProDbContext.ClientOrders
-               .Where(x => x.CaregiverId == caregiverId)
+               .Where(x => x.CaregiverId == caregiverId
+                       && x.ClientOrderStatus == "Completed"
+                       && (x.IsOrderStatusApproved == true || x.OrderUpdatedOn <= sevenDaysAgo))
                .OrderBy(x => x.OrderCreatedAt)
                .ToListAsync();
+
+
 
             var caregiverOrders = new List<ClientOrderResponse>();
             decimal totalEarning = 0;
@@ -233,6 +246,7 @@ namespace Infrastructure.Content.Services
                     Amount = clientOrder.Amount,
                     TransactionId = clientOrder.TransactionId,
                     ClientOrderStatus = clientOrder.ClientOrderStatus,
+                    NoOfOrders = clientOrdersDTOs.Count(),
                     OrderCreatedOn = clientOrder.OrderCreatedAt,
                     
                 };
@@ -299,9 +313,7 @@ namespace Infrastructure.Content.Services
         }
 
         public async Task<string> UpdateClientOrderStatusAsync(string orderId, UpdateClientOrderStatusRequest updateClientOrderStatusRequest)
-        {
-           
-           
+        { 
 
             try
             {
@@ -335,7 +347,39 @@ namespace Infrastructure.Content.Services
             }
         }
 
-       
+        public async Task<string> UpdateOrderStatusToApproveAsync(string orderId)
+        {
+            try
+            {
+                if (!ObjectId.TryParse(orderId, out var objectId))
+                {
+                    throw new ArgumentException("Invalid order ID format.");
+                }
+
+                var existingOrder = await careProDbContext.ClientOrders.FindAsync(objectId);
+
+                if (existingOrder == null)
+                {
+                    throw new KeyNotFoundException($"Order with ID '{orderId}' not found.");
+                }
+
+
+                existingOrder.IsOrderStatusApproved = true;
+                existingOrder.OrderUpdatedOn = DateTime.Now;
+
+
+                careProDbContext.ClientOrders.Update(existingOrder);
+                await careProDbContext.SaveChangesAsync();
+
+                return $"Order with ID '{orderId}' updated successfully.";
+            }
+            catch (Exception ex)
+            {
+                LogException(ex);
+                throw new Exception(ex.Message);
+            }
+        }
+
         public async Task<string> UpdateClientOrderStatusHasDisputeAsync(string orderId, UpdateClientOrderStatusHasDisputeRequest updateClientOrderStatusHasDisputeRequest)
         {
             try
@@ -392,5 +436,6 @@ namespace Infrastructure.Content.Services
             logger.LogInformation($"Audit Event: {message}. User ID: {userId}. Timestamp: {DateTime.UtcNow}");
         }
 
+        
     }
 }

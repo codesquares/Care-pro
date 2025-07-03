@@ -43,10 +43,10 @@ namespace Infrastructure.Content.Services
                 Id = earnings.Id.ToString(),
                 CaregiverId = earnings.CaregiverId,
                 CaregiverName = $"{caregiver.FirstName} {caregiver.LastName}",
-                TotalEarned = earnings.TotalEarned,
-                WithdrawableAmount = earnings.WithdrawableAmount,
-                WithdrawnAmount = earnings.WithdrawnAmount,
-                LastUpdated = earnings.UpdatedAt
+               // TotalEarned = earnings.TotalEarned,
+                //WithdrawableAmount = earnings.WithdrawableAmount,
+                //WithdrawnAmount = earnings.WithdrawnAmount,
+                //LastUpdated = earnings.UpdatedAt
             };
         }
 
@@ -64,23 +64,82 @@ namespace Infrastructure.Content.Services
                 Id = earnings.Id.ToString(),
                 CaregiverId = earnings.CaregiverId,
                 CaregiverName = $"{caregiver.FirstName} {caregiver.LastName}",
-                TotalEarned = earnings.TotalEarned,
-                WithdrawableAmount = earnings.WithdrawableAmount,
-                WithdrawnAmount = earnings.WithdrawnAmount,
-                LastUpdated = earnings.UpdatedAt
+                //TotalEarned = earnings.TotalEarned,
+                //WithdrawableAmount = earnings.WithdrawableAmount,
+                //WithdrawnAmount = earnings.WithdrawnAmount,
+                //LastUpdated = earnings.UpdatedAt
             };
         }
+
+
+        public async Task<CaregiverEarningSummaryResponse> GetEarningByCaregiverIdAsync(string caregiverId)
+        {
+            var earnings = await _dbContext.Earnings
+                    .Where(e => e.CaregiverId == caregiverId)
+                    .OrderByDescending(n => n.CreatedAt)                    
+                    .ToListAsync();
+
+            var earningsDTO = new List<EarningsResponse>();
+            decimal WithdrawableAmount = 0;
+            decimal totalEarnings = 0;
+
+            foreach (var earning in earnings)
+            {
+                WithdrawableAmount += earning.Amount;
+                totalEarnings += earning.Amount;
+
+                var earningDTO = new EarningsResponse()
+                {
+                    Id = earning.Id.ToString(),
+                    ClientOrderId = earning.ClientOrderId,
+                    CaregiverId = earning.CaregiverId,
+                    Amount = earning.Amount,
+                    CreatedAt = earning.CreatedAt,
+                    WithdrawableAmount = WithdrawableAmount
+                };
+                earningsDTO.Add(earningDTO);
+            }
+
+           // return earningsDTO;
+            return new CaregiverEarningSummaryResponse
+            {
+                Earnings = earningsDTO,
+                WithdrawableAmount = WithdrawableAmount,
+                TotalEarning = totalEarnings
+            };
+
+            ////var earnings = await _dbContext.Earnings.Find(e => e.CaregiverId == caregiverId).FirstOrDefaultAsync();
+            ////var earnings = await _dbContext.Earnings.FirstOrDefaultAsync(e => e.CaregiverId == caregiverId);
+            //if (earnings == null)
+            //    return null;
+
+            //var caregiver = await _careGiverService.GetCaregiverUserAsync(caregiverId);
+
+            //return new EarningsResponse
+            //{
+            //    Id = earnings.Id.ToString(),
+            //    CaregiverId = earnings.CaregiverId,
+            //    CaregiverName = $"{caregiver.FirstName} {caregiver.LastName}",
+            //    //TotalEarned = earnings.TotalEarned,
+            //    //WithdrawableAmount = earnings.WithdrawableAmount,
+            //    //WithdrawnAmount = earnings.WithdrawnAmount,
+            //    //LastUpdated = earnings.UpdatedAt
+            //};
+        }
+
+
+
 
         public async Task<EarningsDTO> CreateEarningsAsync(CreateEarningsRequest request)
         {
             var earnings = new Earnings
             {
                 CaregiverId = request.CaregiverId,
-                TotalEarned = request.TotalEarned,
-                WithdrawableAmount = request.WithdrawableAmount,
-                WithdrawnAmount = request.WithdrawnAmount,
-                CreatedAt = DateTime.UtcNow,
-                UpdatedAt = DateTime.UtcNow
+                //TotalEarned = request.TotalEarned,
+                //WithdrawableAmount = request.WithdrawableAmount,
+                //WithdrawnAmount = request.WithdrawnAmount,
+                //CreatedAt = DateTime.UtcNow,
+                //UpdatedAt = DateTime.UtcNow
             };
 
             //await _dbContext.Earnings.InsertOneAsync(earnings);
@@ -92,15 +151,32 @@ namespace Infrastructure.Content.Services
             {
                 Id = earnings.Id.ToString(),
                 CaregiverId = earnings.CaregiverId,
-                TotalEarned = earnings.TotalEarned,
-                WithdrawableAmount = earnings.WithdrawableAmount,
-                WithdrawnAmount = earnings.WithdrawnAmount,
-                CreatedAt = earnings.CreatedAt,
-                UpdatedAt = earnings.UpdatedAt
+                //TotalEarned = earnings.TotalEarned,
+                //WithdrawableAmount = earnings.WithdrawableAmount,
+                //WithdrawnAmount = earnings.WithdrawnAmount,
+                //CreatedAt = earnings.CreatedAt,
+                //UpdatedAt = earnings.UpdatedAt
             };
         }
 
-        
+        public async Task<string> CreateEarningsAsync(AddEarningsRequest addEarningsRequest)
+        {
+            var earnings = new Earnings
+            {
+                ClientOrderId = addEarningsRequest.ClientOrderId,
+                
+                Id = ObjectId.GenerateNewId(),
+                CreatedAt = DateTime.UtcNow,
+            };
+
+            //await _dbContext.Earnings.InsertOneAsync(earnings);
+
+            _dbContext.Earnings.Add(earnings);
+            await _dbContext.SaveChangesAsync();
+
+            return earnings.Id.ToString();
+        }
+
         public async Task<EarningsDTO> UpdateEarningsAsync(string id, UpdateEarningsRequest request)
         {
             var earnings = await _dbContext.Earnings.FirstOrDefaultAsync(e => e.Id == ObjectId.Parse(id));
@@ -108,16 +184,16 @@ namespace Infrastructure.Content.Services
             if (earnings == null)
                 return null;
 
-            if (request.TotalEarned.HasValue)
-                earnings.TotalEarned = request.TotalEarned.Value;
+            //if (request.TotalEarned.HasValue)
+            //    earnings.TotalEarned = request.TotalEarned.Value;
 
-            if (request.WithdrawableAmount.HasValue)
-                earnings.WithdrawableAmount = request.WithdrawableAmount.Value;
+            //if (request.WithdrawableAmount.HasValue)
+            //    earnings.WithdrawableAmount = request.WithdrawableAmount.Value;
 
-            if (request.WithdrawnAmount.HasValue)
-                earnings.WithdrawnAmount = request.WithdrawnAmount.Value;
+            //if (request.WithdrawnAmount.HasValue)
+            //    earnings.WithdrawnAmount = request.WithdrawnAmount.Value;
 
-            earnings.UpdatedAt = DateTime.UtcNow;
+            //earnings.UpdatedAt = DateTime.UtcNow;
 
             _dbContext.Earnings.Update(earnings);
             await _dbContext.SaveChangesAsync();
@@ -126,11 +202,11 @@ namespace Infrastructure.Content.Services
             {
                 Id = earnings.Id.ToString(),
                 CaregiverId = earnings.CaregiverId,
-                TotalEarned = earnings.TotalEarned,
-                WithdrawableAmount = earnings.WithdrawableAmount,
-                WithdrawnAmount = earnings.WithdrawnAmount,
-                CreatedAt = earnings.CreatedAt,
-                UpdatedAt = earnings.UpdatedAt
+                //TotalEarned = earnings.TotalEarned,
+                //WithdrawableAmount = earnings.WithdrawableAmount,
+                //WithdrawnAmount = earnings.WithdrawnAmount,
+                //CreatedAt = earnings.CreatedAt,
+                //UpdatedAt = earnings.UpdatedAt
             };
         }
 
@@ -163,13 +239,13 @@ namespace Infrastructure.Content.Services
             var earnings = await _dbContext.Earnings
                 .FirstOrDefaultAsync(e => e.CaregiverId == caregiverId);
 
-            if (earnings == null || earnings.WithdrawableAmount < withdrawalAmount)
-                return false;
+            //if (earnings == null || earnings.WithdrawableAmount < withdrawalAmount)
+            //    return false;
 
             // Update values
-            earnings.WithdrawableAmount -= withdrawalAmount;
-            earnings.WithdrawnAmount += withdrawalAmount;
-            earnings.UpdatedAt = DateTime.UtcNow;
+            //earnings.WithdrawableAmount -= withdrawalAmount;
+            //earnings.WithdrawnAmount += withdrawalAmount;
+            //earnings.UpdatedAt = DateTime.UtcNow;
 
             // Save changes
             _dbContext.Earnings.Update(earnings);
@@ -187,5 +263,7 @@ namespace Infrastructure.Content.Services
             return await _dbContext.Earnings
                 .AnyAsync(e => e.CaregiverId == caregiverId);
         }
+
+        
     }
 }

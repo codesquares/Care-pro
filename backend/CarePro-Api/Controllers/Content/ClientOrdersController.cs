@@ -183,6 +183,34 @@ namespace CarePro_Api.Controllers.Content
         }
 
 
+
+        [HttpPut]
+        [Route("ClientApproveOrderStatus/orderId")]
+        // [Authorize(Roles = "Client, Admin")]
+        public async Task<ActionResult<string>> UpdateOrderStatusToApproveApproveAsync(string orderId)
+        {
+            try
+            {
+                var result = await clientOrderService.UpdateOrderStatusToApproveAsync(orderId);
+                logger.LogInformation($"Client Order Status with ID: {orderId} updated.");
+                return Ok(result);
+            }
+            catch (ArgumentException ex)
+            {
+                return BadRequest(new { Message = ex.Message }); // Returns 400 Bad Request
+            }
+            catch (KeyNotFoundException ex)
+            {
+                return NotFound(new { message = ex.Message });
+            }
+            catch (Exception ex)
+            {
+                return StatusCode(500, new { message = ex.Message });
+            }
+
+        }
+
+
         [HttpPut]
         [Route("UpdateClientOrderStatusHasDispute/orderId")]
         // [Authorize(Roles = "Caregiver, Admin")]

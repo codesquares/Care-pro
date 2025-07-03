@@ -4,6 +4,7 @@ using Application.Interfaces.Authentication;
 using Application.Interfaces.Content;
 using Application.Interfaces.Email;
 using CloudinaryDotNet;
+using Domain.Entities;
 using Domain.Settings;
 using Infrastructure.Content.Data;
 using Infrastructure.Content.Services;
@@ -96,6 +97,9 @@ builder.Services.AddScoped<IWithdrawalRequestService, WithdrawalRequestService>(
 builder.Services.AddScoped<IAdminUserService, AdminUserService>();
 builder.Services.AddScoped<IReviewService, ReviewService>();
 
+builder.Services.AddHostedService<DailyEarningService>();
+
+
 builder.Services.AddScoped<ITokenHandler, Infrastructure.Content.Services.Authentication.TokenHandler>();
 
 // Add SignalR
@@ -178,6 +182,16 @@ builder.Services.AddScoped<ChatRepository>();
 
 
 
+
+
+
+
+
+
+
+
+
+
 //Handle CORS
 builder.Services.AddCors(options =>
 {
@@ -189,18 +203,6 @@ builder.Services.AddCors(options =>
                .AllowCredentials();
     });
 });
-
-
-//// Handle CORS
-//builder.Services.AddCors(options =>
-//{
-//    options.AddPolicy("default", builder =>
-//    {
-//        builder.AllowAnyOrigin() // Allows requests from any origin
-//               .AllowAnyMethod()  // Allows any HTTP method (GET, POST, PUT, DELETE, etc.)
-//               .AllowAnyHeader(); // Allows any header
-//    });
-//});
 
 
 

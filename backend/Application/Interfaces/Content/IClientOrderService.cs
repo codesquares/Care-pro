@@ -21,6 +21,8 @@ namespace Application.Interfaces.Content
 
         Task<string> UpdateClientOrderStatusAsync(string orderId, UpdateClientOrderStatusRequest  updateClientOrderStatusRequest);
 
+        Task<string> UpdateOrderStatusToApproveAsync(string orderId );
+
 
         Task<string> UpdateClientOrderStatusHasDisputeAsync(string orderId, UpdateClientOrderStatusHasDisputeRequest updateClientOrderStatusDeclinedRequest);
 

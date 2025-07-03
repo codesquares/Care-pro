@@ -57,17 +57,18 @@ namespace CarePro_Api.Controllers.Content
 
         [HttpPost]
         [Authorize(Roles = "Admin,SuperAdmin")]
-        public async Task<IActionResult> CreateEarnings([FromBody] CreateEarningsRequest request)
+        public async Task<IActionResult> CreateEarnings([FromBody] AddEarningsRequest addEarningsRequest)
         {
             try
             {
                 // Check if earnings already exist for this caregiver
-                bool exists = await _earningsService.DoesEarningsExistForCaregiverAsync(request.CaregiverId);
+                bool exists = await _earningsService.DoesEarningsExistForCaregiverAsync(addEarningsRequest.CaregiverId);
                 if (exists)
                     return BadRequest("Earnings record already exists for this caregiver");
 
-                var earnings = await _earningsService.CreateEarningsAsync(request);
-                return CreatedAtAction(nameof(GetEarningsById), new { id = earnings.Id }, earnings);
+                var earnings = await _earningsService.CreateEarningsAsync(addEarningsRequest);
+               // return CreatedAtAction(nameof(GetEarningsById), new { id = earnings.Id }, earnings);
+                return Ok (earnings);
             }
             catch (Exception ex)
             {
