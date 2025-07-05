@@ -12,7 +12,7 @@ namespace CarePro_Api.Controllers.Content
 {
     [Route("api/[controller]")]
     [ApiController]
-    [Authorize]
+   // [Authorize]
     public class WithdrawalRequestsController : ControllerBase
     {
         private readonly IWithdrawalRequestService _withdrawalRequestService;
@@ -57,7 +57,7 @@ namespace CarePro_Api.Controllers.Content
         }
 
         [HttpGet]
-        [Authorize(Roles = "Admin,SuperAdmin")]
+       // [Authorize(Roles = "Admin,SuperAdmin")]
         public async Task<IActionResult> GetAllWithdrawalRequests()
         {
             try
@@ -93,7 +93,7 @@ namespace CarePro_Api.Controllers.Content
         }
 
         [HttpGet("status/{status}")]
-        [Authorize(Roles = "Admin,SuperAdmin")]
+       // [Authorize(Roles = "Admin,SuperAdmin")]
         public async Task<IActionResult> GetWithdrawalRequestsByStatus(string status)
         {
             try
@@ -108,15 +108,15 @@ namespace CarePro_Api.Controllers.Content
         }
 
         [HttpPost]
-        [Authorize(Roles = "Caregiver")]
+       // [Authorize(Roles = "Caregiver")]
         public async Task<IActionResult> CreateWithdrawalRequest([FromBody] CreateWithdrawalRequestRequest request)
         {
             try
             {
                 // Verify that the user is creating a withdrawal for themselves
-                string userId = User.FindFirstValue(ClaimTypes.NameIdentifier);
-                if (userId != request.CaregiverId)
-                    return Forbid();
+                //string userId = User.FindFirstValue(ClaimTypes.NameIdentifier);
+                //if (userId != request.CaregiverId)
+                //    return Forbid();
 
                 var withdrawal = await _withdrawalRequestService.CreateWithdrawalRequestAsync(request);
                 return CreatedAtAction(nameof(GetWithdrawalRequestById), new { id = withdrawal.Id }, withdrawal);
@@ -132,7 +132,7 @@ namespace CarePro_Api.Controllers.Content
         }
 
         [HttpPost("verify")]
-        [Authorize(Roles = "Admin,SuperAdmin")]
+       // [Authorize(Roles = "Admin,SuperAdmin")]
         public async Task<IActionResult> VerifyWithdrawalRequest([FromBody] AdminWithdrawalVerificationRequest request)
         {
             try
@@ -155,7 +155,7 @@ namespace CarePro_Api.Controllers.Content
         }
 
         [HttpPost("complete/{token}")]
-        [Authorize(Roles = "Admin,SuperAdmin")]
+       // [Authorize(Roles = "Admin,SuperAdmin")]
         public async Task<IActionResult> CompleteWithdrawalRequest(string token)
         {
             try
@@ -175,7 +175,7 @@ namespace CarePro_Api.Controllers.Content
         }
 
         [HttpPost("reject")]
-        [Authorize(Roles = "Admin,SuperAdmin")]
+      //  [Authorize(Roles = "Admin,SuperAdmin")]
         public async Task<IActionResult> RejectWithdrawalRequest([FromBody] AdminWithdrawalVerificationRequest request)
         {
             try
@@ -197,7 +197,7 @@ namespace CarePro_Api.Controllers.Content
         }
 
         [HttpGet("has-pending/{caregiverId}")]
-        [Authorize(Roles = "Caregiver")]
+       // [Authorize(Roles = "Caregiver")]
         public async Task<IActionResult> HasPendingWithdrawalRequest(string caregiverId)
         {
             try

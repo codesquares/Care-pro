@@ -13,17 +13,88 @@ using System.Threading.Tasks;
 
 namespace Infrastructure.Content.Services
 {
+    //public class DailyEarningService : BackgroundService
+    //{
+    //    private readonly IServiceScopeFactory _scopeFactory;
+    //    private readonly ILogger<DailyEarningService> _logger;
+    //    private readonly CareProDbContext careProDbContext;
+
+    //    public DailyEarningService(IServiceScopeFactory scopeFactory, ILogger<DailyEarningService> logger, CareProDbContext careProDbContext)
+    //    {
+    //        _scopeFactory = scopeFactory;
+    //        _logger = logger;
+    //        this.careProDbContext = careProDbContext;
+    //    }
+
+    //    protected override async Task ExecuteAsync(CancellationToken stoppingToken)
+    //    {
+    //        while (!stoppingToken.IsCancellationRequested)
+    //        {
+    //            var now = DateTime.Now;
+    //            var nextRun = DateTime.Today.AddDays(1); // 12am next day
+    //            var delay = nextRun - now;
+
+    //            _logger.LogInformation("DailyEarningService will run in {Delay}", delay);
+
+    //            await Task.Delay(delay, stoppingToken);
+
+    //            try
+    //            {
+    //                await ProcessEarningsAsync();
+    //            }
+    //            catch (Exception ex)
+    //            {
+    //                _logger.LogError(ex, "Error while processing earnings.");
+    //            }
+    //        }
+    //    }
+
+    //    private async Task ProcessEarningsAsync()
+    //    {
+    //        using var scope = _scopeFactory.CreateScope();
+    //        var dbContext = scope.ServiceProvider.GetRequiredService<CareProDbContext>();
+
+    //        var cutoffDate = DateTime.UtcNow.AddDays(-7);
+
+    //        // Fetch eligible ClientOrders
+    //        var eligibleOrders = await careProDbContext.ClientOrders
+    //            .Where(o => o.ClientOrderStatus == "Completed" &&
+    //                (o.IsOrderStatusApproved == true || o.OrderUpdatedOn <= cutoffDate))
+    //            .ToListAsync();
+
+    //        foreach (var order in eligibleOrders)
+    //        {
+    //            // Check if Earning already exists for this ClientOrder
+    //            bool earningExists = await careProDbContext.Earnings.AnyAsync(e => e.ClientOrderId == order.Id.ToString());
+    //            if (earningExists)
+    //                continue;
+
+    //            var newEarning = new Earnings
+    //            {
+    //                Id = ObjectId.GenerateNewId(), 
+    //                ClientOrderId = order.Id.ToString(),
+    //                CaregiverId = order.CaregiverId,
+    //                Amount = order.Amount,
+    //                CreatedAt = DateTime.UtcNow
+    //            };
+
+    //            dbContext.Earnings.Add(newEarning);
+    //        }
+
+    //        await dbContext.SaveChangesAsync();
+    //    }
+    //}
+
+
     public class DailyEarningService : BackgroundService
     {
         private readonly IServiceScopeFactory _scopeFactory;
         private readonly ILogger<DailyEarningService> _logger;
-        private readonly CareProDbContext careProDbContext;
 
-        public DailyEarningService(IServiceScopeFactory scopeFactory, ILogger<DailyEarningService> logger, CareProDbContext careProDbContext)
+        public DailyEarningService(IServiceScopeFactory scopeFactory, ILogger<DailyEarningService> logger)
         {
             _scopeFactory = scopeFactory;
             _logger = logger;
-            this.careProDbContext = careProDbContext;
         }
 
         protected override async Task ExecuteAsync(CancellationToken stoppingToken)
@@ -31,7 +102,7 @@ namespace Infrastructure.Content.Services
             while (!stoppingToken.IsCancellationRequested)
             {
                 var now = DateTime.Now;
-                var nextRun = DateTime.Today.AddDays(1); // 12am next day
+                var nextRun = DateTime.Today.AddDays(1);
                 var delay = nextRun - now;
 
                 _logger.LogInformation("DailyEarningService will run in {Delay}", delay);
@@ -56,33 +127,28 @@ namespace Infrastructure.Content.Services
 
             var cutoffDate = DateTime.UtcNow.AddDays(-7);
 
-            // Fetch eligible ClientOrders
-            var eligibleOrders = await careProDbContext.ClientOrders
+            var eligibleOrders = await dbContext.ClientOrders
                 .Where(o => o.ClientOrderStatus == "Completed" &&
-                    (o.IsOrderStatusApproved == true || o.OrderUpdatedOn <= cutoffDate))
+                            (o.IsOrderStatusApproved || o.OrderUpdatedOn <= cutoffDate))
                 .ToListAsync();
 
             foreach (var order in eligibleOrders)
             {
-                // Check if Earning already exists for this ClientOrder
-                bool earningExists = await careProDbContext.Earnings.AnyAsync(e => e.ClientOrderId == order.Id.ToString());
-                if (earningExists)
-                    continue;
+                var exists = await dbContext.Earnings.AnyAsync(e => e.ClientOrderId == order.Id.ToString());
+                if (exists) continue;
 
-                var newEarning = new Earnings
+                dbContext.Earnings.Add(new Earnings
                 {
-                    Id = ObjectId.GenerateNewId(), 
+                    Id = ObjectId.GenerateNewId(),
                     ClientOrderId = order.Id.ToString(),
-                    CaregiverId = order.CaregiverId,
                     Amount = order.Amount,
                     CreatedAt = DateTime.UtcNow
-                };
-
-                dbContext.Earnings.Add(newEarning);
+                });
             }
 
             await dbContext.SaveChangesAsync();
         }
     }
+
 
 }

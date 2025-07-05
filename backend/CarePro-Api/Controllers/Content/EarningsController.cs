@@ -11,7 +11,7 @@ namespace CarePro_Api.Controllers.Content
 {
     [Route("api/[controller]")]
     [ApiController]
-    [Authorize]
+   // [Authorize]
     public class EarningsController : ControllerBase
     {
         private readonly IEarningsService _earningsService;
@@ -56,7 +56,7 @@ namespace CarePro_Api.Controllers.Content
         }
 
         [HttpPost]
-        [Authorize(Roles = "Admin,SuperAdmin")]
+       // [Authorize(Roles = "Admin,SuperAdmin")]
         public async Task<IActionResult> CreateEarnings([FromBody] AddEarningsRequest addEarningsRequest)
         {
             try
@@ -77,7 +77,7 @@ namespace CarePro_Api.Controllers.Content
         }
 
         [HttpPut("{id}")]
-        [Authorize(Roles = "Admin,SuperAdmin")]
+       // [Authorize(Roles = "Admin,SuperAdmin")]
         public async Task<IActionResult> UpdateEarnings(string id, [FromBody] UpdateEarningsRequest request)
         {
             try
