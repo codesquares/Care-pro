@@ -20,7 +20,8 @@ const NotificationBell = ({ navigateTo }) => {
     document.addEventListener('mousedown', handleClickOutside);
     return () => document.removeEventListener('mousedown', handleClickOutside);
   }, []);
-
+ console.log('Notifications:', notifications);
+ console.log('Unread Count:', unreadCount);
   return (
     <div className="notification-bell-container" ref={dropdownRef}>
       <button className="notification-bell" onClick={toggleNotifications}>

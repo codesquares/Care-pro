@@ -1,19 +1,31 @@
+const {generateWithdrawalRequest} = require('../services/withdrawalService');
+
 const withdrawFunds = async (req, res) => {
-  const {amount, caregiverId} = req.body;
-  if (!amount || !caregiverId) {
-    return res.status(400).json({ errorMessage: "Amount and caregiverId are required." });
+  console.log("Withdrawal Request Body:", req.body);
+  const { amountRequested,
+  accountNumber,
+  bankName,
+  accountName, caregiverId, token} = req.body;
+  if (!amountRequested || !caregiverId || !accountNumber || !bankName || !accountName || !token) {
+    return res.status(400).json({ errorMessage: "All fields are required." });
   }
   try {
-    // Logic to process the withdrawal request
-    // This could involve checking if the caregiver has sufficient funds, creating a withdrawal record, etc.
-    
-    // For demonstration, let's assume the withdrawal is successful
+    const withdrawalResponse = await generateWithdrawalRequest({
+      caregiverId: caregiverId,
+      amountRequested: amountRequested,
+      accountNumber: accountNumber,
+      bankName: bankName,
+      accountName: accountName,
+      token: token
+    });
+    console.log("Withdrawal Response:", withdrawalResponse);
     return res.status(200).json({ message: "Withdrawal request submitted successfully." });
   } catch (error) {
     console.error("Error processing withdrawal:", error);
     return res.status(500).json({ errorMessage: "Failed to process withdrawal request." });
   }
 }
+
 
 const allWithdrawals = async (req, res) => {
   try {
@@ -72,6 +84,8 @@ const withdrawableAmount = async (req, res) => {
     return res.status(500).json({ errorMessage: "Failed to calculate withdrawable amount." });
   }
 }
+
+
 // Export the withdrawal controller functions
 module.exports = {
   withdrawFunds,

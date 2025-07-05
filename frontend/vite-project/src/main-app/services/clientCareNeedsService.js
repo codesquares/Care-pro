@@ -10,11 +10,11 @@ class ClientCareNeedsService {
   static async getCareNeeds() {
     try {
       // For demo purposes, get from localStorage
-      const storedNeeds = localStorage.getItem('careNeeds');
+      // const storedNeeds = localStorage.getItem('careNeeds');
       
-      if (storedNeeds) {
-        return JSON.parse(storedNeeds);
-      }
+      // if (storedNeeds) {
+      //   return JSON.parse(storedNeeds);
+      // }
       
       // Get the current client ID
       const userDetails = JSON.parse(localStorage.getItem('userDetails') || '{}');

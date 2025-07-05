@@ -1,16 +1,67 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import './WithdrawalModal.css';
+import { createNotification } from '../../../services/notificationService';
+
 
 const WithdrawalModal = ({ onClose, onSubmit, maxAmount }) => {
   const [formData, setFormData] = useState({
     amountRequested: '',
     accountNumber: '',
     bankName: '',
-    accountName: ''
+    accountName: '',
+    token: '' // Assuming token is passed as a prop or set elsewhere
   });
+  const userId = JSON.parse(localStorage.getItem('userDetails'))?.id || ''; // Get user ID from local storage
   const [errors, setErrors] = useState({});
   const [serviceCharge, setServiceCharge] = useState(0);
   const [finalAmount, setFinalAmount] = useState(0);
+  const [adminData, setAdminData] = useState({});
+  const [admin, setAdmin] = useState({
+    id: "",
+    firstName: '',
+    lastName: '',
+    email: '',
+    phoneNumber: ''
+  });
+  
+ useEffect(() => {
+   const token = localStorage.getItem('authToken'); // Get token from local storage
+   setFormData((prevData) => ({
+     ...prevData,
+     token: token || ''
+   }));
+ }, []);
+
+ useEffect(() => {
+  //load admin id to send notification
+  const getAdmin = async () => {
+    try{
+      const response = await fetch('https://carepro-api20241118153443.azurewebsites.net/api/Admins/AllAdminUsers'); // Assuming admin ID is 1
+      if (!response.ok) {
+        throw new Error('Failed to fetch admin ID');
+      }
+      const data = await response.json();
+      setAdminData(data)
+      return data; // Assuming the admin ID is in the 'id' field
+    }
+    catch (error) {
+      console.error('Error fetching admin ID:', error);
+      return null; // Return null or handle the error as needed
+  }
+  };
+  getAdmin().then((data) => {
+    if (data && data.length > 0) {
+      const admin = data[0]; // Assuming the first admin is the one we want
+      setAdmin({
+        id: admin.id,
+        firstName: admin.firstName,
+        lastName: admin.lastName,
+        email: admin.email,
+        phoneNumber: admin.phoneNumber
+      });
+    }
+  });
+ }, []);
 
   const handleInputChange = (e) => {
     const { name, value } = e.target;
@@ -56,19 +107,47 @@ const WithdrawalModal = ({ onClose, onSubmit, maxAmount }) => {
     if (!formData.accountName) {
       newErrors.accountName = 'Account name is required';
     }
-    
+
+    if (!formData.token) {
+      newErrors.token = 'Token is required';
+    }
     setErrors(newErrors);
     return Object.keys(newErrors).length === 0;
   };
 
   const handleSubmit = (e) => {
     e.preventDefault();
-    
+    console.log("withdrawal modal clicked");
+
     if (validateForm()) {
       onSubmit({
         ...formData,
         amountRequested: parseFloat(formData.amountRequested)
       });
+      createNotification({
+                recipientId: adminData?.id ? admin.id : null, // Assuming admin ID is available
+            
+                senderId: userId,
+                type: "withdrawal",
+                relatedEntityId: userId, // Assuming you have a withdrawal ID
+              }).then(() => {
+                console.log("Notification created successfully"); 
+              }).catch((error) => {
+                console.error("Error creating notification:", error);
+              });
+        createNotification({
+                recipientId: userId, // Assuming user ID is available
+                
+                senderId: userId,
+                type: "withdrawal",
+                relatedEntityId: userId, // Assuming you have a withdrawal ID
+              }).then(() => {
+                console.log("Notification created successfully"); 
+              })
+              .catch((error) => {
+                console.error("Error creating notification:", error);
+              });
+      
     }
   };
 

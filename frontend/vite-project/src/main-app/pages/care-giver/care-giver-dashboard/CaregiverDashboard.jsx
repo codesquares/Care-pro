@@ -24,9 +24,9 @@ const CaregiverDashboard = () => {
    // Retrieve user details from localStorage
    const userDetails = JSON.parse(localStorage.getItem("userDetails"));
    const caregiverId = userDetails?.id;
- 
-   const API_URL = `https://carepro-api20241118153443.azurewebsites.net/api/ClientOrders/caregiverId?caregiverId=${caregiverId}`;
- 
+   const vite_API_URL = import.meta.env.VITE_API_URL; // Ensure this is set in your .env file
+   const API_URL = `${vite_API_URL}/ClientOrders/caregiverId?caregiverId=${caregiverId}`;
+
    useEffect(() => {
      const fetchOrders = async () => {
        try {
@@ -48,6 +48,8 @@ const CaregiverDashboard = () => {
  
      fetchOrders();
    }, []);
+
+  console.log("orders===>",orders) 
 
   return (
     <>

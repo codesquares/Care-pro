@@ -4,6 +4,7 @@ import MessageInput from './MessageInput';
 import MessageStatus from './MessageStatus';
 import { formatDistanceToNow } from 'date-fns';
 import { useMessageContext } from '../../context/MessageContext';
+import { createNotification } from '../../services/notificationService';
 
 const ChatArea = ({ messages, recipient, userId, onSendMessage, isOfflineMode = false }) => {
   const [message, setMessage] = useState('');
@@ -191,6 +192,16 @@ const ChatArea = ({ messages, recipient, userId, onSendMessage, isOfflineMode = 
         // Based on the error stack trace, onSendMessage should receive recipientId and message
         // onSendMessage is a prop passed from parent that should handle the userId internally
         onSendMessage(effectiveRecipientId, message);
+        // Create a notification for the sent message
+        createNotification({
+          recipientId: effectiveRecipientId,
+          senderId: userId,
+          type: "NewMessage",
+          relatedEntityId: message.id,
+        }).then(() => {
+          console.log("Notification created successfully"); 
+        });
+        
       } else {
         console.error("Invalid parameters for sending message:", { 
           userId, 

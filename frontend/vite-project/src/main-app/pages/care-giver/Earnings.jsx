@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { earningsService } from '../../services/withdrawalService';
+import { withdrawalService } from '../../services/withdrawalService';
 // import { useAuth } from '../../context/authContext'; // Assuming you have an auth context
 import './earnings.css';
 import WithdrawalModal from './components/WithdrawalModal';
@@ -15,11 +15,11 @@ const Earnings = () => {
   const [showWithdrawalModal, setShowWithdrawalModal] = useState(false);
   const [hasPendingWithdrawal, setHasPendingWithdrawal] = useState(false);
   const [error, setError] = useState(null);
+  
 
   // Get the current user from local storage
   const currentUser = JSON.parse(localStorage.getItem('userDetails')) || {};
-  
-  
+
   useEffect(() => {
     const fetchEarningsData = async () => {
       try {
@@ -39,7 +39,7 @@ const Earnings = () => {
         // setHasPendingWithdrawal(pendingStatus.hasPendingRequest);
         
          // Load withdrawal history
-        const history = await earningsService.getWithdrawalHistory(currentUser.id);
+        const history = await withdrawalService.getWithdrawalHistory(currentUser.id);
         setWithdrawalHistory(history);
       } catch (err) {
         console.error("Error fetching earnings data:", err);
@@ -79,7 +79,7 @@ const Earnings = () => {
 
   const handleWithdrawalSubmit = async (withdrawalData) => {
     try {
-      await earningsService.createWithdrawalRequest({
+      await withdrawalService.createWithdrawalRequest({
         ...withdrawalData,
         caregiverId: currentUser.id
       });
@@ -88,7 +88,7 @@ const Earnings = () => {
       setHasPendingWithdrawal(true);
       
      // Refresh withdrawal history
-      const history = await earningsService.getWithdrawalHistory(currentUser.id);
+      const history = await withdrawalService.getWithdrawalHistory(currentUser.id);
       setWithdrawalHistory(history);
       
       alert("Withdrawal request submitted successfully!");

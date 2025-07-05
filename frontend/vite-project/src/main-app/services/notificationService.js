@@ -54,7 +54,7 @@ const authHeaders = () => ({
 
 export const getNotifications = async (id, page = 1, pageSize = 10) => {
   try {
-    const response = await axios.get(`${API_URL}/api/Notifications?userId=${id}?page=${page}&pageSize=${pageSize}`, {
+    const response = await axios.get(`${API_URL}/api/Notifications?userId=${id}&page=${page}&pageSize=${pageSize}`, {
       headers: authHeaders()
     });
 
@@ -132,7 +132,7 @@ export const createNotification = async ({
   recipientId,
   senderId,
   type,
-  relatedEntityId = null
+  relatedEntityId 
 }) => {
   try {
     const notificationPayload = {

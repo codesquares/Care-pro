@@ -1,5 +1,5 @@
 import { Routes, Route } from 'react-router-dom';
-import CaregiverDashboard from './care-giver-dashboard/CaregiverDashboard ';
+import CaregiverDashboard from './care-giver-dashboard/CaregiverDashboard';
 import UserProfile from './care-giver-profile/UserProfile';
 import NavigationBar from './care-giver-dashboard/NavigationBar';
 import CaregiverSettings from '../../components/caregiver_settings/CaregiverSettings';

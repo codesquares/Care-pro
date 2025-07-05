@@ -61,6 +61,7 @@ app.use('/webhook/webhook', express.raw({ type: 'application/json' }));
 const integrationRoutes = require('./src/routes/integrationRoutes');
 const recommendationRoutes = require('./src/routes/recommendationRoutes');
 const { apiKeyAuth } = require('./src/middleware/apiKeyMiddleware');
+const earningsRoutes = require('./src/routes/earningsRoutes');
 
 // Routes
 app.use('/api/auth', authRoutes);
@@ -72,6 +73,7 @@ app.use('/api/integration', apiKeyAuth, integrationRoutes);
 app.use('/api/recommendations', recommendationRoutes);
 app.use('/api/assessment', assessmentRoutes);
 app.use('/api/withdrawal', withdrawalRoutes);
+app.use('/api/earnings',earningsRoutes);
 
 // Basic health check endpoint
 app.get('/api/health', (req, res) => {

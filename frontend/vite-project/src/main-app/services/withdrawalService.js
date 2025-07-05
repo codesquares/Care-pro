@@ -2,7 +2,7 @@
 
 const BASE_API_URL = 'https://carepro-api20241118153443.azurewebsites.net/api';
 
-export const earningsService = {
+export const withdrawalService = {
   // Get earnings for the current caregiver
   getCaregiverEarnings: async (caregiverId) => {
     try {
@@ -57,12 +57,15 @@ export const earningsService = {
   // Create a new withdrawal request
   createWithdrawalRequest: async (withdrawalData) => {
     console.log("Withdrawal Data:", withdrawalData);
+    const local_api = `http://localhost:3000/api/withdrawal?userId=${withdrawalData.caregiverId}`;
+    // const authToken = localStorage.getItem('authToken');
+    // console.log("Auth Token:", authToken);
     if (!withdrawalData || !withdrawalData.amountRequested || !withdrawalData.caregiverId) {
       throw new Error('Invalid withdrawal data');
     }
     
     try {
-      const response = await fetch(`${BASE_API_URL}/WithdrawalRequests`, {
+      const response = await fetch(`${local_api}`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
