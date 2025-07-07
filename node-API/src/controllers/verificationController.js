@@ -16,7 +16,7 @@ const TEST_VALUES = {
 // Verify NIN with or without selfie
 const verifyNIN = async (req, res) => {
   try {
-    const { ninNumber, selfieImage, isWithSelfie, userType, token, id } = req.body;
+    const { ninNumber, selfieImage, userType, token, id } = req.body;
     const userId = req.user.id;
 
     // Check if userId from request matches the authenticated user
@@ -41,12 +41,12 @@ const verifyNIN = async (req, res) => {
         message: 'Authorization token is required'
       });
     }
-    if (isWithSelfie === true && !selfieImage) {
-      return res.status(400).json({
-        status: 'error',
-        message: 'Selfie image is required for NIN+selfie verification'
-      });
-    }
+    // if (!selfieImage) {
+    //   return res.status(400).json({
+    //     status: 'error',
+    //     message: 'Selfie image is required for NIN+selfie verification'
+    //   });
+    // }
 
     const isTestNin = ninNumber === TEST_VALUES.NIN;
     let verificationResult;
@@ -77,7 +77,30 @@ const verifyNIN = async (req, res) => {
       verificationResult = await DojahService.verifyNIN(ninNumber, selfieImage, userId);
     }
 
-    // Check if verification was successful
+    // Stepwise response: If only NIN is provided (no selfie), prompt for next step
+    if (
+      verificationResult.status === true &&
+      verificationResult.entity &&
+      verificationResult.entity.verified === true &&
+      !selfieImage
+    ) {
+      return res.status(200).json({
+        status: 'success',
+        message: 'NIN verified. Please provide a selfie to complete verification.',
+        data: {
+          verified: false,
+          verificationStatus: 'nin_verified',
+          nin: ninNumber,
+          firstName: verificationResult.entity.first_name,
+          lastName: verificationResult.entity.last_name,
+          gender: verificationResult.entity.gender,
+          dateOfBirth: verificationResult.entity.date_of_birth,
+          nextSteps: ['selfie']
+        }
+      });
+    }
+
+    // If both NIN and selfie are present and verified, complete verification
     if (
       verificationResult.status === true &&
       verificationResult.entity &&
@@ -136,7 +159,7 @@ const verifyNIN = async (req, res) => {
           lastName: verificationResult.entity.last_name,
           gender: verificationResult.entity.gender,
           dateOfBirth: verificationResult.entity.date_of_birth,
-          nextSteps: !selfieImage ? ['selfie'] : []
+          nextSteps: []
         }
       });
     } else {
@@ -164,7 +187,7 @@ const verifyNIN = async (req, res) => {
 
 const verifyBVN = async (req, res) => {
   try {
-    const { bvnNumber, selfieImage, isWithSelfie, token, userType, id } = req.body;
+    const { bvnNumber, selfieImage, token, userType, id } = req.body;
     const userId = req.user.id;
 
     // Check if userId from request matches the authenticated user
@@ -190,12 +213,12 @@ const verifyBVN = async (req, res) => {
       });
     }
 
-    if (isWithSelfie === true && !selfieImage) {
-      return res.status(400).json({
-        status: 'error',
-        message: 'Selfie image is required for BVN+selfie verification'
-      });
-    }
+    // if (!selfieImage) {
+    //   return res.status(400).json({
+    //     status: 'error',
+    //     message: 'Selfie image is required for BVN+selfie verification'
+    //   });
+    // }
 
     const isTestBvn = bvnNumber === TEST_VALUES.BVN;
     let verificationResult;
@@ -226,7 +249,30 @@ const verifyBVN = async (req, res) => {
       verificationResult = await DojahService.verifyBVN(bvnNumber, selfieImage, userId);
     }
 
-    // Check if verification was successful
+    // Stepwise response: If only BVN is provided (no selfie), prompt for next step
+    if (
+      verificationResult.status === true &&
+      verificationResult.entity &&
+      verificationResult.entity.verified === true &&
+      !selfieImage
+    ) {
+      return res.status(200).json({
+        status: 'success',
+        message: 'BVN verified. Please provide a selfie to complete verification.',
+        data: {
+          verified: false,
+          verificationStatus: 'bvn_verified',
+          bvn: bvnNumber,
+          firstName: verificationResult.entity.first_name,
+          lastName: verificationResult.entity.last_name,
+          gender: verificationResult.entity.gender,
+          dateOfBirth: verificationResult.entity.date_of_birth,
+          nextSteps: ['selfie']
+        }
+      });
+    }
+
+    // If both BVN and selfie are present and verified, complete verification
     if (
       verificationResult.status === true &&
       verificationResult.entity &&
@@ -248,11 +294,9 @@ const verifyBVN = async (req, res) => {
         userId,
         verifiedFirstName: verificationResult.entity.first_name,
         verifiedLastName: verificationResult.entity.last_name,
-
         verificationStatus: 'verified',
         verificationMethod: verificationType,
         verificationNo: bvnNumber,
-    
       };
 
       try {
@@ -287,7 +331,7 @@ const verifyBVN = async (req, res) => {
           lastName: verificationResult.entity.last_name,
           gender: verificationResult.entity.gender,
           dateOfBirth: verificationResult.entity.date_of_birth,
-          nextSteps: !selfieImage ? ['selfie'] : []
+          nextSteps: []
         }
       });
     } else {

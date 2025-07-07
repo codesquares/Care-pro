@@ -185,53 +185,52 @@ const verificationService = {
   
   async verifyBVN(bvnNumber, selfieImage, idImage, userType, id, token ) {
     try {
-      // Get user details for authentication
       const userDetails = JSON.parse(localStorage.getItem('userDetails') || '{}');
-      
-      // If userType is not provided, get it from userDetails or default to 'caregiver'
       if (!userType) {
         userType = userDetails.userType || 'caregiver';
       }
-
-      // check if selfie image and id image are provided and throw error if not
+      const userId = userDetails?.id;
+      if(userId !== id){
+        throw new Error('User ID mismatch. Please check your authentication details.');
+      }
       if (!bvnNumber) {
         throw new Error('BVN number is required for verification');
       }
-      if(!selfieImage || !idImage) {
-        throw new Error('Both selfieImage and idImage must be provided for verification');
+
+      // Step 1: Only BVN provided (stepwise verification)
+      if (!selfieImage && !idImage) {
+        const payload = {
+          bvnNumber: this._getTestValue('bvn', bvnNumber),
+          userType,
+          userId: userDetails.id,
+          id: userDetails.id,
+          token: token,
+          firstName: userDetails.firstName || '',
+          lastName: userDetails.lastName || ''
+        };
+        try {
+          const response = await verificationApi.post('/kyc/verify-bvn', payload);
+          return response.data;
+        } catch (error) {
+          throw error.response?.data || { message: 'BVN verification failed' };
+        }
       }
 
-      
-      console.log(`Verifying BVN for user: ${userDetails.id}, type: ${userType}`);
-      
-      
-      // Create a consistent payload with all necessary auth information
-      const payload = { 
-        bvnNumber: this._getTestValue('bvn', bvnNumber),
-        userType,
-        // Explicitly include userId in payload to ensure it's available to auth middleware
-        userId: userDetails.id,
-        id:userDetails.id,
-        token: token,
-        // Include name information to help with debugging
-        firstName: userDetails.firstName || '',
-        lastName: userDetails.lastName || '',
-        // Include ID image if provided
-        idImage: idImage || null,
-        // Include selfie image if provided
-        selfieImage: selfieImage || null
-
-      };
-      
-      // If both selfie and ID images are provided, use the combined verification endpoint
+      // Step 2: Both selfie and ID images provided (full verification)
       if (selfieImage && idImage) {
-        payload.selfieImage = selfieImage;
-        payload.idImage = idImage;
-        
+        const payload = {
+          bvnNumber: this._getTestValue('bvn', bvnNumber),
+          userType,
+          userId: userDetails.id,
+          id: userDetails.id,
+          token: token,
+          firstName: userDetails.firstName || '',
+          lastName: userDetails.lastName || '',
+          idImage: idImage,
+          selfieImage: selfieImage
+        };
         try {
           const response = await verificationApi.post('/kyc/verify-bvn-with-id-selfie', payload);
-          
-          // Cache the verification status on success
           if (response.data?.status === 'success') {
             this.saveVerificationStatus(
               true, 
@@ -241,15 +240,15 @@ const verificationService = {
               userType
             );
           }
-          
           return response.data;
         } catch (error) {
           console.error('Error with BVN + ID + Selfie verification:', error);
+          throw error.response?.data || { message: 'BVN verification failed' };
         }
       }
-      
-      
-      return response.data;
+
+      // If only one of the images is provided, throw error
+      throw new Error('Both selfieImage and idImage must be provided for full verification');
     } catch (error) {
       throw error.response?.data || { message: 'BVN verification failed' };
     }
@@ -262,47 +261,48 @@ const verificationService = {
    */
   async verifyNIN(ninNumber, selfieImage, userType, idImage, id, token) {
     try {
-      // Get user details for authentication
       const userDetails = JSON.parse(localStorage.getItem('userDetails') || '{}');
-      
-      // If userType is not provided, get it from userDetails or default to 'caregiver'
       if (!userType) {
         userType = userDetails.userType || 'caregiver';
       }
-      // check if nin number is provided and throw error if not
       if (!ninNumber) {
         throw new Error('NIN number is required for verification');
       }
-      if(!selfieImage || !idImage) {
-        throw new Error('Selfie image and ID image must be provided for verification');
+
+      // Step 1: Only NIN provided (stepwise verification)
+      if (!selfieImage && !idImage) {
+        const payload = {
+          ninNumber: this._getTestValue('nin', ninNumber),
+          userType,
+          userId: userDetails.id,
+          id: userDetails.id,
+          token: token,
+          firstName: userDetails.firstName || '',
+          lastName: userDetails.lastName || ''
+        };
+        try {
+          const response = await verificationApi.post('/kyc/verify-nin', payload);
+          return response.data;
+        } catch (error) {
+          throw error.response?.data || { message: 'NIN verification failed' };
+        }
       }
 
-      console.log(`Verifying NIN for user: ${userDetails.id}, type: ${userType}`);
-      
-      // Create a consistent payload with all necessary auth information
-      const payload = {
-        ninNumber: this._getTestValue('nin', ninNumber),
-        userType,
-        // Explicitly include userId in payload to ensure it's available to auth middleware
-        userId: userDetails.id,
-        // Include name information to help with debugging
-        firstName: userDetails.firstName || '',
-        lastName: userDetails.lastName || '',
-        // Include ID image if provided
-        idImage: idImage,
-        // Include selfie image if provided
-        selfieImage: selfieImage,
-        id: userDetails.id,
-        token: token
-      };
-      
+      // Step 2: Both selfie and ID images provided (full verification)
       if (selfieImage && idImage) {
-        payload.selfieImage = selfieImage;
-        payload.idImage = idImage;
+        const payload = {
+          ninNumber: this._getTestValue('nin', ninNumber),
+          userType,
+          userId: userDetails.id,
+          id: userDetails.id,
+          token: token,
+          firstName: userDetails.firstName || '',
+          lastName: userDetails.lastName || '',
+          idImage: idImage,
+          selfieImage: selfieImage
+        };
         try {
           const response = await verificationApi.post('/kyc/verify-nin-with-selfie', payload);
-          
-          // Cache the verification status on success
           if (response.data?.status === 'success') {
             this.saveVerificationStatus(
               true, 
@@ -312,14 +312,15 @@ const verificationService = {
               userType
             );
           }
-          
           return response.data;
         } catch (error) {
           console.error('Error with NIN + Selfie verification:', error);
+          throw error.response?.data || { message: 'NIN verification failed' };
         }
       }
-      // If we reach here, it means we didn't use the combined endpoint but we only want to use the combined endpoint and never the standard separate one
-      return response.data;
+
+      // If only one of the images is provided, throw error
+      throw new Error('Both selfieImage and idImage must be provided for full verification');
     } catch (error) {
       throw error.response?.data || { message: 'NIN verification failed' };
     }

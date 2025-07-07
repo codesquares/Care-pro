@@ -42,8 +42,19 @@ const ProfileCard = () => {
 
     fetchProfile();
   }, []); // Note: No dependencies here — it's safe!
+  console.log("profile===>", profile);
 
   console.log("profile is running");
+  // get the user's first name and first two letters of profile id and last two letters of profile id and last two letters of profile last name and concatenate them to form a username
+  let userName = "";
+   if(profile){
+     userName = profile.firstName + profile.lastName+profile.id.slice(0,2)+profile.id.slice(-2)+profile.lastName.slice(-2);
+   }else{
+     userName = "guestUser209";
+   }
+  console.log("userName===>", userName);
+  // save the username to localStorage
+  localStorage.setItem("userName", userName);
 
   if (loading) return <p>Loading profile...</p>;
   if (error) return <p>Error: {error}</p>;
@@ -60,7 +71,7 @@ const ProfileCard = () => {
           ? `${profile.firstName} ${profile.lastName}`
           : "Ahmed Rufai"}
       </h3>
-      <p className="profile-username">@{profile?.username || "ahmedrufai209"}</p>
+      <p className="profile-username">@{userName}</p>
       <div
         className="view-profile"
         style={{ cursor: "pointer" }}

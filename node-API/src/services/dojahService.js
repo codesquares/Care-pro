@@ -36,17 +36,9 @@ class DojahService {
   }
 
   async verifyNIN(ninNumber, selfieImage = null) {
-    // Always check if this is a test NIN
+    // Only return hardcoded response for test NIN
     const isTestNIN = this.isTestValue('nin', ninNumber);
-    
-    // Force the use of test NIN from guide in development, but only if not already a test value
-    if (process.env.NODE_ENV !== 'production' && !isTestNIN) {
-      ninNumber = this.testValues.nin;
-      console.log(`Using test NIN number ${this.testValues.nin} for development environment`);
-    }
-    
-    // If this is a test NIN (either provided or forced), ensure it's always verified
-    if (isTestNIN || ninNumber === this.testValues.nin) {
+    if (isTestNIN) {
       console.log(`🧪 Always verifying test NIN: ${ninNumber}`);
       return {
         entity: {
@@ -68,24 +60,12 @@ class DojahService {
         status: true
       };
     }
-    
-    // If using mock data or missing API credentials, return mock response
-    if (this.useMock) {
-      console.log('Using mock NIN verification for testing');
-      
-      // Mock failure for some specific test values, success for others
-      if (ninNumber === '12345678900' || ninNumber.length !== 11) {
-        return mockVerifications.mockFailedNIN(ninNumber);
-      }
-      return mockVerifications.mockSuccessNIN(ninNumber);
-    }
-    
+
+    // For all other NINs, always call the real Dojah API
     try {
       let response;
-      
-      // If selfie image is provided, use the NIN with selfie verification endpoint
+
       if (selfieImage) {
-        // According to the API guide, use the NIN with selfie verification endpoint
         response = await axios.post(`${this.baseUrl}/kyc/nin/verify`, {
           nin: ninNumber,
           selfie_image: selfieImage
@@ -93,26 +73,20 @@ class DojahService {
           headers: this.headers
         });
       } else {
-        // Basic NIN verification without selfie
         response = await axios.get(`${this.baseUrl}/kyc/nin`, {
           params: { nin: ninNumber },
           headers: this.headers
         });
       }
-      
-      // Check if we got a proper response
+
       if (response.data && response.data.entity) {
-        // Add verification status based on selfie verification result if available
         const result = response.data;
-        
         if (selfieImage && result.entity.selfie_verification) {
           result.entity.verified = result.entity.selfie_verification.match === true;
           result.entity.verification_status = result.entity.verified ? "success" : "failed";
         }
-        
         return result;
       } else {
-        // Invalid response format
         return {
           entity: {
             nin: ninNumber,
@@ -125,8 +99,6 @@ class DojahService {
       }
     } catch (error) {
       console.error('NIN verification error:', error.response?.data || error.message);
-      
-      // Check if it's a validation error (invalid NIN)
       if (error.response && error.response.status === 400) {
         return {
           entity: {
@@ -138,8 +110,6 @@ class DojahService {
           status: false
         };
       }
-      
-      // Server or API error
       return {
         entity: {
           nin: ninNumber,
@@ -154,17 +124,9 @@ class DojahService {
   }
 
   async verifyBVN(bvnNumber, selfieImage = null) {
-    // Always check if this is a test BVN
+    // Only return hardcoded response for test BVN
     const isTestBVN = this.isTestValue('bvn', bvnNumber);
-    
-    // Force the use of test BVN from guide in development, but only if not already a test value
-    if (process.env.NODE_ENV !== 'production' && !isTestBVN) {
-      bvnNumber = this.testValues.bvn;
-      console.log(`Using test BVN number ${this.testValues.bvn} for development environment`);
-    }
-    
-    // If this is a test BVN (either provided or forced), ensure it's always verified
-    if (isTestBVN || bvnNumber === this.testValues.bvn) {
+    if (isTestBVN) {
       console.log(`🧪 Always verifying test BVN: ${bvnNumber}`);
       return {
         entity: {
@@ -185,24 +147,12 @@ class DojahService {
         status: true
       };
     }
-    
-    // If using mock data or missing API credentials, return mock response
-    if (this.useMock) {
-      console.log('Using mock BVN verification for testing');
-      
-      // Mock failure for some specific test values, success for others
-      if (bvnNumber === '12345678900' || bvnNumber.length !== 11) {
-        return mockVerifications.mockFailedBVN(bvnNumber);
-      }
-      return mockVerifications.mockSuccessBVN(bvnNumber);
-    }
-    
+
+    // For all other BVNs, always call the real Dojah API
     try {
       let response;
-      
-      // If selfie image is provided, use the BVN with selfie verification endpoint
+
       if (selfieImage) {
-        // According to the API guide, use the BVN with selfie verification endpoint
         response = await axios.post(`${this.baseUrl}/kyc/bvn/verify`, {
           bvn: bvnNumber,
           selfie_image: selfieImage
@@ -210,26 +160,20 @@ class DojahService {
           headers: this.headers
         });
       } else {
-        // Basic BVN verification without selfie
         response = await axios.get(`${this.baseUrl}/kyc/bvn`, {
           params: { bvn: bvnNumber },
           headers: this.headers
         });
       }
-      
-      // Check if we got a proper response
+
       if (response.data && response.data.entity) {
-        // Add verification status based on selfie verification result if available
         const result = response.data;
-        
         if (selfieImage && result.entity.selfie_verification) {
           result.entity.verified = result.entity.selfie_verification.match === true;
           result.entity.verification_status = result.entity.verified ? "success" : "failed";
         }
-        
         return result;
       } else {
-        // Invalid response format
         return {
           entity: {
             bvn: bvnNumber,
@@ -242,8 +186,6 @@ class DojahService {
       }
     } catch (error) {
       console.error('BVN verification error:', error.response?.data || error.message);
-      
-      // Check if it's a validation error (invalid BVN)
       if (error.response && error.response.status === 400) {
         return {
           entity: {
@@ -255,8 +197,6 @@ class DojahService {
           status: false
         };
       }
-      
-      // Server or API error
       return {
         entity: {
           bvn: bvnNumber,

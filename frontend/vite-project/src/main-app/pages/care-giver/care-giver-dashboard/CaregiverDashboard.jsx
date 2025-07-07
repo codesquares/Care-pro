@@ -38,7 +38,7 @@ const CaregiverDashboard = () => {
  
          setOrders(data.clientOrders);
           setTotalOrders(data.noOfOrders);
-          setTotalEarnings(data.totalEarning);
+          // setTotalEarnings(data.totalEarning);
        } catch (error) {
          setError(error.message);
        } finally {
@@ -50,6 +50,18 @@ const CaregiverDashboard = () => {
    }, []);
 
   console.log("orders===>",orders) 
+  const earningsTotal = orders.reduce((acc, order) => {
+    if (order.clientOrderStatus === 'Completed') {
+      return acc + order.amount;
+    }
+    return acc;
+  }, 0);
+
+  useEffect(() => {
+    setTotalEarnings(earningsTotal);
+  }, [orders, earningsTotal]);
+
+  console.log("totalEarnings===>", totalEarnings);
 
   return (
     <>

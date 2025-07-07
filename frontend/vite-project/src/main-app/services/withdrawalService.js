@@ -1,6 +1,7 @@
 // import api from './api';
 
 const BASE_API_URL = 'https://carepro-api20241118153443.azurewebsites.net/api';
+const userDetails = JSON.parse(localStorage.getItem('userDetails') || '{}');
 
 export const withdrawalService = {
   // Get earnings for the current caregiver
@@ -125,7 +126,8 @@ export const adminWithdrawalService = {
           'Authorization': `Bearer ${localStorage.getItem('authToken')}`
         }
       });
-      return response.data;
+      const data = await response.json();
+      return data;
     } catch (error) {
       throw error;
     }
@@ -133,6 +135,10 @@ export const adminWithdrawalService = {
 
   // Verify a withdrawal request
   verifyWithdrawalRequest: async (verificationData) => {
+    
+    console.log("Verification Data:=====>", verificationData);
+    console.log("userDetails:=====>", userDetails);
+    verificationData.adminId = userDetails.id; // Add admin ID to verification data
     try {
       const response = await fetch(`${BASE_API_URL}/WithdrawalRequests/verify`, {
         method: 'POST',
@@ -140,9 +146,11 @@ export const adminWithdrawalService = {
           'Content-Type': 'application/json',
           'Authorization': `Bearer ${localStorage.getItem('authToken')}`
         },
+        
         body: JSON.stringify(verificationData)
       });
-      return response.data;
+      const data = await response.json();
+      return  data;
     } catch (error) {
       throw error;
     }
@@ -158,7 +166,8 @@ export const adminWithdrawalService = {
           'Authorization': `Bearer ${localStorage.getItem('authToken')}`
         }
       });
-      return response.data;
+      const data = await response.json();
+      return data;
     } catch (error) {
       throw error;
     }
@@ -175,7 +184,8 @@ export const adminWithdrawalService = {
         },
         body: JSON.stringify(rejectionData)
       });
-      return response.data;
+      const data = await response.json();
+      return data;
     } catch (error) {
       throw error;
     }
