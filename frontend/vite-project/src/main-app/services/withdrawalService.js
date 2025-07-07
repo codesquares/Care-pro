@@ -40,19 +40,19 @@ export const withdrawalService = {
   },
 
   // Check if caregiver has pending withdrawal request
-  hasPendingWithdrawal: async (caregiverId) => {
-    try {
-      const response = await fetch(`${BASE_API_URL}/WithdrawalRequests/has-pending/${caregiverId}`, {
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': `Bearer ${localStorage.getItem('authToken')}`
-        }
-      });
-      return response.data;
-    } catch (error) {
-      throw error;
-    }
-  },
+  // hasPendingWithdrawal: async (caregiverId) => {
+  //   try {
+  //     const response = await fetch(`${BASE_API_URL}/WithdrawalRequests/has-pending/${caregiverId}`, {
+  //       headers: {
+  //         'Content-Type': 'application/json',
+  //         'Authorization': `Bearer ${localStorage.getItem('authToken')}`
+  //       }
+  //     });
+  //     return response.data;
+  //   } catch (error) {
+  //     throw error;
+  //   }
+  // },
 
   // Create a new withdrawal request
   createWithdrawalRequest: async (withdrawalData) => {
@@ -94,7 +94,8 @@ export const adminWithdrawalService = {
           'Authorization': `Bearer ${localStorage.getItem('authToken')}`
         }
       });
-      return response.data;
+      const data = await response.json();
+      return data;
     } catch (error) {
       throw error;
     }

@@ -19,6 +19,11 @@ const WithdrawalManagement = () => {
         setError(null);
         
         const data = await adminWithdrawalService.getAllWithdrawalRequests();
+        if (!data || data.length === 0) {
+          setWithdrawals([]);
+          setFilteredWithdrawals([]);
+          return;
+        }
         setWithdrawals(data);
         setFilteredWithdrawals(data);
       } catch (err) {
@@ -31,12 +36,12 @@ const WithdrawalManagement = () => {
     
     fetchWithdrawals();
   }, []);
-  
+  console.log("withdrawal requests===>", withdrawals);
   useEffect(() => {
     if (filter === 'all') {
       setFilteredWithdrawals(withdrawals);
     } else {
-      setFilteredWithdrawals(withdrawals.filter(w => w.status.toLowerCase() === filter.toLowerCase()));
+      setFilteredWithdrawals(withdrawals?.filter(w => w.status.toLowerCase() === filter.toLowerCase()));
     }
   }, [filter, withdrawals]);
   
@@ -174,7 +179,7 @@ const WithdrawalManagement = () => {
         </select>
       </div>
       
-      {filteredWithdrawals.length === 0 ? (
+      {filteredWithdrawals?.length === 0 ? (
         <div className="no-withdrawals">No withdrawal requests found.</div>
       ) : (
         <div className="withdrawals-table-container">
@@ -193,7 +198,7 @@ const WithdrawalManagement = () => {
               </tr>
             </thead>
             <tbody>
-              {filteredWithdrawals.map(withdrawal => (
+              {filteredWithdrawals?.map(withdrawal => (
                 <tr key={withdrawal.id}>
                   <td>{formatDateTime(withdrawal.createdAt)}</td>
                   <td>{withdrawal.caregiverName}</td>

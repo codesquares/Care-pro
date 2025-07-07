@@ -62,7 +62,7 @@ const LoginPage = () => {
 
       // Redirect based on role
       if (data.role === "Admin") {
-        window.location.href = "/admin";
+        window.location.href = "app/admin/dashboard";
       } else if (data.role === "Client") {
         window.location.href = "/app/client/dashboard";
       } else {

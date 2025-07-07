@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { withdrawalService } from '../../services/withdrawalService';
 // import { useAuth } from '../../context/authContext'; // Assuming you have an auth context
+ import { earningService } from '../../services/earningsService'; // Uncomment when the service is available
 import './earnings.css';
 import WithdrawalModal from './components/WithdrawalModal';
 
@@ -27,13 +28,25 @@ const Earnings = () => {
         setError(null);
         
         // Load earnings data
-        // const earningsData = await earningsService.getCaregiverEarnings(currentUser.id);
+        const earningsData = await earningService.getCaregiverEarnings(currentUser.id);
+         if (!earningsData ) {
+          setEarnings({
+            totalEarned: 0,
+            withdrawableAmount: 0,
+            withdrawnAmount: 0
+          });
+          // throw new Error("No earnings data found for this caregiver.");
+        }
         setEarnings({
-          totalEarned: 3000, // earningsData.totalEarned,
-          withdrawableAmount: 2000, // earningsData.withdrawableAmount,
-          withdrawnAmount: 1000, // earningsData.withdrawnAmount
+          totalEarned: earningsData.totalEarning,
+          // totalEarned: 10000, // Placeholder until service is available
+          withdrawableAmount: earningsData.withdrawableAmount,
+          // withdrawableAmount: 8000, // Placeholder until service is available
+          // withdrawnAmount: earningsData.withdrawnAmount
+          withdrawnAmount: 0 // Placeholder until service is available
         });
-        
+         
+
         // // Check if there's a pending withdrawal
         // const pendingStatus = await earningsService.hasPendingWithdrawal(currentUser.id);
         // setHasPendingWithdrawal(pendingStatus.hasPendingRequest);
@@ -54,7 +67,7 @@ const Earnings = () => {
       
     }
   }, []);
-
+ console.log("earnings", earnings);
   const formatCurrency = (amount) => {
     return new Intl.NumberFormat('en-NG', {
       style: 'currency',
@@ -145,7 +158,7 @@ const Earnings = () => {
               <th>Service Charge</th>
               <th>Final Amount</th>
               <th>Status</th>
-              <th>Token</th>
+              {/* <th>Token</th> */}
             </tr>
           </thead>
           <tbody>

@@ -215,14 +215,6 @@ const verificationService = {
           return response.data;
         } catch (error) {
           console.error('Error with BVN + ID + Selfie verification:', error);
-          
-          // If we get a 404, try falling back to regular BVN verification
-          if (error.response?.status === 404) {
-            console.log('Combined endpoint not found, falling back to regular BVN verification...');
-            // Continue with regular verification (below)
-          } else {
-            throw error;
-          }
         }
       }
       
@@ -299,14 +291,6 @@ const verificationService = {
           return response.data;
         } catch (error) {
           console.error('Error with NIN + Selfie verification:', error);
-          
-          // If we get a 404, try falling back to regular NIN verification
-          if (error.response?.status === 404) {
-            console.log('Combined endpoint not found, falling back to regular NIN verification...');
-            // Continue with regular verification (below)
-          } else {
-            throw error;
-          }
         }
       }
       

@@ -34,25 +34,40 @@ const AdminDashboard = () => {
   const [caregivers, setCaregivers] = useState(0);
   const [clients, setClients] = useState(0);
   const [cleaners, setCleaners] = useState(0);
-  useEffect(async () => {
-   const careGivers = await axios.get(`${apiUrl}/CareGivers/AllCareGivers`,{
-      headers: {
-        'Content-Type': 'application/json',
-        'Authorization': `Bearer ${localStorage.getItem('authToken')}`
+  useEffect(() => {
+    const fetchData = async () => {
+      try {
+        const careGiversData = await axios.get(`${apiUrl}/CareGivers/AllCareGivers`, {
+          headers: {
+            'Content-Type': 'application/json',
+            'Authorization': `Bearer ${localStorage.getItem('authToken')}`
+          }
+        });
+        const caregivers = careGiversData.data.filter(user => user.role === 'Caregiver').length;
+        setCaregivers(caregivers);
+      } catch (error) {
+        console.error("Error fetching caregivers:", error);
       }
-   })
-   const caregivers = careGivers.data.filter(user => user.role === 'Caregiver').length;
-   setCaregivers(caregivers);
+    };
+    fetchData();
   }, []);
-  useEffect(async () => {
-    const clientData = await axios.get(`${apiUrl}/Clients/AllClientUsers`,{
-      headers: {
-        'Content-Type': 'application/json',
-        'Authorization': `Bearer ${localStorage.getItem('authToken')}`
+  
+  useEffect(() => {
+    const fetchData = async () => {
+      try {
+        const clientData = await axios.get(`${apiUrl}/Clients/AllClientUsers`, {
+          headers: {
+            'Content-Type': 'application/json',
+            'Authorization': `Bearer ${localStorage.getItem('authToken')}`
+          }
+        });
+        const clients = clientData.data.filter(user => user.role === 'Client').length;
+        setClients(clients);
+      } catch (error) {
+        console.error("Error fetching clients:", error);
       }
-    })
-    const clients = clientData.data.filter(user => user.role === 'Client').length;
-    setClients(clients);
+    };
+    fetchData();
   }, []);
   
   // const assessments = {};//load assessment data from API.
