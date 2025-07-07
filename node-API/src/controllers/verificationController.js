@@ -16,8 +16,16 @@ const TEST_VALUES = {
 // Verify NIN with or without selfie
 const verifyNIN = async (req, res) => {
   try {
-    const { ninNumber, selfieImage, isWithSelfie, userType = 'caregiver' } = req.body;
+    const { ninNumber, selfieImage, isWithSelfie, userType, token, id } = req.body;
     const userId = req.user.id;
+
+    // Check if userId from request matches the authenticated user
+    if (id && id !== userId) {
+      return res.status(403).json({
+        status: 'error',
+        message: 'Unauthorized access to verify NIN for another user'
+      });
+    }
 
     // Validate inputs
     if (!ninNumber) {
@@ -26,7 +34,13 @@ const verifyNIN = async (req, res) => {
         message: 'NIN number is required'
       });
     }
-
+   // check for token
+    if (!token) {
+      return res.status(401).json({
+        status: 'error',
+        message: 'Authorization token is required'
+      });
+    }
     if (isWithSelfie === true && !selfieImage) {
       return res.status(400).json({
         status: 'error',
@@ -83,32 +97,23 @@ const verifyNIN = async (req, res) => {
 
       const verificationData = {
         userId: userId,
-        verificationType: verificationType,
-        status: 'verified',
-        verificationMethod: 'nin',
-        methodDetails: {
-          ninNumber: ninNumber,
-          withSelfie: !!selfieImage
-        },
-        userData: {
-          firstName: verificationResult.entity.first_name,
-          lastName: verificationResult.entity.last_name,
-          gender: verificationResult.entity.gender,
-          dateOfBirth: verificationResult.entity.date_of_birth
-        },
-        completedAt: new Date().toISOString()
+        verifiedFirstName: verificationResult.entity.first_name,
+        verifiedLastName: verificationResult.entity.last_name,
+        verificationMethod: verificationType,
+        verificationNo: ninNumber,
+        verificationStatus: 'verified',
       };
 
       try {
         if (!verificationResult.isTestValue) {
           const apiEndpoint = userType === 'client'
-            ? `${External_API}/clients/${userId}/verification`
-            : `${External_API}/caregivers/${userId}/verification`;
+            ? `${External_API}/Verifications`
+            : `${External_API}/Verifications`;
 
           console.log('Sending NIN verification result to backend database');
-          await axios.patch(apiEndpoint, verificationData, {
+          await axios.post(apiEndpoint, verificationData, {
             headers: {
-              'Authorization': `Bearer ${process.env.INTERNAL_API_KEY}`,
+              'Authorization': `Bearer ${token}`,
               'Content-Type': 'application/json'
             }
           });
@@ -159,15 +164,29 @@ const verifyNIN = async (req, res) => {
 
 const verifyBVN = async (req, res) => {
   try {
-    const { bvnNumber, selfieImage, isWithSelfie } = req.body;
+    const { bvnNumber, selfieImage, isWithSelfie, token, userType, id } = req.body;
     const userId = req.user.id;
-    const userType = req.body.userType || 'caregiver';
+
+    // Check if userId from request matches the authenticated user
+    if (id && id !== userId) {
+      return res.status(403).json({
+        status: 'error',
+        message: 'Unauthorized access to verify BVN for another user'
+      });
+    }
 
     // Validate inputs
     if (!bvnNumber) {
       return res.status(400).json({
         status: 'error',
         message: 'BVN number is required'
+      });
+    }
+    // check for token
+    if (!token) {
+      return res.status(401).json({
+        status: 'error',
+        message: 'Authorization token is required'
       });
     }
 
@@ -227,32 +246,25 @@ const verifyBVN = async (req, res) => {
 
       const verificationData = {
         userId,
-        verificationType,
-        status: 'verified',
-        verificationMethod: 'bvn',
-        methodDetails: {
-          bvnNumber,
-          withSelfie: !!selfieImage
-        },
-        userData: {
-          firstName: verificationResult.entity.first_name,
-          lastName: verificationResult.entity.last_name,
-          gender: verificationResult.entity.gender,
-          dateOfBirth: verificationResult.entity.date_of_birth
-        },
-        completedAt: new Date().toISOString()
+        verifiedFirstName: verificationResult.entity.first_name,
+        verifiedLastName: verificationResult.entity.last_name,
+
+        verificationStatus: 'verified',
+        verificationMethod: verificationType,
+        verificationNo: bvnNumber,
+    
       };
 
       try {
         if (!verificationResult.isTestValue) {
           const apiEndpoint = userType === 'client'
-            ? `${External_API}/clients/${userId}/verification`
-            : `${External_API}/caregivers/${userId}/verification`;
+            ? `${External_API}/Verifications`
+            : `${External_API}/Verifications`;
 
           console.log('Sending BVN verification result to backend database');
-          await axios.patch(apiEndpoint, verificationData, {
+          await axios.post(apiEndpoint, verificationData, {
             headers: {
-              'Authorization': `Bearer ${process.env.INTERNAL_API_KEY}`,
+              'Authorization': `Bearer ${token}`,
               'Content-Type': 'application/json'
             }
           });
@@ -303,8 +315,15 @@ const verifyBVN = async (req, res) => {
 
 const verifyBVNWithIdSelfie = async (req, res) => {
   try {
-    const { bvnNumber, idImage, selfieImage, idType = 'generic', userType = 'caregiver' } = req.body;
+    const { bvnNumber, idImage, selfieImage, idType, userType, id, token } = req.body;
     const userId = req.user.id;
+    // Check if userId from request matches the authenticated user
+    if (id && id !== userId) {
+      return res.status(403).json({
+        status: 'error',
+        message: 'Unauthorized access to verify BVN for another user'
+      });
+    }
 
     // Validate inputs
     if (!bvnNumber) {
@@ -359,32 +378,23 @@ const verifyBVNWithIdSelfie = async (req, res) => {
     if (isIdSelfieVerified) {
       const verificationData = {
         userId,
-        verificationType: 'bvn_id_selfie',
-        status: 'verified',
+        verifiedFirstName: bvnResult.entity.first_name,
+        verifiedLastName: bvnResult.entity.last_name,
+        verificationNo: bvnNumber,
+        verificationStatus: 'verified',
         verificationMethod: 'bvn_id_selfie',
-        methodDetails: {
-          bvnNumber,
-          idType
-        },
-        userData: {
-          firstName: bvnResult.entity.first_name,
-          lastName: bvnResult.entity.last_name,
-          gender: bvnResult.entity.gender,
-          dateOfBirth: bvnResult.entity.date_of_birth
-        },
-        completedAt: new Date().toISOString()
       };
 
       try {
         if (!isTestBvn) {
           const apiEndpoint = userType === 'client'
-            ? `${External_API}/clients/${userId}/verification`
-            : `${External_API}/caregivers/${userId}/verification`;
+            ? `${External_API}/Verifications`
+            : `${External_API}/Verifications`;
 
           console.log('Sending verification result to backend database');
-          await axios.patch(apiEndpoint, verificationData, {
+          await axios.post(apiEndpoint, verificationData, {
             headers: {
-              'Authorization': `Bearer ${process.env.INTERNAL_API_KEY}`,
+              'Authorization': `Bearer ${token}`,
               'Content-Type': 'application/json'
             }
           });
@@ -444,8 +454,16 @@ const verifyBVNWithIdSelfie = async (req, res) => {
 // Combined NIN with Selfie verification
 const verifyNINWithSelfie = async (req, res) => {
   try {
-    const { ninNumber, selfieImage, userType = 'caregiver' } = req.body;
-    const userId = req.user.id;
+    const { ninNumber, selfieImage, id } = req.body;
+     const userId = req.user.id;
+    // Check if userId from request matches the authenticated user
+    if (id && id !== userId) {
+      return res.status(403).json({
+        status: 'error',
+        message: 'Unauthorized access to verify NIN for another user'
+      });
+    }
+   
 
     // Validate inputs
     if (!ninNumber) {
@@ -476,29 +494,23 @@ const verifyNINWithSelfie = async (req, res) => {
     ) {
       const verificationData = {
         userId,
-        verificationType: 'nin_selfie',
-        status: 'verified',
-        verificationMethod: 'nin_selfie',
-        methodDetails: { ninNumber },
-        userData: {
-          firstName: verificationResult.entity.first_name,
-          lastName: verificationResult.entity.last_name,
-          gender: verificationResult.entity.gender,
-          dateOfBirth: verificationResult.entity.date_of_birth
-        },
-        completedAt: new Date().toISOString()
+        verifiedFirstName: verificationResult.entity.first_name,
+        verifiedLastName: verificationResult.entity.last_name,
+        verificationStatus: 'verified',
+        verificationMethod: "nin_selfie",
+        verificationNo: ninNumber,
       };
 
       try {
         if (!isTestNin) {
           const apiEndpoint = userType === 'client'
-            ? `${External_API}/clients/${userId}/verification`
-            : `${External_API}/caregivers/${userId}/verification`;
+            ? `${External_API}/Verifications`
+            : `${External_API}/Verifications`;
 
           console.log('Sending verification result to backend database');
-          await axios.patch(apiEndpoint, verificationData, {
+          await axios.post(apiEndpoint, verificationData, {
             headers: {
-              Authorization: `Bearer ${process.env.INTERNAL_API_KEY}`,
+              Authorization: `Bearer ${token}`,
               'Content-Type': 'application/json'
             }
           });
@@ -549,8 +561,15 @@ const verifyNINWithSelfie = async (req, res) => {
 // Verify ID with selfie in one combined step
 const verifyIdWithSelfie = async (req, res) => {
   try {
-    const { idType, idNumber, selfieImage, userType = 'caregiver' } = req.body;
+    const { idType, idNumber, selfieImage, userType, id, token } = req.body;
     const userId = req.user.id;
+    // Check if userId from request matches the authenticated user
+    if (id && id !== userId) {
+      return res.status(403).json({
+        status: 'error',
+        message: 'Unauthorized access to verify ID for another user'
+      });
+    }
 
     if (!idType || !idNumber || !selfieImage) {
       return res.status(400).json({
@@ -559,10 +578,10 @@ const verifyIdWithSelfie = async (req, res) => {
       });
     }
 
-    if (idType !== 'bvn' && idType !== 'nin') {
+    if (idType !== 'bvn' || idType !== 'nin' || idType !== 'generic') {
       return res.status(400).json({
         status: 'error',
-        message: 'ID type must be either "bvn" or "nin"'
+        message: 'ID type must be either "bvn", "nin", or "generic"'
       });
     }
 
@@ -579,34 +598,25 @@ const verifyIdWithSelfie = async (req, res) => {
     ) {
       const verificationData = {
         userId,
-        verificationType: `${idType}_selfie`,
-        status: 'verified',
+        verifiedFirstName: verificationResult.entity.first_name,
+        verifiedLastName: verificationResult.entity.last_name,
+        verificationNo: idNumber,
+        verificationStatus: 'verified', 
+    
         verificationMethod: idType,
-        isCompleteVerification: true,
-        methodDetails: {
-          idType,
-          idNumber,
-          withSelfie: true
-        },
-        userData: {
-          firstName: verificationResult.entity.first_name,
-          lastName: verificationResult.entity.last_name,
-          gender: verificationResult.entity.gender,
-          dateOfBirth: verificationResult.entity.date_of_birth
-        },
-        completedAt: new Date().toISOString()
+        
       };
 
       try {
         if (!isTestValue) {
           const apiEndpoint = userType === 'client'
-            ? `${External_API}/clients/${userId}/verification`
-            : `${External_API}/caregivers/${userId}/verification`;
+            ? `${External_API}/Verifications`
+            : `${External_API}/Verifications`;
 
           console.log('Sending verification result to backend database');
           await axios.patch(apiEndpoint, verificationData, {
             headers: {
-              Authorization: `Bearer ${process.env.INTERNAL_API_KEY}`,
+              Authorization: `Bearer ${token}`,
               'Content-Type': 'application/json'
             }
           });
@@ -663,20 +673,22 @@ const getVerificationStatus = async (req, res) => {
     const userId = req.user.id;
     // Get the user type from query params
     const userType = req.query.userType || 'caregiver';
+    //get the token from headers
+    const token = req.headers.authorization?.split(' ')[1];
     
     // Get verification status from Azure API
     let verificationStatus;
     try {
       // Use different endpoints based on user type
       const endpoint = userType === 'client' 
-        ? `${External_API}/clients/${userId}/verification`
-        : `${External_API}/caregivers/${userId}/verification`;
-        
+        ? `${External_API}/Verifications/${userId}`
+        : `${External_API}/Verifications/${userId}`;
+
       const response = await axios.get(
         endpoint,
         {
           headers: {
-            'Authorization': `Bearer ${process.env.INTERNAL_API_KEY}`
+            'Authorization': `Bearer ${token}`
           }
         }
       );

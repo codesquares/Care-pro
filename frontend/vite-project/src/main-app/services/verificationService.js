@@ -2,6 +2,18 @@ import axios from 'axios';
 import api from './api';
 import config from '../config';
 
+
+
+/**
+ * 
+ * All required inputs for verfication
+ * bvnNumber or ninNumber (as appropriate)
+ * selfieImage (required for selfie flows)
+ * idImage (required for BVN with ID+selfie)
+ * userType
+ * token
+ * id (for user validation)
+ **/
 // Create a separate Axios instance for verification API calls
 const verificationApi = axios.create({
   baseURL: config.LOCAL_API_URL,
@@ -170,7 +182,8 @@ const verificationService = {
    * @param {string} userType - Type of user ('caregiver' or 'client')
    * @returns {Promise} - API response
    */
-  async verifyBVN(bvnNumber, selfieImage = null, idImage = null, userType = null) {
+  
+  async verifyBVN(bvnNumber, selfieImage, idImage, userType, id, token ) {
     try {
       // Get user details for authentication
       const userDetails = JSON.parse(localStorage.getItem('userDetails') || '{}');
@@ -179,8 +192,18 @@ const verificationService = {
       if (!userType) {
         userType = userDetails.userType || 'caregiver';
       }
+
+      // check if selfie image and id image are provided and throw error if not
+      if (!bvnNumber) {
+        throw new Error('BVN number is required for verification');
+      }
+      if(!selfieImage || !idImage) {
+        throw new Error('Both selfieImage and idImage must be provided for verification');
+      }
+
       
       console.log(`Verifying BVN for user: ${userDetails.id}, type: ${userType}`);
+      
       
       // Create a consistent payload with all necessary auth information
       const payload = { 
@@ -188,9 +211,16 @@ const verificationService = {
         userType,
         // Explicitly include userId in payload to ensure it's available to auth middleware
         userId: userDetails.id,
+        id:userDetails.id,
+        token: token,
         // Include name information to help with debugging
         firstName: userDetails.firstName || '',
-        lastName: userDetails.lastName || ''
+        lastName: userDetails.lastName || '',
+        // Include ID image if provided
+        idImage: idImage || null,
+        // Include selfie image if provided
+        selfieImage: selfieImage || null
+
       };
       
       // If both selfie and ID images are provided, use the combined verification endpoint
@@ -218,23 +248,6 @@ const verificationService = {
         }
       }
       
-      // Add selfie image if provided (for backward compatibility)
-      if (selfieImage) {
-        payload.selfieImage = selfieImage;
-      }
-      
-      const response = await verificationApi.post('/kyc/verify-bvn', payload);
-      
-      // Cache the verification status on success
-      if (response.data?.status === 'success') {
-        this.saveVerificationStatus(
-          true, 
-          'verified', 
-          response.data.message || 'BVN verification successful',
-          null,
-          userType
-        );
-      }
       
       return response.data;
     } catch (error) {
@@ -247,7 +260,7 @@ const verificationService = {
    * @param {string} userType - Type of user ('caregiver' or 'client')
    * @returns {Promise} - API response
    */
-  async verifyNIN(ninNumber, selfieImage = null, userType = null) {
+  async verifyNIN(ninNumber, selfieImage, userType, idImage, id, token) {
     try {
       // Get user details for authentication
       const userDetails = JSON.parse(localStorage.getItem('userDetails') || '{}');
@@ -256,7 +269,14 @@ const verificationService = {
       if (!userType) {
         userType = userDetails.userType || 'caregiver';
       }
-      
+      // check if nin number is provided and throw error if not
+      if (!ninNumber) {
+        throw new Error('NIN number is required for verification');
+      }
+      if(!selfieImage || !idImage) {
+        throw new Error('Selfie image and ID image must be provided for verification');
+      }
+
       console.log(`Verifying NIN for user: ${userDetails.id}, type: ${userType}`);
       
       // Create a consistent payload with all necessary auth information
@@ -267,13 +287,18 @@ const verificationService = {
         userId: userDetails.id,
         // Include name information to help with debugging
         firstName: userDetails.firstName || '',
-        lastName: userDetails.lastName || ''
+        lastName: userDetails.lastName || '',
+        // Include ID image if provided
+        idImage: idImage,
+        // Include selfie image if provided
+        selfieImage: selfieImage,
+        id: userDetails.id,
+        token: token
       };
       
-      // If selfie image is provided, use the combined verification endpoint
-      if (selfieImage) {
+      if (selfieImage && idImage) {
         payload.selfieImage = selfieImage;
-        
+        payload.idImage = idImage;
         try {
           const response = await verificationApi.post('/kyc/verify-nin-with-selfie', payload);
           
@@ -293,21 +318,7 @@ const verificationService = {
           console.error('Error with NIN + Selfie verification:', error);
         }
       }
-      
-      // Use standard NIN verification endpoint
-      const response = await verificationApi.post('/kyc/verify-nin', payload);
-      
-      // Cache the verification status on success
-      if (response.data?.status === 'success') {
-        this.saveVerificationStatus(
-          true, 
-          'verified', 
-          response.data.message || 'NIN verification successful',
-          null,
-          userType
-        );
-      }
-      
+      // If we reach here, it means we didn't use the combined endpoint but we only want to use the combined endpoint and never the standard separate one
       return response.data;
     } catch (error) {
       throw error.response?.data || { message: 'NIN verification failed' };
@@ -325,14 +336,16 @@ const verificationService = {
    * @param {string} userId - User ID for tracking
    * @returns {Promise} - API response
    */
-  async verifyBVNComplete(bvnNumber, selfieImage, idImage, idType = 'generic', userType = 'caregiver', userId = null) {
+  async verifyBVNComplete(bvnNumber, selfieImage, idImage, idType, userType, userId , token, id) {
     try {
       const payload = { 
         bvnNumber: this._getTestValue('bvn', bvnNumber),
         selfieImage: selfieImage,
         idImage: idImage,
         idType: idType,
-        userType: userType
+        userType: userType,
+        id: id,
+        token: token
       };
       
       try {
@@ -880,15 +893,11 @@ const verificationService = {
     try {
       // For now, since the Azure endpoint is not available, we'll just log the data
       console.log('Would submit verification data to Azure:', verificationData);
-      
-      // Simulate a successful submission
-      return {
-        status: 'success',
-        message: 'Verification data stored successfully for future submission',
-        data: verificationData
-      };
+      // proceed to sending the data to the Azure endpoint
 
-      /*
+      if (!verificationData || !verificationData.azureData) {
+        throw new Error('Verification data is missing or incomplete');
+      }
       // This is the implementation that would be used when the Azure endpoint is available
       const externalApiUrl = 'https://carepro-api20241118153443.azurewebsites.net/api';
       
@@ -902,7 +911,7 @@ const verificationService = {
         verificationData.azureData,
         {
           headers: {
-            'Authorization': `Bearer ${process.env.INTERNAL_API_KEY}`,
+            'Authorization': `Bearer ${localStorage.getItem('authToken')}`,
             'Content-Type': 'application/json'
           }
         }
@@ -913,7 +922,7 @@ const verificationService = {
         message: 'Verification data submitted to Azure successfully',
         data: response.data
       };
-      */
+      
     } catch (error) {
       console.error('Failed to submit verification data to Azure:', error);
       
