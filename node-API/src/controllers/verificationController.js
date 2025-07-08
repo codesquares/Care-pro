@@ -18,6 +18,9 @@ const verifyNIN = async (req, res) => {
   try {
     const { ninNumber, selfieImage, userType, token, id } = req.body;
     const userId = req.user.id;
+    console.log('[verifyNIN] Received ninNumber:', ninNumber, '| typeof:', typeof ninNumber);
+    console.log('[verifyNIN] userId from req.user:', userId, '| id from body:', id);
+    console.log('[verifyNIN] selfieImage present:', !!selfieImage);
 
     // Check if userId from request matches the authenticated user
     if (id && id !== userId) {
@@ -51,9 +54,10 @@ const verifyNIN = async (req, res) => {
     const isTestNin = ninNumber === TEST_VALUES.NIN;
     let verificationResult;
 
+    console.log('[verifyNIN] isTestNin:', isTestNin);
+
     if (isTestNin) {
       console.log(`🧪 Test NIN detected: ${ninNumber} - Auto-approving verification`);
-
       verificationResult = {
         status: true,
         entity: {
@@ -76,6 +80,7 @@ const verifyNIN = async (req, res) => {
     } else {
       verificationResult = await DojahService.verifyNIN(ninNumber, selfieImage, userId);
     }
+    console.log('[verifyNIN] verificationResult:', JSON.stringify(verificationResult));
 
     // Stepwise response: If only NIN is provided (no selfie), prompt for next step
     if (
@@ -189,6 +194,9 @@ const verifyBVN = async (req, res) => {
   try {
     const { bvnNumber, selfieImage, token, userType, id } = req.body;
     const userId = req.user.id;
+    console.log('[verifyBVN] Received bvnNumber:', bvnNumber, '| typeof:', typeof bvnNumber);
+    console.log('[verifyBVN] userId from req.user:', userId, '| id from body:', id);
+    console.log('[verifyBVN] selfieImage present:', !!selfieImage);
 
     // Check if userId from request matches the authenticated user
     if (id && id !== userId) {
@@ -223,9 +231,10 @@ const verifyBVN = async (req, res) => {
     const isTestBvn = bvnNumber === TEST_VALUES.BVN;
     let verificationResult;
 
+    console.log('[verifyBVN] isTestBvn:', isTestBvn);
+
     if (isTestBvn) {
       console.log(`🧪 Test BVN detected: ${bvnNumber} - Auto-approving verification`);
-
       verificationResult = {
         status: true,
         entity: {
@@ -248,6 +257,7 @@ const verifyBVN = async (req, res) => {
     } else {
       verificationResult = await DojahService.verifyBVN(bvnNumber, selfieImage, userId);
     }
+    console.log('[verifyBVN] verificationResult:', JSON.stringify(verificationResult));
 
     // Stepwise response: If only BVN is provided (no selfie), prompt for next step
     if (

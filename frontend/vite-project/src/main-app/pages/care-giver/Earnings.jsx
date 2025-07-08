@@ -28,8 +28,8 @@ const Earnings = () => {
         setError(null);
         
         // Load earnings data
-        const earningsData = await earningService.getCaregiverEarnings(currentUser.id);
-         if (!earningsData ) {
+        const earningsData = await earningService.getUpdatedEarnings(currentUser.id);
+        if (!earningsData) {
           setEarnings({
             totalEarned: 0,
             withdrawableAmount: 0,
@@ -38,12 +38,12 @@ const Earnings = () => {
           // throw new Error("No earnings data found for this caregiver.");
         }
         setEarnings({
-          totalEarned: earningsData.totalEarning,
+          totalEarned: earningsData.totalAmountEarned,
           // totalEarned: 10000, // Placeholder until service is available
           withdrawableAmount: earningsData.withdrawableAmount,
           // withdrawableAmount: 8000, // Placeholder until service is available
           // withdrawnAmount: earningsData.withdrawnAmount
-          withdrawnAmount: 0 // Placeholder until service is available
+          withdrawnAmount: earningsData.totalAmountWithdrawn // Placeholder until service is available
         });
          
 

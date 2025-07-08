@@ -237,6 +237,19 @@ const VerificationPage = () => {
     setProgress(10);
     setProgressMessage("Starting verification process...");
 
+    // Log all input values for debugging
+    console.log('[VerificationPage] handleSubmit called with:', {
+      verificationMethod,
+      verificationStep,
+      bvnNumber,
+      ninNumber,
+      idImage,
+      selfieImage,
+      idType,
+      userDetails,
+      token
+    });
+
     // Clear any existing polling first
     if (pollRef.current) {
       pollRef.current();
@@ -279,6 +292,15 @@ const VerificationPage = () => {
             console.log('🧪 Using test BVN value:', bvnNumber);
           }
 
+          console.log('[VerificationPage] Calling verifyBVN with:', {
+            bvnNumber,
+            selfieImage: null,
+            idImage: null,
+            userType: 'caregiver',
+            id: userDetails.id,
+            token
+          });
+
           const data = await verificationService.verifyBVN(
             bvnNumber,         // string: BVN number
             null,              // selfieImage (null for step 1)
@@ -309,7 +331,14 @@ const VerificationPage = () => {
           const idImageBase64 = idImage ? await convertFileToBase64(idImage) : null;
           const selfieImageBase64 = selfieImage ? await convertFileToBase64(selfieImage) : null;
 
-          console.log("Using complete BVN verification with ID and selfie for caregiver");
+          console.log('[VerificationPage] Calling verifyBVNComplete with:', {
+            bvnNumber,
+            selfieImageBase64,
+            idImageBase64,
+            idType,
+            userType: 'caregiver',
+            userId: userDetails.id
+          });
 
           // Use the combined verification endpoint
           const data = await verificationService.verifyBVNComplete(
@@ -411,6 +440,15 @@ const VerificationPage = () => {
             console.log('🧪 Using test NIN value:', ninNumber);
           }
 
+          console.log('[VerificationPage] Calling verifyNIN with:', {
+            ninNumber,
+            selfieImage: null,
+            userType: 'caregiver',
+            idImage: null,
+            id: userDetails.id,
+            token
+          });
+
           const data = await verificationService.verifyNIN(
             ninNumber,
             null,
@@ -438,7 +476,12 @@ const VerificationPage = () => {
 
           const selfieImageBase64 = selfieImage ? await convertFileToBase64(selfieImage) : null;
 
-          console.log("Using complete NIN verification with selfie for caregiver");
+          console.log('[VerificationPage] Calling verifyNINComplete with:', {
+            ninNumber,
+            selfieImageBase64,
+            userType: 'caregiver',
+            userId: userDetails.id
+          });
 
           // Use the combined verification endpoint
           const data = await verificationService.verifyNINComplete(
@@ -533,6 +576,14 @@ const VerificationPage = () => {
 
         const idImageBase64 = idImage ? await convertFileToBase64(idImage) : null;
         const selfieImageBase64 = selfieImage ? await convertFileToBase64(selfieImage) : null;
+
+        console.log('[VerificationPage] Calling verifyID with:', {
+          idImageBase64,
+          selfieImageBase64,
+          idType,
+          userType: 'caregiver',
+          userId: userDetails.id
+        });
 
         const data = await verificationService.verifyID(
           idImageBase64,

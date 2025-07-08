@@ -21,5 +21,24 @@ export const earningService = {
       throw error;
     }
      
+  },
+  getUpdatedEarnings: async (caregiverId) => {
+     try {
+      const response = await fetch(`${BASE_API_URL}/WithdrawalRequests/TotalAmountEarnedAndWithdrawn/${caregiverId}`,{
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${localStorage.getItem('authToken')}`
+        }
+      });
+      const data = await response.json();
+      if (response.status !== 200) {
+        throw new Error(`Error fetching earnings: ${data.message || 'Unknown error'}`);
+      }
+      console.log("Earnings Data:", data);
+      return data;
+    } catch (error) {
+      console.error("Error fetching caregiver earnings:", error);
+      throw error;
+    }
   }
 }

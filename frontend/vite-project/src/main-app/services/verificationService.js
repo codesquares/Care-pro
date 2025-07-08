@@ -16,7 +16,7 @@ import config from '../config';
  **/
 // Create a separate Axios instance for verification API calls
 const verificationApi = axios.create({
-  baseURL: config.LOCAL_API_URL,
+  baseURL: config.LOCALHOST_API_URL,
   headers: {
     'Content-Type': 'application/json',
   },
@@ -163,15 +163,18 @@ const verificationService = {
    * @returns {string} - Test value for development environment or original value for production
    */
   _getTestValue(type, value) {
-    const testEnvironment = process.env.NODE_ENV !== 'production';
-    if (!testEnvironment) return value;
-    
+    // Use user input as default; only use test value if input is empty/null/undefined
+    console.log('[verificationService] _getTestValue called with:', { type, value });
+    if (value && value.trim && value.trim() !== '') {
+      console.log('[verificationService] Using user input value:', value);
+      return value;
+    }
     const testValues = {
       bvn: '22222222222',
       nin: '70123456789'
     };
-    
-    return testValues[type] || value;
+    console.log('[verificationService] Using test value for', type, ':', testValues[type] || '');
+    return testValues[type] || '';
   },
 
   /**
@@ -199,8 +202,10 @@ const verificationService = {
 
       // Step 1: Only BVN provided (stepwise verification)
       if (!selfieImage && !idImage) {
+        const bvnToSend = this._getTestValue('bvn', bvnNumber);
+        console.log('[verificationService] verifyBVN step 1 - BVN to send:', bvnToSend);
         const payload = {
-          bvnNumber: this._getTestValue('bvn', bvnNumber),
+          bvnNumber: bvnToSend,
           userType,
           userId: userDetails.id,
           id: userDetails.id,
@@ -208,8 +213,10 @@ const verificationService = {
           firstName: userDetails.firstName || '',
           lastName: userDetails.lastName || ''
         };
+        console.log('[verificationService] verifyBVN step 1 - payload:', payload);
         try {
           const response = await verificationApi.post('/kyc/verify-bvn', payload);
+          console.log('[verificationService] verifyBVN step 1 - dojah response:', response.data);
           return response.data;
         } catch (error) {
           throw error.response?.data || { message: 'BVN verification failed' };
@@ -218,8 +225,10 @@ const verificationService = {
 
       // Step 2: Both selfie and ID images provided (full verification)
       if (selfieImage && idImage) {
+        const bvnToSend = this._getTestValue('bvn', bvnNumber);
+        console.log('[verificationService] verifyBVN step 2 - BVN to send:', bvnToSend);
         const payload = {
-          bvnNumber: this._getTestValue('bvn', bvnNumber),
+          bvnNumber: bvnToSend,
           userType,
           userId: userDetails.id,
           id: userDetails.id,
@@ -229,16 +238,27 @@ const verificationService = {
           idImage: idImage,
           selfieImage: selfieImage
         };
+        console.log('[verificationService] verifyBVN step 2 - payload:', payload);
         try {
           const response = await verificationApi.post('/kyc/verify-bvn-with-id-selfie', payload);
+          console.log('[verificationService] verifyBVN step 2 - dojah response:', response.data);
           if (response.data?.status === 'success') {
             this.saveVerificationStatus(
               true, 
               'verified', 
               response.data.message || 'BVN with ID and Selfie verification successful',
-              null,
+              userDetails.id,
               userType
             );
+            // Save to Azure endpoint
+            await this.saveVerificationData({
+              userId: userDetails.id,
+              verifiedFirstName: userDetails.firstName || '',
+              verifiedLastName: userDetails.lastName || '',
+              verificationMethod: 'BVN',
+              verificationNo: bvnNumber,
+              verificationStatus: 'verified'
+            });
           }
           return response.data;
         } catch (error) {
@@ -271,8 +291,10 @@ const verificationService = {
 
       // Step 1: Only NIN provided (stepwise verification)
       if (!selfieImage && !idImage) {
+        const ninToSend = this._getTestValue('nin', ninNumber);
+        console.log('[verificationService] verifyNIN step 1 - NIN to send:', ninToSend);
         const payload = {
-          ninNumber: this._getTestValue('nin', ninNumber),
+          ninNumber: ninToSend,
           userType,
           userId: userDetails.id,
           id: userDetails.id,
@@ -280,8 +302,10 @@ const verificationService = {
           firstName: userDetails.firstName || '',
           lastName: userDetails.lastName || ''
         };
+        console.log('[verificationService] verifyNIN step 1 - payload:', payload);
         try {
           const response = await verificationApi.post('/kyc/verify-nin', payload);
+          console.log('[verificationService] verifyNIN step 1 - dojah response:', response.data);
           return response.data;
         } catch (error) {
           throw error.response?.data || { message: 'NIN verification failed' };
@@ -290,8 +314,10 @@ const verificationService = {
 
       // Step 2: Both selfie and ID images provided (full verification)
       if (selfieImage && idImage) {
+        const ninToSend = this._getTestValue('nin', ninNumber);
+        console.log('[verificationService] verifyNIN step 2 - NIN to send:', ninToSend);
         const payload = {
-          ninNumber: this._getTestValue('nin', ninNumber),
+          ninNumber: ninToSend,
           userType,
           userId: userDetails.id,
           id: userDetails.id,
@@ -301,16 +327,27 @@ const verificationService = {
           idImage: idImage,
           selfieImage: selfieImage
         };
+        console.log('[verificationService] verifyNIN step 2 - payload:', payload);
         try {
           const response = await verificationApi.post('/kyc/verify-nin-with-selfie', payload);
+          console.log('[verificationService] verifyNIN step 2 - dojah response:', response.data);
           if (response.data?.status === 'success') {
             this.saveVerificationStatus(
               true, 
               'verified', 
               response.data.message || 'NIN with Selfie verification successful',
-              null,
+              userDetails.id,
               userType
             );
+            // Save to Azure endpoint
+            await this.saveVerificationData({
+              userId: userDetails.id,
+              verifiedFirstName: userDetails.firstName || '',
+              verifiedLastName: userDetails.lastName || '',
+              verificationMethod: 'NIN',
+              verificationNo: ninNumber,
+              verificationStatus: 'verified'
+            });
           }
           return response.data;
         } catch (error) {
@@ -382,6 +419,10 @@ const verificationService = {
           const idSelfieResponse = await this.verifyID(idImage, selfieImage, idType, userType);
           
           // Combine responses
+          console.log('Combined verification response:', {
+            bvn: bvnResponse.data,
+            idSelfie: idSelfieResponse.data
+          });
           return {
             status: idSelfieResponse.status,
             message: 'Combined verification process completed',
@@ -389,7 +430,9 @@ const verificationService = {
               ...bvnResponse.data,
               idSelfie: idSelfieResponse.data
             }
+            
           };
+          
         } else {
           throw error;
         }
@@ -447,7 +490,10 @@ const verificationService = {
           
           // Then verify Selfie
           const selfieResponse = await this.verifyID(null, selfieImage, 'nin', userType);
-          
+          console.log('Combined verification response:', {
+            nin: ninResponse.data,
+            idSelfie: selfieResponse.data
+          });
           // Combine responses
           return {
             status: selfieResponse.status,
@@ -567,10 +613,19 @@ const verificationService = {
       const endpoint = verificationData.userType === 'client'
         ? `${externalApiUrl}/Verifications`
         : `${externalApiUrl}/Verifications`;
+
+        const dataToSave = {
+           userId: verificationData.userId,
+           verifiedFirstName: verificationData.verifiedFirstName,
+           verifiedLastName: verificationData.verifiedLastName,
+           verificationMethod: verificationData.verificationMethod,
+           verificationNo: verificationData.verificationNo,
+           verificationStatus: verificationData.verificationStatus
+        }
       
       const response = await axios.post(
         endpoint,
-        verificationData.azureData,
+        dataToSave,
         {
           headers: {
             'Authorization': `Bearer ${token}`,
@@ -890,26 +945,34 @@ const verificationService = {
   async submitVerificationDataToAzure(verificationData) {
     // Check if we have saved verification data to process
     const pendingData = JSON.parse(localStorage.getItem('pendingVerificationData') || '[]');
-    
     try {
       // For now, since the Azure endpoint is not available, we'll just log the data
       console.log('Would submit verification data to Azure:', verificationData);
-      // proceed to sending the data to the Azure endpoint
 
-      if (!verificationData || !verificationData.azureData) {
-        throw new Error('Verification data is missing or incomplete');
-      }
-      // This is the implementation that would be used when the Azure endpoint is available
+      // Build the azureData object to match the required structure
+      // {
+      //   "userId": "string",
+      //   "verifiedFirstName": "string",
+      //   "verifiedLastName": "string",
+      //   "verificationMethod": "string",
+      //   "verificationNo": "string",
+      //   "verificationStatus": "string"
+      // }
+      const azureData = {
+        userId: verificationData.userId || '',
+        verifiedFirstName: verificationData.verifiedFirstName || verificationData.firstName || '',
+        verifiedLastName: verificationData.verifiedLastName || verificationData.lastName || '',
+        verificationMethod: verificationData.verificationMethod || verificationData.method || '',
+        verificationNo: verificationData.verificationNo || verificationData.bvnNumber || verificationData.ninNumber || '',
+        verificationStatus: verificationData.verificationStatus || verificationData.status || ''
+      };
+
       const externalApiUrl = 'https://carepro-api20241118153443.azurewebsites.net/api';
-      
-      // Choose endpoint based on user type
-      const endpoint = verificationData.userType === 'client'
-        ? `${externalApiUrl}/clients/${verificationData.userId}/verification`
-        : `${externalApiUrl}/caregivers/${verificationData.userId}/verification`;
-      
+      const endpoint = `${externalApiUrl}/Verifications`;
+
       const response = await axios.post(
         endpoint,
-        verificationData.azureData,
+        azureData,
         {
           headers: {
             'Authorization': `Bearer ${localStorage.getItem('authToken')}`,
@@ -923,10 +986,8 @@ const verificationService = {
         message: 'Verification data submitted to Azure successfully',
         data: response.data
       };
-      
     } catch (error) {
       console.error('Failed to submit verification data to Azure:', error);
-      
       // Store the failed submission attempt for retry later
       if (verificationData && !pendingData.some(data => 
           data.userId === verificationData.userId && 
@@ -934,7 +995,6 @@ const verificationService = {
         pendingData.push(verificationData);
         localStorage.setItem('pendingVerificationData', JSON.stringify(pendingData));
       }
-      
       return {
         status: 'error',
         message: 'Failed to submit verification data to Azure. Data stored for later submission.',

@@ -17,16 +17,16 @@ class DojahService {
       'AppId': `${this.appId}`,
       'Content-Type': 'application/json'
     };
-    // Always use mock in development environments or if credentials are missing
-    this.useMock = process.env.NODE_ENV !== 'production' || process.env.USE_MOCK_VERIFICATION === 'true' || !this.apiKey || !this.appId;
-    
     // Define standard test values that should always return verified
     this.testValues = {
       bvn: '22222222222',  // From Dojah API guide
       nin: '70123456789'   // From Dojah API guide
     };
   }
-  
+  // // For all other NINs, always call the real Dojah API
+    // Base64 value of the selfie image NB: Kindly truncate data:image/jpeg;base64, from the selfie_image object and pass only the buffer starting with /9.
+   
+
   // Helper method to check if a value matches test credentials
   isTestValue(type, value) {
     if (!value) return false;
@@ -36,8 +36,11 @@ class DojahService {
   }
 
   async verifyNIN(ninNumber, selfieImage = null) {
-    // Only return hardcoded response for test NIN
+    // Log the value received and test check
+     const selfieBuffer = selfieImage ? selfieImage.split(',')[1] : null;
+    console.log('[DojahService] verifyNIN called with:', ninNumber);
     const isTestNIN = this.isTestValue('nin', ninNumber);
+    console.log('[DojahService] isTestValue("nin", value):', isTestNIN);
     if (isTestNIN) {
       console.log(`🧪 Always verifying test NIN: ${ninNumber}`);
       return {
@@ -61,7 +64,7 @@ class DojahService {
       };
     }
 
-    // For all other NINs, always call the real Dojah API
+   
     try {
       let response;
 
@@ -124,8 +127,11 @@ class DojahService {
   }
 
   async verifyBVN(bvnNumber, selfieImage = null) {
-    // Only return hardcoded response for test BVN
+    // Log the value received and test check
+     const selfieBuffer = selfieImage ? selfieImage.split(',')[1] : null;
+    console.log('[DojahService] verifyBVN called with:', bvnNumber);
     const isTestBVN = this.isTestValue('bvn', bvnNumber);
+    console.log('[DojahService] isTestValue("bvn", value):', isTestBVN);
     if (isTestBVN) {
       console.log(`🧪 Always verifying test BVN: ${bvnNumber}`);
       return {
@@ -211,17 +217,8 @@ class DojahService {
   }
 
   async verifySelfieToDocs(selfieImage, idImage) {
-    // If using mock data or missing API credentials, return mock response
-    if (this.useMock) {
-      console.log('Using mock ID & Selfie verification for testing');
-      
-      // Mock failure for very small images (likely invalid)
-      if (!selfieImage || !idImage || selfieImage.length < 100 || idImage.length < 100) {
-        return mockVerifications.mockFailedIdSelfie();
-      }
-      
-      return mockVerifications.mockSuccessIdSelfie();
-    }
+    // No more mock: always proceed to real verification
+     const selfieBuffer = selfieImage ? selfieImage.split(',')[1] : null;
     
     try {
       // Make the actual API call to Dojah
@@ -277,17 +274,8 @@ class DojahService {
   }
 
   async verifyIdWithSelfie(selfieImage, idImage, idType = 'generic', referenceId = null) {
-    // If using mock data or missing API credentials, return mock response
-    if (this.useMock) {
-      console.log('Using mock ID with Selfie verification for testing');
-      
-      // Mock failure for very small images (likely invalid)
-      if (!selfieImage || !idImage || selfieImage.length < 100 || idImage.length < 100) {
-        return mockVerifications.mockFailedIdSelfie();
-      }
-      
-      return mockVerifications.mockSuccessIdSelfie();
-    }
+     const selfieBuffer = selfieImage ? selfieImage.split(',')[1] : null;
+    // No more mock: always proceed to real verification
     
     try {
       // Determine which Dojah endpoint to use based on ID type
