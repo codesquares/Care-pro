@@ -16,7 +16,7 @@ import config from '../config';
  **/
 // Create a separate Axios instance for verification API calls
 const verificationApi = axios.create({
-  baseURL: config.LOCALHOST_API_URL,
+  baseURL: config.LOCAL_API_URL,
   headers: {
     'Content-Type': 'application/json',
   },

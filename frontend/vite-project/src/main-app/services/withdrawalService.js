@@ -1,4 +1,5 @@
 // import api from './api';
+import config from '../config'; // Import the config file for API URLs
 
 const BASE_API_URL = 'https://carepro-api20241118153443.azurewebsites.net/api';
 const userDetails = JSON.parse(localStorage.getItem('userDetails') || '{}');
@@ -22,7 +23,7 @@ export const withdrawalService = {
 
   // Get withdrawal history for the caregiver
   getWithdrawalHistory: async (caregiverId) => {
-    const api_to_use = `http://localhost:3000/api/withdrawal`;
+    const api_to_use = `${config.LOCAL_API_URL}/withdrawal`;
     const authToken = localStorage.getItem('authToken');
     console.log("Auth Token:", authToken);
     
@@ -58,7 +59,7 @@ export const withdrawalService = {
   // Create a new withdrawal request
   createWithdrawalRequest: async (withdrawalData) => {
     console.log("Withdrawal Data:", withdrawalData);
-    const local_api = `http://localhost:3000/api/withdrawal?userId=${withdrawalData.caregiverId}`;
+    const local_api = `${config.LOCAL_API_URL}/withdrawal?userId=${withdrawalData.caregiverId}`;
     // const authToken = localStorage.getItem('authToken');
     // console.log("Auth Token:", authToken);
     if (!withdrawalData || !withdrawalData.amountRequested || !withdrawalData.caregiverId) {
