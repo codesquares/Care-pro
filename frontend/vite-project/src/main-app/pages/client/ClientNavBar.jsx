@@ -62,7 +62,7 @@ const ClientNavBar = () => {
           <NotificationBell navigateTo={(path) => navigate(path)} />
         </li>
         <IconLink to={`${basePath}/message`} icon={message} alt="Messages" />
-        <IconLink to={`${basePath}/favorites`} icon={hear} alt="Favorites" />
+        {/* <IconLink to={`${basePath}/favorites`} icon={hear} alt="Favorites" /> */}
       </ul>
 
       <div className="nav-actions">

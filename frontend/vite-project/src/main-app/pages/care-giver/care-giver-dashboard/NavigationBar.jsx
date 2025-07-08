@@ -8,12 +8,16 @@ import message from "../../../../assets/main-app/message.svg";
 import receipt from "../../../../assets/main-app/receipt.svg";
 import NotificationBell from "../../../components/notifications/NotificationBell";
 
+
 const NavigationBar = () => {
   const navigate = useNavigate();
   const basePath = "/app/caregiver";
   const dropdownRef = useRef(null);
 
   const [showDropdown, setShowDropdown] = useState(false);
+  const [earnings, setEarnings] = useState({
+    totalEarned: 0,
+  });
 
   const user = JSON.parse(localStorage.getItem("userDetails"));
   const userName = user?.firstName ? `${user.firstName} ${user.lastName}` : "";
@@ -27,6 +31,27 @@ const NavigationBar = () => {
   return initials.slice(0, 2);
 };
 
+ useEffect(() => {
+    const fetchEarnings = async () => {
+      try{
+      const earnings = await fetch (`https://carepro-api20241118153443.azurewebsites.net/api/WithdrawalRequests/TotalAmountEarnedAndWithdrawn/${user.id}`, {
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${localStorage.getItem('authToken')}`
+        }
+      });
+
+    const data = await earnings.json();
+    setEarnings({
+      totalEarned: data.totalAmountEarned,
+    });
+    } catch (error) {
+      console.error("Error fetching earnings:", error);
+    }
+  };
+
+  fetchEarnings();
+}, []);
 
   const handleSignOut = () => {
     localStorage.clear();
@@ -72,14 +97,14 @@ const NavigationBar = () => {
           <NotificationBell navigateTo={(path) => navigate(path)} />
         </li>
         <IconLink to={`${basePath}/message`} icon={message} alt="Messages" />
-        <IconLink to={`${basePath}/favorites`} icon={hear} alt="Favorites" />
+        {/* <IconLink to={`${basePath}/favorites`} icon={hear} alt="Favorites" /> */}
       </ul>
 
       <div className="nav-actions">
         <div className="earnings" onClick={() => navigate(`${basePath}/earnings`)}>
           <img src={receipt} alt="Earnings Icon" />
           <span>Earned:</span>
-          <strong>₦300,000.00</strong>
+          <strong>₦{earnings.totalEarned.toFixed(2)}</strong>
         </div>
 
         <div className="profile-avatar" ref={dropdownRef}>
