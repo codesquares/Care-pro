@@ -7,6 +7,12 @@ configDotenv();
 // External API base URL
 const External_API = process.env.API_URL || 'https://carepro-api20241118153443.azurewebsites.net/api';
 
+// Define test values for automatic verification
+const TEST_VALUES = {
+  BVN: '22222222222',
+  NIN: '70123456789'
+};
+
 // Verify NIN with or without selfie
 const verifyNIN = async (req, res) => {
   try {
@@ -32,8 +38,36 @@ const verifyNIN = async (req, res) => {
       });
     }
     
-    // Call the Dojah service to verify the NIN, optionally with selfie
-    const verificationResult = await DojahService.verifyNIN(ninNumber, selfieImage, userId);
+    // Check for test NIN value (70123456789) to automatically verify in any environment
+    if (ninNumber === TEST_VALUES.NIN) {
+      console.log(`🧪 Test NIN detected: ${ninNumber} - Auto-approving verification`);
+      
+      // Create a mock successful verification result
+      const mockResult = {
+        status: true,
+        entity: {
+          nin: ninNumber,
+          first_name: req.user.firstName || "Test",
+          last_name: req.user.lastName || "User",
+          middle_name: "",
+          gender: "M",
+          date_of_birth: "1990-01-01",
+          phone_number: "0800000000",
+          selfie_verification: selfieImage ? {
+            confidence_value: 99.9,
+            match: true
+          } : undefined,
+          verification_status: "success",
+          verified: true
+        }
+      };
+      
+      // Skip the actual verification service and use the mock result
+      var verificationResult = mockResult;
+    } else {
+      // Call the Dojah service to verify the NIN, optionally with selfie
+      var verificationResult = await DojahService.verifyNIN(ninNumber, selfieImage, userId);
+    }
     
     // Check if verification was successful
     if (verificationResult.status === true && 
@@ -158,8 +192,36 @@ const verifyBVN = async (req, res) => {
       });
     }
     
-    // Call the Dojah service to verify the BVN, optionally with selfie
-    const verificationResult = await DojahService.verifyBVN(bvnNumber, selfieImage, userId);
+    // Check for test BVN value (22222222222) to automatically verify in any environment
+    if (bvnNumber === TEST_VALUES.BVN) {
+      console.log(`🧪 Test BVN detected: ${bvnNumber} - Auto-approving verification`);
+      
+      // Create a mock successful verification result
+      const mockResult = {
+        status: true,
+        entity: {
+          bvn: bvnNumber,
+          first_name: req.user.firstName || "Test",
+          last_name: req.user.lastName || "User",
+          middle_name: "",
+          date_of_birth: "01-January-1990",
+          phone_number1: "08100000000",
+          gender: "Male",
+          selfie_verification: selfieImage ? {
+            confidence_value: 99.9,
+            match: true
+          } : undefined,
+          verification_status: "success",
+          verified: true
+        }
+      };
+      
+      // Skip the actual verification service and use the mock result
+      var verificationResult = mockResult;
+    } else {
+      // Call the Dojah service to verify the BVN, optionally with selfie
+      var verificationResult = await DojahService.verifyBVN(bvnNumber, selfieImage, userId);
+    }
     
     // Check if verification was successful
     if (verificationResult.status === true && 

@@ -4,6 +4,112 @@ import config from '../config';
 
 // Production API base URL (from config)
 const PROD_API_URL = config.BASE_URL;
+// Local Node.js API URL
+const LOCAL_API_URL = 'http://localhost:3000/api';
+
+// Helper function to determine question type based on content analysis
+const getQuestionType = (questionText) => {
+  // Look for indicators in the text to determine the question type
+  const text = questionText.toLowerCase();
+  
+  // Check for checkbox type indicators (multiple selection)
+  if (
+    text.includes('select all that apply') || 
+    text.includes('check all that apply') || 
+    text.includes('choose all that') ||
+    text.includes('(select all') ||
+    text.includes('multiple options')
+  ) {
+    return 'checkbox';
+  }
+  
+  // Check for radio type indicators (single selection)
+  if (
+    text.includes('which of the following') || 
+    text.includes('which option') || 
+    text.includes('select one') ||
+    text.includes('choose one')
+  ) {
+    return 'radio';
+  }
+  
+  // Default to textarea for open-ended questions
+  return 'textarea';
+};
+
+// Helper function to extract options from question text if applicable
+const getOptionsForQuestion = (questionText) => {
+  const type = getQuestionType(questionText);
+  
+  // Only radio and checkbox questions have options
+  if (type === 'textarea') {
+    return [];
+  }
+  
+  // Try to extract options from the question text
+  // Look for common patterns like lists after the main question
+  // This is a simple implementation - would need refinement in production
+  const optionsMatch = questionText.match(/\:([^\?]+)$/);
+  if (optionsMatch && optionsMatch[1]) {
+    return optionsMatch[1]
+      .split(/\,|\;/)
+      .map(option => option.trim())
+      .filter(option => option.length > 0);
+  }
+  
+  // If no options were found but the question type suggests options should exist,
+  // return some default options based on the question type
+  if (type === 'radio') {
+    if (questionText.toLowerCase().includes('how many years')) {
+      return [
+        'Less than 1 year',
+        '1-3 years',
+        '3-5 years',
+        '5-10 years',
+        'More than 10 years'
+      ];
+    } else if (questionText.toLowerCase().includes('how often')) {
+      return [
+        'Daily',
+        'Several times a week',
+        'Weekly',
+        'Monthly',
+        'Rarely'
+      ];
+    } else {
+      return [
+        'Yes',
+        'No',
+        'Sometimes',
+        'It depends on the situation'
+      ];
+    }
+  }
+  
+  if (type === 'checkbox') {
+    // Default options for caregiving skills
+    if (questionText.toLowerCase().includes('skill')) {
+      return [
+        'Medication management',
+        'Mobility assistance',
+        'Personal hygiene care',
+        'Meal preparation',
+        'First aid',
+        'Dementia care'
+      ];
+    } else {
+      return [
+        'Option 1',
+        'Option 2',
+        'Option 3',
+        'Option 4',
+        'Other'
+      ];
+    }
+  }
+  
+  return [];
+};
 
 // Cache to temporarily store assessment data until backend endpoint is available
 const assessmentCache = [];
@@ -295,8 +401,10 @@ const assessmentService = {
               
               // Race between the actual fetch and our global timeout
               try {
-                const response = await Promise.race([
-                  fetch(`${PROD_API_URL}/kyc/generate-questions`, {
+                // Try local Node.js API first
+                console.log('Trying to fetch questions from local Node.js API (localhost:3000)...');
+                const localResponse = await Promise.race([
+                  fetch(`${LOCAL_API_URL}/kyc/generate-questions`, {
                     method: 'POST',
                     headers: {
                       'Content-Type': 'application/json',
@@ -311,22 +419,73 @@ const assessmentService = {
                 // Clear the timeout since we got a response
                 fetchTimeout.clear();
                 
-                // Check if response is valid and process the data
-                if (response && response.ok) {
-                  const apiData = await response.json();
-                  if (apiData.status === 'success' && apiData.data && apiData.data.length > 0) {
-                    // Process the API data as before
-                    // ...existing code for formatting questions...
+                // Check if response is valid and process the data from local API
+                if (localResponse && localResponse.ok) {
+                  const localApiData = await localResponse.json();
+                  if (localApiData.questions && localApiData.questions.length > 0) {
+                    // Format the questions from the local API
+                    const questions = localApiData.questions.map((questionText, index) => ({
+                      id: `q${index + 1}`,
+                      text: questionText,
+                      type: getQuestionType(questionText),
+                      options: getOptionsForQuestion(questionText)
+                    }));
                     
                     // Cache the questions for 24 hours
                     localStorage.setItem('assessmentQuestions', JSON.stringify(questions));
                     localStorage.setItem('assessmentQuestionsTimestamp', Date.now().toString());
                     
+                    console.log('Successfully fetched questions from local Node.js API');
                     return {
                       success: true,
                       data: questions,
-                      fromAPI: true
+                      fromAPI: true,
+                      source: 'local'
                     };
+                  }
+                } else {
+                  console.log('Local API request failed or returned no questions, trying external API');
+                  
+                  // Try external API if local API failed
+                  const response = await Promise.race([
+                    fetch(`${PROD_API_URL}/kyc/generate-questions`, {
+                      method: 'POST',
+                      headers: {
+                        'Content-Type': 'application/json',
+                        'Authorization': `Bearer ${token}`
+                      },
+                      body: JSON.stringify({ providerType, count: 10 }),
+                      signal: options?.signal || controller.signal
+                    }),
+                    globalTimeoutPromise
+                  ]);
+                  
+                  // Clear the timeout since we got a response
+                  fetchTimeout.clear();
+                  
+                  // Check if response is valid and process the data
+                  if (response && response.ok) {
+                    const apiData = await response.json();
+                    if (apiData.status === 'success' && apiData.data && apiData.data.length > 0) {
+                      // Process the API data as before
+                      const questions = apiData.data.map((q, index) => ({
+                        id: `q${index + 1}`,
+                        text: q.question,
+                        type: q.type,
+                        options: q.options || [],
+                        answer: q.answer || null
+                      }));
+                      
+                      // Cache the questions for 24 hours
+                      localStorage.setItem('assessmentQuestions', JSON.stringify(questions));
+                      localStorage.setItem('assessmentQuestionsTimestamp', Date.now().toString());
+                      
+                      return {
+                        success: true,
+                        data: questions,
+                        fromAPI: true
+                      };
+                    }
                   }
                 }
               } catch (fetchError) {
@@ -427,44 +586,73 @@ const assessmentService = {
       // Log the assessment submission for testing
       logAssessment(assessmentData);
       
-      // Try to submit to backend API first
+      // Try to submit to the local Node.js API first
       const token = localStorage.getItem('authToken');
+      const userDetails = JSON.parse(localStorage.getItem('userDetails') || '{}');
+      const caregiverId = userDetails.id || assessmentData.userId;
+      
       if (token) {
         try {
-          // Extract the responses in the format expected by the API
-          const responses = assessmentData.questions.map(q => q.answer);
-          const providerType = assessmentData.providerType || 'caregiver';
-          
-          console.log('Submitting assessment to API...');
-          const response = await fetch(`${PROD_API_URL}/kyc/submit`, {
+          // First try submitting to local Node.js API
+          console.log('Submitting assessment to local Node.js API...');
+          const localResponse = await fetch(`${LOCAL_API_URL}/assessment/submit`, {
             method: 'POST',
             headers: {
               'Content-Type': 'application/json',
               'Authorization': `Bearer ${token}`
             },
             body: JSON.stringify({ 
-              userId: assessmentData.userId,
-              providerType,
-              responses 
+              userId: caregiverId,
+              timestamp: new Date().toISOString(),
+              questions: assessmentData.questions
             })
           });
           
-          if (response.ok) {
-            const apiData = await response.json();
-            if (apiData.status === 'success') {
-              return {
-                success: true,
-                message: 'Assessment submitted successfully to API',
-                data: {
-                  assessmentId: apiData.assessmentId,
-                  timestamp: new Date().toISOString(),
-                },
-                fromAPI: true
-              };
-            }
+          if (localResponse.ok) {
+            const localData = await localResponse.json();
+            console.log('Successfully submitted to local Node.js API:', localData);
+          } else {
+            console.warn('Local API submission failed, status:', localResponse.status);
+          }
+          
+          // Now submit to the external Azure API with the required schema
+          console.log('Submitting assessment to external Azure API...');
+          
+          // Convert the assessment data to the required format:
+          // { "caregiverId": "string", "questions": ["string"], "status": "string", "score": 0 }
+          const azurePayload = {
+            caregiverId: caregiverId,
+            questions: assessmentData.questions.map(q => q.text),
+            status: "completed",
+            score: 0 // This will be updated after evaluation
+          };
+          
+          const azureResponse = await fetch(`${PROD_API_URL}/Assessments`, {
+            method: 'POST',
+            headers: {
+              'Content-Type': 'application/json',
+              'Authorization': `Bearer ${token}`
+            },
+            body: JSON.stringify(azurePayload)
+          });
+          
+          if (azureResponse.ok) {
+            const apiData = await azureResponse.json();
+            return {
+              success: true,
+              message: 'Assessment submitted successfully to Azure API',
+              data: {
+                assessmentId: apiData.id || apiData.assessmentId,
+                timestamp: new Date().toISOString(),
+              },
+              fromAPI: true
+            };
+          } else {
+            console.warn('Azure API submission failed, falling back to local cache');
+            throw new Error(`Azure API returned status ${azureResponse.status}`);
           }
         } catch (apiError) {
-          console.error('Error submitting assessment to API:', apiError);
+          console.error('Error submitting assessment to APIs:', apiError);
           // Will fall back to local storage
         }
       }
@@ -619,6 +807,40 @@ const assessmentService = {
       if (!evaluationData || typeof evaluationData.score !== 'number') {
         console.warn('Unexpected evaluation response format:', evaluationData);
         throw new Error('Invalid evaluation response format');
+      }
+      
+      // After successful evaluation, save the results to the external Azure API
+      try {
+        const userDetails = JSON.parse(localStorage.getItem('userDetails') || '{}');
+        const caregiverId = userDetails.id || assessmentData.userId;
+
+        // Format the data for Azure API according to required schema:
+        // { "caregiverId": "string", "questions": ["string"], "status": "string", "score": 0 }
+        const azurePayload = {
+          caregiverId: caregiverId,
+          questions: assessmentData.questions.map(q => q.text),
+          status: "completed",
+          score: evaluationData.score
+        };
+        
+        console.log('Saving assessment evaluation results to Azure API...');
+        const azureResponse = await fetch(`${PROD_API_URL}/Assessments`, {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            'Authorization': `Bearer ${token}`
+          },
+          body: JSON.stringify(azurePayload)
+        });
+        
+        if (azureResponse.ok) {
+          console.log('Successfully saved assessment results to Azure API');
+        } else {
+          console.warn(`Failed to save assessment results to Azure API. Status: ${azureResponse.status}`);
+        }
+      } catch (saveError) {
+        console.error('Error saving assessment results to Azure API:', saveError);
+        // Continue with returning evaluation results even if saving fails
       }
       
       return {

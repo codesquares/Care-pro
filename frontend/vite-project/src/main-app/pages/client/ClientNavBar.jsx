@@ -17,11 +17,11 @@ const ClientNavBar = () => {
   const user = JSON.parse(localStorage.getItem("userDetails"));
   const userName = user?.firstName ? `${user.firstName} ${user.lastName}` : "";
 
-  const getInitials = (name) => {
-    const names = name.split(" ");
-    const initials = names.map((n) => n[0].toUpperCase()).join("");
-    return initials.slice(0, 2);
-  };
+  // const getInitials = (name) => {
+  //   const names = name.split(" ");
+  //   const initials = names.map((n) => n[0].toUpperCase()).join("");
+  //   return initials.slice(0, 2);
+  // };
 
   const IconLink = ({ to, icon, alt }) => (
     <li className="nav-link icon-link" onClick={() => navigate(to)}>
@@ -69,7 +69,7 @@ const ClientNavBar = () => {
           
           <span onClick={() => setShowDropdown(!showDropdown)}>{userName}</span>
           <div className="avatar" onClick={() => setShowDropdown(!showDropdown)}>
-            {getInitials(userName)}
+            {/* {getInitials(userName)} */}
           </div>
           {showDropdown && (
             <div className="dropdown-menu">

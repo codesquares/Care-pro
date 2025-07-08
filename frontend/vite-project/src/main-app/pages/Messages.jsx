@@ -97,8 +97,9 @@ const Messages = ({ userId: propsUserId, token: propsToken }) => {
         connectionAttemptsRef.current += 1;
         
         try {
-          // Initialize chat and store cleanup function
-          cleanup = initializeChat(userId, token);
+          // Initialize chat and store cleanup function - ensure it returns a function
+          const cleanupFn = await initializeChat(userId, token);
+          cleanup = typeof cleanupFn === 'function' ? cleanupFn : () => {};
           
           // Wait a bit before checking if we need to retry
           await new Promise(resolve => setTimeout(resolve, 3000));
@@ -115,13 +116,16 @@ const Messages = ({ userId: propsUserId, token: propsToken }) => {
             console.log("[MessagesPage] Connection attempt failed, trying once more");
             
             // Clean up the failed connection first
-            cleanup();
+            if (typeof cleanup === 'function') {
+              cleanup();
+            }
             
             // Try again after a short delay with increasing backoff
-            setTimeout(() => {
+            setTimeout(async () => {
               if (isMounted.current) {
                 console.log("[MessagesPage] Retrying connection...");
-                cleanup = initializeChat(userId, token);
+                const cleanupFn = await initializeChat(userId, token);
+                cleanup = typeof cleanupFn === 'function' ? cleanupFn : () => {};
               }
             }, 2000); // Fixed backoff time
           }
@@ -138,7 +142,9 @@ const Messages = ({ userId: propsUserId, token: propsToken }) => {
     return () => {
       console.log("[MessagesPage] Cleaning up chat connection");
       isMounted.current = false;
-      cleanup();
+      if (typeof cleanup === 'function') {
+        cleanup();
+      }
     };
   // IMPORTANT: We intentionally don't include 'error' in the dependency array
   // to prevent infinite re-renders when errors occur
@@ -198,11 +204,16 @@ const Messages = ({ userId: propsUserId, token: propsToken }) => {
             </p>
             {isOnline && error && !error.includes('offline') && !error.includes('sample data') && (
               <button 
-                onClick={() => {
+                onClick={async () => {
                   console.log("[MessagesPage] Manual retry requested by user");
                   // Use a one-time retry that won't trigger an infinite loop
-                  const cleanup = initializeChat(userId, token);
-                  // Don't trigger additional refreshes - let the system handle it naturally
+                  try {
+                    const cleanupFn = await initializeChat(userId, token);
+                    // Store the cleanup function somewhere if needed
+                    // Don't trigger additional refreshes - let the system handle it naturally
+                  } catch (err) {
+                    console.error("[MessagesPage] Error during manual retry:", err);
+                  }
                 }}
               >
                 <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
