@@ -17,16 +17,16 @@ class DojahService {
       'AppId': `${this.appId}`,
       'Content-Type': 'application/json'
     };
-    // Always use mock in development environments or if credentials are missing
-    this.useMock = process.env.NODE_ENV !== 'production' || process.env.USE_MOCK_VERIFICATION === 'true' || !this.apiKey || !this.appId;
-    
     // Define standard test values that should always return verified
     this.testValues = {
       bvn: '22222222222',  // From Dojah API guide
       nin: '70123456789'   // From Dojah API guide
     };
   }
-  
+  // // For all other NINs, always call the real Dojah API
+    // Base64 value of the selfie image NB: Kindly truncate data:image/jpeg;base64, from the selfie_image object and pass only the buffer starting with /9.
+   
+
   // Helper method to check if a value matches test credentials
   isTestValue(type, value) {
     if (!value) return false;
@@ -36,17 +36,12 @@ class DojahService {
   }
 
   async verifyNIN(ninNumber, selfieImage = null) {
-    // Always check if this is a test NIN
+    // Log the value received and test check
+     const selfieBuffer = selfieImage ? selfieImage.split(',')[1] : null;
+    console.log('[DojahService] verifyNIN called with:', ninNumber);
     const isTestNIN = this.isTestValue('nin', ninNumber);
-    
-    // Force the use of test NIN from guide in development, but only if not already a test value
-    if (process.env.NODE_ENV !== 'production' && !isTestNIN) {
-      ninNumber = this.testValues.nin;
-      console.log(`Using test NIN number ${this.testValues.nin} for development environment`);
-    }
-    
-    // If this is a test NIN (either provided or forced), ensure it's always verified
-    if (isTestNIN || ninNumber === this.testValues.nin) {
+    console.log('[DojahService] isTestValue("nin", value):', isTestNIN);
+    if (isTestNIN) {
       console.log(`🧪 Always verifying test NIN: ${ninNumber}`);
       return {
         entity: {
@@ -68,24 +63,12 @@ class DojahService {
         status: true
       };
     }
-    
-    // If using mock data or missing API credentials, return mock response
-    if (this.useMock) {
-      console.log('Using mock NIN verification for testing');
-      
-      // Mock failure for some specific test values, success for others
-      if (ninNumber === '12345678900' || ninNumber.length !== 11) {
-        return mockVerifications.mockFailedNIN(ninNumber);
-      }
-      return mockVerifications.mockSuccessNIN(ninNumber);
-    }
-    
+
+   
     try {
       let response;
-      
-      // If selfie image is provided, use the NIN with selfie verification endpoint
+
       if (selfieImage) {
-        // According to the API guide, use the NIN with selfie verification endpoint
         response = await axios.post(`${this.baseUrl}/kyc/nin/verify`, {
           nin: ninNumber,
           selfie_image: selfieImage
@@ -93,26 +76,20 @@ class DojahService {
           headers: this.headers
         });
       } else {
-        // Basic NIN verification without selfie
         response = await axios.get(`${this.baseUrl}/kyc/nin`, {
           params: { nin: ninNumber },
           headers: this.headers
         });
       }
-      
-      // Check if we got a proper response
+
       if (response.data && response.data.entity) {
-        // Add verification status based on selfie verification result if available
         const result = response.data;
-        
         if (selfieImage && result.entity.selfie_verification) {
           result.entity.verified = result.entity.selfie_verification.match === true;
           result.entity.verification_status = result.entity.verified ? "success" : "failed";
         }
-        
         return result;
       } else {
-        // Invalid response format
         return {
           entity: {
             nin: ninNumber,
@@ -125,8 +102,6 @@ class DojahService {
       }
     } catch (error) {
       console.error('NIN verification error:', error.response?.data || error.message);
-      
-      // Check if it's a validation error (invalid NIN)
       if (error.response && error.response.status === 400) {
         return {
           entity: {
@@ -138,8 +113,6 @@ class DojahService {
           status: false
         };
       }
-      
-      // Server or API error
       return {
         entity: {
           nin: ninNumber,
@@ -154,17 +127,12 @@ class DojahService {
   }
 
   async verifyBVN(bvnNumber, selfieImage = null) {
-    // Always check if this is a test BVN
+    // Log the value received and test check
+     const selfieBuffer = selfieImage ? selfieImage.split(',')[1] : null;
+    console.log('[DojahService] verifyBVN called with:', bvnNumber);
     const isTestBVN = this.isTestValue('bvn', bvnNumber);
-    
-    // Force the use of test BVN from guide in development, but only if not already a test value
-    if (process.env.NODE_ENV !== 'production' && !isTestBVN) {
-      bvnNumber = this.testValues.bvn;
-      console.log(`Using test BVN number ${this.testValues.bvn} for development environment`);
-    }
-    
-    // If this is a test BVN (either provided or forced), ensure it's always verified
-    if (isTestBVN || bvnNumber === this.testValues.bvn) {
+    console.log('[DojahService] isTestValue("bvn", value):', isTestBVN);
+    if (isTestBVN) {
       console.log(`🧪 Always verifying test BVN: ${bvnNumber}`);
       return {
         entity: {
@@ -185,24 +153,12 @@ class DojahService {
         status: true
       };
     }
-    
-    // If using mock data or missing API credentials, return mock response
-    if (this.useMock) {
-      console.log('Using mock BVN verification for testing');
-      
-      // Mock failure for some specific test values, success for others
-      if (bvnNumber === '12345678900' || bvnNumber.length !== 11) {
-        return mockVerifications.mockFailedBVN(bvnNumber);
-      }
-      return mockVerifications.mockSuccessBVN(bvnNumber);
-    }
-    
+
+    // For all other BVNs, always call the real Dojah API
     try {
       let response;
-      
-      // If selfie image is provided, use the BVN with selfie verification endpoint
+
       if (selfieImage) {
-        // According to the API guide, use the BVN with selfie verification endpoint
         response = await axios.post(`${this.baseUrl}/kyc/bvn/verify`, {
           bvn: bvnNumber,
           selfie_image: selfieImage
@@ -210,26 +166,20 @@ class DojahService {
           headers: this.headers
         });
       } else {
-        // Basic BVN verification without selfie
         response = await axios.get(`${this.baseUrl}/kyc/bvn`, {
           params: { bvn: bvnNumber },
           headers: this.headers
         });
       }
-      
-      // Check if we got a proper response
+
       if (response.data && response.data.entity) {
-        // Add verification status based on selfie verification result if available
         const result = response.data;
-        
         if (selfieImage && result.entity.selfie_verification) {
           result.entity.verified = result.entity.selfie_verification.match === true;
           result.entity.verification_status = result.entity.verified ? "success" : "failed";
         }
-        
         return result;
       } else {
-        // Invalid response format
         return {
           entity: {
             bvn: bvnNumber,
@@ -242,8 +192,6 @@ class DojahService {
       }
     } catch (error) {
       console.error('BVN verification error:', error.response?.data || error.message);
-      
-      // Check if it's a validation error (invalid BVN)
       if (error.response && error.response.status === 400) {
         return {
           entity: {
@@ -255,8 +203,6 @@ class DojahService {
           status: false
         };
       }
-      
-      // Server or API error
       return {
         entity: {
           bvn: bvnNumber,
@@ -271,17 +217,8 @@ class DojahService {
   }
 
   async verifySelfieToDocs(selfieImage, idImage) {
-    // If using mock data or missing API credentials, return mock response
-    if (this.useMock) {
-      console.log('Using mock ID & Selfie verification for testing');
-      
-      // Mock failure for very small images (likely invalid)
-      if (!selfieImage || !idImage || selfieImage.length < 100 || idImage.length < 100) {
-        return mockVerifications.mockFailedIdSelfie();
-      }
-      
-      return mockVerifications.mockSuccessIdSelfie();
-    }
+    // No more mock: always proceed to real verification
+     const selfieBuffer = selfieImage ? selfieImage.split(',')[1] : null;
     
     try {
       // Make the actual API call to Dojah
@@ -337,17 +274,8 @@ class DojahService {
   }
 
   async verifyIdWithSelfie(selfieImage, idImage, idType = 'generic', referenceId = null) {
-    // If using mock data or missing API credentials, return mock response
-    if (this.useMock) {
-      console.log('Using mock ID with Selfie verification for testing');
-      
-      // Mock failure for very small images (likely invalid)
-      if (!selfieImage || !idImage || selfieImage.length < 100 || idImage.length < 100) {
-        return mockVerifications.mockFailedIdSelfie();
-      }
-      
-      return mockVerifications.mockSuccessIdSelfie();
-    }
+     const selfieBuffer = selfieImage ? selfieImage.split(',')[1] : null;
+    // No more mock: always proceed to real verification
     
     try {
       // Determine which Dojah endpoint to use based on ID type

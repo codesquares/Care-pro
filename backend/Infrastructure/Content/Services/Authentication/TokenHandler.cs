@@ -45,5 +45,33 @@ namespace Infrastructure.Content.Services.Authentication
 
             return Task.FromResult(new JwtSecurityTokenHandler().WriteToken(token));
         }
+
+        public string GeneratePasswordResetToken(string email)
+        {
+            var secretKey = configuration["JwtSettings:Secret"];
+            var issuer = configuration["JwtSettings:Issuer"];
+            var audience = configuration["JwtSettings:Audience"];
+            var expires = DateTime.UtcNow.AddMinutes(int.Parse(configuration["JwtSettings:ExpiresInMinutes"]));
+
+            var key = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(secretKey));
+            var creds = new SigningCredentials(key, SecurityAlgorithms.HmacSha256);
+
+            var claims = new[]
+            {
+            new Claim(JwtRegisteredClaimNames.Sub, email),
+            new Claim(JwtRegisteredClaimNames.Jti, Guid.NewGuid().ToString())
+        };
+
+            var token = new JwtSecurityToken(
+                issuer,
+                audience,
+                claims,
+                expires: expires,
+                signingCredentials: creds
+            );
+
+            return new JwtSecurityTokenHandler().WriteToken(token);
+        
+    }
     }
 }

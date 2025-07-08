@@ -13,7 +13,7 @@ const Banner = ({ name, careNeedsSet }) => {
         <h2 className="welcome-text" style={{ color: "white" }}>Welcome back, {name.split(" ")[0]}</h2>
       </div>
 
-      {!careNeedsSet && (
+      {/* {!careNeedsSet && (
         <div className="search-box">
           <div className="search-info">
             <span className="search-icon">⭐</span>
@@ -29,7 +29,7 @@ const Banner = ({ name, careNeedsSet }) => {
             Set Care Needs
           </button>
         </div>
-      )}
+      )} */}
     </div>
   );
 };

@@ -13,6 +13,7 @@ import validateFormData from "../../Vadlidations/GigCreationValidation";
 import { toast } from "react-toastify";
 import Modal from "../../components/modal/Modal";
 import { useNavigate } from "react-router-dom";
+import { createNotification } from "../../services/notificationService";
 
 const GigsForm = () => {
   const pages = ["Overview", "Pricing", "Gallery", "Publish"];
@@ -106,7 +107,7 @@ const GigsForm = () => {
       "Physical therapy support", "Cognitive stimulation activities", "Emotional support and check-ins",
       "Recreational activities assistance", "Acupuncture", "Massage therapy"
     ],
-    "End of Life Care": [
+    "Palliative": [
       "Palliative care support", "Overnight supervision", "Emotional support and check-ins",
       "Home safety assessment"
     ],
@@ -230,6 +231,14 @@ const GigsForm = () => {
         setServerMessage("Gig published successfully!");
         setModalTitle("Success!");
         setModalDescription("Your Gig has been successfully created.");
+        createNotification({
+          recipientId: caregiverId,
+          senderId: caregiverId,
+          type: "NewGig",
+          relatedEntityId: response.data?.id,
+        }).then(() => {
+          console.log("Notification created successfully"); 
+        });
         setButtonBgColor("#34A853");
         setButtonText("Proceed");
         setIsModalOpen(true);

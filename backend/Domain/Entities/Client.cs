@@ -23,11 +23,13 @@ namespace Domain.Entities
 
         public string Password { get; set; }
 
-        public string HomeAddress { get; set; }
+        public string? HomeAddress { get; set; }
 
         public string? PhoneNo { get; set; }
 
         public bool IsDeleted { get; set; }
+
+        public DateTime? DeletedOn { get; set; }
 
         public bool Status { get; set; }
 

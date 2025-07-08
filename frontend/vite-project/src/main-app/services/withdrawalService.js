@@ -1,0 +1,194 @@
+// import api from './api';
+import config from '../config'; // Import the config file for API URLs
+
+const BASE_API_URL = 'https://carepro-api20241118153443.azurewebsites.net/api';
+const userDetails = JSON.parse(localStorage.getItem('userDetails') || '{}');
+
+export const withdrawalService = {
+  // Get earnings for the current caregiver
+  getCaregiverEarnings: async (caregiverId) => {
+    try {
+      const response = await fetch(`${BASE_API_URL}/Earnings/caregiver/${caregiverId}`,{
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${localStorage.getItem('authToken')}`
+        }
+      });
+      // return response.data;
+      return 0;
+    } catch (error) {
+      throw error;
+    }
+  },
+
+  // Get withdrawal history for the caregiver
+  getWithdrawalHistory: async (caregiverId) => {
+    const api_to_use = `${config.LOCAL_API_URL}/withdrawal`;
+    const authToken = localStorage.getItem('authToken');
+    console.log("Auth Token:", authToken);
+    
+    try {
+      const response = await fetch(`${api_to_use}/${caregiverId}?userId=${caregiverId}`, {
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${localStorage.getItem('authToken')}`
+        }
+      });
+      const responseData = await response.json();
+      return responseData;
+    } catch (error) {
+      throw error;
+    }
+  },
+
+  // Check if caregiver has pending withdrawal request
+  // hasPendingWithdrawal: async (caregiverId) => {
+  //   try {
+  //     const response = await fetch(`${BASE_API_URL}/WithdrawalRequests/has-pending/${caregiverId}`, {
+  //       headers: {
+  //         'Content-Type': 'application/json',
+  //         'Authorization': `Bearer ${localStorage.getItem('authToken')}`
+  //       }
+  //     });
+  //     return response.data;
+  //   } catch (error) {
+  //     throw error;
+  //   }
+  // },
+
+  // Create a new withdrawal request
+  createWithdrawalRequest: async (withdrawalData) => {
+    console.log("Withdrawal Data:", withdrawalData);
+    const local_api = `${config.LOCAL_API_URL}/withdrawal?userId=${withdrawalData.caregiverId}`;
+    // const authToken = localStorage.getItem('authToken');
+    // console.log("Auth Token:", authToken);
+    if (!withdrawalData || !withdrawalData.amountRequested || !withdrawalData.caregiverId) {
+      throw new Error('Invalid withdrawal data');
+    }
+    
+    try {
+      const response = await fetch(`${local_api}`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${localStorage.getItem('authToken')}`
+        },
+        body: JSON.stringify(withdrawalData)
+      });
+      const responseData = await response.json();
+      if (!response.ok) {
+        throw new Error(responseData.errorMessage || 'Failed to create withdrawal request');
+      }
+      return responseData;
+    } catch (error) {
+      throw error;
+    }
+  }
+};
+
+export const adminWithdrawalService = {
+  // Get all withdrawal requests
+  getAllWithdrawalRequests: async () => {
+    try {
+      const response = await fetch(`${BASE_API_URL}/WithdrawalRequests`, {
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${localStorage.getItem('authToken')}`
+        }
+      });
+      const data = await response.json();
+      return data;
+    } catch (error) {
+      throw error;
+    }
+  },
+
+  // Get withdrawal requests by status
+  getWithdrawalRequestsByStatus: async (status) => {
+    try {
+      const response = await fetch(`${BASE_API_URL}/WithdrawalRequests/status/${status}`, {
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${localStorage.getItem('authToken')}`
+        }
+      });
+      return response.data;
+    } catch (error) {
+      throw error;
+    }
+  },
+
+  // Get withdrawal request by token
+  getWithdrawalRequestByToken: async (token) => {
+    try {
+      const response = await fetch(`${BASE_API_URL}/WithdrawalRequests/token/${token}`, {
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${localStorage.getItem('authToken')}`
+        }
+      });
+      const data = await response.json();
+      return data;
+    } catch (error) {
+      throw error;
+    }
+  },
+
+  // Verify a withdrawal request
+  verifyWithdrawalRequest: async (verificationData) => {
+    
+    console.log("Verification Data:=====>", verificationData);
+    console.log("userDetails:=====>", userDetails);
+    verificationData.adminId = userDetails.id; // Add admin ID to verification data
+    try {
+      const response = await fetch(`${BASE_API_URL}/WithdrawalRequests/verify`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${localStorage.getItem('authToken')}`
+        },
+        
+        body: JSON.stringify(verificationData)
+      });
+      const data = await response.json();
+      return  data;
+    } catch (error) {
+      throw error;
+    }
+  },
+
+  // Complete a withdrawal request
+  completeWithdrawalRequest: async (token) => {
+    try {
+      const response = await fetch(`${BASE_API_URL}/WithdrawalRequests/complete/${token}`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${localStorage.getItem('authToken')}`
+        }
+      });
+      const data = await response.json();
+      return data;
+    } catch (error) {
+      throw error;
+    }
+  },
+
+  // Reject a withdrawal request
+  rejectWithdrawalRequest: async (rejectionData) => {
+    try {
+      const response = await fetch(`${BASE_API_URL}/WithdrawalRequests/reject`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${localStorage.getItem('authToken')}`
+        },
+        body: JSON.stringify(rejectionData)
+      });
+      const data = await response.json();
+      return data;
+    } catch (error) {
+      throw error;
+    }
+  }
+};

@@ -17,6 +17,17 @@ namespace Application.Interfaces.Content
 
         Task<string> UpdateCaregiverInfornmationAsync(string caregiverId, UpdateCaregiverAdditionalInfoRequest updateCaregiverAdditionalInfoRequest);
 
+        Task<string> UpdateCaregiverAboutMeAsync(string caregiverId, UpdateCaregiverAdditionalInfoRequest updateCaregiverAdditionalInfoRequest);
+
+        Task<string> UpdateCaregiverAvailabilityAsync(string caregiverId, UpdateCaregiverAvailabilityRequest updateCaregiverAvailabilityRequest);
+
+        Task<string> SoftDeleteCaregiverAsync(string caregiverId);
+
+        Task ResetPasswordAsync( ResetPasswordRequest resetPasswordRequest);
+
+
+        Task GeneratePasswordResetTokenAsync(PasswordResetRequestDto passwordResetRequestDto);
+        Task ResetPasswordWithJwtAsync(PasswordResetDto request);
 
     }
 }

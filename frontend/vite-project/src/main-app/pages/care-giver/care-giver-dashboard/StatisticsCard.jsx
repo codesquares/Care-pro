@@ -4,14 +4,14 @@ import StatisticCard1 from "../../../../assets/statisticCard1.png";
 import StatisticCard2 from "../../../../assets/statisticCard2.png";
 import StatisticCard3 from "../../../../assets/statisticCard3.png";
 
-const StatisticsCard = ({totalOrders, totalErnings}) => {
+const StatisticsCard = ({totalOrders, totalEarnings}) => {
   return (
     <div className="statistics-card">
       <div className="stat">
         <img src={StatisticCard1} alt="card1" className="card-image" />  
         <div className="stat-details">
           <p className="stat-title">Total Earnings</p>
-          <h4 className="stat-value">₦{totalErnings}</h4>
+          <h4 className="stat-value">₦{totalEarnings}</h4>
         </div>
       </div>
       <div className="stat">

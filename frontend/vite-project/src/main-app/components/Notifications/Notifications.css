@@ -1,0 +1,93 @@
+.notifications-page {
+  padding: 20px;
+}
+
+.header {
+  font-family: PoppinsSemiBold, sans-serif;
+  font-size: 32px;
+  font-weight: bold;
+  color: #02445F;
+  margin-bottom: 20px;
+}
+
+.notifications-header {
+  font-family: PoppinsSemiBold, sans-serif;
+  font-size: 24px;
+  font-weight: bold;
+  color: #000000;
+  display: flex;
+  align-items: center;
+  margin-bottom: 20px;
+}
+
+.mark-all-read-btn {
+  margin-left: 20px;
+  background: none;
+  border: none;
+  color: #007bff;
+  cursor: pointer;
+  font-size: 16px;
+}
+
+.notifications-box {
+  background-color: #f4f4f4;
+  border-radius: 20px;
+  padding: 20px;
+  margin-bottom: 20px;
+}
+
+.notification-entry {
+  display: flex;
+  align-items: center;
+  margin-bottom: 10px;
+  background-color: #F1FAFF;
+  border-radius: 10px;
+  padding: 10px;
+}
+
+.notification-entry.unread {
+  background: #E5F2FF;
+  border-left: 4px solid #007bff;
+}
+
+.notification-entry img {
+  width: 50px;
+  height: 50px;
+  border-radius: 50%;
+  margin-right: 10px;
+}
+
+.notification-entry p {
+  margin: 0;
+  font-family: Poppins, sans-serif;
+  font-size: 16px;
+  color: #333;
+}
+
+.notification-time {
+  font-size: 12px;
+  color: #666;
+  margin-top: 4px;
+  display: block;
+}
+
+.notification-icon {
+  font-size: 24px;
+  margin-right: 10px;
+}
+
+.notification-content {
+  flex: 1;
+}
+
+.no-notifications {
+  text-align: center;
+  padding: 20px;
+  color: #666;
+}
+
+.notification-loading {
+  text-align: center;
+  padding: 20px;
+  color: #666;
+}

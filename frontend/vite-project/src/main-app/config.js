@@ -3,6 +3,9 @@ const config = {
     BASE_URL: "https://carepro-api20241118153443.azurewebsites.net/api",
     // Alternate URL in case the main one doesn't work
     FALLBACK_URL: "https://carepro-api20241118153443.azurewebsites.net",
+
+    LOCAL_API_URL:"https://care-pro-node-api.onrender.com/api",
+    LOCALHOST_API_URL: "http://localhost:3000/api",
   };
   
   export default config;

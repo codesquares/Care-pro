@@ -17,7 +17,7 @@ const LoginPage = () => {
     const user = JSON.parse(localStorage.getItem("userDetails"));
     if (user && user.role) {
       if (user.role === "Admin") {
-        navigate("/admin", { replace: true });
+        navigate("/app/admin/dashboard", { replace: true });
       } else if (user.role === "Client") {
         navigate("/app/client/dashboard", { replace: true });
       } else {
@@ -62,7 +62,7 @@ const LoginPage = () => {
 
       // Redirect based on role
       if (data.role === "Admin") {
-        window.location.href = "/admin";
+        window.location.href = "app/admin/dashboard";
       } else if (data.role === "Client") {
         window.location.href = "/app/client/dashboard";
       } else {

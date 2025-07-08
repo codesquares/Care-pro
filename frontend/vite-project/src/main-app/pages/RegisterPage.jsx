@@ -25,6 +25,8 @@ const CreateAccount = () => {
         navigate("/app/caregiver/dashboard", { replace: true });
       } else if (user.role === "Client") {
         navigate("/app/client/dashboard", { replace: true });
+      } else if (user.role === "Admin") {
+        navigate("/app/admin/dashboard", { replace: true });
       } else {
         navigate("/app", { replace: true }); // fallback for unknown roles
       }
@@ -87,7 +89,12 @@ const CreateAccount = () => {
     };
 
     try {
-      const endpoint = userType === "Caregiver" ? "/CareGivers/AddCaregiverUser" : "/Clients/AddClientUser";
+      const endpoint = userType === "Caregiver"
+        ? "/CareGivers/AddCaregiverUser"
+        : userType === "Client"
+        ? "/Clients/AddClientUser"
+        : "/Admins/AddAdminUser";
+      console.log("Submitting registration with payload:", payload);
       await fetchData(payload, endpoint);
 
       // Show success modal
@@ -211,6 +218,17 @@ const CreateAccount = () => {
                 />
                  <span className="custom-radio"></span>
                 Client
+              </label>
+              <label className="radio-label">
+                <input
+                  type="radio"
+                  name="userType"
+                  value="Admin"
+                  checked={userType === "Admin"}
+                  onChange={(e) => setUserType(e.target.value)}
+                />
+                 <span className="custom-radio"></span>
+                Admin
               </label>
             </div>
             {errors.userType && <p className="error-text">{errors.userType}</p>}

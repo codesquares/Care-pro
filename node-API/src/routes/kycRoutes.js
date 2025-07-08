@@ -5,7 +5,8 @@ const {
   generateProviderQuestions,
   submitResponses,
   evalResponse,
-  createVerificationSession
+  createVerificationSession,
+  generateQuestionBank
 } = require('../controllers/kycController');
 const {
   verifyNIN,
@@ -26,6 +27,7 @@ router.get('/questions', protect, getQuestions);
 router.post('/generate-questions', protect, generateProviderQuestions);
 router.post('/submit', protect, submitResponses);
 router.post('/evaluate', protect, evalResponse);
+router.post('/generate-question-bank', protect, generateQuestionBank);
 
 // Identity verification routes - all protected
 router.post('/verification-session', protect, createVerificationSession);

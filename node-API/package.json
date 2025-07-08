@@ -6,8 +6,7 @@
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1",
     "start": "nodemon app.js",
-    "start:clean": "npx kill-port 3000 && nodemon app.js",
-    "start:alt": "nodemon app.js --port=3001"
+    "start:prod": "node app.js"
   },
   "keywords": [
     "caregiver",

@@ -17,7 +17,9 @@ const ProfileHeader = () => {
 
   const userDetails = JSON.parse(localStorage.getItem("userDetails"));
   const caregiverId = userDetails?.id;
-
+  // get userName from localStorage
+  const userName = localStorage.getItem("userName") || "guestUser209";
+  console.log("userName===>", userName);
   useEffect(() => {
     // Set up cleanup function for when component unmounts
     return () => {
@@ -158,7 +160,7 @@ const ProfileHeader = () => {
           style={imageStyle}
         />
         <h2 style={{ margin: '10px 0 5px 0' }}>{profile.name}</h2>
-        <p style={{ margin: '5px 0', color: '#666' }}>@{profile.username}</p>
+        <p style={{ margin: '5px 0', color: '#666' }}>@{userName}</p>
         <p style={{ margin: '8px 0 12px 0', maxWidth: '90%' }}>{profile.bio}</p>
         <div className="rating" style={{ margin: '10px 0', fontSize: '16px' }}>
           {"⭐".repeat(Math.round(profile.rating))} ({profile.rating}, {profile.reviews} Reviews)

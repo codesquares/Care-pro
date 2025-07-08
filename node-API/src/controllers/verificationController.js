@@ -16,12 +16,20 @@ const TEST_VALUES = {
 // Verify NIN with or without selfie
 const verifyNIN = async (req, res) => {
   try {
-    // Get the NIN number and optional selfie image from the request body
-    const { ninNumber, selfieImage, isWithSelfie, userType = 'caregiver' } = req.body;
-    
-    // Get the user ID from the authenticated user
+    const { ninNumber, selfieImage, userType, token, id } = req.body;
     const userId = req.user.id;
-    
+    console.log('[verifyNIN] Received ninNumber:', ninNumber, '| typeof:', typeof ninNumber);
+    console.log('[verifyNIN] userId from req.user:', userId, '| id from body:', id);
+    console.log('[verifyNIN] selfieImage present:', !!selfieImage);
+
+    // Check if userId from request matches the authenticated user
+    if (id && id !== userId) {
+      return res.status(403).json({
+        status: 'error',
+        message: 'Unauthorized access to verify NIN for another user'
+      });
+    }
+
     // Validate inputs
     if (!ninNumber) {
       return res.status(400).json({
@@ -29,21 +37,28 @@ const verifyNIN = async (req, res) => {
         message: 'NIN number is required'
       });
     }
-    
-    // For the combined NIN+selfie flow, both should be required
-    if (isWithSelfie === true && !selfieImage) {
-      return res.status(400).json({
+   // check for token
+    if (!token) {
+      return res.status(401).json({
         status: 'error',
-        message: 'Selfie image is required for NIN+selfie verification'
+        message: 'Authorization token is required'
       });
     }
-    
-    // Check for test NIN value (70123456789) to automatically verify in any environment
-    if (ninNumber === TEST_VALUES.NIN) {
+    // if (!selfieImage) {
+    //   return res.status(400).json({
+    //     status: 'error',
+    //     message: 'Selfie image is required for NIN+selfie verification'
+    //   });
+    // }
+
+    const isTestNin = ninNumber === TEST_VALUES.NIN;
+    let verificationResult;
+
+    console.log('[verifyNIN] isTestNin:', isTestNin);
+
+    if (isTestNin) {
       console.log(`🧪 Test NIN detected: ${ninNumber} - Auto-approving verification`);
-      
-      // Create a mock successful verification result
-      const mockResult = {
+      verificationResult = {
         status: true,
         entity: {
           nin: ninNumber,
@@ -59,71 +74,84 @@ const verifyNIN = async (req, res) => {
           } : undefined,
           verification_status: "success",
           verified: true
-        }
+        },
+        isTestValue: true
       };
-      
-      // Skip the actual verification service and use the mock result
-      var verificationResult = mockResult;
     } else {
-      // Call the Dojah service to verify the NIN, optionally with selfie
-      var verificationResult = await DojahService.verifyNIN(ninNumber, selfieImage, userId);
+      verificationResult = await DojahService.verifyNIN(ninNumber, selfieImage, userId);
     }
-    
-    // Check if verification was successful
-    if (verificationResult.status === true && 
-        verificationResult.entity && 
-        (verificationResult.entity.verified === true || 
-         (selfieImage && verificationResult.entity.selfie_verification && 
-          verificationResult.entity.selfie_verification.match === true))) {
-      
-      // Track the verification method
+    console.log('[verifyNIN] verificationResult:', JSON.stringify(verificationResult));
+
+    // Stepwise response: If only NIN is provided (no selfie), prompt for next step
+    if (
+      verificationResult.status === true &&
+      verificationResult.entity &&
+      verificationResult.entity.verified === true &&
+      !selfieImage
+    ) {
+      return res.status(200).json({
+        status: 'success',
+        message: 'NIN verified. Please provide a selfie to complete verification.',
+        data: {
+          verified: false,
+          verificationStatus: 'nin_verified',
+          nin: ninNumber,
+          firstName: verificationResult.entity.first_name,
+          lastName: verificationResult.entity.last_name,
+          gender: verificationResult.entity.gender,
+          dateOfBirth: verificationResult.entity.date_of_birth,
+          nextSteps: ['selfie']
+        }
+      });
+    }
+
+    // If both NIN and selfie are present and verified, complete verification
+    if (
+      verificationResult.status === true &&
+      verificationResult.entity &&
+      (
+        verificationResult.entity.verified === true ||
+        (
+          selfieImage &&
+          verificationResult.entity.selfie_verification &&
+          verificationResult.entity.selfie_verification.match === true
+        )
+      )
+    ) {
       let verificationType = 'nin';
       if (selfieImage) {
         verificationType = 'nin_selfie';
       }
-      
-      // Prepare verification data to update in the Azure API
+
       const verificationData = {
         userId: userId,
-        verificationType: verificationType,
-        status: 'verified',
-        verificationMethod: 'nin',
-        methodDetails: {
-          ninNumber: ninNumber,
-          withSelfie: !!selfieImage
-        },
-        userData: {
-          firstName: verificationResult.entity.first_name,
-          lastName: verificationResult.entity.last_name,
-          gender: verificationResult.entity.gender,
-          dateOfBirth: verificationResult.entity.date_of_birth
-        },
-        completedAt: new Date().toISOString()
+        verifiedFirstName: verificationResult.entity.first_name,
+        verifiedLastName: verificationResult.entity.last_name,
+        verificationMethod: verificationType,
+        verificationNo: ninNumber,
+        verificationStatus: 'verified',
       };
-      
+
       try {
-        // Update user's verification status in the Azure API
-        // Choose endpoint based on user type
-        const apiEndpoint = userType === 'client'
-          ? `${External_API}/clients/${userId}/verification`
-          : `${External_API}/caregivers/${userId}/verification`;
-          
-        await axios.patch(
-          apiEndpoint,
-          verificationData,
-          {
+        if (!verificationResult.isTestValue) {
+          const apiEndpoint = userType === 'client'
+            ? `${External_API}/Verifications`
+            : `${External_API}/Verifications`;
+
+          console.log('Sending NIN verification result to backend database');
+          await axios.post(apiEndpoint, verificationData, {
             headers: {
-              'Authorization': `Bearer ${process.env.INTERNAL_API_KEY}`,
+              'Authorization': `Bearer ${token}`,
               'Content-Type': 'application/json'
             }
-          }
-        );
+          });
+        } else {
+          console.log('Test NIN value detected. Skipping database update.');
+        }
       } catch (apiError) {
         console.error('Failed to update verification status in Azure API:', apiError);
-        // Continue despite API update error - will still return success to user
       }
-      
-      // Return successful verification response
+
       return res.status(200).json({
         status: 'success',
         message: 'NIN verification successful',
@@ -132,17 +160,14 @@ const verifyNIN = async (req, res) => {
           verificationStatus: 'verified',
           nin: ninNumber,
           withSelfie: !!selfieImage,
-          // Include user details from verification result
           firstName: verificationResult.entity.first_name,
           lastName: verificationResult.entity.last_name,
           gender: verificationResult.entity.gender,
-          // Date of birth might be in different formats, so we standardize
           dateOfBirth: verificationResult.entity.date_of_birth,
-          nextSteps: !selfieImage ? ['selfie'] : []
+          nextSteps: []
         }
       });
     } else {
-      // Verification failed
       return res.status(400).json({
         status: 'error',
         message: verificationResult.entity?.message || 'NIN verification failed',
@@ -164,18 +189,23 @@ const verifyNIN = async (req, res) => {
   }
 };
 
-// Verify BVN with or without selfie
+
 const verifyBVN = async (req, res) => {
   try {
-    // Get the BVN number and optional selfie image from the request body
-    const { bvnNumber, selfieImage, isWithSelfie } = req.body;
-    
-    // Get the user ID from the authenticated user
+    const { bvnNumber, selfieImage, token, userType, id } = req.body;
     const userId = req.user.id;
-    
-    // Get user type from the request body (default to caregiver if not specified)
-    const userType = req.body.userType || 'caregiver';
-    
+    console.log('[verifyBVN] Received bvnNumber:', bvnNumber, '| typeof:', typeof bvnNumber);
+    console.log('[verifyBVN] userId from req.user:', userId, '| id from body:', id);
+    console.log('[verifyBVN] selfieImage present:', !!selfieImage);
+
+    // Check if userId from request matches the authenticated user
+    if (id && id !== userId) {
+      return res.status(403).json({
+        status: 'error',
+        message: 'Unauthorized access to verify BVN for another user'
+      });
+    }
+
     // Validate inputs
     if (!bvnNumber) {
       return res.status(400).json({
@@ -183,21 +213,29 @@ const verifyBVN = async (req, res) => {
         message: 'BVN number is required'
       });
     }
-    
-    // For the combined BVN+selfie flow, both should be required
-    if (isWithSelfie === true && !selfieImage) {
-      return res.status(400).json({
+    // check for token
+    if (!token) {
+      return res.status(401).json({
         status: 'error',
-        message: 'Selfie image is required for BVN+selfie verification'
+        message: 'Authorization token is required'
       });
     }
-    
-    // Check for test BVN value (22222222222) to automatically verify in any environment
-    if (bvnNumber === TEST_VALUES.BVN) {
+
+    // if (!selfieImage) {
+    //   return res.status(400).json({
+    //     status: 'error',
+    //     message: 'Selfie image is required for BVN+selfie verification'
+    //   });
+    // }
+
+    const isTestBvn = bvnNumber === TEST_VALUES.BVN;
+    let verificationResult;
+
+    console.log('[verifyBVN] isTestBvn:', isTestBvn);
+
+    if (isTestBvn) {
       console.log(`🧪 Test BVN detected: ${bvnNumber} - Auto-approving verification`);
-      
-      // Create a mock successful verification result
-      const mockResult = {
+      verificationResult = {
         status: true,
         entity: {
           bvn: bvnNumber,
@@ -213,71 +251,84 @@ const verifyBVN = async (req, res) => {
           } : undefined,
           verification_status: "success",
           verified: true
-        }
+        },
+        isTestValue: true
       };
-      
-      // Skip the actual verification service and use the mock result
-      var verificationResult = mockResult;
     } else {
-      // Call the Dojah service to verify the BVN, optionally with selfie
-      var verificationResult = await DojahService.verifyBVN(bvnNumber, selfieImage, userId);
+      verificationResult = await DojahService.verifyBVN(bvnNumber, selfieImage, userId);
     }
-    
-    // Check if verification was successful
-    if (verificationResult.status === true && 
-        verificationResult.entity && 
-        (verificationResult.entity.verified === true || 
-         (selfieImage && verificationResult.entity.selfie_verification && 
-          verificationResult.entity.selfie_verification.match === true))) {
-      
-      // Track the verification method
+    console.log('[verifyBVN] verificationResult:', JSON.stringify(verificationResult));
+
+    // Stepwise response: If only BVN is provided (no selfie), prompt for next step
+    if (
+      verificationResult.status === true &&
+      verificationResult.entity &&
+      verificationResult.entity.verified === true &&
+      !selfieImage
+    ) {
+      return res.status(200).json({
+        status: 'success',
+        message: 'BVN verified. Please provide a selfie to complete verification.',
+        data: {
+          verified: false,
+          verificationStatus: 'bvn_verified',
+          bvn: bvnNumber,
+          firstName: verificationResult.entity.first_name,
+          lastName: verificationResult.entity.last_name,
+          gender: verificationResult.entity.gender,
+          dateOfBirth: verificationResult.entity.date_of_birth,
+          nextSteps: ['selfie']
+        }
+      });
+    }
+
+    // If both BVN and selfie are present and verified, complete verification
+    if (
+      verificationResult.status === true &&
+      verificationResult.entity &&
+      (
+        verificationResult.entity.verified === true ||
+        (
+          selfieImage &&
+          verificationResult.entity.selfie_verification &&
+          verificationResult.entity.selfie_verification.match === true
+        )
+      )
+    ) {
       let verificationType = 'bvn';
       if (selfieImage) {
         verificationType = 'bvn_selfie';
       }
-      
-      // Prepare verification data to update in the Azure API
+
       const verificationData = {
-        userId: userId,
-        verificationType: verificationType,
-        status: 'verified',
-        verificationMethod: 'bvn',
-        methodDetails: {
-          bvnNumber: bvnNumber,
-          withSelfie: !!selfieImage
-        },
-        userData: {
-          firstName: verificationResult.entity.first_name,
-          lastName: verificationResult.entity.last_name,
-          gender: verificationResult.entity.gender,
-          dateOfBirth: verificationResult.entity.date_of_birth
-        },
-        completedAt: new Date().toISOString()
+        userId,
+        verifiedFirstName: verificationResult.entity.first_name,
+        verifiedLastName: verificationResult.entity.last_name,
+        verificationStatus: 'verified',
+        verificationMethod: verificationType,
+        verificationNo: bvnNumber,
       };
-      
+
       try {
-        // Update user's verification status in the Azure API
-        // Choose endpoint based on user type
-        const apiEndpoint = userType === 'client'
-          ? `${External_API}/clients/${userId}/verification`
-          : `${External_API}/caregivers/${userId}/verification`;
-          
-        await axios.patch(
-          apiEndpoint,
-          verificationData,
-          {
+        if (!verificationResult.isTestValue) {
+          const apiEndpoint = userType === 'client'
+            ? `${External_API}/Verifications`
+            : `${External_API}/Verifications`;
+
+          console.log('Sending BVN verification result to backend database');
+          await axios.post(apiEndpoint, verificationData, {
             headers: {
-              'Authorization': `Bearer ${process.env.INTERNAL_API_KEY}`,
+              'Authorization': `Bearer ${token}`,
               'Content-Type': 'application/json'
             }
-          }
-        );
+          });
+        } else {
+          console.log('Test BVN value detected. Skipping database update.');
+        }
       } catch (apiError) {
         console.error('Failed to update verification status in Azure API:', apiError);
-        // Continue despite API update error - will still return success to user
       }
-      
-      // Return successful verification response
+
       return res.status(200).json({
         status: 'success',
         message: 'BVN verification successful',
@@ -286,17 +337,14 @@ const verifyBVN = async (req, res) => {
           verificationStatus: 'verified',
           bvn: bvnNumber,
           withSelfie: !!selfieImage,
-          // Include user details from verification result
           firstName: verificationResult.entity.first_name,
           lastName: verificationResult.entity.last_name,
           gender: verificationResult.entity.gender,
-          // Date of birth might be in different formats, so we standardize
           dateOfBirth: verificationResult.entity.date_of_birth,
-          nextSteps: !selfieImage ? ['selfie'] : []
+          nextSteps: []
         }
       });
     } else {
-      // Verification failed
       return res.status(400).json({
         status: 'error',
         message: verificationResult.entity?.message || 'BVN verification failed',
@@ -318,13 +366,19 @@ const verifyBVN = async (req, res) => {
   }
 };
 
-// Combined BVN with ID and Selfie verification
+
 const verifyBVNWithIdSelfie = async (req, res) => {
   try {
-    // Get all required parameters
-    const { bvnNumber, idImage, selfieImage, idType = 'generic', userType = 'caregiver' } = req.body;
+    const { bvnNumber, idImage, selfieImage, idType, userType, id, token } = req.body;
     const userId = req.user.id;
-    
+    // Check if userId from request matches the authenticated user
+    if (id && id !== userId) {
+      return res.status(403).json({
+        status: 'error',
+        message: 'Unauthorized access to verify BVN for another user'
+      });
+    }
+
     // Validate inputs
     if (!bvnNumber) {
       return res.status(400).json({
@@ -332,21 +386,21 @@ const verifyBVNWithIdSelfie = async (req, res) => {
         message: 'BVN number is required'
       });
     }
-    
+
     if (!idImage || !selfieImage) {
       return res.status(400).json({
         status: 'error',
         message: 'Both ID image and selfie image are required for BVN with ID+Selfie verification'
       });
     }
-    
+
     // Generate reference IDs for tracking
     const bvnReferenceId = `bvn_${userId}_${Date.now()}`;
     const idSelfieReferenceId = `id_selfie_${userId}_${Date.now()}`;
-    
+
     // First verify BVN
     const bvnResult = await DojahService.verifyBVN(bvnNumber, null, userId, bvnReferenceId);
-    
+
     if (!bvnResult.status || !bvnResult.entity || bvnResult.entity.verified !== true) {
       return res.status(400).json({
         status: 'error',
@@ -359,64 +413,52 @@ const verifyBVNWithIdSelfie = async (req, res) => {
         }
       });
     }
-    
-    // If BVN verified, proceed with ID+Selfie verification
+
+    // Proceed with ID+Selfie verification
     const idSelfieResult = await DojahService.verifyIdWithSelfie(
       selfieImage,
       idImage,
       idType,
       idSelfieReferenceId
     );
-    
-    // Check both verifications
-    const isIdSelfieVerified = idSelfieResult.status && 
-      (idSelfieResult.entity?.verification_status === 'verified' || 
+
+    const isIdSelfieVerified = idSelfieResult.status &&
+      (idSelfieResult.entity?.verification_status === 'verified' ||
        idSelfieResult.entity?.verified === true);
-    
-    // If immediate verification succeeded
+
+    // Check if this is a test BVN value
+    const isTestBvn = bvnNumber === TEST_VALUES.BVN;
+
     if (isIdSelfieVerified) {
-      // Prepare verification data for Azure API
       const verificationData = {
-        userId: userId,
-        verificationType: 'bvn_id_selfie',
-        status: 'verified',
+        userId,
+        verifiedFirstName: bvnResult.entity.first_name,
+        verifiedLastName: bvnResult.entity.last_name,
+        verificationNo: bvnNumber,
+        verificationStatus: 'verified',
         verificationMethod: 'bvn_id_selfie',
-        methodDetails: {
-          bvnNumber: bvnNumber,
-          idType: idType
-        },
-        userData: {
-          firstName: bvnResult.entity.first_name,
-          lastName: bvnResult.entity.last_name,
-          gender: bvnResult.entity.gender,
-          dateOfBirth: bvnResult.entity.date_of_birth
-        },
-        completedAt: new Date().toISOString()
       };
-      
+
       try {
-        // Update user's verification status in the Azure API
-        // Choose endpoint based on user type
-        const apiEndpoint = userType === 'client'
-          ? `${External_API}/clients/${userId}/verification`
-          : `${External_API}/caregivers/${userId}/verification`;
-          
-        await axios.patch(
-          apiEndpoint,
-          verificationData,
-          {
+        if (!isTestBvn) {
+          const apiEndpoint = userType === 'client'
+            ? `${External_API}/Verifications`
+            : `${External_API}/Verifications`;
+
+          console.log('Sending verification result to backend database');
+          await axios.post(apiEndpoint, verificationData, {
             headers: {
-              'Authorization': `Bearer ${process.env.INTERNAL_API_KEY}`,
+              'Authorization': `Bearer ${token}`,
               'Content-Type': 'application/json'
             }
-          }
-        );
+          });
+        } else {
+          console.log('Test BVN value detected. Skipping database update.');
+        }
       } catch (apiError) {
         console.error('Failed to update verification status in Azure API:', apiError);
-        // Continue despite API update error
       }
-      
-      // Return successful verification
+
       return res.status(200).json({
         status: 'success',
         message: 'BVN with ID and Selfie verification successful',
@@ -424,10 +466,9 @@ const verifyBVNWithIdSelfie = async (req, res) => {
           verified: true,
           verificationStatus: 'verified',
           bvn: bvnNumber,
-          // Include user details from verification result
           firstName: bvnResult.entity.first_name,
           lastName: bvnResult.entity.last_name,
-          nextSteps: [] // No more steps required
+          nextSteps: []
         },
         referenceIds: {
           bvn: bvnReferenceId,
@@ -435,7 +476,7 @@ const verifyBVNWithIdSelfie = async (req, res) => {
         }
       });
     } else {
-      // ID+Selfie verification requires webhook
+      // ID+Selfie verification pending webhook callback
       return res.status(200).json({
         status: 'pending',
         message: 'BVN verified successfully. ID and Selfie verification is processing.',
@@ -445,7 +486,7 @@ const verifyBVNWithIdSelfie = async (req, res) => {
           bvn: bvnNumber,
           bvnStatus: 'verified',
           idSelfieStatus: 'pending',
-          nextSteps: [] // Waiting for webhook callback
+          nextSteps: []
         },
         referenceIds: {
           bvn: bvnReferenceId,
@@ -463,13 +504,21 @@ const verifyBVNWithIdSelfie = async (req, res) => {
   }
 };
 
+
 // Combined NIN with Selfie verification
 const verifyNINWithSelfie = async (req, res) => {
   try {
-    // Get all required parameters
-    const { ninNumber, selfieImage, userType = 'caregiver' } = req.body;
-    const userId = req.user.id;
-    
+    const { ninNumber, selfieImage, id } = req.body;
+     const userId = req.user.id;
+    // Check if userId from request matches the authenticated user
+    if (id && id !== userId) {
+      return res.status(403).json({
+        status: 'error',
+        message: 'Unauthorized access to verify NIN for another user'
+      });
+    }
+   
+
     // Validate inputs
     if (!ninNumber) {
       return res.status(400).json({
@@ -477,68 +526,55 @@ const verifyNINWithSelfie = async (req, res) => {
         message: 'NIN number is required'
       });
     }
-    
     if (!selfieImage) {
       return res.status(400).json({
         status: 'error',
         message: 'Selfie image is required for NIN+Selfie verification'
       });
     }
-    
-    // Generate reference ID for tracking
+
     const referenceId = `nin_selfie_${userId}_${Date.now()}`;
-    
-    // Verify NIN with selfie
+
     const verificationResult = await DojahService.verifyNIN(ninNumber, selfieImage, userId, referenceId);
-    
-    // Check if verification was successful
-    if (verificationResult.status === true && 
-        verificationResult.entity && 
-        verificationResult.entity.verified === true && 
-        verificationResult.entity.selfie_verification && 
-        verificationResult.entity.selfie_verification.match === true) {
-      
-      // Prepare verification data for Azure API
+
+    const isTestNin = ninNumber === TEST_VALUES.NIN;
+
+    if (
+      verificationResult.status === true &&
+      verificationResult.entity &&
+      verificationResult.entity.verified === true &&
+      verificationResult.entity.selfie_verification &&
+      verificationResult.entity.selfie_verification.match === true
+    ) {
       const verificationData = {
-        userId: userId,
-        verificationType: 'nin_selfie',
-        status: 'verified',
-        verificationMethod: 'nin_selfie',
-        methodDetails: {
-          ninNumber: ninNumber
-        },
-        userData: {
-          firstName: verificationResult.entity.first_name,
-          lastName: verificationResult.entity.last_name,
-          gender: verificationResult.entity.gender,
-          dateOfBirth: verificationResult.entity.date_of_birth
-        },
-        completedAt: new Date().toISOString()
+        userId,
+        verifiedFirstName: verificationResult.entity.first_name,
+        verifiedLastName: verificationResult.entity.last_name,
+        verificationStatus: 'verified',
+        verificationMethod: "nin_selfie",
+        verificationNo: ninNumber,
       };
-      
+
       try {
-        // Update user's verification status in the Azure API
-        // Choose endpoint based on user type
-        const apiEndpoint = userType === 'client'
-          ? `${External_API}/clients/${userId}/verification`
-          : `${External_API}/caregivers/${userId}/verification`;
-          
-        await axios.patch(
-          apiEndpoint,
-          verificationData,
-          {
+        if (!isTestNin) {
+          const apiEndpoint = userType === 'client'
+            ? `${External_API}/Verifications`
+            : `${External_API}/Verifications`;
+
+          console.log('Sending verification result to backend database');
+          await axios.post(apiEndpoint, verificationData, {
             headers: {
-              'Authorization': `Bearer ${process.env.INTERNAL_API_KEY}`,
+              Authorization: `Bearer ${token}`,
               'Content-Type': 'application/json'
             }
-          }
-        );
+          });
+        } else {
+          console.log('Test NIN detected, skipping database update');
+        }
       } catch (apiError) {
         console.error('Failed to update verification status in Azure API:', apiError);
-        // Continue despite API update error
       }
-      
-      // Return successful verification
+
       return res.status(200).json({
         status: 'success',
         message: 'NIN with Selfie verification successful',
@@ -546,18 +582,16 @@ const verifyNINWithSelfie = async (req, res) => {
           verified: true,
           verificationStatus: 'verified',
           nin: ninNumber,
-          // Include user details from verification result
           firstName: verificationResult.entity.first_name,
           lastName: verificationResult.entity.last_name,
-          nextSteps: [] // No more steps required
+          nextSteps: []
         },
         referenceId
       });
     } else {
-      // Verification failed or pending
       const status = verificationResult.status ? 'pending' : 'failed';
       return res.status(status === 'failed' ? 400 : 200).json({
-        status: status,
+        status,
         message: verificationResult.entity?.message || `NIN with Selfie verification ${status}`,
         data: {
           verified: false,
@@ -581,108 +615,96 @@ const verifyNINWithSelfie = async (req, res) => {
 // Verify ID with selfie in one combined step
 const verifyIdWithSelfie = async (req, res) => {
   try {
-    // Get verification details from request body
-    const { idType, idNumber, selfieImage, userType = 'caregiver' } = req.body;
-    
-    // Get the user ID from the authenticated user
+    const { idType, idNumber, selfieImage, userType, id, token } = req.body;
     const userId = req.user.id;
-    
-    // Validate inputs
+    // Check if userId from request matches the authenticated user
+    if (id && id !== userId) {
+      return res.status(403).json({
+        status: 'error',
+        message: 'Unauthorized access to verify ID for another user'
+      });
+    }
+
     if (!idType || !idNumber || !selfieImage) {
       return res.status(400).json({
         status: 'error',
         message: 'ID type, ID number, and selfie image are all required'
       });
     }
-    
-    // Only allow 'bvn' or 'nin' as valid ID types
-    if (idType !== 'bvn' && idType !== 'nin') {
+
+    if (idType !== 'bvn' || idType !== 'nin' || idType !== 'generic') {
       return res.status(400).json({
         status: 'error',
-        message: 'ID type must be either "bvn" or "nin"'
+        message: 'ID type must be either "bvn", "nin", or "generic"'
       });
     }
-    
-    // Call Dojah service to verify the ID with selfie
+
     const verificationResult = await DojahService.verifyIdWithSelfie(idType, idNumber, selfieImage, userId);
-    
-    // Check if verification was successful
-    if (verificationResult.status === true && 
-        verificationResult.entity && 
-        (verificationResult.entity.verified === true || 
-         (verificationResult.entity.selfie_verification && 
-          verificationResult.entity.selfie_verification.match === true))) {
-      
-      // Prepare verification data to update in the Azure API
+    const isTestValue = (idType === 'nin' && idNumber === TEST_VALUES.NIN) || (idType === 'bvn' && idNumber === TEST_VALUES.BVN);
+
+    if (
+      verificationResult.status === true &&
+      verificationResult.entity &&
+      (
+        verificationResult.entity.verified === true ||
+        (verificationResult.entity.selfie_verification && verificationResult.entity.selfie_verification.match === true)
+      )
+    ) {
       const verificationData = {
-        userId: userId,
-        verificationType: `${idType}_selfie`,
-        status: 'verified',
+        userId,
+        verifiedFirstName: verificationResult.entity.first_name,
+        verifiedLastName: verificationResult.entity.last_name,
+        verificationNo: idNumber,
+        verificationStatus: 'verified', 
+    
         verificationMethod: idType,
-        isCompleteVerification: true, // This is a complete verification (ID + selfie)
-        methodDetails: {
-          idType: idType,
-          idNumber: idNumber,
-          withSelfie: true
-        },
-        userData: {
-          firstName: verificationResult.entity.first_name,
-          lastName: verificationResult.entity.last_name,
-          gender: verificationResult.entity.gender,
-          dateOfBirth: verificationResult.entity.date_of_birth
-        },
-        completedAt: new Date().toISOString()
+        
       };
-      
+
       try {
-        // Update user's verification status in the Azure API
-        // Choose endpoint based on user type
-        const apiEndpoint = userType === 'client'
-          ? `${External_API}/clients/${userId}/verification`
-          : `${External_API}/caregivers/${userId}/verification`;
-          
-        await axios.patch(
-          apiEndpoint,
-          verificationData,
-          {
+        if (!isTestValue) {
+          const apiEndpoint = userType === 'client'
+            ? `${External_API}/Verifications`
+            : `${External_API}/Verifications`;
+
+          console.log('Sending verification result to backend database');
+          await axios.patch(apiEndpoint, verificationData, {
             headers: {
-              'Authorization': `Bearer ${process.env.INTERNAL_API_KEY}`,
+              Authorization: `Bearer ${token}`,
               'Content-Type': 'application/json'
             }
-          }
-        );
+          });
+        } else {
+          console.log('Test value detected, skipping database update');
+        }
       } catch (apiError) {
         console.error('Failed to update verification status in Azure API:', apiError);
-        // Continue despite API update error - will still return success to user
       }
-      
-      // Return successful verification response
+
       return res.status(200).json({
         status: 'success',
         message: `${idType.toUpperCase()} with selfie verification successful`,
         data: {
           verified: true,
           verificationStatus: 'verified',
-          idType: idType,
-          idNumber: idNumber,
-          // Include user details from verification result
+          idType,
+          idNumber,
           firstName: verificationResult.entity.first_name,
           lastName: verificationResult.entity.last_name,
           gender: verificationResult.entity.gender,
           dateOfBirth: verificationResult.entity.date_of_birth,
-          nextSteps: [] // No next steps, verification is complete
+          nextSteps: []
         }
       });
     } else {
-      // Verification failed
       return res.status(400).json({
         status: 'error',
         message: verificationResult.entity?.message || `${idType.toUpperCase()} with selfie verification failed`,
         data: {
           verified: false,
           verificationStatus: 'failed',
-          idType: idType,
-          idNumber: idNumber,
+          idType,
+          idNumber,
           error: verificationResult.entity?.message || 'Verification failed. Please check your information and try again.'
         }
       });
@@ -697,6 +719,7 @@ const verifyIdWithSelfie = async (req, res) => {
   }
 };
 
+
 // Get the verification status for the current user
 const getVerificationStatus = async (req, res) => {
   try {
@@ -704,20 +727,22 @@ const getVerificationStatus = async (req, res) => {
     const userId = req.user.id;
     // Get the user type from query params
     const userType = req.query.userType || 'caregiver';
+    //get the token from headers
+    const token = req.headers.authorization?.split(' ')[1];
     
     // Get verification status from Azure API
     let verificationStatus;
     try {
       // Use different endpoints based on user type
       const endpoint = userType === 'client' 
-        ? `${External_API}/clients/${userId}/verification`
-        : `${External_API}/caregivers/${userId}/verification`;
-        
+        ? `${External_API}/Verifications/${userId}`
+        : `${External_API}/Verifications/${userId}`;
+
       const response = await axios.get(
         endpoint,
         {
           headers: {
-            'Authorization': `Bearer ${process.env.INTERNAL_API_KEY}`
+            'Authorization': `Bearer ${token}`
           }
         }
       );

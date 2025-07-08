@@ -133,6 +133,8 @@ useEffect(() => {
   }
 
   console.log("Rendering profile component with data:", profile);
+  //get userName from localStorage
+  const userName = localStorage.getItem("userName") || "guestUser209";
 
   const headerStyle = {
     display: "flex",
@@ -170,7 +172,7 @@ useEffect(() => {
           style={imageStyle}
         />
         <h2 style={{ margin: "10px 0 5px 0" }}>{profile.name}</h2>
-        <p style={{ margin: "5px 0", color: "#666" }}>@{profile.username}</p>
+        <p style={{ margin: "5px 0", color: "#666" }}>@{userName}</p>
         <p style={{ margin: "8px 0 12px 0", maxWidth: "90%" }}>{profile.bio}</p>
         <div className="rating" style={{ margin: "10px 0", fontSize: "16px" }}>
           {"⭐".repeat(Math.round(profile.rating))} ({profile.rating},{" "}

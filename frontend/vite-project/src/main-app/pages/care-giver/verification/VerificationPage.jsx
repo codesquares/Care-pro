@@ -12,7 +12,7 @@ const VerificationPage = () => {
     BVN: '22222222222',
     NIN: '70123456789'
   };
-  
+
   // Helper to check if a value is a test value
   const isTestValue = (type, value) => {
     if (!value) return false;
@@ -30,11 +30,11 @@ const VerificationPage = () => {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [error, setError] = useState("");
   const [success, setSuccess] = useState("");
-  const [verificationStatus, setVerificationStatus] = useState(null); 
+  const [verificationStatus, setVerificationStatus] = useState(null);
   const [isPolling, setIsPolling] = useState(false);
   const [progress, setProgress] = useState(0);
   const [progressMessage, setProgressMessage] = useState("");
-  
+
   // Multi-step verification state - matching client implementation
   const [verificationStep, setVerificationStep] = useState(1);
   const [showIdSelfieStep, setShowIdSelfieStep] = useState(false);
@@ -44,165 +44,164 @@ const VerificationPage = () => {
   // Get token and user ID from localStorage
   const userDetails = JSON.parse(localStorage.getItem("userDetails") || "{}");
   const token = localStorage.getItem("authToken");
-  
+
   // Reference for polling cancellation
   const pollRef = useRef(null);
   const progressIntervalRef = useRef(null);
-  
 
 
-const effectRan = useRef(false);
 
-useEffect(() => {
-  // Skip the second run caused by Strict Mode in development
-  if (effectRan.current) return;
-  effectRan.current = true;
+  const effectRan = useRef(false);
 
-  // Redirect if no token or user ID
-  if (!token || !userDetails.id) {
-    navigate("/login");
-    return;
-  }
+  useEffect(() => {
+    // Skip the second run caused by Strict Mode in development
+    if (effectRan.current) return;
+    effectRan.current = true;
 
-  // Track if component is mounted to prevent state updates after unmounting
-  let isMounted = true;
-
-  // Check initial verification status
-  const checkStatus = async () => {
-    try {
-      if (isMounted) {
-        setProgress(10);
-        setProgressMessage("Checking verification status...");
-      }
-
-      const status = await verificationService.getVerificationStatus(
-        userDetails.id,
-        "caregiver"
-      );
-
-      if (!isMounted) return;
-
-      setVerificationStatus(status);
-
-      if (status.verified === true) {
-        setProgress(100);
-        setProgressMessage("Account already verified!");
-        setSuccess("Your account is already verified!");
-        setTimeout(() => {
-          if (isMounted) {
-            navigate("/app/caregiver/profile");
-          }
-        }, 3000);
-      } else {
-        setProgress(0);
-        setProgressMessage("");
-      }
-    } catch (err) {
-      console.error("Failed to check verification status", err);
-      if (isMounted) {
-        setProgress(0);
-        setProgressMessage("");
-      }
-    }
-  };
-
-  checkStatus();
-
-  let pollingTimeout = null;
-
-  const setupPolling = () => {
-    if (isPolling || verificationStatus?.verified) {
+    // Redirect if no token or user ID
+    if (!token || !userDetails.id) {
+      navigate("/login");
       return;
     }
 
-    if (isMounted) {
-      setIsPolling(true);
+    // Track if component is mounted to prevent state updates after unmounting
+    let isMounted = true;
 
-      let progressCounter = 20;
+    // Check initial verification status
+    const checkStatus = async () => {
+      try {
+        if (isMounted) {
+          setProgress(10);
+          setProgressMessage("Checking verification status...");
+        }
 
-      if (progressIntervalRef.current) {
-        clearInterval(progressIntervalRef.current);
+        const status = await verificationService.getVerificationStatus(
+          userDetails.id,
+          "caregiver"
+        );
+
+        if (!isMounted) return;
+
+        setVerificationStatus(status);
+
+        if (status.verified === true) {
+          setProgress(100);
+          setProgressMessage("Account already verified!");
+          setSuccess("Your account is already verified!");
+          setTimeout(() => {
+            if (isMounted) {
+              navigate("/app/caregiver/profile");
+            }
+          }, 3000);
+        } else {
+          setProgress(0);
+          setProgressMessage("");
+        }
+      } catch (err) {
+        console.error("Failed to check verification status", err);
+        if (isMounted) {
+          setProgress(0);
+          setProgressMessage("");
+        }
+      }
+    };
+
+    checkStatus();
+
+    let pollingTimeout = null;
+
+    const setupPolling = () => {
+      if (isPolling || verificationStatus?.verified) {
+        return;
       }
 
-      progressIntervalRef.current = setInterval(() => {
-        if (!isMounted) {
+      if (isMounted) {
+        setIsPolling(true);
+
+        let progressCounter = 20;
+
+        if (progressIntervalRef.current) {
           clearInterval(progressIntervalRef.current);
-          return;
         }
 
-        if (progressCounter < 90) {
-          setProgress(progressCounter);
-          setProgressMessage("Waiting for verification result...");
-          progressCounter += 5;
+        progressIntervalRef.current = setInterval(() => {
+          if (!isMounted) {
+            clearInterval(progressIntervalRef.current);
+            return;
+          }
+
+          if (progressCounter < 90) {
+            setProgress(progressCounter);
+            setProgressMessage("Waiting for verification result...");
+            progressCounter += 5;
+          }
+        }, 10000);
+
+        if (pollRef.current) {
+          pollRef.current();
+          pollRef.current = null;
         }
-      }, 10000);
+
+        pollRef.current = verificationService.pollVerificationStatus(
+          (status) => {
+            if (!isMounted) return;
+
+            setVerificationStatus(status);
+
+            if (status.verified === true) {
+              clearInterval(progressIntervalRef.current);
+              setIsPolling(false);
+              setProgress(100);
+              setProgressMessage("Verification successful!");
+              setSuccess("Your account has been verified successfully!");
+              setTimeout(() => {
+                if (isMounted) {
+                  navigate("/app/caregiver/profile");
+                }
+              }, 3000);
+            } else if (status.verificationStatus === "pending") {
+              if (status.progress) {
+                setProgress(status.progress);
+                setProgressMessage(
+                  `Verification in progress (attempt ${status.pollingAttempt || 1}/${status.maxAttempts || 10
+                  })...`
+                );
+              }
+            } else if (status.verificationStatus === "failed") {
+              clearInterval(progressIntervalRef.current);
+              setIsPolling(false);
+              setProgress(100);
+              setProgressMessage("Verification failed");
+              setError("Verification failed. Please try again.");
+            }
+          },
+          15000,
+          userDetails.id,
+          "caregiver"
+        );
+      }
+    };
+
+    pollingTimeout = setTimeout(setupPolling, 3000);
+
+    return () => {
+      isMounted = false;
 
       if (pollRef.current) {
         pollRef.current();
         pollRef.current = null;
       }
 
-      pollRef.current = verificationService.pollVerificationStatus(
-        (status) => {
-          if (!isMounted) return;
+      if (progressIntervalRef.current) {
+        clearInterval(progressIntervalRef.current);
+        progressIntervalRef.current = null;
+      }
 
-          setVerificationStatus(status);
-
-          if (status.verified === true) {
-            clearInterval(progressIntervalRef.current);
-            setIsPolling(false);
-            setProgress(100);
-            setProgressMessage("Verification successful!");
-            setSuccess("Your account has been verified successfully!");
-            setTimeout(() => {
-              if (isMounted) {
-                navigate("/app/caregiver/profile");
-              }
-            }, 3000);
-          } else if (status.verificationStatus === "pending") {
-            if (status.progress) {
-              setProgress(status.progress);
-              setProgressMessage(
-                `Verification in progress (attempt ${status.pollingAttempt || 1}/${
-                  status.maxAttempts || 10
-                })...`
-              );
-            }
-          } else if (status.verificationStatus === "failed") {
-            clearInterval(progressIntervalRef.current);
-            setIsPolling(false);
-            setProgress(100);
-            setProgressMessage("Verification failed");
-            setError("Verification failed. Please try again.");
-          }
-        },
-        15000,
-        userDetails.id,
-        "caregiver"
-      );
-    }
-  };
-
-  pollingTimeout = setTimeout(setupPolling, 3000);
-
-  return () => {
-    isMounted = false;
-
-    if (pollRef.current) {
-      pollRef.current();
-      pollRef.current = null;
-    }
-
-    if (progressIntervalRef.current) {
-      clearInterval(progressIntervalRef.current);
-      progressIntervalRef.current = null;
-    }
-
-    if (pollingTimeout) {
-      clearTimeout(pollingTimeout);
-    }
-  };
-}, []);
+      if (pollingTimeout) {
+        clearTimeout(pollingTimeout);
+      }
+    };
+  }, []);
 
   const handleVerificationMethodChange = (e) => {
     setVerificationMethod(e.target.value);
@@ -221,10 +220,10 @@ useEffect(() => {
         setError("Image size should be less than 5MB");
         return;
       }
-      
+
       // Log original file size
       console.log(`Original image size: ${Math.round(file.size / 1024)}KB`);
-      
+
       setImageFunc(file);
       setError("");
     }
@@ -238,12 +237,25 @@ useEffect(() => {
     setProgress(10);
     setProgressMessage("Starting verification process...");
 
+    // Log all input values for debugging
+    console.log('[VerificationPage] handleSubmit called with:', {
+      verificationMethod,
+      verificationStep,
+      bvnNumber,
+      ninNumber,
+      idImage,
+      selfieImage,
+      idType,
+      userDetails,
+      token
+    });
+
     // Clear any existing polling first
     if (pollRef.current) {
       pollRef.current();
       pollRef.current = null;
     }
-    
+
     if (progressIntervalRef.current) {
       clearInterval(progressIntervalRef.current);
       progressIntervalRef.current = null;
@@ -268,26 +280,36 @@ useEffect(() => {
       }
 
       setProgress(30);
-      
+
       if (verificationMethod === "bvn") {
         if (verificationStep === 1) {
           // First step: BVN verification
           setProgressMessage("Processing BVN verification...");
-          
+
           // Check if using a test BVN value
           const isTestBvn = isTestValue('BVN', bvnNumber);
           if (isTestBvn) {
             console.log('🧪 Using test BVN value:', bvnNumber);
           }
-          
+
+          console.log('[VerificationPage] Calling verifyBVN with:', {
+            bvnNumber,
+            selfieImage: null,
+            idImage: null,
+            userType: 'caregiver',
+            id: userDetails.id,
+            token
+          });
+
           const data = await verificationService.verifyBVN(
-            bvnNumber, 
-            null, 
-            null, 
-            'caregiver', 
-            userDetails.id
+            bvnNumber,         // string: BVN number
+            null,              // selfieImage (null for step 1)
+            null,              // idImage (null for step 1)
+            'caregiver',      // userType
+            userDetails.id,    // id
+            token              // token
           );
-          
+
           if (data.status === "success") {
             // BVN verified successfully, now need ID + selfie
             setVerificationStep(2);
@@ -305,28 +327,35 @@ useEffect(() => {
         } else if (verificationStep === 2) {
           // Second step: ID + Selfie verification after BVN
           setProgressMessage("Processing ID and selfie verification for BVN...");
-          
+
           const idImageBase64 = idImage ? await convertFileToBase64(idImage) : null;
           const selfieImageBase64 = selfieImage ? await convertFileToBase64(selfieImage) : null;
-          
-          console.log("Using complete BVN verification with ID and selfie for caregiver");
-          
-          // Use the combined verification endpoint
-          const data = await verificationService.verifyBVNComplete(
-            bvnNumber, 
-            selfieImageBase64, 
+
+          console.log('[VerificationPage] Calling verifyBVNComplete with:', {
+            bvnNumber,
+            selfieImageBase64,
             idImageBase64,
             idType,
-            'caregiver', 
+            userType: 'caregiver',
+            userId: userDetails.id
+          });
+
+          // Use the combined verification endpoint
+          const data = await verificationService.verifyBVNComplete(
+            bvnNumber,
+            selfieImageBase64,
+            idImageBase64,
+            idType,
+            'caregiver',
             userDetails.id
           );
-          
+
           if (data.status === "success" || data.status === "pending") {
             if (data.status === "success") {
               setProgress(100);
               setProgressMessage("Verification successful!");
               setSuccess("Your identity has been verified successfully!");
-              
+
               // Check if verification uses test values - handle differently
               const isTestBvn = isTestValue('BVN', bvnNumber);
               if (isTestBvn) {
@@ -354,7 +383,7 @@ useEffect(() => {
                       completedAt: new Date().toISOString()
                     }
                   };
-                  
+
                   verificationService.saveVerificationData(verificationRecord)
                     .then(response => {
                       if (response.status !== 'success') {
@@ -368,20 +397,20 @@ useEffect(() => {
                   console.error('Error preparing verification data for Azure:', err);
                 }
               }
-              
+
               verificationService.saveVerificationStatus(
-                true, 
-                'verified', 
+                true,
+                'verified',
                 'BVN with ID and Selfie verification successful',
                 userDetails.id,
                 'caregiver'
               );
-              
+
               setVerificationStatus({
                 verified: true,
                 verificationStatus: 'verified'
               });
-              
+
               setTimeout(() => {
                 navigate("/app/caregiver/profile");
               }, 3000);
@@ -404,20 +433,29 @@ useEffect(() => {
         if (verificationStep === 1) {
           // First step: NIN verification
           setProgressMessage("Processing NIN verification...");
-          
+
           // Check if using a test NIN value
           const isTestNin = isTestValue('NIN', ninNumber);
           if (isTestNin) {
             console.log('🧪 Using test NIN value:', ninNumber);
           }
-          
+
+          console.log('[VerificationPage] Calling verifyNIN with:', {
+            ninNumber,
+            selfieImage: null,
+            userType: 'caregiver',
+            idImage: null,
+            id: userDetails.id,
+            token
+          });
+
           const data = await verificationService.verifyNIN(
-            ninNumber, 
-            null, 
-            'caregiver', 
+            ninNumber,
+            null,
+            'caregiver',
             userDetails.id
           );
-          
+
           if (data.status === "success") {
             // NIN verified successfully, now need selfie
             setVerificationStep(2);
@@ -435,25 +473,30 @@ useEffect(() => {
         } else if (verificationStep === 2) {
           // Second step: Selfie verification after NIN
           setProgressMessage("Processing selfie verification for NIN...");
-          
+
           const selfieImageBase64 = selfieImage ? await convertFileToBase64(selfieImage) : null;
-          
-          console.log("Using complete NIN verification with selfie for caregiver");
-          
+
+          console.log('[VerificationPage] Calling verifyNINComplete with:', {
+            ninNumber,
+            selfieImageBase64,
+            userType: 'caregiver',
+            userId: userDetails.id
+          });
+
           // Use the combined verification endpoint
           const data = await verificationService.verifyNINComplete(
-            ninNumber, 
-            selfieImageBase64, 
-            'caregiver', 
+            ninNumber,
+            selfieImageBase64,
+            'caregiver',
             userDetails.id
           );
-          
+
           if (data.status === "success" || data.status === "pending") {
             if (data.status === "success") {
               setProgress(100);
               setProgressMessage("Verification successful!");
               setSuccess("Your identity has been verified successfully!");
-              
+
               // Check if verification uses test values - handle differently
               const isTestNin = isTestValue('NIN', ninNumber);
               if (isTestNin) {
@@ -481,7 +524,7 @@ useEffect(() => {
                       completedAt: new Date().toISOString()
                     }
                   };
-                  
+
                   verificationService.saveVerificationData(verificationRecord)
                     .then(response => {
                       if (response.status !== 'success') {
@@ -495,20 +538,20 @@ useEffect(() => {
                   console.error('Error preparing verification data for Azure:', err);
                 }
               }
-              
+
               verificationService.saveVerificationStatus(
-                true, 
-                'verified', 
+                true,
+                'verified',
                 'NIN with Selfie verification successful',
                 userDetails.id,
                 'caregiver'
               );
-              
+
               setVerificationStatus({
                 verified: true,
                 verificationStatus: 'verified'
               });
-              
+
               setTimeout(() => {
                 navigate("/app/caregiver/profile");
               }, 3000);
@@ -530,24 +573,32 @@ useEffect(() => {
       } else if (verificationMethod === "id") {
         // ID + Selfie verification
         setProgressMessage("Processing ID and selfie verification...");
-        
+
         const idImageBase64 = idImage ? await convertFileToBase64(idImage) : null;
         const selfieImageBase64 = selfieImage ? await convertFileToBase64(selfieImage) : null;
-        
-        const data = await verificationService.verifyID(
-          idImageBase64, 
+
+        console.log('[VerificationPage] Calling verifyID with:', {
+          idImageBase64,
           selfieImageBase64,
           idType,
-          'caregiver', 
+          userType: 'caregiver',
+          userId: userDetails.id
+        });
+
+        const data = await verificationService.verifyID(
+          idImageBase64,
+          selfieImageBase64,
+          idType,
+          'caregiver',
           userDetails.id
         );
-        
+
         if (data.status === "success" || data.status === "pending") {
           if (data.status === "success") {
             setProgress(100);
             setProgressMessage("Verification successful!");
             setSuccess("Your identity has been verified successfully!");
-            
+
             // For ID verification, we'll always save to Azure as there's no test value
             // but we'll still catch and handle errors properly
             try {
@@ -571,7 +622,7 @@ useEffect(() => {
                   completedAt: new Date().toISOString()
                 }
               };
-              
+
               verificationService.saveVerificationData(verificationRecord)
                 .then(response => {
                   if (response.status !== 'success') {
@@ -584,20 +635,20 @@ useEffect(() => {
             } catch (err) {
               console.error('Error preparing verification data for Azure:', err);
             }
-            
+
             verificationService.saveVerificationStatus(
-              true, 
-              'verified', 
+              true,
+              'verified',
               'ID and Selfie verification successful',
               userDetails.id,
               'caregiver'
             );
-            
+
             setVerificationStatus({
               verified: true,
               verificationStatus: 'verified'
             });
-            
+
             setTimeout(() => {
               navigate("/app/caregiver/profile");
             }, 3000);
@@ -619,7 +670,7 @@ useEffect(() => {
     } catch (err) {
       setProgress(100);
       setProgressMessage("Verification failed");
-      
+
       // Provide more specific error messages based on error type
       if (err.response) {
         // The request was made and server responded with an error status code
@@ -639,7 +690,7 @@ useEffect(() => {
         // Something happened in setting up the request
         setError(err.message || "Verification failed. Please try again later.");
       }
-      
+
       // Log detailed error for debugging
       console.error("Verification error details:", err);
     } finally {
@@ -650,25 +701,25 @@ useEffect(() => {
   return (
     <div className="verification-container">
       <Helmet>
-        <link 
-          rel="stylesheet" 
-          href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css" 
-          integrity="sha512-DTOQO9RWCH3ppGqcWaEA1BIZOC6xxalwEsw9c2QQeAIftl+Vegovlnee1c9QX4TctnWMn13TZye+giMm8e2LwA==" 
-          crossOrigin="anonymous" 
-          referrerPolicy="no-referrer" 
+        <link
+          rel="stylesheet"
+          href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css"
+          integrity="sha512-DTOQO9RWCH3ppGqcWaEA1BIZOC6xxalwEsw9c2QQeAIftl+Vegovlnee1c9QX4TctnWMn13TZye+giMm8e2LwA=="
+          crossOrigin="anonymous"
+          referrerPolicy="no-referrer"
         />
       </Helmet>
       <div className="verification-card">
         <h2>Account Verification</h2>
         <p className="verification-intro">
-          To ensure the safety of our clients and maintain high-quality service, 
-          we require all caregivers to verify their identity. Please choose a 
+          To ensure the safety of our clients and maintain high-quality service,
+          we require all caregivers to verify their identity. Please choose a
           verification method below.
         </p>
 
         {error && <div className="error-message"><i className="fas fa-exclamation-circle"></i> {error}</div>}
         {success && <div className="success-message"><i className="fas fa-check-circle"></i> {success}</div>}
-        
+
         {/* Progress indicator */}
         {progress > 0 && (
           <div className="progress-container">
@@ -676,26 +727,25 @@ useEffect(() => {
             <div className="progress-message">{progressMessage}</div>
           </div>
         )}
-        
+
         {/* Verification Status Indicator */}
         {isPolling && (
           <div className="verification-status-container">
             <div className="verification-status-card">
               <div className="status-icon">
-                <i className={`fas ${
-                  verificationStatus?.verified ? 'fa-check-circle' : 
-                  verificationStatus?.verificationStatus === 'pending' ? 'fa-clock' : 
-                  verificationStatus?.verificationStatus === 'failed' ? 'fa-times-circle' : 
-                  'fa-spinner fa-spin'
-                }`}></i>
+                <i className={`fas ${verificationStatus?.verified ? 'fa-check-circle' :
+                    verificationStatus?.verificationStatus === 'pending' ? 'fa-clock' :
+                      verificationStatus?.verificationStatus === 'failed' ? 'fa-times-circle' :
+                        'fa-spinner fa-spin'
+                  }`}></i>
               </div>
               <div className="status-info">
                 <h3>Verification Status</h3>
                 <p>{
-                  verificationStatus?.verified ? 'Verified' : 
-                  verificationStatus?.verificationStatus === 'pending' ? 'Pending Review' : 
-                  verificationStatus?.verificationStatus === 'failed' ? 'Verification Failed' : 
-                  'Checking status...'
+                  verificationStatus?.verified ? 'Verified' :
+                    verificationStatus?.verificationStatus === 'pending' ? 'Pending Review' :
+                      verificationStatus?.verificationStatus === 'failed' ? 'Verification Failed' :
+                        'Checking status...'
                 }</p>
               </div>
             </div>
@@ -721,7 +771,7 @@ useEffect(() => {
                   <div className="method-title">BVN Verification</div>
                   <div className="method-description">Verify with your Bank Verification Number</div>
                 </label>
-                
+
                 <input
                   type="radio"
                   id="nin-method"
@@ -736,7 +786,7 @@ useEffect(() => {
                   <div className="method-title">NIN Verification</div>
                   <div className="method-description">Verify with your National ID Number</div>
                 </label>
-                
+
                 <input
                   type="radio"
                   id="id-method"
@@ -873,8 +923,8 @@ useEffect(() => {
                 </div>
               )}
 
-              <button 
-                type="submit" 
+              <button
+                type="submit"
                 className="submit-btn"
                 disabled={isSubmitting}
               >
@@ -896,16 +946,16 @@ useEffect(() => {
             <div className="verification-methods">
               <h3>
                 {verificationMethod === "bvn" ? "BVN Verification - Step 2" :
-                 verificationMethod === "nin" ? "NIN Verification - Step 2" :
-                 "ID Verification"}
+                  verificationMethod === "nin" ? "NIN Verification - Step 2" :
+                    "ID Verification"}
               </h3>
-              
+
               <p className="verification-step-intro">
-                {verificationMethod === "bvn" ? 
+                {verificationMethod === "bvn" ?
                   "Your BVN has been verified. Please complete the process by uploading your ID and a selfie." :
                   "Your NIN has been verified. Please complete the process by uploading a selfie."}
               </p>
-              
+
               <div className="verification-form">
                 {/* Only show ID document upload for BVN verification */}
                 {verificationMethod === "bvn" && (
@@ -928,7 +978,7 @@ useEffect(() => {
                         <option value="voter">Voter's Card</option>
                       </select>
                     </div>
-                    
+
                     <div className="form-group">
                       <label htmlFor="id-image-step2">
                         <i className="fas fa-id-card"></i>
@@ -952,7 +1002,7 @@ useEffect(() => {
                     </div>
                   </>
                 )}
-                
+
                 {/* Selfie upload for both BVN and NIN */}
                 <div className="form-group">
                   <label htmlFor="selfie-image-step2">
@@ -972,13 +1022,13 @@ useEffect(() => {
                   {selfieImage && <div className="file-name">{selfieImage.name}</div>}
                   <small>
                     <i className="fas fa-info-circle"></i>
-                    {verificationMethod === "bvn" 
+                    {verificationMethod === "bvn"
                       ? "Hold your ID next to your face for verification"
                       : "Take a clear selfie for identity verification"}
                   </small>
                 </div>
               </div>
-              
+
               <div className="button-group">
                 <button
                   type="button"
@@ -992,9 +1042,9 @@ useEffect(() => {
                 >
                   <i className="fas fa-arrow-left"></i> Back
                 </button>
-                
-                <button 
-                  type="submit" 
+
+                <button
+                  type="submit"
                   className="submit-btn"
                   disabled={isSubmitting}
                 >
@@ -1015,12 +1065,12 @@ useEffect(() => {
 
         <div className="verification-footer">
           <p>
-            Your information is securely processed and will only be used for verification purposes. 
+            Your information is securely processed and will only be used for verification purposes.
             For more details on how we handle your data, please see our <a href="/privacy-policy">Privacy Policy</a>.
           </p>
           <div className="footer-buttons">
-            <button 
-              className="back-btn" 
+            <button
+              className="back-btn"
               onClick={() => navigate("/app/caregiver/profile")}
             >
               <i className="fas fa-arrow-left"></i> Back to Profile

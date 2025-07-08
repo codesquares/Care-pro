@@ -1,6 +1,7 @@
 ﻿using Application.DTOs;
 using Application.Interfaces;
 using Domain.Entities;
+using Infrastructure.Content.Data;
 using Infrastructure.Content.Services;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Http;
@@ -28,6 +29,13 @@ namespace CarePro_Api.Controllers.Content
         {
             try
             {
+                // Validate the incoming request
+                if (!(await ValidateAddGigAsync(addGigRequest)))
+                {
+                    return BadRequest(ModelState);
+                }
+
+
                 // Pass Domain Object to Repository, to Persisit this
                 var gig = await gigServices.CreateGigAsync(addGigRequest);
 
@@ -35,6 +43,14 @@ namespace CarePro_Api.Controllers.Content
                 // Send DTO response back to ClientUser
                 return Ok(gig);
 
+            }
+            catch (ArgumentException ex)
+            {
+                return BadRequest(new { Message = ex.Message });
+            }
+            catch (KeyNotFoundException ex)
+            {
+                return NotFound(new { message = ex.Message });
             }
             catch (ApplicationException appEx)
             {
@@ -59,11 +75,34 @@ namespace CarePro_Api.Controllers.Content
        // [Authorize(Roles = "Caregiver, Client, Admin")]
         public async Task<IActionResult> GetAllGigsAsync()
         {
-            logger.LogInformation($"Retrieving all Gigs available");
+            try
+            {
+                logger.LogInformation($"Retrieving all Gigs available");
 
-            var gigs = await gigServices.GetAllGigsAsync();
+                var gigs = await gigServices.GetAllGigsAsync();
 
-            return Ok(gigs);
+                return Ok(gigs);
+            }
+            catch (KeyNotFoundException ex)
+            {
+                return NotFound(new { message = ex.Message });
+            }
+            catch (ApplicationException appEx)
+            {
+                // Handle application-specific exceptions
+                return BadRequest(new { ErrorMessage = appEx.Message });
+            }
+            catch (HttpRequestException httpEx)
+            {
+                // Handle HTTP request-related exceptions
+                return StatusCode(500, new { ErrorMessage = httpEx.Message });
+            }
+            catch (Exception ex)
+            {
+                // Handle other exceptions
+                return StatusCode(500, new { ex /*ErrorMessage = "An error occurred on the server."*/ });
+            }
+            
 
         }
 
@@ -73,13 +112,73 @@ namespace CarePro_Api.Controllers.Content
         // [Authorize(Roles = "Caregiver, Admin")]
         public async Task<IActionResult> GetAllCaregiverGigsAsync(string caregiverId)
         {
-            logger.LogInformation($"Retrieving all Gigs for Caregiver with Id: {caregiverId}");
+            try
+            {
+                logger.LogInformation($"Retrieving all Gigs for Caregiver with MessageId: {caregiverId}");
 
-            var services = await gigServices.GetAllCaregiverGigsAsync(caregiverId);
+                var services = await gigServices.GetAllCaregiverGigsAsync(caregiverId);
 
-            return Ok(services);
+                return Ok(services);
+            }
+            catch (KeyNotFoundException ex)
+            {
+                return NotFound(new { message = ex.Message });
+            }
+            catch (ApplicationException appEx)
+            {
+                // Handle application-specific exceptions
+                return BadRequest(new { ErrorMessage = appEx.Message });
+            }
+            catch (HttpRequestException httpEx)
+            {
+                // Handle HTTP request-related exceptions
+                return StatusCode(500, new { ErrorMessage = httpEx.Message });
+            }
+            catch (Exception ex)
+            {
+                // Handle other exceptions
+                return StatusCode(500, new { ex /*ErrorMessage = "An error occurred on the server."*/ });
+            }          
 
         }
+
+
+        [HttpGet]
+        [Route("service/caregiverId")]
+        // [Authorize(Roles = "Caregiver, Admin")]
+        public async Task<IActionResult> GetAllCaregiverGigsServicesAsync(string caregiverId)
+        {
+            try
+            {
+                logger.LogInformation($"Retrieving all Services for Caregiver with MessageId: {caregiverId}");
+
+                var services = await gigServices.GetAllSubCategoriesForCaregiverAsync(caregiverId);
+
+                return Ok(services);
+            }
+            catch (KeyNotFoundException ex)
+            {
+                return NotFound(new { message = ex.Message });
+            }
+            catch (ApplicationException appEx)
+            {
+                // Handle application-specific exceptions
+                return BadRequest(new { ErrorMessage = appEx.Message });
+            }
+            catch (HttpRequestException httpEx)
+            {
+                // Handle HTTP request-related exceptions
+                return StatusCode(500, new { ErrorMessage = httpEx.Message });
+            }
+            catch (Exception ex)
+            {
+                // Handle other exceptions
+                return StatusCode(500, new { ex /*ErrorMessage = "An error occurred on the server."*/ });
+            }
+
+        }
+
+
 
 
         [HttpGet]
@@ -87,11 +186,34 @@ namespace CarePro_Api.Controllers.Content
         // [Authorize(Roles = "Caregiver, Admin")]
         public async Task<IActionResult> GetAllCaregiverPausedGigsAsync(string caregiverId)
         {
-            logger.LogInformation($"Retrieving all Gigs for Caregiver with Id: {caregiverId}");
+            try
+            {
+                logger.LogInformation($"Retrieving all Gigs for Caregiver with MessageId: {caregiverId}");
 
-            var services = await gigServices.GetAllCaregiverPausedGigsAsync(caregiverId);
+                var services = await gigServices.GetAllCaregiverPausedGigsAsync(caregiverId);
 
-            return Ok(services);
+                return Ok(services);
+            }
+            catch (KeyNotFoundException ex)
+            {
+                return NotFound(new { message = ex.Message });
+            }
+            catch (ApplicationException appEx)
+            {
+                // Handle application-specific exceptions
+                return BadRequest(new { ErrorMessage = appEx.Message });
+            }
+            catch (HttpRequestException httpEx)
+            {
+                // Handle HTTP request-related exceptions
+                return StatusCode(500, new { ErrorMessage = httpEx.Message });
+            }
+            catch (Exception ex)
+            {
+                // Handle other exceptions
+                return StatusCode(500, new { ex /*ErrorMessage = "An error occurred on the server."*/ });
+            }
+            
 
         }
 
@@ -101,11 +223,34 @@ namespace CarePro_Api.Controllers.Content
         // [Authorize(Roles = "Caregiver, Admin")]
         public async Task<IActionResult> GetAllCaregiverDraftGigsAsync(string caregiverId)
         {
-            logger.LogInformation($"Retrieving all Gigs for Caregiver with Id: {caregiverId}");
+            try
+            {
+                logger.LogInformation($"Retrieving all Gigs for Caregiver with MessageId: {caregiverId}");
 
-            var services = await gigServices.GetAllCaregiverDraftGigsAsync(caregiverId);
+                var services = await gigServices.GetAllCaregiverDraftGigsAsync(caregiverId);
 
-            return Ok(services);
+                return Ok(services);
+            }
+            catch (KeyNotFoundException ex)
+            {
+                return NotFound(new { message = ex.Message });
+            }
+            catch (ApplicationException appEx)
+            {
+                // Handle application-specific exceptions
+                return BadRequest(new { ErrorMessage = appEx.Message });
+            }
+            catch (HttpRequestException httpEx)
+            {
+                // Handle HTTP request-related exceptions
+                return StatusCode(500, new { ErrorMessage = httpEx.Message });
+            }
+            catch (Exception ex)
+            {
+                // Handle other exceptions
+                return StatusCode(500, new { ex /*ErrorMessage = "An error occurred on the server."*/ });
+            }
+            
 
         }
 
@@ -114,11 +259,31 @@ namespace CarePro_Api.Controllers.Content
        // [Authorize(Roles = "Caregiver, Admin")]
         public async Task<IActionResult> GetGigAsync(string gigId)
         {
-            logger.LogInformation($"Retrieving  Service with Id: {gigId}");
+            try
+            {
+                logger.LogInformation($"Retrieving  Service with MessageId: {gigId}");
 
-            var gig = await gigServices.GetGigAsync(gigId);            
+                var gig = await gigServices.GetGigAsync(gigId);
 
-            return Ok(gig);
+                return Ok(gig);
+            }
+            catch (KeyNotFoundException ex)
+            {
+                return NotFound(new { message = ex.Message });
+            }
+            catch (ApplicationException appEx)
+            {
+                return BadRequest(new { ErrorMessage = appEx.Message });
+            }
+            catch (HttpRequestException httpEx)
+            {
+                return StatusCode(500, new { ErrorMessage = httpEx.Message });
+            }
+            catch (Exception ex)
+            {
+                return StatusCode(500, new { ex /*ErrorMessage = "An error occurred on the server."*/ });
+            }
+
         }
 
 
@@ -128,10 +293,132 @@ namespace CarePro_Api.Controllers.Content
        // [Authorize(Roles = "Caregiver, Admin")]
         public async Task<ActionResult<string>> UpdateGigStatusToPauseAsync(string gigId, UpdateGigStatusToPauseRequest  updateGigStatusToPauseRequest)
         {
-            var result = await gigServices.UpdateGigStatusToPauseAsync(gigId, updateGigStatusToPauseRequest);
-            logger.LogInformation($"Gig Status with ID: {gigId} updated.");
-            return Ok(result);
+            try
+            {
+                var result = await gigServices.UpdateGigStatusToPauseAsync(gigId, updateGigStatusToPauseRequest);
+                logger.LogInformation($"Gig Status with ID: {gigId} updated.");
+                return Ok(result);
+            }
+            catch (ArgumentException ex)
+            {
+                return BadRequest(new { Message = ex.Message }); // Returns 400 Bad Request
+            }
+            catch (KeyNotFoundException ex)
+            {
+                return NotFound(new { message = ex.Message });
+            }
+            catch (ApplicationException appEx)
+            {
+                return BadRequest(new { ErrorMessage = appEx.Message });
+            }
+            catch (HttpRequestException httpEx)
+            {
+                return StatusCode(500, new { ErrorMessage = httpEx.Message });
+            }
+            catch (Exception ex)
+            {
+                return StatusCode(500, new { ex /*ErrorMessage = "An error occurred on the server."*/ });
+            }
+
         }
 
+
+
+        [HttpPut]
+        [Route("UpdateGig/gigId")]
+        // [Authorize(Roles = "Caregiver, Admin")]
+        public async Task<ActionResult<string>> UpdateGigAsync(string gigId, UpdateGigRequest  updateGigRequest)
+        {
+            try
+            {
+                var result = await gigServices.UpdateGigAsync(gigId, updateGigRequest);
+                logger.LogInformation($"Gig Status with ID: {gigId} updated.");
+                return Ok(result);
+            }
+            catch (ArgumentException ex)
+            {
+                return BadRequest(new { Message = ex.Message });
+            }
+            catch (KeyNotFoundException ex)
+            {
+                return NotFound(new { message = ex.Message });
+            }
+            catch (ApplicationException appEx)
+            {
+                return BadRequest(new { ErrorMessage = appEx.Message });
+            }
+            catch (HttpRequestException httpEx)
+            {
+                return StatusCode(500, new { ErrorMessage = httpEx.Message });
+            }
+            catch (Exception ex)
+            {
+                return StatusCode(500, new { ex /*ErrorMessage = "An error occurred on the server."*/ });
+            }
+
+        }
+
+
+
+        #region Validation
+
+        private async Task<bool> ValidateAddGigAsync(AddGigRequest  addGigRequest)
+        {
+            if (addGigRequest == null)
+            {
+                ModelState.AddModelError(nameof(addGigRequest), $" cannot be empty.");
+                return false;
+            }                     
+
+
+            if (string.IsNullOrWhiteSpace(addGigRequest.Title))
+            {
+                ModelState.AddModelError(nameof(addGigRequest.Title),
+                    $"{nameof(addGigRequest.Title)} is required.");
+            }
+
+            if (string.IsNullOrWhiteSpace(addGigRequest.Category))
+            {
+                ModelState.AddModelError(nameof(addGigRequest.Category),
+                    $"{nameof(addGigRequest.Category)} is required");
+            }
+
+            if (string.IsNullOrWhiteSpace(addGigRequest.DeliveryTime))
+            {
+                ModelState.AddModelError(nameof(addGigRequest.DeliveryTime),
+                    $"{nameof(addGigRequest.DeliveryTime)} is required.");
+            }
+
+            if (string.IsNullOrWhiteSpace(addGigRequest.PackageDetails))
+            {
+                ModelState.AddModelError(nameof(addGigRequest.PackageDetails),
+                    $"{nameof(addGigRequest.PackageDetails)} is required.");
+            }
+
+            if (string.IsNullOrWhiteSpace(addGigRequest.PackageDetails))
+            {
+                ModelState.AddModelError(nameof(addGigRequest.PackageDetails),
+                    $"{nameof(addGigRequest.PackageDetails)} is required.");
+            }
+
+            if (addGigRequest.Price <= 0)
+            {
+                ModelState.AddModelError(nameof(addGigRequest.Price),
+                    $"{nameof(addGigRequest.Price)} cannot be 0.");
+            }
+
+
+
+            if (ModelState.ErrorCount > 0)
+            {
+                return false;
+            }
+
+            return true;
+        }
+
+
+
+        #endregion
     }
 }

@@ -4,335 +4,45 @@ import config from '../config';
 
 // Production API base URL (from config)
 const PROD_API_URL = config.BASE_URL;
-// Local Node.js API URL
-const LOCAL_API_URL = 'http://localhost:3000/api';
 
-// Helper function to determine question type based on content analysis
-const getQuestionType = (questionText) => {
-  // Look for indicators in the text to determine the question type
-  const text = questionText.toLowerCase();
-  
-  // Check for checkbox type indicators (multiple selection)
-  if (
-    text.includes('select all that apply') || 
-    text.includes('check all that apply') || 
-    text.includes('choose all that') ||
-    text.includes('(select all') ||
-    text.includes('multiple options')
-  ) {
-    return 'checkbox';
-  }
-  
-  // Check for radio type indicators (single selection)
-  if (
-    text.includes('which of the following') || 
-    text.includes('which option') || 
-    text.includes('select one') ||
-    text.includes('choose one')
-  ) {
-    return 'radio';
-  }
-  
-  // Default to textarea for open-ended questions
-  return 'textarea';
-};
+// In-memory cache of assessment submissions
+let assessmentCache = [];
 
-// Helper function to extract options from question text if applicable
-const getOptionsForQuestion = (questionText) => {
-  const type = getQuestionType(questionText);
-  
-  // Only radio and checkbox questions have options
-  if (type === 'textarea') {
-    return [];
-  }
-  
-  // Try to extract options from the question text
-  // Look for common patterns like lists after the main question
-  // This is a simple implementation - would need refinement in production
-  const optionsMatch = questionText.match(/\:([^\?]+)$/);
-  if (optionsMatch && optionsMatch[1]) {
-    return optionsMatch[1]
-      .split(/\,|\;/)
-      .map(option => option.trim())
-      .filter(option => option.length > 0);
-  }
-  
-  // If no options were found but the question type suggests options should exist,
-  // return some default options based on the question type
-  if (type === 'radio') {
-    if (questionText.toLowerCase().includes('how many years')) {
-      return [
-        'Less than 1 year',
-        '1-3 years',
-        '3-5 years',
-        '5-10 years',
-        'More than 10 years'
-      ];
-    } else if (questionText.toLowerCase().includes('how often')) {
-      return [
-        'Daily',
-        'Several times a week',
-        'Weekly',
-        'Monthly',
-        'Rarely'
-      ];
-    } else {
-      return [
-        'Yes',
-        'No',
-        'Sometimes',
-        'It depends on the situation'
-      ];
-    }
-  }
-  
-  if (type === 'checkbox') {
-    // Default options for caregiving skills
-    if (questionText.toLowerCase().includes('skill')) {
-      return [
-        'Medication management',
-        'Mobility assistance',
-        'Personal hygiene care',
-        'Meal preparation',
-        'First aid',
-        'Dementia care'
-      ];
-    } else {
-      return [
-        'Option 1',
-        'Option 2',
-        'Option 3',
-        'Option 4',
-        'Other'
-      ];
-    }
-  }
-  
-  return [];
-};
-
-// Cache to temporarily store assessment data until backend endpoint is available
-const assessmentCache = [];
-
-// Track pending requests to prevent duplicate API calls
+// Flag to track pending question request to prevent multiple simultaneous API calls
 let pendingQuestionRequest = null;
 let requestTimeoutId = null;
 
-/**
- * Create a timeout handler for API requests
- * @param {AbortController} controller - The AbortController to abort the request
- * @param {string} errorMessage - The error message to throw when timeout occurs
- * @param {number} timeoutMs - The timeout duration in milliseconds
- * @returns {Object} - An object with clear method to cancel the timeout
- */
-const createTimeoutHandler = (controller, errorMessage, timeoutMs = 15000) => {
-  // Store the timeout ID so we can clear it later
+// Helper function to create timeout handlers for fetch operations
+const createTimeoutHandler = (controller, errorMessage, timeoutMs) => {
   const timeoutId = setTimeout(() => {
-    console.warn(`Request timeout after ${timeoutMs}ms: ${errorMessage}`);
-    // Abort the request
-    if (controller && !controller.signal.aborted) {
-      controller.abort(new Error(errorMessage));
-    }
+    controller.abort();
+    console.warn(errorMessage);
   }, timeoutMs);
   
   return {
-    // Method to clear the timeout
-    clear: () => {
-      clearTimeout(timeoutId);
-    }
+    clear: () => clearTimeout(timeoutId),
+    id: timeoutId
   };
 };
 
-// Add a logging function for monitoring assessment submissions in testing
+// Helper function to log assessment data for debugging
 const logAssessment = (assessmentData) => {
-  console.log('Assessment submitted:', JSON.stringify(assessmentData, null, 2));
-  
-  // Save to file system if running on Node.js (not in browser)
-  if (typeof process !== 'undefined' && process.versions && process.versions.node) {
-    const fs = require('fs');
-    try {
-      const logFile = 'assessment-submissions.log';
-      const logEntry = `\n--- ${new Date().toISOString()} ---\n${JSON.stringify(assessmentData, null, 2)}\n`;
-      
-      fs.appendFileSync(logFile, logEntry);
-      console.log(`Assessment logged to ${logFile}`);
-    } catch (err) {
-      console.error('Failed to log assessment to file:', err);
-    }
-  }
+  console.log('Assessment submission:', {
+    userId: assessmentData.userId,
+    timestamp: new Date().toISOString(),
+    questionCount: assessmentData.questions ? assessmentData.questions.length : 0
+  });
 };
 
-// Generate some sample questions with more variety (temporary until API is ready)
-const generateSampleQuestions = (providerType = 'caregiver', count = 10) => {
-  // Question templates with varying formats
-  const questionTemplates = [
-    // Experience questions
-    { 
-      type: 'radio',
-      text: 'How many years of experience do you have in caregiving?',
-      options: [
-        'Less than 1 year',
-        '1-3 years',
-        '3-5 years',
-        '5-10 years',
-        'More than 10 years'
-      ]
-    },
-    {
-      type: 'checkbox',
-      text: 'Which of the following caregiving skills do you possess? (Select all that apply)',
-      options: [
-        'Medication management',
-        'Mobility assistance',
-        'Personal hygiene care',
-        'Meal preparation',
-        'Vital signs monitoring',
-        'Dementia care',
-        'Wound care',
-        'First aid and emergency response',
-        'Blood pressure monitoring',
-        'Diabetes management'
-      ]
-    },
-    { 
-      type: 'textarea',
-      text: 'How would you handle a situation where a client refuses to take their medication?'
-    },
-    {
-      type: 'textarea',
-      text: 'What would you do if a client has a fall while under your care?'
-    },
-    {
-      type: 'textarea',
-      text: 'Describe how you would assist a client with limited mobility with their personal hygiene?'
-    },
-    {
-      type: 'textarea',
-      text: 'How do you approach caring for a client with dementia who becomes agitated?'
-    },
-    {
-      type: 'textarea',
-      text: 'What steps would you take if you noticed signs of neglect or abuse when taking over care from another caregiver?'
-    },
-    {
-      type: 'radio',
-      text: 'Which of these statements best describes your approach to caregiving?',
-      options: [
-        'I focus on completing tasks efficiently',
-        'I prioritize the client\'s emotional well-being alongside physical care',
-        'I follow care plans exactly as written',
-        'I believe in encouraging maximum independence'
-      ]
-    },
-    {
-      type: 'radio',
-      text: 'How do you maintain professional boundaries with clients and their families?',
-      options: [
-        'I avoid discussing personal details about my life',
-        'I maintain a friendly but professional demeanor at all times',
-        'I clearly communicate my role and limitations',
-        'I follow organizational policies on professional boundaries'
-      ]
-    },
-    {
-      type: 'textarea',
-      text: 'How do you handle conflicts or disagreements with a client\'s family members?'
-    },
-    {
-      type: 'checkbox',
-      text: 'Which of the following communication strategies do you use with clients? (Select all that apply)',
-      options: [
-        'Active listening',
-        'Clear and simple language',
-        'Using visual aids when needed',
-        'Confirming understanding through questions',
-        'Adapting communication style based on client needs',
-        'Using touch appropriately to communicate empathy',
-        'Written communication for important information'
-      ]
-    },
-    {
-      type: 'textarea',
-      text: 'How do you promote dignity and independence while providing personal care?'
-    },
-    {
-      type: 'textarea',
-      text: 'Describe how you would respond to a medical emergency while caring for a client at home?'
-    },
-    {
-      type: 'radio',
-      text: 'What is your approach to documentation and record-keeping?',
-      options: [
-        'I document only significant events or changes',
-        'I keep detailed records of all care activities and observations',
-        'I focus on medical information and vital signs',
-        'I document according to specific guidelines provided'
-      ]
-    },
-    {
-      type: 'checkbox',
-      text: 'Which of these end-of-life care skills do you have experience with? (Select all that apply)',
-      options: [
-        'Pain management',
-        'Emotional support for client and family',
-        'Comfort measures',
-        'Symptom management',
-        'Knowledge of hospice processes',
-        'Spiritual support',
-        'Post-mortem care'
-      ]
-    }
-  ];
-  
-  // For temporary local testing, shuffle and select random questions
-  const shuffleArray = (array) => {
-    for (let i = array.length - 1; i > 0; i--) {
-      const j = Math.floor(Math.random() * (i + 1));
-      [array[i], array[j]] = [array[j], array[i]];
-    }
-    return array;
-  };
-  
-  // Select random questions
-  const selectedQuestions = shuffleArray([...questionTemplates])
-    .slice(0, count)
-    .map((template, index) => ({
-      ...template,
-      id: `q${index + 1}`
-    }));
-  
-  // Make sure there's a mix of question types
-  const hasRadio = selectedQuestions.some(q => q.type === 'radio');
-  const hasCheckbox = selectedQuestions.some(q => q.type === 'checkbox');
-  const hasTextarea = selectedQuestions.some(q => q.type === 'textarea');
-  
-  // If missing a type, replace a question to ensure variety
-  if (!hasRadio && questionTemplates.some(q => q.type === 'radio')) {
-    const radioTemplate = questionTemplates.find(q => q.type === 'radio');
-    selectedQuestions[0] = { ...radioTemplate, id: 'q1' };
-  }
-  
-  if (!hasCheckbox && questionTemplates.some(q => q.type === 'checkbox')) {
-    const checkboxTemplate = questionTemplates.find(q => q.type === 'checkbox');
-    selectedQuestions[1] = { ...checkboxTemplate, id: 'q2' };
-  }
-  
-  if (!hasTextarea && questionTemplates.some(q => q.type === 'textarea')) {
-    const textareaTemplate = questionTemplates.find(q => q.type === 'textarea');
-    selectedQuestions[2] = { ...textareaTemplate, id: 'q3' };
-  }
-  
-  return selectedQuestions;
-};
-
+// Main assessment service
 const assessmentService = {
   /**
-   * Get assessment questions for the given provider type
-   * @param {string} providerType - The type of healthcare provider (caregiver, nurse, etc.)
+   * Gets assessment questions for the specified user type from the API
+   * @param {string} userType - The type of user (caregiver, cleaner)
    * @param {Object} options - Options object including AbortController signal
    * @returns {Promise<Array>} - Array of assessment questions
    */
-  getAssessmentQuestions: async (providerType = 'caregiver', options = {}) => {
+  getAssessmentQuestions: async (userType = 'caregiver', options = {}) => {
     try {
       // If there's already a pending request, return it instead of making a new one
       if (pendingQuestionRequest) {
@@ -352,24 +62,6 @@ const assessmentService = {
         return pendingQuestionRequest;
       }
       
-      // Check if we should use a cached set of questions
-      const cachedQuestionsJson = localStorage.getItem('assessmentQuestions');
-      const cachedQuestions = cachedQuestionsJson ? JSON.parse(cachedQuestionsJson) : null;
-      
-      // Check if we have cached questions that are less than 24 hours old
-      const cacheTime = localStorage.getItem('assessmentQuestionsTimestamp');
-      const cacheAge = cacheTime ? (Date.now() - parseInt(cacheTime)) / (1000 * 60 * 60) : null;
-      
-      // If we have recently cached questions, use them
-      if (cachedQuestions && cacheAge && cacheAge < 24) {
-        console.log('Using cached assessment questions (age: ' + cacheAge.toFixed(1) + ' hours)');
-        return {
-          success: true,
-          data: cachedQuestions,
-          cachedOnly: true
-        };
-      }
-      
       // Create a new request promise and store it
       pendingQuestionRequest = (async () => {
         try {
@@ -381,6 +73,7 @@ const assessmentService = {
               
               // Set up abort controller for timeouts
               const controller = new AbortController();
+              const signal = options.signal || controller.signal;
               
               // Create a timeout handler that will abort the fetch after 15 seconds
               const fetchTimeout = createTimeoutHandler(
@@ -389,599 +82,348 @@ const assessmentService = {
                 15000
               );
               
-              // Add a global timeout to ensure we eventually show something to the user
-              let timedOut = false;
-              const globalTimeoutPromise = new Promise((_, reject) => {
-                setTimeout(() => {
-                  timedOut = true;
-                  console.warn('Global timeout reached - falling back to local questions');
-                  reject(new Error('Global timeout: Falling back to local questions after waiting'));
-                }, 20000); // 20 second global timeout
-              });
+              // Normalize user type to match backend expectations (capitalize first letter)
+              const normalizedUserType = userType.charAt(0).toUpperCase() + userType.slice(1);
               
-              // Race between the actual fetch and our global timeout
-              try {
-                // Try local Node.js API first
-                console.log('Trying to fetch questions from local Node.js API (localhost:3000)...');
-                const localResponse = await Promise.race([
-                  fetch(`${LOCAL_API_URL}/kyc/generate-questions`, {
-                    method: 'POST',
-                    headers: {
-                      'Content-Type': 'application/json',
-                      'Authorization': `Bearer ${token}`
-                    },
-                    body: JSON.stringify({ providerType, count: 10 }),
-                    signal: options?.signal || controller.signal
-                  }),
-                  globalTimeoutPromise
-                ]);
-                
-                // Clear the timeout since we got a response
-                fetchTimeout.clear();
-                
-                // Check if response is valid and process the data from local API
-                if (localResponse && localResponse.ok) {
-                  const localApiData = await localResponse.json();
-                  if (localApiData.questions && localApiData.questions.length > 0) {
-                    // Format the questions from the local API
-                    const questions = localApiData.questions.map((questionText, index) => ({
-                      id: `q${index + 1}`,
-                      text: questionText,
-                      type: getQuestionType(questionText),
-                      options: getOptionsForQuestion(questionText)
-                    }));
-                    
-                    // Cache the questions for 24 hours
-                    localStorage.setItem('assessmentQuestions', JSON.stringify(questions));
-                    localStorage.setItem('assessmentQuestionsTimestamp', Date.now().toString());
-                    
-                    console.log('Successfully fetched questions from local Node.js API');
-                    return {
-                      success: true,
-                      data: questions,
-                      fromAPI: true,
-                      source: 'local'
-                    };
-                  }
-                } else {
-                  console.log('Local API request failed or returned no questions, trying external API');
-                  
-                  // Try external API if local API failed
-                  const response = await Promise.race([
-                    fetch(`${PROD_API_URL}/kyc/generate-questions`, {
-                      method: 'POST',
-                      headers: {
-                        'Content-Type': 'application/json',
-                        'Authorization': `Bearer ${token}`
-                      },
-                      body: JSON.stringify({ providerType, count: 10 }),
-                      signal: options?.signal || controller.signal
-                    }),
-                    globalTimeoutPromise
-                  ]);
-                  
-                  // Clear the timeout since we got a response
-                  fetchTimeout.clear();
-                  
-                  // Check if response is valid and process the data
-                  if (response && response.ok) {
-                    const apiData = await response.json();
-                    if (apiData.status === 'success' && apiData.data && apiData.data.length > 0) {
-                      // Process the API data as before
-                      const questions = apiData.data.map((q, index) => ({
-                        id: `q${index + 1}`,
-                        text: q.question,
-                        type: q.type,
-                        options: q.options || [],
-                        answer: q.answer || null
-                      }));
-                      
-                      // Cache the questions for 24 hours
-                      localStorage.setItem('assessmentQuestions', JSON.stringify(questions));
-                      localStorage.setItem('assessmentQuestionsTimestamp', Date.now().toString());
-                      
-                      return {
-                        success: true,
-                        data: questions,
-                        fromAPI: true
-                      };
-                    }
-                  }
+              // Use the API endpoint for assessment questions
+              // Remove the leading /api since the baseURL already includes it
+              // Using the correct plural endpoint: /Assessments/questions/{userType}
+              const response = await api.get(
+                `/Assessments/questions/${normalizedUserType}`, 
+                { 
+                  headers: { Authorization: `Bearer ${token}` },
+                  signal,
                 }
-              } catch (fetchError) {
-                // Clear the timeout
-                fetchTimeout.clear();
-                
-                if (timedOut) {
-                  console.warn('Request timed out, falling back to local questions');
-                } else {
-                  console.error('Error fetching questions from API:', fetchError);
-                }
+              );
+              
+              // Clear the timeout since request completed successfully
+              fetchTimeout.clear();
+              
+              // Reset the pending request
+              pendingQuestionRequest = null;
+              
+              // Handle both old and new response formats
+              if (response.data && response.data.success && Array.isArray(response.data.data)) {
+                // The API provides data in the wrapped format (success + data)
+                return response.data;
+              } else if (Array.isArray(response.data)) {
+                // The API returns directly an array of questions
+                console.log('Converting raw question array to expected format');
+                return {
+                  success: true,
+                  data: response.data,
+                  fromAPI: true
+                };
+              } else {
+                console.warn('API returned invalid question format:', response.data);
+                throw new Error('Invalid question format received from API');
               }
-            } catch (apiError) {
-              // Only log - we'll fall back to local generation
-              console.error('Error in API request block:', apiError);
+            } catch (err) {
+              // If aborted, don't log an error (this is expected behavior)
+              if (err.name === 'AbortError') {
+                console.log('Question request was aborted');
+              } else {
+                console.error('Error fetching questions from API:', err);
+              }
+              
+              throw err;
+            }
+          } else {
+            throw new Error('No authentication token available');
+          }
+        } catch (err) {
+          // Reset the pending request
+          pendingQuestionRequest = null;
+          
+          // If this is not a network error, try to load from cached questions
+          const cachedQuestionsJson = localStorage.getItem('assessmentQuestions');
+          if (cachedQuestionsJson) {
+            try {
+              const cachedQuestions = JSON.parse(cachedQuestionsJson);
+              console.warn('Using cached questions due to API error:', err.message);
+              return {
+                success: true,
+                data: cachedQuestions,
+                cachedOnly: true
+              };
+            } catch (cacheErr) {
+              console.error('Error parsing cached questions:', cacheErr);
             }
           }
           
-          // If API call failed or no token, generate sample questions locally
-          console.log('Falling back to local question generation');
-          const questions = generateSampleQuestions(providerType);
-          
-          // Cache the generated questions for 24 hours
-          localStorage.setItem('assessmentQuestions', JSON.stringify(questions));
-          localStorage.setItem('assessmentQuestionsTimestamp', Date.now().toString());
-          
-          return {
-            success: true,
-            data: questions,
-            cachedOnly: true
-          };
-        } finally {
-          // Clear the pending request after a short delay (to avoid race conditions)
-          if (requestTimeoutId) {
-            clearTimeout(requestTimeoutId);
-            requestTimeoutId = null;
-          }
-          
-          setTimeout(() => {
-            pendingQuestionRequest = null;
-          }, 500);
+          // If we get here, both API and cache failed
+          throw err;
         }
       })();
       
       return pendingQuestionRequest;
-    } catch (error) {
-      console.error('Error getting assessment questions:', error);
-      
-      // Return a fallback set of questions for testing
-      const fallbackQuestions = [
-        {
-          id: "q1",
-          text: "How many years of experience do you have in caregiving?",
-          type: "radio",
-          options: [
-            "Less than 1 year",
-            "1-3 years",
-            "3-5 years",
-            "5-10 years",
-            "More than 10 years"
-          ]
-        },
-        {
-          id: "q2",
-          text: "What steps would you take if a client had a medical emergency?",
-          type: "textarea"
-        },
-        {
-          id: "q3",
-          text: "Which caregiving skills do you have? (Select all that apply)",
-          type: "checkbox",
-          options: [
-            "Medication management",
-            "Mobility assistance",
-            "Personal care",
-            "Meal preparation",
-            "First aid"
-          ]
-        }
-      ];
-      
-      return {
-        success: true,
-        data: fallbackQuestions,
-        cachedOnly: true,
-        message: 'Using fallback questions due to error'
-      };
+    } catch (err) {
+      console.error('Unexpected error in getAssessmentQuestions:', err);
+      throw err;
     }
   },
 
   /**
-   * Submit a caregiver's assessment to the API
-   * @param {Object} assessmentData - The assessment data including questions and answers
-   * @returns {Promise<Object>} - Response from the API
+   * Submits assessment answers to the API for evaluation
+   * @param {Object} assessmentData - The assessment data and answers
+   * @returns {Promise<Object>} - The assessment result
    */
   submitAssessment: async (assessmentData) => {
     try {
-      // Log the assessment submission for testing
       logAssessment(assessmentData);
       
-      // Try to submit to the local Node.js API first
-      const token = localStorage.getItem('authToken');
-      const userDetails = JSON.parse(localStorage.getItem('userDetails') || '{}');
-      const caregiverId = userDetails.id || assessmentData.userId;
-      
-      if (token) {
-        try {
-          // First try submitting to local Node.js API
-          console.log('Submitting assessment to local Node.js API...');
-          const localResponse = await fetch(`${LOCAL_API_URL}/assessment/submit`, {
-            method: 'POST',
-            headers: {
-              'Content-Type': 'application/json',
-              'Authorization': `Bearer ${token}`
-            },
-            body: JSON.stringify({ 
-              userId: caregiverId,
-              timestamp: new Date().toISOString(),
-              questions: assessmentData.questions
-            })
-          });
-          
-          if (localResponse.ok) {
-            const localData = await localResponse.json();
-            console.log('Successfully submitted to local Node.js API:', localData);
-          } else {
-            console.warn('Local API submission failed, status:', localResponse.status);
-          }
-          
-          // Now submit to the external Azure API with the required schema
-          console.log('Submitting assessment to external Azure API...');
-          
-          // Convert the assessment data to the required format:
-          // { "caregiverId": "string", "questions": ["string"], "status": "string", "score": 0 }
-          const azurePayload = {
-            caregiverId: caregiverId,
-            questions: assessmentData.questions.map(q => q.text),
-            status: "completed",
-            score: 0 // This will be updated after evaluation
-          };
-          
-          const azureResponse = await fetch(`${PROD_API_URL}/Assessments`, {
-            method: 'POST',
-            headers: {
-              'Content-Type': 'application/json',
-              'Authorization': `Bearer ${token}`
-            },
-            body: JSON.stringify(azurePayload)
-          });
-          
-          if (azureResponse.ok) {
-            const apiData = await azureResponse.json();
-            return {
-              success: true,
-              message: 'Assessment submitted successfully to Azure API',
-              data: {
-                assessmentId: apiData.id || apiData.assessmentId,
-                timestamp: new Date().toISOString(),
-              },
-              fromAPI: true
-            };
-          } else {
-            console.warn('Azure API submission failed, falling back to local cache');
-            throw new Error(`Azure API returned status ${azureResponse.status}`);
-          }
-        } catch (apiError) {
-          console.error('Error submitting assessment to APIs:', apiError);
-          // Will fall back to local storage
-        }
-      }
-      
-      // For testing purposes, use the cache mechanism if API call fails
-      console.log('Falling back to local storage for assessment submission');
-      
-      // Store the assessment in local cache (localStorage)
-      const assessmentKey = `assessment_${new Date().getTime()}`;
+      // Add to in-memory cache (useful for debugging)
       assessmentCache.push({
-        ...assessmentData,
-        id: assessmentKey,
-        cachedAt: new Date().toISOString()
+        timestamp: new Date().toISOString(),
+        data: assessmentData
       });
       
-      // Also store in localStorage for persistence between sessions
-      try {
-        // Get existing assessments or initialize empty array
-        const existingAssessments = JSON.parse(localStorage.getItem('cachedAssessments') || '[]');
-        existingAssessments.push({
-          ...assessmentData,
-          id: assessmentKey,
-          cachedAt: new Date().toISOString()
-        });
-        localStorage.setItem('cachedAssessments', JSON.stringify(existingAssessments));
-        console.log('Assessment saved to localStorage');
-      } catch (storageError) {
-        console.warn('Could not save to localStorage:', storageError);
-      }
-      
-      // Return a success response
-      return {
-        success: true,
-        message: 'Assessment submitted successfully for testing',
-        data: {
-          assessmentId: assessmentKey,
-          timestamp: new Date().toISOString(),
-        },
-        cachedOnly: true
-      };
-    } catch (error) {
-      console.error('Error submitting assessment:', error);
-      
-      // Return a friendly error for testing
-      throw new Error('Failed to process assessment. Please try again.');
-    }
-  },
-
-  /**
-   * Get assessment history for the current user
-   * @returns {Promise<Array>} - Array of assessment records
-   */
-  getAssessmentHistory: async () => {
-    try {
-      const userId = JSON.parse(localStorage.getItem('userDetails') || '{}').id;
-      if (!userId) {
-        throw new Error('User ID not found');
-      }
-      
-      // For testing purposes, we'll get data from localStorage
-      console.log('Local testing mode: Retrieving assessment data from localStorage');
-      
-      // Get assessments from localStorage
-      const cachedAssessments = JSON.parse(localStorage.getItem('cachedAssessments') || '[]');
-      
-      // Filter by current user ID
-      const userAssessments = cachedAssessments.filter(assessment => assessment.userId === userId);
-      
-      return {
-        success: true,
-        data: userAssessments,
-        cachedOnly: true
-      };
-    } catch (error) {
-      console.error('Error fetching assessment history:', error);
-      
-      // Return an empty array for testing
-      return {
-        success: true,
-        data: [],
-        cachedOnly: true,
-        message: 'Could not retrieve assessment history'
-      };
-    }
-  },
-
-  /**
-   * Process any cached assessment data that failed to submit previously
-   * @returns {Promise<Object>} - Status of the sync operation
-   */
-  syncCachedAssessments: async () => {
-    // In test mode, we just return success without attempting to sync
-    return { 
-      success: true, 
-      message: 'Test mode: Syncing is simulated',
-      syncedCount: 0
-    };
-  },
-  
-  /**
-   * Get the cached assessment data (for debug purposes)
-   * @returns {Array} - The cached assessment data
-   */
-  _getCache: () => {
-    return [...assessmentCache];
-  },
-
-  /**
-   * Evaluate caregiver assessment responses using OpenAI
-   * @param {Object} assessmentData - Data containing questions and answers
-   * @returns {Promise<Object>} - Evaluation results
-   */
-  evaluateAssessment: async (assessmentData) => {
-    try {
+      console.log('Submitting assessment data:', JSON.stringify(assessmentData, null, 2));
+      // Submit to backend API
       const token = localStorage.getItem('authToken');
       if (!token) {
-        throw new Error('Authentication token not found');
+        throw new Error('No authentication token available');
       }
       
-      // Format the data for evaluation
-      const userId = assessmentData.userId;
-      const providerType = assessmentData.providerType || 'caregiver';
-      const responses = assessmentData.questions.map(q => `Question: ${q.text}\nAnswer: ${q.answer || 'No answer provided'}`);
-      
-      // Add a timeout for the fetch request
-      const controller = new AbortController();
-      const timeoutId = setTimeout(() => controller.abort(), 30000); // 30 second timeout
-      
-      // Call evaluation endpoint
-      const response = await fetch(`${PROD_API_URL}/kyc/evaluate`, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': `Bearer ${token}`
-        },
-        body: JSON.stringify({ userId, providerType, responses }),
-        signal: controller.signal
-      });
-      
-      // Clear the timeout since the request completed
-      clearTimeout(timeoutId);
-      
-      if (!response.ok) {
-        const errorData = await response.json().catch(() => ({ message: `HTTP error ${response.status}` }));
-        throw new Error(errorData.message || 'Evaluation failed');
-      }
-    
-      // Parse the response body only once
-      const evaluationData = await response.json();
-      
-      // Check if we have the expected data structure
-      if (!evaluationData || typeof evaluationData.score !== 'number') {
-        console.warn('Unexpected evaluation response format:', evaluationData);
-        throw new Error('Invalid evaluation response format');
-      }
-      
-      // After successful evaluation, save the results to the external Azure API
       try {
-        const userDetails = JSON.parse(localStorage.getItem('userDetails') || '{}');
-        const caregiverId = userDetails.id || assessmentData.userId;
-
-        // Format the data for Azure API according to required schema:
-        // { "caregiverId": "string", "questions": ["string"], "status": "string", "score": 0 }
-        const azurePayload = {
-          caregiverId: caregiverId,
-          questions: assessmentData.questions.map(q => q.text),
-          status: "completed",
-          score: evaluationData.score
-        };
+        // Submit to the exact endpoint
+        console.log('Submitting to endpoint: /Assessments');
+        const response = await api.post(
+          '/Assessments', 
+          assessmentData, 
+          { headers: { Authorization: `Bearer ${token}` } }
+        );
         
-        console.log('Saving assessment evaluation results to Azure API...');
-        const azureResponse = await fetch(`${PROD_API_URL}/Assessments`, {
-          method: 'POST',
-          headers: {
-            'Content-Type': 'application/json',
-            'Authorization': `Bearer ${token}`
-          },
-          body: JSON.stringify(azurePayload)
-        });
+        // Process the API response
+        // The API may return just an ID or the full assessment object
+        let result = {};
+        const assessmentId = typeof response.data === 'string' ? response.data : (response.data.id || '');
         
-        if (azureResponse.ok) {
-          console.log('Successfully saved assessment results to Azure API');
-        } else {
-          console.warn(`Failed to save assessment results to Azure API. Status: ${azureResponse.status}`);
+        if (assessmentId) {
+          console.log(`Assessment submitted successfully with ID: ${assessmentId}`);
+          
+          try {
+            // Wait for a brief moment to let the backend process the assessment
+            await new Promise(resolve => setTimeout(resolve, 1000));
+            
+            // Use our dedicated method to calculate the score for this assessment
+            console.log(`Calculating score for assessment ID: ${assessmentId}`);
+            const scoreResult = await assessmentService.calculateAssessmentScore(assessmentId);
+            
+            if (scoreResult.success) {
+              result = scoreResult.data;
+              console.log(`Retrieved assessment score: ${result.score}%, Passed: ${result.passed}`);
+            } else {
+              console.warn("Failed to calculate score, using basic information");
+              result = {
+                id: assessmentId,
+                score: 0,
+                passed: false
+              };
+            }
+          } catch (fetchError) {
+            console.warn("Error fetching assessment details:", fetchError);
+            // If fetch fails, use basic info
+            result = {
+              id: assessmentId,
+              score: 0,
+              passed: false
+            };
+          }
         }
-      } catch (saveError) {
-        console.error('Error saving assessment results to Azure API:', saveError);
-        // Continue with returning evaluation results even if saving fails
+        // If response contains the full assessment object
+        else if (response.data) {
+          result = {
+            id: response.data.id || '',
+            score: response.data.score || 0,
+            passed: response.data.passed || false
+          };
+        }
+        
+        // Update the assessment attempt count tracking
+        const attemptHistory = JSON.parse(localStorage.getItem('assessmentAttempts') || '{"attempts": [], "count": 0}');
+        attemptHistory.attempts.push({
+          date: new Date().toISOString(),
+          score: result.score,
+          passed: result.passed,
+          assessmentId: result.id
+        });
+        attemptHistory.count = attemptHistory.attempts.length;
+        localStorage.setItem('assessmentAttempts', JSON.stringify(attemptHistory));
+        
+        // Cache the most recent result
+        localStorage.setItem('lastAssessmentResult', JSON.stringify({
+          timestamp: new Date().toISOString(),
+          score: result.score,
+          passed: result.passed,
+          attemptNumber: attemptHistory.count
+        }));
+          
+          return {
+            success: true,
+            data: result
+          };
+        
+        // If no valid result data
+        if (!response.data) {
+          console.warn('Invalid assessment result format:', response.data);
+          throw new Error('Invalid assessment result format');
+        }
+      } catch (err) {
+        console.error('Error submitting assessment to API:', err);
+        console.log('Error details:', err.response?.data || 'No response data');
+        console.log('Error status:', err.response?.status || 'No status code');
+        console.log('API URL used:', err.config?.url || 'Unknown URL');
+        throw err;
+      }
+    } catch (err) {
+      console.error('Assessment submission error:', err);
+      // Try to get more information about the API request
+      if (err.isAxiosError) {
+        console.log('Full request config:', err.config);
+        console.log('Request data sent:', err.config?.data);
+        console.log('Response received:', err.response?.data);
+      }
+      throw err;
+    }
+  },
+
+  /**
+   * Calculate or fetch the score for a specific assessment
+   * @param {string} assessmentId - The ID of the assessment to calculate score for
+   * @returns {Promise<Object>} - The assessment result with score and pass status
+   */
+  calculateAssessmentScore: async (assessmentId) => {
+    try {
+      if (!assessmentId) {
+        throw new Error('Assessment ID is required');
       }
       
-      return {
-        success: true,
-        score: evaluationData.score,
-        feedback: evaluationData.feedback,
-        improvements: evaluationData.improvements,
-        passThreshold: evaluationData.passThreshold,
-        fromAPI: true
-      };
-    } catch (error) {
-      console.error('Assessment evaluation error:', error);
+      console.log(`Calculating score for assessment ID: ${assessmentId}`);
+      const token = localStorage.getItem('authToken');
       
-      // Check if this was an abort error (timeout)
-      if (error.name === 'AbortError') {
-        console.warn('API request timed out after 30 seconds');
+      if (!token) {
+        throw new Error('No authentication token available');
+      }
+
+      // Call the specific calculate-score endpoint
+      const response = await api.post(
+        `/Assessments/calculate-score/${assessmentId}`, 
+        {}, // Empty body for POST request
+        { headers: { Authorization: `Bearer ${token}` } }
+      );
+      
+      console.log('Score calculation response:', response.data);
+      
+      if (response.data) {
+        // Extract score and passing status
+        let score = 0;
+        let passed = false;
+        
+        // Check different possible response structures
+        if (typeof response.data.score === 'number') {
+          score = response.data.score;
+          passed = response.data.passed !== undefined ? response.data.passed : (score >= 70);
+        } 
+        // Check if the response contains the score under data property
+        else if (response.data.data && typeof response.data.data.score === 'number') {
+          score = response.data.data.score;
+          passed = response.data.data.passed !== undefined ? response.data.data.passed : (score >= 70);
+        }
+        
+        // Update the last assessment result in localStorage
+        const lastResult = JSON.parse(localStorage.getItem('lastAssessmentResult') || '{}');
+        if (lastResult && lastResult.timestamp) {
+          lastResult.score = score;
+          lastResult.passed = passed;
+          localStorage.setItem('lastAssessmentResult', JSON.stringify(lastResult));
+        }
+        
         return {
           success: true,
-          score: 65, // Default passing score for fallback
-          feedback: 'Your responses show an understanding of basic caregiving concepts. Due to a technical issue, we\'ve provided a provisional evaluation.',
-          improvements: 'Please ensure a stable internet connection for future assessments.',
-          passThreshold: true,
-          cachedOnly: true,
-          timeout: true
+          data: {
+            id: assessmentId,
+            score: score,
+            passed: passed
+          }
         };
+      } else {
+        throw new Error('Invalid response format from calculate-score endpoint');
       }
-      
-      // Return a fallback evaluation for testing or when API fails
+    } catch (err) {
+      console.error('Error calculating assessment score:', err);
       return {
-        success: true,
-        score: 75,
-        feedback: 'Your answers demonstrate a good understanding of caregiving principles. You show empathy and practical knowledge.',
-        improvements: 'Consider expanding your knowledge of emergency procedures and medication management.',
-        passThreshold: true,
-        cachedOnly: true
+        success: false,
+        error: err.message,
+        data: {
+          id: assessmentId,
+          score: 0,
+          passed: false
+        }
       };
     }
   },
 
   /**
-   * Get qualification status for the current user
-   * @returns {Object} - Qualification status
+   * Gets the user's qualification status from localStorage
+   * @returns {Object} - The qualification status
    */
   getQualificationStatus: () => {
     try {
-      // Try to get from localStorage first
       const storedStatus = localStorage.getItem('qualificationStatus');
+      const attemptHistory = JSON.parse(localStorage.getItem('assessmentAttempts') || '{"attempts": [], "count": 0}');
+      
       if (storedStatus) {
         const status = JSON.parse(storedStatus);
         
-        // Check if retake period has elapsed if user failed previously
-        if (!status.isQualified && status.canRetakeAfter) {
+        // Add attempt information
+        status.attemptCount = attemptHistory.count;
+        status.attempts = attemptHistory.attempts;
+        status.remainingAttempts = Math.max(0, 3 - attemptHistory.count);
+        
+        // Check if user is in waiting period after 3 failed attempts
+        if (status.canRetakeAfter && !status.isQualified) {
           const retakeDate = new Date(status.canRetakeAfter);
           const now = new Date();
-          
-          // Update canRetake flag based on current date vs retake date
           status.canRetake = now >= retakeDate;
           
-          // If retake is now allowed, update the status in localStorage
-          if (status.canRetake) {
-            localStorage.setItem('qualificationStatus', JSON.stringify(status));
+          if (!status.canRetake) {
+            // Calculate days remaining in waiting period
+            const daysRemaining = Math.ceil((retakeDate - now) / (1000 * 60 * 60 * 24));
+            status.waitingPeriodDays = daysRemaining;
+            status.retakeDate = retakeDate.toLocaleDateString();
           }
+        } else if (!status.isQualified) {
+          // Can retake if not qualified and still has attempts remaining or waiting period is over
+          status.canRetake = attemptHistory.count < 3 || !status.canRetakeAfter;
+          status.waitingPeriodDays = 0;
+        } else {
+          // Already qualified
+          status.canRetake = false;
+          status.waitingPeriodDays = 0;
         }
         
         return status;
       }
       
-      // If no status found, return default values
+      // Default status if none found
       return {
-        assessmentCompleted: false,
         isQualified: false,
-        canRetake: true
+        assessmentCompleted: false,
+        canRetake: true,
+        attemptCount: 0,
+        attempts: [],
+        remainingAttempts: 3,
+        waitingPeriodDays: 0
       };
-    } catch (error) {
-      console.error('Error getting qualification status:', error);
+    } catch (err) {
+      console.error('Error getting qualification status:', err);
       return {
-        assessmentCompleted: false,
         isQualified: false,
-        canRetake: true,
-        error: 'Could not retrieve qualification status'
-      };
-    }
-  },
-  
-  /**
-   * Reset qualification status to allow retaking assessment
-   * Typically called when retake period has elapsed
-   * @returns {Object} - Updated qualification status
-   */
-  resetQualificationStatus: () => {
-    try {
-      // Get current status
-      const currentStatus = JSON.parse(localStorage.getItem('qualificationStatus') || '{}');
-      
-      // Update to allow retake
-      const updatedStatus = {
-        ...currentStatus,
-        canRetake: true,
-        retakeReset: new Date().toISOString()
-      };
-      
-      localStorage.setItem('qualificationStatus', JSON.stringify(updatedStatus));
-      return updatedStatus;
-    } catch (error) {
-      console.error('Error resetting qualification status:', error);
-      return { error: 'Could not reset qualification status' };
-    }
-  },
-  
-  /**
-   * For testing only: Force reset all qualification data
-   * This allows testing different qualification scenarios
-   * @param {Object} options - Configuration options for test status
-   * @returns {Object} - Created test status
-   */
-  _forceQualificationStatus: (options = {}) => {
-    if (process.env.NODE_ENV === 'production') {
-      console.warn('_forceQualificationStatus should not be used in production');
-      return null;
-    }
-    
-    try {
-      const defaultStatus = {
         assessmentCompleted: false,
-        isQualified: false,
         canRetake: true,
-        score: 0,
-        timestamp: new Date().toISOString()
+        error: err.message
       };
-      
-      const testStatus = {
-        ...defaultStatus,
-        ...options
-      };
-      
-      localStorage.setItem('qualificationStatus', JSON.stringify(testStatus));
-      console.log('Test qualification status set:', testStatus);
-      return testStatus;
-    } catch (error) {
-      console.error('Error setting test qualification status:', error);
-      return null;
     }
   }
 };

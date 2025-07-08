@@ -5,6 +5,7 @@ import hear from "../../../assets/main-app/heart.svg";
 import bell from "../../../assets/main-app/notification-bing.svg";
 import message from "../../../assets/main-app/message.svg";
 import receipt from "../../../assets/main-app/receipt.svg";
+import NotificationBell from "../../components/notifications/NotificationBell";
 import "../care-giver/care-giver-dashboard/NavigationBar.css";
 
 const ClientNavBar = () => {
@@ -17,11 +18,14 @@ const ClientNavBar = () => {
   const user = JSON.parse(localStorage.getItem("userDetails"));
   const userName = user?.firstName ? `${user.firstName} ${user.lastName}` : "";
 
-  // const getInitials = (name) => {
-  //   const names = name.split(" ");
-  //   const initials = names.map((n) => n[0].toUpperCase()).join("");
-  //   return initials.slice(0, 2);
-  // };
+ const getInitials = (name) => {
+  if (!name || typeof name !== "string") return "";
+
+  const names = name.trim().split(" ").filter(Boolean); // remove empty parts
+  const initials = names.map((n) => n[0].toUpperCase()).join("");
+
+  return initials.slice(0, 2);
+};
 
   const IconLink = ({ to, icon, alt }) => (
     <li className="nav-link icon-link" onClick={() => navigate(to)}>
@@ -54,9 +58,11 @@ const ClientNavBar = () => {
       </div>
 
       <ul className="nav-icons">
-        <IconLink to={`${basePath}/notifications`} icon={bell} alt="Notifications" />
+        <li className="nav-link icon-link">
+          <NotificationBell navigateTo={(path) => navigate(path)} />
+        </li>
         <IconLink to={`${basePath}/message`} icon={message} alt="Messages" />
-        <IconLink to={`${basePath}/favorites`} icon={hear} alt="Favorites" />
+        {/* <IconLink to={`${basePath}/favorites`} icon={hear} alt="Favorites" /> */}
       </ul>
 
       <div className="nav-actions">

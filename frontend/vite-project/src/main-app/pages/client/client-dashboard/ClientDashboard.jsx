@@ -55,8 +55,8 @@ const ClientDashboard = () => {
         setTopRatedGigs(topRated);
         
         // Check if care needs are set
-        const careNeeds = await ClientCareNeedsService.getCareNeeds();
-        setCareNeedsSet(careNeeds && careNeeds.primaryCondition ? true : false);
+        // const careNeeds = await ClientCareNeedsService.getCareNeeds();
+        // setCareNeedsSet(careNeeds && careNeeds.primaryCondition ? true : false);
         
       } catch (error) {
         console.error("Error fetching services:", error);
@@ -94,7 +94,7 @@ const ClientDashboard = () => {
       {/* Left Sidebar */}
       <div className="leftbar">
         <ClientProfileCard />
-        <SidebarActions />
+        {/* <SidebarActions /> */}
       </div>
       
       {/* Main Content */}
