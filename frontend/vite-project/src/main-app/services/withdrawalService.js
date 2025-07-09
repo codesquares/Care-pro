@@ -23,12 +23,13 @@ export const withdrawalService = {
 
   // Get withdrawal history for the caregiver
   getWithdrawalHistory: async (caregiverId) => {
-    const api_to_use = `${config.LOCAL_API_URL}/withdrawal`;
+    const api_to_use = config.LOCAL_API_URL;
+    // const api_to_use = `http://localhost:3000/api/withdrawal`;
     const authToken = localStorage.getItem('authToken');
     console.log("Auth Token:", authToken);
     
     try {
-      const response = await fetch(`${api_to_use}/${caregiverId}?userId=${caregiverId}`, {
+      const response = await fetch(`${api_to_use}/withdrawal/${caregiverId}?userId=${caregiverId}`, {
         headers: {
           'Content-Type': 'application/json',
           'Authorization': `Bearer ${localStorage.getItem('authToken')}`
