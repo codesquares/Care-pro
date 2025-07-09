@@ -84,16 +84,14 @@ const verifyNIN = async (req, res) => {
 
     // Stepwise response: If only NIN is provided (no selfie), prompt for next step
     if (
-      verificationResult.status === true &&
-      verificationResult.entity &&
-      verificationResult.entity.verified === true &&
+      verificationResult.entity.nin.status === true &&
       !selfieImage
     ) {
       return res.status(200).json({
         status: 'success',
         message: 'NIN verified. Please provide a selfie to complete verification.',
         data: {
-          verified: false,
+          verified: true,
           verificationStatus: 'nin_verified',
           nin: ninNumber,
           firstName: verificationResult.entity.first_name,
@@ -107,10 +105,9 @@ const verifyNIN = async (req, res) => {
 
     // If both NIN and selfie are present and verified, complete verification
     if (
-      verificationResult.status === true &&
+      verificationResult.entity.nin.status === true &&
       verificationResult.entity &&
       (
-        verificationResult.entity.verified === true ||
         (
           selfieImage &&
           verificationResult.entity.selfie_verification &&
@@ -261,16 +258,15 @@ const verifyBVN = async (req, res) => {
 
     // Stepwise response: If only BVN is provided (no selfie), prompt for next step
     if (
-      verificationResult.status === true &&
+      verificationResult.entity.bvn.status === true &&
       verificationResult.entity &&
-      verificationResult.entity.verified === true &&
       !selfieImage
     ) {
       return res.status(200).json({
         status: 'success',
         message: 'BVN verified. Please provide a selfie to complete verification.',
         data: {
-          verified: false,
+          verified: verified,
           verificationStatus: 'bvn_verified',
           bvn: bvnNumber,
           firstName: verificationResult.entity.first_name,
@@ -284,10 +280,10 @@ const verifyBVN = async (req, res) => {
 
     // If both BVN and selfie are present and verified, complete verification
     if (
-      verificationResult.status === true &&
+      verificationResult.entity.bvn.status === true &&
       verificationResult.entity &&
       (
-        verificationResult.entity.verified === true ||
+        
         (
           selfieImage &&
           verificationResult.entity.selfie_verification &&
@@ -401,7 +397,7 @@ const verifyBVNWithIdSelfie = async (req, res) => {
     // First verify BVN
     const bvnResult = await DojahService.verifyBVN(bvnNumber, null, userId, bvnReferenceId);
 
-    if (!bvnResult.status || !bvnResult.entity || bvnResult.entity.verified !== true) {
+    if (!bvnResult.entity.bvn.status || !bvnResult.entity ) {
       return res.status(400).json({
         status: 'error',
         message: bvnResult.entity?.message || 'BVN verification failed',
@@ -540,9 +536,8 @@ const verifyNINWithSelfie = async (req, res) => {
     const isTestNin = ninNumber === TEST_VALUES.NIN;
 
     if (
-      verificationResult.status === true &&
+      verificationResult.entity.nin.status === true &&
       verificationResult.entity &&
-      verificationResult.entity.verified === true &&
       verificationResult.entity.selfie_verification &&
       verificationResult.entity.selfie_verification.match === true
     ) {
@@ -643,10 +638,9 @@ const verifyIdWithSelfie = async (req, res) => {
     const isTestValue = (idType === 'nin' && idNumber === TEST_VALUES.NIN) || (idType === 'bvn' && idNumber === TEST_VALUES.BVN);
 
     if (
-      verificationResult.status === true &&
+      verificationResult.entity.nin.status === true &&
       verificationResult.entity &&
       (
-        verificationResult.entity.verified === true ||
         (verificationResult.entity.selfie_verification && verificationResult.entity.selfie_verification.match === true)
       )
     ) {

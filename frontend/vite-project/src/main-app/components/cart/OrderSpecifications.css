@@ -1,0 +1,20 @@
+.order-specifications {
+  background: white;
+  border-radius: 8px;
+  padding: 24px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+}
+
+.order-specifications__title {
+  font-size: 20px;
+  font-weight: 600;
+  color: #333;
+  margin: 0 0 24px 0;
+}
+
+.order-specifications__service-description {
+  font-size: 16px;
+  color: #333;
+  margin-bottom: 24px;
+  line-height: 1.5;
+}

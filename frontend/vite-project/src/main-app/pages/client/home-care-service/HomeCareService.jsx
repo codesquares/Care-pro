@@ -14,51 +14,12 @@ const HomeCareService = () => {
 
 
   const handleHire = async () => {
-    if (!service) return;
-    const user = JSON.parse(localStorage.getItem("userDetails"));
-    //set the gig id to the local storage
-    localStorage.setItem("gigId", id);
-    //set the amount to the local storage
-    localStorage.setItem("amount", service.price);
-    localStorage.setItem("providerId", service.caregiverId);
-
-    console.log(user);
-  
-    try {
-      const payload = {
-        amount: service.price,
-        email: user?.email,
-        currency: "NIGN",
-        redirectUrl: `${window.location.origin}/app/client/payment-success`,
-      };
-  
-      const response = await fetch(
-        "https://carepro-api20241118153443.azurewebsites.net/api/payments/initiate",
-        {
-          method: "POST",
-          headers: {
-            "Content-Type": "application/json",
-          },
-          body: JSON.stringify(payload),
-        }
-      );
-  
-      if (!response.ok) {
-        throw new Error("Payment initiation failed");
-      }
-  
-      const data = await response.json();
-      console.log("Payment Response:", data);
-  
-      if (data.status === "success" && data.data?.link) {
-        window.location.href = data.data.link; // Redirect to payment gateway
-      } else {
-        throw new Error("Failed to get payment link");
-      }
-    } catch (error) {
-      console.error("Payment error:", error);
-      setError(error.message);
-    }
+    navigate(`${basePath}/cart/${id}`, {
+      state: {
+        serviceId: id,
+        serviceDetails: service,
+      },
+    });
   };
   
 
@@ -66,7 +27,7 @@ const HomeCareService = () => {
     // Navigate directly to conversation with this caregiver
     navigate(`${basePath}/message/${service.caregiverId}`, {
       state: {
-        recipientName: providerName,
+        recipientName: caregiverName,
       },
     });
   };
@@ -100,7 +61,7 @@ const HomeCareService = () => {
   if (error) return <p className="error">{error}</p>;
 
   // Extract service details
-  const { title, providerName, rating, packageDetails, image1, plan, price, features, videoURL } = service;
+  const { title, caregiverName, rating, packageDetails, image1, plan, price, features, videoURL } = service;
 
   return (
     <div className="container">
@@ -110,9 +71,9 @@ const HomeCareService = () => {
         <div className="profile-container">
           <h1 className="title">{title}</h1>
           <div className="profile">
-            <img src={image1 || "/avatar.jpg"} alt={providerName} className="avatar" />
+            <img src={image1 || "/avatar.jpg"} alt={caregiverName} className="avatar" />
             <div>
-              <p className="name">{providerName}</p>
+              <p className="name">{caregiverName}</p>
               <span className="rating">⭐⭐⭐⭐ {rating} (210)</span>
             </div>
           </div>
@@ -129,7 +90,7 @@ const HomeCareService = () => {
               <li>No features listed</li>
             )}
           </ul>
-          <button className="hire-button" onClick={handleHire}>Hire {providerName}</button>
+          <button className="hire-button" onClick={handleHire}>Hire {caregiverName}</button>
         </div>
       </div>
 
@@ -154,7 +115,7 @@ const HomeCareService = () => {
       </div>
 
 
-      <button className="message-button" onClick={handleMessage}>Message {providerName}</button>
+      <button className="message-button" onClick={handleMessage}>Message {caregiverName}</button>
 
       {/* Reviews Section */}
       <div className="reviews">

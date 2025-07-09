@@ -14,6 +14,7 @@ import ClientPreferences from './preferences/ClientPreferences';
 import ClientVerificationPage from './verification/VerificationPage';
 import CareNeedsSettings from './care-needs/CareNeedsSettings';
 import ClientProfile from './profile/ClientProfile';
+import Cart from '../client/cart/Cart';
 
 
 function ClientRoutes() {
@@ -35,6 +36,7 @@ function ClientRoutes() {
             <Route path="/verification" element={<ClientVerificationPage />} />
             <Route path="/care-needs" element={<CareNeedsSettings />} />
             <Route path="/profile" element={<ClientProfile />} />
+            <Route path="/cart/:id" element={<Cart />} />
         </Routes>
         </>
     );
