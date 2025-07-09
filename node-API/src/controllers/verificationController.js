@@ -266,7 +266,7 @@ const verifyBVN = async (req, res) => {
         status: 'success',
         message: 'BVN verified. Please provide a selfie to complete verification.',
         data: {
-          verified: verified,
+          verified: true,
           verificationStatus: 'bvn_verified',
           bvn: bvnNumber,
           firstName: verificationResult.entity.first_name,
