@@ -391,6 +391,7 @@ const verifyBVNWithIdSelfie = async (req, res) => {
       });
     }
     const selfie_image = selfieImage ? selfieImage : null;
+    const photoid_image = idImage ? idImage : null;
     // Generate reference IDs for tracking
     const bvnReferenceId = `bvn_${userId}_${Date.now()}`;
     const idSelfieReferenceId = `id_selfie_${userId}_${Date.now()}`;
@@ -414,14 +415,13 @@ const verifyBVNWithIdSelfie = async (req, res) => {
     // Proceed with ID+Selfie verification
     const idSelfieResult = await DojahService.verifyIdWithSelfie(
       selfie_image,
-      idImage,
+      photoid_image,
       idType,
       idSelfieReferenceId
     );
 
-    const isIdSelfieVerified = idSelfieResult.status &&
-      (idSelfieResult.entity?.verification_status === 'verified' ||
-       idSelfieResult.entity?.verified === true);
+    const isIdSelfieVerified = (idSelfieResult.data?.entity.verified &&
+      idSelfieResult.entity?.verification_status === 'verified' )? true : false;
 
     // Check if this is a test BVN value
     const isTestBvn = bvnNumber === TEST_VALUES.BVN;
@@ -429,8 +429,8 @@ const verifyBVNWithIdSelfie = async (req, res) => {
     if (isIdSelfieVerified) {
       const verificationData = {
         userId,
-        verifiedFirstName: bvnResult.entity.first_name,
-        verifiedLastName: bvnResult.entity.last_name,
+        verifiedFirstName: idSelfieResult.data?.entity.first_name,
+        verifiedLastName: idSelfieResult.data?.entity.last_name,
         verificationNo: bvnNumber,
         verificationStatus: 'verified',
         verificationMethod: 'bvn_id_selfie',
@@ -455,40 +455,26 @@ const verifyBVNWithIdSelfie = async (req, res) => {
       } catch (apiError) {
         console.error('Failed to update verification status in Azure API:', apiError);
       }
-
+       
       return res.status(200).json({
-        status: 'success',
-        message: 'BVN with ID and Selfie verification successful',
-        data: {
-          verified: true,
-          verificationStatus: 'verified',
-          bvn: bvnNumber,
-          firstName: bvnResult.entity.first_name,
-          lastName: bvnResult.entity.last_name,
-          nextSteps: []
-        },
+        ...idSelfieResult.data,
         referenceIds: {
           bvn: bvnReferenceId,
           idSelfie: idSelfieReferenceId
-        }
+        },
+        status: 'success',
+        message: 'BVN with ID and Selfie verification successful',
       });
     } else {
       // ID+Selfie verification pending webhook callback
       return res.status(200).json({
-        status: 'pending',
-        message: 'BVN verified successfully. ID and Selfie verification is processing.',
-        data: {
-          verified: false,
-          verificationStatus: 'pending',
-          bvn: bvnNumber,
-          bvnStatus: 'verified',
-          idSelfieStatus: 'pending',
-          nextSteps: []
-        },
+        ...idSelfieResult.data,
         referenceIds: {
           bvn: bvnReferenceId,
           idSelfie: idSelfieReferenceId
-        }
+        },
+        status: "pending",
+        message: "BVN with ID and selfie verification pending. We will look at manually verifying your request"
       });
     }
   } catch (error) {
@@ -544,9 +530,9 @@ const verifyNINWithSelfie = async (req, res) => {
     ) {
       const verificationData = {
         userId,
-        verifiedFirstName: verificationResult.entity.first_name,
-        verifiedLastName: verificationResult.entity.last_name,
-        verificationStatus: 'verified',
+        verifiedFirstName: verificationResult.data?.entity.first_name,
+        verifiedLastName: verificationResult.data?.entity.last_name,
+        verificationStatus: verificationResult.data?.entity.verification_status,
         verificationMethod: "nin_selfie",
         verificationNo: ninNumber,
       };
@@ -572,30 +558,24 @@ const verifyNINWithSelfie = async (req, res) => {
       }
 
       return res.status(200).json({
-        status: 'success',
-        message: 'NIN with Selfie verification successful',
-        data: {
-          verified: true,
-          verificationStatus: 'verified',
-          nin: ninNumber,
-          firstName: verificationResult.entity.first_name,
-          lastName: verificationResult.entity.last_name,
-          nextSteps: []
+        ...verificationResult.data,
+        referenceIds: {
+          bvn: bvnReferenceId,
+          idSelfie: idSelfieReferenceId
         },
-        referenceId
+        status: 'success',
+        message: 'BVN with ID and Selfie verification successful',
       });
     } else {
-      const status = verificationResult.status ? 'pending' : 'failed';
-      return res.status(status === 'failed' ? 400 : 200).json({
-        status,
-        message: verificationResult.entity?.message || `NIN with Selfie verification ${status}`,
-        data: {
-          verified: false,
-          verificationStatus: status,
-          nin: ninNumber,
-          error: verificationResult.entity?.message || `Verification ${status}. Please check your information and try again.`
+      // ID+Selfie verification pending webhook callback
+      return res.status(200).json({
+        ...verificationResult.data,
+        referenceIds: {
+          bvn: bvnReferenceId,
+          idSelfie: idSelfieReferenceId
         },
-        referenceId
+        status: "pending",
+        message: "BVN with ID and selfie verification pending. We will look at manually verifying your request"
       });
     }
   } catch (error) {

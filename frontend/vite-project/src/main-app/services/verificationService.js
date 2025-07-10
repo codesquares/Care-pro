@@ -242,7 +242,7 @@ const verificationService = {
         try {
           const response = await verificationApi.post('/kyc/verify-bvn-with-id-selfie', payload);
           console.log('[verificationService] verifyBVN step 2 - dojah response:', response.data);
-          if (response.data?.status === 'success') {
+          if (response.data?.entity.verified === true && response.data?.entity.verificationStatus === 'verified') {
             this.saveVerificationStatus(
               true, 
               'verified', 
@@ -253,11 +253,12 @@ const verificationService = {
             // Save to Azure endpoint
             await this.saveVerificationData({
               userId: userDetails.id,
-              verifiedFirstName: userDetails.firstName || '',
-              verifiedLastName: userDetails.lastName || '',
+              verifiedFirstName: response.data?.entity.first_name || '',
+              verifiedLastName: response.data?.entity.last_name || '',
+              verifiedDateOfBirth: response.data?.entity.date_of_birth || '',
               verificationMethod: 'BVN',
               verificationNo: bvnNumber,
-              verificationStatus: 'verified'
+              verificationStatus: response.data?.entity.verificationStatus || 'verified'
             });
           }
           return response.data;
@@ -331,7 +332,7 @@ const verificationService = {
         try {
           const response = await verificationApi.post('/kyc/verify-nin-with-selfie', payload);
           console.log('[verificationService] verifyNIN step 2 - dojah response:', response.data);
-          if (response.data?.status === 'success') {
+          if (response.data?.entity.status === true && response.data?.entity.verificationStatus === 'verified') {
             this.saveVerificationStatus(
               true, 
               'verified', 
@@ -342,10 +343,11 @@ const verificationService = {
             // Save to Azure endpoint
             await this.saveVerificationData({
               userId: userDetails.id,
-              verifiedFirstName: userDetails.firstName || '',
-              verifiedLastName: userDetails.lastName || '',
+              verifiedFirstName: response.data?.entity.first_name || '',
+              verifiedLastName: response.data?.entity.last_name || '',
               verificationMethod: 'NIN',
               verificationNo: ninNumber,
+              date_of_birth: response.data?.entity.date_of_birth || '',
               verificationStatus: 'verified'
             });
           }
@@ -390,11 +392,11 @@ const verificationService = {
         const response = await verificationApi.post('/kyc/verify-bvn-with-id-selfie', payload);
         
         // Cache the verification status on success
-        if (response.data && (response.data.verified === true)) {
+        if (response.data && (response.data.entity.verified === true)) {
           this.saveVerificationStatus(
-            response.data.verified === true, 
-            response.data.verified === true ? 'verified' : 'pending', 
-            response.data.message || 'BVN with ID and Selfie verification ' + response.data.verified,
+            response.data.entity.verified === true, 
+            response.data.entity.verified === true ? 'verified' : 'pending', 
+            response.data.message || 'BVN with ID and Selfie verification ' + response.data.entity.verified,
             userId,
             userType
           );
@@ -411,7 +413,7 @@ const verificationService = {
           // First verify BVN
           const bvnResponse = await this.verifyBVN(bvnNumber, null, null, userType, userId);
 
-          if (bvnResponse.verified !== true) {
+          if (bvnResponse.data?.entity.verified !== true) {
             return bvnResponse; // Return BVN verification error
           }
           
@@ -424,7 +426,7 @@ const verificationService = {
             idSelfie: idSelfieResponse.data
           });
           return {
-            status: idSelfieResponse.verified,
+            status: idSelfieResponse.data?.entity.verified,
             message: 'Combined verification process completed',
             data: {
               ...bvnResponse.data,
@@ -463,15 +465,15 @@ const verificationService = {
         const response = await verificationApi.post('/kyc/verify-nin-with-selfie', payload);
         
         // Cache the verification status on success
-        if (response.data && (response.data.status === 'success' || response.data.status === 'pending')) {
-          this.saveVerificationStatus(
-            response.data.status === 'success', 
-            response.data.status === 'success' ? 'verified' : 'pending', 
-            response.data.message || 'NIN with Selfie verification ' + response.data.status,
-            userId,
-            userType
-          );
-        }
+        // if (response.data && (response.data.entity.nin )) {
+        //   this.saveVerificationStatus(
+        //     response.data.status === 'success', 
+        //     response.data.status === 'success' ? 'verified' : 'pending', 
+        //     response.data.message || 'NIN with Selfie verification ' + response.data.status,
+        //     userId,
+        //     userType
+        //   );
+        // }
         
         return response.data;
       } catch (error) {
@@ -484,7 +486,7 @@ const verificationService = {
           // First verify NIN
           const ninResponse = await this.verifyNIN(ninNumber, null, userType, userId);
 
-          if (ninResponse.verified !== true) {
+          if (ninResponse.entity.verified !== true) {
             return ninResponse; // Return NIN verification error
           }
           
