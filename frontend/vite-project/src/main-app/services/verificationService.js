@@ -390,11 +390,11 @@ const verificationService = {
         const response = await verificationApi.post('/kyc/verify-bvn-with-id-selfie', payload);
         
         // Cache the verification status on success
-        if (response.data && (response.data.status === 'success' || response.data.status === 'pending')) {
+        if (response.data && (response.data.verified === true)) {
           this.saveVerificationStatus(
-            response.data.status === 'success', 
-            response.data.status === 'success' ? 'verified' : 'pending', 
-            response.data.message || 'BVN with ID and Selfie verification ' + response.data.status,
+            response.data.verified === true, 
+            response.data.verified === true ? 'verified' : 'pending', 
+            response.data.message || 'BVN with ID and Selfie verification ' + response.data.verified,
             userId,
             userType
           );
@@ -410,13 +410,13 @@ const verificationService = {
           
           // First verify BVN
           const bvnResponse = await this.verifyBVN(bvnNumber, null, null, userType, userId);
-          
-          if (bvnResponse.status !== 'success') {
+
+          if (bvnResponse.verified !== true) {
             return bvnResponse; // Return BVN verification error
           }
           
           // Then verify ID + Selfie
-          const idSelfieResponse = await this.verifyID(idImage, selfieImage, idType, userType);
+          const idSelfieResponse = await this.verifyID(idImage, selfieImage, idType, userType, bvnNumber, ninNumber);
           
           // Combine responses
           console.log('Combined verification response:', {
@@ -424,7 +424,7 @@ const verificationService = {
             idSelfie: idSelfieResponse.data
           });
           return {
-            status: idSelfieResponse.status,
+            status: idSelfieResponse.verified,
             message: 'Combined verification process completed',
             data: {
               ...bvnResponse.data,
@@ -483,20 +483,20 @@ const verificationService = {
           
           // First verify NIN
           const ninResponse = await this.verifyNIN(ninNumber, null, userType, userId);
-          
-          if (ninResponse.status !== 'success') {
+
+          if (ninResponse.verified !== true) {
             return ninResponse; // Return NIN verification error
           }
           
           // Then verify Selfie
-          const selfieResponse = await this.verifyID(null, selfieImage, 'nin', userType);
+          const selfieResponse = await this.verifyID(null, selfieImage, 'nin', userType, ninNumber, bvnNumber);
           console.log('Combined verification response:', {
             nin: ninResponse.data,
             idSelfie: selfieResponse.data
           });
           // Combine responses
           return {
-            status: selfieResponse.status,
+            status: selfieResponse.verified,
             message: 'Combined verification process completed',
             data: {
               ...ninResponse.data,
@@ -520,13 +520,15 @@ const verificationService = {
    * @param {string} userType - Type of user ('caregiver' or 'client')
    * @returns {Promise} - API response
    */
-  async verifyID(idImage, selfieImage, idType = 'generic', userType = 'caregiver') {
+  async verifyID(idImage, selfieImage, idType = 'generic', userType = 'caregiver', bvn, nin) {
     try {
       const response = await verificationApi.post('/kyc/verify-id-selfie', { 
         idImage, 
         selfieImage,
         idType,
-        userType
+        userType,
+        bvn: this._getTestValue('bvn', bvn),
+        nin: this._getTestValue('nin', nin)
       });
       return response.data;
     } catch (error) {

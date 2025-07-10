@@ -35,9 +35,9 @@ class DojahService {
     return testValue && testValue === value;
   }
 
-  async verifyNIN(ninNumber, selfieImage = null) {
+  async verifyNIN(ninNumber, selfie_image = null) {
     // Log the value received and test check
-     const selfieBuffer = selfieImage ? selfieImage.split(',')[1] : null;
+     const selfieBuffer = selfie_image ? selfie_image.split(',')[1] : null;
     console.log('[DojahService] verifyNIN called with:', ninNumber);
     const isTestNIN = this.isTestValue('nin', ninNumber);
     console.log('[DojahService] isTestValue("nin", value):', isTestNIN);
@@ -68,10 +68,10 @@ class DojahService {
     try {
       let response;
 
-      if (selfieImage) {
+      if (selfie_image) {
         response = await axios.post(`${this.baseUrl}/kyc/nin/verify`, {
           nin: ninNumber,
-          selfie_image: selfieImage
+          selfie_image: selfie_image
         }, {
           headers: this.headers
         });
@@ -82,14 +82,18 @@ class DojahService {
         });
       }
 
-      if (response.data && response.data.entity) {
+      if (response.data && response.data.entity) {// Check if the response contains the expected entity
         const result = response.data;
-        if (selfieImage && result.entity.selfie_verification) {
-          result.entity.verified = result.entity.selfie_verification.match === true;
-          result.entity.verification_status = result.entity.verified ? "success" : "failed";
+        if (selfie_image && result.entity.selfie_verification) {
+          const isVerified = result.entity.selfie_verification.match;
+          const verificationStatus = isVerified ? "success" : "failed";
+          result.entity.verified = isVerified;
+          result.entity.verification_status = verificationStatus;
         }
         return result;
-      } else {
+      } else {// If the response does not contain the expected entity
+        console.error('Invalid response format:', response.data);
+        // Return a structured error response
         return {
           entity: {
             nin: ninNumber,
@@ -97,10 +101,11 @@ class DojahService {
             verified: false,
             message: "Invalid response from verification service"
           },
-          status: false
+          // status: false
         };
       }
-    } catch (error) {
+    } catch (error) {// Error handling for NIN verification
+      // Log the error details for debugging
       console.error('NIN verification error:', error.response?.data || error.message);
       if (error.response && error.response.status === 400) {
         return {
@@ -110,10 +115,10 @@ class DojahService {
             verified: false,
             message: "Invalid NIN provided. Please check and try again."
           },
-          status: false
+          // status: false
         };
       }
-      return {
+      return {// Error handling for NIN verification
         entity: {
           nin: ninNumber,
           verification_status: "error",
@@ -126,9 +131,9 @@ class DojahService {
     }
   }
 
-  async verifyBVN(bvnNumber, selfieImage = null) {
+  async verifyBVN(bvnNumber, selfie_image = null) {
     // Log the value received and test check
-     const selfieBuffer = selfieImage ? selfieImage.split(',')[1] : null;
+    const selfieBuffer = selfie_image ? selfie_image.split(',')[1] : null;
     console.log('[DojahService] verifyBVN called with:', bvnNumber);
     const isTestBVN = this.isTestValue('bvn', bvnNumber);
     console.log('[DojahService] isTestValue("bvn", value):', isTestBVN);
@@ -158,10 +163,10 @@ class DojahService {
     try {
       let response;
 
-      if (selfieImage) {
+      if (selfie_image) {
         response = await axios.post(`${this.baseUrl}/kyc/bvn/verify`, {
           bvn: bvnNumber,
-          selfie_image: selfieImage
+          selfie_image: selfie_image
         }, {
           headers: this.headers
         });
@@ -174,9 +179,11 @@ class DojahService {
 
       if (response.data && response.data.entity) {
         const result = response.data;
-        if (selfieImage && result.entity.selfie_verification) {
-          result.entity.verified = result.entity.selfie_verification.match === true;
-          result.entity.verification_status = result.entity.verified ? "success" : "failed";
+        if (selfie_image && result.entity.selfie_verification) {
+          const isVerified = result.entity.selfie_verification.match;
+          const verificationStatus = isVerified ? "success" : "failed";
+          result.entity.verified = isVerified;
+          result.entity.verification_status = verificationStatus;
         }
         return result;
       } else {
@@ -187,7 +194,7 @@ class DojahService {
             verified: false,
             message: "Invalid response from verification service"
           },
-          status: false
+          // status: false
         };
       }
     } catch (error) {
@@ -200,7 +207,7 @@ class DojahService {
             verified: false,
             message: "Invalid BVN provided. Please check and try again."
           },
-          status: false
+          // status: false
         };
       }
       return {
@@ -210,23 +217,23 @@ class DojahService {
           verified: false,
           message: "Verification service temporarily unavailable. Please try again later."
         },
-        status: false,
+        // status: false,
         error: error.message
       };
     }
   }
 
-  async verifySelfieToDocs(selfieImage, idImage) {
+  async verifySelfieToDocs(selfie_image, photoid_image) {
     // No more mock: always proceed to real verification
-     const selfieBuffer = selfieImage ? selfieImage.split(',')[1] : null;
-    
+    const selfieBuffer = selfie_image ? selfie_image.split(',')[1] : null;
+
     try {
       // Make the actual API call to Dojah
       const response = await axios.post(
         `${this.baseUrl}/kyc/selfie-bvn-verification`,
         {
-          selfie_image: selfieImage,
-          id_image: idImage
+          selfie_image: selfie_image,
+          photoid_image: photoid_image
         },
         { headers: this.headers }
       );
@@ -273,16 +280,19 @@ class DojahService {
     }
   }
 
-  async verifyIdWithSelfie(selfieImage, idImage, idType = 'generic', referenceId = null) {
-     const selfieBuffer = selfieImage ? selfieImage.split(',')[1] : null;
+  async verifyIdWithSelfie(selfie_image, photoid_image, referenceId, first_name, last_name, bvn, nin) {
+     const selfieBuffer = selfie_image ? selfie_image.split(',')[1] : null;
     // No more mock: always proceed to real verification
-    
     try {
       // Determine which Dojah endpoint to use based on ID type
-      let endpoint = `${this.baseUrl}/kyc/id`;
+      let endpoint = `${this.baseUrl}/kyc/${bvn ? "bvn" : "nin"}/verify`;
       let payload = {
-        selfie_image: selfieImage,
-        id_image: idImage
+        selfie_image: selfie_image,
+        photoid_image: photoid_image,
+        first_name: first_name,
+        last_name: last_name,
+        bvn: bvn || "",
+        nin: nin || ""
       };
       
       // Add reference ID if provided for tracking webhook callbacks
@@ -302,11 +312,11 @@ class DojahService {
         const result = response.data;
         
         // Add verification status if not already present
-        if (!result.entity.verification_status) {
-          const isVerified = result.entity.selfie_verification && 
-                            result.entity.selfie_verification.match === true;
+        if (result.entity && result.entity.selfie_verification && result.entity.selfie_verification.confidence_value >= 90) {
+          const isVerified =  result.entity.selfie_verification.match;
           result.entity.verified = isVerified;
-          result.entity.verification_status = isVerified ? "success" : "failed";
+          const verificationStatus = isVerified ? "success" : "failed";
+          result.entity.verification_status = verificationStatus;
         }
         
         return result;
@@ -318,7 +328,7 @@ class DojahService {
             verified: false,
             message: "Invalid response from verification service"
           },
-          status: false
+          // status: false
         };
       }
     } catch (error) {
@@ -332,7 +342,7 @@ class DojahService {
             verified: false,
             message: "Invalid image data provided. Please ensure your ID and selfie are clear and properly formatted."
           },
-          status: false
+          // status: false
         };
       }
       
@@ -343,7 +353,7 @@ class DojahService {
           verified: false,
           message: "Verification service temporarily unavailable. Please try again later."
         },
-        status: false,
+        // status: false,
         error: error.message
       };
     }
@@ -370,7 +380,7 @@ class DojahService {
         `${this.baseUrl}/kyc/widget/user`,
         {
           verification_type: "FULL", // Options: FULL, BASIC, etc.
-          redirect_url: "http://localhost:3000/verification-complete", // Update with your app's URL
+          redirect_url: `http://localhost:3000/verification-complete`, // Update with your app's URL
         },
         { headers: this.headers }
       );

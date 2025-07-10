@@ -21,7 +21,7 @@ const verifyNIN = async (req, res) => {
     console.log('[verifyNIN] Received ninNumber:', ninNumber, '| typeof:', typeof ninNumber);
     console.log('[verifyNIN] userId from req.user:', userId, '| id from body:', id);
     console.log('[verifyNIN] selfieImage present:', !!selfieImage);
-
+    const selfie_image = selfieImage ? selfieImage : null;
     // Check if userId from request matches the authenticated user
     if (id && id !== userId) {
       return res.status(403).json({
@@ -78,14 +78,14 @@ const verifyNIN = async (req, res) => {
         isTestValue: true
       };
     } else {
-      verificationResult = await DojahService.verifyNIN(ninNumber, selfieImage, userId);
+      verificationResult = await DojahService.verifyNIN(ninNumber, selfie_image, userId);
     }
     console.log('[verifyNIN] verificationResult:', JSON.stringify(verificationResult));
 
     // Stepwise response: If only NIN is provided (no selfie), prompt for next step
     if (
-      verificationResult.entity.nin.status === true &&
-      !selfieImage
+      verificationResult.entity.verified === true &&
+      !selfie_image
     ) {
       return res.status(200).json({
         status: 'success',
@@ -105,18 +105,19 @@ const verifyNIN = async (req, res) => {
 
     // If both NIN and selfie are present and verified, complete verification
     if (
-      verificationResult.entity.nin.status === true &&
+      verificationResult.entity.verified === true &&
       verificationResult.entity &&
       (
         (
-          selfieImage &&
+          selfie_image &&
           verificationResult.entity.selfie_verification &&
-          verificationResult.entity.selfie_verification.match === true
+          verificationResult.entity.selfie_verification.match === true &&
+          verificationResult.entity.selfie_verification.confidence_value >= 90 // Ensure high confidence for selfie match
         )
       )
     ) {
       let verificationType = 'nin';
-      if (selfieImage) {
+      if (selfie_image) {
         verificationType = 'nin_selfie';
       }
 
@@ -156,7 +157,7 @@ const verifyNIN = async (req, res) => {
           verified: true,
           verificationStatus: 'verified',
           nin: ninNumber,
-          withSelfie: !!selfieImage,
+          withSelfie: !!selfie_image,
           firstName: verificationResult.entity.first_name,
           lastName: verificationResult.entity.last_name,
           gender: verificationResult.entity.gender,
@@ -194,7 +195,7 @@ const verifyBVN = async (req, res) => {
     console.log('[verifyBVN] Received bvnNumber:', bvnNumber, '| typeof:', typeof bvnNumber);
     console.log('[verifyBVN] userId from req.user:', userId, '| id from body:', id);
     console.log('[verifyBVN] selfieImage present:', !!selfieImage);
-
+    const selfie_image = selfieImage ? selfieImage : null;
     // Check if userId from request matches the authenticated user
     if (id && id !== userId) {
       return res.status(403).json({
@@ -252,15 +253,15 @@ const verifyBVN = async (req, res) => {
         isTestValue: true
       };
     } else {
-      verificationResult = await DojahService.verifyBVN(bvnNumber, selfieImage, userId);
+      verificationResult = await DojahService.verifyBVN(bvnNumber, selfie_image, userId);
     }
     console.log('[verifyBVN] verificationResult:', JSON.stringify(verificationResult));
 
     // Stepwise response: If only BVN is provided (no selfie), prompt for next step
     if (
-      verificationResult.entity.bvn.status === true &&
+      verificationResult.entity.verified === true &&
       verificationResult.entity &&
-      !selfieImage
+      !selfie_image
     ) {
       return res.status(200).json({
         status: 'success',
@@ -280,12 +281,12 @@ const verifyBVN = async (req, res) => {
 
     // If both BVN and selfie are present and verified, complete verification
     if (
-      verificationResult.entity.bvn.status === true &&
+      verificationResult.entity.verified === true &&
       verificationResult.entity &&
       (
         
         (
-          selfieImage &&
+          selfie_image &&
           verificationResult.entity.selfie_verification &&
           verificationResult.entity.selfie_verification.match === true
         )
@@ -389,7 +390,7 @@ const verifyBVNWithIdSelfie = async (req, res) => {
         message: 'Both ID image and selfie image are required for BVN with ID+Selfie verification'
       });
     }
-
+    const selfie_image = selfieImage ? selfieImage : null;
     // Generate reference IDs for tracking
     const bvnReferenceId = `bvn_${userId}_${Date.now()}`;
     const idSelfieReferenceId = `id_selfie_${userId}_${Date.now()}`;
@@ -397,7 +398,7 @@ const verifyBVNWithIdSelfie = async (req, res) => {
     // First verify BVN
     const bvnResult = await DojahService.verifyBVN(bvnNumber, null, userId, bvnReferenceId);
 
-    if (!bvnResult.entity.bvn.status || !bvnResult.entity ) {
+    if (!bvnResult.entity.verified || !bvnResult.entity ) {
       return res.status(400).json({
         status: 'error',
         message: bvnResult.entity?.message || 'BVN verification failed',
@@ -412,7 +413,7 @@ const verifyBVNWithIdSelfie = async (req, res) => {
 
     // Proceed with ID+Selfie verification
     const idSelfieResult = await DojahService.verifyIdWithSelfie(
-      selfieImage,
+      selfie_image,
       idImage,
       idType,
       idSelfieReferenceId
@@ -528,10 +529,10 @@ const verifyNINWithSelfie = async (req, res) => {
         message: 'Selfie image is required for NIN+Selfie verification'
       });
     }
-
+    const selfie_image = selfieImage ? selfieImage : null;
     const referenceId = `nin_selfie_${userId}_${Date.now()}`;
 
-    const verificationResult = await DojahService.verifyNIN(ninNumber, selfieImage, userId, referenceId);
+    const verificationResult = await DojahService.verifyNIN(ninNumber, selfie_image, userId, referenceId);
 
     const isTestNin = ninNumber === TEST_VALUES.NIN;
 
@@ -607,6 +608,8 @@ const verifyNINWithSelfie = async (req, res) => {
   }
 };
 
+
+
 // Verify ID with selfie in one combined step
 const verifyIdWithSelfie = async (req, res) => {
   try {
@@ -633,12 +636,12 @@ const verifyIdWithSelfie = async (req, res) => {
         message: 'ID type must be either "bvn", "nin", or "generic"'
       });
     }
-
-    const verificationResult = await DojahService.verifyIdWithSelfie(idType, idNumber, selfieImage, userId);
+    const selfie_image = selfieImage ? selfieImage : null;
+    const verificationResult = await DojahService.verifyIdWithSelfie(idType, idNumber, selfie_image, userId);
     const isTestValue = (idType === 'nin' && idNumber === TEST_VALUES.NIN) || (idType === 'bvn' && idNumber === TEST_VALUES.BVN);
 
     if (
-      verificationResult.entity.nin.status === true &&
+      verificationResult.entity.verified === true &&
       verificationResult.entity &&
       (
         (verificationResult.entity.selfie_verification && verificationResult.entity.selfie_verification.match === true)

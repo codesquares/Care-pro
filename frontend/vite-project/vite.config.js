@@ -45,7 +45,16 @@ export default defineConfig({
         changeOrigin: true,
         secure: false,
         ws: true, // Enable WebSocket proxying
-      }
+      },
+
+      // Proxy for identity verification API (care-pro-node-api)
+      '/identity-api': {
+        target: 'https://care-pro-node-api.onrender.com',
+        changeOrigin: true,
+        secure: false,
+        rewrite: (path) => path.replace(/^\/identity-api/, '/api'),
+      },
+
     },
     host: true, // Allows access from other devices on the network
     strictPort: false, // Ensures the server will not start if the port is already in use
