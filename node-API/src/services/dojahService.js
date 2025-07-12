@@ -408,6 +408,75 @@ class DojahService {
       throw new Error(`Dojah API error: ${error.message}`);
     }
   }
+
+  async verifyBVNWithSelfie(bvnNumber, selfie_image, referenceId = null) {
+    const selfieBuffer = selfie_image ? selfie_image.split(',')[1] : null;
+    console.log('[DojahService] verifyBVNWithSelfie called with:', bvnNumber);
+
+    try {
+      // Direct call to Dojah's combined verification endpoint
+      const response = await axios.post(
+        `${this.baseUrl}/kyc/bvn/verify`,
+        {
+          bvn: bvnNumber,
+          selfie_image: selfieBuffer,
+          reference_id: referenceId
+        },
+        { headers: this.headers }
+      );
+
+      if (response.data && response.data.entity) {
+        const result = response.data;
+        
+        // Ensure verification status is set
+        if (result.entity.selfie_verification && result.entity.selfie_verification.match) {
+          result.entity.verification_status = "success";
+          result.entity.verified = true;
+        } else {
+          result.entity.verification_status = "failed";
+          result.entity.verified = false;
+        }
+
+        return result;
+      }
+
+      return {
+        entity: {
+          bvn: bvnNumber,
+          verification_status: "failed",
+          verified: false,
+          message: "Invalid response from verification service"
+        },
+        status: false
+      };
+
+    } catch (error) {
+      console.error('BVN with Selfie verification error:', error.response?.data || error.message);
+      
+      if (error.response?.status === 400) {
+        return {
+          entity: {
+            bvn: bvnNumber,
+            verification_status: "failed",
+            verified: false,
+            message: "Invalid BVN or selfie image provided"
+          },
+          status: false
+        };
+      }
+
+      return {
+        entity: {
+          bvn: bvnNumber,
+          verification_status: "error",
+          verified: false,
+          message: "Verification service temporarily unavailable"
+        },
+        status: false,
+        error: error.message
+      };
+    }
+  }
 }
 
 module.exports = new DojahService();

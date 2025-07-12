@@ -390,7 +390,6 @@ const verifyNINWithSelfie = async (req, res) => {
 };
 
 
-
 // Verify ID with selfie in one combined step
 const verifyIdWithSelfie = async (req, res) => {
   try {
@@ -592,10 +591,90 @@ const getVerificationStatus = async (req, res) => {
   }
 };
 
+const verifyBVNWithSelfieOnly = async (req, res) => {
+  try {
+    const { bvnNumber, selfieImage, token, userType, id } = req.body;
+    const userId = req.user.id;
+    console.log('[verifyBVNWithSelfie] Request received:', { bvnNumber, hasImage: !!selfieImage });
+
+    // Validate request
+    if (!bvnNumber || !selfieImage) {
+      return res.status(400).json({
+        status: 'error',
+        message: 'Both BVN number and selfie image are required'
+      });
+    }
+
+    if (id && id !== userId) {
+      return res.status(403).json({
+        status: 'error',
+        message: 'Unauthorized access'
+      });
+    }
+
+    // Check if this is a test BVN value
+    const isTestBvn = bvnNumber === TEST_VALUES.BVN;
+    let verificationResult;
+
+    console.log('[verifyBVNWithSelfie] isTestBvn:', isTestBvn);
+
+    if (isTestBvn) {
+      console.log(`🧪 Test BVN detected: ${bvnNumber} - Auto-approving verification`);
+      verificationResult = {
+        status: true,
+        entity: {
+          bvn: bvnNumber,
+          first_name: req.user.firstName || "Test",
+          last_name: req.user.lastName || "User",
+          middle_name: "",
+          date_of_birth: "01-January-1990",
+          phone_number1: "08100000000",
+          gender: "Male",
+          selfie_verification: {
+            confidence_value: 99.9,
+            match: true
+          },
+          verification_status: "success",
+          verified: true
+        },
+        isTestValue: true
+      };
+    } else {
+      // Generate a reference ID for tracking
+      const referenceId = `bvn_selfie_${Date.now()}_${userId}`;
+      
+      // Make the real API call
+      verificationResult = await DojahService.verifyBVNWithSelfie(bvnNumber, selfieImage, referenceId);
+      console.log('[verifyBVNWithSelfie] Result:', JSON.stringify(verificationResult));
+    }
+
+    if (verificationResult && verificationResult.entity) {
+      return res.status(200).json({
+        verificationResult
+      });
+    }
+
+    return res.status(400).json({
+      status: 'error',
+      message: 'BVN and selfie verification failed',
+      details: verificationResult?.entity?.message || 'Verification service error'
+    });
+
+  } catch (error) {
+    console.error('BVN with selfie verification error:', error);
+    return res.status(500).json({
+      status: 'error',
+      message: 'An error occurred during verification',
+      error: error.message
+    });
+  }
+};
+
 module.exports = {
   verifyNIN,
   verifyBVN,
   verifyBVNWithIdSelfie,
   verifyNINWithSelfie,
-  getVerificationStatus
+  getVerificationStatus,
+  verifyBVNWithSelfieOnly
 };

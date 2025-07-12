@@ -211,7 +211,9 @@ const verificationService = {
           id: userDetails.id,
           token: token,
           firstName: userDetails.firstName || '',
-          lastName: userDetails.lastName || ''
+          lastName: userDetails.lastName || '',
+          selfieImage: selfieImage || null,
+          idImage: idImage || null
         };
         console.log('[verificationService] verifyBVN step 1 - payload:', payload);
         try {
@@ -390,7 +392,7 @@ const verificationService = {
       
       try {
         const response = await verificationApi.post('/kyc/verify-bvn-with-id-selfie', payload);
-        
+
         // Cache the verification status on success
         // if (response.data && (response.data.entity.verified === true)) {
           // this.saveVerificationStatus(
@@ -1029,6 +1031,64 @@ const verificationService = {
       };
     }
   },
+
+  /**
+   * Submit BVN verification with selfie only
+   * @param {string} bvnNumber - The BVN number
+   * @param {string} selfieImage - Base64 encoded selfie image
+   * @param {string} userType - Type of user ('caregiver' or 'client')
+   * @param {string} id - User ID for validation
+   * @param {string} token - Authentication token
+   * @returns {Promise} - API response
+   */
+  async verifyBVNWithSelfie(bvnNumber, selfieImage, userType, id, token) {
+    try {
+      const userDetails = JSON.parse(localStorage.getItem('userDetails') || '{}');
+      if (!userType) {
+        userType = userDetails.userType || 'caregiver';
+      }
+
+      // Input validation
+      if (!bvnNumber) {
+        throw new Error('BVN number is required for verification');
+      }
+      if (!selfieImage) {
+        throw new Error('Selfie image is required for BVN + selfie verification');
+      }
+      if (id && id !== userDetails.id) {
+        throw new Error('User ID mismatch. Please check your authentication details.');
+      }
+
+      // Use test BVN if in development mode
+      const bvnToSend = this._getTestValue('bvn', bvnNumber);
+      console.log('[verificationService] verifyBVNWithSelfie - BVN to send:', bvnToSend);
+
+      const payload = {
+        bvnNumber: bvnToSend,
+        selfieImage,
+        userType,
+        id: userDetails.id,
+        token
+      };
+
+      console.log('[verificationService] verifyBVNWithSelfie - sending payload:', {
+        ...payload,
+        selfieImage: payload.selfieImage ? 'base64_image_data' : null
+      });
+
+      const response = await verificationApi.post('/api/kyc/verify-bvn-with-selfie', payload);
+      console.log('[verificationService] verifyBVNWithSelfie - response:', response.data);
+
+      return response.data;
+
+    } catch (error) {
+      console.error('Error in BVN with selfie verification:', error);
+      throw error.response?.data || { 
+        message: error.message || 'BVN with selfie verification failed'
+      };
+    }
+  },
+
 };
 
 export default verificationService;

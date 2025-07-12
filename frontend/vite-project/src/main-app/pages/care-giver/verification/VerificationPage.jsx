@@ -34,12 +34,7 @@ const VerificationPage = () => {
   const [isPolling, setIsPolling] = useState(false);
   const [progress, setProgress] = useState(0);
   const [progressMessage, setProgressMessage] = useState("");
-
-  // Multi-step verification state - matching client implementation
-  const [verificationStep, setVerificationStep] = useState(1);
   const [showIdSelfieStep, setShowIdSelfieStep] = useState(false);
-  const [bvnResult, setBvnResult] = useState(null);
-  const [ninResult, setNinResult] = useState(null);
 
   // Get token and user ID from localStorage
   const userDetails = JSON.parse(localStorage.getItem("userDetails") || "{}");
@@ -240,7 +235,6 @@ const VerificationPage = () => {
     // Log all input values for debugging
     console.log('[VerificationPage] handleSubmit called with:', {
       verificationMethod,
-      verificationStep,
       bvnNumber,
       ninNumber,
       idImage,
@@ -262,393 +256,126 @@ const VerificationPage = () => {
     }
 
     try {
-      // Validate inputs based on verification method and step
+      // Validate inputs based on verification method
       if (verificationMethod === "bvn") {
-        if (verificationStep === 1 && !bvnNumber) {
-          throw new Error("BVN number is required");
-        } else if (verificationStep === 2 && (!idImage || !selfieImage)) {
-          throw new Error("Both ID image and selfie are required for BVN verification");
+        if (!bvnNumber || !selfieImage) {
+          throw new Error("Both BVN and selfie are required for verification");
         }
       } else if (verificationMethod === "nin") {
-        if (verificationStep === 1 && !ninNumber) {
-          throw new Error("NIN number is required");
-        } else if (verificationStep === 2 && !selfieImage) {
-          throw new Error("Selfie image is required for NIN verification");
+        if (!ninNumber || !selfieImage) {
+          throw new Error("Both NIN and selfie are required for verification");
         }
-      } else if (verificationMethod === "id" && (!idImage || !selfieImage)) {
-        throw new Error("Both ID image and selfie are required for ID verification");
+      } else if (verificationMethod === "id") {
+        if (!idImage || !selfieImage) {
+          throw new Error("Both ID image and selfie are required for verification");
+        }
       }
 
       setProgress(30);
 
       if (verificationMethod === "bvn") {
-        if (verificationStep === 1) {
-          // First step: BVN verification
-          setProgressMessage("Processing BVN verification...");
-
-          // Check if using a test BVN value
-          const isTestBvn = isTestValue('BVN', bvnNumber);
-          if (isTestBvn) {
-            console.log('🧪 Using test BVN value:', bvnNumber);
-          }
-
-          console.log('[VerificationPage] Calling verifyBVN with:', {
-            bvnNumber,
-            selfieImage: null,
-            idImage: null,
-            userType: 'caregiver',
-            id: userDetails.id,
-            token
-          });
-
-          const data = await verificationService.verifyBVN(
-            bvnNumber,         // string: BVN number
-            null,              // selfieImage (null for step 1)
-            null,              // idImage (null for step 1)
-            'caregiver',      // userType
-            userDetails.id,    // id
-            token              // token
-          );
-
-          if (data.verificationResult && !data.verificationResult.error) {
-            // BVN verified successfully, now need ID + selfie
-            setVerificationStep(2);
-            setShowIdSelfieStep(true);
-            setBvnResult(data);
-            setProgress(50);
-            setProgressMessage("BVN verified successfully! Please complete ID and selfie verification.");
-            setSuccess("BVN verification successful! Please proceed with ID and selfie verification.");
-          } else {
-            // BVN verification failed
-            setProgress(100);
-            setProgressMessage("BVN verification failed");
-            setError(data.message || "BVN verification failed. Please check your information and try again.");
-          }
-        } else if (verificationStep === 2) {
-          // Second step: ID + Selfie verification after BVN
-          setProgressMessage("Processing ID and selfie verification for BVN...");
-
-          const idImageBase64 = idImage ? await convertFileToBase64(idImage) : null;
-          const selfieImageBase64 = selfieImage ? await convertFileToBase64(selfieImage) : null;
-
-          console.log('[VerificationPage] Calling verifyBVNComplete with:', {
-            bvnNumber,
-            selfieImageBase64,
-            idImageBase64,
-            idType,
-            userType: 'caregiver',
-            userId: userDetails.id
-          });
-
-          // Use the combined verification endpoint
-          const verificationData = await verificationService.verifyBVNComplete(
-            bvnNumber,
-            selfieImageBase64,
-            idImageBase64,
-            idType,
-            'caregiver',
-            userDetails.id
-          );
-          console.log('[VerificationPage] Verification data:', verificationData);
-
-          if (verificationData.data.entity) {
-
-            setProgress(100);
-            setProgressMessage("Verification successful!");
-            console.log('[VerificationPage] Verification successful:', verificationData);
-            // if (data.entity.verified === true ) {
-            //   setProgress(100);
-            //   setProgressMessage("Verification successful!");
-            //   setSuccess("Your identity has been verified successfully!");
-
-            //   // Check if verification uses test values - handle differently
-            //   const isTestBvn = isTestValue('BVN', bvnNumber);
-            //   if (isTestBvn) {
-            //     console.log('🧪 Test BVN detected - Saving verification status but skipping Azure submission');
-            //   } else {
-            //     // Save verification data to Azure via verificationService
-            //     try {
-            //       const verificationRecord = {
-            //         method: 'bvn_id_selfie',
-            //         userId: userDetails.id,
-            //         userType: 'caregiver',
-            //         timestamp: new Date().toISOString(),
-            //         status: 'verified',
-            //         azureData: {
-            //           userId: userDetails.id,
-            //           userType: 'caregiver',
-            //           verificationType: 'bvn_id_selfie',
-            //           status: 'verified',
-            //           verificationMethod: 'bvn',
-            //           methodDetails: {
-            //             bvnNumber: bvnNumber,
-            //             withSelfie: true
-            //           },
-            //           userData: data.data?.userData || {},
-            //           completedAt: new Date().toISOString()
-            //         }
-            //       };
-
-            //       verificationService.saveVerificationData(verificationRecord)
-            //         .then(response => {
-            //           if (response.status !== 'success') {
-            //             console.warn('Azure submission returned non-success status:', response.status);
-            //           }
-            //         })
-            //         .catch(error => {
-            //           console.error('Failed to save caregiver verification data to Azure:', error);
-            //         });
-            //     } catch (err) {
-            //       console.error('Error preparing verification data for Azure:', err);
-            //     }
-            //   }
-
-            //   verificationService.saveVerificationStatus(
-            //     true,
-            //     'verified',
-            //     'BVN with ID and Selfie verification successful',
-            //     userDetails.id,
-            //     'caregiver'
-            //   );
-
-            //   setVerificationStatus({
-            //     verified: true,
-            //     verificationStatus: 'verified'
-            //   });
-
-            //   setTimeout(() => {
-            //     navigate("/app/caregiver/profile");
-            //   }, 3000);
-            // } else {
-            //   // Pending verification
-            //   setProgress(70);
-            //   setProgressMessage("Verification submitted and pending review...");
-            //   setSuccess("Your verification is being processed. You'll be notified when it's complete.");
-            //   // Start polling for status
-            //   setIsPolling(true);
-            // }
-          } else {
-            // Verification failed
-            setProgress(100);
-            setProgressMessage("Verification failed");
-            setError(data.message || "Verification failed. Please check your information and try again.");
-          }
+        // Validate inputs
+        if (!bvnNumber || !selfieImage) {
+          throw new Error("Both BVN and selfie are required for verification");
         }
-      } else if (verificationMethod === "nin") {
-        if (verificationStep === 1) {
-          // First step: NIN verification
-          setProgressMessage("Processing NIN verification...");
 
-          // Check if using a test NIN value
-          const isTestNin = isTestValue('NIN', ninNumber);
-          if (isTestNin) {
-            console.log('🧪 Using test NIN value:', ninNumber);
-          }
+        setProgressMessage("Processing BVN and selfie verification...");
+        setProgress(30);
 
-          console.log('[VerificationPage] Calling verifyNIN with:', {
-            ninNumber,
-            selfieImage: null,
-            userType: 'caregiver',
-            idImage: null,
-            id: userDetails.id,
-            token
-          });
+        // Convert selfie to base64
+        const selfieImageBase64 = await convertFileToBase64(selfieImage);
 
-          const data = await verificationService.verifyNIN(
-            ninNumber,
-            null,
-            'caregiver',
-            userDetails.id
-          );
+        console.log('[VerificationPage] Starting BVN verification with selfie:', {
+          bvnNumber,
+          hasImage: !!selfieImageBase64,
+          userType: 'caregiver',
+          id: userDetails.id
+        });
 
-          if (!data.verificationResult.error) {
-            // NIN verified successfully, now need selfie
-            setVerificationStep(2);
-            setShowIdSelfieStep(true);
-            setNinResult(data);
-            setProgress(50);
-            setProgressMessage("NIN verified successfully! Please complete the selfie verification.");
-            setSuccess("NIN verification successful! Please proceed with selfie verification.");
-          } else {
-            // NIN verification failed
-            setProgress(100);
-            setProgressMessage("NIN verification failed");
-            setError(data.message || "NIN verification failed. Please check your information and try again.");
-          }
-        } else if (verificationStep === 2) {
-          // Second step: Selfie verification after NIN
-          setProgressMessage("Processing selfie verification for NIN...");
-
-          const selfieImageBase64 = selfieImage ? await convertFileToBase64(selfieImage) : null;
-
-          console.log('[VerificationPage] Calling verifyNINComplete with:', {
-            ninNumber,
-            selfieImageBase64,
-            userType: 'caregiver',
-            userId: userDetails.id
-          });
-
-          // Use the combined verification endpoint
-          const verificationData = await verificationService.verifyNINComplete(
-            ninNumber,
-            selfieImageBase64,
-            'caregiver',
-            userDetails.id
-          );
-
-          if (verificationData) {
-            setProgress(100);
-            setProgressMessage("Verification successful!");
-            console.log('[VerificationPage] Verification successful:', verificationData);
-
-            // if (data.status === "success") {
-            //   setProgress(100);
-            //   setProgressMessage("Verification successful!");
-            //   setSuccess("Your identity has been verified successfully!");
-
-            //   // Check if verification uses test values - handle differently
-            //   const isTestNin = isTestValue('NIN', ninNumber);
-            //   if (isTestNin) {
-            //     console.log('🧪 Test NIN detected - Saving verification status but skipping Azure submission');
-            //   } else {
-            //     // Save verification data to Azure via verificationService
-            //     try {
-            //       const verificationRecord = {
-            //         method: 'nin_selfie',
-            //         userId: userDetails.id,
-            //         userType: 'caregiver',
-            //         timestamp: new Date().toISOString(),
-            //         status: 'verified',
-            //         azureData: {
-            //           userId: userDetails.id,
-            //           userType: 'caregiver',
-            //           verificationType: 'nin_selfie',
-            //           status: 'verified',
-            //           verificationMethod: 'nin',
-            //           methodDetails: {
-            //             ninNumber: ninNumber,
-            //             withSelfie: true
-            //           },
-            //           userData: data.data?.userData || {},
-            //           completedAt: new Date().toISOString()
-            //         }
-            //       };
-
-            //       verificationService.saveVerificationData(verificationRecord)
-            //         .then(response => {
-            //           if (response.status !== 'success') {
-            //             console.warn('Azure submission returned non-success status:', response.status);
-            //           }
-            //         })
-            //         .catch(error => {
-            //           console.error('Failed to save caregiver verification data to Azure:', error);
-            //         });
-            //     } catch (err) {
-            //       console.error('Error preparing verification data for Azure:', err);
-            //     }
-            //   }
-
-            //   verificationService.saveVerificationStatus(
-            //     true,
-            //     'verified',
-            //     'NIN with Selfie verification successful',
-            //     userDetails.id,
-            //     'caregiver'
-            //   );
-
-            //   setVerificationStatus({
-            //     verified: true,
-            //     verificationStatus: 'verified'
-            //   });
-
-            //   setTimeout(() => {
-            //     navigate("/app/caregiver/profile");
-            //   }, 3000);
-            // } else {
-            //   // Pending verification
-            //   setProgress(70);
-            //   setProgressMessage("Verification submitted and pending review...");
-            //   setSuccess("Your verification is being processed. You'll be notified when it's complete.");
-            //   // Start polling for status
-            //   setIsPolling(true);
-            // }
-          } else {
-            // Verification failed
-            setProgress(100);
-            setProgressMessage("Verification failed");
-            setError(verificationData.message || "Verification failed. Please check your information and try again.");
-          }
-        }
-      } else if (verificationMethod === "id") {
-        // ID + Selfie verification
-        setProgressMessage("Processing ID and selfie verification...");
-
-        const idImageBase64 = idImage ? await convertFileToBase64(idImage) : null;
-        const selfieImageBase64 = selfieImage ? await convertFileToBase64(selfieImage) : null;
-
-        console.log('[VerificationPage] Calling verifyID with:', {
-          idImageBase64,
+        const verificationData = await verificationService.verifyBVNWithSelfie(
+          bvnNumber,
           selfieImageBase64,
-          idType,
+          'caregiver',
+          userDetails.id,
+          token
+        );
+
+          if (verificationData.verificationResult?.entity) {
+            const result = verificationData.verificationResult;
+            
+            if (result.entity.verified === true && result.entity.selfie_verification?.match === true) {
+              setProgress(100);
+              setProgressMessage("Verification successful!");
+              setSuccess("Your identity has been verified successfully!");
+              
+              // Save verification status
+              verificationService.saveVerificationStatus(
+                true,
+                'verified',
+                'BVN with selfie verification successful',
+                userDetails.id,
+                'caregiver'
+              );
+
+              setVerificationStatus({
+                verified: true,
+                verificationStatus: 'verified'
+              });
+
+              // Redirect after success
+              setTimeout(() => {
+                navigate("/app/caregiver/profile");
+              }, 3000);
+            } else {
+              // Verification failed
+              setProgress(100);
+              setProgressMessage("Verification failed");
+              setError(result.entity.message || "Verification failed. Please check your selfie and try again.");
+            }
+          } else {
+            // Invalid response
+            setProgress(100);
+            setProgressMessage("Verification failed");
+            setError("Invalid response from verification service");
+          }
+      } else if (verificationMethod === "nin") {
+        // NIN verification
+        setProgressMessage("Processing NIN and selfie verification...");
+
+        // Convert selfie to base64
+        const selfieImageBase64 = await convertFileToBase64(selfieImage);
+
+        console.log('[VerificationPage] Calling verifyNINWithSelfie with:', {
+          ninNumber,
+          selfieImageBase64,
           userType: 'caregiver',
           userId: userDetails.id
         });
 
-        const data = await verificationService.verifyID(
-          idImageBase64,
+        // Use our new simplified NIN + selfie endpoint
+        const verificationData = await verificationService.verifyNINWithSelfie(
+          ninNumber,
           selfieImageBase64,
-          idType,
           'caregiver',
           userDetails.id
         );
 
-        if (data.status === "success" || data.status === "pending") {
-          if (data.status === "success") {
+        console.log('[VerificationPage] Verification data:', verificationData);
+
+        if (verificationData.verificationResult?.entity) {
+          const result = verificationData.verificationResult;
+          
+          if (result.entity.verified === true && result.entity.selfie_verification?.match === true) {
             setProgress(100);
             setProgressMessage("Verification successful!");
             setSuccess("Your identity has been verified successfully!");
-
-            // For ID verification, we'll always save to Azure as there's no test value
-            // but we'll still catch and handle errors properly
-            try {
-              const verificationRecord = {
-                method: 'id_selfie',
-                userId: userDetails.id,
-                userType: 'caregiver',
-                timestamp: new Date().toISOString(),
-                status: 'verified',
-                azureData: {
-                  userId: userDetails.id,
-                  userType: 'caregiver',
-                  verificationType: 'id_selfie',
-                  status: 'verified',
-                  verificationMethod: 'id',
-                  methodDetails: {
-                    idType: idType,
-                    withSelfie: true
-                  },
-                  userData: data.data?.userData || {},
-                  completedAt: new Date().toISOString()
-                }
-              };
-
-              verificationService.saveVerificationData(verificationRecord)
-                .then(response => {
-                  if (response.status !== 'success') {
-                    console.warn('Azure submission returned non-success status:', response.status);
-                  }
-                })
-                .catch(error => {
-                  console.error('Failed to save caregiver verification data to Azure:', error);
-                });
-            } catch (err) {
-              console.error('Error preparing verification data for Azure:', err);
-            }
-
+            console.log('[VerificationPage] Verification successful:', result);
+            
+            // Save verification status
             verificationService.saveVerificationStatus(
               true,
               'verified',
-              'ID and Selfie verification successful',
+              'NIN with selfie verification successful',
               userDetails.id,
               'caregiver'
             );
@@ -658,50 +385,122 @@ const VerificationPage = () => {
               verificationStatus: 'verified'
             });
 
+            // Redirect after success
             setTimeout(() => {
               navigate("/app/caregiver/profile");
             }, 3000);
           } else {
-            // Pending verification
-            setProgress(70);
-            setProgressMessage("Verification submitted and pending review...");
-            setSuccess("Your verification is being processed. You'll be notified when it's complete.");
-            // Start polling for status
-            setIsPolling(true);
+            // Verification failed
+            setProgress(100);
+            setProgressMessage("Verification failed");
+            setError(result.entity.message || "Verification failed. Please check your selfie and try again.");
           }
         } else {
-          // Verification failed
+          // Invalid response
           setProgress(100);
           setProgressMessage("Verification failed");
-          setError(data.message || "Verification failed. Please check your information and try again.");
+          setError("Invalid response from verification service");
+        }
+
+      } else if (verificationMethod === "id") {
+        // ID + Selfie verification
+        setProgressMessage("Processing ID and selfie verification...");
+
+        const idImageBase64 = await convertFileToBase64(idImage);
+        const selfieImageBase64 = await convertFileToBase64(selfieImage);
+
+        console.log('[VerificationPage] Calling verifyIDWithSelfie with:', {
+          idImageBase64,
+          selfieImageBase64,
+          idType,
+          userType: 'caregiver',
+          userId: userDetails.id
+        });
+
+        // Use our new simplified ID + selfie endpoint
+        const verificationData = await verificationService.verifyIDWithSelfie(
+          idImageBase64,
+          selfieImageBase64,
+          idType,
+          'caregiver',
+          userDetails.id
+        );
+
+        console.log('[VerificationPage] Verification data:', verificationData);
+
+        if (verificationData.verificationResult?.entity) {
+          const result = verificationData.verificationResult;
+          
+          if (result.entity.verified === true && result.entity.selfie_verification?.match === true) {
+            setProgress(100);
+            setProgressMessage("Verification successful!");
+            setSuccess("Your identity has been verified successfully!");
+            console.log('[VerificationPage] Verification successful:', result);
+            
+            // Save verification status
+            verificationService.saveVerificationStatus(
+              true,
+              'verified',
+              'ID with selfie verification successful',
+              userDetails.id,
+              'caregiver'
+            );
+
+            setVerificationStatus({
+              verified: true,
+              verificationStatus: 'verified'
+            });
+
+            // Redirect after success
+            setTimeout(() => {
+              navigate("/app/caregiver/profile");
+            }, 3000);
+          } else {
+            // Verification failed
+            setProgress(100);
+            setProgressMessage("Verification failed");
+            setError(result.entity.message || "Verification failed. Please check your selfie and try again.");
+          }
+        } else {
+          // Invalid response
+          setProgress(100);
+          setProgressMessage("Verification failed");
+          setError("Invalid response from verification service");
         }
       }
     } catch (err) {
       setProgress(100);
       setProgressMessage("Verification failed");
 
-      // Provide more specific error messages based on error type
+      // Provide specific error messages based on error type
       if (err.response) {
-        // The request was made and server responded with an error status code
-        if (err.response.status === 401) {
-          setError("Authentication error. Please log in again and retry.");
-        } else if (err.response.status === 400) {
-          setError("Invalid data format: " + (err.message || "Please check your information and try again."));
-        } else if (err.response.status === 500) {
-          setError("Server error: The verification service is currently unavailable. Please try again later.");
-        } else {
-          setError(err.message || "Verification failed. Please check your information and try again.");
+        // Server responded with error
+        switch (err.response.status) {
+          case 401:
+            setError("Authentication error. Please log in again and retry.");
+            break;
+          case 400:
+            setError(`Invalid data format: ${err.response.data?.message || "Please check your information and try again."}`);
+            break;
+          case 500:
+            setError("Server error: The verification service is currently unavailable. Please try again later.");
+            break;
+          default:
+            setError(err.response.data?.message || "Verification failed. Please check your information and try again.");
         }
       } else if (err.request) {
-        // The request was made but no response received (network issue)
+        // No response received (network issue)
         setError("Network issue: Unable to connect to verification service. Please check your internet connection.");
       } else {
-        // Something happened in setting up the request
-        setError(err.message || "Verification failed. Please try again later.");
+        // Error setting up request
+        setError(err.message || "An unexpected error occurred. Please try again later.");
       }
 
-      // Log detailed error for debugging
-      console.error("Verification error details:", err);
+      console.error("[VerificationPage] Error details:", {
+        message: err.message,
+        response: err.response?.data,
+        status: err.response?.status
+      });
     } finally {
       setIsSubmitting(false);
     }
@@ -833,6 +632,28 @@ const VerificationPage = () => {
                     <small>
                       <i className="fas fa-info-circle"></i>
                       Your BVN is a unique 11-digit number from your bank
+                    </small>
+                  </div>
+
+                  <div className="form-group">
+                    <label htmlFor="selfie-image">
+                      <i className="fas fa-camera"></i>
+                      Upload a selfie for verification
+                    </label>
+                    <div className="file-input-wrapper">
+                      <div className="file-input-button">Choose File</div>
+                      <input
+                        type="file"
+                        id="selfie-image"
+                        accept="image/*"
+                        onChange={(e) => handleImageChange(e, setSelfieImage)}
+                        required
+                      />
+                    </div>
+                    {selfieImage && <div className="file-name">{selfieImage.name}</div>}
+                    <small>
+                      <i className="fas fa-info-circle"></i>
+                      Take a clear selfie in good lighting for verification
                     </small>
                   </div>
                 </div>
