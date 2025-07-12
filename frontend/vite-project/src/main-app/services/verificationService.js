@@ -242,25 +242,25 @@ const verificationService = {
         try {
           const response = await verificationApi.post('/kyc/verify-bvn-with-id-selfie', payload);
           console.log('[verificationService] verifyBVN step 2 - dojah response:', response.data);
-          if (response.data?.entity.verified === true && response.data?.entity.verificationStatus === 'verified') {
-            this.saveVerificationStatus(
-              true, 
-              'verified', 
-              response.data.message || 'BVN with ID and Selfie verification successful',
-              userDetails.id,
-              userType
-            );
-            // Save to Azure endpoint
-            await this.saveVerificationData({
-              userId: userDetails.id,
-              verifiedFirstName: response.data?.entity.first_name || '',
-              verifiedLastName: response.data?.entity.last_name || '',
-              verifiedDateOfBirth: response.data?.entity.date_of_birth || '',
-              verificationMethod: 'BVN',
-              verificationNo: bvnNumber,
-              verificationStatus: response.data?.entity.verificationStatus || 'verified'
-            });
-          }
+          // if (response.data?.entity.verified === true && response.data?.entity.verificationStatus === 'verified') {
+          //   this.saveVerificationStatus(
+          //     true, 
+          //     'verified', 
+          //     response.data.message || 'BVN with ID and Selfie verification successful',
+          //     userDetails.id,
+          //     userType
+          //   );
+          //   // Save to Azure endpoint
+          //   await this.saveVerificationData({
+          //     userId: userDetails.id,
+          //     verifiedFirstName: response.data?.entity.first_name || '',
+          //     verifiedLastName: response.data?.entity.last_name || '',
+          //     verifiedDateOfBirth: response.data?.entity.date_of_birth || '',
+          //     verificationMethod: 'BVN',
+          //     verificationNo: bvnNumber,
+          //     verificationStatus: response.data?.entity.verificationStatus || 'verified'
+          //   });
+          // }
           return response.data;
         } catch (error) {
           console.error('Error with BVN + ID + Selfie verification:', error);
@@ -332,25 +332,25 @@ const verificationService = {
         try {
           const response = await verificationApi.post('/kyc/verify-nin-with-selfie', payload);
           console.log('[verificationService] verifyNIN step 2 - dojah response:', response.data);
-          if (response.data?.entity.status === true && response.data?.entity.verificationStatus === 'verified') {
-            this.saveVerificationStatus(
-              true, 
-              'verified', 
-              response.data.message || 'NIN with Selfie verification successful',
-              userDetails.id,
-              userType
-            );
-            // Save to Azure endpoint
-            await this.saveVerificationData({
-              userId: userDetails.id,
-              verifiedFirstName: response.data?.entity.first_name || '',
-              verifiedLastName: response.data?.entity.last_name || '',
-              verificationMethod: 'NIN',
-              verificationNo: ninNumber,
-              date_of_birth: response.data?.entity.date_of_birth || '',
-              verificationStatus: 'verified'
-            });
-          }
+          // if (response.data?.entity.verified === true && response.data?.entity.verificationStatus === 'verified') {
+          //   this.saveVerificationStatus(
+          //     true, 
+          //     'verified', 
+          //     response.data.message || 'NIN with Selfie verification successful',
+          //     userDetails.id,
+          //     userType
+          //   );
+          //   // Save to Azure endpoint
+          //   await this.saveVerificationData({
+          //     userId: userDetails.id,
+          //     verifiedFirstName: response.data?.entity.first_name || '',
+          //     verifiedLastName: response.data?.entity.last_name || '',
+          //     verificationMethod: 'NIN',
+          //     verificationNo: ninNumber,
+          //     date_of_birth: response.data?.entity.date_of_birth || '',
+          //     verificationStatus: 'verified'
+          //   });
+          // }
           return response.data;
         } catch (error) {
           console.error('Error with NIN + Selfie verification:', error);
@@ -393,16 +393,31 @@ const verificationService = {
         
         // Cache the verification status on success
         if (response.data && (response.data.entity.verified === true)) {
-          this.saveVerificationStatus(
-            response.data.entity.verified === true, 
-            response.data.entity.verified === true ? 'verified' : 'pending', 
-            response.data.message || 'BVN with ID and Selfie verification ' + response.data.entity.verified,
-            userId,
-            userType
-          );
-        }
-        
-        return response.data;
+          // this.saveVerificationStatus(
+          //   {
+          //     verified: true,
+          //     status: 'verified',
+          //     message: response.data.message || 'BVN with ID and Selfie verification successful',
+          //     userId: userDetails.id,
+          //     userType: userType
+          //   }
+          // );
+          //   // Save to Azure endpoint
+          //   await this.saveVerificationData({
+          //     userId: userDetails.id,
+          //     verifiedFirstName: response.data?.entity.first_name || '',
+          //     verifiedLastName: response.data?.entity.last_name || '',
+          //     verifiedDateOfBirth: response.data?.entity.date_of_birth || '',
+          //     verificationMethod: 'BVN',
+          //     verificationNo: bvnNumber,
+          //     verificationStatus: response.data?.entity.verificationStatus || 'verified'
+          //   });
+
+          }
+
+        return response.data ? response.data : { status: 'error', message: 'No data returned from verification API' };
+
+
       } catch (error) {
         console.error('Error with complete BVN verification:', error);
         
@@ -464,18 +479,26 @@ const verificationService = {
       try {
         const response = await verificationApi.post('/kyc/verify-nin-with-selfie', payload);
         
-        // Cache the verification status on success
-        // if (response.data && (response.data.entity.nin )) {
+        // if (response.data && (response.data.entity.verified === true)) {
         //   this.saveVerificationStatus(
-        //     response.data.status === 'success', 
-        //     response.data.status === 'success' ? 'verified' : 'pending', 
-        //     response.data.message || 'NIN with Selfie verification ' + response.data.status,
+        //     true, 
+        //     'verified', 
+        //     response.data.message || 'NIN with Selfie verification successful',
         //     userId,
         //     userType
         //   );
+        //   // Save to Azure endpoint
+        //   await this.saveVerificationData({
+        //     userId: userId,
+        //     verifiedFirstName: response.data?.entity.first_name || '',
+        //     verifiedLastName: response.data?.entity.last_name || '',
+        //     verificationMethod: 'NIN',
+        //     verificationNo: ninNumber,
+        //     verificationStatus: response.data?.entity.verificationStatus || 'verified'
+        //   });
         // }
         
-        return response.data;
+        return response.data ? response.data : { status: 'error', message: 'No data returned from verification API' };
       } catch (error) {
         console.error('Error with complete NIN verification:', error);
         
@@ -498,7 +521,7 @@ const verificationService = {
           });
           // Combine responses
           return {
-            status: selfieResponse.verified,
+            status: selfieResponse.data?.entity.verified,
             message: 'Combined verification process completed',
             data: {
               ...ninResponse.data,

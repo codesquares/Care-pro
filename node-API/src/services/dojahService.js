@@ -35,7 +35,7 @@ class DojahService {
     return testValue && testValue === value;
   }
 
-  async verifyNIN(ninNumber, selfie_image = null) {
+  async verifyNIN(ninNumber, selfie_image, photoid_image, userId, referenceId) {
     // Log the value received and test check
      const selfieBuffer = selfie_image ? selfie_image.split(',')[1] : null;
     console.log('[DojahService] verifyNIN called with:', ninNumber);
@@ -131,7 +131,7 @@ class DojahService {
     }
   }
 
-  async verifyBVN(bvnNumber, selfie_image = null) {
+  async verifyBVN(bvnNumber, selfie_image, photoid_image, userId, referenceId) {
     // Log the value received and test check
     const selfieBuffer = selfie_image ? selfie_image.split(',')[1] : null;
     console.log('[DojahService] verifyBVN called with:', bvnNumber);
