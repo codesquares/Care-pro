@@ -247,7 +247,7 @@ const verifyBVNWithIdSelfie = async (req, res) => {
     // Check if this is a test BVN value
     const isTestBvn = bvnNumber === TEST_VALUES.BVN;
 
-    if (idSelfieResult) {
+    // if (idSelfieResult) {
       // const verificationData = {
       //   userId,
       //   verifiedFirstName: idSelfieResult.data?.entity.first_name,
@@ -285,7 +285,7 @@ const verifyBVNWithIdSelfie = async (req, res) => {
         },
         
       });
-    } 
+    // } 
   } catch (error) {
     console.error('BVN with ID and Selfie verification error:', error);
     return res.status(500).json({
