@@ -227,7 +227,7 @@ const verifyBVNWithIdSelfie = async (req, res) => {
     const idSelfieReferenceId = `id_selfie_${userId}_${Date.now()}`;
 
     // First verify BVN
-    const bvnResult = await DojahService.verifyBVN(bvnNumber, null, userId, bvnReferenceId,);
+    const bvnResult = await DojahService.verifyBVN(bvnNumber, null, userId,selfie_image, photoid_image, bvnReferenceId);
 
     if (!bvnResult) {
       return res.status(400).json({
