@@ -278,7 +278,7 @@ const verifyBVNWithIdSelfie = async (req, res) => {
       // }
        
       return res.status(200).json({
-        idSelfieResult,
+        bvnResult,
         referenceIds: {
           bvn: bvnReferenceId,
           idSelfie: idSelfieReferenceId
