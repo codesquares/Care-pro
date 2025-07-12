@@ -223,8 +223,8 @@ const verificationService = {
         }
       }
 
-      // Step 2: Both selfie and ID images provided (full verification)
-      if (selfieImage && idImage) {
+      // Step 2: Both selfie 
+      if (selfieImage ) {
         const bvnToSend = this._getTestValue('bvn', bvnNumber);
         console.log('[verificationService] verifyBVN step 2 - BVN to send:', bvnToSend);
         const payload = {

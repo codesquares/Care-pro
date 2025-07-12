@@ -214,10 +214,10 @@ const verifyBVNWithIdSelfie = async (req, res) => {
       });
     }
 
-    if (!idImage || !selfieImage) {
+    if (!selfieImage) {
       return res.status(400).json({
         status: 'error',
-        message: 'Both ID image and selfie image are required for BVN with ID+Selfie verification'
+        message: 'Selfie image is required for BVN with ID+Selfie verification'
       });
     }
     const selfie_image = selfieImage ? selfieImage : null;

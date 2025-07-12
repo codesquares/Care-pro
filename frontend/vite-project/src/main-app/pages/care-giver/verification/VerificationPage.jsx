@@ -310,7 +310,7 @@ const VerificationPage = () => {
             token              // token
           );
 
-          if (data) {
+          if (data.verificationResult && !data.verificationResult.error) {
             // BVN verified successfully, now need ID + selfie
             setVerificationStep(2);
             setShowIdSelfieStep(true);
@@ -349,6 +349,7 @@ const VerificationPage = () => {
             'caregiver',
             userDetails.id
           );
+          console.log('[VerificationPage] Verification data:', verificationData);
 
           if (verificationData.data.entity) {
 
@@ -460,7 +461,7 @@ const VerificationPage = () => {
             userDetails.id
           );
 
-          if (data) {
+          if (!data.verificationResult.error) {
             // NIN verified successfully, now need selfie
             setVerificationStep(2);
             setShowIdSelfieStep(true);

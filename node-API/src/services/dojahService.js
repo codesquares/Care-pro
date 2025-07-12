@@ -82,13 +82,17 @@ class DojahService {
         });
       }
 
-      if (response.data && response.data.entity) {// Check if the response contains the expected entity
+      if (response.data && response.data.entity) {
         const result = response.data;
         if (selfie_image && result.entity.selfie_verification) {
-          const isVerified = result.entity.selfie_verification.match;
-          const verificationStatus = isVerified ? "success" : "failed";
-          result.entity.verified = isVerified;
-          result.entity.verification_status = verificationStatus;
+          const imageVerified = result.entity.selfie_verification.match;
+          const imageVerificationStatus = imageVerified ? "success" : "failed";
+          result.entity.verified = imageVerified;
+          result.entity.verification_status = imageVerificationStatus;
+        }
+        else{
+          result.entity.ninVerified = true;
+          result.entity.ninVerificationStatus = "success";
         }
         return result;
       } else {// If the response does not contain the expected entity
@@ -180,10 +184,14 @@ class DojahService {
       if (response.data && response.data.entity) {
         const result = response.data;
         if (selfie_image && result.entity.selfie_verification) {
-          const isVerified = result.entity.selfie_verification.match;
-          const verificationStatus = isVerified ? "success" : "failed";
-          result.entity.verified = isVerified;
-          result.entity.verification_status = verificationStatus;
+          const imageVerified = result.entity.selfie_verification.match;
+          const imageVerificationStatus = imageVerified ? "success" : "failed";
+          result.entity.verified = imageVerified;
+          result.entity.verification_status = imageVerificationStatus;
+        }
+        else{
+          result.entity.bvnVerified = true;
+          result.entity.bvnVerificationStatus = "success";
         }
         return result;
       } else {
