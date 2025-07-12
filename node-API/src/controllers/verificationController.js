@@ -300,7 +300,7 @@ const verifyBVNWithIdSelfie = async (req, res) => {
 // Combined NIN with Selfie verification
 const verifyNINWithSelfie = async (req, res) => {
   try {
-    const { ninNumber, selfieImage, id } = req.body;
+    const { ninNumber, idImage, selfieImage, idType, userType, id, token } = req.body;
      const userId = req.user.id;
     // Check if userId from request matches the authenticated user
     if (id && id !== userId) {

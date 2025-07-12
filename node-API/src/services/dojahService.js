@@ -24,20 +24,20 @@ class DojahService {
     };
   }
   // // For all other NINs, always call the real Dojah API
-    // Base64 value of the selfie image NB: Kindly truncate data:image/jpeg;base64, from the selfie_image object and pass only the buffer starting with /9.
-   
+  // Base64 value of the selfie image NB: Kindly truncate data:image/jpeg;base64, from the selfie_image object and pass only the buffer starting with /9.
+
 
   // Helper method to check if a value matches test credentials
   isTestValue(type, value) {
     if (!value) return false;
-    
+
     const testValue = this.testValues[type.toLowerCase()];
     return testValue && testValue === value;
   }
 
   async verifyNIN(ninNumber, selfie_image, photoid_image, userId, referenceId) {
     // Log the value received and test check
-     const selfieBuffer = selfie_image ? selfie_image.split(',')[1] : null;
+    const selfieBuffer = selfie_image ? selfie_image.split(',')[1] : null;
     console.log('[DojahService] verifyNIN called with:', ninNumber);
     const isTestNIN = this.isTestValue('nin', ninNumber);
     console.log('[DojahService] isTestValue("nin", value):', isTestNIN);
@@ -64,7 +64,7 @@ class DojahService {
       };
     }
 
-   
+
     try {
       let response;
 
@@ -84,16 +84,12 @@ class DojahService {
 
       if (response.data && response.data.entity) {
         const result = response.data;
-        if (selfie_image && result.entity.selfie_verification) {
-          const imageVerified = result.entity.selfie_verification.match;
-          const imageVerificationStatus = imageVerified ? "success" : "failed";
-          result.entity.verified = imageVerified;
-          result.entity.verification_status = imageVerificationStatus;
-        }
-        else{
+        // Just leave the selfie_verification untouched if it exists
+        if (!selfie_image) {
           result.entity.ninVerified = true;
           result.entity.ninVerificationStatus = "success";
         }
+
         return result;
       } else {// If the response does not contain the expected entity
         console.error('Invalid response format:', response.data);
@@ -152,7 +148,7 @@ class DojahService {
           date_of_birth: "01-January-1907",
           phone_number1: "08103817187",
           gender: "Male",
-          selfie_verification: selfieImage ? {
+          selfie_verification: selfie_image ? {
             confidence_value: 99.99620056152344,
             match: true
           } : undefined,
@@ -183,16 +179,12 @@ class DojahService {
 
       if (response.data && response.data.entity) {
         const result = response.data;
-        if (selfie_image && result.entity.selfie_verification) {
-          const imageVerified = result.entity.selfie_verification.match;
-          const imageVerificationStatus = imageVerified ? "success" : "failed";
-          result.entity.verified = imageVerified;
-          result.entity.verification_status = imageVerificationStatus;
-        }
-        else{
+        // Just leave the selfie_verification untouched if it exists
+        if (!selfie_image) {
           result.entity.bvnVerified = true;
           result.entity.bvnVerificationStatus = "success";
         }
+
         return result;
       } else {
         return {
@@ -245,7 +237,7 @@ class DojahService {
         },
         { headers: this.headers }
       );
-      
+
       // Check if we got a proper response
       if (response.data && response.data.entity) {
         return response.data;
@@ -262,7 +254,7 @@ class DojahService {
       }
     } catch (error) {
       console.error('Selfie verification error:', error.response?.data || error.message);
-      
+
       // Check if it's a validation error (invalid images)
       if (error.response && error.response.status === 400) {
         return {
@@ -274,7 +266,7 @@ class DojahService {
           status: false
         };
       }
-      
+
       // Server or API error
       return {
         entity: {
@@ -289,7 +281,7 @@ class DojahService {
   }
 
   async verifyIdWithSelfie(selfie_image, photoid_image, referenceId, first_name, last_name, bvn, nin) {
-     const selfieBuffer = selfie_image ? selfie_image.split(',')[1] : null;
+    const selfieBuffer = selfie_image ? selfie_image.split(',')[1] : null;
     // No more mock: always proceed to real verification
     try {
       // Determine which Dojah endpoint to use based on ID type
@@ -302,31 +294,31 @@ class DojahService {
         bvn: bvn || "",
         nin: nin || ""
       };
-      
+
       // Add reference ID if provided for tracking webhook callbacks
       if (referenceId) {
         payload.reference_id = referenceId;
       }
-      
+
       // Make the actual API call to Dojah
       const response = await axios.post(
         endpoint,
         payload,
         { headers: this.headers }
       );
-      
+
       // Check if we got a proper response
       if (response.data && response.data.entity) {
         const result = response.data;
-        
+
         // Add verification status if not already present
         if (result.entity && result.entity.selfie_verification && result.entity.selfie_verification.confidence_value >= 90) {
-          const isVerified =  result.entity.selfie_verification.match;
+          const isVerified = result.entity.selfie_verification.match;
           result.entity.verified = isVerified;
           const verificationStatus = isVerified ? "success" : "failed";
           result.entity.verification_status = verificationStatus;
         }
-        
+
         return result;
       } else {
         // Invalid response format
@@ -341,7 +333,7 @@ class DojahService {
       }
     } catch (error) {
       console.error('ID with Selfie verification error:', error.response?.data || error.message);
-      
+
       // Check if it's a validation error (invalid images)
       if (error.response && error.response.status === 400) {
         return {
@@ -353,7 +345,7 @@ class DojahService {
           // status: false
         };
       }
-      
+
       // Server or API error
       return {
         entity: {
@@ -374,7 +366,7 @@ class DojahService {
         address,
         { headers: this.headers }
       );
-      
+
       return response.data;
     } catch (error) {
       console.error('Address verification error:', error.response?.data || error.message);
@@ -392,7 +384,7 @@ class DojahService {
         },
         { headers: this.headers }
       );
-      
+
       return response.data;
     } catch (error) {
       console.error('Widget creation error:', error.response?.data || error.message);
@@ -409,7 +401,7 @@ class DojahService {
           headers: this.headers
         }
       );
-      
+
       return response.data;
     } catch (error) {
       console.error('Verification status error:', error.response?.data || error.message);

@@ -392,7 +392,7 @@ const verificationService = {
         const response = await verificationApi.post('/kyc/verify-bvn-with-id-selfie', payload);
         
         // Cache the verification status on success
-        if (response.data && (response.data.entity.verified === true)) {
+        // if (response.data && (response.data.entity.verified === true)) {
           // this.saveVerificationStatus(
           //   {
           //     verified: true,
@@ -413,7 +413,7 @@ const verificationService = {
           //     verificationStatus: response.data?.entity.verificationStatus || 'verified'
           //   });
 
-          }
+          // }
 
         return response.data ? response.data : { status: 'error', message: 'No data returned from verification API' };
 
