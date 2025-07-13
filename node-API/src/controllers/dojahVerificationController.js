@@ -1,12 +1,12 @@
 const axios = require('axios');
 const crypto = require('crypto');
-const config = require('../config');
+// const config = require('../config');
 const dotenv = require('dotenv');
 
 // Verify Dojah webhook signature
 const verifySignature = (signature, body) => {
   const hash = crypto
-    .createHmac('sha256', config.DOJAH_SECRET_KEY)
+    .createHmac('sha256', process.env.DOJAH_API_KEY)
     .update(JSON.stringify(body))
     .digest('hex');
   return hash === signature;
