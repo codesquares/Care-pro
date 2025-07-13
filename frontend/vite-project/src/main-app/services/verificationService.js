@@ -714,7 +714,9 @@ const verificationService = {
    * @param {string} userType - Type of user ('caregiver' or 'client')
    * @returns {Promise} - API response with verification status
    */
-  async getVerificationStatus(userId, userType) {
+  async getVerificationStatus(userId, userType,token) {
+
+    token = token || localStorage.getItem('authToken');
     try {
       // If we have a cached status and it's less than 30 seconds old, return it
       const now = Date.now();

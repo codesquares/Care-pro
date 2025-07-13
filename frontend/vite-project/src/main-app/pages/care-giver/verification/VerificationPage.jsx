@@ -59,7 +59,8 @@ const VerificationPage = () => {
 
         const status = await verificationService.getVerificationStatus(
           userDetails.id,
-          "caregiver"
+          "caregiver",
+          token
         );
 
         if (!isMounted) return;

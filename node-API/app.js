@@ -31,7 +31,25 @@ const app = express();
 const PORT = portArg || process.env.PORT || 3000;
 
 // Middleware
-app.use(cors());
+// Enhanced CORS configuration
+app.use(cors({
+  origin: '*', // Allow all origins for now
+  credentials: true,
+  methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
+  allowedHeaders: ['Content-Type', 'Authorization', 'X-Requested-With']
+}));
+
+// Add OPTIONS handling for preflight requests
+app.options('*', cors());
+
+// Add custom headers middleware
+app.use((req, res, next) => {
+  res.header('Access-Control-Allow-Origin', '*');
+  res.header('Access-Control-Allow-Methods', 'GET, POST, PUT, DELETE, OPTIONS');
+  res.header('Access-Control-Allow-Headers', 'Content-Type, Authorization, X-Requested-With');
+  next();
+});
+
 // Increase JSON payload limit to accommodate larger image uploads
 app.use(express.json({ limit: '50mb' }));
 app.use(express.urlencoded({ extended: true, limit: '50mb' }));
@@ -109,9 +127,36 @@ app.get('/', (req, res) => {
   });
 });
 
-// Error handler middleware
+// 404 handler for API routes
+app.use('/api/*', (req, res) => {
+  res.status(404).json({
+    success: false,
+    message: `Endpoint not found: ${req.originalUrl}`
+  });
+});
+
+// Global error handler middleware
 app.use((err, req, res, next) => {
+  console.error(`Error occurred: ${err.message}`);
   console.error(err.stack);
+  
+  // Handle CORS errors specifically
+  if (err.name === 'CORSError') {
+    return res.status(403).json({
+      status: 'error',
+      message: 'CORS error: Access not allowed from this origin'
+    });
+  }
+  
+  // Handle axios errors
+  if (err.isAxiosError) {
+    return res.status(500).json({
+      status: 'error',
+      message: 'External API error',
+      details: err.response?.data || err.message
+    });
+  }
+
   res.status(err.statusCode || 500).json({
     status: 'error',
     message: err.message || 'Something went wrong on the server'

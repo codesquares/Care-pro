@@ -66,7 +66,7 @@ const handleDojahWebhook = async (req, res) => {
 
       // Send to Azure backend
       const response = await axios.post(
-        `${process.env.AZURE_API_URL}/api/Verifications`,
+        `${process.env.API_URL}/Verifications`,
         verificationData,
         {
           headers: {
@@ -130,35 +130,99 @@ const saveVerificationData = async (req, res) => {
 // Get verification status
 const getVerificationStatus = async (req, res) => {
   try {
-    const { userId, userType } = req.query;
-    const {token} = req.body;
+    const { userId, userType, token } = req.query;
 
-    if (!userId || !userType) {
+    if (!userId || !userType || !token) {
       return res.status(400).json({ 
         success: false, 
-        message: 'userId and userType are required parameters' 
+        message: 'userId, userType, and token are required parameters' 
       });
     }
 
-    // Forward the request to Azure API to get verification status
-    const apiEndpoint = process.env.LOCAL_API_URL || 'http://localhost:3000/api';
-    console.log(`Using API endpoint: ${apiEndpoint}`);
+    // Here we're checking the verification status directly from our Node API
+    // We can either query the Azure API or check our local database
     
-    const response = await axios.get(`${apiEndpoint}/verification/status`, {
-      params: { userId, userType },
-      headers: {
-        'Authorization': `Bearer ${req.headers.authorization}`,
-        'Content-Type': 'application/json'
-      }
-    });
+    // For now, since we don't have a local database setup for verification,
+    // we'll check if the user has been verified by querying the Azure API
+    try {
+      // Get verification status from Azure API
+      const apiEndpoint = process.env.API_URL || 'https://carepro-api20241118153443.azurewebsites.net/api';
+      console.log(`Checking verification status from Azure API: ${apiEndpoint}`);
 
-    return res.json(response.data);
+      const response = await axios.get(`${apiEndpoint}/Verifications/userId?userId=${userId}`, {
+        headers: {
+          'Authorization': req.headers.authorization,
+          'Content-Type': 'application/json'
+        }
+      });
+      //if response.code === 400 and response.message is "User with ID 'userId' has not been verified."
+      if (response.data.code === 400 && response.data.message.includes(`User with ID '${userId}' has not been verified.`)) {
+        return res.json({
+          success: true,
+          data: {
+            userId,
+            userType,
+            isVerified: false,
+            verificationStatus: 'not_verified',
+            message: 'User has not completed verification'
+          }
+        });
+      }
+      // If we get a successful response with verification data
+      if (response.data && response.data.id) {
+        return res.json({
+          success: true,
+          data: {
+            userId,
+            userType,
+            isVerified: true,
+            verificationStatus: 'verified',
+            verificationDetails: response.data
+          }
+        });
+      } else {
+        // User exists but is not verified
+        return res.json({
+          success: true,
+          data: {
+            userId,
+            userType,
+            isVerified: false,
+            verificationStatus: 'not_verified',
+            message: 'User has not completed verification'
+          }
+        });
+      }
+    } catch (error) {
+      console.log('Error checking verification status:', error.message);
+      
+      // Default response when user is not verified
+      return res.json({
+        success: true,
+        data: {
+          userId,
+          userType,
+          isVerified: false,
+          verificationStatus: null, // Set to null as default until verified
+          message: 'User verification status not found'
+        }
+      });
+    }
+
   } catch (error) {
     console.error('Error getting verification status:', error);
-    return res.status(error.response?.status || 500).json({
+    
+    // Return a standard response with null verification status
+    return res.status(200).json({
       success: false,
-      message: error.message,
-      error: error.response?.data || error.message
+      message: 'Error retrieving verification status',
+      data: {
+        userId,
+        userType,
+        isVerified: false,
+        verificationStatus: null, // Set to null as default until verified
+        error: 'Verification service unavailable'
+      }
     });
   }
 };
