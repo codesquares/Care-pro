@@ -510,20 +510,22 @@ const getVerificationStatus = async (req, res) => {
     // Get verification status from Azure API
     let verificationStatus;
     try {
-      // Use different endpoints based on user type
-      const endpoint = userType === 'client' 
-        ? `${External_API}/Verifications/${userId}`
-        : `${External_API}/Verifications/${userId}`;
+      // For now, retrieve verification status from our local database
+      // Later we can integrate with Azure API when it's ready
+      const storedVerification = await VerificationModel.findOne({ 
+        userId, 
+        userType 
+      });
 
-      const response = await axios.get(
-        endpoint,
-        {
-          headers: {
-            'Authorization': `Bearer ${token}`
-          }
+      verificationStatus = storedVerification || {
+        verified: false,
+        verificationStatus: 'unverified',
+        methods: {
+          bvn: { status: 'not_verified' },
+          nin: { status: 'not_verified' },
+          idSelfie: { status: 'not_verified' }
         }
-      );
-      verificationStatus = response.data;
+      };
     } catch (apiError) {
       console.error('Failed to get verification status from Azure API:', apiError);
       // Fallback to default status if API call fails

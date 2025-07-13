@@ -9,6 +9,7 @@ const clientServiceRoutes = require('./src/routes/clientServiceRoutes');
 const providerServiceRoutes = require('./src/routes/providerServiceRoutes');
 const assessmentRoutes = require('./src/routes/assessmentRoutes');
 const withdrawalRoutes = require('./src/routes/withdrawalRoutes');
+const dojahRoutes = require('./src/routes/dojahRoutes');
 
 // Load environment variables
 dotenv.config();
@@ -55,7 +56,10 @@ app.post('/test-payload', (req, res) => {
 });
 
 // Setup webhook raw body parser before other middlewares
-app.use('/webhook/webhook', express.raw({ type: 'application/json' }));
+app.use('/api/webhook/webhook', express.raw({ type: 'application/json' }));
+app.use('/api/dojah/webhook', express.raw({ type: 'application/json' }));
+
+
 
 // Import integration routes
 const integrationRoutes = require('./src/routes/integrationRoutes');
@@ -65,6 +69,7 @@ const earningsRoutes = require('./src/routes/earningsRoutes');
 
 // Routes
 app.use('/api/auth', authRoutes);
+app.use('/api/dojah', dojahRoutes);
 app.use('/api/kyc', kycRoutes);
 app.use('/api/webhook', webhookRoutes);
 app.use('/api/client-services', clientServiceRoutes);

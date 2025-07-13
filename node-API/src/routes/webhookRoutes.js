@@ -5,7 +5,7 @@ const { configDotenv } = require('dotenv');
 configDotenv();
 
 // Process incoming webhooks
-router.post('/webhook', express.raw({ type: 'application/json' }), processWebhook);
+router.post('/webhook', processWebhook);
 
 // Get webhook events for debugging
 router.get('/events', getWebhookEvents);

@@ -30,6 +30,10 @@
   display: flex;
   flex-direction: column;
   gap: 1.5rem;
+  margin: 2rem 0;
+  padding: 2rem;
+  background: #f8f9fa;
+  border-radius: 8px;
 }
 
 /* Icon-based method selection */
@@ -380,6 +384,91 @@
   font-size: 0.95rem;
 }
 
+/* New Styles for Dojah Verification UI */
+.method-info {
+  margin-bottom: 2rem;
+  text-align: center;
+}
+
+.method-info h3 {
+  color: #2c3e50;
+  margin-bottom: 1rem;
+}
+
+.method-info p {
+  color: #666;
+  margin-bottom: 1.5rem;
+}
+
+.method-info ul {
+  list-style: none;
+  padding: 0;
+  margin: 0 auto;
+  max-width: 400px;
+  text-align: left;
+}
+
+.method-info ul li {
+  margin: 0.8rem 0;
+  color: #495057;
+  display: flex;
+  align-items: center;
+  gap: 0.8rem;
+}
+
+.method-info ul li i {
+  color: #00A651;
+}
+
+.verification-button-container {
+  display: flex;
+  justify-content: center;
+  margin-top: 2rem;
+}
+
+/* Progress Bar Styles */
+.progress-container {
+  margin: 1.5rem 0;
+  background: #e9ecef;
+  border-radius: 4px;
+  overflow: hidden;
+}
+
+.progress-bar {
+  height: 4px;
+  background: #00A651;
+  transition: width 0.3s ease-in-out;
+}
+
+.progress-message {
+  text-align: center;
+  color: #666;
+  margin-top: 0.5rem;
+  font-size: 0.9rem;
+}
+
+/* Message Styles */
+.error-message, .success-message {
+  padding: 1rem;
+  border-radius: 4px;
+  margin: 1rem 0;
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.error-message {
+  background: #fff3f3;
+  color: #dc3545;
+  border: 1px solid #ffcdd2;
+}
+
+.success-message {
+  background: #f0fff4;
+  color: #00A651;
+  border: 1px solid #c3e6cb;
+}
+
 /* Responsive adjustments */
 @media (min-width: 769px) {
   /* For laptops, tablets, and desktops */
@@ -469,28 +558,4 @@
   .method-description {
     font-size: 0.8rem;
   }
-}
-
-/* Progress Indicator */
-.progress-container {
-  margin: 20px 0;
-  background-color: #f1f1f1;
-  border-radius: 5px;
-  height: 10px;
-  overflow: hidden;
-}
-
-.progress-bar {
-  height: 100%;
-  background-color: #4CAF50;
-  border-radius: 5px;
-  transition: width 0.5s ease;
-}
-
-.progress-message {
-  text-align: center;
-  margin-top: 8px;
-  font-size: 0.9rem;
-  color: #666;
-  min-height: 20px;
 }

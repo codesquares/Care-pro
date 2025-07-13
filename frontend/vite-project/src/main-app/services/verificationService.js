@@ -714,145 +714,39 @@ const verificationService = {
    * @param {string} userType - Type of user ('caregiver' or 'client')
    * @returns {Promise} - API response with verification status
    */
-  async getVerificationStatus(userId = null, userType = 'caregiver') {
-    const minRequestInterval = 2000; // Minimum 2 seconds between requests
-    
-    // Check localStorage first
+  async getVerificationStatus(userId, userType) {
     try {
-      // Try to get user-specific verification status first if userId is provided
-      const storageKey = userId 
-        ? `verificationStatus_${userType}_${userId}` 
-        : 'verificationStatus';
-        
-      const localStatus = localStorage.getItem(storageKey);
-      
-      if (localStatus) {
-        const parsed = JSON.parse(localStatus);
-        // Use the cached status if it exists and is recent (within last 24 hours)
-        const timestamp = new Date(parsed.timestamp || 0);
-        const now = new Date();
-        const hoursSinceVerification = (now - timestamp) / (1000 * 60 * 60);
-        
-        if (hoursSinceVerification < 24) {
-          console.log(`Using cached verification status for ${userType} ${userId} from localStorage`);
-          this._cachedStatus = parsed;
-          return parsed;
-        }
-      }
-      
-      // Fall back to general verification status if no user-specific status found
-      if (!localStatus && !userId) {
-        const generalStatus = localStorage.getItem('verificationStatus');
-        if (generalStatus) {
-          const parsed = JSON.parse(generalStatus);
-          const timestamp = new Date(parsed.timestamp || 0);
-          const now = new Date();
-          const hoursSinceVerification = (now - timestamp) / (1000 * 60 * 60);
-          
-          if (hoursSinceVerification < 24) {
-            console.log("Using cached general verification status from localStorage");
-            this._cachedStatus = parsed;
-            return parsed;
-          }
-        }
-      }
-    } catch (err) {
-      console.error("Error reading verification status from localStorage", err);
-    }
-    
-    try {
-      // Implement debouncing to prevent excessive requests
+      // If we have a cached status and it's less than 30 seconds old, return it
       const now = Date.now();
-      if (now - this._lastVerificationRequest < minRequestInterval) {
-        // If called too soon, return cached response if available
-        if (this._cachedStatus) {
-          return this._cachedStatus;
-        }
-        // Otherwise, wait until the minimum interval has passed
-        await new Promise(resolve => setTimeout(resolve, minRequestInterval - (now - this._lastVerificationRequest)));
+      if (this._cachedStatus && (now - this._lastVerificationRequest) < 30000) {
+        return this._cachedStatus;
       }
+
+      const response = await verificationApi.get('/dojah/status', {
+        params: { userId, userType }
+      });
+
+      this._cachedStatus = response.data;
+      this._lastVerificationRequest = now;
       
-      this._lastVerificationRequest = Date.now();
+      return response.data;
+    } catch (error) {
+      console.error('Error getting verification status:', error);
       
-      // Use verification API to get status with userType query parameter
-      try {
-        // Ensure we have a valid token before making the request
-        const token = localStorage.getItem('authToken');
-        if (!token) {
-          console.warn('No auth token found in localStorage for verification status request');
-          throw new Error('Authentication token missing');
-        }
-        
-        // Add auth token explicitly for this request
-        const verificationResponse = await verificationApi.get('/kyc/status', {
-          params: {
-            userType,
-            userId
-          },
-          headers: {
-            'Authorization': `Bearer ${token}`
-          }
-        });
-        
-        // Extract and normalize response data
-        const status = {
-          ...verificationResponse.data,
-          verified: verificationResponse.data?.data?.verified || false,
-          verificationStatus: verificationResponse.data?.data?.verificationStatus || 'unverified',
-          message: verificationResponse.data?.message || ''
-        };
-        
-        // Cache the response for future quick access
-        this._cachedStatus = status;
-        
-        // Also update the localStorage cache for this user
-        if (userId) {
-          const storageKey = `verificationStatus_${userType}_${userId}`;
-          const cacheData = {
-            ...status,
-            timestamp: new Date().toISOString()
-          };
-          localStorage.setItem(storageKey, JSON.stringify(cacheData));
-        }
-        
-        return status;
-      } catch (requestError) {
-        console.error('Error getting verification status from API:', requestError);
-        
-        // Check if it's an authentication error
-        if (requestError.response?.status === 401) {
-          console.warn('Authentication error (401) while getting verification status');
-          
-          // Check if we have a cached status in localStorage for this specific user
-          const userSpecificKey = userId ? `verificationStatus_${userType}_${userId}` : 'verificationStatus';
-          const cachedData = localStorage.getItem(userSpecificKey) || localStorage.getItem('verificationStatus');
-          
-          if (cachedData) {
-            try {
-              const parsedCache = JSON.parse(cachedData);
-              return parsedCache;
-            } catch (e) {
-              // Ignore parsing errors and continue to default response
-              console.error('Error parsing cached verification data:', e);
-            }
-          }
-        }
-        
-        // Return a default status if API request fails
+      // If we got a 404, return default unverified status
+      if (error.response?.status === 404) {
         return {
           verified: false,
           verificationStatus: 'unverified',
-          message: 'Unable to retrieve verification status. Please try again.'
+          methods: {
+            bvn: { status: 'not_verified' },
+            nin: { status: 'not_verified' },
+            idSelfie: { status: 'not_verified' }
+          }
         };
       }
-    } catch (error) {
-      // If verification API fails, return unverified status
-      console.error('Error getting verification status:', error);
-      return {
-        verified: false,
-        verificationStatus: 'unverified',
-        message: 'Unable to retrieve verification status. Please try again.'
-      };
+      
+      throw error;
     }
   },
   

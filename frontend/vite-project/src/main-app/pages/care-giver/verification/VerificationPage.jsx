@@ -3,23 +3,12 @@ import { useNavigate } from "react-router-dom";
 import "./verification-page.css";
 import "./verification-page-footer.css";
 import verificationService from "../../../services/verificationService";
+import { saveDojahVerification, processDojahResponse } from "../../../services/dojahService";
 import { Helmet } from "react-helmet-async";
+import DojahVerificationButton from "../../../components/verification/DojahVerificationButton";
 import convertFileToBase64 from "./convertFileToBase64";
 
 const VerificationPage = () => {
-  // Constants for test values - matching client implementation
-  const TEST_VALUES = {
-    BVN: '22222222222',
-    NIN: '70123456789'
-  };
-
-  // Helper to check if a value is a test value
-  const isTestValue = (type, value) => {
-    if (!value) return false;
-    const testValue = TEST_VALUES[type.toUpperCase()];
-    return testValue && testValue === value;
-  };
-
   const navigate = useNavigate();
   const [verificationMethod, setVerificationMethod] = useState("bvn");
   const [bvnNumber, setBvnNumber] = useState("");
@@ -43,8 +32,6 @@ const VerificationPage = () => {
   // Reference for polling cancellation
   const pollRef = useRef(null);
   const progressIntervalRef = useRef(null);
-
-
 
   const effectRan = useRef(false);
 
@@ -506,6 +493,50 @@ const VerificationPage = () => {
     }
   };
 
+  // Handle Dojah verification success
+  const handleVerificationSuccess = async (response) => {
+    try {
+      console.log('Verification successful:', response);
+      setSuccess("Identity verification successful!");
+      setProgress(100);
+      setProgressMessage("Verification completed!");
+
+      // Process and save Dojah verification data
+      const verificationData = processDojahResponse(response);
+      await saveDojahVerification(verificationData, userDetails.id);
+
+      // Update local verification status
+      setVerificationStatus({
+        verified: true,
+        verificationStatus: 'verified',
+        method: verificationData.verification_method,
+        timestamp: new Date().toISOString()
+      });
+
+      // Redirect after success
+      setTimeout(() => {
+        navigate("/app/caregiver/profile");
+      }, 3000);
+    } catch (err) {
+      console.error('Error saving verification status:', err);
+      setError("Verification completed but failed to save status. Please contact support.");
+      
+      // Log detailed error for debugging
+      console.error('Verification save error details:', {
+        error: err.message,
+        response: err.response?.data,
+        status: err.response?.status
+      });
+    }
+  };
+
+  // Handle Dojah verification error
+  const handleVerificationError = (error) => {
+    console.error('Verification error:', error);
+    setError("Verification failed. Please try again or contact support if the issue persists.");
+    setProgress(0);
+  };
+
   return (
     <div className="verification-container">
       <Helmet>
@@ -517,12 +548,12 @@ const VerificationPage = () => {
           referrerPolicy="no-referrer"
         />
       </Helmet>
+      
       <div className="verification-card">
         <h2>Account Verification</h2>
         <p className="verification-intro">
           To ensure the safety of our clients and maintain high-quality service,
-          we require all caregivers to verify their identity. Please choose a
-          verification method below.
+          we require all caregivers to verify their identity.
         </p>
 
         {error && <div className="error-message"><i className="fas fa-exclamation-circle"></i> {error}</div>}
@@ -536,362 +567,27 @@ const VerificationPage = () => {
           </div>
         )}
 
-        {/* Verification Status Indicator */}
-        {isPolling && (
-          <div className="verification-status-container">
-            <div className="verification-status-card">
-              <div className="status-icon">
-                <i className={`fas ${verificationStatus?.verified ? 'fa-check-circle' :
-                    verificationStatus?.verificationStatus === 'pending' ? 'fa-clock' :
-                      verificationStatus?.verificationStatus === 'failed' ? 'fa-times-circle' :
-                        'fa-spinner fa-spin'
-                  }`}></i>
-              </div>
-              <div className="status-info">
-                <h3>Verification Status</h3>
-                <p>{
-                  verificationStatus?.verified ? 'Verified' :
-                    verificationStatus?.verificationStatus === 'pending' ? 'Pending Review' :
-                      verificationStatus?.verificationStatus === 'failed' ? 'Verification Failed' :
-                        'Checking status...'
-                }</p>
-              </div>
-            </div>
+        <div className="verification-methods">
+          <div className="method-info">
+            <h3>Quick and Secure Verification</h3>
+            <p>Click the button below to verify your identity using our secure verification partner, Dojah.</p>
+            <ul>
+              <li><i className="fas fa-check"></i> Fast and secure verification process</li>
+              <li><i className="fas fa-check"></i> Multiple verification methods supported</li>
+              <li><i className="fas fa-check"></i> Your data is protected and encrypted</li>
+            </ul>
           </div>
-        )}
 
-        {/* Show different forms based on the verification stage */}
-        {!showIdSelfieStep ? (
-          <form onSubmit={handleSubmit}>
-            <div className="verification-methods">
-              <div className="method-selection">
-                <input
-                  type="radio"
-                  id="bvn-method"
-                  value="bvn"
-                  checked={verificationMethod === "bvn"}
-                  onChange={handleVerificationMethodChange}
-                />
-                <label htmlFor="bvn-method" className={verificationMethod === "bvn" ? "selected" : ""}>
-                  <div className="method-icon bvn-icon">
-                    <i className="fas fa-university"></i>
-                  </div>
-                  <div className="method-title">BVN Verification</div>
-                  <div className="method-description">Verify with your Bank Verification Number</div>
-                </label>
-
-                <input
-                  type="radio"
-                  id="nin-method"
-                  value="nin"
-                  checked={verificationMethod === "nin"}
-                  onChange={handleVerificationMethodChange}
-                />
-                <label htmlFor="nin-method" className={verificationMethod === "nin" ? "selected" : ""}>
-                  <div className="method-icon nin-icon">
-                    <i className="fas fa-id-card"></i>
-                  </div>
-                  <div className="method-title">NIN Verification</div>
-                  <div className="method-description">Verify with your National ID Number</div>
-                </label>
-
-                <input
-                  type="radio"
-                  id="id-method"
-                  value="id"
-                  checked={verificationMethod === "id"}
-                  onChange={handleVerificationMethodChange}
-                />
-                <label htmlFor="id-method" className={verificationMethod === "id" ? "selected" : ""}>
-                  <div className="method-icon id-icon">
-                    <i className="fas fa-camera"></i>
-                  </div>
-                  <div className="method-title">ID & Selfie</div>
-                  <div className="method-description">Upload your ID and a selfie with it</div>
-                </label>
-              </div>
-
-              {/* BVN Verification Form */}
-              {verificationMethod === "bvn" && (
-                <div className="verification-form">
-                  <div className="form-group">
-                    <label htmlFor="bvn">
-                      <i className="fas fa-university"></i>
-                      Bank Verification Number (BVN)
-                    </label>
-                    <input
-                      type="text"
-                      id="bvn"
-                      value={bvnNumber}
-                      onChange={(e) => setBvnNumber(e.target.value)}
-                      placeholder="Enter your 11-digit BVN"
-                      pattern="[0-9]{11}"
-                      maxLength={11}
-                      required
-                    />
-                    <small>
-                      <i className="fas fa-info-circle"></i>
-                      Your BVN is a unique 11-digit number from your bank
-                    </small>
-                  </div>
-
-                  <div className="form-group">
-                    <label htmlFor="selfie-image">
-                      <i className="fas fa-camera"></i>
-                      Upload a selfie for verification
-                    </label>
-                    <div className="file-input-wrapper">
-                      <div className="file-input-button">Choose File</div>
-                      <input
-                        type="file"
-                        id="selfie-image"
-                        accept="image/*"
-                        onChange={(e) => handleImageChange(e, setSelfieImage)}
-                        required
-                      />
-                    </div>
-                    {selfieImage && <div className="file-name">{selfieImage.name}</div>}
-                    <small>
-                      <i className="fas fa-info-circle"></i>
-                      Take a clear selfie in good lighting for verification
-                    </small>
-                  </div>
-                </div>
-              )}
-
-              {/* NIN Verification Form */}
-              {verificationMethod === "nin" && (
-                <div className="verification-form">
-                  <div className="form-group">
-                    <label htmlFor="nin">
-                      <i className="fas fa-id-card"></i>
-                      National Identification Number (NIN)
-                    </label>
-                    <input
-                      type="text"
-                      id="nin"
-                      value={ninNumber}
-                      onChange={(e) => setNinNumber(e.target.value)}
-                      placeholder="Enter your 11-digit NIN"
-                      pattern="[0-9]{11}"
-                      maxLength={11}
-                      required
-                    />
-                    <small>
-                      <i className="fas fa-info-circle"></i>
-                      Your NIN is a unique 11-digit number from your national ID card
-                    </small>
-                  </div>
-                </div>
-              )}
-
-              {/* ID Document Verification Form */}
-              {verificationMethod === "id" && (
-                <div className="verification-form">
-                  <div className="form-group">
-                    <label htmlFor="id-type">
-                      <i className="fas fa-id-card"></i>
-                      ID Document Type
-                    </label>
-                    <select
-                      id="id-type"
-                      value={idType}
-                      onChange={handleIdTypeChange}
-                      required
-                    >
-                      <option value="generic">Generic ID</option>
-                      <option value="nin">National ID (NIN)</option>
-                      <option value="dl">Driver's License</option>
-                      <option value="passport">International Passport</option>
-                      <option value="voter">Voter's Card</option>
-                    </select>
-                  </div>
-
-                  <div className="form-group">
-                    <label htmlFor="id-image">
-                      <i className="fas fa-id-card"></i>
-                      Upload your ID Document
-                    </label>
-                    <div className="file-input-wrapper">
-                      <div className="file-input-button">Choose File</div>
-                      <input
-                        type="file"
-                        id="id-image"
-                        accept="image/*"
-                        onChange={(e) => handleImageChange(e, setIdImage)}
-                        required
-                      />
-                    </div>
-                    {idImage && <div className="file-name">{idImage.name}</div>}
-                    <small>
-                      <i className="fas fa-info-circle"></i>
-                      Supported formats: JPG, PNG, PDF. Max size: 5MB
-                    </small>
-                  </div>
-
-                  <div className="form-group">
-                    <label htmlFor="selfie-image">
-                      <i className="fas fa-camera"></i>
-                      Upload a selfie with your ID document
-                    </label>
-                    <div className="file-input-wrapper">
-                      <div className="file-input-button">Choose File</div>
-                      <input
-                        type="file"
-                        id="selfie-image"
-                        accept="image/*"
-                        onChange={(e) => handleImageChange(e, setSelfieImage)}
-                        required
-                      />
-                    </div>
-                    {selfieImage && <div className="file-name">{selfieImage.name}</div>}
-                    <small>
-                      <i className="fas fa-info-circle"></i>
-                      Hold your ID next to your face for verification
-                    </small>
-                  </div>
-                </div>
-              )}
-
-              <button
-                type="submit"
-                className="submit-btn"
-                disabled={isSubmitting}
-              >
-                {isSubmitting ? (
-                  <>
-                    <i className="fas fa-circle-notch fa-spin"></i> Processing...
-                  </>
-                ) : (
-                  <>
-                    <i className="fas fa-check-circle"></i> Submit Verification
-                  </>
-                )}
-              </button>
-            </div>
-          </form>
-        ) : (
-          // Second step form for ID and Selfie uploads
-          <form onSubmit={handleSubmit}>
-            <div className="verification-methods">
-              <h3>
-                {verificationMethod === "bvn" ? "BVN Verification - Step 2" :
-                  verificationMethod === "nin" ? "NIN Verification - Step 2" :
-                    "ID Verification"}
-              </h3>
-
-              <p className="verification-step-intro">
-                {verificationMethod === "bvn" ?
-                  "Your BVN has been verified. Please complete the process by uploading your ID and a selfie." :
-                  "Your NIN has been verified. Please complete the process by uploading a selfie."}
-              </p>
-
-              <div className="verification-form">
-                {/* Only show ID document upload for BVN verification */}
-                {verificationMethod === "bvn" && (
-                  <>
-                    <div className="form-group">
-                      <label htmlFor="id-type-step2">
-                        <i className="fas fa-id-card"></i>
-                        ID Document Type
-                      </label>
-                      <select
-                        id="id-type-step2"
-                        value={idType}
-                        onChange={handleIdTypeChange}
-                        required
-                      >
-                        <option value="generic">Generic ID</option>
-                        <option value="nin">National ID (NIN)</option>
-                        <option value="dl">Driver's License</option>
-                        <option value="passport">International Passport</option>
-                        <option value="voter">Voter's Card</option>
-                      </select>
-                    </div>
-
-                    <div className="form-group">
-                      <label htmlFor="id-image-step2">
-                        <i className="fas fa-id-card"></i>
-                        Upload your ID Document
-                      </label>
-                      <div className="file-input-wrapper">
-                        <div className="file-input-button">Choose File</div>
-                        <input
-                          type="file"
-                          id="id-image-step2"
-                          accept="image/*"
-                          onChange={(e) => handleImageChange(e, setIdImage)}
-                          required
-                        />
-                      </div>
-                      {idImage && <div className="file-name">{idImage.name}</div>}
-                      <small>
-                        <i className="fas fa-info-circle"></i>
-                        Supported formats: JPG, PNG, PDF. Max size: 5MB
-                      </small>
-                    </div>
-                  </>
-                )}
-
-                {/* Selfie upload for both BVN and NIN */}
-                <div className="form-group">
-                  <label htmlFor="selfie-image-step2">
-                    <i className="fas fa-camera"></i>
-                    Upload a selfie{verificationMethod === "bvn" ? " with your ID document" : ""}
-                  </label>
-                  <div className="file-input-wrapper">
-                    <div className="file-input-button">Choose File</div>
-                    <input
-                      type="file"
-                      id="selfie-image-step2"
-                      accept="image/*"
-                      onChange={(e) => handleImageChange(e, setSelfieImage)}
-                      required
-                    />
-                  </div>
-                  {selfieImage && <div className="file-name">{selfieImage.name}</div>}
-                  <small>
-                    <i className="fas fa-info-circle"></i>
-                    {verificationMethod === "bvn"
-                      ? "Hold your ID next to your face for verification"
-                      : "Take a clear selfie for identity verification"}
-                  </small>
-                </div>
-              </div>
-
-              <div className="button-group">
-                <button
-                  type="button"
-                  className="back-btn"
-                  onClick={() => {
-                    setVerificationStep(1);
-                    setShowIdSelfieStep(false);
-                    setBvnResult(null);
-                    setNinResult(null);
-                  }}
-                >
-                  <i className="fas fa-arrow-left"></i> Back
-                </button>
-
-                <button
-                  type="submit"
-                  className="submit-btn"
-                  disabled={isSubmitting}
-                >
-                  {isSubmitting ? (
-                    <>
-                      <i className="fas fa-circle-notch fa-spin"></i> Processing...
-                    </>
-                  ) : (
-                    <>
-                      <i className="fas fa-check-circle"></i> Complete Verification
-                    </>
-                  )}
-                </button>
-              </div>
-            </div>
-          </form>
-        )}
+          <div className="verification-button-container">
+            <DojahVerificationButton
+              userId={userDetails.id}
+              onSuccess={handleVerificationSuccess}
+              onError={handleVerificationError}
+              buttonText="Start Verification"
+              backgroundColor="#00A651"
+            />
+          </div>
+        </div>
 
         <div className="verification-footer">
           <p>
@@ -913,3 +609,5 @@ const VerificationPage = () => {
 };
 
 export default VerificationPage;
+
+
