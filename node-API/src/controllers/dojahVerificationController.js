@@ -235,5 +235,6 @@ const getVerificationStatus = async (req, res) => {
 module.exports = {
   handleDojahWebhook,
   saveVerificationData,
-  getVerificationStatus
+  getVerificationStatus,
+  handleGetDojahWebhook
 };
