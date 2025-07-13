@@ -725,7 +725,7 @@ const verificationService = {
       }
 
       const response = await verificationApi.get('/dojah/status', {
-        params: { userId, userType }
+        params: { userId, userType, token },
       });
 
       this._cachedStatus = response.data;

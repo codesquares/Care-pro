@@ -504,7 +504,10 @@ const VerificationPage = () => {
 
       // Process and save Dojah verification data
       const verificationData = processDojahResponse(response);
+      console.log('Processed verification data:', verificationData);
+      
       await saveDojahVerification(verificationData, userDetails.id);
+      console.log('Verification data saved successfully');
 
       // Update local verification status
       setVerificationStatus({
@@ -534,8 +537,57 @@ const VerificationPage = () => {
   // Handle Dojah verification error
   const handleVerificationError = (error) => {
     console.error('Verification error:', error);
-    setError("Verification failed. Please try again or contact support if the issue persists.");
+    setError(`Verification failed: ${error.message || "Please try again or contact support if the issue persists."}`);
     setProgress(0);
+    
+    // Log the detailed error for debugging
+    console.error('Verification error details:', {
+      message: error.message,
+      stack: error.stack,
+      name: error.name
+    });
+  };
+  
+  // Debug function to manually trigger verification widget
+  const debugOpenWidget = () => {
+    console.log('Manually opening widget...');
+    // Create global function to access from console
+    window.openDojahWidget = () => {
+      console.log('Attempting to open widget from debug function');
+      const script = document.createElement('script');
+      script.innerHTML = `
+        try {
+          console.log('Creating widget directly');
+          const widget = new DojahWidget({
+            appId: "${import.meta.env.VITE_DOJAH_APP_ID || "686c915878a2b53b2bdb5631"}",
+            widgetId: "${import.meta.env.VITE_DOJAH_WIDGET_ID || "68732f5e97202a07f66bc89a"}",
+            type: "custom",
+            config: {
+              debug: true,
+              webhook: true,
+              stages: ["government-data", "selfie"]
+            },
+            metadata: {
+              user_id: "${userDetails.id}"
+            },
+            callback: function(response) {
+              console.log("Direct widget verification completed:", response);
+            },
+            onError: function(error) {
+              console.error("Direct widget verification error:", error);
+            }
+          });
+          
+          widget.setup();
+          widget.open();
+        } catch (e) {
+          console.error('Error creating widget directly:', e);
+        }
+      `;
+      document.body.appendChild(script);
+    };
+    
+    alert('Debug function added. Open console and type: window.openDojahWidget()');
   };
 
   return (
@@ -587,6 +639,24 @@ const VerificationPage = () => {
               buttonText="Start Verification"
               backgroundColor="#00A651"
             />
+            
+            {/* Debug button */}
+            {import.meta.env.DEV && (
+              <button 
+                onClick={debugOpenWidget}
+                style={{
+                  marginTop: '10px',
+                  padding: '5px 10px',
+                  fontSize: '12px',
+                  backgroundColor: '#f0f0f0',
+                  border: '1px solid #ccc',
+                  borderRadius: '4px',
+                  cursor: 'pointer'
+                }}
+              >
+                Debug Widget
+              </button>
+            )}
           </div>
         </div>
 

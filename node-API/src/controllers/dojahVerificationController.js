@@ -92,6 +92,11 @@ const handleDojahWebhook = async (req, res) => {
   }
 };
 
+// Handle Dojah webhook GET request
+const handleGetDojahWebhook = (req, res) => {
+  // This endpoint is for testing purposes, to verify if the webhook is reachable
+  res.status(200).json({ status: 'Dojah webhook is reachable' });
+};
 // Save verification data (called from frontend)
 const saveVerificationData = async (req, res) => {
   try {
