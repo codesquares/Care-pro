@@ -131,6 +131,7 @@ const saveVerificationData = async (req, res) => {
 const getVerificationStatus = async (req, res) => {
   try {
     const { userId, userType } = req.query;
+    const {token} = req.body;
 
     if (!userId || !userType) {
       return res.status(400).json({ 
@@ -140,10 +141,13 @@ const getVerificationStatus = async (req, res) => {
     }
 
     // Forward the request to Azure API to get verification status
-    const response = await axios.get(`${process.env.AZURE_API_URL}/api/verification/status`, {
+    const apiEndpoint = process.env.LOCAL_API_URL || 'http://localhost:3000/api';
+    console.log(`Using API endpoint: ${apiEndpoint}`);
+    
+    const response = await axios.get(`${apiEndpoint}/verification/status`, {
       params: { userId, userType },
       headers: {
-        'Authorization': `Bearer ${process.env.AZURE_API_KEY}`,
+        'Authorization': `Bearer ${req.headers.authorization}`,
         'Content-Type': 'application/json'
       }
     });
