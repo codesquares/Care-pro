@@ -1,26 +1,51 @@
 import React from 'react';
 import './OrderDetails.css';
 import {useState, useEffect } from 'react';
+import { PriceCalculator } from './ServiceFrequency';
 
-const OrderDetails = ({ service }) => {
-  // // Extract service details
+const OrderDetails = ({ service, selectedFrequency, priceData, onPayment }) => {
+  // Extract service details
   console.log("Service details in OrderDetails:", service);
-      const { title, caregiverName, rating, packageDetails, image1, plan, price, features, videoURL } = service;
-      const serviceFee = price ? (price * 0.05).toFixed(2) : "₦3,270"; // Assuming service fee is 5% of price
-      const generateOrderNumber = () => {
-        return `#${Math.random().toString(36).substr(2, 9).toUpperCase()}`;
-      };
-      // generate order number once and dont generate it again
-      const orderNumber = generateOrderNumber();
+  console.log("Selected frequency in OrderDetails:", selectedFrequency);
+  console.log("Price data in OrderDetails:", priceData);
+  
+  const { title, caregiverName, rating, packageDetails, image1, plan, price, features, videoURL } = service;
+  
+  // Use price data if available, otherwise fallback to base price
+  const effectivePrice = priceData ? priceData.calculatedPrice : price;
+  const serviceFee = effectivePrice ? (effectivePrice * 0.05) : (price * 0.05);
+  const totalAmount = effectivePrice + serviceFee;
+  
+  const generateOrderNumber = () => {
+    return `#${Math.random().toString(36).substr(2, 9).toUpperCase()}`;
+  };
+  
+  // Generate order number once and don't generate it again
+  const [orderNumber] = useState(() => generateOrderNumber());
   const [orderData, setOrderData] = useState({
     serviceName: title || "I will clean your house and do your laundry twice a week",
     status: "In Progress",
     orderedFrom: caregiverName,
-    orderFee: price,
+    orderFee: effectivePrice,
     serviceFee: serviceFee,
-    totalAmount: (price + Number(serviceFee)).toFixed(2),
-    orderNumber: "#F02C6F335B05"
+    totalAmount: totalAmount,
+    orderNumber: orderNumber
   });
+
+  // Update order data when price data changes
+  useEffect(() => {
+    if (priceData) {
+      const newServiceFee = priceData.calculatedPrice * 0.05;
+      const newTotalAmount = priceData.calculatedPrice + newServiceFee;
+      
+      setOrderData(prev => ({
+        ...prev,
+        orderFee: priceData.calculatedPrice,
+        serviceFee: newServiceFee,
+        totalAmount: newTotalAmount
+      }));
+    }
+  }, [priceData]);
  
   return (
     <div className="order-details">
@@ -62,20 +87,45 @@ const OrderDetails = ({ service }) => {
           </div>
         </div>
 
+        {/* Service Frequency Information */}
+        {selectedFrequency && (
+          <div className="order-details__row">
+            <span className="order-details__label">Service Frequency:</span>
+            <span className="order-details__value">
+              {PriceCalculator.getFrequencyDisplayName(selectedFrequency)}
+            </span>
+          </div>
+        )}
+
+        {/* Price Breakdown */}
         <div className="order-details__row">
           <span className="order-details__label">Order fee:</span>
-          <span className="order-details__value">{orderData.orderFee}</span>
+          <span className="order-details__value">
+            {PriceCalculator.formatPrice(orderData.orderFee)}
+          </span>
         </div>
 
+        {/* Show savings if applicable */}
+        {priceData && priceData.savings > 0 && (
+          <div className="order-details__row order-details__row--savings">
+            <span className="order-details__label">You save:</span>
+            <span className="order-details__value order-details__value--savings">
+              -{PriceCalculator.formatPrice(priceData.savings)}
+            </span>
+          </div>
+        )}
+
         <div className="order-details__row">
-          <span className="order-details__label">Service fee:</span>
-          <span className="order-details__value">{orderData.serviceFee}</span>
+          <span className="order-details__label">Service fee (5%):</span>
+          <span className="order-details__value">
+            {PriceCalculator.formatPrice(orderData.serviceFee)}
+          </span>
         </div>
 
         <div className="order-details__row order-details__row--total">
           <span className="order-details__label">Total amount:</span>
           <span className="order-details__value order-details__value--total">
-            {orderData.totalAmount}
+            {PriceCalculator.formatPrice(orderData.totalAmount)}
           </span>
         </div>
 
@@ -85,8 +135,11 @@ const OrderDetails = ({ service }) => {
         </div>
       </div>
 
-      <button className="order-details__payment-btn">
-        Proceed to payment →
+      <button 
+        className="order-details__payment-btn"
+        onClick={onPayment}
+      >
+        Proceed to payment → {PriceCalculator.formatPrice(orderData.totalAmount)}
       </button>
     </div>
   );

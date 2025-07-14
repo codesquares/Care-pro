@@ -11,24 +11,118 @@ const Cart = () => {
     const [videoPreviewUrl, setVideoPreviewUrl] = useState("");
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState(null);
+    
+    // Frequency and price data state
+    const [selectedFrequency, setSelectedFrequency] = useState('weekly');
+    const [frequencyPriceData, setFrequencyPriceData] = useState(null);
+    
+    // Task management state
+    const [tasks, setTasks] = useState([
+      {
+        id: 1,
+        text: 'Help with physical therapy exercises or encourage light exercise like walking',
+        isExplanatory: true,
+        deletable: false
+      },
+      {
+        id: 2,
+        text: 'Walk my dogs and feed my cat for a month',
+        isExplanatory: true,
+        deletable: false
+      },
+      {
+        id: 3,
+        text: 'Catering and cooking international dishes for a month',
+        isExplanatory: true,
+        deletable: false
+      }
+    ]);
+    const [taskValidationError, setTaskValidationError] = useState('');
+    
     const navigate = useNavigate();
     const basePath = "/app/client"; // Base path for your routes
-  
-  
+    
+    // Get user tasks (non-explanatory)
+    const userTasks = tasks.filter(task => !task.isExplanatory);
+
+    // Task validation
+    const validateTasks = () => {
+      if (userTasks.length === 0) {
+        setTaskValidationError('Please add at least one task for your caregiver');
+        return false;
+      }
+      setTaskValidationError('');
+      return true;
+    };
+
+    // Handle task management
+    const handleAddTask = (newTaskText) => {
+      if (!newTaskText.trim()) return;
+      
+      const newTask = {
+        id: Date.now(),
+        text: newTaskText.trim(),
+        isExplanatory: false,
+        deletable: true
+      };
+      
+      setTasks([...tasks, newTask]);
+      setTaskValidationError('');
+    };
+
+    const handleRemoveTask = (taskId) => {
+      const taskToRemove = tasks.find(task => task.id === taskId);
+      if (taskToRemove && taskToRemove.deletable) {
+        setTasks(tasks.filter(task => task.id !== taskId));
+      }
+    };  
+    // Handle frequency change from OrderSpecifications
+    const handleFrequencyChange = (frequencyId, priceData) => {
+      setSelectedFrequency(frequencyId);
+      setFrequencyPriceData(priceData);
+    };
+
     const handleHire = async () => {
       if (!service) return;
+      
+      // Validate tasks before proceeding to payment
+      if (!validateTasks()) {
+        return;
+      }
+      
       const user = JSON.parse(localStorage.getItem("userDetails"));
-      //set the gig id to the local storage
+      
+      // Calculate total amount (order fee + service fee)
+      const orderFee = frequencyPriceData ? frequencyPriceData.calculatedPrice : service.price;
+      const serviceFee = orderFee * 0.05;
+      const totalAmount = orderFee + serviceFee;
+      
+      // Store all order data for payment success page
+      const orderData = {
+        gigId: id,
+        serviceId: id,
+        providerId: service.caregiverId,
+        selectedFrequency,
+        priceData: frequencyPriceData,
+        tasks: userTasks.map(task => task.text), // Only user tasks, as text array
+        userDetails: user,
+        timestamp: new Date().toISOString(),
+        totalAmount: totalAmount // Store calculated total
+      };
+      
+      localStorage.setItem("orderData", JSON.stringify(orderData));
       localStorage.setItem("gigId", id);
-      //set the amount to the local storage
-      localStorage.setItem("amount", service.price);
+      
+      // Store total amount (not just order fee) for payment
+      localStorage.setItem("amount", totalAmount);
       localStorage.setItem("providerId", service.caregiverId);
-  
-      console.log(user);
+
+      console.log("Order data prepared:", orderData);
+      console.log("Payment amount (total):", totalAmount);
     
       try {
         const payload = {
-          amount: service.price,
+          amount: totalAmount, // Send total amount (order fee + service fee)
           email: user?.email,
           currency: "NIGN",
           redirectUrl: `${window.location.origin}/app/client/payment-success`,
@@ -96,8 +190,23 @@ const Cart = () => {
   return (
     <div className="cart-page">
       <div className="cart-container">
-        <OrderSpecifications service={service} />
-        <OrderDetails service={service} />
+        <OrderSpecifications 
+          service={service} 
+          selectedFrequency={selectedFrequency}
+          onFrequencyChange={handleFrequencyChange}
+          tasks={tasks}
+          onAddTask={handleAddTask}
+          onRemoveTask={handleRemoveTask}
+          taskValidationError={taskValidationError}
+          userTasksCount={userTasks.length}
+          validateTasks={validateTasks}
+        />
+        <OrderDetails 
+          service={service} 
+          selectedFrequency={selectedFrequency}
+          priceData={frequencyPriceData}
+          onPayment={handleHire}
+        />
       </div>
     </div>
   );

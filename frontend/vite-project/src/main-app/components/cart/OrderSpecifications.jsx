@@ -1,25 +1,43 @@
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import ServiceProvider from './ServiceProvider';
 import ServiceFrequency from './ServiceFrequency';
 import TaskList from './TaskList';
 import './OrderSpecifications.css';
+import configs from '../../config';
 
-const OrderSpecifications = () => {
-  const [selectedFrequency, setSelectedFrequency] = useState('weekly');
-  const [tasks, setTasks] = useState([
-    'Help with physical therapy exercises or encourage light exercise like walking',
-    'Walk my dogs and feed my cat for a month',
-    'Catering and cooking international dishes for a month'
-  ]);
+const OrderSpecifications = ({
+  service, 
+  selectedFrequency, 
+  onFrequencyChange,
+  tasks,
+  onAddTask,
+  onRemoveTask,
+  taskValidationError,
+  userTasksCount,
+  validateTasks
+}) => {
 
-  const serviceTitle = "I will clean your house and do your laundry twice a week";
+  const userDetails = localStorage.getItem('userDetails');
+  console.log('User details:', userDetails);
+  const clientId = userDetails ? JSON.parse(userDetails).id : null;
+  useEffect(() => {
+    // Fetch or update data based on the selected service
+    //fetch caregiver details or service specifications if needed
+  }, []);
+  
+  if (!service) {
+    return <div>Loading...</div>;
+  }
+  console.log('Service inside order specifications:', service);
+  const [frequencyPriceData, setFrequencyPriceData] = useState(null);
+  
+  // Task management is now handled by parent (Cart)
+  const serviceTitle = service? service.title : 'Service Title Not Available';
 
-  const handleAddTask = (newTask) => {
-    setTasks([...tasks, newTask]);
-  };
-
-  const handleRemoveTask = (index) => {
-    setTasks(tasks.filter((_, i) => i !== index));
+  // Enhanced frequency change handler - now just passes to parent
+  const handleFrequencyChange = (frequencyId, priceData) => {
+    setFrequencyPriceData(priceData); // Keep local copy for form inputs
+    onFrequencyChange(frequencyId, priceData); // Pass to parent (Cart)
   };
 
   return (
@@ -30,17 +48,51 @@ const OrderSpecifications = () => {
         {serviceTitle}
       </div>
 
-      <ServiceProvider />
-      
-      <ServiceFrequency 
+      <ServiceProvider service={service} />
+
+      <ServiceFrequency
         selectedFrequency={selectedFrequency}
-        onFrequencyChange={setSelectedFrequency}
+        onFrequencyChange={handleFrequencyChange}
+        service={service}
+      />
+
+      {/* Frequency Price Data for OrderDetails or other components */}
+      {frequencyPriceData && (
+        <>
+          <input 
+            type="hidden" 
+            name="frequencyPriceData" 
+            value={JSON.stringify(frequencyPriceData)} 
+          />
+        </>
+      )}
+
+      {/* Task validation error */}
+      {taskValidationError && (
+        <div className="order-specifications__error">
+          {taskValidationError}
+        </div>
+      )}
+
+      {/* Hidden form inputs for task data */}
+      <input 
+        type="hidden" 
+        name="userTasks" 
+        value={JSON.stringify(tasks.filter(task => !task.isExplanatory).map(task => task.text))} 
+      />
+      <input 
+        type="hidden" 
+        name="taskCount" 
+        value={userTasksCount} 
       />
 
       <TaskList 
         tasks={tasks}
-        onAddTask={handleAddTask}
-        onRemoveTask={handleRemoveTask}
+        onAddTask={onAddTask}
+        onRemoveTask={onRemoveTask}
+        service={service}
+        userTasksCount={userTasksCount}
+        validateTasks={validateTasks}
       />
     </div>
   );

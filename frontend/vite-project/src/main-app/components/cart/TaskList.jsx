@@ -1,9 +1,13 @@
 import React, { useState } from 'react';
 import './TaskList.css';
 
-const TaskList = ({ tasks, onAddTask, onRemoveTask }) => {
+const TaskList = ({ tasks, onAddTask, onRemoveTask, userTasksCount, validateTasks }) => {
   const [newTask, setNewTask] = useState('');
   const [isAddingTask, setIsAddingTask] = useState(false);
+
+  // Separate explanatory and user tasks
+  const explanatoryTasks = tasks.filter(task => task.isExplanatory);
+  const userTasks = tasks.filter(task => !task.isExplanatory);
 
   const handleSubmitTask = (e) => {
     e.preventDefault();
@@ -22,19 +26,59 @@ const TaskList = ({ tasks, onAddTask, onRemoveTask }) => {
     <div className="task-list">
       <h3 className="task-list__title">Enter Tasks</h3>
       
-      <div className="task-list__items">
-        {tasks.map((task, index) => (
-          <div key={index} className="task-list__item">
-            <span className="task-list__item-text">{task}</span>
-            <button 
-              className="task-list__remove-btn"
-              onClick={() => onRemoveTask(index)}
-              type="button"
-            >
-              🗑️
-            </button>
+      {/* Explanatory Tasks Section */}
+      {explanatoryTasks.length > 0 && (
+        <div className="task-list__section">
+          <h4 className="task-list__section-title">Example tasks:</h4>
+          <div className="task-list__items task-list__items--explanatory">
+            {explanatoryTasks.map((task) => (
+              <div key={task.id} className="task-list__item task-list__item--explanatory">
+                <span className="task-list__item-text task-list__item-text--explanatory">
+                  {task.text}
+                </span>
+                <span className="task-list__item-label">Example</span>
+              </div>
+            ))}
           </div>
-        ))}
+        </div>
+      )}
+
+      {/* User Tasks Section */}
+      <div className="task-list__section">
+        <h4 className="task-list__section-title">
+          Your tasks: 
+          <span className="task-list__count">
+            ({userTasksCount} task{userTasksCount !== 1 ? 's' : ''} added)
+          </span>
+        </h4>
+        
+        {userTasks.length > 0 && (
+          <div className="task-list__items">
+            {userTasks.map((task) => (
+              <div key={task.id} className="task-list__item">
+                <span className="task-list__item-text">{task.text}</span>
+                {task.deletable && (
+                  <button 
+                    className="task-list__remove-btn"
+                    onClick={() => onRemoveTask(task.id)}
+                    type="button"
+                    title="Remove task"
+                  >
+                    🗑️
+                  </button>
+                )}
+              </div>
+            ))}
+          </div>
+        )}
+
+        {userTasksCount === 0 && (
+          <div className="task-list__empty-state">
+            <p className="task-list__empty-text">
+              No tasks added yet. Please add at least one task for your caregiver.
+            </p>
+          </div>
+        )}
       </div>
 
       {isAddingTask ? (
