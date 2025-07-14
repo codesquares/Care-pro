@@ -11,7 +11,7 @@ import OrderDetails from './orders/OrderTasks&Details';
 import OrderHistory from './orders/OrderHistory';
 import ClientSettings from './client-settings/ClientSettings';
 import ClientPreferences from './preferences/ClientPreferences';
-import ClientVerificationPage from './verification/VerificationPage.new';
+import ClientVerificationPage from './verification/VerificationPage';
 import CareNeedsSettings from './care-needs/CareNeedsSettings';
 import ClientProfile from './profile/ClientProfile';
 import Cart from '../client/cart/Cart';

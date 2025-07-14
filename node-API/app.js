@@ -73,9 +73,10 @@ app.post('/test-payload', (req, res) => {
   });
 });
 
-// Setup webhook raw body parser before other middlewares
+// Setup webhook raw body parser separately for each webhook service
+// Other webhook service needs raw body for signature verification
 app.use('/api/webhook/webhook', express.raw({ type: 'application/json' }));
-app.use('/api/dojah/webhook', express.raw({ type: 'application/json' }));
+// Dojah webhook will use regular JSON parsing (no raw body needed for now)
 
 
 

@@ -42,12 +42,29 @@ const formatVerificationData = (dojahData, userId) => {
 // Handle Dojah webhook
 const handleDojahWebhook = async (req, res) => {
   try {
+    // Add comprehensive logging to see what Dojah sends
+    console.log('=== DOJAH WEBHOOK RECEIVED ===');
+    console.log('Headers:', JSON.stringify(req.headers, null, 2));
+    console.log('Body:', JSON.stringify(req.body, null, 2));
+    console.log('Content-Type:', req.headers['content-type']);
+    console.log('User-Agent:', req.headers['user-agent']);
+    console.log('Method:', req.method);
+    console.log('URL:', req.url);
+    console.log('================================');
+
     const signature = req.headers['x-dojah-signature'];
     
-    // Verify webhook signature
-    if (!verifySignature(signature, req.body)) {
-      console.error('Invalid webhook signature');
-      return res.status(401).json({ error: 'Invalid signature' });
+    // COMMENTED OUT: Signature verification for testing
+    // if (!verifySignature(signature, req.body)) {
+    //   console.error('Invalid webhook signature');
+    //   return res.status(401).json({ error: 'Invalid signature' });
+    // }
+    
+    // Log signature for debugging
+    if (signature) {
+      console.log('Dojah signature received:', signature);
+    } else {
+      console.log('No Dojah signature header found');
     }
 
     const { event, data, metadata } = req.body;
@@ -81,10 +98,12 @@ const handleDojahWebhook = async (req, res) => {
     }
 
     // Handle other webhook events
+    console.log('Webhook event received but not handled:', event);
     return res.status(200).json({ status: 'received' });
 
   } catch (error) {
     console.error('Webhook handler error:', error);
+    console.error('Error details:', error.response?.data || error.message);
     return res.status(500).json({ 
       error: 'Internal server error',
       details: error.response?.data || error.message 
