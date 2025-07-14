@@ -218,17 +218,35 @@ const getVerificationStatus = async (req, res) => {
         });
       }
     } catch (error) {
+      // Handle 404 as expected behavior - user not verified yet
+      if (error.response && error.response.status === 404) {
+        console.log(`✓ User ${userId} has not been verified yet (404 - expected)`);
+        return res.json({
+          success: true,
+          data: {
+            userId,
+            userType,
+            isVerified: false,
+            verificationStatus: 'not_verified',
+            message: 'User has not completed verification yet',
+            needsVerification: true
+          }
+        });
+      }
+      
+      // Log other errors as actual issues
       console.log('Error checking verification status:', error.message);
       
-      // Default response when user is not verified
+      // Default response for other errors
       return res.json({
         success: true,
         data: {
           userId,
           userType,
           isVerified: false,
-          verificationStatus: null, // Set to null as default until verified
-          message: 'User verification status not found'
+          verificationStatus: 'unknown',
+          message: 'Unable to verify current verification status',
+          needsVerification: true
         }
       });
     }
