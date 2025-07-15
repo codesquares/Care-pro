@@ -59,7 +59,8 @@ const ClientNavBar = () => {
 
       <ul className="nav-icons">
         <li className="nav-link icon-link">
-          <NotificationBell navigateTo={(path) => navigate(path)} />
+          {/* <NotificationBell navigateTo={(path) => navigate(path)} /> */}
+                      <img src={bell} alt="Notifications" onClick={() => navigate(path)} />
         </li>
         <IconLink to={`${basePath}/message`} icon={message} alt="Messages" />
         {/* <IconLink to={`${basePath}/favorites`} icon={hear} alt="Favorites" /> */}
@@ -84,6 +85,9 @@ const ClientNavBar = () => {
               </div>
               <div className="dropdown-item" onClick={() => navigate(`${basePath}/verification`)}>
                 Verify Account
+              </div>
+                <div className="dropdown-item" onClick={() => navigate(`${basePath}/settings`)}>
+                Settings
               </div>
               <div className="dropdown-item" onClick={handleSignOut}>
                 Sign Out

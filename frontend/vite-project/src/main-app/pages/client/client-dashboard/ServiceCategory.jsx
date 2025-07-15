@@ -3,6 +3,9 @@ import ServiceCard from "./ServiceCard";
 import "./serviceCategory.css";
 
 const ServiceCategory = ({ title, services }) => (
+  
+
+ 
   <div className="service-category">
     <div className="category-header">
       <h2>{title}</h2>
