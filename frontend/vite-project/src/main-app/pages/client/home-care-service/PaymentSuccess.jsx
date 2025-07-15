@@ -11,6 +11,7 @@ const PaymentSuccess = () => {
   const status = searchParams.get("status");
   const transactionId = searchParams.get("transaction_id");
   const txRef = searchParams.get("tx_ref");
+  const errorMessage = searchParams.get("message") || searchParams.get("error");
 
   const user = JSON.parse(localStorage.getItem("userDetails") || "{}");
   const gigId = localStorage.getItem("gigId");
@@ -89,11 +90,49 @@ const PaymentSuccess = () => {
             navigate("/app/client/my-orders");
           }, 3000);
         }
+      } else if (status !== "successful") {
+        // Handle payment failure - clean up localStorage and provide feedback
+        console.log("Payment failed or cancelled:", { status, errorMessage, txRef });
+        
+        // Clean up any stored payment data
+        localStorage.removeItem("orderData");
+        localStorage.removeItem("gigId");
+        localStorage.removeItem("amount");
+        localStorage.removeItem("providerId");
       }
     };
 
     createOrderAndSendTasks();
-  }, [status, transactionId, user, gigId, navigate, orderData]);
+  }, [status, transactionId, user, gigId, navigate, orderData, errorMessage]);
+
+  // Function to get user-friendly error message
+  const getErrorMessage = () => {
+    if (errorMessage) {
+      return errorMessage;
+    }
+    
+    switch (status) {
+      case "failed":
+        return "Your payment could not be processed. This might be due to insufficient funds, declined card, or network issues.";
+      case "cancelled":
+        return "You cancelled the payment process.";
+      case "timeout":
+        return "The payment session timed out. Please try again.";
+      default:
+        return "Something went wrong with your payment. Please check your payment details and try again.";
+    }
+  };
+
+  // Function to handle retry payment
+  const handleRetryPayment = () => {
+    // Redirect back to cart with the same gig ID
+    if (gigId) {
+      navigate(`/app/client/cart/${gigId}`);
+    } else {
+      // Fallback to dashboard if no gig ID
+      navigate("/app/client/dashboard");
+    }
+  };
 
   // Function to send tasks to backend
   const sendTasksToBackend = async (tasks, clientId) => {
@@ -182,8 +221,58 @@ const PaymentSuccess = () => {
         </div>
       ) : (
         <div>
-          <p>Something went wrong with your payment.</p>
-          <button onClick={() => navigate("/app/client/home")}>Go to Home</button>
+          <p style={{ color: '#e74c3c', marginBottom: '15px' }}>
+            <strong>Payment Failed</strong>
+          </p>
+          <p style={{ marginBottom: '15px' }}>
+            {getErrorMessage()}
+          </p>
+          {txRef && (
+            <p style={{ fontSize: '14px', color: '#666', marginBottom: '15px' }}>
+              Reference: {txRef}
+            </p>
+          )}
+          <div style={{ display: 'flex', gap: '10px', flexWrap: 'wrap' }}>
+            <button 
+              onClick={handleRetryPayment}
+              style={{ 
+                backgroundColor: '#3498db', 
+                color: 'white', 
+                padding: '10px 20px',
+                border: 'none',
+                borderRadius: '5px',
+                cursor: 'pointer'
+              }}
+            >
+              Try Again
+            </button>
+            <button 
+              onClick={() => navigate("/app/client/dashboard")}
+              style={{ 
+                backgroundColor: '#95a5a6', 
+                color: 'white', 
+                padding: '10px 20px',
+                border: 'none',
+                borderRadius: '5px',
+                cursor: 'pointer'
+              }}
+            >
+              Browse Services
+            </button>
+            <button 
+              onClick={() => navigate("/app/client/dashboard")}
+              style={{ 
+                backgroundColor: '#7f8c8d', 
+                color: 'white', 
+                padding: '10px 20px',
+                border: 'none',
+                borderRadius: '5px',
+                cursor: 'pointer'
+              }}
+            >
+              Go to Dashboard
+            </button>
+          </div>
         </div>
       )}
     </div>

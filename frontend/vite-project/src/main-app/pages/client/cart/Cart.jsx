@@ -91,6 +91,7 @@ const Cart = () => {
       }
       
       const user = JSON.parse(localStorage.getItem("userDetails"));
+      // const id = user?.id;
       
       // Calculate total amount (order fee + service fee)
       const orderFee = frequencyPriceData ? frequencyPriceData.calculatedPrice : service.price;
@@ -172,6 +173,19 @@ const Cart = () => {
             const data = await response.json();
             console.log("Service details:", data);
             setService(data);
+            
+            // Calculate default weekly frequency price data
+            const weeklyMultiplier = 4; // Assuming weekly means 4 times per month
+            const defaultWeeklyPrice = data.price * weeklyMultiplier;
+            const defaultPriceData = {
+              frequency: 'weekly',
+              multiplier: weeklyMultiplier,
+              basePrice: data.price,
+              calculatedPrice: defaultWeeklyPrice
+            };
+            
+            // Set default frequency price data
+            setFrequencyPriceData(defaultPriceData);
           } catch (error) {
             setError(error.message);
           } finally {

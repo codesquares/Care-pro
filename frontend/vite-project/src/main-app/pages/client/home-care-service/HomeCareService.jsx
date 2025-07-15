@@ -191,41 +191,11 @@ const HomeCareService = () => {
   const navigate = useNavigate();
   const basePath = "/app/client";
 
-  const handleHire = async () => {
+ const handleHire = async () => {
     if (!service) return;
-    const user = JSON.parse(localStorage.getItem("userDetails"));
-    localStorage.setItem("gigId", id);
-    localStorage.setItem("amount", service.price);
-    localStorage.setItem("providerId", service.caregiverId);
-
-    try {
-      const payload = {
-        amount: service.price,
-        email: user?.email,
-        currency: "NIGN",
-        redirectUrl: `${window.location.origin}/app/client/payment-success`,
-      };
-
-      const response = await fetch(
-        "https://carepro-api20241118153443.azurewebsites.net/api/payments/initiate",
-        {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify(payload),
-        }
-      );
-
-      const data = await response.json();
-      if (data.status === "success" && data.data?.link) {
-        window.location.href = data.data.link;
-      } else {
-        throw new Error("Failed to get payment link");
-      }
-    } catch (err) {
-      console.error("Payment error:", err);
-      setError(err.message);
-    }
-  };
+  
+    navigate(`${basePath}/cart/${id}`);
+ };
 
   const handleMessage = () => {
     navigate(`${basePath}/message/${service.caregiverId}`, {

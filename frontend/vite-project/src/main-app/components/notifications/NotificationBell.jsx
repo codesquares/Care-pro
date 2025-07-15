@@ -3,7 +3,7 @@ import { useSelector, useDispatch } from 'react-redux';
 import { markNotificationAsRead, markAllNotificationsAsRead } from '../../Redux/slices/notificationSlice';
 import './NotificationBell.css';
 
-const NotificationBell = ({ navigateTo }) => {
+const NotificationBell = ({ navigateTo, bellIcon }) => {
   const { notifications, unreadCount, loading } = useSelector((state) => state.notifications);
   const dispatch = useDispatch();
   const [isOpen, setIsOpen] = useState(false);
@@ -25,7 +25,11 @@ const NotificationBell = ({ navigateTo }) => {
   return (
     <div className="notification-bell-container" ref={dropdownRef}>
       <button className="notification-bell" onClick={toggleNotifications}>
-        🔔
+        {bellIcon ? (
+          <img src={bellIcon} alt="Notifications" />
+        ) : (
+          '🔔'
+        )}
         {unreadCount > 0 && <span className="notification-badge">{unreadCount > 9 ? '9+' : unreadCount}</span>}
       </button>
 

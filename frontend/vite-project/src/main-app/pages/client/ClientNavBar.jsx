@@ -2,7 +2,7 @@ import React, { useState, useRef, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import logo from '../../../assets/careproLogo.svg';
 import hear from "../../../assets/main-app/heart.svg";
-import bell from "../../../assets/main-app/notification-bing.svg";
+import bellIcon from "../../../assets/bell_icon.png";
 import message from "../../../assets/main-app/message.svg";
 import receipt from "../../../assets/main-app/receipt.svg";
 import NotificationBell from "../../components/notifications/NotificationBell";
@@ -59,8 +59,7 @@ const ClientNavBar = () => {
 
       <ul className="nav-icons">
         <li className="nav-link icon-link">
-          {/* <NotificationBell navigateTo={(path) => navigate(path)} /> */}
-                      <img src={bell} alt="Notifications" onClick={() => navigate(path)} />
+          <NotificationBell navigateTo={(path) => navigate(path)} bellIcon={bellIcon} />
         </li>
         <IconLink to={`${basePath}/message`} icon={message} alt="Messages" />
         {/* <IconLink to={`${basePath}/favorites`} icon={hear} alt="Favorites" /> */}

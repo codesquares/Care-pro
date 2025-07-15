@@ -72,6 +72,15 @@ useEffect(() => {
         const data = await response.json();
         console.log("Profile data received:", data);
 
+        // Format the member since date
+        const formattedDate = data.createdAt 
+          ? new Date(data.createdAt).toLocaleDateString('en-US', { 
+              year: 'numeric', 
+              month: 'long', 
+              day: 'numeric' 
+            })
+          : "N/A";
+
         const transformedData = {
           picture: data.profilePicture || profilecard1,
           name: `${data.firstName} ${data.lastName}`,
@@ -88,8 +97,8 @@ useEffect(() => {
           services: data.services || [],
           status: data.status || false,
           isAvailable: data.isAvailable || false,
-          // Use verification status from node API
-          verificationStatus: verificationStatusValue,
+          // Use verification status from cached data or default to unverified
+          verificationStatus: "unverified",
         };
 
         const cachedStatus = verificationService.getCachedVerificationStatus(

@@ -85,9 +85,11 @@ const ProfileInformation = ({ profileDescription, onUpdate, services}) => {
 
       <div className="services">
         <h3>Services</h3>
-        <ul>
-          {services.map((service, i) => <li key={i}>{service}</li>)}
-        </ul>
+        <div className="services-list">
+          {services.map((service, i) => (
+            <div key={i} className="service-item">{service}</div>
+          ))}
+        </div>
       </div>
 
       <hr />

@@ -3,7 +3,7 @@ import { useNavigate } from "react-router-dom";
 import "./NavigationBar.css";
 import logo from '../../../../assets/careproLogo.svg';
 import hear from "../../../../assets/main-app/heart.svg";
-// import Bell from "../../../../assets/main-app/notification-bing.svg";
+import bellIcon from "../../../../assets/bell_icon.png";
 import message from "../../../../assets/main-app/message.svg";
 import receipt from "../../../../assets/main-app/receipt.svg";
 import NotificationBell from "../../../components/notifications/NotificationBell";
@@ -94,7 +94,7 @@ const NavigationBar = () => {
 
       <ul className="nav-icons">
         <li className="nav-link icon-link">
-          <NotificationBell navigateTo={(path) => navigate(path)} />
+          <NotificationBell navigateTo={(path) => navigate(path)} bellIcon={bellIcon} />
         </li>
         <IconLink to={`${basePath}/message`} icon={message} alt="Messages" />
         {/* <IconLink to={`${basePath}/favorites`} icon={hear} alt="Favorites" /> */}
