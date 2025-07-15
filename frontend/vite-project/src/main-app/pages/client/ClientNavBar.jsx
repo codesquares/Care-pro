@@ -75,7 +75,7 @@ const ClientNavBar = () => {
           
           <span onClick={() => setShowDropdown(!showDropdown)}>{userName}</span>
           <div className="avatar" onClick={() => setShowDropdown(!showDropdown)}>
-            {/* {getInitials(userName)} */}
+            {getInitials(userName)}
           </div>
           {showDropdown && (
             <div className="dropdown-menu">
