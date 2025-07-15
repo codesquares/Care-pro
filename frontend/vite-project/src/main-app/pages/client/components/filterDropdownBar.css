@@ -1,0 +1,17 @@
+.filter-dropdown-bar {
+  display: flex;
+  flex-direction: row;  /* Align items vertically */
+  gap: 12px;                /* Space between dropdowns */
+  margin: 20px 6rem;
+  width: 100%;
+  max-width: 400px;         /* Optional: limit width on large screens */
+}
+
+.filter-dropdown-bar select {
+  padding: 10px 12px;
+  font-size: 14px;
+  border-radius: 8px;
+  border: 1px solid #ccc;
+  width: 100%;
+  box-sizing: border-box;
+}

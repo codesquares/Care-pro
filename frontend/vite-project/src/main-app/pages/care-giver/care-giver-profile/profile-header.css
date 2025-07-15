@@ -30,6 +30,8 @@
     font-size: 0.85rem;
     margin: 10px 0;
   }
+
+
   
   .button-container {
     display: flex;
@@ -45,7 +47,7 @@
     border-radius: 4px;
     background: #34d399;
     color: #fff;
-    cursor: pointer;
+
   }
   
   .availability-btn.available {

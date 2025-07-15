@@ -9,7 +9,23 @@ import TestVerificationToggle from "../../../components/dev/TestVerificationTogg
 import verificationService from "../../../services/verificationService";
 
 const ProfileHeader = () => {
-  const [profile, setProfile] = useState(null);
+  const [profile, setProfile] = useState({
+    name: "",
+    username: "",
+    bio: "",
+    rating: 0,
+    reviews: 0,
+    location: "",
+    memberSince: "",
+    lastDelivery: "",
+    picture: "",
+    introVideo: "",
+    aboutMe: "",
+    services:[],
+    status: false,
+    verificationStatus: null,
+    isAvailable: false,
+  });
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState("");
 
@@ -63,13 +79,17 @@ useEffect(() => {
           bio: data.bio || `${data.firstName} is a caregiver on CarePro`,
           rating: data.rating || 0,
           reviews: data.reviews || 0,
-          location: data.location || "Location not specified",
-          memberSince: new Date(data.createdAt).toLocaleDateString(),
-          lastDelivery: data.lastDelivery || "No deliveries yet",
+          location: data.location || "N/A",
+          memberSince: formattedDate,
+          lastDelivery: data.lastDelivery || "N/A",
+          picture: data.picture || profilecard1,
+          introVideo: data.introVideo || "",
+          aboutMe: data.aboutMe || "N/A",
+          services: data.services || [],
           status: data.status || false,
-          verificationStatus: "unverified",
-          introVideo: data.introVideo || null,
-          aboutMe: data.aboutMe || data.bio || `Hello, I'm ${data.firstName}!`,
+          isAvailable: data.isAvailable || false,
+          // Use verification status from node API
+          verificationStatus: verificationStatusValue,
         };
 
         const cachedStatus = verificationService.getCachedVerificationStatus(
@@ -143,7 +163,7 @@ useEffect(() => {
   };
 
   return (
-    <>
+        
       <div className="profile-header" style={headerStyle}>
         <img
           src={profile.picture}
@@ -165,6 +185,10 @@ useEffect(() => {
             📦 Last Delivery: {profile.lastDelivery}
           </p>
         </div>
+        <div className={`availability-btn ${profile.isAvailable ? 'available' : 'unavailable'}`}>
+          {profile.isAvailable ? "Available" : "Unavailable"}
+        </div>
+        <div className="button-container">
         <button
           className={`availability-btn ${profile.status ? "available" : "unavailable"}`}
           style={{
@@ -194,10 +218,14 @@ useEffect(() => {
       </div>
 
       <IntroVideo profileIntrovideo={profile.introVideo} />
-      <ProfileInformation profileDescription={profile.aboutMe} />
-
-      {process.env.NODE_ENV !== "production" && <TestVerificationToggle />}
-    </>
+      <ProfileInformation profileDescription = {profile.aboutMe} services={profile.services}
+      onUpdate={(newAboutMe) => setProfile(prev => ({ ...prev, aboutMe: newAboutMe }))}
+      />
+        
+      
+      {/* Development Tool for Testing - Remove in Production */}
+      {process.env.NODE_ENV !== 'production' && <TestVerificationToggle />}
+      </div>
   );
 };
 

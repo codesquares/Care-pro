@@ -110,7 +110,7 @@ const NavigationBar = () => {
         <div className="profile-avatar" ref={dropdownRef}>
           <span onClick={() => setShowDropdown(!showDropdown)}>{userName}</span>
           <div className="avatar" onClick={() => setShowDropdown(!showDropdown)}>
-            {getInitials(userName)}
+            {/* {getInitials(userName)} */}
           </div>
 
           {showDropdown && (
