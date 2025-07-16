@@ -45,6 +45,7 @@ builder.Services.Configure<DataProtectionTokenProviderOptions>(options =>
 
 
 
+/// Configure cloudinary service
 var cloudinarySettings = builder.Configuration.GetSection("CloudinarySettings");
 var account = new Account(
     cloudinarySettings["CloudName"],

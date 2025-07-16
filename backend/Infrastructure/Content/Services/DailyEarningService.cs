@@ -102,7 +102,8 @@ namespace Infrastructure.Content.Services
             while (!stoppingToken.IsCancellationRequested)
             {
                 var now = DateTime.Now;
-                var nextRun = DateTime.Today.AddDays(1);
+               // var nextRun = DateTime.Today.AddDays(1);
+                var nextRun = DateTime.Now.AddMinutes(10);
                 var delay = nextRun - now;
 
                 _logger.LogInformation("DailyEarningService will run in {Delay}", delay);
@@ -119,6 +120,7 @@ namespace Infrastructure.Content.Services
                 }
             }
         }
+
 
         private async Task ProcessEarningsAsync()
         {
@@ -141,6 +143,7 @@ namespace Infrastructure.Content.Services
                 {
                     Id = ObjectId.GenerateNewId(),
                     ClientOrderId = order.Id.ToString(),
+                    CaregiverId = order.CaregiverId,
                     Amount = order.Amount,
                     CreatedAt = DateTime.UtcNow
                 });

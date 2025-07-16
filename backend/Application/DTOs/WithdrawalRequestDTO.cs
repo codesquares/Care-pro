@@ -63,6 +63,15 @@ namespace Application.DTOs
         public string? AccountName { get; set; }
     }
 
+
+    public class CaregiverWithdrawalSummaryResponse
+    {
+        public decimal TotalAmountEarned { get; set; }
+        public decimal TotalAmountWithdrawn { get; set; }
+        public decimal WithdrawableAmount { get; set; }
+    }
+
+
     public class AdminWithdrawalVerificationRequest
     {
         public string Token { get; set; }

@@ -45,7 +45,7 @@ namespace Application.DTOs
     {
         public decimal TotalEarning { get; set; }
         public decimal WithdrawableAmount { get; set; }
-        public List<EarningsResponse> Earnings { get; set; }
+       // public List<EarningsResponse> Earnings { get; set; }
     }
 
 

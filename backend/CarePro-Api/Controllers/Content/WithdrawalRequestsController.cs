@@ -131,6 +131,24 @@ namespace CarePro_Api.Controllers.Content
             }
         }
 
+
+        [HttpGet("TotalAmountEarnedAndWithdrawn/{caregiverId}")]
+        // [Authorize(Roles = "Admin,SuperAdmin")]
+        public async Task<IActionResult> GetTotalAmountEarnedAndWithdrawnByCaregiverIdAsync(string caregiverId)
+        {
+            try
+            {
+                var withdrawals = await _withdrawalRequestService.GetTotalAmountEarnedAndWithdrawnByCaregiverIdAsync(caregiverId);
+                return Ok(withdrawals);
+            }
+            catch (Exception ex)
+            {
+                return BadRequest(new { ErrorMessage = ex.Message });
+            }
+        }
+
+
+
         [HttpPost("verify")]
        // [Authorize(Roles = "Admin,SuperAdmin")]
         public async Task<IActionResult> VerifyWithdrawalRequest([FromBody] AdminWithdrawalVerificationRequest request)

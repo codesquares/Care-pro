@@ -43,9 +43,13 @@ namespace CarePro_Api.Controllers.Content
         {
             try
             {
-                var earnings = await _earningsService.GetEarningsByCaregiverIdAsync(caregiverId);
+                var earnings = await _earningsService.GetEarningByCaregiverIdAsync(caregiverId);
                 if (earnings == null)
-                    return NotFound("No earnings record found for this caregiver");
+                {
+                    // return NotFound("No earnings record found for this caregiver");
+                    return Ok (earnings);
+                }
+                    
 
                 return Ok(earnings);
             }

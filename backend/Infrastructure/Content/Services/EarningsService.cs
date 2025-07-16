@@ -79,7 +79,7 @@ namespace Infrastructure.Content.Services
                     .OrderByDescending(n => n.CreatedAt)                    
                     .ToListAsync();
 
-            var earningsDTO = new List<EarningsResponse>();
+          //  var earningsDTO = new List<EarningsResponse>();
             decimal WithdrawableAmount = 0;
             decimal totalEarnings = 0;
 
@@ -87,23 +87,13 @@ namespace Infrastructure.Content.Services
             {
                 WithdrawableAmount += earning.Amount;
                 totalEarnings += earning.Amount;
-
-                var earningDTO = new EarningsResponse()
-                {
-                    Id = earning.Id.ToString(),
-                    ClientOrderId = earning.ClientOrderId,
-                    CaregiverId = earning.CaregiverId,
-                    Amount = earning.Amount,
-                    CreatedAt = earning.CreatedAt,
-                    WithdrawableAmount = WithdrawableAmount
-                };
-                earningsDTO.Add(earningDTO);
+                                
             }
 
            // return earningsDTO;
             return new CaregiverEarningSummaryResponse
             {
-                Earnings = earningsDTO,
+               // Earnings = earningsDTO,
                 WithdrawableAmount = WithdrawableAmount,
                 TotalEarning = totalEarnings
             };
