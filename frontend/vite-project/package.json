@@ -30,7 +30,8 @@
     "react-router-dom": "^6.26.1",
     "react-scripts": "5.0.1",
     "sass": "^1.77.8",
-    "tree-kill": "^1.2.2"
+    "tree-kill": "^1.2.2",
+    "webpack-dev-server": "^4.15.2"
   },
   "devDependencies": {
     "@babel/core": "^7.26.7",
@@ -52,5 +53,9 @@
     "typescript": "^4.9.5",
     "vite": "^5.4.1",
     "wait-on": "^8.0.2"
-  }
+  },
+  "overrides": {
+  "postcss": "^8.4.38",
+  "brace-expansion": "^4.0.1"
+}
 }
