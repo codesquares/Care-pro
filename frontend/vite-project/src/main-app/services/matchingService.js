@@ -472,46 +472,46 @@ class MatchingService {
    * Get mock gigs as fallback
    * @returns {Array} Mock gigs
    */
-  static getMockGigs() {
-    return [
-      {
-        id: 'gig-1',
-        title: 'Elder Care Assistance',
-        description: 'Looking for compassionate caregiver for elderly father with mild dementia',
-        serviceType: 'Elder Care',
-        location: 'Lagos',
-        schedule: 'weekday-mornings',
-        frequency: 'weekly',
-        payRate: 28,
-        duration: '4 hours',
-        requiredSkills: ['Dementia Care', 'Medication Management']
-      },
-      {
-        id: 'gig-2',
-        title: 'Special Needs Child Support',
-        description: 'Seeking experienced caregiver for 8-year-old with autism',
-        serviceType: 'Special Needs Care',
-        location: 'Abuja',
-        schedule: 'afternoons',
-        frequency: 'daily',
-        payRate: 32,
-        duration: '3 hours',
-        requiredSkills: ['Autism Support', 'Behavioral Management']
-      },
-      {
-        id: 'gig-3',
-        title: 'Post-Surgery Recovery Help',
-        description: 'Need assistance with recovery after knee surgery',
-        serviceType: 'Post-Surgery Care',
-        location: 'Lagos',
-        schedule: 'flexible',
-        frequency: 'as-needed',
-        payRate: 30,
-        duration: 'varies',
-        requiredSkills: ['Physical Therapy', 'Mobility Assistance']
-      }
-    ];
-  }
+  // static getMockGigs() {
+  //   return [
+  //     {
+  //       id: 'gig-1',
+  //       title: 'Elder Care Assistance',
+  //       description: 'Looking for compassionate caregiver for elderly father with mild dementia',
+  //       serviceType: 'Elder Care',
+  //       location: 'Lagos',
+  //       schedule: 'weekday-mornings',
+  //       frequency: 'weekly',
+  //       payRate: 28,
+  //       duration: '4 hours',
+  //       requiredSkills: ['Dementia Care', 'Medication Management']
+  //     },
+  //     {
+  //       id: 'gig-2',
+  //       title: 'Special Needs Child Support',
+  //       description: 'Seeking experienced caregiver for 8-year-old with autism',
+  //       serviceType: 'Special Needs Care',
+  //       location: 'Abuja',
+  //       schedule: 'afternoons',
+  //       frequency: 'daily',
+  //       payRate: 32,
+  //       duration: '3 hours',
+  //       requiredSkills: ['Autism Support', 'Behavioral Management']
+  //     },
+  //     {
+  //       id: 'gig-3',
+  //       title: 'Post-Surgery Recovery Help',
+  //       description: 'Need assistance with recovery after knee surgery',
+  //       serviceType: 'Post-Surgery Care',
+  //       location: 'Lagos',
+  //       schedule: 'flexible',
+  //       frequency: 'as-needed',
+  //       payRate: 30,
+  //       duration: 'varies',
+  //       requiredSkills: ['Physical Therapy', 'Mobility Assistance']
+  //     }
+  //   ];
+  // }
 }
 
 export default MatchingService;
