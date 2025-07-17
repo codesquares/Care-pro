@@ -393,80 +393,80 @@ class MatchingService {
    * Fetch available gigs from the API
    * @returns {Promise<Array>} Array of gig data
    */
-  static async fetchAvailableGigs() {
-    try {
-      // Get token from localStorage
-      const token = localStorage.getItem('authToken');
-      if (!token) {
-        console.warn('No authentication token found for API calls');
-        return this.getMockGigs();
-      }
+  // static async fetchAvailableGigs() {
+  //   try {
+  //     // Get token from localStorage
+  //     const token = localStorage.getItem('authToken');
+  //     if (!token) {
+  //       console.warn('No authentication token found for API calls');
+  //       return this.getMockGigs();
+  //     }
       
-      const API_URL = 'https://carepro-api20241118153443.azurewebsites.net/api/Gigs';
+  //     const API_URL = 'https://carepro-api20241118153443.azurewebsites.net/api/Gigs';
       
-      // Use timeout for better UX
-      const controller = new AbortController();
-      const timeoutId = setTimeout(() => controller.abort(), 7000); // 7 second timeout
+  //     // Use timeout for better UX
+  //     const controller = new AbortController();
+  //     const timeoutId = setTimeout(() => controller.abort(), 7000); // 7 second timeout
       
-      const response = await fetch(API_URL, {
-        method: 'GET',
-        headers: {
-          'Authorization': `Bearer ${token}`,
-          'Content-Type': 'application/json'
-        },
-        signal: controller.signal
-      });
+  //     const response = await fetch(API_URL, {
+  //       method: 'GET',
+  //       headers: {
+  //         'Authorization': `Bearer ${token}`,
+  //         'Content-Type': 'application/json'
+  //       },
+  //       signal: controller.signal
+  //     });
       
-      clearTimeout(timeoutId);
+  //     clearTimeout(timeoutId);
       
-      if (!response.ok) {
-        console.warn(`API returned ${response.status} when fetching gigs`);
-        return this.getMockGigs();
-      }
+  //     if (!response.ok) {
+  //       console.warn(`API returned ${response.status} when fetching gigs`);
+  //       return this.getMockGigs();
+  //     }
       
-      const data = await response.json();
+  //     const data = await response.json();
       
-      if (!data || !Array.isArray(data)) {
-        console.warn('Invalid data format received from API');
-        return this.getMockGigs();
-      }
+  //     if (!data || !Array.isArray(data)) {
+  //       console.warn('Invalid data format received from API');
+  //       return this.getMockGigs();
+  //     }
       
-      // Map the API response to our expected format
-      return data.filter(gig => gig.status === 'published').map(gig => {
-        // Extract required skills from requirements or categories
-        const requiredSkills = [];
-        if (gig.requirements && Array.isArray(gig.requirements)) {
-          requiredSkills.push(...gig.requirements);
-        } else if (gig.subCategory) {
-          requiredSkills.push(gig.subCategory);
-        }
+  //     // Map the API response to our expected format
+  //     return data.filter(gig => gig.status === 'published').map(gig => {
+  //       // Extract required skills from requirements or categories
+  //       const requiredSkills = [];
+  //       if (gig.requirements && Array.isArray(gig.requirements)) {
+  //         requiredSkills.push(...gig.requirements);
+  //       } else if (gig.subCategory) {
+  //         requiredSkills.push(gig.subCategory);
+  //       }
         
-        // Determine frequency
-        let frequency = 'as-needed';
-        if (gig.title) {
-          if (gig.title.toLowerCase().includes('daily')) frequency = 'daily';
-          else if (gig.title.toLowerCase().includes('weekly')) frequency = 'weekly';
-          else if (gig.title.toLowerCase().includes('monthly')) frequency = 'monthly';
-        }
+  //       // Determine frequency
+  //       let frequency = 'as-needed';
+  //       if (gig.title) {
+  //         if (gig.title.toLowerCase().includes('daily')) frequency = 'daily';
+  //         else if (gig.title.toLowerCase().includes('weekly')) frequency = 'weekly';
+  //         else if (gig.title.toLowerCase().includes('monthly')) frequency = 'monthly';
+  //       }
         
-        return {
-          id: gig.id,
-          title: gig.title,
-          description: gig.description,
-          serviceType: gig.category || gig.subCategory || 'General Care',
-          location: gig.location || 'Unknown',
-          schedule: gig.availabilitySchedule || 'flexible',
-          frequency: frequency,
-          payRate: gig.price || 0,
-          duration: gig.duration || 'varies',
-          requiredSkills: requiredSkills
-        };
-      });
-    } catch (error) {
-      console.error('Error fetching gigs:', error);
-      return this.getMockGigs();
-    }
-  }
+  //       return {
+  //         id: gig.id,
+  //         title: gig.title,
+  //         description: gig.description,
+  //         serviceType: gig.category || gig.subCategory || 'General Care',
+  //         location: gig.location || 'Unknown',
+  //         schedule: gig.availabilitySchedule || 'flexible',
+  //         frequency: frequency,
+  //         payRate: gig.price || 0,
+  //         duration: gig.duration || 'varies',
+  //         requiredSkills: requiredSkills
+  //       };
+  //     });
+  //   } catch (error) {
+  //     console.error('Error fetching gigs:', error);
+  //     return this.getMockGigs();
+  //   }
+  // }
   
   /**
    * Get mock gigs as fallback
