@@ -4,9 +4,11 @@ on:
   push:
     branches:
       - dev
+      - pre-deployment
   pull_request:
     branches:
       - dev
+      - pre-deployment
 
 jobs:
   build-and-test:
