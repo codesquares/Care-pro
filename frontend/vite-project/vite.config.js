@@ -56,11 +56,14 @@ export default defineConfig({
       },
 
     },
-    host: true, // Allows access from other devices on the network
+    host: 'localhost', // Safer default; avoid exposing dev server to network
+    fs: {
+      deny: ['.env', '.env.local', '.git', 'node_modules'], // Deny sensitive folders explicitly
+    },
     strictPort: false, // Ensures the server will not start if the port is already in use
   },
   preview:{
-    host: '0.0.0.0',
+    host: 'localhost',
     port: process.env.PORT || 5173,
     strictPort: false,
     allowedHosts: 'all'
