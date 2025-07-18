@@ -3,6 +3,20 @@ const crypto = require('crypto');
 // const config = require('../config');
 const dotenv = require('dotenv');
 
+// In-memory storage for webhook data (temporary bridge)
+const webhookDataStore = new Map();
+
+// Cleanup expired data every hour
+setInterval(() => {
+  const now = Date.now();
+  for (const [userId, data] of webhookDataStore.entries()) {
+    if (now > data.expiresAt) {
+      webhookDataStore.delete(userId);
+      console.log(`Expired webhook data cleaned up for user: ${userId}`);
+    }
+  }
+}, 60 * 60 * 1000); // Run every hour
+
 // Verify Dojah webhook signature
 const verifySignature = (signature, body) => {
   const hash = crypto
@@ -77,24 +91,18 @@ const handleDojahWebhook = async (req, res) => {
         return res.status(400).json({ error: 'Missing user ID' });
       }
 
-      // Format data for Azure
-      const verificationData = formatVerificationData(data, userId);
-      console.log('Formatted verification data:', verificationData);
+      // Store webhook data temporarily in memory
+      const webhookData = {
+        timestamp: Date.now(),
+        rawData: req.body,
+        retrieved: false,
+        expiresAt: Date.now() + (12 * 60 * 60 * 1000) // 12 hours
+      };
 
-      // Send to Azure backend
-      const response = await axios.post(
-        `${process.env.API_URL}/Verifications`,
-        verificationData,
-        {
-          headers: {
-            'Authorization': `Bearer ${req.headers.authorization}`,
-            'Content-Type': 'application/json'
-          }
-        }
-      );
+      webhookDataStore.set(userId, webhookData);
+      console.log(`Webhook data stored for user ${userId}, expires in 12 hours`);
 
-      console.log('Azure API response:', response.data);
-      return res.status(200).json({ status: 'success' });
+      return res.status(200).json({ status: 'success', message: 'Webhook data stored successfully' });
     }
 
     // Handle other webhook events
@@ -116,6 +124,65 @@ const handleGetDojahWebhook = (req, res) => {
   // This endpoint is for testing purposes, to verify if the webhook is reachable
   res.status(200).json({ status: 'Dojah webhook is reachable' });
 };
+
+// Get webhook data for a specific user
+const getWebhookData = async (req, res) => {
+  try {
+    const { userId } = req.params;
+
+    if (!userId) {
+      return res.status(400).json({ 
+        success: false, 
+        error: 'User ID is required' 
+      });
+    }
+
+    const storedData = webhookDataStore.get(userId);
+
+    if (!storedData) {
+      return res.status(200).json({ 
+        success: false, 
+        status: 'not_found',
+        message: 'No webhook data found for this user. Verification may not have been completed yet.',
+        data: null
+      });
+    }
+
+    // Check if data has expired
+    if (Date.now() > storedData.expiresAt) {
+      webhookDataStore.delete(userId);
+      return res.status(200).json({ 
+        success: false, 
+        status: 'expired',
+        message: 'Verification data has expired after 12 hours. Please complete verification again.',
+        data: null
+      });
+    }
+
+    // Mark as retrieved and optionally delete (uncomment if you want one-time access)
+    // webhookDataStore.delete(userId);
+
+    console.log(`Webhook data retrieved for user: ${userId}`);
+
+    return res.status(200).json({ 
+      success: true, 
+      status: 'found',
+      data: storedData.rawData,
+      timestamp: storedData.timestamp,
+      message: 'Webhook data retrieved successfully'
+    });
+
+  } catch (error) {
+    console.error('Error retrieving webhook data:', error);
+    return res.status(500).json({ 
+      success: false,
+      status: 'error',
+      error: 'Failed to retrieve webhook data',
+      details: error.message 
+    });
+  }
+};
+
 // Save verification data (called from frontend)
 const saveVerificationData = async (req, res) => {
   try {
@@ -273,5 +340,6 @@ module.exports = {
   handleDojahWebhook,
   saveVerificationData,
   getVerificationStatus,
-  handleGetDojahWebhook
+  handleGetDojahWebhook,
+  getWebhookData
 };

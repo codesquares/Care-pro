@@ -14,6 +14,9 @@ router.get('/webhook', dojahController.handleGetDojahWebhook);
 // Save verification data endpoint (protected)
 router.post('/save', protect, dojahController.saveVerificationData);
 
+// Get webhook data endpoint (protected) - NEW
+router.get('/data/:userId', protect, dojahController.getWebhookData);
+
 // Get verification status endpoint (protected)
 router.get('/status', protect, dojahController.getVerificationStatus);
 
