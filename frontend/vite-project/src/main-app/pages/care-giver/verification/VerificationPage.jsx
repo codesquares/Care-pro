@@ -3,9 +3,10 @@ import { useNavigate } from "react-router-dom";
 import "./verification-page.css";
 import "./verification-page-footer.css";
 import verificationService from "../../../services/verificationService";
-import { saveDojahVerification, processDojahResponse } from "../../../services/dojahService";
+import { saveDojahVerification, processDojahResponse, getWebhookData } from "../../../services/dojahService";
 import { Helmet } from "react-helmet-async";
 import DojahVerificationButton from "../../../components/verification/DojahVerificationButton";
+import { use } from "react";
 
 const VerificationPage = () => {
   const navigate = useNavigate();
@@ -14,6 +15,7 @@ const VerificationPage = () => {
   const [verificationStatus, setVerificationStatus] = useState(null);
   const [progress, setProgress] = useState(0);
   const [progressMessage, setProgressMessage] = useState("");
+  const [webhookData, setWebhookData] = useState(false);
 
   // Get token and user ID from localStorage
   const userDetails = JSON.parse(localStorage.getItem("userDetails") || "{}");
@@ -65,6 +67,22 @@ const VerificationPage = () => {
     };
 
     checkStatus();
+  }, []);
+
+  useEffect(() => {
+    // Check for webhook data when component mounts
+    const fetchWebhookData = async () => {
+      const userId = userDetails.id;
+      const token = localStorage.getItem("authToken");
+      try {
+        const data = await getWebhookData(userId, token);
+        console.log('Fetched webhook data====>:', data);
+      } catch (error) {
+        console.error('Error fetching webhook data:', error);
+      }
+    };
+
+    fetchWebhookData();
   }, []);
 
   // Handle Dojah verification success
@@ -121,47 +139,7 @@ const VerificationPage = () => {
     });
   };
   
-  // Debug function to manually trigger verification widget
-  const debugOpenWidget = () => {
-    console.log('Manually opening widget...');
-    // Create global function to access from console
-    window.openDojahWidget = () => {
-      console.log('Attempting to open widget from debug function');
-      const script = document.createElement('script');
-      script.innerHTML = `
-        try {
-          console.log('Creating widget directly');
-          const widget = new DojahWidget({
-            appId: "${import.meta.env.VITE_DOJAH_APP_ID || "686c915878a2b53b2bdb5631"}",
-            widgetId: "${import.meta.env.VITE_DOJAH_WIDGET_ID || "68732f5e97202a07f66bc89a"}",
-            type: "custom",
-            config: {
-              debug: true,
-              webhook: true,
-              stages: ["government-data", "selfie"]
-            },
-            metadata: {
-              user_id: "${userDetails.id}"
-            },
-            callback: function(response) {
-              console.log("Direct widget verification completed:", response);
-            },
-            onError: function(error) {
-              console.error("Direct widget verification error:", error);
-            }
-          });
-          
-          widget.setup();
-          widget.open();
-        } catch (e) {
-          console.error('Error creating widget directly:', e);
-        }
-      `;
-      document.body.appendChild(script);
-    };
-    
-    alert('Debug function added. Open console and type: window.openDojahWidget()');
-  };
+  
 
   return (
     <div className="verification-container">
@@ -213,24 +191,6 @@ const VerificationPage = () => {
               backgroundColor="#00A651"
               user={userDetails}
             />
-            
-            {/* Debug button */}
-            {/* {import.meta.env.DEV && (
-              <button 
-                onClick={debugOpenWidget}
-                style={{
-                  marginTop: '10px',
-                  padding: '5px 10px',
-                  fontSize: '12px',
-                  backgroundColor: '#f0f0f0',
-                  border: '1px solid #ccc',
-                  borderRadius: '4px',
-                  cursor: 'pointer'
-                }}
-              >
-                Debug Widget
-              </button>
-            )} */}
           </div>
         </div>
 
