@@ -71,3 +71,52 @@ export const getWebhookData = async (userId, token) => {
     throw error;
   }
 };
+
+// Admin-only methods
+export const getAllWebhookData = async (token) => {
+  try {
+    const response = await fetch(`${endpoint}/dojah/admin/all-data`, {
+      headers: {
+        Authorization: `Bearer ${token}`,
+        'Content-Type': 'application/json'
+      }
+    });
+
+    if (!response.ok) {
+      if (response.status === 403) {
+        throw new Error('Access denied. Admin role required.');
+      }
+      throw new Error(`HTTP error! status: ${response.status}`);
+    }
+
+    const data = await response.json();
+    return data;
+  } catch (error) {
+    console.error('Error fetching all webhook data:', error);
+    throw error;
+  }
+};
+
+export const getWebhookStatistics = async (token) => {
+  try {
+    const response = await fetch(`${endpoint}/dojah/admin/statistics`, {
+      headers: {
+        Authorization: `Bearer ${token}`,
+        'Content-Type': 'application/json'
+      }
+    });
+
+    if (!response.ok) {
+      if (response.status === 403) {
+        throw new Error('Access denied. Admin role required.');
+      }
+      throw new Error(`HTTP error! status: ${response.status}`);
+    }
+
+    const data = await response.json();
+    return data;
+  } catch (error) {
+    console.error('Error fetching webhook statistics:', error);
+    throw error;
+  }
+};

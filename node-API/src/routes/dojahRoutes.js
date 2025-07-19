@@ -20,4 +20,8 @@ router.get('/data/:userId', protect, dojahController.getWebhookData);
 // Get verification status endpoint (protected)
 router.get('/status', protect, dojahController.getVerificationStatus);
 
+// Admin endpoints (protected - requires admin role)
+router.get('/admin/all-data', protect, dojahController.getAllWebhookData);
+router.get('/admin/statistics', protect, dojahController.getWebhookStatistics);
+
 module.exports = router;

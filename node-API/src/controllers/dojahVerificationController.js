@@ -336,10 +336,144 @@ const getVerificationStatus = async (req, res) => {
   }
 };
 
+// Get all webhook data for admin users
+const getAllWebhookData = async (req, res) => {
+  try {
+    // Check if user has admin role (assuming it's passed in the request or JWT token)
+    const userRole = req.user?.role || req.headers['x-user-role'];
+    
+    if (!userRole || userRole !== 'admin') {
+      return res.status(403).json({
+        success: false,
+        error: 'Access denied. Admin role required.',
+        message: 'Only admin users can access all webhook data'
+      });
+    }
+
+    // Get all webhook data from memory store
+    const allWebhookData = [];
+    const now = Date.now();
+    
+    for (const [userId, data] of webhookDataStore.entries()) {
+      // Check if data has expired and clean it up
+      if (now > data.expiresAt) {
+        webhookDataStore.delete(userId);
+        console.log(`Expired webhook data cleaned up for user: ${userId}`);
+        continue;
+      }
+      
+      // Add non-expired data to result
+      allWebhookData.push({
+        userId,
+        timestamp: data.timestamp,
+        retrieved: data.retrieved,
+        expiresAt: data.expiresAt,
+        expiresIn: Math.max(0, Math.round((data.expiresAt - now) / (60 * 60 * 1000))), // Hours until expiry
+        webhookData: data.rawData
+      });
+    }
+
+    // Sort by timestamp (newest first)
+    allWebhookData.sort((a, b) => b.timestamp - a.timestamp);
+
+    console.log(`Admin user accessed all webhook data. Found ${allWebhookData.length} records.`);
+
+    return res.status(200).json({
+      success: true,
+      message: `Retrieved ${allWebhookData.length} webhook records`,
+      data: allWebhookData,
+      metadata: {
+        totalRecords: allWebhookData.length,
+        retrievedAt: new Date().toISOString(),
+        memoryStoreSize: webhookDataStore.size
+      }
+    });
+
+  } catch (error) {
+    console.error('Error retrieving all webhook data:', error);
+    return res.status(500).json({
+      success: false,
+      error: 'Failed to retrieve webhook data',
+      details: error.message
+    });
+  }
+};
+
+// Get webhook statistics for admin dashboard
+const getWebhookStatistics = async (req, res) => {
+  try {
+    const userRole = req.user?.role || req.headers['x-user-role'];
+    
+    if (!userRole || userRole !== 'admin') {
+      return res.status(403).json({
+        success: false,
+        error: 'Access denied. Admin role required.'
+      });
+    }
+
+    const now = Date.now();
+    let totalRecords = 0;
+    let expiredRecords = 0;
+    let successfulVerifications = 0;
+    let failedVerifications = 0;
+    const last24Hours = now - (24 * 60 * 60 * 1000);
+    let recentVerifications = 0;
+
+    for (const [userId, data] of webhookDataStore.entries()) {
+      totalRecords++;
+      
+      if (now > data.expiresAt) {
+        expiredRecords++;
+      } else {
+        // Count verification status
+        const webhookData = data.rawData;
+        if (webhookData.event === 'verification.completed') {
+          const verificationStatus = webhookData.data?.status;
+          if (verificationStatus === 'success') {
+            successfulVerifications++;
+          } else {
+            failedVerifications++;
+          }
+        }
+        
+        // Count recent verifications (last 24 hours)
+        if (data.timestamp > last24Hours) {
+          recentVerifications++;
+        }
+      }
+    }
+
+    return res.status(200).json({
+      success: true,
+      statistics: {
+        totalRecords,
+        activeRecords: totalRecords - expiredRecords,
+        expiredRecords,
+        successfulVerifications,
+        failedVerifications,
+        recentVerifications,
+        memoryStoreSize: webhookDataStore.size,
+        successRate: totalRecords > 0 ? ((successfulVerifications / (successfulVerifications + failedVerifications)) * 100).toFixed(2) : 0
+      },
+      timestamp: new Date().toISOString()
+    });
+
+  } catch (error) {
+    console.error('Error retrieving webhook statistics:', error);
+    return res.status(500).json({
+      success: false,
+      error: 'Failed to retrieve webhook statistics',
+      details: error.message
+    });
+  }
+};
+
 module.exports = {
   handleDojahWebhook,
   saveVerificationData,
   getVerificationStatus,
   handleGetDojahWebhook,
-  getWebhookData
+  getWebhookData,
+  getAllWebhookData,
+  getWebhookStatistics
 };

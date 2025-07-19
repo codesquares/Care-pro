@@ -6,6 +6,8 @@ import WithdrawalManagement from './withdrawal-management/WithdrawalManagement';
 import UsersManagement from './users-management/UsersManagement';
 import { useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
+import DojahDataViewer from '../../components/admin/DojahDataViewer';
+import DojahAdminDashboard from '../../components/admin/DojahAdminDashboard';
 
 function AdminRoutes() {
     const navigate = useNavigate();
@@ -28,6 +30,9 @@ function AdminRoutes() {
             <Route path='/question-bank' element={<QuestionBankManager />} />
             <Route path='/withdrawals' element={<WithdrawalManagement />} />
             <Route path='/users' element={<UsersManagement />} />
+            <Route path='/dojah-data' element={<DojahDataViewer />} />
+            <Route path="dojah-admin" element={<DojahAdminDashboard />} />
+
         </Routes>
         </>
     );

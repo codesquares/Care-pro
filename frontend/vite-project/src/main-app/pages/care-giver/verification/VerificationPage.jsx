@@ -53,7 +53,7 @@ const VerificationPage = () => {
           setProgressMessage("Account already verified!");
           setSuccess("Your account is already verified!");
           setTimeout(() => {
-            navigate("/app/caregiver/profile");
+            navigate("/app/caregiver/dashboard");
           }, 3000);
         } else {
           setProgress(0);
@@ -70,19 +70,67 @@ const VerificationPage = () => {
   }, []);
 
   useEffect(() => {
-    // Check for webhook data when component mounts
+    // Check for webhook data when component mounts and poll for updates
+    let pollInterval;
+    
     const fetchWebhookData = async () => {
       const userId = userDetails.id;
       const token = localStorage.getItem("authToken");
       try {
         const data = await getWebhookData(userId, token);
         console.log('Fetched webhook data====>:', data);
+        
+        // If webhook data is found and verification was successful
+        if (data.success && data.data && data.data.event === 'verification.completed') {
+          const verificationResult = data.data.data;
+          if (verificationResult.status === 'success') {
+            console.log('Verification successful from webhook:', verificationResult);
+            setSuccess("Identity verification successful!");
+            setProgress(100);
+            setProgressMessage("Verification completed!");
+
+            // Process and save Dojah verification data
+            const verificationData = processDojahResponse(verificationResult);
+            console.log('Processed verification data:', verificationData);
+            
+            await saveDojahVerification(verificationData, userDetails.id);
+            console.log('Verification data saved successfully');
+
+            // Update local verification status
+            setVerificationStatus({
+              verified: true,
+              verificationStatus: 'verified',
+              method: verificationData.verification_method,
+              timestamp: new Date().toISOString()
+            });
+
+            // Clear polling interval
+            if (pollInterval) {
+              clearInterval(pollInterval);
+            }
+
+            // Redirect after success
+            setTimeout(() => {
+              navigate("/app/caregiver/dashboard");
+            }, 3000);
+          }
+        }
       } catch (error) {
         console.error('Error fetching webhook data:', error);
       }
     };
 
     fetchWebhookData();
+    
+    // Set up polling to check for webhook data every 5 seconds
+    pollInterval = setInterval(fetchWebhookData, 5000);
+    
+    // Clean up interval on component unmount
+    return () => {
+      if (pollInterval) {
+        clearInterval(pollInterval);
+      }
+    };
   }, []);
 
   // Handle Dojah verification success
@@ -110,7 +158,7 @@ const VerificationPage = () => {
 
       // Redirect after success
       setTimeout(() => {
-        navigate("/app/caregiver/profile");
+        navigate("/app/caregiver/dashboard");
       }, 3000);
     } catch (err) {
       console.error('Error saving verification status:', err);
@@ -202,9 +250,9 @@ const VerificationPage = () => {
           <div className="footer-buttons">
             <button
               className="back-btn"
-              onClick={() => navigate("/app/caregiver/profile")}
+              onClick={() => navigate("/app/caregiver/dashboard")}
             >
-              <i className="fas fa-arrow-left"></i> Back to Profile
+              <i className="fas fa-arrow-left"></i> Back to Dashboard
             </button>
           </div>
         </div>

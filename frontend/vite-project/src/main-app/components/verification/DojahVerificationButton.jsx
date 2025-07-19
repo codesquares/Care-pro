@@ -63,13 +63,20 @@ const DojahVerificationButton = ({
       return null;
     }
     
+    // Dynamically determine the redirect URL based on current environment
+    // Use environment variable if set, otherwise use current origin
+    const redirectUrl = import.meta.env.VITE_REDIRECT_URL || 
+                       `${window.location.origin}/app/caregiver/dashboard`;
+    
+    console.log('Redirect URL for verification:', redirectUrl);
+    
     // Build the URL with all necessary parameters
     const baseUrl = 'https://identity.dojah.io';
     const params = new URLSearchParams({
       app_id: appId,
       widget_id: widgetId,
       user_id: userId || '',
-      redirect_url: window.location.href, // Redirect back to current page when done
+      redirect_url: redirectUrl, // Dynamically set based on current environment
       type: 'iframe' // Specify iframe mode
     });
     
