@@ -9,6 +9,8 @@ const DojahAdminDashboard = () => {
   const [selectedWebhook, setSelectedWebhook] = useState(null);
 
   const token = localStorage.getItem('authToken');
+  const user = JSON.parse(localStorage.getItem('userDetails') || '{}');
+  console.log('Current User:', user);
 
   useEffect(() => {
     loadData();
@@ -20,8 +22,8 @@ const DojahAdminDashboard = () => {
 
     try {
       const [allDataResponse, statsResponse] = await Promise.all([
-        getAllWebhookData(token),
-        getWebhookStatistics(token)
+        getAllWebhookData(token,user.role),
+        getWebhookStatistics(token,user.role)
       ]);
 
       setWebhookData(allDataResponse.data || []);

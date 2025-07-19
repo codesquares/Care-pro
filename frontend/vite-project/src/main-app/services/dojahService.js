@@ -73,12 +73,13 @@ export const getWebhookData = async (userId, token) => {
 };
 
 // Admin-only methods
-export const getAllWebhookData = async (token) => {
+export const getAllWebhookData = async (token,userRole) => {
   try {
     const response = await fetch(`${endpoint}/dojah/admin/all-data`, {
       headers: {
         Authorization: `Bearer ${token}`,
-        'Content-Type': 'application/json'
+        'Content-Type': 'application/json',
+        'x-user-role': userRole
       }
     });
 
@@ -97,12 +98,13 @@ export const getAllWebhookData = async (token) => {
   }
 };
 
-export const getWebhookStatistics = async (token) => {
+export const getWebhookStatistics = async (token,userRole) => {
   try {
     const response = await fetch(`${endpoint}/dojah/admin/statistics`, {
       headers: {
         Authorization: `Bearer ${token}`,
-        'Content-Type': 'application/json'
+        'Content-Type': 'application/json',
+        'x-user-role': userRole
       }
     });
 

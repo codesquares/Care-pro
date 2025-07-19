@@ -340,7 +340,7 @@ const getVerificationStatus = async (req, res) => {
 const getAllWebhookData = async (req, res) => {
   try {
     // Check if user has admin role (assuming it's passed in the request or JWT token)
-    const userRole = req.user?.role || req.headers['x-user-role'];
+    const userRole = req.headers['x-user-role'] || req.user?.role;
     
     if (!userRole || userRole !== 'admin') {
       return res.status(403).json({
@@ -402,7 +402,7 @@ const getAllWebhookData = async (req, res) => {
 // Get webhook statistics for admin dashboard
 const getWebhookStatistics = async (req, res) => {
   try {
-    const userRole = req.user?.role || req.headers['x-user-role'];
+    const userRole = req.headers['x-user-role'];
     
     if (!userRole || userRole !== 'admin') {
       return res.status(403).json({
