@@ -15,6 +15,18 @@ const ChatArea = ({ messages, recipient, userId, onSendMessage, isOfflineMode = 
   const [isLoading, setIsLoading] = useState(messages === undefined); // Add loading state
   const [isRecipientTyping, setIsRecipientTyping] = useState(false);
   
+  // Function to get initials from name (similar to NavigationBar)
+  const getInitials = (name) => {
+    if (!name || typeof name !== "string") return "?";
+    
+    const names = name.trim().split(" ").filter(Boolean);
+    if (names.length === 0) return "?";
+    
+    const initials = names.map((n) => n[0].toUpperCase()).join("");
+    
+    return initials.slice(0, 2);
+  };
+  
   // Define safeRecipient at component level to ensure it's available throughout
   // This prevents the undefined safeRecipient issue in handleSendMessage
   console.log("ChatArea received recipient:", recipient);
@@ -22,9 +34,9 @@ const ChatArea = ({ messages, recipient, userId, onSendMessage, isOfflineMode = 
   
   const safeRecipient = recipient ? {
     avatar: recipient.avatar || '/avatar.jpg',
-    name: recipient.recipientName || recipient.name || recipient.fullName || 'Care Provider',
+    name: recipient.recipientName || recipient.name || recipient.FullName || recipient.fullName || 'Care Provider',
     isOnline: recipient.isOnline || false,
-    lastActive: recipient.lastActive || new Date().toISOString(),
+    lastActive: recipient.lastActive || null, // Don't default to current time
     id: recipient.receiverId || recipient.id || recipient.userId || null
   } : null;
   
@@ -129,7 +141,7 @@ const ChatArea = ({ messages, recipient, userId, onSendMessage, isOfflineMode = 
     }
   };
 
-  const handleSendMessage = () => {
+  const handleSendMessage = async () => {
     if (message.trim()) {
       // Use the component-level safeRecipient variable
       // Extract recipient ID with fallbacks
@@ -189,18 +201,36 @@ const ChatArea = ({ messages, recipient, userId, onSendMessage, isOfflineMode = 
           messagePreview: message.length > 20 ? message.substring(0, 20) + '...' : message 
         });
         
-        // Based on the error stack trace, onSendMessage should receive recipientId and message
-        // onSendMessage is a prop passed from parent that should handle the userId internally
-        onSendMessage(effectiveRecipientId, message);
-        // Create a notification for the sent message
-        createNotification({
-          recipientId: effectiveRecipientId,
-          senderId: userId,
-          type: "NewMessage",
-          relatedEntityId: message.id,
-        }).then(() => {
-          console.log("Notification created successfully"); 
-        });
+        try {
+          // Based on the error stack trace, onSendMessage should receive recipientId and message
+          // onSendMessage is a prop passed from parent that should handle the userId internally
+          const messageId = await onSendMessage(effectiveRecipientId, message);
+          
+          // Create a notification for the sent message only if message was sent successfully
+          if (messageId) {
+            try {
+              const notificationData = {
+                recipientId: effectiveRecipientId,
+                senderId: userId,
+                type: "NewMessage"
+              };
+              
+              // Only add relatedEntityId if messageId is a valid string (not a temp ID)
+              if (messageId && typeof messageId === 'string' && !messageId.startsWith('temp-')) {
+                notificationData.relatedEntityId = messageId;
+              }
+              
+              await createNotification(notificationData);
+              console.log("Notification created successfully");
+            } catch (notificationError) {
+              console.warn("Failed to create notification, but message was sent successfully:", notificationError);
+              // Don't throw here since the message was already sent successfully
+            }
+          }
+        } catch (sendError) {
+          console.error("Failed to send message:", sendError);
+          // Handle message send failure here if needed
+        }
         
       } else {
         console.error("Invalid parameters for sending message:", { 
@@ -351,10 +381,10 @@ const ChatArea = ({ messages, recipient, userId, onSendMessage, isOfflineMode = 
   // Add this function before the return statement
   const formatLastActive = (lastActiveDate) => {
     try {
-      if (!lastActiveDate) return 'Not recently active';
+      if (!lastActiveDate) return 'Last seen unavailable';
       
       const lastActive = new Date(lastActiveDate);
-      if (isNaN(lastActive.getTime())) return 'Not recently active';
+      if (isNaN(lastActive.getTime())) return 'Last seen unavailable';
       
       const now = new Date();
       const diffInSeconds = Math.floor((now - lastActive) / 1000);
@@ -401,18 +431,20 @@ const ChatArea = ({ messages, recipient, userId, onSendMessage, isOfflineMode = 
       <header className="chat-header">
         <div className="recipient-info">
           <div className="avatar-container">
-            <img src={safeRecipient.avatar} alt={safeRecipient.name} className="avatar" />
+            <div className="avatar avatar-receiver">
+              {getInitials(safeRecipient.name)}
+            </div>
             {safeRecipient.isOnline && <span className="avatar-online-indicator"></span>}
           </div>
           <div className="recipient-details">
             <h3>{safeRecipient.name}</h3>
-            <div className="status-indicator">
+            <div className="status-indicator recipient-status">
               {safeRecipient.isOnline ? (
                 <span className="status online">Online</span>
               ) : (
                 <span 
                   className="status offline"
-                  data-full-time={safeRecipient.lastActive ? 
+                  title={safeRecipient.lastActive ? 
                     new Date(safeRecipient.lastActive).toLocaleString(undefined, {
                       weekday: 'long',
                       year: 'numeric',
@@ -430,11 +462,11 @@ const ChatArea = ({ messages, recipient, userId, onSendMessage, isOfflineMode = 
           </div>
         </div>
         <div className="chat-actions">
-          <button className="action-button" title="Call">
+          {/* <button className="action-button" title="Accept Offer">
             <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
               <path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6 19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72 12.84 12.84 0 0 0 .7 2.81 2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45 12.84 12.84 0 0 0 2.81.7A2 2 0 0 1 22 16.92z"></path>
             </svg>
-          </button>
+          </button> */}
           <button className="action-button" title="More options">
             <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
               <circle cx="12" cy="12" r="1"></circle>
@@ -464,7 +496,9 @@ const ChatArea = ({ messages, recipient, userId, onSendMessage, isOfflineMode = 
           {isNewConversation ? (
             <div className="new-conversation-message">
               <div className="welcome-message">
-                <img src={safeRecipient.avatar} alt={safeRecipient.name} className="welcome-avatar" />
+                <div className="welcome-avatar avatar-receiver">
+                  {getInitials(safeRecipient.name)}
+                </div>
                 <h3>Start a conversation with {safeRecipient.name}</h3>
                 <p>Send a message to begin chatting</p>
                 {isOfflineMode && (

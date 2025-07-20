@@ -66,7 +66,7 @@ export const MessageProvider = ({ children }) => {
   }, []);
   
   // Function to update conversations list with a new message
-  const updateConversationsList = useCallback(async (senderId) => {
+  const updateConversationsList = useCallback(async (senderId, messagePreview = 'New message') => {
     console.log('Updating conversations list with senderId:', senderId);
     
     // Store the last updated senderId for use in the refresh effect
@@ -89,17 +89,15 @@ export const MessageProvider = ({ children }) => {
             id: senderId,
             name: userData.fullName || userData.username || userData.firstName + ' ' + userData.lastName,
             avatar: userData.profileImage || '/default-avatar.png',
-            lastMessage: 'New message',
+            lastMessage: messagePreview,
             timestamp: new Date().toISOString(),
             unreadCount: unreadMessages[senderId] || 0,
-            isOnline: onlineUsers[senderId] || false
+            isOnline: onlineUsers[senderId] || false,
+            previewMessage: messagePreview
           };
           console.log('Adding new conversation to list:', newConversation);
           return [newConversation, ...prev];
         });
-        
-        // We'll refresh conversations in a separate effect
-        // Don't call fetchConversations here to avoid dependency cycle
       } catch (error) {
         console.error('Error fetching user info:', error);
         
@@ -113,10 +111,11 @@ export const MessageProvider = ({ children }) => {
                 id: senderId,
                 name: `User ${senderId.substring(0, 5)}...`,
                 avatar: '/default-avatar.png',
-                lastMessage: 'New message',
+                lastMessage: messagePreview,
                 timestamp: new Date().toISOString(),
                 unreadCount: unreadMessages[senderId] || 0,
-                isOnline: false
+                isOnline: onlineUsers[senderId] || false,
+                previewMessage: messagePreview
               },
               ...prev
             ];
@@ -131,7 +130,8 @@ export const MessageProvider = ({ children }) => {
         if (c.id === senderId) {
           return {
             ...c,
-            lastMessage: 'New message',
+            lastMessage: messagePreview,
+            previewMessage: messagePreview,
             timestamp: new Date().toISOString(),
             unreadCount: unreadMessages[senderId] || 0
           };
@@ -194,7 +194,7 @@ export const MessageProvider = ({ children }) => {
           continue; // Skip conversations without any ID
         }
         
-        // Default to false for online status rather than making API calls
+        // Declare isOnline variable
         let isOnline = false;
         
         // Only check online status for selected conversation to reduce API calls
@@ -204,14 +204,21 @@ export const MessageProvider = ({ children }) => {
           } catch (e) {
             console.warn('Error getting online status, assuming offline:', e);
           }
+        } else {
+          // Use cached online status from onlineUsers state
+          isOnline = onlineUsers[conversationId] || false;
         }
         
         conversationsWithStatus.push({
           ...conversation,
           // Ensure id field exists
           id: conversationId,
+          // Normalize name field from API's FullName
+          name: conversation.FullName || conversation.fullName || conversation.name,
           isOnline,
-          unreadCount: unreadMessages[conversationId] || 0
+          unreadCount: unreadMessages[conversationId] || 0,
+          // Ensure preview message exists
+          previewMessage: conversation.previewMessage || conversation.lastMessage || 'No messages yet'
         });
       }
       
@@ -232,7 +239,7 @@ export const MessageProvider = ({ children }) => {
       clearTimeout(timeoutId);
       setIsLoading(false);
     }
-  }, [selectedChatId, unreadMessages]);
+  }, [selectedChatId, unreadMessages, onlineUsers]); // Added onlineUsers to dependencies
 
   console.log("conversations of this user:", conversations);
   // Initialize chat connection
@@ -293,12 +300,13 @@ export const MessageProvider = ({ children }) => {
         chatService.on('onMessage', async (messageData) => {
           const { senderId, message, messageId, status } = messageData;
           
+          console.log(`New message received from ${senderId}:`, message);
+          console.log(`Message ID: ${messageId}, Status: ${status}`);
+          console.log(`Current user ID: ${userId}, Selected chat: ${selectedChatId}`);
+          
           // Add to messages if this is the active chat
-          if (senderId === selectedChatId || senderId === recipient.id) {
-
-            console.log(`New message from ${senderId}:`, message);
-            console.log(`Message ID: ${messageId}, Status: ${status}`);
-            console.log(`Current user ID: ${userId}`);
+          if (selectedChatId === senderId) {
+            console.log('Adding message to active chat');
             setMessages(prevMessages => [...prevMessages, {
               id: messageId,
               senderId,
@@ -307,35 +315,33 @@ export const MessageProvider = ({ children }) => {
               timestamp: new Date().toISOString(),
               status: status || 'delivered'
             }]);
-            
-            // First mark as delivered
-            try {
-              await chatService.markMessageAsDelivered(messageId, userId);
-            } catch (err) {
-              console.error('Error marking message as delivered:', err);
-            }
-            
-            // Then mark as read if this is the active chat
-            try {
-              await chatService.markMessageRead(messageId);
-            } catch (err) {
-              console.error('Error marking message as read:', err);
-            }
           } else {
+            console.log('Message from non-active chat, updating unread count');
             // Update unread count
             setUnreadMessages(prevCounts => ({
               ...prevCounts,
               [senderId]: (prevCounts[senderId] || 0) + 1
             }));
-            
-            // For messages not in active chat, just mark as delivered but not read
+          }
+          
+          // Always mark as delivered for any message we receive
+          try {
+            await chatService.markMessageAsDelivered(messageId, userId);
+          } catch (err) {
+            console.error('Error marking message as delivered:', err);
+          }
+          
+          // Only mark as read if this is the active chat
+          if (selectedChatId === senderId) {
             try {
-              await chatService.markMessageAsDelivered(messageId, userId);
+              await chatService.markMessageRead(messageId);
             } catch (err) {
-              console.error('Error marking message as delivered:', err);
+              console.error('Error marking message as read:', err);
             }
-            
-            // Trigger browser notification
+          }
+          
+          // Trigger browser notification for non-active chats
+          if (selectedChatId !== senderId) {
             const event = new CustomEvent('new-message', {
               detail: {
                 title: 'New Message',
@@ -346,8 +352,8 @@ export const MessageProvider = ({ children }) => {
             window.dispatchEvent(event);
           }
           
-          // Update conversations list if needed
-          updateConversationsList(senderId);
+          // Always update conversations list when a new message arrives
+          updateConversationsList(senderId, message?.substring(0, 50) + (message?.length > 50 ? '...' : '') || 'New message');
         }),
 
         // Message read receipt handler
@@ -418,10 +424,23 @@ export const MessageProvider = ({ children }) => {
         
         // User status change handler
         chatService.on('onUserStatusChanged', ({ userId, status }) => {
+          console.log(`User ${userId} status changed to: ${status}`);
           setOnlineUsers(prev => ({
             ...prev,
             [userId]: status === 'Online'
           }));
+          
+          // Update the conversations list to reflect the new status
+          setConversations(prev => prev.map(conv => 
+            conv.id === userId 
+              ? { ...conv, isOnline: status === 'Online' }
+              : conv
+          ));
+          
+          // If this is the selected chat recipient, update recipient data
+          if (selectedChatId === userId) {
+            setRecipient(prev => prev ? { ...prev, isOnline: status === 'Online' } : null);
+          }
         }),
         
         // Error handler

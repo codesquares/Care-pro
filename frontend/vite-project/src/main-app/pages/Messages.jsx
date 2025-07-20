@@ -539,8 +539,8 @@ const requestPermission = async () => {
       )}
       
       <div className="messages-dashboard-header">
-        <h1>Message Dashboard</h1>
-        <p>View and manage all your conversations</p>
+        {/* <h1>Message Dashboard</h1>
+        <p>View and manage all your conversations</p> */}
         <ConnectionStatus state={isLoading ? 'Connecting' : error ? 'Disconnected' : 'Connected'} />
         <NotificationPermissionButton 
           permissionGranted={permissionGranted} 

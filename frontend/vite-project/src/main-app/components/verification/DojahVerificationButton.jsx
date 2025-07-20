@@ -1,5 +1,6 @@
 import React, { useState, useRef } from 'react';
 import { DOJAH_CONFIG } from '../../config/dojah';
+import styles from './DojahVerificationButton.module.css';
 
 /**
  * DojahVerificationButton Component
@@ -140,9 +141,9 @@ const DojahVerificationButton = ({
               border: '2px solid transparent',
               borderTop: '2px solid #ffffff',
               borderRadius: '50%',
-              animation: 'spin 1s linear infinite',
               marginRight: '8px'
-            }}></span>
+            }}
+            className={styles.spinAnimation}></span>
             Loading...
           </>
         ) : (
@@ -151,12 +152,6 @@ const DojahVerificationButton = ({
             {buttonText}
           </>
         )}
-        <style jsx="true">{`
-          @keyframes spin {
-            0% { transform: rotate(0deg); }
-            100% { transform: rotate(360deg); }
-          }
-        `}</style>
       </button>
       
       {/* Modal with iframe */}

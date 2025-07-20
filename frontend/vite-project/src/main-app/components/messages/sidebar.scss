@@ -136,8 +136,21 @@
             width: 48px;
             height: 48px;
             border-radius: 50%;
-            object-fit: cover;
             border: 2px solid #f3f4f6;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: bold;
+            font-size: 1.1rem;
+            color: #fff;
+            
+            &.avatar-sender {
+              background-color: #ef4444; // Red background for sender
+            }
+            
+            &.avatar-receiver {
+              background-color: #3b82f6; // Blue background for receiver
+            }
           }
           
           .online-indicator {

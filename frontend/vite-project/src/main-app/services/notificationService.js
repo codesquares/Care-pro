@@ -135,14 +135,25 @@ export const createNotification = async ({
   relatedEntityId 
 }) => {
   try {
+    // Validate required fields
+    if (!recipientId || !senderId || !type) {
+      throw new Error('Missing required fields: recipientId, senderId, and type are required');
+    }
+    
     const notificationPayload = {
       recipientId,
       senderId,
       type,
       title: generateTitle(type, senderId),
-      content: generateContent(type, senderId),
-      relatedEntityId
+      content: generateContent(type, senderId)
     };
+    
+    // Only add relatedEntityId if it's provided and valid
+    if (relatedEntityId) {
+      notificationPayload.relatedEntityId = relatedEntityId;
+    }
+
+    console.log('Creating notification with payload:', notificationPayload);
 
     const response = await axios.post(`${API_URL}/api/Notifications`, notificationPayload, {
       headers: authHeaders()
@@ -151,6 +162,14 @@ export const createNotification = async ({
     return response.data;
   } catch (error) {
     console.error("Create notification error:", error);
+    
+    // Log more details about the error
+    if (error.response) {
+      console.error("Error response status:", error.response.status);
+      console.error("Error response data:", error.response.data);
+      console.error("Error response headers:", error.response.headers);
+    }
+    
     throw error;
   }
 };

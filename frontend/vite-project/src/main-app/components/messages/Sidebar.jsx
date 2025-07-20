@@ -6,14 +6,27 @@ const Sidebar = ({ conversations, selectedChatId, onSelectChat, unreadMessages }
   const [searchTerm, setSearchTerm] = useState('');
   const [filteredConversations, setFilteredConversations] = useState([]);
   
+  // Function to get initials from name (similar to NavigationBar)
+  const getInitials = (name) => {
+    if (!name || typeof name !== "string") return "?";
+    
+    const names = name.trim().split(" ").filter(Boolean);
+    if (names.length === 0) return "?";
+    
+    const initials = names.map((n) => n[0].toUpperCase()).join("");
+    
+    return initials.slice(0, 2);
+  };
+  
   useEffect(() => {
     if (searchTerm.trim() === '') {
       setFilteredConversations(conversations);
     } else {
-      const filtered = conversations.filter(chat => 
-        chat.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-        (chat.previewMessage && chat.previewMessage.toLowerCase().includes(searchTerm.toLowerCase()))
-      );
+      const filtered = conversations.filter(chat => {
+        const name = chat.name || chat.FullName || chat.fullName || '';
+        return name.toLowerCase().includes(searchTerm.toLowerCase()) ||
+        (chat.previewMessage && chat.previewMessage.toLowerCase().includes(searchTerm.toLowerCase()));
+      });
       setFilteredConversations(filtered);
     }
   }, [searchTerm, conversations]);
@@ -78,17 +91,15 @@ const Sidebar = ({ conversations, selectedChatId, onSelectChat, unreadMessages }
                   onClick={() => chatId && onSelectChat(chatId)}
                 >
                   <div className="avatar-container">
-                    <img 
-                      src={chat.avatar} 
-                      alt={chat.name} 
-                      className="avatar" 
-                    />
+                    <div className="avatar avatar-receiver">
+                      {getInitials(chat.name || chat.FullName || chat.fullName)}
+                    </div>
                     {chat.isOnline && <span className="online-indicator"></span>}
                   </div>
                   
                   <div className="chat-preview">
                     <div className="chat-header">
-                      <h4>{chat.name}</h4>
+                      <h4>{chat.name || chat.FullName || chat.fullName}</h4>
                       <span className="chat-time">
                         {chat.lastMessage?.timestamp ? 
                           formatDistanceToNow(new Date(chat.lastMessage.timestamp), { addSuffix: false }) : 
