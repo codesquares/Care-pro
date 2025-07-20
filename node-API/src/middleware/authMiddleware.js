@@ -3,31 +3,10 @@ const axios = require('axios');
 const { configDotenv } = require('dotenv');
 configDotenv();
 
-// Protect middleware - Verifies user with external API
+// Protect middleware - Verifies user with JWT token validation
 const protectUser = async (userId, token, userType = 'caregiver') => {
   const External_Auth_API = process.env.API_URL || 'https://carepro-api20241118153443.azurewebsites.net/api';
-  
-  // Development mode bypass for testing
-  const devMode = process.env.NODE_ENV !== 'production';
-  if (devMode && process.env.BYPASS_AUTH === 'true') {
-    console.log(`⚠️ AUTH BYPASS ENABLED: Using mock ${userType} data for userId: ${userId}`);
-    
-    // Make a more tailored mock user data based on userType
-    const mockData = {
-      id: userId,
-      userType: userType, 
-      firstName: userType === 'client' ? 'Client' : 'CareGiver',
-      lastName: 'User',
-      email: `${userType}@example.com`,
-      isVerified: true,
-      _devMode: true // Flag to indicate this is a mock user
-    };
-    
-    // Log the mock data we're returning for debugging
-    console.log('Mock user data:', mockData);
-    
-    return mockData;
-  }
+  const jwt = require('jsonwebtoken');
   
   try {
     if (!userId || !token) {
@@ -35,9 +14,43 @@ const protectUser = async (userId, token, userType = 'caregiver') => {
       return null;
     }
 
+    // First, validate and decode the JWT token
+    console.log('🔍 Validating JWT token...');
+    let decoded;
+    try {
+      // Decode the token first to check its structure
+      decoded = jwt.decode(token);
+      console.log('🔍 Decoded JWT token:', decoded);
+      
+      if (!decoded) {
+        console.log('❌ Invalid JWT token - cannot decode');
+        return null;
+      }
+      
+      // Check if token has expired
+      if (decoded.exp && Date.now() >= decoded.exp * 1000) {
+        console.log('❌ JWT token has expired');
+        return null;
+      }
+      
+      console.log('✅ JWT token is valid and not expired');
+      
+      // Extract user info from JWT token
+      const tokenUserId = decoded.userId || decoded.id || decoded.sub;
+      const tokenEmail = decoded["http://schemas.xmlsoap.org/ws/2005/05/identity/claims/emailaddress"] || decoded.email;
+      const tokenRole = decoded["http://schemas.microsoft.com/ws/2008/06/identity/claims/role"] || decoded.role;
+      
+      console.log(`🔍 Token contains - userId: ${tokenUserId}, email: ${tokenEmail}, role: ${tokenRole}`);
+      
+    } catch (jwtError) {
+      console.error('❌ JWT validation error:', jwtError.message);
+      return null;
+    }
+
     console.log(`🔍 Verifying user with type: ${userType}, userId: ${userId}`);
     
-    // Attempt to verify both user types if inconsistent data is received
+    // Now verify the user exists in the external API
+    // We still need this to get full user details
     let user = null;
     let errors = [];
     
@@ -60,6 +73,12 @@ const protectUser = async (userId, token, userType = 'caregiver') => {
       if (externalResponse.data) {
         user = externalResponse.data;
         user.userType = userType;
+        // Add JWT token info to user object
+        user.tokenData = {
+          email: decoded["http://schemas.xmlsoap.org/ws/2005/05/identity/claims/emailaddress"],
+          role: decoded["http://schemas.microsoft.com/ws/2008/06/identity/claims/role"],
+          exp: decoded.exp
+        };
         console.log(`✅ User verified as ${userType}`);
       }
     } catch (primaryError) {
@@ -84,6 +103,12 @@ const protectUser = async (userId, token, userType = 'caregiver') => {
         if (alternativeResponse.data) {
           user = alternativeResponse.data;
           user.userType = alternativeType;
+          // Add JWT token info to user object
+          user.tokenData = {
+            email: decoded["http://schemas.xmlsoap.org/ws/2005/05/identity/claims/emailaddress"],
+            role: decoded["http://schemas.microsoft.com/ws/2008/06/identity/claims/role"],
+            exp: decoded.exp
+          };
           console.log(`✅ User verified as ${alternativeType} (alternative type)`);
         }
       } catch (fallbackError) {

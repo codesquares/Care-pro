@@ -45,13 +45,13 @@ const DojahDataViewer = ({ onClose }) => {
         <h3>Dojah Webhook Data</h3>
         <div className={styles.viewTabs}>
           <button 
-            className={`${styles.tabButton} ${view === 'statistics' ? styles.active : ''}`} 
+            className={view === 'statistics' ? 'active' : ''} 
             onClick={() => handleViewChange('statistics')}
           >
             Statistics
           </button>
           <button 
-            className={`${styles.tabButton} ${view === 'data' ? styles.active : ''}`} 
+            className={view === 'data' ? 'active' : ''} 
             onClick={() => handleViewChange('data')}
           >
             All Data
