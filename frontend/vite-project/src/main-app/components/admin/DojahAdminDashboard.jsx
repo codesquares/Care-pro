@@ -22,8 +22,8 @@ const DojahAdminDashboard = () => {
 
     try {
       const [allDataResponse, statsResponse] = await Promise.all([
-        getAllWebhookData(token,user.role),
-        getWebhookStatistics(token,user.role)
+        getAllWebhookData(token),
+        getWebhookStatistics(token)
       ]);
 
       setWebhookData(allDataResponse.data || []);

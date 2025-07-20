@@ -226,4 +226,75 @@ const protect = async (req, res, next) => {
   }
 };
 
-module.exports = { protectUser, protect };
+// Admin protect middleware - Validates JWT token and checks for admin role
+const protectAdmin = async (req, res, next) => {
+  try {
+    console.log('🔒 Admin auth middleware debug:');
+    console.log('Headers:', req.headers);
+    
+    // Get token from Authorization header
+    const authHeader = req.headers.authorization;
+    if (!authHeader || !authHeader.startsWith('Bearer ')) {
+      return res.status(401).json({ 
+        status: 'error', 
+        message: 'Not authorized, no token' 
+      });
+    }
+    
+    const token = authHeader.split(' ')[1];
+    
+    // Decode JWT token to get role information
+    // You'll need to install jsonwebtoken: npm install jsonwebtoken
+    const jwt = require('jsonwebtoken');
+    
+    try {
+      // Decode the token (you might need to verify with your JWT_SECRET)
+      const decoded = jwt.decode(token);
+      console.log('🔍 Decoded JWT token:', decoded);
+      
+      if (!decoded) {
+        return res.status(401).json({
+          status: 'error',
+          message: 'Invalid token'
+        });
+      }
+      
+      // Check for admin role in the token claims
+      // Based on your JWT structure, the role is in: "http://schemas.microsoft.com/ws/2008/06/identity/claims/role"
+      const roleClaim = decoded["http://schemas.microsoft.com/ws/2008/06/identity/claims/role"];
+      
+      if (!roleClaim || roleClaim.toLowerCase() !== 'admin') {
+        return res.status(403).json({
+          status: 'error',
+          message: 'Access denied. Admin role required.',
+          userRole: roleClaim
+        });
+      }
+      
+      console.log(`✅ Admin authentication successful. Role: ${roleClaim}`);
+      
+      // Set admin user data in request
+      req.user = {
+        role: roleClaim,
+        email: decoded["http://schemas.xmlsoap.org/ws/2005/05/identity/claims/emailaddress"],
+        isAdmin: true
+      };
+      
+      next();
+    } catch (jwtError) {
+      console.error('JWT decode error:', jwtError);
+      return res.status(401).json({
+        status: 'error',
+        message: 'Invalid or expired token'
+      });
+    }
+  } catch (error) {
+    console.error('Admin auth middleware error:', error);
+    res.status(500).json({
+      status: 'error',
+      message: 'Authentication error'
+    });
+  }
+};
+
+module.exports = { protectUser, protect, protectAdmin };

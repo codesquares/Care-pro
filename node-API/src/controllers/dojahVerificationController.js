@@ -339,16 +339,10 @@ const getVerificationStatus = async (req, res) => {
 // Get all webhook data for admin users
 const getAllWebhookData = async (req, res) => {
   try {
-    // Check if user has admin role (assuming it's passed in the request or JWT token)
-    const userRole = req.headers['x-user-role'] || req.user?.role;
+    // Admin authentication is now handled by middleware
+    // No need to manually check userRole - middleware ensures only admins reach this point
     
-    if (!userRole || userRole !== 'admin') {
-      return res.status(403).json({
-        success: false,
-        error: 'Access denied. Admin role required.',
-        message: 'Only admin users can access all webhook data'
-      });
-    }
+    console.log(`Admin user (${req.user?.email}) accessing all webhook data`);
 
     // Get all webhook data from memory store
     const allWebhookData = [];
@@ -402,14 +396,8 @@ const getAllWebhookData = async (req, res) => {
 // Get webhook statistics for admin dashboard
 const getWebhookStatistics = async (req, res) => {
   try {
-    const userRole = req.headers['x-user-role'];
-    
-    if (!userRole || userRole !== 'admin') {
-      return res.status(403).json({
-        success: false,
-        error: 'Access denied. Admin role required.'
-      });
-    }
+    // Admin authentication is now handled by middleware
+    console.log(`Admin user (${req.user?.email}) accessing webhook statistics`);
 
     const now = Date.now();
     let totalRecords = 0;

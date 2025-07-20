@@ -1,6 +1,6 @@
 const express = require('express');
 const router = express.Router();
-const { protect } = require('../middleware/authMiddleware');
+const { protect, protectAdmin } = require('../middleware/authMiddleware');
 const dojahController = require('../controllers/dojahVerificationController');
 
 // Middleware for webhook route if we need raw body later
@@ -21,7 +21,7 @@ router.get('/data/:userId', protect, dojahController.getWebhookData);
 router.get('/status', protect, dojahController.getVerificationStatus);
 
 // Admin endpoints (protected - requires admin role)
-router.get('/admin/all-data', protect, dojahController.getAllWebhookData);
-router.get('/admin/statistics', protect, dojahController.getWebhookStatistics);
+router.get('/admin/all-data', protectAdmin, dojahController.getAllWebhookData);
+router.get('/admin/statistics', protectAdmin, dojahController.getWebhookStatistics);
 
 module.exports = router;
