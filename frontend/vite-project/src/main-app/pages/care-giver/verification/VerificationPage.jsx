@@ -16,6 +16,8 @@ const VerificationPage = () => {
   const [progress, setProgress] = useState(0);
   const [progressMessage, setProgressMessage] = useState("");
   const [webhookData, setWebhookData] = useState(false);
+  const [isVerifying, setIsVerifying] = useState(false); // Track if verification is in progress
+  const [modalInstance, setModalInstance] = useState(null); // Store modal reference
 
   // Get token and user ID from localStorage
   const userDetails = JSON.parse(localStorage.getItem("userDetails") || "{}");
@@ -74,35 +76,62 @@ const VerificationPage = () => {
     let pollInterval;
     
     const fetchWebhookData = async () => {
+      // Only poll if verification is in progress
+      if (!isVerifying) return;
+      
       const userId = userDetails.id;
       const token = localStorage.getItem("authToken");
       try {
         const data = await getWebhookData(userId, token);
         console.log('Fetched webhook data====>:', data);
         
-        // If webhook data is found and verification was successful
-        if (data.success && data.data && data.data.event === 'verification.completed') {
-          const verificationResult = data.data.data;
-          if (verificationResult.status === 'success') {
-            console.log('Verification successful from webhook:', verificationResult);
+        // Check for Dojah's actual webhook format
+        if (data.success && data.data) {
+          const webhookBody = data.data;
+          
+          // Check if this is a completed verification
+          if (webhookBody.status === true && webhookBody.verification_status === 'Completed') {
+            console.log('Verification successful from webhook:', webhookBody);
             setSuccess("Identity verification successful!");
             setProgress(100);
             setProgressMessage("Verification completed!");
+            setIsVerifying(false);
 
-            // Process and save Dojah verification data
-            const verificationData = processDojahResponse(verificationResult);
-            console.log('Processed verification data:', verificationData);
-            
-            await saveDojahVerification(verificationData, userDetails.id);
-            console.log('Verification data saved successfully');
+            // Auto-close Dojah modal if it exists
+            const modalElement = document.querySelector('[style*="position: fixed"][style*="z-index: 9999"]');
+            if (modalElement) {
+              modalElement.remove();
+              console.log('Dojah modal closed automatically');
+            }
 
-            // Update local verification status
-            setVerificationStatus({
-              verified: true,
-              verificationStatus: 'verified',
-              method: verificationData.verification_method,
-              timestamp: new Date().toISOString()
-            });
+            // Process the webhook data for Azure backend
+            try {
+              // Call backend to process and send to Azure
+              const response = await fetch(`https://care-pro-node-api.onrender.com/api/dojah/process/${userId}`, {
+                method: 'POST',
+                headers: {
+                  'Authorization': `Bearer ${token}`,
+                  'Content-Type': 'application/json'
+                }
+              });
+              
+              if (response.ok) {
+                const result = await response.json();
+                console.log('Verification data processed and sent to Azure:', result);
+                
+                // Update local verification status
+                setVerificationStatus({
+                  verified: true,
+                  verificationStatus: 'verified',
+                  method: 'DOJAH_VERIFICATION',
+                  timestamp: new Date().toISOString()
+                });
+              } else {
+                console.error('Failed to process verification data');
+              }
+            } catch (processError) {
+              console.error('Error processing verification data:', processError);
+            }
 
             // Clear polling interval
             if (pollInterval) {
@@ -120,18 +149,30 @@ const VerificationPage = () => {
       }
     };
 
-    fetchWebhookData();
+    // Only start polling if verification is in progress
+    if (isVerifying) {
+      fetchWebhookData();
+      
+      // Set up polling to check for webhook data every 3 seconds
+      pollInterval = setInterval(fetchWebhookData, 3000);
+    }
     
-    // Set up polling to check for webhook data every 5 seconds
-    pollInterval = setInterval(fetchWebhookData, 5000);
-    
-    // Clean up interval on component unmount
+    // Clean up interval on component unmount or when verification stops
     return () => {
       if (pollInterval) {
         clearInterval(pollInterval);
       }
     };
-  }, []);
+  }, [isVerifying, userDetails.id, navigate, token]);
+
+  // Handle when verification starts (when user clicks the button)
+  const handleVerificationStart = () => {
+    console.log('Verification started - beginning webhook polling');
+    setIsVerifying(true);
+    setProgress(20);
+    setProgressMessage("Verification in progress...");
+    setError(""); // Clear any previous errors
+  };
 
   // Handle Dojah verification success
   const handleVerificationSuccess = async (response) => {
@@ -235,6 +276,7 @@ const VerificationPage = () => {
               userId={userDetails.id}
               onSuccess={handleVerificationSuccess}
               onError={handleVerificationError}
+              onStart={handleVerificationStart}
               buttonText="Start Verification"
               backgroundColor="#00A651"
               user={userDetails}

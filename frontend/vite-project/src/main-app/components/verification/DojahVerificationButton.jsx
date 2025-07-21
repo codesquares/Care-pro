@@ -10,7 +10,8 @@ import styles from './DojahVerificationButton.module.css';
  */
 const DojahVerificationButton = ({ 
   onSuccess, 
-  onError, 
+  onError,
+  onStart, 
   userId,
   buttonText = "Verify Identity",
   textColor = "#FFFFFF",
@@ -76,9 +77,16 @@ const DojahVerificationButton = ({
     const params = new URLSearchParams({
       app_id: appId,
       widget_id: widgetId,
-      user_id: userId || '',
+      user_id: userId || '', // This will be included in webhook response
       redirect_url: redirectUrl, // Dynamically set based on current environment
       type: 'iframe' // Specify iframe mode
+    });
+    
+    console.log('Dojah verification URL params:', {
+      app_id: appId,
+      widget_id: widgetId,
+      user_id: userId,
+      redirect_url: redirectUrl
     });
     
     return `${baseUrl}?${params.toString()}`;
@@ -99,6 +107,11 @@ const DojahVerificationButton = ({
     setShowModal(true);
     setupMessageListener();
     setIsLoading(false);
+    
+    // Call onStart callback to begin webhook polling
+    if (onStart) {
+      onStart();
+    }
   };
   
   // Close the modal

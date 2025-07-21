@@ -178,73 +178,34 @@ const handleDojahWebhook = async (req, res) => {
 
     // Check if this is a completed verification from Dojah
     if (status === true && verification_status === 'Completed') {
-      // Extract user ID from reference_id or use reference_id as userId
-      // Dojah format: "DJ-D405E7AB56" - we'll use this as userId for now
-      const userId = reference_id || `dojah-${Date.now()}`;
+      // Extract user ID from Dojah's user_id parameter or use reference_id as fallback
+      // Dojah should include the user_id that was passed to the widget
+      const userId = req.body.user_id || reference_id || `dojah-${Date.now()}`;
       
       if (!userId) {
-        console.error('No reference ID in webhook data');
+        console.error('No user ID or reference ID in webhook data');
         logWebhookData({
-          error: 'No reference ID in webhook data',
+          error: 'No user ID or reference ID in webhook data',
           body: req.body
         }, 'error');
-        return res.status(400).json({ error: 'Missing reference ID' });
+        return res.status(400).json({ error: 'Missing user ID or reference ID' });
       }
 
-      console.log(`✅ Processing completed verification for reference: ${userId}`);
+      console.log(`✅ Processing completed verification for user: ${userId} (reference: ${reference_id})`);
 
-      // Store webhook data temporarily in memory
+      // Store webhook data temporarily in memory using user ID as key
       const webhookData = {
         timestamp: Date.now(),
         rawData: req.body,
         retrieved: false,
-        expiresAt: Date.now() + (12 * 60 * 60 * 1000) // 12 hours
+        expiresAt: Date.now() + (12 * 60 * 60 * 1000), // 12 hours
+        referenceId: reference_id // Keep reference ID for admin tracking
       };
 
       webhookDataStore.set(userId, webhookData);
       console.log(`Webhook data stored for user ${userId}, expires in 12 hours`);
 
-      // AUTOMATICALLY SEND TO AZURE BACKEND
-      try {
-        console.log('🚀 Attempting to send data to Azure backend...');
-        
-        // Format the data for Azure backend using the actual Dojah data structure
-        const formattedData = formatVerificationDataFromDojah(req.body, userId);
-        console.log('📋 Formatted data for Azure:', JSON.stringify(formattedData, null, 2));
-        
-        // Log the formatted data
-        logWebhookData({
-          userId,
-          rawDojahData: req.body,
-          formattedForAzure: formattedData
-        }, 'formatted-data');
-
-        // Send to Azure backend
-        const azureApiUrl = process.env.AZURE_API_URL || 'https://carepro-api20241118153443.azurewebsites.net/api';
-        console.log(`📡 Sending to Azure: ${azureApiUrl}/Verifications`);
-        
-        // Note: We don't have user token here, so this might fail with auth error
-        // The formatted data will be logged so you can see what would be sent
-        logWebhookData({
-          action: 'would-send-to-azure',
-          endpoint: `${azureApiUrl}/Verifications`,
-          data: formattedData,
-          note: 'Token required for actual sending'
-        }, 'azure-attempt');
-
-        console.log('✅ Data formatted and logged. Check logs for mapping details.');
-        
-      } catch (azureError) {
-        console.error('❌ Azure backend error:', azureError.message);
-        logWebhookData({
-          error: 'Azure backend error',
-          details: azureError.message,
-          userId,
-          rawData: req.body
-        }, 'azure-error');
-      }
-
-      return res.status(200).json({ status: 'success', message: 'Webhook data stored and logged successfully' });
+      return res.status(200).json({ status: 'success', message: 'Webhook data stored successfully' });
     }
 
     // Handle other webhook events or unsuccessful verifications
@@ -323,63 +284,17 @@ const processWebhookToAzure = async (req, res) => {
       // Log the processing attempt
       logWebhookData({
         userId,
-        action: 'manual-processing-to-azure',
+        action: 'manual-processing-formatted',
         rawDojahData: webhookBody,
         formattedForAzure: formattedData
       }, 'manual-process');
 
-      // Send to Azure backend with auth token
-      const azureApiUrl = process.env.AZURE_API_URL || 'https://carepro-api20241118153443.azurewebsites.net/api';
-      
-      try {
-        const response = await axios.post(
-          `${azureApiUrl}/Verifications`,
-          formattedData,
-          {
-            headers: {
-              'Authorization': req.headers.authorization,
-              'Content-Type': 'application/json'
-            }
-          }
-        );
-
-        console.log('✅ Successfully sent to Azure backend');
-        
-        // Log success
-        logWebhookData({
-          userId,
-          action: 'successfully-sent-to-azure',
-          azureResponse: response.data,
-          status: response.status
-        }, 'azure-success');
-
-        // Mark as processed (optional: remove from memory)
-        // webhookDataStore.delete(userId);
-
-        return res.status(200).json({
-          success: true,
-          message: 'Verification data successfully sent to Azure backend',
-          azureResponse: response.data
-        });
-
-      } catch (azureError) {
-        console.error('❌ Failed to send to Azure backend:', azureError.response?.data || azureError.message);
-        
-        // Log the Azure error
-        logWebhookData({
-          userId,
-          action: 'failed-to-send-to-azure',
-          error: azureError.response?.data || azureError.message,
-          status: azureError.response?.status,
-          formattedData
-        }, 'azure-error');
-
-        return res.status(500).json({
-          success: false,
-          error: 'Failed to send to Azure backend',
-          details: azureError.response?.data || azureError.message
-        });
-      }
+      return res.status(200).json({
+        success: true,
+        message: 'Verification data formatted successfully',
+        formattedData: formattedData,
+        note: 'Data formatted but not sent to Azure (manual processing only)'
+      });
     }
 
     return res.status(400).json({
@@ -455,7 +370,7 @@ const getWebhookData = async (req, res) => {
   }
 };
 
-// Save verification data (called from frontend)
+// Save verification data (formats data but doesn't send to Azure)
 const saveVerificationData = async (req, res) => {
   try {
     const { userId, verificationData } = req.body;
@@ -464,28 +379,29 @@ const saveVerificationData = async (req, res) => {
       return res.status(400).json({ error: 'Missing required data' });
     }
 
-    // Format data for Azure
+    // Format data for Azure (but don't send it)
     const formattedData = formatVerificationData(verificationData, userId);
 
-    // Send to Azure backend
-    const response = await axios.post(
-      `${process.env.AZURE_API_URL}/api/Verifications`,
-      formattedData,
-      {
-        headers: {
-          'Authorization': `Bearer ${req.headers.authorization}`,
-          'Content-Type': 'application/json'
-        }
-      }
-    );
+    // Log the formatted data
+    logWebhookData({
+      userId,
+      action: 'save-verification-data-formatted',
+      originalData: verificationData,
+      formattedData: formattedData
+    }, 'save-verification');
 
-    return res.status(200).json(response.data);
+    return res.status(200).json({
+      success: true,
+      message: 'Verification data formatted successfully',
+      formattedData: formattedData,
+      note: 'Data formatted but not sent to Azure'
+    });
 
   } catch (error) {
     console.error('Save verification error:', error);
     return res.status(500).json({ 
-      error: 'Failed to save verification data',
-      details: error.response?.data || error.message 
+      error: 'Failed to format verification data',
+      details: error.message 
     });
   }
 };
