@@ -26,7 +26,7 @@ const DojahAdminDashboard = () => {
         getAllWebhookData(token),
         getWebhookStatistics(token)
       ]);
-
+    
       setWebhookData(allDataResponse.data || []);
       setStatistics(statsResponse.statistics);
     } catch (err) {
@@ -42,13 +42,54 @@ const DojahAdminDashboard = () => {
   };
 
   const formatVerificationData = (webhook) => {
-    const { data } = webhook.webhookData;
+    const webhookData = webhook.webhookData;
+    
+    // Handle Dojah's actual webhook format
+    const governmentData = webhookData.data?.government_data?.data;
+    const userData = webhookData.data?.user_data?.data;
+    const idData = webhookData.data?.id?.data?.id_data;
+    
+    // Extract name from BVN data if available
+    let firstName = '';
+    let lastName = '';
+    let verificationNumber = '';
+    let verificationType = '';
+    
+    if (governmentData?.bvn?.entity) {
+      const bvnEntity = governmentData.bvn.entity;
+      firstName = bvnEntity.first_name?.trim() || '';
+      lastName = bvnEntity.last_name?.trim() || '';
+      verificationNumber = bvnEntity.bvn || '';
+      verificationType = 'BVN';
+    }
+    
+    // Fallback to user data
+    if (!firstName && userData) {
+      firstName = userData.first_name || '';
+      lastName = userData.last_name || '';
+    }
+    
+    // Fallback to ID data
+    if (!firstName && idData) {
+      firstName = idData.first_name || '';
+      lastName = idData.last_name?.replace(',', '') || '';
+    }
+    
+    // Get verification type and number from main webhook data
+    if (!verificationType) {
+      verificationType = webhookData.id_type || webhookData.verification_type || 'Unknown';
+    }
+    
+    if (!verificationNumber) {
+      verificationNumber = webhookData.value || webhookData.verification_value || 'N/A';
+    }
+    
     return {
-      status: data?.status || 'Unknown',
-      firstName: data?.first_name || 'N/A',
-      lastName: data?.last_name || 'N/A',
-      verificationType: data?.id_type || data?.verification_method || 'N/A',
-      verificationNumber: data?.id_number || data?.bvn || data?.nin || 'N/A'
+      status: webhookData.status === true ? 'success' : (webhookData.status === false ? 'failed' : 'unknown'),
+      firstName: firstName || 'N/A',
+      lastName: lastName || 'N/A',
+      verificationType: verificationType,
+      verificationNumber: verificationNumber
     };
   };
 
@@ -64,7 +105,7 @@ const DojahAdminDashboard = () => {
     }
   };
 
-  console.log("admin dashboard", webhookData, statistics);
+  console.log("admin dashboard=====>", webhookData);
   if (loading) {
     return (
       <div className={styles.dojahAdminDashboard}>

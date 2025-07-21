@@ -55,7 +55,7 @@ const verifySignature = (signature, body) => {
   return hash === signature;
 };
 
-// Format verification data for Azure
+// Format verification data for Azure (original function for backwards compatibility)
 const formatVerificationData = (dojahData, userId) => {
   let verificationNo = '';
   let verificationMethod = '';
@@ -79,6 +79,59 @@ const formatVerificationData = (dojahData, userId) => {
     verificationMethod,
     verificationNo,
     verificationStatus: dojahData.status === 'success' ? 'verified' : 'failed'
+  };
+};
+
+// Format verification data from Dojah's actual webhook structure
+const formatVerificationDataFromDojah = (dojahWebhook, userId) => {
+  let verificationNo = '';
+  let verificationMethod = '';
+  let firstName = '';
+  let lastName = '';
+
+  // Extract data from the complex Dojah structure
+  const governmentData = dojahWebhook.data?.government_data?.data;
+  const userData = dojahWebhook.data?.user_data?.data;
+  const idData = dojahWebhook.data?.id?.data?.id_data;
+
+  // Get BVN information if available
+  if (governmentData?.bvn?.entity) {
+    const bvnEntity = governmentData.bvn.entity;
+    verificationNo = bvnEntity.bvn;
+    verificationMethod = 'BVN';
+    firstName = bvnEntity.first_name?.trim() || '';
+    lastName = bvnEntity.last_name?.trim() || '';
+  }
+
+  // Fallback to user data if BVN data not available
+  if (!firstName && userData) {
+    firstName = userData.first_name || '';
+    lastName = userData.last_name || '';
+  }
+
+  // Fallback to ID data if still not available
+  if (!firstName && idData) {
+    firstName = idData.first_name || '';
+    lastName = idData.last_name?.replace(',', '') || ''; // Remove comma from last name
+  }
+
+  // Get verification type from main webhook data
+  if (!verificationMethod) {
+    verificationMethod = dojahWebhook.id_type || dojahWebhook.verification_type || 'UNKNOWN';
+  }
+
+  // Get verification number from main webhook data if not found in government data
+  if (!verificationNo) {
+    verificationNo = dojahWebhook.value || dojahWebhook.verification_value || '';
+  }
+
+  return {
+    userId,
+    verifiedFirstName: firstName,
+    verifiedLastName: lastName,
+    verificationMethod,
+    verificationNo,
+    verificationStatus: dojahWebhook.status === true ? 'verified' : 'failed'
   };
 };
 
@@ -119,19 +172,26 @@ const handleDojahWebhook = async (req, res) => {
       console.log('No Dojah signature header found');
     }
 
-    const { event, data, metadata } = req.body;
-    console.log('Received webhook:', { event, metadata });
+    // Dojah sends different format than expected - no "event" field
+    const { status, verification_status, data, metadata, reference_id } = req.body;
+    console.log('Received webhook:', { status, verification_status, reference_id });
 
-    if (event === 'verification.completed') {
-      const userId = metadata?.user_id;
+    // Check if this is a completed verification from Dojah
+    if (status === true && verification_status === 'Completed') {
+      // Extract user ID from reference_id or use reference_id as userId
+      // Dojah format: "DJ-D405E7AB56" - we'll use this as userId for now
+      const userId = reference_id || `dojah-${Date.now()}`;
+      
       if (!userId) {
-        console.error('No user ID in webhook metadata');
+        console.error('No reference ID in webhook data');
         logWebhookData({
-          error: 'No user ID in webhook metadata',
+          error: 'No reference ID in webhook data',
           body: req.body
         }, 'error');
-        return res.status(400).json({ error: 'Missing user ID' });
+        return res.status(400).json({ error: 'Missing reference ID' });
       }
+
+      console.log(`✅ Processing completed verification for reference: ${userId}`);
 
       // Store webhook data temporarily in memory
       const webhookData = {
@@ -148,14 +208,14 @@ const handleDojahWebhook = async (req, res) => {
       try {
         console.log('🚀 Attempting to send data to Azure backend...');
         
-        // Format the data for Azure backend
-        const formattedData = formatVerificationData(data, userId);
+        // Format the data for Azure backend using the actual Dojah data structure
+        const formattedData = formatVerificationDataFromDojah(req.body, userId);
         console.log('📋 Formatted data for Azure:', JSON.stringify(formattedData, null, 2));
         
         // Log the formatted data
         logWebhookData({
           userId,
-          rawDojahData: data,
+          rawDojahData: req.body,
           formattedForAzure: formattedData
         }, 'formatted-data');
 
@@ -180,20 +240,20 @@ const handleDojahWebhook = async (req, res) => {
           error: 'Azure backend error',
           details: azureError.message,
           userId,
-          rawData: data
+          rawData: req.body
         }, 'azure-error');
       }
 
       return res.status(200).json({ status: 'success', message: 'Webhook data stored and logged successfully' });
     }
 
-    // Handle other webhook events
-    console.log('Webhook event received but not handled:', event);
+    // Handle other webhook events or unsuccessful verifications
+    console.log('Webhook received but not a completed verification:', { status, verification_status });
     logWebhookData({
-      event,
-      data,
-      metadata,
-      note: 'Event type not handled'
+      status,
+      verification_status,
+      reference_id,
+      note: 'Not a completed verification'
     }, 'unhandled-event');
     
     return res.status(200).json({ status: 'received' });
@@ -252,18 +312,19 @@ const processWebhookToAzure = async (req, res) => {
       });
     }
 
-    const { event, data, metadata } = storedData.rawData;
+    const webhookBody = storedData.rawData;
 
-    if (event === 'verification.completed') {
-      // Format data for Azure
-      const formattedData = formatVerificationData(data, userId);
+    // Check if this is a completed verification from Dojah
+    if (webhookBody.status === true && webhookBody.verification_status === 'Completed') {
+      // Format data for Azure using the new Dojah format
+      const formattedData = formatVerificationDataFromDojah(webhookBody, userId);
       console.log('📋 Formatted data for Azure:', JSON.stringify(formattedData, null, 2));
 
       // Log the processing attempt
       logWebhookData({
         userId,
         action: 'manual-processing-to-azure',
-        rawDojahData: data,
+        rawDojahData: webhookBody,
         formattedForAzure: formattedData
       }, 'manual-process');
 
@@ -323,7 +384,7 @@ const processWebhookToAzure = async (req, res) => {
 
     return res.status(400).json({
       success: false,
-      error: 'Invalid webhook event type'
+      error: 'Invalid webhook - not a completed verification'
     });
 
   } catch (error) {
@@ -624,15 +685,12 @@ const getWebhookStatistics = async (req, res) => {
       if (now > data.expiresAt) {
         expiredRecords++;
       } else {
-        // Count verification status
+        // Count verification status - updated for Dojah's format
         const webhookData = data.rawData;
-        if (webhookData.event === 'verification.completed') {
-          const verificationStatus = webhookData.data?.status;
-          if (verificationStatus === 'success') {
-            successfulVerifications++;
-          } else {
-            failedVerifications++;
-          }
+        if (webhookData.status === true && webhookData.verification_status === 'Completed') {
+          successfulVerifications++;
+        } else if (webhookData.status === false) {
+          failedVerifications++;
         }
         
         // Count recent verifications (last 24 hours)
