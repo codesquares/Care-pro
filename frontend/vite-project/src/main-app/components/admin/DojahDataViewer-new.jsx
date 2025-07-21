@@ -38,6 +38,7 @@ const DojahDataViewer = ({ onClose }) => {
   React.useEffect(() => {
     loadData('statistics');
   }, []);
+  console.log("dataviewer", data);
 
   return (
     <div className={styles.dojahDataViewer}>

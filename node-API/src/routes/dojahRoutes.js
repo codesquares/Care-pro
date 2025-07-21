@@ -17,11 +17,14 @@ router.post('/save', protect, dojahController.saveVerificationData);
 // Get webhook data endpoint (protected) - NEW
 router.get('/data/:userId', protect, dojahController.getWebhookData);
 
+// Process webhook data and send to Azure endpoint (protected) - NEW
+router.post('/process/:userId', protect, dojahController.processWebhookToAzure);
+
 // Get verification status endpoint (protected)
 router.get('/status', protect, dojahController.getVerificationStatus);
 
 // Admin endpoints (protected - requires admin role)
-router.get('/admin/all-data', protectAdmin, dojahController.getAllWebhookData);
+router.get('/admin/all-data', protectAdmin,dojahController.getAllWebhookData);
 router.get('/admin/statistics', protectAdmin, dojahController.getWebhookStatistics);
 
 module.exports = router;

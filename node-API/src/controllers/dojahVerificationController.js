@@ -1,10 +1,39 @@
 const axios = require('axios');
 const crypto = require('crypto');
+const fs = require('fs');
+const path = require('path');
 // const config = require('../config');
 const dotenv = require('dotenv');
 
 // In-memory storage for webhook data (temporary bridge)
 const webhookDataStore = new Map();
+
+// Create logs directory if it doesn't exist
+const logsDir = path.join(__dirname, '../../logs');
+if (!fs.existsSync(logsDir)) {
+  fs.mkdirSync(logsDir, { recursive: true });
+}
+
+// Function to log webhook data to file for debugging
+const logWebhookData = (data, type = 'webhook') => {
+  try {
+    const timestamp = new Date().toISOString();
+    const filename = `dojah-${type}-${timestamp.split('T')[0]}.json`;
+    const filepath = path.join(logsDir, filename);
+    
+    const logEntry = {
+      timestamp,
+      type,
+      data
+    };
+    
+    // Append to daily log file
+    fs.appendFileSync(filepath, JSON.stringify(logEntry, null, 2) + '\n---\n');
+    console.log(`✅ Logged ${type} data to: ${filename}`);
+  } catch (error) {
+    console.error('❌ Failed to log webhook data:', error.message);
+  }
+};
 
 // Cleanup expired data every hour
 setInterval(() => {
@@ -66,6 +95,15 @@ const handleDojahWebhook = async (req, res) => {
     console.log('URL:', req.url);
     console.log('================================');
 
+    // Log the complete webhook data to file for debugging
+    logWebhookData({
+      headers: req.headers,
+      body: req.body,
+      method: req.method,
+      url: req.url,
+      timestamp: new Date().toISOString()
+    }, 'webhook-received');
+
     const signature = req.headers['x-dojah-signature'];
     
     // COMMENTED OUT: Signature verification for testing
@@ -88,6 +126,10 @@ const handleDojahWebhook = async (req, res) => {
       const userId = metadata?.user_id;
       if (!userId) {
         console.error('No user ID in webhook metadata');
+        logWebhookData({
+          error: 'No user ID in webhook metadata',
+          body: req.body
+        }, 'error');
         return res.status(400).json({ error: 'Missing user ID' });
       }
 
@@ -102,16 +144,71 @@ const handleDojahWebhook = async (req, res) => {
       webhookDataStore.set(userId, webhookData);
       console.log(`Webhook data stored for user ${userId}, expires in 12 hours`);
 
-      return res.status(200).json({ status: 'success', message: 'Webhook data stored successfully' });
+      // AUTOMATICALLY SEND TO AZURE BACKEND
+      try {
+        console.log('🚀 Attempting to send data to Azure backend...');
+        
+        // Format the data for Azure backend
+        const formattedData = formatVerificationData(data, userId);
+        console.log('📋 Formatted data for Azure:', JSON.stringify(formattedData, null, 2));
+        
+        // Log the formatted data
+        logWebhookData({
+          userId,
+          rawDojahData: data,
+          formattedForAzure: formattedData
+        }, 'formatted-data');
+
+        // Send to Azure backend
+        const azureApiUrl = process.env.AZURE_API_URL || 'https://carepro-api20241118153443.azurewebsites.net/api';
+        console.log(`📡 Sending to Azure: ${azureApiUrl}/Verifications`);
+        
+        // Note: We don't have user token here, so this might fail with auth error
+        // The formatted data will be logged so you can see what would be sent
+        logWebhookData({
+          action: 'would-send-to-azure',
+          endpoint: `${azureApiUrl}/Verifications`,
+          data: formattedData,
+          note: 'Token required for actual sending'
+        }, 'azure-attempt');
+
+        console.log('✅ Data formatted and logged. Check logs for mapping details.');
+        
+      } catch (azureError) {
+        console.error('❌ Azure backend error:', azureError.message);
+        logWebhookData({
+          error: 'Azure backend error',
+          details: azureError.message,
+          userId,
+          rawData: data
+        }, 'azure-error');
+      }
+
+      return res.status(200).json({ status: 'success', message: 'Webhook data stored and logged successfully' });
     }
 
     // Handle other webhook events
     console.log('Webhook event received but not handled:', event);
+    logWebhookData({
+      event,
+      data,
+      metadata,
+      note: 'Event type not handled'
+    }, 'unhandled-event');
+    
     return res.status(200).json({ status: 'received' });
 
   } catch (error) {
     console.error('Webhook handler error:', error);
     console.error('Error details:', error.response?.data || error.message);
+    
+    // Log the error
+    logWebhookData({
+      error: 'Webhook handler error',
+      details: error.response?.data || error.message,
+      stack: error.stack
+    }, 'handler-error');
+    
     return res.status(500).json({ 
       error: 'Internal server error',
       details: error.response?.data || error.message 
@@ -123,6 +220,120 @@ const handleDojahWebhook = async (req, res) => {
 const handleGetDojahWebhook = (req, res) => {
   // This endpoint is for testing purposes, to verify if the webhook is reachable
   res.status(200).json({ status: 'Dojah webhook is reachable' });
+};
+
+// Process stored webhook data and send to Azure (with auth token)
+const processWebhookToAzure = async (req, res) => {
+  try {
+    const { userId } = req.params;
+
+    if (!userId) {
+      return res.status(400).json({ 
+        success: false, 
+        error: 'User ID is required' 
+      });
+    }
+
+    const storedData = webhookDataStore.get(userId);
+
+    if (!storedData) {
+      return res.status(404).json({ 
+        success: false, 
+        error: 'No webhook data found for this user' 
+      });
+    }
+
+    // Check if data has expired
+    if (Date.now() > storedData.expiresAt) {
+      webhookDataStore.delete(userId);
+      return res.status(410).json({ 
+        success: false, 
+        error: 'Webhook data has expired' 
+      });
+    }
+
+    const { event, data, metadata } = storedData.rawData;
+
+    if (event === 'verification.completed') {
+      // Format data for Azure
+      const formattedData = formatVerificationData(data, userId);
+      console.log('📋 Formatted data for Azure:', JSON.stringify(formattedData, null, 2));
+
+      // Log the processing attempt
+      logWebhookData({
+        userId,
+        action: 'manual-processing-to-azure',
+        rawDojahData: data,
+        formattedForAzure: formattedData
+      }, 'manual-process');
+
+      // Send to Azure backend with auth token
+      const azureApiUrl = process.env.AZURE_API_URL || 'https://carepro-api20241118153443.azurewebsites.net/api';
+      
+      try {
+        const response = await axios.post(
+          `${azureApiUrl}/Verifications`,
+          formattedData,
+          {
+            headers: {
+              'Authorization': req.headers.authorization,
+              'Content-Type': 'application/json'
+            }
+          }
+        );
+
+        console.log('✅ Successfully sent to Azure backend');
+        
+        // Log success
+        logWebhookData({
+          userId,
+          action: 'successfully-sent-to-azure',
+          azureResponse: response.data,
+          status: response.status
+        }, 'azure-success');
+
+        // Mark as processed (optional: remove from memory)
+        // webhookDataStore.delete(userId);
+
+        return res.status(200).json({
+          success: true,
+          message: 'Verification data successfully sent to Azure backend',
+          azureResponse: response.data
+        });
+
+      } catch (azureError) {
+        console.error('❌ Failed to send to Azure backend:', azureError.response?.data || azureError.message);
+        
+        // Log the Azure error
+        logWebhookData({
+          userId,
+          action: 'failed-to-send-to-azure',
+          error: azureError.response?.data || azureError.message,
+          status: azureError.response?.status,
+          formattedData
+        }, 'azure-error');
+
+        return res.status(500).json({
+          success: false,
+          error: 'Failed to send to Azure backend',
+          details: azureError.response?.data || azureError.message
+        });
+      }
+    }
+
+    return res.status(400).json({
+      success: false,
+      error: 'Invalid webhook event type'
+    });
+
+  } catch (error) {
+    console.error('Process webhook error:', error);
+    return res.status(500).json({ 
+      success: false,
+      error: 'Failed to process webhook data',
+      details: error.message 
+    });
+  }
 };
 
 // Get webhook data for a specific user
@@ -463,5 +674,6 @@ module.exports = {
   handleGetDojahWebhook,
   getWebhookData,
   getAllWebhookData,
-  getWebhookStatistics
+  getWebhookStatistics,
+  processWebhookToAzure
 };

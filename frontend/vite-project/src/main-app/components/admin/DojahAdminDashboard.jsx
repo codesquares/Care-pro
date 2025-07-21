@@ -64,6 +64,7 @@ const DojahAdminDashboard = () => {
     }
   };
 
+  console.log("admin dashboard", webhookData, statistics);
   if (loading) {
     return (
       <div className={styles.dojahAdminDashboard}>
