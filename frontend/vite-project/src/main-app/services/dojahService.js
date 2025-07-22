@@ -52,11 +52,16 @@ export const processDojahResponse = (response) => {
   };
 };
 
-export const getWebhookData = async (userId, token) => {
+export const getWebhookData = async (userId, token, timestamp = null) => {
   try {
-    const response = await fetch(`${endpoint}/dojah/data/${userId}?userId=${userId}`, {
+    // Add cache busting parameter to prevent cached responses during polling
+    const cacheBuster = timestamp || Date.now();
+    const response = await fetch(`${endpoint}/dojah/data/${userId}?userId=${userId}&t=${cacheBuster}`, {
       headers: {
-        Authorization: `Bearer ${token}`
+        Authorization: `Bearer ${token}`,
+        'Cache-Control': 'no-cache, no-store, must-revalidate',
+        'Pragma': 'no-cache',
+        'Expires': '0'
       }
     });
 

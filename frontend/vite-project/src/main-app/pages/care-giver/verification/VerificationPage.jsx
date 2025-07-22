@@ -74,15 +74,31 @@ const VerificationPage = () => {
   useEffect(() => {
     // Check for webhook data when component mounts and poll for updates
     let pollInterval;
+    let pollCount = 0;
+    const MAX_POLL_ATTEMPTS = 60; // Stop after 5 minutes (60 * 5s = 5min)
     
     const fetchWebhookData = async () => {
       // Only poll if verification is in progress
       if (!isVerifying) return;
       
+      pollCount++;
+      
+      // Stop polling after max attempts to prevent infinite loops
+      if (pollCount > MAX_POLL_ATTEMPTS) {
+        console.log('Polling timeout reached, stopping verification check');
+        setIsVerifying(false);
+        setError('Verification timeout. Please try again or contact support.');
+        setProgress(0);
+        setProgressMessage('');
+        return;
+      }
+      
       const userId = userDetails.id;
       const token = localStorage.getItem("authToken");
       try {
-        const data = await getWebhookData(userId, token);
+        // Add cache busting and specific headers to prevent caching issues
+        const timestamp = Date.now();
+        const data = await getWebhookData(userId, token, timestamp);
         console.log('Fetched webhook data====>:', data);
         
         // Check for Dojah's actual webhook format
@@ -111,7 +127,8 @@ const VerificationPage = () => {
                 method: 'POST',
                 headers: {
                   'Authorization': `Bearer ${token}`,
-                  'Content-Type': 'application/json'
+                  'Content-Type': 'application/json',
+                  'Cache-Control': 'no-cache'
                 }
               });
               
@@ -146,15 +163,24 @@ const VerificationPage = () => {
         }
       } catch (error) {
         console.error('Error fetching webhook data:', error);
+        
+        // If we get repeated errors, stop polling
+        if (pollCount > 5) {
+          console.log('Multiple polling errors, reducing frequency');
+          // Exponentially back off polling frequency after errors
+          clearInterval(pollInterval);
+          pollInterval = setInterval(fetchWebhookData, 10000); // Slow down to 10s
+        }
       }
     };
 
     // Only start polling if verification is in progress
     if (isVerifying) {
+      // Start with immediate check
       fetchWebhookData();
       
-      // Set up polling to check for webhook data every 3 seconds
-      pollInterval = setInterval(fetchWebhookData, 3000);
+      // Set up polling to check for webhook data every 5 seconds (reduced from 3)
+      pollInterval = setInterval(fetchWebhookData, 5000);
     }
     
     // Clean up interval on component unmount or when verification stops
@@ -172,6 +198,7 @@ const VerificationPage = () => {
     setProgress(20);
     setProgressMessage("Verification in progress...");
     setError(""); // Clear any previous errors
+    setSuccess(""); // Clear any previous success messages
   };
 
   // Handle Dojah verification success
@@ -181,6 +208,7 @@ const VerificationPage = () => {
       setSuccess("Identity verification successful!");
       setProgress(100);
       setProgressMessage("Verification completed!");
+      setIsVerifying(false); // Stop polling
 
       // Process and save Dojah verification data
       const verificationData = processDojahResponse(response);
@@ -204,6 +232,7 @@ const VerificationPage = () => {
     } catch (err) {
       console.error('Error saving verification status:', err);
       setError("Verification completed but failed to save status. Please contact support.");
+      setIsVerifying(false); // Stop polling on error
       
       // Log detailed error for debugging
       console.error('Verification save error details:', {
@@ -219,6 +248,8 @@ const VerificationPage = () => {
     console.error('Verification error:', error);
     setError(`Verification failed: ${error.message || "Please try again or contact support if the issue persists."}`);
     setProgress(0);
+    setProgressMessage("");
+    setIsVerifying(false); // Stop polling on error
     
     // Log the detailed error for debugging
     console.error('Verification error details:', {
@@ -228,22 +259,93 @@ const VerificationPage = () => {
     });
   };
   useEffect(() => {
-    // lOAD verification from backend 
+    // Load verification from backend 
     const fetchMyVerification = async () => {
       try {
-        const response = await fetch(`https://care-pro-node-api.onrender.com/api/dojah/status/${userDetails.id}`);
+        const response = await fetch(`https://care-pro-node-api.onrender.com/api/dojah/status?userId=${userDetails.id}&userType=caregiver&token=${token}`, {
+          method: 'GET',
+          headers: {
+            'Authorization': `Bearer ${token}`,
+            'Content-Type': 'application/json'
+          }
+        });
+        
         if (!response.ok) {
-          throw new Error('Network response was not ok');
+          // Handle different error types
+          if (response.status === 401) {
+            console.log('Authentication error - user may need to log in again');
+            // Don't set error, just log for now since this is expected for unverified users
+            return;
+          } else if (response.status === 404) {
+            console.log('User verification status not found - assuming not verified');
+            return;
+          } else {
+            throw new Error(`HTTP ${response.status}: ${response.statusText}`);
+          }
         }
+        
         const data = await response.json();
         console.log('Fetched verification data:', data);
-        // Process the fetched data as needed
+        
+        // Update verification status if user is already verified
+        if (data.success && data.data && data.data.isVerified) {
+          setVerificationStatus({
+            verified: true,
+            verificationStatus: 'verified',
+            method: 'EXISTING_VERIFICATION'
+          });
+          setSuccess("Your account is already verified!");
+          setTimeout(() => {
+            navigate("/app/caregiver/dashboard");
+          }, 2000);
+        }
       } catch (error) {
         console.error('Error fetching verification data:', error);
-        setError("Failed to load verification data. Please try again later.");
+        // Don't set error here as it might just mean user isn't verified yet
+        console.log('User verification status could not be loaded - assuming not verified');
       }
     };
-  },[]);
+
+    // Only fetch if we have required data
+    if (userDetails.id && token) {
+      fetchMyVerification();
+    }
+  }, [userDetails.id, token, navigate]);
+
+  // Handle Dojah iframe messages (including IP address errors)
+  useEffect(() => {
+    const handleDojahMessage = (event) => {
+      console.log('Received message from Dojah iframe:', event.data);
+      
+      if (event.data.type === 'connect.account.error') {
+        const errorMessage = event.data.response?.message || 'Unknown error';
+        console.error('Dojah Error:', errorMessage);
+        
+        if (errorMessage.includes('Failed to fetch user ip address')) {
+          setError('Network connectivity issue detected. Please try disabling VPN/proxy, using a different browser, or check your internet connection.');
+          setIsVerifying(false);
+          setProgress(0);
+          setProgressMessage('');
+        } else {
+          setError(`Verification service error: ${errorMessage}`);
+          setIsVerifying(false);
+          setProgress(0);
+          setProgressMessage('');
+        }
+      } else if (event.data.type === 'connect.account.success') {
+        console.log('Dojah verification successful:', event.data);
+        handleVerificationSuccess(event.data.response);
+      } else if (event.data.type === 'connect.account.close') {
+        console.log('Dojah modal closed by user');
+        setIsVerifying(false);
+        setProgress(0);
+        setProgressMessage('');
+      }
+    };
+
+    window.addEventListener('message', handleDojahMessage);
+    return () => window.removeEventListener('message', handleDojahMessage);
+  }, []);
   
 
   return (
@@ -265,7 +367,29 @@ const VerificationPage = () => {
           we require all caregivers to verify their identity.
         </p>
 
-        {error && <div className="error-message"><i className="fas fa-exclamation-circle"></i> {error}</div>}
+        {error && (
+          <div className="error-message">
+            <i className="fas fa-exclamation-circle"></i> {error}
+            {error.includes('Network connectivity issue') && (
+              <div className="error-suggestions">
+                <p><strong>Try these solutions:</strong></p>
+                <ul>
+                  <li>Disable VPN or proxy temporarily</li>
+                  <li>Try a different browser or incognito mode</li>
+                  <li>Check your internet connection</li>
+                  <li>Refresh the page and try again</li>
+                </ul>
+                <button 
+                  className="retry-btn" 
+                  onClick={() => window.location.reload()}
+                  style={{ marginTop: '10px', padding: '8px 16px', backgroundColor: '#007bff', color: 'white', border: 'none', borderRadius: '4px', cursor: 'pointer' }}
+                >
+                  <i className="fas fa-redo"></i> Retry Verification
+                </button>
+              </div>
+            )}
+          </div>
+        )}
         {success && <div className="success-message"><i className="fas fa-check-circle"></i> {success}</div>}
 
         {/* Progress indicator */}

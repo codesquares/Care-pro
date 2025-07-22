@@ -324,6 +324,14 @@ const getWebhookData = async (req, res) => {
       });
     }
 
+    // Set cache control headers to prevent caching of polling responses
+    res.set({
+      'Cache-Control': 'no-cache, no-store, must-revalidate',
+      'Pragma': 'no-cache',
+      'Expires': '0',
+      'ETag': `"${userId}-${Date.now()}"` // Dynamic ETag to prevent caching
+    });
+
     const storedData = webhookDataStore.get(userId);
 
     if (!storedData) {
@@ -331,7 +339,8 @@ const getWebhookData = async (req, res) => {
         success: false, 
         status: 'not_found',
         message: 'No webhook data found for this user. Verification may not have been completed yet.',
-        data: null
+        data: null,
+        polledAt: new Date().toISOString()
       });
     }
 
@@ -342,21 +351,23 @@ const getWebhookData = async (req, res) => {
         success: false, 
         status: 'expired',
         message: 'Verification data has expired after 12 hours. Please complete verification again.',
-        data: null
+        data: null,
+        polledAt: new Date().toISOString()
       });
     }
 
     // Mark as retrieved and optionally delete (uncomment if you want one-time access)
     // webhookDataStore.delete(userId);
 
-    console.log(`Webhook data retrieved for user: ${userId}`);
+    console.log(`Webhook data retrieved for user: ${userId} at ${new Date().toISOString()}`);
 
     return res.status(200).json({ 
       success: true, 
       status: 'found',
       data: storedData.rawData,
       timestamp: storedData.timestamp,
-      message: 'Webhook data retrieved successfully'
+      message: 'Webhook data retrieved successfully',
+      polledAt: new Date().toISOString()
     });
 
   } catch (error) {
