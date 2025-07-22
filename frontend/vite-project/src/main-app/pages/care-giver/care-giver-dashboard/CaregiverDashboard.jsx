@@ -79,7 +79,7 @@ const CaregiverDashboard = () => {
         </div>
 
         <div className="rightbar">
-          <div className="select-container">
+          <div className="select-dropdown-container">
             <select
               id="dropdown"
               className="custom-select"

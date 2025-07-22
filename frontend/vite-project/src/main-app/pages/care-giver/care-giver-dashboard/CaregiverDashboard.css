@@ -21,16 +21,17 @@
   gap: 16px;
 }
 
-/* Dropdown Container */
-.select-container {
+.select-dropdown-container {
   display: flex;
-  justify-content: flex-end;
+  justify-content: flex-end; /* Align contents inside to the right */
+  width: 100%;               /* Take full width to push contents to the right */
   margin-bottom: 10px;
 }
 
 /* Dropdown Styles */
 .custom-select {
-  padding: 8px 12px;
+    width: 200px;              /* Optional: define a width */
+  padding: 8px;
   font-size: 14px;
   border-radius: 8px;
   border: 1px solid #ccc;
@@ -39,6 +40,9 @@
   cursor: pointer;
   transition: border-color 0.3s ease;
 }
+
+
+
 
 .custom-select:hover,
 .custom-select:focus {
