@@ -82,9 +82,9 @@ const ClientNavBar = () => {
               <div className="dropdown-item" onClick={() => navigate(`${basePath}/profile`)}>
                 View Profile
               </div>
-              <div className="dropdown-item" onClick={() => navigate(`${basePath}/verification`)}>
+              {/* <div className="dropdown-item" onClick={() => navigate(`${basePath}/verification`)}>
                 Verify Account
-              </div>
+              </div> */}
                 <div className="dropdown-item" onClick={() => navigate(`${basePath}/settings`)}>
                 Settings
               </div>
