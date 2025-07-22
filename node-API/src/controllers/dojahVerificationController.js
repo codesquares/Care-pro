@@ -418,11 +418,7 @@ const getVerificationStatus = async (req, res) => {
       });
     }
 
-    // Here we're checking the verification status directly from our Node API
-    // We can either query the Azure API or check our local database
     
-    // For now, since we don't have a local database setup for verification,
-    // we'll check if the user has been verified by querying the Azure API
     try {
       // Get verification status from Azure API
       const apiEndpoint = process.env.API_URL || 'https://carepro-api20241118153443.azurewebsites.net/api';
@@ -434,19 +430,7 @@ const getVerificationStatus = async (req, res) => {
           'Content-Type': 'application/json'
         }
       });
-      //if response.code === 400 and response.message is "User with ID 'userId' has not been verified."
-      if (response.data.code === 400 && response.data.message.includes(`User with ID '${userId}' has not been verified.`)) {
-        return res.json({
-          success: true,
-          data: {
-            userId,
-            userType,
-            isVerified: false,
-            verificationStatus: 'not_verified',
-            message: 'User has not completed verification'
-          }
-        });
-      }
+      
       // If we get a successful response with verification data
       if (response.data && response.data.id) {
         return res.json({
@@ -485,6 +469,23 @@ const getVerificationStatus = async (req, res) => {
             verificationStatus: 'not_verified',
             message: 'User has not completed verification yet',
             needsVerification: true
+          }
+        });
+      }
+      
+      // Handle 401 as authentication error - but still return unverified status
+      if (error.response && error.response.status === 401) {
+        console.log(`⚠️ Authentication error when checking user ${userId} verification status (401)`);
+        return res.json({
+          success: true,
+          data: {
+            userId,
+            userType,
+            isVerified: false,
+            verificationStatus: 'not_verified',
+            message: 'User has not completed verification yet',
+            needsVerification: true,
+            authNote: 'Could not authenticate with verification service'
           }
         });
       }

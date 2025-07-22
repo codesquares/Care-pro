@@ -227,7 +227,23 @@ const VerificationPage = () => {
       name: error.name
     });
   };
-  
+  useEffect(() => {
+    // lOAD verification from backend 
+    const fetchMyVerification = async () => {
+      try {
+        const response = await fetch(`https://care-pro-node-api.onrender.com/api/dojah/status/${userDetails.id}`);
+        if (!response.ok) {
+          throw new Error('Network response was not ok');
+        }
+        const data = await response.json();
+        console.log('Fetched verification data:', data);
+        // Process the fetched data as needed
+      } catch (error) {
+        console.error('Error fetching verification data:', error);
+        setError("Failed to load verification data. Please try again later.");
+      }
+    };
+  },[]);
   
 
   return (
