@@ -65,6 +65,12 @@ const DojahVerificationButton = ({
       return null;
     }
     
+    if (!userId) {
+      console.error('Missing userId for Dojah verification');
+      if (onError) onError(new Error('User ID is required for verification'));
+      return null;
+    }
+    
     // Dynamically determine the redirect URL based on current environment
     // Use environment variable if set, otherwise use current origin
     const redirectUrl = import.meta.env.VITE_REDIRECT_URL || 
@@ -74,19 +80,32 @@ const DojahVerificationButton = ({
     
     // Build the URL with all necessary parameters
     const baseUrl = 'https://identity.dojah.io';
+    const timestamp = Date.now();
+    const referenceId = `user_${userId}_${timestamp}`;
+    
     const params = new URLSearchParams({
       app_id: appId,
       widget_id: widgetId,
-      user_id: userId || '', // This will be included in webhook response
-      redirect_url: redirectUrl, // Dynamically set based on current environment
-      type: 'iframe' // Specify iframe mode
+      type: 'iframe',
+      // Pass user ID in multiple ways to ensure Dojah receives it
+      user_id: userId,
+      reference_id: referenceId,
+      redirect_url: redirectUrl,
+      // Add metadata as URL parameter
+      metadata: JSON.stringify({
+        user_id: userId,
+        reference_id: referenceId,
+        timestamp: timestamp,
+        source: 'care-pro-app'
+      })
     });
     
-    console.log('Dojah verification URL params:', {
-      app_id: appId,
-      widget_id: widgetId,
-      user_id: userId,
-      redirect_url: redirectUrl
+    console.log('🔗 Built Dojah verification URL with params:', {
+      userId,
+      referenceId,
+      appId,
+      widgetId,
+      redirectUrl
     });
     
     return `${baseUrl}?${params.toString()}`;

@@ -717,6 +717,27 @@ const verificationService = {
   async getVerificationStatus(userId, userType,token) {
 
     token = token || localStorage.getItem('authToken');
+    
+    // Check if token is expired
+    const isTokenExpired = (token) => {
+      if (!token) return true;
+      
+      try {
+        const payload = JSON.parse(atob(token.split('.')[1]));
+        const currentTime = Date.now() / 1000;
+        return payload.exp < currentTime;
+      } catch (error) {
+        console.error('Error checking token expiration:', error);
+        return true;
+      }
+    };
+
+    if (isTokenExpired(token)) {
+      const error = new Error('Token expired');
+      error.status = 401;
+      throw error;
+    }
+
     try {
       // If we have a cached status and it's less than 30 seconds old, return it
       const now = Date.now();
@@ -734,6 +755,13 @@ const verificationService = {
       return response.data;
     } catch (error) {
       console.error('Error getting verification status:', error);
+      
+      // Handle 401 (unauthorized/expired token)
+      if (error.response?.status === 401 || error.status === 401) {
+        const authError = new Error('Authentication failed - token expired');
+        authError.status = 401;
+        throw authError;
+      }
       
       // If we got a 404, return default unverified status
       if (error.response?.status === 404) {

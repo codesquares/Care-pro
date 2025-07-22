@@ -36,6 +36,18 @@ const VerificationPage = () => {
       return;
     }
 
+    // Check if token is expired
+    if (isTokenExpired(token)) {
+      console.log('Token is expired on page load - redirecting to login');
+      setError('Your session has expired. Please log in again.');
+      setTimeout(() => {
+        localStorage.removeItem("authToken");
+        localStorage.removeItem("userDetails");
+        navigate("/login");
+      }, 2000);
+      return;
+    }
+
     // Check initial verification status
     const checkStatus = async () => {
       try {
@@ -63,6 +75,18 @@ const VerificationPage = () => {
         }
       } catch (err) {
         console.error("Failed to check verification status", err);
+        
+        // Handle token expiration
+        if (err.message && err.message.includes('401')) {
+          setError('Your session has expired. Please log in again.');
+          setTimeout(() => {
+            localStorage.removeItem("authToken");
+            localStorage.removeItem("userDetails");
+            navigate("/login");
+          }, 2000);
+          return;
+        }
+        
         setProgress(0);
         setProgressMessage("");
       }
@@ -94,11 +118,25 @@ const VerificationPage = () => {
       }
       
       const userId = userDetails.id;
-      const token = localStorage.getItem("authToken");
+      const currentToken = localStorage.getItem("authToken");
+      
+      // Check if token is expired before making request
+      if (isTokenExpired(currentToken)) {
+        console.log('Token expired during polling - redirecting to login');
+        setIsVerifying(false);
+        setError('Your session has expired. Please log in again.');
+        setTimeout(() => {
+          localStorage.removeItem("authToken");
+          localStorage.removeItem("userDetails");
+          navigate("/login");
+        }, 2000);
+        return;
+      }
+      
       try {
         // Add cache busting and specific headers to prevent caching issues
         const timestamp = Date.now();
-        const data = await getWebhookData(userId, token, timestamp);
+        const data = await getWebhookData(userId, currentToken, timestamp);
         console.log('Fetched webhook data====>:', data);
         
         // Check for Dojah's actual webhook format
@@ -126,15 +164,16 @@ const VerificationPage = () => {
               const response = await fetch(`https://care-pro-node-api.onrender.com/api/dojah/process/${userId}`, {
                 method: 'POST',
                 headers: {
-                  'Authorization': `Bearer ${token}`,
+                  'Authorization': `Bearer ${currentToken}`,
                   'Content-Type': 'application/json',
                   'Cache-Control': 'no-cache'
                 }
               });
               
-              if (response.ok) {
-                const result = await response.json();
-                console.log('Verification data processed and sent to Azure:', result);
+              const result = await response.json();
+              
+              if (response.ok && result.success) {
+                console.log('✅ Verification data processed and sent to Azure:', result);
                 
                 // Update local verification status
                 setVerificationStatus({
@@ -143,11 +182,16 @@ const VerificationPage = () => {
                   method: 'DOJAH_VERIFICATION',
                   timestamp: new Date().toISOString()
                 });
+                
+                setSuccess("Identity verification completed and saved successfully! Redirecting...");
+                
               } else {
-                console.error('Failed to process verification data');
+                console.warn('⚠️ Verification completed but Azure submission had issues:', result);
+                setSuccess("Identity verification completed! Processing in background...");
               }
             } catch (processError) {
               console.error('Error processing verification data:', processError);
+              setSuccess("Identity verification completed! Data will be processed shortly...");
             }
 
             // Clear polling interval
@@ -155,14 +199,27 @@ const VerificationPage = () => {
               clearInterval(pollInterval);
             }
 
-            // Redirect after success
+            // Redirect after success with a longer delay to show success message
             setTimeout(() => {
               navigate("/app/caregiver/dashboard");
-            }, 3000);
+            }, 4000); // Increased to 4 seconds
           }
         }
       } catch (error) {
         console.error('Error fetching webhook data:', error);
+        
+        // Handle 401 errors (token expiration)
+        if (error.message && error.message.includes('401')) {
+          console.log('Token expired during webhook polling - redirecting to login');
+          setIsVerifying(false);
+          setError('Your session has expired. Please log in again.');
+          setTimeout(() => {
+            localStorage.removeItem("authToken");
+            localStorage.removeItem("userDetails");
+            navigate("/login");
+          }, 2000);
+          return;
+        }
         
         // If we get repeated errors, stop polling
         if (pollCount > 5) {
@@ -193,6 +250,20 @@ const VerificationPage = () => {
 
   // Handle when verification starts (when user clicks the button)
   const handleVerificationStart = () => {
+    const currentToken = localStorage.getItem("authToken");
+    
+    // Check if token is expired before starting verification
+    if (isTokenExpired(currentToken)) {
+      console.log('Token expired before starting verification - redirecting to login');
+      setError('Your session has expired. Please log in again to continue verification.');
+      setTimeout(() => {
+        localStorage.removeItem("authToken");
+        localStorage.removeItem("userDetails");
+        navigate("/login");
+      }, 2000);
+      return;
+    }
+
     console.log('Verification started - beginning webhook polling');
     setIsVerifying(true);
     setProgress(20);
@@ -258,10 +329,36 @@ const VerificationPage = () => {
       name: error.name
     });
   };
+  // Check if token is expired
+  const isTokenExpired = (token) => {
+    if (!token) return true;
+    
+    try {
+      const payload = JSON.parse(atob(token.split('.')[1]));
+      const currentTime = Date.now() / 1000;
+      return payload.exp < currentTime;
+    } catch (error) {
+      console.error('Error checking token expiration:', error);
+      return true;
+    }
+  };
+
   useEffect(() => {
     // Load verification from backend 
     const fetchMyVerification = async () => {
       try {
+        // Check if token is expired before making the request
+        if (isTokenExpired(token)) {
+          console.log('Token is expired - redirecting to login');
+          setError('Your session has expired. Please log in again.');
+          setTimeout(() => {
+            localStorage.removeItem("authToken");
+            localStorage.removeItem("userDetails");
+            navigate("/login");
+          }, 2000);
+          return;
+        }
+
         const response = await fetch(`https://care-pro-node-api.onrender.com/api/dojah/status?userId=${userDetails.id}&userType=caregiver&token=${token}`, {
           method: 'GET',
           headers: {
@@ -273,8 +370,13 @@ const VerificationPage = () => {
         if (!response.ok) {
           // Handle different error types
           if (response.status === 401) {
-            console.log('Authentication error - user may need to log in again');
-            // Don't set error, just log for now since this is expected for unverified users
+            console.log('Authentication error - token may be expired');
+            setError('Your session has expired. Please log in again.');
+            setTimeout(() => {
+              localStorage.removeItem("authToken");
+              localStorage.removeItem("userDetails");
+              navigate("/login");
+            }, 2000);
             return;
           } else if (response.status === 404) {
             console.log('User verification status not found - assuming not verified');

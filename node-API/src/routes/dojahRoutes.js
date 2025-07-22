@@ -20,6 +20,9 @@ router.get('/data/:userId', protect, dojahController.getWebhookData);
 // Process webhook data and send to Azure endpoint (protected) - NEW
 router.post('/process/:userId', protect, dojahController.processWebhookToAzure);
 
+// Retry Azure submission endpoint (protected) - NEW
+router.post('/retry/:userId', protect, dojahController.retryAzureSubmission);
+
 // Get verification status endpoint (protected)
 router.get('/status', protect, dojahController.getVerificationStatus);
 

@@ -55,6 +55,72 @@ const verifySignature = (signature, body) => {
   return hash === signature;
 };
 
+// Auto-process verification to Azure backend
+const autoProcessVerificationToAzure = async (userId, webhookBody) => {
+  try {
+    console.log(`🔄 Auto-processing verification for user: ${userId}`);
+    
+    // Format data for Azure
+    const formattedData = formatVerificationDataFromDojah(webhookBody, userId);
+    
+    // Send to Azure API (no auth headers needed for internal processing)
+    const apiEndpoint = process.env.API_URL || 'https://carepro-api20241118153443.azurewebsites.net/api';
+    
+    // Use internal API key if available
+    const headers = {
+      'Content-Type': 'application/json'
+    };
+    
+    if (process.env.INTERNAL_API_KEY) {
+      headers['Authorization'] = `Bearer ${process.env.INTERNAL_API_KEY}`;
+    }
+    
+    const azureResponse = await axios.post(
+      `${apiEndpoint}/Verifications`,
+      formattedData,
+      { 
+        headers,
+        timeout: 30000 // 30 second timeout
+      }
+    );
+
+    console.log(`✅ Auto-processed verification for user ${userId}:`, azureResponse.data);
+    
+    // Log successful auto-processing
+    logWebhookData({
+      userId,
+      action: 'auto-process-success',
+      azureResponse: azureResponse.data,
+      formattedData
+    }, 'auto-process-success');
+
+    // Mark as processed in memory
+    const storedData = webhookDataStore.get(userId);
+    if (storedData) {
+      storedData.processed = true;
+      storedData.processedAt = Date.now();
+      storedData.azureResponse = azureResponse.data;
+      webhookDataStore.set(userId, storedData);
+    }
+
+    return azureResponse.data;
+    
+  } catch (error) {
+    console.error(`❌ Auto-processing failed for user ${userId}:`, error.message);
+    
+    // Log the auto-processing error
+    logWebhookData({
+      userId,
+      action: 'auto-process-error',
+      error: error.message,
+      response: error.response?.data,
+      status: error.response?.status
+    }, 'auto-process-error');
+    
+    throw error;
+  }
+};
+
 // Format verification data for Azure (original function for backwards compatibility)
 const formatVerificationData = (dojahData, userId) => {
   let verificationNo = '';
@@ -89,6 +155,9 @@ const formatVerificationDataFromDojah = (dojahWebhook, userId) => {
   let firstName = '';
   let lastName = '';
 
+  console.log('🔍 Formatting Dojah webhook data for user:', userId);
+  console.log('📋 Raw webhook structure:', JSON.stringify(dojahWebhook, null, 2));
+
   // Extract data from the complex Dojah structure
   const governmentData = dojahWebhook.data?.government_data?.data;
   const userData = dojahWebhook.data?.user_data?.data;
@@ -101,38 +170,63 @@ const formatVerificationDataFromDojah = (dojahWebhook, userId) => {
     verificationMethod = 'BVN';
     firstName = bvnEntity.first_name?.trim() || '';
     lastName = bvnEntity.last_name?.trim() || '';
+    console.log('✅ Found BVN data:', { verificationNo, firstName, lastName });
   }
 
-  // Fallback to user data if BVN data not available
+  // Get NIN information if available and no BVN found
+  if (!verificationNo && governmentData?.nin?.entity) {
+    const ninEntity = governmentData.nin.entity;
+    verificationNo = ninEntity.nin;
+    verificationMethod = 'NIN';
+    firstName = ninEntity.first_name?.trim() || '';
+    lastName = ninEntity.last_name?.trim() || '';
+    console.log('✅ Found NIN data:', { verificationNo, firstName, lastName });
+  }
+
+  // Fallback to user data if government data not available
   if (!firstName && userData) {
     firstName = userData.first_name || '';
     lastName = userData.last_name || '';
+    console.log('📋 Using user data for names:', { firstName, lastName });
   }
 
   // Fallback to ID data if still not available
   if (!firstName && idData) {
     firstName = idData.first_name || '';
     lastName = idData.last_name?.replace(',', '') || ''; // Remove comma from last name
+    console.log('📋 Using ID data for names:', { firstName, lastName });
   }
 
-  // Get verification type from main webhook data
+  // Get verification type from main webhook data if not found
   if (!verificationMethod) {
-    verificationMethod = dojahWebhook.id_type || dojahWebhook.verification_type || 'UNKNOWN';
+    verificationMethod = dojahWebhook.id_type || dojahWebhook.verification_type || 'DOJAH_VERIFICATION';
+    console.log('📋 Using fallback verification method:', verificationMethod);
   }
 
-  // Get verification number from main webhook data if not found in government data
+  // Get verification number from main webhook data if not found
   if (!verificationNo) {
-    verificationNo = dojahWebhook.value || dojahWebhook.verification_value || '';
+    verificationNo = dojahWebhook.value || dojahWebhook.verification_value || dojahWebhook.reference_id || '';
+    console.log('📋 Using fallback verification number:', verificationNo);
   }
 
-  return {
-    userId,
+  // Ensure we have minimum required data
+  if (!firstName || !lastName) {
+    console.warn('⚠️ Missing name data in webhook, using fallback values');
+    firstName = firstName || 'Unknown';
+    lastName = lastName || 'User';
+  }
+
+  const formattedData = {
+    userId: userId.toString(),
     verifiedFirstName: firstName,
     verifiedLastName: lastName,
     verificationMethod,
-    verificationNo,
+    verificationNo: verificationNo.toString(),
     verificationStatus: dojahWebhook.status === true ? 'verified' : 'failed'
   };
+
+  console.log('✅ Final formatted data for Azure:', formattedData);
+  return formattedData;
 };
 
 // Handle Dojah webhook
@@ -178,17 +272,32 @@ const handleDojahWebhook = async (req, res) => {
 
     // Check if this is a completed verification from Dojah
     if (status === true && verification_status === 'Completed') {
-      // Extract user ID from Dojah's user_id parameter or use reference_id as fallback
-      // Dojah should include the user_id that was passed to the widget
-      const userId = req.body.user_id || reference_id || `dojah-${Date.now()}`;
+      // Extract user ID from multiple possible sources
+      let userId = null;
       
-      if (!userId) {
-        console.error('No user ID or reference ID in webhook data');
+      // Try to get userId from various webhook fields
+      if (req.body.user_id) {
+        userId = req.body.user_id;
+      } else if (req.body.metadata?.user_id) {
+        userId = req.body.metadata.user_id;
+      } else if (reference_id && reference_id.startsWith('user_')) {
+        // Extract from reference_id format: user_{userId}_{timestamp}
+        userId = reference_id.split('_')[1];
+      } else if (reference_id) {
+        userId = reference_id;
+      }
+      
+      if (!userId || userId.startsWith('dojah-')) {
+        console.error('No valid user ID found in webhook data');
         logWebhookData({
-          error: 'No user ID or reference ID in webhook data',
-          body: req.body
+          error: 'No valid user ID found in webhook data',
+          body: req.body,
+          extractedUserId: userId
         }, 'error');
-        return res.status(400).json({ error: 'Missing user ID or reference ID' });
+        return res.status(400).json({ 
+          error: 'Missing or invalid user ID', 
+          details: 'Webhook must contain valid user identification' 
+        });
       }
 
       console.log(`✅ Processing completed verification for user: ${userId} (reference: ${reference_id})`);
@@ -204,6 +313,17 @@ const handleDojahWebhook = async (req, res) => {
 
       webhookDataStore.set(userId, webhookData);
       console.log(`Webhook data stored for user ${userId}, expires in 12 hours`);
+
+      // Auto-process verification to Azure in background
+      setTimeout(async () => {
+        try {
+          await autoProcessVerificationToAzure(userId, req.body);
+          console.log(`✅ Auto-processed verification for user ${userId}`);
+        } catch (error) {
+          console.error(`❌ Auto-processing failed for user ${userId}:`, error.message);
+          // Data remains in memory for manual retry
+        }
+      }, 2000); // Process after 2 seconds to ensure frontend polling works
 
       return res.status(200).json({ status: 'success', message: 'Webhook data stored successfully' });
     }
@@ -284,17 +404,68 @@ const processWebhookToAzure = async (req, res) => {
       // Log the processing attempt
       logWebhookData({
         userId,
-        action: 'manual-processing-formatted',
+        action: 'processing-webhook-for-azure',
         rawDojahData: webhookBody,
         formattedForAzure: formattedData
-      }, 'manual-process');
+      }, 'azure-submission');
 
-      return res.status(200).json({
-        success: true,
-        message: 'Verification data formatted successfully',
-        formattedData: formattedData,
-        note: 'Data formatted but not sent to Azure (manual processing only)'
-      });
+      try {
+        // Send to Azure API
+        const apiEndpoint = process.env.API_URL || 'https://carepro-api20241118153443.azurewebsites.net/api';
+        
+        const azureResponse = await axios.post(
+          `${apiEndpoint}/Verifications`,
+          formattedData,
+          {
+            headers: {
+              'Authorization': req.headers.authorization,
+              'Content-Type': 'application/json'
+            },
+            timeout: 30000 // 30 second timeout
+          }
+        );
+
+        console.log('✅ Successfully sent verification data to Azure:', azureResponse.data);
+        
+        // Mark as processed and optionally remove from memory
+        webhookDataStore.delete(userId);
+        
+        // Log successful submission
+        logWebhookData({
+          userId,
+          action: 'azure-submission-success',
+          azureResponse: azureResponse.data,
+          formattedData
+        }, 'azure-success');
+
+        return res.status(200).json({
+          success: true,
+          message: 'Verification data successfully sent to Azure',
+          azureResponse: azureResponse.data,
+          formattedData: formattedData
+        });
+        
+      } catch (azureError) {
+        console.error('❌ Failed to send verification data to Azure:', azureError);
+        
+        // Log the Azure submission error
+        logWebhookData({
+          userId,
+          action: 'azure-submission-error',
+          error: azureError.message,
+          response: azureError.response?.data,
+          status: azureError.response?.status,
+          formattedData
+        }, 'azure-error');
+
+        // Don't delete from memory on failure - allow retry
+        return res.status(500).json({
+          success: false,
+          error: 'Failed to submit verification data to Azure',
+          details: azureError.response?.data || azureError.message,
+          retryable: true
+        });
+      }
     }
 
     return res.status(400).json({
@@ -367,7 +538,10 @@ const getWebhookData = async (req, res) => {
       data: storedData.rawData,
       timestamp: storedData.timestamp,
       message: 'Webhook data retrieved successfully',
-      polledAt: new Date().toISOString()
+      polledAt: new Date().toISOString(),
+      processed: storedData.processed || false,
+      processedAt: storedData.processedAt || null,
+      azureResponse: storedData.processed ? storedData.azureResponse : null
     });
 
   } catch (error) {
@@ -653,6 +827,65 @@ const getWebhookStatistics = async (req, res) => {
   }
 };
 
+// Retry failed Azure submissions
+const retryAzureSubmission = async (req, res) => {
+  try {
+    const { userId } = req.params;
+
+    if (!userId) {
+      return res.status(400).json({ 
+        success: false, 
+        error: 'User ID is required' 
+      });
+    }
+
+    const storedData = webhookDataStore.get(userId);
+
+    if (!storedData) {
+      return res.status(404).json({ 
+        success: false, 
+        error: 'No webhook data found for this user. Data may have been processed or expired.' 
+      });
+    }
+
+    // Check if already processed
+    if (storedData.processed) {
+      return res.status(200).json({
+        success: true,
+        message: 'Verification already processed successfully',
+        azureResponse: storedData.azureResponse
+      });
+    }
+
+    // Retry processing
+    try {
+      await autoProcessVerificationToAzure(userId, storedData.rawData);
+      
+      return res.status(200).json({
+        success: true,
+        message: 'Verification retry successful',
+        processed: true
+      });
+      
+    } catch (retryError) {
+      return res.status(500).json({
+        success: false,
+        error: 'Retry failed',
+        details: retryError.message,
+        retryable: true
+      });
+    }
+
+  } catch (error) {
+    console.error('Retry submission error:', error);
+    return res.status(500).json({ 
+      success: false,
+      error: 'Failed to retry submission',
+      details: error.message 
+    });
+  }
+};
+
 module.exports = {
   handleDojahWebhook,
   saveVerificationData,
@@ -661,5 +894,6 @@ module.exports = {
   getWebhookData,
   getAllWebhookData,
   getWebhookStatistics,
-  processWebhookToAzure
+  processWebhookToAzure,
+  retryAzureSubmission
 };
