@@ -1,5 +1,6 @@
-import React, { useState, useRef } from 'react';
+import React, { useState, useRef, useEffect } from 'react';
 import { DOJAH_CONFIG } from '../../config/dojah';
+import config from '../../config';
 import styles from './DojahVerificationButton.module.css';
 
 /**
@@ -19,7 +20,29 @@ const DojahVerificationButton = ({
 }) => {
   const [isLoading, setIsLoading] = useState(false);
   const [showModal, setShowModal] = useState(false);
+  const [initializationError, setInitializationError] = useState(null);
   const iframeRef = useRef(null);
+
+  // Check initialization on component mount
+  useEffect(() => {
+    try {
+      // Verify that global variables are properly set
+      if (typeof window !== 'undefined') {
+        if (!window.ENV || !window.Dojah) {
+          throw new Error('Dojah environment not properly initialized. Please check config.js');
+        }
+
+        console.log('🎯 Dojah environment verified:', {
+          ENV: !!window.ENV,
+          Dojah: !!window.Dojah,
+          initialized: window.Dojah?.initialized
+        });
+      }
+    } catch (error) {
+      console.error('❌ Dojah initialization check failed:', error);
+      setInitializationError(error.message);
+    }
+  }, []);
   
   // Function to handle messages from the iframe
   const handleIframeMessage = (event) => {
@@ -56,12 +79,12 @@ const DojahVerificationButton = ({
   
   // Function to build the verification URL
   const buildVerificationUrl = () => {
-    const appId = DOJAH_CONFIG.appId;
-    const widgetId = DOJAH_CONFIG.widgetId;
+    const appId = config.DOJAH.APP_ID;
+    const widgetId = config.DOJAH.WIDGET_ID;
     
     if (!appId || !widgetId) {
-      console.error('Missing Dojah appId or widgetId');
-      if (onError) onError(new Error('Missing Dojah configuration'));
+      console.error('Missing Dojah appId or widgetId in config');
+      if (onError) onError(new Error('Missing Dojah configuration in config.js'));
       return null;
     }
     
@@ -71,15 +94,13 @@ const DojahVerificationButton = ({
       return null;
     }
     
-    // Dynamically determine the redirect URL based on current environment
-    // Use environment variable if set, otherwise use current origin
-    const redirectUrl = import.meta.env.VITE_REDIRECT_URL || 
-                       `${window.location.origin}/app/caregiver/dashboard`;
+    // Use redirect URL from config
+    const redirectUrl = config.ENV.REDIRECT_URL;
     
-    console.log('Redirect URL for verification:', redirectUrl);
+    console.log('🔗 Redirect URL for verification:', redirectUrl);
     
     // Build the URL with all necessary parameters
-    const baseUrl = 'https://identity.dojah.io';
+    const baseUrl = config.DOJAH.IDENTITY_URL;
     const timestamp = Date.now();
     const referenceId = `user_${userId}_${timestamp}`;
     
@@ -105,7 +126,8 @@ const DojahVerificationButton = ({
       referenceId,
       appId,
       widgetId,
-      redirectUrl
+      redirectUrl,
+      baseUrl
     });
     
     return `${baseUrl}?${params.toString()}`;
@@ -113,7 +135,14 @@ const DojahVerificationButton = ({
   
   // Handle click on the verification button
   const handleButtonClick = () => {
-    console.log('Opening Dojah verification iframe...');
+    // Check for initialization errors first
+    if (initializationError) {
+      console.error('Cannot start verification due to initialization error:', initializationError);
+      if (onError) onError(new Error(`Initialization failed: ${initializationError}`));
+      return;
+    }
+
+    console.log('🚀 Opening Dojah verification iframe...');
     setIsLoading(true);
     
     // Show modal with iframe
@@ -122,7 +151,7 @@ const DojahVerificationButton = ({
       setIsLoading(false);
       return;
     }
-    
+
     setShowModal(true);
     setupMessageListener();
     setIsLoading(false);

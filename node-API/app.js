@@ -36,7 +36,21 @@ app.use(cors({
   origin: '*', // Allow all origins for now
   credentials: true,
   methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
-  allowedHeaders: ['Content-Type', 'Authorization', 'X-Requested-With']
+  allowedHeaders: [
+    'Content-Type', 
+    'Authorization', 
+    'X-Requested-With',
+    'Cache-Control',
+    'Pragma',
+    'Expires',
+    'ETag'
+  ],
+  exposedHeaders: [
+    'Cache-Control',
+    'Pragma', 
+    'Expires',
+    'ETag'
+  ]
 }));
 
 // Add OPTIONS handling for preflight requests
@@ -46,7 +60,8 @@ app.options('*', cors());
 app.use((req, res, next) => {
   res.header('Access-Control-Allow-Origin', '*');
   res.header('Access-Control-Allow-Methods', 'GET, POST, PUT, DELETE, OPTIONS');
-  res.header('Access-Control-Allow-Headers', 'Content-Type, Authorization, X-Requested-With');
+  res.header('Access-Control-Allow-Headers', 'Content-Type, Authorization, X-Requested-With, Cache-Control, Pragma, Expires, ETag');
+  res.header('Access-Control-Expose-Headers', 'Cache-Control, Pragma, Expires, ETag');
   next();
 });
 

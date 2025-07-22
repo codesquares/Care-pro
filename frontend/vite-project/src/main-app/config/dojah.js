@@ -2,19 +2,28 @@
 /**
  * Dojah Configuration
  * 
- * This file contains configuration for the Dojah Verification Widget
+ * This file imports Dojah configuration from the main config.js file
+ * to maintain consistency across the application.
  */
 
+import config from '../config.js';
+
+// Export Dojah configuration from main config
 export const DOJAH_CONFIG = {
-  // Use env variables if available, otherwise use hardcoded values
-  // For production, make sure to set these in your .env file
-  widgetId: import.meta.env.VITE_DOJAH_WIDGET_ID || "68732f5e97202a07f66bc89a",
-  appId: import.meta.env.VITE_DOJAH_APP_ID || "686c915878a2b53b2bdb5631",
+  // Use values from main config which respects env variables
+  widgetId: config.DOJAH.WIDGET_ID,
+  appId: config.DOJAH.APP_ID,
   type: "custom",
   config: {
-    debug: true, // Set to true to see more logs
+    debug: config.ENV.DEBUG,
     webhook: true,
-    stages: ["government-data", "selfie"]
+    stages: ["government-data", "selfie"],
+    // Disable PostHog analytics to prevent network errors
+    analytics: {
+      posthog: {
+        enabled: false
+      }
+    }
   },
   metadata: {
     user_id: "", // Will be set dynamically
@@ -26,3 +35,6 @@ export const DOJAH_CONFIG = {
     console.error("Verification error:", error);
   }
 };
+
+// Re-export config for backward compatibility
+export { config as CONFIG };
