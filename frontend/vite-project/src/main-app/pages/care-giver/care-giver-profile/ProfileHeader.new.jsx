@@ -184,8 +184,8 @@ const ProfileHeader = () => {
           width: '100%', 
           marginTop: '10px' 
         }}>
-          <VerifyButton verificationStatus={profile.verificationStatus} />
-          <AssessmentButton verificationStatus={profile.verificationStatus} />
+          {/* <VerifyButton verificationStatus={profile.verificationStatus} />
+          <AssessmentButton verificationStatus={profile.verificationStatus} /> */}
         </div>
       </div>
 

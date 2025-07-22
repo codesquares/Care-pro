@@ -1,6 +1,7 @@
 import React, { useState, useRef, useEffect } from 'react';
 import { DOJAH_CONFIG } from '../../config/dojah';
 import config from '../../config';
+import DojahErrorFallback from './DojahErrorFallback';
 import styles from './DojahVerificationButton.module.css';
 
 /**
@@ -26,23 +27,50 @@ const DojahVerificationButton = ({
   // Check initialization on component mount
   useEffect(() => {
     try {
-      // Verify that global variables are properly set
-      if (typeof window !== 'undefined') {
-        if (!window.ENV || !window.Dojah) {
-          throw new Error('Dojah environment not properly initialized. Please check config.js');
-        }
-
-        console.log('🎯 Dojah environment verified:', {
-          ENV: !!window.ENV,
-          Dojah: !!window.Dojah,
-          initialized: window.Dojah?.initialized
-        });
+      // Simple check for basic requirements
+      if (!config.DOJAH.APP_ID || !config.DOJAH.WIDGET_ID) {
+        throw new Error('Missing Dojah APP_ID or WIDGET_ID in configuration');
       }
+
+      console.log('🎯 Dojah verification component initialized:', {
+        APP_ID: config.DOJAH.APP_ID,
+        WIDGET_ID: config.DOJAH.WIDGET_ID,
+        IDENTITY_URL: config.DOJAH.IDENTITY_URL
+      });
+
+      // Listen for iframe messages (verification completion)
+      const handleGlobalMessage = (event) => {
+        // Only accept messages from Dojah domain
+        if (!event.origin.includes('dojah.io')) return;
+        
+        try {
+          const data = typeof event.data === 'string' ? JSON.parse(event.data) : event.data;
+          console.log('� Received message from iframe:', data);
+          
+          if (data.type === 'verification_complete' || data.status === 'success') {
+            if (onSuccess) onSuccess(data);
+            closeModal();
+          } else if (data.type === 'verification_error' || data.status === 'error') {
+            if (onError) onError(new Error(data.message || 'Verification failed'));
+            closeModal();
+          }
+        } catch (err) {
+          console.log('📨 Non-JSON message from iframe:', event.data);
+        }
+      };
+
+      window.addEventListener('message', handleGlobalMessage);
+
+      // Cleanup
+      return () => {
+        window.removeEventListener('message', handleGlobalMessage);
+      };
+        
     } catch (error) {
-      console.error('❌ Dojah initialization check failed:', error);
+      console.error('❌ Dojah component initialization failed:', error);
       setInitializationError(error.message);
     }
-  }, []);
+  }, [onSuccess, onError]);
   
   // Function to handle messages from the iframe
   const handleIframeMessage = (event) => {
@@ -167,7 +195,29 @@ const DojahVerificationButton = ({
     setShowModal(false);
     window.removeEventListener('message', handleIframeMessage);
   };
-  
+
+  // Retry initialization
+  const retryInitialization = () => {
+    setInitializationError(null);
+    // Force re-check of initialization
+    if (typeof window !== 'undefined') {
+      console.log('🔄 Retrying Dojah initialization...');
+      if (window.ENV && window.Dojah) {
+        console.log('✅ Dojah environment available on retry');
+      }
+    }
+  };
+
+  // Show error fallback if there's an initialization error
+  if (initializationError) {
+    return (
+      <DojahErrorFallback 
+        error={initializationError} 
+        retry={retryInitialization}
+      />
+    );
+  }
+
   return (
     <>
       <button
@@ -269,6 +319,7 @@ const DojahVerificationButton = ({
               }}
               title="Dojah Identity Verification"
               allow="camera; microphone; fullscreen"
+              loading="lazy"
             />
           </div>
         </div>

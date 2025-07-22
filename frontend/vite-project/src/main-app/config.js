@@ -25,50 +25,12 @@ const config = {
     }
 };
 
-// Initialize global variables for Dojah widget (fixes ENV and Dojah undefined errors)
-if (typeof window !== 'undefined') {
-    // Set global ENV for Dojah widget
-    if (!window.ENV) {
-        window.ENV = config.ENV;
-    }
-
-    // Initialize Dojah global object
-    if (!window.Dojah) {
-        window.Dojah = {
-            initialized: false,
-            config: {},
-            init: function(dojahConfig) {
-                this.config = { ...this.config, ...dojahConfig };
-                this.initialized = true;
-                console.log('✅ Dojah initialized with config:', this.config);
-            },
-            createWidget: function(element, widgetConfig) {
-                console.log('📦 Dojah widget creation requested:', { element, widgetConfig });
-                // Mock widget creation for iframe approach
-                return {
-                    open: () => console.log('🔓 Dojah widget opened'),
-                    close: () => console.log('🔒 Dojah widget closed'),
-                    destroy: () => console.log('💥 Dojah widget destroyed')
-                };
-            }
-        };
-    }
-
-    // Initialize Dojah if not already initialized
-    if (window.Dojah && !window.Dojah.initialized) {
-        window.Dojah.init({
-            appId: config.DOJAH.APP_ID,
-            widgetId: config.DOJAH.WIDGET_ID,
-            debug: config.ENV.DEBUG,
-            webhook: true,
-            stages: ["government-data", "selfie"],
-            analytics: {
-                posthog: {
-                    enabled: false // Disable to prevent network errors
-                }
-            }
-        });
-    }
-}
+// Log config for debugging
+console.log('📋 App config loaded:', {
+    DOJAH_APP_ID: config.DOJAH.APP_ID,
+    DOJAH_WIDGET_ID: config.DOJAH.WIDGET_ID,
+    ENV_MODE: config.ENV.ENVIRONMENT,
+    API_URL: config.ENV.API_URL
+});
 
 export default config;
