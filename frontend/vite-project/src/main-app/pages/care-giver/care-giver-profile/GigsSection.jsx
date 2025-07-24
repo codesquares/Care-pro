@@ -1,5 +1,7 @@
 import React, { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
+import EmptyState from "../../../../components/EmptyState"; 
+import clock from "../../../../assets/main-app/clock.png"; // Ensure you have an empty gigs image in your assets
 import "./gigs-section.css";
 
 const GigsSection = () => {
@@ -29,8 +31,7 @@ const GigsSection = () => {
         }
 
         const data = await response.json();
-        // console.log(data);
-        setGigs(data); // Assuming the API returns an array of gigs
+        setGigs(data);
         setIsLoading(false);
       } catch (err) {
         setError(err.message);
@@ -41,24 +42,49 @@ const GigsSection = () => {
     fetchGigs();
   }, []);
 
-  if (isLoading) return <p>Loading gigs...</p>;
+  if (isLoading) {
+    return (
+      <div className="spinner-container">
+        <div className="spinner" />
+        <p>Loading gigs...</p>
+      </div>
+    );
+  }
+
   if (error) return <p>Error: {error}</p>;
 
   return (
     <div className="gigs-section">
       <h3>Active Gigs</h3>
-      <div className="gigs-grid">
-        {gigs.map((gig) => (
-          <div key={gig.id} className="gig-card">
-            <img src={gig.image1 || "https://via.placeholder.com/150"} alt={gig.title} className="gig-image" />
-            <h4 className="gig-title">{gig.title}</h4>
+      {gigs.length === 0 ? (
+        <EmptyState
+          logo={<img src={clock} alt="No Gigs" style={{ width: 80 }} />}
+          title="No Gigs Yet"
+          description="You haven’t created any gigs. Get started by creating one."
+          action={
+            <button className="create-gig-btn" onClick={handleNavigateToCreateGig}>
+              Create Gig
+            </button>
+          }
+        />
+      ) : (
+        <div className="gigs-grid">
+          {gigs.map((gig) => (
+            <div key={gig.id} className="gig-card">
+              <img
+                src={gig.image1 || "https://via.placeholder.com/150"}
+                alt={gig.title}
+                className="gig-image"
+              />
+              <h4 className="gig-title">{gig.title}</h4>
+            </div>
+          ))}
+          <div className="gig-card create-new" onClick={handleNavigateToCreateGig}>
+            <div className="create-icon">+</div>
+            <p>Create a new Gig</p>
           </div>
-        ))}
-        <div className="gig-card create-new" onClick={handleNavigateToCreateGig}>
-          <div className="create-icon">+</div>
-          <p>Create a new Gig</p>
         </div>
-      </div>
+      )}
     </div>
   );
 };

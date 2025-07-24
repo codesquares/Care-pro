@@ -1,15 +1,13 @@
-import React, { useEffect, useState } from "react";
+import React from "react";
 import OrderCard from "./OrderCard";
+import EmptyState from "../../../../components/EmptyState";
+import emptyOrdersImage from "../../../../assets/main-app/emptyOrder.png"; // Ensure you have an empty orders image in your assets
 import "./OrderList.css";
 
 const OrderList = ({ filter, orders, loading, error }) => {
-
-
-
   if (loading) return <p>Loading orders...</p>;
   if (error) return <p>Error: {error}</p>;
 
-  // Filter orders based on the selected filter option
   const filteredOrders = orders.filter((order) =>
     !filter || filter === "All Orders" || order.clientOrderStatus === filter
   );
@@ -28,7 +26,11 @@ const OrderList = ({ filter, orders, loading, error }) => {
           />
         ))
       ) : (
-        <p>No orders available</p>
+        <EmptyState
+          logo={<img src={emptyOrdersImage} alt="No Orders" style={{ width: 100 }} />}
+          title="You have no orders available"
+          description="You would be updated immediately you have an order"
+        />
       )}
     </div>
   );
