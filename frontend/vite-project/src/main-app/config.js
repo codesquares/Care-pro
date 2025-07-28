@@ -12,7 +12,8 @@ const config = {
         APP_ID: import.meta.env.VITE_DOJAH_APP_ID || "686c915878a2b53b2bdb5631",
         WIDGET_ID: import.meta.env.VITE_DOJAH_WIDGET_ID || "68732f5e97202a07f66bc89a",
         API_URL: "https://api.dojah.io",
-        IDENTITY_URL: "https://identity.dojah.io"
+        IDENTITY_URL: "https://identity.dojah.io",
+        PUBLIC_KEY: import.meta.env.VITE_DOJAH_PUBLIC_KEY 
     },
     
     // Environment Configuration

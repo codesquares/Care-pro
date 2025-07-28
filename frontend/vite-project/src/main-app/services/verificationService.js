@@ -1013,6 +1013,83 @@ const verificationService = {
     }
   },
 
+  /**
+   * Process Dojah verification results and save to backend
+   * @param {Object} verificationPayload - The verification data from Dojah
+   * @returns {Promise<Object>} - Response from backend
+   */
+  async processDojahVerification(verificationPayload) {
+    try {
+      console.log('[verificationService] processDojahVerification - payload:', verificationPayload);
+
+      // Validate required Azure backend format fields
+      if (!verificationPayload.userId || !verificationPayload.verifiedFirstName || !verificationPayload.verifiedLastName) {
+        throw new Error('userId, verifiedFirstName, and verifiedLastName are required for Azure API');
+      }
+
+      // For verificationMethod and verificationStatus - these cannot be undefined/null
+      if (!verificationPayload.verificationMethod || !verificationPayload.verificationStatus) {
+        throw new Error('verificationMethod and verificationStatus are required for Azure API');
+      }
+
+      // verificationNo can be empty string but should be defined (not null/undefined)
+      if (verificationPayload.verificationNo === undefined || verificationPayload.verificationNo === null) {
+        throw new Error('verificationNo must be defined (can be empty string) for Azure API');
+      }
+
+      // Send the verification data directly to Azure API (not through local Node API)
+      const token = localStorage.getItem('authToken');
+      if (!token) {
+        throw new Error('Authentication token missing for Azure API');
+      }
+
+      const response = await axios.post(`${config.BASE_URL}/Verifications`, verificationPayload, {
+        headers: {
+          'Authorization': `Bearer ${token}`,
+          'Content-Type': 'application/json'
+        }
+      });
+      console.log('[verificationService] processDojahVerification - Azure API response:', response.data);
+
+      // Handle different verification statuses
+      const status = verificationPayload.verificationStatus;
+      if (status === 'verified') {
+        // Save verification status locally for verified users
+        this.saveVerificationStatus(
+          true,
+          'verified',
+          'Dojah KYC verification completed successfully',
+          verificationPayload.userId,
+          'caregiver'
+        );
+      } else if (status === 'pending') {
+        // Save pending status locally
+        this.saveVerificationStatus(
+          false,
+          'pending',
+          'Dojah KYC verification submitted for review',
+          verificationPayload.userId,
+          'caregiver'
+        );
+      }
+
+      return {
+        success: true,
+        message: response.data?.message || 'Verification data saved successfully',
+        data: response.data,
+        status: status
+      };
+
+    } catch (error) {
+      console.error('Error processing Dojah verification:', error);
+      return { 
+        success: false,
+        message: error.response?.data?.message || error.message || 'Failed to process Dojah verification',
+        status: 'failed'
+      };
+    }
+  },
+
 };
 
 export default verificationService;

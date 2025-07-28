@@ -23,6 +23,8 @@ const generateTitle = (type, senderId) => {
       return `New signup: user ${senderId}`;
     case 'SystemNotice':
       return `System notice`;
+    case 'VerificationUpdate':
+      return `Identity Verification Update`;
     case 'NewGig':
       return `New gig created by user ${senderId}`;
     default:
@@ -41,6 +43,8 @@ const generateContent = (type, senderId) => {
       return `User ${senderId} just signed up.`;
     case 'SystemNotice':
       return `There is a new system update.`;
+    case 'VerificationUpdate':
+      return `Your identity verification status has been updated.`;
     case 'NewGig':
       return `User ${senderId} posted a new gig.`;
     default:
@@ -132,7 +136,10 @@ export const createNotification = async ({
   recipientId,
   senderId,
   type,
-  relatedEntityId 
+  relatedEntityId,
+  title,
+  content,
+  metadata
 }) => {
   try {
     // Validate required fields
@@ -144,13 +151,19 @@ export const createNotification = async ({
       recipientId,
       senderId,
       type,
-      title: generateTitle(type, senderId),
-      content: generateContent(type, senderId)
+      // Use custom title/content if provided, otherwise generate them
+      title: title || generateTitle(type, senderId),
+      content: content || generateContent(type, senderId)
     };
     
     // Only add relatedEntityId if it's provided and valid
     if (relatedEntityId) {
       notificationPayload.relatedEntityId = relatedEntityId;
+    }
+
+    // Add metadata if provided (for additional context)
+    if (metadata && typeof metadata === 'object') {
+      notificationPayload.metadata = metadata;
     }
 
     console.log('Creating notification with payload:', notificationPayload);
