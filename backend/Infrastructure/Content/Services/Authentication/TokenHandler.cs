@@ -22,6 +22,7 @@ namespace Infrastructure.Content.Services.Authentication
             this.configuration = configuration;
         }
 
+        
         public Task<string> CreateTokenAsync(AppUserDTO  appUserDTO)
         {
             // Create Claims
@@ -45,6 +46,8 @@ namespace Infrastructure.Content.Services.Authentication
 
             return Task.FromResult(new JwtSecurityTokenHandler().WriteToken(token));
         }
+
+       
 
         public string GeneratePasswordResetToken(string email)
         {
@@ -73,5 +76,48 @@ namespace Infrastructure.Content.Services.Authentication
             return new JwtSecurityTokenHandler().WriteToken(token);
         
     }
+
+
+
+        public string GenerateEmailVerificationToken(string userId, string email, string secretKey, int expireMinutes = 30)
+        {
+            var key = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(secretKey));
+            var creds = new SigningCredentials(key, SecurityAlgorithms.HmacSha256);
+
+            var token = new JwtSecurityToken(
+                claims: new[]
+                {
+                new Claim("userId", userId),
+                new Claim("email", email)
+                },
+                expires: DateTime.UtcNow.AddMinutes(expireMinutes),
+                signingCredentials: creds
+            );
+
+            return new JwtSecurityTokenHandler().WriteToken(token);
+        }
+
+
+        //public static string GenerateEmailVerificationToken(AppUser user, string jwtSecret, int expireMinutes = 30)
+        //{
+        //    var tokenHandler = new JwtSecurityTokenHandler();
+        //    var key = Encoding.ASCII.GetBytes(jwtSecret);
+
+        //    var tokenDescriptor = new SecurityTokenDescriptor
+        //    {
+        //        Subject = new ClaimsIdentity(new[]
+        //        {
+        //    new Claim("userId", user.AppUserId.ToString()),
+        //    new Claim("email", user.Email),
+        //}),
+        //        Expires = DateTime.UtcNow.AddMinutes(expireMinutes),
+        //        SigningCredentials = new SigningCredentials(new SymmetricSecurityKey(key), SecurityAlgorithms.HmacSha256Signature)
+        //    };
+
+        //    var token = tokenHandler.CreateToken(tokenDescriptor);
+        //    return tokenHandler.WriteToken(token);
+        //}
+
+
     }
 }

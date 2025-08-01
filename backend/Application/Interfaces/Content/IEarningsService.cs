@@ -17,5 +17,9 @@ namespace Application.Interfaces.Content
         Task<EarningsDTO> UpdateEarningsAsync(string id, UpdateEarningsRequest request);
         Task<bool> UpdateWithdrawalAmountsAsync(string caregiverId, decimal withdrawalAmount);
         Task<bool> DoesEarningsExistForCaregiverAsync(string caregiverId);
+
+
+        Task <IEnumerable<EarningsResponse>> GetAllCaregiverEarningAsync(string caregiverId);
+
     }
 }

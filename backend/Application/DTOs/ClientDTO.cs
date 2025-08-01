@@ -1,4 +1,5 @@
-﻿using MongoDB.Bson;
+﻿using Microsoft.AspNetCore.Http;
+using MongoDB.Bson;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -72,6 +73,9 @@ namespace Application.DTOs
 
         public DateTime CreatedAt { get; set; }
     }
+
+
+    
 
     public class UpdateClientUserRequest
     {

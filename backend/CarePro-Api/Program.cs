@@ -44,6 +44,12 @@ builder.Services.Configure<DataProtectionTokenProviderOptions>(options =>
 });
 
 
+//builder.Services.AddIdentity<AppUser, IdentityRole>()
+//    .AddEntityFrameworkStores<CareProDbContext>()  // replace with your actual DbContext
+//    .AddDefaultTokenProviders();
+
+
+
 
 /// Configure cloudinary service
 var cloudinarySettings = builder.Configuration.GetSection("CloudinarySettings");
@@ -97,6 +103,7 @@ builder.Services.AddScoped<IEarningsService, EarningsService>();
 builder.Services.AddScoped<IWithdrawalRequestService, WithdrawalRequestService>();
 builder.Services.AddScoped<IAdminUserService, AdminUserService>();
 builder.Services.AddScoped<IReviewService, ReviewService>();
+builder.Services.AddScoped<ISearchService, SearchService>();
 
 builder.Services.AddHostedService<DailyEarningService>();
 
@@ -187,6 +194,7 @@ builder.Services.AddScoped<ChatRepository>();
 
 
 
+builder.Services.AddHttpContextAccessor();
 
 
 

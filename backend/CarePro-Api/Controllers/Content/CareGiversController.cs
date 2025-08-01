@@ -1,6 +1,8 @@
 ﻿using Application.DTOs;
+using Application.Interfaces.Authentication;
 using Application.Interfaces.Content;
 using Infrastructure.Content.Data;
+using Infrastructure.Content.Services;
 using Infrastructure.Content.Services.Authentication;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Http;
@@ -20,12 +22,14 @@ namespace CarePro_Api.Controllers.Content
         private readonly CareProDbContext careProDbContext;
         private readonly ICareGiverService careGiverService;
         private readonly ILogger<CareGiversController> logger;
+        private readonly IHttpContextAccessor httpContextAccessor;
 
-        public CareGiversController(CareProDbContext careProDbContext, ICareGiverService careGiverService, ILogger<CareGiversController> logger)
+        public CareGiversController(CareProDbContext careProDbContext, ICareGiverService careGiverService, ILogger<CareGiversController> logger, IHttpContextAccessor httpContextAccessor)
         {
             this.careProDbContext = careProDbContext;
             this.careGiverService = careGiverService;
             this.logger = logger;
+            this.httpContextAccessor = httpContextAccessor;
         }
 
         /// ENDPOINT TO CREATE  CARE GIVER USERS TO THE DATABASE        
@@ -41,8 +45,14 @@ namespace CarePro_Api.Controllers.Content
                     return BadRequest(ModelState);
                 }
 
+                HttpContext httpContext = httpContextAccessor.HttpContext;
+
+                // Get the origin (i.e., source URL) of the incoming request
+                string origin = httpContext.Request.Headers["Host"];
+
+
                 // Pass Domain Object to Repository to Persist this
-                var careGiverUser = await careGiverService.CreateCaregiverUserAsync(addCaregiverRequest);
+                var careGiverUser = await careGiverService.CreateCaregiverUserAsync(addCaregiverRequest, origin);
 
                 // Send DTO response back to ClientUser
                 return Ok(careGiverUser);
@@ -72,6 +82,86 @@ namespace CarePro_Api.Controllers.Content
                 return StatusCode(500, new { StatusCode = 500, ErrorMessage = ex.Message });
             }
         }
+
+
+
+        #region Email Handling
+        
+
+        [HttpGet("confirm-email")]
+        public async Task<IActionResult> ConfirmEmail([FromQuery] string token)
+        {
+            var result = await careGiverService.ConfirmEmailAsync(token);
+
+            if (result.StartsWith("Account confirmed"))
+                return Ok(result);
+
+            return BadRequest(result);
+        }
+
+
+
+
+        [HttpPost("resend-confirmation")]
+        public async Task<IActionResult> ResendConfirmationEmail([FromBody] string email)
+        {
+            try
+            {
+                HttpContext httpContext = httpContextAccessor.HttpContext;
+
+                // Get the origin (i.e., source URL) of the incoming request
+                string origin = httpContext.Request.Headers["Host"];
+
+
+
+                var result = await careGiverService.ResendEmailConfirmationAsync(email, origin);
+                return Ok(new { message = result });
+            }
+            catch (Exception ex)
+            {
+                return BadRequest(new { error = ex.Message });
+            }
+        }
+
+        #endregion
+
+
+
+
+        #region get origin
+        [HttpGet("GetOrigin")]
+        public IActionResult GetOrigin()
+        {
+            // Retrieve the Origin header from the HTTP request
+            HttpContext httpContext = httpContextAccessor.HttpContext;
+
+            // Get the Referer header of the incoming request
+            string referer = httpContext.Request.Headers["Referer"];
+
+            if (string.IsNullOrEmpty(referer))
+            {
+                // Referer header is missing or empty
+                return BadRequest("Referer header not found in the request.");
+            }
+            else
+            {
+                // Referer header is present, extract the origin URL
+                Uri refererUri;
+                if (Uri.TryCreate(referer, UriKind.Absolute, out refererUri))
+                {
+                    // Build the base URL with scheme, host, and port components
+                    string origin = $"{refererUri.Scheme}://{refererUri.Host}:{refererUri.Port}";
+                    return Ok($"Origin: {origin}");
+                }
+                else
+                {
+                    // Invalid Referer URL format
+                    return BadRequest("Invalid Referer header value.");
+                }
+            }
+        }
+        #endregion
+
 
 
         [HttpGet]
@@ -157,6 +247,34 @@ namespace CarePro_Api.Controllers.Content
                 return StatusCode(500, new { message = ex.Message });
             }
             
+        }
+
+
+
+        [HttpPut]
+        [Route("UpdateProfilePicture/{caregiverId}")]
+        //[Authorize(Roles = "Caregiver, Client, Admin")]
+        public async Task<IActionResult> UpdateProfilePictureAsync(string caregiverId, [FromForm] UpdateProfilePictureRequest updateProfilePictureRequest )
+        {
+            try
+            {
+                logger.LogInformation($"Caregiver with ID: {caregiverId} Profile Picture has been updated.");
+                var caregiver = await careGiverService.UpdateProfilePictureAsync(caregiverId, updateProfilePictureRequest);
+                return Ok(caregiver);
+            }
+            catch (ArgumentException ex)
+            {
+                return BadRequest(new { message = ex.Message });
+            }
+            catch (KeyNotFoundException ex)
+            {
+                return NotFound(new { message = ex.Message });
+            }
+            catch (Exception ex)
+            {
+                return StatusCode(500, new { message = ex.Message });
+            }
+
         }
 
 

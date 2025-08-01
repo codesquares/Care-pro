@@ -1,4 +1,5 @@
 ﻿using Application.DTOs;
+using Application.DTOs.Email;
 using Application.Interfaces;
 using Application.Interfaces.Authentication;
 using Application.Interfaces.Content;
@@ -7,16 +8,25 @@ using Domain;
 using Domain.Entities;
 using Infrastructure.Content.Data;
 using Infrastructure.Services;
+using Microsoft.AspNet.Identity;
+using Microsoft.AspNetCore.Identity;
+using Microsoft.AspNetCore.WebUtilities;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 using Microsoft.IdentityModel.Tokens;
+using Microsoft.VisualStudio.Web.CodeGenerators.Mvc.Templates.BlazorIdentity.Pages;
 using MongoDB.Bson;
+using NuGet.Common;
 using System;
+using System.Buffers.Text;
 using System.Collections.Generic;
+using System.Globalization;
 using System.IdentityModel.Tokens.Jwt;
 using System.Linq;
 using System.Security.Authentication;
+using System.Security.Claims;
 using System.Text;
+using System.Text.RegularExpressions;
 using System.Threading.Tasks;
 using static NuGet.Packaging.PackagingConstants;
 using static Org.BouncyCastle.Math.EC.ECCurve;
@@ -30,9 +40,7 @@ namespace Infrastructure.Content.Services
         private readonly ITokenHandler tokenHandler;
         private readonly IEmailService emailService;
         private readonly IConfiguration configuration;
-        //private readonly IGigServices gigServices;
-
-        //  private readonly IClientOrderService clientOrderService;
+        
 
         public CareGiverService(CareProDbContext careProDbContext, CloudinaryService cloudinaryService, ITokenHandler tokenHandler, IEmailService emailService, IConfiguration configuration)
         {
@@ -41,17 +49,58 @@ namespace Infrastructure.Content.Services
             this.tokenHandler = tokenHandler;
             this.emailService = emailService;
             this.configuration = configuration;
-           // this.gigServices = gigServices;
-            // this.clientOrderService = clientOrderService;
+           
         }
 
-        public async Task<CaregiverDTO> CreateCaregiverUserAsync(AddCaregiverRequest addCaregiverRequest)
+        private bool IsValidEmail(string email)
+        {
+            if (string.IsNullOrWhiteSpace(email))
+                return false;
+
+            try
+            {
+                email = Regex.Replace(email, @"(@)(.+)$", DomainMapper, RegexOptions.None, TimeSpan.FromMilliseconds(200));
+
+                // Examines the domain part of the email and normalizes it.
+                string DomainMapper(Match match)
+                {
+                    var idn = new IdnMapping();
+                    var domainName = idn.GetAscii(match.Groups[2].Value);
+                    return match.Groups[1].Value + domainName;
+                }
+            }
+            catch
+            {
+                return false;
+            }
+
+            try
+            {
+                return Regex.IsMatch(email,
+                    @"^[^@\s]+@[^@\s]+\.[^@\s]+$",
+                    RegexOptions.IgnoreCase, TimeSpan.FromMilliseconds(250));
+            }
+            catch
+            {
+                return false;
+            }
+        }
+
+
+
+
+        public async Task<CaregiverDTO> CreateCaregiverUserAsync(AddCaregiverRequest addCaregiverRequest, string? origin)
         {
             if (addCaregiverRequest.Role != "Caregiver")
             {
-                // throw new AuthenticationException("User already exist, Kindly Login or use forget password!");
                 throw new InvalidOperationException("This Service can only be used to create a user with Caregiver Role!");
             }
+
+            if (!IsValidEmail(addCaregiverRequest.Email))
+            {
+                throw new InvalidOperationException("Please enter a valid email address.");
+            }
+
 
             var hashedPassword = BCrypt.Net.BCrypt.HashPassword(addCaregiverRequest.Password);
 
@@ -99,6 +148,7 @@ namespace Infrastructure.Content.Services
                 AppUserId = caregiver.Id,
                 //Role = Roles.Caregiver.ToString(),
                 Role = caregiver.Role,
+                EmailConfirmed = false,
                 IsDeleted = false,
                 CreatedAt = caregiver.CreatedAt,
             };
@@ -106,6 +156,26 @@ namespace Infrastructure.Content.Services
             await careProDbContext.AppUsers.AddAsync(careProAppUser);
 
             await careProDbContext.SaveChangesAsync();
+
+
+            #region SendVerificationEmail
+                        
+            var jwtSecretKey = configuration["JwtSettings:Secret"];
+            var token = tokenHandler.GenerateEmailVerificationToken(
+                careProAppUser.AppUserId.ToString(),
+                careProAppUser.Email,
+                jwtSecretKey // inject or get from config
+            );
+            var verificationLink = $"{origin}/verify-email?token={token}";
+
+            await emailService.SendSignUpVerificationEmailAsync(
+                careProAppUser.Email,
+                verificationLink,
+                careProAppUser.FirstName + " " + careProAppUser.LastName
+            );    
+
+            #endregion SendVerificationEmail
+
 
             var careGiverUserDTO = new CaregiverDTO()
             {
@@ -121,6 +191,145 @@ namespace Infrastructure.Content.Services
 
             return careGiverUserDTO;
         }
+
+
+                
+        public async Task<string> ConfirmEmailAsync(string token)
+        {
+            var jwtSecret = configuration["JwtSettings:Secret"];
+            if (string.IsNullOrWhiteSpace(jwtSecret))
+                throw new Exception("JWT Secret not configured.");
+
+            var tokenHandler = new JwtSecurityTokenHandler();
+            var key = Encoding.UTF8.GetBytes(jwtSecret);
+
+            try
+            {
+                var principal = tokenHandler.ValidateToken(token, new TokenValidationParameters
+                {
+                    ValidateIssuer = false,
+                    ValidateAudience = false,
+                    ValidateLifetime = true,
+                    ValidateIssuerSigningKey = true,
+                    IssuerSigningKey = new SymmetricSecurityKey(key),
+                    ClockSkew = TimeSpan.Zero
+                }, out SecurityToken validatedToken);
+
+                var userId = principal.FindFirst("userId")?.Value;
+
+                if (string.IsNullOrEmpty(userId))
+                    return "Invalid token. User ID not found.";
+
+                var user = await careProDbContext.AppUsers.FindAsync(ObjectId.Parse(userId));
+
+                if (user == null)
+                    return "User not found.";
+
+                if (user.EmailConfirmed)
+                    return "Email already confirmed.";
+
+                user.EmailConfirmed = true;
+                await careProDbContext.SaveChangesAsync();
+
+                return $"Account confirmed for {user.Email}. You can now log in.";
+            }
+            catch (SecurityTokenException)
+            {
+                return "Token is invalid or expired.";
+            }
+            catch (Exception ex)
+            {
+                return $"An error occurred: {ex.Message}";
+            }
+        }
+
+
+        public async Task<string> ResendEmailConfirmationAsync(string email, string? origin)
+        {
+            var user = await careProDbContext.AppUsers.FirstOrDefaultAsync(x => x.Email.ToLower() == email.ToLower());
+
+            if (user == null)
+                throw new Exception("User does not exist");
+
+            if (user.EmailConfirmed)
+                return "Email already confirmed";
+
+
+            #region SendVerificationEmail
+
+            //var token = tokenHandler.GenerateEmailVerificationToken(careProAppUser, jwtSecret);
+            //var verificationLink = $"{origin}/verify-email?token={token}";
+            var jwtSecretKey = configuration["JwtSettings:Secret"];
+            var token = tokenHandler.GenerateEmailVerificationToken(
+                user.AppUserId.ToString(),
+                user.Email,
+                jwtSecretKey // inject or get from config
+            );
+            var verificationLink = $"{origin}/verify-email?token={token}";
+
+            await emailService.SendSignUpVerificationEmailAsync(
+                user.Email,
+                verificationLink,
+                user.FirstName + " " + user.LastName
+            );
+
+
+
+
+            #endregion
+
+            //    var jwtSecret = configuration["JwtSettings:Secret"];
+            //    if (string.IsNullOrWhiteSpace(jwtSecret))
+            //        throw new Exception("JWT Secret not configured.");
+            //    // Create a new JWT email confirmation token
+            //    var tokenHandler = new JwtSecurityTokenHandler();
+            //    var key = Encoding.UTF8.GetBytes(jwtSecret);
+
+            //    var tokenDescriptor = new SecurityTokenDescriptor
+            //    {
+            //        Subject = new ClaimsIdentity(new[]
+            //        {
+            //    new Claim("userId", user.AppUserId.ToString()),
+            //}),
+            //        Expires = DateTime.UtcNow.AddHours(24),
+            //        SigningCredentials = new SigningCredentials(new SymmetricSecurityKey(key), SecurityAlgorithms.HmacSha256Signature)
+            //    };
+
+
+
+            //    var jwtSecretKey = configuration["JwtSettings:Secret"];
+            //    var token = tokenHandler.GenerateEmailVerificationToken(
+            //        user.AppUserId.ToString(),
+            //        user.Email,
+            //        jwtSecretKey // inject or get from config
+            //    );
+            //    var verificationLink = $"{origin}/verify-email?token={token}";
+
+
+
+
+            //    var token = tokenHandler.CreateToken(tokenDescriptor);
+            //    var tokenString = tokenHandler.WriteToken(token);
+            //    var baseUrl = ;
+
+            //    // Generate confirmation link
+            //    var confirmUrl = $"{baseUrl}/confirm-email?token={tokenString}";
+
+            //    // Send email with the link (You should plug in your real email sending service here)
+            //    await emailService.SendSignUpVerificationEmailAsync(
+            //        user.Email,
+            //        confirmUrl,
+            //        user.FirstName
+            //    );
+
+
+
+
+            return "A new confirmation link has been sent to your email.";
+        }
+
+
+
 
         public async Task<IEnumerable<CaregiverResponse>> GetAllCaregiverUserAsync()
         {
@@ -326,7 +535,7 @@ namespace Infrastructure.Content.Services
                 await updateCaregiverAdditionalInfoRequest.IntroVideo.CopyToAsync(memoryStream);
                 var videoBytes = memoryStream.ToArray();
 
-                // Now upload videoBytes to Cloudinary
+                // Now upload imageBytes to Cloudinary
                 var videoUrl = await cloudinaryService.UploadVideoAsync(videoBytes, $"intro_{existingCareGiver.FirstName}{existingCareGiver.LastName}");
 
                 existingCareGiver.IntroVideo = videoUrl; // Save Cloudinary URL to DB
@@ -385,7 +594,7 @@ namespace Infrastructure.Content.Services
                 await updateCaregiverAdditionalInfoRequest.IntroVideo.CopyToAsync(memoryStream);
                 var videoBytes = memoryStream.ToArray();
 
-                // Now upload videoBytes to Cloudinary
+                // Now upload imageBytes to Cloudinary
                 var videoUrl = await cloudinaryService.UploadVideoAsync(videoBytes, $"intro_{existingCareGiver.FirstName}{existingCareGiver.LastName}");
 
                 existingCareGiver.IntroVideo = videoUrl; // Save Cloudinary URL to DB
@@ -408,6 +617,43 @@ namespace Infrastructure.Content.Services
             await careProDbContext.SaveChangesAsync();
 
             return $"Caregiver with ID '{caregiverId}' Additional Information Updated successfully.";
+
+        }
+
+        public async Task<string> UpdateProfilePictureAsync(string caregiverId, UpdateProfilePictureRequest updateProfilePictureRequest)
+        {
+
+            if (!ObjectId.TryParse(caregiverId, out var objectId))
+            {
+                throw new ArgumentException("Invalid Caregiver ID format.");
+            }
+
+
+            var existingCareGiver = await careProDbContext.CareGivers.FindAsync(objectId);
+
+            if (existingCareGiver == null)
+            {
+                throw new KeyNotFoundException($"Caregiver with ID '{caregiverId}' not found.");
+            }
+
+
+            if (updateProfilePictureRequest.ProfileImage != null)
+            {
+                using var memoryStream = new MemoryStream();
+                await updateProfilePictureRequest.ProfileImage.CopyToAsync(memoryStream);
+                var imageBytes = memoryStream.ToArray();
+
+                // Now upload imageBytes to Cloudinary
+                var imageURL = await cloudinaryService.UploadImageAsync(imageBytes, $"intro_{existingCareGiver.FirstName}{existingCareGiver.LastName}");
+
+                existingCareGiver.ProfileImage = imageURL; // Save Cloudinary URL to DB
+            }
+
+            
+            careProDbContext.CareGivers.Update(existingCareGiver);
+            await careProDbContext.SaveChangesAsync();
+
+            return $"Caregiver with ID '{caregiverId}' ProfilePicture Updated successfully.";
 
         }
 
@@ -434,9 +680,6 @@ namespace Infrastructure.Content.Services
 
             await careProDbContext.SaveChangesAsync();
         }
-
-
-
 
         public async Task GeneratePasswordResetTokenAsync(PasswordResetRequestDto passwordResetRequestDto)
         {
@@ -493,6 +736,6 @@ namespace Infrastructure.Content.Services
             }
         }
 
-
+       
     }
 }

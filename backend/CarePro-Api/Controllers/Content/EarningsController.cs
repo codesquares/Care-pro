@@ -1,5 +1,6 @@
 using Application.DTOs;
 using Application.Interfaces.Content;
+using Infrastructure.Content.Services;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
@@ -38,7 +39,7 @@ namespace CarePro_Api.Controllers.Content
             }
         }
 
-        [HttpGet("caregiver/{caregiverId}")]
+        [HttpGet("result/{caregiverId}")]
         public async Task<IActionResult> GetEarningsByCaregiverId(string caregiverId)
         {
             try
@@ -46,7 +47,7 @@ namespace CarePro_Api.Controllers.Content
                 var earnings = await _earningsService.GetEarningByCaregiverIdAsync(caregiverId);
                 if (earnings == null)
                 {
-                    // return NotFound("No earnings record found for this caregiver");
+                    // return NotFound("No earnings record found for this result");
                     return Ok (earnings);
                 }
                     
@@ -65,10 +66,10 @@ namespace CarePro_Api.Controllers.Content
         {
             try
             {
-                // Check if earnings already exist for this caregiver
+                // Check if earnings already exist for this result
                 bool exists = await _earningsService.DoesEarningsExistForCaregiverAsync(addEarningsRequest.CaregiverId);
                 if (exists)
-                    return BadRequest("Earnings record already exists for this caregiver");
+                    return BadRequest("Earnings record already exists for this result");
 
                 var earnings = await _earningsService.CreateEarningsAsync(addEarningsRequest);
                // return CreatedAtAction(nameof(GetEarningsById), new { id = earnings.Id }, earnings);
@@ -97,5 +98,22 @@ namespace CarePro_Api.Controllers.Content
                 return BadRequest(new { ErrorMessage = ex.Message });
             }
         }
+
+
+
+        [HttpGet("EarningHistory/{caregiverId}")]
+        public async Task<IActionResult> GetAllEarningsByCaregiverAsync(string caregiverId)
+        {
+            try
+            {
+                var result = await _earningsService.GetAllCaregiverEarningAsync(caregiverId);
+                return Ok(result);
+            }
+            catch (Exception ex)
+            {
+                return BadRequest(new { ErrorMessage = ex.Message });
+            }
+        }
+
     }
 }

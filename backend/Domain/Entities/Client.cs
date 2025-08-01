@@ -32,6 +32,7 @@ namespace Domain.Entities
         public DateTime? DeletedOn { get; set; }
 
         public bool Status { get; set; }
+        public string? ProfileImage { get; set; }
 
         public DateTime CreatedAt { get; set; }
 

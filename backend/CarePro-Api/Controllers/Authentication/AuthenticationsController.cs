@@ -71,7 +71,10 @@ namespace CarePro_Api.Controllers.Authentication
                 }
 
             }
-
+            catch (UnauthorizedAccessException ex)
+            {
+                return Unauthorized(new { message = ex.Message });
+            }
             catch (ApplicationException appEx)
             {
                 // Handle application-specific exceptions

@@ -15,11 +15,13 @@ namespace CarePro_Api.Controllers.Content
     {
         private readonly IClientService clientService;
         private readonly ILogger<ClientsController> logger;
+        private readonly IHttpContextAccessor httpContextAccessor;
 
-        public ClientsController(IClientService clientService, ILogger<ClientsController> logger)
+        public ClientsController(IClientService clientService, ILogger<ClientsController> logger, IHttpContextAccessor httpContextAccessor)
         {
             this.clientService = clientService;
             this.logger = logger;
+            this.httpContextAccessor = httpContextAccessor;
         }
 
         /// ENDPOINT TO CREATE  CLIENT USERS TO THE DATABASE
@@ -30,8 +32,14 @@ namespace CarePro_Api.Controllers.Content
         {
             try
             {
+                HttpContext httpContext = httpContextAccessor.HttpContext;
+
+                // Get the origin (i.e., source URL) of the incoming request
+                string origin = httpContext.Request.Headers["Host"];
+
+
                 // Pass Domain Object to Repository, to Persisit this
-                var clientUser = await clientService.CreateClientUserAsync(addClientUserRequest);
+                var clientUser = await clientService.CreateClientUserAsync(addClientUserRequest, origin);
 
 
                 // Send DTO response back to ClientUser
@@ -64,6 +72,76 @@ namespace CarePro_Api.Controllers.Content
             }
 
         }
+
+
+        #region Email Handling
+
+
+        [HttpGet("confirm-email")]
+        public async Task<IActionResult> ConfirmEmail([FromQuery] string token)
+        {
+            var result = await clientService.ConfirmEmailAsync(token);
+
+            if (result.StartsWith("Account confirmed"))
+                return Ok(result);
+
+            return BadRequest(result);
+        }
+
+
+
+
+        [HttpPost("resend-confirmation")]
+        public async Task<IActionResult> ResendConfirmationEmail([FromBody] string email)
+        {
+            try
+            {
+                HttpContext httpContext = httpContextAccessor.HttpContext;
+
+                // Get the origin (i.e., source URL) of the incoming request
+                string origin = httpContext.Request.Headers["Host"];
+
+
+
+                var result = await clientService.ResendEmailConfirmationAsync(email, origin);
+                return Ok(new { message = result });
+            }
+            catch (Exception ex)
+            {
+                return BadRequest(new { error = ex.Message });
+            }
+        }
+
+        #endregion
+
+
+        [HttpPut]
+        [Route("UpdateProfilePicture/{clientId}")]
+        //[Authorize(Roles = "Caregiver, Client, Admin")]
+        public async Task<IActionResult> UpdateProfilePictureAsync(string clientId, [FromForm] UpdateProfilePictureRequest updateProfilePictureRequest)
+        {
+            try
+            {
+                logger.LogInformation($"Client with ID: {clientId} Profile Picture has been updated.");
+                var client = await clientService.UpdateProfilePictureAsync(clientId, updateProfilePictureRequest);
+                return Ok(client);
+            }
+            catch (ArgumentException ex)
+            {
+                return BadRequest(new { message = ex.Message });
+            }
+            catch (KeyNotFoundException ex)
+            {
+                return NotFound(new { message = ex.Message });
+            }
+            catch (Exception ex)
+            {
+                return StatusCode(500, new { message = ex.Message });
+            }
+
+        }
+
+
 
 
         [HttpGet]

@@ -78,4 +78,26 @@ namespace Application.DTOs
         public string AdminId { get; set; }
         public string? AdminNotes { get; set; }
     }
+
+
+    public class TransactionHistoryResponse
+    {
+        public string Id { get; set; }
+        public string CaregiverId { get; set; }
+        public string CaregiverName { get; set; }
+        public decimal AmountRequested { get; set; }
+        public decimal ServiceCharge { get; set; }
+        public decimal FinalAmount { get; set; }
+        public string Token { get; set; }
+        public string Status { get; set; }
+        public DateTime CreatedAt { get; set; }
+        public DateTime? VerifiedAt { get; set; }
+        public DateTime? CompletedAt { get; set; }
+        public string? AdminNotes { get; set; }
+        public string? AdminId { get; set; }
+        public string? AdminName { get; set; }
+        public string? AccountNumber { get; set; }
+        public string? BankName { get; set; }
+        public string? AccountName { get; set; }
+    }
 }

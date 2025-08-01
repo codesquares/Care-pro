@@ -18,7 +18,7 @@ namespace Application.Interfaces
         Task<IEnumerable<GigDTO>> GetAllCaregiverDraftGigsAsync(string caregiverId);
 
         Task<IEnumerable<GigDTO>> GetAllGigsAsync();
-
+        
        // Task<IEnumerable<GigDTO>> GetAllCaregiverServicesAsync(string caregiverId);
 
         Task<List<string>> GetAllSubCategoriesForCaregiverAsync(string caregiverId);

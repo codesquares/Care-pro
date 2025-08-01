@@ -32,6 +32,13 @@ namespace Infrastructure.Content.Services.Authentication
 
             if (appUser != null)
             {
+                // ✅ Check email confirmation before proceeding
+                if (!appUser.EmailConfirmed)
+                {
+                    throw new UnauthorizedAccessException("Email not yet confirmed. Please check your inbox.");
+                }
+
+
                 //return appUser;
                 var careGiverAppUser = await careProDbContext.CareGivers.FirstOrDefaultAsync(x => x.Id == appUser.AppUserId);
                 var clientAppUser = await careProDbContext.Clients.FirstOrDefaultAsync(x => x.Id == appUser.AppUserId);

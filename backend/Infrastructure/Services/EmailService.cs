@@ -43,7 +43,7 @@ namespace Infrastructure.Services
             message.To.Add(MailboxAddress.Parse(toEmail));
             message.Subject = "Password Reset Request";
 
-            //var resetLink = $"https://yourdomain.com/reset-password?token={resetToken}";
+            //var resetLink = $"https://yourdomain.com/reset-password?token={verificationToken}";
             var resetLink = $"{resetToken}";
 
             message.Body = new TextPart("html")
@@ -64,76 +64,39 @@ namespace Infrastructure.Services
             await client.DisconnectAsync(true);
         }
 
-        //public async Task SendPasswordResetEmailWithJwtAsync(string email)
-        //{
-        //    var user = await careProDbContext.CareGivers.FirstOrDefaultAsync(u => u.Email == email.ToLower());
-
-        //    if (user == null)
-        //        throw new InvalidOperationException("User not found.");
-
-        //    var token = tokenHandler.GeneratePasswordResetToken(email);
-        //    var resetLink = $"https://yourfrontenddomain.com/reset-password?token={token}";
-
-
-        //    await emailService.SendPasswordResetEmailAsync(email, token);
-        //}
 
 
 
+        public async Task SendSignUpVerificationEmailAsync(string toEmail, string verificationToken, string firstName)
+        {
+            var message = new MimeMessage();
+            message.From.Add(new MailboxAddress(fromName, fromEmail));
+            message.To.Add(MailboxAddress.Parse(toEmail));
+            message.Subject = "Confirm Your Email - CarePro";
 
+            //var resetLink = $"https://yourdomain.com/reset-password?token={verificationToken}";
+            var verificationLink = $"{verificationToken}";
 
+            message.Body = new TextPart("html")
+            {
+                Text = $@"
+            <h3>Hello {firstName},</h3> <br />
+            <h3>Welcome to CarePro!</h3>
+            <p>Thank you for signing up. Please confirm your email address by clicking the link below:</p>
+            <p><a href='{verificationLink}'>Verify My Email</a></p>
+            <p>This helps us ensure we have the right contact information and lets you access your account securely.</p>
+            <br />
+            <p>If you did not sign up for CarePro, please ignore this email.</p>
+            <br />
+            <p>Thanks,<br />The CarePro Team</p>"
+            };
 
-
-
-
-
-
-
-
-
-        //private System.Net.Mail.SmtpClient _smtpClient;
-
-        //public MailSettings _mailSettings { get; }
-        //public ILogger<EmailService> _logger { get; }
-
-        //public EmailService(IOptions<MailSettings> mailSettings, ILogger<EmailService> logger)
-        //{
-        //    _mailSettings = mailSettings.Value;
-        //    _logger = logger;
-        //}
-
-
-
-
-
-
-        //public async Task SendEmailAsync2(string toEmail, string subject, string body)
-        //{
-        //    _smtpClient = new System.Net.Mail.SmtpClient(_mailSettings.Host)
-        //    {
-
-        //        Port = 587,
-        //        EnableSsl = true,
-        //        UseDefaultCredentials = false,
-        //        Credentials = new NetworkCredential(_mailSettings.Mail, _mailSettings.Password)
-        //    };
-        //    try
-        //    {
-        //        var message = new MailMessage(_mailSettings.Mail, toEmail, subject, body)
-        //        {
-        //            IsBodyHtml = true
-        //        };
-
-        //        await _smtpClient.SendMailAsync(message);
-        //    }
-        //    catch (Exception ex)
-        //    {
-        //        // Handle exceptions
-        //        _logger.LogError($"Failed to send email: {ex.Message}");
-        //        throw new Exception(ex.Message);
-        //    }
-        //}
-
+            using var client = new SmtpClient();
+            await client.ConnectAsync(smtpServer, smtpPort, MailKit.Security.SecureSocketOptions.StartTls);
+            await client.AuthenticateAsync(fromEmail, appPassword);
+            await client.SendAsync(message);
+            await client.DisconnectAsync(true);
+        }
 
 
 

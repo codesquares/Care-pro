@@ -23,19 +23,21 @@ namespace Infrastructure.Content.Services
     public class ClientService : IClientService
     {
         private readonly CareProDbContext careProDbContext;
+        private readonly CloudinaryService cloudinaryService;
         private readonly ITokenHandler tokenHandler;
         private readonly IEmailService emailService;
         private readonly IConfiguration configuration;
 
-        public ClientService(CareProDbContext careProDbContext, ITokenHandler tokenHandler, IEmailService emailService, IConfiguration configuration)
+        public ClientService(CareProDbContext careProDbContext, CloudinaryService cloudinaryService, ITokenHandler tokenHandler, IEmailService emailService, IConfiguration configuration)
         {
             this.careProDbContext = careProDbContext;
+            this.cloudinaryService = cloudinaryService;
             this.tokenHandler = tokenHandler;
             this.emailService = emailService;
             this.configuration = configuration;
         }
 
-        public async Task<ClientDTO> CreateClientUserAsync(AddClientUserRequest addClientUserRequest)
+        public async Task<ClientDTO> CreateClientUserAsync(AddClientUserRequest addClientUserRequest, string? origin)
         {
             var hashedPassword = BCrypt.Net.BCrypt.HashPassword(addClientUserRequest.Password);
 
@@ -78,6 +80,7 @@ namespace Infrastructure.Content.Services
                 Id = ObjectId.GenerateNewId(),
                 AppUserId = clientUser.Id,
                 Role = Roles.Client.ToString(),
+                EmailConfirmed = false,
                 IsDeleted = false,
                 CreatedAt = clientUser.CreatedAt,
             };
@@ -85,6 +88,27 @@ namespace Infrastructure.Content.Services
             await careProDbContext.AppUsers.AddAsync(careProAppUser);
 
             await careProDbContext.SaveChangesAsync();
+
+
+            #region SendVerificationEmail
+
+            var jwtSecretKey = configuration["JwtSettings:Secret"];
+            var token = tokenHandler.GenerateEmailVerificationToken(
+                careProAppUser.AppUserId.ToString(),
+                careProAppUser.Email,
+                jwtSecretKey // inject or get from config
+            );
+            var verificationLink = $"{origin}/verify-email?token={token}";
+
+            await emailService.SendSignUpVerificationEmailAsync(
+                careProAppUser.Email,
+                verificationLink,
+                careProAppUser.FirstName + " " + careProAppUser.LastName
+            );
+
+            #endregion SendVerificationEmail
+
+
 
             var clientUserDTO = new ClientDTO()
             {
@@ -100,6 +124,99 @@ namespace Infrastructure.Content.Services
 
             return clientUserDTO;
         }
+
+
+        public async Task<string> ConfirmEmailAsync(string token)
+        {
+            var jwtSecret = configuration["JwtSettings:Secret"];
+            if (string.IsNullOrWhiteSpace(jwtSecret))
+                throw new Exception("JWT Secret not configured.");
+
+            var tokenHandler = new JwtSecurityTokenHandler();
+            var key = Encoding.UTF8.GetBytes(jwtSecret);
+
+            try
+            {
+                var principal = tokenHandler.ValidateToken(token, new TokenValidationParameters
+                {
+                    ValidateIssuer = false,
+                    ValidateAudience = false,
+                    ValidateLifetime = true,
+                    ValidateIssuerSigningKey = true,
+                    IssuerSigningKey = new SymmetricSecurityKey(key),
+                    ClockSkew = TimeSpan.Zero
+                }, out SecurityToken validatedToken);
+
+                var userId = principal.FindFirst("userId")?.Value;
+
+                if (string.IsNullOrEmpty(userId))
+                    return "Invalid token. User ID not found.";
+
+                var user = await careProDbContext.AppUsers.FindAsync(ObjectId.Parse(userId));
+
+                if (user == null)
+                    return "User not found.";
+
+                if (user.EmailConfirmed)
+                    return "Email already confirmed.";
+
+                user.EmailConfirmed = true;
+                await careProDbContext.SaveChangesAsync();
+
+                return $"Account confirmed for {user.Email}. You can now log in.";
+            }
+            catch (SecurityTokenException)
+            {
+                return "Token is invalid or expired.";
+            }
+            catch (Exception ex)
+            {
+                return $"An error occurred: {ex.Message}";
+            }
+        }
+
+
+        public async Task<string> ResendEmailConfirmationAsync(string email, string? origin)
+        {
+            var user = await careProDbContext.AppUsers.FirstOrDefaultAsync(x => x.Email.ToLower() == email.ToLower());
+
+            if (user == null)
+                throw new Exception("User does not exist");
+
+            if (user.EmailConfirmed)
+                return "Email already confirmed";
+
+
+            #region SendVerificationEmail
+
+            
+            var jwtSecretKey = configuration["JwtSettings:Secret"];
+            var token = tokenHandler.GenerateEmailVerificationToken(
+                user.AppUserId.ToString(),
+                user.Email,
+                jwtSecretKey 
+            );
+            var verificationLink = $"{origin}/verify-email?token={token}";
+
+            await emailService.SendSignUpVerificationEmailAsync(
+                user.Email,
+                verificationLink,
+                user.FirstName + " " + user.LastName
+            );
+
+
+
+
+            #endregion
+
+            
+
+            return "A new confirmation link has been sent to your email.";
+        }
+
+
+
+
 
         public async Task<ClientResponse> GetClientUserAsync(string clientId)
         {
@@ -165,6 +282,47 @@ namespace Infrastructure.Content.Services
         {
             throw new NotImplementedException();
         }
+
+
+        public async Task<string> UpdateProfilePictureAsync(string clientId, UpdateProfilePictureRequest updateProfilePictureRequest)
+        {
+
+            if (!ObjectId.TryParse(clientId, out var objectId))
+            {
+                throw new ArgumentException("Invalid Caregiver ID format.");
+            }
+
+
+            var existingCareGiver = await careProDbContext.Clients.FindAsync(objectId);
+
+            if (existingCareGiver == null)
+            {
+                throw new KeyNotFoundException($"Client with ID '{clientId}' not found.");
+            }
+
+
+            if (updateProfilePictureRequest.ProfileImage != null)
+            {
+                using var memoryStream = new MemoryStream();
+                await updateProfilePictureRequest.ProfileImage.CopyToAsync(memoryStream);
+                var imageBytes = memoryStream.ToArray();
+
+                // Now upload imageBytes to Cloudinary
+                var imageURL = await cloudinaryService.UploadImageAsync(imageBytes, $"profile_{existingCareGiver.FirstName}{existingCareGiver.LastName}");
+
+                existingCareGiver.ProfileImage = imageURL; // Save Cloudinary URL to DB
+            }
+
+
+            careProDbContext.Clients.Update(existingCareGiver);
+            await careProDbContext.SaveChangesAsync();
+
+            return $"Client with ID '{clientId}' ProfilePicture Updated successfully.";
+
+        }
+
+
+
 
         public async Task<string> SoftDeleteClientAsync(string clientId)
         {

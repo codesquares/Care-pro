@@ -13,5 +13,11 @@ namespace Application.Interfaces.Authentication
         Task<string> CreateTokenAsync(AppUserDTO  appUserDTO);
 
         string GeneratePasswordResetToken(string email);
+
+
+        //string GenerateEmailVerificationToken(AppUser user, string jwtSecret, int expireMinutes = 30);
+        string GenerateEmailVerificationToken(string userId, string email, string secretKey, int expireMinutes = 30);
+
+       // string GenerateEmailVerificationToken(string userId, string email, string secretKey, int expireMinutes = 30);
     }
 }

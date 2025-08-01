@@ -41,6 +41,26 @@ namespace Infrastructure.Content.Services
         }
 
 
+        public async Task<string> UploadImageAsync(byte[] imageBytes, string fileName)
+        {
+            using var stream = new MemoryStream(imageBytes);
+            var uploadParams = new ImageUploadParams
+            {
+                File = new FileDescription(fileName, stream),
+                Folder = "caregiver_images"
+            };
+
+            var uploadResult = await _cloudinary.UploadAsync(uploadParams);
+
+            if (uploadResult.StatusCode == System.Net.HttpStatusCode.OK)
+            {
+                return uploadResult.SecureUrl.AbsoluteUri;
+            }
+
+            throw new Exception("Image upload failed.");
+        }
+
+
         public async Task<string> DownloadVideoAsBase64Async(string videoUrl)
         {
             if (string.IsNullOrWhiteSpace(videoUrl))

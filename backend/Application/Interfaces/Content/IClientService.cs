@@ -9,13 +9,18 @@ namespace Application.Interfaces.Content
 {
     public interface IClientService
     {
-        Task<ClientDTO> CreateClientUserAsync(AddClientUserRequest addClientUserRequest);
+        Task<ClientDTO> CreateClientUserAsync(AddClientUserRequest addClientUserRequest, string? origin);
+
+        Task<string> ConfirmEmailAsync(string token);
+        Task<string> ResendEmailConfirmationAsync(string email, string? origin);
 
         Task<ClientResponse> GetClientUserAsync(string clientId);
 
         Task<IEnumerable<ClientResponse>> GetAllClientUserAsync();
 
         Task<string> UpdateClientUserAsync(string clientId, UpdateClientUserRequest updateClientUserRequest );
+
+        Task<string> UpdateProfilePictureAsync(string clientId, UpdateProfilePictureRequest updateProfilePictureRequest);
 
 
         Task<string> SoftDeleteClientAsync(string clientId);
