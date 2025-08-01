@@ -75,7 +75,7 @@ const CaregiverVerificationPage = () => {
           setSuccess("Your account is already verified! Redirecting to dashboard...");
           setTimeout(() => {
             if (isMounted) {
-              navigate("/app/caregiver/dashboard");
+              window.location.href = "/app/caregiver/dashboard";
             }
           }, 2000);
         } else {
@@ -146,9 +146,9 @@ const CaregiverVerificationPage = () => {
           setSuccess("Verification processed. Please check notifications for details. Redirecting to dashboard...");
         }
         
-        // Always redirect after a short delay
+        // Always redirect after a short delay - using window.location for reliable navigation
         setTimeout(() => {
-          navigate("/app/caregiver/dashboard");
+          window.location.href = "/app/caregiver/dashboard";
         }, 3000);
         
       } catch (err) {
@@ -162,10 +162,10 @@ const CaregiverVerificationPage = () => {
           verifiedLastName: userDetails.lastName || ''
         });
         
-        // Still redirect - notifications will inform user of issues
+        // Still redirect - notifications will inform user of issues - using window.location for reliability
         setSuccess("Verification processed. Please check notifications for details. Redirecting to dashboard...");
         setTimeout(() => {
-          navigate("/app/caregiver/dashboard");
+          window.location.href = "/app/caregiver/dashboard";
         }, 3000);
       } finally {
         setIsSubmitting(false);
@@ -188,9 +188,9 @@ const CaregiverVerificationPage = () => {
       setIsSubmitting(false);
       setShowDojahWidget(false);
       
-      // Still redirect after error
+      // Still redirect after error - using window.location for reliable navigation
       setTimeout(() => {
-        navigate("/app/caregiver/dashboard");
+        window.location.href = "/app/caregiver/dashboard";
       }, 3000);
     } else if (type === 'close') {
       setIsSubmitting(false);
@@ -703,7 +703,7 @@ const CaregiverVerificationPage = () => {
           <div className="verification-navigation">
             <button
               type="button"
-              onClick={() => navigate("/app/caregiver/dashboard")}
+              onClick={() => window.location.href = "/app/caregiver/dashboard"}
               className="back-btn"
               disabled={isSubmitting}
             >

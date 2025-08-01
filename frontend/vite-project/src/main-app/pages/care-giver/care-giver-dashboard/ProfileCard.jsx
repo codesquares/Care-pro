@@ -35,6 +35,7 @@ const ProfileCard = () => {
         setProfile(data);
       } catch (err) {
         setError(err.message);
+        console.error("Profile fetch error:", err);
       } finally {
         setLoading(false);
       }
@@ -42,9 +43,10 @@ const ProfileCard = () => {
 
     fetchProfile();
   }, []); // Note: No dependencies here — it's safe!
+  
   console.log("profile===>", profile);
-
   console.log("profile is running");
+  
   // get the user's first name and first two letters of profile id and last two letters of profile id and last two letters of profile last name and concatenate them to form a username
   let userName = "";
    if(profile){
@@ -56,8 +58,22 @@ const ProfileCard = () => {
   // save the username to localStorage
   localStorage.setItem("userName", userName);
 
-  if (loading) return <p>Loading profile...</p>;
-  if (error) return <p>Error: {error}</p>;
+  if (loading) return (
+    <div className="profile-card">
+      <div className="profile-loading">
+        <p>Loading profile...</p>
+      </div>
+    </div>
+  );
+  
+  if (error) return (
+    <div className="profile-card">
+      <div className="profile-error">
+        <p>Error: {error}</p>
+        <button onClick={() => window.location.reload()}>Retry</button>
+      </div>
+    </div>
+  );
 
   return (
     <div className="profile-card">

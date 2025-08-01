@@ -12,13 +12,19 @@ import DirectMessage from '../../components/messages/DirectMessage';
 import VerificationPage from './verification/VerificationPage';
 import AssessmentPage from './verification/AssessmentPage';
 import NotificationsPage from '../../components/Notifications/Notifications';
+import ErrorBoundary from '../../components/ErrorBoundary';
+import '../../components/ErrorBoundary.css';
 
 function CareGiverRoutes() {
     return (
         <>
         <NavigationBar />
         <Routes>
-            <Route path='/dashboard' element={<CaregiverDashboard />} />
+            <Route path='/dashboard' element={
+                <ErrorBoundary>
+                    <CaregiverDashboard />
+                </ErrorBoundary>
+            } />
             <Route path='/profile' element={<UserProfile />} />
             <Route path='/earnings' element={<Earnings />} />
             <Route path='/orders' element={<Order />} />

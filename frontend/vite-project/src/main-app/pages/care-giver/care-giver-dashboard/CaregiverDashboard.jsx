@@ -22,7 +22,7 @@ const CaregiverDashboard = () => {
   };
 
    // Retrieve user details from localStorage
-   const userDetails = JSON.parse(localStorage.getItem("userDetails"));
+   const userDetails = JSON.parse(localStorage.getItem("userDetails") || "{}");
    const caregiverId = userDetails?.id;
    // const vite_API_URL = import.meta.env.VITE_API_URL; // Use the environment variable for the API URL
    const vite_API_URL = 'https://carepro-api20241118153443.azurewebsites.net/api'; 
@@ -34,14 +34,15 @@ const CaregiverDashboard = () => {
        try {
          const response = await fetch(API_URL);
          if (!response.ok) {
-           throw new Error("Failed to fetch orders");
+           throw new Error(`Failed to fetch orders: ${response.status} ${response.statusText}`);
          }
          const data = await response.json();
  
-         setOrders(data.clientOrders);
-          setTotalOrders(data.noOfOrders);
+         setOrders(data.clientOrders || []);
+         setTotalOrders(data.noOfOrders || 0);
           // setTotalEarnings(data.totalEarning);
        } catch (error) {
+         console.error("Error fetching orders:", error);
          setError(error.message);
        } finally {
          setLoading(false);
@@ -52,9 +53,9 @@ const CaregiverDashboard = () => {
    }, []);
 
   console.log("orders===>",orders) 
-  const earningsTotal = orders.reduce((acc, order) => {
+  const earningsTotal = (orders || []).reduce((acc, order) => {
     if (order.clientOrderStatus === 'Completed') {
-      return acc + order.amount;
+      return acc + (order.amount || 0);
     }
     return acc;
   }, 0);
@@ -64,6 +65,40 @@ const CaregiverDashboard = () => {
   }, [orders, earningsTotal]);
 
   console.log("totalEarnings===>", totalEarnings);
+
+  // Add loading state for initial render
+  if (loading) {
+    return (
+      <>
+        <div className="caregiver-dashboard">
+          <div className="dashboard-loading">
+            <div className="loading-spinner"></div>
+            <p>Loading dashboard...</p>
+          </div>
+        </div>
+      </>
+    );
+  }
+
+  // Add error state with retry option
+  if (error) {
+    return (
+      <>
+        <div className="caregiver-dashboard">
+          <div className="dashboard-error">
+            <h3>Error Loading Dashboard</h3>
+            <p>Error: {error}</p>
+            <button 
+              onClick={() => window.location.reload()} 
+              className="retry-btn"
+            >
+              Retry
+            </button>
+          </div>
+        </div>
+      </>
+    );
+  }
 
   return (
     <>
