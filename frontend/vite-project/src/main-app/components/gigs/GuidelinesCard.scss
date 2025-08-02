@@ -1,0 +1,165 @@
+.guidelines-card {
+  background: #ffffff;
+  border: 1px solid #e0e0e0;
+  border-radius: 8px;
+  padding: 20px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+  height: fit-content;
+  position: sticky;
+  top: 20px;
+  max-height: calc(100vh - 40px);
+  overflow-y: auto;
+  
+  .guidelines-header {
+    margin-bottom: 20px;
+    border-bottom: 2px solid #f0f0f0;
+    padding-bottom: 15px;
+    
+    h3 {
+      color: #2c3e50;
+      margin: 0 0 8px 0;
+      font-size: 1.25rem;
+      font-weight: 600;
+    }
+    
+    p {
+      color: #7f8c8d;
+      margin: 0;
+      font-size: 0.9rem;
+    }
+  }
+  
+  .guidelines-content {
+    .guideline-section {
+      margin-bottom: 24px;
+      
+      &:last-child {
+        margin-bottom: 0;
+      }
+      
+      h4 {
+        color: #34495e;
+        margin: 0 0 8px 0;
+        font-size: 1rem;
+        font-weight: 600;
+        display: flex;
+        align-items: center;
+        
+        &:before {
+          content: "📝";
+          margin-right: 8px;
+          font-size: 0.9rem;
+        }
+      }
+      
+      p {
+        color: #5a6c7d;
+        line-height: 1.5;
+        margin: 0 0 12px 0;
+        font-size: 0.9rem;
+      }
+      
+      .tips {
+        background: #f8f9fa;
+        border-left: 3px solid #3498db;
+        padding: 12px 15px;
+        border-radius: 0 4px 4px 0;
+        
+        strong {
+          color: #2980b9;
+          font-size: 0.85rem;
+          display: block;
+          margin-bottom: 8px;
+        }
+        
+        ul {
+          margin: 0;
+          padding-left: 16px;
+          
+          li {
+            color: #5a6c7d;
+            font-size: 0.85rem;
+            line-height: 1.4;
+            margin-bottom: 4px;
+            
+            &:last-child {
+              margin-bottom: 0;
+            }
+          }
+        }
+      }
+    }
+  }
+  
+  .guidelines-footer {
+    margin-top: 20px;
+    padding-top: 15px;
+    border-top: 1px solid #ecf0f1;
+    
+    .help-note {
+      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+      color: white;
+      padding: 15px;
+      border-radius: 6px;
+      text-align: center;
+      
+      strong {
+        display: block;
+        margin-bottom: 5px;
+        font-size: 0.9rem;
+      }
+      
+      p {
+        margin: 0;
+        font-size: 0.8rem;
+        opacity: 0.9;
+      }
+    }
+  }
+}
+
+// Responsive design
+@media (max-width: 1200px) {
+  .guidelines-card {
+    position: relative;
+    top: 0;
+    max-height: none;
+    margin-bottom: 20px;
+  }
+}
+
+@media (max-width: 768px) {
+  .guidelines-card {
+    padding: 15px;
+    
+    .guidelines-header {
+      h3 {
+        font-size: 1.1rem;
+      }
+    }
+    
+    .guidelines-content {
+      .guideline-section {
+        h4 {
+          font-size: 0.95rem;
+        }
+        
+        p {
+          font-size: 0.85rem;
+        }
+        
+        .tips {
+          padding: 10px 12px;
+          
+          strong {
+            font-size: 0.8rem;
+          }
+          
+          ul li {
+            font-size: 0.8rem;
+          }
+        }
+      }
+    }
+  }
+}

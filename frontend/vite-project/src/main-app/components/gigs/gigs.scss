@@ -39,10 +39,32 @@ textarea {
   display: flex;
   flex-wrap: wrap;
   justify-content: center;
-  align-items: center;
+  align-items: flex-start;
   margin-top: 5px;
   width: 100%;
   flex-direction: column;
+}
+
+.gigs-form-content {
+  display: flex;
+  width: 100%;
+  max-width: 1400px;
+  gap: 30px;
+  align-items: flex-start;
+  justify-content: center;
+  margin: 0 auto;
+  padding: 0 20px;
+}
+
+.main-content {
+  flex: 1;
+  max-width: 900px;
+  width: 100%;
+}
+
+.guidelines-sidebar {
+  flex: 0 0 350px;
+  width: 350px;
 }
 
 .gigs-form-header {
@@ -305,6 +327,24 @@ textarea {
 
 
 // Responsive Design
+@media (max-width: 1200px) {
+  .gigs-form-content {
+    flex-direction: column;
+    align-items: center;
+  }
+  
+  .guidelines-sidebar {
+    flex: none;
+    width: 100%;
+    max-width: 900px;
+    order: -1; // Show guidelines above main content on smaller screens
+  }
+  
+  .main-content {
+    width: 100%;
+  }
+}
+
 @media (max-width: 768px) {
   .gigs-card {
     padding: 20px;
@@ -316,6 +356,11 @@ textarea {
   }
 
   .gigs-card-section {
+    gap: 20px;
+  }
+  
+  .gigs-form-content {
+    padding: 0 10px;
     gap: 20px;
   }
 }

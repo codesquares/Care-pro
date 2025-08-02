@@ -1,3 +1,5 @@
+import config from "../config";
+
 // Mock Refresh Token API Call
 export const refreshToken = async () => {
     try {
@@ -18,6 +20,55 @@ export const refreshToken = async () => {
         return data.newAuthToken; // Assume API returns newAuthToken
     } catch (error) {
         console.error('Refresh token failed:', error);
+        throw error;
+    }
+};
+
+// Forgot Password API Call
+export const forgotPassword = async (email) => {
+    try {
+        // TODO: Uncomment when backend API is ready
+
+        const response = await fetch(`${config.BASE_URL}/CareGivers/request-reset`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ email }),
+        });
+
+        if (!response.ok) {
+            const errorData = await response.json();
+            throw new Error(errorData.message || 'Failed to send reset email');
+        }
+         
+        return await response.json();
+        
+    } catch (error) {
+        console.error('Forgot password failed:', error);
+        throw error;
+    }
+};
+
+// Reset Password API Call
+export const resetPassword = async (email, currentPassword, newPassword) => {
+    try {
+        // TODO: Uncomment when backend API is ready
+        
+        const response = await fetch(`${config.BASE_URL}/CareGivers/reset-password`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ email, currentPassword, newPassword }),
+        });
+
+        if (!response.ok) {
+            const errorData = await response.json();
+            throw new Error(errorData.message || 'Failed to reset password');
+        }
+
+        return await response.json();
+        
+        
+    } catch (error) {
+        console.error('Reset password failed:', error);
         throw error;
     }
 };

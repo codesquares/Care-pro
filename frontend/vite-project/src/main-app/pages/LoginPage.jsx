@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from "react";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, Link } from "react-router-dom";
 import axios from "axios";
 import "../../styles/main-app/pages/RegisterPage.scss";
 import authImage from "../../assets/authImage.png";
@@ -104,13 +104,16 @@ const LoginPage = () => {
               {loading ? "Logging in..." : "Login"}
             </button>
           </form>
+          <p className="forgot-password">
+            <Link to="/forgot-password">Forgot password?</Link>
+          </p>
           <div className="alternate-login">
             <p>or</p>
             <button className="btn google">Google</button>
             <button className="btn apple">Apple</button>
           </div>
           <p className="signin-text">
-            I don't have an account? <a href="/register">Sign up</a>
+            I don't have an account? <Link to="/register">Sign up</Link>
           </p>
           <p className="terms">
             By logging in, you agree to the <a href="#">Terms of Use</a> and{" "}

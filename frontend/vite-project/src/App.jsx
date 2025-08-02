@@ -15,6 +15,7 @@ import BecomeCaregiver from './pages/BecomeCaregiver';
 import OrderFaq from './main-app/pages/care-giver/OrderFaq';
 import LoginPage from './main-app/pages/LoginPage';
 import RegisterPage from './main-app/pages/RegisterPage';
+import ForgotPasswordPage from './main-app/pages/ForgotPasswordPage';
 import UnauthorizedPage from './main-app/pages/UnauthorizedPage';
 import { ToastContainer } from 'react-toastify';
 import 'react-toastify/dist/ReactToastify.css';
@@ -79,6 +80,7 @@ function AppContent() {
     '/become-caregiver',
     '/login',
     '/register',
+    '/forgot-password',
     '/create-gig',
     '/unauthorized',
      '/splash',
@@ -121,6 +123,7 @@ function AppContent() {
         <Route path="/become-caregiver" element={<BecomeCaregiver />} />
         <Route path="/login" element={<LoginPage />} />
         <Route path="/register" element={<RegisterPage />} />
+        <Route path="/forgot-password" element={<ForgotPasswordPage />} />
         <Route path="/" element={<SplashScreen />} />
 
         {/* <Route path="/Caregivergigpage" element={<Caregivergigpage />} /> */}

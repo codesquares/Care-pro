@@ -3,6 +3,7 @@ import GigsCard from "./GigsCard";
 import PageBar from "./PageBar";
 import PricingTable from "./Pricing";
 import GalleryUploads from "./Gallery";
+import GuidelinesCard from "./GuidelinesCard";
 import "./gigs.scss";
 import "./Pricing.scss";
 import "./galleryUploads.scss";
@@ -292,48 +293,56 @@ const GigsForm = () => {
       <div className="gigs-form-header"></div>
 
       <div className="gigs-form-body">
-        <PageBar pages={pages} currentPage={currentPage}
-         onPageClick={(pageIndex) => setCurrentPage(pageIndex)}
-         />
-        <br />
-        {currentPage === 0 && (
-          <GigsCard
-            categories={categories}
-            onCategoryChange={handleCategoryChange}
-            onSubCategoryChange={handleSubCategoryChange}
-            onSearchTagChange={handleSearchTagChange}
-            onTitleChange={handleTitleChange}
-            formData={formData}
-          />
-        )}
-        {currentPage === 1 && (
-          <PricingTable
-            pricing={formData.pricing}
-            onPricingChange={(updatedPricing) =>
-              setFormData((prev) => ({ ...prev, pricing: updatedPricing }))
-            }
-          />
-        )}
-        {currentPage === 2 && (
-          <GalleryUploads onFileChange={onFileChange} />
-        )}
-        {currentPage === 3 && (
-          <PublishGig
-            image={`data:image/jpeg;base64,${formData.image1}`}
-            title={alt}
-            onSaveAsDraft={handleSaveAsDraft}
-            onPublish={handleSubmit}
-          />
-        )}
-        <div className="gigs-form-buttons">
-          {currentPage < pages.length - 1 && (
-            <>
-              {currentPage > 0 && (
-                <Button onClick={goToPreviousPage}>Back</Button>
+        <div className="gigs-form-content">
+          <div className="main-content">
+            <PageBar pages={pages} currentPage={currentPage}
+             onPageClick={(pageIndex) => setCurrentPage(pageIndex)}
+             />
+            <br />
+            {currentPage === 0 && (
+              <GigsCard
+                categories={categories}
+                onCategoryChange={handleCategoryChange}
+                onSubCategoryChange={handleSubCategoryChange}
+                onSearchTagChange={handleSearchTagChange}
+                onTitleChange={handleTitleChange}
+                formData={formData}
+              />
+            )}
+            {currentPage === 1 && (
+              <PricingTable
+                pricing={formData.pricing}
+                onPricingChange={(updatedPricing) =>
+                  setFormData((prev) => ({ ...prev, pricing: updatedPricing }))
+                }
+              />
+            )}
+            {currentPage === 2 && (
+              <GalleryUploads onFileChange={onFileChange} />
+            )}
+            {currentPage === 3 && (
+              <PublishGig
+                image={`data:image/jpeg;base64,${formData.image1}`}
+                title={alt}
+                onSaveAsDraft={handleSaveAsDraft}
+                onPublish={handleSubmit}
+              />
+            )}
+            <div className="gigs-form-buttons">
+              {currentPage < pages.length - 1 && (
+                <>
+                  {currentPage > 0 && (
+                    <Button onClick={goToPreviousPage}>Back</Button>
+                  )}
+                  <Button onClick={goToNextPage}>Save & Continue</Button>
+                </>
               )}
-              <Button onClick={goToNextPage}>Save & Continue</Button>
-            </>
-          )}
+            </div>
+          </div>
+          
+          <div className="guidelines-sidebar">
+            <GuidelinesCard currentPage={currentPage} />
+          </div>
         </div>
       </div>
 
