@@ -149,7 +149,9 @@ const GuidelinesCard = ({ currentPage, activeField, onClose }) => {
 
   return (
     <>
-      <div className="guidelines-backdrop"></div>
+      {activeField && (
+        <div className="guidelines-backdrop" onClick={handleCloseGuidelines} />
+      )}
       <div className={`guidelines-card ${activeField ? 'field-focused' : 'default-view'}`}>
         <div className="guidelines-header">
           <div className="header-content">
@@ -162,35 +164,35 @@ const GuidelinesCard = ({ currentPage, activeField, onClose }) => {
             </button>
           )}
         </div>
-          
-          <div className="guidelines-content">
-            <div className="guideline-section">
-              <p>{displayContent.content}</p>
-              {displayContent.tips && (
-                <div className="tips">
-                  <strong>💡 Tips:</strong>
-                  <ul>
-                    {displayContent.tips.map((tip, tipIndex) => (
-                      <li key={tipIndex}>{tip}</li>
-                    ))}
-                  </ul>
-                </div>
-              )}
-            </div>
-          </div>
-
-          <div className="guidelines-footer">
-            <div className="help-note">
-              <strong>{activeField ? "📝 Context Help" : "💡 Need Help?"}</strong>
-              <p>
-                {activeField 
-                  ? "This guidance is specific to the field you're currently working on."
-                  : "Click on any form field to see specific guidance for that section."
-                }
-              </p>
-            </div>
+        
+        <div className="guidelines-content">
+          <div className="guideline-section">
+            <p>{displayContent.content}</p>
+            {displayContent.tips && (
+              <div className="tips">
+                <strong>💡 Tips:</strong>
+                <ul>
+                  {displayContent.tips.map((tip, tipIndex) => (
+                    <li key={tipIndex}>{tip}</li>
+                  ))}
+                </ul>
+              </div>
+            )}
           </div>
         </div>
+
+        <div className="guidelines-footer">
+          <div className="help-note">
+            <strong>{activeField ? "📝 Context Help" : "💡 Need Help?"}</strong>
+            <p>
+              {activeField 
+                ? "This guidance is specific to the field you're currently working on."
+                : "Click on any form field to see specific guidance for that section."
+              }
+            </p>
+          </div>
+        </div>
+      </div>
     </>
   );
 };

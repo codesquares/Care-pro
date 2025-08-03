@@ -198,18 +198,6 @@ useEffect(() => {
           {profile.isAvailable ? "Available" : "Unavailable"}
         </div>
         <div className="button-container">
-        <button
-          className={`availability-btn ${profile.status ? "available" : "unavailable"}`}
-          style={{
-            margin: "15px 0",
-            padding: "8px 20px",
-            borderRadius: "4px",
-            border: "none",
-            cursor: "pointer",
-          }}
-        >
-          {profile.status ? "Available" : "Unavailable"}
-        </button>
         <div
           className="button-container"
           style={{

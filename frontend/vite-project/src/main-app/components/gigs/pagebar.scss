@@ -2,6 +2,7 @@
   display: flex;
   // justify-content: space-between;
   align-items: center;
+  width: 80%;
   
   .page-bar-btn{
     margin-left:auto;
@@ -34,7 +35,16 @@
       background-color: #ccc;
 
       &.completed {
-        background-color: #4caf50; // Green color for completed pages
+        background-color: #4caf50; // Green color for completed valid pages
+      }
+      
+      &.error {
+        background-color: #e74c3c; // Red color for completed invalid pages
+      }
+      
+      &.current {
+        background-color: #2196f3; // Blue color for current page
+        border: 2px solid #1976d2;
       }
     }
 

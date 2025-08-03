@@ -32,6 +32,36 @@
   width: 55%;
 }
 
+.validation-summary {
+  background-color: #fdf2f2;
+  border: 1px solid #e74c3c;
+  border-radius: 4px;
+  padding: 1rem;
+  margin: 1rem 0;
+  width: 100%;
+  
+  h4 {
+    color: #e74c3c;
+    margin-bottom: 0.5rem;
+    font-size: 16px;
+  }
+  
+  ul {
+    list-style-type: none;
+    padding: 0;
+    
+    li {
+      margin-bottom: 0.25rem;
+      color: #e74c3c;
+      font-size: 14px;
+      
+      div {
+        margin-bottom: 0.125rem;
+      }
+    }
+  }
+}
+
 .publish-gig-buttons {
   display: flex;
   justify-content: flex-start;
@@ -47,6 +77,12 @@
   border-radius: 5px;
   cursor: pointer;
   transition: background-color 0.3s, transform 0.2s;
+  
+  &:disabled {
+    opacity: 0.6;
+    cursor: not-allowed;
+    transform: none !important;
+  }
 }
 
 .publish-gig-buttons .draft-button {

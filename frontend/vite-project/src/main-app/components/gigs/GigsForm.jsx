@@ -7,39 +7,132 @@ import GuidelinesCard from "./GuidelinesCard";
 import "./gigs.scss";
 import "./Pricing.scss";
 import "./galleryUploads.scss";
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import PublishGig from "./Publish";
 import axios from "axios";
-import validateFormData from "../../Vadlidations/GigCreationValidation";
+import validateFormData, { 
+  validateOverviewPage, 
+  validatePricingPage, 
+  validateGalleryPage, 
+  validatePublishPage 
+} from "../../Vadlidations/GigCreationValidation";
 import { toast } from "react-toastify";
 import Modal from "../../components/modal/Modal";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, useLocation } from "react-router-dom";
 import { createNotification } from "../../services/notificationService";
 
 const GigsForm = () => {
   const pages = ["Overview", "Pricing", "Gallery", "Publish"];
   const [currentPage, setCurrentPage] = useState(0);
+  const [activeField, setActiveField] = useState(null);
+  const [blurTimeout, setBlurTimeout] = useState(null);
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [modalTitle, setModalTitle] = useState("");
   const [modalDescription, setModalDescription] = useState("");
   const [buttonText, setButtonText] = useState("okay");
   const [buttonBgColor, setButtonBgColor] = useState("#34A853");
-  const source = "/src/assets/dog_on_a_leash.jpg";
-  const alt = "Dog on a leash";
   const [serverMessage, setServerMessage] = useState("");
   const [isSubmitted, setIsSubmitted] = useState(null);
+  const [validationErrors, setValidationErrors] = useState({});
+  const [pageValidationStatus, setPageValidationStatus] = useState({
+    0: false, // Overview
+    1: false, // Pricing
+    2: false, // Gallery
+    3: false  // Publish
+  });
   const navigate = useNavigate();
+  const location = useLocation();
+  
+  // Check if we're in edit mode
+  const isEditMode = location.state?.editMode || false;
+  const gigData = location.state?.gigData || null;
 
   const goToNextPage = () => {
+    const currentPageValidation = validateCurrentPage();
+    
+    if (!currentPageValidation.isValid) {
+      setValidationErrors(currentPageValidation.errors);
+      toast.error("Please fix the validation errors before proceeding");
+      return;
+    }
+    
     if (currentPage < pages.length - 1) {
+      setValidationErrors({});
+      setPageValidationStatus(prev => ({ ...prev, [currentPage]: true }));
       setCurrentPage((prev) => prev + 1);
     }
   };
 
   const goToPreviousPage = () => {
     if (currentPage > 0) {
+      setValidationErrors({});
       setCurrentPage((prev) => prev - 1);
     }
+  };
+
+  const validateCurrentPage = () => {
+    switch (currentPage) {
+      case 0:
+        return validateOverviewPage(formData);
+      case 1:
+        return validatePricingPage(formData.pricing);
+      case 2:
+        return validateGalleryPage(formData);
+      case 3:
+        return validatePublishPage(formData);
+      default:
+        return { isValid: true, errors: {} };
+    }
+  };
+
+  const clearValidationErrors = () => {
+    setValidationErrors({});
+  };
+
+  const handleFieldFocus = (fieldName) => {
+    // Clear any pending blur timeout
+    if (blurTimeout) {
+      clearTimeout(blurTimeout);
+      setBlurTimeout(null);
+    }
+    setActiveField(fieldName);
+  };
+
+  const handleFieldBlur = () => {
+    // Set a longer delay to prevent flashing and allow for quick refocus
+    const timeoutId = setTimeout(() => {
+      setActiveField(null);
+      setBlurTimeout(null);
+    }, 800);
+    setBlurTimeout(timeoutId);
+  };
+
+  // Alternative handler for elements that need persistent display
+  const handleFieldHover = (fieldName) => {
+    // Clear any pending blur timeout
+    if (blurTimeout) {
+      clearTimeout(blurTimeout);
+      setBlurTimeout(null);
+    }
+    setActiveField(fieldName);
+  };
+
+  const handleFieldLeave = () => {
+    // Shorter delay for mouse leave events
+    const timeoutId = setTimeout(() => {
+      setActiveField(null);
+      setBlurTimeout(null);
+    }, 300);
+    setBlurTimeout(timeoutId);
+  };
+
+  const handleCloseGuidelines = () => {
+    // Clear any pending blur timeout
+    if (blurTimeout) {
+      clearTimeout(blurTimeout);
+      setBlurTimeout(null);
+    }
+    setActiveField(null);
   };
 
   const handleInputChange = (name, value) => {
@@ -66,6 +159,57 @@ const GigsForm = () => {
     status: "",
     caregiverId: caregiverId,
   });
+
+  // Effect to populate form data when in edit mode
+  useEffect(() => {
+    if (isEditMode && gigData) {
+      // Parse pricing data if it exists
+      let pricingData = {
+        Basic: { name: "", details: "", deliveryTime: "", amount: "" },
+        Standard: { name: "", details: "", deliveryTime: "", amount: "" },
+        Premium: { name: "", details: "", deliveryTime: "", amount: "" },
+      };
+
+      // If gig has pricing data, parse it
+      if (gigData.pricing) {
+        try {
+          pricingData = typeof gigData.pricing === 'string' 
+            ? JSON.parse(gigData.pricing) 
+            : gigData.pricing;
+        } catch (error) {
+          console.error('Error parsing pricing data:', error);
+        }
+      }
+
+      // Parse search tags if they exist
+      let searchTagsArray = [];
+      if (gigData.tags) {
+        searchTagsArray = typeof gigData.tags === 'string' 
+          ? gigData.tags.split(', ') 
+          : gigData.tags;
+      }
+
+      // Parse subcategory if it exists
+      let subcategoryArray = [];
+      if (gigData.subcategory) {
+        subcategoryArray = Array.isArray(gigData.subcategory) 
+          ? gigData.subcategory 
+          : [gigData.subcategory];
+      }
+
+      setFormData({
+        title: gigData.title || "",
+        category: gigData.category || "",
+        subcategory: subcategoryArray,
+        searchTags: searchTagsArray,
+        pricing: pricingData,
+        image1: gigData.image1 || "",
+        video: gigData.video || "https://www.youtube.com/watch?v=RVFAyFWO4go",
+        status: gigData.status || "",
+        caregiverId: gigData.caregiverId || caregiverId,
+      });
+    }
+  }, [isEditMode, gigData, caregiverId]);
 
   const searchtags = formData.searchTags.length > 0
     ? formData.searchTags.join(", ")
@@ -120,6 +264,12 @@ const GigsForm = () => {
     e.preventDefault();
     setIsSubmitted(true);
 
+    // Basic validation for draft - at least title and category should be present
+    if (!formData.title || !formData.category) {
+      toast.error("Please provide at least a title and category before saving as draft");
+      return;
+    }
+
     try {
       const formDataPayload = new FormData();
 
@@ -167,6 +317,14 @@ const GigsForm = () => {
       category,
       subcategory: [],
     }));
+    // Clear category validation error
+    if (validationErrors.category) {
+      setValidationErrors(prev => {
+        const newErrors = { ...prev };
+        delete newErrors.category;
+        return newErrors;
+      });
+    }
   };
 
   const handleSubCategoryChange = (updatedSubcategories) => {
@@ -174,6 +332,14 @@ const GigsForm = () => {
       ...prev,
       subcategory: updatedSubcategories,
     }));
+    // Clear subcategory validation error
+    if (validationErrors.subcategory) {
+      setValidationErrors(prev => {
+        const newErrors = { ...prev };
+        delete newErrors.subcategory;
+        return newErrors;
+      });
+    }
   };
 
   const handleSearchTagChange = (tags) => {
@@ -181,6 +347,14 @@ const GigsForm = () => {
       ...prev,
       searchTags: tags,
     }));
+    // Clear searchTags validation error
+    if (validationErrors.searchTags) {
+      setValidationErrors(prev => {
+        const newErrors = { ...prev };
+        delete newErrors.searchTags;
+        return newErrors;
+      });
+    }
   };
 
   const handleTitleChange = (title) => {
@@ -188,11 +362,27 @@ const GigsForm = () => {
       ...prev,
       title,
     }));
+    // Clear title validation error when user starts typing
+    if (validationErrors.title) {
+      setValidationErrors(prev => {
+        const newErrors = { ...prev };
+        delete newErrors.title;
+        return newErrors;
+      });
+    }
   };
 
   const handleSubmit = async (e) => {
     e.preventDefault();
     setIsSubmitted(true);
+
+    // Final validation before submission
+    const validation = validatePublishPage(formData);
+    if (!validation.isValid) {
+      setValidationErrors(validation.errors);
+      toast.error("Please fix all validation errors before publishing");
+      return;
+    }
 
     try {
       const formDataPayload = new FormData();
@@ -222,24 +412,43 @@ const GigsForm = () => {
         console.log(key, value);
       }
 
-      const response = await axios.post(
-        "https://carepro-api20241118153443.azurewebsites.net/api/Gigs",
-        formDataPayload,
-        { headers: { "Content-Type": "multipart/form-data" } }
-      );
+      let response;
+      if (isEditMode && gigData?.id) {
+        // Update existing gig
+        response = await axios.put(
+          `https://carepro-api20241118153443.azurewebsites.net/api/Gigs/${gigData.id}`,
+          formDataPayload,
+          { headers: { "Content-Type": "multipart/form-data" } }
+        );
+      } else {
+        // Create new gig
+        response = await axios.post(
+          "https://carepro-api20241118153443.azurewebsites.net/api/Gigs",
+          formDataPayload,
+          { headers: { "Content-Type": "multipart/form-data" } }
+        );
+      }
 
       if (response.status === 200) {
-        setServerMessage("Gig published successfully!");
+        const successMessage = isEditMode ? "Gig updated successfully!" : "Gig published successfully!";
+        const modalDesc = isEditMode ? "Your Gig has been successfully updated." : "Your Gig has been successfully created.";
+        
+        setServerMessage(successMessage);
         setModalTitle("Success!");
-        setModalDescription("Your Gig has been successfully created.");
-        createNotification({
-          recipientId: caregiverId,
-          senderId: caregiverId,
-          type: "NewGig",
-          relatedEntityId: response.data?.id,
-        }).then(() => {
-          console.log("Notification created successfully"); 
-        });
+        setModalDescription(modalDesc);
+        
+        if (!isEditMode) {
+          // Only create notification for new gigs
+          createNotification({
+            recipientId: caregiverId,
+            senderId: caregiverId,
+            type: "NewGig",
+            relatedEntityId: response.data?.id,
+          }).then(() => {
+            console.log("Notification created successfully"); 
+          });
+        }
+        
         setButtonBgColor("#34A853");
         setButtonText("Proceed");
         setIsModalOpen(true);
@@ -283,6 +492,15 @@ const GigsForm = () => {
           image1: base64String || "",
         }));
         console.log("base64String:", base64String);
+        
+        // Clear image validation error
+        if (validationErrors.image1) {
+          setValidationErrors(prev => {
+            const newErrors = { ...prev };
+            delete newErrors.image1;
+            return newErrors;
+          });
+        }
       };
       reader.readAsDataURL(file);
     }
@@ -290,15 +508,21 @@ const GigsForm = () => {
 
   return (
     <div className="gigs-form">
-      <div className="gigs-form-header"></div>
+      <div className="gigs-form-header">
+        <h1>{isEditMode ? 'Edit Gig' : 'Create New Gig'}</h1>
+        {isEditMode && <p>Update your existing gig details</p>}
+      </div>
 
       <div className="gigs-form-body">
         <div className="gigs-form-content">
           <div className="main-content">
-            <PageBar pages={pages} currentPage={currentPage}
-             onPageClick={(pageIndex) => setCurrentPage(pageIndex)}
-             />
-            <br />
+            <PageBar 
+              pages={pages} 
+              currentPage={currentPage}
+              onPageClick={(pageIndex) => setCurrentPage(pageIndex)}
+              pageValidationStatus={pageValidationStatus}
+            />
+            
             {currentPage === 0 && (
               <GigsCard
                 categories={categories}
@@ -306,26 +530,66 @@ const GigsForm = () => {
                 onSubCategoryChange={handleSubCategoryChange}
                 onSearchTagChange={handleSearchTagChange}
                 onTitleChange={handleTitleChange}
+                onFieldFocus={handleFieldFocus}
+                onFieldBlur={handleFieldBlur}
+                onFieldHover={handleFieldHover}
+                onFieldLeave={handleFieldLeave}
                 formData={formData}
+                validationErrors={validationErrors}
+                clearValidationErrors={clearValidationErrors}
               />
             )}
             {currentPage === 1 && (
               <PricingTable
                 pricing={formData.pricing}
-                onPricingChange={(updatedPricing) =>
-                  setFormData((prev) => ({ ...prev, pricing: updatedPricing }))
-                }
+                onPricingChange={(updatedPricing) => {
+                  setFormData((prev) => ({ ...prev, pricing: updatedPricing }));
+                  // Clear pricing validation errors when user makes changes
+                  if (Object.keys(validationErrors).some(key => 
+                    key.includes('basic') || key.includes('standard') || key.includes('premium') || key === 'general' || key === 'progression'
+                  )) {
+                    setValidationErrors(prev => {
+                      const newErrors = { ...prev };
+                      Object.keys(newErrors).forEach(key => {
+                        if (key.includes('basic') || key.includes('standard') || key.includes('premium') || key === 'general' || key === 'progression') {
+                          delete newErrors[key];
+                        }
+                      });
+                      return newErrors;
+                    });
+                  }
+                }}
+                onFieldFocus={handleFieldFocus}
+                onFieldBlur={handleFieldBlur}
+                onFieldHover={handleFieldHover}
+                onFieldLeave={handleFieldLeave}
+                validationErrors={validationErrors}
               />
             )}
             {currentPage === 2 && (
-              <GalleryUploads onFileChange={onFileChange} />
+              <GalleryUploads 
+                onFileChange={onFileChange} 
+                onFieldFocus={handleFieldFocus}
+                onFieldBlur={handleFieldBlur}
+                onFieldHover={handleFieldHover}
+                onFieldLeave={handleFieldLeave}
+                validationErrors={validationErrors}
+              />
             )}
             {currentPage === 3 && (
               <PublishGig
                 image={`data:image/jpeg;base64,${formData.image1}`}
-                title={alt}
+                title={formData.title || "Your Gig"}
                 onSaveAsDraft={handleSaveAsDraft}
                 onPublish={handleSubmit}
+                onFieldFocus={handleFieldFocus}
+                onFieldBlur={handleFieldBlur}
+                onFieldHover={handleFieldHover}
+                onFieldLeave={handleFieldLeave}
+                validationErrors={(() => {
+                  const validation = validatePublishPage(formData);
+                  return validation.errors;
+                })()}
               />
             )}
             <div className="gigs-form-buttons">
@@ -339,12 +603,14 @@ const GigsForm = () => {
               )}
             </div>
           </div>
-          
-          <div className="guidelines-sidebar">
-            <GuidelinesCard currentPage={currentPage} />
-          </div>
         </div>
       </div>
+
+      <GuidelinesCard 
+        currentPage={currentPage} 
+        activeField={activeField} 
+        onClose={handleCloseGuidelines}
+      />
 
       <Modal
         isOpen={isModalOpen}

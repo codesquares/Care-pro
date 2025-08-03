@@ -8,7 +8,13 @@ const GigsCard = ({
   onCategoryChange,
   onSubCategoryChange,
   onTitleChange,
+  onFieldFocus,
+  onFieldBlur,
+  onFieldHover,
+  onFieldLeave,
   formData,
+  validationErrors = {},
+  clearValidationErrors,
 }) => {
   return (
     <div className="gigs-card">
@@ -27,8 +33,16 @@ const GigsCard = ({
               type="text"
               value={formData.title}
               onChange={(e) => onTitleChange(e.target.value)}
+              onFocus={() => onFieldFocus('title')}
+              onBlur={onFieldBlur}
               placeholder="I will take care of your pet"
+              className={validationErrors.title ? 'error' : ''}
             />
+            {validationErrors.title && (
+              <div className="validation-error">
+                {validationErrors.title}
+              </div>
+            )}
           </div>
         </div>
 
@@ -47,7 +61,10 @@ const GigsCard = ({
                 const selectedCategory = e.target.value;
                 onCategoryChange(selectedCategory);
               }}
+              onFocus={() => onFieldFocus('category')}
+              onBlur={onFieldBlur}
               value={formData.category}
+              className={validationErrors.category ? 'error' : ''}
             >
               <option value="">Select a category</option>
               {Object.keys(categories).map((category) => (
@@ -56,13 +73,22 @@ const GigsCard = ({
                 </option>
               ))}
             </select>
+            {validationErrors.category && (
+              <div className="validation-error">
+                {validationErrors.category}
+              </div>
+            )}
           </div>
 
           {/* Subcategory */}
           {formData.category && (
             <div className="subcategory-section">
               <h4>Select Subcategories</h4>
-              <div className="subcategory-checkbox-group">
+              <div 
+                className={`subcategory-checkbox-group ${validationErrors.subcategory ? 'error' : ''}`}
+                onMouseEnter={() => onFieldHover && onFieldHover('subcategory')}
+                onMouseLeave={onFieldLeave}
+              >
                 {categories[formData.category]?.map((subCategory) => (
                   <label key={subCategory} className="subcategory-checkbox">
                     <input
@@ -85,6 +111,11 @@ const GigsCard = ({
                   </label>
                 ))}
               </div>
+              {validationErrors.subcategory && (
+                <div className="validation-error">
+                  {validationErrors.subcategory}
+                </div>
+              )}
             </div>
           )}
         </div>
@@ -102,8 +133,16 @@ const GigsCard = ({
               name="searchTags" 
               type="text"
               onChange={(e) => onSearchTagChange(e.target.value.split(","))}
+              onFocus={() => onFieldFocus('searchTags')}
+              onBlur={onFieldBlur}
               placeholder="Add search tags separated by a comma"
+              className={validationErrors.searchTags ? 'error' : ''}
             />
+            {validationErrors.searchTags && (
+              <div className="validation-error">
+                {validationErrors.searchTags}
+              </div>
+            )}
           </div>
         </div>
       </form>

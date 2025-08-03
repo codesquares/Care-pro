@@ -14,21 +14,20 @@
     gap: 15px;
   }
   
-  .gig-card {
-    background: #fff;
-    border-radius: 8px;
-    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
-    overflow: hidden;
-    text-align: center;
-    transition: transform 0.2s;
-    cursor: pointer;
-  }
-  
-  .gig-card:hover {
-    transform: translateY(-5px);
-  }
-  
-  .gig-image {
+.gig-card {
+  background: #fff;
+  border-radius: 8px;
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+  overflow: hidden;
+  text-align: center;
+  transition: transform 0.2s;
+  cursor: pointer;
+  position: relative;
+}
+
+.gig-card:hover {
+  transform: translateY(-5px);
+}  .gig-image {
     width: 100%;
     height: 120px;
     object-fit: cover;
@@ -91,4 +90,282 @@
 
 .create-gig-btn:hover {
   background-color: #034f63;
+}
+
+/* Draft Gigs Section */
+.draft-gigs-section {
+  margin-top: 30px;
+}
+
+.draft-gigs-section h3 {
+  color: #666;
+  font-size: 1.2rem;
+  margin-bottom: 15px;
+}
+
+/* Active Gig Card Styles */
+.active-gig {
+  position: relative;
+  overflow: visible;
+}
+
+.active-gig .gig-actions {
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  opacity: 0;
+  visibility: hidden;
+  transform: translateY(100%);
+  transition: all 0.3s ease;
+  background: rgba(255, 255, 255, 0.98);
+  backdrop-filter: blur(10px);
+  border-top: 1px solid #e9ecef;
+  box-shadow: 0 -2px 10px rgba(0, 0, 0, 0.1);
+  z-index: 10;
+}
+
+.active-gig:hover .gig-actions {
+  opacity: 1;
+  visibility: visible;
+  transform: translateY(0);
+}
+
+/* Draft Gig Card Styles */
+.draft-gig {
+  position: relative;
+  opacity: 0.8;
+  background: #f8f9fa;
+  border: 1px solid #e9ecef;
+}
+
+.draft-gig:hover {
+  opacity: 1;
+  transform: translateY(-3px);
+}
+
+/* Draft Badge */
+.draft-badge {
+  position: absolute;
+  top: 10px;
+  right: 10px;
+  background: #ffc107;
+  color: #333;
+  padding: 4px 8px;
+  border-radius: 12px;
+  font-size: 0.75rem;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+/* Gig Actions Container */
+.gig-actions {
+  display: flex;
+  gap: 8px;
+  padding: 15px;
+  justify-content: center;
+  background: rgba(0, 0, 0, 0.02);
+  border-top: 1px solid #e9ecef;
+}
+
+/* Active gig actions - hidden by default, shown on hover */
+.active-gig .gig-actions {
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  opacity: 0;
+  transform: translateY(100%);
+  transition: all 0.3s ease;
+  background: rgba(255, 255, 255, 0.95);
+  backdrop-filter: blur(5px);
+  border-top: 1px solid #e9ecef;
+}
+
+.active-gig:hover .gig-actions {
+  opacity: 1;
+  transform: translateY(0);
+}
+
+/* Draft gig actions - always visible */
+.draft-gig .gig-actions {
+  opacity: 1;
+  position: relative;
+  transform: none;
+}
+
+/* Action Buttons */
+.edit-btn, .publish-btn, .pause-btn, .delete-btn {
+  padding: 8px 16px;
+  border: none;
+  border-radius: 6px;
+  font-size: 0.85rem;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  min-height: 36px;
+}
+
+.edit-btn {
+  background: #6c757d;
+  color: white;
+  flex: 1;
+}
+
+.edit-btn:hover:not(:disabled) {
+  background: #5a6268;
+  transform: translateY(-1px);
+}
+
+.publish-btn {
+  background: #28a745;
+  color: white;
+  flex: 1;
+}
+
+.publish-btn:hover:not(:disabled) {
+  background: #218838;
+  transform: translateY(-1px);
+}
+
+.pause-btn {
+  background: #ffc107;
+  color: #333;
+  flex: 1;
+}
+
+.pause-btn:hover:not(:disabled) {
+  background: #e0a800;
+  transform: translateY(-1px);
+}
+
+.delete-btn {
+  background: #dc3545;
+  color: white;
+  flex: 1;
+}
+
+.delete-btn:hover:not(:disabled) {
+  background: #c82333;
+  transform: translateY(-1px);
+}
+
+.edit-btn:disabled, .publish-btn:disabled, .pause-btn:disabled, .delete-btn:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+  transform: none;
+}
+
+/* Small Spinner for Publish Button */
+.spinner-small {
+  width: 14px;
+  height: 14px;
+  border: 2px solid rgba(255, 255, 255, 0.3);
+  border-top: 2px solid white;
+  border-radius: 50%;
+  animation: spin 1s linear infinite;
+  margin-right: 5px;
+}
+
+/* Toast Notification Styles */
+.toast-container {
+  position: fixed;
+  top: 20px;
+  right: 20px;
+  z-index: 1000;
+}
+
+.toast {
+  background: white;
+  border-radius: 8px;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+  padding: 16px 20px;
+  margin-bottom: 10px;
+  min-width: 300px;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  border-left: 4px solid;
+  animation: slideIn 0.3s ease-out;
+}
+
+.toast.success {
+  border-left-color: #28a745;
+  background: #f8fff9;
+}
+
+.toast.error {
+  border-left-color: #dc3545;
+  background: #fff8f8;
+}
+
+.toast-icon {
+  font-size: 1.2rem;
+  font-weight: bold;
+}
+
+.toast.success .toast-icon {
+  color: #28a745;
+}
+
+.toast.error .toast-icon {
+  color: #dc3545;
+}
+
+.toast-message {
+  flex: 1;
+  font-size: 0.9rem;
+  color: #333;
+}
+
+.toast-close {
+  background: none;
+  border: none;
+  font-size: 1.2rem;
+  color: #999;
+  cursor: pointer;
+  padding: 0;
+  line-height: 1;
+}
+
+.toast-close:hover {
+  color: #666;
+}
+
+@keyframes slideIn {
+  from {
+    transform: translateX(100%);
+    opacity: 0;
+  }
+  to {
+    transform: translateX(0);
+    opacity: 1;
+  }
+}
+
+/* Responsive Design */
+@media (max-width: 768px) {
+  .gigs-grid {
+    grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+    gap: 10px;
+  }
+  
+  .gig-actions {
+    flex-direction: column;
+    gap: 8px;
+  }
+  
+  .edit-btn, .publish-btn, .pause-btn, .delete-btn {
+    flex: none;
+    width: 100%;
+  }
+  
+  .toast {
+    min-width: 280px;
+    margin: 0 10px 10px 0;
+  }
 }

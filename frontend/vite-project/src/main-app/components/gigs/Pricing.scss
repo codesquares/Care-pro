@@ -4,7 +4,7 @@
   font-family: Arial, sans-serif;
   display: flex;
   gap:10px;
-  width:90%;
+  width:80%;
   height:800px;
   background-color: white;
   border-radius: 10px;
@@ -53,9 +53,31 @@
       border: 1px solid black;
       padding: 8px;
       text-align: flex-start;
+      position: relative;
+      
       input, textarea, select {
         width: 100%;
         padding: 4px;
+        
+        &.error {
+          border: 1px solid #e74c3c !important;
+          background-color: #fdf2f2 !important;
+        }
+      }
+      
+      .validation-error {
+        color: #e74c3c;
+        font-size: 0.75rem;
+        margin-top: 0.25rem;
+        display: block;
+        position: absolute;
+        bottom: -15px;
+        left: 8px;
+        right: 8px;
+        background-color: white;
+        padding: 2px 4px;
+        border-radius: 2px;
+        z-index: 10;
       }
     }
 

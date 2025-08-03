@@ -5,7 +5,22 @@
 }
 
 *::-webkit-scrollbar {
-  display: none;
+  width: 8px;
+  height: 8px;
+}
+
+*::-webkit-scrollbar-track {
+  background: #f1f1f1;
+  border-radius: 4px;
+}
+
+*::-webkit-scrollbar-thumb {
+  background: #c1c1c1;
+  border-radius: 4px;
+  
+  &:hover {
+    background: #a8a8a8;
+  }
 }
 
 input {
@@ -18,6 +33,67 @@ select,
 textarea {
   background-color: white;
   color: grey;
+}
+
+// Validation error styles
+.validation-error {
+  color: #e74c3c;
+  font-size: 0.875rem;
+  margin-top: 0.25rem;
+  display: block;
+  
+  &.general-error {
+    background-color: #fdf2f2;
+    border: 1px solid #e74c3c;
+    border-radius: 4px;
+    padding: 0.5rem;
+    margin-top: 0.5rem;
+  }
+}
+
+input.error,
+select.error,
+textarea.error {
+  border: 1px solid #e74c3c !important;
+  background-color: #fdf2f2 !important;
+}
+
+.subcategory-checkbox-group.error {
+  border: 1px solid #e74c3c;
+  border-radius: 4px;
+  background-color: #fdf2f2;
+  padding: 0.5rem;
+}
+
+.validation-summary {
+  background-color: #fdf2f2;
+  border: 1px solid #e74c3c;
+  border-radius: 4px;
+  padding: 1rem;
+  margin: 1rem 0;
+  
+  h4 {
+    color: #e74c3c;
+    margin-bottom: 0.5rem;
+  }
+  
+  ul {
+    list-style-type: none;
+    padding: 0;
+    
+    li {
+      margin-bottom: 0.25rem;
+      
+      div {
+        margin-bottom: 0.125rem;
+      }
+    }
+  }
+}
+
+button:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
 }
 
 .create-gig-wrapper {
@@ -33,6 +109,8 @@ textarea {
 .gigs-form {
   display: flex;
   flex-direction: column;
+  min-height: 100vh;
+  overflow: visible;
 }
 
 .gigs-form-body {
@@ -43,28 +121,22 @@ textarea {
   margin-top: 5px;
   width: 100%;
   flex-direction: column;
+  flex: 1;
+  overflow: visible;
 }
 
 .gigs-form-content {
   display: flex;
   width: 100%;
-  max-width: 1400px;
-  gap: 30px;
-  align-items: flex-start;
-  justify-content: center;
-  margin: 0 auto;
-  padding: 0 20px;
+  position: relative;
 }
 
 .main-content {
   flex: 1;
-  max-width: 900px;
   width: 100%;
-}
-
-.guidelines-sidebar {
-  flex: 0 0 350px;
-  width: 350px;
+  overflow-y: auto;
+  padding-bottom: 20px;
+  scroll-behavior: smooth;
 }
 
 .gigs-form-header {
@@ -188,10 +260,12 @@ textarea {
 }
 
 .gigs-card {
-  margin-top: 2rem;
+  padding-top: 3rem;
   background: white;
-  width: 90%;
-  padding: 40px;
+  width: 80%;
+  padding-left: 40px;
+  padding-right: 40px;
+  padding-bottom: 40px;
   border-radius: 16px;
   box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
   border: 2px solid #f4f4f4;
@@ -235,7 +309,7 @@ textarea {
 
 .gigs-form-buttons {
   display: flex;
-  width: 90%;
+  width: 80%;
   justify-content: flex-end;
   margin-top: 20px;
   gap: 5px;
@@ -329,19 +403,8 @@ textarea {
 // Responsive Design
 @media (max-width: 1200px) {
   .gigs-form-content {
-    flex-direction: column;
-    align-items: center;
-  }
-  
-  .guidelines-sidebar {
-    flex: none;
-    width: 100%;
-    max-width: 900px;
-    order: -1; // Show guidelines above main content on smaller screens
-  }
-  
-  .main-content {
-    width: 100%;
+    max-width: 100%;
+    padding: 0 15px;
   }
 }
 
@@ -361,6 +424,5 @@ textarea {
   
   .gigs-form-content {
     padding: 0 10px;
-    gap: 20px;
   }
 }

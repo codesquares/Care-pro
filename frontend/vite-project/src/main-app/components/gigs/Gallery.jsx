@@ -1,7 +1,7 @@
 import { useState } from "react";
 import "./galleryUploads.scss";
 
-const GalleryUploads = ({ onFileChange, onVideoChange }) => {
+const GalleryUploads = ({ onFileChange, onVideoChange, onFieldFocus, onFieldBlur, validationErrors = {} }) => {
   const [imagePreviews, setImagePreviews] = useState([null, null, null]);
   const [videoPreview, setVideoPreview] = useState(null);
 
@@ -39,19 +39,34 @@ const GalleryUploads = ({ onFileChange, onVideoChange }) => {
             <p className="gigs-card-gallery-instructions">
               Get noticed by the right clients with visual examples of your work.
             </p>
+            {validationErrors.image1 && (
+              <div className="validation-error">
+                {validationErrors.image1}
+              </div>
+            )}
           </div>
           <div className="uploads-card-area">
             {[0, 1, 2].map((index) => (
               <div className="uploads-card-input" key={index}>
-                <label className="file-upload">
+                <label 
+                  className="file-upload"
+                  onMouseEnter={() => onFieldFocus('gallery-upload')}
+                  onMouseLeave={onFieldBlur}
+                >
                   <div className="upload-area">
-                    <img
-                      src={imagePreviews[index] || "https://via.placeholder.com/50"}
-                      alt={`Preview ${index + 1}`}
-                      className="galleryImage"
-                    />
-                    <span>Drag & drop Photo or</span>
-                    <p>Browse</p>
+                    {imagePreviews[index] ? (
+                      <img
+                        src={imagePreviews[index]}
+                        alt={`Preview ${index + 1}`}
+                        className="galleryImage"
+                      />
+                    ) : (
+                      <div className="placeholder-content">
+                        <div className="placeholder-icon">📷</div>
+                        <span>Drag & drop Photo or</span>
+                        <p>Browse</p>
+                      </div>
+                    )}
                   </div>
                   <input
                     type="file"
@@ -73,7 +88,11 @@ const GalleryUploads = ({ onFileChange, onVideoChange }) => {
           </div>
 
           <div className="uploads-card-input video-area">
-            <label className="file-upload">
+            <label 
+              className="file-upload"
+              onMouseEnter={() => onFieldFocus('gallery-upload')}
+              onMouseLeave={onFieldBlur}
+            >
               <div className="upload-area">
                 {videoPreview ? (
                   <video
@@ -83,15 +102,11 @@ const GalleryUploads = ({ onFileChange, onVideoChange }) => {
                     width="200"
                   />
                 ) : (
-                  <>
-                    <img
-                      src="https://via.placeholder.com/50"
-                      alt="Video Upload"
-                      className="galleryImage"
-                    />
+                  <div className="placeholder-content">
+                    <div className="placeholder-icon">🎥</div>
                     <span>Drag & drop Video or</span>
                     <p>Browse</p>
-                  </>
+                  </div>
                 )}
               </div>
               <input
