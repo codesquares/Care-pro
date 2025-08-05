@@ -19,6 +19,7 @@ const CaregiverSettings = () => {
   const [newPassword, setNewPassword] = useState("");
   const [confirmNewPassword, setConfirmNewPassword] = useState("");
   const [passwordMessage, setPasswordMessage] = useState("");
+  const [isUploadingImage, setIsUploadingImage] = useState(false);
 
   useEffect(() => {
     const fetchProfile = async () => {
@@ -37,13 +38,14 @@ const CaregiverSettings = () => {
         }
 
         const data = await response.json();
+        console.log("Profile data fetched in settings page:", data);
 
         setProfile({
           name: `${data.firstName} ${data.lastName}` || "N/A",
           username: data.email || "N/A",
           location: data.location || "N/A",
           memberSince: data.createdAt || "N/A",
-          picture: data.picture || profileCardImage,
+          picture: data.profileImage || profileCardImage,
         });
 
         setIsAvailable(data.isAvailable);
@@ -56,7 +58,7 @@ const CaregiverSettings = () => {
 
     fetchProfile();
   }, []);
-
+// console.log("profile picture:", profile.picture);
   const toggleAvailability = async (newAvailability) => {
     try {
       const userDetails = JSON.parse(localStorage.getItem("userDetails"));
@@ -127,6 +129,118 @@ const CaregiverSettings = () => {
     }
   };
 
+  const handleImageUpload = async (event) => {
+    const file = event.target.files[0];
+    if (!file) return;
+
+    // Validate file type
+    if (!file.type.startsWith('image/')) {
+      toast.error('Please select a valid image file');
+      return;
+    }
+
+    // Validate file size (5MB limit)
+    if (file.size > 5 * 1024 * 1024) {
+      toast.error('Image size should be less than 5MB');
+      return;
+    }
+
+    // Create preview URL using FileReader (CSP-compliant)
+    const fileReader = new FileReader();
+    fileReader.onload = () => {
+      setProfile(prev => ({
+        ...prev,
+        picture: fileReader.result
+      }));
+    };
+    fileReader.readAsDataURL(file);
+
+    try {
+      setIsUploadingImage(true);
+      const userDetails = JSON.parse(localStorage.getItem("userDetails"));
+      
+      if (!userDetails?.id) {
+        throw new Error("User ID not found");
+      }
+
+      const formData = new FormData();
+      formData.append('ProfileImage', file);
+
+      // Determine if user is client or caregiver based on userDetails
+      // You may need to adjust this logic based on how you identify user types
+      const isClient = userDetails.role === 'Client' || userDetails.userType === 'Client';
+      const endpoint = isClient 
+        ? `https://carepro-api20241118153443.azurewebsites.net/api/Clients/UpdateProfilePicture/${userDetails.id}`
+        : `https://carepro-api20241118153443.azurewebsites.net/api/CareGivers/UpdateProfilePicture/${userDetails.id}`;
+
+      const response = await fetch(endpoint, {
+        method: 'PUT',
+        headers: {
+          'accept': '*/*',
+        },
+        body: formData,
+      });
+
+      if (!response.ok) {
+        let errorMessage = 'Failed to update profile picture';
+        try {
+          const errorData = await response.json();
+          errorMessage = errorData.message || errorMessage;
+        } catch {
+          // If response is not JSON, use the status text
+          errorMessage = response.statusText || errorMessage;
+        }
+        throw new Error(errorMessage);
+      }
+
+      let result = {};
+      try {
+        result = await response.json();
+      } catch {
+        // If response is not JSON (likely a success message), that's okay
+        console.log('Response is not JSON, assuming success');
+      }
+      
+      // If API returns a new image URL, update it; otherwise keep the preview
+      if (result.profilePictureUrl || result.url) {
+        setProfile(prev => ({
+          ...prev,
+          picture: result.profilePictureUrl || result.url
+        }));
+      } else {
+        // If no URL in response, refresh profile data to get updated picture URL
+        const userDetails = JSON.parse(localStorage.getItem("userDetails"));
+        const refreshResponse = await fetch(
+          `https://carepro-api20241118153443.azurewebsites.net/api/CareGivers/${userDetails.id}`
+        );
+        if (refreshResponse.ok) {
+          const refreshData = await refreshResponse.json();
+          if (refreshData.profileImage) {
+            setProfile(prev => ({
+              ...prev,
+              picture: refreshData.profileImage
+            }));
+          }
+        }
+      }
+
+      toast.success('Profile picture updated successfully!');
+      
+      // Reset the file input
+      event.target.value = '';
+      
+    } catch (err) {
+      console.error('Error uploading image:', err);
+      toast.error(err.message || 'Failed to update profile picture');
+    } finally {
+      setIsUploadingImage(false);
+    }
+  };
+
+  const triggerImageUpload = () => {
+    document.getElementById('profile-image-input').click();
+  };
+
   if (isLoading) return <p>Loading...</p>;
   if (error) return <p>Error: {error}</p>;
 
@@ -135,7 +249,24 @@ const CaregiverSettings = () => {
       <div className="profile-settings-wrapper">
         {/* Profile Section */}
         <div className="profile-info-section">
-          <img src={profile.picture} alt="Profile" className="profile-image" />
+          <div className="profile-image-container">
+            <img src={profile.picture} alt="Profile" className="profile-image" />
+            <button 
+              className="image-upload-button" 
+              onClick={triggerImageUpload}
+              disabled={isUploadingImage}
+              title="Upload new profile picture"
+            >
+              {isUploadingImage ? '...' : '+'}
+            </button>
+            <input
+              id="profile-image-input"
+              type="file"
+              accept="image/*"
+              onChange={handleImageUpload}
+              style={{ display: 'none' }}
+            />
+          </div>
           <h2 className="profile-name">{profile.name}</h2>
           <p className="profile-email">{profile.username}</p>
           <div className="profile-rating">★★★★☆ (29 reviews)</div>

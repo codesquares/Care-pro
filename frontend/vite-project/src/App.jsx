@@ -16,6 +16,8 @@ import OrderFaq from './main-app/pages/care-giver/OrderFaq';
 import LoginPage from './main-app/pages/LoginPage';
 import RegisterPage from './main-app/pages/RegisterPage';
 import ForgotPasswordPage from './main-app/pages/ForgotPasswordPage';
+import ConfirmEmailPage from './main-app/pages/ConfirmEmailPage';
+import ResendConfirmationPage from './main-app/pages/ResendConfirmationPage';
 import UnauthorizedPage from './main-app/pages/UnauthorizedPage';
 import { ToastContainer } from 'react-toastify';
 import 'react-toastify/dist/ReactToastify.css';
@@ -81,6 +83,8 @@ function AppContent() {
     '/login',
     '/register',
     '/forgot-password',
+    '/confirm-email',
+    '/resend-confirmation',
     '/create-gig',
     '/unauthorized',
      '/splash',
@@ -124,6 +128,8 @@ function AppContent() {
         <Route path="/login" element={<LoginPage />} />
         <Route path="/register" element={<RegisterPage />} />
         <Route path="/forgot-password" element={<ForgotPasswordPage />} />
+        <Route path="/confirm-email" element={<ConfirmEmailPage />} />
+        <Route path="/resend-confirmation" element={<ResendConfirmationPage />} />
         <Route path="/" element={<SplashScreen />} />
 
         {/* <Route path="/Caregivergigpage" element={<Caregivergigpage />} /> */}

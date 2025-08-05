@@ -5,7 +5,7 @@ import "../../styles/main-app/pages/ForgotPasswordPage.scss";
 import authImage from "../../assets/authImage.png";
 import { toast } from "react-toastify";
 import config from "../config";
-import { forgotPassword, resetPassword } from "../services/auth";
+import { forgotPassword, resetPasswordWithToken } from "../services/auth";
 
 const ForgotPasswordPage = () => {
   const [searchParams] = useSearchParams();
@@ -45,7 +45,7 @@ const ForgotPasswordPage = () => {
     setLoading(true);
 
     try {
-      // Using auth service (API calls are commented out in the service)
+      // Using auth service - calls backend request-reset endpoint
       await forgotPassword(email);
       
       setSuccess(true);
@@ -85,8 +85,8 @@ const ForgotPasswordPage = () => {
     setLoading(true);
 
     try {
-      // Using auth service (API calls are commented out in the service)
-      await resetPassword(emailFromUrl, resetToken, newPassword);
+      // Using auth service - calls the token-based reset endpoint
+      await resetPasswordWithToken(resetToken, newPassword);
       
       toast.success("Password reset successful! You can now login with your new password.");
       

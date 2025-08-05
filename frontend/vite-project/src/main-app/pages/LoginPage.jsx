@@ -107,6 +107,9 @@ const LoginPage = () => {
           <p className="forgot-password">
             <Link to="/forgot-password">Forgot password?</Link>
           </p>
+          <p className="resend-confirmation">
+            <Link to="/resend-confirmation">Resend confirmation email</Link>
+          </p>
           <div className="alternate-login">
             <p>or</p>
             <button className="btn google">Google</button>
