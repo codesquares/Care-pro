@@ -1,6 +1,5 @@
 import { useState } from "react";
 import "./gigs.scss";
-import Input from "../input/Input";
 
 const GigsCard = ({
   categories,
@@ -10,24 +9,31 @@ const GigsCard = ({
   onTitleChange,
   formData,
 }) => {
+  const [tagsInput, setTagsInput] = useState("");
+
+  const handleTagsChange = (e) => {
+    const value = e.target.value;
+    setTagsInput(value);
+    onSearchTagChange(value.split(",").map((t) => t.trim()).filter(Boolean));
+  };
+
   return (
-    <div className="gigs-card">
-      <form>
+    <div className="gigs-overview-card">
+      <form className="gigs-form-body">
         {/* Gig Title Section */}
         <div className="gigs-card-section">
           <div className="gigs-card-details">
-            <h3>Gig Title</h3>
-            <p className="gigs-card-title-instructions">
+            <h3>Gig title</h3>
+            <p>
               Your gig title is the most important place to include keywords that Clients would likely use to search for a service like yours.
             </p>
           </div>
-          <div className="gigs-card-input">
-            <Input
-              name="titleInput"
-              type="text"
+          <div className="gigs-card-input full-width">
+            <textarea
+              rows={3}
               value={formData.title}
               onChange={(e) => onTitleChange(e.target.value)}
-              placeholder="I will take care of your pet"
+              placeholder="I will take care of your pets"
             />
           </div>
         </div>
@@ -36,74 +42,59 @@ const GigsCard = ({
         <div className="gigs-card-section">
           <div className="gigs-card-details">
             <h3>Category</h3>
-            <p className="gigs-card-category-instructions">
-              Choose the category that best fits your gig.
-            </p>
+            <p>Choose the category and sub-category most suitable for your Gig.</p>
           </div>
-          <div className="gigs-card-input">
+          <div className="gigs-card-input double-dropdown">
             <select
-              id="category"
-              onChange={(e) => {
-                const selectedCategory = e.target.value;
-                onCategoryChange(selectedCategory);
-              }}
+              onChange={(e) => onCategoryChange(e.target.value)}
               value={formData.category}
             >
-              <option value="">Select a category</option>
+              <option value="">Service Category</option>
               {Object.keys(categories).map((category) => (
                 <option key={category} value={category}>
                   {category}
                 </option>
               ))}
             </select>
-          </div>
 
-          {/* Subcategory */}
-          {formData.category && (
-            <div className="subcategory-section">
-              <h4>Select Subcategories</h4>
-              <div className="subcategory-checkbox-group">
-                {categories[formData.category]?.map((subCategory) => (
-                  <label key={subCategory} className="subcategory-checkbox">
-                    <input
-                      className="checkbox-input"
-                      type="checkbox"
-                      value={subCategory}
-                      checked={formData.subcategory.includes(subCategory)}
-                      onChange={(e) => {
-                        const isChecked = e.target.checked;
-                        if (isChecked) {
-                          onSubCategoryChange([...formData.subcategory, subCategory]);
-                        } else {
-                          onSubCategoryChange(
-                            formData.subcategory.filter((s) => s !== subCategory)
-                          );
-                        }
-                      }}
-                    />
-                    <span>{subCategory}</span>
-                  </label>
+            <select
+              onChange={(e) => onSubCategoryChange([e.target.value])}
+              value={formData.subcategory[0] || ""}
+              disabled={!formData.category}
+            >
+              <option value="">Service Subcategory</option>
+              {formData.category &&
+                categories[formData.category]?.map((subCategory) => (
+                  <option key={subCategory} value={subCategory}>
+                    {subCategory}
+                  </option>
                 ))}
-              </div>
-            </div>
-          )}
+            </select>
+          </div>
         </div>
 
-        {/* Search Tags Section */}
+        {/* Search Tags */}
         <div className="gigs-card-section">
           <div className="gigs-card-details">
             <h3>Search Tags</h3>
-            <p className="gigs-card-search-tags-instructions">
-              Tag your Gig with buzz words that are relevant to the services you render. Use all 5 tags to help Buyers find your gig.
+            <p>
+              Tag your Gig with buzz words that are relevant to the services you offer. Use all 5 tags to get found.
             </p>
           </div>
-          <div className="gigs-card-input">
-            <Input
-              name="searchTags" 
+          <div className="gigs-card-input full-width">
+            <input
               type="text"
-              onChange={(e) => onSearchTagChange(e.target.value.split(","))}
-              placeholder="Add search tags separated by a comma"
+              placeholder="Add search tags separated by commas"
+              value={tagsInput}
+              onChange={handleTagsChange}
             />
+            <div className="tag-preview">
+              {formData.searchTags?.map((tag) => (
+                <span key={tag} className="tag-pill">
+                  {tag} ✕
+                </span>
+              ))}
+            </div>
           </div>
         </div>
       </form>

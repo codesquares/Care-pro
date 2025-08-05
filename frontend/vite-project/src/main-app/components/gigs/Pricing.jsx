@@ -1,157 +1,232 @@
+// import React, { useState } from "react";
+// import "./Pricing.scss";
+
+// const PricingTable = ({ onPricingChange }) => {
+//   const [pricing, setPricing] = useState({
+//     Basic: { name: "", details: "", deliveryTime: "", amount: "" },
+//     Standard: { name: "", details: "", deliveryTime: "", amount: "" },
+//     Premium: { name: "", details: "", deliveryTime: "", amount: "" },
+//   });
+
+//   const handleInputChange = (plan, field, value) => {
+//     const updatedPricing = { ...pricing, [plan]: { ...pricing[plan], [field]: value } };
+//     setPricing(updatedPricing);
+//     onPricingChange(updatedPricing);
+//   };
+
+
+//   return (
+//     <div className="pricing-table">
+//       <div className="pricing-table-header">
+//         <h3>Price and Packages</h3>
+//         <p>Create packages and select prices for each offering.</p>
+//       </div>
+
+//       <table className="table-styles">
+//         <thead>
+//           <tr>
+//             <th>Basic</th>
+//             <th>Standard</th>
+//             <th>Premium</th>
+//           </tr>
+//         </thead>
+//         <tbody>
+//           {/* Name Your Package */}
+//           <tr>
+//             <td>
+//               <input
+//                 type="text"
+//                 value={pricing.Basic.name}
+//                 onChange={(e) => handleInputChange("Basic", "name", e.target.value)}
+//                 placeholder="Basic Package"
+//               />
+//             </td>
+//             <td>
+//               <input
+//                 type="text"
+//                 value={pricing.Standard.name}
+//                 onChange={(e) => handleInputChange("Standard", "name", e.target.value)}
+//                 placeholder="Standard Package"
+//               />
+//             </td>
+//             <td>
+//               <input
+//                 type="text"
+//                 value={pricing.Premium.name}
+//                 onChange={(e) => handleInputChange("Premium", "name", e.target.value)}
+//                 placeholder="Premium Package"
+//               />
+//             </td>
+//           </tr>
+
+//           {/* Describe Details */}
+//           <tr>
+//             <td>
+//               <textarea
+//                 value={pricing.Basic.details}
+//                 onChange={(e) => handleInputChange("Basic", "details", e.target.value)}
+//                 placeholder="Describe tasks for Basic package and sepreate with ;"
+//               />
+//             </td>
+//             <td>
+//               <textarea
+//                 value={pricing.Standard.details}
+//                 onChange={(e) => handleInputChange("Standard", "details", e.target.value)}
+//                 placeholder="Describe tasks for Standard package and sepreate with ;"
+//               />
+//             </td>
+//             <td>
+//               <textarea
+//                 value={pricing.Premium.details}
+//                 onChange={(e) => handleInputChange("Premium", "details", e.target.value)}
+//                 placeholder="Describe tasks for Premium package and sepreate with ;"
+//               />
+//             </td>
+//           </tr>
+
+//           {/* Delivery Time */}
+//           <tr>
+//             <td>
+//               <select
+//                 value={pricing.Basic.deliveryTime}
+//                 onChange={(e) => handleInputChange("Basic", "deliveryTime", e.target.value)}
+//               >
+//                 <option value="">Select Delivery Time</option>
+//                 <option value="1 Day">1 Day</option>
+//                 <option value="3 Days">3 Days</option>
+//                 <option value="7 Days">7 Days</option>
+//               </select>
+//             </td>
+//             <td>
+//               <select
+//                 value={pricing.Standard.deliveryTime}
+//                 onChange={(e) => handleInputChange("Standard", "deliveryTime", e.target.value)}
+//               >
+//                 <option value="">Select Delivery Time</option>
+//                 <option value="1 Day">1 Day</option>
+//                 <option value="3 Days">3 Days</option>
+//                 <option value="7 Days">7 Days</option>
+//               </select>
+//             </td>
+//             <td>
+//               <select
+//                 value={pricing.Premium.deliveryTime}
+//                 onChange={(e) => handleInputChange("Premium", "deliveryTime", e.target.value)}
+//               >
+//                 <option value="">Select Delivery Time</option>
+//                 <option value="1 Day">1 Day</option>
+//                 <option value="3 Days">3 Days</option>
+//                 <option value="7 Days">7 Days</option>
+//               </select>
+//             </td>
+//           </tr>
+
+//           {/* Minimum Amount */}
+//           <tr>
+//             <td className="amount-row">
+//               <input
+//                 type="number"
+//                 value={pricing.Basic.amount}
+//                 onChange={(e) => handleInputChange("Basic", "amount", e.target.value)}
+//                 placeholder="₦0.00"
+//               />
+//             </td>
+//             <td className="amount-row">
+//               <input
+//                 type="number"
+//                 value={pricing.Standard.amount}
+//                 onChange={(e) => handleInputChange("Standard", "amount", e.target.value)}
+//                 placeholder="₦0.00"
+//               />
+//             </td>
+//             <td className="amount-row">
+//               <input
+//                 type="number"
+//                 value={pricing.Premium.amount}
+//                 onChange={(e) => handleInputChange("Premium", "amount", e.target.value)}
+//                 placeholder="₦0.00"
+//               />
+//             </td>
+//           </tr>
+//         </tbody>
+//       </table>
+//     </div>
+//   );
+// }
+
+// export default PricingTable;
+
+
+
+
 import React, { useState } from "react";
 import "./Pricing.scss";
 
 const PricingTable = ({ onPricingChange }) => {
-  const [pricing, setPricing] = useState({
-    Basic: { name: "", details: "", deliveryTime: "", amount: "" },
-    Standard: { name: "", details: "", deliveryTime: "", amount: "" },
-    Premium: { name: "", details: "", deliveryTime: "", amount: "" },
+  const [basic, setBasic] = useState({
+    name: "",
+    details: "",
+    deliveryTime: "",
+    amount: "",
   });
 
-  const handleInputChange = (plan, field, value) => {
-    const updatedPricing = { ...pricing, [plan]: { ...pricing[plan], [field]: value } };
-    setPricing(updatedPricing);
-    onPricingChange(updatedPricing);
+  const handleChange = (field, value) => {
+    const updated = { ...basic, [field]: value };
+    setBasic(updated);
+    onPricingChange({ Basic: updated }); // keep the shape for parent compatibility
   };
 
-
   return (
-    <div className="pricing-table">
-      <div className="pricing-table-header">
-        <h3>Price and Packages</h3>
-        <p>Create packages and select prices for each offering.</p>
+    <div className="pricing-card">
+      <div className="pricing-header">
+        <h3>Pricing</h3>
+        <p>Set up your service price and details for the Basic package.</p>
       </div>
 
-      <table className="table-styles">
-        <thead>
-          <tr>
-            <th>Basic</th>
-            <th>Standard</th>
-            <th>Premium</th>
-          </tr>
-        </thead>
-        <tbody>
-          {/* Name Your Package */}
-          <tr>
-            <td>
-              <input
-                type="text"
-                value={pricing.Basic.name}
-                onChange={(e) => handleInputChange("Basic", "name", e.target.value)}
-                placeholder="Basic Package"
-              />
-            </td>
-            <td>
-              <input
-                type="text"
-                value={pricing.Standard.name}
-                onChange={(e) => handleInputChange("Standard", "name", e.target.value)}
-                placeholder="Standard Package"
-              />
-            </td>
-            <td>
-              <input
-                type="text"
-                value={pricing.Premium.name}
-                onChange={(e) => handleInputChange("Premium", "name", e.target.value)}
-                placeholder="Premium Package"
-              />
-            </td>
-          </tr>
+      <div className="pricing-field">
+        <label>Package Name</label>
+        <input
+          type="text"
+          placeholder="Basic Package"
+          value={basic.name}
+          onChange={(e) => handleChange("name", e.target.value)}
+        />
+      </div>
 
-          {/* Describe Details */}
-          <tr>
-            <td>
-              <textarea
-                value={pricing.Basic.details}
-                onChange={(e) => handleInputChange("Basic", "details", e.target.value)}
-                placeholder="Describe tasks for Basic package and sepreate with ;"
-              />
-            </td>
-            <td>
-              <textarea
-                value={pricing.Standard.details}
-                onChange={(e) => handleInputChange("Standard", "details", e.target.value)}
-                placeholder="Describe tasks for Standard package and sepreate with ;"
-              />
-            </td>
-            <td>
-              <textarea
-                value={pricing.Premium.details}
-                onChange={(e) => handleInputChange("Premium", "details", e.target.value)}
-                placeholder="Describe tasks for Premium package and sepreate with ;"
-              />
-            </td>
-          </tr>
+      <div className="pricing-field">
+        <label>Package Details</label>
+        <textarea
+          placeholder="Describe tasks for this package (separate by semicolons)"
+          value={basic.details}
+          onChange={(e) => handleChange("details", e.target.value)}
+          rows={3}
+        />
+      </div>
 
-          {/* Delivery Time */}
-          <tr>
-            <td>
-              <select
-                value={pricing.Basic.deliveryTime}
-                onChange={(e) => handleInputChange("Basic", "deliveryTime", e.target.value)}
-              >
-                <option value="">Select Delivery Time</option>
-                <option value="1 Day">1 Day</option>
-                <option value="3 Days">3 Days</option>
-                <option value="7 Days">7 Days</option>
-              </select>
-            </td>
-            <td>
-              <select
-                value={pricing.Standard.deliveryTime}
-                onChange={(e) => handleInputChange("Standard", "deliveryTime", e.target.value)}
-              >
-                <option value="">Select Delivery Time</option>
-                <option value="1 Day">1 Day</option>
-                <option value="3 Days">3 Days</option>
-                <option value="7 Days">7 Days</option>
-              </select>
-            </td>
-            <td>
-              <select
-                value={pricing.Premium.deliveryTime}
-                onChange={(e) => handleInputChange("Premium", "deliveryTime", e.target.value)}
-              >
-                <option value="">Select Delivery Time</option>
-                <option value="1 Day">1 Day</option>
-                <option value="3 Days">3 Days</option>
-                <option value="7 Days">7 Days</option>
-              </select>
-            </td>
-          </tr>
+      <div className="pricing-field">
+        <label>Delivery Time</label>
+        <select
+          value={basic.deliveryTime}
+          onChange={(e) => handleChange("deliveryTime", e.target.value)}
+        >
+          <option value="">Select Delivery Time</option>
+          <option value="1 Day">1 Day</option>
+          <option value="3 Days">3 Days</option>
+          <option value="7 Days">7 Days</option>
+        </select>
+      </div>
 
-          {/* Minimum Amount */}
-          <tr>
-            <td className="amount-row">
-              <input
-                type="number"
-                value={pricing.Basic.amount}
-                onChange={(e) => handleInputChange("Basic", "amount", e.target.value)}
-                placeholder="₦0.00"
-              />
-            </td>
-            <td className="amount-row">
-              <input
-                type="number"
-                value={pricing.Standard.amount}
-                onChange={(e) => handleInputChange("Standard", "amount", e.target.value)}
-                placeholder="₦0.00"
-              />
-            </td>
-            <td className="amount-row">
-              <input
-                type="number"
-                value={pricing.Premium.amount}
-                onChange={(e) => handleInputChange("Premium", "amount", e.target.value)}
-                placeholder="₦0.00"
-              />
-            </td>
-          </tr>
-        </tbody>
-      </table>
+      <div className="pricing-field">
+        <label>Price (₦)</label>
+        <input
+          type="number"
+          placeholder="₦0.00"
+          value={basic.amount}
+          onChange={(e) => handleChange("amount", e.target.value)}
+        />
+      </div>
     </div>
   );
-}
+};
 
 export default PricingTable;

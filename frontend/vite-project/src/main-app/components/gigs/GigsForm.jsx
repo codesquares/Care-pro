@@ -24,7 +24,7 @@ const GigsForm = () => {
   const [buttonText, setButtonText] = useState("okay");
   const [buttonBgColor, setButtonBgColor] = useState("#34A853");
   const source = "/src/assets/dog_on_a_leash.jpg";
-  const alt = "Dog on a leash";
+  // const alt = "Dog on a leash";
   const [serverMessage, setServerMessage] = useState("");
   const [isSubmitted, setIsSubmitted] = useState(null);
   const navigate = useNavigate();
@@ -320,7 +320,7 @@ const GigsForm = () => {
         {currentPage === 3 && (
           <PublishGig
             image={`data:image/jpeg;base64,${formData.image1}`}
-            title={alt}
+            title={formData.title}
             onSaveAsDraft={handleSaveAsDraft}
             onPublish={handleSubmit}
           />
@@ -329,9 +329,9 @@ const GigsForm = () => {
           {currentPage < pages.length - 1 && (
             <>
               {currentPage > 0 && (
-                <Button onClick={goToPreviousPage}>Back</Button>
+                <Button className="gig-back-button" onClick={goToPreviousPage}>Back</Button>
               )}
-              <Button onClick={goToNextPage}>Save & Continue</Button>
+              <Button className="gig-next-button" onClick={goToNextPage}>Save & Continue</Button>
             </>
           )}
         </div>

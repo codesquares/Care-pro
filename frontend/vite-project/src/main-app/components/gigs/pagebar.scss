@@ -1,52 +1,93 @@
-.page-bar {
+.page-bar-container {
+  width: 100%;
+  padding: 1rem 8rem;
+  background-color: #f9f9f9;
+}
+
+.page-bar-card {
+  background: white;
+  border-radius: 8px;
+  padding: 16px 24px;
   display: flex;
-  // justify-content: space-between;
   align-items: center;
+  justify-content: space-between;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+}
+
+.page-bar-steps {
+  display: flex;
+  align-items: center;
+  gap: 8px;
   
-  .page-bar-btn{
-    margin-left:auto;
+}
+
+.page-step {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  cursor: default;
+  
+  &.clickable {
+    cursor: pointer;
   }
-  .page-bar-separator {
-    margin: 0 10px;
-    font-size: 18px;
-    color: #aaa;
+
+  &.active {
+    background-color: transparent;
+    margin-top: 0px;
+    .step-number {
+      background-color: #1dbf73;
+      color: white;
+    }
+    .step-name {
+      color: #1dbf73;
+      font-weight: 600;
+    }
   }
-  .page-bar-item {
-    text-align: center;
-    // flex: 1;
-    position: relative;
-    color:black;
-    display: flex;
-    gap:5px;
-    align-items: center;
- 
-    .page-bar-icon {
-      width: 30px;
-      height: 30px;
-      border-radius: 50%;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      margin: 0 auto;
-      font-size: 16px;
-      font-weight: bold;
-      color: #fff;
-      background-color: #ccc;
+}
 
-      &.completed {
-        background-color: #4caf50; // Green color for completed pages
-      }
-    }
+.step-number {
+  width: 24px;
+  height: 24px;
+  border-radius: 50%;
+  background-color: #f5f5f5;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 12px;
+  font-weight: 600;
+  color: #999;
 
-    .page-bar-label {
-      margin-top: 8px;
-      font-size: 12px;
-      font-weight: normal;
+  &.completed {
+    background-color: #1dbf73;
+    color: white;
+  }
+}
 
-      &.active {
-        font-weight: bold;
-        color: #4caf50; // Highlight active label
-      }
-    }
+.step-name {
+  font-size: 14px;
+  color: #666;
+  font-weight: 500;
+}
+
+.step-separator {
+  color: #ccc;
+  margin: 0 4px;
+  font-size: 16px;
+}
+
+.page-bar-actions {
+  margin-left: auto;
+}
+
+.save-button {
+  padding: 6px 16px;
+  font-size: 14px;
+  background-color: #f5f5f5;
+  color: #333;
+  border: none;
+  border-radius: 4px;
+  
+  &:hover {
+    background-color: #e0e0e0;
   }
 }
