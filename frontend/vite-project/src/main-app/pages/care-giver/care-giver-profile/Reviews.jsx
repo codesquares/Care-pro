@@ -1,4 +1,6 @@
 import React, { useState, useEffect } from "react";
+import EmptyState from "../../../../components/EmptyState";
+import clock from "../../../../assets/main-app/clock.png";
 import "./reviews.css";
 
 const Reviews = () => {
@@ -82,7 +84,7 @@ const Reviews = () => {
   // Loading state
   if (isLoadingGigs || isLoadingReviews) {
     return (
-      <div className="reviews">
+      <div className="reviews reviews-empty">
         <h3>Reviews from Clients</h3>
         <div className="spinner-container">
           <div className="spinner" />
@@ -95,7 +97,7 @@ const Reviews = () => {
   // Error state
   if (error) {
     return (
-      <div className="reviews">
+      <div className="reviews reviews-empty">
         <h3>Reviews from Clients</h3>
         <p className="error-message">Error: {error}</p>
       </div>
@@ -105,11 +107,13 @@ const Reviews = () => {
   // No reviews state
   if (reviewsFromApi.length === 0) {
     return (
-      <div className="reviews">
+      <div className="reviews reviews-empty">
         <h3>Reviews from Clients</h3>
-        <div className="no-reviews">
-          <p>No reviews yet. Keep providing great service to receive your first review!</p>
-        </div>
+        <EmptyState
+          logo={<img src={clock} alt="No Reviews" style={{ width: 80 }} />}
+          title="No Reviews Yet"
+          description="Keep providing great service to receive your first review!"
+        />
       </div>
     );
   }

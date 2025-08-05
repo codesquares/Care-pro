@@ -35,7 +35,7 @@ const VerifyButton = ({ verificationStatus }) => {
         };
       default:
         return {
-          text: "Verify Your Account",
+          text: "Verify Account",
           className: "verify-button",
         };
     }
@@ -48,6 +48,20 @@ const VerifyButton = ({ verificationStatus }) => {
       className={buttonContent.className} 
       onClick={handleVerifyClick}
       disabled={buttonContent.disabled}
+      style={{
+        padding: '8px 16px',
+        border: 'none',
+        borderRadius: '6px',
+        backgroundColor: buttonContent.disabled ? '#6c757d' : 
+          (verificationStatus === 'failed' ? '#dc3545' : '#007bff'),
+        color: 'white',
+        cursor: buttonContent.disabled ? 'not-allowed' : 'pointer',
+        fontSize: '14px',
+        fontWeight: '500',
+        minWidth: '150px',
+        height: '36px',
+        width: '150px'
+      }}
     >
       {buttonContent.text}
     </button>

@@ -78,7 +78,7 @@ const ProfileCard = () => {
   return (
     <div className="profile-card">
       <img
-        src={profile?.profilePicture || profilecard1}
+        src={profile?.profileImage || profilecard1}
         alt="Profile"
         className="profile-picture"
       />

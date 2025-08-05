@@ -73,3 +73,11 @@
     line-height: 1.4;
   }
   
+  /* Empty state styling - remove background to match gigs section */
+  .reviews-empty {
+    background: none !important;
+    box-shadow: none !important;
+    border-radius: 0 !important;
+    margin-top: 20px;
+  }
+  
