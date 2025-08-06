@@ -25,6 +25,9 @@
     box-sizing: border-box;
     max-width: 100%;
     min-width: 0;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
   }
 
   /* Profile Basic Info Section */
@@ -66,6 +69,7 @@
     object-fit: cover;
     margin: 0 auto 16px auto;
     border: 3px solid #f0f0f0;
+    display: block;
   }
 
   .profile-header-card h2 {
@@ -332,6 +336,153 @@
 }
 
 /* Responsive Styles */
+@media (min-width: 768px) {
+  .profile-header-card {
+    padding: 28px;
+  }
+  
+  .profile-header-card .profile-img {
+    width: 140px;
+    height: 140px;
+  }
+  
+  .profile-header-card h2 {
+    font-size: 26px;
+  }
+  
+  .profile-header-card .username {
+    font-size: 16px;
+  }
+  
+  .profile-header-card .bio {
+    font-size: 16px;
+  }
+  
+  .profile-header-card .rating {
+    font-size: 18px;
+  }
+  
+  .profile-header-card .rating .rating-text {
+    font-size: 16px;
+  }
+  
+  .profile-details .detail-item {
+    font-size: 16px;
+  }
+  
+  .availability-status {
+    font-size: 16px;
+    padding: 10px 20px;
+  }
+  
+  .edit-location-btn {
+    font-size: 16px;
+    padding: 10px 20px;
+  }
+}
+
+@media (min-width: 1024px) {
+  .profile-header-card {
+    padding: 32px;
+  }
+  
+  .profile-header-card .profile-img {
+    width: 160px;
+    height: 160px;
+  }
+  
+  .profile-header-card h2 {
+    font-size: 28px;
+  }
+  
+  .profile-header-card .username {
+    font-size: 18px;
+  }
+  
+  .profile-header-card .bio {
+    font-size: 18px;
+  }
+  
+  .profile-header-card .rating {
+    font-size: 20px;
+  }
+  
+  .profile-header-card .rating .rating-text {
+    font-size: 18px;
+  }
+  
+  .profile-details .detail-item {
+    font-size: 18px;
+    gap: 12px;
+  }
+  
+  .availability-status {
+    font-size: 18px;
+    padding: 12px 24px;
+  }
+  
+  .edit-location-btn {
+    font-size: 18px;
+    padding: 12px 24px;
+  }
+}
+
+@media (min-width: 1280px) {
+  .profile-header-card {
+    padding: 40px;
+  }
+  
+  .profile-header-card .profile-img {
+    width: 180px;
+    height: 180px;
+    margin-bottom: 20px;
+  }
+  
+  .profile-header-card h2 {
+    font-size: 32px;
+    margin-bottom: 12px;
+  }
+  
+  .profile-header-card .username {
+    font-size: 20px;
+    margin-bottom: 16px;
+  }
+  
+  .profile-header-card .bio {
+    font-size: 20px;
+  }
+  
+  .profile-header-card .rating {
+    font-size: 22px;
+    margin: 20px 0;
+  }
+  
+  .profile-header-card .rating .rating-text {
+    font-size: 20px;
+  }
+  
+  .profile-details {
+    gap: 16px;
+    margin: 24px 0;
+  }
+  
+  .profile-details .detail-item {
+    font-size: 20px;
+    gap: 16px;
+  }
+  
+  .availability-status {
+    font-size: 20px;
+    padding: 14px 28px;
+    margin: 20px 0;
+  }
+  
+  .edit-location-btn {
+    font-size: 20px;
+    padding: 14px 28px;
+  }
+}
+
 @media (max-width: 768px) {
   .profile-header {
     gap: 16px;
@@ -344,6 +495,7 @@
   .profile-header-card .profile-img {
     width: 100px;
     height: 100px;
+    display: block;
   }
   
   .profile-header-card h2 {
@@ -367,6 +519,7 @@
   .profile-header-card .profile-img {
     width: 80px;
     height: 80px;
+    display: block;
   }
   
   .profile-header-card h2 {

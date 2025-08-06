@@ -2,7 +2,10 @@ import React, { useState, useEffect, useRef } from "react";
 import { useNavigate } from "react-router-dom";
 import "./verification-page.css";
 import "./assessment-page.css";
+import "./mobile-assessment.css";
+import "../care-giver-profile/profile-header.css";
 import assessmentService from "../../../services/assessmentService";
+import { userService } from "../../../services/userService";
 import { Helmet } from "react-helmet-async";
 
 const AssessmentPage = () => {
@@ -18,12 +21,36 @@ const AssessmentPage = () => {
   const [assessmentResult, setAssessmentResult] = useState(null);
   const [questionsWithAnswers, setQuestionsWithAnswers] = useState([]);
 
+  // Profile-related state variables (from ProfileHeader)
+  const [userData, setUserData] = useState(null);
+  const [isProfileLoading, setIsProfileLoading] = useState(true);
+  const [userRating, setUserRating] = useState(0);
+  const [reviewCount, setReviewCount] = useState(0);
+  const [memberSince, setMemberSince] = useState('');
+  const [lastDelivery, setLastDelivery] = useState('');
+  const [location, setLocation] = useState('');
+
   // Get token and user ID from localStorage
   const userDetails = JSON.parse(localStorage.getItem("userDetails") || "{}");
   const token = localStorage.getItem("authToken");
   
   // To track and abort ongoing fetch requests
   const abortControllerRef = useRef(null);
+
+  // Helper function to render stars
+  const renderStars = (rating) => {
+    const fullStars = Math.floor(rating);
+    const hasHalfStar = rating % 1 >= 0.5;
+    const emptyStars = 5 - fullStars - (hasHalfStar ? 1 : 0);
+    
+    return (
+      <>
+        {'★'.repeat(fullStars)}
+        {hasHalfStar && '☆'}
+        {'☆'.repeat(emptyStars)}
+      </>
+    );
+  };
 
   // Declare fetchQuestions outside of useEffect so it can be called from other functions
   const fetchQuestions = async () => {
@@ -108,6 +135,81 @@ const AssessmentPage = () => {
       return;
     }
     
+    let isMounted = true;
+
+    // Fetch profile data
+    const fetchProfileData = async () => {
+      try {
+        setIsProfileLoading(true);
+        
+        // Fetch user profile data
+        const response = await userService.getProfile();
+        
+        if (isMounted) {
+          if (response && response.success && response.data) {
+            const profileData = response.data;
+            setUserData(profileData);
+            setUserRating(parseFloat(profileData.averageRating || profileData.rating || 0));
+            setReviewCount(parseInt(profileData.reviewCount || profileData.reviewsCount || 0));
+            setLocation(profileData.location || 'Location not specified');
+            
+            // Format member since date
+            if (profileData.createdAt) {
+              const memberDate = new Date(profileData.createdAt);
+              setMemberSince(memberDate.toLocaleDateString('en-US', { 
+                year: 'numeric', 
+                month: 'long' 
+              }));
+            } else {
+              setMemberSince('Member since signup');
+            }
+            
+            // Format last delivery
+            if (profileData.lastDelivery) {
+              const lastDeliveryDate = new Date(profileData.lastDelivery);
+              const now = new Date();
+              const diffTime = Math.abs(now - lastDeliveryDate);
+              const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
+              
+              if (diffDays === 1) {
+                setLastDelivery('1 day ago');
+              } else if (diffDays < 30) {
+                setLastDelivery(`${diffDays} days ago`);
+              } else if (diffDays < 365) {
+                const months = Math.floor(diffDays / 30);
+                setLastDelivery(`${months} month${months > 1 ? 's' : ''} ago`);
+              } else {
+                const years = Math.floor(diffDays / 365);
+                setLastDelivery(`${years} year${years > 1 ? 's' : ''} ago`);
+              }
+            } else {
+              setLastDelivery('No recent activity');
+            }
+          } else {
+            // Handle API error - use fallback data from localStorage
+            console.warn('API response was not successful:', response);
+            setUserData(userDetails);
+            setLocation('Location not specified');
+            setMemberSince('Member since signup');
+            setLastDelivery('No recent activity');
+          }
+        }
+      } catch (error) {
+        console.error('Error fetching profile data:', error);
+        if (isMounted) {
+          // Set fallback data from localStorage
+          setUserData(userDetails);
+          setLocation('Location not specified');
+          setMemberSince('Member since signup');
+          setLastDelivery('No recent activity');
+        }
+      } finally {
+        if (isMounted) {
+          setIsProfileLoading(false);
+        }
+      }
+    };
+    
     // Check if user is already qualified or has assessment restrictions
     const qualificationStatus = assessmentService.getQualificationStatus();
     
@@ -127,11 +229,13 @@ const AssessmentPage = () => {
       return;
     }
     
-    // Fetch questions when component mounts
+    // Fetch both profile data and questions
+    fetchProfileData();
     fetchQuestions();
     
     // Cleanup function to abort any ongoing requests when unmounting
     return () => {
+      isMounted = false;
       if (abortControllerRef.current) {
         abortControllerRef.current.abort();
       }
@@ -311,93 +415,218 @@ const AssessmentPage = () => {
     }
   };
 
+  // Reusable Profile Card Component
+  const renderProfileCard = () => (
+    <div className="profile-header-card">
+      {isProfileLoading ? (
+        <div className="loading-profile">
+          <div className="profile-img skeleton"></div>
+          <div className="skeleton-text"></div>
+          <div className="skeleton-text short"></div>
+        </div>
+      ) : (
+        <>
+          {/* Profile Image */}
+          <img 
+            src={userData?.profilePicture || userData?.profileImage || userDetails.profilePicture || `https://ui-avatars.com/api/?name=${encodeURIComponent((userData?.firstName || userDetails.firstName) + ' ' + (userData?.lastName || userDetails.lastName))}&background=06b6d4&color=fff&size=120`} 
+            alt="Profile" 
+            className="profile-img"
+            onError={(e) => {
+              e.target.src = `https://ui-avatars.com/api/?name=${encodeURIComponent((userData?.firstName || userDetails.firstName) + ' ' + (userData?.lastName || userDetails.lastName))}&background=06b6d4&color=fff&size=120`;
+            }}
+          />
+          
+          {/* Basic Info */}
+          <div className="profile-basic-info">
+            <h2>
+              {userData?.firstName || userDetails.firstName} {userData?.lastName || userDetails.lastName}
+            </h2>
+            <p className="username">@{userData?.username || userData?.email || userDetails.username || userDetails.email || 'caregiver'}</p>
+            {(userData?.bio || userData?.aboutMe) && <p className="bio">{userData.bio || userData.aboutMe}</p>}
+          </div>
+
+          {/* Rating Section */}
+          <div className="profile-rating-section">
+            <div className="rating">
+              <span className="stars">
+                {renderStars(userRating)}
+              </span>
+              <span className="rating-text">
+                {userRating.toFixed(1)} ({reviewCount} reviews)
+              </span>
+            </div>
+          </div>
+
+          {/* Profile Details */}
+          <div className="profile-details">
+            <div className="detail-item">
+              <i className="fas fa-map-marker-alt"></i>
+              <span>{location}</span>
+            </div>
+            <div className="detail-item">
+              <i className="fas fa-calendar"></i>
+              <span>Member since {memberSince}</span>
+            </div>
+            <div className="detail-item">
+              <i className="fas fa-truck"></i>
+              <span>Last delivery: {lastDelivery}</span>
+            </div>
+          </div>
+
+          {/* Availability Status */}
+          <div className={`availability-status ${userData?.isAvailable ? 'available' : 'unavailable'}`}>
+            {userData?.isAvailable ? 'Available for work' : 'Currently unavailable'}
+          </div>
+        </>
+      )}
+    </div>
+  );
+
   const renderWelcomeScreen = () => {
     // Check if this is a retake
     const qualificationStatus = assessmentService.getQualificationStatus();
     const isRetake = qualificationStatus.assessmentCompleted && qualificationStatus.canRetake;
     
     return (
-      <div className="assessment-welcome">
-        <div className="welcome-icon">
-          <i className={`fas ${isRetake ? 'fa-sync-alt' : 'fa-clipboard-check'}`}></i>
-        </div>
-        <h2>{isRetake ? 'Caregiver Assessment Retake' : 'Welcome to the Caregiver Assessment'}</h2>
-        {isLoading ? (
-          <div className="loading-indicator">
-            <div className="spinner"></div>
-            <p>Loading assessment questions...</p>
-          </div>
-        ) : (
-          <>
-            <div className="welcome-info">
-              <p>This assessment will test your knowledge and skills as a caregiver.</p>
-              <p>
-                You will be presented with {userDetails.role?.toLowerCase() === 'cleaner' ? '10' : '30'} multiple-choice questions.
-              </p>
-              <p>You must score at least <strong>70%</strong> to pass.</p>
-              <p>Please allocate 20-30 minutes to complete this assessment without interruptions.</p>
+      <div className="mobile-assessment-container fade-in">
+        {/* User Profile Card */}
+        {renderProfileCard()}
+
+        {/* Assessment Content */}
+        <div className="assessment-content">
+          {/* Account Verification Header */}
+          <div className="account-verification-header">
+            <h1>Account Verification</h1>
+            <div className="verification-progress-bar">
+              <div className="progress-segment active"></div>
+              <div className="progress-segment"></div>
+              <div className="progress-segment"></div>
             </div>
-            
-            {error && <div className="error-message">{error}</div>}
-            
-            <button 
-              className="primary-button"
-              onClick={startAssessment}
-              disabled={isLoading || questions.length === 0}
-            >
-              Start Assessment
-            </button>
-          </>
-        )}
+          </div>
+
+          {/* Assessment Welcome Card */}
+          <div className="assessment-welcome-card">
+            <div className="welcome-content">
+              <div className="assessment-illustration">
+                <i className="fas fa-clipboard-list"></i>
+              </div>
+              <h2>Welcome to the Caregiver Assessment</h2>
+              <p>This assessment will help us understand your caregiving experience, skills, and approach. It will be used to match you with clients based on your specific expertise.</p>
+              <p>The assessment consists of {userDetails.role?.toLowerCase() === 'cleaner' ? '10' : '30'} questions and should take approximately 15 minutes to complete.</p>
+            </div>
+
+            <div className="assessment-instructions">
+              <div className="instruction-item">
+                <div className="instruction-icon">
+                  <i className="fas fa-lightbulb"></i>
+                </div>
+                <div className="instruction-content">
+                  <h4>Be Honest</h4>
+                  <p>Answer all questions truthfully to ensure the best client matches for your skills.</p>
+                </div>
+              </div>
+
+              <div className="instruction-item">
+                <div className="instruction-icon">
+                  <i className="fas fa-clock"></i>
+                </div>
+                <div className="instruction-content">
+                  <h4>Take your time</h4>
+                  <p>There's no time limit, so think carefully before choosing your answer.</p>
+                </div>
+              </div>
+
+              <div className="instruction-item">
+                <div className="instruction-icon">
+                  <i className="fas fa-check-double"></i>
+                </div>
+                <div className="instruction-content">
+                  <h4>Complete in one session</h4>
+                  <p>For best results, complete the assessment in one sitting without interruptions.</p>
+                </div>
+              </div>
+
+              <div className="instruction-item">
+                <div className="instruction-icon">
+                  <i className="fas fa-award"></i>
+                </div>
+                <div className="instruction-content">
+                  <h4>Detailed Responses</h4>
+                  <p>For open-ended questions, provide detailed responses that showcase your experience and knowledge.</p>
+                </div>
+              </div>
+            </div>
+
+            {isLoading ? (
+              <div className="loading-indicator">
+                <div className="spinner"></div>
+                <p>Loading assessment questions...</p>
+              </div>
+            ) : (
+              <>
+                {error && <div className="error-message">{error}</div>}
+                
+                <button 
+                  className="proceed-btn"
+                  onClick={startAssessment}
+                  disabled={isLoading || questions.length === 0}
+                >
+                  Proceed to Assessments
+                  <i className="fas fa-arrow-right"></i>
+                </button>
+              </>
+            )}
+          </div>
+        </div>
       </div>
     );
   };
 
   const renderInstructionsScreen = () => {
     return (
-      <div className="assessment-instructions">
-        <h2>Assessment Instructions</h2>
-        
-        <div className="instructions-content">
-          <div className="instruction-item">
-            <div className="instruction-icon"><i className="fas fa-lightbulb"></i></div>
-            <div className="instruction-text">
-              <h3>Multiple Choice Format</h3>
-              <p>All questions have multiple-choice answers. Select the best answer for each question.</p>
+      <div className="mobile-assessment-container fade-in">
+        {/* User Profile Card */}
+        {renderProfileCard()}
+
+        {/* Assessment Content */}
+        <div className="assessment-content">
+          {/* Account Verification Header */}
+          <div className="account-verification-header">
+            <h1>Account Verification</h1>
+            <div className="verification-progress-bar">
+              <div className="progress-segment active"></div>
+              <div className="progress-segment active"></div>
+              <div className="progress-segment"></div>
             </div>
           </div>
-          
-          <div className="instruction-item">
-            <div className="instruction-icon"><i className="fas fa-clock"></i></div>
-            <div className="instruction-text">
-              <h3>No Time Limit</h3>
-              <p>Take your time to consider each question carefully before answering.</p>
-            </div>
-          </div>
-          
-          <div className="instruction-item">
-            <div className="instruction-icon"><i className="fas fa-undo"></i></div>
-            <div className="instruction-text">
-              <h3>Navigation</h3>
-              <p>You can go back to previous questions to review your answers before submitting.</p>
-            </div>
-          </div>
-          
-          <div className="instruction-item">
-            <div className="instruction-icon"><i className="fas fa-check-double"></i></div>
-            <div className="instruction-text">
-              <h3>Passing Score</h3>
-              <p>You need to answer at least 70% of questions correctly to pass this assessment.</p>
+
+          {/* Question Card */}
+          <div className="question-card">
+            <div className="question-content">
+              <h2>Welcome to the Caregiver Assessment</h2>
+              <div className="question-text">
+                <p>Describe how you will respond to a medical emergency while caring for a patient at home?</p>
+              </div>
+              <div className="answer-input">
+                <textarea 
+                  placeholder="Type your response here..."
+                  className="response-textarea"
+                  rows="4"
+                />
+              </div>
+              <div className="question-navigation">
+                <button className="nav-btn previous-btn">
+                  <i className="fas fa-arrow-left"></i>
+                  Previous
+                </button>
+                <button className="nav-btn next-btn" onClick={beginQuestions}>
+                  Next
+                  <i className="fas fa-arrow-right"></i>
+                </button>
+              </div>
             </div>
           </div>
         </div>
-        
-        <button 
-          className="primary-button"
-          onClick={beginQuestions}
-        >
-          Begin Assessment
-        </button>
       </div>
     );
   };
@@ -423,68 +652,98 @@ const AssessmentPage = () => {
     console.log('Current Question Structure:', currentQ);
     
     return (
-      <div className="assessment-questions-screen">
-        <div className="assessment-progress">
-          <div className="progress-text">
-            Question {currentQuestion + 1} of {questions.length}
+      <div className="mobile-assessment-container fade-in">
+        {/* User Profile Card */}
+        {renderProfileCard()}
+
+        {/* Assessment Content */}
+        <div className="assessment-content">
+          {/* Account Verification Header */}
+          <div className="account-verification-header">
+            <h1>Account Verification</h1>
+            <div className="verification-progress-bar">
+              <div className="progress-segment active"></div>
+              <div className="progress-segment active"></div>
+              <div className="progress-segment active"></div>
+            </div>
           </div>
-          <div className="progress-bar">
-            <div 
-              className="progress-fill" 
-              style={{ width: `${(currentQuestion + 1) / questions.length * 100}%` }}
-            ></div>
-          </div>
-        </div>
-        
-        <div className="question-container">
-          <h3 className="question-text">
-            {/* Display question text from the correct field - backend uses "Question" not "text" */}
-            <span className="question-number">Question {currentQuestion + 1}:</span>
-            {currentQ.question || currentQ.Question || currentQ.text || "Question text not available"}
-          </h3>
-          
-          <div className="answer-options">
-            {(currentQ.options || currentQ.Options || []).map((option, index) => {
-              // Determine the option letter (A, B, C, D)
-              const optionLetter = String.fromCharCode(65 + index); // 65 is ASCII for 'A'
+
+          {/* Question Card */}
+          <div className="question-card">
+            <div className="question-content">
+              <h2>Caregiver Assessment</h2>
               
-              return (
-                <div className="answer-option" key={index}>
-                  <input 
-                    type="radio"
-                    id={`option-${index}`}
-                    name={`question-${currentQ.id}`}
-                    value={optionLetter}
-                    checked={answers[currentQ.id] === optionLetter}
-                    onChange={() => handleAnswerChange(currentQ.id, optionLetter)}
-                  />
-                  <label htmlFor={`option-${index}`}>
-                    <span className="option-letter">{optionLetter}</span> {option}
-                  </label>
+              {/* Progress indicator */}
+              <div className="question-progress">
+                <div className="progress-text">
+                  Question {currentQuestion + 1} of {questions.length}
                 </div>
-              );
-            })}
-          </div>
-          
-          {error && <div className="error-message">{error}</div>}
-          
-          <div className="button-row">
-            <button 
-              className="secondary-button"
-              onClick={moveToPreviousQuestion}
-              disabled={currentQuestion === 0}
-            >
-              Previous
-            </button>
-            
-            <button 
-              className="primary-button"
-              onClick={moveToNextQuestion}
-              disabled={isSubmitting}
-            >
-              {currentQuestion === questions.length - 1 ? 'Submit' : 'Next'}
-              {isSubmitting && <i className="fas fa-spinner fa-spin ml-2"></i>}
-            </button>
+                <div className="progress-bar">
+                  <div 
+                    className="progress-fill" 
+                    style={{ width: `${(currentQuestion + 1) / questions.length * 100}%` }}
+                  ></div>
+                </div>
+              </div>
+
+              <div className="question-text">
+                <p>{currentQ.question || currentQ.Question || currentQ.text || "Question text not available"}</p>
+              </div>
+
+              <div className="answer-options">
+                {(currentQ.options || currentQ.Options || []).map((option, index) => {
+                  // Determine the option letter (A, B, C, D)
+                  const optionLetter = String.fromCharCode(65 + index); // 65 is ASCII for 'A'
+                  
+                  return (
+                    <div 
+                      className={`answer-option ${answers[currentQ.id] === optionLetter ? 'selected' : ''}`} 
+                      key={index}
+                      onClick={() => handleAnswerChange(currentQ.id, optionLetter)}
+                    >
+                      <input 
+                        type="radio"
+                        id={`option-${index}`}
+                        name={`question-${currentQ.id}`}
+                        value={optionLetter}
+                        checked={answers[currentQ.id] === optionLetter}
+                        onChange={() => handleAnswerChange(currentQ.id, optionLetter)}
+                        style={{ display: 'none' }}
+                      />
+                      <label htmlFor={`option-${index}`} className="option-label">
+                        <div className="option-indicator">
+                          <span className="option-letter">{optionLetter}</span>
+                        </div>
+                        <span className="option-text">{option}</span>
+                      </label>
+                    </div>
+                  );
+                })}
+              </div>
+              
+              {error && <div className="error-message">{error}</div>}
+              
+              <div className="question-navigation">
+                <button 
+                  className="nav-btn previous-btn"
+                  onClick={moveToPreviousQuestion}
+                  disabled={currentQuestion === 0}
+                >
+                  <i className="fas fa-arrow-left"></i>
+                  Previous
+                </button>
+                
+                <button 
+                  className="nav-btn next-btn"
+                  onClick={moveToNextQuestion}
+                  disabled={isSubmitting}
+                >
+                  {currentQuestion === questions.length - 1 ? 'Submit' : 'Next'}
+                  <i className="fas fa-arrow-right"></i>
+                  {isSubmitting && <i className="fas fa-spinner fa-spin ml-2"></i>}
+                </button>
+              </div>
+            </div>
           </div>
         </div>
       </div>
@@ -492,148 +751,213 @@ const AssessmentPage = () => {
   };
 
   const renderThankYouScreen = () => {
+    const isPassing = assessmentResult?.isPassing;
+    const score = assessmentResult?.score || 0;
+    
     return (
-      <div className="assessment-thank-you">
-        <div className={`result-icon ${assessmentResult?.isPassing ? 'passed' : 'failed'}`}>
-          <i className={`fas ${assessmentResult?.isPassing ? 'fa-check-circle' : 'fa-times-circle'}`}></i>
-        </div>
-        
-        <h2>{assessmentResult?.isPassing ? 'Assessment Passed!' : 'Assessment Not Passed'}</h2>
-        
-        <div className="result-details">
-          <div className="score-display">
-            <div className="score-circle">
-              <span className="score-value">{assessmentResult?.score}%</span>
+      <div className="mobile-assessment-container fade-in">
+        {/* User Profile Card */}
+        {renderProfileCard()}
+
+        {/* Assessment Content */}
+        <div className="assessment-content">
+          {/* Account Verification Header */}
+          <div className="account-verification-header">
+            <h1>Account Verification</h1>
+            <div className="verification-progress-bar">
+              <div className="progress-segment active"></div>
+              <div className="progress-segment active"></div>
+              <div className="progress-segment active"></div>
             </div>
-            <p className="score-label">Your Score</p>
-            
-            {assessmentResult?.assessmentId && (
-              <button 
-                className="refresh-score-btn" 
-                onClick={async () => {
-                  try {
-                    const scoreResult = await assessmentService.calculateAssessmentScore(assessmentResult.assessmentId);
-                    if (scoreResult.success) {
-                      setAssessmentResult({
-                        ...assessmentResult,
-                        score: scoreResult.data.score,
-                        isPassing: scoreResult.data.passed
-                      });
-                      
-                      // Update localStorage
-                      const qualificationStatus = JSON.parse(localStorage.getItem('qualificationStatus') || '{}');
-                      qualificationStatus.score = scoreResult.data.score;
-                      qualificationStatus.isQualified = scoreResult.data.passed;
-                      localStorage.setItem('qualificationStatus', JSON.stringify(qualificationStatus));
-                      
-                      setSuccess("Score has been refreshed.");
-                    } else {
-                      setError("Failed to refresh score. Please try again.");
-                    }
-                  } catch (err) {
-                    console.error("Error refreshing score:", err);
-                    setError("An error occurred while refreshing the score.");
-                  }
-                }}
-              >
-                Refresh Score
-              </button>
-            )}
           </div>
-          
-          <div className="pass-threshold">
-            <p><strong>Passing threshold:</strong> 70%</p>
-            <p><strong>Attempt:</strong> {assessmentResult?.attemptNumber || 1} of 3 allowed</p>
-            
-            {!assessmentResult?.isPassing && assessmentResult?.attemptNumber < 3 && (
-              <p className="retake-info">You may retake the assessment immediately.</p>
-            )}
-            
-            {!assessmentResult?.isPassing && assessmentResult?.attemptNumber >= 3 && (
-              <p className="waiting-period-info">You must wait 15 days before your next attempt.</p>
-            )}
-          </div>
-        </div>
-        
-        {success && <div className="success-message">{success}</div>}
-        
-        {/* Display question results with explanations */}
-        <div className="assessment-results-summary">
-          <h3>Questions & Answers</h3>
-          
-          <div className="results-list">
-            {questionsWithAnswers.map((q, index) => (
-              <div key={index} className={`result-item ${q.isCorrect ? 'correct' : 'incorrect'}`}>
-                <div className="result-question">
-                  <span className="question-number">{index + 1}.</span> {q.text}
+
+          {/* Results Card */}
+          <div className="results-card">
+            <div className="results-content">
+              <h2>Caregiver Assessment</h2>
+              
+              {/* Result Status */}
+              <div className={`result-status ${isPassing ? 'success' : 'failure'}`}>
+                <div className="result-icon">
+                  {isPassing ? (
+                    <div className="success-icon">
+                      <i className="fas fa-trophy"></i>
+                    </div>
+                  ) : (
+                    <div className="failure-icon">
+                      <i className="fas fa-exclamation-triangle"></i>
+                    </div>
+                  )}
                 </div>
                 
-                <div className="result-status">
-                  {q.isCorrect ? 
-                    <div className="correct-badge"><i className="fas fa-check-circle"></i> Correct</div> : 
-                    <div className="incorrect-badge"><i className="fas fa-times-circle"></i> Incorrect</div>
-                  }
+                <div className="result-message">
+                  {isPassing ? (
+                    <>
+                      <h3 className="result-title">YAY!!</h3>
+                      <p className="result-subtitle">
+                        You met the qualifications threshold to work with CarePro
+                      </p>
+                    </>
+                  ) : (
+                    <>
+                      <h3 className="result-title">OH OH</h3>
+                      <p className="result-subtitle">
+                        You did not meet the qualifications threshold to work with CarePro
+                      </p>
+                    </>
+                  )}
                 </div>
                 
-                <div className="result-options">
-                  {q.options.map((option, optIndex) => {
-                    const optionLetter = String.fromCharCode(65 + optIndex);
-                    const isUserAnswer = optionLetter === q.userAnswer;
-                    const isCorrectAnswer = optionLetter === q.correctAnswer;
-                    
-                    return (
-                      <div 
-                        key={optIndex} 
-                        className={`result-option ${isUserAnswer ? 'user-answer' : ''} ${isCorrectAnswer ? 'correct-answer' : ''}`}
-                      >
-                        <div className="option-content">
-                          <span className="option-letter">{optionLetter}</span>
-                          <span className="option-text">{option}</span>
-                        </div>
-                        <div className="option-indicator">
-                          {isUserAnswer && <span className="user-answer-indicator"><i className="fas fa-user"></i> Your answer</span>}
-                          {isCorrectAnswer && <span className="correct-answer-indicator"><i className="fas fa-check"></i> Correct</span>}
-                        </div>
-                      </div>
-                    );
-                  })}
-                </div>
-                
-                {q.explanation && (
-                  <div className="result-explanation">
-                    {q.explanation}
+                <div className="score-display">
+                  <div className={`score-circle ${isPassing ? 'passing' : 'failing'}`}>
+                    <span className="score-percentage">{score}%</span>
                   </div>
+                  <p className="score-message">
+                    {isPassing 
+                      ? "Your answers demonstrate a good understanding of caregiving principles. You are now qualified and practical knowledge." 
+                      : "You have one more shot at getting this right, you can either back in time or start the again now."
+                    }
+                  </p>
+                </div>
+              </div>
+
+              {/* Action Buttons */}
+              <div className="result-actions">
+                {isPassing ? (
+                  <button 
+                    className="proceed-btn success"
+                    onClick={() => navigate('/app/caregiver/profile')}
+                  >
+                    Proceed to Dashboard
+                    <i className="fas fa-arrow-right"></i>
+                  </button>
+                ) : (
+                  <>
+                    <button 
+                      className="proceed-btn outline"
+                      onClick={() => navigate('/app/caregiver/profile')}
+                    >
+                      Proceed to Dashboard
+                    </button>
+                    {assessmentResult?.attemptNumber < 3 && (
+                      <button 
+                        className="restart-btn"
+                        onClick={() => {
+                          setCurrentStep('welcome');
+                          setCurrentQuestion(0);
+                          setAnswers({});
+                          setAssessmentResult(null);
+                          setError('');
+                          setSuccess('');
+                        }}
+                      >
+                        Restart Assessment
+                        <i className="fas fa-redo"></i>
+                      </button>
+                    )}
+                  </>
                 )}
               </div>
-            ))}
+
+              {/* Additional Info */}
+              {success && <div className="success-message">{success}</div>}
+              
+              {assessmentResult?.assessmentId && (
+                <button 
+                  className="refresh-score-btn" 
+                  onClick={async () => {
+                    try {
+                      const scoreResult = await assessmentService.calculateAssessmentScore(assessmentResult.assessmentId);
+                      if (scoreResult.success) {
+                        setAssessmentResult({
+                          ...assessmentResult,
+                          score: scoreResult.data.score,
+                          isPassing: scoreResult.data.passed
+                        });
+                        
+                        // Update localStorage
+                        const qualificationStatus = JSON.parse(localStorage.getItem('qualificationStatus') || '{}');
+                        qualificationStatus.score = scoreResult.data.score;
+                        qualificationStatus.isQualified = scoreResult.data.passed;
+                        localStorage.setItem('qualificationStatus', JSON.stringify(qualificationStatus));
+                        
+                        setSuccess("Score has been refreshed.");
+                      } else {
+                        setError("Failed to refresh score. Please try again.");
+                      }
+                    } catch (err) {
+                      console.error("Error refreshing score:", err);
+                      setError("An error occurred while refreshing the score.");
+                    }
+                  }}
+                >
+                  Refresh Score
+                </button>
+              )}
+
+              {/* Detailed Results (Collapsible) */}
+              <details className="detailed-results">
+                <summary>View Detailed Results</summary>
+                <div className="results-breakdown">
+                  <p><strong>Passing threshold:</strong> 70%</p>
+                  <p><strong>Attempt:</strong> {assessmentResult?.attemptNumber || 1} of 3 allowed</p>
+                  
+                  {!isPassing && assessmentResult?.attemptNumber < 3 && (
+                    <p className="retake-info">You may retake the assessment immediately.</p>
+                  )}
+                  
+                  {!isPassing && assessmentResult?.attemptNumber >= 3 && (
+                    <p className="waiting-period-info">You must wait 15 days before your next attempt.</p>
+                  )}
+
+                  {/* Question Results */}
+                  {questionsWithAnswers.length > 0 && (
+                    <div className="questions-summary">
+                      <h4>Questions & Answers</h4>
+                      {questionsWithAnswers.map((q, index) => (
+                        <div key={index} className={`result-item ${q.isCorrect ? 'correct' : 'incorrect'}`}>
+                          <div className="result-question">
+                            <span className="question-number">{index + 1}.</span> {q.text}
+                          </div>
+                          
+                          <div className="result-status-mini">
+                            {q.isCorrect ? 
+                              <div className="correct-badge"><i className="fas fa-check-circle"></i> Correct</div> : 
+                              <div className="incorrect-badge"><i className="fas fa-times-circle"></i> Incorrect</div>
+                            }
+                          </div>
+                          
+                          {q.explanation && (
+                            <div className="result-explanation">
+                              {q.explanation}
+                            </div>
+                          )}
+                        </div>
+                      ))}
+                    </div>
+                  )}
+                </div>
+              </details>
+            </div>
           </div>
-        </div>
-        
-        <div className="thank-you-actions">
-          <button 
-            className="primary-button"
-            onClick={() => navigate('/app/caregiver/profile')}
-          >
-            Return to Profile
-          </button>
         </div>
       </div>
     );
   };
 
   return (
-    <div className="assessment-page">
+    <>
       <Helmet>
         <title>Caregiver Assessment | CarePro</title>
       </Helmet>
       
-      <div className="assessment-container">
+      <div className="mobile-assessment-page">
         {currentStep === 'welcome' && renderWelcomeScreen()}
         {currentStep === 'instructions' && renderInstructionsScreen()}
         {currentStep === 'questions' && renderQuestionsScreen()}
         {currentStep === 'thank-you' && renderThankYouScreen()}
       </div>
-    </div>
+    </>
   );
 };
 

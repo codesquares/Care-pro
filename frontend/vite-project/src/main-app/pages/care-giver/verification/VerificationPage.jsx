@@ -4,7 +4,10 @@ import { useDispatch } from "react-redux";
 import Dojah from "react-dojah";
 import "./verification-page.css";
 import "./verification-page-footer.css";
+import "./mobile-verification.css";
+import "../care-giver-profile/profile-header.css";
 import verificationService from "../../../services/verificationService";
+import { userService } from "../../../services/userService"; // Ensure this is the correct import path
 import { createNotification } from "../../../services/notificationService";
 import { fetchNotifications } from "../../../Redux/slices/notificationSlice";
 import { Helmet } from "react-helmet-async";
@@ -21,12 +24,36 @@ const CaregiverVerificationPage = () => {
   const [progress, setProgress] = useState(0);
   const [progressMessage, setProgressMessage] = useState("");
   const [showDojahWidget, setShowDojahWidget] = useState(false);
+  
+  // Profile-related state variables (from ProfileHeader)
+  const [userData, setUserData] = useState(null);
+  const [isLoading, setIsLoading] = useState(true);
+  const [userRating, setUserRating] = useState(0);
+  const [reviewCount, setReviewCount] = useState(0);
+  const [memberSince, setMemberSince] = useState('');
+  const [lastDelivery, setLastDelivery] = useState('');
+  const [location, setLocation] = useState('');
 
   // Get token and user ID from localStorage
   const userDetails = JSON.parse(localStorage.getItem("userDetails") || "{}");
   const token = localStorage.getItem("authToken");
 
   const effectRan = useRef(false);
+  
+  // Helper function to render stars
+  const renderStars = (rating) => {
+    const fullStars = Math.floor(rating);
+    const hasHalfStar = rating % 1 >= 0.5;
+    const emptyStars = 5 - fullStars - (hasHalfStar ? 1 : 0);
+    
+    return (
+      <>
+        {'★'.repeat(fullStars)}
+        {hasHalfStar && '☆'}
+        {'☆'.repeat(emptyStars)}
+      </>
+    );
+  };
 
   // Dojah Configuration - Replace with your actual keys from dashboard
   const dojahConfig = {
@@ -51,6 +78,79 @@ const CaregiverVerificationPage = () => {
     }
 
     let isMounted = true;
+
+    // Fetch profile data
+    const fetchProfileData = async () => {
+      try {
+        setIsLoading(true);
+        
+        // Fetch user profile data
+        const response = await userService.getProfile();
+        
+        if (isMounted) {
+          if (response && response.success && response.data) {
+            const profileData = response.data;
+            setUserData(profileData);
+            setUserRating(parseFloat(profileData.averageRating || profileData.rating || 0));
+            setReviewCount(parseInt(profileData.reviewCount || profileData.reviewsCount || 0));
+            setLocation(profileData.location || 'Location not specified');
+            
+            // Format member since date
+            if (profileData.createdAt) {
+              const memberDate = new Date(profileData.createdAt);
+              setMemberSince(memberDate.toLocaleDateString('en-US', { 
+                year: 'numeric', 
+                month: 'long' 
+              }));
+            } else {
+              setMemberSince('Member since signup');
+            }
+            
+            // Format last delivery (you may need to adjust this based on your data structure)
+            if (profileData.lastDelivery) {
+              const lastDeliveryDate = new Date(profileData.lastDelivery);
+              const now = new Date();
+              const diffTime = Math.abs(now - lastDeliveryDate);
+              const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
+              
+              if (diffDays === 1) {
+                setLastDelivery('1 day ago');
+              } else if (diffDays < 30) {
+                setLastDelivery(`${diffDays} days ago`);
+              } else if (diffDays < 365) {
+                const months = Math.floor(diffDays / 30);
+                setLastDelivery(`${months} month${months > 1 ? 's' : ''} ago`);
+              } else {
+                const years = Math.floor(diffDays / 365);
+                setLastDelivery(`${years} year${years > 1 ? 's' : ''} ago`);
+              }
+            } else {
+              setLastDelivery('No recent activity');
+            }
+          } else {
+            // Handle API error - use fallback data from localStorage
+            console.warn('API response was not successful:', response);
+            setUserData(userDetails);
+            setLocation('Location not specified');
+            setMemberSince('Member since signup');
+            setLastDelivery('No recent activity');
+          }
+        }
+      } catch (error) {
+        console.error('Error fetching profile data:', error);
+        if (isMounted) {
+          // Set fallback data from localStorage
+          setUserData(userDetails);
+          setLocation('Location not specified');
+          setMemberSince('Member since signup');
+          setLastDelivery('No recent activity');
+        }
+      } finally {
+        if (isMounted) {
+          setIsLoading(false);
+        }
+      }
+    };
 
     // Check initial verification status
     const checkStatus = async () => {
@@ -91,6 +191,8 @@ const CaregiverVerificationPage = () => {
       }
     };
 
+    // Run both profile fetch and verification check
+    fetchProfileData();
     checkStatus();
 
     return () => {
@@ -562,7 +664,7 @@ const CaregiverVerificationPage = () => {
   };
 
   // Prepare user data for Dojah (pre-fill if available)
-  const userData = {
+  const dojahUserData = {
     first_name: userDetails.firstName || "",
     last_name: userDetails.lastName || "",
     email: userDetails.email || "",
@@ -583,134 +685,190 @@ const CaregiverVerificationPage = () => {
         <meta name="description" content="Verify your identity to become a trusted caregiver on Care Pro" />
       </Helmet>
 
-      <div className="verification-page">
-        <div className="verification-container">
-          <div className="verification-header">
-            <h1>Identity Verification</h1>
-            <p>Please verify your identity to complete your caregiver registration</p>
-          </div>
-
-          {/* Progress Bar */}
-          {progress > 0 && (
-            <div className="progress-container">
-              <div className="progress-bar">
-                <div 
-                  className="progress-fill" 
-                  style={{ width: `${progress}%` }}
-                ></div>
-              </div>
-              <p className="progress-message">{progressMessage}</p>
-            </div>
-          )}
-
-          {/* Error Display */}
-          {error && (
-            <div className="error-message">
-              <p>{error}</p>
-            </div>
-          )}
-
-          {/* Success Display */}
-          {success && (
-            <div className="success-message">
-              <p>{success}</p>
-            </div>
-          )}
-
-          {/* Verification Status */}
-          {verificationStatus?.verified && (
-            <div className="verification-status verified">
-              <h3>✅ Account Verified</h3>
-              <p>Your identity has been successfully verified!</p>
-            </div>
-          )}
-
-          {/* Main Verification Content */}
-          {!verificationStatus?.verified && !showDojahWidget && (
-            <div className="verification-content">
-              <div className="verification-method-selection">
-                <h3>Choose Verification Method</h3>
-                
-                <div className="method-option">
-                  <input
-                    type="radio"
-                    id="dojah"
-                    name="verificationMethod"
-                    value="dojah"
-                    checked={verificationMethod === "dojah"}
-                    onChange={(e) => setVerificationMethod(e.target.value)}
+      <div className="mobile-verification-page">
+        {!showDojahWidget ? (
+          <div className="mobile-verification-container fade-in">
+            {/* User Profile Card */}
+            <div className="profile-header-card">
+              {isLoading ? (
+                <div className="loading-profile">
+                  <div className="profile-img skeleton"></div>
+                  <div className="skeleton-text"></div>
+                  <div className="skeleton-text short"></div>
+                </div>
+              ) : (
+                <>
+                  {/* Profile Image */}
+                  <img 
+                    src={userData?.profilePicture || userData?.profileImage || userDetails.profilePicture || `https://ui-avatars.com/api/?name=${encodeURIComponent((userData?.firstName || userDetails.firstName) + ' ' + (userData?.lastName || userDetails.lastName))}&background=06b6d4&color=fff&size=120`} 
+                    alt="Profile" 
+                    className="profile-img"
+                    onError={(e) => {
+                      e.target.src = `https://ui-avatars.com/api/?name=${encodeURIComponent((userData?.firstName || userDetails.firstName) + ' ' + (userData?.lastName || userDetails.lastName))}&background=06b6d4&color=fff&size=120`;
+                    }}
                   />
-                  <label htmlFor="dojah" className="method-label">
-                    <div className="method-info">
-                      <h4>🔐 Secure Identity Verification</h4>
-                      <p>Complete identity verification using advanced KYC technology</p>
-                      <ul>
-                        <li>✅ Government ID verification</li>
-                        <li>✅ Biometric facial recognition</li>
-                        <li>✅ Live selfie verification</li>
-                        <li>✅ BVN/NIN validation (if applicable)</li>
-                        <li>✅ Secure and encrypted process</li>
-                      </ul>
+                  
+                  {/* Basic Info */}
+                  <div className="profile-basic-info">
+                    <h2>
+                      {userData?.firstName || userDetails.firstName} {userData?.lastName || userDetails.lastName}
+                    </h2>
+                    <p className="username">@{userData?.username || userData?.email || userDetails.username || userDetails.email || 'caregiver'}</p>
+                    {(userData?.bio || userData?.aboutMe) && <p className="bio">{userData.bio || userData.aboutMe}</p>}
+                  </div>
+
+                  {/* Rating Section */}
+                  <div className="profile-rating-section">
+                    <div className="rating">
+                      <span className="stars">
+                        {renderStars(userRating)}
+                      </span>
+                      <span className="rating-text">
+                        {userRating.toFixed(1)} ({reviewCount} reviews)
+                      </span>
                     </div>
-                  </label>
+                  </div>
+
+                  {/* Profile Details */}
+                  <div className="profile-details">
+                    <div className="detail-item">
+                      <i className="fas fa-map-marker-alt"></i>
+                      <span>{location}</span>
+                    </div>
+                    <div className="detail-item">
+                      <i className="fas fa-calendar"></i>
+                      <span>Member since {memberSince}</span>
+                    </div>
+                    <div className="detail-item">
+                      <i className="fas fa-truck"></i>
+                      <span>Last delivery: {lastDelivery}</span>
+                    </div>
+                  </div>
+
+                  {/* Availability Status */}
+                  <div className={`availability-status ${userData?.isAvailable ? 'available' : 'unavailable'}`}>
+                    {userData?.isAvailable ? 'Available for work' : 'Currently unavailable'}
+                  </div>
+                </>
+              )}
+            </div>
+
+            {/* Account Verification Card */}
+            <div className="verification-card">
+              <div className="verification-content">
+                <h2>Account Verification</h2>
+                <p className="verification-subtitle">
+                  To ensure the safety of our clients and maintain high-quality services, we require all 
+                  caregivers to verify their identity. Please choose a verification method below.
+                </p>
+
+                {/* Verification Instructions */}
+                <div className="verification-instructions">
+                  <div className="instruction-item">
+                    <div className="instruction-icon">
+                      <i className="fas fa-id-card"></i>
+                    </div>
+                    <div className="instruction-content">
+                      <h4>Government ID verification</h4>
+                      <p>Get verified with your Bank verification Number</p>
+                    </div>
+                  </div>
+
+                  <div className="instruction-item">
+                    <div className="instruction-icon">
+                      <i className="fas fa-mobile-alt"></i>
+                    </div>
+                    <div className="instruction-content">
+                      <h4>NIN Verification</h4>
+                      <p>Get verified with your National Identification Number</p>
+                    </div>
+                  </div>
+
+                  <div className="instruction-item">
+                    <div className="instruction-icon">
+                      <i className="fas fa-camera"></i>
+                    </div>
+                    <div className="instruction-content">
+                      <h4>E-Selfie</h4>
+                      <p>Get verified by uploading your Photo on accompanying selfie</p>
+                    </div>
+                  </div>
+                </div>
+
+                {/* Progress Bar */}
+                {progress > 0 && (
+                  <div className="progress-container">
+                    <div className="progress-bar">
+                      <div 
+                        className="progress-fill" 
+                        style={{ width: `${progress}%` }}
+                      ></div>
+                    </div>
+                    <p className="progress-message">{progressMessage}</p>
+                  </div>
+                )}
+
+                {/* Error Display */}
+                {error && (
+                  <div className="error-message">
+                    <p>{error}</p>
+                  </div>
+                )}
+
+                {/* Success Display */}
+                {success && (
+                  <div className="success-message">
+                    <p>{success}</p>
+                  </div>
+                )}
+
+                {/* Verification Status */}
+                {verificationStatus?.verified && (
+                  <div className="verification-status verified">
+                    <h3>✅ Account Verified</h3>
+                    <p>Your identity has been successfully verified!</p>
+                  </div>
+                )}
+
+                {/* Start Verification Button */}
+                {!verificationStatus?.verified && (
+                  <button
+                    type="button"
+                    onClick={handleStartVerification}
+                    disabled={isSubmitting}
+                    className="proceed-btn start-verification"
+                  >
+                    {isSubmitting ? "Processing..." : "Start Verification"}
+                    <i className="fas fa-arrow-right"></i>
+                  </button>
+                )}
+
+                {/* Additional Info */}
+                <div className="verification-info">
+                  <p className="privacy-note">
+                    🔒 Your data is protected with bank-level security and encryption.
+                    We comply with all data protection regulations.
+                  </p>
                 </div>
               </div>
-
-              <div className="verification-actions">
-                <button
-                  type="button"
-                  onClick={handleStartVerification}
-                  disabled={isSubmitting}
-                  className="start-verification-btn"
-                >
-                  {isSubmitting ? "Processing..." : "Start Verification"}
-                </button>
-              </div>
-
-              <div className="verification-info">
-                <h4>What you'll need:</h4>
-                <ul>
-                  <li>A valid government-issued ID (National ID, Driver's License, or Passport)</li>
-                  <li>Good lighting for clear photos</li>
-                  <li>A few minutes to complete the process</li>
-                  <li>Your BVN or NIN (for Nigerian users)</li>
-                </ul>
-                
-                <p className="privacy-note">
-                  🔒 Your data is protected with bank-level security and encryption.
-                  We comply with all data protection regulations.
-                </p>
-              </div>
             </div>
-          )}
-
-          {/* Dojah Widget */}
-          {showDojahWidget && dojahConfig.appID && dojahConfig.publicKey && (
-            <div className="dojah-widget-container">
+          </div>
+        ) : (
+          /* Dojah Widget */
+          <div className="dojah-widget-container">
+            {dojahConfig.appID && dojahConfig.publicKey && (
               <Dojah
                 response={handleDojahResponse}
                 appID={dojahConfig.appID}
                 publicKey={dojahConfig.publicKey}
                 type={dojahConfig.type}
                 config={dojahConfig.config}
-                userData={userData}
+                userData={dojahUserData}
                 metadata={metadata}
               />
-            </div>
-          )}
-
-          {/* Navigation */}
-          <div className="verification-navigation">
-            <button
-              type="button"
-              onClick={() => window.location.href = "/app/caregiver/dashboard"}
-              className="back-btn"
-              disabled={isSubmitting}
-            >
-              Back to Dashboard
-            </button>
+            )}
           </div>
-        </div>
+        )}
       </div>
     </>
   );
