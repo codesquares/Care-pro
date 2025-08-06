@@ -9,6 +9,7 @@ import EarningsPage from './EarningsPage';
 import WithdrawPage from './WithdrawPage';
 import Order from './Order';
 import CreateGig from './CreateGig';
+import CreateOffer from '../CreateOffer';
 import Messages from '../Messages';
 import DirectMessage from '../../components/messages/DirectMessage';
 import VerificationPage from './verification/VerificationPage';
@@ -33,6 +34,7 @@ function CareGiverRoutes() {
             <Route path='/earnings-old' element={<Earnings />} />
             <Route path='/orders' element={<Order />} />
             <Route path='/create-gigs' element={<CreateGig/>} />
+            <Route path='/create-offer' element={<CreateOffer/>} />
             <Route path='/settings' element={<CaregiverSettings />} />
             <Route path="/CaregiverProfile" element={<CaregiverProfile />} />
             <Route path="/message" element={<Messages />} />

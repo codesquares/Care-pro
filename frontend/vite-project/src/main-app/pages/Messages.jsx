@@ -539,13 +539,16 @@ const requestPermission = async () => {
       )}
       
       <div className="messages-dashboard-header">
-        {/* <h1>Message Dashboard</h1>
-        <p>View and manage all your conversations</p> */}
-        <ConnectionStatus state={isLoading ? 'Connecting' : error ? 'Disconnected' : 'Connected'} />
-        <NotificationPermissionButton 
-          permissionGranted={permissionGranted} 
-          requestPermission={requestPermission} 
-        />
+        <div className="header-content">
+          <h1>My Messages</h1>
+          <div className="header-actions">
+            <ConnectionStatus state={isLoading ? 'Connecting' : error ? 'Disconnected' : 'Connected'} />
+            <NotificationPermissionButton 
+              permissionGranted={permissionGranted} 
+              requestPermission={requestPermission} 
+            />
+          </div>
+        </div>
       </div>
       
       <div className="messages-container">
@@ -579,6 +582,23 @@ const requestPermission = async () => {
           </div>
         )}
       </div>
+      
+      {/* Floating Create Offer Button - only show when no chat is selected */}
+      {!selectedChatId && conversations.length > 0 && (
+        <div className="floating-action-button" title="Create Offer">
+          <button 
+            className="fab-button"
+            onClick={() => {
+              // Navigate to create offer page
+              window.location.href = '/app/caregiver/create-offer';
+            }}
+          >
+            <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+              <path d="M3 3h18v18H3zM12 8v8m-4-4h8"/>
+            </svg>
+          </button>
+        </div>
+      )}
       
       {/* Toast notifications */}
       <ToastContainer />

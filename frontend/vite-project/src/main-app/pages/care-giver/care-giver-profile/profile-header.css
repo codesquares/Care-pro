@@ -33,6 +33,15 @@
     margin-bottom: 20px;
     padding-bottom: 16px;
     border-bottom: 1px solid #f3f4f6;
+    list-style: none;
+  }
+
+  .profile-basic-info::before,
+  .profile-basic-info::after,
+  .profile-basic-info *::before,
+  .profile-basic-info *::after {
+    content: none !important;
+    display: none !important;
   }
 
   /* Profile Rating Section */
@@ -65,6 +74,13 @@
     font-weight: 600;
     color: #1a1a1a;
     line-height: 1.2;
+    list-style: none;
+  }
+
+  .profile-header-card h2::before,
+  .profile-header-card h2::after {
+    content: none !important;
+    display: none !important;
   }
 
   .profile-header-card .username {

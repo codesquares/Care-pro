@@ -183,7 +183,7 @@ const ProfileHeader = () => {
   }
 
   const userDetails = JSON.parse(localStorage.getItem("userDetails"));
-  const userName = localStorage.getItem("userName") || "guestUser209";
+  const userName = localStorage.getItem("userName");
 
   console.log("Rendering profile component with data========>:", profile);
 
@@ -197,7 +197,7 @@ const ProfileHeader = () => {
             className="profile-img"
           />
           <h2>{profile.name}</h2>
-          <p className="username">@{userName}</p>
+          {userName && <p className="username">@{userName}</p>}
           <p className="bio">{profile.bio}</p>
         </div>
       

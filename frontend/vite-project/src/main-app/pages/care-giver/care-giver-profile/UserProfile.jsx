@@ -7,13 +7,13 @@ import "./user-profile.css";
 const UserProfile = () => {
   return (
     <div className="user-profile">
-      <div className="profile-left">
+      <aside className="profile-left">
         <ProfileHeader />
-      </div>
-      <div className="profile-right">
+      </aside>
+      <main className="profile-right">
         <GigsSection />
         <Reviews />
-      </div>
+      </main>
     </div>
   );
 };

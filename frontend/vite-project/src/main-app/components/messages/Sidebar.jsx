@@ -38,7 +38,14 @@ const Sidebar = ({ conversations, selectedChatId, onSelectChat, unreadMessages }
   return (
     <div className="sidebar">
       <div className="sidebar-header">
-        <h2>Messages</h2>
+        <h2>My Messages</h2>
+        <div className="filter-dropdown">
+          <select defaultValue="all">
+            <option value="all">All chats</option>
+            <option value="unread">Unread</option>
+            <option value="archived">Archived</option>
+          </select>
+        </div>
       </div>
       
       <div className="search-container">
