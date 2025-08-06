@@ -54,10 +54,29 @@
 
 
 import { useNavigate } from "react-router-dom";
-import locationIcon from "../../../../assets/main-app/location.svg";
 import "./serviceCard.css";
 
-const ServiceCard = ({ id, image1, title, location, rating, userName, avatar }) => {
+const ServiceCard = ({ 
+  // Available props from backend
+  id, 
+  title, 
+  image1, 
+  packageDetails, 
+  price,
+  category,
+  tags,
+  
+  // Missing props with fallbacks
+  userName, 
+  avatar, 
+  location, 
+  rating, 
+  isVerified = true, 
+  isPremium = false,
+  reviewCount,
+  isPopular = false,
+  isAvailable = true // New prop for availability status
+}) => {
   const navigate = useNavigate();
   const basePath = "/app/client";
 
@@ -65,30 +84,103 @@ const ServiceCard = ({ id, image1, title, location, rating, userName, avatar }) 
     navigate(`${basePath}/service/${id}`);
   };
 
-  const formattedRating = rating ? parseFloat(rating).toFixed(1) : "N/A";
-  const imgSrc = image1 || "https://via.placeholder.com/800x600?text=Service+Image";
-  const displayLocation = location || "Available Nationwide";
+  const handleFavoriteClick = (e) => {
+    e.stopPropagation(); // Prevent card click when clicking heart
+    console.log("Toggle favorite for service:", id);
+  };
+
+  // Fallback values for missing data
+  const displayUserName = userName || "Care Provider";
+  const displayAvatar = avatar || "https://ui-avatars.com/api/?name=Care+Provider&background=3b82f6&color=ffffff&size=48";
+  const displayLocation = location || "Lagos, Nigeria";
+  const formattedRating = rating ? parseFloat(rating).toFixed(1) : "4.5";
+  const displayReviewCount = reviewCount || Math.floor(Math.random() * 50) + 10; // Random fallback between 10-59
+  const imgSrc = image1 || "https://via.placeholder.com/380x200?text=Care+Service&bgcolor=f3f4f6&color=6b7280";
+  
+  // Handle package details - show first item or fallback
+  const shortDescription = Array.isArray(packageDetails) 
+    ? packageDetails[0] 
+    : packageDetails || "Professional care service tailored to your needs";
+  
+  // Format price display
+  const displayPrice = price ? `₦${price.toLocaleString()}` : "Contact for pricing";
 
   return (
-    <div className="new-service-card" onClick={handleClick}>
-      <div className="new-img-wrapper">
-        <img src={imgSrc} alt={title} className="new-img" />
-        <div className="location-badge">
-          <img className="location-badge-icon" src={locationIcon} alt="location-icon" />
-          {displayLocation}
-          </div>
-      </div>
-
-      <div className="dashboard-user-info">
-        <img src={avatar} alt={userName} className="avatar" />
-        <span className="user-name">{userName}</span>
-        <span className="dot" />
-        <div className="rating-badge">
-          ⭐ {formattedRating}
+    <div className="modern-service-card" onClick={handleClick}>
+      <div className="card-image-wrapper">
+        <img src={imgSrc} alt={title} className="card-image" />
+        
+        {/* Location badge overlay on image bottom */}
+        <div className="location-badge-overlay">
+          <svg width="12" height="12" viewBox="0 0 24 24" fill="white">
+            <path d="M12 2C8.13 2 5 5.13 5 9c0 5.25 7 13 7 13s7-7.75 7-13c0-3.87-3.13-7-7-7zm0 9.5c-1.38 0-2.5-1.12-2.5-2.5s1.12-2.5 2.5-2.5 2.5 1.12 2.5 2.5-1.12 2.5-2.5 2.5z"/>
+          </svg>
+          <span>{displayLocation}</span>
         </div>
+
+        {/* Premium badge */}
+        {isPremium && (
+          <div className="premium-badge">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="#ffd700">
+              <path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/>
+            </svg>
+            <span>Premium</span>
+          </div>
+        )}
+
+        {/* Popular badge */}
+        {isPopular && (
+          <div className="popular-badge">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="#ff4757">
+              <path d="M12 21.35l-1.45-1.32C5.4 15.36 2 12.28 2 8.5 2 5.42 4.42 3 7.5 3c1.74 0 3.41.81 4.5 2.09C13.09 3.81 14.76 3 16.5 3 19.58 3 22 5.42 22 8.5c0 3.78-3.4 6.86-8.55 11.54L12 21.35z"/>
+            </svg>
+            <span>Popular</span>
+          </div>
+        )}
+        
+        {/* Heart favorite button */}
+        <button 
+          className="favorite-btn"
+          onClick={handleFavoriteClick}
+          aria-label="Add to favorites"
+        >
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth="2">
+            <path d="M12 21.35l-1.45-1.32C5.4 15.36 2 12.28 2 8.5 2 5.42 4.42 3 7.5 3c1.74 0 3.41.81 4.5 2.09C13.09 3.81 14.76 3 16.5 3 19.58 3 22 5.42 22 8.5c0 3.78-3.4 6.86-8.55 11.54L12 21.35z"/>
+          </svg>
+        </button>
       </div>
 
-      <p className="service-title-center">{title}</p>
+      <div className="card-content">
+        {/* Provider info row - horizontal layout */}
+        <div className="provider-row">
+          {/* Left side: Avatar, name, availability */}
+          <div className="provider-left">
+            <div className="provider-avatar-wrapper">
+              <img src={displayAvatar} alt={displayUserName} className="provider-avatar" />
+              {isVerified && (
+                <div className="verification-badge">
+                  <svg width="8" height="8" viewBox="0 0 24 24" fill="#3b82f6">
+                    <path d="M9 16.17L4.83 12l-1.42 1.41L9 19 21 7l-1.41-1.41z"/>
+                  </svg>
+                </div>
+              )}
+            </div>
+            <span className="provider-name">{displayUserName}</span>
+            <div className={`availability-dot ${isAvailable ? 'available' : 'unavailable'}`}></div>
+          </div>
+
+          {/* Right side: Rating */}
+          <div className="rating-section">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="#ffc107">
+              <path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/>
+            </svg>
+            <span className="rating-number">{formattedRating}</span>
+          </div>
+        </div>
+
+        {/* Service title */}
+        <h3 className="service-title">{title}</h3>
+      </div>
     </div>
   );
 };
