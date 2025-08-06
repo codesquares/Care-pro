@@ -1,7 +1,8 @@
-import React from 'react';
+import React, { useState } from 'react';
 import './GuidelinesCard.scss';
 
 const GuidelinesCard = ({ currentPage, activeField, onClose }) => {
+  const [isMinimized, setIsMinimized] = useState(false);
   const fieldGuidelines = {
     // Overview Page Fields
     'title': {
@@ -26,65 +27,25 @@ const GuidelinesCard = ({ currentPage, activeField, onClose }) => {
     },
 
     // Pricing Page Fields
-    'pricing-basic-name': {
-      heading: "Basic Package Name",
-      content: "Give your basic package a clear, appealing name that describes the core service.",
+    'basic-name': {
+      heading: "Package Name",
+      content: "Give your package a clear, appealing name that describes the core service.",
       tips: ["Keep it simple and clear", "Focus on the main benefit", "Use action words"]
     },
-    'pricing-basic-details': {
-      heading: "Basic Package Details",
-      content: "Describe exactly what's included in your basic package. Be specific about what clients can expect.",
-      tips: ["List specific deliverables", "Be clear about limitations", "Use bullet points for clarity"]
+    'basic-details': {
+      heading: "Package Details",
+      content: "Describe exactly what's included in your package. Be specific about what clients can expect.",
+      tips: ["List specific deliverables", "Be clear about limitations", "Use bullet points for clarity", "Separate with semicolons"]
     },
-    'pricing-basic-delivery': {
-      heading: "Basic Package Delivery Time",
-      content: "Set a realistic timeframe for completing the basic service. Consider your availability and workload.",
-      tips: ["Be conservative with timing", "Account for potential delays", "Consider your other commitments"]
+    'basic-delivery': {
+      heading: "Service Frequency",
+      content: "Set how often you'll provide this service. Choose the frequency that works best for your availability.",
+      tips: ["Consider your schedule", "Be realistic about commitments", "Match client needs", "Account for travel time"]
     },
-    'pricing-basic-amount': {
-      heading: "Basic Package Pricing",
-      content: "Set a competitive price for your basic service. This should be your most affordable option.",
-      tips: ["Research competitor pricing", "Don't undervalue your service", "Consider all your costs"]
-    },
-    'pricing-standard-name': {
-      heading: "Standard Package Name",
-      content: "Your standard package should offer more value than basic. Name it to reflect the enhanced service.",
-      tips: ["Highlight the added value", "Make it sound appealing", "Show progression from basic"]
-    },
-    'pricing-standard-details': {
-      heading: "Standard Package Details",
-      content: "Describe the additional services or enhanced features included in your standard package.",
-      tips: ["Clearly show what's extra vs basic", "Add meaningful value", "Make it your most popular option"]
-    },
-    'pricing-standard-delivery': {
-      heading: "Standard Package Delivery Time",
-      content: "Standard delivery time can be similar to basic or slightly longer if you're providing more comprehensive service.",
-      tips: ["Balance speed with quality", "Consider the extra work involved", "Make it attractive to clients"]
-    },
-    'pricing-standard-amount': {
-      heading: "Standard Package Pricing",
-      content: "Price your standard package to reflect the additional value. This is often the most popular choice.",
-      tips: ["Show clear value over basic", "Make it compelling", "Price for profitability"]
-    },
-    'pricing-premium-name': {
-      heading: "Premium Package Name",
-      content: "Your premium package should be the complete, full-service option. Name it to convey luxury and completeness.",
-      tips: ["Emphasize exclusivity", "Use premium language", "Convey comprehensive service"]
-    },
-    'pricing-premium-details': {
-      heading: "Premium Package Details",
-      content: "Include everything from standard plus additional premium features. This should be your most comprehensive offering.",
-      tips: ["Include everything possible", "Add exclusive bonuses", "Make it irresistible for those who want the best"]
-    },
-    'pricing-premium-delivery': {
-      heading: "Premium Package Delivery Time",
-      content: "Premium delivery can be faster (priority) or allow more time for comprehensive service, depending on your offering.",
-      tips: ["Consider offering priority service", "Allow time for quality", "Make it feel exclusive"]
-    },
-    'pricing-premium-amount': {
-      heading: "Premium Package Pricing",
-      content: "Price your premium package significantly higher to reflect the comprehensive service and exclusivity.",
-      tips: ["Price for value, not just cost", "Make the upgrade worthwhile", "Don't be afraid to price appropriately"]
+    'basic-amount': {
+      heading: "Package Pricing",
+      content: "Set a competitive price for your service. Consider your skills, experience, and local market rates.",
+      tips: ["Research competitor pricing", "Don't undervalue your service", "Consider all your costs", "Factor in travel expenses"]
     },
 
     // Gallery Page Fields
@@ -120,8 +81,8 @@ const GuidelinesCard = ({ currentPage, activeField, onClose }) => {
     },
     1: { // Pricing page
       title: "Pricing Guidelines", 
-      content: "Click on any pricing field to see specific guidance. Create three tiers to give clients options that fit their needs and budget.",
-      tips: ["Basic: Essential service only", "Standard: Most popular option", "Premium: Full-service experience"]
+      content: "Click on any pricing field to see specific guidance. Set up your service package with clear pricing and frequency options.",
+      tips: ["Be clear about what's included", "Set competitive but fair pricing", "Choose realistic service frequency"]
     },
     2: { // Gallery page
       title: "Gallery Guidelines",
@@ -147,51 +108,67 @@ const GuidelinesCard = ({ currentPage, activeField, onClose }) => {
     if (onClose) onClose();
   };
 
+  const handleToggleMinimize = () => {
+    setIsMinimized(!isMinimized);
+  };
+
   return (
     <>
       {activeField && (
         <div className="guidelines-backdrop" onClick={handleCloseGuidelines} />
       )}
-      <div className={`guidelines-card ${activeField ? 'field-focused' : 'default-view'}`}>
+      <div className={`guidelines-card ${activeField ? 'field-focused' : 'default-view'} ${isMinimized ? 'minimized' : ''}`}>
         <div className="guidelines-header">
           <div className="header-content">
             <h3>{activeGuideline ? displayContent.heading : displayContent.title}</h3>
-            <p>{activeField ? "Field-specific guidance" : "Follow these guidelines to create an effective gig"}</p>
+            {!isMinimized && (
+              <p>{activeField ? "Field-specific guidance" : "Follow these guidelines to create an effective gig"}</p>
+            )}
           </div>
-          {activeField && (
-            <button className="close-guidelines" onClick={handleCloseGuidelines}>
-              ✕
+          <div className="header-controls">
+            {/* Minimize/Maximize button for mobile */}
+            <button className="minimize-guidelines mobile-only" onClick={handleToggleMinimize}>
+              {isMinimized ? '▲' : '▼'}
             </button>
-          )}
-        </div>
-        
-        <div className="guidelines-content">
-          <div className="guideline-section">
-            <p>{displayContent.content}</p>
-            {displayContent.tips && (
-              <div className="tips">
-                <strong>💡 Tips:</strong>
-                <ul>
-                  {displayContent.tips.map((tip, tipIndex) => (
-                    <li key={tipIndex}>{tip}</li>
-                  ))}
-                </ul>
-              </div>
+            {activeField && (
+              <button className="close-guidelines" onClick={handleCloseGuidelines}>
+                ✕
+              </button>
             )}
           </div>
         </div>
+        
+        {!isMinimized && (
+          <>
+            <div className="guidelines-content">
+              <div className="guideline-section">
+                <p>{displayContent.content}</p>
+                {displayContent.tips && (
+                  <div className="tips">
+                    <strong>💡 Tips:</strong>
+                    <ul>
+                      {displayContent.tips.map((tip, tipIndex) => (
+                        <li key={tipIndex}>{tip}</li>
+                      ))}
+                    </ul>
+                  </div>
+                )}
+              </div>
+            </div>
 
-        <div className="guidelines-footer">
-          <div className="help-note">
-            <strong>{activeField ? "📝 Context Help" : "💡 Need Help?"}</strong>
-            <p>
-              {activeField 
-                ? "This guidance is specific to the field you're currently working on."
-                : "Click on any form field to see specific guidance for that section."
-              }
-            </p>
-          </div>
-        </div>
+            <div className="guidelines-footer">
+              <div className="help-note">
+                <strong>{activeField ? "📝 Context Help" : "💡 Need Help?"}</strong>
+                <p>
+                  {activeField 
+                    ? "This guidance is specific to the field you're currently working on."
+                    : "Click on any form field to see specific guidance for that section."
+                  }
+                </p>
+              </div>
+            </div>
+          </>
+        )}
       </div>
     </>
   );

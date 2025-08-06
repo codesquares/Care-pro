@@ -1,186 +1,373 @@
-.publish-gig{
-  display: flex;
-  padding-top: 3rem;
-  justify-content: space-between;
-  width:80%;
-  gap: 4rem;
-  margin: 0 auto;
-  
-}
-.publish-gig-main {
-  padding:20px;
-  width: 80%;
-  // max-width: 500px;
-  height: 400px;
-  background-color: #f9f9f9;
-  border-radius: 10px;
-  box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1);
-  font-family: Arial, sans-serif;
-  
-}
-
-.publish-gig-main h2 {
-  font-size: 24px;
-  color: #333;
-  margin-bottom: 10px;
-  width: 55%;
-}
-
-.publish-gig-main p {
-  font-size: 16px;
-  color: #555;
-  margin-bottom: 20px;
-  width: 55%;
-}
-
-.validation-summary {
-  background-color: #fdf2f2;
-  border: 1px solid #e74c3c;
-  border-radius: 4px;
-  padding: 1rem;
-  margin: 1rem 0;
+// Mobile-first publish gig component
+.publish-gig {
   width: 100%;
-  
-  h4 {
-    color: #e74c3c;
-    margin-bottom: 0.5rem;
-    font-size: 16px;
+  padding: 1rem;
+  font-family: "Arial", sans-serif;
+
+  // Tablet and up
+  @media (min-width: 768px) {
+    padding: 1.5rem;
   }
-  
-  ul {
-    list-style-type: none;
-    padding: 0;
-    
-    li {
-      margin-bottom: 0.25rem;
-      color: #e74c3c;
-      font-size: 14px;
-      
-      div {
-        margin-bottom: 0.125rem;
+
+  // Desktop and up
+  @media (min-width: 1024px) {
+    padding: 2rem 3rem;
+  }
+
+  .publish-gig-container {
+    max-width: 1200px;
+    margin: 0 auto;
+    display: flex;
+    flex-direction: column;
+    gap: 1.5rem;
+
+    // Tablet and up - side by side layout
+    @media (min-width: 768px) {
+      flex-direction: row;
+      gap: 2rem;
+      align-items: flex-start;
+    }
+
+    // Desktop and up
+    @media (min-width: 1024px) {
+      gap: 3rem;
+    }
+  }
+}
+// Main content area - mobile first
+.publish-gig-main {
+  width: 100%;
+  background-color: #f9f9f9;
+  border-radius: 8px;
+  padding: 1.5rem;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+
+  // Tablet and up
+  @media (min-width: 768px) {
+    flex: 2;
+    padding: 2rem;
+    border-radius: 10px;
+    box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1);
+  }
+
+  // Desktop and up
+  @media (min-width: 1024px) {
+    padding: 2.5rem;
+  }
+
+  .publish-gig-header {
+    margin-bottom: 1.5rem;
+
+    // Tablet and up
+    @media (min-width: 768px) {
+      margin-bottom: 2rem;
+    }
+
+    h2 {
+      font-size: 1.375rem;
+      color: #333;
+      margin-bottom: 0.75rem;
+      line-height: 1.3;
+      font-weight: 600;
+
+      // Tablet and up
+      @media (min-width: 768px) {
+        font-size: 1.5rem;
+        margin-bottom: 1rem;
+      }
+
+      // Desktop and up
+      @media (min-width: 1024px) {
+        font-size: 1.75rem;
+      }
+    }
+
+    p {
+      font-size: 0.95rem;
+      color: #555;
+      line-height: 1.4;
+      margin: 0;
+
+      // Tablet and up
+      @media (min-width: 768px) {
+        font-size: 1rem;
+        line-height: 1.5;
+      }
+
+      // Desktop and up
+      @media (min-width: 1024px) {
+        font-size: 1.05rem;
       }
     }
   }
 }
 
-.publish-gig-buttons {
-  display: flex;
-  justify-content: flex-start;
-  gap: 20px;
-  width: 50%;
-}
-
-.publish-gig-buttons .draft-button,
-.publish-gig-buttons .publish-button {
-  padding: 10px 0px 10px 0px;
-  font-size: 16px;
-  border: none;
-  border-radius: 5px;
-  cursor: pointer;
-  transition: background-color 0.3s, transform 0.2s;
+// Validation summary - mobile first
+.validation-summary {
+  background-color: #fdf2f2;
+  border: 1px solid #e74c3c;
+  border-radius: 6px;
+  padding: 1rem;
+  margin-bottom: 1.5rem;
   
-  &:disabled {
-    opacity: 0.6;
-    cursor: not-allowed;
-    transform: none !important;
+  // Tablet and up
+  @media (min-width: 768px) {
+    border-radius: 8px;
+    padding: 1.25rem;
+    margin-bottom: 2rem;
+  }
+  
+  h4 {
+    color: #e74c3c;
+    margin-bottom: 0.75rem;
+    font-size: 0.95rem;
+    font-weight: 600;
+    line-height: 1.3;
+
+    // Tablet and up
+    @media (min-width: 768px) {
+      font-size: 1rem;
+      margin-bottom: 1rem;
+    }
+  }
+  
+  ul {
+    list-style-type: none;
+    padding: 0;
+    margin: 0;
+    
+    li {
+      margin-bottom: 0.5rem;
+      color: #e74c3c;
+      font-size: 0.875rem;
+      line-height: 1.4;
+
+      // Tablet and up
+      @media (min-width: 768px) {
+        font-size: 0.9rem;
+        margin-bottom: 0.5rem;
+      }
+      
+      div {
+        margin-bottom: 0.25rem;
+
+        &:last-child {
+          margin-bottom: 0;
+        }
+      }
+
+      &:last-child {
+        margin-bottom: 0;
+      }
+    }
   }
 }
 
-.publish-gig-buttons .draft-button {
-  background-color: #f4f4f4;
-  color: #555;
-}
-
-.publish-gig-buttons .draft-button:hover {
-  background-color: #ddd;
-  transform: scale(1.05);
-}
-
-.publish-gig-buttons .publish-button {
-  background-color: #05668D;
-  color: white;
-}
-
-.publish-gig-buttons .publish-button:hover {
-  background-color: #0056b3;
-  transform: scale(1.05);
-}
-.publish-gig-sidebar {
-  width:30%;
-  height: 300px;
+// Button container - mobile first
+.publish-gig-buttons {
   display: flex;
   flex-direction: column;
-  border-radius: 10px;
-  overflow: hidden;
-  box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1);
-  background-color: #fff;
-  font-family: Arial, sans-serif;
-}
-
-/* Image Section */
-.publish-card-image {
-  flex: 8; /* 80% of the card height */
-  position: relative;
-}
-
-.publish-card-image img {
+  gap: 1rem;
   width: 100%;
-  height: 100%;
-  object-fit: cover;
+
+  // Small mobile landscape and up
+  @media (min-width: 480px) {
+    flex-direction: row;
+    gap: 1rem;
+  }
+
+  // Tablet and up
+  @media (min-width: 768px) {
+    gap: 1.25rem;
+    max-width: 400px;
+  }
+
+  // Desktop and up
+  @media (min-width: 1024px) {
+    gap: 1.5rem;
+  }
+
+  .draft-button,
+  .publish-button {
+    flex: 1;
+    padding: 0.875rem 1.5rem;
+    font-size: 0.95rem;
+    font-weight: 500;
+    border: none;
+    border-radius: 6px;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    min-height: 44px; // Touch-friendly
+
+    // Tablet and up
+    @media (min-width: 768px) {
+      padding: 1rem 2rem;
+      font-size: 1rem;
+      border-radius: 8px;
+    }
+
+    // Desktop and up
+    @media (min-width: 1024px) {
+      padding: 1.125rem 2.25rem;
+      font-size: 1.05rem;
+    }
+    
+    &:disabled {
+      opacity: 0.6;
+      cursor: not-allowed;
+      transform: none !important;
+    }
+
+    &:active {
+      transform: scale(0.98);
+    }
+  }
+
+  .draft-button {
+    background-color: #f4f4f4;
+    color: #555;
+    border: 1px solid #ddd;
+
+    &:hover:not(:disabled) {
+      background-color: #e9e9e9;
+      border-color: #ccc;
+      transform: translateY(-1px);
+    }
+
+    &:focus {
+      outline: none;
+      box-shadow: 0 0 0 2px rgba(85, 85, 85, 0.2);
+    }
+  }
+
+  .publish-button {
+    background-color: #05668D;
+    color: white;
+    font-weight: 600;
+
+    &:hover:not(:disabled) {
+      background-color: #0056b3;
+      transform: translateY(-1px);
+      box-shadow: 0 4px 12px rgba(5, 102, 141, 0.3);
+    }
+
+    &:focus {
+      outline: none;
+      box-shadow: 0 0 0 2px rgba(5, 102, 141, 0.3);
+    }
+  }
 }
 
-/* Text and Controls Section */
+// Sidebar - mobile first
+.publish-gig-sidebar {
+  width: 100%;
+  max-width: 400px;
+  margin: 0 auto;
+
+  // Tablet and up
+  @media (min-width: 768px) {
+    flex: 1;
+    max-width: 300px;
+    margin: 0;
+  }
+
+  // Desktop and up
+  @media (min-width: 1024px) {
+    max-width: 350px;
+  }
+
+  .publish-card {
+    background-color: #fff;
+    border-radius: 8px;
+    overflow: hidden;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+    transition: transform 0.3s ease, box-shadow 0.3s ease;
+
+    // Tablet and up
+    @media (min-width: 768px) {
+      border-radius: 10px;
+      box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1);
+    }
+
+    &:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 4px 20px rgba(0, 0, 0, 0.15);
+
+      // Desktop and up
+      @media (min-width: 1024px) {
+        transform: translateY(-3px);
+        box-shadow: 0 6px 25px rgba(0, 0, 0, 0.15);
+      }
+    }
+  }
+}
+
+// Card image section - mobile first
+.publish-card-image {
+  height: 200px;
+  position: relative;
+  overflow: hidden;
+
+  // Tablet and up
+  @media (min-width: 768px) {
+    height: 240px;
+  }
+
+  // Desktop and up
+  @media (min-width: 1024px) {
+    height: 280px;
+  }
+
+  img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    transition: transform 0.3s ease;
+
+    &:hover {
+      transform: scale(1.05);
+    }
+  }
+}
+
+// Card bottom section - mobile first
 .publish-card-bottom {
-  flex: 2; /* 20% of the card height */
-  padding: 10px;
+  padding: 1rem;
   display: flex;
   flex-direction: column;
-  justify-content: space-between;
+  justify-content: center;
   align-items: center;
-}
+  min-height: 60px;
 
-.publish-card-title {
-  font-size: 16px;
-  font-weight: bold;
-  color: #333;
-  text-align: center;
-  margin-bottom: 10px;
-}
+  // Tablet and up
+  @media (min-width: 768px) {
+    padding: 1.25rem;
+    min-height: 70px;
+  }
 
-.publish-card-controls {
-  display: flex;
-  align-items: center;
-  gap: 10px;
-}
+  .publish-card-title {
+    font-size: 0.95rem;
+    font-weight: 600;
+    color: #333;
+    text-align: center;
+    line-height: 1.3;
+    margin: 0;
+    display: -webkit-box;
+    -webkit-line-clamp: 2;
+    line-clamp: 2;
+    -webkit-box-orient: vertical;
+    overflow: hidden;
+    text-overflow: ellipsis;
 
-.control-button {
-  background: none;
-  border: none;
-  color: #007bff;
-  font-size: 20px;
-  cursor: pointer;
-  transition: color 0.3s, transform 0.2s;
-}
+    // Tablet and up
+    @media (min-width: 768px) {
+      font-size: 1rem;
+      line-height: 1.4;
+    }
 
-.control-button:hover {
-  color: #0056b3;
-  transform: scale(1.1);
-}
-
-/* Dots for Swipe Indicators */
-.dots {
-  display: flex;
-  gap: 5px;
-}
-
-.dot {
-  width: 8px;
-  height: 8px;
-  border-radius: 50%;
-  background-color: #ddd;
-  transition: background-color 0.3s;
-}
-
-.dot.active {
-  background-color: #007bff;
+    // Desktop and up
+    @media (min-width: 1024px) {
+      font-size: 1.05rem;
+    }
+  }
 }

@@ -25,7 +25,7 @@ const GigsCard = ({
 
   return (
     <div className="gigs-overview-card">
-      <form className="gigs-form-body">
+      <div className="gigs-form-body">
         {/* Gig Title Section */}
         <div className="gigs-card-section">
           <div className="gigs-card-details">
@@ -34,7 +34,7 @@ const GigsCard = ({
               Your gig title is the most important place to include keywords that Clients would likely use to search for a service like yours.
             </p>
           </div>
-          <div className="gigs-card-input full-width">
+          <div className="gigs-card-input">
             <textarea
               rows={3}
               value={formData.title}
@@ -58,7 +58,7 @@ const GigsCard = ({
             <h3>Category</h3>
             <p>Choose the category and sub-category most suitable for your Gig.</p>
           </div>
-          <div className="gigs-card-input double-dropdown">
+          <div className="gigs-card-input">
             <select
               id="category"
               onChange={(e) => {
@@ -87,7 +87,12 @@ const GigsCard = ({
           {/* Subcategory */}
           {formData.category && (
             <div className="subcategory-section">
-              <h4>Select Subcategories</h4>
+              <div className="subcategory-header">
+                <h4>Select Subcategories</h4>
+                <span className="subcategory-count">
+                  {formData.subcategory.length} of 5 selected
+                </span>
+              </div>
               <div 
                 className={`subcategory-checkbox-group ${validationErrors.subcategory ? 'error' : ''}`}
                 onMouseEnter={() => onFieldHover && onFieldHover('subcategory')}
@@ -111,7 +116,7 @@ const GigsCard = ({
                         }
                       }}
                     />
-                    <span>{subCategory}</span>
+                    <span className="checkbox-label">{subCategory}</span>
                   </label>
                 ))}
               </div>
@@ -132,7 +137,7 @@ const GigsCard = ({
               Tag your Gig with buzz words that are relevant to the services you offer. Use all 5 tags to get found.
             </p>
           </div>
-          <div className="gigs-card-input full-width">
+          <div className="gigs-card-input">
             <input
               type="text"
               onChange={(e) => onSearchTagChange(e.target.value.split(","))}
@@ -146,9 +151,18 @@ const GigsCard = ({
                 {validationErrors.searchTags}
               </div>
             )}
+            {formData.searchTags && formData.searchTags.length > 0 && (
+              <div className="tags-preview">
+                {formData.searchTags.map((tag, index) => (
+                  <span key={index} className="tag-pill">
+                    {tag.trim()}
+                  </span>
+                ))}
+              </div>
+            )}
           </div>
         </div>
-      </form>
+      </div>
     </div>
   );
 };

@@ -1,165 +1,4 @@
-// import React, { useState } from "react";
-// import "./Pricing.scss";
-
-// const PricingTable = ({ onPricingChange }) => {
-//   const [pricing, setPricing] = useState({
-//     Basic: { name: "", details: "", deliveryTime: "", amount: "" },
-//     Standard: { name: "", details: "", deliveryTime: "", amount: "" },
-//     Premium: { name: "", details: "", deliveryTime: "", amount: "" },
-//   });
-
-//   const handleInputChange = (plan, field, value) => {
-//     const updatedPricing = { ...pricing, [plan]: { ...pricing[plan], [field]: value } };
-//     setPricing(updatedPricing);
-//     onPricingChange(updatedPricing);
-//   };
-
-
-//   return (
-//     <div className="pricing-table">
-//       <div className="pricing-table-header">
-//         <h3>Price and Packages</h3>
-//         <p>Create packages and select prices for each offering.</p>
-//       </div>
-
-//       <table className="table-styles">
-//         <thead>
-//           <tr>
-//             <th>Basic</th>
-//             <th>Standard</th>
-//             <th>Premium</th>
-//           </tr>
-//         </thead>
-//         <tbody>
-//           {/* Name Your Package */}
-//           <tr>
-//             <td>
-//               <input
-//                 type="text"
-//                 value={pricing.Basic.name}
-//                 onChange={(e) => handleInputChange("Basic", "name", e.target.value)}
-//                 placeholder="Basic Package"
-//               />
-//             </td>
-//             <td>
-//               <input
-//                 type="text"
-//                 value={pricing.Standard.name}
-//                 onChange={(e) => handleInputChange("Standard", "name", e.target.value)}
-//                 placeholder="Standard Package"
-//               />
-//             </td>
-//             <td>
-//               <input
-//                 type="text"
-//                 value={pricing.Premium.name}
-//                 onChange={(e) => handleInputChange("Premium", "name", e.target.value)}
-//                 placeholder="Premium Package"
-//               />
-//             </td>
-//           </tr>
-
-//           {/* Describe Details */}
-//           <tr>
-//             <td>
-//               <textarea
-//                 value={pricing.Basic.details}
-//                 onChange={(e) => handleInputChange("Basic", "details", e.target.value)}
-//                 placeholder="Describe tasks for Basic package and sepreate with ;"
-//               />
-//             </td>
-//             <td>
-//               <textarea
-//                 value={pricing.Standard.details}
-//                 onChange={(e) => handleInputChange("Standard", "details", e.target.value)}
-//                 placeholder="Describe tasks for Standard package and sepreate with ;"
-//               />
-//             </td>
-//             <td>
-//               <textarea
-//                 value={pricing.Premium.details}
-//                 onChange={(e) => handleInputChange("Premium", "details", e.target.value)}
-//                 placeholder="Describe tasks for Premium package and sepreate with ;"
-//               />
-//             </td>
-//           </tr>
-
-//           {/* Delivery Time */}
-//           <tr>
-//             <td>
-//               <select
-//                 value={pricing.Basic.deliveryTime}
-//                 onChange={(e) => handleInputChange("Basic", "deliveryTime", e.target.value)}
-//               >
-//                 <option value="">Select Delivery Time</option>
-//                 <option value="1 Day">1 Day</option>
-//                 <option value="3 Days">3 Days</option>
-//                 <option value="7 Days">7 Days</option>
-//               </select>
-//             </td>
-//             <td>
-//               <select
-//                 value={pricing.Standard.deliveryTime}
-//                 onChange={(e) => handleInputChange("Standard", "deliveryTime", e.target.value)}
-//               >
-//                 <option value="">Select Delivery Time</option>
-//                 <option value="1 Day">1 Day</option>
-//                 <option value="3 Days">3 Days</option>
-//                 <option value="7 Days">7 Days</option>
-//               </select>
-//             </td>
-//             <td>
-//               <select
-//                 value={pricing.Premium.deliveryTime}
-//                 onChange={(e) => handleInputChange("Premium", "deliveryTime", e.target.value)}
-//               >
-//                 <option value="">Select Delivery Time</option>
-//                 <option value="1 Day">1 Day</option>
-//                 <option value="3 Days">3 Days</option>
-//                 <option value="7 Days">7 Days</option>
-//               </select>
-//             </td>
-//           </tr>
-
-//           {/* Minimum Amount */}
-//           <tr>
-//             <td className="amount-row">
-//               <input
-//                 type="number"
-//                 value={pricing.Basic.amount}
-//                 onChange={(e) => handleInputChange("Basic", "amount", e.target.value)}
-//                 placeholder="₦0.00"
-//               />
-//             </td>
-//             <td className="amount-row">
-//               <input
-//                 type="number"
-//                 value={pricing.Standard.amount}
-//                 onChange={(e) => handleInputChange("Standard", "amount", e.target.value)}
-//                 placeholder="₦0.00"
-//               />
-//             </td>
-//             <td className="amount-row">
-//               <input
-//                 type="number"
-//                 value={pricing.Premium.amount}
-//                 onChange={(e) => handleInputChange("Premium", "amount", e.target.value)}
-//                 placeholder="₦0.00"
-//               />
-//             </td>
-//           </tr>
-//         </tbody>
-//       </table>
-//     </div>
-//   );
-// }
-
-// export default PricingTable;
-
-
-
-
-import React, { useState } from "react";
+import React from "react";
 import "./Pricing.scss";
 
 const PricingTable = ({ pricing, onPricingChange, onFieldFocus, onFieldBlur, onFieldHover, onFieldLeave, validationErrors = {} }) => {
@@ -167,6 +6,7 @@ const PricingTable = ({ pricing, onPricingChange, onFieldFocus, onFieldBlur, onF
     const updatedPricing = { ...pricing, [plan]: { ...pricing[plan], [field]: value } };
     onPricingChange(updatedPricing);
   };
+
   const getFieldError = (plan, field) => {
     return validationErrors[plan.toLowerCase()]?.[field];
   };
@@ -175,65 +15,93 @@ const PricingTable = ({ pricing, onPricingChange, onFieldFocus, onFieldBlur, onF
     return !!getFieldError(plan, field);
   };
 
-
   return (
-    <div className="pricing-card">
-      <div className="pricing-header">
-        <h3>Pricing</h3>
-        <p>Set up your service price and details for the Basic package.</p>
+    <div className="pricing-table">
+      <div className="pricing-table-header">
+        <h3>Pricing & Package</h3>
+        <p>Create your service package and set your pricing.</p>
         {validationErrors.general && (
-          <div className="validation-error general-error">
+          <div className="general-error">
             {validationErrors.general}
           </div>
         )}
-        {validationErrors.progression && (
-          <div className="validation-error general-error">
-            {validationErrors.progression}
-          </div>
-        )}
       </div>
 
-      <div className="pricing-field">
-        <label>Package Name</label>
-        <input
-          type="text"
-          placeholder="Basic Package"
-          value={basic.name}
-          onChange={(e) => handleChange("name", e.target.value)}
-        />
-      </div>
+      <div className="pricing-form-container">
+        <div className="pricing-field">
+          <label>Package Name</label>
+          <input
+            type="text"
+            value={pricing.Basic.name}
+            onChange={(e) => handleInputChange("Basic", "name", e.target.value)}
+            onFocus={() => onFieldFocus && onFieldFocus('basic-name')}
+            onBlur={onFieldBlur}
+            placeholder="Basic Package"
+            className={hasFieldError("Basic", "name") ? 'error' : ''}
+          />
+          {getFieldError("Basic", "name") && (
+            <div className="validation-error">
+              {getFieldError("Basic", "name")}
+            </div>
+          )}
+        </div>
 
-      <div className="pricing-field">
-        <label>Package Details</label>
-        <textarea
-          placeholder="Describe tasks for this package (separate by semicolons)"
-          value={basic.details}
-          onChange={(e) => handleChange("details", e.target.value)}
-          rows={3}
-        />
-      </div>
+        <div className="pricing-field">
+          <label>Package Details</label>
+          <textarea
+            value={pricing.Basic.details}
+            onChange={(e) => handleInputChange("Basic", "details", e.target.value)}
+            onFocus={() => onFieldFocus && onFieldFocus('basic-details')}
+            onBlur={onFieldBlur}
+            placeholder="Describe tasks for this package (separate with semicolons)"
+            className={hasFieldError("Basic", "details") ? 'error' : ''}
+            rows={4}
+          />
+          {getFieldError("Basic", "details") && (
+            <div className="validation-error">
+              {getFieldError("Basic", "details")}
+            </div>
+          )}
+        </div>
 
-      <div className="pricing-field">
-        <label>Delivery Time</label>
-        <select
-          value={basic.deliveryTime}
-          onChange={(e) => handleChange("deliveryTime", e.target.value)}
-        >
-          <option value="">Select Delivery Time</option>
-          <option value="1 Day">1 Day</option>
-          <option value="3 Days">3 Days</option>
-          <option value="7 Days">7 Days</option>
-        </select>
-      </div>
+        <div className="pricing-field">
+          <label>Service Frequency</label>
+          <select
+            value={pricing.Basic.deliveryTime}
+            onChange={(e) => handleInputChange("Basic", "deliveryTime", e.target.value)}
+            onFocus={() => onFieldFocus && onFieldFocus('basic-delivery')}
+            onBlur={onFieldBlur}
+            className={hasFieldError("Basic", "deliveryTime") ? 'error' : ''}
+          >
+            <option value="">Select Service Frequency</option>
+            <option value="1 Day Per Week">1 Day Per Week Service</option>
+            <option value="3 Days Per Week">3 Days Per Week Service</option>
+            <option value="5+ Days Per Week">5+ Days Per Week Service</option>
+          </select>
+          {getFieldError("Basic", "deliveryTime") && (
+            <div className="validation-error">
+              {getFieldError("Basic", "deliveryTime")}
+            </div>
+          )}
+        </div>
 
-      <div className="pricing-field">
-        <label>Price (₦)</label>
-        <input
-          type="number"
-          placeholder="₦0.00"
-          value={basic.amount}
-          onChange={(e) => handleChange("amount", e.target.value)}
-        />
+        <div className="pricing-field">
+          <label>Price (₦)</label>
+          <input
+            type="number"
+            value={pricing.Basic.amount}
+            onChange={(e) => handleInputChange("Basic", "amount", e.target.value)}
+            onFocus={() => onFieldFocus && onFieldFocus('basic-amount')}
+            onBlur={onFieldBlur}
+            placeholder="₦0.00"
+            className={hasFieldError("Basic", "amount") ? 'error' : ''}
+          />
+          {getFieldError("Basic", "amount") && (
+            <div className="validation-error">
+              {getFieldError("Basic", "amount")}
+            </div>
+          )}
+        </div>
       </div>
     </div>
   );

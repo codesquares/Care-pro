@@ -3,7 +3,7 @@ import GigsCard from "./GigsCard";
 import PageBar from "./PageBar";
 import PricingTable from "./Pricing";
 import GalleryUploads from "./Gallery";
-import GuidelinesCard from "./GuidelinesCard";
+import GuidelinesCard from "./GuidelinesCard_fixed";
 import "./gigs.scss";
 import "./Pricing.scss";
 import "./galleryUploads.scss";
@@ -31,11 +31,6 @@ const GigsForm = () => {
   const [modalDescription, setModalDescription] = useState("");
   const [buttonText, setButtonText] = useState("okay");
   const [buttonBgColor, setButtonBgColor] = useState("#34A853");
-<<<<<<< HEAD
-=======
-  const source = "/src/assets/dog_on_a_leash.jpg";
-  // const alt = "Dog on a leash";
->>>>>>> d3a8f7d97cb25569b4a5ab53a34841907a9b133b
   const [serverMessage, setServerMessage] = useState("");
   const [isSubmitted, setIsSubmitted] = useState(null);
   const [validationErrors, setValidationErrors] = useState({});
@@ -519,7 +514,6 @@ const GigsForm = () => {
       </div>
 
       <div className="gigs-form-body">
-<<<<<<< HEAD
         <div className="gigs-form-content">
           <div className="main-content">
             <PageBar 
@@ -609,50 +603,6 @@ const GigsForm = () => {
               )}
             </div>
           </div>
-=======
-        <PageBar pages={pages} currentPage={currentPage}
-         onPageClick={(pageIndex) => setCurrentPage(pageIndex)}
-         />
-        <br />
-        {currentPage === 0 && (
-          <GigsCard
-            categories={categories}
-            onCategoryChange={handleCategoryChange}
-            onSubCategoryChange={handleSubCategoryChange}
-            onSearchTagChange={handleSearchTagChange}
-            onTitleChange={handleTitleChange}
-            formData={formData}
-          />
-        )}
-        {currentPage === 1 && (
-          <PricingTable
-            pricing={formData.pricing}
-            onPricingChange={(updatedPricing) =>
-              setFormData((prev) => ({ ...prev, pricing: updatedPricing }))
-            }
-          />
-        )}
-        {currentPage === 2 && (
-          <GalleryUploads onFileChange={onFileChange} />
-        )}
-        {currentPage === 3 && (
-          <PublishGig
-            image={`data:image/jpeg;base64,${formData.image1}`}
-            title={formData.title}
-            onSaveAsDraft={handleSaveAsDraft}
-            onPublish={handleSubmit}
-          />
-        )}
-        <div className="gigs-form-buttons">
-          {currentPage < pages.length - 1 && (
-            <>
-              {currentPage > 0 && (
-                <Button className="gig-back-button" onClick={goToPreviousPage}>Back</Button>
-              )}
-              <Button className="gig-next-button" onClick={goToNextPage}>Save & Continue</Button>
-            </>
-          )}
->>>>>>> d3a8f7d97cb25569b4a5ab53a34841907a9b133b
         </div>
       </div>
 
