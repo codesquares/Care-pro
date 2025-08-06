@@ -104,11 +104,20 @@ button:disabled {
   width: 100%;
   height: auto;
   margin-bottom: 60px;
+.gigs-overview-card {
+  background: white;
+  border-radius: 8px;
+  padding: 3rem;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+  margin: 2rem 8rem;
+ 
 }
 
-.gigs-form {
+.gigs-card-section {
   display: flex;
   flex-direction: column;
+  gap: 0.75rem;
+  margin-bottom: 2rem;
   min-height: 100vh;
   overflow: visible;
 }
@@ -139,115 +148,64 @@ button:disabled {
   scroll-behavior: smooth;
 }
 
-.gigs-form-header {
-  margin-bottom: 40px;
+.gigs-card-details h3 {
+  font-size: 1rem;
+  font-weight: 600;
+  margin-bottom: 0.3rem;
 }
 
-.gigs-header {
-  display: flex;
-  height: 60px;
+.gigs-card-details p {
+  font-size: 0.875rem;
+  color: #888;
+}
+
+.gigs-card-input.full-width {
   width: 100%;
-  justify-content: space-between;
-  flex-wrap: wrap;
-  padding-top: 3rem;
-  color: black;
-  margin: auto;
 }
 
-.nav-item a {
-  text-decoration: none;
-  font-size: medium;
-  margin-right: 1rem;
-  color: black;
-}
-
-.nav-icons,
-.nav-class-icons,
-.nav-item,
-.logo-area,
-.nav-image {
-  display: flex;
-  justify-content: center;
-  align-items: center;
-  margin: 5px;
-}
-
-.nav-class-icons {
-  border-radius: 8%;
-  padding: 5px;
-}
-
-.icon {
-  color: black;
-  background-color: #f4f4f4;
-}
-
-.nav-image img {
-  height: 30px;
-  width: 30px;
-  border-radius: 50%;
-}
-
-.logo-area {
-  margin-left: 5px;
-}
-
-.logo-area img {
+.gigs-card-input textarea {
+  width: 100%;
   height: 100px;
-  width: 100px;
-  border-radius: 50%;
-  margin-right: 30px;
+  padding: 1rem;
+  border-radius: 8px;
+  border: 1px solid #ccc;
+  resize: none;
+  font-size: 1rem;
 }
 
-.page-number.complete {
-  background: green;
-  color: white;
-  font-size: 20px;
-  font-weight: bold;
+.gigs-card-input input[type="text"] {
+  width: 100%;
+  padding: 0.75rem;
+  border-radius: 8px;
+  border: 1px solid #ccc;
+  margin-bottom: 0.5rem;
+  font-size: 1rem;
 }
 
-.page-bar {
+.gigs-card-input.double-dropdown {
   display: flex;
-  gap: 10px;
-  align-items: center;
-  padding: 10px;
-  background: white;
-  width: 80%;
-  border-radius: 16px;
-  overflow: hidden;
-  border: 2px solid #f4f4f4;
+  flex-direction: row;
+  gap: 1rem;
+  width: 100%;
 }
 
-.button {
-  background: gray;
-  border: none;
-  border-radius: 10px;
-  padding: 10px 20px;
-  color: white;
-  font-weight: bold;
+.gigs-card-input select {
+  width: 100%;
+  padding: 0.75rem;
+  font-size: 1rem;
+  border-radius: 8px;
+  border: 1px solid #ccc;
+  appearance: none;
 }
 
-.page {
+.tag-preview {
   display: flex;
-  align-items: center;
-  gap: 8px;
+  flex-wrap: wrap;
+  gap: 0.5rem;
 }
 
-.page-number {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  border-radius: 50%;
-  background: rgb(69, 67, 67);
-  color: white;
-  width: 40px;
-  height: 40px;
-  font-size: 16px;
-  font-weight: bold;
-}
-
-.page-header {
-  font-size: 16px;
+.tag-pill {
+  background-color: #f2f2f2;
   color: #333;
 }
 
@@ -276,131 +234,48 @@ button:disabled {
   flex-wrap: wrap;
   gap: 30px;
   justify-content: space-between;
+  border-radius: 20px;
+  padding: 0.4rem 0.8rem;
+  font-size: 0.875rem;
+  cursor: default;
+  display: inline-flex;
   align-items: center;
 }
 
-.gigs-card-details {
-  display: flex;
-  flex-direction: column;
-  color: black;
-  width: 40%;
-  gap: 4px;
-}
 
-.gigs-card-title-instructions,
-.gigs-card-category-instructions,
-.gigs-card-search-tags-instructions {
-  font-size: smaller;
-  font-weight: 100;
-  color: rgb(196, 188, 188);
-}
 
-.gigs-card-input {
-  margin-right: auto;
+.form-footer {
   display: flex;
   justify-content: flex-start;
-  width: 50%;
-
-  input {
-    width: 100%;
-    max-width: 300px;
-  }
+  margin-top: 1rem;
 }
 
 .gigs-form-buttons {
   display: flex;
+  gap: 1rem;
+  margin: 2rem 7rem 8rem;
   width: 80%;
   justify-content: flex-end;
   margin-top: 20px;
   gap: 5px;
 }
 
-.gigs-card-input select {
-  width: 100%;
-  max-width: 400px;
-  padding: 10px;
-  height: 45px;
-  font-size: 14px;
+.gig-back-button,
+.gig-next-button {
+  padding: 0.75rem 1.5rem;
+  font-size: 1rem;
   border-radius: 8px;
-  border: 1px solid #ccc;
-  background-color: #fff;
-  appearance: none;
-  margin-bottom: 12px;
-  white-space: normal;
-  text-overflow: unset;
-  overflow: visible;
-}
-
-
-
-.subcategory-section {
-  // margin-top: 2rem;
-  // padding-top: 2rem;
-  width: 100%;
-  border-top: 1px solid #ddd;
-}
-
-.subcategory-section h4 {
-  font-size: 1.125rem;
-  font-weight: 600;
-  margin-bottom: 1rem;
-  color: #2c3e50;
-}
-
-.subcategory-checkbox-group {
-  display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
-  gap: 1rem;
-  margin-top: 1rem;
-  max-width: 100%;
-}
-
-.subcategory-checkbox {
-  display: flex;
-  align-items: center;
-  gap: 0.75rem;
-  padding: 0.75rem 1rem;
-  background-color: #f9f9f9;
-  border: 1px solid #dcdcdc;
-  border-radius: 0.75rem;
+  border: none;
+  background-color: #05668D;
+  color: white;
   cursor: pointer;
-  font-size: 0.9375rem;
-  min-height: 48px;
-  color: #333;
-  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05);
-  transition: all 0.2s ease;
-}
+  width: 10%;
+  &:hover {
+    background-color: #045a75;
+  }
+} 
 
-.checkbox-input {
-  width: 16px;
-  height: 16px;
-  accent-color: #4a90e2; /* Gives the checkbox a modern blue tint */
-  cursor: pointer;
-  display: grid;
-  place-content: center;
-}
-
-
-.subcategory-checkbox:hover {
-  background-color: #eef3ff;
-  border-color: #aac4ff;
-  box-shadow: 0 2px 8px rgba(100, 149, 237, 0.15);
-}
-
-.subcategory-checkbox input {
-  cursor: pointer;
-  accent-color: #4a90e2;
-}
-
-.subcategory-checkbox span {
-  flex: 1;
-  white-space: normal;
-  overflow: visible;
-  color: #222;
-}
-
-
-// Responsive Design
+/* Responsive */
 @media (max-width: 1200px) {
   .gigs-form-content {
     max-width: 100%;
@@ -409,17 +284,8 @@ button:disabled {
 }
 
 @media (max-width: 768px) {
-  .gigs-card {
-    padding: 20px;
-  }
-
-  .gigs-card-input,
-  .gigs-card-details {
-    width: 100%;
-  }
-
-  .gigs-card-section {
-    gap: 20px;
+  .gigs-card-input.double-dropdown {
+    flex-direction: column;
   }
   
   .gigs-form-content {

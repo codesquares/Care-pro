@@ -1,6 +1,5 @@
 import { useState } from "react";
 import "./gigs.scss";
-import Input from "../input/Input";
 
 const GigsCard = ({
   categories,
@@ -16,21 +15,28 @@ const GigsCard = ({
   validationErrors = {},
   clearValidationErrors,
 }) => {
+  const [tagsInput, setTagsInput] = useState("");
+
+  const handleTagsChange = (e) => {
+    const value = e.target.value;
+    setTagsInput(value);
+    onSearchTagChange(value.split(",").map((t) => t.trim()).filter(Boolean));
+  };
+
   return (
-    <div className="gigs-card">
-      <form>
+    <div className="gigs-overview-card">
+      <form className="gigs-form-body">
         {/* Gig Title Section */}
         <div className="gigs-card-section">
           <div className="gigs-card-details">
-            <h3>Gig Title</h3>
-            <p className="gigs-card-title-instructions">
+            <h3>Gig title</h3>
+            <p>
               Your gig title is the most important place to include keywords that Clients would likely use to search for a service like yours.
             </p>
           </div>
-          <div className="gigs-card-input">
-            <Input
-              name="titleInput"
-              type="text"
+          <div className="gigs-card-input full-width">
+            <textarea
+              rows={3}
               value={formData.title}
               onChange={(e) => onTitleChange(e.target.value)}
               onFocus={() => onFieldFocus('title')}
@@ -50,11 +56,9 @@ const GigsCard = ({
         <div className="gigs-card-section">
           <div className="gigs-card-details">
             <h3>Category</h3>
-            <p className="gigs-card-category-instructions">
-              Choose the category that best fits your gig.
-            </p>
+            <p>Choose the category and sub-category most suitable for your Gig.</p>
           </div>
-          <div className="gigs-card-input">
+          <div className="gigs-card-input double-dropdown">
             <select
               id="category"
               onChange={(e) => {
@@ -66,7 +70,7 @@ const GigsCard = ({
               value={formData.category}
               className={validationErrors.category ? 'error' : ''}
             >
-              <option value="">Select a category</option>
+              <option value="">Service Category</option>
               {Object.keys(categories).map((category) => (
                 <option key={category} value={category}>
                   {category}
@@ -120,17 +124,16 @@ const GigsCard = ({
           )}
         </div>
 
-        {/* Search Tags Section */}
+        {/* Search Tags */}
         <div className="gigs-card-section">
           <div className="gigs-card-details">
             <h3>Search Tags</h3>
-            <p className="gigs-card-search-tags-instructions">
-              Tag your Gig with buzz words that are relevant to the services you render. Use all 5 tags to help Buyers find your gig.
+            <p>
+              Tag your Gig with buzz words that are relevant to the services you offer. Use all 5 tags to get found.
             </p>
           </div>
-          <div className="gigs-card-input">
-            <Input
-              name="searchTags" 
+          <div className="gigs-card-input full-width">
+            <input
               type="text"
               onChange={(e) => onSearchTagChange(e.target.value.split(","))}
               onFocus={() => onFieldFocus('searchTags')}

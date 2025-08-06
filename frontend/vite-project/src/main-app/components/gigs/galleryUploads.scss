@@ -1,15 +1,22 @@
-/* General styling for the gallery uploads section */
-.gallery{
+.gig-gallery-uploads {
   background-color: white;
   padding: 25px;
+<<<<<<< HEAD
   width: 80%;
   padding-top: 3rem;
+=======
+  border-radius: 12px;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+  margin: 20px 8rem;
+>>>>>>> d3a8f7d97cb25569b4a5ab53a34841907a9b133b
 }
 
 .galleryImage {
-  width: 50px;
-  height: 50px;
-  border-radius: 50%;
+  width: 100px;
+  height: 100px;
+  object-fit: cover;
+  border-radius: 6px;
+  margin-bottom: 10px;
 }
 
 .placeholder-content {
@@ -45,13 +52,11 @@
   flex-wrap: wrap;
   gap: 20px;
   align-items: flex-start;
-  
 }
 
 .uploads-card-details {
-  // flex: 1 1 30%;
+  width: 30%;
   color: black;
-  width:30%;
 }
 
 .uploads-card-details h3 {
@@ -65,12 +70,12 @@
   color: #666;
   margin: 5px 0;
 }
-.uploads-card-area{
-  display:flex;
-  
+
+.uploads-card-area {
+  display: flex;
 }
+
 .uploads-card-input {
-  // flex: 1 1 50%;
   display: flex;
   justify-content: center;
   align-items: center;
@@ -83,17 +88,15 @@
     text-decoration: underline;
   }
 
-  span{
+  span {
     color: gray !important;
     font-size: 14px !important;
   }
 }
 
-/* Drag-and-drop area styling */
 .file-upload {
   width: 100%;
   max-width: 200px;
-  border: 2px  #ccc;
   border-radius: 8px;
   padding: 20px;
   text-align: center;
@@ -101,6 +104,7 @@
   cursor: pointer;
   position: relative;
   transition: border-color 0.3s, background-color 0.3s;
+  border: 2px solid #ccc;
 }
 
 .file-upload:hover {
@@ -115,26 +119,6 @@
   gap: 10px;
 }
 
-.file-upload span {
-  font-size: 16px;
-  color: #333;
-}
-
-.file-upload .browse-button {
-  padding: 10px 20px;
-  background-color: #007bff;
-  color: white;
-  border: none;
-  border-radius: 4px;
-  cursor: pointer;
-  transition: background-color 0.3s;
-}
-
-.file-upload .browse-button:hover {
-  background-color: #0056b3;
-}
-
-/* Hidden input for file selection */
 .file-upload input {
   position: absolute;
   width: 100%;
@@ -144,23 +128,3 @@
   opacity: 0;
   cursor: pointer;
 }
-.video-area{
-  display:flex;
-  justify-content: flex-start;
-  align-items: flex-start;
-}
-
-.galleryImage {
-  width: 100px;
-  height: 100px;
-  object-fit: cover;
-  border-radius: 6px;
-  margin-bottom: 10px;
-}
-.videoPreview {
-  width: 100%;
-  max-width: 200px;
-  border-radius: 8px;
-  margin-bottom: 10px;
-}
-

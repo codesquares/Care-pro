@@ -1,3 +1,4 @@
+<<<<<<< HEAD
 .pricing-table {
   padding-top:3rem;
   margin: 20px 0;
@@ -12,36 +13,138 @@
   padding:20px;
   position: relative;
   padding-bottom: 60px; /* Height for bottom table */
+=======
+// .pricing-table {
+//   padding-top:3rem;
+//   margin: 20px 0;
+//   font-family: Arial, sans-serif;
+//   display: flex;
+//   gap:10px;
+//   width:90%;
+//   height:800px;
+//   background-color: white;
+//   border-radius: 10px;
+//   box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1);
+//   padding:20px;
+//   position: relative;
+//   padding-bottom: 60px; /* Height for bottom table */
+>>>>>>> d3a8f7d97cb25569b4a5ab53a34841907a9b133b
   
-  .pricing-table-header {
-    display: flex;
-    align-items: center;
-    margin-bottom: 20px;
-    width:30%;
-    flex-direction: column;
-    align-items: flex-start;
+//   .pricing-table-header {
+//     display: flex;
+//     align-items: center;
+//     margin-bottom: 20px;
+//     width:30%;
+//     flex-direction: column;
+//     align-items: flex-start;
   
+//   h3 {
+//     font-size: 20px;
+//     font-weight: bold;
+//     margin-bottom: 10px;
+//     color:black;
+//   }
+
+//   p {
+//     font-size: 14px;
+//     color: #555;
+//     margin-bottom: 20px;
+//   }
+//   }
+
+//   .table-style-left{
+//     position: absolute;
+//     bottom: 0;
+//     left: 0;
+//     padding: 30px;
+//   }
+
+//   table {
+//     width: 100%;
+//     height:70%;
+//     border: 1px solid;
+//     border-color: black;
+//     border-collapse: collapse;
+
+//     th,td {
+//       border: 1px solid black;
+//       padding: 8px;
+//       text-align: flex-start;
+//       input, textarea, select {
+//         width: 100%;
+//         padding: 4px;
+//       }
+//     }
+
+//     th {
+//       background-color: #f4f4f4;
+//       font-weight: bold;
+//       color:black;
+//     }
+    
+//   textarea {
+//     resize: vertical;
+//     height: 60px;
+//     border: 0;
+//   }
+
+//   select {
+//     cursor: pointer;
+//     border: 0;
+//   }  
+//   }
+// }
+
+// /*Class for the black text on the bottom row */
+// .amount-row{
+//   input{
+//     color: black;
+//   }
+//   ::placeholder {
+//     color: black;
+//   }
+// }
+
+
+.pricing-card {
+  background: white;
+  width: 90%;
+  // max-width: 600px;
+  margin: 2rem auto;
+  padding: 2rem;
+  border-radius: 12px;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05);
+  font-family: "Arial", sans-serif;
+}
+
+.pricing-header {
+  margin-bottom: 1.5rem;
+
   h3 {
-    font-size: 20px;
-    font-weight: bold;
-    margin-bottom: 10px;
-    color:black;
+    font-size: 1.25rem;
+    font-weight: 600;
+    margin-bottom: 0.5rem;
+    color: #000;
   }
 
   p {
-    font-size: 14px;
+    font-size: 0.95rem;
     color: #555;
-    margin-bottom: 20px;
   }
+}
+
+.pricing-field {
+  display: flex;
+  flex-direction: column;
+  margin-bottom: 1.5rem;
+
+  label {
+    font-size: 0.95rem;
+    color: #333;
+    margin-bottom: 0.5rem;
   }
 
-  .table-style-left{
-    position: absolute;
-    bottom: 0;
-    left: 0;
-    padding: 30px;
-  }
-
+<<<<<<< HEAD
   table {
     width: 100%;
     height:70%;
@@ -87,27 +190,37 @@
       color:black;
     }
     
+=======
+  input,
+  select,
+>>>>>>> d3a8f7d97cb25569b4a5ab53a34841907a9b133b
+  textarea {
+    padding: 0.75rem 1rem;
+    border: 1px solid #ddd;
+    border-radius: 8px;
+    font-size: 1rem;
+    color: #222;
+    background-color: #fff;
+  }
+
+  input::placeholder {
+    color: #aaa;
+  }
+
   textarea {
     resize: vertical;
-    height: 60px;
-    border: 0;
-  }
-
-  select {
-    cursor: pointer;
-    border: 0;
-  }  
+    min-height: 80px;
   }
 }
 
-/*Class for the black text on the bottom row */
-.amount-row{
-  input{
-    color: black;
-  }
-  ::placeholder {
-    color: black;
+/* Responsive */
+@media (max-width: 768px) {
+  .pricing-card {
+    padding: 1.5rem;
   }
 }
-
-
+.page-bar-container {
+  width: 100%;
+  padding: 1rem 8rem;
+  background-color: #f9f9f9;
+}
