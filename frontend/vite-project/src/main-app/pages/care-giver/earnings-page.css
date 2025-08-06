@@ -1,0 +1,722 @@
+/* Earnings Page Styles */
+.earnings-page-container {
+  font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: 32px;
+  background-color: #f8f9fa;
+  min-height: 100vh;
+}
+
+.earnings-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 40px;
+}
+
+.earnings-title {
+  font-size: 32px;
+  font-weight: 700;
+  color: #2c3e50;
+  margin: 0;
+}
+
+.withdraw-earnings-btn {
+  background: #3498db;
+  color: white;
+  padding: 14px 28px;
+  border-radius: 8px;
+  text-decoration: none;
+  font-weight: 600;
+  font-size: 16px;
+  transition: all 0.3s ease;
+  border: none;
+  cursor: pointer;
+  box-shadow: 0 2px 8px rgba(52, 152, 219, 0.2);
+}
+
+.withdraw-earnings-btn:hover {
+  background: #2980b9;
+  transform: translateY(-1px);
+  box-shadow: 0 4px 12px rgba(52, 152, 219, 0.3);
+}
+
+/* Stats Grid */
+.earnings-stats-grid {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 24px;
+  margin-bottom: 48px;
+}
+
+.stat-card {
+  background: white;
+  padding: 28px;
+  border-radius: 16px;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
+  display: flex;
+  align-items: center;
+  gap: 20px;
+  transition: all 0.3s ease;
+  border: 1px solid #f0f0f0;
+}
+
+.stat-card:hover {
+  transform: translateY(-4px);
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.12);
+  border-color: #e0e0e0;
+}
+
+.stat-icon {
+  font-size: 40px;
+  width: 72px;
+  height: 72px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 16px;
+  background: #f8f9fa;
+  flex-shrink: 0;
+}
+
+.balance-card .stat-icon {
+  background: linear-gradient(135deg, #e8f5e8, #d4f4d4);
+}
+
+.orders-card .stat-icon {
+  background: linear-gradient(135deg, #e3f2fd, #bbdefb);
+}
+
+.earnings-card .stat-icon {
+  background: linear-gradient(135deg, #fff3e0, #ffe0b2);
+}
+
+.payout-card .stat-icon {
+  background: linear-gradient(135deg, #fce4ec, #f8bbd9);
+}
+
+.stat-content {
+  flex: 1;
+  min-width: 0;
+}
+
+.stat-label {
+  color: #6c757d;
+  font-size: 14px;
+  margin: 0 0 8px 0;
+  font-weight: 500;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+.stat-value {
+  color: #2c3e50;
+  font-size: 28px;
+  font-weight: 700;
+  margin: 0;
+  line-height: 1.2;
+}
+
+/* Chart Section */
+.earnings-chart-section {
+  background: white;
+  border-radius: 16px;
+  padding: 32px;
+  margin-bottom: 48px;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
+  border: 1px solid #f0f0f0;
+}
+
+.chart-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 24px;
+}
+
+.chart-header h3 {
+  color: #2c3e50;
+  font-size: 20px;
+  font-weight: 600;
+  margin: 0;
+}
+
+.chart-controls {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+}
+
+.chart-year {
+  color: #6c757d;
+  font-size: 14px;
+  font-weight: 500;
+  padding: 6px 12px;
+  background: #f8f9fa;
+  border-radius: 6px;
+}
+
+.chart-info-btn {
+  background: #f8f9fa;
+  border: 1px solid #dee2e6;
+  font-size: 16px;
+  cursor: pointer;
+  padding: 8px;
+  border-radius: 8px;
+  transition: all 0.2s ease;
+  color: #6c757d;
+}
+
+.chart-info-btn:hover {
+  background: #e9ecef;
+  color: #495057;
+}
+
+.earnings-amount {
+  margin-bottom: 32px;
+  text-align: left;
+}
+
+.amount-value {
+  font-size: 36px;
+  font-weight: 700;
+  color: #2c3e50;
+}
+
+.earnings-chart {
+  position: relative;
+}
+
+.chart-bars {
+  display: flex;
+  align-items: end;
+  justify-content: space-between;
+  height: 160px;
+  margin-bottom: 16px;
+  gap: 12px;
+  padding: 0 8px;
+}
+
+.chart-bar {
+  background: linear-gradient(180deg, #3498db, #2980b9);
+  border-radius: 6px 6px 0 0;
+  min-height: 24px;
+  flex: 1;
+  max-width: 32px;
+  transition: all 0.3s ease;
+  box-shadow: 0 2px 4px rgba(52, 152, 219, 0.2);
+}
+
+.chart-bar:hover {
+  background: linear-gradient(180deg, #2980b9, #1f4e79);
+  transform: scaleY(1.05);
+}
+
+.chart-labels {
+  display: flex;
+  justify-content: space-between;
+  font-size: 13px;
+  color: #6c757d;
+  font-weight: 500;
+  padding: 0 16px;
+}
+
+.no-chart-data {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  height: 160px;
+  background: #f8f9fa;
+  border-radius: 12px;
+  border: 2px dashed #dee2e6;
+}
+
+.no-chart-data p {
+  color: #6c757d;
+  font-size: 16px;
+  font-style: italic;
+  margin: 0;
+}
+
+/* Transactions Section */
+.transactions-section {
+  background: white;
+  border-radius: 16px;
+  padding: 32px;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
+  border: 1px solid #f0f0f0;
+}
+
+.transactions-title {
+  color: #2c3e50;
+  font-size: 20px;
+  font-weight: 600;
+  margin: 0 0 24px 0;
+}
+
+.transactions-table-container {
+  overflow-x: auto;
+  border-radius: 12px;
+  border: 1px solid #f0f0f0;
+}
+
+.transactions-table {
+  width: 100%;
+  border-collapse: separate;
+  border-spacing: 0;
+  border-radius: 12px;
+  overflow: hidden;
+}
+
+.transactions-table thead {
+  background: linear-gradient(135deg, #f8f9fa, #f1f3f4);
+}
+
+.transactions-table th {
+  padding: 20px 16px;
+  text-align: left;
+  font-weight: 600;
+  color: #495057;
+  font-size: 14px;
+  border-bottom: 2px solid #dee2e6;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+.transactions-table td {
+  padding: 20px 16px;
+  border-bottom: 1px solid #f0f0f0;
+  color: #495057;
+  font-size: 14px;
+  font-weight: 500;
+}
+
+.transactions-table tbody tr:last-child td {
+  border-bottom: none;
+}
+
+.transactions-table tbody tr:hover {
+  background-color: rgba(52, 152, 219, 0.02);
+}
+
+.activity-cell {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.activity-icon {
+  font-size: 18px;
+  width: 32px;
+  height: 32px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 8px;
+  font-size: 14px;
+}
+
+.activity-icon.earning {
+  background: linear-gradient(135deg, #e8f5e8, #d4f4d4);
+}
+
+.activity-icon.withdrawal {
+  background: linear-gradient(135deg, #ffebee, #ffcdd2);
+}
+
+.amount {
+  font-weight: 600;
+  font-size: 15px;
+}
+
+.amount.positive {
+  color: #28a745;
+}
+
+.amount.negative {
+  color: #dc3545;
+}
+
+.no-transactions {
+  text-align: center;
+  color: #6c757d;
+  padding: 60px 20px;
+  font-style: italic;
+  font-size: 16px;
+}
+
+/* Loading and Error States */
+.loading-spinner {
+  text-align: center;
+  padding: 80px 20px;
+  font-size: 18px;
+  color: #6c757d;
+}
+
+.error-message {
+  background-color: #f8d7da;
+  color: #721c24;
+  border: 1px solid #f5c6cb;
+  border-radius: 12px;
+  padding: 20px;
+  text-align: center;
+  margin: 20px 0;
+  font-weight: 500;
+}
+
+/* Responsive Design */
+@media (max-width: 1024px) {
+  .earnings-stats-grid {
+    grid-template-columns: repeat(2, 1fr);
+    gap: 20px;
+  }
+  
+  .stat-card {
+    padding: 24px;
+  }
+  
+  .stat-icon {
+    width: 64px;
+    height: 64px;
+    font-size: 36px;
+  }
+  
+  .stat-value {
+    font-size: 24px;
+  }
+}
+
+@media (max-width: 768px) {
+  .earnings-page-container {
+    padding: 20px;
+  }
+
+  .earnings-header {
+    flex-direction: column;
+    gap: 20px;
+    align-items: stretch;
+  }
+
+  .earnings-title {
+    font-size: 28px;
+    text-align: center;
+  }
+
+  .withdraw-earnings-btn {
+    text-align: center;
+    padding: 16px 24px;
+    font-size: 16px;
+  }
+
+  .earnings-stats-grid {
+    grid-template-columns: 1fr;
+    gap: 16px;
+    margin-bottom: 32px;
+  }
+
+  .stat-card {
+    padding: 20px;
+    gap: 16px;
+  }
+
+  .stat-icon {
+    width: 56px;
+    height: 56px;
+    font-size: 32px;
+  }
+
+  .stat-value {
+    font-size: 22px;
+  }
+
+  .earnings-chart-section,
+  .transactions-section {
+    padding: 24px;
+    margin-bottom: 24px;
+  }
+
+  .chart-header {
+    flex-direction: column;
+    gap: 16px;
+    align-items: stretch;
+  }
+
+  .chart-header h3 {
+    text-align: center;
+  }
+
+  .amount-value {
+    font-size: 30px;
+    text-align: center;
+  }
+
+  .chart-bars {
+    height: 120px;
+    gap: 8px;
+  }
+
+  .chart-labels {
+    font-size: 11px;
+    padding: 0 12px;
+  }
+
+  .transactions-table-container {
+    margin: 0 -24px;
+    padding: 0 24px;
+  }
+
+  .transactions-table th,
+  .transactions-table td {
+    padding: 14px 10px;
+    font-size: 13px;
+  }
+
+  .activity-cell {
+    flex-direction: column;
+    gap: 6px;
+    text-align: center;
+  }
+
+  .activity-icon {
+    width: 28px;
+    height: 28px;
+    font-size: 14px;
+  }
+}
+
+@media (max-width: 480px) {
+  .earnings-page-container {
+    padding: 16px;
+  }
+
+  .earnings-title {
+    font-size: 24px;
+  }
+
+  .withdraw-earnings-btn {
+    padding: 14px 20px;
+    font-size: 15px;
+  }
+
+  .stat-card {
+    padding: 18px;
+    flex-direction: column;
+    text-align: center;
+    gap: 12px;
+  }
+
+  .stat-icon {
+    width: 48px;
+    height: 48px;
+    font-size: 28px;
+  }
+
+  .stat-value {
+    font-size: 20px;
+  }
+
+  .earnings-chart-section,
+  .transactions-section {
+    padding: 20px;
+  }
+
+  .amount-value {
+    font-size: 26px;
+  }
+
+  .chart-bars {
+    height: 100px;
+    gap: 6px;
+  }
+
+  .chart-labels {
+    font-size: 10px;
+    padding: 0 8px;
+  }
+
+  .transactions-table th,
+  .transactions-table td {
+    padding: 12px 6px;
+    font-size: 12px;
+  }
+
+  .activity-icon {
+    width: 24px;
+    height: 24px;
+    font-size: 12px;
+  }
+}
+
+/* Large Desktop Styles */
+@media (min-width: 1400px) {
+  .earnings-page-container {
+    max-width: 1400px;
+    padding: 40px;
+  }
+  
+  .earnings-stats-grid {
+    gap: 32px;
+    margin-bottom: 56px;
+  }
+  
+  .stat-card {
+    padding: 32px;
+    gap: 24px;
+  }
+  
+  .stat-icon {
+    width: 80px;
+    height: 80px;
+    font-size: 44px;
+  }
+  
+  .stat-value {
+    font-size: 32px;
+  }
+  
+  .earnings-chart-section,
+  .transactions-section {
+    padding: 40px;
+  }
+  
+  .chart-bars {
+    height: 180px;
+    gap: 16px;
+  }
+}
+
+/* Mobile Responsive Design */
+@media (max-width: 768px) {
+  .earnings-page-container {
+    padding: 16px;
+  }
+
+  .earnings-header {
+    flex-direction: column;
+    gap: 16px;
+    align-items: stretch;
+  }
+
+  .earnings-title {
+    font-size: 24px;
+    text-align: center;
+  }
+
+  .withdraw-earnings-btn {
+    text-align: center;
+    padding: 14px 20px;
+  }
+
+  .earnings-stats-grid {
+    grid-template-columns: 1fr;
+    gap: 16px;
+  }
+
+  .stat-card {
+    padding: 20px;
+  }
+
+  .stat-icon {
+    font-size: 28px;
+    width: 50px;
+    height: 50px;
+  }
+
+  .stat-value {
+    font-size: 20px;
+  }
+
+  .earnings-chart-section,
+  .transactions-section {
+    padding: 20px;
+  }
+
+  .chart-header {
+    flex-direction: column;
+    gap: 12px;
+    align-items: stretch;
+  }
+
+  .chart-header h3 {
+    text-align: center;
+  }
+
+  .amount-value {
+    font-size: 28px;
+    text-align: center;
+  }
+
+  .chart-bars {
+    height: 100px;
+    gap: 4px;
+  }
+
+  .chart-labels {
+    font-size: 10px;
+    padding: 0 8px;
+  }
+
+  .transactions-table-container {
+    margin: 0 -20px;
+    padding: 0 20px;
+  }
+
+  .transactions-table th,
+  .transactions-table td {
+    padding: 12px 8px;
+    font-size: 13px;
+  }
+
+  .activity-cell {
+    flex-direction: column;
+    gap: 4px;
+    text-align: center;
+  }
+}
+
+@media (max-width: 480px) {
+  .earnings-page-container {
+    padding: 12px;
+  }
+
+  .earnings-title {
+    font-size: 20px;
+  }
+
+  .stat-card {
+    padding: 16px;
+    flex-direction: column;
+    text-align: center;
+  }
+
+  .stat-icon {
+    font-size: 24px;
+    width: 40px;
+    height: 40px;
+  }
+
+  .stat-value {
+    font-size: 18px;
+  }
+
+  .earnings-chart-section,
+  .transactions-section {
+    padding: 16px;
+  }
+
+  .amount-value {
+    font-size: 24px;
+  }
+
+  .chart-bars {
+    height: 80px;
+    gap: 2px;
+  }
+
+  .transactions-table th,
+  .transactions-table td {
+    padding: 8px 4px;
+    font-size: 12px;
+  }
+}

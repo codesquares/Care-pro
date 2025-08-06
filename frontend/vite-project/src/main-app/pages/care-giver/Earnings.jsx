@@ -52,8 +52,13 @@ const Earnings = () => {
         // setHasPendingWithdrawal(pendingStatus.hasPendingRequest);
         
          // Load withdrawal history
-        const history = await withdrawalService.getWithdrawalHistory(currentUser.id);
-        setWithdrawalHistory(history);
+        try {
+          const history = await withdrawalService.getWithdrawalHistory(currentUser.id);
+          setWithdrawalHistory(Array.isArray(history) ? history : []);
+        } catch (historyError) {
+          console.error("Error fetching withdrawal history:", historyError);
+          setWithdrawalHistory([]);
+        }
       } catch (err) {
         console.error("Error fetching earnings data:", err);
         setError("Failed to load earnings data. Please try again later.");
@@ -101,8 +106,13 @@ const Earnings = () => {
       setHasPendingWithdrawal(true);
       
      // Refresh withdrawal history
-      const history = await withdrawalService.getWithdrawalHistory(currentUser.id);
-      setWithdrawalHistory(history);
+      try {
+        const history = await withdrawalService.getWithdrawalHistory(currentUser.id);
+        setWithdrawalHistory(Array.isArray(history) ? history : []);
+      } catch (historyError) {
+        console.error("Error refreshing withdrawal history:", historyError);
+        setWithdrawalHistory([]);
+      }
       
       alert("Withdrawal request submitted successfully!");
     } catch (err) {

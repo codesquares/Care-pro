@@ -84,7 +84,7 @@ const Reviews = () => {
   // Loading state
   if (isLoadingGigs || isLoadingReviews) {
     return (
-      <div className="reviews reviews-empty">
+      <div className="reviews">
         <h3>Reviews from Clients</h3>
         <div className="spinner-container">
           <div className="spinner" />
@@ -109,11 +109,8 @@ const Reviews = () => {
     return (
       <div className="reviews reviews-empty">
         <h3>Reviews from Clients</h3>
-        <EmptyState
-          logo={<img src={clock} alt="No Reviews" style={{ width: 80 }} />}
-          title="No Reviews Yet"
-          description="Keep providing great service to receive your first review!"
-        />
+        <span className="empty-icon">💬</span>
+        <p>No reviews yet. Keep providing great service to receive your first review!</p>
       </div>
     );
   }
@@ -122,16 +119,35 @@ const Reviews = () => {
     <div className="reviews">
       <h3>Reviews from Clients</h3>
       <div className="review-list">
-        {filteredReviews.map((review) => (
-          <div key={review.id} className="review-card">
+        {filteredReviews.map((review, index) => (
+          <div key={review.id || index} className="review-card">
+            <img 
+              src={review.clientPhoto || `https://ui-avatars.com/api/?name=${encodeURIComponent(review.clientName || review.name || 'Client')}&background=3b82f6&color=ffffff&size=48`}
+              alt={review.clientName || review.name || 'Client'}
+              className="review-avatar"
+            />
             <div className="review-content">
               <div className="review-header">
-                <h4 className="review-name">{review.clientName || review.name || "Anonymous Client"}</h4>
+                <h4 className="review-author">{review.clientName || review.name || "Anonymous Client"}</h4>
                 <div className="review-rating">
-                  {"⭐".repeat(review.rating || 5)}
+                  <span className="review-stars">
+                    {"⭐".repeat(Math.max(1, Math.min(5, review.rating || 5)))}
+                  </span>
+                  <span className="review-rating-text">
+                    {review.rating || 5}/5
+                  </span>
                 </div>
               </div>
-              <p className="review-text">{review.comment || review.review}</p>
+              <p className="review-text">{review.comment || review.review || "Great service!"}</p>
+              {review.createdAt && (
+                <p className="review-date">
+                  {new Date(review.createdAt).toLocaleDateString('en-US', {
+                    year: 'numeric',
+                    month: 'long',
+                    day: 'numeric'
+                  })}
+                </p>
+              )}
             </div>
           </div>
         ))}

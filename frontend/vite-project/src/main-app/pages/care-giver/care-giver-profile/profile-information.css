@@ -1,211 +1,303 @@
-/* General Container Styling */
-.description,
-.services,
-.certifications {
-  padding: 15px 20px;
-  background: #fff;
+/* Profile Information Section Styles */
+.profile-information-section {
+  background: #ffffff;
+  border-radius: 12px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+  padding: 24px;
+  border: 1px solid #e8eaed;
+  margin-bottom: 20px;
+  width: 100%;
+  box-sizing: border-box;
+  max-width: 100%;
+  min-width: 0;
 }
 
-.description h3,
-.services h3,
-.certifications h3 {
-  font-size: 1rem;
-  font-weight: bold;
-  margin-bottom: 10px;
-  color: #333;
+.profile-information-section h3 {
+  margin: 0 0 16px 0;
+  font-size: 18px;
+  font-weight: 600;
+  color: #1a1a1a;
 }
 
-/* Description Section */
-.description p {
-  font-size: 0.9rem;
-  color: #666;
-  margin-bottom: 10px;
+.profile-information-section p {
+  font-size: 14px;
+  color: #4b5563;
+  margin: 0 0 16px 0;
   line-height: 1.5;
 }
 
-.description button {
-  background-color: #2563eb;
-  color: #fff;
-  font-size: 0.9rem;
-  padding: 8px 12px;
+.edit-description-btn {
+  background-color: #3b82f6;
+  color: white;
+  font-size: 14px;
+  padding: 8px 16px;
   border: none;
-  border-radius: 4px;
+  border-radius: 6px;
   cursor: pointer;
-  margin-top: 10px;
+  font-weight: 500;
+  transition: all 0.2s ease;
 }
 
-.description button:hover {
-  background-color: #1d4ed8;
-}
-
-/* Divider Styling */
-hr {
-  border: none;
-  height: 1px;
-  background-color: #f0f0f0;
-  margin: 10px 0;
+.edit-description-btn:hover {
+  background-color: #2563eb;
 }
 
 /* Services Section */
+.services-section {
+  background: #ffffff;
+  border-radius: 12px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+  padding: 24px;
+  border: 1px solid #e8eaed;
+  margin-bottom: 20px;
+  width: 100%;
+  box-sizing: border-box;
+  max-width: 100%;
+  min-width: 0;
+}
+
+.services-section h3 {
+  margin: 0 0 16px 0;
+  font-size: 18px;
+  font-weight: 600;
+  color: #1a1a1a;
+}
+
 .services-list {
   display: flex;
   flex-wrap: wrap;
-  gap: 10px;
-  justify-content: center;
-  margin-top: 15px;
+  gap: 8px;
+  margin-top: 0;
 }
 
-.service-item {
-  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-  color: white;
-  padding: 8px 16px;
+.service-tag {
+  background: #f3f4f6;
+  color: #374151;
+  padding: 6px 12px;
   border-radius: 20px;
-  font-size: 0.85rem;
+  font-size: 13px;
   font-weight: 500;
-  text-align: center;
-  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.15);
-  transition: all 0.3s ease;
-  cursor: default;
-  min-width: 120px;
-  flex: 0 0 auto;
+  border: 1px solid #e5e7eb;
   white-space: nowrap;
-  overflow: hidden;
-  text-overflow: ellipsis;
-}
-
-.service-item:hover {
-  transform: translateY(-2px);
-  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
-}
-
-/* Legacy styles for backward compatibility */
-.services ul {
-  list-style-type: none;
-  padding: 0;
-  margin: 0;
-}
-
-.services li {
-  font-size: 0.9rem;
-  color: #666;
-  margin: 5px 0;
-  padding-left: 15px;
-  position: relative;
-}
-
-.services li::before {
-  content: "•";
-  color: #2563eb;
-  font-weight: bold;
-  position: absolute;
-  left: 0;
 }
 
 /* Certifications Section */
-.certifications ul {
-  list-style-type: none;
-  padding: 0;
+.certifications-section {
+  background: #ffffff;
+  border-radius: 12px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+  padding: 24px;
+  border: 1px solid #e8eaed;
+  margin-bottom: 20px;
+  width: 100%;
+  box-sizing: border-box;
+  max-width: 100%;
+  min-width: 0;
+}
+
+.certifications-section h3 {
+  margin: 0 0 16px 0;
+  font-size: 18px;
+  font-weight: 600;
+  color: #1a1a1a;
+}
+
+.certifications-list {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.certification-item {
+  padding: 12px 16px;
+  background: #f8f9fa;
+  border-radius: 8px;
+  border-left: 4px solid #3b82f6;
+}
+
+.certification-item h4 {
+  margin: 0 0 4px 0;
+  font-size: 14px;
+  font-weight: 600;
+  color: #1a1a1a;
+}
+
+.certification-item p {
   margin: 0;
+  font-size: 13px;
+  color: #6b7280;
 }
 
-.certifications li {
-  margin: 5px 0;
-}
-
-.certifications a {
-  font-size: 0.9rem;
-  color: #2563eb;
+.certification-item a {
+  color: #3b82f6;
   text-decoration: none;
+  font-size: 13px;
 }
 
-.certifications a:hover {
+.certification-item a:hover {
   text-decoration: underline;
 }
 
+.add-certification-btn {
+  background: #f3f4f6;
+  color: #374151;
+  border: 2px dashed #d1d5db;
+  border-radius: 8px;
+  padding: 12px;
+  cursor: pointer;
+  font-size: 14px;
+  font-weight: 500;
+  transition: all 0.2s ease;
+}
 
+.add-certification-btn:hover {
+  border-color: #3b82f6;
+  color: #3b82f6;
+  background: #eff6ff;
+}
+
+/* Modal Styles */
 .modal-overlay {
   position: fixed;
   top: 0;
   left: 0;
   right: 0;
   bottom: 0;
-  background: rgba(0, 0, 0, 0.5);
+  background-color: rgba(0, 0, 0, 0.5);
   display: flex;
   align-items: center;
   justify-content: center;
-  z-index: 999;
+  z-index: 1000;
 }
 
 .modal-content {
   background: white;
-  padding: 20px;
-  border-radius: 8px;
-  width: 400px;
-  max-width: 90%;
+  border-radius: 12px;
+  padding: 24px;
+  max-width: 500px;
+  width: 90%;
+  max-height: 80vh;
+  overflow-y: auto;
+  box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1);
+}
+
+.modal-content h3 {
+  margin: 0 0 20px 0;
+  font-size: 18px;
+  font-weight: 600;
+  color: #1a1a1a;
+}
+
+.modal-content textarea {
+  width: 100%;
+  min-height: 120px;
+  padding: 12px;
+  border: 1px solid #d1d5db;
+  border-radius: 6px;
+  font-size: 14px;
+  line-height: 1.5;
+  resize: vertical;
+  font-family: inherit;
+  box-sizing: border-box;
+}
+
+.modal-content textarea:focus {
+  outline: none;
+  border-color: #3b82f6;
+  box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
+}
+
+.modal-content input {
+  width: 100%;
+  padding: 12px;
+  border: 1px solid #d1d5db;
+  border-radius: 6px;
+  font-size: 14px;
+  margin-bottom: 16px;
+  box-sizing: border-box;
+}
+
+.modal-content input:focus {
+  outline: none;
+  border-color: #3b82f6;
+  box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
 }
 
 .modal-actions {
-  margin-top: 1rem;
   display: flex;
+  gap: 12px;
   justify-content: flex-end;
-  gap: 1rem;
+  margin-top: 20px;
+}
+
+.modal-btn {
+  padding: 10px 20px;
+  border-radius: 6px;
+  font-size: 14px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  border: 1px solid;
+}
+
+.modal-btn.cancel {
+  background: white;
+  color: #6b7280;
+  border-color: #d1d5db;
+}
+
+.modal-btn.cancel:hover {
+  background: #f9fafb;
+}
+
+.modal-btn.save {
+  background: #3b82f6;
+  color: white;
+  border-color: #3b82f6;
+}
+
+.modal-btn.save:hover:not(:disabled) {
+  background: #2563eb;
+}
+
+.modal-btn.save:disabled {
+  background: #9ca3af;
+  border-color: #9ca3af;
+  cursor: not-allowed;
 }
 
 /* Responsive Styles */
 @media (max-width: 768px) {
-  .description,
-  .services,
-  .certifications {
-    padding: 12px 15px;
+  .profile-information-section,
+  .services-section,
+  .certifications-section {
+    padding: 16px;
   }
   
-  .description h3,
-  .services h3,
-  .certifications h3 {
-    font-size: 0.95rem;
+  .services-list {
+    gap: 6px;
   }
   
-  .description p,
-  .services li,
-  .certifications a {
-    font-size: 0.85rem;
-  }
-  
-  .description button {
-    padding: 6px 10px;
-    font-size: 0.85rem;
-  }
-  
-  .modal-content {
-    width: 350px;
-    padding: 15px;
+  .service-tag {
+    font-size: 12px;
+    padding: 5px 10px;
   }
 }
 
 @media (max-width: 480px) {
-  .description,
-  .services,
-  .certifications {
-    padding: 10px;
-  }
-  
-  .description p {
-    line-height: 1.4;
-  }
-  
-  .services li::before {
-    font-size: 0.8rem;
+  .profile-information-section,
+  .services-section,
+  .certifications-section {
+    padding: 12px;
   }
   
   .modal-content {
-    width: 100%;
-    max-width: 300px;
-    padding: 12px;
+    padding: 16px;
   }
   
   .modal-actions {
     flex-direction: column;
-    gap: 0.5rem;
+    gap: 8px;
   }
 }
 

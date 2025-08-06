@@ -14,14 +14,21 @@ const VerifyButton = ({ verificationStatus }) => {
     navigate("/app/caregiver/verification");
   };
 
-  // Don't show the button if user is already verified or verification is in progress
-  if (verificationStatus === "verified" || verificationStatus === "in_progress") {
+  // Don't show the button if verification is in progress
+  if (verificationStatus === "in_progress") {
     return null;
   }
 
   // Handle different verification statuses
   const getButtonContent = () => {
     switch (verificationStatus) {
+      case "verified":
+        return {
+          text: "Verified ✓",
+          className: "verify-button verify-button-verified",
+          showCheckmark: true,
+          disabled: true,
+        };
       case "failed":
         return {
           text: "Retry Verification",
@@ -35,7 +42,7 @@ const VerifyButton = ({ verificationStatus }) => {
         };
       default:
         return {
-          text: "Verify Account",
+          text: "Get Verified",
           className: "verify-button",
         };
     }
@@ -45,25 +52,22 @@ const VerifyButton = ({ verificationStatus }) => {
 
   return (
     <button 
-      className={buttonContent.className} 
-      onClick={handleVerifyClick}
+      className={buttonContent.className}
+      onClick={buttonContent.disabled ? undefined : handleVerifyClick}
       disabled={buttonContent.disabled}
-      style={{
-        padding: '8px 16px',
-        border: 'none',
-        borderRadius: '6px',
-        backgroundColor: buttonContent.disabled ? '#6c757d' : 
-          (verificationStatus === 'failed' ? '#dc3545' : '#007bff'),
-        color: 'white',
-        cursor: buttonContent.disabled ? 'not-allowed' : 'pointer',
-        fontSize: '14px',
-        fontWeight: '500',
-        minWidth: '150px',
-        height: '36px',
-        width: '150px'
-      }}
     >
-      {buttonContent.text}
+      {buttonContent.showCheckmark && (
+        <svg 
+          width="16" 
+          height="16" 
+          viewBox="0 0 24 24" 
+          fill="#1877F2"
+          style={{ marginRight: '4px' }}
+        >
+          <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-2 15l-5-5 1.41-1.41L10 14.17l7.59-7.59L19 8l-9 9z"/>
+        </svg>
+      )}
+      <span>{buttonContent.text}</span>
     </button>
   );
 };

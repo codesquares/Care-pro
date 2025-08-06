@@ -30,16 +30,29 @@ export const withdrawalService = {
     console.log("Auth Token:", authToken);
     
     try {
-      const response = await fetch(`${api_to_use}/withdrawalRequests`, {
+      const response = await fetch(`${api_to_use}/WithdrawalRequests`, {
         headers: {
           'Content-Type': 'application/json',
           'Authorization': `Bearer ${localStorage.getItem('authToken')}`
         }
       });
+      
+      if (!response.ok) {
+        throw new Error(`HTTP error! status: ${response.status}`);
+      }
+      
       const responseData = await response.json();
+      
+      // Ensure responseData is an array before filtering
+      if (!Array.isArray(responseData)) {
+        console.warn('Withdrawal history response is not an array:', responseData);
+        return [];
+      }
+      
       const userSpecificdata = responseData.filter(request => request.caregiverId === caregiverId);
       return userSpecificdata;
     } catch (error) {
+      console.error('Error in getWithdrawalHistory:', error);
       throw error;
     }
   },

@@ -1,75 +1,218 @@
 .gigs-section {
-    margin-top: 20px;
-    padding: 20px;
-  }
-  
-  .gigs-section h3 {
-    font-size: 1.2rem;
-    margin-bottom: 10px;
-  }
-  
-  .gigs-grid {
-    display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
-    gap: 15px;
-  }
-  
+  background: #ffffff;
+  border-radius: 12px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+  padding: 24px;
+  border: 1px solid #e8eaed;
+}
+
+.gigs-section h3 {
+  margin: 0 0 20px 0;
+  font-size: 20px;
+  font-weight: 600;
+  color: #1a1a1a;
+}
+
+/* Tab Navigation */
+.gigs-tabs {
+  display: flex;
+  margin-bottom: 24px;
+  border-bottom: 1px solid #e5e7eb;
+}
+
+.gigs-tab {
+  padding: 12px 16px;
+  background: none;
+  border: none;
+  cursor: pointer;
+  font-size: 14px;
+  font-weight: 500;
+  color: #6b7280;
+  border-bottom: 2px solid transparent;
+  transition: all 0.2s ease;
+}
+
+.gigs-tab.active {
+  color: #3b82f6;
+  border-bottom-color: #3b82f6;
+}
+
+.gigs-tab:hover {
+  color: #374151;
+}
+
+.gigs-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+  gap: 20px;
+}
+
 .gig-card {
-  background: #fff;
-  border-radius: 8px;
-  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+  background: #ffffff;
+  border-radius: 12px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
   overflow: hidden;
   text-align: center;
-  transition: transform 0.2s;
+  transition: all 0.2s ease;
   cursor: pointer;
   position: relative;
+  border: 1px solid #e8eaed;
 }
 
 .gig-card:hover {
-  transform: translateY(-5px);
-}  .gig-image {
-    width: 100%;
-    height: 120px;
-    object-fit: cover;
-  }
-  
-  .gig-title {
-    font-size: 0.95rem;
-    margin: 10px;
-    color: #333;
-  }
-  
-  .create-new {
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    flex-direction: column;
-    background: #f9fafc;
-    border: 2px dashed #ccc;
-    color: #888;
-    padding: 30px;
-  }
-  
-  .create-new .create-icon {
-    font-size: 2rem;
-    margin-bottom: 5px;
-  }
-  
-  .spinner-container {
+  transform: translateY(-2px);
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.12);
+}
+
+.gig-image {
+  width: 100%;
+  height: 160px;
+  object-fit: cover;
+  background: #f3f4f6;
+}
+
+.gig-content {
+  padding: 16px;
+}
+
+.gig-title {
+  font-size: 16px;
+  font-weight: 600;
+  margin: 0 0 8px 0;
+  color: #1a1a1a;
+  line-height: 1.4;
+}
+
+.gig-description {
+  font-size: 14px;
+  color: #6b7280;
+  margin: 0 0 12px 0;
+  line-height: 1.4;
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  line-clamp: 2;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+}
+
+.gig-actions {
+  display: flex;
+  gap: 8px;
+  justify-content: center;
+  margin-top: 12px;
+}
+
+.gig-action-btn {
+  padding: 6px 12px;
+  border: 1px solid;
+  border-radius: 6px;
+  font-size: 12px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.gig-action-btn.edit {
+  background: #eff6ff;
+  color: #3b82f6;
+  border-color: #3b82f6;
+}
+
+.gig-action-btn.edit:hover {
+  background: #dbeafe;
+}
+
+.gig-action-btn.publish {
+  background: #f0fdf4;
+  color: #22c55e;
+  border-color: #22c55e;
+}
+
+.gig-action-btn.publish:hover {
+  background: #dcfce7;
+}
+
+.gig-action-btn.pause {
+  background: #fef3c7;
+  color: #f59e0b;
+  border-color: #f59e0b;
+}
+
+.gig-action-btn.pause:hover {
+  background: #fde68a;
+}
+
+.gig-action-btn.delete {
+  background: #fef2f2;
+  color: #ef4444;
+  border-color: #ef4444;
+}
+
+.gig-action-btn.delete:hover {
+  background: #fee2e2;
+}
+
+.gig-action-btn:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+/* Create New Gig Card */
+.create-new-gig {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-direction: column;
+  background: #f9fafb;
+  border: 2px dashed #d1d5db;
+  border-radius: 12px;
+  color: #6b7280;
+  padding: 40px 20px;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  min-height: 200px;
+}
+
+.create-new-gig:hover {
+  border-color: #3b82f6;
+  color: #3b82f6;
+  background: #eff6ff;
+}
+
+.create-icon {
+  font-size: 48px;
+  margin-bottom: 12px;
+  display: block;
+}
+
+.create-text {
+  font-size: 16px;
+  font-weight: 500;
+  margin: 0;
+}
+
+.create-subtext {
+  font-size: 14px;
+  margin: 4px 0 0 0;
+  color: #9ca3af;
+}
+
+/* Loading and Empty States */
+.spinner-container {
   display: flex;
   flex-direction: column;
   align-items: center;
-  margin-top: 40px;
+  margin: 40px 0;
 }
 
 .spinner {
   width: 40px;
   height: 40px;
-  border: 4px solid lightgray;
-  border-top: 4px solid #3498db;
+  border: 4px solid #e5e7eb;
+  border-top: 4px solid #3b82f6;
   border-radius: 50%;
   animation: spin 1s linear infinite;
-  margin-bottom: 10px;
+  margin-bottom: 16px;
 }
 
 @keyframes spin {
@@ -77,143 +220,72 @@
   100% { transform: rotate(360deg); }
 }
 
+.empty-state {
+  text-align: center;
+  padding: 40px 20px;
+  color: #6b7280;
+}
+
+.empty-state h4 {
+  font-size: 18px;
+  margin: 0 0 8px 0;
+  color: #374151;
+}
+
+.empty-state p {
+  font-size: 14px;
+  margin: 0 0 20px 0;
+  line-height: 1.5;
+}
+
 .create-gig-btn {
-  padding: 10px 20px;
-  background-color: #05668D;
+  padding: 12px 24px;
+  background-color: #3b82f6;
   color: white;
   font-weight: 500;
   border: none;
   border-radius: 6px;
   cursor: pointer;
-  margin-top: 15px;
+  font-size: 14px;
+  transition: all 0.2s ease;
 }
 
 .create-gig-btn:hover {
-  background-color: #034f63;
+  background-color: #2563eb;
 }
 
-/* Draft Gigs Section */
-.draft-gigs-section {
-  margin-top: 30px;
+/* Responsive Design */
+@media (max-width: 768px) {
+  .gigs-grid {
+    grid-template-columns: 1fr;
+    gap: 16px;
+  }
+  
+  .gigs-section {
+    padding: 16px;
+  }
+  
+  .gig-actions {
+    flex-direction: column;
+    gap: 8px;
+  }
 }
 
-.draft-gigs-section h3 {
-  color: #666;
-  font-size: 1.2rem;
-  margin-bottom: 15px;
-}
-
-/* Active Gig Card Styles */
-.active-gig {
-  position: relative;
-  overflow: visible;
-}
-
-.active-gig .gig-actions {
-  position: absolute;
-  bottom: 0;
-  left: 0;
-  right: 0;
-  opacity: 0;
-  visibility: hidden;
-  transform: translateY(100%);
-  transition: all 0.3s ease;
-  background: rgba(255, 255, 255, 0.98);
-  backdrop-filter: blur(10px);
-  border-top: 1px solid #e9ecef;
-  box-shadow: 0 -2px 10px rgba(0, 0, 0, 0.1);
-  z-index: 10;
-}
-
-.active-gig:hover .gig-actions {
-  opacity: 1;
-  visibility: visible;
-  transform: translateY(0);
-}
-
-/* Draft Gig Card Styles */
-.draft-gig {
-  position: relative;
-  opacity: 0.8;
-  background: #f8f9fa;
-  border: 1px solid #e9ecef;
-}
-
-.draft-gig:hover {
-  opacity: 1;
-  transform: translateY(-3px);
-}
-
-/* Draft Badge */
-.draft-badge {
-  position: absolute;
-  top: 10px;
-  right: 10px;
-  background: #ffc107;
-  color: #333;
-  padding: 4px 8px;
-  border-radius: 12px;
-  font-size: 0.75rem;
-  font-weight: 600;
-  text-transform: uppercase;
-  letter-spacing: 0.5px;
-}
-
-/* Gig Actions Container */
-.gig-actions {
-  display: flex;
-  gap: 8px;
-  padding: 15px;
-  justify-content: center;
-  background: rgba(0, 0, 0, 0.02);
-  border-top: 1px solid #e9ecef;
-}
-
-/* Active gig actions - hidden by default, shown on hover */
-.active-gig .gig-actions {
-  position: absolute;
-  bottom: 0;
-  left: 0;
-  right: 0;
-  opacity: 0;
-  transform: translateY(100%);
-  transition: all 0.3s ease;
-  background: rgba(255, 255, 255, 0.95);
-  backdrop-filter: blur(5px);
-  border-top: 1px solid #e9ecef;
-}
-
-.active-gig:hover .gig-actions {
-  opacity: 1;
-  transform: translateY(0);
-}
-
-/* Draft gig actions - always visible */
-.draft-gig .gig-actions {
-  opacity: 1;
-  position: relative;
-  transform: none;
-}
-
-/* Action Buttons */
-.edit-btn, .publish-btn, .pause-btn, .delete-btn {
-  padding: 8px 16px;
-  border: none;
-  border-radius: 6px;
-  font-size: 0.85rem;
-  font-weight: 500;
-  cursor: pointer;
-  transition: all 0.2s ease;
-  display: flex;
-  align-items: center;
-  gap: 5px;
-  min-height: 36px;
-}
-
-.edit-btn {
-  background: #6c757d;
-  color: white;
-  flex: 1;
+@media (max-width: 480px) {
+  .gigs-tabs {
+    flex-direction: column;
+  }
+  
+  .gigs-tab {
+    text-align: center;
+    border-bottom: none;
+    border-right: 2px solid transparent;
+  }
+  
+  .gigs-tab.active {
+    border-right-color: #3b82f6;
+    border-bottom-color: transparent;
+  }
 }
 
 .edit-btn:hover:not(:disabled) {

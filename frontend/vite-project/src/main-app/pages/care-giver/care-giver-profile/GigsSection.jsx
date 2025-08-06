@@ -13,6 +13,7 @@ const GigsSection = () => {
   const [publishingGigs, setPublishingGigs] = useState(new Set());
   const [pausingGigs, setPausingGigs] = useState(new Set());
   const [deletingGigs, setDeletingGigs] = useState(new Set());
+  const [activeTab, setActiveTab] = useState("active");
   const navigate = useNavigate();
   const basePath = "/app/caregiver";
   const { toasts, showSuccess, showError, removeToast } = useToast();
@@ -224,123 +225,129 @@ const GigsSection = () => {
 
   if (isLoading) {
     return (
-      <div className="spinner-container">
-        <div className="spinner" />
-        <p>Loading gigs...</p>
+      <div className="gigs-section">
+        <div className="spinner-container">
+          <div className="spinner" />
+          <p>Loading gigs...</p>
+        </div>
       </div>
     );
   }
 
-  if (error) return <p>Error: {error}</p>;
+  if (error) {
+    return (
+      <div className="gigs-section">
+        <p>Error: {error}</p>
+      </div>
+    );
+  }
 
   return (
     <div className="gigs-section">
-      {/* Active Gigs Section */}
       <h3>Active Gigs</h3>
+      
+      {/* Tab Navigation */}
+      <div className="gigs-tabs">
+        <button 
+          className={`gigs-tab ${activeTab === "active" ? "active" : ""}`}
+          onClick={() => setActiveTab("active")}
+        >
+          Active Gigs ({activeGigs.length})
+        </button>
+        <button 
+          className={`gigs-tab ${activeTab === "paused" ? "active" : ""}`}
+          onClick={() => setActiveTab("paused")}
+        >
+          Paused Gigs ({draftGigs.length})
+        </button>
+      </div>
+
+      {/* No Gigs State */}
       {activeGigs.length === 0 && draftGigs.length === 0 ? (
-        <EmptyState
-          logo={<img src={clock} alt="No Gigs" style={{ width: 80 }} />}
-          title="No Gigs Yet"
-          description="You haven't created any gigs. Get started by creating one."
-          action={
-            <button className="create-gig-btn" onClick={handleNavigateToCreateGig}>
-              Create Gig
-            </button>
-          }
-        />
+        <div className="empty-state">
+          <img src={clock} alt="No Gigs" style={{ width: 80, marginBottom: 16 }} />
+          <h4>No Gigs Yet</h4>
+          <p>You haven't created any gigs. Get started by creating one.</p>
+          <button className="create-gig-btn" onClick={handleNavigateToCreateGig}>
+            Create Your First Gig
+          </button>
+        </div>
       ) : (
-        <>
-          {/* Active Gigs Grid */}
-          <div className="gigs-grid">
-            <div className="gig-card create-new" onClick={handleNavigateToCreateGig}>
-              <div className="create-icon">+</div>
-              <p>Create a new Gig</p>
-            </div>
-            {activeGigs.map((gig) => (
-              <div key={gig.id} className="gig-card active-gig">
-                <img
-                  src={gig.image1 || "https://via.placeholder.com/150"}
-                  alt={gig.title}
-                  className="gig-image"
-                />
+        <div className="gigs-grid">
+          {/* Create New Gig Card - Always first */}
+          <div className="create-new-gig" onClick={handleNavigateToCreateGig}>
+            <span className="create-icon">+</span>
+            <p className="create-text">Create a new Gig</p>
+            <p className="create-subtext">Add a new service offering</p>
+          </div>
+
+          {/* Active Tab Content */}
+          {activeTab === "active" && activeGigs.map((gig) => (
+            <div key={gig.id} className="gig-card">
+              <img
+                src={gig.image1 || "https://via.placeholder.com/300x160"}
+                alt={gig.title}
+                className="gig-image"
+              />
+              <div className="gig-content">
                 <h4 className="gig-title">{gig.title}</h4>
+                <p className="gig-description">{gig.description}</p>
                 <div className="gig-actions">
                   <button 
-                    className="pause-btn"
-                    onClick={() => handlePauseGig(gig)}
-                    disabled={pausingGigs.has(gig.id) || deletingGigs.has(gig.id)}
+                    className="gig-action-btn edit"
+                    onClick={() => handleEditGig(gig)}
                   >
-                    {pausingGigs.has(gig.id) ? (
-                      <>
-                        <span className="spinner-small"></span>
-                        Pausing...
-                      </>
-                    ) : (
-                      'Pause'
-                    )}
+                    Edit
                   </button>
                   <button 
-                    className="delete-btn"
-                    onClick={() => handleDeleteGig(gig)}
-                    disabled={pausingGigs.has(gig.id) || deletingGigs.has(gig.id)}
+                    className="gig-action-btn pause"
+                    onClick={() => handlePauseGig(gig)}
+                    disabled={pausingGigs.has(gig.id)}
                   >
-                    {deletingGigs.has(gig.id) ? (
-                      <>
-                        <span className="spinner-small"></span>
-                        Deleting...
-                      </>
-                    ) : (
-                      'Delete'
-                    )}
+                    {pausingGigs.has(gig.id) ? 'Pausing...' : 'Pause'}
+                  </button>
+                  <button 
+                    className="gig-action-btn delete"
+                    onClick={() => handleDeleteGig(gig)}
+                    disabled={deletingGigs.has(gig.id)}
+                  >
+                    {deletingGigs.has(gig.id) ? 'Deleting...' : 'Delete'}
                   </button>
                 </div>
               </div>
-            ))}
-          </div>
+            </div>
+          ))}
 
-          {/* Draft Gigs Section */}
-          {draftGigs.length > 0 && (
-            <div className="draft-gigs-section">
-              <h3>Draft Gigs</h3>
-              <div className="gigs-grid">
-                {draftGigs.map((gig) => (
-                  <div key={gig.id} className="gig-card draft-gig">
-                    <img
-                      src={gig.image1 || "https://via.placeholder.com/150"}
-                      alt={gig.title}
-                      className="gig-image"
-                    />
-                    <h4 className="gig-title">{gig.title}</h4>
-                    <div className="draft-badge">Draft</div>
-                    <div className="gig-actions">
-                      <button 
-                        className="edit-btn"
-                        onClick={() => handleEditGig(gig)}
-                        disabled={publishingGigs.has(gig.id)}
-                      >
-                        Edit
-                      </button>
-                      <button 
-                        className="publish-btn"
-                        onClick={() => handlePublishGig(gig)}
-                        disabled={publishingGigs.has(gig.id)}
-                      >
-                        {publishingGigs.has(gig.id) ? (
-                          <>
-                            <span className="spinner-small"></span>
-                            Publishing...
-                          </>
-                        ) : (
-                          'Publish'
-                        )}
-                      </button>
-                    </div>
-                  </div>
-                ))}
+          {/* Paused Tab Content */}
+          {activeTab === "paused" && draftGigs.map((gig) => (
+            <div key={gig.id} className="gig-card">
+              <img
+                src={gig.image1 || "https://via.placeholder.com/300x160"}
+                alt={gig.title}
+                className="gig-image"
+              />
+              <div className="gig-content">
+                <h4 className="gig-title">{gig.title}</h4>
+                <p className="gig-description">{gig.description}</p>
+                <div className="gig-actions">
+                  <button 
+                    className="gig-action-btn edit"
+                    onClick={() => handleEditGig(gig)}
+                  >
+                    Edit
+                  </button>
+                  <button 
+                    className="gig-action-btn publish"
+                    onClick={() => handlePublishGig(gig)}
+                    disabled={publishingGigs.has(gig.id)}
+                  >
+                    {publishingGigs.has(gig.id) ? 'Publishing...' : 'Publish'}
+                  </button>
+                </div>
               </div>
             </div>
-          )}
-        </>
+          ))}
+        </div>
       )}
       
       {/* Toast Container */}

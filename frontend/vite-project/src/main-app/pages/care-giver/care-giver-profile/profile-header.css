@@ -1,110 +1,364 @@
 .profile-header {
-    text-align: center;
-    padding: 20px;
-    background: #fff;
-  }
-  
-  .profile-header img {
-    width: 100px;
-    height: 100px;
-    border-radius: 50%;
-    margin-bottom: 10px;
-  }
-  
-  .profile-header h2 {
-    font-size: 1.2rem;
-    margin: 5px 0;
-  }
-  
-  .profile-header p {
-    font-size: 0.9rem;
-    color: #666;
-  }
-  
-  .profile-header .rating {
-    margin: 10px 0;
-    color: #f5a623;
-  }
-  
-  .profile-header .details {
-    font-size: 0.85rem;
-    margin: 10px 0;
-  }
-
-
-  
-  .button-container {
     display: flex;
     flex-direction: column;
+    gap: 0;
+    width: 100%;
+    max-width: 100%;
+  }
+
+  /* Ensure all child components have consistent width */
+  .profile-header > * {
+    width: 100%;
+    max-width: 100%;
+    min-width: 0;
+    box-sizing: border-box;
+  }
+
+  /* Main Profile Header Card - Using same styling as profile information components */
+  .profile-header-card {
+    border-radius: 12px;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+    padding: 24px;
+    border: 1px solid #e8eaed;
+    margin-bottom: 20px;
+    width: 100%;
+    box-sizing: border-box;
+    max-width: 100%;
+    min-width: 0;
+  }
+
+  /* Profile Basic Info Section */
+  .profile-basic-info {
+    text-align: center;
+    margin-bottom: 20px;
+    padding-bottom: 16px;
+    border-bottom: 1px solid #f3f4f6;
+  }
+
+  /* Profile Rating Section */
+  .profile-rating-section {
+    margin-bottom: 20px;
+    padding-bottom: 16px;
+    border-bottom: 1px solid #f3f4f6;
+  }
+
+  /* Center profile image and basic info */
+  .profile-header-card .profile-img,
+  .profile-header-card h2,
+  .profile-header-card .username,
+  .profile-header-card .rating {
+    text-align: center;
+  }
+
+  .profile-header-card .profile-img {
+    width: 120px;
+    height: 120px;
+    border-radius: 50%;
+    object-fit: cover;
+    margin: 0 auto 16px auto;
+    border: 3px solid #f0f0f0;
+  }
+
+  .profile-header-card h2 {
+    margin: 0 0 8px 0;
+    font-size: 24px;
+    font-weight: 600;
+    color: #1a1a1a;
+    line-height: 1.2;
+  }
+
+  .profile-header-card .username {
+    margin: 0 0 12px 0;
+    font-size: 14px;
+    color: #6b7280;
+  }
+
+  .profile-header-card .bio {
+    margin: 0 0 16px 0;
+    font-size: 14px;
+    line-height: 1.5;
+    color: #4b5563;
+    width: 100%;
+    text-align: left;
+  }
+
+  .profile-header-card .rating {
+    margin: 16px 0;
+    font-size: 16px;
+    display: flex;
     align-items: center;
-    margin-top: 10px;
-  }
-  
-  .availability-btn {
-    margin-top: 10px;
-    padding: 8px 12px;
-    border: none;
-    border-radius: 4px;
-    background: #34d399;
-    color: #fff;
-
-  }
-  
-  .availability-btn.available {
-    background-color: #28a745;
-    color: white;
-  }
-  
-  .availability-btn.unavailable {
-    background-color: #dc3545;
-    color: white;
+    justify-content: center;
+    gap: 8px;
+    text-align: center;
   }
 
-  /* Responsive Styles */
-  @media (max-width: 768px) {
-    .profile-header {
-      padding: 15px;
-    }
-    
-    .profile-header img {
-      width: 80px;
-      height: 80px;
-    }
-    
-    .profile-header h2 {
-      font-size: 1.1rem;
-    }
-    
-    .profile-header p {
-      font-size: 0.85rem;
-    }
-    
-    .profile-header .details {
-      font-size: 0.8rem;
-    }
+  .profile-header-card .rating .stars {
+    color: #fbbf24;
+  }
+
+  .profile-header-card .rating .rating-text {
+    font-size: 14px;
+    color: #6b7280;
+  }
+
+  .profile-details {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+    margin: 20px 0;
+    width: 100%;
+    text-align: left;
+    padding-bottom: 16px;
+    border-bottom: 1px solid #f3f4f6;
+  }
+
+  .profile-details .detail-item {
+    display: flex;
+    align-items: center;
+    justify-content: flex-start;
+    gap: 8px;
+    font-size: 14px;
+    color: #4b5563;
+    width: 100%;
+  }
+
+  .location-section {
+    display: flex;
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 8px;
+    width: 100%;
+  }
+
+  .location-section .detail-item {
+    width: 100%;
+  }
+
+  .edit-location-btn {
+    padding: 8px 16px;
+    border: 1px solid #3b82f6;
+    border-radius: 6px;
+    background-color: #3b82f6;
+    color: white;
+    cursor: pointer;
+    font-size: 14px;
+    font-weight: 500;
+    width: 100%;
+    height: 36px;
+    transition: all 0.2s ease;
+    text-align: center;
+  }
+
+  .edit-location-btn:hover {
+    background-color: #2563eb;
+    border-color: #2563eb;
+  }
+
+  .availability-status {
+    display: block;
+    padding: 8px 16px;
+    border-radius: 6px;
+    font-size: 14px;
+    font-weight: 500;
+    margin: 16px 0;
+    width: 100%;
+    text-align: center;
+    transition: all 0.2s ease;
+    box-sizing: border-box;
+  }
+
+  .availability-status.available {
+    background-color: #d1fae5;
+    color: #065f46;
+    border: 1px solid #a7f3d0;
+  }
+
+    .availability-status.unavailable {
+    background-color: #fef2f2;
+    color: #dc2626;
+    border: 1px solid #fecaca;
+  }
+
+  .profile-actions {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+    margin-top: 0;
+    width: 100%;
+    align-items: center;
+    justify-content: center;
+  }
+
+  .profile-actions > * {
+    width: auto;
+    text-align: center;
+    min-width: 200px;
+  }
+
+  /* Verify Button Container */
+  .verify-button-container {
+    display: flex;
+    justify-content: center;
+    margin-top: 16px;
+  }
+
+  /* Section Cards */
+  .section-card {
+    background: #ffffff;
+    border-radius: 12px;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+    padding: 20px;
+    border: 1px solid #e8eaed;
+    margin-bottom: 20px;
+    width: 100%;
+  }
+
+  .section-card h3 {
+    margin: 0 0 16px 0;
+    font-size: 18px;
+    font-weight: 600;
+    color: #1a1a1a;
+  }
+
+  /* Location Modal */
+  .location-modal-overlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background-color: rgba(0, 0, 0, 0.5);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    z-index: 1000;
+  }
+
+  .location-modal {
+    background: white;
+    border-radius: 12px;
+    padding: 24px;
+    max-width: 400px;
+    width: 90%;
+    max-height: 80vh;
+    overflow: auto;
+    box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1);
+  }
+
+  .location-modal h3 {
+    margin: 0 0 16px 0;
+    font-size: 18px;
+    font-weight: 600;
+    color: #1a1a1a;
+  }
+
+  .location-modal input {
+    width: 100%;
+    padding: 12px;
+    border: 1px solid #d1d5db;
+    border-radius: 6px;
+    font-size: 14px;
+    margin-bottom: 16px;
+    box-sizing: border-box;
+    transition: border-color 0.2s ease;
+  }
+
+  .location-modal input:focus {
+    outline: none;
+    border-color: #3b82f6;
+    box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
+  }
+
+  .modal-buttons {
+    display: flex;
+    gap: 12px;
+    justify-content: flex-end;
+  }
+
+  .modal-btn {
+    padding: 10px 20px;
+    border-radius: 6px;
+    font-size: 14px;
+    font-weight: 500;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    min-width: 80px;
+    height: 40px;
+    border: 1px solid;
+  }
+
+  .modal-btn.cancel {
+    background: white;
+    color: #6b7280;
+    border-color: #d1d5db;
+  }
+
+  .modal-btn.cancel:hover {
+    background: #f9fafb;
+    border-color: #9ca3af;
+  }
+
+  .modal-btn.save {
+    background: #3b82f6;
+    color: white;
+    border-color: #3b82f6;
+  }
+
+  .modal-btn.save:hover:not(:disabled) {
+    background: #2563eb;
+    border-color: #2563eb;
+  }
+
+.modal-btn.save:disabled {
+  background: #9ca3af;
+  border-color: #9ca3af;
+  cursor: not-allowed;
+}
+
+/* Responsive Styles */
+@media (max-width: 768px) {
+  .profile-header {
+    gap: 16px;
   }
   
-  @media (max-width: 480px) {
-    .profile-header {
-      padding: 12px;
-    }
-    
-    .profile-header img {
-      width: 70px;
-      height: 70px;
-    }
-    
-    .profile-header h2 {
-      font-size: 1rem;
-      margin: 3px 0;
-    }
-    
-    .profile-header .rating {
-      margin: 6px 0;
-    }
-    
-    .availability-btn {
-      padding: 6px 10px;
-      font-size: 0.9rem;
-    }
+  .profile-header-card {
+    padding: 16px;
   }
+  
+  .profile-header-card .profile-img {
+    width: 100px;
+    height: 100px;
+  }
+  
+  .profile-header-card h2 {
+    font-size: 20px;
+  }
+  
+  .section-card {
+    padding: 16px;
+  }
+  
+  .section-card h3 {
+    font-size: 16px;
+  }
+}
+
+@media (max-width: 480px) {
+  .profile-header-card {
+    padding: 12px;
+  }
+  
+  .profile-header-card .profile-img {
+    width: 80px;
+    height: 80px;
+  }
+  
+  .profile-header-card h2 {
+    font-size: 18px;
+  }
+  
+  .edit-location-btn,
+  .availability-status {
+    font-size: 13px;
+  }
+}

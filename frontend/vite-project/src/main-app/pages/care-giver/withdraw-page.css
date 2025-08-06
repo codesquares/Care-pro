@@ -1,0 +1,310 @@
+/* Withdraw Page Styles */
+.withdraw-page-container {
+  font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+  max-width: 600px;
+  margin: 0 auto;
+  padding: 20px;
+  background-color: #f8f9fa;
+  min-height: 100vh;
+}
+
+.withdraw-header {
+  margin-bottom: 30px;
+}
+
+.back-link {
+  color: #3498db;
+  text-decoration: none;
+  font-size: 16px;
+  font-weight: 500;
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  margin-bottom: 16px;
+  transition: color 0.3s ease;
+}
+
+.back-link:hover {
+  color: #2980b9;
+}
+
+.withdraw-title {
+  font-size: 28px;
+  font-weight: 600;
+  color: #2c3e50;
+  margin: 0;
+  text-align: center;
+}
+
+.withdraw-content {
+  background: white;
+  border-radius: 12px;
+  padding: 32px;
+  box-shadow: 0 2px 12px rgba(0, 0, 0, 0.08);
+}
+
+.withdraw-form {
+  display: flex;
+  flex-direction: column;
+  gap: 24px;
+}
+
+.form-group {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.form-label {
+  font-size: 14px;
+  font-weight: 600;
+  color: #2c3e50;
+  margin-bottom: 4px;
+}
+
+.input-wrapper {
+  position: relative;
+}
+
+.form-input {
+  width: 100%;
+  padding: 14px 16px;
+  border: 1px solid #dee2e6;
+  border-radius: 8px;
+  font-size: 16px;
+  color: #495057;
+  background: white;
+  transition: border-color 0.3s ease, box-shadow 0.3s ease;
+  box-sizing: border-box;
+}
+
+.form-input:focus {
+  outline: none;
+  border-color: #3498db;
+  box-shadow: 0 0 0 3px rgba(52, 152, 219, 0.1);
+}
+
+.form-input.error {
+  border-color: #e74c3c;
+  box-shadow: 0 0 0 3px rgba(231, 76, 60, 0.1);
+}
+
+.form-select {
+  cursor: pointer;
+  background-image: url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 20 20'%3e%3cpath stroke='%236b7280' stroke-linecap='round' stroke-linejoin='round' stroke-width='1.5' d='m6 8 4 4 4-4'/%3e%3c/svg%3e");
+  background-position: right 12px center;
+  background-repeat: no-repeat;
+  background-size: 16px;
+  padding-right: 40px;
+  appearance: none;
+}
+
+.error-text {
+  color: #e74c3c;
+  font-size: 13px;
+  font-weight: 500;
+  margin-top: 4px;
+  display: block;
+}
+
+.recipient-section {
+  border-top: 1px solid #eee;
+  padding-top: 24px;
+}
+
+.section-title {
+  font-size: 18px;
+  font-weight: 600;
+  color: #2c3e50;
+  margin: 0 0 20px 0;
+}
+
+.calculation-summary {
+  background: #f8f9fa;
+  border-radius: 8px;
+  padding: 20px;
+  border: 1px solid #dee2e6;
+}
+
+.calculation-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 8px 0;
+  font-size: 14px;
+  color: #495057;
+}
+
+.calculation-row.total {
+  border-top: 1px solid #dee2e6;
+  margin-top: 8px;
+  padding-top: 16px;
+  font-weight: 600;
+  font-size: 16px;
+  color: #2c3e50;
+}
+
+.processing-info {
+  background: #fff3cd;
+  border: 1px solid #ffeaa7;
+  border-radius: 8px;
+  padding: 16px;
+  display: flex;
+  align-items: flex-start;
+  gap: 12px;
+}
+
+.info-icon {
+  font-size: 18px;
+  flex-shrink: 0;
+  margin-top: 2px;
+}
+
+.processing-info p {
+  margin: 0;
+  font-size: 14px;
+  color: #856404;
+  line-height: 1.5;
+}
+
+.withdraw-submit-btn {
+  background: #3498db;
+  color: white;
+  border: none;
+  border-radius: 8px;
+  padding: 16px 24px;
+  font-size: 16px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: background-color 0.3s ease, transform 0.2s ease;
+  width: 100%;
+}
+
+.withdraw-submit-btn:hover:not(:disabled) {
+  background: #2980b9;
+  transform: translateY(-1px);
+}
+
+.withdraw-submit-btn:disabled {
+  background: #bdc3c7;
+  cursor: not-allowed;
+  transform: none;
+}
+
+.loading-spinner {
+  text-align: center;
+  padding: 60px 20px;
+  font-size: 16px;
+  color: #6c757d;
+}
+
+/* Mobile Responsive Design */
+@media (max-width: 768px) {
+  .withdraw-page-container {
+    padding: 16px;
+    max-width: 100%;
+  }
+
+  .withdraw-title {
+    font-size: 24px;
+  }
+
+  .withdraw-content {
+    padding: 24px;
+    border-radius: 8px;
+  }
+
+  .form-input {
+    padding: 12px 14px;
+    font-size: 16px; /* Prevents zoom on iOS */
+  }
+
+  .calculation-summary {
+    padding: 16px;
+  }
+
+  .processing-info {
+    padding: 14px;
+    flex-direction: column;
+    gap: 8px;
+  }
+
+  .info-icon {
+    align-self: flex-start;
+  }
+
+  .withdraw-submit-btn {
+    padding: 14px 20px;
+    font-size: 16px;
+  }
+}
+
+@media (max-width: 480px) {
+  .withdraw-page-container {
+    padding: 12px;
+  }
+
+  .withdraw-title {
+    font-size: 20px;
+  }
+
+  .withdraw-content {
+    padding: 20px;
+  }
+
+  .withdraw-form {
+    gap: 20px;
+  }
+
+  .form-input {
+    padding: 12px;
+    font-size: 16px;
+  }
+
+  .calculation-row {
+    font-size: 13px;
+  }
+
+  .calculation-row.total {
+    font-size: 15px;
+  }
+
+  .processing-info p {
+    font-size: 13px;
+  }
+
+  .section-title {
+    font-size: 16px;
+  }
+}
+
+/* Focus states for accessibility */
+.back-link:focus,
+.withdraw-submit-btn:focus {
+  outline: 2px solid #3498db;
+  outline-offset: 2px;
+}
+
+/* Animation for form submission */
+.withdraw-submit-btn:active {
+  transform: translateY(0);
+}
+
+/* Custom scrollbar for select dropdown on webkit browsers */
+.form-select::-webkit-scrollbar {
+  width: 8px;
+}
+
+.form-select::-webkit-scrollbar-track {
+  background: #f1f1f1;
+  border-radius: 4px;
+}
+
+.form-select::-webkit-scrollbar-thumb {
+  background: #c1c1c1;
+  border-radius: 4px;
+}
+
+.form-select::-webkit-scrollbar-thumb:hover {
+  background: #a8a8a8;
+}
