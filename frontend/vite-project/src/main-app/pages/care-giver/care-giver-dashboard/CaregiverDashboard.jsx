@@ -107,16 +107,27 @@ const CaregiverDashboard = () => {
         <div className="leftbar">
           <ProfileCard />
           <StatisticsCard totalOrders={totalOrders} totalEarnings={totalEarnings} />
-          <div className="setting-container" style={{ cursor: "pointer" }} onClick={() => navigate(`${basePath}/settings`)}>
-            <img src={setting} alt="Setting" className="setting-image" />
+          <div 
+            className="setting-container" 
+            role="button"
+            tabIndex={0}
+            onClick={() => navigate(`${basePath}/settings`)}
+            onKeyDown={(e) => {
+              if (e.key === 'Enter' || e.key === ' ') {
+                navigate(`${basePath}/settings`);
+              }
+            }}
+          >
+            <img src={setting} alt="Settings" className="setting-image" />
             <span className="setting-text">Account Settings</span>
           </div>
         </div>
 
         <div className="rightbar">
           <div className="select-dropdown-container">
+            <label htmlFor="order-filter" className="sr-only">Filter orders</label>
             <select
-              id="dropdown"
+              id="order-filter"
               className="custom-select"
               value={filter} // Set the selected option based on filter state
               onChange={handleFilterChange} // Update state on change

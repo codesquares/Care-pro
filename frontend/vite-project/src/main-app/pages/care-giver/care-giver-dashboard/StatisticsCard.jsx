@@ -21,13 +21,13 @@ const StatisticsCard = ({totalOrders, totalEarnings}) => {
           <h4 className="stat-value">{totalOrders}</h4>
         </div>
       </div>
-      <div className="stat">
+      {/* <div className="stat">
         <img src={StatisticCard3} alt="card3" className="card-image" />  
         <div className="stat-details">
           <p className="stat-title">Hours Spent</p>
           <h4 className="stat-value">32.5 hours</h4>
         </div>
-      </div>
+      </div> */}
     </div>
   );
 };

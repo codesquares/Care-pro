@@ -1,23 +1,28 @@
+/* Mobile-first design for OrderCard */
 .order-card {
   display: flex;
-  gap: 16px;
+  flex-direction: column;
+  gap: 12px;
   padding: 16px;
   background-color: #fff;
   border-bottom: 1px solid #eee;
-  border-radius: 10px;
+  border-radius: 12px;
   box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
-  align-items: flex-start;
+  margin-bottom: 12px;
+  transition: box-shadow 0.3s ease;
+}
+
+.order-card:hover {
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
 }
 
 .image-wrapper {
-  width: 200px;
-  height: 100px;
+  width: 100%;
+  height: 150px;
   flex-shrink: 0;
-  border-radius: 10px;
+  border-radius: 8px;
   overflow: hidden;
   background-color: #f0f0f0;
-
-  
 }
 
 .order-image {
@@ -42,35 +47,91 @@
 }
 
 .order-title {
-  font-size: 16px;
+  font-size: 15px;
   font-weight: 600;
   color: #2c2c2c;
   margin: 0;
+  line-height: 1.3;
+  word-break: break-word;
 }
 
 .order-user {
-  font-size: 14px;
+  font-size: 13px;
   color: #4f4f4f;
   margin: 0;
 }
 
 .order-footer {
   display: flex;
-  justify-content: space-between;
-  align-items: center;
+  flex-direction: column;
+  gap: 8px;
+  align-items: flex-start;
 }
 
 .status {
   background-color: #fff3cd;
   color: #f4b400;
-  font-size: 13px;
-  padding: 4px 10px;
+  font-size: 12px;
+  padding: 4px 8px;
   border-radius: 8px;
   font-weight: 500;
+  white-space: nowrap;
 }
 
 .order-price {
-  font-size: 15px;
+  font-size: 16px;
   font-weight: 600;
   color: #1a1a1a;
+}
+
+/* Responsive design for OrderCard */
+@media (min-width: 576px) {
+  .order-card {
+    flex-direction: row;
+    gap: 16px;
+    align-items: flex-start;
+  }
+  
+  .image-wrapper {
+    width: 140px;
+    height: 100px;
+    border-radius: 10px;
+  }
+  
+  .order-title {
+    font-size: 16px;
+  }
+  
+  .order-user {
+    font-size: 14px;
+  }
+  
+  .order-footer {
+    flex-direction: row;
+    justify-content: space-between;
+    align-items: center;
+  }
+  
+  .status {
+    font-size: 13px;
+    padding: 4px 10px;
+  }
+  
+  .order-price {
+    font-size: 15px;
+  }
+}
+
+@media (min-width: 768px) {
+  .image-wrapper {
+    width: 180px;
+    height: 110px;
+  }
+}
+
+@media (min-width: 992px) {
+  .image-wrapper {
+    width: 200px;
+    height: 100px;
+  }
 }
