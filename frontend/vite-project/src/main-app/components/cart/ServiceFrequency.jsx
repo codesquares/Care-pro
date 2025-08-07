@@ -175,7 +175,7 @@ const ServiceFrequency = ({ selectedFrequency, onFrequencyChange, service }) => 
       </div>
 
       {/* Price Breakdown Display */}
-      {selectedFrequency && currentPriceData && (
+      {/* {selectedFrequency && currentPriceData && (
         <div className="service-frequency__price-breakdown">
           <h4>Price Breakdown</h4>
           <div className="price-breakdown__details">
@@ -213,7 +213,7 @@ const ServiceFrequency = ({ selectedFrequency, onFrequencyChange, service }) => 
             </div>
           </div>
         </div>
-      )}
+      )} */}
     </div>
   );
 

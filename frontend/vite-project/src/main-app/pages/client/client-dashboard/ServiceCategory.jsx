@@ -3,8 +3,7 @@ import ServiceCard from "./ServiceCard";
 import "./serviceCategory.css";
 
 const ServiceCategory = ({ title, services }) => (
-  
-
+  console.log("Rendering ServiceCategory with services:", services),
  
   <div className="service-category">
     <div className="category-header">

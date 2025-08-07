@@ -182,6 +182,7 @@
 import { useState, useEffect } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import "./home-care-service.css";
+import ClientGigService from "../../../services/clientGigService";
 
 const HomeCareService = () => {
   const { id } = useParams();
@@ -199,48 +200,88 @@ const HomeCareService = () => {
 
   const handleMessage = () => {
     navigate(`${basePath}/message/${service.caregiverId}`, {
-      state: { recipientName: service.providerName },
+      state: { recipientName: service.caregiverName },
     });
   };
 
   useEffect(() => {
     const fetchServiceDetails = async () => {
       try {
-        const response = await fetch(
-          `https://carepro-api20241118153443.azurewebsites.net/api/Gigs/gigId?gigId=${id}`
-        );
-        if (!response.ok) throw new Error("Failed to fetch service details");
-        const data = await response.json();
-        setService(data);
+        setLoading(true);
+        setError(null);
+        
+        // Use the enhanced ClientGigService to get all enriched gigs
+        const allGigs = await ClientGigService.getAllGigs();
+        
+        // Find the specific gig by ID
+        const foundGig = allGigs.find(gig => gig.id === id);
+        
+        if (!foundGig) {
+          throw new Error("Service not found or no longer available");
+        }
+        
+        setService(foundGig);
+        console.log("Enriched service details:", foundGig);
+        
       } catch (err) {
+        console.error("Error fetching service details:", err);
         setError(err.message);
       } finally {
         setLoading(false);
       }
     };
-    fetchServiceDetails();
+    
+    if (id) {
+      fetchServiceDetails();
+    }
   }, [id]);
 
   if (loading) return <div className="spinner-container">
             <div className="loading-spinner"></div>
           </div>;
-  if (error) return <p className="error">{error}</p>;
+  if (error) return <div className="error-container">
+            <p className="error">{error}</p>
+            <button className="back-btn" onClick={() => navigate(-1)}>← Go Back</button>
+          </div>;
+  if (!service) return <div className="error-container">
+            <p className="error">Service not found</p>
+            <button className="back-btn" onClick={() => navigate(-1)}>← Go Back</button>
+          </div>;
 
+  // Extract all available fields from enriched service data
   const {
     title,
-    providerName,
     caregiverName,
-    rating,
+    caregiverFirstName,
+    caregiverLastName,
+    caregiverEmail,
+    caregiverPhone,
+    gigImage,
+    caregiverRating,
+    caregiverReviewCount,
+    caregiverLocation,
+    caregiverBio,
+    caregiverExperience,
+    caregiverSpecializations,
+    caregiverIsVerified,
+    caregiverIsAvailable,
+    caregiverJoinDate,
+    caregiverLanguages,
+    caregiverCertifications,
     packageDetails,
+    packageName,
     image1,
-    plan,
     price,
-    features,
     videoURL,
-    location,
+    subCategory,
+    category,
+    deliveryTime,
+    caregiverProfileImage,
+    status
   } = service;
 
-  console.log("Service details:", service);
+
+  console.log("Service details===><===:", service);
 
   return (
     <div className="container-service">
@@ -249,16 +290,39 @@ const HomeCareService = () => {
 
       {/* Top Section */}
       <div className="service-top-header">
-        <div className="service-card-section">
+        <div 
+          className="service-card-section"
+          style={{
+            backgroundImage: image1 ? `url(${image1})` : 'none'
+          }}
+        >
           <h2 className="gig-title">{title}</h2>
           <div className="provider-info-card">
-            <img src={image1 || "/avatar.jpg"} alt={caregiverName} className="provider-avatar" />
+            <img 
+              src={caregiverProfileImage ||  "/avatar.jpg"} 
+              alt={caregiverName} 
+              className="provider-avatar" 
+            />
             <div className="provider-details">
               <p className="provider-name">{caregiverName}</p>
               <div className="provider-tags">
-                <span className="status-tag">Available</span>
-                <span className="location-tag">{location || "Yaba, Lagos"}</span>
-                <span className="rating-tag">⭐ {rating} (200)</span>
+                <span className={`status-tag ${caregiverIsAvailable ? 'available' : 'unavailable'}`}>
+                  {caregiverIsAvailable ? "Available" : "Unavailable"}
+                </span>
+                {caregiverIsVerified && (
+                  <span className="verification-tag">✓ Verified</span>
+                )}
+                <span className="location-tag">
+                  {caregiverLocation || "Location not specified"}
+                </span>
+                <span className="rating-tag">
+                  ⭐ {caregiverRating || 0} ({caregiverReviewCount || 0} reviews)
+                </span>
+                {caregiverExperience > 0 && (
+                  <span className="experience-tag">
+                    {caregiverExperience} years experience
+                  </span>
+                )}
               </div>
             </div>
           </div>
@@ -267,67 +331,163 @@ const HomeCareService = () => {
         {/* Plan Section */}
         <div className="plan-box">
           <div className="plan-tabs">
-            <span className="tab-basic">Basic</span>
-            {/* <span className="tab">Standard</span>
-            <span className="tab">Premium</span> */}
+            <span className="tab-basic">{packageName || "Basic"}</span>
+            <span className="delivery-time">Delivery: {deliveryTime || "1-2 days"}</span>
           </div>
           <div className="plan-price">₦{Number(price).toLocaleString()}</div>
           <ul className="plan-features">
-            {(packageDetails || []).map((f, i) => (
-              <li key={i} className={ "enabled"}>
-                ✓ {f}
+            {(packageDetails || []).map((feature, i) => (
+              <li key={i} className="enabled">
+                ✓ {feature}
               </li>
             ))}
+            {caregiverSpecializations.length > 0 && (
+              <li className="specializations">
+                <strong>Specializations:</strong> {caregiverSpecializations.join(', ')}
+              </li>
+            )}
           </ul>
-          <button className="accept-offer-btn" onClick={handleHire}>Accept offer →</button>
+          <button className="accept-offer-btn" onClick={handleHire}>
+            Accept offer →
+          </button>
         </div>
       </div>
 
       {/* Video Section */}
-      <h3>Introduction video</h3>
-      <div className="video-preview">
-        <video width="100%" controls>
-          <source src={videoURL} type="video/mp4" />
-          Your browser does not support the video tag.
-        </video>
-      </div>
+      {videoURL && (
+        <>
+          <h3>Introduction video</h3>
+          <div className="video-preview">
+            <video width="100%" controls>
+              <source src={videoURL} type="video/mp4" />
+              Your browser does not support the video tag.
+            </video>
+          </div>
+        </>
+      )}
+
+      {/* Caregiver Bio Section */}
+      {caregiverBio && (
+        <div className="caregiver-bio">
+          <h3>About {caregiverFirstName || caregiverName}</h3>
+          <p>{caregiverBio}</p>
+        </div>
+      )}
 
       {/* Package Details */}
       <div className="package-details">
-        <p>jke oeboe ferojebovrekfoeubfewo f erofuer freojferf erkf reuiofre ferkj fbefbiuerfnerjbvefbijrf nrwbfirewbfrw fkjbrfb rew frekjfrwiufrwk fojerfbier feroufer ferovfuer ferouvfer vouervber veruovfheoijweropfwbj wrf wroiwrfbwr ihrfw jofuowbf ih</p>
-        {/* <h2 className="section-title">What this package includes:</h2> */}
-        {/* <ul className="package-list">
-          {(packageDetails || []).map((item, index) => (
-            <li key={index} className="package-item">✓ {item}</li>
-          ))}
-        </ul> */}
+        <h2 className="section-title">What this package includes:</h2>
+        
+        {/* Service Details and Categories - Side by Side */}
+        <div className="service-details-container">
+          {/* Package Details List */}
+          {packageDetails && packageDetails.length > 0 && (
+            <div className="package-section">
+              <h4>Service Details:</h4>
+              <ul className="package-list">
+                {packageDetails.map((item, index) => (
+                  <li key={index} className="package-item">✓ {item}</li>
+                ))}
+              </ul>
+            </div>
+          )}
+          
+          {/* SubCategory Services */}
+          {subCategory && subCategory.length > 0 && (
+            <div className="package-section">
+              <h4>Service Categories:</h4>
+              <ul className="package-list">
+                {subCategory.map((item, index) => (
+                  <li key={index} className="package-item">✓ {item}</li>
+                ))}
+              </ul>
+            </div>
+          )}
+        </div>
+
+        {/* Caregiver Languages */}
+        {caregiverLanguages && caregiverLanguages.length > 0 && (
+          <div className="package-section">
+            <h4>Languages Spoken:</h4>
+            <div className="languages-list">
+              {caregiverLanguages.map((language, index) => (
+                <span key={index} className="language-tag">{language}</span>
+              ))}
+            </div>
+          </div>
+        )}
+
+        {/* Caregiver Certifications */}
+        {caregiverCertifications && caregiverCertifications.length > 0 && (
+          <div className="package-section">
+            <h4>Certifications:</h4>
+            <ul className="certifications-list">
+              {caregiverCertifications.map((cert, index) => (
+                <li key={index} className="certification-item">🏆 {cert}</li>
+              ))}
+            </ul>
+          </div>
+        )}
       </div>
 
       {/* Floating Message Button */}
       <div className="floating-message">
-        <img src={image1 || "/avatar.jpg"} className="floating-avatar" />
+        <img 
+          src={caregiverProfileImage || "/avatar.jpg"} 
+          className="floating-avatar" 
+          alt={caregiverName}
+        />
         <div className="floating-info">
-        <p className="message-provider-btn" onClick={handleMessage}>Message:  {caregiverName}</p>
-        <span className="status-text">Away · Avg. response time: 3 Hrs</span>
+          <p className="message-provider-btn" onClick={handleMessage}>
+            Message: {caregiverFirstName || caregiverName}
+          </p>
+          <span className="status-text">
+            {caregiverIsAvailable ? "Available" : "Away"} · 
+            {caregiverEmail && (
+              <span> Contact: {caregiverEmail}</span>
+            )}
+          </span>
         </div>
       </div>
 
       {/* Reviews */}
-      <div className="reviews">
-        <h2 className="review-title">Reviews</h2>
-        <div className="review-card">
-          <div className="review-header">
-            <img src="/avatar.jpg" alt="User" className="review-avatar" />
-            <div>
-              <p className="reviewer-name">Josiah Ruben</p>
-              <div className="stars">⭐⭐⭐⭐⭐</div>
+      {caregiverReviewCount > 0 && (
+        <div className="reviews">
+          <h2 className="review-title">Reviews</h2>
+          <div className="reviews-summary">
+            <div className="rating-overview">
+              <span className="average-rating">⭐ {caregiverRating || 0}</span>
+              <span className="review-count">({caregiverReviewCount || 0} reviews)</span>
+              {caregiverExperience > 0 && (
+                <span className="experience-info">• {caregiverExperience} years experience</span>
+              )}
+              {caregiverIsVerified && (
+                <span className="verified-badge">✓ Verified Caregiver</span>
+              )}
             </div>
           </div>
-          <p className="review-text">
-            "I can't thank Rufai enough for the care and kindness she provided to my father. Her attention to detail and genuine concern for his well-being went..."
-          </p>
+          
+          {/* Sample Review - In a real app, you'd fetch actual reviews */}
+          <div className="review-card">
+            <div className="review-header">
+              <img src="/avatar.jpg" alt="User" className="review-avatar" />
+              <div>
+                <p className="reviewer-name">Josiah Ruben</p>
+                <div className="stars">⭐⭐⭐⭐⭐</div>
+              </div>
+            </div>
+            <p className="review-text">
+              "I can't thank {caregiverFirstName || caregiverName} enough for the care and kindness provided to my father. 
+              Their attention to detail and genuine concern for his well-being went above and beyond expectations..."
+            </p>
+          </div>
+          
+          {/* Note about reviews */}
+          <div className="reviews-note">
+            <p><em>Reviews are based on the caregiver's overall performance across all services.</em></p>
+          </div>
         </div>
-      </div>
+      )}
     </div>
   );
 };

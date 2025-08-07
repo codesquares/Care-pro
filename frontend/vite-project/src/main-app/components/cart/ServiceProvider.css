@@ -1,36 +1,45 @@
+/* Mobile-first service provider */
 .service-provider {
   display: flex;
   align-items: center;
-  gap: 12px;
-  margin-bottom: 24px;
+  gap: 10px;
+  /* Mobile-first: smaller margin */
+  margin-bottom: 16px;
 }
 
 .service-provider__avatar {
   position: relative;
+  flex-shrink: 0;
 }
 
 .service-provider__image {
-  width: 40px;
-  height: 40px;
+  /* Mobile-first: smaller image */
+  width: 36px;
+  height: 36px;
   border-radius: 50%;
   object-fit: cover;
 }
 
 .service-provider__info {
   flex: 1;
+  min-width: 0;
 }
 
 .service-provider__name-row {
   display: flex;
   align-items: center;
-  gap: 8px;
-  margin-bottom: 4px;
+  gap: 6px;
+  margin-bottom: 3px;
 }
 
 .service-provider__name {
-  font-size: 16px;
+  /* Mobile-first: smaller font */
+  font-size: 15px;
   font-weight: 600;
   color: #333;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
 }
 
 .service-provider__status {
@@ -38,16 +47,19 @@
   height: 8px;
   border-radius: 50%;
   background-color: #10b981;
+  flex-shrink: 0;
 }
 
 .service-provider__badges {
   display: flex;
   align-items: center;
-  gap: 8px;
+  gap: 6px;
+  flex-wrap: wrap;
 }
 
 .service-provider__badge {
-  font-size: 12px;
+  /* Mobile-first: smaller font */
+  font-size: 11px;
   padding: 2px 8px;
   border-radius: 12px;
   font-weight: 500;
@@ -77,4 +89,41 @@
 .service-provider__rating-text {
   font-size: 12px;
   color: #666;
+}
+
+/* Tablet and up: larger sizing */
+@media (min-width: 768px) {
+  .service-provider {
+    gap: 12px;
+    margin-bottom: 20px;
+  }
+  
+  .service-provider__image {
+    width: 40px;
+    height: 40px;
+  }
+  
+  .service-provider__name-row {
+    gap: 8px;
+    margin-bottom: 4px;
+  }
+  
+  .service-provider__name {
+    font-size: 16px;
+  }
+  
+  .service-provider__badges {
+    gap: 8px;
+  }
+  
+  .service-provider__badge {
+    font-size: 12px;
+  }
+}
+
+/* Desktop: full sizing */
+@media (min-width: 1024px) {
+  .service-provider {
+    margin-bottom: 24px;
+  }
 }

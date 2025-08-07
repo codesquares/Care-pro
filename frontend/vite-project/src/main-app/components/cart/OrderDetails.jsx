@@ -9,7 +9,9 @@ const OrderDetails = ({ service, selectedFrequency, priceData, onPayment }) => {
   console.log("Selected frequency in OrderDetails:", selectedFrequency);
   console.log("Price data in OrderDetails:", priceData);
   
-  const { title, caregiverName, rating, packageDetails, image1, plan, price, features, videoURL } = service;
+  const { title, caregiverName, rating, packageDetails, image1, plan, price, features, videoURL, caregiverProfileImage } = service;
+
+  console.log("where is service from?:", service);
   
   // Use price data if available, otherwise fallback to base price
   const effectivePrice = priceData ? priceData.calculatedPrice : price;
@@ -77,7 +79,7 @@ const OrderDetails = ({ service, selectedFrequency, priceData, onPayment }) => {
           <span className="order-details__label">Ordered from:</span>
           <div className="order-details__provider">
             <img 
-              src={image1} 
+              src={caregiverProfileImage} 
               alt="Provider" 
               className="order-details__provider-image"
             />

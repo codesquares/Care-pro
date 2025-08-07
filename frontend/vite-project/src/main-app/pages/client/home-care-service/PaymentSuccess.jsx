@@ -1,6 +1,7 @@
 import { useEffect, useRef, useState } from "react";
 import { useSearchParams, useNavigate } from "react-router-dom";
 import configs from '../../../config';
+import './PaymentSuccess.css';
 
 const PaymentSuccess = () => {
   const [searchParams] = useSearchParams();
@@ -203,78 +204,111 @@ const PaymentSuccess = () => {
   };
 
   return (
-    <div className="container">
-      <h1>Payment {status === "successful" ? "Successful" : "Failed"}</h1>
-      {status === "successful" ? (
-        <div>
-          <p>Transaction ID: {transactionId}</p>
-          <p>Reference: {txRef}</p>
-          <p>Amount Paid: ₦{amount.toLocaleString()}</p>
-          <p>Status: {orderStatus}</p>
-          {orderData && orderData.tasks && orderData.tasks.length > 0 && (
-            <p>✓ {orderData.tasks.length} task(s) will be saved</p>
+    <div className="payment-success-page">
+      <div className="payment-success-container">
+        <div className="payment-success-card">
+          {status === "successful" ? (
+            <>
+              {/* Success Header */}
+              <div className="payment-status-icon payment-status-icon--success">
+                ✓
+              </div>
+              <h1 className="payment-success-title payment-success-title--success">
+                Payment Successful!
+              </h1>
+              
+              {/* Order Status */}
+              <div className="payment-status-message payment-status-message--processing">
+                <div className="loading-spinner" style={{ margin: '0 auto 10px auto' }}></div>
+                {orderStatus}
+              </div>
+              
+              {/* Payment Details */}
+              <div className="payment-details">
+                <div className="payment-detail-item">
+                  <span className="payment-detail-label">Transaction ID</span>
+                  <span className="payment-detail-value">{transactionId}</span>
+                </div>
+                <div className="payment-detail-item">
+                  <span className="payment-detail-label">Reference</span>
+                  <span className="payment-detail-value">{txRef}</span>
+                </div>
+                <div className="payment-detail-item">
+                  <span className="payment-detail-label">Amount Paid</span>
+                  <span className="payment-detail-value payment-amount">₦{amount.toLocaleString()}</span>
+                </div>
+              </div>
+              
+              {/* Order Features */}
+              {orderData && (
+                <div className="order-features">
+                  {orderData.tasks && orderData.tasks.length > 0 && (
+                    <div className="order-feature-item">
+                      {orderData.tasks.length} task(s) will be saved for your caregiver
+                    </div>
+                  )}
+                  {orderData.selectedFrequency && (
+                    <div className="order-feature-item">
+                      Service frequency: {orderData.selectedFrequency}
+                    </div>
+                  )}
+                </div>
+              )}
+              
+              {/* Action Button */}
+              <div className="payment-actions">
+                <button 
+                  className="payment-btn payment-btn--primary"
+                  onClick={() => navigate("/app/client/my-order")}
+                >
+                  View My Orders
+                </button>
+              </div>
+            </>
+          ) : (
+            <>
+              {/* Failed Header */}
+              <div className="payment-status-icon payment-status-icon--failed">
+                ✕
+              </div>
+              <h1 className="payment-success-title payment-success-title--failed">
+                Payment Failed
+              </h1>
+              
+              {/* Error Message */}
+              <div className="error-message">
+                <div className="error-title">Payment could not be processed</div>
+                <div>{getErrorMessage()}</div>
+                {txRef && (
+                  <div className="error-reference">Reference: {txRef}</div>
+                )}
+              </div>
+              
+              {/* Action Buttons */}
+              <div className="payment-actions">
+                <button 
+                  className="payment-btn payment-btn--primary"
+                  onClick={handleRetryPayment}
+                >
+                  Try Again
+                </button>
+                <button 
+                  className="payment-btn payment-btn--secondary"
+                  onClick={() => navigate("/app/client/dashboard")}
+                >
+                  Browse Services
+                </button>
+                <button 
+                  className="payment-btn payment-btn--outline"
+                  onClick={() => navigate("/app/client/dashboard")}
+                >
+                  Go to Dashboard
+                </button>
+              </div>
+            </>
           )}
-          {orderData && orderData.selectedFrequency && (
-            <p>✓ Service frequency: {orderData.selectedFrequency}</p>
-          )}
-          <button onClick={() => navigate("/app/client/my-order")}>Go to Order</button>
         </div>
-      ) : (
-        <div>
-          <p style={{ color: '#e74c3c', marginBottom: '15px' }}>
-            <strong>Payment Failed</strong>
-          </p>
-          <p style={{ marginBottom: '15px' }}>
-            {getErrorMessage()}
-          </p>
-          {txRef && (
-            <p style={{ fontSize: '14px', color: '#666', marginBottom: '15px' }}>
-              Reference: {txRef}
-            </p>
-          )}
-          <div style={{ display: 'flex', gap: '10px', flexWrap: 'wrap' }}>
-            <button 
-              onClick={handleRetryPayment}
-              style={{ 
-                backgroundColor: '#3498db', 
-                color: 'white', 
-                padding: '10px 20px',
-                border: 'none',
-                borderRadius: '5px',
-                cursor: 'pointer'
-              }}
-            >
-              Try Again
-            </button>
-            <button 
-              onClick={() => navigate("/app/client/dashboard")}
-              style={{ 
-                backgroundColor: '#95a5a6', 
-                color: 'white', 
-                padding: '10px 20px',
-                border: 'none',
-                borderRadius: '5px',
-                cursor: 'pointer'
-              }}
-            >
-              Browse Services
-            </button>
-            <button 
-              onClick={() => navigate("/app/client/dashboard")}
-              style={{ 
-                backgroundColor: '#7f8c8d', 
-                color: 'white', 
-                padding: '10px 20px',
-                border: 'none',
-                borderRadius: '5px',
-                cursor: 'pointer'
-              }}
-            >
-              Go to Dashboard
-            </button>
-          </div>
-        </div>
-      )}
+      </div>
     </div>
   );
 };

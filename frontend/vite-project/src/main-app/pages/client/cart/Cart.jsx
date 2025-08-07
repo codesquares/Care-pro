@@ -1,9 +1,13 @@
 import React from 'react';
 import OrderSpecifications from '../../../components/cart/OrderSpecifications';
 import OrderDetails from '../../../components/cart/OrderDetails';
+import ServiceProvider from '../../../components/cart/ServiceProvider';
+import ServiceFrequency from '../../../components/cart/ServiceFrequency';
+import TaskList from '../../../components/cart/TaskList';
 import './Cart.css';
 import { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
+import ClientGigService from '../../../services/clientGigService';
 
 const Cart = () => {
    const { id } = useParams();
@@ -11,6 +15,9 @@ const Cart = () => {
     const [videoPreviewUrl, setVideoPreviewUrl] = useState("");
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState(null);
+    
+    // Responsive state for mobile detection
+    const [isMobile, setIsMobile] = useState(false);
     
     // Frequency and price data state
     const [selectedFrequency, setSelectedFrequency] = useState('weekly');
@@ -45,11 +52,11 @@ const Cart = () => {
     // Get user tasks (non-explanatory)
     const userTasks = tasks.filter(task => !task.isExplanatory);
 
-    // Task validation
+    // Task validation - now optional but informational
     const validateTasks = () => {
       if (userTasks.length === 0) {
-        setTaskValidationError('Please add at least one task for your caregiver');
-        return false;
+        setTaskValidationError('💡 Tip: Adding specific tasks helps caregivers provide better personalized service');
+        return true; // Allow payment to proceed
       }
       setTaskValidationError('');
       return true;
@@ -76,19 +83,29 @@ const Cart = () => {
         setTasks(tasks.filter(task => task.id !== taskId));
       }
     };  
-    // Handle frequency change from OrderSpecifications
+    // Handle frequency change from ServiceFrequency
     const handleFrequencyChange = (frequencyId, priceData) => {
       setSelectedFrequency(frequencyId);
       setFrequencyPriceData(priceData);
     };
 
+    // Mobile detection effect
+    useEffect(() => {
+      const checkIsMobile = () => {
+        setIsMobile(window.innerWidth < 768);
+      };
+      
+      checkIsMobile();
+      window.addEventListener('resize', checkIsMobile);
+      
+      return () => window.removeEventListener('resize', checkIsMobile);
+    }, []);
+
     const handleHire = async () => {
       if (!service) return;
       
-      // Validate tasks before proceeding to payment
-      if (!validateTasks()) {
-        return;
-      }
+      // Show informational message about tasks (non-blocking)
+      validateTasks();
       
       const user = JSON.parse(localStorage.getItem("userDetails"));
       // const id = user?.id;
@@ -164,29 +181,36 @@ const Cart = () => {
      
         const fetchServiceDetails = async () => {
           try {
-            const response = await fetch(
-              `https://carepro-api20241118153443.azurewebsites.net/api/Gigs/gigId?gigId=${id}`
-            );
-            if (!response.ok) {
-              throw new Error("Failed to fetch service details");
+            setLoading(true);
+            setError(null);
+            
+            // Use the enhanced ClientGigService to get all enriched gigs
+            const allGigs = await ClientGigService.getAllGigs();
+            
+            // Find the specific gig by ID
+            const foundGig = allGigs.find(gig => gig.id === id);
+            
+            if (!foundGig) {
+              throw new Error("Service not found or no longer available");
             }
-            const data = await response.json();
-            console.log("Service details:", data);
-            setService(data);
+            
+            console.log("Service details:", foundGig);
+            setService(foundGig);
             
             // Calculate default weekly frequency price data
             const weeklyMultiplier = 4; // Assuming weekly means 4 times per month
-            const defaultWeeklyPrice = data.price * weeklyMultiplier;
+            const defaultWeeklyPrice = foundGig.price * weeklyMultiplier;
             const defaultPriceData = {
               frequency: 'weekly',
               multiplier: weeklyMultiplier,
-              basePrice: data.price,
+              basePrice: foundGig.price,
               calculatedPrice: defaultWeeklyPrice
             };
             
             // Set default frequency price data
             setFrequencyPriceData(defaultPriceData);
           } catch (error) {
+            console.error("Error fetching service details:", error);
             setError(error.message);
           } finally {
             setLoading(false);
@@ -199,31 +223,83 @@ const Cart = () => {
       if (loading) return <p>Loading...</p>;
       if (error) return <p className="error">{error}</p>;
     
-      // // Extract service details
-      // const { title, caregiverName, rating, packageDetails, image1, plan, price, features, videoURL } = service;
-  return (
-    <div className="cart-page">
-      <div className="cart-container">
-        <OrderSpecifications 
-          service={service} 
-          selectedFrequency={selectedFrequency}
-          onFrequencyChange={handleFrequencyChange}
-          tasks={tasks}
-          onAddTask={handleAddTask}
-          onRemoveTask={handleRemoveTask}
-          taskValidationError={taskValidationError}
-          userTasksCount={userTasks.length}
-          validateTasks={validateTasks}
-        />
-        <OrderDetails 
-          service={service} 
-          selectedFrequency={selectedFrequency}
-          priceData={frequencyPriceData}
-          onPayment={handleHire}
-        />
-      </div>
-    </div>
-  );
+      // Mobile layout: Order specifications header -> Order details -> Service frequency -> Task list
+      // Desktop layout: Order specifications (all components) -> Order details
+      if (isMobile) {
+        return (
+          <div className="cart-page">
+            <div className="cart-container">
+              {/* Order specifications header and service info */}
+              <div className="order-specifications">
+                <h2 className="order-specifications__title">Order Specifications</h2>
+                <div className="order-specifications__service-description">
+                  {service?.title || 'Service Title Not Available'}
+                </div>
+                <ServiceProvider service={service} />
+              </div>
+              
+              {/* Order details */}
+              <OrderDetails 
+                service={service} 
+                selectedFrequency={selectedFrequency}
+                priceData={frequencyPriceData}
+                onPayment={handleHire}
+              />
+              
+              {/* Service frequency */}
+              <div className="order-specifications">
+                <ServiceFrequency
+                  selectedFrequency={selectedFrequency}
+                  onFrequencyChange={handleFrequencyChange}
+                  service={service}
+                />
+                
+                {/* Task validation error */}
+                {taskValidationError && (
+                  <div className="order-specifications__error">
+                    {taskValidationError}
+                  </div>
+                )}
+                
+                {/* Task list */}
+                <TaskList 
+                  tasks={tasks}
+                  onAddTask={handleAddTask}
+                  onRemoveTask={handleRemoveTask}
+                  service={service}
+                  userTasksCount={userTasks.length}
+                  validateTasks={validateTasks}
+                />
+              </div>
+            </div>
+          </div>
+        );
+      }
+      
+      // Desktop layout (original)
+      return (
+        <div className="cart-page">
+          <div className="cart-container">
+            <OrderSpecifications 
+              service={service} 
+              selectedFrequency={selectedFrequency}
+              onFrequencyChange={handleFrequencyChange}
+              tasks={tasks}
+              onAddTask={handleAddTask}
+              onRemoveTask={handleRemoveTask}
+              taskValidationError={taskValidationError}
+              userTasksCount={userTasks.length}
+              validateTasks={validateTasks}
+            />
+            <OrderDetails 
+              service={service} 
+              selectedFrequency={selectedFrequency}
+              priceData={frequencyPriceData}
+              onPayment={handleHire}
+            />
+          </div>
+        </div>
+      );
 };
 
 export default Cart;

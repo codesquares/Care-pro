@@ -9,7 +9,7 @@ const ServiceProvider = ({service}) => {
     <div className="service-provider">
       <div className="service-provider__avatar">
         <img 
-          src={service.image1} 
+          src={service.caregiverProfileImage || '/default-avatar.png'} 
           alt={service.caregiverName || 'Service Provider Avatar'} 
           className="service-provider__image"
         />

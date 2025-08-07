@@ -11,16 +11,102 @@ const ClientGigService = {
    * Get all available gig services
    * @returns {Promise<Array>} List of all gig services
    */
+  // async getAllGigs() {
+  //   try {
+  //     const response = await axios.get(`${BASE_API_URL}/Gigs`);
+  //     const userResponse = await axios.get(`${BASE_API_URL}/CareGivers/AllCaregivers`);
+  //     // Combine gig services with user data and exclude any gig that does not have a caregiverId in the user data
+
+  //     return response.data || [];
+  //   } catch (error) {
+  //     console.error('Error fetching all gigs:', error);
+  //     return [];
+  //   }
+  // },
+  
   async getAllGigs() {
+  try {
+    // Fetch all gigs and all caregivers in parallel for better performance
+    const [response, userResponse] = await Promise.all([
+      axios.get(`${BASE_API_URL}/Gigs`),
+      axios.get(`${BASE_API_URL}/CareGivers/AllCaregivers`)
+    ]);
+
+    const allGigs = response.data || [];
+    const allCaregivers = userResponse.data || [];
+
+    // Create a map of caregiver data for faster lookup
+    // This improves performance when matching gigs to caregivers
+    const caregiverMap = new Map();
+    allCaregivers.forEach(caregiver => {
+      caregiverMap.set(caregiver.id, caregiver);
+    });
+
+    // Filter gigs to only include those with valid caregivers and published status
+    // and enrich them with caregiver information
+    const validAndEnrichedGigs = allGigs
+      .filter(gig => {
+        // Exclude gigs that don't have a caregiverId or whose caregiver doesn't exist
+        // Also exclude gigs that are not published
+        return gig.caregiverId && 
+               caregiverMap.has(gig.caregiverId) && 
+               gig.status === 'Published';
+      })
+      .map(gig => {
+        // Get the corresponding caregiver data
+        const caregiver = caregiverMap.get(gig.caregiverId);
+        
+        // Combine gig data with relevant caregiver information
+        return {
+          ...gig, // Keep all original gig properties
+          
+          // Add enriched caregiver data to the gig object
+          caregiverName: caregiver.firstName && caregiver.lastName 
+            ? `${caregiver.firstName} ${caregiver.lastName}` 
+            : caregiver.fullName || 'Unknown Caregiver',
+          
+          caregiverFirstName: caregiver.firstName || '',
+          caregiverLastName: caregiver.lastName || '',
+          caregiverEmail: caregiver.email || '',
+          caregiverPhone: caregiver.phoneNumber || '',
+          gigImage:  gig.image1 || '',
+          caregiverRating: caregiver.rating || 0,
+          caregiverReviewCount: caregiver.reviewCount || 0,
+          caregiverLocation: caregiver.location || caregiver.address || '',
+          caregiverBio: caregiver.bio || caregiver.description || '',
+          caregiverExperience: caregiver.yearsOfExperience || caregiver.experience || 0,
+          caregiverSpecializations: caregiver.specializations || caregiver.skills || [],
+          caregiverIsVerified: caregiver.isVerified || false,
+          caregiverIsAvailable: caregiver.isAvailable !== false, // Default to true if not specified
+          caregiverJoinDate: caregiver.createdAt || caregiver.joinDate || '',
+          caregiverLanguages: caregiver.languages || [],
+          caregiverCertifications: caregiver.certifications || [],
+          
+          // Keep the original caregiverId for reference
+          originalCaregiverId: gig.caregiverId,
+          caregiverProfileImage: caregiver.profileImage || "./avatar.jpg"
+        };
+      });
+
+    console.log(`Filtered ${validAndEnrichedGigs.length} valid gigs out of ${allGigs.length} total gigs`);
+    console.log('Enriched gig data:', validAndEnrichedGigs);
+
+    return validAndEnrichedGigs;
+    
+  } catch (error) {
+    console.error('Error fetching and combining gigs with caregiver data:', error);
+    
+    // In case of error, still try to return basic gig data if available
     try {
-      const response = await axios.get(`${BASE_API_URL}/Gigs`);
-      return response.data || [];
-    } catch (error) {
-      console.error('Error fetching all gigs:', error);
+      const fallbackResponse = await axios.get(`${BASE_API_URL}/Gigs`);
+      console.warn('Returning basic gig data without caregiver enrichment due to error');
+      return fallbackResponse.data || [];
+    } catch (fallbackError) {
+      console.error('Complete failure to fetch gigs:', fallbackError);
       return [];
     }
-  },
-  
+  }
+},
   /**
    * Get most popular gig services
    * @param {number} limit - Maximum number of gigs to return
@@ -28,15 +114,22 @@ const ClientGigService = {
    */
   async getPopularGigs(limit = 6) {
     try {
-      // In a real app, this would use a dedicated endpoint
-      // For now, we'll simulate by getting all and filtering
-      const response = await axios.get(`${BASE_API_URL}/Gigs`);
-      const allGigs = response.data || [];
+      // Use getAllGigs to get enriched data with caregiver information
+      const allEnrichedGigs = await this.getAllGigs();
       
-      // Sort by number of orders (popularity)
-      // This is just a simulation - actual implementation would depend on your API
-      const sortedGigs = [...allGigs].sort((a, b) => 
-        (b.orderCount || 0) - (a.orderCount || 0)
+      // Calculate popularity score using available fields
+      // TODO: Add 'orderCount', 'viewCount', or 'bookingCount' fields to track actual popularity metrics
+      // Current implementation uses caregiver rating * review count as popularity proxy
+      const gigsWithPopularityScore = allEnrichedGigs.map(gig => ({
+        ...gig,
+        popularityScore: (gig.caregiverRating * gig.caregiverReviewCount) + 
+                        (gig.caregiverIsVerified ? 10 : 0) + // Boost for verified caregivers
+                        (gig.caregiverExperience * 2) // Boost for experience
+      }));
+      
+      // Sort by popularity score (higher is better)
+      const sortedGigs = gigsWithPopularityScore.sort((a, b) => 
+        b.popularityScore - a.popularityScore
       );
       
       return sortedGigs.slice(0, limit);
@@ -53,16 +146,24 @@ const ClientGigService = {
    */
   async getTopRatedGigs(limit = 6) {
     try {
-      // In a real app, this would use a dedicated endpoint
-      const response = await axios.get(`${BASE_API_URL}/Gigs`);
-      const allGigs = response.data || [];
+      // Use getAllGigs to get enriched data with caregiver information
+      const allEnrichedGigs = await this.getAllGigs();
       
-      // Sort by rating
-      const sortedGigs = [...allGigs].sort((a, b) => 
-        (b.rating || 0) - (a.rating || 0)
-      );
+      // Filter to only include gigs with rated caregivers and sort by rating
+      // TODO: Add 'gigRating' field to track ratings specific to individual gigs
+      // Current implementation uses caregiverRating as the primary rating metric
+      const ratedGigs = allEnrichedGigs
+        .filter(gig => gig.caregiverRating > 0) // Only include gigs with rated caregivers
+        .sort((a, b) => {
+          // Primary sort by caregiver rating (descending)
+          if (a.caregiverRating !== b.caregiverRating) {
+            return b.caregiverRating - a.caregiverRating;
+          }
+          // Secondary sort by review count for tie-breaking (more reviews = more credible)
+          return b.caregiverReviewCount - a.caregiverReviewCount;
+        });
       
-      return sortedGigs.slice(0, limit);
+      return ratedGigs.slice(0, limit);
     } catch (error) {
       console.error('Error fetching top rated gigs:', error);
       return [];
@@ -71,7 +172,7 @@ const ClientGigService = {
   
   /**
    * Apply advanced filters to gig services
-   * @param {Array} services - List of gig services to filter
+   * @param {Array} services - List of enriched gig services from getAllGigs()
    * @param {Object} filters - Filter criteria
    * @returns {Array} Filtered list of gig services
    */
@@ -82,31 +183,33 @@ const ClientGigService = {
     
     let filteredServices = [...services];
     
-    // Filter by service type (category)
+    // Filter by service type (category or subcategory)
     if (filters.serviceType) {
       filteredServices = filteredServices.filter(service => 
         service.category === filters.serviceType || 
-        service.subCategory === filters.serviceType
+        (service.subCategory && service.subCategory.includes(filters.serviceType))
       );
     }
     
-    // Filter by location
+    // Enhanced location filtering using both gig and caregiver location
+    // TODO: Populate caregiverLocation field - many entries are empty
     if (filters.location) {
       filteredServices = filteredServices.filter(service => 
-        service.location === filters.location || 
+        service.caregiverLocation === filters.location ||
+        service.caregiverLocation.toLowerCase().includes(filters.location.toLowerCase()) ||
         service.serviceArea?.includes(filters.location)
       );
     }
     
-    // Filter by minimum rating
+    // Enhanced rating filtering using caregiver rating
     if (filters.minRating) {
       const minRatingValue = parseFloat(filters.minRating);
       filteredServices = filteredServices.filter(service => 
-        (service.rating || 0) >= minRatingValue
+        (service.caregiverRating || 0) >= minRatingValue
       );
     }
     
-    // Filter by price range
+    // Price range filtering
     if (filters.priceRange) {
       if (filters.priceRange.min) {
         const minPrice = parseFloat(filters.priceRange.min);
@@ -123,17 +226,65 @@ const ClientGigService = {
       }
     }
     
-    // Sort results
+    // New filter: Verified caregivers only
+    if (filters.verifiedOnly) {
+      filteredServices = filteredServices.filter(service => 
+        service.caregiverIsVerified === true
+      );
+    }
+    
+    // New filter: Available caregivers only
+    if (filters.availableOnly) {
+      filteredServices = filteredServices.filter(service => 
+        service.caregiverIsAvailable === true
+      );
+    }
+    
+    // New filter: Minimum experience years
+    if (filters.minExperience) {
+      const minExp = parseFloat(filters.minExperience);
+      filteredServices = filteredServices.filter(service => 
+        (service.caregiverExperience || 0) >= minExp
+      );
+    }
+    
+    // New filter: By caregiver specializations
+    if (filters.specializations && filters.specializations.length > 0) {
+      filteredServices = filteredServices.filter(service =>
+        filters.specializations.some(spec =>
+          service.caregiverSpecializations.includes(spec)
+        )
+      );
+    }
+    
+    // New filter: By package type
+    if (filters.packageType) {
+      filteredServices = filteredServices.filter(service => 
+        service.packageType === filters.packageType
+      );
+    }
+    
+    // Enhanced sorting with new options
     if (filters.sortBy) {
       switch (filters.sortBy) {
         case 'popularity':
-          filteredServices.sort((a, b) => (b.orderCount || 0) - (a.orderCount || 0));
+          // TODO: Add orderCount/bookingCount for true popularity metrics
+          // Current implementation uses composite popularity score
+          filteredServices.sort((a, b) => {
+            const scoreA = (a.caregiverRating * a.caregiverReviewCount) + 
+                          (a.caregiverIsVerified ? 10 : 0) + 
+                          (a.caregiverExperience * 2);
+            const scoreB = (b.caregiverRating * b.caregiverReviewCount) + 
+                          (b.caregiverIsVerified ? 10 : 0) + 
+                          (b.caregiverExperience * 2);
+            return scoreB - scoreA;
+          });
           break;
         case 'rating-high':
-          filteredServices.sort((a, b) => (b.rating || 0) - (a.rating || 0));
+          filteredServices.sort((a, b) => (b.caregiverRating || 0) - (a.caregiverRating || 0));
           break;
         case 'rating-low':
-          filteredServices.sort((a, b) => (a.rating || 0) - (b.rating || 0));
+          filteredServices.sort((a, b) => (a.caregiverRating || 0) - (b.caregiverRating || 0));
           break;
         case 'price-high':
           filteredServices.sort((a, b) => (b.price || 0) - (a.price || 0));
@@ -144,14 +295,39 @@ const ClientGigService = {
         case 'newest':
           filteredServices.sort((a, b) => new Date(b.createdAt || 0) - new Date(a.createdAt || 0));
           break;
+        case 'experience-high':
+          filteredServices.sort((a, b) => (b.caregiverExperience || 0) - (a.caregiverExperience || 0));
+          break;
+        case 'experience-low':
+          filteredServices.sort((a, b) => (a.caregiverExperience || 0) - (b.caregiverExperience || 0));
+          break;
+        case 'most-reviewed':
+          filteredServices.sort((a, b) => (b.caregiverReviewCount || 0) - (a.caregiverReviewCount || 0));
+          break;
+        case 'verified-first':
+          filteredServices.sort((a, b) => {
+            if (a.caregiverIsVerified === b.caregiverIsVerified) {
+              return (b.caregiverRating || 0) - (a.caregiverRating || 0);
+            }
+            return b.caregiverIsVerified - a.caregiverIsVerified;
+          });
+          break;
         default:
-          // Default sort (by id or popularity)
+          // Default sort by rating then by review count
+          filteredServices.sort((a, b) => {
+            if ((b.caregiverRating || 0) !== (a.caregiverRating || 0)) {
+              return (b.caregiverRating || 0) - (a.caregiverRating || 0);
+            }
+            return (b.caregiverReviewCount || 0) - (a.caregiverReviewCount || 0);
+          });
           break;
       }
     }
     
     return filteredServices;
-  }
+  },
+ 
+  
 };
 
 export default ClientGigService;
