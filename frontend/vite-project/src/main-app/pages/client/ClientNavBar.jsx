@@ -9,6 +9,7 @@ import homeIcon from "../../../assets/home_icon.png";
 import settingIcon from "../../../assets/setting.png";
 import NotificationBell from "../../components/notifications/NotificationBell";
 import "../care-giver/care-giver-dashboard/NavigationBar.css";
+import "./ClientNavBarCustom.css";
 
 const ClientNavBar = () => {
   const navigate = useNavigate();
@@ -17,6 +18,7 @@ const ClientNavBar = () => {
 
   const [showDropdown, setShowDropdown] = useState(false);
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
+  const [searchQuery, setSearchQuery] = useState("");
 
   const user = JSON.parse(localStorage.getItem("userDetails"));
   const userName = user?.firstName ? `${user.firstName} ${user.lastName}` : "";
@@ -58,6 +60,18 @@ const ClientNavBar = () => {
     setMobileMenuOpen(!mobileMenuOpen);
   };
 
+  const handleSearch = (e) => {
+    e.preventDefault();
+    if (searchQuery.trim()) {
+      // Navigate to search results or handle search logic
+      navigate(`${basePath}/search?q=${encodeURIComponent(searchQuery.trim())}`);
+    }
+  };
+
+  const handleSearchInputChange = (e) => {
+    setSearchQuery(e.target.value);
+  };
+
   return (
     <nav className="navigation-bar">
       {/* Mobile Navigation */}
@@ -76,25 +90,37 @@ const ClientNavBar = () => {
         </button>
       </div>
 
+      {/* Mobile: User name and search bar below nav */}
+      <div className="mobile-user-search">
+        <div className="mobile-search-container">
+          <form onSubmit={handleSearch} className="mobile-search-form">
+            <input
+              type="text"
+              placeholder="What service are you looking for today?"
+              value={searchQuery}
+              onChange={handleSearchInputChange}
+              className="mobile-search-input"
+            />
+            <button type="submit" className="mobile-search-button" aria-label="Search">
+              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                <path 
+                  d="M21 21L16.514 16.506L21 21ZM19 10.5C19 15.194 15.194 19 10.5 19C5.806 19 2 15.194 2 10.5C2 5.806 5.806 2 10.5 2C15.194 2 19 5.806 19 10.5Z" 
+                  stroke="currentColor" 
+                  strokeWidth="2" 
+                  strokeLinecap="round" 
+                  strokeLinejoin="round"
+                />
+              </svg>
+            </button>
+          </form>
+        </div>
+      </div>
+
       {/* Mobile Menu Overlay */}
       {mobileMenuOpen && (
         <div className="mobile-menu-overlay" onClick={() => setMobileMenuOpen(false)}>
           <div className="mobile-menu" onClick={(e) => e.stopPropagation()}>
             <div className="mobile-menu-header">
-              <div className="mobile-menu-user">
-                <div className="avatar">
-                  <span className="avatar-initials">
-                    {getInitials(userName)}
-                  </span>
-                </div>
-                <div className="user-info">
-                  <span className="user-name">{userName}</span>
-                  <div className="earnings-mobile">
-                    <img src={receipt} alt="Orders Icon" />
-                    <span>View Orders</span>
-                  </div>
-                </div>
-              </div>
               <button 
                 className="close-menu"
                 onClick={() => setMobileMenuOpen(false)}
@@ -103,7 +129,6 @@ const ClientNavBar = () => {
                 ×
               </button>
             </div>
-            
             <ul className="mobile-menu-links">
               <li onClick={() => { navigate(`${basePath}/dashboard`); setMobileMenuOpen(false); }}>
                 <div className="menu-item-content">
@@ -162,36 +187,71 @@ const ClientNavBar = () => {
           <img src={logo} alt="CarePro Logo" />
         </div>
 
+        {/* Search Bar */}
+        <div className="search-container">
+          <form onSubmit={handleSearch} className="search-form">
+            <input
+              type="text"
+              placeholder="What service are you looking for today?"
+              value={searchQuery}
+              onChange={handleSearchInputChange}
+              className="search-input"
+            />
+            <button type="submit" className="search-button" aria-label="Search">
+              <svg width="20" height="20" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                <path 
+                  d="M21 21L16.514 16.506L21 21ZM19 10.5C19 15.194 15.194 19 10.5 19C5.806 19 2 15.194 2 10.5C2 5.806 5.806 2 10.5 2C15.194 2 19 5.806 19 10.5Z" 
+                  stroke="currentColor" 
+                  strokeWidth="2" 
+                  strokeLinecap="round" 
+                  strokeLinejoin="round"
+                />
+              </svg>
+            </button>
+          </form>
+        </div>
+
         <ul className="nav-links">
-          <li className="nav-link text-link" onClick={() => navigate(`${basePath}/dashboard`)}>
-            Dashboard
-          </li>
-          <li className="nav-link text-link" onClick={() => navigate(`${basePath}/my-order`)}>
-            My Orders
-          </li>
-          <li className="nav-link text-link" onClick={() => navigate(`${basePath}/settings`)}>
-            Settings
-          </li>
         </ul>
 
         <div className="nav-actions">
           <ul className="nav-icons">
+            <li className="nav-link icon-link" onClick={() => navigate(`${basePath}/settings`)}>
+              <img src={settingIcon} alt="Settings" />
+            </li>
             <li className="nav-link icon-link">
               <NotificationBell navigateTo={(path) => navigate(path)} bellIcon={bellIcon} />
             </li>
             <IconLink to={`${basePath}/message`} icon={message} alt="Messages" />
+            <IconLink to={`${basePath}/favorites`} icon={hear} alt="Favorites" />
           </ul>
 
           <div className="earnings" onClick={() => navigate(`${basePath}/my-order`)}>
             <img src={receipt} alt="Orders Icon" />
-            <span>View</span>
-            <strong>Orders</strong>
+            <span>View Orders</span>
           </div>
 
           <div className="profile-avatar" ref={dropdownRef}>
-            <span onClick={() => setShowDropdown(!showDropdown)}>{userName}</span>
+            <span className="user-name-text" onClick={() => setShowDropdown(!showDropdown)}>
+              {`${user?.firstName + " " + user?.lastName || "User"}`}
+            </span>
             <div className="avatar" onClick={() => setShowDropdown(!showDropdown)}>
-              {getInitials(userName)}
+              {user?.profileImage ? (
+                <img 
+                  src={user.profileImage} 
+                  alt="Profile" 
+                  className="avatar-image"
+                />
+              ) : (
+                <span className="avatar-initials">
+                  {getInitials(userName)}
+                </span>
+              )}
+            </div>
+            <div className="dropdown-arrow" onClick={() => setShowDropdown(!showDropdown)}>
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                <path d="M6 9L12 15L18 9" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
+              </svg>
             </div>
             {showDropdown && (
               <div className="dropdown-menu">

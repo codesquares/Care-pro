@@ -1,0 +1,412 @@
+/* Mobile user/search section below nav */
+@media (max-width: 900px) {
+  .mobile-user-search {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 12px;
+    padding: 12px 0 8px 0;
+    background: #fff;
+    border-bottom: 1px solid #f0f0f0;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.03);
+    z-index: 2;
+  }
+
+  .mobile-user-name {
+    font-size: 1.1rem;
+    font-weight: 600;
+    color: #222;
+    letter-spacing: 0.02em;
+    margin-bottom: 0;
+    text-align: center;
+    width: 100%;
+  }
+
+  .mobile-search-container {
+    width: 90vw;
+    max-width: 400px;
+    margin: 0 auto;
+  }
+
+  .mobile-search-form {
+    display: flex;
+    align-items: center;
+    background: #f5f6fa;
+    border-radius: 24px;
+    padding: 4px 12px;
+    box-shadow: 0 1px 4px rgba(0,0,0,0.04);
+  }
+
+  .mobile-search-input {
+    flex: 1;
+    border: none;
+    background: transparent;
+    font-size: 1rem;
+    padding: 8px 0;
+    outline: none;
+    color: #222;
+  }
+
+  .mobile-search-button {
+    background: none;
+    border: none;
+    padding: 0 4px;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    color: #667eea;
+  }
+}
+/* ClientNavBar Specific Styles - Overrides NavigationBar.css conflicts */
+
+/* Fix desktop navigation visibility and positioning */
+@media (min-width: 1024px) {
+  /* Ensure desktop navigation is properly displayed */
+  .desktop-nav {
+    display: flex !important;
+    align-items: center !important;
+    justify-content: space-between !important;
+    padding: 12px 24px !important;
+    overflow: visible !important;
+    position: relative !important;
+    width: 100% !important;
+    box-sizing: border-box !important;
+    height: 64px !important;
+    min-height: 64px !important;
+  }
+
+  /* Navigation actions container */
+  .nav-actions {
+    display: flex !important;
+    align-items: center !important;
+    gap: 16px !important;
+    overflow: visible !important;
+    position: relative !important;
+    flex-shrink: 0 !important;
+    min-width: auto !important;
+    height: 100% !important;
+    z-index: 10 !important;
+  }
+
+  /* Icon group styling */
+  .nav-icons {
+    display: flex !important;
+    align-items: center !important;
+    gap: 2px !important;
+    list-style: none !important;
+    margin: 0 !important;
+    padding: 6px 12px !important;
+    background-color: #f8f9fa !important;
+    border-radius: 12px !important;
+    border: 1px solid #e9ecef !important;
+    height: 40px !important;
+    box-sizing: border-box !important;
+    flex-shrink: 0 !important;
+  }
+
+  /* Individual icon links */
+  .icon-link {
+    display: flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+    width: 32px !important;
+    height: 32px !important;
+    border-radius: 8px !important;
+    transition: background-color 0.2s ease !important;
+    cursor: pointer !important;
+    flex-shrink: 0 !important;
+  }
+
+  .icon-link:hover {
+    background-color: #ffffff !important;
+  }
+
+  .icon-link img {
+    height: 18px !important;
+    width: 18px !important;
+    object-fit: contain !important;
+  }
+
+  /* Notification bell specific styling */
+  .nav-icons .notification-bell {
+    display: flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+    width: 32px !important;
+    height: 32px !important;
+  }
+
+  .nav-icons .notification-bell img {
+    width: 18px !important;
+    height: 18px !important;
+    object-fit: contain !important;
+  }
+
+  /* Ensure all nav-icons items are properly aligned */
+  .nav-icons li {
+    list-style: none !important;
+    margin: 0 !important;
+    padding: 0 !important;
+    display: flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+  }
+
+  /* Earnings/View Orders button */
+  .earnings {
+    display: flex !important;
+    align-items: center !important;
+    gap: 8px !important;
+    font-size: 0.875rem !important;
+    background-color: #f8f9fa !important;
+    padding: 0 16px !important;
+    border-radius: 12px !important;
+    color: #333 !important;
+    cursor: pointer !important;
+    transition: all 0.2s ease !important;
+    border: 1px solid #e9ecef !important;
+    height: 40px !important;
+    box-sizing: border-box !important;
+    flex-shrink: 0 !important;
+    white-space: nowrap !important;
+  }
+
+  .earnings:hover {
+    background-color: #e9ecef !important;
+    border-color: #dee2e6 !important;
+  }
+
+  .earnings img {
+    height: 18px !important;
+    width: 18px !important;
+    flex-shrink: 0 !important;
+  }
+
+  .earnings span,
+  .earnings strong {
+    color: #333 !important;
+    font-weight: 500 !important;
+  }
+
+  .earnings strong {
+    font-weight: 600 !important;
+  }
+
+  /* FINAL: Profile avatar section - clean professional styling */
+  .profile-avatar {
+    display: flex !important;
+    align-items: center !important;
+    gap: 8px !important;
+    cursor: pointer !important;
+    position: relative !important;
+    padding: 4px 8px !important;
+    border-radius: 8px !important;
+    transition: background-color 0.2s ease !important;
+    min-width: auto !important;
+    flex-shrink: 0 !important;
+    height: 40px !important;
+    box-sizing: border-box !important;
+    overflow: visible !important;
+    z-index: 5 !important;
+    background: transparent !important;
+    max-width: none !important;
+    width: auto !important;
+  }
+
+  .profile-avatar:hover {
+    background-color: #f8f9fa !important;
+  }
+
+  /* FINAL: User name display - clean professional styling */
+  .user-name-text {
+    font-size: 14px !important;
+    font-weight: 500 !important;
+    color: #222 !important;
+    white-space: nowrap !important;
+    max-width: 120px !important;
+    overflow: hidden !important;
+    text-overflow: ellipsis !important;
+    z-index: 6 !important;
+    display: block !important;
+    line-height: 1.2 !important;
+  }
+
+  /* FINAL: Avatar container - clean professional styling */
+  .desktop-nav .avatar {
+    display: flex !important;
+    visibility: visible !important;
+    opacity: 1 !important;
+    width: 32px !important;
+    height: 32px !important;
+    font-size: 0.9rem !important;
+    flex-shrink: 0 !important;
+    border-radius: 50% !important;
+    align-items: center !important;
+    justify-content: center !important;
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%) !important;
+    color: white !important;
+    font-weight: 500 !important;
+    overflow: visible !important;
+    position: relative !important;
+    transform: none !important;
+    clip: unset !important;
+    left: auto !important;
+    right: auto !important;
+    top: auto !important;
+    bottom: auto !important;
+    margin: 0 !important;
+    z-index: 1000 !important;
+    cursor: pointer !important;
+    transition: transform 0.2s ease !important;
+  }
+
+  /* Avatar image styling */
+  .desktop-nav .avatar-image {
+    width: 100% !important;
+    height: 100% !important;
+    object-fit: cover !important;
+    border-radius: 50% !important;
+    display: block !important;
+    visibility: visible !important;
+    opacity: 1 !important;
+  }
+
+  /* Avatar initials styling */
+  .desktop-nav .avatar-initials {
+    font-size: 0.9rem !important;
+    font-weight: 500 !important;
+    display: flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+    width: 100% !important;
+    height: 100% !important;
+    visibility: visible !important;
+    opacity: 1 !important;
+    position: static !important;
+    transform: none !important;
+  }
+
+  /* CRITICAL: Dropdown arrow - force visibility */
+  .dropdown-arrow {
+    display: flex !important;
+    visibility: visible !important;
+    opacity: 1 !important;
+    align-items: center !important;
+    justify-content: center !important;
+    color: #6c757d !important;
+    transition: transform 0.2s ease !important;
+    width: 16px !important;
+    height: 16px !important;
+    flex-shrink: 0 !important;
+    position: static !important;
+    transform: none !important;
+    overflow: visible !important;
+    clip: unset !important;
+  }
+
+  .dropdown-arrow svg {
+    display: block !important;
+    visibility: visible !important;
+    opacity: 1 !important;
+    width: 16px !important;
+    height: 16px !important;
+  }
+
+  .profile-avatar:hover .dropdown-arrow {
+    color: #495057 !important;
+  }
+
+  /* Dropdown menu positioning */
+  .dropdown-menu {
+    position: absolute !important;
+    right: 0 !important;
+    top: calc(100% + 8px) !important;
+    background: #ffffff !important;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15) !important;
+    border-radius: 8px !important;
+    overflow: visible !important;
+    z-index: 99999 !important;
+    min-width: 160px !important;
+    border: 1px solid #e9ecef !important;
+    display: block !important;
+    visibility: visible !important;
+    opacity: 1 !important;
+    width: auto !important;
+    height: auto !important;
+    transform: none !important;
+    padding: 8px 0 !important;
+  }
+
+  .dropdown-item {
+    padding: 12px 16px !important;
+    cursor: pointer !important;
+    font-size: 0.875rem !important;
+    color: #333 !important;
+    transition: background-color 0.2s ease !important;
+    border: none !important;
+    background: transparent !important;
+    width: 100% !important;
+    text-align: left !important;
+    display: block !important;
+    font-weight: 400 !important;
+    line-height: 1.4 !important;
+    box-sizing: border-box !important;
+  }
+
+  .dropdown-item:hover {
+    background-color: #f8f9fa !important;
+  }
+
+  /* Search container adjustments */
+  .search-container {
+    flex: 1;
+    max-width: 400px;
+    margin: 0 24px;
+  }
+
+  .search-input {
+    width: 100%;
+    padding: 10px 48px 10px 16px;
+    border: 1px solid #ddd;
+    border-radius: 50px;
+    font-size: 14px;
+    background-color: #f8f9fa;
+    transition: all 0.2s ease;
+    outline: none;
+    height: 40px;
+    box-sizing: border-box;
+  }
+
+  .search-input:focus {
+    border-color: #007bff;
+    background-color: #ffffff;
+    box-shadow: 0 0 0 3px rgba(0, 123, 255, 0.1);
+  }
+}
+
+/* Large desktop adjustments */
+@media (min-width: 1200px) {
+  .desktop-nav {
+    padding: 12px 32px !important;
+  }
+  
+  .nav-actions {
+    gap: 20px !important;
+  }
+  
+  .search-container {
+    max-width: 450px;
+    margin: 0 32px;
+  }
+}
+
+@media (min-width: 1400px) {
+  .desktop-nav {
+    padding-left: 32px !important;
+    padding-right: 32px !important;
+  }
+  
+  .nav-actions {
+    gap: 24px !important;
+  }
+}
