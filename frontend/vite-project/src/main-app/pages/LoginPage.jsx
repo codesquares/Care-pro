@@ -1,8 +1,7 @@
 import React, { useState, useEffect } from "react";
 import { useNavigate, Link } from "react-router-dom";
 import axios from "axios";
-import "../../styles/main-app/pages/RegisterPage.scss";
-import authImage from "../../assets/authImage.png";
+import "../../styles/main-app/pages/LoginPage.scss";
 import { toast } from "react-toastify";
 import config from "../config"; // Assuming this contains your BASE_URL
 
@@ -122,9 +121,6 @@ const LoginPage = () => {
             By logging in, you agree to the <a href="#">Terms of Use</a> and{" "}
             <a href="#">Privacy Policy</a>.
           </p>
-        </div>
-        <div className="image-container">
-          <img src={authImage} alt="Mental health awareness" />
         </div>
       </div>
     </div>

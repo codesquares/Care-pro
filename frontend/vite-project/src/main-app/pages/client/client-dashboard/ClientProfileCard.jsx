@@ -38,7 +38,18 @@ const ClientProfileCard = () => {
   if (error) return <div className="profile-card error"><p>Error: {error}</p></div>;
 
   const userFullName = profile ? `${profile.firstName || ''} ${profile.lastName || ''}` : '';
-  const username = profile?.username || (profile?.email ? profile.email.split('@')[0] : '');
+  
+  // get the user's first name and first two letters of profile id and last two letters of profile id and last two letters of profile last name and concatenate them to form a username
+  let username = "";
+  if(profile && profile.firstName && profile.lastName && profile.id){
+    username = profile.firstName + profile.lastName + profile.id.slice(0,2) + profile.id.slice(-2) + profile.lastName.slice(-2);
+  } else {
+    username = "guestUser209";
+  }
+  
+  // save the username to localStorage
+  localStorage.setItem("userName", username);
+  console.log(profile, "profile data");
   
   return (
     <div className="profile-card">

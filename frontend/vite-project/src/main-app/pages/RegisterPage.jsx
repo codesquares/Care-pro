@@ -98,10 +98,12 @@ const CreateAccount = () => {
       await fetchData(payload, endpoint);
 
       // Show success modal
-      setModalTitle("Success!");
-      setModalDescription("Your account has been created successfully.");
+      setModalTitle("Registration Successful!");
+      setModalDescription(
+        `✅ Your account has been created successfully! 📧 We've sent a confirmation email to: ${formValues.email}. ⚠️ Important: Please check your email and click the confirmation link to activate your account. You won't be able to login until your email is confirmed.`
+      );
       setButtonBgColor("#34A853");
-      setButtonText("Proceed");
+      setButtonText("Go to Login");
       setIsModalOpen(true);
       
     } catch (err) {
@@ -119,7 +121,15 @@ const CreateAccount = () => {
 
   const handleProceed = () => {
     setIsModalOpen(false);
-    navigate("/login"); // Navigate to success page
+    // Add a toast reminder about email confirmation
+    toast.info("Please check your email and click the confirmation link before logging in.", {
+      autoClose: 6000, // Show for 6 seconds
+    });
+    
+    // Add a small delay before navigation to ensure the toast is visible
+    setTimeout(() => {
+      navigate("/login"); // Navigate to login page
+    }, 500); // 500ms delay to ensure smooth transition
   }  
 
   return (
@@ -232,6 +242,14 @@ const CreateAccount = () => {
               </label>
             </div>
             {errors.userType && <p className="error-text">{errors.userType}</p>}
+            
+            <div className="email-confirmation-notice">
+              <p className="notice-text">
+                📧 <strong>Email Confirmation Required:</strong> After registration, you'll receive a confirmation email. 
+                You must click the link in that email before you can login to your account.
+              </p>
+            </div>
+            
             <button type="submit" className="btn" disabled={loading}>
               {loading ? "Creating Account..." : "Create Account"}
             </button>

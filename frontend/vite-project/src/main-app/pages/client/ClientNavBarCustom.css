@@ -1,3 +1,10 @@
+/* Hide mobile search on larger screens */
+@media (min-width: 901px) {
+  .mobile-user-search {
+    display: none !important;
+  }
+}
+
 /* Mobile user/search section below nav */
 @media (max-width: 900px) {
   .mobile-user-search {
@@ -45,6 +52,11 @@
     padding: 8px 0;
     outline: none;
     color: #222;
+  }
+
+  .mobile-search-form.has-value {
+    background: #e3f2fd;
+    border: 1px solid #007bff;
   }
 
   .mobile-search-button {
@@ -379,8 +391,13 @@
 
   .search-input:focus {
     border-color: #007bff;
-    background-color: #ffffff;
+    background-color: #fff;
     box-shadow: 0 0 0 3px rgba(0, 123, 255, 0.1);
+  }
+
+  .search-input.has-value {
+    border-color: #007bff;
+    background-color: #fff;
   }
 }
 

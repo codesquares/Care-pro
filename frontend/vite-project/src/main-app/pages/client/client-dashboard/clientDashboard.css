@@ -82,6 +82,21 @@
   transform: translateY(-1px);
 }
 
+.reset-buttons {
+  display: flex;
+  gap: 12px;
+  justify-content: center;
+  flex-wrap: wrap;
+}
+
+.reset-button.search-reset {
+  background-color: #6b7280;
+}
+
+.reset-button.search-reset:hover {
+  background-color: #4b5563;
+}
+
 /* Tablet styles */
 @media (min-width: 768px) {
   .service-categories {

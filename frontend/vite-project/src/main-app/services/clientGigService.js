@@ -171,6 +171,52 @@ const ClientGigService = {
   },
   
   /**
+   * Apply search functionality to gig services
+   * @param {Array} services - List of enriched gig services from getAllGigs()
+   * @param {string} searchTerm - Search term to filter by
+   * @returns {Array} Filtered list of gig services based on search
+   */
+  applySearch(services, searchTerm) {
+    if (!services || !Array.isArray(services) || !searchTerm || searchTerm.trim() === '') {
+      return services;
+    }
+
+    const normalizedSearchTerm = searchTerm.toLowerCase().trim();
+    
+    return services.filter(service => {
+      // Search across multiple fields for comprehensive results
+      const searchableFields = [
+        service.title || '',
+        service.description || '',
+        service.category || '',
+        service.subCategory || '',
+        service.caregiverName || '',
+        service.caregiverFirstName || '',
+        service.caregiverLastName || '',
+        service.caregiverLocation || '',
+        service.caregiverBio || '',
+        service.serviceArea || '',
+        service.packageType || '',
+        ...(service.caregiverSpecializations || []),
+        ...(service.caregiverLanguages || []),
+        ...(service.caregiverCertifications || [])
+      ];
+
+      // Check if any field contains the search term
+      return searchableFields.some(field => {
+        if (typeof field === 'string') {
+          return field.toLowerCase().includes(normalizedSearchTerm);
+        } else if (Array.isArray(field)) {
+          return field.some(item => 
+            typeof item === 'string' && item.toLowerCase().includes(normalizedSearchTerm)
+          );
+        }
+        return false;
+      });
+    });
+  },
+
+  /**
    * Apply advanced filters to gig services
    * @param {Array} services - List of enriched gig services from getAllGigs()
    * @param {Object} filters - Filter criteria
@@ -182,6 +228,11 @@ const ClientGigService = {
     }
     
     let filteredServices = [...services];
+
+    // Apply search filter first if searchTerm exists
+    if (filters.searchTerm) {
+      filteredServices = this.applySearch(filteredServices, filters.searchTerm);
+    }
     
     // Filter by service type (category or subcategory)
     if (filters.serviceType) {

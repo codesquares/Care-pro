@@ -5,6 +5,18 @@ import authImage from "../../assets/authImage.png";
 import { toast } from "react-toastify";
 import { validateEmailToken, confirmEmail } from "../services/auth";
 
+/**
+ * ConfirmEmailPage Component
+ * 
+ * This page handles email confirmation for both caregivers and clients.
+ * 
+ * The backend endpoints are available at:
+ * - /api/CareGivers/validate-email-token
+ * - /api/CareGivers/confirm-email  
+ * - /api/Clients/validate-email-token
+ * - /api/Clients/confirm-email
+ */
+
 const ConfirmEmailPage = () => {
   const [searchParams] = useSearchParams();
   const navigate = useNavigate();
@@ -43,7 +55,7 @@ const ConfirmEmailPage = () => {
       
       // Check if token validation was successful
       if (!tokenValidationResult.success) {
-        throw new Error('Invalid or expired confirmation token');
+        throw new Error(tokenValidationResult.message || 'Invalid or expired confirmation token');
       }
       
       setUserInfo(tokenValidationResult);
@@ -60,7 +72,24 @@ const ConfirmEmailPage = () => {
       }, 3000);
     } catch (err) {
       console.error("Email confirmation error:", err);
-      const errorMessage = err.message || "Failed to confirm email. Please check your internet connection and try again.";
+      
+      // Handle specific error cases
+      let errorMessage = "Failed to confirm email. Please try again.";
+      
+      if (err.message) {
+        if (err.message.includes('User not found') || err.message.includes('caregiver id not existing') || err.message.includes('Client with ID') || err.message.includes('Caregiver with ID')) {
+          errorMessage = "This confirmation link appears to be for a different user type or the user account could not be found. Please check the link or try registering again.";
+        } else if (err.message.includes('Invalid or expired') || err.message.includes('JWT must have')) {
+          errorMessage = "This confirmation link has expired or is invalid. Please request a new confirmation email.";
+        } else if (err.message.includes('Failed to fetch') || err.message.includes('network')) {
+          errorMessage = "Unable to connect to the server. Please check your internet connection and try again.";
+        } else if (err.message.includes('404') || err.message.includes('endpoint') || err.message.includes('temporarily unavailable')) {
+          errorMessage = "Email confirmation service is temporarily unavailable. Please try again later or contact support.";
+        } else {
+          errorMessage = err.message;
+        }
+      }
+      
       setError(errorMessage);
       toast.error(errorMessage);
     } finally {
@@ -96,7 +125,7 @@ const ConfirmEmailPage = () => {
                 {userInfo?.email ? (
                   <>Your email address <strong>{userInfo.email}</strong> has been successfully verified.</>
                 ) : (
-                  "Your email address has been successfully verified."
+                  "Your email confirmation link has been processed. You can now proceed to login to your account."
                 )}
               </p>
               <p className="subtitle">
@@ -116,8 +145,28 @@ const ConfirmEmailPage = () => {
               <h1>Email Confirmation Failed</h1>
               <p className="error-message">{error}</p>
               <p className="subtitle">
-                This could happen if the confirmation link has expired or has already been used.
-                Please try registering again or contact support if the problem persists.
+                {error.includes('user type') || error.includes('different user') ? (
+                  <>
+                    This confirmation link may be for a different account type (client vs caregiver) 
+                    or the account may not exist. Please try registering with the correct account type 
+                    or contact support if you believe this is an error.
+                  </>
+                ) : error.includes('expired') || error.includes('invalid') ? (
+                  <>
+                    This confirmation link has expired or is no longer valid. 
+                    Please try registering again to receive a new confirmation email.
+                  </>
+                ) : error.includes('service') || error.includes('temporarily unavailable') ? (
+                  <>
+                    Our email confirmation service is temporarily experiencing issues. 
+                    Please try again in a few minutes or contact support if the problem persists.
+                  </>
+                ) : (
+                  <>
+                    This could happen if the confirmation link has expired, has already been used, 
+                    or if there's a temporary service issue. Please try registering again or contact support.
+                  </>
+                )}
               </p>
               {token && (
                 <button 

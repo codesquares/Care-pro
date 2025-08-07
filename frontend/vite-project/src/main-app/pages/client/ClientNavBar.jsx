@@ -1,5 +1,5 @@
 import React, { useState, useRef, useEffect } from "react";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, useLocation } from "react-router-dom";
 import logo from '../../../assets/careproLogo.svg';
 import hear from "../../../assets/main-app/heart.svg";
 import bellIcon from "../../../assets/bell_icon.png";
@@ -13,8 +13,10 @@ import "./ClientNavBarCustom.css";
 
 const ClientNavBar = () => {
   const navigate = useNavigate();
+  const location = useLocation();
   const basePath = "/app/client";
   const dropdownRef = useRef(null);
+  const debounceRef = useRef(null);
 
   const [showDropdown, setShowDropdown] = useState(false);
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
@@ -22,6 +24,30 @@ const ClientNavBar = () => {
 
   const user = JSON.parse(localStorage.getItem("userDetails"));
   const userName = user?.firstName ? `${user.firstName} ${user.lastName}` : "";
+
+  // Initialize search query from URL on component mount
+  useEffect(() => {
+    const urlParams = new URLSearchParams(location.search);
+    const searchParam = urlParams.get('q');
+    if (searchParam) {
+      setSearchQuery(searchParam);
+    } else {
+      setSearchQuery('');
+    }
+  }, [location.search]);
+
+  // Listen for clear search events from dashboard
+  useEffect(() => {
+    const handleClearSearch = () => {
+      setSearchQuery('');
+    };
+
+    window.addEventListener('clearSearch', handleClearSearch);
+    
+    return () => {
+      window.removeEventListener('clearSearch', handleClearSearch);
+    };
+  }, []);
 
   const getInitials = (name) => {
     if (!name || typeof name !== "string") return "";
@@ -63,14 +89,53 @@ const ClientNavBar = () => {
   const handleSearch = (e) => {
     e.preventDefault();
     if (searchQuery.trim()) {
-      // Navigate to search results or handle search logic
-      navigate(`${basePath}/search?q=${encodeURIComponent(searchQuery.trim())}`);
+      // Navigate to dashboard with search query parameter
+      navigate(`${basePath}/dashboard?q=${encodeURIComponent(searchQuery.trim())}`);
+    } else {
+      // If empty search, go to dashboard without query
+      navigate(`${basePath}/dashboard`);
     }
   };
 
   const handleSearchInputChange = (e) => {
-    setSearchQuery(e.target.value);
+    const value = e.target.value;
+    setSearchQuery(value);
+
+    // Clear existing timeout
+    if (debounceRef.current) {
+      clearTimeout(debounceRef.current);
+    }
+
+    // Set up debounced navigation for real-time search
+    debounceRef.current = setTimeout(() => {
+      if (location.pathname === `${basePath}/dashboard`) {
+        // Only update URL if we're already on dashboard
+        if (value.trim()) {
+          const newUrl = `${basePath}/dashboard?q=${encodeURIComponent(value.trim())}`;
+          window.history.pushState({}, '', newUrl);
+          // Trigger a custom event to notify dashboard of URL change
+          window.dispatchEvent(new CustomEvent('searchChanged', { 
+            detail: { searchQuery: value.trim() } 
+          }));
+        } else {
+          // Clear search if empty
+          window.history.pushState({}, '', `${basePath}/dashboard`);
+          window.dispatchEvent(new CustomEvent('searchChanged', { 
+            detail: { searchQuery: '' } 
+          }));
+        }
+      }
+    }, 300); // 300ms debounce
   };
+
+  // Cleanup debounce on unmount
+  useEffect(() => {
+    return () => {
+      if (debounceRef.current) {
+        clearTimeout(debounceRef.current);
+      }
+    };
+  }, []);
 
   return (
     <nav className="navigation-bar">
@@ -93,13 +158,13 @@ const ClientNavBar = () => {
       {/* Mobile: User name and search bar below nav */}
       <div className="mobile-user-search">
         <div className="mobile-search-container">
-          <form onSubmit={handleSearch} className="mobile-search-form">
+          <form onSubmit={handleSearch} className={`mobile-search-form ${searchQuery ? 'has-value' : ''}`}>
             <input
               type="text"
               placeholder="What service are you looking for today?"
               value={searchQuery}
               onChange={handleSearchInputChange}
-              className="mobile-search-input"
+              className={`mobile-search-input ${searchQuery ? 'has-value' : ''}`}
             />
             <button type="submit" className="mobile-search-button" aria-label="Search">
               <svg width="18" height="18" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
@@ -195,7 +260,7 @@ const ClientNavBar = () => {
               placeholder="What service are you looking for today?"
               value={searchQuery}
               onChange={handleSearchInputChange}
-              className="search-input"
+              className={`search-input ${searchQuery ? 'has-value' : ''}`}
             />
             <button type="submit" className="search-button" aria-label="Search">
               <svg width="20" height="20" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">

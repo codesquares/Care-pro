@@ -62,6 +62,25 @@ const ClientProfile = () => {
     fetchProfile();
   }, [clientId]);
 
+  // Generate username using the same logic as ClientProfileCard
+  const generateUsername = (profileData) => {
+    if (profileData && profileData.firstName && profileData.lastName && profileData.id) {
+      return profileData.firstName + profileData.lastName + profileData.id.slice(0,2) + profileData.id.slice(-2) + profileData.lastName.slice(-2);
+    } else {
+      return "guestUser209";
+    }
+  };
+
+  // Get the generated username
+  const username = profile ? generateUsername(profile) : "guestUser209";
+  
+  // Save username to localStorage
+  useEffect(() => {
+    if (username !== "guestUser209") {
+      localStorage.setItem("userName", username);
+    }
+  }, [username]);
+
   // Handle input changes
   const handleChange = (e) => {
     const { name, value } = e.target;
@@ -305,7 +324,7 @@ const ClientProfile = () => {
           </div>
           <div className="profile-status">
             <h3>{profile?.firstName} {profile?.lastName}</h3>
-            <p className="username">@{profile?.username || profile?.email?.split('@')[0]}</p>
+            <p className="username">@{username}</p>
             
             <div className="verification-status">
               <span className={`status-indicator ${profile?.isVerified ? 'verified' : 'not-verified'}`}></span>

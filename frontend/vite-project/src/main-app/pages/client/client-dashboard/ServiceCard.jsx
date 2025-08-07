@@ -55,6 +55,7 @@
 
 import { useNavigate } from "react-router-dom";
 import "./serviceCard.css";
+import defaultAvatar from "../../../../assets/profilecard1.png";
 
 const ServiceCard = ({ 
   // Available props from backend
@@ -67,9 +68,12 @@ const ServiceCard = ({
   tags,
   
   // Missing props with fallbacks
-  userName, 
+  caregiverName,
+  caregiverFirstName,
+  caregiverLastName,
+  caregiverProfileImage, 
   avatar, 
-  location, 
+  caregiverLocation, 
   rating, 
   isVerified = true, 
   isPremium = false,
@@ -83,16 +87,20 @@ const ServiceCard = ({
   const handleClick = () => {
     navigate(`${basePath}/service/${id}`);
   };
-
+ //create initials from first and last name
+  const initials = `${caregiverFirstName?.charAt(0) || ''}${caregiverLastName?.charAt(0) || ''}`.toUpperCase();
   const handleFavoriteClick = (e) => {
     e.stopPropagation(); // Prevent card click when clicking heart
     console.log("Toggle favorite for service:", id);
   };
 
+  // console.log("ServiceCard props:", service);
+
   // Fallback values for missing data
-  const displayUserName = userName || "Care Provider";
-  const displayAvatar = avatar || "https://ui-avatars.com/api/?name=Care+Provider&background=3b82f6&color=ffffff&size=48";
-  const displayLocation = location || "Lagos, Nigeria";
+  const displayUserName = caregiverName || "Care Provider";
+  //check if caregiverProfileImage is not empty string
+  const displayAvatar = (caregiverProfileImage && caregiverProfileImage.trim() !== '') ? caregiverProfileImage : defaultAvatar;
+  const displayLocation = caregiverLocation || "Lagos, Nigeria";
   const formattedRating = rating ? parseFloat(rating).toFixed(1) : "4.5";
   const displayReviewCount = reviewCount || Math.floor(Math.random() * 50) + 10; // Random fallback between 10-59
   const imgSrc = image1 || "https://via.placeholder.com/380x200?text=Care+Service&bgcolor=f3f4f6&color=6b7280";
@@ -156,7 +164,14 @@ const ServiceCard = ({
           {/* Left side: Avatar, name, availability */}
           <div className="provider-left">
             <div className="provider-avatar-wrapper">
-              <img src={displayAvatar} alt={displayUserName} className="provider-avatar" />
+              <img 
+                src={displayAvatar} 
+                alt={displayUserName} 
+                className="provider-avatar"
+                onError={(e) => {
+                  e.target.src = defaultAvatar;
+                }}
+              />
               {isVerified && (
                 <div className="verification-badge">
                   <svg width="8" height="8" viewBox="0 0 24 24" fill="#3b82f6">

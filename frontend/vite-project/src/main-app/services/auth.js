@@ -131,25 +131,24 @@ export const validateEmailToken = async (token) => {
             },
         });
 
-        // If CareGiver endpoint fails with 404/user not found, try Clients endpoint
+        // If CareGiver endpoint fails, try Clients endpoint
         if (!response.ok) {
-            const errorData = await response.json();
-            if (errorData.message && errorData.message.includes('User not found')) {
-                response = await fetch(`${config.BASE_URL}/Clients/validate-email-token?token=${encodeURIComponent(token)}`, {
-                    method: 'GET',
-                    headers: {
-                        'Content-Type': 'application/json',
-                    },
-                });
-                
-                if (!response.ok) {
-                    const clientErrorData = await response.json();
-                    throw new Error(clientErrorData.message || 'Failed to validate email token');
-                }
-            } else {
-                throw new Error(errorData.message || 'Failed to validate email token');
+            const errorData = await response.json().catch(() => ({ message: 'Network or server error' }));
+            
+            // Try clients endpoint if caregiver fails
+            response = await fetch(`${config.BASE_URL}/Clients/validate-email-token?token=${encodeURIComponent(token)}`, {
+                method: 'GET',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+            });
+            
+            if (!response.ok) {
+                const clientErrorData = await response.json().catch(() => ({ message: 'Network or server error' }));
+                throw new Error(clientErrorData.message || errorData.message || 'Failed to validate email token');
             }
         }
+        
         const responseData = await response.json();
         console.log(responseData);
         return responseData;
@@ -172,24 +171,21 @@ export const confirmEmail = async (userId) => {
             body: JSON.stringify( userId),
         });
 
-        // If CareGiver endpoint fails with 404/user not found, try Clients endpoint
+        // If CareGiver endpoint fails, try Clients endpoint
         if (!response.ok) {
-            const errorData = await response.json();
-            if (errorData.message && errorData.message.includes('User not found')) {
-                response = await fetch(`${config.BASE_URL}/Clients/confirm-email`, {
-                    method: 'POST',
-                    headers: {
-                        'Content-Type': 'application/json',
-                    },
-                    body: JSON.stringify(userId),
-                });
-                
-                if (!response.ok) {
-                    const clientErrorData = await response.json();
-                    throw new Error(clientErrorData.message || 'Failed to confirm email');
-                }
-            } else {
-                throw new Error(errorData.message || 'Failed to confirm email');
+            const errorData = await response.json().catch(() => ({ message: 'Network or server error' }));
+            
+            // Try clients endpoint if caregiver fails
+            response = await fetch(`${config.BASE_URL}/Clients/confirm-email`, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+            });
+            
+            if (!response.ok) {
+                const clientErrorData = await response.json().catch(() => ({ message: 'Network or server error' }));
+                throw new Error(clientErrorData.message || errorData.message || 'Failed to confirm email');
             }
         }
 

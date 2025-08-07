@@ -1,5 +1,6 @@
 
 import React, { useState, useEffect } from "react";
+import { useLocation } from "react-router-dom";
 import "./clientDashboard.css";
 import "./responsiveFixes.css";
 import Banner from "./Banner";
@@ -10,6 +11,7 @@ import ClientCareNeedsService from "../../../services/clientCareNeedsService";
 import CareMatchBanner from "./CareMatchBanner";
 
 const ClientDashboard = () => {
+  const location = useLocation();
   const [services, setServices] = useState([]);
   const [filteredServices, setFilteredServices] = useState([]);
   const [popularGigs, setPopularGigs] = useState([]);
@@ -23,11 +25,39 @@ const ClientDashboard = () => {
     serviceType: '',
     location: '',
     minRating: '',
-    quickFilter: ''
+    quickFilter: '',
+    searchTerm: ''
   });
 
   const [careNeedsSet, setCareNeedsSet] = useState(false);
   const user = JSON.parse(localStorage.getItem("userDetails") || "{}");
+
+  // Extract search query from URL parameters
+  useEffect(() => {
+    const urlParams = new URLSearchParams(location.search);
+    const searchQuery = urlParams.get('q');
+    setFilters(prevFilters => ({
+      ...prevFilters,
+      searchTerm: searchQuery || ''
+    }));
+  }, [location.search]);
+
+  // Listen for real-time search changes from navigation bar
+  useEffect(() => {
+    const handleSearchChange = (event) => {
+      const { searchQuery } = event.detail;
+      setFilters(prevFilters => ({
+        ...prevFilters,
+        searchTerm: searchQuery || ''
+      }));
+    };
+
+    window.addEventListener('searchChanged', handleSearchChange);
+    
+    return () => {
+      window.removeEventListener('searchChanged', handleSearchChange);
+    };
+  }, []);
 
   useEffect(() => {
     const fetchData = async () => {
@@ -68,6 +98,18 @@ const ClientDashboard = () => {
     setFilters(newFilters);
   };
 
+  // Check if any filters or search are active
+  const hasActiveFiltersOrSearch = () => {
+    return filters.quickFilter ||
+           filters.sortBy ||
+           filters.serviceType ||
+           filters.location ||
+           filters.minRating ||
+           filters.priceRange.min ||
+           filters.priceRange.max ||
+           filters.searchTerm;
+  };
+
   return (
     <div className="dashboard client-dashboard-flex">
       <div className="rightbar">
@@ -91,14 +133,8 @@ const ClientDashboard = () => {
 
         {!loading && !error && (
           <div className="service-categories">
-            {/* Show categories if no filters are active */}
-            {!filters.quickFilter &&
-              !filters.sortBy &&
-              !filters.serviceType &&
-              !filters.location &&
-              !filters.minRating &&
-              !filters.priceRange.min &&
-              !filters.priceRange.max && (
+            {/* Show categories if no filters or search are active */}
+            {!hasActiveFiltersOrSearch() && (
                 <>
                   {popularGigs.length > 0 && (
                     <ServiceCategory
@@ -120,38 +156,63 @@ const ClientDashboard = () => {
 
             <ServiceCategory
               title={
-                filters.quickFilter ||
-                filters.sortBy ||
-                filters.serviceType ||
-                filters.location ||
-                filters.minRating ||
-                filters.priceRange.min ||
-                filters.priceRange.max
-                  ? "Filtered Services"
+                hasActiveFiltersOrSearch()
+                  ? filters.searchTerm 
+                    ? `Search Results${filters.searchTerm ? ` for "${filters.searchTerm}"` : ''}`
+                    : "Filtered Services"
                   : "All Services"
               }
               services={filteredServices}
             />
 
-            {filteredServices.length === 0 && (
+            {filteredServices.length === 0 && hasActiveFiltersOrSearch() && (
               <div className="no-results">
                 <h3>No services found</h3>
-                <p>Try adjusting your filters or search for something else.</p>
-                <button
-                  className="reset-button"
-                  onClick={() =>
-                    handleFilterChange({
-                      sortBy: '',
-                      priceRange: { min: '', max: '' },
-                      serviceType: '',
-                      location: '',
-                      minRating: '',
-                      quickFilter: ''
-                    })
+                <p>
+                  {filters.searchTerm 
+                    ? `No results found for "${filters.searchTerm}". Try searching for something else or adjusting your filters.`
+                    : "Try adjusting your filters or search for something else."
                   }
-                >
-                  Reset Filters
-                </button>
+                </p>
+                <div className="reset-buttons">
+                  {filters.searchTerm && (
+                    <button
+                      className="reset-button search-reset"
+                      onClick={() => {
+                        setFilters(prevFilters => ({
+                          ...prevFilters,
+                          searchTerm: ''
+                        }));
+                        // Clear the URL search parameter
+                        window.history.pushState({}, '', location.pathname);
+                        // Notify navigation bar to clear search input
+                        window.dispatchEvent(new CustomEvent('clearSearch'));
+                      }}
+                    >
+                      Clear Search
+                    </button>
+                  )}
+                  <button
+                    className="reset-button"
+                    onClick={() => {
+                      setFilters({
+                        sortBy: '',
+                        priceRange: { min: '', max: '' },
+                        serviceType: '',
+                        location: '',
+                        minRating: '',
+                        quickFilter: '',
+                        searchTerm: ''
+                      });
+                      // Clear the URL search parameter
+                      window.history.pushState({}, '', location.pathname);
+                      // Notify navigation bar to clear search input
+                      window.dispatchEvent(new CustomEvent('clearSearch'));
+                    }}
+                  >
+                    Reset All Filters
+                  </button>
+                </div>
               </div>
             )}
           </div>
