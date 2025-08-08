@@ -1,4 +1,4 @@
-.profile-header {
+.caregiver-profile-header {
     display: flex;
     flex-direction: column;
     gap: 0;
@@ -7,7 +7,7 @@
   }
 
   /* Ensure all child components have consistent width */
-  .profile-header > * {
+  .caregiver-profile-header > * {
     width: 100%;
     max-width: 100%;
     min-width: 0;
@@ -15,7 +15,7 @@
   }
 
   /* Main Profile Header Card - Using same styling as profile information components */
-  .profile-header-card {
+  .caregiver-profile-header-card {
     border-radius: 12px;
     box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
     padding: 24px;
@@ -31,38 +31,38 @@
   }
 
   /* Profile Basic Info Section */
-  .profile-basic-info {
+  .caregiver-profile-basic-info {
     text-align: center;
-    margin-bottom: 20px;
+    margin-bottom: 16px;
     padding-bottom: 16px;
     border-bottom: 1px solid #f3f4f6;
     list-style: none;
   }
 
-  .profile-basic-info::before,
-  .profile-basic-info::after,
-  .profile-basic-info *::before,
-  .profile-basic-info *::after {
+  .caregiver-profile-basic-info::before,
+  .caregiver-profile-basic-info::after,
+  .caregiver-profile-basic-info *::before,
+  .caregiver-profile-basic-info *::after {
     content: none !important;
     display: none !important;
   }
 
   /* Profile Rating Section */
-  .profile-rating-section {
-    margin-bottom: 20px;
+  .caregiver-profile-rating-section {
+    margin-bottom: 16px;
     padding-bottom: 16px;
     border-bottom: 1px solid #f3f4f6;
   }
 
   /* Center profile image and basic info */
-  .profile-header-card .profile-img,
-  .profile-header-card h2,
-  .profile-header-card .username,
-  .profile-header-card .rating {
+  .caregiver-profile-header-card .caregiver-profile-img,
+  .caregiver-profile-header-card h2,
+  .caregiver-profile-header-card .caregiver-username,
+  .caregiver-profile-header-card .caregiver-rating {
     text-align: center;
   }
 
-  .profile-header-card .profile-img {
+  .caregiver-profile-header-card .caregiver-profile-img {
     width: 120px;
     height: 120px;
     border-radius: 50%;
@@ -72,7 +72,7 @@
     display: block;
   }
 
-  .profile-header-card h2 {
+  .caregiver-profile-header-card h2 {
     margin: 0 0 8px 0;
     font-size: 24px;
     font-weight: 600;
@@ -81,29 +81,51 @@
     list-style: none;
   }
 
-  .profile-header-card h2::before,
-  .profile-header-card h2::after {
+  .caregiver-profile-header-card h2::before,
+  .caregiver-profile-header-card h2::after {
     content: none !important;
     display: none !important;
   }
 
-  .profile-header-card .username {
-    margin: 0 0 12px 0;
+  .caregiver-profile-header-card .caregiver-username {
+    margin: 0 0 16px 0;
     font-size: 14px;
     color: #6b7280;
   }
 
-  .profile-header-card .bio {
+  .caregiver-profile-header-card .caregiver-bio {
     margin: 0 0 16px 0;
-    font-size: 14px;
-    line-height: 1.5;
+    font-size: 12px;
+    line-height: 1.4;
     color: #4b5563;
     width: 100%;
-    text-align: left;
+    text-align: center;
+    font-style: italic;
+    font-weight: bold;
+    position: relative;
+    padding: 0 20px;
   }
 
-  .profile-header-card .rating {
-    margin: 16px 0;
+  .caregiver-profile-header-card .caregiver-bio::before {
+    content: '"';
+    position: absolute;
+    left: 0;
+    top: 0;
+    font-size: 14px;
+    color: #6b7280;
+  }
+
+  .caregiver-profile-header-card .caregiver-bio::after {
+    content: '"';
+    position: absolute;
+    right: 0;
+    bottom: 0;
+    font-size: 14px;
+    color: #6b7280;
+  }
+
+  .caregiver-profile-header-card .caregiver-rating {
+    margin: 0 0 16px 0;
     font-size: 16px;
     display: flex;
     align-items: center;
@@ -112,49 +134,87 @@
     text-align: center;
   }
 
-  .profile-header-card .rating .stars {
+  .caregiver-profile-header-card .caregiver-rating .caregiver-stars {
     color: #fbbf24;
   }
 
-  .profile-header-card .rating .rating-text {
+  .caregiver-profile-header-card .caregiver-rating .caregiver-rating-text {
     font-size: 14px;
     color: #6b7280;
   }
 
-  .profile-details {
+  .caregiver-profile-details {
     display: flex;
     flex-direction: column;
-    gap: 12px;
-    margin: 20px 0;
+    gap: 8px;
+    margin: 0 0 16px 0;
     width: 100%;
+    padding: 16px;
+    border: 1px solid #e5e7eb;
+    border-radius: 8px;
+    background-color: #f9fafb;
     text-align: left;
     padding-bottom: 16px;
-    border-bottom: 1px solid #f3f4f6;
   }
 
-  .profile-details .detail-item {
+  .caregiver-profile-details .caregiver-detail-item {
     display: flex;
     align-items: center;
-    justify-content: flex-start;
-    gap: 8px;
+    justify-content: space-between;
     font-size: 14px;
-    color: #4b5563;
+    color: #374151;
     width: 100%;
+    padding: 12px 16px;
+    border-bottom: 1px solid #e5e7eb;
+    background-color: #f8f9fa;
+    border-radius: 0;
+    margin-bottom: 0;
+    box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05);
+    transition: background-color 0.2s ease;
   }
 
-  .location-section {
+  .caregiver-profile-details .caregiver-detail-item:hover {
+    background-color: #f1f3f4;
+  }
+
+  .caregiver-profile-details .caregiver-detail-item:first-child {
+    border-top-left-radius: 6px;
+    border-top-right-radius: 6px;
+  }
+
+  .caregiver-profile-details .caregiver-detail-item:last-child {
+    border-bottom: none;
+    margin-bottom: 0;
+    border-bottom-left-radius: 6px;
+    border-bottom-right-radius: 6px;
+  }
+
+  .caregiver-detail-label {
+    font-weight: 500;
+    color: #1f2937;
+    flex-shrink: 0;
+  }
+
+  .caregiver-detail-value {
+    color: #4b5563;
+    text-align: right;
+    flex-grow: 1;
+    margin-left: 16px;
+  }
+
+  .caregiver-location-section {
     display: flex;
     flex-direction: column;
-    align-items: flex-start;
+    align-items: stretch;
     gap: 8px;
     width: 100%;
   }
 
-  .location-section .detail-item {
+  .caregiver-location-section .caregiver-detail-item {
     width: 100%;
   }
 
-  .edit-location-btn {
+  .caregiver-edit-location-btn {
     padding: 8px 16px;
     border: 1px solid #3b82f6;
     border-radius: 6px;
@@ -167,14 +227,15 @@
     height: 36px;
     transition: all 0.2s ease;
     text-align: center;
+    margin-top: 12px;
   }
 
-  .edit-location-btn:hover {
+  .caregiver-edit-location-btn:hover {
     background-color: #2563eb;
     border-color: #2563eb;
   }
 
-  .availability-status {
+  .caregiver-availability-status {
     display: block;
     padding: 8px 16px;
     border-radius: 6px;
@@ -187,43 +248,43 @@
     box-sizing: border-box;
   }
 
-  .availability-status.available {
+  .caregiver-availability-status.available {
     background-color: #d1fae5;
     color: #065f46;
     border: 1px solid #a7f3d0;
   }
 
-    .availability-status.unavailable {
+    .caregiver-availability-status.unavailable {
     background-color: #fef2f2;
     color: #dc2626;
     border: 1px solid #fecaca;
   }
 
-  .profile-actions {
+  .caregiver-profile-actions {
     display: flex;
     flex-direction: column;
     gap: 12px;
-    margin-top: 0;
+    margin: 0 0 16px 0;
     width: 100%;
     align-items: center;
     justify-content: center;
   }
 
-  .profile-actions > * {
+  .caregiver-profile-actions > * {
     width: auto;
     text-align: center;
     min-width: 200px;
   }
 
   /* Verify Button Container */
-  .verify-button-container {
+  .caregiver-verify-button-container {
     display: flex;
     justify-content: center;
     margin-top: 16px;
   }
 
   /* Section Cards */
-  .section-card {
+  .caregiver-section-card {
     background: #ffffff;
     border-radius: 12px;
     box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
@@ -233,7 +294,7 @@
     width: 100%;
   }
 
-  .section-card h3 {
+  .caregiver-section-card h3 {
     margin: 0 0 16px 0;
     font-size: 18px;
     font-weight: 600;
@@ -241,7 +302,7 @@
   }
 
   /* Location Modal */
-  .location-modal-overlay {
+  .caregiver-location-modal-overlay {
     position: fixed;
     top: 0;
     left: 0;
@@ -254,7 +315,7 @@
     z-index: 1000;
   }
 
-  .location-modal {
+  .caregiver-location-modal {
     background: white;
     border-radius: 12px;
     padding: 24px;
@@ -265,14 +326,14 @@
     box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1);
   }
 
-  .location-modal h3 {
+  .caregiver-location-modal h3 {
     margin: 0 0 16px 0;
     font-size: 18px;
     font-weight: 600;
     color: #1a1a1a;
   }
 
-  .location-modal input {
+  .caregiver-location-modal input {
     width: 100%;
     padding: 12px;
     border: 1px solid #d1d5db;
@@ -283,19 +344,19 @@
     transition: border-color 0.2s ease;
   }
 
-  .location-modal input:focus {
+  .caregiver-location-modal input:focus {
     outline: none;
     border-color: #3b82f6;
     box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
   }
 
-  .modal-buttons {
+  .caregiver-modal-buttons {
     display: flex;
     gap: 12px;
     justify-content: flex-end;
   }
 
-  .modal-btn {
+  .caregiver-modal-btn {
     padding: 10px 20px;
     border-radius: 6px;
     font-size: 14px;
@@ -307,29 +368,29 @@
     border: 1px solid;
   }
 
-  .modal-btn.cancel {
+  .caregiver-modal-btn.caregiver-modal-cancel {
     background: white;
     color: #6b7280;
     border-color: #d1d5db;
   }
 
-  .modal-btn.cancel:hover {
+  .caregiver-modal-btn.caregiver-modal-cancel:hover {
     background: #f9fafb;
     border-color: #9ca3af;
   }
 
-  .modal-btn.save {
+  .caregiver-modal-btn.caregiver-modal-save {
     background: #3b82f6;
     color: white;
     border-color: #3b82f6;
   }
 
-  .modal-btn.save:hover:not(:disabled) {
+  .caregiver-modal-btn.caregiver-modal-save:hover:not(:disabled) {
     background: #2563eb;
     border-color: #2563eb;
   }
 
-.modal-btn.save:disabled {
+.caregiver-modal-btn.caregiver-modal-save:disabled {
   background: #9ca3af;
   border-color: #9ca3af;
   cursor: not-allowed;
@@ -337,65 +398,65 @@
 
 /* Responsive Styles */
 @media (min-width: 768px) {
-  .profile-header-card {
+  .caregiver-profile-header-card {
     padding: 28px;
   }
   
-  .profile-header-card .profile-img {
+  .caregiver-profile-header-card .caregiver-profile-img {
     width: 140px;
     height: 140px;
   }
   
-  .profile-header-card h2 {
+  .caregiver-profile-header-card h2 {
     font-size: 26px;
   }
   
-  .profile-header-card .username {
+  .caregiver-profile-header-card .caregiver-username {
     font-size: 16px;
   }
   
-  .profile-header-card .bio {
-    font-size: 16px;
+  .caregiver-profile-header-card .caregiver-bio {
+    font-size: 14px;
   }
   
-  .profile-header-card .rating {
+  .caregiver-profile-header-card .caregiver-rating {
     font-size: 18px;
   }
   
-  .profile-header-card .rating .rating-text {
+  .caregiver-profile-header-card .caregiver-rating .caregiver-rating-text {
     font-size: 16px;
   }
   
-  .profile-details .detail-item {
+  .caregiver-profile-details .caregiver-detail-item {
     font-size: 16px;
   }
   
-  .availability-status {
+  .caregiver-availability-status {
     font-size: 16px;
     padding: 10px 20px;
   }
   
-  .edit-location-btn {
+  .caregiver-edit-location-btn {
     font-size: 16px;
     padding: 10px 20px;
   }
 }
 
 @media (min-width: 1024px) {
-  .profile-header-card {
+  .caregiver-profile-header-card {
     padding: 32px;
   }
   
-  .profile-header-card .profile-img {
+  .caregiver-profile-header-card .caregiver-profile-img {
     width: 160px;
     height: 160px;
   }
   
-  .profile-header-card h2 {
+  .caregiver-profile-header-card h2 {
     font-size: 28px;
   }
   
-  .profile-header-card .username {
+  .caregiver-profile-header-card .caregiver-username {
     font-size: 18px;
   }
   

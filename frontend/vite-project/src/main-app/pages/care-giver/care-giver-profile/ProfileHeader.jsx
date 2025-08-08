@@ -168,16 +168,16 @@ const ProfileHeader = () => {
 
   if (isLoading) {
     return (
-      <div className="profile-header-card">
-        <div className="loading-spinner">Loading profile...</div>
+      <div className="caregiver-profile-header-card">
+        <div className="caregiver-loading-spinner">Loading profile...</div>
       </div>
     );
   }
 
   if (error) {
     return (
-      <div className="profile-header-card">
-        <div className="error-message">{error}</div>
+      <div className="caregiver-profile-header-card">
+        <div className="caregiver-error-message">{error}</div>
       </div>
     );
   }
@@ -188,51 +188,52 @@ const ProfileHeader = () => {
   console.log("Rendering profile component with data========>:", profile);
 
   return (
-    <div className="profile-header">
-      <div className="profile-header-card">
-        <div className="profile-basic-info">
+    <div className="caregiver-profile-header">
+      <div className="caregiver-profile-header-card">
+        <div className="caregiver-profile-basic-info">
           <img
             src={profile.picture}
             alt="Profile"
-            className="profile-img"
+            className="caregiver-profile-img"
           />
           <h2>{profile.name}</h2>
-          {userName && <p className="username">@{userName}</p>}
-          <p className="bio">{profile.bio}</p>
+          {userName && <p className="caregiver-username">@{userName}</p>}
+          <p className="caregiver-bio">{profile.bio}</p>
         </div>
       
-        <div className="profile-rating-section">
-          <div className="rating">
-            <span className="stars">
+        <div className="caregiver-profile-rating-section">
+          <div className="caregiver-rating">
+            <span className="caregiver-stars">
               {"⭐".repeat(Math.round(profile.rating))}
             </span>
-            <span className="rating-text">
+            <span className="caregiver-rating-text">
               ({profile.rating}, {profile.reviews} Reviews)
             </span>
           </div>
         </div>
 
-        <div className="profile-details">
-          <div className="location-section">
-            <div className="detail-item">
-              <span>📍 {profile.location}</span>
-            </div>
-            <button 
-              onClick={() => setShowLocationModal(true)}
-              className="edit-location-btn"
-            >
-              Edit Location
-            </button>
+        <div className="caregiver-profile-details">
+          <div className="caregiver-detail-item">
+            <span className="caregiver-detail-label">📍 Location</span>
+            <span className="caregiver-detail-value">{profile.location}</span>
           </div>
-          <div className="detail-item">
-            <span>📅 Member since: {profile.memberSince}</span>
+          <div className="caregiver-detail-item">
+            <span className="caregiver-detail-label">📅 Member since</span>
+            <span className="caregiver-detail-value">{profile.memberSince}</span>
           </div>
-          <div className="detail-item">
-            <span>🚚 Last delivery: {profile.lastDelivery}</span>
+          <div className="caregiver-detail-item">
+            <span className="caregiver-detail-label">� Last delivery</span>
+            <span className="caregiver-detail-value">{profile.lastDelivery}</span>
           </div>
+          <button 
+            onClick={() => setShowLocationModal(true)}
+            className="caregiver-edit-location-btn"
+          >
+            Edit Location
+          </button>
         </div>
 
-        <div className="profile-actions">
+        <div className="caregiver-profile-actions">
           <VerifyButton 
             verificationStatus={profile.verificationStatus} 
             userId={userDetails?.id}
@@ -246,11 +247,11 @@ const ProfileHeader = () => {
         {/* Location Edit Modal */}
         {showLocationModal && (
           <div 
-            className="location-modal-overlay"
+            className="caregiver-location-modal-overlay"
             onClick={() => setShowLocationModal(false)}
           >
             <div 
-              className="location-modal"
+              className="caregiver-location-modal"
               onClick={(e) => e.stopPropagation()}
             >
               <h3>Edit Location</h3>
@@ -259,19 +260,19 @@ const ProfileHeader = () => {
                 value={editedLocation}
                 onChange={(e) => setEditedLocation(e.target.value)}
                 placeholder="Enter new location"
-                className="location-input"
+                className="caregiver-location-input"
               />
-              <div className="modal-buttons">
+              <div className="caregiver-modal-buttons">
                 <button 
                   onClick={() => setShowLocationModal(false)}
-                  className="modal-btn cancel"
+                  className="caregiver-modal-btn caregiver-modal-cancel"
                 >
                   Cancel
                 </button>
                 <button 
                   onClick={handleLocationSave}
                   disabled={locationLoading}
-                  className="modal-btn save"
+                  className="caregiver-modal-btn caregiver-modal-save"
                 >
                   {locationLoading ? 'Saving...' : 'Save'}
                 </button>

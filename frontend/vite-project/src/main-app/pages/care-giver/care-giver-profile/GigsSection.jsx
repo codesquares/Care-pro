@@ -225,9 +225,9 @@ const GigsSection = () => {
 
   if (isLoading) {
     return (
-      <div className="gigs-section">
-        <div className="spinner-container">
-          <div className="spinner" />
+      <div className="caregiver-gigs-section">
+        <div className="caregiver-spinner-container">
+          <div className="caregiver-spinner" />
           <p>Loading gigs...</p>
         </div>
       </div>
@@ -236,26 +236,26 @@ const GigsSection = () => {
 
   if (error) {
     return (
-      <div className="gigs-section">
+      <div className="caregiver-gigs-section">
         <p>Error: {error}</p>
       </div>
     );
   }
 
   return (
-    <div className="gigs-section">
+    <div className="caregiver-gigs-section">
       <h3>Active Gigs</h3>
       
       {/* Tab Navigation */}
-      <div className="gigs-tabs">
+      <div className="caregiver-gigs-tabs">
         <button 
-          className={`gigs-tab ${activeTab === "active" ? "active" : ""}`}
+          className={`caregiver-gigs-tab ${activeTab === "active" ? "active" : ""}`}
           onClick={() => setActiveTab("active")}
         >
           Active Gigs ({activeGigs.length})
         </button>
         <button 
-          className={`gigs-tab ${activeTab === "paused" ? "active" : ""}`}
+          className={`caregiver-gigs-tab ${activeTab === "paused" ? "active" : ""}`}
           onClick={() => setActiveTab("paused")}
         >
           Paused Gigs ({draftGigs.length})
@@ -264,50 +264,50 @@ const GigsSection = () => {
 
       {/* No Gigs State */}
       {activeGigs.length === 0 && draftGigs.length === 0 ? (
-        <div className="empty-state">
+        <div className="caregiver-empty-state">
           <img src={clock} alt="No Gigs" style={{ width: 80, marginBottom: 16 }} />
           <h4>No Gigs Yet</h4>
           <p>You haven't created any gigs. Get started by creating one.</p>
-          <button className="create-gig-btn" onClick={handleNavigateToCreateGig}>
+          <button className="caregiver-create-gig-btn" onClick={handleNavigateToCreateGig}>
             Create Your First Gig
           </button>
         </div>
       ) : (
-        <div className="gigs-grid">
+        <div className="caregiver-gigs-grid">
           {/* Create New Gig Card - Always first */}
-          <div className="create-new-gig" onClick={handleNavigateToCreateGig}>
-            <span className="create-icon">+</span>
-            <p className="create-text">Create a new Gig</p>
-            <p className="create-subtext">Add a new service offering</p>
+          <div className="caregiver-create-new-gig" onClick={handleNavigateToCreateGig}>
+            <span className="caregiver-create-icon">+</span>
+            <p className="caregiver-create-text">Create a new Gig</p>
+            <p className="caregiver-create-subtext">Add a new service offering</p>
           </div>
 
           {/* Active Tab Content */}
           {activeTab === "active" && activeGigs.map((gig) => (
-            <div key={gig.id} className="gig-card">
+            <div key={gig.id} className="caregiver-gig-card">
               <img
                 src={gig.image1 || "https://via.placeholder.com/300x160"}
                 alt={gig.title}
-                className="gig-image"
+                className="caregiver-gig-image"
               />
-              <div className="gig-content">
-                <h4 className="gig-title">{gig.title}</h4>
-                <p className="gig-description">{gig.description}</p>
-                <div className="gig-actions">
+              <div className="caregiver-gig-content">
+                <h4 className="caregiver-gig-title">{gig.title}</h4>
+                <p className="caregiver-gig-description">{gig.description}</p>
+                <div className="caregiver-gig-actions">
                   <button 
-                    className="gig-action-btn edit"
+                    className="caregiver-gig-action-btn caregiver-edit"
                     onClick={() => handleEditGig(gig)}
                   >
                     Edit
                   </button>
                   <button 
-                    className="gig-action-btn pause"
+                    className="caregiver-gig-action-btn caregiver-pause"
                     onClick={() => handlePauseGig(gig)}
                     disabled={pausingGigs.has(gig.id)}
                   >
                     {pausingGigs.has(gig.id) ? 'Pausing...' : 'Pause'}
                   </button>
                   <button 
-                    className="gig-action-btn delete"
+                    className="caregiver-gig-action-btn caregiver-delete"
                     onClick={() => handleDeleteGig(gig)}
                     disabled={deletingGigs.has(gig.id)}
                   >
@@ -320,24 +320,24 @@ const GigsSection = () => {
 
           {/* Paused Tab Content */}
           {activeTab === "paused" && draftGigs.map((gig) => (
-            <div key={gig.id} className="gig-card">
+            <div key={gig.id} className="caregiver-gig-card">
               <img
                 src={gig.image1 || "https://via.placeholder.com/300x160"}
                 alt={gig.title}
-                className="gig-image"
+                className="caregiver-gig-image"
               />
-              <div className="gig-content">
-                <h4 className="gig-title">{gig.title}</h4>
-                <p className="gig-description">{gig.description}</p>
-                <div className="gig-actions">
+              <div className="caregiver-gig-content">
+                <h4 className="caregiver-gig-title">{gig.title}</h4>
+                <p className="caregiver-gig-description">{gig.description}</p>
+                <div className="caregiver-gig-actions">
                   <button 
-                    className="gig-action-btn edit"
+                    className="caregiver-gig-action-btn caregiver-edit"
                     onClick={() => handleEditGig(gig)}
                   >
                     Edit
                   </button>
                   <button 
-                    className="gig-action-btn publish"
+                    className="caregiver-gig-action-btn caregiver-publish"
                     onClick={() => handlePublishGig(gig)}
                     disabled={publishingGigs.has(gig.id)}
                   >
@@ -351,7 +351,7 @@ const GigsSection = () => {
       )}
       
       {/* Toast Container */}
-      <div className="toast-container">
+      <div className="caregiver-toast-container">
         {toasts.map((toast) => (
           <Toast
             key={toast.id}
