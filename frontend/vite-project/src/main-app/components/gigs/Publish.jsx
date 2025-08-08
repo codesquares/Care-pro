@@ -1,7 +1,23 @@
 import React from "react";
 import "./publishGig.scss";
 
-const PublishGig = ({ onSaveAsDraft, onPublish, image, title, onPrev, onNext, onFieldFocus, onFieldBlur, onFieldHover, onFieldLeave, validationErrors = {} }) => {
+const PublishGig = ({ 
+  onSaveAsDraft, 
+  onPublish, 
+  image, 
+  title, 
+  onPrev, 
+  onNext, 
+  onFieldFocus, 
+  onFieldBlur, 
+  onFieldHover, 
+  onFieldLeave, 
+  validationErrors = {},
+  canPublish = true,
+  activeGigsCount = 0,
+  isEditingPublishedGig = false,
+  isLoadingGigs = false
+}) => {
   return (
     <div className="publish-gig">
       <div className="publish-gig-container">
@@ -11,6 +27,20 @@ const PublishGig = ({ onSaveAsDraft, onPublish, image, title, onPrev, onNext, on
             <p>
               You can save your gig as a draft or publish now and start receiving orders.
             </p>
+            {isLoadingGigs && (
+              <p className="loading-message">Checking your current gigs...</p>
+            )}
+            {!isLoadingGigs && !canPublish && !isEditingPublishedGig && (
+              <div className="gig-limit-warning">
+                <p>⚠️ You already have 2 active gigs (the maximum allowed). Please pause one of your active gigs to publish this one, or save as draft for now.</p>
+              </div>
+            )}
+            {!isLoadingGigs && activeGigsCount >= 0 && (
+              <p className="gig-count-info">
+                Active gigs: {activeGigsCount}/2
+                {isEditingPublishedGig && " (editing published gig)"}
+              </p>
+            )}
           </div>
 
           {Object.keys(validationErrors).length > 0 && (
@@ -43,13 +73,14 @@ const PublishGig = ({ onSaveAsDraft, onPublish, image, title, onPrev, onNext, on
               Save as Draft
             </button>
             <button 
-              className="publish-button" 
+              className={`publish-button ${!canPublish || isLoadingGigs ? 'disabled' : ''}`}
               onClick={onPublish}
               onMouseEnter={(e) => onFieldHover && onFieldHover('publish-gig', e)}
               onMouseLeave={(e) => onFieldLeave && onFieldLeave(e)}
-              disabled={Object.keys(validationErrors).length > 0}
+              disabled={Object.keys(validationErrors).length > 0 || !canPublish || isLoadingGigs}
+              title={!canPublish ? 'You can only have 2 active gigs. Pause an active gig first.' : ''}
             >
-              Publish Gig
+              {isLoadingGigs ? 'Loading...' : 'Publish Gig'}
             </button>
           </div>
         </div>

@@ -40,12 +40,18 @@ const GigsForm = () => {
     2: false, // Gallery
     3: false  // Publish
   });
+  const [activeGigsCount, setActiveGigsCount] = useState(0);
+  const [isLoadingGigs, setIsLoadingGigs] = useState(true);
   const navigate = useNavigate();
   const location = useLocation();
   
   // Check if we're in edit mode
   const isEditMode = location.state?.editMode || false;
   const gigData = location.state?.gigData || null;
+  
+  // Check if we can publish (considering 2-gig limit)
+  const isEditingPublishedGig = isEditMode && gigData?.status?.toLowerCase() === 'published';
+  const canPublish = isEditingPublishedGig || activeGigsCount < 2;
 
   const goToNextPage = () => {
     const currentPageValidation = validateCurrentPage();
@@ -211,6 +217,41 @@ const GigsForm = () => {
     }
   }, [isEditMode, gigData, caregiverId]);
 
+  // Effect to fetch existing gigs and count active ones
+  useEffect(() => {
+    const fetchActiveGigsCount = async () => {
+      try {
+        setIsLoadingGigs(true);
+        const userDetails = JSON.parse(localStorage.getItem("userDetails"));
+        if (!userDetails?.id) {
+          console.warn("Caregiver ID not found in local storage.");
+          setIsLoadingGigs(false);
+          return;
+        }
+
+        const response = await fetch(
+          `https://carepro-api20241118153443.azurewebsites.net/api/Gigs/caregiver/caregiverId?caregiverId=${userDetails.id}`
+        );
+        
+        if (!response.ok) {
+          throw new Error("Failed to fetch gigs data.");
+        }
+
+        const existingGigs = await response.json();
+        const activeGigs = existingGigs.filter(gig => gig.status?.toLowerCase() === 'published');
+        setActiveGigsCount(activeGigs.length);
+        
+      } catch (err) {
+        console.error('Error fetching active gigs count:', err);
+        // Set to 0 on error to be safe, but log the error
+      } finally {
+        setIsLoadingGigs(false);
+      }
+    };
+
+    fetchActiveGigsCount();
+  }, []);
+
   const searchtags = formData.searchTags.length > 0
     ? formData.searchTags.join(", ")
     : null;
@@ -302,6 +343,11 @@ const GigsForm = () => {
 
       if (response.status === 200) {
         setServerMessage("Gig saved as draft successfully!");
+        setModalTitle("Success!");
+        setModalDescription("Your Gig has been successfully saved as draft.");
+        setButtonBgColor("#34A853");
+        setButtonText("Proceed");
+        setIsModalOpen(true);
         toast.success("Gig saved as draft!");
       }
     } catch (err) {
@@ -375,6 +421,12 @@ const GigsForm = () => {
   const handleSubmit = async (e) => {
     e.preventDefault();
     setIsSubmitted(true);
+
+    // Check gig limit before validation
+    if (!canPublish) {
+      toast.error("You can only have 2 active gigs at a time. Please pause one of your active gigs first to publish this one.");
+      return;
+    }
 
     // Final validation before submission
     const validation = validatePublishPage(formData);
@@ -586,6 +638,10 @@ const GigsForm = () => {
                 onFieldBlur={handleFieldBlur}
                 onFieldHover={handleFieldHover}
                 onFieldLeave={handleFieldLeave}
+                canPublish={canPublish}
+                activeGigsCount={activeGigsCount}
+                isEditingPublishedGig={isEditingPublishedGig}
+                isLoadingGigs={isLoadingGigs}
                 validationErrors={(() => {
                   const validation = validatePublishPage(formData);
                   return validation.errors;

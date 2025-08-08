@@ -73,10 +73,25 @@ export const validatePricingPage = (pricing) => {
       
       if (!packageData.details || packageData.details.trim().length === 0) {
         packageErrors.details = "Package details are required";
-      } else if (packageData.details.length < 20) {
-        packageErrors.details = "Package details must be at least 20 characters";
-      } else if (packageData.details.length > 500) {
-        packageErrors.details = "Package details must not exceed 500 characters";
+      } else {
+        // Validate task-based details
+        const tasks = packageData.details.split(';').filter(task => task.trim());
+        
+        if (tasks.length === 0) {
+          packageErrors.details = "At least 1 task is required";
+        } else if (tasks.length > 8) {
+          packageErrors.details = "Maximum 8 tasks allowed";
+        } else {
+          // Check each task for word count
+          const invalidTasks = tasks.filter(task => {
+            const words = task.trim().split(/\s+/).filter(word => word.length > 0);
+            return words.length > 50;
+          });
+          
+          if (invalidTasks.length > 0) {
+            packageErrors.details = "Each task cannot exceed 50 words";
+          }
+        }
       }
       
       if (!packageData.deliveryTime) {

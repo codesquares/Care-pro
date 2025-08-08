@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useRef } from "react";
 import "./gigs.scss";
 
 const GigsCard = ({
@@ -16,11 +16,71 @@ const GigsCard = ({
   clearValidationErrors,
 }) => {
   const [tagsInput, setTagsInput] = useState("");
+  const tagInputRef = useRef(null);
 
   const handleTagsChange = (e) => {
     const value = e.target.value;
     setTagsInput(value);
-    onSearchTagChange(value.split(",").map((t) => t.trim()).filter(Boolean));
+    
+    // Handle comma-separated input
+    if (value.includes(',')) {
+      const newTags = value.split(',').map(tag => tag.trim()).filter(tag => tag.length > 0 && tag.length <= 20);
+      const lastTag = newTags[newTags.length - 1];
+      
+      if (newTags.length > 1) {
+        const tagsToAdd = newTags.slice(0, -1);
+        const currentTags = formData.searchTags || [];
+        // Filter out duplicates and ensure we don't exceed 5 tags
+        const uniqueTagsToAdd = tagsToAdd.filter(tag => !currentTags.includes(tag));
+        const updatedTags = [...currentTags, ...uniqueTagsToAdd].slice(0, 5);
+        onSearchTagChange(updatedTags);
+        setTagsInput(lastTag || "");
+      }
+    }
+  };
+
+  const handleTagKeyDown = (e) => {
+    const currentTags = formData.searchTags || [];
+    
+    if (e.key === 'Enter' && tagsInput.trim()) {
+      e.preventDefault();
+      const trimmedTag = tagsInput.trim();
+      if (trimmedTag && 
+          trimmedTag.length >= 2 && 
+          trimmedTag.length <= 20 && 
+          !currentTags.includes(trimmedTag) && 
+          currentTags.length < 5) {
+        const updatedTags = [...currentTags, trimmedTag];
+        onSearchTagChange(updatedTags);
+        setTagsInput("");
+      }
+    } else if (e.key === 'Backspace' && !tagsInput && currentTags.length > 0) {
+      // Remove last tag when backspace is pressed and input is empty
+      const updatedTags = currentTags.slice(0, -1);
+      onSearchTagChange(updatedTags);
+    }
+  };
+
+  const removeTag = (indexToRemove) => {
+    const currentTags = formData.searchTags || [];
+    const updatedTags = currentTags.filter((_, index) => index !== indexToRemove);
+    onSearchTagChange(updatedTags);
+  };
+
+  const handleTagInputBlur = () => {
+    // Add remaining input as tag if it exists and meets criteria
+    const currentTags = formData.searchTags || [];
+    const trimmedInput = tagsInput.trim();
+    if (trimmedInput && 
+        trimmedInput.length >= 2 && 
+        trimmedInput.length <= 20 && 
+        !currentTags.includes(trimmedInput) && 
+        currentTags.length < 5) {
+      const updatedTags = [...currentTags, trimmedInput];
+      onSearchTagChange(updatedTags);
+      setTagsInput("");
+    }
+    onFieldBlur();
   };
 
   return (
@@ -138,26 +198,45 @@ const GigsCard = ({
             </p>
           </div>
           <div className="gigs-card-input">
-            <input
-              type="text"
-              onChange={(e) => onSearchTagChange(e.target.value.split(","))}
-              onFocus={() => onFieldFocus('searchTags')}
-              onBlur={onFieldBlur}
-              placeholder="Add search tags separated by a comma"
-              className={validationErrors.searchTags ? 'error' : ''}
-            />
+            <div className={`tag-input-container ${validationErrors.searchTags ? 'error' : ''} ${(formData.searchTags || []).length >= 5 ? 'tag-limit-reached' : ''}`}>
+              <div className="tag-input-wrapper">
+                {(formData.searchTags || []).map((tag, index) => (
+                  <span key={index} className="tag-pill-inside">
+                    {tag}
+                    <button 
+                      type="button" 
+                      className="tag-remove-btn"
+                      onClick={() => removeTag(index)}
+                      aria-label={`Remove tag ${tag}`}
+                    >
+                      ×
+                    </button>
+                  </span>
+                ))}
+                <input
+                  ref={tagInputRef}
+                  type="text"
+                  value={tagsInput}
+                  onChange={handleTagsChange}
+                  onKeyDown={handleTagKeyDown}
+                  onFocus={() => onFieldFocus('searchTags')}
+                  onBlur={handleTagInputBlur}
+                  placeholder={(formData.searchTags || []).length === 0 ? "Add tags (press Enter or use comma to separate)" : (formData.searchTags || []).length >= 5 ? "Tag limit reached" : ""}
+                  className="tag-input-field"
+                  maxLength={20}
+                  disabled={(formData.searchTags || []).length >= 5}
+                />
+              </div>
+            </div>
+            <div className="tag-input-helper">
+              <span className={`tag-counter ${(formData.searchTags || []).length >= 5 ? 'tag-limit-reached' : ''}`}>
+                {(formData.searchTags || []).length} of 5 tags used
+              </span>
+              <span className="tag-instruction">Press Enter or use comma to add tags. Max 20 characters per tag.</span>
+            </div>
             {validationErrors.searchTags && (
               <div className="validation-error">
                 {validationErrors.searchTags}
-              </div>
-            )}
-            {formData.searchTags && formData.searchTags.length > 0 && (
-              <div className="tags-preview">
-                {formData.searchTags.map((tag, index) => (
-                  <span key={index} className="tag-pill">
-                    {tag.trim()}
-                  </span>
-                ))}
               </div>
             )}
           </div>

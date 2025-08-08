@@ -1,5 +1,6 @@
 import React from "react";
 import "./Pricing.scss";
+import PackageDetailsInput from "./PackageDetailsInput";
 
 const PricingTable = ({ pricing, onPricingChange, onFieldFocus, onFieldBlur, onFieldHover, onFieldLeave, validationErrors = {} }) => {
   const handleInputChange = (plan, field, value) => {
@@ -48,14 +49,13 @@ const PricingTable = ({ pricing, onPricingChange, onFieldFocus, onFieldBlur, onF
 
         <div className="pricing-field">
           <label>Package Details</label>
-          <textarea
+          <PackageDetailsInput
             value={pricing.Basic.details}
-            onChange={(e) => handleInputChange("Basic", "details", e.target.value)}
+            onChange={(value) => handleInputChange("Basic", "details", value)}
             onFocus={() => onFieldFocus && onFieldFocus('basic-details')}
             onBlur={onFieldBlur}
-            placeholder="Describe tasks for this package (separate with semicolons)"
+            placeholder="Enter a task and press Enter (e.g., medication assistance, vital checks)"
             className={hasFieldError("Basic", "details") ? 'error' : ''}
-            rows={4}
           />
           {getFieldError("Basic", "details") && (
             <div className="validation-error">

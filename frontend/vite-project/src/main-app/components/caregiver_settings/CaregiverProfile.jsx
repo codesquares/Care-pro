@@ -66,7 +66,7 @@ const ProfilePage = () => {
       console.log("thi is the profile page");
     return (
         <div className="profile-page-container">
-            {/* I commented this out since it overlaps with the layout and im not sure how to fix <Navbar />*/}
+            
             {/* Left Section - Profile Details */}
             <div >
                 <div className="profile-info-section">

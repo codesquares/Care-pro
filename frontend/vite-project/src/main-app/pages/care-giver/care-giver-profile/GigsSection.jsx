@@ -32,6 +32,12 @@ const GigsSection = () => {
   };
 
   const handlePublishGig = async (gig) => {
+    // Check if we can publish (less than 2 active gigs)
+    if (!canPublishNewGig) {
+      showError('You can only have 2 active gigs at a time. Please pause one of your active gigs first to publish this one.');
+      return;
+    }
+
     try {
       // Add gig to publishing set to show loading state
       setPublishingGigs(prev => new Set(prev).add(gig.id));
@@ -196,6 +202,9 @@ const GigsSection = () => {
     return gigs.filter(gig => gig.status?.toLowerCase() === 'draft');
   }, [gigs]);
 
+  // Check if user can publish new gigs (max 2 active gigs allowed)
+  const canPublishNewGig = useMemo(() => activeGigs.length < 2, [activeGigs]);
+
   useEffect(() => {
     const fetchGigs = async () => {
       try {
@@ -273,15 +282,22 @@ const GigsSection = () => {
           </button>
         </div>
       ) : (
-        <div className="caregiver-gigs-grid">
-          {/* Create New Gig Card - Always first */}
-          <div className="caregiver-create-new-gig" onClick={handleNavigateToCreateGig}>
-            <span className="caregiver-create-icon">+</span>
-            <p className="caregiver-create-text">Create a new Gig</p>
-            <p className="caregiver-create-subtext">Add a new service offering</p>
-          </div>
+      <div className="caregiver-gigs-grid">
+        {/* Create New Gig Card - Always first */}
+        <div className="caregiver-create-new-gig" onClick={handleNavigateToCreateGig}>
+          <span className="caregiver-create-icon">+</span>
+          <p className="caregiver-create-text">Create a new Gig</p>
+          <p className="caregiver-create-subtext">Add a new service offering</p>
+        </div>
 
-          {/* Active Tab Content */}
+        {/* Active Gigs Limit Notice */}
+        {activeTab === "paused" && !canPublishNewGig && (
+          <div className="gig-limit-notice">
+            <p>⚠️ You have reached the maximum of 2 active gigs. Pause an active gig to publish more.</p>
+          </div>
+        )}
+
+        {/* Active Tab Content */}
           {activeTab === "active" && activeGigs.map((gig) => (
             <div key={gig.id} className="caregiver-gig-card">
               <img
@@ -337,9 +353,10 @@ const GigsSection = () => {
                     Edit
                   </button>
                   <button 
-                    className="caregiver-gig-action-btn caregiver-publish"
+                    className={`caregiver-gig-action-btn caregiver-publish ${!canPublishNewGig ? 'disabled' : ''}`}
                     onClick={() => handlePublishGig(gig)}
-                    disabled={publishingGigs.has(gig.id)}
+                    disabled={publishingGigs.has(gig.id) || !canPublishNewGig}
+                    title={!canPublishNewGig ? 'You can only have 2 active gigs. Pause an active gig first.' : ''}
                   >
                     {publishingGigs.has(gig.id) ? 'Publishing...' : 'Publish'}
                   </button>

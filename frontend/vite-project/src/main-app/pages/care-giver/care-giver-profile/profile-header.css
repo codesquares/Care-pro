@@ -72,6 +72,59 @@
     display: block;
   }
 
+  /* Profile Image Container for Upload Functionality */
+  .caregiver-profile-img-container {
+    position: relative;
+    display: inline-block;
+    margin: 0 auto 16px auto;
+  }
+
+  .caregiver-profile-img-upload-btn {
+    position: absolute;
+    bottom: 8px;
+    right: 8px;
+    width: 32px;
+    height: 32px;
+    border-radius: 50%;
+    background-color: #3b82f6;
+    border: 2px solid white;
+    color: white;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 18px;
+    font-weight: bold;
+    transition: all 0.2s ease;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+  }
+
+  .caregiver-profile-img-upload-btn:hover:not(:disabled) {
+    background-color: #2563eb;
+    transform: scale(1.05);
+  }
+
+  .caregiver-profile-img-upload-btn:disabled {
+    background-color: #9ca3af;
+    cursor: not-allowed;
+    transform: none;
+  }
+
+  .caregiver-upload-spinner {
+    animation: spin 1s linear infinite;
+    font-size: 16px;
+  }
+
+  @keyframes spin {
+    from { transform: rotate(0deg); }
+    to { transform: rotate(360deg); }
+  }
+
+  .caregiver-upload-plus {
+    line-height: 1;
+    margin-top: -2px;
+  }
+
   .caregiver-profile-header-card h2 {
     margin: 0 0 8px 0;
     font-size: 24px;
@@ -570,6 +623,15 @@
   .section-card h3 {
     font-size: 16px;
   }
+
+  /* Mobile styles for image upload button */
+  .caregiver-profile-img-upload-btn {
+    width: 28px;
+    height: 28px;
+    font-size: 16px;
+    bottom: 6px;
+    right: 6px;
+  }
 }
 
 @media (max-width: 480px) {
@@ -590,5 +652,14 @@
   .edit-location-btn,
   .availability-status {
     font-size: 13px;
+  }
+
+  /* Smaller mobile styles for image upload button */
+  .caregiver-profile-img-upload-btn {
+    width: 24px;
+    height: 24px;
+    font-size: 14px;
+    bottom: 4px;
+    right: 4px;
   }
 }

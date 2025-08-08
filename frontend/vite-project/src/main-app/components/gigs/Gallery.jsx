@@ -36,7 +36,7 @@ const GalleryUploads = ({ onFileChange, onFieldFocus, onFieldBlur, validationErr
           </div>
 
           <div className="uploads-card-area">
-            {[0, 1, 2].map((index) => (
+            {[0].map((index) => (
               <div className="uploads-card-input" key={index}>
                 <label 
                   className="file-upload"

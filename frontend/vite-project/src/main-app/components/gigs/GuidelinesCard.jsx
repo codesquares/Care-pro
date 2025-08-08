@@ -181,11 +181,11 @@ const GuidelinesCard = ({ currentPage, activeField, onClose }) => {
 
           <div className="guidelines-footer">
             <div className="help-note">
-              <strong>{activeField ? "📝 Context Help" : "💡 Need Help?"}</strong>
+              <strong>{activeField ? "📝" : "💡"}</strong>
               <p>
                 {activeField 
-                  ? "This guidance is specific to the field you're currently working on."
-                  : "Click on any form field to see specific guidance for that section."
+                  ? "Context-specific guidance for this field"
+                  : "Click any field for specific guidance"
                 }
               </p>
             </div>

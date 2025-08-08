@@ -464,3 +464,35 @@
     margin: 0 10px 10px 0;
   }
 }
+
+/* Gig Limit Notice */
+.gig-limit-notice {
+  background-color: #fff3cd;
+  border: 1px solid #ffeaa7;
+  border-radius: 8px;
+  padding: 12px 16px;
+  margin-bottom: 16px;
+  text-align: center;
+  grid-column: 1 / -1; /* Span full width */
+}
+
+.gig-limit-notice p {
+  margin: 0;
+  color: #856404;
+  font-size: 14px;
+  font-weight: 500;
+}
+
+/* Enhanced disabled state for publish button */
+.caregiver-gig-action-btn.caregiver-publish.disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+  background-color: #f3f4f6;
+  color: #9ca3af;
+  border-color: #e5e7eb;
+}
+
+.caregiver-gig-action-btn.caregiver-publish.disabled:hover {
+  text-decoration: none;
+  background-color: #f3f4f6;
+}

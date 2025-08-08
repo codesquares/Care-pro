@@ -89,14 +89,16 @@ const CaregiverSettings = () => {
   };
 
   return (
-    <div className="settings-container">
-      <h1 className="settings-title">My Settings</h1>
+    <>
+      {/* <div className="settings-page-header-text">
+        <h1 className="settings-title">My Settings</h1>
+      </div> */}
       
       <div className="settings-content">
         {/* Profile Section - Using ProfileHeader component */}
-        <div className="profile-section">
+        
           <ProfileHeader />
-        </div>
+        
 
         {/* Settings Section */}
         <div className="settings-panel">
@@ -184,7 +186,7 @@ const CaregiverSettings = () => {
         </div>
       </div>
     </div>
-    </div>
+    </>
   );
 };
 
