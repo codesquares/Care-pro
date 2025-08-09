@@ -32,7 +32,7 @@
 }
 
 /* Base styles - Mobile First (320px and up) */
-.register-page {
+.login-page {
   min-height: 100vh;
   background: linear-gradient(135deg, var(--background-primary) 0%, #e8f4f8 100%);
   padding: 1rem;
@@ -40,18 +40,24 @@
   align-items: center;
   justify-content: center;
   font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+  padding-top: 2rem;
+  padding-bottom: 2rem;
 }
 
-.create-account-container {
+.login-container {
   width: 100%;
   max-width: 100%;
   background-color: var(--background-white);
   border-radius: var(--border-radius-lg);
-  box-shadow: var(--shadow-md);
+  box-shadow: 0 10px 40px rgba(0, 0, 0, 0.1);
   overflow: hidden;
   display: flex;
   flex-direction: column;
   min-height: 500px;
+  position: relative;
+  z-index: 10;
+  backdrop-filter: blur(10px);
+  border: 1px solid rgba(255, 255, 255, 0.8);
 }
 
 .form-container {
@@ -60,6 +66,8 @@
   display: flex;
   flex-direction: column;
   justify-content: center;
+  position: relative;
+  z-index: 20;
 }
 
 .form-container h1 {
@@ -69,6 +77,10 @@
   margin: 0 0 2rem 0;
   text-align: center;
   line-height: 1.2;
+  background: linear-gradient(135deg, var(--primary-color) 0%, #028C5C 100%);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
 }
 
 /* Form Styles - Mobile */
@@ -82,25 +94,28 @@ form {
 /* Input Styles - Mobile */
 input {
   width: 100%;
-  padding: 0.875rem 1rem;
-  border: 2px solid var(--border-color);
+  padding: 0.625rem 0.875rem;
+  border: 1.5px solid var(--border-color);
   border-radius: var(--border-radius-sm);
-  font-size: 1rem;
+  font-size: 0.95rem;
   background-color: var(--background-white);
   transition: var(--transition-fast);
   box-sizing: border-box;
   font-family: inherit;
+  line-height: 1.5;
   
   &:focus {
     outline: none;
     border-color: var(--primary-color);
     box-shadow: 0 0 0 3px var(--border-focus);
     background-color: var(--background-white);
+    transform: translateY(-1px);
   }
   
   &::placeholder {
     color: var(--text-light);
-    font-size: 0.95rem;
+    font-size: 0.9rem;
+    font-weight: 400;
   }
   
   &:invalid {
@@ -109,13 +124,19 @@ input {
   
   &:valid:not(:placeholder-shown) {
     border-color: var(--success-color);
+    background-image: linear-gradient(135deg, rgba(39, 174, 96, 0.05) 0%, rgba(39, 174, 96, 0.02) 100%);
+  }
+  
+  &:hover:not(:focus) {
+    border-color: rgba(2, 68, 95, 0.6);
+    background-color: rgba(248, 250, 252, 0.8);
   }
 }
 
 /* Button Styles - Mobile */
 .btn {
   width: 100%;
-  padding: 0.875rem 1.5rem;
+  padding: 0.75rem 1.5rem;
   border: none;
   border-radius: var(--border-radius-pill);
   font-size: 0.95rem;
@@ -130,6 +151,7 @@ input {
   justify-content: center;
   gap: 0.5rem;
   margin-bottom: 0.5rem;
+  letter-spacing: 0.025em;
   
   &:active {
     transform: translateY(1px);
@@ -151,7 +173,12 @@ input {
     &:hover:not(:disabled) {
       background: linear-gradient(135deg, var(--primary-hover) 0%, #012d3d 100%);
       transform: translateY(-2px);
-      box-shadow: var(--shadow-md);
+      box-shadow: 0 6px 20px rgba(2, 68, 95, 0.3);
+    }
+    
+    &:focus {
+      outline: none;
+      box-shadow: 0 0 0 3px rgba(2, 68, 95, 0.2), 0 6px 20px rgba(2, 68, 95, 0.3);
     }
   }
 
@@ -162,7 +189,7 @@ input {
     &:hover:not(:disabled) {
       background: linear-gradient(135deg, #c23321 0%, #a12b1e 100%);
       transform: translateY(-2px);
-      box-shadow: var(--shadow-md);
+      box-shadow: 0 6px 20px rgba(219, 68, 55, 0.3);
     }
   }
 
@@ -173,7 +200,7 @@ input {
     &:hover:not(:disabled) {
       background: linear-gradient(135deg, #1a1a1a 0%, #000000 100%);
       transform: translateY(-2px);
-      box-shadow: var(--shadow-md);
+      box-shadow: 0 6px 20px rgba(51, 51, 51, 0.3);
     }
   }
 }
@@ -199,8 +226,8 @@ input {
 .terms {
   text-align: center;
   font-size: 0.9rem;
-  line-height: 1.5;
-  margin: 0.75rem 0;
+  line-height: 1.4;
+  margin: 0.5rem 0;
   
   a {
     color: var(--primary-color);
@@ -226,13 +253,13 @@ input {
 }
 
 .resend-confirmation {
-  margin-bottom: 1.5rem;
+  margin-bottom: 1rem;
 }
 
 .terms {
   color: var(--text-light);
   font-size: 0.8rem;
-  margin-top: 1.5rem;
+  margin-top: 1rem;
   
   a {
     color: var(--primary-color);
@@ -243,7 +270,7 @@ input {
 /* Alternate Login Section - Mobile */
 .alternate-login {
   text-align: center;
-  margin: 1.5rem 0;
+  margin: 1rem 0;
   
   p {
     margin: 0 0 1rem 0;
@@ -292,8 +319,10 @@ input {
 
 /* Small Mobile Landscape (480px and up) */
 @media (min-width: 480px) {
-  .register-page {
+  .login-page {
     padding: 1.5rem;
+    padding-top: 2.5rem;
+    padding-bottom: 2.5rem;
   }
 
   .form-container {
@@ -305,8 +334,8 @@ input {
   }
 
   input {
-    padding: 1rem 1.25rem;
-    font-size: 1.05rem;
+    padding: 0.625rem 1rem;
+    font-size: 1rem;
   }
 
   .btn {
@@ -343,11 +372,13 @@ input {
 
 /* Tablet Portrait (768px and up) */
 @media (min-width: 768px) {
-  .register-page {
+  .login-page {
     padding: 2rem;
+    padding-top: 3rem;
+    padding-bottom: 3rem;
   }
 
-  .create-account-container {
+  .login-container {
     max-width: 500px;
     flex-direction: column;
     min-height: 500px;
@@ -372,8 +403,8 @@ input {
 
   input {
     max-width: 400px;
-    padding: 1.125rem 1.25rem;
-    font-size: 1.1rem;
+    padding: 0.75rem 1rem;
+    font-size: 1rem;
   }
 
   .btn {
@@ -437,53 +468,55 @@ input {
 
 /* Tablet Landscape and Small Desktop (1024px and up) */
 @media (min-width: 1024px) {
-  .register-page {
-    padding: 3rem;
+  .login-page {
+    padding: 1.5rem;
+    padding-top: 4rem;
+    padding-bottom: 4rem;
   }
 
-  .create-account-container {
-    max-width: 600px;
-    min-height: 600px;
+  .login-container {
+    max-width: 450px;
+    min-height: auto;
   }
 
   .form-container {
-    padding: 4rem 3rem;
+    padding: 1.5rem 1.5rem;
   }
 
   .form-container h1 {
-    font-size: 2.5rem;
-    margin-bottom: 3rem;
+    font-size: 1.75rem;
+    margin-bottom: 1.5rem;
   }
 
   form {
-    gap: 1.5rem;
-    margin-bottom: 3rem;
+    gap: 1rem;
+    margin-bottom: 1.5rem;
   }
 
   input {
-    max-width: 450px;
-    padding: 1.25rem 1.5rem;
-    font-size: 1.15rem;
+    max-width: 350px;
+    padding: 0.625rem 0.875rem;
+    font-size: 0.95rem;
   }
 
   .btn {
-    max-width: 350px;
-    padding: 1.25rem 3rem;
-    font-size: 1.15rem;
+    max-width: 280px;
+    padding: 0.75rem 1.5rem;
+    font-size: 0.95rem;
   }
 
   .alternate-login {
-    margin: 2.5rem 0;
+    margin: 1rem 0;
     
     .btn {
-      max-width: 300px;
+      max-width: 220px;
       
       // Consistent width and spacing for both buttons
       &.google,
       &.apple {
         width: 100%;
-        max-width: 300px;
-        margin-bottom: 0.75rem;
+        max-width: 220px;
+        margin-bottom: 0.5rem;
       }
       
       &.apple {
@@ -495,40 +528,41 @@ input {
   .forgot-password,
   .resend-confirmation,
   .signin-text {
-    font-size: 1.1rem;
+    font-size: 0.9rem;
+    margin: 0.5rem 0;
   }
 
   .terms {
-    font-size: 1rem;
-    margin-top: 2rem;
+    font-size: 0.85rem;
+    margin-top: 1rem;
   }
 }
 
 /* Large Desktop (1200px and up) */
 @media (min-width: 1200px) {
-  .create-account-container {
-    max-width: 700px;
+  .login-container {
+    max-width: 480px;
   }
 
   .form-container {
-    padding: 5rem 4rem;
+    padding: 2rem 2rem;
   }
 
   .form-container h1 {
-    font-size: 2.75rem;
-    margin-bottom: 3.5rem;
+    font-size: 2rem;
+    margin-bottom: 1.75rem;
   }
 
   input {
-    max-width: 500px;
-    padding: 1.375rem 1.75rem;
-    font-size: 1.2rem;
+    max-width: 380px;
+    padding: 0.75rem 1rem;
+    font-size: 1rem;
   }
 
   .btn {
-    max-width: 400px;
-    padding: 1.375rem 3.5rem;
-    font-size: 1.2rem;
+    max-width: 300px;
+    padding: 0.875rem 2rem;
+    font-size: 1rem;
   }
 }
 
@@ -598,7 +632,7 @@ input {
     --border-focus: rgba(74, 158, 255, 0.3);
   }
 
-  .register-page {
+  .login-page {
     background: linear-gradient(135deg, var(--background-primary) 0%, #0d1418 100%);
   }
 

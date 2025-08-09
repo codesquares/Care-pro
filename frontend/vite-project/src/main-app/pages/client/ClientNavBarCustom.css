@@ -1,13 +1,15 @@
+/* Client NavBar Specific Styles */
+
 /* Hide mobile search on larger screens */
 @media (min-width: 901px) {
-  .mobile-user-search {
+  .client-mobile-user-search {
     display: none !important;
   }
 }
 
 /* Mobile user/search section below nav */
 @media (max-width: 900px) {
-  .mobile-user-search {
+  .client-mobile-user-search {
     display: flex;
     flex-direction: column;
     align-items: center;
@@ -19,7 +21,7 @@
     z-index: 2;
   }
 
-  .mobile-user-name {
+  .client-mobile-user-name {
     font-size: 1.1rem;
     font-weight: 600;
     color: #222;
@@ -29,13 +31,13 @@
     width: 100%;
   }
 
-  .mobile-search-container {
+  .client-mobile-search-container {
     width: 90vw;
     max-width: 400px;
     margin: 0 auto;
   }
 
-  .mobile-search-form {
+  .client-mobile-search-form {
     display: flex;
     align-items: center;
     background: #f5f6fa;
@@ -44,7 +46,7 @@
     box-shadow: 0 1px 4px rgba(0,0,0,0.04);
   }
 
-  .mobile-search-input {
+  .client-mobile-search-input {
     flex: 1;
     border: none;
     background: transparent;
@@ -54,12 +56,12 @@
     color: #222;
   }
 
-  .mobile-search-form.has-value {
+  .client-mobile-search-form.has-value {
     background: #e3f2fd;
     border: 1px solid #007bff;
   }
 
-  .mobile-search-button {
+  .client-mobile-search-button {
     background: none;
     border: none;
     padding: 0 4px;
@@ -69,12 +71,48 @@
     color: #667eea;
   }
 }
-/* ClientNavBar Specific Styles - Overrides NavigationBar.css conflicts */
 
-/* Fix desktop navigation visibility and positioning */
+/* Main navigation styling */
+.client-navigation-bar {
+  position: sticky;
+  top: 0;
+  z-index: 1000;
+  background: #ffffff;
+  border-bottom: 1px solid #e9ecef;
+  box-shadow: 0 2px 4px rgba(0,0,0,0.05);
+}
+
+/* Mobile navigation - hidden on desktop */
+.client-mobile-nav {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 12px 20px;
+  height: 56px;
+  box-sizing: border-box;
+}
+
+.client-mobile-user-search {
+  display: flex;
+}
+
 @media (min-width: 1024px) {
-  /* Ensure desktop navigation is properly displayed */
-  .desktop-nav {
+  .client-mobile-nav {
+    display: none !important;
+  }
+  
+  .client-mobile-user-search {
+    display: none !important;
+  }
+}
+
+/* Desktop navigation - visible only on large screens */
+.client-desktop-nav {
+  display: none;
+}
+
+@media (min-width: 1024px) {
+  .client-desktop-nav {
     display: flex !important;
     align-items: center !important;
     justify-content: space-between !important;
@@ -85,345 +123,495 @@
     box-sizing: border-box !important;
     height: 64px !important;
     min-height: 64px !important;
-  }
-
-  /* Navigation actions container */
-  .nav-actions {
-    display: flex !important;
-    align-items: center !important;
-    gap: 16px !important;
-    overflow: visible !important;
-    position: relative !important;
-    flex-shrink: 0 !important;
-    min-width: auto !important;
-    height: 100% !important;
-    z-index: 10 !important;
-  }
-
-  /* Icon group styling */
-  .nav-icons {
-    display: flex !important;
-    align-items: center !important;
-    gap: 2px !important;
-    list-style: none !important;
     margin: 0 !important;
-    padding: 6px 12px !important;
-    background-color: #f8f9fa !important;
-    border-radius: 12px !important;
-    border: 1px solid #e9ecef !important;
-    height: 40px !important;
-    box-sizing: border-box !important;
-    flex-shrink: 0 !important;
+  }
+}
+
+/* Logo styling */
+.client-logo {
+  cursor: pointer !important;
+  display: flex !important;
+  align-items: center !important;
+  margin: 0 !important;
+  padding: 0 !important;
+  box-sizing: border-box !important;
+}
+
+.client-logo img {
+  height: 32px;
+  width: auto;
+}
+
+/* Search container - properly centered */
+.client-search-container {
+  flex: 1 !important;
+  max-width: 400px !important;
+  margin: 0 24px !important;
+  position: relative !important;
+  display: flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  box-sizing: border-box !important;
+  height: 100% !important;
+  padding: 0 !important;
+}
+
+.client-search-form {
+  position: relative !important;
+  width: 100% !important;
+  display: flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  height: 100% !important;
+  margin: 0 !important;
+  padding: 0 !important;
+}
+
+.client-search-input {
+  width: 100% !important;
+  padding: 8px 48px 8px 16px !important;
+  border: 1px solid #ddd !important;
+  border-radius: 50px !important;
+  font-size: 14px !important;
+  background-color: #f8f9fa !important;
+  transition: all 0.2s ease !important;
+  outline: none !important;
+  height: 36px !important;
+  box-sizing: border-box !important;
+  margin: 0 !important;
+  vertical-align: middle !important;
+}
+
+.client-search-input:focus {
+  border-color: #007bff;
+  background-color: #fff;
+  box-shadow: 0 0 0 3px rgba(0, 123, 255, 0.1);
+}
+
+.client-search-input.has-value {
+  border-color: #007bff;
+  background-color: #fff;
+}
+
+.client-search-input::placeholder {
+  color: #6c757d;
+}
+
+.client-search-button {
+  position: absolute;
+  right: 12px;
+  top: 50%;
+  transform: translateY(-50%);
+  background: none;
+  border: none;
+  padding: 6px;
+  cursor: pointer;
+  color: #6c757d;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: all 0.2s ease;
+  width: 32px;
+  height: 32px;
+}
+
+.client-search-button:hover {
+  background-color: #e9ecef;
+  color: #495057;
+}
+
+/* Navigation actions container - override with specificity */
+.client-desktop-nav .client-nav-actions {
+  display: flex !important;
+  align-items: center !important;
+  gap: 16px !important;
+  overflow: visible !important;
+  position: relative !important;
+  flex-shrink: 0 !important;
+  min-width: auto !important;
+  height: 100% !important;
+  padding: 0 !important;
+  margin: 0 !important;
+  box-sizing: border-box !important;
+}
+
+/* Icon group styling - override with specificity */
+.client-desktop-nav .client-nav-icons {
+  display: flex !important;
+  align-items: center !important;
+  gap: 2px !important;
+  list-style: none !important;
+  margin: 0 !important;
+  padding: 6px 12px !important;
+  background-color: #f8f9fa !important;
+  border-radius: 12px !important;
+  border: 1px solid #e9ecef !important;
+  height: 40px !important;
+  box-sizing: border-box !important;
+  flex-shrink: 0 !important;
+}
+
+/* Individual icon links - override with specificity */
+.client-desktop-nav .client-icon-link {
+  display: flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  width: 32px !important;
+  height: 32px !important;
+  border-radius: 6px !important;
+  transition: background-color 0.2s ease !important;
+  cursor: pointer !important;
+  box-sizing: border-box !important;
+  padding: 4px !important;
+  margin: 0 !important;
+}
+
+.client-desktop-nav .client-icon-link:hover {
+  background-color: #ffffff !important;
+}
+
+.client-desktop-nav .client-icon-link img {
+  height: 16px !important;
+  width: 16px !important;
+  object-fit: contain !important;
+}
+
+/* Notification bell specific styling */
+.client-desktop-nav .client-nav-icons .notification-bell {
+  display: flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  width: 32px !important;
+  height: 32px !important;
+  box-sizing: border-box !important;
+  padding: 4px !important;
+  margin: 0 !important;
+}
+
+.client-desktop-nav .client-nav-icons .notification-bell img {
+  width: 16px !important;
+  height: 16px !important;
+  object-fit: contain !important;
+}
+
+/* Ensure all nav-icons items are properly aligned */
+.client-nav-icons li {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+/* Earnings/View Orders button - override with specificity */
+.client-desktop-nav .client-earnings {
+  display: flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  gap: 6px !important;
+  font-size: 0.875rem !important;
+  background-color: transparent !important;
+  padding: 6px 8px !important;
+  border-radius: 8px !important;
+  color: #333 !important;
+  cursor: pointer !important;
+  transition: all 0.2s ease !important;
+  border: none !important;
+  height: 32px !important;
+  box-sizing: border-box !important;
+  white-space: nowrap !important;
+  margin: 0 !important;
+}
+
+.client-desktop-nav .client-earnings:hover {
+  background-color: #ffffff !important;
+}
+
+.client-desktop-nav .client-earnings img {
+  height: 16px !important;
+  width: 16px !important;
+  flex-shrink: 0 !important;
+}
+
+.client-desktop-nav .client-earnings span,
+.client-desktop-nav .client-earnings strong {
+  color: #333 !important;
+  font-weight: 500 !important;
+}
+
+.client-desktop-nav .client-earnings strong {
+  font-weight: 600 !important;
+}
+
+/* Profile avatar section */
+.client-profile-avatar {
+  display: flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  gap: 6px !important;
+  cursor: pointer !important;
+  position: relative !important;
+  padding: 6px 8px !important;
+  border-radius: 8px !important;
+  transition: background-color 0.2s ease !important;
+  height: 32px !important;
+  box-sizing: border-box !important;
+  margin: 0 !important;
+  background-color: transparent !important;
+  border: none !important;
+}
+
+.client-profile-avatar:hover {
+  background-color: #f8f9fa;
+}
+
+/* User name display */
+.client-user-name-text {
+  font-size: 13px;
+  font-weight: 500;
+  color: #222;
+  white-space: nowrap;
+  max-width: 100px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  line-height: 1.2;
+}
+
+/* Avatar container */
+.client-avatar {
+  display: flex;
+  width: 28px;
+  height: 28px;
+  font-size: 0.8rem;
+  border-radius: 50%;
+  align-items: center;
+  justify-content: center;
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  color: white;
+  font-weight: 500;
+  cursor: pointer;
+  transition: transform 0.2s ease;
+}
+
+/* Avatar image styling */
+.client-avatar-image {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  border-radius: 50%;
+}
+
+/* Avatar initials styling */
+.client-avatar-initials {
+  font-size: 0.8rem;
+  font-weight: 500;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 100%;
+  height: 100%;
+}
+
+/* Dropdown arrow */
+.client-dropdown-arrow {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: #6c757d;
+  transition: transform 0.2s ease;
+  width: 14px;
+  height: 14px;
+}
+
+.client-dropdown-arrow svg {
+  width: 14px;
+  height: 14px;
+}
+
+.client-profile-avatar:hover .client-dropdown-arrow {
+  color: #495057;
+}
+
+/* Dropdown menu positioning */
+.client-dropdown-menu {
+  position: absolute;
+  right: 0;
+  top: calc(100% + 8px);
+  background: #ffffff;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+  border-radius: 8px;
+  z-index: 99999;
+  min-width: 160px;
+  border: 1px solid #e9ecef;
+  padding: 8px 0;
+}
+
+.client-dropdown-item {
+  padding: 12px 16px;
+  cursor: pointer;
+  font-size: 0.875rem;
+  color: #333;
+  transition: background-color 0.2s ease;
+  border: none;
+  background: transparent;
+  width: 100%;
+  text-align: left;
+  display: block;
+  font-weight: 400;
+  line-height: 1.4;
+  box-sizing: border-box;
+}
+
+.client-dropdown-item:hover {
+  background-color: #f8f9fa;
+}
+
+/* Mobile menu styling */
+@media (max-width: 1023px) {
+  .client-desktop-nav {
+    display: none;
+  }
+  
+  .client-hamburger-menu {
+    display: flex;
+    flex-direction: column;
+    justify-content: space-around;
+    width: 24px;
+    height: 24px;
+    background: transparent;
+    border: none;
+    cursor: pointer;
+    padding: 0;
   }
 
-  /* Individual icon links */
-  .icon-link {
-    display: flex !important;
-    align-items: center !important;
-    justify-content: center !important;
-    width: 32px !important;
-    height: 32px !important;
-    border-radius: 8px !important;
-    transition: background-color 0.2s ease !important;
-    cursor: pointer !important;
-    flex-shrink: 0 !important;
-  }
-
-  .icon-link:hover {
-    background-color: #ffffff !important;
-  }
-
-  .icon-link img {
-    height: 18px !important;
-    width: 18px !important;
-    object-fit: contain !important;
-  }
-
-  /* Notification bell specific styling */
-  .nav-icons .notification-bell {
-    display: flex !important;
-    align-items: center !important;
-    justify-content: center !important;
-    width: 32px !important;
-    height: 32px !important;
-  }
-
-  .nav-icons .notification-bell img {
-    width: 18px !important;
-    height: 18px !important;
-    object-fit: contain !important;
-  }
-
-  /* Ensure all nav-icons items are properly aligned */
-  .nav-icons li {
-    list-style: none !important;
-    margin: 0 !important;
-    padding: 0 !important;
-    display: flex !important;
-    align-items: center !important;
-    justify-content: center !important;
-  }
-
-  /* Earnings/View Orders button */
-  .earnings {
-    display: flex !important;
-    align-items: center !important;
-    gap: 8px !important;
-    font-size: 0.875rem !important;
-    background-color: #f8f9fa !important;
-    padding: 0 16px !important;
-    border-radius: 12px !important;
-    color: #333 !important;
-    cursor: pointer !important;
-    transition: all 0.2s ease !important;
-    border: 1px solid #e9ecef !important;
-    height: 40px !important;
-    box-sizing: border-box !important;
-    flex-shrink: 0 !important;
-    white-space: nowrap !important;
-  }
-
-  .earnings:hover {
-    background-color: #e9ecef !important;
-    border-color: #dee2e6 !important;
-  }
-
-  .earnings img {
-    height: 18px !important;
-    width: 18px !important;
-    flex-shrink: 0 !important;
-  }
-
-  .earnings span,
-  .earnings strong {
-    color: #333 !important;
-    font-weight: 500 !important;
-  }
-
-  .earnings strong {
-    font-weight: 600 !important;
-  }
-
-  /* FINAL: Profile avatar section - clean professional styling */
-  .profile-avatar {
-    display: flex !important;
-    align-items: center !important;
-    gap: 8px !important;
-    cursor: pointer !important;
-    position: relative !important;
-    padding: 4px 8px !important;
-    border-radius: 8px !important;
-    transition: background-color 0.2s ease !important;
-    min-width: auto !important;
-    flex-shrink: 0 !important;
-    height: 40px !important;
-    box-sizing: border-box !important;
-    overflow: visible !important;
-    z-index: 5 !important;
-    background: transparent !important;
-    max-width: none !important;
-    width: auto !important;
-  }
-
-  .profile-avatar:hover {
-    background-color: #f8f9fa !important;
-  }
-
-  /* FINAL: User name display - clean professional styling */
-  .user-name-text {
-    font-size: 14px !important;
-    font-weight: 500 !important;
-    color: #222 !important;
-    white-space: nowrap !important;
-    max-width: 120px !important;
-    overflow: hidden !important;
-    text-overflow: ellipsis !important;
-    z-index: 6 !important;
-    display: block !important;
-    line-height: 1.2 !important;
-  }
-
-  /* FINAL: Avatar container - clean professional styling */
-  .desktop-nav .avatar {
-    display: flex !important;
-    visibility: visible !important;
-    opacity: 1 !important;
-    width: 32px !important;
-    height: 32px !important;
-    font-size: 0.9rem !important;
-    flex-shrink: 0 !important;
-    border-radius: 50% !important;
-    align-items: center !important;
-    justify-content: center !important;
-    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%) !important;
-    color: white !important;
-    font-weight: 500 !important;
-    overflow: visible !important;
-    position: relative !important;
-    transform: none !important;
-    clip: unset !important;
-    left: auto !important;
-    right: auto !important;
-    top: auto !important;
-    bottom: auto !important;
-    margin: 0 !important;
-    z-index: 1000 !important;
-    cursor: pointer !important;
-    transition: transform 0.2s ease !important;
-  }
-
-  /* Avatar image styling */
-  .desktop-nav .avatar-image {
-    width: 100% !important;
-    height: 100% !important;
-    object-fit: cover !important;
-    border-radius: 50% !important;
-    display: block !important;
-    visibility: visible !important;
-    opacity: 1 !important;
-  }
-
-  /* Avatar initials styling */
-  .desktop-nav .avatar-initials {
-    font-size: 0.9rem !important;
-    font-weight: 500 !important;
-    display: flex !important;
-    align-items: center !important;
-    justify-content: center !important;
-    width: 100% !important;
-    height: 100% !important;
-    visibility: visible !important;
-    opacity: 1 !important;
-    position: static !important;
-    transform: none !important;
-  }
-
-  /* CRITICAL: Dropdown arrow - force visibility */
-  .dropdown-arrow {
-    display: flex !important;
-    visibility: visible !important;
-    opacity: 1 !important;
-    align-items: center !important;
-    justify-content: center !important;
-    color: #6c757d !important;
-    transition: transform 0.2s ease !important;
-    width: 16px !important;
-    height: 16px !important;
-    flex-shrink: 0 !important;
-    position: static !important;
-    transform: none !important;
-    overflow: visible !important;
-    clip: unset !important;
-  }
-
-  .dropdown-arrow svg {
-    display: block !important;
-    visibility: visible !important;
-    opacity: 1 !important;
-    width: 16px !important;
-    height: 16px !important;
-  }
-
-  .profile-avatar:hover .dropdown-arrow {
-    color: #495057 !important;
-  }
-
-  /* Dropdown menu positioning */
-  .dropdown-menu {
-    position: absolute !important;
-    right: 0 !important;
-    top: calc(100% + 8px) !important;
-    background: #ffffff !important;
-    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15) !important;
-    border-radius: 8px !important;
-    overflow: visible !important;
-    z-index: 99999 !important;
-    min-width: 160px !important;
-    border: 1px solid #e9ecef !important;
-    display: block !important;
-    visibility: visible !important;
-    opacity: 1 !important;
-    width: auto !important;
-    height: auto !important;
-    transform: none !important;
-    padding: 8px 0 !important;
-  }
-
-  .dropdown-item {
-    padding: 12px 16px !important;
-    cursor: pointer !important;
-    font-size: 0.875rem !important;
-    color: #333 !important;
-    transition: background-color 0.2s ease !important;
-    border: none !important;
-    background: transparent !important;
-    width: 100% !important;
-    text-align: left !important;
-    display: block !important;
-    font-weight: 400 !important;
-    line-height: 1.4 !important;
-    box-sizing: border-box !important;
-  }
-
-  .dropdown-item:hover {
-    background-color: #f8f9fa !important;
-  }
-
-  /* Search container adjustments */
-  .search-container {
-    flex: 1;
-    max-width: 400px;
-    margin: 0 24px;
-  }
-
-  .search-input {
+  .client-hamburger-menu span {
     width: 100%;
-    padding: 10px 48px 10px 16px;
-    border: 1px solid #ddd;
-    border-radius: 50px;
-    font-size: 14px;
-    background-color: #f8f9fa;
+    height: 2px;
+    background-color: #333;
     transition: all 0.2s ease;
-    outline: none;
-    height: 40px;
-    box-sizing: border-box;
   }
 
-  .search-input:focus {
-    border-color: #007bff;
-    background-color: #fff;
-    box-shadow: 0 0 0 3px rgba(0, 123, 255, 0.1);
+  .client-mobile-menu-overlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: rgba(0, 0, 0, 0.5);
+    z-index: 9999;
+    display: flex;
+    justify-content: flex-end;
   }
 
-  .search-input.has-value {
-    border-color: #007bff;
-    background-color: #fff;
+  .client-mobile-menu {
+    background: white;
+    width: 280px;
+    height: 100%;
+    padding: 0;
+    overflow-y: auto;
+    box-shadow: -2px 0 8px rgba(0, 0, 0, 0.1);
+  }
+
+  .client-mobile-menu-header {
+    padding: 16px 20px;
+    border-bottom: 1px solid #e9ecef;
+    display: flex;
+    justify-content: flex-end;
+  }
+
+  .client-close-menu {
+    background: none;
+    border: none;
+    font-size: 24px;
+    cursor: pointer;
+    color: #666;
+    padding: 0;
+    width: 32px;
+    height: 32px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+
+  .client-mobile-menu-links {
+    list-style: none;
+    padding: 0;
+    margin: 0;
+  }
+
+  .client-mobile-menu-links li {
+    border-bottom: 1px solid #f0f0f0;
+    cursor: pointer;
+  }
+
+  .client-menu-item-content {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    padding: 16px 20px;
+    transition: background-color 0.2s ease;
+  }
+
+  .client-mobile-menu-links li:hover .client-menu-item-content {
+    background-color: #f8f9fa;
+  }
+
+  .client-menu-item-content img {
+    width: 20px;
+    height: 20px;
+    object-fit: contain;
+  }
+
+  .client-small-avatar {
+    width: 24px;
+    height: 24px;
+    font-size: 0.75rem;
+  }
+
+  .client-notifications-item .client-menu-item-content {
+    align-items: center;
+  }
+
+  .client-sign-out {
+    border-top: 1px solid #e9ecef;
+    margin-top: 8px;
+  }
+
+  .client-sign-out .client-menu-item-content {
+    color: #dc3545;
   }
 }
 
 /* Large desktop adjustments */
 @media (min-width: 1200px) {
-  .desktop-nav {
-    padding: 12px 32px !important;
+  .client-desktop-nav {
+    padding: 12px 32px;
+    gap: 32px;
   }
   
-  .nav-actions {
-    gap: 20px !important;
+  .client-nav-actions {
+    gap: 20px;
   }
   
-  .search-container {
+  .client-search-container {
     max-width: 450px;
-    margin: 0 32px;
   }
 }
 
 @media (min-width: 1400px) {
-  .desktop-nav {
-    padding-left: 32px !important;
-    padding-right: 32px !important;
+  .client-desktop-nav {
+    padding-left: 32px;
+    padding-right: 32px;
+    gap: 40px;
   }
   
-  .nav-actions {
-    gap: 24px !important;
+  .client-nav-actions {
+    gap: 24px;
+  }
+  
+  .client-search-container {
+    max-width: 500px;
   }
 }

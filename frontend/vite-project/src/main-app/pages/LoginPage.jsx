@@ -79,8 +79,8 @@ const LoginPage = () => {
   };
 
   return (
-    <div className="register-page">
-      <div className="create-account-container">
+    <div className="login-page">
+      <div className="login-container">
         <div className="form-container">
           <h1>Welcome Back!</h1>
           <form onSubmit={handleSubmit}>
