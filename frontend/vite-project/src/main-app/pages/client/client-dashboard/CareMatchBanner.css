@@ -1,7 +1,6 @@
 .care-match-banner {
   position: relative;
-  top: -90px;
-
+  top: -50px;
   background: #FEFEFF;
   border-radius: 12px;
   padding: 20px;
@@ -10,6 +9,7 @@
   justify-content: space-between;
   margin: 0px 80px;
   box-shadow: 0 2px 4px rgba(0,0,0,0.05);
+  margin-bottom:0px;
 }
 
 .banner-content {

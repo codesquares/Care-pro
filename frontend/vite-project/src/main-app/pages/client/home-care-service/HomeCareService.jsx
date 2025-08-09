@@ -183,6 +183,7 @@ import { useState, useEffect } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import "./home-care-service.css";
 import ClientGigService from "../../../services/clientGigService";
+import defaultAvatar from "../../../../assets/profilecard1.png"
 
 const HomeCareService = () => {
   const { id } = useParams();
@@ -277,11 +278,15 @@ const HomeCareService = () => {
     category,
     deliveryTime,
     caregiverProfileImage,
-    status
+    status,
+    lastDeliveryDate
   } = service;
 
 
   console.log("Service details===><===:", service);
+  console.log("caregiverProfileImage value:", caregiverProfileImage);
+  console.log("caregiverProfileImage type:", typeof caregiverProfileImage);
+  console.log("defaultAvatar:", defaultAvatar);
 
   return (
     <div className="container-service">
@@ -298,10 +303,14 @@ const HomeCareService = () => {
         >
           <h2 className="gig-title">{title}</h2>
           <div className="provider-info-card">
+            {/* if caregiverProfileImage is not available, show defaultAvatar */}
             <img 
-              src={caregiverProfileImage ||  "/avatar.jpg"} 
+              src={caregiverProfileImage && (caregiverProfileImage.startsWith('http') || caregiverProfileImage.startsWith('/')) ? caregiverProfileImage : defaultAvatar} 
               alt={caregiverName} 
-              className="provider-avatar" 
+              className="provider-avatar"
+              onError={(e) => {
+                e.target.src = defaultAvatar;
+              }}
             />
             <div className="provider-details">
               <p className="provider-name">{caregiverName}</p>
@@ -350,6 +359,27 @@ const HomeCareService = () => {
           <button className="accept-offer-btn" onClick={handleHire}>
             Accept offer →
           </button>
+        </div>
+      </div>
+
+      {/* Floating Message Button */}
+      <div className="floating-message">
+        <img 
+          src={caregiverProfileImage && (caregiverProfileImage.startsWith('http') || caregiverProfileImage.startsWith('/')) ? caregiverProfileImage : defaultAvatar} 
+          className="floating-avatar" 
+          alt={caregiverName}
+          onError={(e) => {
+            e.target.src = defaultAvatar;
+          }}
+        />
+        <div className="floating-info">
+          <p className="message-provider-btn" onClick={handleMessage}>
+            Message: {caregiverFirstName || caregiverName}
+          </p>
+          <span className="status-text">
+            {caregiverIsAvailable ? "Available" : "Away"} · 
+            <span> for {lastDeliveryDate || "Unknown days"}</span>
+          </span>
         </div>
       </div>
 
@@ -428,26 +458,6 @@ const HomeCareService = () => {
             </ul>
           </div>
         )}
-      </div>
-
-      {/* Floating Message Button */}
-      <div className="floating-message">
-        <img 
-          src={caregiverProfileImage || "/avatar.jpg"} 
-          className="floating-avatar" 
-          alt={caregiverName}
-        />
-        <div className="floating-info">
-          <p className="message-provider-btn" onClick={handleMessage}>
-            Message: {caregiverFirstName || caregiverName}
-          </p>
-          <span className="status-text">
-            {caregiverIsAvailable ? "Available" : "Away"} · 
-            {caregiverEmail && (
-              <span> Contact: {caregiverEmail}</span>
-            )}
-          </span>
-        </div>
       </div>
 
       {/* Reviews */}

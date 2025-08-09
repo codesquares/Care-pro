@@ -481,7 +481,7 @@ const ClientProfile = () => {
             </div>
           </div>
           
-          <div className="profile-section">
+          {/* <div className="profile-section">
             <h2>Quick Actions</h2>
             <div className="profile-actions">
               <button 
@@ -508,7 +508,7 @@ const ClientProfile = () => {
                 <span>View Orders</span>
               </button>
             </div>
-          </div>
+          </div> */}
         </div>
       </div>
     </div>

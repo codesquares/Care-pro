@@ -520,26 +520,26 @@ const ClientSettings = () => {
   };
   
   return (
-    <div className="settings-container">
+    <div className="client-settings-container">
       {/* Mobile toggle button */}
-      <div className="mobile-toggle-button" onClick={toggleSidebar}>
+      <div className="client-settings-mobile-toggle-button" onClick={toggleSidebar}>
         <i className={`fas ${sidebarOpen ? 'fa-times' : 'fa-bars'}`}></i>
       </div>
       
-      <div className="settings-layout">
+      <div className="client-settings-layout">
         {/* Left Sidebar */}
-        <div className={`settings-sidebar ${sidebarOpen ? 'open' : ''}`}>
-          <div className="sidebar-header">
-            <img src={previewUrl || defaultAvatar} alt="Profile" className="sidebar-avatar" />
-            <div className="sidebar-user-info">
+        <div className={`client-settings-sidebar ${sidebarOpen ? 'open' : ''}`}>
+          <div className="client-settings-sidebar-header">
+            <img src={previewUrl || defaultAvatar} alt="Profile" className="client-settings-sidebar-avatar" />
+            <div className="client-settings-sidebar-user-info">
               <h3>{`${accountForm.firstName} ${accountForm.lastName}`}</h3>
               <p>{accountForm.email}</p>
             </div>
           </div>
           
-          <ul className="sidebar-menu">
+          <ul className="client-settings-sidebar-menu">
             <li 
-              className={`sidebar-menu-item ${activeTab === "account" ? "active" : ""}`}
+              className={`client-settings-sidebar-menu-item ${activeTab === "account" ? "active" : ""}`}
               onClick={() => {
                 setActiveTab("account");
                 setSidebarOpen(false);
@@ -549,7 +549,7 @@ const ClientSettings = () => {
               <span>Account Information</span>
             </li>
             <li 
-              className={`sidebar-menu-item ${activeTab === "password" ? "active" : ""}`}
+              className={`client-settings-sidebar-menu-item ${activeTab === "password" ? "active" : ""}`}
               onClick={() => {
                 setActiveTab("password");
                 setSidebarOpen(false);
@@ -559,7 +559,7 @@ const ClientSettings = () => {
               <span>Password</span>
             </li>
             <li 
-              className={`sidebar-menu-item ${activeTab === "notifications" ? "active" : ""}`}
+              className={`client-settings-sidebar-menu-item ${activeTab === "notifications" ? "active" : ""}`}
               onClick={() => {
                 setActiveTab("notifications");
                 setSidebarOpen(false);
@@ -572,8 +572,8 @@ const ClientSettings = () => {
         </div>
         
         {/* Main Content Area */}
-        <div className="settings-content">
-          <h1 className="settings-title">
+        <div className="client-settings-content">
+          <h1 className="client-settings-title">
             {activeTab === "account" && "Account Information"}
             {activeTab === "password" && "Change Password"}
             {activeTab === "notifications" && "Notification Preferences"}
@@ -581,23 +581,23 @@ const ClientSettings = () => {
           
           {/* Message display */}
           {message.text && (
-            <div className={`message ${message.type}`}>
+            <div className={`client-settings-message ${message.type}`}>
               {message.text}
             </div>
           )}
       
           {/* Account Info Tab */}
           {activeTab === "account" && (
-            <div className="settings-section">
-              <div className="profile-picture-section">
+            <div className="client-settings-section">
+              <div className="client-settings-profile-picture-section">
                 <img 
                   src={previewUrl || defaultAvatar} 
                   alt="Profile" 
-                  className="profile-picture-preview"
+                  className="client-settings-profile-picture-preview"
                 />
-                <div className="profile-picture-actions">
+                <div className="client-settings-profile-picture-actions">
                   <button 
-                    className="settings-button"
+                    className="client-settings-button"
                     onClick={handleImageUploadClick}
                     disabled={uploadingImage}
                   >
@@ -606,26 +606,26 @@ const ClientSettings = () => {
                   <input 
                     type="file" 
                     ref={fileInputRef}
-                    className="file-input"
+                    className="client-settings-file-input"
                     accept="image/*"
                     onChange={handleImageSelect}
                   />
                   {selectedFile && (
                     <>
                       {uploadingImage ? (
-                        <div className="upload-progress">
+                        <div className="client-settings-upload-progress">
                           <div 
-                            className="progress-bar" 
+                            className="client-settings-progress-bar" 
                             style={{ 
                               width: `${uploadProgress}%`,
                               backgroundColor: uploadProgress < 100 ? '#4a6bdf' : '#20c997'
                             }}
                           ></div>
-                          <span className="progress-text">{uploadProgress}%</span>
+                          <span className="client-settings-progress-text">{uploadProgress}%</span>
                         </div>
                       ) : (
                         <button 
-                          className="settings-button"
+                          className="client-settings-button"
                           onClick={handleImageUpload}
                         >
                           <i className="fas fa-cloud-upload-alt"></i> Upload
@@ -636,8 +636,8 @@ const ClientSettings = () => {
                 </div>
               </div>
               
-              <form className="settings-form" onSubmit={handleAccountSave}>
-                <div className="form-group">
+              <form className="client-settings-form" onSubmit={handleAccountSave}>
+                <div className="client-settings-form-group">
                   <label htmlFor="firstName">First Name</label>
                   <input 
                     type="text"
@@ -645,21 +645,21 @@ const ClientSettings = () => {
                     name="firstName"
                     value={accountForm.firstName}
                     onChange={handleAccountChange}
-                    className={`input-validated ${
+                    className={`client-settings-input-validated ${
                       accountForm.firstName && 
                       (validationStates.firstName.isValid ? "valid" : "invalid")
                     }`}
                     required
                   />
                   {accountForm.firstName && validationStates.firstName.isValid && (
-                    <i className="fas fa-check validation-icon"></i>
+                    <i className="fas fa-check client-settings-validation-icon"></i>
                   )}
                   {!validationStates.firstName.isValid && (
-                    <p className="password-hint">{validationStates.firstName.message}</p>
+                    <p className="client-settings-password-hint">{validationStates.firstName.message}</p>
                   )}
                 </div>
                 
-                <div className="form-group">
+                <div className="client-settings-form-group">
                   <label htmlFor="lastName">Last Name</label>
                   <input 
                     type="text"
@@ -667,37 +667,37 @@ const ClientSettings = () => {
                     name="lastName"
                     value={accountForm.lastName}
                     onChange={handleAccountChange}
-                    className={`input-validated ${
+                    className={`client-settings-input-validated ${
                       accountForm.lastName && 
                       (validationStates.lastName.isValid ? "valid" : "invalid")
                     }`}
                     required
                   />
                   {accountForm.lastName && validationStates.lastName.isValid && (
-                    <i className="fas fa-check validation-icon"></i>
+                    <i className="fas fa-check client-settings-validation-icon"></i>
                   )}
                   {!validationStates.lastName.isValid && (
-                    <p className="password-hint">{validationStates.lastName.message}</p>
+                    <p className="client-settings-password-hint">{validationStates.lastName.message}</p>
                   )}
                 </div>
                 
-                <div className="form-group">
+                <div className="client-settings-form-group">
                   <label htmlFor="email">Email Address</label>
                   <input 
                     type="email"
                     id="email"
                     name="email"
                     value={accountForm.email}
-                    className="input-readonly"
+                    className="client-settings-input-readonly"
                     readOnly
                     disabled
                   />
-                  <p className="field-info">
+                  <p className="client-settings-field-info">
                     <i className="fas fa-info-circle"></i> Email address cannot be changed
                   </p>
                 </div>
                 
-                <div className="form-group">
+                <div className="client-settings-form-group">
                   <label htmlFor="phoneNumber">Phone Number</label>
                   <input 
                     type="tel"
@@ -705,24 +705,24 @@ const ClientSettings = () => {
                     name="phoneNumber"
                     value={accountForm.phoneNumber}
                     onChange={handleAccountChange}
-                    className={`input-validated ${
+                    className={`client-settings-input-validated ${
                       accountForm.phoneNumber && 
                       (validationStates.phoneNumber.isValid ? "valid" : "invalid")
                     }`}
                     required
                   />
                   {accountForm.phoneNumber && validationStates.phoneNumber.isValid && (
-                    <i className="fas fa-check validation-icon"></i>
+                    <i className="fas fa-check client-settings-validation-icon"></i>
                   )}
                   {!validationStates.phoneNumber.isValid && (
-                    <p className="password-hint">{validationStates.phoneNumber.message}</p>
+                    <p className="client-settings-password-hint">{validationStates.phoneNumber.message}</p>
                   )}
                 </div>
                 
-                <div className="form-actions">
+                <div className="client-settings-form-actions">
                   <button 
                     type="submit" 
-                    className="settings-button"
+                    className="client-settings-button"
                     disabled={isLoading}
                   >
                     {isLoading ? (
@@ -738,12 +738,12 @@ const ClientSettings = () => {
                 </div>
               </form>
               
-              <div className="deactivate-section">
+              <div className="client-settings-deactivate-section">
                 <h3><i className="fas fa-exclamation-triangle"></i> Deactivate Account</h3>
                 <p>Once you deactivate your account, all your data will be permanently deleted. This action cannot be undone.</p>
                 <div className="right-aligned">
                   <button 
-                    className="settings-button danger"
+                    className="client-settings-button danger"
                     onClick={showDeactivateConfirmation}
                     disabled={isLoading}
                   >
@@ -756,9 +756,9 @@ const ClientSettings = () => {
           
           {/* Password Tab */}
           {activeTab === "password" && (
-            <div className="settings-section">
-              <form className="settings-form" onSubmit={handlePasswordSave}>
-                <div className="form-group">
+            <div className="client-settings-section">
+              <form className="client-settings-form" onSubmit={handlePasswordSave}>
+                <div className="client-settings-form-group">
                   <label htmlFor="currentPassword">Current Password</label>
                   <input 
                     type="password"
@@ -766,18 +766,18 @@ const ClientSettings = () => {
                     name="currentPassword"
                     value={passwordForm.currentPassword}
                     onChange={handlePasswordChange}
-                    className={`input-validated ${
+                    className={`client-settings-input-validated ${
                       passwordForm.currentPassword && 
                       (validationStates.currentPassword.isValid ? "valid" : "invalid")
                     }`}
                     required
                   />
                   {!validationStates.currentPassword.isValid && (
-                    <p className="password-hint">{validationStates.currentPassword.message}</p>
+                    <p className="client-settings-password-hint">{validationStates.currentPassword.message}</p>
                   )}
                 </div>
                 
-                <div className="form-group">
+                <div className="client-settings-form-group">
                   <label htmlFor="newPassword">New Password</label>
                   <input 
                     type="password"
@@ -785,7 +785,7 @@ const ClientSettings = () => {
                     name="newPassword"
                     value={passwordForm.newPassword}
                     onChange={handlePasswordChange}
-                    className={`input-validated ${
+                    className={`client-settings-input-validated ${
                       passwordForm.newPassword && 
                       (validationStates.newPassword.isValid ? "valid" : "invalid")
                     }`}
@@ -793,20 +793,20 @@ const ClientSettings = () => {
                   />
                   
                   {passwordForm.newPassword && (
-                    <div className="password-strength">
-                      <div className="strength-bar" style={{ width: `${(passwordStrength.score / 6) * 100}%`, backgroundColor: passwordStrength.color }}></div>
-                      <span className="strength-text" style={{ color: passwordStrength.color }}>
+                    <div className="client-settings-password-strength">
+                      <div className="client-settings-strength-bar" style={{ width: `${(passwordStrength.score / 6) * 100}%`, backgroundColor: passwordStrength.color }}></div>
+                      <span className="client-settings-strength-text" style={{ color: passwordStrength.color }}>
                         {passwordStrength.label}
                       </span>
                     </div>
                   )}
                   
-                  <p className="password-hint">
+                  <p className="client-settings-password-hint">
                     <i className="fas fa-info-circle"></i> Password should be at least 8 characters and include uppercase, lowercase, numbers, and special characters.
                   </p>
                 </div>
                 
-                <div className="form-group">
+                <div className="client-settings-form-group">
                   <label htmlFor="confirmPassword">Confirm New Password</label>
                   <input 
                     type="password"
@@ -814,21 +814,21 @@ const ClientSettings = () => {
                     name="confirmPassword"
                     value={passwordForm.confirmPassword}
                     onChange={handlePasswordChange}
-                    className={`input-validated ${
+                    className={`client-settings-input-validated ${
                       passwordForm.confirmPassword && 
                       (validationStates.confirmPassword.isValid ? "valid" : "invalid")
                     }`}
                     required
                   />
                   {!validationStates.confirmPassword.isValid && (
-                    <p className="password-hint">{validationStates.confirmPassword.message}</p>
+                    <p className="client-settings-password-hint">{validationStates.confirmPassword.message}</p>
                   )}
                 </div>
                 
-                <div className="form-actions">
+                <div className="client-settings-form-actions">
                   <button 
                     type="submit" 
-                    className="settings-button"
+                    className="client-settings-button"
                     disabled={isLoading}
                   >
                     {isLoading ? (
@@ -848,114 +848,114 @@ const ClientSettings = () => {
           
           {/* Notifications Tab */}
           {activeTab === "notifications" && (
-            <div className="settings-section">
-              <div className="notification-settings">
-                <div className="switch-container">
+            <div className="client-settings-section">
+              <div className="client-settings-notification-settings">
+                <div className="client-settings-switch-container">
                   <div>
-                    <div className="switch-label">Email Notifications</div>
-                    <div className="switch-description">
+                    <div className="client-settings-switch-label">Email Notifications</div>
+                    <div className="client-settings-switch-description">
                       Receive email notifications about account updates and service information
                     </div>
                   </div>
-                  <label className="switch">
+                  <label className="client-settings-switch">
                     <input 
                       type="checkbox" 
                       checked={notificationPreferences.emailNotifications}
                       onChange={() => handleNotificationToggle("emailNotifications")}
                     />
-                    <span className="slider"></span>
+                    <span className="client-settings-slider"></span>
                   </label>
                 </div>
                 
-                <div className="switch-container">
+                <div className="client-settings-switch-container">
                   <div>
-                    <div className="switch-label">SMS Notifications</div>
-                    <div className="switch-description">
+                    <div className="client-settings-switch-label">SMS Notifications</div>
+                    <div className="client-settings-switch-description">
                       Receive text messages for important updates and reminders
                     </div>
                   </div>
-                  <label className="switch">
+                  <label className="client-settings-switch">
                     <input 
                       type="checkbox" 
                       checked={notificationPreferences.smsNotifications}
                       onChange={() => handleNotificationToggle("smsNotifications")}
                     />
-                    <span className="slider"></span>
+                    <span className="client-settings-slider"></span>
                   </label>
                 </div>
                 
-                <div className="switch-container">
+                <div className="client-settings-switch-container">
                   <div>
-                    <div className="switch-label">Marketing Emails</div>
-                    <div className="switch-description">
+                    <div className="client-settings-switch-label">Marketing Emails</div>
+                    <div className="client-settings-switch-description">
                       Receive promotional emails about new services and special offers
                     </div>
                   </div>
-                  <label className="switch">
+                  <label className="client-settings-switch">
                     <input 
                       type="checkbox" 
                       checked={notificationPreferences.marketingEmails}
                       onChange={() => handleNotificationToggle("marketingEmails")}
                     />
-                    <span className="slider"></span>
+                    <span className="client-settings-slider"></span>
                   </label>
                 </div>
                 
-                <div className="switch-container">
+                <div className="client-settings-switch-container">
                   <div>
-                    <div className="switch-label">Order Updates</div>
-                    <div className="switch-description">
+                    <div className="client-settings-switch-label">Order Updates</div>
+                    <div className="client-settings-switch-description">
                       Receive notifications about your orders and bookings
                     </div>
                   </div>
-                  <label className="switch">
+                  <label className="client-settings-switch">
                     <input 
                       type="checkbox" 
                       checked={notificationPreferences.orderUpdates}
                       onChange={() => handleNotificationToggle("orderUpdates")}
                     />
-                    <span className="slider"></span>
+                    <span className="client-settings-slider"></span>
                   </label>
                 </div>
                 
-                <div className="switch-container">
+                <div className="client-settings-switch-container">
                   <div>
-                    <div className="switch-label">Service Updates</div>
-                    <div className="switch-description">
+                    <div className="client-settings-switch-label">Service Updates</div>
+                    <div className="client-settings-switch-description">
                       Receive notifications about service changes and important information
                     </div>
                   </div>
-                  <label className="switch">
+                  <label className="client-settings-switch">
                     <input 
                       type="checkbox" 
                       checked={notificationPreferences.serviceUpdates}
                       onChange={() => handleNotificationToggle("serviceUpdates")}
                     />
-                    <span className="slider"></span>
+                    <span className="client-settings-slider"></span>
                   </label>
                 </div>
                 
-                <div className="switch-container">
+                <div className="client-settings-switch-container">
                   <div>
-                    <div className="switch-label">Promotions</div>
-                    <div className="switch-description">
+                    <div className="client-settings-switch-label">Promotions</div>
+                    <div className="client-settings-switch-description">
                       Receive notifications about discounts and promotional offers
                     </div>
                   </div>
-                  <label className="switch">
+                  <label className="client-settings-switch">
                     <input 
                       type="checkbox" 
                       checked={notificationPreferences.promotions}
                       onChange={() => handleNotificationToggle("promotions")}
                     />
-                    <span className="slider"></span>
+                    <span className="client-settings-slider"></span>
                   </label>
                 </div>
               </div>
               
-              <div className="form-actions">
+              <div className="client-settings-form-actions">
                 <button 
-                  className="settings-button"
+                  className="client-settings-button"
                   onClick={handleNotificationSave}
                   disabled={isLoading}
                 >
@@ -977,19 +977,19 @@ const ClientSettings = () => {
       
       {/* Confirmation Modal */}
       {showModal && (
-        <div className="modal-overlay">
-          <div className="modal-content">
+        <div className="client-settings-modal-overlay">
+          <div className="client-settings-modal-content">
             <h3><i className="fas fa-exclamation-triangle"></i> {modalConfig.title}</h3>
             <p>{modalConfig.text}</p>
-            <div className="modal-actions">
+            <div className="client-settings-modal-actions">
               <button 
-                className="settings-button cancel"
+                className="client-settings-button cancel"
                 onClick={() => setShowModal(false)}
               >
                 <i className="fas fa-times"></i> Cancel
               </button>
               <button 
-                className="settings-button danger"
+                className="client-settings-button danger"
                 onClick={modalConfig.confirmAction}
                 disabled={isLoading}
               >
