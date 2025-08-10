@@ -1,9 +1,11 @@
 import React, { useState, useEffect } from "react";
 import { useNavigate, Link } from "react-router-dom";
 import axios from "axios";
+import loginImg from "../../assets/loginImg.png";
+import loginLogo from "../../assets/loginLogo.png";
 import "../../styles/main-app/pages/LoginPage.scss";
 import { toast } from "react-toastify";
-import config from "../config"; // Assuming this contains your BASE_URL
+import config from "../config";
 
 const LoginPage = () => {
   const [email, setEmail] = useState("");
@@ -23,14 +25,12 @@ const LoginPage = () => {
         navigate("/app/caregiver/dashboard", { replace: true });
       }
     }
-  }, []);
+  }, [navigate]);
 
-  // Handle form submission
   const handleSubmit = async (e) => {
     e.preventDefault();
     setError(null);
 
-    // Validation
     if (!email || !password) {
       setError("Email and password are required.");
       return;
@@ -49,26 +49,20 @@ const LoginPage = () => {
         { email, password }
       );
 
-      console.log("Login response:", response);
-
       const { data } = response;
       toast.success("Login successful");
-      console.log("Login successful:", data);
       localStorage.setItem("userDetails", JSON.stringify(data));
       localStorage.setItem("userId", data.id);
-      // Store token in localStorage
       localStorage.setItem("authToken", data.token);
 
-      // Redirect based on role
       if (data.role === "Admin") {
-        window.location.href = "app/admin/dashboard";
+        navigate("/app/admin/dashboard");
       } else if (data.role === "Client") {
-        window.location.href = "/app/client/dashboard";
+        navigate("/app/client/dashboard");
       } else {
-        window.location.href = "/app/caregiver/dashboard";
+        navigate("/app/caregiver/dashboard");
       }
     } catch (err) {
-      console.error("Login error:", err);
       const errorMessage =
         err.response?.data?.message || "Invalid email or password.";
       setError(errorMessage);
@@ -79,49 +73,66 @@ const LoginPage = () => {
   };
 
   return (
-    <div className="login-page">
-      <div className="login-container">
-        <div className="form-container">
-          <h1>Welcome Back!</h1>
-          <form onSubmit={handleSubmit}>
-            <input
-              type="email"
-              placeholder="Email address"
-              value={email}
-              onChange={(e) => setEmail(e.target.value)}
-              required
-            />
+    <div className="login-wrapper">
+      {/* Left section */}
+      <div className="login-left">
+        <div className="login-logo-section">
+          <img src={loginLogo} alt="Carepro Logo" />
+        </div>
+        <div className="login-image-section">
+          <img
+            src={loginImg}
+            alt="Caregiver"
+            className="main-image"
+          />
+        </div>
+      </div>
+
+      {/* Right section */}
+      <div className="login-right">
+        <h2>Login</h2>
+        <form onSubmit={handleSubmit}>
+          <label>Email Address</label>
+          <input
+            type="email"
+            placeholder="e.g Johnsonsand@gmail.com"
+            value={email}
+            onChange={(e) => setEmail(e.target.value)}
+          />
+
+          <label>Password</label>
+          <div className="password-input">
             <input
               type="password"
-              placeholder="Password"
+              placeholder="Enter password"
               value={password}
               onChange={(e) => setPassword(e.target.value)}
-              required
             />
-            {error && <p className="error-message">{error}</p>}
-            <button type="submit" className="btn" disabled={loading}>
-              {loading ? "Logging in..." : "Login"}
-            </button>
-          </form>
-          <p className="forgot-password">
-            <Link to="/forgot-password">Forgot password?</Link>
-          </p>
-          <p className="resend-confirmation">
-            <Link to="/resend-confirmation">Resend confirmation email</Link>
-          </p>
-          <div className="alternate-login">
-            <p>or</p>
-            <button className="btn google">Google</button>
-            <button className="btn apple">Apple</button>
           </div>
-          <p className="signin-text">
-            I don't have an account? <Link to="/register">Sign up</Link>
-          </p>
-          <p className="terms">
-            By logging in, you agree to the <a href="#">Terms of Use</a> and{" "}
-            <a href="#">Privacy Policy</a>.
-          </p>
+
+          {error && <p className="error-message">{error}</p>}
+
+          <button type="submit" className="btn-primary" disabled={loading}>
+            {loading ? "Logging in..." : "Continue"}
+          </button>
+        </form>
+
+        <div className="divider">or</div>
+
+        <div className="social-login">
+          <button className="google-btn">Google</button>
+          <button className="apple-btn">Apple</button>
         </div>
+
+        <p className="signup-text">
+          Don’t have an account? <Link to="/register">Signup →</Link>
+        </p>
+
+        <p className="terms">
+          By creating an account, you agree to the{" "}
+          <Link to="#">Terms of use</Link> and{" "}
+          <Link to="#">Privacy Policy</Link>
+        </p>
       </div>
     </div>
   );

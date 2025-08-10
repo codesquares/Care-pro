@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from "react";
 import "../../styles/main-app/pages/RegisterPage.scss";
-import authImage from "../../assets/authImage.png";
+import loginImg from "../../assets/loginImg.png";
+import loginLogo from "../../assets/loginLogo.png";
 import useApi from "../services/useApi";
 import { toast } from "react-toastify";
 import Modal from "../components/modal/Modal";
@@ -98,12 +99,10 @@ const CreateAccount = () => {
       await fetchData(payload, endpoint);
 
       // Show success modal
-      setModalTitle("Registration Successful!");
-      setModalDescription(
-        `✅ Your account has been created successfully! 📧 We've sent a confirmation email to: ${formValues.email}. ⚠️ Important: Please check your email and click the confirmation link to activate your account. You won't be able to login until your email is confirmed.`
-      );
+      setModalTitle("Success!");
+      setModalDescription("Your account has been created successfully.");
       setButtonBgColor("#34A853");
-      setButtonText("Go to Login");
+      setButtonText("Proceed");
       setIsModalOpen(true);
       
     } catch (err) {
@@ -121,22 +120,25 @@ const CreateAccount = () => {
 
   const handleProceed = () => {
     setIsModalOpen(false);
-    // Add a toast reminder about email confirmation
-    toast.info("Please check your email and click the confirmation link before logging in.", {
-      autoClose: 6000, // Show for 6 seconds
-    });
-    
-    // Add a small delay before navigation to ensure the toast is visible
-    setTimeout(() => {
-      navigate("/login"); // Navigate to login page
-    }, 500); // 500ms delay to ensure smooth transition
+    navigate("/login"); // Navigate to success page
   }  
 
   return (
-    <div className="register-page">
-      <div className="create-account-container">
-        <div className="form-container">
-          <h1>Create an account</h1>
+    <div className="login-wrapper">
+            <div className="login-left">
+              <div className="login-logo-section">
+                <img src={loginLogo} alt="Carepro Logo" />
+              </div>
+              <div className="login-image-section">
+                <img
+                  src={loginImg}
+                  alt="Caregiver"
+                  className="main-image"
+                />
+              </div>
+            </div>
+        <div className="login-right">
+          <h2>Create an account</h2>
           <form onSubmit={handleSubmit} noValidate>
             <div className="input-group">
               <div>
@@ -184,7 +186,7 @@ const CreateAccount = () => {
               />
               {errors.phone && <p className="error-text">{errors.phone}</p>}
             </div>
-            <div>
+            <div className="password-input">
               <input
                 type="password"
                 name="password"
@@ -195,7 +197,7 @@ const CreateAccount = () => {
               />
               {errors.password && <p className="error-text">{errors.password}</p>}
             </div>
-            <div>
+            <div className="password-input">
               <input
                 type="password"
                 name="confirmPassword"
@@ -242,24 +244,12 @@ const CreateAccount = () => {
               </label>
             </div>
             {errors.userType && <p className="error-text">{errors.userType}</p>}
-            
-            <div className="email-confirmation-notice">
-              <p className="notice-text">
-                📧 <strong>Email Confirmation Required:</strong> After registration, you'll receive a confirmation email. 
-                You must click the link in that email before you can login to your account.
-              </p>
-            </div>
-            
-            <button type="submit" className="btn" disabled={loading}>
+            <button type="submit" className="btn-primary" disabled={loading}>
               {loading ? "Creating Account..." : "Create Account"}
             </button>
           </form>
           {error && <p className="error-text">Error: {error.message}</p>}
         </div>
-        <div className="image-container">
-          <img src={authImage} alt="Mental health awareness" />
-        </div>
-      </div>
       
       {/* Modal */}
       <Modal
