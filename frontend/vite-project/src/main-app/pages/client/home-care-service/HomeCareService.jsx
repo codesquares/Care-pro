@@ -179,19 +179,23 @@
 // export default HomeCareService;
 
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import "./home-care-service.css";
 import ClientGigService from "../../../services/clientGigService";
-import defaultAvatar from "../../../../assets/profilecard1.png"
+import defaultAvatar from "../../../../assets/profilecard1.png";
+import VideoModal from "../../../components/VideoModal/VideoModal";
 
 const HomeCareService = () => {
   const { id } = useParams();
   const [service, setService] = useState(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
+  const [showVideoModal, setShowVideoModal] = useState(false);
+  const [serviceCardDimensions, setServiceCardDimensions] = useState({ width: 0, height: 0 });
   const navigate = useNavigate();
   const basePath = "/app/client";
+  const serviceCardRef = useRef(null);
 
  const handleHire = async () => {
     if (!service) return;
@@ -237,6 +241,27 @@ const HomeCareService = () => {
     }
   }, [id]);
 
+  // Capture service card dimensions
+  useEffect(() => {
+    const updateDimensions = () => {
+      if (serviceCardRef.current) {
+        const rect = serviceCardRef.current.getBoundingClientRect();
+        setServiceCardDimensions({
+          width: rect.width,
+          height: rect.height
+        });
+      }
+    };
+
+    // Update dimensions on mount and window resize
+    updateDimensions();
+    window.addEventListener('resize', updateDimensions);
+
+    return () => {
+      window.removeEventListener('resize', updateDimensions);
+    };
+  }, [service]); // Re-run when service data is loaded
+
   if (loading) return <div className="spinner-container">
             <div className="loading-spinner"></div>
           </div>;
@@ -279,6 +304,7 @@ const HomeCareService = () => {
     deliveryTime,
     caregiverProfileImage,
     status,
+    introVideo,
     lastDeliveryDate
   } = service;
 
@@ -296,10 +322,11 @@ const HomeCareService = () => {
       {/* Top Section */}
       <div className="service-top-header">
         <div 
+          ref={serviceCardRef}
           className="service-card-section"
-          style={{
-            backgroundImage: image1 ? `url(${image1})` : 'none'
-          }}
+          // style={{
+          //   backgroundImage: image1 ? `url(${image1})` : 'none'
+          // }}
         >
           <h2 className="gig-title">{title}</h2>
           <div className="provider-info-card">
@@ -336,8 +363,7 @@ const HomeCareService = () => {
             </div>
           </div>
         </div>
-
-        {/* Plan Section */}
+        {/** Plan Section **/}
         <div className="plan-box">
           <div className="plan-tabs">
             <span className="tab-basic">{packageName || "Basic"}</span>
@@ -362,6 +388,22 @@ const HomeCareService = () => {
         </div>
       </div>
 
+      {/** Video Section - Now under service-top-header on large screens **/}
+      {(introVideo ) && (
+        <div className="video-section">
+          <h3>Introduction video</h3>
+          <div className="video-thumbnail-container" onClick={() => setShowVideoModal(true)}>
+            <video className="video-thumbnail" muted>
+              <source src={introVideo} type="video/mp4" />
+            </video>
+            <div className="play-overlay">
+              <div className="play-icon">▶</div>
+              <div className="play-text">Click to play video</div>
+            </div>
+          </div>
+        </div>
+      )}
+
       {/* Floating Message Button */}
       <div className="floating-message">
         <img 
@@ -382,19 +424,6 @@ const HomeCareService = () => {
           </span>
         </div>
       </div>
-
-      {/* Video Section */}
-      {videoURL && (
-        <>
-          <h3>Introduction video</h3>
-          <div className="video-preview">
-            <video width="100%" controls>
-              <source src={videoURL} type="video/mp4" />
-              Your browser does not support the video tag.
-            </video>
-          </div>
-        </>
-      )}
 
       {/* Caregiver Bio Section */}
       {caregiverBio && (
@@ -498,6 +527,16 @@ const HomeCareService = () => {
           </div>
         </div>
       )}
+      
+      {/* Video Modal */}
+      <VideoModal
+        isOpen={showVideoModal}
+        onClose={() => setShowVideoModal(false)}
+        videoUrl={introVideo || videoURL}
+        title="Introduction Video"
+        width={serviceCardDimensions.width > 0 ? `${serviceCardDimensions.width}px` : undefined}
+        height={serviceCardDimensions.height > 0 ? `${serviceCardDimensions.height}px` : undefined}
+      />
     </div>
   );
 };

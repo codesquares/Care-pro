@@ -84,7 +84,8 @@ const ClientGigService = {
           
           // Keep the original caregiverId for reference
           originalCaregiverId: gig.caregiverId,
-          caregiverProfileImage: caregiver.profileImage || "./avatar.jpg"
+          caregiverProfileImage: caregiver.profileImage || "./avatar.jpg",
+          introVideo:caregiver.introVideo || ""
         };
       });
 

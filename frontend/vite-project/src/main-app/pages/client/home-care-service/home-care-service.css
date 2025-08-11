@@ -221,6 +221,136 @@
 }
 
 /* Video section */
+.video-section {
+  margin: 20px 0;
+  width: 100%;
+}
+
+.video-section h3 {
+  font-size: 18px;
+  margin-bottom: 16px;
+  color: #1f2937;
+  font-weight: 600;
+}
+
+.video-thumbnail-container {
+  position: relative;
+  cursor: pointer;
+  border-radius: 12px;
+  overflow: hidden;
+  width: 100%;
+  background: #f8fafc;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+  transition: all 0.3s ease;
+  border: 1px solid #e2e8f0;
+}
+
+.video-thumbnail-container:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.15);
+}
+
+.video-thumbnail {
+  width: 100%;
+  height: 280px;
+  object-fit: cover;
+  display: block;
+  border-radius: 12px;
+}
+
+.play-overlay {
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: rgba(0, 0, 0, 0.3);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  color: white;
+  transition: all 0.3s ease;
+  border-radius: 12px;
+}
+
+.video-thumbnail-container:hover .play-overlay {
+  background: rgba(0, 0, 0, 0.4);
+}
+
+.play-icon {
+  font-size: 24px;
+  margin-bottom: 8px;
+  background: #22d3ee;
+  color: white;
+  border-radius: 50%;
+  width: 64px;
+  height: 64px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: all 0.3s ease;
+  box-shadow: 0 4px 16px rgba(34, 211, 238, 0.4);
+  border: 3px solid rgba(255, 255, 255, 0.9);
+}
+
+.video-thumbnail-container:hover .play-icon {
+  background: #06b6d4;
+  transform: scale(1.1);
+  box-shadow: 0 6px 20px rgba(34, 211, 238, 0.6);
+}
+
+.play-text {
+  font-size: 14px;
+  font-weight: 500;
+  text-shadow: 0 2px 4px rgba(0, 0, 0, 0.5);
+  opacity: 0.9;
+}
+
+/* Responsive video section */
+@media (max-width: 768px) {
+  .video-thumbnail {
+    height: 220px;
+  }
+  
+  .play-icon {
+    width: 56px;
+    height: 56px;
+    font-size: 20px;
+  }
+  
+  .video-section h3 {
+    font-size: 16px;
+  }
+}
+
+/* Tablet and larger screens - match service-card-section width */
+@media (min-width: 768px) {
+  .video-section {
+    width: 60%;
+    max-width: 60%;
+  }
+}
+
+/* Desktop screens */
+@media (min-width: 1024px) {
+  .video-section {
+    width: 60%;
+    max-width: 60%;
+  }
+}
+
+.video-preview {
+  margin: 20px 0;
+  border-radius: 8px;
+  overflow: hidden;
+}
+
+.video-preview video {
+  width: 100%;
+  height: auto;
+}
+
 .video-preview {
   margin: 20px 0;
   border-radius: 8px;
