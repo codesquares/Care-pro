@@ -83,9 +83,9 @@ const GigsForm = () => {
       case 1:
         return validatePricingPage(formData.pricing);
       case 2:
-        return validateGalleryPage(formData);
+        return validateGalleryPage(formData, selectedFile, imagePreview);
       case 3:
-        return validatePublishPage(formData);
+        return validatePublishPage(formData, selectedFile, imagePreview);
       default:
         return { isValid: true, errors: {} };
     }
@@ -160,11 +160,16 @@ const GigsForm = () => {
       Standard: { name: "", details: "", deliveryTime: "", amount: "" },
       Premium: { name: "", details: "", deliveryTime: "", amount: "" },
     },
-    image1: "",
     video: "https://www.youtube.com/watch?v=RVFAyFWO4go",
     status: "",
     caregiverId: caregiverId,
   });
+
+  // Image-related state
+  const [files, setFiles] = useState([]);
+  const [video, setVideo] = useState(null);
+  const [selectedFile, setSelectedFile] = useState(null);
+  const [imagePreview, setImagePreview] = useState(null);
 
   // Effect to populate form data when in edit mode
   useEffect(() => {
@@ -209,11 +214,19 @@ const GigsForm = () => {
         subcategory: subcategoryArray,
         searchTags: searchTagsArray,
         pricing: pricingData,
-        image1: gigData.image1 || "",
         video: gigData.video || "https://www.youtube.com/watch?v=RVFAyFWO4go",
         status: gigData.status || "",
         caregiverId: gigData.caregiverId || caregiverId,
       });
+
+      // Set image preview if editing existing gig with image
+      if (gigData.image1) {
+        // Convert base64 back to data URL for preview
+        const dataUrl = `data:image/jpeg;base64,${gigData.image1}`;
+        setImagePreview(dataUrl);
+        // Note: For edit mode, we keep the preview but selectedFile remains null
+        // This indicates we have an existing image from backend
+      }
     }
   }, [isEditMode, gigData, caregiverId]);
 
@@ -251,6 +264,15 @@ const GigsForm = () => {
 
     fetchActiveGigsCount();
   }, []);
+
+  // Cleanup blob URLs on component unmount
+  useEffect(() => {
+    return () => {
+      if (imagePreview && imagePreview.startsWith('blob:')) {
+        URL.revokeObjectURL(imagePreview);
+      }
+    };
+  }, [imagePreview]);
 
   const searchtags = formData.searchTags.length > 0
     ? formData.searchTags.join(", ")
@@ -315,9 +337,7 @@ const GigsForm = () => {
       const formDataPayload = new FormData();
 
       Object.keys(formData).forEach((key) => {
-        if (key === "image1" && formData.image1) {
-          formDataPayload.append("Image1", formData.image1);
-        } else if (key === "searchTags") {
+        if (key === "searchTags") {
           formDataPayload.append("Tags", searchtags);
         } else if (key === "status") {
           formDataPayload.append("status", "Draft");
@@ -335,10 +355,19 @@ const GigsForm = () => {
         }
       });
 
+      // Handle image for draft save
+      if (selectedFile) {
+        console.log("Adding Image1 file to draft FormData:", selectedFile.name);
+        formDataPayload.append("Image1", selectedFile);
+      } else if (isEditMode && gigData?.image1) {
+        // For edit mode, preserve existing image
+        console.log("Preserving existing Image1 for draft edit mode");
+        formDataPayload.append("Image1", gigData.image1);
+      }
+
       const response = await axios.post(
         "https://carepro-api20241118153443.azurewebsites.net/api/Gigs",
-        formDataPayload,
-        { headers: { "Content-Type": "multipart/form-data" } }
+        formDataPayload
       );
 
       if (response.status === 200) {
@@ -428,9 +457,22 @@ const GigsForm = () => {
       return;
     }
 
+    // Check if image is selected (for new gigs) or exists (for edit mode)
+    if (!selectedFile && !imagePreview) {
+      console.error("No image selected or existing");
+      setValidationErrors({ image1: "Please upload at least one image to showcase your service" });
+      toast.error("Please upload an image before publishing");
+      return;
+    }
+
     // Final validation before submission
-    const validation = validatePublishPage(formData);
+    console.log("Form data before validation:", formData);
+    console.log("Selected file:", selectedFile?.name, selectedFile?.size);
+    console.log("Image preview:", imagePreview ? "exists" : "null", imagePreview?.length || "N/A");
+    
+    const validation = validatePublishPage(formData, selectedFile, imagePreview);
     if (!validation.isValid) {
+      console.log("Validation errors:", validation.errors);
       setValidationErrors(validation.errors);
       toast.error("Please fix all validation errors before publishing");
       return;
@@ -439,45 +481,69 @@ const GigsForm = () => {
     try {
       const formDataPayload = new FormData();
 
-      Object.keys(formData).forEach((key) => {
-        if (key === "image1" && formData.image1) {
-          formDataPayload.append("Image1", formData.image1);
-        } else if (key === "searchTags") {
-          formDataPayload.append("Tags", searchtags);
-        } else if (key === "status") {
-          formDataPayload.append("status", "Published");
-        } else if (key === "pricing") {
-          Object.keys(formData.pricing).forEach((packageType) => {
-            const packageData = formData.pricing[packageType];
-            formDataPayload.append("PackageType", packageType);
-            formDataPayload.append("PackageName", packageData.name);
-            formDataPayload.append("PackageDetails", packageData.details);
-            formDataPayload.append("DeliveryTime", packageData.deliveryTime);
-            formDataPayload.append("Price", packageData.amount);
-          });
-        } else {
-          formDataPayload.append(key, formData[key]);
-        }
+      // Handle basic fields
+      formDataPayload.append("Title", formData.title || "");
+      formDataPayload.append("Category", formData.category || "");
+      
+      // Handle subcategory array - backend expects List<string>
+      if (formData.subcategory && Array.isArray(formData.subcategory)) {
+        formData.subcategory.forEach(sub => {
+          formDataPayload.append("SubCategory", sub);
+        });
+      }
+      
+      formDataPayload.append("Tags", searchtags || "");
+      formDataPayload.append("Status", "Published");
+      formDataPayload.append("CaregiverId", formData.caregiverId || "");
+      
+      // Handle image - append the file directly or existing base64 for edit mode
+      if (selectedFile) {
+        console.log("Adding new Image1 file to FormData:", selectedFile.name, selectedFile.type, selectedFile.size);
+        formDataPayload.append("Image1", selectedFile);
+      } else if (isEditMode && gigData?.image1) {
+        // For edit mode, if no new file selected, keep existing image as base64
+        console.log("Preserving existing Image1 for edit mode");
+        formDataPayload.append("Image1", gigData.image1);
+      }
+      
+      // Handle video URL
+      if (formData.video) {
+        formDataPayload.append("VideoURL", formData.video);
+      }
+
+      // Handle pricing - find the first completed package
+      const completedPackage = Object.keys(formData.pricing).find(packageType => {
+        const pkg = formData.pricing[packageType];
+        return pkg.name && pkg.details && pkg.deliveryTime && pkg.amount;
       });
+      
+      if (completedPackage) {
+        const packageData = formData.pricing[completedPackage];
+        formDataPayload.append("PackageType", completedPackage);
+        formDataPayload.append("PackageName", packageData.name);
+        formDataPayload.append("PackageDetails", packageData.details);
+        formDataPayload.append("DeliveryTime", packageData.deliveryTime);
+        formDataPayload.append("Price", parseInt(packageData.amount, 10).toString());
+      }
 
       for (let [key, value] of formDataPayload.entries()) {
-        console.log(key, value);
+        console.log(`FormData field: ${key} = ${value} (type: ${typeof value}, length: ${value?.length || 'N/A'})`);
       }
+
+      console.log("About to send FormData to backend...");
 
       let response;
       if (isEditMode && gigData?.id) {
         // Update existing gig
         response = await axios.put(
           `https://carepro-api20241118153443.azurewebsites.net/api/Gigs/${gigData.id}`,
-          formDataPayload,
-          { headers: { "Content-Type": "multipart/form-data" } }
+          formDataPayload
         );
       } else {
         // Create new gig
         response = await axios.post(
           "https://carepro-api20241118153443.azurewebsites.net/api/Gigs",
-          formDataPayload,
-          { headers: { "Content-Type": "multipart/form-data" } }
+          formDataPayload
         );
       }
 
@@ -530,31 +596,78 @@ const GigsForm = () => {
     navigate("/app/caregiver/profile");
   };
 
-  const [files, setFiles] = useState([]);
-  const [video, setVideo] = useState(null);
-
-  const onFileChange = (e) => {
+  const onFileChange = (e, index) => {
     const file = e.target.files[0];
+    
+    // Handle image removal (when files array is empty or no file selected)
+    if (!file || e.target.files.length === 0) {
+      // Cleanup previous blob URL to prevent memory leaks
+      if (imagePreview && imagePreview.startsWith('blob:')) {
+        URL.revokeObjectURL(imagePreview);
+      }
+      
+      setSelectedFile(null);
+      setImagePreview(null);
+      console.log("Image removed/cleared");
+      
+      // Clear image validation error
+      if (validationErrors.image1) {
+        setValidationErrors(prev => {
+          const newErrors = { ...prev };
+          delete newErrors.image1;
+          return newErrors;
+        });
+      }
+      return;
+    }
+    
     if (file) {
+      // Validate file type
+      if (!file.type.startsWith('image/')) {
+        toast.error("Please select a valid image file (JPG, PNG, GIF, WebP).");
+        return;
+      }
+      
+      // Additional validation for specific formats
+      const allowedTypes = ['image/jpeg', 'image/jpg', 'image/png', 'image/gif', 'image/webp'];
+      if (!allowedTypes.includes(file.type.toLowerCase())) {
+        toast.error("Unsupported file format. Please use JPG, PNG, GIF, or WebP.");
+        return;
+      }
+      
+      // Validate file size (max 5MB)
+      const maxSize = 5 * 1024 * 1024; // 5MB
+      if (file.size > maxSize) {
+        toast.error("Image size must be less than 5MB.");
+        return;
+      }
+      
+      // Store the file object directly
+      setSelectedFile(file);
+      
+      // Cleanup previous blob URL to prevent memory leaks
+      if (imagePreview && imagePreview.startsWith('blob:')) {
+        URL.revokeObjectURL(imagePreview);
+      }
+      
+      // Create preview using FileReader for data URL (CSP compliant)
       const reader = new FileReader();
-      reader.onload = () => {
-        const base64String = reader.result.split(",")[1];
-        setFormData((prevData) => ({
-          ...prevData,
-          image1: base64String || "",
-        }));
-        console.log("base64String:", base64String);
-        
-        // Clear image validation error
-        if (validationErrors.image1) {
-          setValidationErrors(prev => {
-            const newErrors = { ...prev };
-            delete newErrors.image1;
-            return newErrors;
-          });
-        }
+      reader.onload = (e) => {
+        setImagePreview(e.target.result);
       };
       reader.readAsDataURL(file);
+      
+      console.log("File selected successfully:", file.name, file.size, "bytes");
+      toast.success("Image selected successfully!");
+      
+      // Clear image validation error
+      if (validationErrors.image1) {
+        setValidationErrors(prev => {
+          const newErrors = { ...prev };
+          delete newErrors.image1;
+          return newErrors;
+        });
+      }
     }
   };
 
@@ -626,11 +739,13 @@ const GigsForm = () => {
                 onFieldHover={handleFieldHover}
                 onFieldLeave={handleFieldLeave}
                 validationErrors={validationErrors}
+                imagePreview={imagePreview}
+                selectedFile={selectedFile}
               />
             )}
             {currentPage === 3 && (
               <PublishGig
-                image={`data:image/jpeg;base64,${formData.image1}`}
+                image={imagePreview || ''}
                 title={formData.title || "Your Gig"}
                 onSaveAsDraft={handleSaveAsDraft}
                 onPublish={handleSubmit}
@@ -643,7 +758,7 @@ const GigsForm = () => {
                 isEditingPublishedGig={isEditingPublishedGig}
                 isLoadingGigs={isLoadingGigs}
                 validationErrors={(() => {
-                  const validation = validatePublishPage(formData);
+                  const validation = validatePublishPage(formData, selectedFile, imagePreview);
                   return validation.errors;
                 })()}
               />

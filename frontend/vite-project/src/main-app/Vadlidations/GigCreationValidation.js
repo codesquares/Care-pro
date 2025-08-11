@@ -100,8 +100,8 @@ export const validatePricingPage = (pricing) => {
       
       if (!packageData.amount || packageData.amount <= 0) {
         packageErrors.amount = "Package amount must be greater than 0";
-      } else if (packageData.amount < 10000) {
-        packageErrors.amount = "Minimum amount is ₦10,000";
+      } else if (packageData.amount < 1000) {
+        packageErrors.amount = "Minimum amount is ₦1,000";
       } else if (packageData.amount > 1000000) {
         packageErrors.amount = "Maximum amount is ₦1,000,000";
       }
@@ -130,22 +130,22 @@ export const validatePricingPage = (pricing) => {
   return { isValid: Object.keys(errors).length === 0, errors };
 };
 
-export const validateGalleryPage = (formData) => {
+export const validateGalleryPage = (formData, selectedFile, imagePreview) => {
   const errors = {};
   
-  // Image validation - at least one image is required
-  if (!formData.image1) {
+  // Image validation - at least one image is required (either new file or existing preview)
+  if (!selectedFile && !imagePreview) {
     errors.image1 = "Please upload at least one image to showcase your service";
   }
   
   return { isValid: Object.keys(errors).length === 0, errors };
 };
 
-export const validatePublishPage = (formData) => {
+export const validatePublishPage = (formData, selectedFile, imagePreview) => {
   // Run all validations for final check
   const overviewValidation = validateOverviewPage(formData);
   const pricingValidation = validatePricingPage(formData.pricing);
-  const galleryValidation = validateGalleryPage(formData);
+  const galleryValidation = validateGalleryPage(formData, selectedFile, imagePreview);
   
   const allErrors = {
     ...overviewValidation.errors,
