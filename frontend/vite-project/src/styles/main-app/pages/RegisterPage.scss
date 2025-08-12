@@ -26,6 +26,65 @@
   --gradient-apple: linear-gradient(135deg, #333333 0%, #1a1a1a 100%);
 }
 
+/* Login wrapper styles for register page */
+.login-wrapper {
+  display: flex;
+  height: 100vh;
+  font-family: "Inter", sans-serif;
+
+  .login-left {
+    flex: 0.5;
+    background: linear-gradient(to bottom, var(--primary-color), var(--primary-hover));
+    padding: 2rem;
+    display: flex;
+    flex-direction: column;
+
+    .login-logo-section {
+      display: flex;
+      justify-content: flex-start;
+      margin-bottom: 2rem;
+
+      img {
+        max-width: 150px;
+        height: auto;
+      }
+    }
+
+    .login-image-section {
+      flex: 1;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+
+      img {
+        max-width: 100%;
+        height: auto;
+        border-radius: 10px;
+      }
+    }
+  }
+
+  .login-right {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    padding: 2rem 3rem;
+    overflow: visible;
+    max-width: 700px;
+    margin: 0 auto;
+
+    h2 {
+      font-weight: 700;
+      font-size: 1.75rem;
+      color: var(--primary-color);
+      margin: 0 0 1.5rem 0;
+      text-align: center;
+      line-height: 1.2;
+    }
+  }
+}
+
 /* Mobile-First Base Styles */
 .register-page {
   min-height: 100vh;
@@ -47,12 +106,12 @@
   overflow: hidden;
   display: flex;
   flex-direction: column;
-  min-height: 600px;
+  min-height: 550px;
 }
 
 .form-container {
   flex: 1;
-  padding: 2rem 1.5rem;
+  padding: 1rem 1.25rem;
   display: flex;
   flex-direction: column;
   justify-content: center;
@@ -62,7 +121,7 @@
   font-size: 1.75rem;
   font-weight: 700;
   color: var(--primary-color);
-  margin: 0 0 2rem 0;
+  margin: 0 0 1rem 0;
   text-align: center;
   line-height: 1.2;
 }
@@ -71,15 +130,15 @@
 form {
   display: flex;
   flex-direction: column;
-  gap: 1rem;
-  margin-bottom: 2rem;
+  gap: 0.75rem;
+  margin-bottom: 0.25rem;
 }
 
 /* Input Group for side-by-side inputs */
 .input-group {
   display: flex;
   flex-direction: column;
-  gap: 1rem;
+  gap: 0.5rem;
   
   > div {
     flex: 1;
@@ -89,10 +148,10 @@ form {
 /* Input Styles - Mobile */
 input:not([type="radio"]) {
   width: 100%;
-  padding: 0.875rem 1rem;
+  padding: 0.5rem 0.75rem;
   border: 2px solid var(--border-color);
   border-radius: var(--border-radius-sm);
-  font-size: 1rem;
+  font-size: 0.95rem;
   background-color: var(--background-white);
   transition: var(--transition-fast);
   box-sizing: border-box;
@@ -124,9 +183,9 @@ input:not([type="radio"]) {
 .radio-group {
   display: flex;
   flex-direction: column;
-  gap: 0.75rem;
+  gap: 0.5rem;
   margin: 0.5rem 0;
-  padding: 1rem;
+  padding: 0.75rem;
   background: var(--background-light);
   border-radius: var(--border-radius-sm);
   border: 1px solid var(--border-color);
@@ -139,7 +198,7 @@ input:not([type="radio"]) {
   font-size: 0.95rem;
   font-weight: 500;
   color: var(--text-primary);
-  padding: 0.5rem;
+  padding: 0.25rem;
   border-radius: var(--border-radius-sm);
   transition: var(--transition-fast);
   
@@ -240,6 +299,24 @@ input:not([type="radio"]) {
   line-height: 1.4;
 }
 
+/* Sign-in Link - Mobile */
+.signup-text {
+  margin: 0.5rem 0;
+  font-size: 0.9rem;
+  text-align: center;
+  color: var(--text-secondary);
+  
+  a {
+    color: var(--primary-color);
+    text-decoration: none;
+    font-weight: 500;
+    
+    &:hover {
+      text-decoration: underline;
+    }
+  }
+}
+
 /* Email Confirmation Notice - Mobile */
 .email-confirmation-notice {
   margin: 1rem 0;
@@ -304,12 +381,12 @@ input:not([type="radio"]) {
   .radio-group {
     flex-direction: row;
     gap: 1rem;
-    padding: 1.25rem;
+    padding: 0.75rem;
   }
 
   .radio-label {
     font-size: 1rem;
-    padding: 0.75rem;
+    padding: 0.5rem;
   }
 
   .error-text {
@@ -366,8 +443,8 @@ input:not([type="radio"]) {
 
   .radio-group {
     max-width: 400px;
-    padding: 1.5rem;
-    gap: 1.25rem;
+    padding: 0.875rem;
+    gap: 1rem;
   }
 
   .error-text {
@@ -434,7 +511,7 @@ input:not([type="radio"]) {
 
   form {
     gap: 1.5rem;
-    margin-bottom: 3rem;
+    margin-bottom: 1rem;
   }
 
   .input-group {
@@ -455,13 +532,13 @@ input:not([type="radio"]) {
 
   .radio-group {
     max-width: 450px;
-    padding: 1.75rem;
-    gap: 1.5rem;
+    padding: 1rem;
+    gap: 1rem;
   }
 
   .radio-label {
     font-size: 1.1rem;
-    padding: 1rem;
+    padding: 0.5rem;
   }
 
   .image-container {
@@ -507,12 +584,12 @@ input:not([type="radio"]) {
 
   .radio-group {
     max-width: 500px;
-    padding: 2rem;
+    padding: 1rem;
   }
 
   .radio-label {
     font-size: 1.15rem;
-    padding: 1.25rem;
+    padding: 0.5rem;
   }
 
   .image-container {
@@ -566,6 +643,43 @@ input:not([type="radio"]) {
     animation-duration: 0.01ms !important;
     animation-iteration-count: 1 !important;
     transition-duration: 0.01ms !important;
+  }
+}
+
+/* Responsive styles for login-wrapper structure */
+@media (max-width: 1024px) {
+  .login-wrapper {
+    .login-left {
+      padding: 1.5rem;
+    }
+    .login-right {
+      padding: 1.5rem 2rem;
+      h2 {
+        font-size: 1.5rem;
+      }
+    }
+  }
+}
+
+@media (max-width: 768px) {
+  .login-wrapper {
+    flex-direction: column;
+
+    .login-left {
+      display: none;
+    }
+
+    .login-right {
+      flex: none;
+      width: 100%;
+      padding: 1rem;
+      max-width: 100%;
+
+      h2 {
+        font-size: 1.4rem;
+        margin-bottom: 1rem;
+      }
+    }
   }
 }
 

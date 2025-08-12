@@ -8,6 +8,7 @@ import receipt from "../../../assets/main-app/receipt.svg";
 import homeIcon from "../../../assets/home_icon.png";
 import settingIcon from "../../../assets/setting.png";
 import NotificationBell from "../../components/notifications/NotificationBell";
+import { useAuth } from "../../context/AuthContext";
 // import "../care-giver/care-giver-dashboard/NavigationBar.css";
 import "./ClientNavBarCustom.css";
 
@@ -17,13 +18,18 @@ const ClientNavBar = () => {
   const basePath = "/app/client";
   const dropdownRef = useRef(null);
   const debounceRef = useRef(null);
+  const { user, handleLogout } = useAuth();
 
   const [showDropdown, setShowDropdown] = useState(false);
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [searchQuery, setSearchQuery] = useState("");
 
-  const user = JSON.parse(localStorage.getItem("userDetails"));
   const userName = user?.firstName ? `${user.firstName} ${user.lastName}` : "";
+
+  // Early return if no user data - prevents errors during logout
+  if (!user) {
+    return null;
+  }
 
   // Initialize search query from URL on component mount
   useEffect(() => {
@@ -65,8 +71,10 @@ const ClientNavBar = () => {
   );
 
   const handleSignOut = () => {
-    localStorage.clear();
-    navigate("/login");
+    const navInfo = handleLogout();
+    if (navInfo.shouldNavigate) {
+      navigate(navInfo.path, { replace: true });
+    }
   };
 
   const handleClickOutside = (event) => {

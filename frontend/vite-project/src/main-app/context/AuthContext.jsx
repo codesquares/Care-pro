@@ -1,5 +1,6 @@
 import React, { createContext, useContext, useState, useEffect } from 'react';
-import { refreshToken, logout } from '../services/auth';
+import { useNavigate } from 'react-router-dom';
+import { logout } from '../services/auth';
 
 const AuthContext = createContext();
 
@@ -21,6 +22,7 @@ export const AuthProvider = ({ children }) => {
                         setUserRole(userDetails.role);
                         setIsAuthenticated(true);
                     } else {
+                        // Don't call logout aggressively - just set as unauthenticated
                         setIsAuthenticated(false);
                     }
                 } else {
@@ -28,7 +30,8 @@ export const AuthProvider = ({ children }) => {
                 }
             } catch (error) {
                 console.error('Auth check failed:', error);
-                logout();
+                // Don't call logout on every error - just set as unauthenticated
+                setIsAuthenticated(false);
             } finally {
                 setLoading(false);
             }
@@ -39,11 +42,22 @@ export const AuthProvider = ({ children }) => {
 
     const login = (userData, token, refreshTokenValue) => {
         localStorage.setItem('authToken', token);
-        localStorage.setItem('refreshToken', refreshTokenValue);
+        if (refreshTokenValue) {
+            localStorage.setItem('refreshToken', refreshTokenValue);
+        }
         localStorage.setItem('userDetails', JSON.stringify(userData));
+        localStorage.setItem('userId', userData.id);
         setUser(userData);
         setUserRole(userData.role);
         setIsAuthenticated(true);
+        
+        // Return navigation info instead of navigating directly
+        return {
+            shouldNavigate: true,
+            path: userData.role === "Admin" ? "/app/admin/dashboard" :
+                  userData.role === "Client" ? "/app/client/dashboard" :
+                  "/app/caregiver/dashboard"
+        };
     };
 
     const handleLogout = () => {
@@ -51,6 +65,7 @@ export const AuthProvider = ({ children }) => {
         setUser(null);
         setUserRole(null);
         setIsAuthenticated(false);
+        return { shouldNavigate: true, path: "/login" };
     };
 
     return (

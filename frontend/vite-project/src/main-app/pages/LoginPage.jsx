@@ -6,6 +6,7 @@ import loginLogo from "../../assets/loginLogo.png";
 import "../../styles/main-app/pages/LoginPage.scss";
 import { toast } from "react-toastify";
 import config from "../config";
+import { useAuth } from "../context/AuthContext";
 
 const LoginPage = () => {
   const [email, setEmail] = useState("");
@@ -13,19 +14,17 @@ const LoginPage = () => {
   const [error, setError] = useState(null);
   const [loading, setLoading] = useState(false);
   const navigate = useNavigate();
+  const { isAuthenticated, userRole, loading: authLoading, login } = useAuth();
 
+  // Only redirect if already authenticated (no duplicate navigation logic)
   useEffect(() => {
-    const user = JSON.parse(localStorage.getItem("userDetails"));
-    if (user && user.role) {
-      if (user.role === "Admin") {
-        navigate("/app/admin/dashboard", { replace: true });
-      } else if (user.role === "Client") {
-        navigate("/app/client/dashboard", { replace: true });
-      } else {
-        navigate("/app/caregiver/dashboard", { replace: true });
-      }
+    if (!authLoading && isAuthenticated && userRole) {
+      const dashboardPath = userRole === "Admin" ? "/app/admin/dashboard" :
+                           userRole === "Client" ? "/app/client/dashboard" :
+                           "/app/caregiver/dashboard";
+      navigate(dashboardPath, { replace: true });
     }
-  }, [navigate]);
+  }, [isAuthenticated, userRole, authLoading, navigate]);
 
   const handleSubmit = async (e) => {
     e.preventDefault();
@@ -51,16 +50,13 @@ const LoginPage = () => {
 
       const { data } = response;
       toast.success("Login successful");
-      localStorage.setItem("userDetails", JSON.stringify(data));
-      localStorage.setItem("userId", data.id);
-      localStorage.setItem("authToken", data.token);
-
-      if (data.role === "Admin") {
-        navigate("/app/admin/dashboard");
-      } else if (data.role === "Client") {
-        navigate("/app/client/dashboard");
-      } else {
-        navigate("/app/caregiver/dashboard");
+      
+      // Use AuthContext login method which returns navigation info
+      const navInfo = login(data, data.token, data.refreshToken);
+      
+      // Navigate using the path from AuthContext
+      if (navInfo.shouldNavigate) {
+        navigate(navInfo.path, { replace: true });
       }
     } catch (err) {
       const errorMessage =
@@ -116,8 +112,8 @@ const LoginPage = () => {
 
           {error && <p className="error-message">{error}</p>}
 
-          <button type="submit" className="btn-primary" disabled={loading}>
-            {loading ? "Logging in..." : "Continue"}
+          <button type="submit" className="btn-primary" disabled={loading || authLoading}>
+            {loading ? "Logging in..." : authLoading ? "Checking authentication..." : "Continue"}
           </button>
         </form>
 

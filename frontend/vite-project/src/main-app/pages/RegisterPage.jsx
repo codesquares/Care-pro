@@ -1,11 +1,11 @@
 import React, { useState, useEffect } from "react";
+import { useNavigate, Link } from "react-router-dom";
 import "../../styles/main-app/pages/RegisterPage.scss";
 import loginImg from "../../assets/loginImg.png";
 import loginLogo from "../../assets/loginLogo.png";
 import useApi from "../services/useApi";
 import { toast } from "react-toastify";
-import Modal from "../components/modal/Modal";
-import { useNavigate } from "react-router-dom"; 
+import Modal from "../components/modal/Modal"; 
 
 const CreateAccount = () => {
   const { data, error, loading, fetchData } = useApi("", "post");
@@ -248,6 +248,11 @@ const CreateAccount = () => {
               {loading ? "Creating Account..." : "Create Account"}
             </button>
           </form>
+          
+          <p className="signup-text">
+            Already have an account? <Link to="/login">Sign in →</Link>
+          </p>
+          
           {error && <p className="error-text">Error: {error.message}</p>}
         </div>
       

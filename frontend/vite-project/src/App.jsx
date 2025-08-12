@@ -57,7 +57,9 @@ function App() {
         {/* <NotificationProvider> */}
           <MessageProvider>
             <Router>
-              <AppContent />
+              <AuthProvider>
+                <AppContent />
+              </AuthProvider>
             </Router>
           </MessageProvider>
         {/* </NotificationProvider> */}

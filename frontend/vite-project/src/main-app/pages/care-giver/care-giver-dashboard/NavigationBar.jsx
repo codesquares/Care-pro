@@ -10,12 +10,14 @@ import homeIcon from "../../../../assets/home_icon.png";
 import settingIcon from "../../../../assets/setting.png";
 import NotificationBell from "../../../components/notifications/NotificationBell";
 import { userService } from "../../../services/userService";
+import { useAuth } from "../../../context/AuthContext";
 
 
 const NavigationBar = () => {
   const navigate = useNavigate();
   const basePath = "/app/caregiver";
   const dropdownRef = useRef(null);
+  const { user, handleLogout } = useAuth();
 
   const [showDropdown, setShowDropdown] = useState(false);
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
@@ -24,8 +26,12 @@ const NavigationBar = () => {
   });
   const [profileData, setProfileData] = useState(null);
 
-  const user = JSON.parse(localStorage.getItem("userDetails"));
   const userName = user?.firstName ? `${user.firstName} ${user.lastName}` : "";
+
+  // Early return if no user data - prevents errors during logout
+  if (!user) {
+    return null;
+  }
 
   const getInitials = (name) => {
   if (!name || typeof name !== "string") return "";
@@ -90,11 +96,13 @@ const NavigationBar = () => {
 
   fetchEarnings();
   fetchProfile();
-}, [user.id]);
+}, [user?.id]); // Add optional chaining to prevent null errors
 
   const handleSignOut = () => {
-    localStorage.clear();
-    navigate("/login"); // or your login route
+    const navInfo = handleLogout();
+    if (navInfo.shouldNavigate) {
+      navigate(navInfo.path, { replace: true });
+    }
   };
 
   useEffect(() => {

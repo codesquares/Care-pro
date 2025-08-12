@@ -257,5 +257,7 @@ const validateToken = async (token) => {
 export const logout = () => {
     localStorage.removeItem('authToken');
     localStorage.removeItem('refreshToken');
-    window.location.href = '/login'; // Redirect to login page
+    localStorage.removeItem('userDetails');
+    localStorage.removeItem('userId');
+    // Don't use hard redirect - let React Router handle navigation
 };

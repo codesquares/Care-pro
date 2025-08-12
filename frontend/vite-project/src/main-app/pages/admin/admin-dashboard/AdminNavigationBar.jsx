@@ -1,19 +1,25 @@
 import React from 'react';
 import { Link, useNavigate } from 'react-router-dom';
+import { useAuth } from '../../../context/AuthContext';
 import './admin-navigation-bar.css';
 
 const AdminNavigationBar = () => {
   const navigate = useNavigate();
+  const { user, handleLogout } = useAuth();
   
-  // Get user info from localStorage
-  const userDetails = JSON.parse(localStorage.getItem('userDetails') || '{}');
-  const userName = userDetails.firstName || 'Admin';
+  const userName = user?.firstName || 'Admin';
+
+  // Early return if no user data - prevents errors during logout
+  if (!user) {
+    return null;
+  }
   
   // Handle logout
-  const handleLogout = () => {
-    localStorage.removeItem('authToken');
-    localStorage.removeItem('userDetails');
-    navigate('/login');
+  const handleAdminLogout = () => {
+    const navInfo = handleLogout();
+    if (navInfo.shouldNavigate) {
+      navigate(navInfo.path, { replace: true });
+    }
   };
 
   return (
@@ -69,7 +75,7 @@ const AdminNavigationBar = () => {
             <span className="user-name">{userName}</span>
             <span className="user-role">Administrator</span>
           </div>
-          <button className="logout-button" onClick={handleLogout}>
+          <button className="logout-button" onClick={handleAdminLogout}>
             <i className="fas fa-sign-out-alt"></i>
             <span>Logout</span>
           </button>
