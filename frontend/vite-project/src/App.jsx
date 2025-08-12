@@ -101,14 +101,24 @@ function AppContent() {
 
   ];
 
+  // Define routes that should not have navbar
+  const routesWithoutNavbar = ['/login', '/register', '/forgot-password', '/confirm-email', '/resend-confirmation'];
+  
+  // Define routes that should not have footer
+  const routesWithoutFooter = ['/login', '/register', '/forgot-password', '/confirm-email', '/resend-confirmation'];
+
   // Check if current path is unprotected
   const isUnprotectedRoute = unprotectedRoutes.includes(location.pathname.toLowerCase()) && location.pathname !== '/';
+  
+  // Check if current route should show navbar and footer
+  const shouldShowNavbar = isUnprotectedRoute && !routesWithoutNavbar.includes(location.pathname);
+  const shouldShowFooter = !routesWithoutFooter.includes(location.pathname);
 
   
 
   return (
     <div className="App">
-      {isUnprotectedRoute && <Navbar />}
+      {shouldShowNavbar && <Navbar />}
       <ScrollToTop />
       <ToastContainer position="top-right" autoClose={5000} />
       {/* <ConnectionStatusIndicator /> */}
@@ -161,7 +171,7 @@ function AppContent() {
           }}
         />
       </Routes>
-      <Footer />
+      {shouldShowFooter && <Footer />}
       <ToastContainer
         position="bottom-right"
         autoClose={5000}

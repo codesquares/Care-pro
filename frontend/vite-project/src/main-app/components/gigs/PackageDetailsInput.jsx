@@ -13,6 +13,21 @@ const PackageDetailsInput = ({
   const [currentInput, setCurrentInput] = useState('');
   const [wordCount, setWordCount] = useState(0);
   const [error, setError] = useState('');
+  const [isMobile, setIsMobile] = useState(false);
+
+  // Detect mobile device
+  useEffect(() => {
+    const detectMobile = () => {
+      const userAgent = navigator.userAgent || navigator.vendor || window.opera;
+      const isMobileDevice = /android|webos|iphone|ipad|ipod|blackberry|iemobile|opera mini/i.test(userAgent.toLowerCase());
+      const isSmallScreen = window.innerWidth <= 768;
+      setIsMobile(isMobileDevice || isSmallScreen);
+    };
+
+    detectMobile();
+    window.addEventListener('resize', detectMobile);
+    return () => window.removeEventListener('resize', detectMobile);
+  }, []);
 
   // Convert string to tasks array
   const stringToTasks = (detailsString) => {
@@ -50,8 +65,8 @@ const PackageDetailsInput = ({
     setError('');
   };
 
-  // Handle Enter key press
-  const handleKeyPress = (e) => {
+  // Handle Enter key press (using onKeyDown for better mobile support)
+  const handleKeyDown = (e) => {
     if (e.key === 'Enter') {
       e.preventDefault();
       addTask();
@@ -104,16 +119,27 @@ const PackageDetailsInput = ({
     <div className={`package-details-input ${className || ''}`}>
       {/* Input field */}
       <div className="input-container">
-        <input
-          type="text"
-          value={currentInput}
-          onChange={handleInputChange}
-          onKeyPress={handleKeyPress}
-          onFocus={onFocus}
-          onBlur={onBlur}
-          placeholder={placeholder || "Enter a task and press Enter (e.g., medication assistance)"}
-          className="task-input"
-        />
+        <div className="input-wrapper">
+          <input
+            type="text"
+            value={currentInput}
+            onChange={handleInputChange}
+            onKeyDown={handleKeyDown}
+            onFocus={onFocus}
+            onBlur={onBlur}
+            placeholder={placeholder || (isMobile ? "Enter a task (e.g., medication assistance)" : "Enter a task and press Enter (e.g., medication assistance)")}
+            className="task-input"
+          />
+          <button
+            type="button"
+            className="add-task-button"
+            onClick={addTask}
+            disabled={!currentInput.trim()}
+            aria-label="Add task"
+          >
+            +
+          </button>
+        </div>
         <div className="input-meta">
           <span 
             className="word-count" 
@@ -155,7 +181,10 @@ const PackageDetailsInput = ({
 
       {/* Help text */}
       <div className="help-text">
-        Press Enter to add each task. Example: "medication assistance", "vital checks", "hospital visit coordination"
+        {isMobile 
+          ? "Type a task and tap the + button to add it. Example: \"medication assistance\", \"vital checks\""
+          : "Press Enter or click the + button to add each task. Example: \"medication assistance\", \"vital checks\", \"hospital visit coordination\""
+        }
       </div>
 
       {/* Minimum tasks validation */}

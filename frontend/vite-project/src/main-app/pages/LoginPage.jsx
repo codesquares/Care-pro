@@ -110,6 +110,10 @@ const LoginPage = () => {
             />
           </div>
 
+          <div className="forgot-password">
+            <Link to="/forgot-password">Forgot Password?</Link>
+          </div>
+
           {error && <p className="error-message">{error}</p>}
 
           <button type="submit" className="btn-primary" disabled={loading}>

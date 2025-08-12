@@ -7,8 +7,15 @@
     position: relative;
     margin-bottom: 0.5rem;
 
+    .input-wrapper {
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+      position: relative;
+    }
+
     .task-input {
-      width: 100%;
+      flex: 1;
       padding: 0.75rem;
       border: 1px solid #ddd;
       border-radius: 4px;
@@ -31,6 +38,69 @@
       &::placeholder {
         color: #888;
         font-style: italic;
+      }
+    }
+
+    .add-task-button {
+      background: #6474c4;
+      color: white;
+      border: none;
+      border-radius: 50%;
+      width: 2.5rem;
+      height: 2.5rem;
+      font-size: 1.2rem;
+      font-weight: bold;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      transition: all 0.3s ease;
+      flex-shrink: 0;
+      min-width: 2.5rem;
+      min-height: 2.5rem;
+      -webkit-tap-highlight-color: transparent; // Remove blue highlight on mobile
+      user-select: none; // Prevent text selection
+
+      // Mobile: make button more prominent
+      @media (max-width: 767px) {
+        width: 3rem;
+        height: 3rem;
+        font-size: 1.4rem;
+        min-width: 3rem;
+        min-height: 3rem;
+        border-radius: 8px;
+      }
+
+      &:hover:not(:disabled) {
+        background: #5a6bb8;
+        transform: translateY(-2px);
+        box-shadow: 0 4px 8px rgba(100, 116, 196, 0.3);
+      }
+
+      &:active:not(:disabled) {
+        transform: translateY(-1px);
+        box-shadow: 0 2px 4px rgba(100, 116, 196, 0.3);
+        background: #4d5aa3; // Darker on press for mobile feedback
+      }
+
+      &:disabled {
+        background: #ccc;
+        cursor: not-allowed;
+        transform: none;
+        box-shadow: none;
+      }
+
+      &:focus {
+        outline: none;
+        box-shadow: 0 0 0 3px rgba(100, 116, 196, 0.2);
+      }
+
+      // Mobile touch feedback
+      @media (max-width: 767px) {
+        &:active:not(:disabled) {
+          transform: scale(0.95);
+          background: #4d5aa3;
+        }
       }
     }
 
@@ -202,6 +272,19 @@
 
   // Responsive adjustments
   @media (max-width: 480px) {
+    .input-wrapper {
+      gap: 0.75rem;
+    }
+
+    .add-task-button {
+      width: 3.5rem;
+      height: 3.5rem;
+      font-size: 1.6rem;
+      min-width: 3.5rem;
+      min-height: 3.5rem;
+      border-radius: 12px;
+    }
+
     .tasks-list {
       .task-item {
         font-size: 0.75rem;
@@ -215,6 +298,11 @@
 
     .input-meta {
       font-size: 0.7rem;
+    }
+
+    .help-text {
+      font-size: 0.7rem;
+      line-height: 1.3;
     }
   }
 }

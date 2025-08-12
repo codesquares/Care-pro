@@ -231,7 +231,7 @@ const CreateAccount = () => {
                  <span className="custom-radio"></span>
                 Client
               </label>
-              <label className="radio-label">
+              {/* <label className="radio-label">
                 <input
                   type="radio"
                   name="userType"
@@ -241,7 +241,7 @@ const CreateAccount = () => {
                 />
                  <span className="custom-radio"></span>
                 Admin
-              </label>
+              </label> */}
             </div>
             {errors.userType && <p className="error-text">{errors.userType}</p>}
             <button type="submit" className="btn-primary" disabled={loading}>
