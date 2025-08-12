@@ -270,7 +270,7 @@
   box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15) !important;
   border-radius: 8px !important;
   overflow: visible !important;
-  z-index: 99999 !important;
+  z-index: 999999 !important;
   min-width: 160px !important;
   border: 1px solid #e9ecef !important;
   display: block !important;
@@ -482,6 +482,7 @@
     flex-shrink: 0 !important;
     height: 40px !important;
     box-sizing: border-box !important;
+    overflow: visible !important;
   }
   
   .profile-avatar:hover {
@@ -523,7 +524,7 @@
     background-color: #007bff !important;
     color: white !important;
     font-weight: 500 !important;
-    overflow: hidden !important;
+    position: relative !important;
   }
   
   .desktop-nav .avatar-image {
@@ -531,11 +532,19 @@
     height: 100% !important;
     object-fit: cover !important;
     border-radius: 50% !important;
+    overflow: hidden !important;
   }
   
   .desktop-nav .avatar-initials {
     font-size: 0.9rem !important;
     font-weight: 500 !important;
+    width: 100% !important;
+    height: 100% !important;
+    display: flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+    border-radius: 50% !important;
+    overflow: hidden !important;
   }
 }
 
