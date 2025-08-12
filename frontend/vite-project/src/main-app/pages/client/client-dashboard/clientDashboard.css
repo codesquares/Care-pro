@@ -8,6 +8,19 @@
   border-radius: 12px;
 }
 
+/* Smooth transition for hiding/showing components during search */
+.banner, .mid-banner, .filter-bar {
+  transition: opacity 0.2s ease-in-out, height 0.2s ease-in-out;
+}
+
+.banner.search-hidden, .mid-banner.search-hidden, .filter-bar.search-hidden {
+  opacity: 0;
+  height: 0;
+  overflow: hidden;
+  margin: 0;
+  padding: 0;
+}
+
 /* Spinner Centering */
 .spinner-container {
   display: flex;

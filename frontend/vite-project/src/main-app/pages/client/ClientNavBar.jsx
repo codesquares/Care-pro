@@ -23,6 +23,7 @@ const ClientNavBar = () => {
   const [showDropdown, setShowDropdown] = useState(false);
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [searchQuery, setSearchQuery] = useState("");
+  const [isTyping, setIsTyping] = useState(false);
 
   const userName = user?.firstName ? `${user.firstName} ${user.lastName}` : "";
 
@@ -46,6 +47,7 @@ const ClientNavBar = () => {
   useEffect(() => {
     const handleClearSearch = () => {
       setSearchQuery('');
+      setIsTyping(false);
     };
 
     window.addEventListener('clearSearch', handleClearSearch);
@@ -96,18 +98,47 @@ const ClientNavBar = () => {
 
   const handleSearch = (e) => {
     e.preventDefault();
+    setIsTyping(false); // Reset typing state on form submission
     if (searchQuery.trim()) {
       // Navigate to dashboard with search query parameter
       navigate(`${basePath}/dashboard?q=${encodeURIComponent(searchQuery.trim())}`);
+      // Dispatch search event with completed search
+      window.dispatchEvent(new CustomEvent('searchChanged', { 
+        detail: { searchQuery: searchQuery.trim(), isSearching: false } 
+      }));
     } else {
       // If empty search, go to dashboard without query
       navigate(`${basePath}/dashboard`);
+      window.dispatchEvent(new CustomEvent('searchChanged', { 
+        detail: { searchQuery: '', isSearching: false } 
+      }));
     }
   };
 
   const handleSearchInputChange = (e) => {
     const value = e.target.value;
     setSearchQuery(value);
+    
+    // Set typing state to true when user starts typing
+    if (!isTyping && value.trim()) {
+      setIsTyping(true);
+      // Immediately notify that searching has started
+      window.dispatchEvent(new CustomEvent('searchChanged', { 
+        detail: { searchQuery: value.trim(), isSearching: true } 
+      }));
+    }
+    
+    // If search is cleared, immediately notify and reset typing state
+    if (!value.trim()) {
+      setIsTyping(false);
+      window.dispatchEvent(new CustomEvent('searchChanged', { 
+        detail: { searchQuery: '', isSearching: false } 
+      }));
+      if (location.pathname === `${basePath}/dashboard`) {
+        window.history.pushState({}, '', `${basePath}/dashboard`);
+      }
+      return;
+    }
 
     // Clear existing timeout
     if (debounceRef.current) {
@@ -123,16 +154,12 @@ const ClientNavBar = () => {
           window.history.pushState({}, '', newUrl);
           // Trigger a custom event to notify dashboard of URL change
           window.dispatchEvent(new CustomEvent('searchChanged', { 
-            detail: { searchQuery: value.trim() } 
-          }));
-        } else {
-          // Clear search if empty
-          window.history.pushState({}, '', `${basePath}/dashboard`);
-          window.dispatchEvent(new CustomEvent('searchChanged', { 
-            detail: { searchQuery: '' } 
+            detail: { searchQuery: value.trim(), isSearching: false } 
           }));
         }
       }
+      // Reset typing state after debounce period
+      setIsTyping(false);
     }, 300); // 300ms debounce
   };
 

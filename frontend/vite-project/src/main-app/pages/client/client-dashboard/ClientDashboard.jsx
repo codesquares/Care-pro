@@ -18,6 +18,7 @@ const ClientDashboard = () => {
   const [topRatedGigs, setTopRatedGigs] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
+  const [isActivelySearching, setIsActivelySearching] = useState(false);
 
   const [filters, setFilters] = useState({
     sortBy: '',
@@ -45,11 +46,16 @@ const ClientDashboard = () => {
   // Listen for real-time search changes from navigation bar
   useEffect(() => {
     const handleSearchChange = (event) => {
-      const { searchQuery } = event.detail;
+      const { searchQuery, isSearching } = event.detail;
       setFilters(prevFilters => ({
         ...prevFilters,
         searchTerm: searchQuery || ''
       }));
+      
+      // Update active searching state
+      if (isSearching !== undefined) {
+        setIsActivelySearching(isSearching);
+      }
     };
 
     window.addEventListener('searchChanged', handleSearchChange);
@@ -110,19 +116,30 @@ const ClientDashboard = () => {
            filters.searchTerm;
   };
 
+  // Check if components should be hidden during search
+  const shouldHideComponents = () => {
+    return isActivelySearching || (filters.searchTerm && filters.searchTerm.trim() !== '');
+  };
+
   return (
     <div className="dashboard client-dashboard-flex">
       <div className="rightbar">
-        <Banner
-          name={`${user.firstName} ${user.lastName}`}
-          careNeedsSet={careNeedsSet}
-        />
+        {!shouldHideComponents() && (
+          <Banner
+            name={`${user.firstName} ${user.lastName}`}
+            careNeedsSet={careNeedsSet}
+          />
+        )}
 
-        <div className="mid-banner">
-          <CareMatchBanner />
-        </div>
+        {!shouldHideComponents() && (
+          <div className="mid-banner">
+            <CareMatchBanner />
+          </div>
+        )}
 
-        <FilterBarDropdown filters={filters} onFilterChange={handleFilterChange} />
+        {!shouldHideComponents() && (
+          <FilterBarDropdown filters={filters} onFilterChange={handleFilterChange} />
+        )}
 
         {loading && (
           <div className="spinner-container">
@@ -183,6 +200,7 @@ const ClientDashboard = () => {
                           ...prevFilters,
                           searchTerm: ''
                         }));
+                        setIsActivelySearching(false);
                         // Clear the URL search parameter
                         window.history.pushState({}, '', location.pathname);
                         // Notify navigation bar to clear search input
@@ -204,6 +222,7 @@ const ClientDashboard = () => {
                         quickFilter: '',
                         searchTerm: ''
                       });
+                      setIsActivelySearching(false);
                       // Clear the URL search parameter
                       window.history.pushState({}, '', location.pathname);
                       // Notify navigation bar to clear search input
