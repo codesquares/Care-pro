@@ -18,8 +18,33 @@ const MyOrders = () => {
     const [rating, setRating] = useState(0);
     const [reviewComment, setReviewComment] = useState("");
     const [isReviewSubmitted, setIsReviewSubmitted] = useState(false);
+    const [checkingReviewStatus, setCheckingReviewStatus] = useState(false);
     const userDetails = JSON.parse(localStorage.getItem("userDetails"));
     const userId = userDetails?.id;
+
+    // Check if user has already submitted a review for this order
+    const checkExistingReview = async (gigId, clientId) => {
+        if (!gigId || !clientId) return false;
+        
+        try {
+            setCheckingReviewStatus(true);
+            const response = await axios.get(
+                `https://carepro-api20241118153443.azurewebsites.net/api/Reviews?gigId=${gigId}`
+            );
+            
+            if (response.status === 200 && response.data) {
+                // Check if any review in the array was submitted by this client
+                const existingReview = response.data.find(review => review.clientId === clientId);
+                return !!existingReview; // Returns true if review exists
+            }
+            return false;
+        } catch (error) {
+            console.warn("Error checking existing review:", error);
+            return false; // If we can't check, assume no review exists
+        } finally {
+            setCheckingReviewStatus(false);
+        }
+    };
 
     useEffect(() => {
         const fetchOrderDetails = async () => {
@@ -33,7 +58,14 @@ const MyOrders = () => {
                 const response = await axios.get(
                     `https://carepro-api20241118153443.azurewebsites.net/api/ClientOrders/orderId?orderId=${orderId}`
                 );
-                setOrders([response.data]); // API returns a single order, so wrap it in an array
+                const orderData = response.data;
+                setOrders([orderData]); // API returns a single order, so wrap it in an array
+                
+                // Check if user has already submitted a review for this order
+                if (orderData.gigId && userId) {
+                    const hasExistingReview = await checkExistingReview(orderData.gigId, userId);
+                    setIsReviewSubmitted(hasExistingReview);
+                }
             } catch (err) {
                 setError("Failed to fetch order details.");
             } finally {
@@ -240,11 +272,18 @@ const MyOrders = () => {
                                     {orders[0].clientOrderStatus === "Completed" ? (
                                         isReviewSubmitted ? (
                                             <div className="review-submitted">
-                                                <p>✓ Review Submitted</p>
+                                                <p>✓ Review Already Submitted</p>
                                                 <p>Thank you for your feedback!</p>
                                             </div>
+                                        ) : checkingReviewStatus ? (
+                                            <button className="submit-review-btn disabled" disabled>
+                                                Checking Review Status...
+                                            </button>
                                         ) : (
-                                            <button className="submit-review-btn" onClick={() => openModal("review")}>
+                                            <button 
+                                                className="submit-review-btn" 
+                                                onClick={() => openModal("review")}
+                                            >
                                                 Submit Review
                                             </button>
                                         )

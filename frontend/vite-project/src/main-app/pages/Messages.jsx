@@ -79,6 +79,10 @@ const Messages = ({ userId: propsUserId, token: propsToken }) => {
  const dispatch = useDispatch();
 const { notifications } = useSelector((state) => state.notifications);
 
+  // Mobile view management
+  const [showSidebar, setShowSidebar] = useState(true);
+  const [isMobile, setIsMobile] = useState(window.innerWidth < 768);
+
   // Get user details with better error handling
   let userId = null;
   let user = null;
@@ -116,6 +120,22 @@ const { notifications } = useSelector((state) => state.notifications);
       window.removeEventListener('online', handleOnlineStatus);
       window.removeEventListener('offline', handleOnlineStatus);
     };
+  }, []);
+
+  // Handle window resize for mobile detection
+  useEffect(() => {
+    const handleResize = () => {
+      const mobile = window.innerWidth < 768;
+      setIsMobile(mobile);
+      
+      // Auto-show sidebar on desktop
+      if (!mobile) {
+        setShowSidebar(true);
+      }
+    };
+
+    window.addEventListener('resize', handleResize);
+    return () => window.removeEventListener('resize', handleResize);
   }, []);
 
   const {
@@ -314,6 +334,18 @@ const requestPermission = async () => {
     console.log("Before selectChat - Current selectedChatId:", selectedChatId);
     console.log("Current recipient:", recipient);
     selectChat(chatId);
+    
+    // On mobile, hide sidebar when chat is selected
+    if (isMobile) {
+      setShowSidebar(false);
+    }
+  };
+
+  // Handle going back to conversations on mobile
+  const handleBackToConversations = () => {
+    if (isMobile) {
+      setShowSidebar(true);
+    }
   };
   
   // Handle sending a new message
@@ -620,53 +652,54 @@ const requestPermission = async () => {
       </div>
       
       <div className="messages-container">
-        <Sidebar 
-          conversations={conversations} 
-          selectedChatId={selectedChatId} 
-          onSelectChat={handleSelectChat} 
-          unreadMessages={unreadMessages}
-        />
-        
-        {conversations.length === 0 ? (
-          <EmptyMessageState isConnecting={isLoading} />
-        ) : selectedChatId ? (
-          <ChatArea 
-            messages={messages || []}
-            recipient={recipient || conversations.find(c => c.id === selectedChatId)}
-            userId={userId}
-            onSendMessage={handleSendNewMessage}
-          />
-        ) : (
-          <div className="placeholder">
-            <div className="placeholder-content">
-              <div className="placeholder-icon">
-                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                  <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"></path>
-                </svg>
-              </div>
-              <h3>No conversation selected</h3>
-              <p>Choose a conversation from the sidebar to start messaging or continue an existing conversation.</p>
-            </div>
+        {/* Mobile back button - only show when chat is selected on mobile */}
+        {isMobile && selectedChatId && !showSidebar && (
+          <div className="mobile-back-header">
+            <button className="back-button" onClick={handleBackToConversations}>
+              <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                <path d="M19 12H5M12 19l-7-7 7-7"/>
+              </svg>
+              <span>Back to Conversations</span>
+            </button>
           </div>
         )}
-      </div>
-      
-      {/* Floating Create Offer Button - only show when no chat is selected */}
-      {!selectedChatId && conversations.length > 0 && (
-        <div className="floating-action-button" title="Create Offer">
-          <button 
-            className="fab-button"
-            onClick={() => {
-              // Navigate to create offer page
-              window.location.href = '/app/caregiver/create-offer';
-            }}
-          >
-            <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-              <path d="M3 3h18v18H3zM12 8v8m-4-4h8"/>
-            </svg>
-          </button>
+
+        {/* Sidebar - show/hide based on mobile state */}
+        <div className={`sidebar-container ${isMobile && !showSidebar ? 'mobile-hidden' : ''}`}>
+          <Sidebar 
+            conversations={conversations} 
+            selectedChatId={selectedChatId} 
+            onSelectChat={handleSelectChat} 
+            unreadMessages={unreadMessages}
+          />
         </div>
-      )}
+        
+        {/* Chat area - show/hide based on mobile state */}
+        <div className={`chat-container ${isMobile && showSidebar ? 'mobile-hidden' : ''}`}>
+          {conversations.length === 0 ? (
+            <EmptyMessageState isConnecting={isLoading} />
+          ) : selectedChatId ? (
+            <ChatArea 
+              messages={messages || []}
+              recipient={recipient || conversations.find(c => c.id === selectedChatId)}
+              userId={userId}
+              onSendMessage={handleSendNewMessage}
+            />
+          ) : (
+            <div className="placeholder">
+              <div className="placeholder-content">
+                <div className="placeholder-icon">
+                  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                    <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"></path>
+                  </svg>
+                </div>
+                <h3>No conversation selected</h3>
+                <p>Choose a conversation from the sidebar to start messaging or continue an existing conversation.</p>
+              </div>
+            </div>
+          )}
+        </div>
+      </div>
       
       {/* Toast notifications */}
       <ToastContainer />

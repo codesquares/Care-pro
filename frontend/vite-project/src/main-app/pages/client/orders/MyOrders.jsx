@@ -82,7 +82,7 @@ const MyOrders = () => {
               onClick={() => handleOrderClick(order.id)}
               style={{ cursor: "pointer" }}
               >
-                <img src={order.gigImage || "default-image.png"} alt="Order" className="client-order-image" />
+                <img src={order.gigImage || "default-image.png"} alt="Order-info" className="client-order-image" />
                 <div className="client-order-details">
                   <h3>{order.gigTitle}</h3>
                   <p>{order.caregiverName || "Unknown Client"}</p>

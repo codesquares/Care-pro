@@ -14,6 +14,69 @@
   color: #1a1a1a;
 }
 
+/* Review Statistics */
+.review-stats {
+  background: #f9fafb;
+  border-radius: 8px;
+  padding: 16px;
+  margin-bottom: 20px;
+  border: 1px solid #f3f4f6;
+}
+
+.stats-summary {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  margin-bottom: 12px;
+}
+
+.total-reviews {
+  font-weight: 600;
+  color: #374151;
+  font-size: 16px;
+}
+
+.average-rating {
+  font-weight: 600;
+  color: #059669;
+  font-size: 16px;
+}
+
+/* Rating Filter Buttons */
+.rating-filters {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.filter-btn {
+  background: #ffffff;
+  border: 1px solid #d1d5db;
+  border-radius: 6px;
+  padding: 6px 12px;
+  font-size: 14px;
+  font-weight: 500;
+  color: #374151;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.filter-btn:hover {
+  background: #f3f4f6;
+  border-color: #9ca3af;
+}
+
+.filter-btn:focus {
+  outline: none;
+  box-shadow: 0 0 0 2px rgba(59, 130, 246, 0.3);
+}
+
+.filter-btn.active {
+  background: #3b82f6;
+  color: #ffffff;
+  border-color: #3b82f6;
+}
+
 /* Review List Styling */
 .review-list {
   display: flex;
@@ -85,6 +148,22 @@
 .review-rating-text {
   color: #6b7280;
   font-weight: 500;
+}
+
+/* Gig Information */
+.review-gig-info {
+  margin: 8px 0;
+  font-size: 13px;
+  color: #6b7280;
+}
+
+.review-gig-title {
+  font-weight: 500;
+  color: #374151;
+}
+
+.review-gig-category {
+  opacity: 0.8;
 }
 
 /* Review Text */

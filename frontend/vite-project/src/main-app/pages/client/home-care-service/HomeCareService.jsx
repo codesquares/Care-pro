@@ -205,7 +205,7 @@ const HomeCareService = () => {
 
   const handleMessage = () => {
     navigate(`${basePath}/message/${service.caregiverId}`, {
-      state: { recipientName: service.caregiverName },
+      state: { recipientName: service.caregiverName, serviceId: id },
     });
   };
 

@@ -78,6 +78,7 @@
     flex: 1;
     min-height: 0; /* Important for flex children */
     overflow: hidden;
+    position: relative;
     
     /* On mobile, ensure proper space allocation */
     @media (max-width: 767px) {
@@ -87,6 +88,102 @@
     
     @media (min-width: 768px) {
       flex-direction: row;
+    }
+
+    .mobile-back-header {
+      display: flex;
+      align-items: center;
+      padding: 0.75rem 1rem;
+      background-color: #fff;
+      border-bottom: 1px solid #e5e7eb;
+      position: sticky;
+      top: 80px; /* Account for main messages header */
+      z-index: 20;
+      box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
+
+      @media (min-width: 768px) {
+        display: none;
+      }
+
+      .back-button {
+        display: flex;
+        align-items: center;
+        gap: 0.5rem;
+        background: none;
+        border: none;
+        color: #4f46e5;
+        font-size: 0.875rem;
+        font-weight: 500;
+        cursor: pointer;
+        padding: 0.5rem;
+        border-radius: 6px;
+        transition: all 0.2s ease;
+
+        &:hover {
+          background-color: #f3f4f6;
+        }
+
+        svg {
+          width: 16px;
+          height: 16px;
+        }
+      }
+    }
+
+    .sidebar-container {
+      flex: none;
+      
+      @media (max-width: 767px) {
+        width: 100%;
+        height: calc(100% - 80px); /* Account for main messages header */
+        position: absolute;
+        top: 0;
+        left: 0;
+        z-index: 10;
+        background-color: #fff;
+        transition: transform 0.3s ease;
+
+        &.mobile-hidden {
+          transform: translateX(-100%);
+        }
+      }
+
+      @media (min-width: 768px) {
+        position: relative;
+        width: 320px;
+        height: 100%;
+      }
+
+      @media (min-width: 1024px) {
+        width: 380px;
+      }
+
+      @media (min-width: 1200px) {
+        width: 420px;
+      }
+    }
+
+    .chat-container {
+      flex: 1;
+      min-height: 0;
+      
+      @media (max-width: 767px) {
+        width: 100%;
+        height: calc(100% - 80px); /* Account for main messages header */
+        position: absolute;
+        top: 0;
+        left: 0;
+        background-color: #fff;
+        transition: transform 0.3s ease;
+
+        &.mobile-hidden {
+          transform: translateX(100%);
+        }
+      }
+
+      @media (min-width: 768px) {
+        position: relative;
+      }
     }
   }
   

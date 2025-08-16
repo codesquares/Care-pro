@@ -1,12 +1,16 @@
 import React, { useState, useEffect, useRef } from 'react';
+import { useLocation } from 'react-router-dom';
 import './chatarea.scss';
 import MessageInput from './MessageInput';
 import MessageStatus from './MessageStatus';
+import ServiceSelectionModal from './ServiceSelectionModal';
 import { formatDistanceToNow } from 'date-fns';
 import { useMessageContext } from '../../context/MessageContext';
 import { createNotification } from '../../services/notificationService';
+import ClientGigService from '../../services/clientGigService';
 
 const ChatArea = ({ messages, recipient, userId, onSendMessage, isOfflineMode = false }) => {
+  const location = useLocation();
   const [message, setMessage] = useState('');
   const messagesEndRef = useRef(null);
   const { handleDeleteMessage } = useMessageContext();
@@ -16,6 +20,16 @@ const ChatArea = ({ messages, recipient, userId, onSendMessage, isOfflineMode = 
   const [isRecipientTyping, setIsRecipientTyping] = useState(false);
   const [lastMessageCount, setLastMessageCount] = useState(0);
   const chatAreaRef = useRef(null);
+
+  // Check if user is a client and extract serviceId
+  const isClientRoute = location.pathname.includes('/client/');
+  const serviceId = location.state?.serviceId;
+
+  // State for caregiver gigs and modal
+  const [caregiverGigs, setCaregiverGigs] = useState([]);
+  const [isLoadingGigs, setIsLoadingGigs] = useState(false);
+  const [showServiceModal, setShowServiceModal] = useState(false);
+  const [gigCache, setGigCache] = useState(new Map()); // Cache gigs by caregiver ID
   
   // Function to get initials from name (similar to NavigationBar)
   const getInitials = (name) => {
@@ -143,6 +157,20 @@ const ChatArea = ({ messages, recipient, userId, onSendMessage, isOfflineMode = 
     return () => document.removeEventListener('click', handleClickOutside);
   }, [showDeleteMenu]);
 
+  // Fetch caregiver gigs when recipient changes (for Hire Me button)
+  // Only fetch if no serviceId (avoid unnecessary API calls when coming from HomeCareService)
+  useEffect(() => {
+    if (isClientRoute && recipient?.id && !serviceId) {
+      console.log('Fetching gigs for discovery mode - no direct serviceId available');
+      fetchCaregiverGigs(recipient.id);
+    } else if (isClientRoute && recipient?.id && serviceId) {
+      console.log('Direct mode from HomeCareService - skipping gig fetch, using serviceId:', serviceId);
+      // Clear any previous gig data since we're in direct mode
+      setCaregiverGigs([]);
+      setIsLoadingGigs(false);
+    }
+  }, [recipient?.id, isClientRoute, serviceId]);
+
   // Handle sending animation
   const handleSendMessageWithAnimation = () => {
     if (message.trim()) {
@@ -171,6 +199,88 @@ const ChatArea = ({ messages, recipient, userId, onSendMessage, isOfflineMode = 
         );
       }, 500);
     }
+  };
+
+  // Fetch caregiver gigs for the Hire Me button
+  const fetchCaregiverGigs = async (caregiverId) => {
+    // Check cache first
+    if (gigCache.has(caregiverId)) {
+      const cachedData = gigCache.get(caregiverId);
+      const cacheAge = Date.now() - cachedData.timestamp;
+      
+      // Use cached data if less than 5 minutes old
+      if (cacheAge < 5 * 60 * 1000) {
+        setCaregiverGigs(cachedData.gigs);
+        return cachedData.gigs;
+      }
+    }
+
+    setIsLoadingGigs(true);
+    try {
+      // Get all gigs and filter for this caregiver
+      const allGigs = await ClientGigService.getAllGigs();
+      const caregiverPublishedGigs = allGigs.filter(
+        gig => gig.caregiverId === caregiverId && gig.status === 'Published'
+      );
+
+      // Cache the results
+      setGigCache(prev => new Map(prev.set(caregiverId, {
+        gigs: caregiverPublishedGigs,
+        timestamp: Date.now()
+      })));
+
+      setCaregiverGigs(caregiverPublishedGigs);
+      console.log(`Found ${caregiverPublishedGigs.length} published gigs for caregiver ${caregiverId}`);
+      
+      return caregiverPublishedGigs;
+    } catch (error) {
+      console.error('Error fetching caregiver gigs:', error);
+      setCaregiverGigs([]);
+      return [];
+    } finally {
+      setIsLoadingGigs(false);
+    }
+  };
+
+  // Handle Hire Me button click with priority logic
+  const handleHireMeClick = () => {
+    // Priority 1: Use serviceId from navigation state (direct from HomeCareService)
+    if (serviceId) {
+      console.log('Direct navigation: Using serviceId from HomeCareService:', serviceId);
+      
+      // Navigate to the specific service page
+      // Note: If service becomes unavailable, the service page will handle the error
+      window.location.href = `/app/client/service/${serviceId}`;
+      return;
+    }
+
+    // Priority 2: Use fetched gigs (general messaging context)
+    if (isLoadingGigs) {
+      console.log('Still loading caregiver gigs...');
+      return; // Don't do anything if still loading
+    }
+
+    if (caregiverGigs.length === 0) {
+      console.log('No published gigs available for this caregiver');
+      // Could show a toast message here: "This caregiver has no available services"
+      return;
+    }
+
+    if (caregiverGigs.length === 1) {
+      // Direct navigation if only one service
+      const service = caregiverGigs[0];
+      console.log('Single service navigation:', service.title);
+      window.location.href = `/app/client/service/${service.id}`;
+    } else {
+      // Open modal for multiple services
+      console.log(`Multiple services available: ${caregiverGigs.length} options`);
+      setShowServiceModal(true);
+    }
+  };
+
+  // Handle service selection from modal
+  const handleSelectService = (service) => {
+    window.location.href = `/app/client/service/${service.id}`;
   };
 
   const handleSendMessage = async () => {
@@ -494,19 +604,45 @@ const ChatArea = ({ messages, recipient, userId, onSendMessage, isOfflineMode = 
           </div>
         </div>
         <div className="chat-actions">
-          <button 
-            className="action-button create-offer-btn" 
-            title="Create Offer"
-            onClick={() => {
-              // Navigate to create offer page with recipient info
-              window.location.href = `/app/caregiver/create-offer?recipientId=${safeRecipient.id}&recipientName=${encodeURIComponent(safeRecipient.name)}`;
-            }}
-          >
-            <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-              <path d="M3 3h18v18H3zM12 8v8m-4-4h8"/>
-            </svg>
-            <span className="button-text">Create Offer</span>
-          </button>
+          {/* Show Hire Me button for clients with priority logic */}
+          {isClientRoute && (
+            // Priority 1: Show if serviceId from navigation (direct from HomeCareService)
+            serviceId || 
+            // Priority 2: Show if caregiver has gigs or still loading (discovery mode)
+            caregiverGigs.length > 0 || 
+            isLoadingGigs
+          ) && (
+            <button 
+              className={`action-button hire-me-btn ${isLoadingGigs && !serviceId ? 'loading' : ''}`}
+              title={
+                serviceId 
+                  ? 'Hire Me - Return to Service'
+                  : isLoadingGigs 
+                    ? 'Loading services...' 
+                    : `Hire Me${caregiverGigs.length > 1 ? ` (${caregiverGigs.length} services)` : ''}`
+              }
+              onClick={handleHireMeClick}
+              disabled={isLoadingGigs && !serviceId}
+            >
+              {isLoadingGigs && !serviceId ? (
+                <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="loading-spinner">
+                  <path d="M21 12a9 9 0 11-6.219-8.56"/>
+                </svg>
+              ) : (
+                <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                  <path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/>
+                  <circle cx="9" cy="7" r="4"/>
+                  <path d="m22 2-5 10-4-4Z"/>
+                </svg>
+              )}
+              <span className="button-text">
+                {isLoadingGigs && !serviceId ? 'Loading...' : 'Hire Me'}
+                {!isLoadingGigs && !serviceId && caregiverGigs.length > 1 && (
+                  <span className="service-count">({caregiverGigs.length})</span>
+                )}
+              </span>
+            </button>
+          )}
           {/* <button className="action-button" title="Accept Offer">
             <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
               <path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6 19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72 12.84 12.84 0 0 0 .7 2.81 2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45 12.84 12.84 0 0 0 2.81.7A2 2 0 0 1 22 16.92z"></path>
@@ -522,7 +658,14 @@ const ChatArea = ({ messages, recipient, userId, onSendMessage, isOfflineMode = 
         </div>
       </header>
 
-      <div className="messages-container" ref={chatAreaRef}>
+      <div 
+        className="messages-container" 
+        ref={chatAreaRef}
+        tabIndex="0"
+        role="log"
+        aria-label="Chat messages"
+        aria-live="polite"
+      >
         {isOfflineMode && (
           <div className="offline-mode-banner">
             <i className="offline-icon">⚠️</i>
@@ -656,6 +799,18 @@ const ChatArea = ({ messages, recipient, userId, onSendMessage, isOfflineMode = 
           placeholder={isOfflineMode ? 'Compose message (offline mode)' : 'Type your message...'}
         />
       </div>
+
+      {/* Service Selection Modal - only show in discovery mode (no direct serviceId) */}
+      {!serviceId && (
+        <ServiceSelectionModal
+          isOpen={showServiceModal}
+          onClose={() => setShowServiceModal(false)}
+          services={caregiverGigs}
+          caregiverName={recipient?.name || 'Caregiver'}
+          onSelectService={handleSelectService}
+          isLoading={isLoadingGigs}
+        />
+      )}
     </div>
   );
 };
