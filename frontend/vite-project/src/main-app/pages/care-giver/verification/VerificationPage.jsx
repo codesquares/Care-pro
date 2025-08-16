@@ -172,10 +172,10 @@ const CaregiverVerificationPage = () => {
         if (status.data.isVerified === true || status.data.verificationStatus === "verified") {
           setProgress(100);
           setProgressMessage("Account already verified!");
-          setSuccess("Your account is already verified! Redirecting to dashboard...");
+          setSuccess("Your account is already verified! Redirecting to profile...");
           setTimeout(() => {
             if (isMounted) {
-              window.location.href = "/app/caregiver/dashboard";
+              window.location.href = "/app/caregiver/profile";
             }
           }, 2000);
         } else {
@@ -243,14 +243,14 @@ const CaregiverVerificationPage = () => {
         } else if (overallStatus === 'pending') {
           setSuccess("Verification submitted for review! You'll be notified once complete. Redirecting to dashboard...");
         } else if (overallStatus === 'partial') {
-          setSuccess("Verification partially completed. Please check notifications for details. Redirecting to dashboard...");
+          setSuccess("Verification partially completed. Please check notifications for details. Redirecting to profile...");
         } else {
-          setSuccess("Verification processed. Please check notifications for details. Redirecting to dashboard...");
+          setSuccess("Verification processed. Please check notifications for details. Redirecting to profile...");
         }
         
         // Always redirect after a short delay - using window.location for reliable navigation
         setTimeout(() => {
-          window.location.href = "/app/caregiver/dashboard";
+          window.location.href = "/app/caregiver/profile";
         }, 3000);
         
       } catch (err) {
@@ -265,9 +265,9 @@ const CaregiverVerificationPage = () => {
         });
         
         // Still redirect - notifications will inform user of issues - using window.location for reliability
-        setSuccess("Verification processed. Please check notifications for details. Redirecting to dashboard...");
+        setSuccess("Verification processed. Please check notifications for details. Redirecting to profile...");
         setTimeout(() => {
-          window.location.href = "/app/caregiver/dashboard";
+          window.location.href = "/app/caregiver/profile";
         }, 3000);
       } finally {
         setIsSubmitting(false);
@@ -292,7 +292,7 @@ const CaregiverVerificationPage = () => {
       
       // Still redirect after error - using window.location for reliable navigation
       setTimeout(() => {
-        window.location.href = "/app/caregiver/dashboard";
+        window.location.href = "/app/caregiver/profile";
       }, 3000);
     } else if (type === 'close') {
       setIsSubmitting(false);

@@ -56,7 +56,7 @@ export const AuthProvider = ({ children }) => {
             shouldNavigate: true,
             path: userData.role === "Admin" ? "/app/admin/dashboard" :
                   userData.role === "Client" ? "/app/client/dashboard" :
-                  "/app/caregiver/dashboard"
+                  "/app/caregiver/profile"
         };
     };
 

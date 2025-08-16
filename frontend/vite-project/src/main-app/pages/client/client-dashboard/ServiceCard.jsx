@@ -54,6 +54,7 @@
 
 
 import { useNavigate } from "react-router-dom";
+import { useAuth } from "../../../context/AuthContext";
 import "./serviceCard.css";
 import defaultAvatar from "../../../../assets/profilecard1.png";
 
@@ -79,18 +80,36 @@ const ServiceCard = ({
   isPremium = false,
   reviewCount,
   isPopular = false,
-  isAvailable = true // New prop for availability status
+  isAvailable = true, // New prop for availability status
+  isPublic = false // New prop to indicate if this is for public viewing
 }) => {
   const navigate = useNavigate();
+  const { isAuthenticated } = useAuth();
   const basePath = "/app/client";
 
   const handleClick = () => {
+    // If this is a public view and user is not authenticated, redirect to login
+    if (isPublic && !isAuthenticated) {
+      const returnUrl = encodeURIComponent(`${basePath}/service/${id}`);
+      navigate(`/login?returnTo=${returnUrl}&message=Please sign in to view service details and make bookings`);
+      return;
+    }
+    
+    // Normal navigation for authenticated users
     navigate(`${basePath}/service/${id}`);
   };
  //create initials from first and last name
   const initials = `${caregiverFirstName?.charAt(0) || ''}${caregiverLastName?.charAt(0) || ''}`.toUpperCase();
   const handleFavoriteClick = (e) => {
     e.stopPropagation(); // Prevent card click when clicking heart
+    
+    // If this is a public view and user is not authenticated, redirect to login
+    if (isPublic && !isAuthenticated) {
+      const returnUrl = encodeURIComponent(window.location.pathname + window.location.search);
+      navigate(`/login?returnTo=${returnUrl}&message=Please sign in to save your favorite services`);
+      return;
+    }
+    
     console.log("Toggle favorite for service:", id);
   };
 
@@ -146,11 +165,12 @@ const ServiceCard = ({
           </div>
         )}
         
-        {/* Heart favorite button */}
+        {/* Heart favorite button - show login prompt for unauthenticated users */}
         <button 
           className="favorite-btn"
           onClick={handleFavoriteClick}
-          aria-label="Add to favorites"
+          aria-label={isPublic && !isAuthenticated ? "Sign in to save favorites" : "Add to favorites"}
+          title={isPublic && !isAuthenticated ? "Sign in to save your favorite services" : "Add to favorites"}
         >
           <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth="2">
             <path d="M12 21.35l-1.45-1.32C5.4 15.36 2 12.28 2 8.5 2 5.42 4.42 3 7.5 3c1.74 0 3.41.81 4.5 2.09C13.09 3.81 14.76 3 16.5 3 19.58 3 22 5.42 22 8.5c0 3.78-3.4 6.86-8.55 11.54L12 21.35z"/>
@@ -195,6 +215,13 @@ const ServiceCard = ({
 
         {/* Service title */}
         <h3 className="service-title">{title}</h3>
+        
+        {/* Action hint for public users */}
+        {isPublic && !isAuthenticated && (
+          <div className="public-action-hint">
+            <span className="hint-text">Click to view details • Sign in to book</span>
+          </div>
+        )}
       </div>
     </div>
   );

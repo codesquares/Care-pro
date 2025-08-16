@@ -23,7 +23,7 @@ const CreateAccount = () => {
     const user = JSON.parse(localStorage.getItem("userDetails"));
     if (user && user.role) {
       if (user.role === "Caregiver") {
-        navigate("/app/caregiver/dashboard", { replace: true });
+        navigate("/app/caregiver/profile", { replace: true });
       } else if (user.role === "Client") {
         navigate("/app/client/dashboard", { replace: true });
       } else if (user.role === "Admin") {

@@ -14,6 +14,8 @@ const ChatArea = ({ messages, recipient, userId, onSendMessage, isOfflineMode = 
   const [visibleMessages, setVisibleMessages] = useState([]);
   const [isLoading, setIsLoading] = useState(messages === undefined); // Add loading state
   const [isRecipientTyping, setIsRecipientTyping] = useState(false);
+  const [lastMessageCount, setLastMessageCount] = useState(0);
+  const chatAreaRef = useRef(null);
   
   // Function to get initials from name (similar to NavigationBar)
   const getInitials = (name) => {
@@ -42,12 +44,42 @@ const ChatArea = ({ messages, recipient, userId, onSendMessage, isOfflineMode = 
   
   console.log("ChatArea created safeRecipient:", safeRecipient);
 
-  // Scroll to bottom when messages change
-  useEffect(() => {
+  // Enhanced scroll to bottom with smooth behavior and detection of new messages
+  const scrollToBottom = (force = false) => {
     if (messagesEndRef.current) {
-      messagesEndRef.current.scrollIntoView({ behavior: 'smooth' });
+      const chatContainer = chatAreaRef.current;
+      const shouldAutoScroll = force || 
+        !chatContainer || 
+        (chatContainer.scrollTop + chatContainer.clientHeight >= chatContainer.scrollHeight - 50);
+      
+      if (shouldAutoScroll) {
+        messagesEndRef.current.scrollIntoView({ 
+          behavior: force ? 'instant' : 'smooth',
+          block: 'end'
+        });
+      }
     }
-  }, [messages]);
+  };
+
+  // Scroll to bottom when messages change (with detection for new messages)
+  useEffect(() => {
+    if (messages && Array.isArray(messages)) {
+      const newMessageCount = messages.length;
+      if (newMessageCount > lastMessageCount) {
+        // New messages arrived
+        console.log(`New messages detected: ${newMessageCount - lastMessageCount}`);
+        setTimeout(() => scrollToBottom(false), 100); // Small delay to ensure DOM update
+      }
+      setLastMessageCount(newMessageCount);
+    }
+  }, [messages, lastMessageCount]);
+
+  // Scroll to bottom when recipient changes (new chat selected)
+  useEffect(() => {
+    if (recipient) {
+      setTimeout(() => scrollToBottom(true), 200); // Force scroll for new chat
+    }
+  }, [recipient?.id]);
   
   // Process messages to add read receipt info for display
   useEffect(() => {
@@ -490,7 +522,7 @@ const ChatArea = ({ messages, recipient, userId, onSendMessage, isOfflineMode = 
         </div>
       </header>
 
-      <div className="messages-container">
+      <div className="messages-container" ref={chatAreaRef}>
         {isOfflineMode && (
           <div className="offline-mode-banner">
             <i className="offline-icon">⚠️</i>

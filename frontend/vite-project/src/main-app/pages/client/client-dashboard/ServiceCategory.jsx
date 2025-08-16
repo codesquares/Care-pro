@@ -2,7 +2,7 @@ import React from "react";
 import ServiceCard from "./ServiceCard";
 import "./serviceCategory.css";
 
-const ServiceCategory = ({ title, services }) => (
+const ServiceCategory = ({ title, services, isPublic = false }) => (
   console.log("Rendering ServiceCategory with services:", services),
  
   <div className="service-category">
@@ -12,7 +12,7 @@ const ServiceCategory = ({ title, services }) => (
     </div>
     <div className="service-list">
       {services.map((service, index) => (
-        <ServiceCard key={index} {...service} />
+        <ServiceCard key={index} {...service} isPublic={isPublic} />
       ))}
     </div>
   </div>

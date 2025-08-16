@@ -160,3 +160,190 @@
     margin: 20px 6rem;
   }
 }
+
+/* Public CTA Section Styles */
+.public-cta-section {
+  margin: 40px 0;
+  padding: 0 20px;
+}
+
+.cta-card {
+  background: linear-gradient(135deg, #1769aa 0%, #42a5f5 100%);
+  color: white;
+  padding: 40px 30px;
+  border-radius: 16px;
+  text-align: center;
+  box-shadow: 0 8px 25px rgba(23, 105, 170, 0.3);
+}
+
+.cta-icon {
+  font-size: 2.5rem;
+  margin-bottom: 20px;
+  display: block;
+}
+
+.cta-card h3 {
+  font-size: 1.8rem;
+  margin: 0 0 15px 0;
+  font-weight: 600;
+}
+
+.cta-card p {
+  font-size: 1.1rem;
+  margin: 0 0 30px 0;
+  opacity: 0.9;
+  max-width: 500px;
+  margin-left: auto;
+  margin-right: auto;
+  line-height: 1.5;
+}
+
+.cta-buttons {
+  display: flex;
+  gap: 15px;
+  justify-content: center;
+  flex-wrap: wrap;
+}
+
+.cta-primary, .cta-secondary {
+  padding: 15px 30px;
+  border-radius: 8px;
+  font-weight: 600;
+  font-size: 1rem;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  border: none;
+  min-width: 130px;
+}
+
+.cta-primary {
+  background: white;
+  color: #1769aa;
+}
+
+.cta-primary:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 4px 15px rgba(255, 255, 255, 0.3);
+}
+
+.cta-secondary {
+  background: transparent;
+  color: white;
+  border: 2px solid white;
+}
+
+.cta-secondary:hover {
+  background: white;
+  color: #1769aa;
+}
+
+/* Public action hint for service cards */
+.public-action-hint {
+  margin-top: 12px;
+  padding: 8px 12px;
+  background: rgba(23, 105, 170, 0.1);
+  border-radius: 6px;
+  text-align: center;
+}
+
+.hint-text {
+  font-size: 0.85rem;
+  color: #1769aa;
+  font-weight: 500;
+}
+
+/* Subtle CTA Section for Public Users */
+.public-subtle-cta {
+  margin: 30px 20px;
+  padding: 0;
+}
+
+.subtle-cta-content {
+  background: linear-gradient(135deg, #f8f9ff 0%, #e8f4fd 100%);
+  border: 1px solid #e1e8f0;
+  padding: 30px;
+  border-radius: 12px;
+  text-align: center;
+  box-shadow: 0 2px 8px rgba(23, 105, 170, 0.08);
+}
+
+.subtle-cta-content h3 {
+  font-size: 1.4rem;
+  margin: 0 0 12px 0;
+  color: #1769aa;
+  font-weight: 600;
+}
+
+.subtle-cta-content p {
+  font-size: 1rem;
+  margin: 0 0 24px 0;
+  color: #666;
+  max-width: 400px;
+  margin-left: auto;
+  margin-right: auto;
+  line-height: 1.5;
+}
+
+.subtle-cta-buttons {
+  display: flex;
+  gap: 12px;
+  justify-content: center;
+  flex-wrap: wrap;
+}
+
+.subtle-cta-primary, .subtle-cta-secondary {
+  padding: 12px 24px;
+  border-radius: 8px;
+  font-weight: 500;
+  font-size: 0.95rem;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  border: none;
+  min-width: 120px;
+}
+
+.subtle-cta-primary {
+  background: #1769aa;
+  color: white;
+}
+
+.subtle-cta-primary:hover {
+  background: #145a8a;
+  transform: translateY(-1px);
+}
+
+.subtle-cta-secondary {
+  background: white;
+  color: #1769aa;
+  border: 1px solid #1769aa;
+}
+
+.subtle-cta-secondary:hover {
+  background: #1769aa;
+  color: white;
+}
+
+/* Responsive adjustments for subtle CTA */
+@media (max-width: 768px) {
+  .subtle-cta-content {
+    padding: 24px 20px;
+  }
+  
+  .subtle-cta-content h3 {
+    font-size: 1.2rem;
+  }
+  
+  .subtle-cta-content p {
+    font-size: 0.9rem;
+  }
+  
+  .subtle-cta-buttons {
+    flex-direction: column;
+    align-items: center;
+    gap: 10px;
+  }
+  
+  .subtle-cta-primary, .subtle-cta-secondary {
+    width: 180px;
+  }
+}

@@ -34,6 +34,9 @@ class SignalRChatService {
     this.connectionId = null;
     this._userId = null;
     this._isConnecting = false;
+    this._connectionHealthInterval = null;
+    this._lastHeartbeat = null;
+    this._pendingHandlers = new Map(); // Store handlers registered before connection
     
     // Add cache for message history and status
     this._messageCache = new Map(); // Map of conversation IDs to cached message history
@@ -52,28 +55,185 @@ class SignalRChatService {
   }
 
   /**
-   * Validates an ID parameter without trying to convert it to a different format
-   * This prevents UUID to MongoDB ObjectId conversion issues
-   * @param {string} id - The ID to validate
-   * @param {string} paramName - Name of the parameter for error messages
-   * @returns {string} - The validated ID
+   * Enhanced event handler registration with persistence
+   * @param {string} event - Event name
+   * @param {Function} handler - Event handler function
+   * @returns {Function} - Cleanup function to remove the handler
    */
-  // validateId(id, paramName = 'ID') {
-  //   if (!id) {
-  //     throw new Error(`${paramName} cannot be empty`);
-  //   }
+  on(event, handler) {
+    if (!this.eventHandlers[event]) {
+      console.warn(`Unknown event: ${event}`);
+      return () => {};
+    }
 
-  //   if (typeof id !== 'string') {
-  //     id = String(id);
-  //   }
+    // If connection exists, register immediately
+    if (this.connection && this.isConnectionReady()) {
+      this._registerHandler(event, handler);
+    } else {
+      // Store handler for later registration
+      if (!this._pendingHandlers.has(event)) {
+        this._pendingHandlers.set(event, []);
+      }
+      this._pendingHandlers.get(event).push(handler);
+    }
 
-  //   // Simple check to catch common mistakes where message text is passed as an ID
-  //   if (id.includes(' ') || id.length > 100) {
-  //     throw new Error(`${paramName} appears to be message text. Parameter order might be incorrect.`);
-  //   }
+    // Add to our event handlers array
+    this.eventHandlers[event].push(handler);
+    
+    // Return cleanup function
+    return () => {
+      const index = this.eventHandlers[event].indexOf(handler);
+      if (index > -1) {
+        this.eventHandlers[event].splice(index, 1);
+      }
+      
+      // Remove from pending handlers if it exists
+      if (this._pendingHandlers.has(event)) {
+        const pendingIndex = this._pendingHandlers.get(event).indexOf(handler);
+        if (pendingIndex > -1) {
+          this._pendingHandlers.get(event).splice(pendingIndex, 1);
+        }
+      }
+    };
+  }
 
-  //   return id.trim();
-  // }
+  /**
+   * Register a single handler with the SignalR connection
+   * @private
+   */
+  _registerHandler(event, handler) {
+    if (!this.connection) return;
+
+    const signalREventMap = {
+      'onMessage': 'ReceiveMessage',
+      'onMessageRead': 'MessageRead',
+      'onMessageDelivered': 'MessageDelivered',
+      'onMessageDeleted': 'MessageDeleted',
+      'onUserStatusChanged': 'UserStatusChanged',
+      'onAllMessagesRead': 'AllMessagesRead'
+    };
+
+    const signalREvent = signalREventMap[event];
+    if (signalREvent) {
+      // Wrap handler to match our event data format
+      const wrappedHandler = (...args) => {
+        switch (event) {
+          case 'onMessage':
+            handler({ senderId: args[0], message: args[1], messageId: args[2], status: args[3] });
+            break;
+          case 'onMessageRead':
+            handler({ messageId: args[0], timestamp: args[1], userId: args[2], recipientId: args[3] });
+            break;
+          case 'onMessageDelivered':
+            handler({ messageId: args[0], timestamp: args[1], userId: args[2], recipientId: args[3] });
+            break;
+          case 'onMessageDeleted':
+            handler({ messageId: args[0], userId: args[1], recipientId: args[2] });
+            break;
+          case 'onUserStatusChanged':
+            handler({ userId: args[0], status: args[1] });
+            break;
+          case 'onAllMessagesRead':
+            handler({ userId: args[0], timestamp: args[1] });
+            break;
+          default:
+            handler(...args);
+        }
+      };
+
+      this.connection.on(signalREvent, wrappedHandler);
+    }
+  }
+
+  /**
+   * Register all pending handlers
+   * @private
+   */
+  _registerPendingHandlers() {
+    if (!this.connection || !this._pendingHandlers.size) return;
+
+    console.log('Registering pending handlers:', [...this._pendingHandlers.keys()]);
+    
+    for (const [event, handlers] of this._pendingHandlers.entries()) {
+      handlers.forEach(handler => this._registerHandler(event, handler));
+    }
+    
+    // Clear pending handlers after registration
+    this._pendingHandlers.clear();
+  }
+
+  /**
+   * Start connection health monitoring
+   * @private
+   */
+  _startConnectionHealthMonitoring() {
+    // Clear any existing interval
+    if (this._connectionHealthInterval) {
+      clearInterval(this._connectionHealthInterval);
+    }
+
+    this._lastHeartbeat = Date.now();
+    
+    // Check connection health every 30 seconds
+    this._connectionHealthInterval = setInterval(() => {
+      if (!this.connection || !this.isConnectionReady()) {
+        console.warn('Connection health check failed - not connected');
+        return;
+      }
+
+      // Send a ping to check if connection is responsive
+      this.connection.invoke('Ping').then(() => {
+        this._lastHeartbeat = Date.now();
+      }).catch(error => {
+        console.warn('Connection ping failed:', error);
+        // If ping fails, the connection might be stale
+        if (Date.now() - this._lastHeartbeat > 60000) { // 1 minute without response
+          console.error('Connection appears stale, attempting reconnection');
+          this._attemptReconnection();
+        }
+      });
+    }, 30000);
+  }
+
+  /**
+   * Stop connection health monitoring
+   * @private
+   */
+  _stopConnectionHealthMonitoring() {
+    if (this._connectionHealthInterval) {
+      clearInterval(this._connectionHealthInterval);
+      this._connectionHealthInterval = null;
+    }
+  }
+
+  /**
+   * Attempt to reconnect with existing handlers
+   * @private
+   */
+  async _attemptReconnection() {
+    if (this._isConnecting || !this._userId) {
+      return;
+    }
+
+    console.log('Attempting to reconnect...');
+    
+    try {
+      // Store current token
+      const token = localStorage.getItem('authToken');
+      if (!token) {
+        console.error('No auth token available for reconnection');
+        return;
+      }
+
+      // Disconnect and reconnect
+      await this.disconnect();
+      await this.connect(this._userId, token);
+      
+      console.log('Reconnection successful');
+    } catch (error) {
+      console.error('Reconnection failed:', error);
+    }
+  }
   
   /**
    * Initializes the connection to the SignalR hub with limits on retries
@@ -151,6 +311,9 @@ class SignalRChatService {
       this.connectionId = this.connection.connectionId;
       console.log('Connected to SignalR hub with ID:', this.connectionId);
       
+      // Start connection health monitoring
+      this._startConnectionHealthMonitoring();
+      
       // Register with the server that this user is online
       try {
         console.log('Registering user connection with server:', userId);
@@ -199,6 +362,9 @@ class SignalRChatService {
     }
 
     try {
+      // Stop connection health monitoring
+      this._stopConnectionHealthMonitoring();
+      
       // Make sure we're not trying to connect at the same time
       this._isConnecting = false;
       this.reconnectPromise = null;
@@ -823,59 +989,6 @@ class SignalRChatService {
     return false;
   }
 
-  /**
-   * Register event handlers for either service events or SignalR events
-   * @param {string} event - Event name 
-   * @param {function} handler - Function to call when event occurs
-   * @returns {function|undefined} - Function to call to unregister handler (only for service events)
-   */
-  on(event, handler) {
-    // Handle internal service events (onConnected, onDisconnected, etc.)
-    if (this.eventHandlers && this.eventHandlers[event]) {
-      this.eventHandlers[event].push(handler);
-      
-      // Return a function to unregister this handler
-      return () => {
-        this.eventHandlers[event] = this.eventHandlers[event].filter(h => h !== handler);
-      };
-    }
-    
-    // Store pending handlers for SignalR events that will be registered once connection is established
-    // This solves the "Cannot register handler" errors when trying to register before connection is ready
-    if (!this.connection || this.connection.state !== signalR.HubConnectionState.Connected) {
-      // Initialize pending handlers structure if it doesn't exist
-      this._pendingHandlers = this._pendingHandlers || new Map();
-      
-      // Get or create array of handlers for this event
-      if (!this._pendingHandlers.has(event)) {
-        this._pendingHandlers.set(event, []);
-      }
-      
-      // Add this handler to pending list
-      this._pendingHandlers.get(event).push(handler);
-      console.log(`Handler for ${event} queued - will be registered when connection is established`);
-      
-      // Return function to remove from pending handlers
-      return () => {
-        if (this._pendingHandlers && this._pendingHandlers.has(event)) {
-          this._pendingHandlers.set(
-            event,
-            this._pendingHandlers.get(event).filter(h => h !== handler)
-          );
-        }
-      };
-    }
-    
-    // If connection exists and is in Connected state, register directly
-    console.log(`Registering handler for ${event} directly as connection is established`);
-    this.connection.on(event, handler);
-    return () => {
-      if (this.connection) {
-        this.connection.off(event, handler);
-      }
-    };
-  }
-  
   /**
    * Remove an event handler for a specific SignalR event
    * @param {string} eventName - The name of the event to stop listening for

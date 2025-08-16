@@ -35,6 +35,8 @@ import PaymentSuccess from './main-app/pages/client/home-care-service/PaymentSuc
 import { MessageProvider } from './main-app/context/MessageContext';
 // import { NotificationProvider } from './main-app/context/NotificationContext';
 import SplashScreen from './main-app/components/SplashScreen/SplashScreen';
+import PublicMarketplace from './main-app/pages/client/client-dashboard/PublicMarketplace';
+import PublicClientNavBar from './main-app/pages/client/PublicClientNavBar';
 // import ConnectionStatusIndicator from './main-app/components/notification/ConnectionStatusIndicator';
 //Added for viewing Order Pages
 import Order from './main-app/pages/client/orders/MyOrders';
@@ -89,10 +91,8 @@ function AppContent() {
     '/resend-confirmation',
     '/create-gig',
     '/unauthorized',
-     '/splash',
-
+    '/splash',
     '/Caregivergigpage',
-
     '/MyOrders',
     '/OrderTasks&Details',
     '/order-faq',
@@ -110,22 +110,26 @@ function AppContent() {
   const routesWithoutFooter = ['/login', '/register', '/forgot-password', '/confirm-email', '/resend-confirmation'];
 
   // Check if current path is unprotected
-  const isUnprotectedRoute = unprotectedRoutes.includes(location.pathname.toLowerCase()) && location.pathname !== '/';
+  const isUnprotectedRoute = unprotectedRoutes.includes(location.pathname.toLowerCase());
+  const isRootRoute = location.pathname === '/';
   
   // Check if current route should show navbar and footer
-  const shouldShowNavbar = isUnprotectedRoute && !routesWithoutNavbar.includes(location.pathname);
+  const shouldShowClientNavbar = isRootRoute;
+  const shouldShowBasicNavbar = isUnprotectedRoute && 
+                                !routesWithoutNavbar.includes(location.pathname) && 
+                                !isRootRoute;
   const shouldShowFooter = !routesWithoutFooter.includes(location.pathname);
 
   
 
   return (
     <div className="App">
-      {shouldShowNavbar && <Navbar />}
+      {shouldShowBasicNavbar && <Navbar />}
+      {shouldShowClientNavbar && <PublicClientNavBar />}
       <ScrollToTop />
       <ToastContainer position="top-right" autoClose={5000} />
       {/* <ConnectionStatusIndicator /> */}
       <Routes>
-        {/* <Route path="/" element={<Home />} /> */}
         <Route path="/about-us" element={<AboutUs />} />
         <Route path="/blog" element={<Blog />} />
         <Route path="/contentful-blog" element={<ContentBlog />} />
@@ -142,10 +146,10 @@ function AppContent() {
         <Route path="/forgot-password" element={<ForgotPasswordPage />} />
         <Route path="/confirm-email" element={<ConfirmEmailPage />} />
         <Route path="/resend-confirmation" element={<ResendConfirmationPage />} />
-        <Route path="/" element={<SplashScreen />} />
+        <Route path="/" element={<PublicMarketplace />} />
+        <Route path="/splash" element={<SplashScreen />} />
 
         {/* <Route path="/Caregivergigpage" element={<Caregivergigpage />} /> */}
-
 
         <Route path="/MyOrders" element={<Order />} />
         <Route path="/OrderTasks&Details" element={<Order2 />} />

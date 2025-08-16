@@ -29,6 +29,9 @@ export const MessageProvider = ({ children }) => {
   const [error, setError] = useState(null);
   const [connectionState, setConnectionState] = useState('Disconnected');
   const [currentUserId, setCurrentUserId] = useState(null);
+  const [lastMessageTimestamp, setLastMessageTimestamp] = useState(null);
+  const [isPollingActive, setIsPollingActive] = useState(false); // Start with polling disabled
+  const [messageIds, setMessageIds] = useState(new Set()); // Track message IDs to prevent duplicates
   
   // Add a function to refresh the current user ID from localStorage if needed
   const refreshCurrentUserId = useCallback(() => {
@@ -48,6 +51,138 @@ export const MessageProvider = ({ children }) => {
     }
     return currentUserId;
   }, [currentUserId]);
+
+  // Add message deduplication function
+  const addMessageWithDeduplication = useCallback((newMessage) => {
+    const messageId = newMessage.id || newMessage.messageId;
+    if (!messageId) {
+      console.warn('Message without ID received, skipping:', newMessage);
+      return false;
+    }
+
+    setMessageIds(prevIds => {
+      if (prevIds.has(messageId)) {
+        console.log('Duplicate message detected, skipping:', messageId);
+        return prevIds;
+      }
+      
+      const newIds = new Set(prevIds);
+      newIds.add(messageId);
+      return newIds;
+    });
+
+    setMessages(prevMessages => {
+      // Double-check for duplicates in the messages array
+      if (prevMessages.some(msg => (msg.id || msg.messageId) === messageId)) {
+        console.log('Message already exists in state, skipping:', messageId);
+        return prevMessages;
+      }
+      
+      const messageToAdd = {
+        id: messageId,
+        senderId: newMessage.senderId,
+        receiverId: newMessage.receiverId || currentUserId,
+        content: newMessage.content || newMessage.message,
+        timestamp: newMessage.timestamp || new Date().toISOString(),
+        status: newMessage.status || 'delivered'
+      };
+      
+      console.log('Adding new message to state:', messageToAdd);
+      return [...prevMessages, messageToAdd];
+    });
+
+    return true;
+  }, [currentUserId]);
+
+  // Polling function to fetch messages as fallback
+  const pollForMessages = useCallback(async () => {
+    if (!selectedChatId || !currentUserId || !isPollingActive) {
+      return;
+    }
+
+    try {
+      console.log('Polling for messages in chat:', selectedChatId);
+      // Use the correct API endpoint format that matches the existing working endpoints
+      const response = await axios.get(
+        `${API_BASE_URL}/api/Chat/conversations/${currentUserId}`,
+        { timeout: 5000 }
+      );
+
+      // The response should be conversations list, find our selected conversation
+      if (response.data && Array.isArray(response.data)) {
+        const selectedConversation = response.data.find(conv => 
+          conv.id === selectedChatId || conv.userId === selectedChatId
+        );
+        
+        if (selectedConversation && selectedConversation.messages) {
+          const polledMessages = selectedConversation.messages;
+          
+          // Filter out messages we already have
+          const newMessages = polledMessages.filter(msg => {
+            const msgId = msg.id || msg.messageId;
+            return msgId && !messageIds.has(msgId);
+          });
+
+          if (newMessages.length > 0) {
+            console.log(`Found ${newMessages.length} new messages via polling`);
+            newMessages.forEach(msg => addMessageWithDeduplication(msg));
+            
+            // Update last message timestamp
+            const latestTimestamp = Math.max(...newMessages.map(msg => 
+              new Date(msg.timestamp || msg.createdAt).getTime()
+            ));
+            setLastMessageTimestamp(new Date(latestTimestamp).toISOString());
+          }
+        }
+      }
+    } catch (error) {
+      console.warn('Error polling for messages (this is expected if endpoint doesn\'t exist):', error.message);
+      // Don't set error state for polling failures to avoid disrupting UI
+      // Disable polling if we get 404s consistently
+      if (error.response?.status === 404) {
+        console.log('Disabling polling due to 404 errors');
+        setIsPollingActive(false);
+      }
+    }
+  }, [selectedChatId, currentUserId, isPollingActive, messageIds, addMessageWithDeduplication]);
+
+  // Start/stop polling based on chat selection and connection state
+  useEffect(() => {
+    // TEMPORARY: Disable all polling to fix 404 errors
+    // Polling will only activate if manually enabled during debugging
+    console.log('Polling effect triggered but currently disabled to prevent 404 errors');
+    setIsPollingActive(false);
+    return () => {}; // No polling for now
+    
+    /* Original polling logic - disabled
+    let pollInterval;
+    
+    // Only start polling if SignalR is actually disconnected or having issues
+    // Don't poll if we have a good SignalR connection
+    const shouldPoll = selectedChatId && currentUserId && 
+      (connectionState === 'Disconnected' || connectionState === 'Reconnecting') &&
+      isPollingActive;
+    
+    if (shouldPoll) {
+      console.log('Starting message polling for chat due to poor connection:', selectedChatId);
+      
+      // Poll immediately, then every 10 seconds (increased from 8 to reduce load)
+      pollForMessages();
+      pollInterval = setInterval(pollForMessages, 10000);
+    } else {
+      if (selectedChatId && connectionState === 'Connected') {
+        console.log('SignalR connected, disabling polling for chat:', selectedChatId);
+        setIsPollingActive(false);
+      }
+    }
+
+    return () => {
+      if (pollInterval) {
+        clearInterval(pollInterval);
+      }
+    };
+    */
+  }, [selectedChatId, currentUserId, connectionState, isPollingActive, pollForMessages]);
   
   // Effect to update connection state periodically (now with much longer interval)
   useEffect(() => {
@@ -304,17 +439,40 @@ export const MessageProvider = ({ children }) => {
           console.log(`Message ID: ${messageId}, Status: ${status}`);
           console.log(`Current user ID: ${userId}, Selected chat: ${selectedChatId}`);
           
+          // Disable polling since SignalR is working
+          if (isPollingActive) {
+            console.log('SignalR message received, disabling polling');
+            setIsPollingActive(false);
+          }
+          
+          // Create message object for deduplication
+          const newMessage = {
+            id: messageId,
+            messageId: messageId,
+            senderId,
+            receiverId: userId,
+            content: message,
+            message: message,
+            timestamp: new Date().toISOString(),
+            status: status || 'delivered'
+          };
+          
           // Add to messages if this is the active chat
           if (selectedChatId === senderId) {
             console.log('Adding message to active chat');
-            setMessages(prevMessages => [...prevMessages, {
-              id: messageId,
-              senderId,
-              receiverId: userId,
-              content: message,
-              timestamp: new Date().toISOString(),
-              status: status || 'delivered'
-            }]);
+            const added = addMessageWithDeduplication(newMessage);
+            
+            if (added) {
+              // Update last message timestamp
+              setLastMessageTimestamp(new Date().toISOString());
+              
+              // Mark as read since user is viewing this chat
+              try {
+                await chatService.markMessageRead(messageId);
+              } catch (err) {
+                console.error('Error marking message as read:', err);
+              }
+            }
           } else {
             console.log('Message from non-active chat, updating unread count');
             // Update unread count
@@ -329,15 +487,6 @@ export const MessageProvider = ({ children }) => {
             await chatService.markMessageAsDelivered(messageId, userId);
           } catch (err) {
             console.error('Error marking message as delivered:', err);
-          }
-          
-          // Only mark as read if this is the active chat
-          if (selectedChatId === senderId) {
-            try {
-              await chatService.markMessageRead(messageId);
-            } catch (err) {
-              console.error('Error marking message as read:', err);
-            }
           }
           
           // Trigger browser notification for non-active chats
@@ -716,13 +865,108 @@ export const MessageProvider = ({ children }) => {
     }
   }, [currentUserId, messages]);
   
+  // Load messages for a specific chat with better error handling and deduplication
+  const loadMessages = useCallback(async (chatId) => {
+    if (!chatId || !currentUserId) {
+      console.warn('Cannot load messages: missing chatId or currentUserId');
+      return;
+    }
+
+    console.log(`Loading messages for chat: ${chatId}`);
+    setIsLoading(true);
+    setError(null);
+    
+    // Clear existing messages and message IDs when switching chats
+    setMessages([]);
+    setMessageIds(new Set());
+    setLastMessageTimestamp(null);
+
+    try {
+      // Try SignalR method first, fallback to REST API
+      let messageHistory;
+      try {
+        messageHistory = await chatService.getMessageHistory(currentUserId, chatId);
+        console.log('Got message history from SignalR:', messageHistory);
+      } catch (signalRError) {
+        console.warn('SignalR message fetch failed, trying alternative approaches:', signalRError.message);
+        
+        // Don't try the problematic API endpoint that's causing 404s
+        // Instead, use the conversations endpoint and extract messages
+        try {
+          const response = await axios.get(
+            `${API_BASE_URL}/api/Chat/conversations/${currentUserId}`,
+            { timeout: 10000 }
+          );
+          
+          if (response.data && Array.isArray(response.data)) {
+            const conversation = response.data.find(conv => 
+              conv.id === chatId || conv.userId === chatId
+            );
+            messageHistory = conversation?.messages || [];
+          } else {
+            messageHistory = [];
+          }
+        } catch (apiError) {
+          console.warn('REST API fetch also failed:', apiError.message);
+          messageHistory = [];
+        }
+      }
+
+      if (messageHistory && Array.isArray(messageHistory)) {
+        console.log(`Loaded ${messageHistory.length} messages for chat ${chatId}`);
+        
+        // Process messages with deduplication
+        const processedMessages = [];
+        const newMessageIds = new Set();
+        
+        messageHistory.forEach((msg, index) => {
+          const messageId = msg.id || msg.messageId || `generated-${msg.senderId}-${index}-${Date.now()}`;
+          if (!newMessageIds.has(messageId)) {
+            newMessageIds.add(messageId);
+            processedMessages.push({
+              id: messageId,
+              senderId: msg.senderId,
+              receiverId: msg.receiverId,
+              content: msg.content || msg.message,
+              timestamp: msg.timestamp || msg.createdAt || new Date().toISOString(),
+              status: msg.status || 'delivered'
+            });
+          }
+        });
+        
+        // Sort messages by timestamp
+        processedMessages.sort((a, b) => new Date(a.timestamp) - new Date(b.timestamp));
+        
+        setMessages(processedMessages);
+        setMessageIds(newMessageIds);
+        
+        // Set last message timestamp
+        if (processedMessages.length > 0) {
+          const lastMsg = processedMessages[processedMessages.length - 1];
+          setLastMessageTimestamp(lastMsg.timestamp);
+        }
+        
+        console.log('Messages loaded and processed successfully');
+      } else {
+        console.log('No messages found for this chat');
+        setMessages([]);
+        setMessageIds(new Set());
+      }
+    } catch (error) {
+      console.error('Error loading messages:', error);
+      setError('Failed to load messages: ' + (error.message || 'Unknown error'));
+      // Keep existing messages on error instead of clearing them
+    } finally {
+      setIsLoading(false);
+    }
+  }, [currentUserId]);
+
   // Select chat
   const selectChat = useCallback(async (chatId) => {
     console.log("MessageContext: selectChat called with chatId:", chatId);
     console.log("Current conversations:", conversations);
     
     setSelectedChatId(chatId);
-    setIsLoading(true);
     
     try {
       // Find recipient in conversations using either id or userId
@@ -748,69 +992,64 @@ export const MessageProvider = ({ children }) => {
         [chatId]: 0
       }));
       
-      // Fetch message history if we have both users
-      if (chatId && currentUserId) {
-        console.log("Fetching message history for currentUserId:", currentUserId, "and chatId:", chatId);
-        try {
-          const messageHistory = await chatService.getMessageHistory(currentUserId, chatId);
-          console.log("Got message history:", messageHistory);
+      // Load messages for this chat
+      // TEMPORARY: Skip loadMessages to avoid 404 errors, rely on SignalR only
+      console.log('Skipping loadMessages call to avoid 404 errors, using SignalR message history instead');
+      
+      try {
+        // Try to get message history from SignalR only
+        const messageHistory = await chatService.getMessageHistory(currentUserId, chatId);
+        if (messageHistory && Array.isArray(messageHistory)) {
+          console.log(`Got ${messageHistory.length} messages from SignalR for chat ${chatId}`);
           
-          // Process and sort messages - ensure messageHistory is an array
-          const processedMessages = Array.isArray(messageHistory) ? messageHistory
-            .map((message, index) => {
-              // For debugging
-              if (!message.id && !message.messageId) {
-                console.log('Message without ID:', message);
-              }
-              
-              // Create a safe message with guaranteed unique ID
-              return {
-                // Ensure every message has a unique ID as a string
-                id: message.id ? String(message.id) : 
-                    message.messageId ? String(message.messageId) : 
-                    `generated-${message.senderId}-${index}-${Date.now()}`,
-                // Ensure all properties are valid
-                senderId: String(message.senderId || ''),
-                receiverId: String(message.receiverId || ''),
-                content: message.content || message.message || '', // Handle different property names
-                timestamp: message.timestamp || new Date().toISOString(),
-                status: message.status || 'delivered'
-              };
-            })
-            .sort((a, b) => new Date(a.timestamp) - new Date(b.timestamp))
-          : [];
+          // Process messages with deduplication
+          const processedMessages = [];
+          const newMessageIds = new Set();
           
-          console.log("Setting messages with processedMessages:", processedMessages);
+          messageHistory.forEach((msg, index) => {
+            const messageId = msg.id || msg.messageId || `generated-${msg.senderId}-${index}-${Date.now()}`;
+            if (!newMessageIds.has(messageId)) {
+              newMessageIds.add(messageId);
+              processedMessages.push({
+                id: messageId,
+                senderId: msg.senderId,
+                receiverId: msg.receiverId,
+                content: msg.content || msg.message,
+                timestamp: msg.timestamp || msg.createdAt || new Date().toISOString(),
+                status: msg.status || 'delivered'
+              });
+            }
+          });
+          
+          // Sort messages by timestamp
+          processedMessages.sort((a, b) => new Date(a.timestamp) - new Date(b.timestamp));
+          
           setMessages(processedMessages);
+          setMessageIds(newMessageIds);
           
-          // Mark all messages from this sender as read in one batch operation
-          if (processedMessages.some(message => message.senderId === chatId && message.status !== 'read')) {
-            chatService.markAllMessagesAsRead(chatId, currentUserId)
-              .then(() => {
-                // Update local message statuses
-                setMessages(prevMessages => 
-                  prevMessages.map(msg => 
-                    msg.senderId === chatId && !msg.isDeleted && msg.status !== 'read'
-                      ? { ...msg, status: 'read', readAt: new Date().toISOString() } 
-                      : msg
-                  )
-                );
-              })
-              .catch(err => console.error('Error marking all messages as read:', err));
+          // Set last message timestamp
+          if (processedMessages.length > 0) {
+            const lastMsg = processedMessages[processedMessages.length - 1];
+            setLastMessageTimestamp(lastMsg.timestamp);
           }
-        } catch (historyError) {
-          console.error('Failed to load message history:', historyError);
+        } else {
+          console.log('No message history available from SignalR');
           setMessages([]);
-          // Don't fail the entire chat selection just because history failed
+          setMessageIds(new Set());
         }
+      } catch (error) {
+        console.warn('SignalR message history failed, starting with empty chat:', error.message);
+        setMessages([]);
+        setMessageIds(new Set());
       }
+      
+      // await loadMessages(chatId);  // DISABLED to prevent 404 errors
+      
     } catch (error) {
-      console.error('Failed to select chat:', error);
-      setError('Failed to load messages: ' + (error.message || 'Unknown error'));
-    } finally {
-      setIsLoading(false);
+      console.error('Error in selectChat:', error);
+      setError('Failed to select chat: ' + (error.message || 'Unknown error'));
     }
-  }, [conversations, currentUserId]);
+  }, [conversations, currentUserId, loadMessages]);
 
   // Add listener for refresh-conversations event triggered by DirectMessage component
   useEffect(() => {
@@ -859,6 +1098,8 @@ export const MessageProvider = ({ children }) => {
     error,
     connectionState,
     currentUserId,
+    isPollingActive,
+    lastMessageTimestamp,
     
     // Methods
     initializeChat,
@@ -866,6 +1107,7 @@ export const MessageProvider = ({ children }) => {
     selectChat,
     fetchConversations,
     handleDeleteMessage,
+    loadMessages,
     refreshCurrentUserId
   };
 

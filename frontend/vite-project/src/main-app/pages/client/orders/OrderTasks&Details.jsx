@@ -3,6 +3,7 @@ import axios from "axios";
 import { useParams } from "react-router-dom";
 import { ToastContainer, toast } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
+import { createNotification } from "../../../services/notificationService";
 import "./Order&Tasks.scss";
 
 const MyOrders = () => {
@@ -14,6 +15,9 @@ const MyOrders = () => {
     const [isModalOpen, setIsModalOpen] = useState(false);
     const [modalType, setModalType] = useState("");
     const [reason, setReason] = useState(""); 
+    const [rating, setRating] = useState(0);
+    const [reviewComment, setReviewComment] = useState("");
+    const [isReviewSubmitted, setIsReviewSubmitted] = useState(false);
     const userDetails = JSON.parse(localStorage.getItem("userDetails"));
     const userId = userDetails?.id;
 
@@ -43,6 +47,10 @@ const MyOrders = () => {
     const openModal = (type) => {
         setModalType(type);
         setReason("");
+        if (type === "review") {
+            setRating(0);
+            setReviewComment("");
+        }
         setIsModalOpen(true);
     };
 
@@ -72,10 +80,79 @@ const MyOrders = () => {
             // Show success toast
             toast.success(`Order has been marked as ${modalType === "complete" ? "Completed" : "Disputed"}!`);
             setIsModalOpen(false);
+            
+            // Refresh the order data to reflect the new status
+            const response = await axios.get(
+                `https://carepro-api20241118153443.azurewebsites.net/api/ClientOrders/orderId?orderId=${orderId}`
+            );
+            setOrders([response.data]);
         } catch (err) {
             console.error(err);
             // Show error toast
             toast.error("Failed to update the order status.");
+        }
+    };
+
+    const handleSubmitReview = async () => {
+        if (!rating || rating < 1 || rating > 5) {
+            toast.error("Please provide a rating between 1 and 5 stars.");
+            return;
+        }
+
+        if (!reviewComment.trim()) {
+            toast.error("Please provide a review comment.");
+            return;
+        }
+
+        const order = orders[0];
+        if (!order.gigId) {
+            toast.error("Cannot submit review: Gig ID is missing.");
+            return;
+        }
+
+        const reviewPayload = {
+            clientId: userId,
+            caregiverId: order.caregiverId,
+            gigId: order.gigId,
+            message: reviewComment.trim(),
+            rating: rating
+        };
+
+        try {
+            // Submit the review
+            await axios.post(
+                "https://carepro-api20241118153443.azurewebsites.net/api/Reviews",
+                reviewPayload,
+                {
+                    headers: {
+                        'accept': '*/*',
+                        'Content-Type': 'application/json'
+                    }
+                }
+            );
+            
+            // Create notification for the caregiver
+            try {
+                await createNotification({
+                    recipientId: order.caregiverId,
+                    senderId: userId,
+                    type: "SystemNotice",
+                    title: "New Review Received",
+                    content: `A client has submitted a ${rating}-star review for your service: ${order.gigTitle || 'your gig'}`,
+                    relatedEntityId: order.id
+                });
+                console.log("Review notification sent successfully to caregiver");
+            } catch (notificationError) {
+                console.error("Failed to send notification to caregiver:", notificationError);
+                // Don't fail the review submission if notification fails
+            }
+            
+            toast.success("Review submitted successfully!");
+            setIsReviewSubmitted(true);
+            setIsModalOpen(false);
+        } catch (err) {
+            console.error("Error submitting review:", err);
+            toast.error("Failed to submit review. Please try again.");
         }
     };
 
@@ -160,12 +237,27 @@ const MyOrders = () => {
                                         <p>Total price: {orders[0].amount}</p>
                                         <p>Order number: #{orders[0].id}</p>
                                     </div>
-                                    <button className="mark-completed-btn" onClick={() => openModal("complete")}>
-                                        Mark as Completed
-                                    </button>
-                                    <button className="report-issue-btn" onClick={() => openModal("dispute")}>
-                                        Dispute Order
-                                    </button>
+                                    {orders[0].clientOrderStatus === "Completed" ? (
+                                        isReviewSubmitted ? (
+                                            <div className="review-submitted">
+                                                <p>✓ Review Submitted</p>
+                                                <p>Thank you for your feedback!</p>
+                                            </div>
+                                        ) : (
+                                            <button className="submit-review-btn" onClick={() => openModal("review")}>
+                                                Submit Review
+                                            </button>
+                                        )
+                                    ) : (
+                                        <>
+                                            <button className="mark-completed-btn" onClick={() => openModal("complete")}>
+                                                Mark as Completed
+                                            </button>
+                                            <button className="report-issue-btn" onClick={() => openModal("dispute")}>
+                                                Dispute Order
+                                            </button>
+                                        </>
+                                    )}
                                 </div>
                             )}
                         </div>
@@ -188,18 +280,62 @@ const MyOrders = () => {
             {isModalOpen && (
                 <div className="modal-overlay">
                     <div className="modal-content">
-                        <h3>{modalType === "complete" ? "Mark as Completed" : "Dispute Order"}</h3>
-                        {modalType === "dispute" && (
-                            <textarea
-                                placeholder="Enter reason..."
-                                value={reason}
-                                onChange={(e) => setReason(e.target.value)}
-                            />
+                        {modalType === "review" ? (
+                            <>
+                                <h3>Submit Review</h3>
+                                <div className="review-form">
+                                    <div className="rating-section">
+                                        <label>Rating:</label>
+                                        <div className="star-rating">
+                                            {[1, 2, 3, 4, 5].map((star) => (
+                                                <span
+                                                    key={star}
+                                                    className={`star ${rating >= star ? 'active' : ''}`}
+                                                    onClick={() => setRating(star)}
+                                                    style={{ 
+                                                        cursor: 'pointer', 
+                                                        fontSize: '24px', 
+                                                        color: rating >= star ? '#ffd700' : '#ccc',
+                                                        marginRight: '5px'
+                                                    }}
+                                                >
+                                                    ★
+                                                </span>
+                                            ))}
+                                        </div>
+                                    </div>
+                                    <div className="comment-section">
+                                        <label>Your Review:</label>
+                                        <textarea
+                                            placeholder="Share your experience with this caregiver..."
+                                            value={reviewComment}
+                                            onChange={(e) => setReviewComment(e.target.value)}
+                                            rows="4"
+                                            style={{ width: '100%', marginTop: '8px', padding: '8px' }}
+                                        />
+                                    </div>
+                                </div>
+                                <div className="modal-actions">
+                                    <button onClick={handleSubmitReview}>Submit Review</button>
+                                    <button onClick={() => setIsModalOpen(false)}>Cancel</button>
+                                </div>
+                            </>
+                        ) : (
+                            <>
+                                <h3>{modalType === "complete" ? "Mark as Completed" : "Dispute Order"}</h3>
+                                {modalType === "dispute" && (
+                                    <textarea
+                                        placeholder="Enter reason..."
+                                        value={reason}
+                                        onChange={(e) => setReason(e.target.value)}
+                                    />
+                                )}
+                                <div className="modal-actions">
+                                    <button onClick={handleSubmitStatus}>Submit</button>
+                                    <button onClick={() => setIsModalOpen(false)}>Cancel</button>
+                                </div>
+                            </>
                         )}
-                        <div className="modal-actions">
-                            <button onClick={handleSubmitStatus}>Submit</button>
-                            <button onClick={() => setIsModalOpen(false)}>Cancel</button>
-                        </div>
                     </div>
                 </div>
             )}

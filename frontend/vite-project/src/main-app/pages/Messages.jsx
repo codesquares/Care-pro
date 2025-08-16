@@ -126,6 +126,9 @@ const { notifications } = useSelector((state) => state.notifications);
     unreadMessages,
     isLoading,
     error,
+    connectionState,
+    isPollingActive,
+    lastMessageTimestamp,
     selectChat,
     handleSendMessage,
     initializeChat,
@@ -395,30 +398,92 @@ const requestPermission = async () => {
   };
 
   // Add connection status display component
-  const ConnectionStatus = ({ state }) => {
-    // Don't show anything if connected
-    if (state === 'Connected') {
+  const ConnectionStatus = ({ state, isPolling }) => {
+    const [isVisible, setIsVisible] = useState(true);
+    
+    // Auto-hide disconnected status after 5 seconds on mobile
+    useEffect(() => {
+      if (state === 'Disconnected' && window.innerWidth <= 768) {
+        const timer = setTimeout(() => {
+          setIsVisible(false);
+        }, 5000);
+        return () => clearTimeout(timer);
+      }
+      setIsVisible(true);
+    }, [state]);
+    
+    // Don't show anything if connected and not polling, or if hidden
+    if (!isVisible || (state === 'Connected' && !isPolling)) {
       return null;
     }
     
+    let statusConfig = {};
+    
+    if (isPolling) {
+      statusConfig = {
+        color: '#ff9800',
+        text: 'Using backup connection',
+        icon: '🔄'
+      };
+    } else {
+      switch (state) {
+        case 'Connecting':
+          statusConfig = {
+            color: '#2196f3',
+            text: 'Connecting...',
+            icon: '🔗'
+          };
+          break;
+        case 'Reconnecting':
+          statusConfig = {
+            color: '#ff9800',
+            text: 'Reconnecting...',
+            icon: '🔄'
+          };
+          break;
+        case 'Disconnected':
+          statusConfig = {
+            color: '#f44336',
+            text: window.innerWidth <= 768 ? 'Connection issue' : 'Connection issue - tap to dismiss',
+            icon: '❌'
+          };
+          break;
+        default:
+          return null;
+      }
+    }
+
     return (
-      <div className={`connection-status ${state.toLowerCase()}`}>
-        <div className="status-indicator">
-          {state === 'Connecting' ? (
-            <div className="connecting-spinner"></div>
-          ) : (
-            <div className="status-dot"></div>
-          )}
-          <span className="status-text">
-            {state === 'Connecting' ? 'Connecting...' : 
-             state === 'Reconnecting' ? 'Reconnecting...' : 
-             state === 'Disconnected' ? 'Disconnected' : state}
-          </span>
-        </div>
+      <div 
+        className={`connection-status ${state.toLowerCase()}`}
+        onClick={() => state === 'Disconnected' && setIsVisible(false)}
+        style={{
+          position: 'fixed',
+          top: window.innerWidth <= 768 ? '10px' : '70px',
+          right: window.innerWidth <= 768 ? '10px' : '20px',
+          backgroundColor: statusConfig.color,
+          color: 'white',
+          padding: window.innerWidth <= 768 ? '6px 12px' : '8px 16px',
+          borderRadius: '20px',
+          fontSize: window.innerWidth <= 768 ? '12px' : '14px',
+          fontWeight: '500',
+          zIndex: 1000,
+          boxShadow: '0 2px 8px rgba(0,0,0,0.2)',
+          display: 'flex',
+          alignItems: 'center',
+          gap: '6px',
+          maxWidth: window.innerWidth <= 768 ? '250px' : 'auto',
+          backdropFilter: 'blur(10px)',
+          cursor: state === 'Disconnected' ? 'pointer' : 'default',
+          transition: 'opacity 0.3s ease'
+        }}
+      >
+        <span>{statusConfig.icon}</span>
+        <span>{statusConfig.text}</span>
       </div>
     );
   };
-  
+
   // Debug helper
   const logChatServiceDebug = () => {
     import('../services/signalRChatService').then(module => {
@@ -542,7 +607,10 @@ const requestPermission = async () => {
         <div className="header-content">
           <h1>My Messages</h1>
           <div className="header-actions">
-            <ConnectionStatus state={isLoading ? 'Connecting' : error ? 'Disconnected' : 'Connected'} />
+            <ConnectionStatus 
+              state={isLoading ? 'Connecting' : (error && connectionState === 'Disconnected') ? 'Disconnected' : connectionState || 'Connected'} 
+              isPolling={isPollingActive}
+            />
             <NotificationPermissionButton 
               permissionGranted={permissionGranted} 
               requestPermission={requestPermission} 
@@ -620,9 +688,6 @@ const requestPermission = async () => {
           </div>
         </div>
       )}
-      
-      {/* Connection status display */}
-      <ConnectionStatus state={isLoading ? 'Connecting' : error ? 'Disconnected' : 'Connected'} />
     </div>
   );
 };

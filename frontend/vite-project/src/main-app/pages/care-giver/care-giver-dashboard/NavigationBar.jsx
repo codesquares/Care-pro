@@ -132,7 +132,7 @@ const NavigationBar = () => {
     <nav className="navigation-bar">
       {/* Mobile Navigation */}
       <div className="mobile-nav">
-        <div className="logo" onClick={() => navigate(`${basePath}/dashboard`)}>
+        <div className="logo" onClick={() => navigate('/')}>
           <img src={logo} alt="CarePro Logo" />
         </div>
         <button 
@@ -236,7 +236,7 @@ const NavigationBar = () => {
 
       {/* Desktop Navigation */}
       <div className="desktop-nav">
-        <div className="logo" onClick={() => navigate(`${basePath}/dashboard`)}>
+        <div className="logo" onClick={() => navigate('/')}>
           <img src={logo} alt="CarePro Logo" />
         </div>
 

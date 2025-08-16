@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from "react";
-import { useNavigate, Link } from "react-router-dom";
+import { useNavigate, Link, useLocation } from "react-router-dom";
 import axios from "axios";
 import loginImg from "../../assets/loginImg.png";
 import loginLogo from "../../assets/loginLogo.png";
@@ -14,17 +14,28 @@ const LoginPage = () => {
   const [error, setError] = useState(null);
   const [loading, setLoading] = useState(false);
   const navigate = useNavigate();
+  const location = useLocation();
   const { isAuthenticated, userRole, loading: authLoading, login } = useAuth();
+
+  // Get return URL and message from query parameters
+  const urlParams = new URLSearchParams(location.search);
+  const returnTo = urlParams.get('returnTo');
+  const message = urlParams.get('message');
 
   // Only redirect if already authenticated (no duplicate navigation logic)
   useEffect(() => {
     if (!authLoading && isAuthenticated && userRole) {
-      const dashboardPath = userRole === "Admin" ? "/app/admin/dashboard" :
-                           userRole === "Client" ? "/app/client/dashboard" :
-                           "/app/caregiver/dashboard";
-      navigate(dashboardPath, { replace: true });
+      // If there's a return URL, use it; otherwise use default dashboard
+      if (returnTo) {
+        navigate(decodeURIComponent(returnTo), { replace: true });
+      } else {
+        const dashboardPath = userRole === "Admin" ? "/app/admin/dashboard" :
+                             userRole === "Client" ? "/app/client/dashboard" :
+                             "/app/caregiver/profile";
+        navigate(dashboardPath, { replace: true });
+      }
     }
-  }, [isAuthenticated, userRole, authLoading, navigate]);
+  }, [isAuthenticated, userRole, authLoading, navigate, returnTo]);
 
   const handleSubmit = async (e) => {
     e.preventDefault();
@@ -54,8 +65,10 @@ const LoginPage = () => {
       // Use AuthContext login method which returns navigation info
       const navInfo = login(data, data.token, data.refreshToken);
       
-      // Navigate using the path from AuthContext
-      if (navInfo.shouldNavigate) {
+      // Navigate using return URL if available, otherwise use AuthContext path
+      if (returnTo) {
+        navigate(decodeURIComponent(returnTo), { replace: true });
+      } else if (navInfo.shouldNavigate) {
         navigate(navInfo.path, { replace: true });
       }
     } catch (err) {
@@ -87,6 +100,11 @@ const LoginPage = () => {
       {/* Right section */}
       <div className="login-right">
         <h2>Login</h2>
+        {message && (
+          <div className="login-message">
+            <p>{decodeURIComponent(message)}</p>
+          </div>
+        )}
         <form onSubmit={handleSubmit}>
           <label>Email Address</label>
           <input
