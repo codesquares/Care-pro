@@ -231,7 +231,7 @@ const ProfileHeader = () => {
         aboutMe: data.aboutMe || "",
         services: data.services || [],
         status: data.status || false,
-        verificationStatus: "verified", // Temporarily set to verified for testing
+        verificationStatus: verificationStatus, // Temporarily set to verified for testing
         isAvailable: data.isAvailable || false,
       };
 

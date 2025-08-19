@@ -12,6 +12,19 @@ dist
 dist-ssr
 *.local
 *.env
+
+# Test files and scripts
+test-*.js
+**/test-*.js
+__tests__/
+*.test.js
+*.spec.js
+**/testingUtils.js
+
+# Documentation and notes (markdown files)
+*.md
+!README.md
+
 # Editor directories and files
 .vscode/*
 !.vscode/extensions.json

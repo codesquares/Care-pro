@@ -15,6 +15,8 @@ namespace Application.Interfaces.Content
 
         Task<VerificationResponse> GetVerificationAsync(string appUserId);
 
+        Task<VerificationStatusSummary> GetUserVerificationStatusAsync(string userId);
+
         Task<string> UpdateVerificationAsync(string verificationId, UpdateVerificationRequest updateVerificationRequest );
 
     }

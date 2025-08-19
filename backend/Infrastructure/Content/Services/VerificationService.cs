@@ -82,7 +82,11 @@ namespace Infrastructure.Content.Services
 
         public async Task<VerificationResponse> GetVerificationAsync(string userId)
         {
-            var verification = await careProDbContext.Verifications.FirstOrDefaultAsync(x => x.UserId.ToString() == userId);
+            // Get the most recent verification record for the user
+            var verification = await careProDbContext.Verifications
+                .Where(x => x.UserId.ToString() == userId)
+                .OrderByDescending(x => x.VerifiedOn)
+                .FirstOrDefaultAsync();
 
             if (verification == null)
             {
@@ -127,6 +131,90 @@ namespace Infrastructure.Content.Services
 
             return $"Verification with ID '{verificationId}' Updated successfully.";
 
+        }
+
+        public async Task<VerificationStatusSummary> GetUserVerificationStatusAsync(string userId)
+        {
+            // Get all verification records for the user, ordered by most recent first
+            var verifications = await careProDbContext.Verifications
+                .Where(x => x.UserId.ToString() == userId)
+                .OrderByDescending(x => x.VerifiedOn)
+                .ToListAsync();
+
+            // Create summary with default values
+            var summary = new VerificationStatusSummary
+            {
+                UserId = userId,
+                CurrentStatus = "not_verified",
+                HasSuccess = false,
+                HasPending = false,
+                HasFailed = false,
+                HasAny = verifications.Any(),
+                TotalAttempts = verifications.Count,
+                LastAttempt = verifications.FirstOrDefault()?.VerifiedOn,
+                MostRecentRecord = null
+            };
+
+            if (!verifications.Any())
+            {
+                return summary;
+            }
+
+            // Analyze verification statuses
+            var statusCounts = verifications.GroupBy(v => v.VerificationStatus.ToLower())
+                .ToDictionary(g => g.Key, g => g.Count());
+
+            // Check for different status types (normalize status values)
+            summary.HasSuccess = verifications.Any(v => 
+                v.VerificationStatus.ToLower() == "success" || 
+                v.VerificationStatus.ToLower() == "verified" ||
+                v.VerificationStatus.ToLower() == "completed");
+                
+            summary.HasPending = verifications.Any(v => 
+                v.VerificationStatus.ToLower() == "pending" ||
+                v.VerificationStatus.ToLower() == "processing");
+                
+            summary.HasFailed = verifications.Any(v => 
+                v.VerificationStatus.ToLower() == "failed" ||
+                v.VerificationStatus.ToLower() == "rejected" ||
+                v.VerificationStatus.ToLower() == "cancelled");
+
+            // Determine primary status using priority logic:
+            // 1. If any success → success
+            // 2. If any pending and no success → pending  
+            // 3. If only failed → failed
+            // 4. Default → not_verified
+            if (summary.HasSuccess)
+            {
+                summary.CurrentStatus = "success";
+            }
+            else if (summary.HasPending)
+            {
+                summary.CurrentStatus = "pending";
+            }
+            else if (summary.HasFailed)
+            {
+                summary.CurrentStatus = "failed";
+            }
+
+            // Get the most recent record for additional details
+            var mostRecent = verifications.FirstOrDefault();
+            if (mostRecent != null)
+            {
+                summary.MostRecentRecord = new VerificationResponse
+                {
+                    VerificationId = mostRecent.VerificationId.ToString(),
+                    UserId = mostRecent.UserId,
+                    VerificationMethod = mostRecent.VerificationMethod,
+                    VerificationNo = mostRecent.VerificationNo,
+                    VerificationStatus = mostRecent.VerificationStatus,
+                    IsVerified = mostRecent.IsVerified,
+                    VerifiedOn = mostRecent.VerifiedOn,
+                    UpdatedOn = mostRecent.UpdatedOn
+                };
+            }
+
+            return summary;
         }
     }
 }

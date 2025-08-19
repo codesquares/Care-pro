@@ -22,6 +22,18 @@
     text-align: center;
     position: relative;
     box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+    animation: modalFadeIn 0.3s ease-out;
+  }
+  
+  @keyframes modalFadeIn {
+    from {
+      opacity: 0;
+      transform: translateY(-20px);
+    }
+    to {
+      opacity: 1;
+      transform: translateY(0);
+    }
   }
   
   /* Close Button */
@@ -49,13 +61,35 @@
   }
   
   /* Subtext */
-  p {
+  .description {
     color: #555;
     font-size: 1rem;
     margin-bottom: 2rem;
     line-height: 1.6;
     text-align: left;
     padding: 0 0.5rem;
+    white-space: pre-line; /* Allows line breaks from \n */
+  }
+  
+  /* Email highlighting within description */
+  .description strong {
+    color: #2c8b45;
+    font-weight: 600;
+    background-color: rgba(44, 139, 69, 0.1);
+    padding: 2px 4px;
+    border-radius: 3px;
+  }
+  
+  /* Additional styling for better text hierarchy */
+  .description p {
+    margin: 0.5rem 0;
+  }
+  
+  /* Modal Actions Container */
+  .modal-actions {
+    display: flex;
+    flex-direction: column;
+    gap: 0.75rem;
   }
   
   /* Proceed Button */
@@ -68,9 +102,29 @@
     border-radius: 5px;
     cursor: pointer;
     transition: background-color 0.3s ease;
+    width: 100%;
   }
   
   .proceed-button:hover {
     background-color: #2c8b45;
+  }
+  
+  /* Secondary Button */
+  .secondary-button {
+    background-color: transparent;
+    color: #666;
+    padding: 0.5rem 1rem;
+    font-size: 0.9rem;
+    border: 1px solid #ddd;
+    border-radius: 5px;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    width: 100%;
+  }
+  
+  .secondary-button:hover {
+    background-color: #f5f5f5;
+    border-color: #bbb;
+    color: #333;
   }
   

@@ -96,6 +96,49 @@ namespace CarePro_Api.Controllers
 
         }
 
+        [HttpGet]
+        [Route("status/{userId}")]
+        // [Authorize(Roles = "Caregiver, Client, Admin")]
+        public async Task<IActionResult> GetVerificationStatusAsync(string userId)
+        {
+            try
+            {
+                logger.LogInformation($"Retrieving verification status summary for user with ID '{userId}'.");
+
+                var statusSummary = await verificationService.GetUserVerificationStatusAsync(userId);
+
+                return Ok(statusSummary);
+
+            }
+            catch (KeyNotFoundException ex)
+            {
+                // Return default status if user has no verifications
+                return Ok(new VerificationStatusSummary
+                {
+                    UserId = userId,
+                    CurrentStatus = "not_verified",
+                    HasSuccess = false,
+                    HasPending = false,
+                    HasFailed = false,
+                    HasAny = false,
+                    TotalAttempts = 0,
+                    LastAttempt = null,
+                    MostRecentRecord = null
+                });
+            }
+            catch (ApplicationException appEx)
+            {
+                return BadRequest(new { ErrorMessage = appEx.Message });
+            }
+            catch (HttpRequestException httpEx)
+            {
+                return StatusCode(500, new { ErrorMessage = httpEx.Message });
+            }
+            catch (Exception ex)
+            {
+                return StatusCode(500, new { ErrorMessage = ex.Message });
+            }
+        }
 
         [HttpPut]
         [Route("verificationId")]

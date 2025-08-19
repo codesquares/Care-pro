@@ -165,19 +165,26 @@ const CaregiverVerificationPage = () => {
           "caregiver"
         );
 
+        console.log("Verification Status Response while checking=====>>>:", status);
+
         if (!isMounted) return;
         console.log("Verification Status in the check function:", status);
         setVerificationStatus(status);
 
-        if (status.data.isVerified === true || status.data.verificationStatus === "verified") {
+        // Check if user has successful verification using enhanced status
+        if (status.hasSuccess || status.currentStatus === "success" || status.verified === true) {
           setProgress(100);
           setProgressMessage("Account already verified!");
-          setSuccess("Your account is already verified! Redirecting to profile...");
+          setSuccess("Your account is already verified! Redirecting to assessments...");
           setTimeout(() => {
             if (isMounted) {
-              window.location.href = "/app/caregiver/profile";
+              window.location.href = "/app/caregiver/assessments";
             }
           }, 2000);
+        } else if (status.hasPending && !status.hasSuccess) {
+          setProgress(50);
+          setProgressMessage("Verification is pending review...");
+          setSuccess("Your verification is being processed. You will be notified when complete.");
         } else {
           setProgress(0);
           setProgressMessage("");
@@ -238,11 +245,11 @@ const CaregiverVerificationPage = () => {
         setProgressMessage("Verification processed successfully!");
         
         // Show brief success message based on status
-        if (overallStatus === 'verified') {
+        if (overallStatus === 'Verified') {
           setSuccess("Verification completed successfully! Redirecting to dashboard...");
-        } else if (overallStatus === 'pending') {
+        } else if (overallStatus === 'Pending') {
           setSuccess("Verification submitted for review! You'll be notified once complete. Redirecting to dashboard...");
-        } else if (overallStatus === 'partial') {
+        } else if (overallStatus === 'Partial') {
           setSuccess("Verification partially completed. Please check notifications for details. Redirecting to profile...");
         } else {
           setSuccess("Verification processed. Please check notifications for details. Redirecting to profile...");
@@ -822,23 +829,44 @@ const CaregiverVerificationPage = () => {
                   </div>
                 )}
 
-                {/* Verification Status */}
-                {verificationStatus?.verified && (
+                {/* Enhanced Verification Status Display */}
+                {verificationStatus?.hasSuccess && (
                   <div className="verification-status verified">
                     <h3>✅ Account Verified</h3>
                     <p>Your identity has been successfully verified!</p>
+                    <button
+                      type="button"
+                      onClick={() => window.location.href = "/app/caregiver/assessments"}
+                      className="proceed-btn start-assessment"
+                    >
+                      Start Assessment
+                      <i className="fas fa-arrow-right"></i>
+                    </button>
                   </div>
                 )}
 
-                {/* Start Verification Button */}
-                {!verificationStatus?.verified && (
+                {verificationStatus?.hasPending && !verificationStatus?.hasSuccess && (
+                  <div className="verification-status pending">
+                    <h3>⏳ Verification Pending</h3>
+                    <p>Your verification is being processed. You will be notified when complete.</p>
+                    <div className="pending-info">
+                      <p><strong>Total Attempts:</strong> {verificationStatus.totalAttempts}</p>
+                      {verificationStatus.lastAttempt && (
+                        <p><strong>Last Attempt:</strong> {new Date(verificationStatus.lastAttempt).toLocaleString()}</p>
+                      )}
+                    </div>
+                  </div>
+                )}
+
+                {/* Start/Retry Verification Button */}
+                {!verificationStatus?.hasSuccess && !verificationStatus?.hasPending && (
                   <button
                     type="button"
                     onClick={handleStartVerification}
                     disabled={isSubmitting}
                     className="proceed-btn start-verification"
                   >
-                    {isSubmitting ? "Processing..." : "Start Verification"}
+                    {isSubmitting ? "Processing..." : (verificationStatus?.hasFailed ? "Retry Verification" : "Start Verification")}
                     <i className="fas fa-arrow-right"></i>
                   </button>
                 )}

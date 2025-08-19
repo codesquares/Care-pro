@@ -749,10 +749,41 @@ const verificationService = {
         params: { userId, userType, token },
       });
 
-      this._cachedStatus = response.data;
+      // Process the enhanced response data from new backend endpoint
+      const statusData = response.data.data || response.data;
+      
+      // Create enhanced status object for frontend use
+      const enhancedStatus = {
+        // Legacy fields for backward compatibility
+        verified: statusData.isVerified || false,
+        verificationStatus: statusData.verificationStatus || 'not_verified',
+        
+        // New enhanced fields
+        hasSuccess: statusData.hasSuccess || false,
+        hasPending: statusData.hasPending || false,
+        hasFailed: statusData.hasFailed || false,
+        hasAny: statusData.hasAny || false,
+        totalAttempts: statusData.totalAttempts || 0,
+        lastAttempt: statusData.lastAttempt,
+        needsVerification: statusData.needsVerification || false,
+        message: statusData.message || 'No verification status available',
+        mostRecentRecord: statusData.mostRecentRecord,
+        
+        // Current status for UI logic
+        currentStatus: statusData.verificationStatus || 'not_verified',
+        
+        // Legacy methods structure for compatibility
+        methods: {
+          bvn: { status: statusData.hasSuccess ? 'verified' : 'not_verified' },
+          nin: { status: statusData.hasSuccess ? 'verified' : 'not_verified' },
+          idSelfie: { status: statusData.hasSuccess ? 'verified' : 'not_verified' }
+        }
+      };
+
+      this._cachedStatus = enhancedStatus;
       this._lastVerificationRequest = now;
       
-      return response.data;
+      return enhancedStatus;
     } catch (error) {
       console.error('Error getting verification status:', error);
       
@@ -763,16 +794,28 @@ const verificationService = {
         throw authError;
       }
       
-      // If we got a 404, return default unverified status
+      // If we got a 404, return enhanced default unverified status
       if (error.response?.status === 404) {
         return {
+          // Legacy fields
           verified: false,
-          verificationStatus: 'unverified',
+          verificationStatus: 'not_verified',
           methods: {
             bvn: { status: 'not_verified' },
             nin: { status: 'not_verified' },
             idSelfie: { status: 'not_verified' }
-          }
+          },
+          // Enhanced fields
+          hasSuccess: false,
+          hasPending: false,
+          hasFailed: false,
+          hasAny: false,
+          totalAttempts: 0,
+          lastAttempt: null,
+          needsVerification: true,
+          message: 'No verification records found',
+          mostRecentRecord: null,
+          currentStatus: 'not_verified'
         };
       }
       

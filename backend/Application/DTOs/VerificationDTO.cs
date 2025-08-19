@@ -44,6 +44,18 @@ namespace Application.DTOs
         public DateTime? UpdatedOn { get; set; }
     }
 
+    public class VerificationStatusSummary
+    {
+        public string UserId { get; set; }
+        public string CurrentStatus { get; set; }  // primary status: success, pending, failed, not_verified
+        public bool HasSuccess { get; set; }
+        public bool HasPending { get; set; }
+        public bool HasFailed { get; set; }
+        public bool HasAny { get; set; }
+        public int TotalAttempts { get; set; }
+        public DateTime? LastAttempt { get; set; }
+        public VerificationResponse MostRecentRecord { get; set; }
+    }
 
     public class UpdateVerificationRequest
     {

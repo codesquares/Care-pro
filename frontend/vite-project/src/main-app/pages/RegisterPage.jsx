@@ -45,6 +45,7 @@ const CreateAccount = () => {
   const [modalDescription, setModalDescription] = useState("");
   const [buttonText, setButtonText] = useState("Okay");
   const [buttonBgColor, setButtonBgColor] = useState("#34A853");
+  const [isEmailVerification, setIsEmailVerification] = useState(false);
 
   const validate = () => {
     const newErrors = {};
@@ -98,11 +99,16 @@ const CreateAccount = () => {
       console.log("Submitting registration with payload:", payload);
       await fetchData(payload, endpoint);
 
-      // Show success modal
-      setModalTitle("Success!");
-      setModalDescription("Your account has been created successfully.");
+      // Show success modal with email verification instructions
+      setModalTitle("Registration Successful!");
+      setModalDescription(`Your account has been created successfully! 
+
+We've sent a verification email to **${formValues.email}**. Please check your inbox and click the verification link to activate your account.
+
+You won't be able to log in until your email is verified.`);
       setButtonBgColor("#34A853");
-      setButtonText("Proceed");
+      setButtonText("Go to Login");
+      setIsEmailVerification(true);
       setIsModalOpen(true);
       
     } catch (err) {
@@ -114,6 +120,7 @@ const CreateAccount = () => {
       setModalDescription("Something went wrong during registration. Please try again.");
       setButtonBgColor("#FF0000");
       setButtonText("Okay");
+      setIsEmailVerification(false);
       setIsModalOpen(true);
     }
   };
@@ -121,7 +128,12 @@ const CreateAccount = () => {
   const handleProceed = () => {
     setIsModalOpen(false);
     navigate("/login"); // Navigate to success page
-  }  
+  };
+
+  const handleResendEmail = () => {
+    setIsModalOpen(false);
+    navigate("/resend-confirmation"); // Navigate to resend confirmation page
+  };  
 
   return (
     <div className="login-wrapper">
@@ -264,6 +276,9 @@ const CreateAccount = () => {
         description={modalDescription}
         buttonText={buttonText}
         buttonBgColor={buttonBgColor}
+        isEmailVerification={isEmailVerification}
+        secondaryButtonText={isEmailVerification ? "Didn't receive email?" : undefined}
+        onSecondaryAction={isEmailVerification ? handleResendEmail : undefined}
         onProceed={handleProceed}
       />
     </div>
