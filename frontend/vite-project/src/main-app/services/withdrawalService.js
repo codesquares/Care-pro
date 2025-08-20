@@ -24,13 +24,13 @@ export const withdrawalService = {
 
   // Get withdrawal history for the caregiver
   getWithdrawalHistory: async (caregiverId) => {
-    const api_to_use = config.BASE_URL;
+    // const api_to_use = config.BASE_URL;
     // const api_to_use = `http://localhost:3000/api/withdrawal`;
     const authToken = localStorage.getItem('authToken');
     console.log("Auth Token:", authToken);
     
     try {
-      const response = await fetch(`${api_to_use}/WithdrawalRequests`, {
+      const response = await fetch(`${BASE_API_URL}/Earnings/transaction-history/${caregiverId}`, {
         headers: {
           'Content-Type': 'application/json',
           'Authorization': `Bearer ${localStorage.getItem('authToken')}`
@@ -48,7 +48,7 @@ export const withdrawalService = {
         console.warn('Withdrawal history response is not an array:', responseData);
         return [];
       }
-      
+
       const userSpecificdata = responseData.filter(request => request.caregiverId === caregiverId);
       return userSpecificdata;
     } catch (error) {

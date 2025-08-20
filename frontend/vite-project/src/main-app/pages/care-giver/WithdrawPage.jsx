@@ -191,6 +191,10 @@ const WithdrawPage = () => {
 
       <div className="withdraw-content">
         <form onSubmit={handleSubmit} className="withdraw-form">
+          <div>
+            <h4 className="form-title">Withdrawable Amount</h4>
+            <p className="form-subtitle">{formatCurrency(earnings.withdrawableAmount - (earnings.withdrawableAmount * 0.20))}</p>
+          </div>
           <div className="form-group">
             <label htmlFor="amountRequested" className="form-label">
               Enter Withdrawal Amount
@@ -205,7 +209,7 @@ const WithdrawPage = () => {
                 className={`form-input ${errors.amountRequested ? 'error' : ''}`}
                 placeholder="Enter amount"
                 step="0.01"
-                max={earnings.withdrawableAmount}
+                max={earnings.withdrawableAmount - (earnings.withdrawableAmount * 0.20)}
               />
               {errors.amountRequested && (
                 <span className="error-text">{errors.amountRequested}</span>

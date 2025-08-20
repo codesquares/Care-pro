@@ -1133,6 +1133,19 @@ const verificationService = {
     }
   },
 
+  async getVerificationFromAPI(userId) {
+    try {
+      const response = await axios.get(`${config.BASE_URL}/Verifications/userId?userId=${userId}`);
+      console.log('[verificationService] getVerificationFromAPI - response:', response.data);
+      return response.data.verificationStatus;
+    } catch (error) {
+      console.error('Error fetching verification data:', error);
+      throw error.response?.data || {
+        message: error.message || 'Failed to fetch verification data'
+      };
+    }
+  }
+
 };
 
 export default verificationService;

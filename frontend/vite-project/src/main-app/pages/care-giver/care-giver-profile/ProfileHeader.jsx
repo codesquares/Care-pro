@@ -33,6 +33,7 @@ const ProfileHeader = () => {
   const [editedLocation, setEditedLocation] = useState("");
   const [locationLoading, setLocationLoading] = useState(false);
   const [imageUploadLoading, setImageUploadLoading] = useState(false);
+  const [statusFromApi, setStatusFromApi] = useState(null);
   const fileInputRef = useRef(null);
 
   const isMountedRef = useRef(true);
@@ -212,7 +213,8 @@ const ProfileHeader = () => {
       // Get verification status
       let verificationStatus = null;
       try {
-        verificationStatus = await verificationService.getVerificationStatus(userDetails.id);
+        verificationStatus = await verificationService.getVerificationFromAPI(userDetails.id);
+        setStatusFromApi(verificationStatus);
       } catch (verErr) {
         console.warn("Failed to fetch verification status:", verErr);
       }
@@ -231,7 +233,7 @@ const ProfileHeader = () => {
         aboutMe: data.aboutMe || "",
         services: data.services || [],
         status: data.status || false,
-        verificationStatus: verificationStatus, // Temporarily set to verified for testing
+        verificationStatus: statusFromApi, // Temporarily set to verified for testing
         isAvailable: data.isAvailable || false,
       };
 

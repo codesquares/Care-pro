@@ -28,9 +28,19 @@ const VerifyButton = ({ verificationStatus }) => {
   const getButtonContent = () => {
     // Handle enhanced status object from new API
     if (typeof verificationStatus === 'object' && verificationStatus !== null) {
-      const { hasSuccess, hasPending, hasFailed, hasAny, currentStatus } = verificationStatus;
+      const { hasSuccess, hasPending, hasFailed, hasAny, currentStatus, needsVerification } = verificationStatus;
       
-      if (hasSuccess) {
+      // Check if user doesn't need verification
+      if (needsVerification === false) {
+        return {
+          text: "Verification Not Required",
+          className: "verify-button verify-button-pending",
+          disabled: true,
+        };
+      }
+      
+      // Handle the three main statuses: "successful or completed", "Pending", "failed"
+      if (currentStatus === "successful" || currentStatus === "completed" || hasSuccess) {
         return {
           text: "Start Assessment",
           className: "verify-button verify-button-success",
@@ -40,7 +50,7 @@ const VerifyButton = ({ verificationStatus }) => {
         };
       }
       
-      if (hasPending && !hasSuccess) {
+      if (currentStatus === "Pending" || hasPending) {
         return {
           text: "Verification Pending...",
           className: "verify-button verify-button-pending",
@@ -48,14 +58,22 @@ const VerifyButton = ({ verificationStatus }) => {
         };
       }
       
-      if (hasFailed || !hasAny) {
+      if (currentStatus === "failed" || hasFailed) {
         return {
-          text: hasFailed ? "Retry Verification" : "Get Verified",
+          text: "Retry Verification",
           className: "verify-button verify-button-retry",
           onClick: handleVerifyClick,
           disabled: false,
         };
       }
+      
+      // Default case for not_verified or any other status
+      return {
+        text: "Get Verified",
+        className: "verify-button",
+        onClick: handleVerifyClick,
+        disabled: false,
+      };
     }
     
     // Handle legacy string-based status

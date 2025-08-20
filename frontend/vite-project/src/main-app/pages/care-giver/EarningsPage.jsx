@@ -28,7 +28,10 @@ const EarningsPage = () => {
         
         // Load earnings data
         const earningsData = await earningService.getUpdatedEarnings(currentUser.id);
-        if (!earningsData) {
+        const orders = await earningService.getCareGiverOrderDetails(currentUser.id);
+        console.log("Earnings Data:", earningsData);
+        console.log("Order Details:", orders);
+        if (!earningsData || !orders) {
           setEarnings({
             totalEarned: 0,
             withdrawableAmount: 0,
@@ -42,10 +45,11 @@ const EarningsPage = () => {
             totalEarned: earningsData.totalAmountEarned,
             withdrawableAmount: earningsData.withdrawableAmount,
             withdrawnAmount: earningsData.totalAmountWithdrawn,
-            totalOrders: earningsData.totalOrders || 1250, // Placeholder if not available
+            // totalOrders: earningsData.totalOrders || 1250, // Placeholder if not available
             totalEarnings: earningsData.totalAmountEarned,
             totalPaidOut: earningsData.totalAmountWithdrawn,
           });
+          setEarnings(prev => ({ ...prev, totalOrders: orders.length || 0 }));
         }
 
         // Load withdrawal history
@@ -242,16 +246,16 @@ const EarningsPage = () => {
               <tbody>
                 {currentYearTransactions.map((withdrawal) => (
                   <tr key={withdrawal.id}>
-                    <td>{new Date(withdrawal.createdAt).toLocaleDateString()}</td>
-                    <td>
+                    <td className="date-cell">{new Date(withdrawal.createdAt).toLocaleDateString()}</td>
+                    <td className="activity-cell-container">
                       <div className="activity-cell">
-                        <span className="activity-icon withdrawal">�</span>
+                        <span className="activity-icon withdrawal">💸</span>
                         <span>Withdrawal</span>
                       </div>
                     </td>
-                    <td>{withdrawal.status === 'Completed' ? 'Transferred successfully' : withdrawal.status}</td>
-                    <td>{withdrawal.token || 'N/A'}</td>
-                    <td className="amount negative">-{formatCurrency(withdrawal.amountRequested)}</td>
+                    <td className="description-cell">{withdrawal.status === 'Completed' ? 'Transferred successfully' : withdrawal.status === null ? 'N/A' : withdrawal.status}</td>
+                    <td className="order-cell">{withdrawal.token || 'N/A'}</td>
+                    <td className="amount-cell amount negative">-{formatCurrency(withdrawal.amountRequested || 0)}</td>
                   </tr>
                 ))}
               </tbody>

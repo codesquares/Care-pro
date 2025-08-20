@@ -69,13 +69,13 @@
 }
 
 .stat-icon {
-  font-size: 40px;
-  width: 72px;
-  height: 72px;
+  font-size: 28px;
+  width: 56px;
+  height: 56px;
   display: flex;
   align-items: center;
   justify-content: center;
-  border-radius: 16px;
+  border-radius: 12px;
   background: #f8f9fa;
   flex-shrink: 0;
 }
@@ -259,6 +259,7 @@
   overflow-x: auto;
   border-radius: 12px;
   border: 1px solid #f0f0f0;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
 }
 
 .transactions-table {
@@ -267,6 +268,8 @@
   border-spacing: 0;
   border-radius: 12px;
   overflow: hidden;
+  min-width: 600px;
+  table-layout: fixed;
 }
 
 .transactions-table thead {
@@ -336,6 +339,40 @@
 
 .amount.negative {
   color: #dc3545;
+}
+
+/* Table Cell Specific Styles */
+.date-cell {
+  white-space: nowrap;
+  min-width: 100px;
+  font-family: 'Segoe UI', monospace;
+}
+
+.activity-cell-container {
+  min-width: 120px;
+}
+
+.description-cell {
+  max-width: 200px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.order-cell {
+  max-width: 120px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  font-family: 'Segoe UI', monospace;
+  font-size: 13px;
+}
+
+.amount-cell {
+  text-align: right;
+  white-space: nowrap;
+  min-width: 100px;
+  font-weight: 600;
 }
 
 .no-transactions {
