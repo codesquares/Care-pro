@@ -14,6 +14,26 @@ class ErrorBoundary extends React.Component {
   componentDidCatch(error, errorInfo) {
     // Log error details
     console.error('ErrorBoundary caught an error:', error, errorInfo);
+    
+    // Handle toast-related errors specifically
+    if (error.message && error.message.includes('toggle')) {
+      console.warn('Toast-related error caught, attempting to dismiss toasts...');
+      try {
+        // Import toast dynamically to avoid circular dependency
+        import('react-toastify').then(({ toast }) => {
+          toast.dismiss();
+        });
+        
+        // Don't show error UI for toast errors, just reset after a short delay
+        setTimeout(() => {
+          this.setState({ hasError: false, error: null, errorInfo: null });
+        }, 100);
+        return;
+      } catch (e) {
+        console.error('Error dismissing toasts:', e);
+      }
+    }
+    
     this.setState({
       error: error,
       errorInfo: errorInfo

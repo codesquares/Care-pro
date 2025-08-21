@@ -142,10 +142,13 @@
 
   .caregiver-profile-header-card .caregiver-username {
     margin: 0 0 16px 0;
-    font-size: 14px;
+    font-size: 0.6rem;
     color: #6b7280;
+    font-family: 'ag', sans-serif;
   }
-
+  .caregiver-profile-name{
+    font-family: 'kanit', sans-serif;
+  }
   .caregiver-profile-header-card .caregiver-bio {
     margin: 0 0 16px 0;
     font-size: 12px;
@@ -157,6 +160,7 @@
     font-weight: bold;
     position: relative;
     padding: 0 20px;
+    font-family:'Ag', 'Kanit', sans-serif;
   }
 
   .caregiver-profile-header-card .caregiver-bio::before {
@@ -229,7 +233,27 @@
   .caregiver-profile-details .caregiver-detail-item:hover {
     background-color: #f1f3f4;
   }
-
+  .caregiver-detail-button{
+    display:flex;
+    gap: 8px;
+  }
+  .caregiver-detail-button .caregiver-edit-location-btn {
+    padding: 6px 12px;
+    border: 1px solid #0f3f8b;
+    border-radius: 6px;
+    background-color: #0f3f8b;
+    color: white;
+    cursor: pointer;
+    font-size: 12px;
+    font-weight: 500;
+    transition: all 0.2s ease;
+    text-align: center;
+  }
+  .caregiver-detail-button .caregiver-edit-location-btn:last-child {
+    background-color: transparent;
+    border-color: #0f3f8b;
+    color: rgb(65, 56, 56);
+  }
   .caregiver-profile-details .caregiver-detail-item:first-child {
     border-top-left-radius: 6px;
     border-top-right-radius: 6px;

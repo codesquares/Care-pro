@@ -8,6 +8,7 @@ import AssessmentButton from "./AssessmentButton";
 import TestVerificationToggle from "../../../components/dev/TestVerificationToggle";
 import verificationService from "../../../services/verificationService";
 import { toast } from "react-toastify";
+import { generateUsername } from "../../../utils/usernameGenerator";
 
 const ProfileHeader = () => {
   const [profile, setProfile] = useState({
@@ -220,7 +221,7 @@ const ProfileHeader = () => {
       }
 
       const updatedProfile = {
-        name: data.firstName && data.lastName ? `${data.firstName} ${data.lastName}` : "John Doe",
+        name: data.firstName && data.lastName ? `${data.firstName.charAt(0).toUpperCase() + data.firstName.slice(1)} ${data.lastName.charAt(0).toUpperCase() + data.lastName.slice(1)}` : "John Doe",
         username: data.email || "user@example.com",
         bio: data.aboutMe || "Passionate caregiver dedicated to providing quality care.",
         rating: data.rating || 4.8,
@@ -239,6 +240,17 @@ const ProfileHeader = () => {
 
       console.log("Updated profile with new image:", updatedProfile.picture);
       setProfile(updatedProfile);
+      
+      // Generate and save username using centralized utility
+      if (data.firstName && data.email && data.createdAt) {
+        const generatedUsername = generateUsername(
+          data.firstName,
+          data.email,
+          data.createdAt
+        );
+        localStorage.setItem("userName", generatedUsername);
+        console.log("Generated and saved username:", generatedUsername);
+      }
       
     } catch (err) {
       console.error("Failed to load profile:", err);
@@ -307,12 +319,13 @@ const ProfileHeader = () => {
               style={{ display: 'none' }}
             />
           </div>
-          <h2>{profile.name}</h2>
+          <h2 className="caregiver-profile-name">{profile.name}</h2>
           {userName && <p className="caregiver-username">@{userName}</p>}
-          <p className="caregiver-bio">{profile.bio}</p>
+          {/*bio should be limited to 60 characters */}
+          <p className="caregiver-bio">{`"${profile.bio.slice(0, 60)}${profile.bio.length > 60 ? '...' : ''}"`}</p>
         </div>
       
-        <div className="caregiver-profile-rating-section">
+        {/* <div className="caregiver-profile-rating-section">
           <div className="caregiver-rating">
             <span className="caregiver-stars">
               {"⭐".repeat(Math.round(profile.rating))}
@@ -321,7 +334,7 @@ const ProfileHeader = () => {
               ({profile.rating}, {profile.reviews} Reviews)
             </span>
           </div>
-        </div>
+        </div> */}
 
         <div className="caregiver-profile-details">
           <div className="caregiver-detail-item">
@@ -336,12 +349,21 @@ const ProfileHeader = () => {
             <span className="caregiver-detail-label">� Last delivery</span>
             <span className="caregiver-detail-value">{profile.lastDelivery}</span>
           </div>
-          <button 
+          <div className="caregiver-detail-button">
+            <button 
             onClick={() => setShowLocationModal(true)}
             className="caregiver-edit-location-btn"
           >
             Edit Location
           </button>
+          <button 
+            onClick={() => setShowLocationModal(false)}
+            className="caregiver-edit-location-btn"
+          >
+            {profile.isAvailable ? "Available" : "Not Available"}
+          </button>
+          </div>
+          
         </div>
 
         <div className="caregiver-profile-actions">

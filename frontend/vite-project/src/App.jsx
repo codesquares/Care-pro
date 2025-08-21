@@ -25,6 +25,7 @@ import ProtectedRoute from './main-app/components/auth/ProtectedRoute';
 import MainAppRoutes from './main-app/routes';
 import { logout } from './main-app/services/auth';
 import { AuthProvider } from './main-app/context/AuthContext';
+import ErrorBoundary from './main-app/components/ErrorBoundary';
 import CreateGig from './main-app/pages/care-giver/CreateGig';
 // import Messages from './main-app/pages/Messages';
 import NotificationBell from './main-app/components/notifications/NotificationBell';
@@ -60,7 +61,9 @@ function App() {
           <MessageProvider>
             <Router>
               <AuthProvider>
-                <AppContent />
+                <ErrorBoundary>
+                  <AppContent />
+                </ErrorBoundary>
               </AuthProvider>
             </Router>
           </MessageProvider>
@@ -127,7 +130,7 @@ function AppContent() {
       {shouldShowBasicNavbar && <Navbar />}
       {shouldShowClientNavbar && <PublicClientNavBar />}
       <ScrollToTop />
-      <ToastContainer position="top-right" autoClose={5000} />
+      {/* Remove duplicate ToastContainer to prevent conflicts - main one is at bottom */}
       {/* <ConnectionStatusIndicator /> */}
       <Routes>
         <Route path="/about-us" element={<AboutUs />} />
@@ -180,14 +183,16 @@ function AppContent() {
       {shouldShowFooter && <Footer />}
       <ToastContainer
         position="bottom-right"
-        autoClose={5000}
+        autoClose={3000}
         hideProgressBar={false}
         newestOnTop={false}
-        closeOnClick
+        closeOnClick={false}
         rtl={false}
-        pauseOnFocusLoss
-        draggable
-        pauseOnHover
+        pauseOnFocusLoss={false}
+        draggable={false}
+        pauseOnHover={false}
+        limit={3}
+        containerId="main-toast-container"
       />
     </div>
   );

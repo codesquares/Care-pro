@@ -51,13 +51,7 @@ export const AuthProvider = ({ children }) => {
         setUserRole(userData.role);
         setIsAuthenticated(true);
         
-        // Return navigation info instead of navigating directly
-        return {
-            shouldNavigate: true,
-            path: userData.role === "Admin" ? "/app/admin/dashboard" :
-                  userData.role === "Client" ? "/app/client/dashboard" :
-                  "/app/caregiver/profile"
-        };
+        // No longer return navigation info - let components handle their own navigation
     };
 
     const handleLogout = () => {

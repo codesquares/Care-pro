@@ -2,6 +2,7 @@ import React, { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import "./ProfileCard.css";
 import profilecard1 from "../../../../assets/profilecard1.png";
+import { generateUsername } from "../../../utils/usernameGenerator";
 
 const ProfileCard = () => {
   const navigate = useNavigate();
@@ -47,13 +48,17 @@ const ProfileCard = () => {
   console.log("profile===>", profile);
   console.log("profile is running");
   
-  // get the user's first name and first two letters of profile id and last two letters of profile id and last two letters of profile last name and concatenate them to form a username
+  // Generate username using centralized utility
   let userName = "";
-   if(profile){
-     userName = profile.firstName + profile.lastName+profile.id.slice(0,2)+profile.id.slice(-2)+profile.lastName.slice(-2);
-   }else{
-     userName = "guestUser209";
-   }
+  if (profile) {
+    userName = generateUsername(
+      profile.firstName,
+      profile.email,
+      profile.createdAt
+    );
+  } else {
+    userName = "guest000000"; // Fallback handled by utility
+  }
   console.log("userName===>", userName);
   // save the username to localStorage
   localStorage.setItem("userName", userName);
@@ -77,17 +82,21 @@ const ProfileCard = () => {
 
   return (
     <div className="profile-card">
-      <img
+      <div className="caregiver-profile-card-bio-head">
+         <img
         src={profile?.profileImage || profilecard1}
         alt="Profile"
         className="profile-picture"
       />
+      {/* capitalize first letter of each word in name */}
       <h3 className="profile-name">
         {profile?.firstName && profile?.lastName
-          ? `${profile.firstName} ${profile.lastName}`
+          ? `${profile.firstName.charAt(0).toUpperCase() + profile.firstName.slice(1)} ${profile.lastName.charAt(0).toUpperCase() + profile.lastName.slice(1)}`
           : "Ahmed Rufai"}
       </h3>
       <p className="profile-username">@{userName}</p>
+      </div>
+      
       <div
         className="view-profile"
         style={{ cursor: "pointer" }}

@@ -178,6 +178,66 @@ input:not([type="radio"]) {
   }
 }
 
+/* Password Input Styles */
+.password-input {
+  position: relative;
+  
+  input {
+    width: 100%;
+    padding: 0.5rem 3rem 0.5rem 0.75rem;
+    border: 2px solid var(--border-color);
+    border-radius: var(--border-radius-sm);
+    font-size: 0.95rem;
+    background-color: var(--background-white);
+    transition: var(--transition-fast);
+    box-sizing: border-box;
+    font-family: inherit;
+    
+    &:focus {
+      outline: none;
+      border-color: var(--primary-color);
+      box-shadow: 0 0 0 3px var(--border-focus);
+      background-color: var(--background-white);
+    }
+    
+    &::placeholder {
+      color: var(--text-light);
+      font-size: 0.95rem;
+    }
+  }
+  
+  .password-toggle {
+    position: absolute;
+    right: 12px;
+    top: 50%;
+    transform: translateY(-50%);
+    background: none;
+    border: none;
+    cursor: pointer;
+    padding: 4px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: #666;
+    transition: color 0.2s ease;
+
+    &:hover {
+      color: var(--primary-color);
+    }
+
+    &:focus {
+      outline: 2px solid var(--primary-color);
+      outline-offset: 2px;
+      border-radius: 4px;
+    }
+
+    svg {
+      width: 20px;
+      height: 20px;
+    }
+  }
+}
+
 
 /* Radio Group Styles - Mobile */
 .radio-group {
@@ -434,6 +494,18 @@ input:not([type="radio"]) {
     font-size: 1.1rem;
   }
 
+  .password-input {
+    max-width: 400px;
+    
+    input {
+      padding: 1.125rem 3.5rem 1.125rem 1.25rem;
+    }
+    
+    .password-toggle {
+      right: 15px;
+    }
+  }
+
   .btn {
     max-width: 300px;
     padding: 1.125rem 2.5rem;
@@ -616,11 +688,18 @@ input:not([type="radio"]) {
 
   .radio-label:active {
     transform: scale(0.98);
-    background-color: rgba(2, 68, 95, 0.1);
   }
 
-  input:focus {
-    transform: scale(1.02);
+  .password-toggle {
+    padding: 8px;
+    
+    &:hover {
+      color: #666;
+    }
+    
+    &:active {
+      color: var(--primary-color);
+    }
   }
 }
 

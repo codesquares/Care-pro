@@ -379,8 +379,8 @@ const MyOrders = () => {
                 </div>
             )}
 
-            {/* ToastContainer for React Toastify */}
-            <ToastContainer position="top-right" autoClose={5000} hideProgressBar={false} />
+            {/* Remove duplicate ToastContainer - main app already has one */}
+            {/* <ToastContainer position="top-right" autoClose={5000} hideProgressBar={false} /> */}
         </div>
     );
 };

@@ -5,6 +5,7 @@ import defaultAvatar from '../../../../assets/profilecard1.png';
 import ClientProfileService from '../../../services/clientProfileService';
 import OrderMetrics from '../../../components/client/OrderMetrics';
 import { toast } from 'react-toastify';
+import { generateUsername } from '../../../utils/usernameGenerator';
 
 /**
  * Enhanced Premium Client Profile Page Component
@@ -62,21 +63,14 @@ const ClientProfile = () => {
     fetchProfile();
   }, [clientId]);
 
-  // Generate username using the same logic as ClientProfileCard
-  const generateUsername = (profileData) => {
-    if (profileData && profileData.firstName && profileData.lastName && profileData.id) {
-      return profileData.firstName + profileData.lastName + profileData.id.slice(0,2) + profileData.id.slice(-2) + profileData.lastName.slice(-2);
-    } else {
-      return "guestUser209";
-    }
-  };
-
-  // Get the generated username
-  const username = profile ? generateUsername(profile) : "guestUser209";
+  // Generate username using the centralized utility
+  const username = profile && profile.firstName && profile.email && profile.createdAt 
+    ? generateUsername(profile.firstName, profile.email, profile.createdAt)
+    : "guest000000";
   
   // Save username to localStorage
   useEffect(() => {
-    if (username !== "guestUser209") {
+    if (username && username !== "guest000000") {
       localStorage.setItem("userName", username);
     }
   }, [username]);

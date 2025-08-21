@@ -2,6 +2,7 @@ import React, { useEffect, useState } from "react";
 import { useNavigate, Link } from "react-router-dom";
 import "./clientProfileCard.css";
 import defaultAvatar from '../../../../assets/profilecard1.png';
+import { generateUsername } from "../../utils/usernameGenerator";
 
 const ClientProfileCard = () => {
   const navigate = useNavigate();
@@ -39,12 +40,16 @@ const ClientProfileCard = () => {
 
   const userFullName = profile ? `${profile.firstName || ''} ${profile.lastName || ''}` : '';
   
-  // get the user's first name and first two letters of profile id and last two letters of profile id and last two letters of profile last name and concatenate them to form a username
+  // Generate username using centralized utility
   let username = "";
-  if(profile && profile.firstName && profile.lastName && profile.id){
-    username = profile.firstName + profile.lastName + profile.id.slice(0,2) + profile.id.slice(-2) + profile.lastName.slice(-2);
+  if (profile && profile.firstName && profile.email && profile.createdAt) {
+    username = generateUsername(
+      profile.firstName,
+      profile.email,
+      profile.createdAt
+    );
   } else {
-    username = "guestUser209";
+    username = "guest000000"; // Fallback handled by utility
   }
   
   // save the username to localStorage
