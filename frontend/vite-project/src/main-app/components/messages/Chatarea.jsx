@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useRef } from 'react';
+import React, { useState, useEffect, useRef, useCallback, useMemo } from 'react';
 import { useLocation } from 'react-router-dom';
 import './chatarea.scss';
 import MessageInput from './MessageInput';
@@ -15,8 +15,9 @@ const ChatArea = ({ messages, recipient, userId, onSendMessage, isOfflineMode = 
   const messagesEndRef = useRef(null);
   const { handleDeleteMessage } = useMessageContext();
   const [showDeleteMenu, setShowDeleteMenu] = useState(null);
-  const [visibleMessages, setVisibleMessages] = useState([]);
-  const [isLoading, setIsLoading] = useState(messages === undefined); // Add loading state
+  const [isLoading, setIsLoading] = useState(true); // Start with loading to prevent flash
+  const [hasInitialized, setHasInitialized] = useState(false); // Track if component has initialized
+  const [showLoadingSpinner, setShowLoadingSpinner] = useState(true); // Control spinner visibility separately
   const [isRecipientTyping, setIsRecipientTyping] = useState(false);
   const [lastMessageCount, setLastMessageCount] = useState(0);
   const chatAreaRef = useRef(null);
@@ -31,8 +32,8 @@ const ChatArea = ({ messages, recipient, userId, onSendMessage, isOfflineMode = 
   const [showServiceModal, setShowServiceModal] = useState(false);
   const [gigCache, setGigCache] = useState(new Map()); // Cache gigs by caregiver ID
   
-  // Function to get initials from name (similar to NavigationBar)
-  const getInitials = (name) => {
+  // Memoized function to get initials from name
+  const getInitials = useCallback((name) => {
     if (!name || typeof name !== "string") return "?";
     
     const names = name.trim().split(" ").filter(Boolean);
@@ -41,25 +42,27 @@ const ChatArea = ({ messages, recipient, userId, onSendMessage, isOfflineMode = 
     const initials = names.map((n) => n[0].toUpperCase()).join("");
     
     return initials.slice(0, 2);
-  };
+  }, []);
   
-  // Define safeRecipient at component level to ensure it's available throughout
-  // This prevents the undefined safeRecipient issue in handleSendMessage
+  // Memoized safe recipient to prevent unnecessary re-renders
+  const safeRecipient = useMemo(() => {
+    if (!recipient) return null;
+    
+    return {
+      avatar: recipient.avatar || '/avatar.jpg',
+      name: recipient.recipientName || recipient.name || recipient.FullName || recipient.fullName || 'Care Provider',
+      isOnline: recipient.isOnline || false,
+      lastActive: recipient.lastActive || null,
+      id: recipient.receiverId || recipient.id || recipient.userId || null
+    };
+  }, [recipient]);
+  
   console.log("ChatArea received recipient:", recipient);
   console.log("ChatArea received messages:", messages);
-  
-  const safeRecipient = recipient ? {
-    avatar: recipient.avatar || '/avatar.jpg',
-    name: recipient.recipientName || recipient.name || recipient.FullName || recipient.fullName || 'Care Provider',
-    isOnline: recipient.isOnline || false,
-    lastActive: recipient.lastActive || null, // Don't default to current time
-    id: recipient.receiverId || recipient.id || recipient.userId || null
-  } : null;
-  
   console.log("ChatArea created safeRecipient:", safeRecipient);
 
-  // Enhanced scroll to bottom with smooth behavior and detection of new messages
-  const scrollToBottom = (force = false) => {
+  // Memoized scroll to bottom function
+  const scrollToBottom = useCallback((force = false) => {
     if (messagesEndRef.current) {
       const chatContainer = chatAreaRef.current;
       const shouldAutoScroll = force || 
@@ -73,7 +76,48 @@ const ChatArea = ({ messages, recipient, userId, onSendMessage, isOfflineMode = 
         });
       }
     }
-  };
+  }, []);
+
+  // Memoized message processing to prevent unnecessary re-renders
+  const visibleMessages = useMemo(() => {
+    if (!messages || !Array.isArray(messages)) {
+      return [];
+    }
+
+    return messages.map((msg, index) => {
+      // Ensure each message has an id
+      const msgWithId = {
+        ...msg,
+        id: msg.id || `generated-id-${index}-${Date.now()}-${Math.random().toString(36).substring(2, 9)}`
+      };
+      
+      let statusText = '';
+      
+      if (msgWithId.senderId === userId) {
+        // Only show status for messages sent by current user
+        if (msgWithId.status === 'read') {
+          statusText = msgWithId.readAt 
+            ? `Read ${new Date(msgWithId.readAt).toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'})}` 
+            : 'Read';
+        } else if (msgWithId.status === 'delivered') {
+          statusText = 'Delivered';
+        } else if (msgWithId.status === 'sent') {
+          statusText = 'Sent';
+        } else if (msgWithId.status === 'sending') {
+          statusText = 'Sending...';
+        } else if (msgWithId.status === 'failed') {
+          statusText = 'Failed to send';
+        } else if (msgWithId.status === 'pending') {
+          statusText = 'Waiting to send (offline)';
+        }
+      }
+      
+      return {
+        ...msgWithId,
+        statusText
+      };
+    });
+  }, [messages, userId]);
 
   // Scroll to bottom when messages change (with detection for new messages)
   useEffect(() => {
@@ -86,64 +130,46 @@ const ChatArea = ({ messages, recipient, userId, onSendMessage, isOfflineMode = 
       }
       setLastMessageCount(newMessageCount);
     }
-  }, [messages, lastMessageCount]);
+  }, [messages, lastMessageCount, scrollToBottom]);
 
   // Scroll to bottom when recipient changes (new chat selected)
   useEffect(() => {
     if (recipient) {
       setTimeout(() => scrollToBottom(true), 200); // Force scroll for new chat
     }
-  }, [recipient?.id]);
+  }, [recipient?.id, scrollToBottom]);
   
-  // Process messages to add read receipt info for display
+  // Update loading state based on messages with delay to prevent flash
   useEffect(() => {
-    setIsLoading(messages === undefined); // Update loading state
-    
-    if (messages && Array.isArray(messages)) {
-      // Log received messages for debugging
-      console.log('Processing messages in ChatArea:', messages);
-      setIsLoading(false); // Messages loaded
-      
-      const processedMessages = messages.map((msg, index) => {
-        // Ensure each message has an id
-        const msgWithId = {
-          ...msg,
-          id: msg.id || `generated-id-${index}-${Date.now()}-${Math.random().toString(36).substring(2, 9)}`
-        };
+    if (!hasInitialized) {
+      // On first mount, add a small delay to prevent flash
+      const initTimer = setTimeout(() => {
+        setHasInitialized(true);
+        const shouldLoad = messages === undefined;
+        setIsLoading(shouldLoad);
         
-        let statusText = '';
-        
-        if (msgWithId.senderId === userId) {
-          // Only show status for messages sent by current user
-          if (msgWithId.status === 'read') {
-            statusText = msgWithId.readAt 
-              ? `Read ${new Date(msgWithId.readAt).toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'})}` 
-              : 'Read';
-          } else if (msgWithId.status === 'delivered') {
-            statusText = 'Delivered';
-          } else if (msgWithId.status === 'sent') {
-            statusText = 'Sent';
-          } else if (msgWithId.status === 'sending') {
-            statusText = 'Sending...';
-          } else if (msgWithId.status === 'failed') {
-            statusText = 'Failed to send';
-          } else if (msgWithId.status === 'pending') {
-            statusText = 'Waiting to send (offline)';
-          }
+        // Hide spinner with a slight delay for smooth transition
+        if (!shouldLoad) {
+          setTimeout(() => setShowLoadingSpinner(false), 150);
+        } else {
+          setShowLoadingSpinner(true);
         }
-        
-        return {
-          ...msgWithId,
-          statusText
-        };
-      });
+      }, 100); // Small delay to prevent flash
       
-      console.log('Processed messages with IDs:', processedMessages);
-      setVisibleMessages(processedMessages);
+      return () => clearTimeout(initTimer);
     } else {
-      setVisibleMessages([]);
+      // After initialization, update loading state with smooth transition
+      const shouldLoad = messages === undefined;
+      setIsLoading(shouldLoad);
+      
+      if (!shouldLoad) {
+        // Fade out loading spinner before hiding
+        setTimeout(() => setShowLoadingSpinner(false), 100);
+      } else {
+        setShowLoadingSpinner(true);
+      }
     }
-  }, [messages, userId]);
+  }, [messages, hasInitialized]);
 
   // Close menu when clicking outside
   useEffect(() => {
@@ -673,14 +699,14 @@ const ChatArea = ({ messages, recipient, userId, onSendMessage, isOfflineMode = 
           </div>
         )}
         
-        {isLoading && (
-          <div className="messages-loading-state">
+        {showLoadingSpinner && isLoading && (
+          <div className={`messages-loading-state ${!showLoadingSpinner ? 'fade-out' : ''}`}>
             <div className="loading-spinner"></div>
             <p>Loading messages...</p>
           </div>
         )}
 
-        <div className="messages-area">
+        <div className={`messages-area ${!isLoading && hasInitialized ? 'fade-in' : ''}`}>
           {isNewConversation ? (
             <div className="new-conversation-message">
               <div className="welcome-message">

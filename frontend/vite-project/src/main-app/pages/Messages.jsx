@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useState, useCallback, useMemo, useRef } from 'react';
 import { useSearchParams } from 'react-router-dom';
 import Sidebar from '../components/messages/Sidebar.jsx';
 import ChatArea from '../components/messages/Chatarea.jsx';
@@ -6,9 +6,8 @@ import ChatMetrics from '../components/messages/ChatMetrics.jsx';
 import EmptyMessageState from '../components/messages/EmptyMessageState.jsx';
 import ToastContainer from '../components/toast/ToastContainer.jsx';
 import { useMessageContext } from '../context/MessageContext.jsx';
-// Note: Previously this was using NotificationsContext.jsx, now consolidated into NotificationContext.jsx
-// import { useNotifications } from '../context/NotificationContext.jsx';
 import connectionManager from '../services/connectionManager.js';
+import useDebounce from '../hooks/useDebounce.js';
 import '../components/messages/messages.scss';
 import '../components/messages/connection-status.scss';
 import { useSelector, useDispatch } from 'react-redux';
@@ -74,34 +73,54 @@ document.head.appendChild(styleElement);
 
 const Messages = ({ userId: propsUserId, token: propsToken }) => {
   const [searchParams] = useSearchParams();
+  const dispatch = useDispatch();
+  const { notifications } = useSelector((state) => state.notifications);
+  
   // Track whether we're online for better error handling
   const [isOnline, setIsOnline] = useState(navigator.onLine);
- const dispatch = useDispatch();
-const { notifications } = useSelector((state) => state.notifications);
 
-  // Mobile view management
-  const [showSidebar, setShowSidebar] = useState(true);
-  const [isMobile, setIsMobile] = useState(window.innerWidth < 768);
+  // Mobile view management - calculate initial state properly
+  const [isMobile, setIsMobile] = useState(() => window.innerWidth < 768);
+  const [showSidebar, setShowSidebar] = useState(() => window.innerWidth >= 768);
 
-  // Get user details with better error handling
-  let userId = null;
-  let user = null;
-  try {
-    const userString = localStorage.getItem("userDetails");
-    if (userString) {
-      user = JSON.parse(userString);
-      userId = user?.id;
-      if (!userId) {
-        console.error("User ID is missing from userDetails in localStorage");
+  // Notification permission state
+  const [permissionGranted, setPermissionGranted] = useState(Notification.permission === 'granted');
+
+  // Added state to handle offline content display
+  const [showOfflineContent, setShowOfflineContent] = useState(false);
+  
+  // Add initial mount state to prevent flash
+  const [isInitialMount, setIsInitialMount] = useState(true);
+  
+  // Refs for preventing unnecessary re-renders
+  const notificationProcessedRef = useRef(new Set());
+  const isInitializingRef = useRef(false);
+
+  // Use custom hooks for performance optimization
+  const { debounce } = useDebounce();
+
+  // Get user details with better error handling - memoized
+  const userDetails = useMemo(() => {
+    let userId = null;
+    let user = null;
+    try {
+      const userString = localStorage.getItem("userDetails");
+      if (userString) {
+        user = JSON.parse(userString);
+        userId = user?.id;
+        if (!userId) {
+          console.error("User ID is missing from userDetails in localStorage");
+        } else {
+          console.log("User ID loaded successfully:", userId);
+        }
       } else {
-        console.log("User ID loaded successfully:", userId);
+        console.error("No userDetails found in localStorage");
       }
-    } else {
-      console.error("No userDetails found in localStorage");
+    } catch (error) {
+      console.error("Error parsing userDetails from localStorage:", error);
     }
-  } catch (error) {
-    console.error("Error parsing userDetails from localStorage:", error);
-  }
+    return { userId, user };
+  }, []); // Empty deps - localStorage data shouldn't change during component lifecycle
 
   const token = propsToken || localStorage.getItem('authToken') || "mock-token";
   console.log("Auth token loaded:", token?.substring(0, 10) + "...");
@@ -122,22 +141,29 @@ const { notifications } = useSelector((state) => state.notifications);
     };
   }, []);
 
-  // Handle window resize for mobile detection
+  // Handle window resize for mobile detection - debounced to prevent flash
   useEffect(() => {
-    const handleResize = () => {
+    const handleResize = debounce(() => {
       const mobile = window.innerWidth < 768;
+      const wasDesktop = !isMobile;
+      const isNowDesktop = !mobile;
+      
       setIsMobile(mobile);
       
-      // Auto-show sidebar on desktop
-      if (!mobile) {
-        setShowSidebar(true);
+      // Only change sidebar state if transitioning between mobile/desktop
+      // This prevents unnecessary state changes that cause flash
+      if (wasDesktop !== isNowDesktop) {
+        if (isNowDesktop) {
+          setShowSidebar(true); // Auto-show sidebar on desktop
+        }
       }
-    };
+    }, 100); // Debounce resize events
 
     window.addEventListener('resize', handleResize);
     return () => window.removeEventListener('resize', handleResize);
-  }, []);
+  }, [isMobile, debounce]);
 
+  // Memoize message context destructuring to prevent unnecessary effect triggers
   const {
     conversations,
     selectedChatId,
@@ -154,55 +180,11 @@ const { notifications } = useSelector((state) => state.notifications);
     initializeChat,
   } = useMessageContext();
 
+  // Separate effect for connection initialization - focused dependencies
   useEffect(() => {
-  const unreadChatNotification = notifications.find(n => n.type === 'chat' && !n.readAt);
-
-  if (unreadChatNotification) {
-    // Show toast
-    toast.info(`💬 New message from ${unreadChatNotification.senderName || 'someone'}`, {
-      position: 'bottom-left',
-      autoClose: 3000,
-    });
-
-    // Native browser notification if permitted
-    if (Notification.permission === 'granted') {
-      new Notification('New Message', {
-        body: unreadChatNotification.message || 'You have a new message',
-        icon: '/notification-icon.png',
-      });
-    }
-  }
-}, [notifications]);
-
-useEffect(() => {
-  if (!selectedChatId) return;
-
-  const relatedNotifications = notifications.filter(
-    n => n.type === 'chat' &&
-         n.relatedEntityId === selectedChatId &&
-         !n.readAt
-  );
-
-  relatedNotifications.forEach(n => dispatch(markNotificationAsRead(n.id)));
-}, [selectedChatId, notifications, dispatch]);
-
-  const [permissionGranted, setPermissionGranted] = useState(Notification.permission === 'granted');
-
-const requestPermission = async () => {
-  try {
-    const result = await Notification.requestPermission();
-    setPermissionGranted(result === 'granted');
-  } catch (err) {
-    console.error('Error requesting notification permission:', err);
-  }
-};
-
-  
-  
-  // Initialize chat connection on component mount with strict retry limits
-  useEffect(() => {
-    // Note: We no longer request notification permission automatically here
-    // It will be requested only in response to user interaction
+    if (!userDetails.userId || !token || isInitializingRef.current) return;
+    
+    isInitializingRef.current = true;
     
     // Reset connection manager when component is first mounted
     if (connectionManager.isDestroyed) {
@@ -210,19 +192,22 @@ const requestPermission = async () => {
       connectionManager.isDestroyed = false;
     }
     
+    // Clear initial mount state after a short delay to prevent flash
+    const mountTimer = setTimeout(() => {
+      setIsInitialMount(false);
+    }, 150);
+    
     // If connection is already initialized, skip
     if (connectionManager.hasInitialized) {
       console.log("[MessagesPage] Chat connection already initialized, skipping");
-      return () => {};
+      isInitializingRef.current = false;
+      clearTimeout(mountTimer);
+      setIsInitialMount(false);
+      return () => clearTimeout(mountTimer);
     }
     
     // Track if this component is still mounted
     const isMounted = { current: true };
-    
-    // Track connection attempts
-    const MAX_CONNECTION_ATTEMPTS = 1;
-    
-    // Connect to SignalR - only if we have a user ID and token
     let cleanup = () => {};
     
     // Avoid recreating connections unnecessarily
@@ -230,13 +215,7 @@ const requestPermission = async () => {
       // Start connection attempt and abort if another is in progress
       if (!connectionManager.startConnectionAttempt()) {
         console.log('[MessagesPage] Connection attempt already in progress, skipping');
-        return;
-      }
-      
-      // Validate required parameters
-      if (!userId || !token) {
-        console.error('[MessagesPage] Missing user ID or token');
-        connectionManager.endConnectionAttempt(null);
+        isInitializingRef.current = false;
         return;
       }
       
@@ -246,15 +225,15 @@ const requestPermission = async () => {
       connectionManager.setConnectionTimeout(() => {
         console.log('[MessagesPage] Connection attempt timed out after 20 seconds');
         if (isMounted.current) {
-          setError('Connection timed out. The server may be unavailable.');
           // Force reset the connection manager state to allow retry
           connectionManager.reset();
         }
+        isInitializingRef.current = false;
       }, 20000); // 20 seconds timeout
       
       try {
         // Initialize chat and store cleanup function
-        const cleanupFn = await initializeChat(userId, token);
+        const cleanupFn = await initializeChat(userDetails.userId, token);
         
         // Clear timeout since connection was successful
         connectionManager.clearConnectionTimeout();
@@ -266,15 +245,18 @@ const requestPermission = async () => {
         connectionManager.endConnectionAttempt('success');
         
         console.log('[MessagesPage] Chat connection successfully initialized');
+        isInitializingRef.current = false;
       } catch (err) {
         console.error("[MessagesPage] Error setting up chat connection:", err);
         connectionManager.endConnectionAttempt(null);
+        isInitializingRef.current = false;
         
         // Set a timeout to retry connection after a delay if still mounted
         if (isMounted.current) {
           setTimeout(() => {
             if (isMounted.current && !connectionManager.hasInitialized) {
               console.log('[MessagesPage] Retrying connection...');
+              isInitializingRef.current = false;
               setupConnection();
             }
           }, 5000); // Retry after 5 seconds
@@ -289,6 +271,8 @@ const requestPermission = async () => {
     return () => {
       console.log("[MessagesPage] Cleaning up chat connection");
       isMounted.current = false;
+      isInitializingRef.current = false;
+      clearTimeout(mountTimer);
       connectionManager.clearConnectionTimeout();
       
       // Ensure we call the cleanup function to remove event handlers
@@ -317,7 +301,100 @@ const requestPermission = async () => {
         }, 500);
       }
     };
-  }, [userId, token, initializeChat, requestPermission]);
+  }, [userDetails.userId, token]); // Minimal dependencies
+  
+  // Separate effect for URL parameter handling
+  useEffect(() => {
+    const userIdParam = searchParams.get('user');
+    if (userIdParam && !selectedChatId) {
+      console.log(`[MessagesPage] Auto-selecting chat from URL param: ${userIdParam}`);
+      selectChat(userIdParam);
+    }
+  }, [searchParams]); // Removed selectChat from dependencies to prevent loops
+
+  // Handle window resize for mobile detection
+  useEffect(() => {
+    const handleResize = () => {
+      const mobile = window.innerWidth < 768;
+      setIsMobile(mobile);
+      
+      // Auto-show sidebar on desktop
+      if (!mobile) {
+        setShowSidebar(true);
+      }
+    };
+
+    window.addEventListener('resize', handleResize);
+    return () => window.removeEventListener('resize', handleResize);
+  }, []);
+
+    // Debounced notification handler to prevent rapid re-renders
+  const debouncedNotificationHandler = useMemo(
+    () => debounce((notifications) => {
+      const unreadChatNotification = notifications.find(n => n.type === 'chat' && !n.readAt);
+
+      if (unreadChatNotification && !notificationProcessedRef.current.has(unreadChatNotification.id)) {
+        // Mark as processed to prevent duplicate handling
+        notificationProcessedRef.current.add(unreadChatNotification.id);
+        
+        // Show toast
+        toast.info(`💬 New message from ${unreadChatNotification.senderName || 'someone'}`, {
+          position: 'bottom-left',
+          autoClose: 3000,
+        });
+
+        // Native browser notification if permitted
+        if (Notification.permission === 'granted') {
+          new Notification('New Message', {
+            body: unreadChatNotification.message || 'You have a new message',
+            icon: '/notification-icon.png',
+          });
+        }
+        
+        // Clean up processed notifications after some time
+        setTimeout(() => {
+          notificationProcessedRef.current.delete(unreadChatNotification.id);
+        }, 10000);
+      }
+    }, 100),
+    [debounce]
+  );
+
+  // Effect for handling new chat notifications (debounced)
+  useEffect(() => {
+    if (notifications.length > 0) {
+      debouncedNotificationHandler(notifications);
+    }
+  }, [notifications, debouncedNotificationHandler]);
+
+  // Effect for marking selected chat notifications as read
+  useEffect(() => {
+    if (!selectedChatId) return;
+
+    const relatedNotifications = notifications.filter(
+      n => n.type === 'chat' &&
+           n.relatedEntityId === selectedChatId &&
+           !n.readAt
+    );
+
+    if (relatedNotifications.length > 0) {
+      // Batch dispatch to prevent multiple re-renders
+      relatedNotifications.forEach(n => dispatch(markNotificationAsRead(n.id)));
+    }
+  }, [selectedChatId, notifications, dispatch]);
+
+  // Memoized requestPermission callback
+  const requestPermission = useCallback(async () => {
+    try {
+      const result = await Notification.requestPermission();
+      setPermissionGranted(result === 'granted');
+    } catch (err) {
+      console.error('Error requesting notification permission:', err);
+    }
+  }, []);
+
+
+
   
   // Separate effect for URL parameter handling
   useEffect(() => {
@@ -351,7 +428,7 @@ const requestPermission = async () => {
   // Handle sending a new message
   const handleSendNewMessage = (receiverId, messageText) => {
     // Log parameters to help debug
-    console.log("handleSendNewMessage parameters:", { userId, receiverId, messageText });
+    console.log("handleSendNewMessage parameters:", { userId: userDetails.userId, receiverId, messageText });
     
     // Check and validate message text first
     if (!messageText || typeof messageText !== 'string') {
@@ -360,11 +437,11 @@ const requestPermission = async () => {
     }
     
     // Make sure parameters are correctly ordered - sometimes they get swapped
-    handleSendMessage(userId, receiverId, messageText);
+    handleSendMessage(userDetails.userId, receiverId, messageText);
   };
   
   // Added state to handle offline content display
-  const [showOfflineContent, setShowOfflineContent] = useState(false);
+  // const [showOfflineContent, setShowOfflineContent] = useState(false); // Already declared above
 
   // Effect to handle offline fallback after connection timeout
   useEffect(() => {
@@ -547,9 +624,34 @@ const requestPermission = async () => {
 
   const hasUnreadChat = notifications.some(n => n.type === 'chat' && !n.readAt);
 
+  // Show initial loading screen to prevent flash
+  if (isInitialMount) {
+    return (
+      <div className="messages">
+        <div className="messages-loading-overlay">
+          <div className="loading-content">
+            <div className="loading-spinner">
+              <div className="spinner"></div>
+            </div>
+            <p>Loading messages...</p>
+          </div>
+        </div>
+      </div>
+    );
+  }
   
   return (
-    <div className="messages">
+    <div className="messages">{/* Loading overlay - show when initially loading conversations */}
+      {isLoading && conversations.length === 0 && (
+        <div className="messages-loading-overlay">
+          <div className="loading-content">
+            <div className="loading-spinner">
+              <div className="spinner"></div>
+            </div>
+            <p>Loading conversations...</p>
+          </div>
+        </div>
+      )}
       
       {hasUnreadChat && <NotificationPermissionButton 
       permissionGranted={permissionGranted}
@@ -594,7 +696,7 @@ const requestPermission = async () => {
                   console.log("[MessagesPage] Manual retry requested by user");
                   // Use a one-time retry that won't trigger an infinite loop
                   try {
-                    const cleanupFn = await initializeChat(userId, token);
+                    const cleanupFn = await initializeChat(userDetails.userId, token);
                     // Store the cleanup function somewhere if needed
                     // Don't trigger additional refreshes - let the system handle it naturally
                   } catch (err) {
@@ -682,7 +784,7 @@ const requestPermission = async () => {
             <ChatArea 
               messages={messages || []}
               recipient={recipient || conversations.find(c => c.id === selectedChatId)}
-              userId={userId}
+              userId={userDetails.userId}
               onSendMessage={handleSendNewMessage}
             />
           ) : (

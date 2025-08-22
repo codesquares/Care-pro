@@ -24,7 +24,7 @@ class ClientCareNeedsService {
         // Try to fetch from API first
         try {
           const token = localStorage.getItem('authToken');
-          const API_URL = `https://carepro-api20241118153443.azurewebsites.net/api/ClientPreferences/${clientId}`;
+          const API_URL = `https://carepro-api20241118153443.azurewebsites.net/api/ClientPreferences/clientId?clientId=${clientId}`;
           
           const response = await fetch(API_URL, {
             method: 'GET',
@@ -42,6 +42,11 @@ class ClientCareNeedsService {
               const careNeeds = this.convertApiDataToCareNeeds(data.data);
               return careNeeds;
             }
+          } else if (response.status === 404) {
+            // 404 is expected when user hasn't set preferences yet
+            console.log('No preferences found for user, using defaults');
+          } else {
+            console.warn(`API returned ${response.status}, using default care needs`);
           }
         } catch (apiError) {
           console.warn('API call failed, using default care needs:', apiError);

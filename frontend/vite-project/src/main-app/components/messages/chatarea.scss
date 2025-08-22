@@ -11,6 +11,8 @@
   background-color: #fff;
   border-radius: 0;
   overflow: hidden;
+  opacity: 1;
+  transition: opacity 0.3s ease-in-out; // Smooth transition for entire chat area
   
   @media (min-width: 768px) {
     border-radius: 12px;
@@ -509,6 +511,12 @@
       flex-grow: 1;
       display: flex;
       flex-direction: column;
+      opacity: 1;
+      transition: opacity 0.2s ease-in; // Smooth fade-in for messages
+      
+      &.fade-in {
+        animation: fadeInUp 0.3s ease-out;
+      }
       
       .message-group {
         margin-bottom: 1rem;
@@ -964,29 +972,35 @@
   }
   
   .messages-loading-state {
-      display: flex;
-      flex-direction: column;
-      align-items: center;
-      justify-content: center;
-      height: 200px;
-      margin: 2rem auto;
-      
-      .loading-spinner {
-        width: 40px;
-        height: 40px;
-        border-radius: 50%;
-        border: 3px solid rgba(79, 70, 229, 0.1);
-        border-top-color: #4f46e5;
-        animation: spinner 0.8s linear infinite;
-        margin-bottom: 1rem;
-      }
-      
-      p {
-        color: #6b7280;
-        font-size: 0.95rem;
-        margin: 0;
-        font-weight: 500;
-      }
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    height: 200px;
+    margin: 2rem auto;
+    opacity: 1;
+    transition: opacity 0.3s ease-in-out; // Add smooth transition
+    
+    &.fade-out {
+      opacity: 0;
+    }
+    
+    .loading-spinner {
+      width: 40px;
+      height: 40px;
+      border-radius: 50%;
+      border: 3px solid rgba(79, 70, 229, 0.1);
+      border-top-color: #4f46e5;
+      animation: spinner 0.8s linear infinite;
+      margin-bottom: 1rem;
+    }
+    
+    p {
+      color: #6b7280;
+      font-size: 0.95rem;
+      margin: 0;
+      font-weight: 500;
+    }
       
       @keyframes spinner {
         to {
@@ -1087,6 +1101,18 @@
     100% {
       opacity: 1;
       transform: translateY(0) scale(1);
+    }
+  }
+  
+  // Fade in animation for messages area
+  @keyframes fadeInUp {
+    from {
+      opacity: 0;
+      transform: translateY(10px);
+    }
+    to {
+      opacity: 1;
+      transform: translateY(0);
     }
   }
   

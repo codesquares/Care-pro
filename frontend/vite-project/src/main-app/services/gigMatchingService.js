@@ -48,7 +48,7 @@ class GigMatchingService {
         // Fallback: get all gigs and filter based on client preferences
         try {
           // Get client preferences
-          const prefResponse = await fetch(`https://carepro-api20241118153443.azurewebsites.net/api/ClientPreferences/${clientId}`, {
+          const prefResponse = await fetch(`https://carepro-api20241118153443.azurewebsites.net/api/ClientPreferences/clientId?clientId=${clientId}`, {
             method: 'GET',
             headers: {
               'Authorization': `Bearer ${token}`
@@ -62,6 +62,12 @@ class GigMatchingService {
               // Parse preferences
               preferences = this.parsePreferencesData(prefData.data);
             }
+          } else if (prefResponse.status === 404) {
+            console.log('No client preferences found, using basic matching');
+            preferences = {}; // Use empty preferences for basic matching
+          } else {
+            console.warn(`Failed to fetch client preferences: ${prefResponse.status}`);
+            preferences = {}; // Use empty preferences as fallback
           }
           
           // Get all gigs

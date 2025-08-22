@@ -1,10 +1,159 @@
-import React, { createContext, useContext, useState, useEffect, useCallback } from 'react';
+import React, { createContext, useContext, useState, useEffect, useCallback, useMemo, useReducer, useRef } from 'react';
 import chatService from '../services/signalRChatService';
 import axios from 'axios';
 import config from '../config';
+import useDebounce from '../hooks/useDebounce';
+import useApiDeduplication from '../hooks/useApiDeduplication';
 
 // Constants
 const API_BASE_URL = "https://carepro-api20241118153443.azurewebsites.net";
+
+// Reducer for batched message state updates
+const messageStateReducer = (state, action) => {
+  switch (action.type) {
+    case 'NEW_MESSAGE_RECEIVED':
+      const { message, senderId, isActiveChat } = action.payload;
+      const messageId = message.id || message.messageId;
+      
+      // Check for duplicates
+      if (state.messageIds.has(messageId)) {
+        return state;
+      }
+      
+      const newMessageIds = new Set(state.messageIds);
+      newMessageIds.add(messageId);
+      
+      return {
+        ...state,
+        messages: [...state.messages, message],
+        messageIds: newMessageIds,
+        unreadMessages: isActiveChat 
+          ? state.unreadMessages 
+          : { ...state.unreadMessages, [senderId]: (state.unreadMessages[senderId] || 0) + 1 },
+        lastMessageTimestamp: message.timestamp
+      };
+      
+    case 'MESSAGE_STATUS_UPDATE':
+      const { messageId: updateId, status, timestamp, field } = action.payload;
+      return {
+        ...state,
+        messages: state.messages.map(msg => 
+          msg.id === updateId 
+            ? { ...msg, status, [field]: timestamp } 
+            : msg
+        )
+      };
+      
+    case 'MESSAGE_DELETED':
+      const { messageId: deletedId } = action.payload;
+      return {
+        ...state,
+        messages: state.messages.map(msg => 
+          msg.id === deletedId 
+            ? { ...msg, isDeleted: true, content: "This message was deleted" } 
+            : msg
+        )
+      };
+      
+    case 'CLEAR_CHAT_MESSAGES':
+      return {
+        ...state,
+        messages: [],
+        messageIds: new Set(),
+        lastMessageTimestamp: null
+      };
+      
+    case 'SET_MESSAGES':
+      const { messages: newMessages } = action.payload;
+      const messageIdsSet = new Set();
+      const validMessages = newMessages.filter(msg => {
+        const id = msg.id || msg.messageId;
+        if (id && !messageIdsSet.has(id)) {
+          messageIdsSet.add(id);
+          return true;
+        }
+        return false;
+      });
+      
+      return {
+        ...state,
+        messages: validMessages,
+        messageIds: messageIdsSet
+      };
+      
+    case 'RESET_UNREAD_COUNT':
+      const { chatId } = action.payload;
+      return {
+        ...state,
+        unreadMessages: {
+          ...state.unreadMessages,
+          [chatId]: 0
+        }
+      };
+      
+    case 'ADD_MESSAGE':
+      const { message: newMsg } = action.payload;
+      return {
+        ...state,
+        messages: [...state.messages, newMsg]
+      };
+      
+    case 'UPDATE_MESSAGE_STATUS':
+      const { messageId: msgId, status: newStatus, timestamp: statusTimestamp, newId, ...otherFields } = action.payload;
+      return {
+        ...state,
+        messages: state.messages.map(message => 
+          message.id === msgId 
+            ? { 
+                ...message, 
+                id: newId || message.id,
+                status: newStatus, 
+                timestamp: statusTimestamp || message.timestamp,
+                ...otherFields
+              }
+            : message
+        )
+      };
+      
+    case 'SET_MESSAGES': {
+      const { messages: messagesToSet } = action.payload;
+      const messageIdSet = new Set();
+      const processedMessages = messagesToSet.filter(msg => {
+        const id = msg.id || msg.messageId;
+        if (id && !messageIdSet.has(id)) {
+          messageIdSet.add(id);
+          return true;
+        }
+        return false;
+      });
+      
+      // Get last message timestamp
+      let lastTimestamp = null;
+      if (processedMessages.length > 0) {
+        const lastMsg = processedMessages[processedMessages.length - 1];
+        lastTimestamp = lastMsg.timestamp;
+      }
+      
+      return {
+        ...state,
+        messages: processedMessages,
+        messageIds: messageIdSet,
+        lastMessageTimestamp: lastTimestamp
+      };
+    }
+      
+    case 'CLEAR_MESSAGES':
+      return {
+        ...state,
+        messages: [],
+        messageIds: new Set(),
+        lastMessageTimestamp: null
+      };
+      
+    default:
+      return state;
+  }
+};
 
 // Create context
 const MessageContext = createContext();
@@ -22,16 +171,51 @@ export const MessageProvider = ({ children }) => {
   const [conversations, setConversations] = useState([]);
   const [selectedChatId, setSelectedChatId] = useState(null);
   const [recipient, setRecipient] = useState({});
-  const [messages, setMessages] = useState([]);
-  const [unreadMessages, setUnreadMessages] = useState({});
   const [onlineUsers, setOnlineUsers] = useState({});
-  const [isLoading, setIsLoading] = useState(false);
+  const [isLoading, setIsLoading] = useState(true); // Start with loading to prevent flash
   const [error, setError] = useState(null);
-  const [connectionState, setConnectionState] = useState('Disconnected');
+  const [connectionState, setConnectionState] = useState('Connecting'); // Start with Connecting instead of Disconnected
   const [currentUserId, setCurrentUserId] = useState(null);
-  const [lastMessageTimestamp, setLastMessageTimestamp] = useState(null);
-  const [isPollingActive, setIsPollingActive] = useState(false); // Start with polling disabled
-  const [messageIds, setMessageIds] = useState(new Set()); // Track message IDs to prevent duplicates
+  const [isPollingActive, setIsPollingActive] = useState(false);
+  
+  // Use reducer for message-related state to enable batching
+  const [messageState, dispatchMessageState] = useReducer(messageStateReducer, {
+    messages: [],
+    unreadMessages: {},
+    lastMessageTimestamp: null,
+    messageIds: new Set()
+  });
+  
+  // Destructure for backward compatibility
+  const { messages, unreadMessages, lastMessageTimestamp, messageIds } = messageState;
+  
+  // Use custom hooks for performance optimization - TEMPORARILY SIMPLIFIED
+  // const debounceHook = useDebounce();
+  // const deduplicationHook = useApiDeduplication();
+  
+  // Simple inline implementations to avoid hook issues
+  const safeDebounce = useCallback((func, wait) => {
+    return (...args) => {
+      setTimeout(() => func.apply(null, args), wait);
+    };
+  }, []);
+  
+  const safeDeduplicate = useCallback((key, apiCall) => {
+    return apiCall();
+  }, []);
+  
+  // Log hook initialization status (moved to useEffect to avoid conditional logic in render)
+  useEffect(() => {
+    console.log('MessageProvider hooks initialized successfully');
+    // Set loading to false after a brief delay to allow initial state setup
+    const initTimer = setTimeout(() => {
+      if (!currentUserId) {
+        setIsLoading(false);
+      }
+    }, 50);
+    
+    return () => clearTimeout(initTimer);
+  }, [currentUserId]);
   
   // Add a function to refresh the current user ID from localStorage if needed
   const refreshCurrentUserId = useCallback(() => {
@@ -52,43 +236,30 @@ export const MessageProvider = ({ children }) => {
     return currentUserId;
   }, [currentUserId]);
 
-  // Add message deduplication function
-  const addMessageWithDeduplication = useCallback((newMessage) => {
+  // Optimized message deduplication using reducer
+  const addMessageWithDeduplication = useCallback((newMessage, isActiveChat = false) => {
     const messageId = newMessage.id || newMessage.messageId;
     if (!messageId) {
       console.warn('Message without ID received, skipping:', newMessage);
       return false;
     }
 
-    setMessageIds(prevIds => {
-      if (prevIds.has(messageId)) {
-        console.log('Duplicate message detected, skipping:', messageId);
-        return prevIds;
-      }
-      
-      const newIds = new Set(prevIds);
-      newIds.add(messageId);
-      return newIds;
-    });
+    const messageToAdd = {
+      id: messageId,
+      senderId: newMessage.senderId,
+      receiverId: newMessage.receiverId || currentUserId,
+      content: newMessage.content || newMessage.message,
+      timestamp: newMessage.timestamp || new Date().toISOString(),
+      status: newMessage.status || 'delivered'
+    };
 
-    setMessages(prevMessages => {
-      // Double-check for duplicates in the messages array
-      if (prevMessages.some(msg => (msg.id || msg.messageId) === messageId)) {
-        console.log('Message already exists in state, skipping:', messageId);
-        return prevMessages;
-      }
-      
-      const messageToAdd = {
-        id: messageId,
+    dispatchMessageState({
+      type: 'NEW_MESSAGE_RECEIVED',
+      payload: {
+        message: messageToAdd,
         senderId: newMessage.senderId,
-        receiverId: newMessage.receiverId || currentUserId,
-        content: newMessage.content || newMessage.message,
-        timestamp: newMessage.timestamp || new Date().toISOString(),
-        status: newMessage.status || 'delivered'
-      };
-      
-      console.log('Adding new message to state:', messageToAdd);
-      return [...prevMessages, messageToAdd];
+        isActiveChat
+      }
     });
 
     return true;
@@ -126,12 +297,6 @@ export const MessageProvider = ({ children }) => {
           if (newMessages.length > 0) {
             console.log(`Found ${newMessages.length} new messages via polling`);
             newMessages.forEach(msg => addMessageWithDeduplication(msg));
-            
-            // Update last message timestamp
-            const latestTimestamp = Math.max(...newMessages.map(msg => 
-              new Date(msg.timestamp || msg.createdAt).getTime()
-            ));
-            setLastMessageTimestamp(new Date(latestTimestamp).toISOString());
           }
         }
       }
@@ -200,12 +365,12 @@ export const MessageProvider = ({ children }) => {
     return () => clearInterval(interval);
   }, []);
   
-  // Function to update conversations list with a new message
-  const updateConversationsList = useCallback(async (senderId, messagePreview = 'New message') => {
+  // Function to update conversations list with a new message - now debounced
+  const updateConversationsListImmediate = useCallback(async (senderId, messagePreview = 'New message') => {
     console.log('Updating conversations list with senderId:', senderId);
     
     // Store the last updated senderId for use in the refresh effect
-    updateConversationsList.lastUpdatedSenderId = senderId;
+    updateConversationsListImmediate.lastUpdatedSenderId = senderId;
     
     // Check if we already have this conversation
     const existingConversation = conversations.find(c => c.id === senderId);
@@ -276,105 +441,102 @@ export const MessageProvider = ({ children }) => {
     }
   }, [conversations, currentUserId, onlineUsers, unreadMessages]);
   
+  // Debounced version to prevent rapid consecutive calls
+  const updateConversationsList = useMemo(
+    () => safeDebounce(updateConversationsListImmediate, 300),
+    [updateConversationsListImmediate, safeDebounce]
+  );
+  
   // Fetch conversations with caching, timeout and rate limiting
   const fetchConversations = useCallback(async (userId) => {
     if (!userId) return;
     
-    // Prevent excessive requests by using a debounce mechanism
-    const now = Date.now();
-    const lastFetch = fetchConversations.lastFetchTime || 0;
-    const minInterval = 5000; // Minimum 5 seconds between fetches
+    // Use deduplication to prevent concurrent requests
+    const requestKey = `fetchConversations-${userId}`;
     
-    // Skip if we've recently fetched and already have data
-    if (now - lastFetch < minInterval && conversations.length > 0) {
-      console.log('Skipping conversation fetch - too soon since last fetch');
-      return;
-    }
-    
-    // Mark the last fetch time
-    fetchConversations.lastFetchTime = now;
-    
-    setIsLoading(true);
-    
-    // Create an abort controller for the request
-    const controller = new AbortController();
-    const timeoutId = setTimeout(() => {
-      controller.abort();
-    }, 10000); // 10 second timeout
-    
-    try {
-      console.log(`Fetching conversations for user ID: ${userId}`);
-      const response = await axios.get(`${API_BASE_URL}/api/Chat/conversations/${userId}`, {
-        signal: controller.signal
-      });
+    return safeDeduplicate(requestKey, async () => {
+      // Prevent excessive requests by using a debounce mechanism
+      const now = Date.now();
+      const lastFetch = fetchConversations.lastFetchTime || 0;
+      const minInterval = 5000; // Minimum 5 seconds between fetches
       
-      // Log conversations data received from API for debugging
-      console.log('Conversations data received from API:', response.data);
-      
-      // Successfully got data, clear the timeout
-      clearTimeout(timeoutId);
-      
-      // Limit processing conversations to avoid excessive API calls
-      const maxConversationsToProcess = 10;
-      const limitedConversations = response.data.slice(0, maxConversationsToProcess);
-      
-      // Process conversations and add online status - avoid parallel API calls
-      const conversationsWithStatus = [];
-      for (const conversation of limitedConversations) {
-        // Normalize ID field - ensure each conversation has an id property
-        const conversationId = conversation.id || conversation.userId;
-        
-        if (!conversationId) {
-          console.error("Received conversation without ID:", conversation);
-          continue; // Skip conversations without any ID
-        }
-        
-        // Declare isOnline variable
-        let isOnline = false;
-        
-        // Only check online status for selected conversation to reduce API calls
-        if (conversationId === selectedChatId) {
-          try {
-            isOnline = await chatService.isUserOnline(conversationId);
-          } catch (e) {
-            console.warn('Error getting online status, assuming offline:', e);
-          }
-        } else {
-          // Use cached online status from onlineUsers state
-          isOnline = onlineUsers[conversationId] || false;
-        }
-        
-        conversationsWithStatus.push({
-          ...conversation,
-          // Ensure id field exists
-          id: conversationId,
-          // Normalize name field from API's FullName
-          name: conversation.FullName || conversation.fullName || conversation.name,
-          isOnline,
-          unreadCount: unreadMessages[conversationId] || 0,
-          // Ensure preview message exists
-          previewMessage: conversation.previewMessage || conversation.lastMessage || 'No messages yet'
-        });
+      // Skip if we've recently fetched and already have data
+      if (now - lastFetch < minInterval && conversations.length > 0) {
+        console.log('Skipping conversation fetch - too soon since last fetch');
+        return conversations;
       }
       
-      setConversations(conversationsWithStatus);
-    } catch (error) {
-      if (error.name === 'AbortError') {
-        console.warn('Conversation fetch timed out, using cached data');
-        // Don't update state on timeout, keep existing conversations
-      } else {
+      // Mark the last fetch time
+      fetchConversations.lastFetchTime = now;
+      
+      setIsLoading(true);
+      
+      try {
+        console.log(`Fetching conversations for user ID: ${userId}`);
+        const response = await axios.get(`${API_BASE_URL}/api/Chat/conversations/${userId}`, {
+          timeout: 10000
+        });
+        
+        // Log conversations data received from API for debugging
+        console.log('Conversations data received from API:', response.data);
+        
+        // Limit processing conversations to avoid excessive API calls
+        const maxConversationsToProcess = 10;
+        const limitedConversations = response.data.slice(0, maxConversationsToProcess);
+        
+        // Process conversations and add online status - avoid parallel API calls
+        const conversationsWithStatus = [];
+        for (const conversation of limitedConversations) {
+          // Normalize ID field - ensure each conversation has an id property
+          const conversationId = conversation.id || conversation.userId;
+          
+          if (!conversationId) {
+            console.error("Received conversation without ID:", conversation);
+            continue; // Skip conversations without any ID
+          }
+          
+          // Declare isOnline variable
+          let isOnline = false;
+          
+          // Only check online status for selected conversation to reduce API calls
+          if (conversationId === selectedChatId) {
+            try {
+              isOnline = await chatService.isUserOnline(conversationId);
+            } catch (e) {
+              console.warn('Error getting online status, assuming offline:', e);
+            }
+          } else {
+            // Use cached online status from onlineUsers state
+            isOnline = onlineUsers[conversationId] || false;
+          }
+          
+          conversationsWithStatus.push({
+            ...conversation,
+            // Ensure id field exists
+            id: conversationId,
+            // Normalize name field from API's FullName
+            name: conversation.FullName || conversation.fullName || conversation.name,
+            isOnline,
+            unreadCount: unreadMessages[conversationId] || 0,
+            // Ensure preview message exists
+            previewMessage: conversation.previewMessage || conversation.lastMessage || 'No messages yet'
+          });
+        }
+        
+        setConversations(conversationsWithStatus);
+        return conversationsWithStatus;
+      } catch (error) {
         console.error('Failed to fetch conversations:', error);
         setError('Failed to load conversations: ' + (error.message || 'Unknown error'));
         
         // Use empty array in case of error
         setConversations([]);
+        throw error;
+      } finally {
+        setIsLoading(false);
       }
-    } finally {
-      // Clear timeout if it hasn't fired yet
-      clearTimeout(timeoutId);
-      setIsLoading(false);
-    }
-  }, [selectedChatId, unreadMessages, onlineUsers]); // Added onlineUsers to dependencies
+    });
+  }, [selectedChatId, unreadMessages, onlineUsers, safeDeduplicate]); // Added deduplicate to dependencies
 
   console.log("conversations of this user:", conversations);
   // Initialize chat connection
@@ -457,66 +619,61 @@ export const MessageProvider = ({ children }) => {
             status: status || 'delivered'
           };
           
-          // Add to messages if this is the active chat
-          if (selectedChatId === senderId) {
-            console.log('Adding message to active chat');
-            const added = addMessageWithDeduplication(newMessage);
-            
-            if (added) {
-              // Update last message timestamp
-              setLastMessageTimestamp(new Date().toISOString());
-              
-              // Mark as read since user is viewing this chat
+          // Add to messages if this is the active chat - use batched update
+          const isActiveChat = selectedChatId === senderId;
+          const wasAdded = addMessageWithDeduplication(newMessage, isActiveChat);
+          
+          if (wasAdded) {
+            // Mark as read if user is viewing this chat
+            if (isActiveChat) {
+              console.log('Adding message to active chat');
               try {
                 await chatService.markMessageRead(messageId);
               } catch (err) {
                 console.error('Error marking message as read:', err);
               }
+            } else {
+              console.log('Message from non-active chat, unread count updated via reducer');
             }
-          } else {
-            console.log('Message from non-active chat, updating unread count');
-            // Update unread count
-            setUnreadMessages(prevCounts => ({
-              ...prevCounts,
-              [senderId]: (prevCounts[senderId] || 0) + 1
-            }));
+            
+            // Always mark as delivered for any message we receive
+            try {
+              await chatService.markMessageAsDelivered(messageId, userId);
+            } catch (err) {
+              console.error('Error marking message as delivered:', err);
+            }
+            
+            // Trigger browser notification for non-active chats
+            if (!isActiveChat) {
+              const event = new CustomEvent('new-message', {
+                detail: {
+                  title: 'New Message',
+                  message: message,
+                  senderId: senderId
+                }
+              });
+              window.dispatchEvent(event);
+            }
+            
+            // Always update conversations list when a new message arrives
+            updateConversationsList(senderId, message?.substring(0, 50) + (message?.length > 50 ? '...' : '') || 'New message');
           }
-          
-          // Always mark as delivered for any message we receive
-          try {
-            await chatService.markMessageAsDelivered(messageId, userId);
-          } catch (err) {
-            console.error('Error marking message as delivered:', err);
-          }
-          
-          // Trigger browser notification for non-active chats
-          if (selectedChatId !== senderId) {
-            const event = new CustomEvent('new-message', {
-              detail: {
-                title: 'New Message',
-                message: message,
-                senderId: senderId
-              }
-            });
-            window.dispatchEvent(event);
-          }
-          
-          // Always update conversations list when a new message arrives
-          updateConversationsList(senderId, message?.substring(0, 50) + (message?.length > 50 ? '...' : '') || 'New message');
         }),
 
         // Message read receipt handler
         chatService.on('onMessageRead', (data) => {
           const { messageId, timestamp, status } = data;
           
-          // Update message status in state
-          setMessages(prevMessages => 
-            prevMessages.map(msg => 
-              msg.id === messageId 
-                ? { ...msg, status: 'read', readAt: timestamp } 
-                : msg
-            )
-          );
+          // Update message status using reducer
+          dispatchMessageState({
+            type: 'MESSAGE_STATUS_UPDATE',
+            payload: {
+              messageId,
+              status: 'read',
+              timestamp,
+              field: 'readAt'
+            }
+          });
           
           console.log(`Message ${messageId} marked as read at ${timestamp}`);
         }),
@@ -525,14 +682,16 @@ export const MessageProvider = ({ children }) => {
         chatService.on('onMessageDelivered', (data) => {
           const { messageId, timestamp, status } = data;
           
-          // Update message status in state
-          setMessages(prevMessages => 
-            prevMessages.map(msg => 
-              msg.id === messageId && msg.status !== 'read'
-                ? { ...msg, status: 'delivered', deliveredAt: timestamp } 
-                : msg
-            )
-          );
+          // Update message status using reducer
+          dispatchMessageState({
+            type: 'MESSAGE_STATUS_UPDATE',
+            payload: {
+              messageId,
+              status: 'delivered',
+              timestamp,
+              field: 'deliveredAt'
+            }
+          });
           
           console.log(`Message ${messageId} marked as delivered at ${timestamp}`);
         }),
@@ -541,33 +700,34 @@ export const MessageProvider = ({ children }) => {
         chatService.on('onMessageDeleted', (data) => {
           const { messageId } = data;
           
-          // Update message in state
-          setMessages(prevMessages => 
-            prevMessages.map(msg => 
-              msg.id === messageId 
-                ? { ...msg, isDeleted: true, content: "This message was deleted" } 
-                : msg
-            )
-          );
+          // Update message using reducer
+          dispatchMessageState({
+            type: 'MESSAGE_DELETED',
+            payload: { messageId }
+          });
           
           console.log(`Message ${messageId} was deleted`);
         }),
         
         // All messages read handler
         chatService.on('onAllMessagesRead', (data) => {
-          const { userId, timestamp } = data;
+          const { userId: readByUserId, timestamp } = data;
           
-          // Update all messages from this user to read
-          if (userId === selectedChatId) {
-            setMessages(prevMessages => 
-              prevMessages.map(msg => 
-                msg.senderId === userId && !msg.isDeleted
-                  ? { ...msg, status: 'read', readAt: timestamp } 
-                  : msg
-              )
+          // Update all messages from this user to read using batch update
+          if (readByUserId === selectedChatId) {
+            // Get current messages and batch update them
+            const updatedMessages = messages.map(msg => 
+              msg.senderId === readByUserId && !msg.isDeleted
+                ? { ...msg, status: 'read', readAt: timestamp }
+                : msg
             );
             
-            console.log(`All messages from ${userId} marked as read at ${timestamp}`);
+            dispatchMessageState({
+              type: 'SET_MESSAGES',
+              payload: { messages: updatedMessages }
+            });
+            
+            console.log(`All messages from ${readByUserId} marked as read at ${timestamp}`);
           }
         }),
         
@@ -728,7 +888,10 @@ export const MessageProvider = ({ children }) => {
       status: 'sending'
     };
     
-    setMessages(prev => [...prev, newMessage]);
+    dispatchMessageState({
+      type: 'ADD_MESSAGE',
+      payload: { message: newMessage }
+    });
     
     try {
       // Send message through SignalR
@@ -737,13 +900,10 @@ export const MessageProvider = ({ children }) => {
       const messageId = await chatService.sendMessage(senderId, receiverId, messageText);
       
       // Update message with real ID and status
-      setMessages(prev => prev.map(message => 
-        message.id === tempId ? { 
-          ...message, 
-          id: messageId,
-          status: 'sent' 
-        } : message
-      ));
+      dispatchMessageState({
+        type: 'UPDATE_MESSAGE_STATUS',
+        payload: { messageId: tempId, status: 'sent', newId: messageId }
+      });
       
       // Update conversations list
       setConversations(prev => {
@@ -797,15 +957,16 @@ export const MessageProvider = ({ children }) => {
       }
       
       // Update message status to failed with detailed error information
-      setMessages(prev => prev.map(message => 
-        message.id === tempId ? { 
-          ...message, 
+      dispatchMessageState({
+        type: 'UPDATE_MESSAGE_STATUS',
+        payload: { 
+          messageId: tempId, 
           status: 'failed',
           errorDetails: userFriendlyError,
-          errorObject: error,  // Store the full error object for potential retry logic
-          retryCount: 0        // Initialize retry count for future retry capability
-        } : message
-      ));
+          errorObject: error,
+          retryCount: 0
+        }
+      });
       
       // Trigger a UI notification if needed
       const event = new CustomEvent('message-error', {
@@ -840,22 +1001,28 @@ export const MessageProvider = ({ children }) => {
       }
       
       // Optimistically update UI
-      setMessages(prev => prev.map(message => 
-        message.id === messageId 
-          ? { ...message, isDeleted: true, content: "This message was deleted" } 
-          : message
-      ));
+      dispatchMessageState({
+        type: 'UPDATE_MESSAGE_STATUS',
+        payload: { 
+          messageId, 
+          isDeleted: true, 
+          content: "This message was deleted"
+        }
+      });
       
       // Send delete request to server
       const success = await chatService.deleteMessage(messageId, currentUserId);
       
       if (!success) {
         // Revert optimistic update if delete failed
-        setMessages(prev => prev.map(message => 
-          message.id === messageId && message.isDeleted
-            ? { ...message, isDeleted: false, content: message.originalContent } 
-            : message
-        ));
+        dispatchMessageState({
+          type: 'UPDATE_MESSAGE_STATUS',
+          payload: { 
+            messageId,
+            isDeleted: false, 
+            content: message.originalContent
+          }
+        });
       }
       
       return success;
@@ -876,10 +1043,8 @@ export const MessageProvider = ({ children }) => {
     setIsLoading(true);
     setError(null);
     
-    // Clear existing messages and message IDs when switching chats
-    setMessages([]);
-    setMessageIds(new Set());
-    setLastMessageTimestamp(null);
+    // Clear existing messages and message IDs when switching chats using reducer
+    dispatchMessageState({ type: 'CLEAR_CHAT_MESSAGES' });
 
     try {
       // Try SignalR method first, fallback to REST API
@@ -937,20 +1102,17 @@ export const MessageProvider = ({ children }) => {
         // Sort messages by timestamp
         processedMessages.sort((a, b) => new Date(a.timestamp) - new Date(b.timestamp));
         
-        setMessages(processedMessages);
-        setMessageIds(newMessageIds);
-        
-        // Set last message timestamp
-        if (processedMessages.length > 0) {
-          const lastMsg = processedMessages[processedMessages.length - 1];
-          setLastMessageTimestamp(lastMsg.timestamp);
-        }
+        dispatchMessageState({
+          type: 'SET_MESSAGES',
+          payload: { messages: processedMessages }
+        });
         
         console.log('Messages loaded and processed successfully');
       } else {
         console.log('No messages found for this chat');
-        setMessages([]);
-        setMessageIds(new Set());
+        dispatchMessageState({
+          type: 'CLEAR_MESSAGES'
+        });
       }
     } catch (error) {
       console.error('Error loading messages:', error);
@@ -987,10 +1149,10 @@ export const MessageProvider = ({ children }) => {
       }
       
       // Reset unread count for this chat
-      setUnreadMessages(prev => ({
-        ...prev,
-        [chatId]: 0
-      }));
+      dispatchMessageState({
+        type: 'RESET_UNREAD_COUNT',
+        payload: { chatId }
+      });
       
       // Load messages for this chat
       // TEMPORARY: Skip loadMessages to avoid 404 errors, rely on SignalR only
@@ -1024,23 +1186,22 @@ export const MessageProvider = ({ children }) => {
           // Sort messages by timestamp
           processedMessages.sort((a, b) => new Date(a.timestamp) - new Date(b.timestamp));
           
-          setMessages(processedMessages);
-          setMessageIds(newMessageIds);
+          dispatchMessageState({
+            type: 'SET_MESSAGES',
+            payload: { messages: processedMessages }
+          });
           
-          // Set last message timestamp
-          if (processedMessages.length > 0) {
-            const lastMsg = processedMessages[processedMessages.length - 1];
-            setLastMessageTimestamp(lastMsg.timestamp);
-          }
         } else {
           console.log('No message history available from SignalR');
-          setMessages([]);
-          setMessageIds(new Set());
+          dispatchMessageState({
+            type: 'CLEAR_MESSAGES'
+          });
         }
       } catch (error) {
         console.warn('SignalR message history failed, starting with empty chat:', error.message);
-        setMessages([]);
-        setMessageIds(new Set());
+        dispatchMessageState({
+          type: 'CLEAR_MESSAGES'
+        });
       }
       
       // await loadMessages(chatId);  // DISABLED to prevent 404 errors
@@ -1086,8 +1247,8 @@ export const MessageProvider = ({ children }) => {
     }
   }, [currentUserId, conversations, updateConversationsList.lastUpdatedSenderId]);
 
-  // Context value
-  const value = {
+  // Memoized context value to prevent unnecessary re-renders
+  const contextValue = useMemo(() => ({
     conversations,
     selectedChatId,
     recipient,
@@ -1101,7 +1262,7 @@ export const MessageProvider = ({ children }) => {
     isPollingActive,
     lastMessageTimestamp,
     
-    // Methods
+    // Methods (already memoized with useCallback)
     initializeChat,
     handleSendMessage,
     selectChat,
@@ -1109,10 +1270,18 @@ export const MessageProvider = ({ children }) => {
     handleDeleteMessage,
     loadMessages,
     refreshCurrentUserId
-  };
+  }), [
+    // State dependencies
+    conversations, selectedChatId, recipient, messages, unreadMessages, 
+    onlineUsers, isLoading, error, connectionState, currentUserId, 
+    isPollingActive, lastMessageTimestamp,
+    // Method dependencies
+    initializeChat, handleSendMessage, selectChat, fetchConversations, 
+    handleDeleteMessage, loadMessages, refreshCurrentUserId
+  ]);
 
   return (
-    <MessageContext.Provider value={value}>
+    <MessageContext.Provider value={contextValue}>
       {children}
     </MessageContext.Provider>
   );

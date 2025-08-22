@@ -1,13 +1,12 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback, useMemo } from 'react';
 import './sidebar.scss';
 import { formatDistanceToNow } from 'date-fns';
 
 const Sidebar = ({ conversations, selectedChatId, onSelectChat, unreadMessages }) => {
   const [searchTerm, setSearchTerm] = useState('');
-  const [filteredConversations, setFilteredConversations] = useState([]);
   
-  // Function to get initials from name (similar to NavigationBar)
-  const getInitials = (name) => {
+  // Memoized function to get initials from name
+  const getInitials = useCallback((name) => {
     if (!name || typeof name !== "string") return "?";
     
     const names = name.trim().split(" ").filter(Boolean);
@@ -16,24 +15,31 @@ const Sidebar = ({ conversations, selectedChatId, onSelectChat, unreadMessages }
     const initials = names.map((n) => n[0].toUpperCase()).join("");
     
     return initials.slice(0, 2);
-  };
+  }, []);
   
-  useEffect(() => {
+  // Memoized filtered conversations to prevent unnecessary re-calculations
+  const filteredConversations = useMemo(() => {
     if (searchTerm.trim() === '') {
-      setFilteredConversations(conversations);
-    } else {
-      const filtered = conversations.filter(chat => {
-        const name = chat.name || chat.FullName || chat.fullName || '';
-        return name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-        (chat.previewMessage && chat.previewMessage.toLowerCase().includes(searchTerm.toLowerCase()));
-      });
-      setFilteredConversations(filtered);
+      return conversations;
     }
+    
+    return conversations.filter(chat => {
+      const name = chat.name || chat.FullName || chat.fullName || '';
+      const preview = chat.previewMessage || '';
+      return name.toLowerCase().includes(searchTerm.toLowerCase()) ||
+             preview.toLowerCase().includes(searchTerm.toLowerCase());
+    });
   }, [searchTerm, conversations]);
   
-  const handleSearch = (e) => {
+  // Memoized search handler
+  const handleSearch = useCallback((e) => {
     setSearchTerm(e.target.value);
-  };
+  }, []);
+  
+  // Memoized clear search handler
+  const clearSearch = useCallback(() => {
+    setSearchTerm('');
+  }, []);
   
   return (
     <div className="sidebar">
@@ -64,7 +70,7 @@ const Sidebar = ({ conversations, selectedChatId, onSelectChat, unreadMessages }
           {searchTerm && (
             <button 
               className="clear-search"
-              onClick={() => setSearchTerm('')}
+              onClick={clearSearch}
             >
               <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
                 <line x1="18" y1="6" x2="6" y2="18"></line>

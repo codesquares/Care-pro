@@ -24,7 +24,7 @@ const ClientPreferenceService = {
       }
       
       // Use the Azure API endpoint
-      const API_URL = `https://carepro-api20241118153443.azurewebsites.net/api/ClientPreferences/${clientId}`;
+      const API_URL = `https://carepro-api20241118153443.azurewebsites.net/api/ClientPreferences/clientId?clientId=${clientId}`;
       
       // Use timeout for better UX
       const controller = new AbortController();

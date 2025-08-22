@@ -96,9 +96,9 @@ const CaregiverSettings = () => {
       
       <div className="settings-content">
         {/* Profile Section - Using ProfileHeader component */}
-        
+        <div className="caregiver-settings-profile-section">
           <ProfileHeader />
-        
+        </div>
 
         {/* Settings Section */}
         <div className="settings-panel">
