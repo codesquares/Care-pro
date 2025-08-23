@@ -7,6 +7,7 @@ import "../care-giver-profile/profile-header.css";
 import assessmentService from "../../../services/assessmentService";
 import { userService } from "../../../services/userService";
 import { Helmet } from "react-helmet-async";
+import ProfileCard from "../care-giver-dashboard/ProfileCard";
 
 const AssessmentPage = () => {
   const navigate = useNavigate();
@@ -21,36 +22,12 @@ const AssessmentPage = () => {
   const [assessmentResult, setAssessmentResult] = useState(null);
   const [questionsWithAnswers, setQuestionsWithAnswers] = useState([]);
 
-  // Profile-related state variables (from ProfileHeader)
-  const [userData, setUserData] = useState(null);
-  const [isProfileLoading, setIsProfileLoading] = useState(true);
-  const [userRating, setUserRating] = useState(0);
-  const [reviewCount, setReviewCount] = useState(0);
-  const [memberSince, setMemberSince] = useState('');
-  const [lastDelivery, setLastDelivery] = useState('');
-  const [location, setLocation] = useState('');
-
   // Get token and user ID from localStorage
   const userDetails = JSON.parse(localStorage.getItem("userDetails") || "{}");
   const token = localStorage.getItem("authToken");
   
   // To track and abort ongoing fetch requests
   const abortControllerRef = useRef(null);
-
-  // Helper function to render stars
-  const renderStars = (rating) => {
-    const fullStars = Math.floor(rating);
-    const hasHalfStar = rating % 1 >= 0.5;
-    const emptyStars = 5 - fullStars - (hasHalfStar ? 1 : 0);
-    
-    return (
-      <>
-        {'★'.repeat(fullStars)}
-        {hasHalfStar && '☆'}
-        {'☆'.repeat(emptyStars)}
-      </>
-    );
-  };
 
   // Declare fetchQuestions outside of useEffect so it can be called from other functions
   const fetchQuestions = async () => {
@@ -136,79 +113,6 @@ const AssessmentPage = () => {
     }
     
     let isMounted = true;
-
-    // Fetch profile data
-    const fetchProfileData = async () => {
-      try {
-        setIsProfileLoading(true);
-        
-        // Fetch user profile data
-        const response = await userService.getProfile();
-        
-        if (isMounted) {
-          if (response && response.success && response.data) {
-            const profileData = response.data;
-            setUserData(profileData);
-            setUserRating(parseFloat(profileData.averageRating || profileData.rating || 0));
-            setReviewCount(parseInt(profileData.reviewCount || profileData.reviewsCount || 0));
-            setLocation(profileData.location || 'Location not specified');
-            
-            // Format member since date
-            if (profileData.createdAt) {
-              const memberDate = new Date(profileData.createdAt);
-              setMemberSince(memberDate.toLocaleDateString('en-US', { 
-                year: 'numeric', 
-                month: 'long' 
-              }));
-            } else {
-              setMemberSince('Member since signup');
-            }
-            
-            // Format last delivery
-            if (profileData.lastDelivery) {
-              const lastDeliveryDate = new Date(profileData.lastDelivery);
-              const now = new Date();
-              const diffTime = Math.abs(now - lastDeliveryDate);
-              const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
-              
-              if (diffDays === 1) {
-                setLastDelivery('1 day ago');
-              } else if (diffDays < 30) {
-                setLastDelivery(`${diffDays} days ago`);
-              } else if (diffDays < 365) {
-                const months = Math.floor(diffDays / 30);
-                setLastDelivery(`${months} month${months > 1 ? 's' : ''} ago`);
-              } else {
-                const years = Math.floor(diffDays / 365);
-                setLastDelivery(`${years} year${years > 1 ? 's' : ''} ago`);
-              }
-            } else {
-              setLastDelivery('No recent activity');
-            }
-          } else {
-            // Handle API error - use fallback data from localStorage
-            console.warn('API response was not successful:', response);
-            setUserData(userDetails);
-            setLocation('Location not specified');
-            setMemberSince('Member since signup');
-            setLastDelivery('No recent activity');
-          }
-        }
-      } catch (error) {
-        console.error('Error fetching profile data:', error);
-        if (isMounted) {
-          // Set fallback data from localStorage
-          setUserData(userDetails);
-          setLocation('Location not specified');
-          setMemberSince('Member since signup');
-          setLastDelivery('No recent activity');
-        }
-      } finally {
-        if (isMounted) {
-          setIsProfileLoading(false);
-        }
-      }
-    };
     
     // Check if user is already qualified or has assessment restrictions
     const qualificationStatus = assessmentService.getQualificationStatus();
@@ -229,8 +133,7 @@ const AssessmentPage = () => {
       return;
     }
     
-    // Fetch both profile data and questions
-    fetchProfileData();
+    // Fetch questions
     fetchQuestions();
     
     // Cleanup function to abort any ongoing requests when unmounting
@@ -415,73 +318,6 @@ const AssessmentPage = () => {
     }
   };
 
-  // Reusable Profile Card Component
-  const renderProfileCard = () => (
-    <div className="profile-header-card">
-      {isProfileLoading ? (
-        <div className="loading-profile">
-          <div className="profile-img skeleton"></div>
-          <div className="skeleton-text"></div>
-          <div className="skeleton-text short"></div>
-        </div>
-      ) : (
-        <>
-          {/* Profile Image */}
-          <img 
-            src={userData?.profilePicture || userData?.profileImage || userDetails.profilePicture || `https://ui-avatars.com/api/?name=${encodeURIComponent((userData?.firstName || userDetails.firstName) + ' ' + (userData?.lastName || userDetails.lastName))}&background=06b6d4&color=fff&size=120`} 
-            alt="Profile" 
-            className="profile-img"
-            onError={(e) => {
-              e.target.src = `https://ui-avatars.com/api/?name=${encodeURIComponent((userData?.firstName || userDetails.firstName) + ' ' + (userData?.lastName || userDetails.lastName))}&background=06b6d4&color=fff&size=120`;
-            }}
-          />
-          
-          {/* Basic Info */}
-          <div className="profile-basic-info">
-            <h2>
-              {userData?.firstName || userDetails.firstName} {userData?.lastName || userDetails.lastName}
-            </h2>
-            <p className="username">@{userData?.username || userData?.email || userDetails.username || userDetails.email || 'caregiver'}</p>
-            {(userData?.bio || userData?.aboutMe) && <p className="bio">{userData.bio || userData.aboutMe}</p>}
-          </div>
-
-          {/* Rating Section */}
-          <div className="profile-rating-section">
-            <div className="rating">
-              <span className="stars">
-                {renderStars(userRating)}
-              </span>
-              <span className="rating-text">
-                {userRating.toFixed(1)} ({reviewCount} reviews)
-              </span>
-            </div>
-          </div>
-
-          {/* Profile Details */}
-          <div className="profile-details">
-            <div className="detail-item">
-              <i className="fas fa-map-marker-alt"></i>
-              <span>{location}</span>
-            </div>
-            <div className="detail-item">
-              <i className="fas fa-calendar"></i>
-              <span>Member since {memberSince}</span>
-            </div>
-            <div className="detail-item">
-              <i className="fas fa-truck"></i>
-              <span>Last delivery: {lastDelivery}</span>
-            </div>
-          </div>
-
-          {/* Availability Status */}
-          <div className={`availability-status ${userData?.isAvailable ? 'available' : 'unavailable'}`}>
-            {userData?.isAvailable ? 'Available for work' : 'Currently unavailable'}
-          </div>
-        </>
-      )}
-    </div>
-  );
-
   const renderWelcomeScreen = () => {
     // Check if this is a retake
     const qualificationStatus = assessmentService.getQualificationStatus();
@@ -490,7 +326,9 @@ const AssessmentPage = () => {
     return (
       <div className="mobile-assessment-container fade-in">
         {/* User Profile Card */}
-        {renderProfileCard()}
+        <div className="caregiver-profile-card-assesment">
+          <ProfileCard />
+        </div>
 
         {/* Assessment Content */}
         <div className="assessment-content">
@@ -586,7 +424,7 @@ const AssessmentPage = () => {
     return (
       <div className="mobile-assessment-container fade-in">
         {/* User Profile Card */}
-        {renderProfileCard()}
+        <ProfileCard />
 
         {/* Assessment Content */}
         <div className="assessment-content">
@@ -654,7 +492,7 @@ const AssessmentPage = () => {
     return (
       <div className="mobile-assessment-container fade-in">
         {/* User Profile Card */}
-        {renderProfileCard()}
+        <ProfileCard />
 
         {/* Assessment Content */}
         <div className="assessment-content">
@@ -757,7 +595,7 @@ const AssessmentPage = () => {
     return (
       <div className="mobile-assessment-container fade-in">
         {/* User Profile Card */}
-        {renderProfileCard()}
+        <ProfileCard />
 
         {/* Assessment Content */}
         <div className="assessment-content">

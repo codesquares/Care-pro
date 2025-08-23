@@ -16,96 +16,55 @@ const VerifyButton = ({ verificationStatus }) => {
 
   // Navigate to assessments when verification is complete
   const handleAssessmentClick = () => {
-    navigate("/app/caregiver/assessments");
+    navigate("/app/caregiver/assessment");
   };
 
-  // Don't show the button if verification is in progress
-  if (verificationStatus === "in_progress") {
-    return null;
+  // Show the button with text processing verification if verification is pending
+  if (verificationStatus === "pending") {
+    return (
+      <button className="verify-button verify-button-pending" disabled>
+        Processing Verification...
+      </button>
+    );
   }
 
   // Handle different verification statuses with enhanced logic
   const getButtonContent = () => {
-    // Handle enhanced status object from new API
-    if (typeof verificationStatus === 'object' && verificationStatus !== null) {
-      const { hasSuccess, hasPending, hasFailed, hasAny, currentStatus, needsVerification } = verificationStatus;
-      
-      // Check if user doesn't need verification
-      if (needsVerification === false) {
-        return {
-          text: "Verification Not Required",
-          className: "verify-button verify-button-pending",
-          disabled: true,
-        };
-      }
-      
-      // Handle the three main statuses: "successful or completed", "Pending", "failed"
-      if (currentStatus === "successful" || currentStatus === "completed" || hasSuccess) {
-        return {
-          text: "Start Assessment",
-          className: "verify-button verify-button-success",
-          onClick: handleAssessmentClick,
-          showCheckmark: true,
-          disabled: false,
-        };
-      }
-      
-      if (currentStatus === "Pending" || hasPending) {
-        return {
-          text: "Verification Pending...",
-          className: "verify-button verify-button-pending",
-          disabled: true,
-        };
-      }
-      
-      if (currentStatus === "failed" || hasFailed) {
-        return {
-          text: "Retry Verification",
-          className: "verify-button verify-button-retry",
-          onClick: handleVerifyClick,
-          disabled: false,
-        };
-      }
-      
-      // Default case for not_verified or any other status
+    // Handle the main statuses: "successful", "completed", "success", "Pending", "pending", "failed", "Failed"
+    if (verificationStatus === "successful" || verificationStatus === "completed" || verificationStatus === "success") {
       return {
-        text: "Get Verified",
-        className: "verify-button",
+        text: "Start Assessment",
+        className: "verify-button verify-button-success",
+        onClick: handleAssessmentClick,
+        showCheckmark: true,
+        disabled: false,
+      };
+    }
+    
+    if (verificationStatus === "Pending" || verificationStatus === "pending") {
+      return {
+        text: "Verification Pending...",
+        className: "verify-button verify-button-pending",
+        disabled: true,
+      };
+    }
+    
+    if (verificationStatus === "failed" || verificationStatus === "Failed") {
+      return {
+        text: "Retry Verification",
+        className: "verify-button verify-button-retry",
         onClick: handleVerifyClick,
         disabled: false,
       };
     }
     
-    // Handle legacy string-based status
-    switch (verificationStatus) {
-      case "verified":
-      case "success":
-        return {
-          text: "Start Assessment",
-          className: "verify-button verify-button-success",
-          onClick: handleAssessmentClick,
-          showCheckmark: true,
-          disabled: false,
-        };
-      case "failed":
-        return {
-          text: "Retry Verification",
-          className: "verify-button verify-button-retry",
-          onClick: handleVerifyClick,
-        };
-      case "pending":
-        return {
-          text: "Verification Pending...",
-          className: "verify-button verify-button-pending",
-          disabled: true,
-        };
-      default:
-        return {
-          text: "Get Verified",
-          className: "verify-button",
-          onClick: handleVerifyClick,
-        };
-    }
+    // Default case for not_verified or any other status
+    return {
+      text: "Get Verified",
+      className: "verify-button",
+      onClick: handleVerifyClick,
+      disabled: false,
+    };
   };
 
   const buttonContent = getButtonContent();

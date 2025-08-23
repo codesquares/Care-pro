@@ -62,12 +62,15 @@
 }
 
 .verify-button-success {
-  background-color: #10b981;
-  color: white;
+  background-color: transparent;
+  color: #10b981;
+  border: 1px solid #10b981;
 }
 
 .verify-button-success:hover {
-  background-color: #059669;
+  background-color: rgba(16, 185, 129, 0.1);
+  color: #059669;
+  border-color: #059669;
 }
 
 .verify-button-success:focus {

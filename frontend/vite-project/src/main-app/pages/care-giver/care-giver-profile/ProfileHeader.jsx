@@ -215,6 +215,7 @@ const ProfileHeader = () => {
       let verificationStatus = null;
       try {
         verificationStatus = await verificationService.getVerificationFromAPI(userDetails.id);
+        console.log("Fetched verification status:", verificationStatus);
         setStatusFromApi(verificationStatus);
       } catch (verErr) {
         console.warn("Failed to fetch verification status:", verErr);
@@ -365,15 +366,14 @@ const ProfileHeader = () => {
           </div>
           
         </div>
-
-        <div className="caregiver-profile-actions">
+       <div className="caregiver-profile-actions">
           <VerifyButton 
-            verificationStatus={profile.verificationStatus} 
+            verificationStatus={statusFromApi} 
             userId={userDetails?.id}
           />
           <AssessmentButton userId={userDetails?.id} />
         </div>
-
+         
         {/* Development Tool for Testing - Remove in Production */}
         {process.env.NODE_ENV !== 'production' && <TestVerificationToggle />}
 

@@ -2,6 +2,7 @@ import React, { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import "./assessment-button.css";
 import assessmentService from "../../../services/assessmentService";
+import ProfileCard from "../care-giver-dashboard/ProfileCard";
 
 /**
  * A button component that redirects caregivers to the assessment page or shows qualification status
