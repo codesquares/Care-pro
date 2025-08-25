@@ -365,64 +365,62 @@ const assessmentService = {
   },
 
   /**
-   * Gets the user's qualification status from localStorage
-   * @returns {Object} - The qualification status
+   * Gets the user's qualification status from the API
+   * @param {string} careGiverId - The caregiver ID to check status for
+   * @returns {Promise<Object>} - The qualification status
    */
-  getQualificationStatus: () => {
+  getQualificationStatus: async (careGiverId) => {
     try {
-      const storedStatus = localStorage.getItem('qualificationStatus');
-      const attemptHistory = JSON.parse(localStorage.getItem('assessmentAttempts') || '{"attempts": [], "count": 0}');
-      
-      if (storedStatus) {
-        const status = JSON.parse(storedStatus);
-        
-        // Add attempt information
-        status.attemptCount = attemptHistory.count;
-        status.attempts = attemptHistory.attempts;
-        status.remainingAttempts = Math.max(0, 3 - attemptHistory.count);
-        
-        // Check if user is in waiting period after 3 failed attempts
-        if (status.canRetakeAfter && !status.isQualified) {
-          const retakeDate = new Date(status.canRetakeAfter);
-          const now = new Date();
-          status.canRetake = now >= retakeDate;
-          
-          if (!status.canRetake) {
-            // Calculate days remaining in waiting period
-            const daysRemaining = Math.ceil((retakeDate - now) / (1000 * 60 * 60 * 24));
-            status.waitingPeriodDays = daysRemaining;
-            status.retakeDate = retakeDate.toLocaleDateString();
-          }
-        } else if (!status.isQualified) {
-          // Can retake if not qualified and still has attempts remaining or waiting period is over
-          status.canRetake = attemptHistory.count < 3 || !status.canRetakeAfter;
-          status.waitingPeriodDays = 0;
-        } else {
-          // Already qualified
-          status.canRetake = false;
-          status.waitingPeriodDays = 0;
-        }
-        
-        return status;
+      if (!careGiverId) {
+        throw new Error('CareGiver ID is required');
       }
+
+      const apiUrl = `https://carepro-api20241118153443.azurewebsites.net/api/Assessments/careGiverId?careGiverId=${careGiverId}`;
       
-      // Default status if none found
-      return {
-        isQualified: false,
-        assessmentCompleted: false,
-        canRetake: true,
-        attemptCount: 0,
-        attempts: [],
-        remainingAttempts: 3,
-        waitingPeriodDays: 0
-      };
+      const response = await fetch(apiUrl, {
+        method: 'GET',
+        headers: {
+          'accept': '*/*'
+        }
+      });
+
+      if (!response.ok) {
+        throw new Error(`API request failed: ${response.status} ${response.statusText}`);
+      }
+
+      const assessmentData = await response.json();
+      
+      // Check if assessment exists and has a score
+      if (assessmentData && typeof assessmentData.score === 'number') {
+        const isQualified = assessmentData.score >= 70;
+        
+        return {
+          isQualified,
+          assessmentCompleted: true,
+          score: assessmentData.score,
+          canRetake: !isQualified, // Can retake if not qualified
+          assessmentData: assessmentData, // Include full assessment data
+          fetchedFromAPI: true
+        };
+      } else {
+        // No assessment found or no score available
+        return {
+          isQualified: false,
+          assessmentCompleted: false,
+          canRetake: true,
+          score: null,
+          assessmentData: assessmentData,
+          fetchedFromAPI: true
+        };
+      }
     } catch (err) {
-      console.error('Error getting qualification status:', err);
+      console.error('Error getting qualification status from API:', err);
       return {
         isQualified: false,
         assessmentCompleted: false,
         canRetake: true,
-        error: err.message
+        error: err.message,
+        fetchedFromAPI: false
       };
     }
   }

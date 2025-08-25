@@ -367,11 +367,17 @@ const ProfileHeader = () => {
           
         </div>
        <div className="caregiver-profile-actions">
-          <VerifyButton 
-            verificationStatus={statusFromApi} 
-            userId={userDetails?.id}
-          />
-          <AssessmentButton userId={userDetails?.id} />
+          {statusFromApi === "completed" ? (
+            <AssessmentButton 
+              verificationStatus={statusFromApi} 
+              userId={userDetails?.id} 
+            />
+          ) : (
+            <VerifyButton 
+              verificationStatus={statusFromApi} 
+              userId={userDetails?.id}
+            />
+          )}
         </div>
          
         {/* Development Tool for Testing - Remove in Production */}
