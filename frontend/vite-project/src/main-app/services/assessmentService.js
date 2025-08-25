@@ -394,7 +394,7 @@ const assessmentService = {
       // check if assessmentData is an array and has at least one entry
       // check if the last entry in the array has a score >= 70, if it has one entry then just check its score, if it does not have an entry and returns that the user has not been verified, just return status as awaiting assessment
       if (Array.isArray(assessmentData) && assessmentData.length > 0) {
-        const lastAssessment = assessmentData[assessmentData.length - 1];
+        const lastAssessment = assessmentData[0];
         const isQualified = lastAssessment.score >= 70;
 
         return {
