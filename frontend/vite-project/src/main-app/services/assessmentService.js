@@ -389,15 +389,18 @@ const assessmentService = {
       }
 
       const assessmentData = await response.json();
-      
-      // Check if assessment exists and has a score
-      if (assessmentData && typeof assessmentData.score === 'number') {
-        const isQualified = assessmentData.score >= 70;
-        
+
+      // Check if assessment exists, using the assessedDate field, check the last assessment and see if the score is 70 or above
+      // check if assessmentData is an array and has at least one entry
+      // check if the last entry in the array has a score >= 70, if it has one entry then just check its score, if it does not have an entry and returns that the user has not been verified, just return status as awaiting assessment
+      if (Array.isArray(assessmentData) && assessmentData.length > 0) {
+        const lastAssessment = assessmentData[assessmentData.length - 1];
+        const isQualified = lastAssessment.score >= 70;
+
         return {
           isQualified,
           assessmentCompleted: true,
-          score: assessmentData.score,
+          score: lastAssessment.score,
           canRetake: !isQualified, // Can retake if not qualified
           assessmentData: assessmentData, // Include full assessment data
           fetchedFromAPI: true
