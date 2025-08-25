@@ -106,6 +106,9 @@ const AssessmentPage = () => {
   };
   
   useEffect(() => {
+    // Scroll to top when component mounts
+    window.scrollTo(0, 0);
+    
     // Redirect if no token or user ID
     if (!token || !userDetails.id) {
       navigate("/login");
@@ -145,6 +148,11 @@ const AssessmentPage = () => {
     };
   }, [navigate, token, userDetails.id]);
 
+  // Scroll to top when step or question changes
+  useEffect(() => {
+    window.scrollTo(0, 0);
+  }, [currentStep, currentQuestion]);
+
   const handleAnswerChange = (questionId, value) => {
     // For multiple-choice answers (radio buttons)
     setAnswers(prev => ({
@@ -164,6 +172,9 @@ const AssessmentPage = () => {
     
     setError("");
     
+    // Scroll to top before moving to next question
+    window.scrollTo(0, 0);
+    
     if (currentQuestion < questions.length - 1) {
       setCurrentQuestion(prev => prev + 1);
     } else {
@@ -174,6 +185,8 @@ const AssessmentPage = () => {
 
   const moveToPreviousQuestion = () => {
     if (currentQuestion > 0) {
+      // Scroll to top before moving to previous question
+      window.scrollTo(0, 0);
       setCurrentQuestion(prev => prev - 1);
     }
   };
@@ -194,10 +207,14 @@ const AssessmentPage = () => {
       localStorage.setItem('qualificationStatus', JSON.stringify(updatedStatus));
     }
     
+    // Scroll to top when transitioning to instructions
+    window.scrollTo(0, 0);
     setCurrentStep("instructions");
   };
 
   const beginQuestions = () => {
+    // Scroll to top when transitioning to questions
+    window.scrollTo(0, 0);
     setCurrentStep("questions");
   };
 
@@ -304,6 +321,9 @@ const AssessmentPage = () => {
           data: assessmentData,
           result: assessmentResult
         }));
+        
+        // Scroll to top before showing results
+        window.scrollTo(0, 0);
         
         // Move to thank you page
         setCurrentStep("thank-you");
@@ -681,6 +701,8 @@ const AssessmentPage = () => {
                       <button 
                         className="restart-btn"
                         onClick={() => {
+                          // Scroll to top before restarting
+                          window.scrollTo(0, 0);
                           setCurrentStep('welcome');
                           setCurrentQuestion(0);
                           setAnswers({});
