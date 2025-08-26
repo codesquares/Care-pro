@@ -80,20 +80,42 @@
   flex-shrink: 0;
 }
 
+.earnings-stat-icon {
+  font-size: 16px;
+  width: 16px;
+  height: 16px;
+}
+
 .balance-card .stat-icon {
   background: linear-gradient(135deg, #e8f5e8, #d4f4d4);
+}
+
+.balance-card .earnings-stat-icon {
+  color: #28a745;
 }
 
 .orders-card .stat-icon {
   background: linear-gradient(135deg, #e3f2fd, #bbdefb);
 }
 
+.orders-card .earnings-stat-icon {
+  color: #007bff;
+}
+
 .earnings-card .stat-icon {
   background: linear-gradient(135deg, #fff3e0, #ffe0b2);
 }
 
+.earnings-card .earnings-stat-icon {
+  color: #fd7e14;
+}
+
 .payout-card .stat-icon {
   background: linear-gradient(135deg, #fce4ec, #f8bbd9);
+}
+
+.payout-card .earnings-stat-icon {
+  color: #e83e8c;
 }
 
 .stat-content {
@@ -166,6 +188,15 @@
   border-radius: 8px;
   transition: all 0.2s ease;
   color: #6c757d;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.chart-info-icon {
+  font-size: 14px;
+  width: 14px;
+  height: 14px;
 }
 
 .chart-info-btn:hover {
@@ -326,6 +357,13 @@
 
 .activity-icon.withdrawal {
   background: linear-gradient(135deg, #ffebee, #ffcdd2);
+}
+
+.withdrawal-icon {
+  font-size: 16px;
+  width: 16px;
+  height: 16px;
+  color: #dc3545;
 }
 
 .amount {

@@ -1,8 +1,21 @@
 import React, { useState, useEffect } from "react";
+import { FaStar } from "react-icons/fa";
 import EmptyState from "../../../../components/EmptyState";
 import clock from "../../../../assets/main-app/clock.png";
 import CaregiverReviewService from "../../../services/caregiverReviewService";
 import "./reviews.css";
+
+// Helper function to render star ratings
+const renderStars = (rating) => {
+  const stars = [];
+  const numStars = Math.max(1, Math.min(5, rating || 5));
+  
+  for (let i = 0; i < numStars; i++) {
+    stars.push(<FaStar key={i} className="review-star" />);
+  }
+  
+  return stars;
+};
 
 const Reviews = () => {
   const [reviewsFromApi, setReviewsFromApi] = useState([]);
@@ -101,7 +114,7 @@ const Reviews = () => {
               {reviewStats.totalReviews} review{reviewStats.totalReviews !== 1 ? 's' : ''}
             </span>
             <span className="average-rating">
-              {reviewStats.averageRating}/5 ⭐
+              {reviewStats.averageRating}/5 <FaStar className="rating-star" />
             </span>
           </div>
           
@@ -120,7 +133,7 @@ const Reviews = () => {
                   className="filter-btn"
                   onClick={() => handleFilter(rating)}
                 >
-                  {rating}⭐ ({reviewStats.ratingDistribution[rating]})
+                  {rating}<FaStar className="filter-star" /> ({reviewStats.ratingDistribution[rating]})
                 </button>
               )
             ))}
@@ -141,7 +154,7 @@ const Reviews = () => {
                 <h4 className="review-author">{review.client?.name || "Anonymous Client"}</h4>
                 <div className="review-rating">
                   <span className="review-stars">
-                    {"⭐".repeat(Math.max(1, Math.min(5, review.rating || 5)))}
+                    {renderStars(review.rating)}
                   </span>
                   <span className="review-rating-text">
                     {review.rating || 5}/5

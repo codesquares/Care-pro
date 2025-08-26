@@ -52,7 +52,7 @@ class ErrorBoundary extends React.Component {
               <summary>Error Details (for developers)</summary>
               {this.state.error && this.state.error.toString()}
               <br />
-              {this.state.errorInfo.componentStack}
+              {this.state.errorInfo && this.state.errorInfo.componentStack}
             </details>
             <div className="error-boundary-actions">
               <button 

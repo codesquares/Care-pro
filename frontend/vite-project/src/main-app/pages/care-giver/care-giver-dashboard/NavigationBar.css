@@ -10,6 +10,45 @@
   min-height: 64px;
 }
 
+/* Icon styles for React Icons */
+.nav-react-icon, .mobile-menu-icon {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.nav-icons .nav-react-icon,
+.icon-link .nav-react-icon {
+  width: 20px !important;
+  height: 20px !important;
+  color: #333 !important;
+  display: inline-block !important;
+  flex-shrink: 0 !important;
+}
+
+.icon-link {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 40px;
+  height: 40px;
+  border-radius: 8px;
+  transition: background-color 0.2s ease;
+  cursor: pointer;
+}
+
+.icon-link:hover {
+  background-color: rgba(0, 0, 0, 0.05);
+}
+
+.icon-link img, .nav-react-icon {
+  height: 20px;
+  width: 20px;
+  font-size: 20px;
+  color: #333;
+  object-fit: contain;
+}
+
 /* Mobile Navigation (default) */
 .mobile-nav {
   display: grid;
@@ -172,6 +211,12 @@
   height: 16px;
 }
 
+.earnings-mobile .mobile-menu-icon {
+  width: 16px;
+  height: 16px;
+  color: #666;
+}
+
 .close-menu {
   background: none;
   border: none;
@@ -212,6 +257,13 @@
   width: 20px;
   height: 20px;
   object-fit: contain;
+}
+
+.mobile-menu-icon {
+  width: 20px;
+  height: 20px;
+  font-size: 20px;
+  color: #333;
 }
 
 .small-avatar {
@@ -428,6 +480,29 @@
     object-fit: contain !important;
   }
   
+  .nav-icons .nav-react-icon {
+    width: 18px !important;
+    height: 18px !important;
+    color: #333 !important;
+    display: inline-block !important;
+    flex-shrink: 0 !important;
+  }
+  
+  .nav-react-icon {
+    width: 18px !important;
+    height: 18px !important;
+    color: #333 !important;
+    display: inline-block !important;
+    flex-shrink: 0 !important;
+  }
+  
+  .mobile-menu-icon {
+    height: 18px !important;
+    width: 18px !important;
+    font-size: 18px !important;
+    color: #333 !important;
+  }
+  
   /* Earnings section */
   .earnings {
     display: flex !important;
@@ -455,6 +530,13 @@
   .earnings img {
     height: 18px !important;
     width: 18px !important;
+    flex-shrink: 0 !important;
+  }
+  
+  .earnings-icon {
+    width: 18px !important;
+    height: 18px !important;
+    color: #333 !important;
     flex-shrink: 0 !important;
   }
   

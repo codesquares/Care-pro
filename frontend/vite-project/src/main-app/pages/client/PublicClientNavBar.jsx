@@ -1,9 +1,7 @@
 import React, { useState, useRef, useEffect } from "react";
 import { useNavigate, useLocation } from "react-router-dom";
+import { FaHome, FaEnvelope, FaCog, FaSearch } from "react-icons/fa";
 import logo from "../../../assets/careproLogo.svg";
-import message from "../../../assets/main-app/message.svg";
-import homeIcon from "../../../assets/home_icon.png";
-import settingIcon from "../../../assets/setting.png";
 import { useAuth } from "../../context/AuthContext";
 import "./ClientNavBarCustom.css";
 
@@ -184,9 +182,7 @@ const PublicClientNavBar = () => {
               className="client-mobile-search-input"
             />
             <button type="submit" className="client-mobile-search-button" aria-label="Search">
-              <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor">
-                <path d="M15.5 14h-.79l-.28-.27C15.41 12.59 16 11.11 16 9.5 16 5.91 13.09 3 9.5 3S3 5.91 3 9.5 5.91 16 9.5 16c1.61 0 3.09-.59 4.23-1.57l.27.28v.79l5 4.99L20.49 19l-4.99-5zm-6 0C7.01 14 5 11.99 5 9.5S7.01 5 9.5 5 14 7.01 14 9.5 11.99 14 9.5 14z"/>
-              </svg>
+              <FaSearch size={16} />
             </button>
           </form>
         </div>
@@ -220,15 +216,15 @@ const PublicClientNavBar = () => {
                 {user?.role === 'Client' && (
                   <>
                     <div className="mobile-menu-item" onClick={() => handleMobileNavClick('/app/client/dashboard')}>
-                      <img src={homeIcon} alt="Dashboard" />
+                      <FaHome className="mobile-menu-icon" />
                       <span>My Dashboard</span>
                     </div>
                     <div className="mobile-menu-item" onClick={() => handleMobileNavClick('/app/client/message')}>
-                      <img src={message} alt="Messages" />
+                      <FaEnvelope className="mobile-menu-icon" />
                       <span>Messages</span>
                     </div>
                     <div className="mobile-menu-item" onClick={() => handleMobileNavClick('/app/client/settings')}>
-                      <img src={settingIcon} alt="Settings" />
+                      <FaCog className="mobile-menu-icon" />
                       <span>Settings</span>
                     </div>
                   </>
@@ -237,15 +233,15 @@ const PublicClientNavBar = () => {
                 {user?.role === 'Caregiver' && (
                   <>
                     <div className="mobile-menu-item" onClick={() => handleMobileNavClick('/app/caregiver/dashboard')}>
-                      <img src={homeIcon} alt="Dashboard" />
+                      <FaHome className="mobile-menu-icon" />
                       <span>My Dashboard</span>
                     </div>
                     <div className="mobile-menu-item" onClick={() => handleMobileNavClick('/app/caregiver/message')}>
-                      <img src={message} alt="Messages" />
+                      <FaEnvelope className="mobile-menu-icon" />
                       <span>Messages</span>
                     </div>
                     <div className="mobile-menu-item" onClick={() => handleMobileNavClick('/app/caregiver/settings')}>
-                      <img src={settingIcon} alt="Settings" />
+                      <FaCog className="mobile-menu-icon" />
                       <span>Settings</span>
                     </div>
                   </>
@@ -254,11 +250,11 @@ const PublicClientNavBar = () => {
                 {(user?.role === 'Admin' || user?.role === 'SuperAdmin') && (
                   <>
                     <div className="mobile-menu-item" onClick={() => handleMobileNavClick('/app/admin/dashboard')}>
-                      <img src={homeIcon} alt="Dashboard" />
+                      <FaHome className="mobile-menu-icon" />
                       <span>Admin Dashboard</span>
                     </div>
                     <div className="mobile-menu-item" onClick={() => handleMobileNavClick('/app/admin/settings')}>
-                      <img src={settingIcon} alt="Settings" />
+                      <FaCog className="mobile-menu-icon" />
                       <span>Settings</span>
                     </div>
                   </>
@@ -306,9 +302,7 @@ const PublicClientNavBar = () => {
               className={`client-search-input ${searchQuery ? 'has-value' : ''}`}
             />
             <button type="submit" className="client-search-button" aria-label="Search">
-              <svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor">
-                <path d="M15.5 14h-.79l-.28-.27C15.41 12.59 16 11.11 16 9.5 16 5.91 13.09 3 9.5 3S3 5.91 3 9.5 5.91 16 9.5 16c1.61 0 3.09-.59 4.23-1.57l.27.28v.79l5 4.99L20.49 19l-4.99-5zm-6 0C7.01 14 5 11.99 5 9.5S7.01 5 9.5 5 14 7.01 14 9.5 11.99 14 9.5 14z"/>
-              </svg>
+              <FaSearch size={20} />
             </button>
           </form>
         </div>
@@ -321,15 +315,15 @@ const PublicClientNavBar = () => {
               {user?.role === 'Client' && (
                 <>
                   <div className="client-nav-item" onClick={() => navigate('/app/client/dashboard')}>
-                    <img src={homeIcon} alt="Dashboard" />
+                    <FaHome className="client-nav-icon" />
                     <span>Dashboard</span>
                   </div>
                   <div className="client-nav-item" onClick={() => navigate('/app/client/message')}>
-                    <img src={message} alt="Messages" />
+                    <FaEnvelope className="client-nav-icon" />
                     <span>Messages</span>
                   </div>
                   <div className="client-nav-item" onClick={() => navigate('/app/client/settings')}>
-                    <img src={settingIcon} alt="Settings" />
+                    <FaCog className="client-nav-icon" />
                     <span>Settings</span>
                   </div>
                 </>
@@ -338,15 +332,15 @@ const PublicClientNavBar = () => {
               {user?.role === 'Caregiver' && (
                 <>
                   <div className="client-nav-item" onClick={() => navigate('/app/caregiver/dashboard')}>
-                    <img src={homeIcon} alt="Dashboard" />
+                    <FaHome className="client-nav-icon" />
                     <span>Dashboard</span>
                   </div>
                   <div className="client-nav-item" onClick={() => navigate('/app/caregiver/message')}>
-                    <img src={message} alt="Messages" />
+                    <FaEnvelope className="client-nav-icon" />
                     <span>Messages</span>
                   </div>
                   <div className="client-nav-item" onClick={() => navigate('/app/caregiver/settings')}>
-                    <img src={settingIcon} alt="Settings" />
+                    <FaCog className="client-nav-icon" />
                     <span>Settings</span>
                   </div>
                 </>
@@ -355,11 +349,11 @@ const PublicClientNavBar = () => {
               {(user?.role === 'Admin' || user?.role === 'SuperAdmin') && (
                 <>
                   <div className="client-nav-item" onClick={() => navigate('/app/admin/dashboard')}>
-                    <img src={homeIcon} alt="Dashboard" />
+                    <FaHome className="client-nav-icon" />
                     <span>Admin Dashboard</span>
                   </div>
                   <div className="client-nav-item" onClick={() => navigate('/app/admin/settings')}>
-                    <img src={settingIcon} alt="Settings" />
+                    <FaCog className="client-nav-icon" />
                     <span>Settings</span>
                   </div>
                 </>

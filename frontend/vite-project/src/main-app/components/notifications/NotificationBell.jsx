@@ -4,7 +4,7 @@ import { markNotificationAsRead, markAllNotificationsAsRead } from '../../Redux/
 import { formatDistanceToNow } from 'date-fns';
 import './NotificationBell.css';
 
-const NotificationBell = ({ navigateTo, bellIcon }) => {
+const NotificationBell = ({ navigateTo, bellIcon: BellIcon }) => {
   const { notifications, unreadCount, loading } = useSelector((state) => state.notifications);
   const dispatch = useDispatch();
   const [isOpen, setIsOpen] = useState(false);
@@ -69,8 +69,8 @@ const NotificationBell = ({ navigateTo, bellIcon }) => {
   return (
     <div className="notification-bell-container" ref={dropdownRef}>
       <button className="notification-bell" onClick={toggleNotifications}>
-        {bellIcon ? (
-          <img src={bellIcon} alt="Notifications" />
+        {BellIcon ? (
+          <BellIcon className="bell-icon" />
         ) : (
           '🔔'
         )}

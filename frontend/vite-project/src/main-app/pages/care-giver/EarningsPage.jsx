@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
+import { FaDollarSign, FaClipboardList, FaChartLine, FaCreditCard, FaInfoCircle, FaMoneyBillWave } from 'react-icons/fa';
 import { earningService } from '../../services/earningsService';
 import { withdrawalService } from '../../services/withdrawalService';
 import './earnings-page.css';
@@ -147,7 +148,9 @@ const EarningsPage = () => {
 
       <div className="earnings-stats-grid">
         <div className="stat-card balance-card">
-          <div className="stat-icon">💰</div>
+          <div className="stat-icon">
+            <FaDollarSign className="earnings-stat-icon" />
+          </div>
           <div className="stat-content">
             <p className="stat-label">Your Balance</p>
             <h2 className="stat-value">{formatCurrency(earnings.withdrawableAmount)}</h2>
@@ -155,7 +158,9 @@ const EarningsPage = () => {
         </div>
 
         <div className="stat-card orders-card">
-          <div className="stat-icon">📋</div>
+          <div className="stat-icon">
+            <FaClipboardList className="earnings-stat-icon" />
+          </div>
           <div className="stat-content">
             <p className="stat-label">Total Orders</p>
             <h2 className="stat-value">{formatNumber(earnings.totalOrders)}</h2>
@@ -163,7 +168,9 @@ const EarningsPage = () => {
         </div>
 
         <div className="stat-card earnings-card">
-          <div className="stat-icon">⏰</div>
+          <div className="stat-icon">
+            <FaChartLine className="earnings-stat-icon" />
+          </div>
           <div className="stat-content">
             <p className="stat-label">Total Earnings</p>
             <h2 className="stat-value">{formatCurrency(earnings.totalEarnings)}</h2>
@@ -171,7 +178,9 @@ const EarningsPage = () => {
         </div>
 
         <div className="stat-card payout-card">
-          <div className="stat-icon">💳</div>
+          <div className="stat-icon">
+            <FaCreditCard className="earnings-stat-icon" />
+          </div>
           <div className="stat-content">
             <p className="stat-label">Total Paid Out</p>
             <h2 className="stat-value">{formatCurrency(earnings.totalPaidOut)}</h2>
@@ -184,7 +193,9 @@ const EarningsPage = () => {
           <h3>Total Earnings</h3>
           <div className="chart-controls">
             <span className="chart-year">{currentYear}</span>
-            <button className="chart-info-btn">ℹ️</button>
+            <button className="chart-info-btn">
+              <FaInfoCircle className="chart-info-icon" />
+            </button>
           </div>
         </div>
         
@@ -249,7 +260,9 @@ const EarningsPage = () => {
                     <td className="date-cell">{new Date(withdrawal.createdAt).toLocaleDateString()}</td>
                     <td className="activity-cell-container">
                       <div className="activity-cell">
-                        <span className="activity-icon withdrawal">💸</span>
+                        <span className="activity-icon withdrawal">
+                          <FaMoneyBillWave className="withdrawal-icon" />
+                        </span>
                         <span>Withdrawal</span>
                       </div>
                     </td>

@@ -1,5 +1,6 @@
 import React, { useEffect, useState, useRef } from "react";
 import "./profile-header.css";
+import { FaMapMarkerAlt, FaCalendarAlt, FaTruck } from "react-icons/fa";
 import profilecard1 from "../../../../assets/profilecard1.png";
 import IntroVideo from "./IntroVideo";
 import ProfileInformation from "./ProfileInformation";
@@ -339,15 +340,21 @@ const ProfileHeader = () => {
 
         <div className="caregiver-profile-details">
           <div className="caregiver-detail-item">
-            <span className="caregiver-detail-label">📍 Location</span>
+            <span className="caregiver-detail-label">
+              <FaMapMarkerAlt className="caregiver-detail-icon" /> Location
+            </span>
             <span className="caregiver-detail-value">{profile.location}</span>
           </div>
           <div className="caregiver-detail-item">
-            <span className="caregiver-detail-label">📅 Member since</span>
+            <span className="caregiver-detail-label">
+              <FaCalendarAlt className="caregiver-detail-icon" /> Member since
+            </span>
             <span className="caregiver-detail-value">{profile.memberSince}</span>
           </div>
           <div className="caregiver-detail-item">
-            <span className="caregiver-detail-label">� Last delivery</span>
+            <span className="caregiver-detail-label">
+              <FaTruck className="caregiver-detail-icon" /> Last delivery
+            </span>
             <span className="caregiver-detail-value">{profile.lastDelivery}</span>
           </div>
           <div className="caregiver-detail-button">

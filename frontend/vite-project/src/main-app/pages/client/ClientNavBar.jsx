@@ -1,12 +1,10 @@
 import React, { useState, useRef, useEffect } from "react";
 import { useNavigate, useLocation } from "react-router-dom";
+import { FaBell, FaEnvelope, FaCog } from "react-icons/fa";
 import logo from '../../../assets/careproLogo.svg';
 import hear from "../../../assets/main-app/heart.svg";
-import bellIcon from "../../../assets/bell_icon.png";
-import message from "../../../assets/main-app/message.svg";
 import receipt from "../../../assets/main-app/receipt.svg";
 import homeIcon from "../../../assets/home_icon.png";
-import settingIcon from "../../../assets/setting.png";
 import NotificationBell from "../../components/notifications/NotificationBell";
 import { useAuth } from "../../context/AuthContext";
 // import "../care-giver/care-giver-dashboard/NavigationBar.css";
@@ -66,9 +64,13 @@ const ClientNavBar = () => {
     return initials.slice(0, 2);
   };
 
-  const IconLink = ({ to, icon, alt }) => (
+  const IconLink = ({ to, icon, alt, isReactIcon = false }) => (
     <li className="client-nav-link client-icon-link" onClick={() => navigate(to)}>
-      <img src={icon} alt={alt} />
+      {isReactIcon ? (
+        React.createElement(icon, { className: "client-nav-icon", alt })
+      ) : (
+        <img src={icon} alt={alt} />
+      )}
     </li>
   );
 
@@ -244,13 +246,13 @@ const ClientNavBar = () => {
               </li>
               <li onClick={() => { navigate(`${basePath}/message`); setMobileMenuOpen(false); }}>
                 <div className="client-menu-item-content">
-                  <img src={message} alt="Messages" />
+                  <FaEnvelope className="client-nav-icon" />
                   <span>Messages</span>
                 </div>
               </li>
               <li onClick={() => { navigate(`${basePath}/settings`); setMobileMenuOpen(false); }}>
                 <div className="client-menu-item-content">
-                  <img src={settingIcon} alt="Settings" />
+                  <FaCog className="client-nav-icon" />
                   <span>Settings</span>
                 </div>
               </li>
@@ -266,7 +268,7 @@ const ClientNavBar = () => {
               </li>
               <li className="client-notifications-item">
                 <div className="client-menu-item-content" onClick={() => setMobileMenuOpen(false)}>
-                  <NotificationBell navigateTo={(path) => navigate(path)} bellIcon={bellIcon} />
+                  <NotificationBell navigateTo={(path) => navigate(path)} bellIcon={FaBell} />
                   <span>Notifications</span>
                 </div>
               </li>
@@ -314,12 +316,12 @@ const ClientNavBar = () => {
         <div className="client-nav-actions">
           <ul className="client-nav-icons">
             <li className="client-nav-link client-icon-link" onClick={() => navigate(`${basePath}/settings`)}>
-              <img src={settingIcon} alt="Settings" />
+              <FaCog className="client-nav-icon" />
             </li>
             <li className="client-nav-link client-icon-link">
-              <NotificationBell navigateTo={(path) => navigate(path)} bellIcon={bellIcon} />
+              <NotificationBell navigateTo={(path) => navigate(path)} bellIcon={FaBell} />
             </li>
-            <IconLink to={`${basePath}/message`} icon={message} alt="Messages" />
+            <IconLink to={`${basePath}/message`} icon={FaEnvelope} alt="Messages" isReactIcon={true} />
             {/* <IconLink to={`${basePath}/favorites`} icon={hear} alt="Favorites" /> */}
           </ul>
 

@@ -3,11 +3,7 @@ import { useNavigate } from "react-router-dom";
 import "./NavigationBar.css";
 import logo from '../../../../assets/careproLogo.svg';
 import hear from "../../../../assets/main-app/heart.svg";
-import bellIcon from "../../../../assets/bell_icon.png";
-import message from "../../../../assets/main-app/message.svg";
-import receipt from "../../../../assets/main-app/receipt.svg";
-import homeIcon from "../../../../assets/home_icon.png";
-import settingIcon from "../../../../assets/setting.png";
+import { FaBell, FaEnvelope, FaReceipt, FaHome, FaCog } from "react-icons/fa";
 import NotificationBell from "../../../components/notifications/NotificationBell";
 import { userService } from "../../../services/userService";
 import { useAuth } from "../../../context/AuthContext";
@@ -122,11 +118,17 @@ const NavigationBar = () => {
     setMobileMenuOpen(!mobileMenuOpen);
   };
 
-  const IconLink = ({ to, icon, alt }) => (
-    <li className="nav-link icon-link" onClick={() => navigate(to)}>
-      <img src={icon} alt={alt} />
-    </li>
-  );
+  const IconLink = ({ to, icon: IconComponent, alt, isReactIcon = false }) => {
+    return (
+      <li className="nav-link icon-link" onClick={() => navigate(to)}>
+        {isReactIcon ? (
+          <IconComponent className="nav-react-icon" size={18} />
+        ) : (
+          <img src={IconComponent} alt={alt} />
+        )}
+      </li>
+    );
+  };
 
   return (
     <nav className="navigation-bar">
@@ -161,7 +163,7 @@ const NavigationBar = () => {
                 <div className="user-info">
                   <span className="user-name">{userName}</span>
                   <div className="earnings-mobile">
-                    <img src={receipt} alt="Earnings Icon" />
+                    <FaReceipt className="mobile-menu-icon" size={20} />
                     <span>Earned: ₦{earnings.totalEarned.toFixed(2)}</span>
                   </div>
                 </div>
@@ -178,7 +180,7 @@ const NavigationBar = () => {
             <ul className="mobile-menu-links">
               <li onClick={() => { navigate(`${basePath}/dashboard`); setMobileMenuOpen(false); }}>
                 <div className="menu-item-content">
-                  <img src={homeIcon} alt="Dashboard" />
+                  <FaHome className="mobile-menu-icon" />
                   <span>Dashboard</span>
                 </div>
               </li>
@@ -190,19 +192,19 @@ const NavigationBar = () => {
               </li> */}
               <li onClick={() => { navigate(`${basePath}/earnings`); setMobileMenuOpen(false); }}>
                 <div className="menu-item-content">
-                  <img src={receipt} alt="Earnings" />
+                  <FaReceipt className="mobile-menu-icon" />
                   <span>Earnings</span>
                 </div>
               </li>
               <li onClick={() => { navigate(`${basePath}/message`); setMobileMenuOpen(false); }}>
                 <div className="menu-item-content">
-                  <img src={message} alt="Messages" />
+                  <FaEnvelope className="mobile-menu-icon" />
                   <span>Messages</span>
                 </div>
               </li>
               <li onClick={() => { navigate(`${basePath}/settings`); setMobileMenuOpen(false); }}>
                 <div className="menu-item-content">
-                  <img src={settingIcon} alt="Settings" />
+                  <FaCog className="mobile-menu-icon" />
                   <span>Settings</span>
                 </div>
               </li>
@@ -219,7 +221,7 @@ const NavigationBar = () => {
               </li>
               <li className="notifications-item">
                 <div className="menu-item-content" onClick={() => setMobileMenuOpen(false)}>
-                  <NotificationBell navigateTo={(path) => navigate(path)} bellIcon={bellIcon} />
+                  <NotificationBell navigateTo={(path) => navigate(path)} bellIcon={FaBell} />
                   <span>Notifications</span>
                 </div>
               </li>
@@ -258,13 +260,13 @@ const NavigationBar = () => {
         <div className="nav-actions">
           <ul className="nav-icons">
             <li className="nav-link icon-link">
-              <NotificationBell navigateTo={(path) => navigate(path)} bellIcon={bellIcon} />
+              <NotificationBell navigateTo={(path) => navigate(path)} bellIcon={FaBell} />
             </li>
-            <IconLink to={`${basePath}/message`} icon={message} alt="Messages" />
+            <IconLink to={`${basePath}/message`} icon={FaEnvelope} alt="Messages" isReactIcon={true} />
           </ul>
 
           <div className="earnings" onClick={() => navigate(`${basePath}/earnings`)}>
-            <img src={receipt} alt="Earnings Icon" />
+            <FaReceipt className="earnings-icon" size={20} />
             <span>Earned:</span>
             <strong>₦{earnings.totalEarned.toFixed(2)}</strong>
           </div>

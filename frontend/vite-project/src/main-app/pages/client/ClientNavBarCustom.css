@@ -771,11 +771,13 @@
   white-space: nowrap;
 }
 
-.client-nav-item img {
+.client-nav-item img,
+.client-nav-icon {
   width: 16px;
   height: 16px;
   object-fit: contain;
   flex-shrink: 0;
+  color: #6b7280;
 }
 
 .client-nav-item span {
@@ -844,6 +846,13 @@
   width: 20px;
   height: 20px;
   object-fit: contain;
+  flex-shrink: 0;
+}
+
+.mobile-menu-icon {
+  width: 20px;
+  height: 20px;
+  color: #333;
   flex-shrink: 0;
 }
 
