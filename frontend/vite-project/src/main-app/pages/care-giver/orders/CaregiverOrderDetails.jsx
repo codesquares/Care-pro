@@ -2,6 +2,7 @@ import React, { useState, useEffect } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import axios from "axios";
 import { toast, ToastContainer } from "react-toastify";
+import { FaClipboardList, FaPhoneAlt } from "react-icons/fa";
 import "react-toastify/dist/ReactToastify.css";
 import "./CaregiverOrderDetails.css";
 
@@ -254,13 +255,13 @@ const CaregiverOrderDetails = () => {
                                             Mark Order as Completed
                                         </button>
                                     )}
-                                    <button 
+                                    {/* <button 
                                         className="contact-client-btn" 
                                         onClick={() => openModal("contact")}
                                         disabled={isContactLoading}
                                     >
                                         {isContactLoading ? "Setting up..." : "Contact Client"}
-                                    </button>
+                                    </button> */}
                                 </div>
                             )}
                         </div>
@@ -268,11 +269,11 @@ const CaregiverOrderDetails = () => {
                         <div className="support-section">
                             <h3>Support</h3>
                             <div className="support-item">
-                                <span>📋 Guidelines</span>
+                                <span><FaClipboardList /> Guidelines</span>
                                 <span>Service delivery guidelines</span>
                             </div>
                             <div className="support-item">
-                                <span>📞 Support Center</span>
+                                <span><FaPhoneAlt /> Support Center</span>
                                 <span>Get help with order issues</span>
                             </div>
                         </div>
