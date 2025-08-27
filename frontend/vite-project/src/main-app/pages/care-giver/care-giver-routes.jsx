@@ -16,6 +16,7 @@ import VerificationPage from './verification/VerificationPage';
 import AssessmentPage from './verification/AssessmentPage';
 import NotificationsPage from '../../components/Notifications/Notifications';
 import ErrorBoundary from '../../components/ErrorBoundary';
+import CaregiverOrderDetails from './orders/CaregiverOrderDetails';
 import '../../components/ErrorBoundary.css';
 
 function CareGiverRoutes() {
@@ -42,6 +43,7 @@ function CareGiverRoutes() {
             <Route path="/notifications" element={<NotificationsPage />} />
             <Route path="/verification" element={<VerificationPage />} />
             <Route path="/assessment" element={<AssessmentPage />} />
+            <Route path="/order-details/:orderId" element={<CaregiverOrderDetails />} />
         </Routes>
         </>
     );

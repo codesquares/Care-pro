@@ -3,6 +3,7 @@ using Application.Interfaces;
 using Application.Interfaces.Content;
 using Domain.Entities;
 using Infrastructure.Content.Data;
+using Infrastructure.Services;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging;
 using MongoDB.Bson;
@@ -87,6 +88,7 @@ namespace Infrastructure.Content.Services
         private readonly INotificationService notificationService;
         private readonly IEarningsService _earningsService;
         private readonly ITransactionHistoryService _transactionHistoryService;
+        private readonly IAutoConversationService _autoConversationService;
 
         public ClientOrderService(
             CareProDbContext careProDbContext, 
@@ -96,7 +98,8 @@ namespace Infrastructure.Content.Services
             ILogger<GigServices> logger,
             INotificationService notificationService,
             IEarningsService earningsService,
-            ITransactionHistoryService transactionHistoryService)
+            ITransactionHistoryService transactionHistoryService,
+            IAutoConversationService autoConversationService)
         {
             this.careProDbContext = careProDbContext;
             this.gigServices = gigServices;
@@ -106,6 +109,7 @@ namespace Infrastructure.Content.Services
             this.notificationService = notificationService;
             this._earningsService = earningsService;
             this._transactionHistoryService = transactionHistoryService;
+            this._autoConversationService = autoConversationService;
         }
 
         public async Task<Result<ClientOrderDTO>> CreateClientOrderAsync(AddClientOrderRequest addClientOrderRequest)
@@ -162,6 +166,22 @@ namespace Infrastructure.Content.Services
                     notificationContent,
                     clientOrder.Id.ToString()
                 );
+            }
+
+            // Auto-create conversation between client and caregiver
+            try
+            {
+                await _autoConversationService.CreateConversationForOrderAsync(
+                    clientOrder.CaregiverId, 
+                    clientOrder.ClientId, 
+                    clientOrder.Id.ToString()
+                );
+                logger.LogInformation($"Auto-created conversation for order {clientOrder.Id}");
+            }
+            catch (Exception ex)
+            {
+                logger.LogWarning(ex, $"Failed to auto-create conversation for order {clientOrder.Id}. Order creation will proceed.");
+                // Don't fail the order creation if conversation creation fails
             }
 
             var clientOrderDTO = new ClientOrderDTO

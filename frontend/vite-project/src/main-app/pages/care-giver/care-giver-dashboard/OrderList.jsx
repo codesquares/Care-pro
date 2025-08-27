@@ -1,10 +1,17 @@
 import React from "react";
+import { useNavigate } from "react-router-dom";
 import OrderCard from "./OrderCard";
 import EmptyState from "../../../../components/EmptyState";
 import emptyOrdersImage from "../../../../assets/main-app/emptyOrder.png"; // Ensure you have an empty orders image in your assets
 import "./OrderList.css";
 
 const OrderList = ({ filter, orders, loading, error }) => {
+  const navigate = useNavigate();
+
+  const handleOrderClick = (orderId) => {
+    navigate(`/app/caregiver/order-details/${orderId}`);
+  };
+
   if (loading) return <p>Loading orders...</p>;
   if (error) return <p>Error: {error}</p>;
 
@@ -18,6 +25,8 @@ const OrderList = ({ filter, orders, loading, error }) => {
         filteredOrders.map((order, index) => (
           <OrderCard
             key={index}
+            orderId={order.id}
+            onClick={handleOrderClick}
             title={order.gigTitle}
             user={order.clientName}
             price={order.amount}

@@ -1,9 +1,15 @@
 import React from "react";
 import "./OrderCard.css";
 
-const OrderCard = ({ title, user, price, status, image }) => {
+const OrderCard = ({ title, user, price, status, image, orderId, onClick }) => {
+  const handleClick = () => {
+    if (onClick && orderId) {
+      onClick(orderId);
+    }
+  };
+
   return (
-    <div className="order-card">
+    <div className="order-card" onClick={handleClick} style={{ cursor: onClick ? 'pointer' : 'default' }}>
     <div className="image-wrapper">
       <img src={image} alt={title} className="order-image" />
     </div>
