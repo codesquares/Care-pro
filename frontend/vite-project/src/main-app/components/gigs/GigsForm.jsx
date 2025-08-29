@@ -20,10 +20,10 @@ import { toast } from "react-toastify";
 import Modal from "../../components/modal/Modal";
 import { useNavigate, useLocation } from "react-router-dom";
 import { createNotification } from "../../services/notificationService";
+import { useGigForm } from "../../contexts/GigEditContext";
 
 const GigsForm = () => {
   const pages = ["Overview", "Pricing", "Gallery", "Publish"];
-  const [currentPage, setCurrentPage] = useState(0);
   const [activeField, setActiveField] = useState(null);
   const [blurTimeout, setBlurTimeout] = useState(null);
   const [isModalOpen, setIsModalOpen] = useState(false);
@@ -43,15 +43,32 @@ const GigsForm = () => {
   const [activeGigsCount, setActiveGigsCount] = useState(0);
   const [isLoadingGigs, setIsLoadingGigs] = useState(true);
   const navigate = useNavigate();
-  const location = useLocation();
   
-  // Check if we're in edit mode
-  const isEditMode = location.state?.editMode || false;
-  const gigData = location.state?.gigData || null;
+  // Use context for form state and current step
+  const { 
+    formData, 
+    currentStep, 
+    setCurrentStep, 
+    isEditMode, 
+    validateForm,
+    updateField,
+    isLoading,
+    isSaving
+  } = useGigForm();
   
   // Check if we can publish (considering 2-gig limit)
-  const isEditingPublishedGig = isEditMode && gigData?.status?.toLowerCase() === 'published';
-  const canPublish = isEditingPublishedGig || activeGigsCount < 2;
+  const canPublish = isEditMode || activeGigsCount < 2;
+  
+  // Debug logging for publish logic
+  console.log('🔍 Publish Logic Debug:', {
+    isEditMode,
+    activeGigsCount,
+    canPublish,
+    formDataStatus: formData.status
+  });
+  
+  // Check if we're editing a published gig
+  const isEditingPublishedGig = isEditMode && (formData.status === "Published" || formData.status === "Active");
 
   const goToNextPage = () => {
     const currentPageValidation = validateCurrentPage();
@@ -62,22 +79,22 @@ const GigsForm = () => {
       return;
     }
     
-    if (currentPage < pages.length - 1) {
+    if (currentStep < pages.length - 1) {
       setValidationErrors({});
-      setPageValidationStatus(prev => ({ ...prev, [currentPage]: true }));
-      setCurrentPage((prev) => prev + 1);
+      setPageValidationStatus(prev => ({ ...prev, [currentStep]: true }));
+      setCurrentStep(currentStep + 1);
     }
   };
 
   const goToPreviousPage = () => {
-    if (currentPage > 0) {
+    if (currentStep > 0) {
       setValidationErrors({});
-      setCurrentPage((prev) => prev - 1);
+      setCurrentStep(currentStep - 1);
     }
   };
 
   const validateCurrentPage = () => {
-    switch (currentPage) {
+    switch (currentStep) {
       case 0:
         return validateOverviewPage(formData);
       case 1:
@@ -142,28 +159,10 @@ const GigsForm = () => {
   };
 
   const handleInputChange = (name, value) => {
-    setFormData((prev) => ({
-      ...prev,
-      [name]: value,
-    }));
+    updateField(name, value);
   };
 
   const caregiverId = localStorage.getItem("userId");
-
-  const [formData, setFormData] = useState({
-    title: "",
-    category: "",
-    subcategory: [],
-    searchTags: [],
-    pricing: {
-      Basic: { name: "", details: "", deliveryTime: "", amount: "" },
-      Standard: { name: "", details: "", deliveryTime: "", amount: "" },
-      Premium: { name: "", details: "", deliveryTime: "", amount: "" },
-    },
-    video: "https://www.youtube.com/watch?v=RVFAyFWO4go",
-    status: "",
-    caregiverId: caregiverId,
-  });
 
   // Image-related state
   const [files, setFiles] = useState([]);
@@ -171,64 +170,20 @@ const GigsForm = () => {
   const [selectedFile, setSelectedFile] = useState(null);
   const [imagePreview, setImagePreview] = useState(null);
 
-  // Effect to populate form data when in edit mode
+  // Effect to set image preview if editing existing gig with image
   useEffect(() => {
-    if (isEditMode && gigData) {
-      // Parse pricing data if it exists
-      let pricingData = {
-        Basic: { name: "", details: "", deliveryTime: "", amount: "" },
-        Standard: { name: "", details: "", deliveryTime: "", amount: "" },
-        Premium: { name: "", details: "", deliveryTime: "", amount: "" },
-      };
-
-      // If gig has pricing data, parse it
-      if (gigData.pricing) {
-        try {
-          pricingData = typeof gigData.pricing === 'string' 
-            ? JSON.parse(gigData.pricing) 
-            : gigData.pricing;
-        } catch (error) {
-          console.error('Error parsing pricing data:', error);
-        }
-      }
-
-      // Parse search tags if they exist
-      let searchTagsArray = [];
-      if (gigData.tags) {
-        searchTagsArray = typeof gigData.tags === 'string' 
-          ? gigData.tags.split(', ') 
-          : gigData.tags;
-      }
-
-      // Parse subcategory if it exists
-      let subcategoryArray = [];
-      if (gigData.subcategory) {
-        subcategoryArray = Array.isArray(gigData.subcategory) 
-          ? gigData.subcategory 
-          : [gigData.subcategory];
-      }
-
-      setFormData({
-        title: gigData.title || "",
-        category: gigData.category || "",
-        subcategory: subcategoryArray,
-        searchTags: searchTagsArray,
-        pricing: pricingData,
-        video: gigData.video || "https://www.youtube.com/watch?v=RVFAyFWO4go",
-        status: gigData.status || "",
-        caregiverId: gigData.caregiverId || caregiverId,
-      });
-
-      // Set image preview if editing existing gig with image
-      if (gigData.image1) {
-        // Convert base64 back to data URL for preview
-        const dataUrl = `data:image/jpeg;base64,${gigData.image1}`;
+    if (isEditMode && formData.image1) {
+      // Check if it's already a URL or base64 data
+      if (formData.image1.startsWith('http')) {
+        // It's a Cloudinary URL, use it directly
+        setImagePreview(formData.image1);
+      } else {
+        // It's base64 data, convert to data URL for preview
+        const dataUrl = `data:image/jpeg;base64,${formData.image1}`;
         setImagePreview(dataUrl);
-        // Note: For edit mode, we keep the preview but selectedFile remains null
-        // This indicates we have an existing image from backend
       }
     }
-  }, [isEditMode, gigData, caregiverId]);
+  }, [isEditMode, formData.image1]);
 
   // Effect to fetch existing gigs and count active ones
   useEffect(() => {
@@ -251,7 +206,14 @@ const GigsForm = () => {
         }
 
         const existingGigs = await response.json();
-        const activeGigs = existingGigs.filter(gig => gig.status?.toLowerCase() === 'published');
+        console.log('🔍 All existing gigs:', existingGigs.map(g => ({ id: g.id, status: g.status, title: g.title })));
+        
+        const activeGigs = existingGigs.filter(gig => {
+          const status = gig.status?.toLowerCase();
+          return status === 'published' || status === 'active';
+        });
+        
+        console.log('🔍 Active gigs found:', activeGigs.length, activeGigs.map(g => ({ id: g.id, status: g.status })));
         setActiveGigsCount(activeGigs.length);
         
       } catch (err) {
@@ -359,10 +321,10 @@ const GigsForm = () => {
       if (selectedFile) {
         console.log("Adding Image1 file to draft FormData:", selectedFile.name);
         formDataPayload.append("Image1", selectedFile);
-      } else if (isEditMode && gigData?.image1) {
-        // For edit mode, preserve existing image
-        console.log("Preserving existing Image1 for draft edit mode");
-        formDataPayload.append("Image1", gigData.image1);
+      } else if (isEditMode && formData?.image1) {
+        // For edit mode without new image, don't append anything - the backend should keep existing
+        console.log("Edit mode: keeping existing image, not appending to FormData");
+        // Note: Backend should preserve existing image when no new Image1 is provided
       }
 
       const response = await axios.post(
@@ -387,11 +349,8 @@ const GigsForm = () => {
   };
 
   const handleCategoryChange = (category) => {
-    setFormData((prev) => ({
-      ...prev,
-      category,
-      subcategory: [],
-    }));
+    updateField('category', category);
+    updateField('subcategory', []); // Reset subcategory when category changes
     // Clear category validation error
     if (validationErrors.category) {
       setValidationErrors(prev => {
@@ -403,10 +362,7 @@ const GigsForm = () => {
   };
 
   const handleSubCategoryChange = (updatedSubcategories) => {
-    setFormData((prev) => ({
-      ...prev,
-      subcategory: updatedSubcategories,
-    }));
+    updateField('subcategory', updatedSubcategories);
     // Clear subcategory validation error
     if (validationErrors.subcategory) {
       setValidationErrors(prev => {
@@ -418,10 +374,7 @@ const GigsForm = () => {
   };
 
   const handleSearchTagChange = (tags) => {
-    setFormData((prev) => ({
-      ...prev,
-      searchTags: tags,
-    }));
+    updateField('searchTags', tags);
     // Clear searchTags validation error
     if (validationErrors.searchTags) {
       setValidationErrors(prev => {
@@ -433,10 +386,7 @@ const GigsForm = () => {
   };
 
   const handleTitleChange = (title) => {
-    setFormData((prev) => ({
-      ...prev,
-      title,
-    }));
+    updateField('title', title);
     // Clear title validation error when user starts typing
     if (validationErrors.title) {
       setValidationErrors(prev => {
@@ -500,10 +450,10 @@ const GigsForm = () => {
       if (selectedFile) {
         console.log("Adding new Image1 file to FormData:", selectedFile.name, selectedFile.type, selectedFile.size);
         formDataPayload.append("Image1", selectedFile);
-      } else if (isEditMode && gigData?.image1) {
-        // For edit mode, if no new file selected, keep existing image as base64
-        console.log("Preserving existing Image1 for edit mode");
-        formDataPayload.append("Image1", gigData.image1);
+      } else if (isEditMode && formData?.image1) {
+        // For edit mode without new image, don't append anything - the backend should keep existing
+        console.log("Edit mode: keeping existing image, not appending to FormData");
+        // Note: Backend should preserve existing image when no new Image1 is provided
       }
       
       // Handle video URL
@@ -533,10 +483,10 @@ const GigsForm = () => {
       console.log("About to send FormData to backend...");
 
       let response;
-      if (isEditMode && gigData?.id) {
+      if (isEditMode && formData?.id) {
         // Update existing gig
         response = await axios.put(
-          `https://carepro-api20241118153443.azurewebsites.net/api/Gigs/${gigData.id}`,
+          `https://carepro-api20241118153443.azurewebsites.net/api/Gigs/UpdateGig/gigId?gigId=${formData.id}`,
           formDataPayload
         );
       } else {
@@ -683,12 +633,12 @@ const GigsForm = () => {
           <div className="main-content">
             <PageBar 
               pages={pages} 
-              currentPage={currentPage}
-              onPageClick={(pageIndex) => setCurrentPage(pageIndex)}
+              currentPage={currentStep}
+              onPageClick={(pageIndex) => setCurrentStep(pageIndex)}
               pageValidationStatus={pageValidationStatus}
             />
             
-            {currentPage === 0 && (
+            {currentStep === 0 && (
               <GigsCard
                 categories={categories}
                 onCategoryChange={handleCategoryChange}
@@ -699,16 +649,14 @@ const GigsForm = () => {
                 onFieldBlur={handleFieldBlur}
                 onFieldHover={handleFieldHover}
                 onFieldLeave={handleFieldLeave}
-                formData={formData}
-                validationErrors={validationErrors}
                 clearValidationErrors={clearValidationErrors}
               />
             )}
-            {currentPage === 1 && (
+            {currentStep === 1 && (
               <PricingTable
                 pricing={formData.pricing}
                 onPricingChange={(updatedPricing) => {
-                  setFormData((prev) => ({ ...prev, pricing: updatedPricing }));
+                  updateField('pricing', updatedPricing);
                   // Clear pricing validation errors when user makes changes
                   if (Object.keys(validationErrors).some(key => 
                     key.includes('basic') || key.includes('standard') || key.includes('premium') || key === 'general' || key === 'progression'
@@ -731,7 +679,7 @@ const GigsForm = () => {
                 validationErrors={validationErrors}
               />
             )}
-            {currentPage === 2 && (
+            {currentStep === 2 && (
               <GalleryUploads 
                 onFileChange={onFileChange} 
                 onFieldFocus={handleFieldFocus}
@@ -743,7 +691,7 @@ const GigsForm = () => {
                 selectedFile={selectedFile}
               />
             )}
-            {currentPage === 3 && (
+            {currentStep === 3 && (
               <PublishGig
                 image={imagePreview || ''}
                 title={formData.title || "Your Gig"}
@@ -764,9 +712,9 @@ const GigsForm = () => {
               />
             )}
             <div className="gigs-form-buttons">
-              {currentPage < pages.length - 1 && (
+              {currentStep < pages.length - 1 && (
                 <>
-                  {currentPage > 0 && (
+                  {currentStep > 0 && (
                     <Button onClick={goToPreviousPage}>Back</Button>
                   )}
                   <Button onClick={goToNextPage}>Save & Continue</Button>
@@ -778,7 +726,7 @@ const GigsForm = () => {
       </div>
 
       <GuidelinesCard 
-        currentPage={currentPage} 
+        currentPage={currentStep} 
         activeField={activeField} 
         onClose={handleCloseGuidelines}
       />

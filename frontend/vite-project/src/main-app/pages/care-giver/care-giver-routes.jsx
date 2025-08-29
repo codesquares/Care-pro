@@ -17,35 +17,36 @@ import AssessmentPage from './verification/AssessmentPage';
 import NotificationsPage from '../../components/Notifications/Notifications';
 import ErrorBoundary from '../../components/ErrorBoundary';
 import CaregiverOrderDetails from './orders/CaregiverOrderDetails';
+import { GigEditProvider } from '../../contexts/GigEditContext';
 import '../../components/ErrorBoundary.css';
 
 function CareGiverRoutes() {
     return (
-        <>
-        <NavigationBar />
-        <Routes>
-            <Route path='/dashboard' element={
-                <ErrorBoundary>
-                    <CaregiverDashboard />
-                </ErrorBoundary>
-            } />
-            <Route path='/profile' element={<UserProfile />} />
-            <Route path='/earnings' element={<EarningsPage />} />
-            <Route path='/withdraw' element={<WithdrawPage />} />
-            <Route path='/earnings-old' element={<Earnings />} />
-            <Route path='/orders' element={<Order />} />
-            <Route path='/create-gigs' element={<CreateGig/>} />
-            <Route path='/create-offer' element={<CreateOffer/>} />
-            <Route path='/settings' element={<CaregiverSettings />} />
-            <Route path="/CaregiverProfile" element={<CaregiverProfile />} />
-            <Route path="/message" element={<Messages />} />
-            <Route path="/message/:recipientId" element={<DirectMessage />} />
-            <Route path="/notifications" element={<NotificationsPage />} />
-            <Route path="/verification" element={<VerificationPage />} />
-            <Route path="/assessment" element={<AssessmentPage />} />
-            <Route path="/order-details/:orderId" element={<CaregiverOrderDetails />} />
-        </Routes>
-        </>
+        <GigEditProvider>
+            <NavigationBar />
+            <Routes>
+                <Route path='/dashboard' element={
+                    <ErrorBoundary>
+                        <CaregiverDashboard />
+                    </ErrorBoundary>
+                } />
+                <Route path='/profile' element={<UserProfile />} />
+                <Route path='/earnings' element={<EarningsPage />} />
+                <Route path='/withdraw' element={<WithdrawPage />} />
+                <Route path='/earnings-old' element={<Earnings />} />
+                <Route path='/orders' element={<Order />} />
+                <Route path='/create-gigs' element={<CreateGig/>} />
+                <Route path='/create-offer' element={<CreateOffer/>} />
+                <Route path='/settings' element={<CaregiverSettings />} />
+                <Route path="/CaregiverProfile" element={<CaregiverProfile />} />
+                <Route path="/message" element={<Messages />} />
+                <Route path="/message/:recipientId" element={<DirectMessage />} />
+                <Route path="/notifications" element={<NotificationsPage />} />
+                <Route path="/verification" element={<VerificationPage />} />
+                <Route path="/assessment" element={<AssessmentPage />} />
+                <Route path="/order-details/:orderId" element={<CaregiverOrderDetails />} />
+            </Routes>
+        </GigEditProvider>
     );
 }
 

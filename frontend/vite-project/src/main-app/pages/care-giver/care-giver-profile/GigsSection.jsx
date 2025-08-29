@@ -4,6 +4,7 @@ import EmptyState from "../../../../components/EmptyState";
 import clock from "../../../../assets/main-app/clock.png"; // Ensure you have an empty gigs image in your assets
 import Toast from "../../../components/toast/Toast";
 import useToast from "../../../hooks/useToast";
+import { useGigEdit } from "../../../contexts/GigEditContext";
 import "./gigs-section.css";
 
 const GigsSection = () => {
@@ -17,18 +18,37 @@ const GigsSection = () => {
   const navigate = useNavigate();
   const basePath = "/app/caregiver";
   const { toasts, showSuccess, showError, removeToast } = useToast();
+  const { populateFromGig, resetForm } = useGigEdit();
+
+  // Debug: Check if we have the context functions
+  console.log('🔍 DEBUG - GigsSection context check:', {
+    hasPopulateFromGig: typeof populateFromGig,
+    hasResetForm: typeof resetForm
+  });
 
   const handleNavigateToCreateGig = () => {
+    // Reset form when creating new gig
+    console.log('🔍 DEBUG - handleNavigateToCreateGig - resetting form');
+    resetForm();
     navigate(`${basePath}/create-gigs`);
   };
 
-  const handleEditGig = (gig) => {
-    navigate(`${basePath}/create-gigs`, {
-      state: { 
-        gigData: gig, 
-        editMode: true 
-      }
-    });
+  const handleEditGig = async (gig) => {
+    // Debug: Very basic click detection
+    console.log('🚨 EDIT BUTTON CLICKED!');
+    console.log('🔍 DEBUG - HandleEditGig gig data:', gig);
+    console.log('🔍 DEBUG - Available keys:', Object.keys(gig));
+    
+    // Populate the context with all gig data for editing
+    console.log('🔍 DEBUG - About to call populateFromGig');
+    populateFromGig(gig);
+    console.log('🔍 DEBUG - populateFromGig called, waiting before navigation');
+    
+    // Add a small delay to allow the reducer to process
+    await new Promise(resolve => setTimeout(resolve, 100));
+    
+    console.log('🔍 DEBUG - Now navigating after delay');
+    navigate(`${basePath}/create-gigs`);
   };
 
   const handlePublishGig = async (gig) => {

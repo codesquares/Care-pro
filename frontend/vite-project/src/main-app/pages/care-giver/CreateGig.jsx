@@ -1,10 +1,8 @@
 import GigsForm from "../../components/gigs/GigsForm";
 
-
 const CreateGig = () => {
   return (
-      <GigsForm 
-      />
+    <GigsForm />
   )
 };
 export default CreateGig;

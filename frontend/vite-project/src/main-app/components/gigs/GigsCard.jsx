@@ -1,4 +1,5 @@
 import { useState, useRef } from "react";
+import { useGigForm } from "../../contexts/GigEditContext";
 import "./gigs.scss";
 
 const GigsCard = ({
@@ -11,12 +12,20 @@ const GigsCard = ({
   onFieldBlur,
   onFieldHover,
   onFieldLeave,
-  formData,
-  validationErrors = {},
   clearValidationErrors,
 }) => {
   const [tagsInput, setTagsInput] = useState("");
   const tagInputRef = useRef(null);
+  const { formData, validationErrors, updateField } = useGigForm();
+
+  // Debug: Log current formData
+  console.log('🔍 DEBUG - GigsCard formData:', {
+    title: formData.title,
+    category: formData.category,
+    subcategory: formData.subcategory,
+    searchTags: formData.searchTags,
+    isEditMode: formData.isEditMode
+  });
 
   const handleTagsChange = (e) => {
     const value = e.target.value;
@@ -33,7 +42,8 @@ const GigsCard = ({
         // Filter out duplicates and ensure we don't exceed 5 tags
         const uniqueTagsToAdd = tagsToAdd.filter(tag => !currentTags.includes(tag));
         const updatedTags = [...currentTags, ...uniqueTagsToAdd].slice(0, 5);
-        onSearchTagChange(updatedTags);
+        updateField('searchTags', updatedTags);
+        if (onSearchTagChange) onSearchTagChange(updatedTags);
         setTagsInput(lastTag || "");
       }
     }
@@ -51,20 +61,23 @@ const GigsCard = ({
           !currentTags.includes(trimmedTag) && 
           currentTags.length < 5) {
         const updatedTags = [...currentTags, trimmedTag];
-        onSearchTagChange(updatedTags);
+        updateField('searchTags', updatedTags);
+        if (onSearchTagChange) onSearchTagChange(updatedTags);
         setTagsInput("");
       }
     } else if (e.key === 'Backspace' && !tagsInput && currentTags.length > 0) {
       // Remove last tag when backspace is pressed and input is empty
       const updatedTags = currentTags.slice(0, -1);
-      onSearchTagChange(updatedTags);
+      updateField('searchTags', updatedTags);
+      if (onSearchTagChange) onSearchTagChange(updatedTags);
     }
   };
 
   const removeTag = (indexToRemove) => {
     const currentTags = formData.searchTags || [];
     const updatedTags = currentTags.filter((_, index) => index !== indexToRemove);
-    onSearchTagChange(updatedTags);
+    updateField('searchTags', updatedTags);
+    if (onSearchTagChange) onSearchTagChange(updatedTags);
   };
 
   const handleTagInputBlur = () => {
@@ -77,10 +90,11 @@ const GigsCard = ({
         !currentTags.includes(trimmedInput) && 
         currentTags.length < 5) {
       const updatedTags = [...currentTags, trimmedInput];
-      onSearchTagChange(updatedTags);
+      updateField('searchTags', updatedTags);
+      if (onSearchTagChange) onSearchTagChange(updatedTags);
       setTagsInput("");
     }
-    onFieldBlur();
+    if (onFieldBlur) onFieldBlur();
   };
 
   return (
@@ -98,8 +112,11 @@ const GigsCard = ({
             <textarea
               rows={3}
               value={formData.title}
-              onChange={(e) => onTitleChange(e.target.value)}
-              onFocus={() => onFieldFocus('title')}
+              onChange={(e) => {
+                updateField('title', e.target.value);
+                if (onTitleChange) onTitleChange(e.target.value);
+              }}
+              onFocus={() => onFieldFocus && onFieldFocus('title')}
               onBlur={onFieldBlur}
               placeholder="I will take care of your pet"
               className={validationErrors.title ? 'error' : ''}
@@ -123,9 +140,11 @@ const GigsCard = ({
               id="category"
               onChange={(e) => {
                 const selectedCategory = e.target.value;
-                onCategoryChange(selectedCategory);
+                updateField('category', selectedCategory);
+                updateField('subcategory', []); // Reset subcategory when category changes
+                if (onCategoryChange) onCategoryChange(selectedCategory);
               }}
-              onFocus={() => onFieldFocus('category')}
+              onFocus={() => onFieldFocus && onFieldFocus('category')}
               onBlur={onFieldBlur}
               value={formData.category}
               className={validationErrors.category ? 'error' : ''}
@@ -167,13 +186,14 @@ const GigsCard = ({
                       checked={formData.subcategory.includes(subCategory)}
                       onChange={(e) => {
                         const isChecked = e.target.checked;
+                        let updatedSubcategories;
                         if (isChecked) {
-                          onSubCategoryChange([...formData.subcategory, subCategory]);
+                          updatedSubcategories = [...formData.subcategory, subCategory];
                         } else {
-                          onSubCategoryChange(
-                            formData.subcategory.filter((s) => s !== subCategory)
-                          );
+                          updatedSubcategories = formData.subcategory.filter((s) => s !== subCategory);
                         }
+                        updateField('subcategory', updatedSubcategories);
+                        if (onSubCategoryChange) onSubCategoryChange(updatedSubcategories);
                       }}
                     />
                     <span className="checkbox-label">{subCategory}</span>
