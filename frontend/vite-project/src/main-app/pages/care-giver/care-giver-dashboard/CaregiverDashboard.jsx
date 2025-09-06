@@ -27,7 +27,7 @@ const CaregiverDashboard = () => {
    // const vite_API_URL = import.meta.env.VITE_API_URL; // Use the environment variable for the API URL
    const vite_API_URL = 'https://carepro-api20241118153443.azurewebsites.net/api'; 
    // Ensure this is set in your .env file
-   const API_URL = `${vite_API_URL}/ClientOrders/caregiverId?caregiverId=${caregiverId}`;
+   const API_URL = `${vite_API_URL}/ClientOrders/CaregiverOrders/caregiverId?caregiverId=${caregiverId}`;
 
    useEffect(() => {
      const fetchOrders = async () => {
