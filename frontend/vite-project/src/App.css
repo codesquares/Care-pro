@@ -1,3 +1,6 @@
+/* Import responsive utilities */
+@import "./styles/responsive-utilities.css";
+
 .landImage {
   display: flex;
   flex-direction: column;
@@ -15,9 +18,6 @@
     padding: 6rem;
   }
 }
-
-/* Import responsive utilities */
-@import "./styles/responsive-utilities.css";
 
 .App {
   background-color: #FAFAFA;

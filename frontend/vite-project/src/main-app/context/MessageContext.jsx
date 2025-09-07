@@ -63,24 +63,6 @@ const messageStateReducer = (state, action) => {
         lastMessageTimestamp: null
       };
       
-    case 'SET_MESSAGES':
-      const { messages: newMessages } = action.payload;
-      const messageIdsSet = new Set();
-      const validMessages = newMessages.filter(msg => {
-        const id = msg.id || msg.messageId;
-        if (id && !messageIdsSet.has(id)) {
-          messageIdsSet.add(id);
-          return true;
-        }
-        return false;
-      });
-      
-      return {
-        ...state,
-        messages: validMessages,
-        messageIds: messageIdsSet
-      };
-      
     case 'RESET_UNREAD_COUNT':
       const { chatId } = action.payload;
       return {
