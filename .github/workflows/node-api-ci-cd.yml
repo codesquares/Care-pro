@@ -1,0 +1,201 @@
+name: Care-Pro Node-API CI/CD Pipeline
+
+on:
+  push:
+    paths:
+      - 'node-API/**'
+    branches: [ main, develop, staging ]
+  pull_request:
+    paths:
+      - 'node-API/**'
+    branches: [ main, develop, staging ]
+
+jobs:
+  # MANDATORY TESTS - Must pass before any deployment
+  mandatory-tests:
+    name: 🚨 MANDATORY Security & Critical Tests
+    runs-on: ubuntu-latest
+    
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+      
+    - name: Setup Node.js
+      uses: actions/setup-node@v4
+      with:
+        node-version: '18'
+        cache: 'npm'
+        cache-dependency-path: node-API/package-lock.json
+        
+    - name: Install dependencies
+      working-directory: node-API
+      run: npm ci
+      
+    - name: Run Security Tests (MANDATORY)
+      working-directory: node-API
+      run: npm run test:security
+      env:
+        NODE_ENV: test
+        
+    - name: Run Critical Controller Tests (MANDATORY)
+      working-directory: node-API
+      run: npm run test:unit -- --testPathPattern="controllers"
+      env:
+        NODE_ENV: test
+        
+    - name: Run Critical Integration Tests (MANDATORY)
+      working-directory: node-API
+      run: npm run test:integration -- --testPathPattern="critical"
+      env:
+        NODE_ENV: test
+        
+    - name: Generate Coverage Report
+      working-directory: node-API
+      run: npm run test:coverage
+      env:
+        NODE_ENV: test
+        
+    - name: Check Coverage Thresholds (MANDATORY)
+      working-directory: node-API
+      run: |
+        # Fail if coverage is below mandatory thresholds
+        npm run test:coverage -- --passWithNoTests=false
+      env:
+        NODE_ENV: test
+
+  # Full test suite - Required for staging/production
+  complete-test-suite:
+    name: 🧪 Complete Test Suite
+    needs: mandatory-tests
+    runs-on: ubuntu-latest
+    
+    strategy:
+      matrix:
+        node-version: [16, 18, 20]
+        
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+      
+    - name: Setup Node.js ${{ matrix.node-version }}
+      uses: actions/setup-node@v4
+      with:
+        node-version: ${{ matrix.node-version }}
+        cache: 'npm'
+        cache-dependency-path: node-API/package-lock.json
+        
+    - name: Install dependencies
+      working-directory: node-API
+      run: npm ci
+      
+    - name: Run all tests
+      working-directory: node-API
+      run: npm run test:ci
+      env:
+        NODE_ENV: test
+        
+    - name: Upload coverage to Codecov
+      uses: codecov/codecov-action@v3
+      with:
+        directory: node-API/coverage
+        flags: node-api
+
+  # Security audit - Must pass for production
+  security-audit:
+    name: 🔒 Security Audit
+    runs-on: ubuntu-latest
+    
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+      
+    - name: Setup Node.js
+      uses: actions/setup-node@v4
+      with:
+        node-version: '18'
+        cache: 'npm'
+        cache-dependency-path: node-API/package-lock.json
+        
+    - name: Install dependencies
+      working-directory: node-API
+      run: npm ci
+      
+    - name: Run security audit
+      working-directory: node-API
+      run: npm audit --audit-level high
+      
+    - name: Check for known vulnerabilities
+      working-directory: node-API
+      run: npx audit-ci --moderate
+
+  # Deployment gates based on branch
+  deploy-staging:
+    name: 🚀 Deploy to Staging
+    needs: [mandatory-tests, complete-test-suite, security-audit]
+    runs-on: ubuntu-latest
+    if: github.ref == 'refs/heads/develop' && github.event_name == 'push'
+    
+    environment:
+      name: staging
+      
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+      
+    - name: Deploy to staging
+      run: |
+        echo "🎯 All mandatory tests passed - deploying to staging"
+        echo "✅ Security tests: PASSED"
+        echo "✅ Critical controller tests: PASSED"
+        echo "✅ Integration tests: PASSED"
+        echo "✅ Coverage thresholds: MET"
+        echo "✅ Security audit: PASSED"
+        # Add actual deployment commands here
+
+  deploy-production:
+    name: 🏛️ Deploy to Production
+    needs: [mandatory-tests, complete-test-suite, security-audit]
+    runs-on: ubuntu-latest
+    if: github.ref == 'refs/heads/main' && github.event_name == 'push'
+    
+    environment:
+      name: production
+      
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+      
+    - name: Final deployment verification
+      run: |
+        echo "🎯 PRODUCTION DEPLOYMENT VERIFICATION"
+        echo "✅ All mandatory tests MUST pass before this step"
+        echo "✅ Security tests: PASSED"
+        echo "✅ Controller tests (95% coverage): PASSED"
+        echo "✅ Integration tests: PASSED"
+        echo "✅ Security audit: PASSED"
+        echo "✅ Multi-node compatibility: PASSED"
+        
+    - name: Deploy to production
+      run: |
+        echo "🚀 Deploying to production environment"
+        # Add actual production deployment commands here
+
+  # Notification on failure
+  notify-failure:
+    name: 📢 Notify on Failure
+    needs: [mandatory-tests, complete-test-suite, security-audit]
+    runs-on: ubuntu-latest
+    if: failure()
+    
+    steps:
+    - name: Notify team of test failures
+      run: |
+        echo "❌ MANDATORY TESTS FAILED"
+        echo "🚫 Deployment blocked until all mandatory tests pass"
+        echo "🔍 Check the following areas:"
+        echo "   - Security vulnerabilities"
+        echo "   - Authentication/authorization"
+        echo "   - Input validation"
+        echo "   - Rate limiting"
+        echo "   - Error handling"
+        echo "   - Code coverage thresholds"

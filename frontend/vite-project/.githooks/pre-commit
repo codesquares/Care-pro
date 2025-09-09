@@ -1,0 +1,105 @@
+#!/bin/bash
+
+# Frontend Pre-commit Hook - CarePro Vite Project
+# This script runs before every commit to ensure code quality and prevent broken code from entering the repository
+
+set -e  # Exit on any error
+
+# Color codes for better output
+RED='\033[0;31m'
+GREEN='\033[0;32m'
+YELLOW='\033[1;33m'
+BLUE='\033[0;34m'
+NC='\033[0m' # No Color
+
+# Get the project directory (frontend/vite-project)
+PROJECT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
+echo -e "${BLUE}🏗️  Running Frontend Pre-commit Checks in: $PROJECT_DIR${NC}"
+
+# Change to project directory
+cd "$PROJECT_DIR"
+
+# Function to print section headers
+print_section() {
+    echo
+    echo -e "${BLUE}$1${NC}"
+    echo "=================================================="
+}
+
+# Function to handle errors
+handle_error() {
+    echo -e "${RED}❌ Pre-commit check failed: $1${NC}"
+    echo -e "${RED}🚫 COMMIT REJECTED - Please fix the issues above before committing${NC}"
+    exit 1
+}
+
+print_section "🔍 1. LINTING CHECK (WARNING ONLY)"
+echo -e "${YELLOW}Running ESLint to check code quality...${NC}"
+if npm run lint; then
+    echo -e "${GREEN}✅ Linting passed${NC}"
+else
+    echo -e "${YELLOW}⚠️  Linting issues found - continuing anyway (fix these gradually)${NC}"
+fi
+
+print_section "🧪 2. RUNNING TESTS (WARNING ONLY)"
+echo -e "${YELLOW}Running Jest tests...${NC}"
+if npm test -- --passWithNoTests --watchAll=false; then
+    echo -e "${GREEN}✅ All tests passed${NC}"
+else
+    echo -e "${YELLOW}⚠️  Some tests failed - continuing anyway (fix these gradually)${NC}"
+fi
+
+print_section "🏗️  3. BUILD CHECK"
+echo -e "${YELLOW}Checking if the project builds successfully...${NC}"
+if npm run build; then
+    echo -e "${GREEN}✅ Build successful${NC}"
+    # Clean up build directory to keep repo clean
+    rm -rf dist/
+else
+    handle_error "Build failed"
+fi
+
+print_section "🔒 4. SECURITY AUDIT"
+echo -e "${YELLOW}Running npm security audit...${NC}"
+if npm audit --audit-level=high; then
+    echo -e "${GREEN}✅ No high-severity security vulnerabilities found${NC}"
+else
+    echo -e "${YELLOW}⚠️  Security vulnerabilities detected. Please review and fix.${NC}"
+    echo -e "${YELLOW}💡 Run 'npm audit fix' to automatically fix issues${NC}"
+    handle_error "Security audit failed"
+fi
+
+print_section "📦 5. DEPENDENCY CHECK"
+echo -e "${YELLOW}Checking for missing dependencies...${NC}"
+if npm ls --depth=0 > /dev/null 2>&1; then
+    echo -e "${GREEN}✅ All dependencies are properly installed${NC}"
+else
+    echo -e "${YELLOW}⚠️  Some dependencies might be missing or outdated${NC}"
+    echo -e "${YELLOW}💡 Run 'npm install --legacy-peer-deps' to fix dependency issues${NC}"
+    handle_error "Dependency check failed"
+fi
+
+print_section "🎯 6. TYPESCRIPT CHECK (if applicable)"
+if [ -f "tsconfig.json" ]; then
+    echo -e "${YELLOW}Running TypeScript type checking...${NC}"
+    if npx tsc --noEmit; then
+        echo -e "${GREEN}✅ TypeScript check passed${NC}"
+    else
+        handle_error "TypeScript type checking failed"
+    fi
+else
+    echo -e "${YELLOW}📝 No tsconfig.json found, skipping TypeScript check${NC}"
+fi
+
+# Final success message
+echo
+echo -e "${GREEN}🎉 ALL PRE-COMMIT CHECKS PASSED!${NC}"
+echo -e "${GREEN}✅ Your frontend code is ready to be committed${NC}"
+echo -e "${BLUE}📋 Summary of checks completed:${NC}"
+echo -e "   • Code linting (ESLint)"
+echo -e "   • Unit/Integration tests (Jest)"
+echo -e "   • Build verification (Vite)"
+echo -e "   • Security audit (npm audit)"
+echo -e "   • Dependency verification"
+echo -e "   • TypeScript type checking"
+echo

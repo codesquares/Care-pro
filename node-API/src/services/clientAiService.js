@@ -145,15 +145,15 @@ const analyzeClientNeedsAndPreferences = async (clientPreferences) => {
     console.error('Client needs analysis error:', error.message);
     // Return a minimal default response
     return {
-      serviceType: serviceType || 'general care',
+      serviceType: clientPreferences.serviceType || 'general care',
       serviceCategory: 'personal care',
       requirementsLevel: 2,
       keywords: ['care', 'assistance', 'support', 'help', 'caregiver', 
                 'daily activities', 'personal care', 'companionship', 
                 'elderly care', 'home care'],
-      locationPreference: location || 'not specified',
-      scheduleDetails: schedule || 'flexible',
-      specialRequirements: needs || 'none specified'
+      locationPreference: clientPreferences.location || 'not specified',
+      scheduleDetails: clientPreferences.schedule || 'flexible',
+      specialRequirements: clientPreferences.needs || 'none specified'
     };
   }
 };

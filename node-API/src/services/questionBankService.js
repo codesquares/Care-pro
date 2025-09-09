@@ -1,14 +1,13 @@
 // Question bank generation service using OpenAI
-const { Configuration, OpenAIApi } = require('openai');
+const OpenAI = require('openai');
 const fs = require('fs').promises;
 const path = require('path');
 const axios = require('axios');
 
 // Initialize OpenAI
-const configuration = new Configuration({
+const openai = new OpenAI({
   apiKey: process.env.OPENAI_API_KEY
 });
-const openai = new OpenAIApi(configuration);
 
 /**
  * Generate multiple choice questions based on the assessment prompt
@@ -44,7 +43,7 @@ Please provide exactly ${count} questions in the specified format. Focus on maki
 `;
 
     // Call OpenAI API
-    const response = await openai.createChatCompletion({
+    const response = await openai.chat.completions.create({
       model: "gpt-4",
       messages: [
         { role: "system", content: "You are an expert in adult social care training and assessment creation." },
@@ -55,7 +54,7 @@ Please provide exactly ${count} questions in the specified format. Focus on maki
     });
 
     // Parse the response
-    const content = response.data.choices[0].message.content.trim();
+    const content = response.choices[0].message.content.trim();
     const questions = parseQuestionsFromText(content);
     
     // Format questions for storage
