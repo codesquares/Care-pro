@@ -36,10 +36,10 @@ namespace Infrastructure.Content.Services
             _notificationService = notificationService;
         }
 
-        public async Task<WithdrawalRequestResponse> GetWithdrawalRequestByIdAsync(string id)
+        public async Task<WithdrawalRequestResponse> GetWithdrawalRequestByIdAsync(string withdrawalRequestId)
         {
-           // var withdrawal = await _dbContext.WithdrawalRequests.Find(w => w.Id == ObjectId.Parse(id)).FirstOrDefaultAsync();
-            var withdrawal = await _dbContext.WithdrawalRequests.FirstOrDefaultAsync(w => w.Id == ObjectId.Parse(id));
+           // var withdrawal = await _dbContext.WithdrawalRequests.Find(w => w.Id == ObjectId.Parse(withdrawalRequestId)).FirstOrDefaultAsync();
+            var withdrawal = await _dbContext.WithdrawalRequests.FirstOrDefaultAsync(w => w.Id == ObjectId.Parse(withdrawalRequestId));
 
             if (withdrawal == null)
                 return null;
@@ -88,6 +88,33 @@ namespace Infrastructure.Content.Services
 
             return responses;
         }
+
+
+        public async Task<List<CaregiverWithdrawalHistoryResponse>> GetCaregiverWithdrawalRequestHistoryAsync(string caregiverId)
+        {
+            var withdrawals = await _dbContext.WithdrawalRequests
+                .Where(x => x.CaregiverId == caregiverId)
+                .ToListAsync();
+            var responses = new List<CaregiverWithdrawalHistoryResponse>();
+
+            foreach (var withdrawal in withdrawals)
+            {
+                var withdrawalDTO = new CaregiverWithdrawalHistoryResponse
+                {
+                    Id = withdrawal.Id.ToString(),
+                    CaregiverId = withdrawal.CaregiverId,
+                    AmountRequested = withdrawal.AmountRequested,
+                    Activity = "Withdrawal",
+                    Description = withdrawal.Status,
+                    CompletedAt = withdrawal.CreatedAt,                
+                                      
+                };
+                responses.Add(withdrawalDTO);
+            }
+
+            return responses;
+        }
+
 
         public async Task<List<WithdrawalRequestResponse>> GetWithdrawalRequestsByStatusAsync(string status)
         {

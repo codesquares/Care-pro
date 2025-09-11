@@ -31,6 +31,8 @@ namespace Application.DTOs
         public string ClientOrderId { get; set; }
         public string CaregiverId { get; set; }
         public string CaregiverName { get; set; }
+        public string Activity { get; set; }
+        public string Description { get; set; }
         public string ClientOrderStatus { get; set; }
         public decimal Amount { get; set; }
         public decimal WithdrawableAmount { get; set; }

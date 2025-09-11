@@ -20,6 +20,7 @@ namespace Application.Interfaces.Content
 
 
         Task <IEnumerable<EarningsResponse>> GetAllCaregiverEarningAsync(string caregiverId);
+        Task<IEnumerable<TransactionHistoryResponse>> GetCaregiverTransactionHistoryAsync(string caregiverId);
 
     }
 }

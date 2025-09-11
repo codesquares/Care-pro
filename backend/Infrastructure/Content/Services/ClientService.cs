@@ -17,6 +17,8 @@ using Application.Interfaces.Email;
 using Microsoft.Extensions.Configuration;
 using Microsoft.IdentityModel.Tokens;
 using System.IdentityModel.Tokens.Jwt;
+using System.Web;
+using System.Security.Claims;
 
 namespace Infrastructure.Content.Services
 {
@@ -41,11 +43,13 @@ namespace Infrastructure.Content.Services
         {
             var hashedPassword = BCrypt.Net.BCrypt.HashPassword(addClientUserRequest.Password);
 
-            var clientUserExist = await careProDbContext.CareGivers.FirstOrDefaultAsync(x => x.Email == addClientUserRequest.Email);
+            var clientUserExist = await careProDbContext.Clients.FirstOrDefaultAsync(x => x.Email == addClientUserRequest.Email);
+            
+           // var appUserExist = await careProDbContext.AppUsers.FirstOrDefaultAsync(x => x.Email == addClientUserRequest.Email);
 
-            if (clientUserExist != null)
+            if (clientUserExist != null )
             {
-                throw new InvalidOperationException("User already exist, Kindly Login or use forget password!");
+                throw new InvalidOperationException("User already exist, Kindly Login or use a different email!");
             }
 
             /// CONVERT DTO TO DOMAIN OBJECT            
@@ -98,12 +102,16 @@ namespace Infrastructure.Content.Services
                 careProAppUser.Email,
                 jwtSecretKey // inject or get from config
             );
-            var verificationLink = $"{origin}/verify-email?token={token}";
+
+            string verificationLink;
+            verificationLink = IsFrontendOrigin(origin)
+                ? $"{origin}/confirm-email?token={HttpUtility.UrlEncode(token)}"
+                : $"{origin}/api/CareGivers/confirm-email?token={HttpUtility.UrlEncode(token)}";
 
             await emailService.SendSignUpVerificationEmailAsync(
                 careProAppUser.Email,
                 verificationLink,
-                careProAppUser.FirstName + " " + careProAppUser.LastName
+                careProAppUser.FirstName
             );
 
             #endregion SendVerificationEmail
@@ -123,6 +131,13 @@ namespace Infrastructure.Content.Services
             };
 
             return clientUserDTO;
+        }
+
+
+        // Detect if request is coming from frontend or not
+        private bool IsFrontendOrigin(string origin)
+        {
+            return origin.Contains("localhost:5173") || origin.Contains("onrender.com");
         }
 
 
@@ -152,7 +167,8 @@ namespace Infrastructure.Content.Services
                 if (string.IsNullOrEmpty(userId))
                     return "Invalid token. User ID not found.";
 
-                var user = await careProDbContext.AppUsers.FindAsync(ObjectId.Parse(userId));
+                var objectId = ObjectId.Parse(userId);
+                var user = await careProDbContext.AppUsers.FirstOrDefaultAsync(u => u.AppUserId == objectId);
 
                 if (user == null)
                     return "User not found.";
@@ -176,6 +192,64 @@ namespace Infrastructure.Content.Services
         }
 
 
+        /// Validate the Email (token) from front end
+        public async Task<(bool IsValid, string? UserId, string? Email, string? ErrorMessage)> ValidateEmailTokenAsync(string token)
+        {
+            var jwtSecret = configuration["JwtSettings:Secret"];
+            var tokenHandler = new JwtSecurityTokenHandler();
+            var key = Encoding.UTF8.GetBytes(jwtSecret);
+
+            try
+            {
+                var principal = tokenHandler.ValidateToken(token, new TokenValidationParameters
+                {
+                    ValidateIssuer = false,
+                    ValidateAudience = false,
+                    ValidateLifetime = true,
+                    ValidateIssuerSigningKey = true,
+                    IssuerSigningKey = new SymmetricSecurityKey(key),
+                    ClockSkew = TimeSpan.Zero
+                }, out SecurityToken validatedToken);
+
+                var userId = principal.FindFirst("userId")?.Value;
+                var email = principal.FindFirst(ClaimTypes.Email)?.Value;
+
+                if (string.IsNullOrEmpty(userId))
+                    return (false, null, null, "Invalid token. User ID missing.");
+
+                return (true, userId, email, null);
+            }
+            catch (SecurityTokenException)
+            {
+                return (false, null, null, "Token is invalid or expired.");
+            }
+            catch (Exception ex)
+            {
+                return (false, null, null, $"An error occurred: {ex.Message}");
+            }
+        }
+
+        /// Confirm Email from front end
+        public async Task<string> ConfirmEmailFromFrontendAsync(string userId)
+        {
+            var objectId = ObjectId.Parse(userId);
+            var user = await careProDbContext.AppUsers.FirstOrDefaultAsync(u => u.AppUserId == objectId);
+
+            if (user == null)
+                return "User not found.";
+
+            if (user.EmailConfirmed)
+                return "Email already confirmed.";
+
+            user.EmailConfirmed = true;
+            await careProDbContext.SaveChangesAsync();
+
+            return $"Email confirmed successfully for {user.Email}.";
+        }
+
+
+
+
         public async Task<string> ResendEmailConfirmationAsync(string email, string? origin)
         {
             var user = await careProDbContext.AppUsers.FirstOrDefaultAsync(x => x.Email.ToLower() == email.ToLower());
@@ -196,16 +270,17 @@ namespace Infrastructure.Content.Services
                 user.Email,
                 jwtSecretKey 
             );
-            var verificationLink = $"{origin}/verify-email?token={token}";
+
+            string verificationLink;
+            verificationLink = IsFrontendOrigin(origin)
+                ? $"{origin}/confirm-email?token={HttpUtility.UrlEncode(token)}"
+                : $"{origin}/api/CareGivers/confirm-email?token={HttpUtility.UrlEncode(token)}";
 
             await emailService.SendSignUpVerificationEmailAsync(
                 user.Email,
                 verificationLink,
                 user.FirstName + " " + user.LastName
             );
-
-
-
 
             #endregion
 
@@ -238,7 +313,8 @@ namespace Infrastructure.Content.Services
                 Role = client.Role,
                 Status = client.Status,
                 HomeAddress = client.HomeAddress,
-                
+                ProfileImage = client.ProfileImage,
+
                 CreatedAt = client.CreatedAt,
             };
 
@@ -269,7 +345,7 @@ namespace Infrastructure.Content.Services
                     IsDeleted = clientUser.IsDeleted,
                     Status = clientUser.Status,
                     HomeAddress = clientUser.HomeAddress,
-                    
+                    ProfileImage = clientUser.ProfileImage,
                     CreatedAt = clientUser.CreatedAt,
                 };
                 clientUsersDTOs.Add(clientUserDTO);
@@ -346,7 +422,7 @@ namespace Infrastructure.Content.Services
             return $"Client with ID '{clientId}' Availability Status Updated successfully.";
         }
 
-        public async Task ResetPasswordAsync(ResetPasswordRequest resetPasswordRequest)
+        public async Task ChangePasswordAsync(ResetPasswordRequest resetPasswordRequest)
         {
             var user = await careProDbContext.AppUsers.FirstOrDefaultAsync(u => u.Email == resetPasswordRequest.Email.ToLower());
 
@@ -368,7 +444,7 @@ namespace Infrastructure.Content.Services
             await careProDbContext.SaveChangesAsync();
         }
 
-        public async Task GeneratePasswordResetTokenAsync(PasswordResetRequestDto passwordResetRequestDto)
+        public async Task GeneratePasswordResetTokenAsync(PasswordResetRequestDto passwordResetRequestDto, string? origin)
         {
             var user = await careProDbContext.AppUsers.FirstOrDefaultAsync(u => u.Email == passwordResetRequestDto.Email.ToLower());
 
@@ -377,7 +453,13 @@ namespace Infrastructure.Content.Services
 
             var token = tokenHandler.GeneratePasswordResetToken(passwordResetRequestDto.Email);
 
-            await emailService.SendPasswordResetEmailAsync(passwordResetRequestDto.Email, token);
+            // Build the full reset link (example frontend route)
+            string resetLink;
+            resetLink = IsFrontendOrigin(origin)
+                ? $"{origin}/forgot-password?token={HttpUtility.UrlEncode(token)}"
+                : $"{origin}/api/CareGivers/resetPassword?token={HttpUtility.UrlEncode(token)}";
+
+            await emailService.SendPasswordResetEmailAsync(passwordResetRequestDto.Email, resetLink, user.FirstName);
         }
 
         public async Task ResetPasswordWithJwtAsync(PasswordResetDto request)

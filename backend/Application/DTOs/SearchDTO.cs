@@ -1,4 +1,5 @@
-﻿using System;
+﻿using Domain.Entities;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
@@ -14,4 +15,23 @@ namespace Application.DTOs
     {
         public CaregiverResponse CaregiverResponses { get; set; }
     }
+
+
+    public class ClientOrderWithGig : ClientOrder
+    {
+        public Gig Gigs { get; set; }
+    }
+
+    public class ClientOrderWithGigCaregiver : ClientOrderWithGig
+    {
+        public Caregiver Caregivers { get; set; }
+    }
+
+    public class ClientOrderFull : ClientOrderWithGigCaregiver
+    {
+        public Client Clients { get; set; }
+    }
+
+
+
 }

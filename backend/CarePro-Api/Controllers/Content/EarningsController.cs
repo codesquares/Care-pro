@@ -115,5 +115,20 @@ namespace CarePro_Api.Controllers.Content
             }
         }
 
+
+
+        [HttpGet("transaction-history/{caregiverId}")]
+        public async Task<IActionResult> GetCaregiverTransactionHistoryAsync(string caregiverId)
+        {
+            try
+            {
+                var result = await _earningsService.GetCaregiverTransactionHistoryAsync(caregiverId);
+                return Ok(result);
+            }
+            catch (Exception ex)
+            {
+                return BadRequest(new { ErrorMessage = ex.Message });
+            }
+        }
     }
 }

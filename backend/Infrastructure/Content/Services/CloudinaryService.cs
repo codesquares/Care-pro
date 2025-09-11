@@ -21,17 +21,19 @@ namespace Infrastructure.Content.Services
             _httpClient = new HttpClient();
         }
 
+       
+
         public async Task<string> UploadVideoAsync(byte[] videoBytes, string fileName)
         {
             using var stream = new MemoryStream(videoBytes);
             var uploadParams = new VideoUploadParams
             {
                 File = new FileDescription(fileName, stream),
-                //ResourceType = ResourceType.Video
+               // ResourceType = ResourceType.Video, // Important for videos
                 Folder = "caregiver_videos"
             };
 
-            var uploadResult = await _cloudinary.UploadAsync(uploadParams);
+            var uploadResult = await _cloudinary.UploadLargeAsync(uploadParams); // Handles big files
             if (uploadResult.StatusCode == System.Net.HttpStatusCode.OK)
             {
                 return uploadResult.SecureUrl.AbsoluteUri;
@@ -41,6 +43,27 @@ namespace Infrastructure.Content.Services
         }
 
 
+
+        //public async Task<string> UploadVideoAsync(byte[] videoBytes, string fileName)
+        //{
+        //    using var stream = new MemoryStream(videoBytes);
+        //    var uploadParams = new VideoUploadParams
+        //    {
+        //        File = new FileDescription(fileName, stream),
+        //        //ResourceType = ResourceType.Video
+        //        Folder = "caregiver_videos"
+        //    };
+
+        //    var uploadResult = await _cloudinary.UploadAsync(uploadParams);
+        //    if (uploadResult.StatusCode == System.Net.HttpStatusCode.OK)
+        //    {
+        //        return uploadResult.SecureUrl.AbsoluteUri;
+        //    }
+
+        //    throw new Exception("Video upload failed.");
+        //}
+
+
         public async Task<string> UploadImageAsync(byte[] imageBytes, string fileName)
         {
             using var stream = new MemoryStream(imageBytes);
@@ -48,6 +71,26 @@ namespace Infrastructure.Content.Services
             {
                 File = new FileDescription(fileName, stream),
                 Folder = "caregiver_images"
+            };
+
+            var uploadResult = await _cloudinary.UploadAsync(uploadParams);
+
+            if (uploadResult.StatusCode == System.Net.HttpStatusCode.OK)
+            {
+                return uploadResult.SecureUrl.AbsoluteUri;
+            }
+
+            throw new Exception("Image upload failed.");
+        }
+
+
+        public async Task<string> UploadGigImageAsync(byte[] imageBytes, string fileName)
+        {
+            using var stream = new MemoryStream(imageBytes);
+            var uploadParams = new ImageUploadParams
+            {
+                File = new FileDescription(fileName, stream),
+                Folder = "gigs_images"
             };
 
             var uploadResult = await _cloudinary.UploadAsync(uploadParams);

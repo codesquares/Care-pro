@@ -45,10 +45,15 @@ namespace CarePro_Api.Controllers.Content
                     return BadRequest(ModelState);
                 }
 
+                
+
                 HttpContext httpContext = httpContextAccessor.HttpContext;
 
-                // Get the origin (i.e., source URL) of the incoming request
-                string origin = httpContext.Request.Headers["Host"];
+                // Get frontend origin from the request
+                string origin = httpContext.Request.Headers["Origin"].FirstOrDefault()
+                                ?? $"{httpContext.Request.Scheme}://{httpContext.Request.Host}";
+
+                
 
 
                 // Pass Domain Object to Repository to Persist this
@@ -87,16 +92,42 @@ namespace CarePro_Api.Controllers.Content
 
         #region Email Handling
         
+        /// Confirm Email from the API
+        //[HttpGet("confirm-email")]
+        //public async Task<IActionResult> ConfirmEmail([FromQuery] string token)
+        //{
+        //    var result = await careGiverService.ConfirmEmailAsync(token);
 
-        [HttpGet("confirm-email")]
-        public async Task<IActionResult> ConfirmEmail([FromQuery] string token)
+        //    if (result.StartsWith("Account confirmed"))
+        //        return Ok(result);
+
+        //    return BadRequest(result);
+        //}
+
+
+
+        [HttpGet("validate-email-token")]
+        public async Task<IActionResult> ValidateEmailToken([FromQuery] string token)
         {
-            var result = await careGiverService.ConfirmEmailAsync(token);
+            var result = await careGiverService.ValidateEmailTokenAsync(token);
 
-            if (result.StartsWith("Account confirmed"))
-                return Ok(result);
+            if (!result.IsValid)
+                return BadRequest(new { success = false, message = result.ErrorMessage });
 
-            return BadRequest(result);
+            return Ok(new
+            {
+                success = true,
+                userId = result.UserId,
+                email = result.Email
+            });
+        }
+
+        /// Confirm Email from the Front-end
+        [HttpPost("confirm-email")]
+        public async Task<IActionResult> ConfirmEmail([FromBody] string userId)
+        {
+            var message = await careGiverService.ConfirmEmailFromFrontendAsync(userId);
+            return Ok(new { message });
         }
 
 
@@ -109,8 +140,9 @@ namespace CarePro_Api.Controllers.Content
             {
                 HttpContext httpContext = httpContextAccessor.HttpContext;
 
-                // Get the origin (i.e., source URL) of the incoming request
-                string origin = httpContext.Request.Headers["Host"];
+                // Get frontend origin from the request
+                string origin = httpContext.Request.Headers["Origin"].FirstOrDefault()
+                                ?? $"{httpContext.Request.Scheme}://{httpContext.Request.Host}";
 
 
 
@@ -160,9 +192,6 @@ namespace CarePro_Api.Controllers.Content
                 }
             }
         }
-        #endregion
-
-
 
         [HttpGet]
         [Route("AllCaregivers")]
@@ -195,7 +224,7 @@ namespace CarePro_Api.Controllers.Content
                 return StatusCode(500, new { StatusCode = 500, ErrorMessage = dbEx.Message });
             }
             catch (Exception ex)
-            {                
+            {
                 return StatusCode(500, new { StatusCode = 500, ErrorMessage = ex.Message });
             }
 
@@ -223,6 +252,14 @@ namespace CarePro_Api.Controllers.Content
             }
         }
 
+
+
+
+        #endregion
+
+
+
+
         [HttpPut]
         [Route("UpdateCaregiverInfo/{caregiverId}")]        
         //[Authorize(Roles = "Caregiver, Client, Admin")]
@@ -231,7 +268,7 @@ namespace CarePro_Api.Controllers.Content
             try
             {
                 logger.LogInformation($"Caregiver with ID: {caregiverId} additional Information has been updated.");
-                var caregiver = await careGiverService.UpdateCaregiverInfornmationAsync(caregiverId, updateCaregiverAdditionalInfoRequest);
+                var caregiver = await careGiverService.UpdateCaregiverInformationAsync(caregiverId, updateCaregiverAdditionalInfoRequest);
                 return Ok(caregiver);
             }
             catch (ArgumentException ex)
@@ -287,7 +324,7 @@ namespace CarePro_Api.Controllers.Content
             try
             {
                 logger.LogInformation($"Caregiver with ID: {caregiverId} additional Information has been updated.");
-                var caregiver = await careGiverService.UpdateCaregiverInfornmationAsync(caregiverId, updateCaregiverAdditionalInfoRequest);
+                var caregiver = await careGiverService.UpdateCaregiverInformationAsync(caregiverId, updateCaregiverAdditionalInfoRequest);
                 return Ok(caregiver);
             }
             catch (ArgumentException ex)
@@ -355,16 +392,16 @@ namespace CarePro_Api.Controllers.Content
 
 
 
-        [HttpPost("reset-password")]
-        public async Task<IActionResult> ResetPassword([FromBody] ResetPasswordRequest request)
+        [HttpPost("change-password")]
+        public async Task<IActionResult> ChangePassword([FromBody] ResetPasswordRequest request)
         {
             if (!ModelState.IsValid)
                 return BadRequest(ModelState);
 
             try
             {
-                await careGiverService.ResetPasswordAsync(request);
-                return Ok(new { message = "Password reset successful." });
+                await careGiverService.ChangePasswordAsync(request);
+                return Ok(new { message = "Password changed successful." });
             }
             catch (InvalidOperationException ex)
             {
@@ -389,7 +426,13 @@ namespace CarePro_Api.Controllers.Content
         [AllowAnonymous] // Allow unauthenticated access
         public async Task<IActionResult> RequestPasswordReset([FromBody] PasswordResetRequestDto request)
         {
-            await careGiverService.GeneratePasswordResetTokenAsync(request);
+            HttpContext httpContext = httpContextAccessor.HttpContext;
+
+            // Determine the origin of the request (frontend/backend)
+            string origin = httpContext.Request.Headers["Origin"].FirstOrDefault()
+                            ?? $"{httpContext.Request.Scheme}://{httpContext.Request.Host}";
+
+            await careGiverService.GeneratePasswordResetTokenAsync(request, origin);
             return Ok(new { message = "A reset link has been sent to the registered Email ." });
         }
 

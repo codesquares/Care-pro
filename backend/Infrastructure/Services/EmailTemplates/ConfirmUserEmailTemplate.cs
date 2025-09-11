@@ -59,22 +59,23 @@ namespace Infrastructure.Services.EmailTemplates
 
                                                                 <p style=""font-family: sans-serif; line-height: 1.5; font-size: 14px; font-weight: normal; margin: 0; margin-bottom: 25px; word-wrap: break-word;"">
 
+                                                                    <h3>Welcome to CarePro!</h3>
 
-
-                                                                    Please, kindly confirm your account by clicking the ""Click Here"" below.
-
-                                                                    <br />
+                                                                    Please, kindly verify your account by clicking the ""Verify my Email"" below.
 
                                                                     <br />
 
-                                                                    <a href = ""{{ TokenUrl }}""> Click Here </a>
+                                                                    <br />
+
+                                                                    <a href = ""{{ verificationLink }}""> Verify my Email </a>
 
                                                                      
                                                                     <br />
                                                                     <br />
 
-                                                                                                                
-
+                                                                    This helps us ensure we have the right contact information and lets you access your account securely.                                          
+                                                                    <p>If you did not sign up for CarePro, please ignore this email.</p>
+                                                                    <p>Thanks,<br />The CarePro Team</p>""
 
                                                                 </p>
 

@@ -14,6 +14,8 @@ namespace Application.Interfaces.Content
 
 
         Task<IEnumerable<ClientOrderResponse>> GetAllClientOrderAsync(string clientUserId);
+        Task<IEnumerable<ClientOrderResponse>> GetCaregiverOrdersAsync(string caregiverId);
+        Task<IEnumerable<ClientOrderResponse>> GetAllClientOrdersByGigIdAsync(string gigId);
 
         Task<ClientOrderResponse> GetClientOrderAsync(string orderId);
 

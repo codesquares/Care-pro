@@ -22,12 +22,12 @@ namespace CarePro_Api.Controllers.Content
             _withdrawalRequestService = withdrawalRequestService;
         }
 
-        [HttpGet("{id}")]
-        public async Task<IActionResult> GetWithdrawalRequestById(string id)
+        [HttpGet("{withdrawalRequestId}")]
+        public async Task<IActionResult> GetWithdrawalRequestById(string withdrawalRequestId)
         {
             try
             {
-                var withdrawal = await _withdrawalRequestService.GetWithdrawalRequestByIdAsync(id);
+                var withdrawal = await _withdrawalRequestService.GetWithdrawalRequestByIdAsync(withdrawalRequestId);
                 if (withdrawal == null)
                     return NotFound("Withdrawal request not found");
 
@@ -92,6 +92,25 @@ namespace CarePro_Api.Controllers.Content
             }
         }
 
+
+        [HttpGet("caregiver-withdrawal-history/{caregiverId}")]
+        public async Task<IActionResult> GetCaregiverWithdrawalRequestHistoryAsync(string caregiverId)
+        {
+            try
+            {
+                
+
+                var withdrawals = await _withdrawalRequestService.GetCaregiverWithdrawalRequestHistoryAsync(caregiverId);
+                return Ok(withdrawals);
+            }
+            catch (Exception ex)
+            {
+                return BadRequest(new { ErrorMessage = ex.Message });
+            }
+        }
+
+
+
         [HttpGet("status/{status}")]
        // [Authorize(Roles = "Admin,SuperAdmin")]
         public async Task<IActionResult> GetWithdrawalRequestsByStatus(string status)
@@ -155,7 +174,7 @@ namespace CarePro_Api.Controllers.Content
         {
             try
             {
-                // Ensure admin id in the request matches the authenticated user
+                // Ensure admin withdrawalRequestId in the request matches the authenticated user
                 string adminId = User.FindFirstValue(ClaimTypes.NameIdentifier);
                 request.AdminId = adminId;
 

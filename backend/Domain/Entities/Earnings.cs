@@ -11,6 +11,7 @@ namespace Domain.Entities
     {
         public ObjectId Id { get; set; }
         public string ClientOrderId { get; set; }
+        public string ClientOrderStatus { get; set; }
         public string CaregiverId { get; set; }
         public decimal Amount { get; set; }
         public DateTime CreatedAt { get; set; }

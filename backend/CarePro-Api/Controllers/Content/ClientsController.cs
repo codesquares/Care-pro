@@ -34,11 +34,12 @@ namespace CarePro_Api.Controllers.Content
             {
                 HttpContext httpContext = httpContextAccessor.HttpContext;
 
-                // Get the origin (i.e., source URL) of the incoming request
-                string origin = httpContext.Request.Headers["Host"];
+                // Get frontend origin from the request
+                string origin = httpContext.Request.Headers["Origin"].FirstOrDefault()
+                                ?? $"{httpContext.Request.Scheme}://{httpContext.Request.Host}";
 
 
-                // Pass Domain Object to Repository, to Persisit this
+                // Pass Domain Object to Repository, to Persist this
                 var clientUser = await clientService.CreateClientUserAsync(addClientUserRequest, origin);
 
 
@@ -77,16 +78,42 @@ namespace CarePro_Api.Controllers.Content
         #region Email Handling
 
 
-        [HttpGet("confirm-email")]
-        public async Task<IActionResult> ConfirmEmail([FromQuery] string token)
+        //[HttpGet("confirm-email")]
+        //public async Task<IActionResult> ConfirmEmail([FromQuery] string token)
+        //{
+        //    var result = await clientService.ConfirmEmailAsync(token);
+
+        //    if (result.StartsWith("Account confirmed"))
+        //        return Ok(result);
+
+        //    return BadRequest(result);
+        //}
+
+
+        [HttpGet("validate-email-token")]
+        public async Task<IActionResult> ValidateEmailToken([FromQuery] string token)
         {
-            var result = await clientService.ConfirmEmailAsync(token);
+            var result = await clientService.ValidateEmailTokenAsync(token);
 
-            if (result.StartsWith("Account confirmed"))
-                return Ok(result);
+            if (!result.IsValid)
+                return BadRequest(new { success = false, message = result.ErrorMessage });
 
-            return BadRequest(result);
+            return Ok(new
+            {
+                success = true,
+                userId = result.UserId,
+                email = result.Email
+            });
         }
+
+        /// Confirm Email from the Front-end
+        [HttpPost("confirm-email")]
+        public async Task<IActionResult> ConfirmEmail([FromBody] string userId)
+        {
+            var message = await clientService.ConfirmEmailFromFrontendAsync(userId);
+            return Ok(new { message });
+        }
+
 
 
 
@@ -98,8 +125,9 @@ namespace CarePro_Api.Controllers.Content
             {
                 HttpContext httpContext = httpContextAccessor.HttpContext;
 
-                // Get the origin (i.e., source URL) of the incoming request
-                string origin = httpContext.Request.Headers["Host"];
+                // Get frontend origin from the request
+                string origin = httpContext.Request.Headers["Origin"].FirstOrDefault()
+                                ?? $"{httpContext.Request.Scheme}://{httpContext.Request.Host}";
 
 
 
@@ -242,7 +270,7 @@ namespace CarePro_Api.Controllers.Content
 
             try
             {
-                await clientService.ResetPasswordAsync(request);
+                await clientService.ChangePasswordAsync(request);
                 return Ok(new { message = "Password reset successful." });
             }
             catch (InvalidOperationException ex)
@@ -268,7 +296,14 @@ namespace CarePro_Api.Controllers.Content
         [AllowAnonymous] // Allow unauthenticated access
         public async Task<IActionResult> RequestPasswordReset([FromBody] PasswordResetRequestDto request)
         {
-            await clientService.GeneratePasswordResetTokenAsync(request);
+            HttpContext httpContext = httpContextAccessor.HttpContext;
+
+            // Determine the origin of the request (frontend/backend)
+            string origin = httpContext.Request.Headers["Origin"].FirstOrDefault()
+                            ?? $"{httpContext.Request.Scheme}://{httpContext.Request.Host}";
+
+
+            await clientService.GeneratePasswordResetTokenAsync(request, origin);
             return Ok(new { message = "A reset link has been sent to the registered Email ." });
         }
 

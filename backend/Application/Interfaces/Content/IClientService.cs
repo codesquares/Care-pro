@@ -14,6 +14,13 @@ namespace Application.Interfaces.Content
         Task<string> ConfirmEmailAsync(string token);
         Task<string> ResendEmailConfirmationAsync(string email, string? origin);
 
+
+        Task<(bool IsValid, string? UserId, string? Email, string? ErrorMessage)> ValidateEmailTokenAsync(string token);
+
+        Task<string> ConfirmEmailFromFrontendAsync(string userId);
+
+
+
         Task<ClientResponse> GetClientUserAsync(string clientId);
 
         Task<IEnumerable<ClientResponse>> GetAllClientUserAsync();
@@ -25,9 +32,9 @@ namespace Application.Interfaces.Content
 
         Task<string> SoftDeleteClientAsync(string clientId);
 
-        Task ResetPasswordAsync(ResetPasswordRequest resetPasswordRequest);
+        Task ChangePasswordAsync(ResetPasswordRequest resetPasswordRequest);
 
-        Task GeneratePasswordResetTokenAsync(PasswordResetRequestDto passwordResetRequestDto);
+        Task GeneratePasswordResetTokenAsync(PasswordResetRequestDto passwordResetRequestDto, string? origin);
 
         Task ResetPasswordWithJwtAsync(PasswordResetDto request);
 

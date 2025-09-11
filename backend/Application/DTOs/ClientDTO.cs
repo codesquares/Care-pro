@@ -64,6 +64,7 @@ namespace Application.DTOs
         public string Role { get; set; }
 
         public string HomeAddress { get; set; }
+        public string ProfileImage { get; set; }
 
         public string PhoneNo { get; set; }
         public bool IsDeleted { get; set; }

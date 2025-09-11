@@ -285,10 +285,14 @@ namespace Infrastructure.Content.Services
                     CaregiverId = earning.CaregiverId,
                     CaregiverName = caregiver.FirstName + " " + caregiver.LastName,
 
+                    Activity = "Earning",
+
                     
                     Amount = earning.Amount,
-                    ClientOrderStatus = clientOrder.ClientOrderStatus,
-                    CreatedAt = clientOrder.OrderCreatedOn,
+                   // ClientOrderStatus = clientOrder.ClientOrderStatus,
+                    Description = clientOrder.ClientOrderStatus,
+                   // CreatedAt = clientOrder.OrderCreatedOn,
+                    CreatedAt = earning.CreatedAt,
 
                 };
 
@@ -297,5 +301,48 @@ namespace Infrastructure.Content.Services
 
             return earningsDTOs;
         }
+
+
+        public async Task<IEnumerable<TransactionHistoryResponse>> GetCaregiverTransactionHistoryAsync(string caregiverId)
+        {
+            var transactionHistory = new List<TransactionHistoryResponse>();
+
+            // 1. Get all withdrawals in one query
+            var withdrawals = await _dbContext.WithdrawalRequests
+                .Where(x => x.CaregiverId == caregiverId)
+                .Select(w => new TransactionHistoryResponse
+                {
+                    Id = w.Id.ToString(),
+                    CaregiverId = w.CaregiverId,
+                    Amount = w.AmountRequested,
+                    Activity = "Withdrawal",
+                    Description = w.Status,
+                    CreatedAt = w.CreatedAt
+                })
+                .ToListAsync();
+
+            transactionHistory.AddRange(withdrawals);
+
+            // 2. Get all earnings with related data in one query
+            var earnings = await _dbContext.Earnings
+                .Where(x => x.CaregiverId == caregiverId)
+                
+                .Select(e => new TransactionHistoryResponse
+                {
+                    Id = e.Id.ToString(),
+                    CaregiverId = e.CaregiverId,
+                    Amount = e.Amount,
+                    Activity = "Earning",
+                    Description = e.ClientOrderStatus,
+                    CreatedAt = e.CreatedAt
+                })
+                .ToListAsync();
+
+            transactionHistory.AddRange(earnings);
+
+            // 3. Return combined list sorted by date (latest first)
+            return transactionHistory.OrderByDescending(t => t.CreatedAt);
+        }
+
     }
 }

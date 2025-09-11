@@ -257,6 +257,194 @@ namespace Infrastructure.Content.Services
             return clientOrdersDTOs;
         }
 
+        public async Task<IEnumerable<ClientOrderResponse>> GetCaregiverOrdersAsync(string caregiverId)
+        {
+            var orders = await careProDbContext.ClientOrders
+               .Where(x => x.CaregiverId == caregiverId)
+               .OrderBy(x => x.OrderCreatedAt)
+               .ToListAsync();
+
+            var clientOrdersDTOs = new List<ClientOrderResponse>();
+
+            foreach (var clientOrder in orders)
+            {
+                var gig = await gigServices.GetGigAsync(clientOrder.GigId);
+                if (gig == null)
+                {
+                    throw new KeyNotFoundException("The GigID entered is not a Valid ID");
+                }
+
+                var caregiver = await careGiverService.GetCaregiverUserAsync(gig.CaregiverId);
+                if (caregiver == null)
+                {
+                    throw new KeyNotFoundException("The UserId entered is not a Valid ID");
+                }
+
+                //var client = await careGiverService.GetCaregiverUserAsync(clientOrder.ClientId);
+                var client = await clientService.GetClientUserAsync(clientOrder.ClientId);
+                if (client == null)
+                {
+                    throw new KeyNotFoundException("The ClientId entered is not a Valid ID");
+                }
+
+                var clientOrderDTO = new ClientOrderResponse()
+                {
+                    Id = clientOrder.Id.ToString(),
+                    ClientId = clientOrder.ClientId,
+                    ClientName = client.FirstName + " " + client.LastName,
+
+                    CaregiverId = gig.CaregiverId,
+                    CaregiverName = caregiver.FirstName + " " + caregiver.LastName,
+
+                    GigId = clientOrder.GigId,
+                    GigTitle = gig.Title,
+                    GigImage = gig.Image1,
+                    GigPackageDetails = gig.PackageDetails,
+                    GigStatus = gig.Status,
+
+
+                    PaymentOption = clientOrder.PaymentOption,
+                    Amount = clientOrder.Amount,
+                    TransactionId = clientOrder.TransactionId,
+                    ClientOrderStatus = clientOrder.ClientOrderStatus,
+                    NoOfOrders = clientOrdersDTOs.Count(),
+                    OrderCreatedOn = clientOrder.OrderCreatedAt,
+
+                };
+
+                clientOrdersDTOs.Add(clientOrderDTO);
+            }
+
+            return clientOrdersDTOs;
+        }
+
+        public async Task<IEnumerable<ClientOrderResponse>> GetAllClientOrdersByGigIdAsync(string gigId)
+        {
+            var orders = await careProDbContext.ClientOrders
+               .Where(x => x.GigId == gigId)
+               .OrderBy(x => x.OrderCreatedAt)
+               .ToListAsync();
+
+            var clientOrdersDTOs = new List<ClientOrderResponse>();
+
+            foreach (var clientOrder in orders)
+            {
+                var gig = await gigServices.GetGigAsync(clientOrder.GigId);
+                if (gig == null)
+                {
+                    throw new KeyNotFoundException("The GigID entered is not a Valid ID");
+                }
+
+                var caregiver = await careGiverService.GetCaregiverUserAsync(gig.CaregiverId);
+                if (caregiver == null)
+                {
+                    throw new KeyNotFoundException("The UserId entered is not a Valid ID");
+                }
+
+                //var client = await careGiverService.GetCaregiverUserAsync(clientOrder.ClientId);
+                var client = await clientService.GetClientUserAsync(clientOrder.ClientId);
+                if (client == null)
+                {
+                    throw new KeyNotFoundException("The ClientId entered is not a Valid ID");
+                }
+
+                var clientOrderDTO = new ClientOrderResponse()
+                {
+                    Id = clientOrder.Id.ToString(),
+                    ClientId = clientOrder.ClientId,
+                    ClientName = client.FirstName + " " + client.LastName,
+
+                    CaregiverId = gig.CaregiverId,
+                    CaregiverName = caregiver.FirstName + " " + caregiver.LastName,
+
+                    GigId = clientOrder.GigId,
+                    GigTitle = gig.Title,
+                    GigImage = gig.Image1,
+                    GigPackageDetails = gig.PackageDetails,
+                    GigStatus = gig.Status,
+
+
+                    PaymentOption = clientOrder.PaymentOption,
+                    Amount = clientOrder.Amount,
+                    TransactionId = clientOrder.TransactionId,
+                    ClientOrderStatus = clientOrder.ClientOrderStatus,
+                    NoOfOrders = clientOrdersDTOs.Count(),
+                    OrderCreatedOn = clientOrder.OrderCreatedAt,
+
+                };
+
+                clientOrdersDTOs.Add(clientOrderDTO);
+            }
+
+            return clientOrdersDTOs;
+        }
+
+
+
+
+        //public async Task<IEnumerable<ClientOrderResponse>> GetClientOrdersAsync(string clientUserId)
+        //{
+        //    var pipeline = careProDbContext.ClientOrders
+        //        .Aggregate()
+        //        // Match client orders by clientId
+        //        .Match(x => x.ClientId == clientUserId)
+
+        //        // Join → Gigs collection
+        //        .Lookup(
+        //            foreignCollection: careProDbContext.Gigs,
+        //            localField: o => o.GigId,
+        //            foreignField: g => g.Id,
+        //            @as: (ClientOrderWithGig temp) => temp.Gigs
+        //        )
+
+        //        // Flatten joined gig
+        //        .Unwind<ClientOrderWithGig, ClientOrderWithGig>(x => x.Gigs)
+
+        //        // Join → Caregivers collection
+        //        .Lookup(
+        //            foreignCollection: careProDbContext.CareGivers,
+        //            localField: x => x.Gigs.CaregiverId,
+        //            foreignField: c => c.Id,
+        //            @as: (ClientOrderWithGigCaregiver temp) => temp.Caregivers
+        //        )
+        //        .Unwind<ClientOrderWithGigCaregiver, ClientOrderWithGigCaregiver>(x => x.Caregivers)
+
+        //        // Join → Clients collection
+        //        .Lookup(
+        //            foreignCollection: careProDbContext.Clients,
+        //            localField: x => x.ClientId,
+        //            foreignField: c => c.Id,
+        //            @as: (ClientOrderFull temp) => temp.Clients
+        //        )
+        //        .Unwind<ClientOrderFull, ClientOrderFull>(x => x.Clients)
+
+        //        // Project result to DTO
+        //        .Project(x => new ClientOrderResponse
+        //        {
+        //            Id = x.Id.ToString(),
+        //            ClientId = x.ClientId,
+        //            ClientName = x.Clients.FirstName + " " + x.Clients.LastName,
+        //            CaregiverId = x.Gigs.CaregiverId,
+        //            CaregiverName = x.Caregivers.FirstName + " " + x.Caregivers.LastName,
+        //            GigId = x.GigId,
+        //            GigTitle = x.Gigs.Title,
+        //            GigImage = x.Gigs.Image1,
+        //            GigPackageDetails = x.Gigs.PackageDetails,
+        //            GigStatus = x.Gigs.Status,
+        //            PaymentOption = x.PaymentOption,
+        //            Amount = x.Amount,
+        //            TransactionId = x.TransactionId,
+        //            ClientOrderStatus = x.ClientOrderStatus,
+        //            OrderCreatedOn = x.OrderCreatedAt
+        //        });
+
+        //    var results = await pipeline.ToListAsync();
+        //    return results;
+        //}
+
+
+
+
         public async Task<ClientOrderResponse> GetClientOrderAsync(string orderId)
         {
             var order = await careProDbContext.ClientOrders.FirstOrDefaultAsync(x => x.Id.ToString() == orderId);
@@ -438,4 +626,7 @@ namespace Infrastructure.Content.Services
 
         
     }
+
+
+
 }

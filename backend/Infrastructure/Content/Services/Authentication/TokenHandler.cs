@@ -1,6 +1,7 @@
 ﻿using Application.DTOs;
 using Application.Interfaces.Authentication;
 using Domain.Entities;
+using Microsoft.AspNet.Identity;
 using Microsoft.Extensions.Configuration;
 using Microsoft.IdentityModel.Tokens;
 using System;
@@ -81,6 +82,8 @@ namespace Infrastructure.Content.Services.Authentication
 
         public string GenerateEmailVerificationToken(string userId, string email, string secretKey, int expireMinutes = 30)
         {
+            
+
             var key = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(secretKey));
             var creds = new SigningCredentials(key, SecurityAlgorithms.HmacSha256);
 
