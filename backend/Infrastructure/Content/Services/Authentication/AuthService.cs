@@ -22,13 +22,13 @@ namespace Infrastructure.Content.Services.Authentication
         {
             this.careProDbContext = careProDbContext;
         }
-        
-        
+
+
         public async Task<AppUserDTO> AuthenticateUserAsync(LoginRequest loginRequest)
-        {      
+        {
             var appUser = await careProDbContext.AppUsers
                 .FirstOrDefaultAsync(x => x.Email.ToLower() == loginRequest.Email.ToLower());
-           
+
 
             if (appUser != null)
             {
@@ -43,7 +43,7 @@ namespace Infrastructure.Content.Services.Authentication
                     {
                         AppUserId = appUser.AppUserId.ToString(),
                         Email = appUser.Email,
-                       // FirstName = careGiverAppUser?.FirstName ?? clientAppUser?.FirstName,
+                        // FirstName = careGiverAppUser?.FirstName ?? clientAppUser?.FirstName,
                         FirstName = appUser?.FirstName,
                         MiddleName = careGiverAppUser?.MiddleName ?? clientAppUser?.MiddleName,
                         LastName = appUser?.LastName,
@@ -52,7 +52,7 @@ namespace Infrastructure.Content.Services.Authentication
                         // Use HomeAddress from client if available; otherwise, fallback to a default or null
                         HomeAddress = clientAppUser?.HomeAddress ?? careGiverAppUser?.HomeAddress ?? "Not Provided",
 
-                        
+
 
                         Role = appUser.Role,
                         Password = appUser.Password,
@@ -63,8 +63,8 @@ namespace Infrastructure.Content.Services.Authentication
                 }
             }
 
-            
-          
+
+
             return null;
         }
 

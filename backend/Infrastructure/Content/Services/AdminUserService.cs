@@ -45,7 +45,7 @@ namespace Infrastructure.Content.Services
                 // Assign new ID
                 Id = ObjectId.GenerateNewId(),
                 Role = addAdminUserRequest.Role,
-               // Status = true,
+                // Status = true,
                 IsDeleted = false,
 
 
@@ -75,7 +75,7 @@ namespace Infrastructure.Content.Services
 
             await careProDbContext.SaveChangesAsync();
 
-            
+
 
             return adminUser.Id.ToString();
         }
@@ -89,7 +89,7 @@ namespace Infrastructure.Content.Services
                 throw new KeyNotFoundException($"Caregiver with ID '{adminUserId}' not found.");
             }
 
-            
+
             var adminUserDTO = new AdminUserResponse()
             {
                 Id = adminUser.Id.ToString(),
@@ -100,7 +100,7 @@ namespace Infrastructure.Content.Services
                 PhoneNo = adminUser.PhoneNo,
                 Role = adminUser.Role,
                 IsDeleted = adminUser.IsDeleted,
-                             
+
                 CreatedAt = adminUser.CreatedAt,
             };
 
@@ -130,7 +130,7 @@ namespace Infrastructure.Content.Services
                     Role = adminUser.Role,
                     IsDeleted = adminUser.IsDeleted,
                     Status = adminUser.Status,
-                    
+
 
 
                     CreatedAt = adminUser.CreatedAt,

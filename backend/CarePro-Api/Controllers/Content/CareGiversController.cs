@@ -105,7 +105,7 @@ namespace CarePro_Api.Controllers.Content
                 return StatusCode(500, new { StatusCode = 500, ErrorMessage = dbEx.Message });
             }
             catch (Exception ex)
-            {                
+            {
                 return StatusCode(500, new { StatusCode = 500, ErrorMessage = ex.Message });
             }
 
@@ -134,7 +134,7 @@ namespace CarePro_Api.Controllers.Content
         }
 
         [HttpPut]
-        [Route("UpdateCaregiverInfo/{caregiverId}")]        
+        [Route("UpdateCaregiverInfo/{caregiverId}")]
         //[Authorize(Roles = "Caregiver, Client, Admin")]
         public async Task<IActionResult> UpdateCaregiverAdditionalInfoAsync(string caregiverId, [FromForm] UpdateCaregiverAdditionalInfoRequest updateCaregiverAdditionalInfoRequest)
         {
@@ -156,7 +156,7 @@ namespace CarePro_Api.Controllers.Content
             {
                 return StatusCode(500, new { message = ex.Message });
             }
-            
+
         }
 
 
@@ -192,7 +192,7 @@ namespace CarePro_Api.Controllers.Content
         [HttpPut]
         [Route("UpdateCaregiverAvailability/{caregiverId}")]
         //[Authorize(Roles = "Caregiver, Client, Admin")]
-        public async Task<IActionResult> UpdateCaregiverAvailabilityAsync(string caregiverId, UpdateCaregiverAvailabilityRequest  updateCaregiverAvailabilityRequest)
+        public async Task<IActionResult> UpdateCaregiverAvailabilityAsync(string caregiverId, UpdateCaregiverAvailabilityRequest updateCaregiverAvailabilityRequest)
         {
             try
             {
@@ -216,7 +216,7 @@ namespace CarePro_Api.Controllers.Content
         [HttpPut]
         [Route("SoftDeleteCaregiver/{caregiverId}")]
         //[Authorize(Roles = "Caregiver, Client, Admin")]
-        public async Task<IActionResult> SoftDeleteCaregiverAsync(string caregiverId )
+        public async Task<IActionResult> SoftDeleteCaregiverAsync(string caregiverId)
         {
             try
             {

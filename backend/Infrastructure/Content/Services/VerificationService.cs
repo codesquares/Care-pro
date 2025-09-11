@@ -92,7 +92,7 @@ namespace Infrastructure.Content.Services
             {
                 throw new KeyNotFoundException($"User with ID '{userId}' has not been verified.");
             }
-                        
+
 
             var verificationDTO = new VerificationResponse()
             {
@@ -165,16 +165,16 @@ namespace Infrastructure.Content.Services
                 .ToDictionary(g => g.Key, g => g.Count());
 
             // Check for different status types (normalize status values)
-            summary.HasSuccess = verifications.Any(v => 
-                v.VerificationStatus.ToLower() == "success" || 
+            summary.HasSuccess = verifications.Any(v =>
+                v.VerificationStatus.ToLower() == "success" ||
                 v.VerificationStatus.ToLower() == "verified" ||
                 v.VerificationStatus.ToLower() == "completed");
-                
-            summary.HasPending = verifications.Any(v => 
+
+            summary.HasPending = verifications.Any(v =>
                 v.VerificationStatus.ToLower() == "pending" ||
                 v.VerificationStatus.ToLower() == "processing");
-                
-            summary.HasFailed = verifications.Any(v => 
+
+            summary.HasFailed = verifications.Any(v =>
                 v.VerificationStatus.ToLower() == "failed" ||
                 v.VerificationStatus.ToLower() == "rejected" ||
                 v.VerificationStatus.ToLower() == "cancelled");

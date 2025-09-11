@@ -10,7 +10,7 @@ namespace Application.Interfaces.Authentication
 {
     public interface ITokenHandler
     {
-        Task<string> CreateTokenAsync(AppUserDTO  appUserDTO);
+        Task<string> CreateTokenAsync(AppUserDTO appUserDTO);
 
         string GeneratePasswordResetToken(string email);
     }

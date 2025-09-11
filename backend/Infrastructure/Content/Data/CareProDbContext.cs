@@ -42,10 +42,10 @@ namespace Infrastructure.Content.Data
             modelBuilder.Entity<Earnings>().ToCollection("Earnings");
             modelBuilder.Entity<WithdrawalRequest>().ToCollection("WithdrawalRequests");
             modelBuilder.Entity<AdminUser>().ToCollection("AdminUsers");
-            
+
         }
 
-        
+
         public DbSet<Caregiver> CareGivers { get; set; }
         public DbSet<AppUser> AppUsers { get; set; }
         public DbSet<Client> Clients { get; set; }

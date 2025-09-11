@@ -26,7 +26,7 @@ builder.Services.AddDbContext<CareProDbContext>(options =>
 {
     //options.UseMongoDB("mongodb://localhost:27017", "Care-Pro_DB");
     //////options.UseMongoDB("mongodb+srv://codesquareltd:fqWU47mw0Coyfp5n@cluster0.c9g7a.mongodb.net/?retryWrites=true&w=majority&appName=Cluster0", "Care-pro_db");
-  options.UseMongoDB("mongodb+srv://codesquareltd:fqWU47mw0Coyfp5n@cluster0.c9g7a.mongodb.net/Care-pro_db?retryWrites=true&w=majority", "Care-pro_db");
+    options.UseMongoDB("mongodb+srv://codesquareltd:fqWU47mw0Coyfp5n@cluster0.c9g7a.mongodb.net/Care-pro_db?retryWrites=true&w=majority", "Care-pro_db");
 });
 
 /// Configure JWT
@@ -185,10 +185,10 @@ builder.Services.AddCors(options =>
     options.AddPolicy("default", builder =>
     {
         builder.WithOrigins(
-                "https://care-pro-frontend.onrender.com", 
-                "https://localhost:5173", 
-                "http://localhost:5173", 
-                "https://localhost:5174", 
+                "https://care-pro-frontend.onrender.com",
+                "https://localhost:5173",
+                "http://localhost:5173",
+                "https://localhost:5174",
                 "http://localhost:5174",
                 "http://localhost:3000",
                 "https://localhost:3000",
@@ -197,8 +197,8 @@ builder.Services.AddCors(options =>
             )
             .AllowAnyHeader()
             .AllowAnyMethod()
-            .AllowCredentials(); 
-            // Removed the SetIsOriginAllowed(_ => true) which was conflicting with WithOrigins
+            .AllowCredentials();
+        // Removed the SetIsOriginAllowed(_ => true) which was conflicting with WithOrigins
     });
 });
 

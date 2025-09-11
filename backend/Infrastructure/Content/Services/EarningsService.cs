@@ -27,9 +27,9 @@ namespace Infrastructure.Content.Services
 
         public async Task<EarningsResponse> GetEarningsByIdAsync(string id)
         {
-           // var earnings = await _dbContext.Earnings.Find(e => e.Id == ObjectId.Parse(id)).FirstOrDefaultAsync();
-           // var filter = Builders<Earnings>.Filter.Eq(e => e.Id, ObjectId.Parse(id));
-           // var earnings = await _dbContext.Earnings.Find(filter).FirstOrDefaultAsync();
+            // var earnings = await _dbContext.Earnings.Find(e => e.Id == ObjectId.Parse(id)).FirstOrDefaultAsync();
+            // var filter = Builders<Earnings>.Filter.Eq(e => e.Id, ObjectId.Parse(id));
+            // var earnings = await _dbContext.Earnings.Find(filter).FirstOrDefaultAsync();
             var earnings = await _dbContext.Earnings.FirstOrDefaultAsync(e => e.Id == ObjectId.Parse(id));
 
 
@@ -37,7 +37,7 @@ namespace Infrastructure.Content.Services
                 return null;
 
             var caregiver = await _careGiverService.GetCaregiverUserAsync(earnings.CaregiverId);
-            
+
             return new EarningsResponse
             {
                 Id = earnings.Id.ToString(),
@@ -53,7 +53,7 @@ namespace Infrastructure.Content.Services
         public async Task<EarningsResponse> GetEarningsByCaregiverIdAsync(string caregiverId)
         {
             //var earnings = await _dbContext.Earnings.Find(e => e.CaregiverId == caregiverId).FirstOrDefaultAsync();
-            var earnings = await _dbContext.Earnings.FirstOrDefaultAsync (e => e.CaregiverId == caregiverId);
+            var earnings = await _dbContext.Earnings.FirstOrDefaultAsync(e => e.CaregiverId == caregiverId);
             if (earnings == null)
                 return null;
 
@@ -85,8 +85,8 @@ namespace Infrastructure.Content.Services
 
             //await _dbContext.Earnings.InsertOneAsync(earnings);
 
-            _dbContext.Earnings.Add(earnings); 
-            await _dbContext.SaveChangesAsync(); 
+            _dbContext.Earnings.Add(earnings);
+            await _dbContext.SaveChangesAsync();
 
             return new EarningsDTO
             {
@@ -100,7 +100,7 @@ namespace Infrastructure.Content.Services
             };
         }
 
-        
+
         public async Task<EarningsDTO> UpdateEarningsAsync(string id, UpdateEarningsRequest request)
         {
             var earnings = await _dbContext.Earnings.FirstOrDefaultAsync(e => e.Id == ObjectId.Parse(id));

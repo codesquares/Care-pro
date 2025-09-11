@@ -16,7 +16,7 @@ namespace Application.DTOs
         public string ReferenceId { get; set; }
         public DateTime CreatedAt { get; set; }
     }
-    
+
     public class TransactionHistoryResponse
     {
         public string Id { get; set; }
@@ -28,7 +28,7 @@ namespace Application.DTOs
         public string ReferenceId { get; set; }
         public DateTime CreatedAt { get; set; }
     }
-    
+
     public class CreateTransactionRequest
     {
         public string CaregiverId { get; set; }
@@ -37,7 +37,7 @@ namespace Application.DTOs
         public string Description { get; set; }
         public string ReferenceId { get; set; }
     }
-    
+
     public class TransactionHistoryQueryParams
     {
         public string CaregiverId { get; set; }

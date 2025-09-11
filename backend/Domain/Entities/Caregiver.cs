@@ -7,9 +7,9 @@ using System.Threading.Tasks;
 
 namespace Domain.Entities
 {
-    public class Caregiver 
+    public class Caregiver
     {
-        public ObjectId Id { get; set; } 
+        public ObjectId Id { get; set; }
 
         public string FirstName { get; set; }
 
@@ -24,7 +24,7 @@ namespace Domain.Entities
         public string Password { get; set; }
 
 
-        
+
 
         public string Role { get; set; }
 
@@ -40,17 +40,17 @@ namespace Domain.Entities
 
         public string? HomeAddress { get; set; }
         public string? Location { get; set; }
-        public string? ReasonForDeactivation { get; set; }    
+        public string? ReasonForDeactivation { get; set; }
 
-       
+
         public string? AboutMe { get; set; }
         public string? IntroVideo { get; set; }
-        
-        
 
 
 
-        
+
+
+
 
     }
 }

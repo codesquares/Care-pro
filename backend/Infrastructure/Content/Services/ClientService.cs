@@ -93,7 +93,7 @@ namespace Infrastructure.Content.Services
                 LastName = clientUser.LastName,
                 MiddleName = clientUser.MiddleName,
                 Email = clientUser.Email,
-                HomeAddress= clientUser.HomeAddress,
+                HomeAddress = clientUser.HomeAddress,
                 Role = clientUser.Role,
                 CreatedAt = clientUser.CreatedAt,
             };
@@ -121,7 +121,7 @@ namespace Infrastructure.Content.Services
                 Role = client.Role,
                 Status = client.Status,
                 HomeAddress = client.HomeAddress,
-                
+
                 CreatedAt = client.CreatedAt,
             };
 
@@ -152,7 +152,7 @@ namespace Infrastructure.Content.Services
                     IsDeleted = clientUser.IsDeleted,
                     Status = clientUser.Status,
                     HomeAddress = clientUser.HomeAddress,
-                    
+
                     CreatedAt = clientUser.CreatedAt,
                 };
                 clientUsersDTOs.Add(clientUserDTO);
@@ -204,7 +204,7 @@ namespace Infrastructure.Content.Services
             var client = await careProDbContext.Clients.FirstOrDefaultAsync(c => c.Email == resetPasswordRequest.Email.ToLower());
             if (client != null)
             {
-                client.Password = user.Password; 
+                client.Password = user.Password;
             }
 
             await careProDbContext.SaveChangesAsync();

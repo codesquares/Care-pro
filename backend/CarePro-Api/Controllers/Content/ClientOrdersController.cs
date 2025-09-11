@@ -23,7 +23,7 @@ namespace CarePro_Api.Controllers.Content
             this.logger = logger;
         }
 
-      
+
         /// ENDPOINT TO CREATE  ClientOrder Services TO THE DATABASE
         [HttpPost]
         // [Authorize(Roles = "Client")]
@@ -45,7 +45,7 @@ namespace CarePro_Api.Controllers.Content
         [Route("clientUserId")]
         // [Authorize(Roles = "Caregiver, Client, Admin")]
         public async Task<IActionResult> GetAllClientOrdersAsync(string clientUserId)
-        {           
+        {
 
             try
             {
@@ -97,7 +97,7 @@ namespace CarePro_Api.Controllers.Content
             catch (KeyNotFoundException ex)
             {
                 return NotFound(new { message = ex.Message });
-            }            
+            }
             catch (ApplicationException appEx)
             {
                 // Handle application-specific exceptions
@@ -159,7 +159,7 @@ namespace CarePro_Api.Controllers.Content
         [HttpPut]
         [Route("UpdateClientOrderStatus/orderId")]
         // [Authorize(Roles = "Caregiver, Admin")]
-        public async Task<ActionResult<string>> UpdateClientOrderStatusAsync(string orderId, UpdateClientOrderStatusRequest updateClientOrderStatusRequest )
+        public async Task<ActionResult<string>> UpdateClientOrderStatusAsync(string orderId, UpdateClientOrderStatusRequest updateClientOrderStatusRequest)
         {
             try
             {
@@ -179,14 +179,14 @@ namespace CarePro_Api.Controllers.Content
             {
                 return StatusCode(500, new { message = ex.Message });
             }
-            
+
         }
 
 
         [HttpPut]
         [Route("UpdateClientOrderStatusHasDispute/orderId")]
         // [Authorize(Roles = "Caregiver, Admin")]
-        public async Task<ActionResult<string>> UpdateClientOrderStatusHasDisputeAsync(string orderId, UpdateClientOrderStatusHasDisputeRequest  updateClientOrderStatusHasDisputeRequest)
+        public async Task<ActionResult<string>> UpdateClientOrderStatusHasDisputeAsync(string orderId, UpdateClientOrderStatusHasDisputeRequest updateClientOrderStatusHasDisputeRequest)
         {
             try
             {
@@ -206,10 +206,10 @@ namespace CarePro_Api.Controllers.Content
             {
                 return StatusCode(500, new { message = ex.Message });
             }
-            
+
         }
 
 
-       
+
     }
 }

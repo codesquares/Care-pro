@@ -60,14 +60,14 @@ namespace Infrastructure.Content.Services
             // Convert the Base 64 string to a byte array
             var imageBytes = Convert.FromBase64String(addGigRequest.Image1);
 
-            
+
 
             /// CONVERT DTO TO DOMAIN OBJECT            
             var gig = new Gig
             {
                 Title = addGigRequest.Title,
                 Category = addGigRequest.Category,
-               // SubCategory = addGigRequest.SubCategory,
+                // SubCategory = addGigRequest.SubCategory,
                 SubCategory = string.Join(",", addGigRequest.SubCategory
                     .Where(x => !string.IsNullOrWhiteSpace(x))
                     .Select(x => x.Trim())),
@@ -75,7 +75,7 @@ namespace Infrastructure.Content.Services
                 Tags = addGigRequest.Tags,
                 PackageType = addGigRequest.PackageType,
                 PackageName = addGigRequest.PackageName,
-                
+
                 PackageDetails = addGigRequest.PackageDetails
                         .Split(';', StringSplitOptions.RemoveEmptyEntries)
                         .Select(x => x.Trim())
@@ -111,16 +111,16 @@ namespace Infrastructure.Content.Services
             {
                 Id = gig.Id.ToString(),
                 Title = gig.Title,
-                Category= gig.Category,
-                SubCategory= gig.SubCategory
+                Category = gig.Category,
+                SubCategory = gig.SubCategory
                     .Split(',', StringSplitOptions.RemoveEmptyEntries)
                     .Select(x => x.Trim())
                     .ToList(),
-                Tags= gig.Tags,
-                PackageType= gig.PackageType,
-                PackageName= gig.PackageName,
-                PackageDetails= gig.PackageDetails,
-                DeliveryTime= gig.DeliveryTime,
+                Tags = gig.Tags,
+                PackageType = gig.PackageType,
+                PackageName = gig.PackageName,
+                PackageDetails = gig.PackageDetails,
+                DeliveryTime = gig.DeliveryTime,
                 Price = gig.Price,
                 //Image1 = gig.Image1,
                 Image2 = gig.Image2,
@@ -240,7 +240,7 @@ namespace Infrastructure.Content.Services
                     Status = gig.Status,
                     CaregiverId = gig.CaregiverId,
                     CreatedAt = gig.CreatedAt,
-                    
+
                 };
                 gigsDTOs.Add(gigDTO);
             }
@@ -374,7 +374,7 @@ namespace Infrastructure.Content.Services
 
         public async Task<GigDTO> GetGigAsync(string gigId)
         {
-            
+
 
             var gig = await careProDbContext.Gigs.FirstOrDefaultAsync(x => x.Id.ToString() == gigId);
 
@@ -458,7 +458,7 @@ namespace Infrastructure.Content.Services
                 existingGig.Status = updateGigStatusToPauseRequest.Status;
                 existingGig.UpdatedOn = DateTime.Now;
                 existingGig.IsUpdatedToPause = true;
-                
+
 
                 careProDbContext.Gigs.Update(existingGig);
                 await careProDbContext.SaveChangesAsync();
@@ -527,9 +527,9 @@ namespace Infrastructure.Content.Services
                                                 .ToList();
             existingGig.DeliveryTime = updateGigRequest.DeliveryTime;
             existingGig.Price = updateGigRequest.Price;
-           // existingGig.Image1 = imageBytes;
+            // existingGig.Image1 = imageBytes;
             existingGig.UpdatedOn = DateTime.Now;
-            
+
 
             careProDbContext.Gigs.Update(existingGig);
             await careProDbContext.SaveChangesAsync();
@@ -570,6 +570,6 @@ namespace Infrastructure.Content.Services
             logger.LogInformation($"Audit Event: {message}. User ID: {caregiverId}. Timestamp: {DateTime.UtcNow}");
         }
 
-        
+
     }
 }

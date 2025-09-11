@@ -35,13 +35,13 @@ namespace CarePro_Api.Controllers.Content
             try
             {
                 var userId = User.FindFirstValue(ClaimTypes.NameIdentifier);
-                
+
                 // Added explicit null check as in the other controller
                 if (string.IsNullOrEmpty(userId))
                 {
                     return Unauthorized("User not authenticated properly.");
                 }
-                
+
                 var notifications = await _notificationService.GetUserNotificationsAsync(userId, page, pageSize);
                 return Ok(notifications);
             }
@@ -59,13 +59,13 @@ namespace CarePro_Api.Controllers.Content
             try
             {
                 var userId = User.FindFirstValue(ClaimTypes.NameIdentifier);
-                
+
                 // Added explicit null check as in the other controller
                 if (string.IsNullOrEmpty(userId))
                 {
                     return Unauthorized("User not authenticated properly.");
                 }
-                
+
                 var count = await _notificationService.GetUnreadNotificationCountAsync(userId);
                 return Ok(new { count });
             }
@@ -83,13 +83,13 @@ namespace CarePro_Api.Controllers.Content
             try
             {
                 var userId = User.FindFirstValue(ClaimTypes.NameIdentifier);
-                
+
                 // Added explicit null check as in the other controller
                 if (string.IsNullOrEmpty(userId))
                 {
                     return Unauthorized("User not authenticated properly.");
                 }
-                
+
                 // Validate notification belongs to the user (optional but recommended)
                 // This check should be added in a production application
 
@@ -110,13 +110,13 @@ namespace CarePro_Api.Controllers.Content
             try
             {
                 var userId = User.FindFirstValue(ClaimTypes.NameIdentifier);
-                
+
                 // Added explicit null check as in the other controller
                 if (string.IsNullOrEmpty(userId))
                 {
                     return Unauthorized("User not authenticated properly.");
                 }
-                
+
                 await _notificationService.MarkAllAsReadAsync(userId);
                 return NoContent();
             }
@@ -134,13 +134,13 @@ namespace CarePro_Api.Controllers.Content
             try
             {
                 var userId = User.FindFirstValue(ClaimTypes.NameIdentifier);
-                
+
                 // Added explicit null check as in the other controller
                 if (string.IsNullOrEmpty(userId))
                 {
                     return Unauthorized("User not authenticated properly.");
                 }
-                
+
                 // Validate notification belongs to the user (optional but recommended)
                 // This check should be added in a production application
 
@@ -162,13 +162,13 @@ namespace CarePro_Api.Controllers.Content
             try
             {
                 var userId = User.FindFirstValue(ClaimTypes.NameIdentifier);
-                
+
                 // Added explicit null check as in the other controller
                 if (string.IsNullOrEmpty(userId))
                 {
                     return Unauthorized("User not authenticated properly.");
                 }
-                
+
                 var notification = await _notificationService.CreateNotificationAsync(
                     request.RecipientId,
                     userId,

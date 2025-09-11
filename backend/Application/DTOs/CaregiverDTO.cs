@@ -32,10 +32,10 @@ namespace Application.DTOs
 
         public bool Status { get; set; }
 
-        
+
         public string? HomeAddress { get; set; }
 
-        
+
         public string? Introduction { get; set; }
         public string? Description { get; set; }
         public string[]? Services { get; set; }
@@ -43,7 +43,7 @@ namespace Application.DTOs
         public string[]? CertificationIDs { get; set; }
         public string? ReasonForDeactivation { get; set; }
         public string? IntroVideoUrl { get; set; }
-        
+
     }
 
     public class AddCaregiverRequest
@@ -63,7 +63,7 @@ namespace Application.DTOs
 
         public string Password { get; set; } = null!;
 
-       
+
     }
 
     public class CaregiverResponse
@@ -83,7 +83,7 @@ namespace Application.DTOs
 
         public string Role { get; set; }
 
-       // public string Password { get; set; } = null!;
+        // public string Password { get; set; } = null!;
 
         public bool IsDeleted { get; set; }
 
@@ -91,7 +91,7 @@ namespace Application.DTOs
         public bool Status { get; set; }
 
 
-        
+
         public string? HomeAddress { get; set; }
 
         public string? AboutMe { get; set; }
@@ -107,7 +107,7 @@ namespace Application.DTOs
 
 
         public bool IsAvailable { get; set; }
-        
+
         public string? IntroVideo { get; set; }
         public decimal TotalEarning { get; set; }
         public int NoOfOrders { get; set; }
@@ -124,24 +124,24 @@ namespace Application.DTOs
 
     public class UpdateCaregiverAdditionalInfoRequest
     {
-        
-        public string? AboutMe { get; set; }        
-        public string? Location { get; set; }        
+
+        public string? AboutMe { get; set; }
+        public string? Location { get; set; }
         //public string? IntroVideo { get; set; }
         public IFormFile? IntroVideo { get; set; }
     }
 
     public class UpdateCaregiverAvailabilityRequest
     {
-        public bool IsAvailable { get; set; }        
+        public bool IsAvailable { get; set; }
     }
 
     public class ResetPasswordRequest
-    {       
+    {
         public string Email { get; init; }
-        
+
         public string CurrentPassword { get; init; }
-        
+
         public string NewPassword { get; init; }
     }
 

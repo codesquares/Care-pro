@@ -52,7 +52,7 @@ namespace Infrastructure.Content.Services
                 return Convert.ToBase64String(videoBytes);
             }
             catch (Exception ex)
-            {                
+            {
                 throw new Exception($"Failed to download video from URL: {videoUrl}", ex);
             }
         }

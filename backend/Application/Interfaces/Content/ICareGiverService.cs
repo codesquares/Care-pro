@@ -23,7 +23,7 @@ namespace Application.Interfaces.Content
 
         Task<string> SoftDeleteCaregiverAsync(string caregiverId);
 
-        Task ResetPasswordAsync( ResetPasswordRequest resetPasswordRequest);
+        Task ResetPasswordAsync(ResetPasswordRequest resetPasswordRequest);
 
 
         Task GeneratePasswordResetTokenAsync(PasswordResetRequestDto passwordResetRequestDto);

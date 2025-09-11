@@ -22,7 +22,7 @@ namespace Infrastructure.Content.Services.Authentication
             this.configuration = configuration;
         }
 
-        public Task<string> CreateTokenAsync(AppUserDTO  appUserDTO)
+        public Task<string> CreateTokenAsync(AppUserDTO appUserDTO)
         {
             // Create Claims
             var claims = new List<Claim>();
@@ -38,8 +38,8 @@ namespace Infrastructure.Content.Services.Authentication
                 configuration["Jwt:Issuer"],
                 configuration["Jwt:Audience"],
                 claims,
-                expires: DateTime.Now.AddMinutes(40),                
-                
+                expires: DateTime.Now.AddMinutes(40),
+
 
                 signingCredentials: credentials);
 
@@ -71,7 +71,7 @@ namespace Infrastructure.Content.Services.Authentication
             );
 
             return new JwtSecurityTokenHandler().WriteToken(token);
-        
-    }
+
+        }
     }
 }

@@ -43,7 +43,7 @@ namespace Infrastructure.Content.Services
                 var existingRecommendations = await _dbContext.ClientRecommendations
                     .FirstOrDefaultAsync(r => r.ClientId == clientId);
 
-                if (existingRecommendations != null && 
+                if (existingRecommendations != null &&
                     existingRecommendations.GeneratedAt > DateTime.Now.AddDays(-1) &&
                     existingRecommendations.CaregiverRecommendations?.Count > 0)
                 {
@@ -85,7 +85,7 @@ namespace Infrastructure.Content.Services
                 var existingRecommendations = await _dbContext.ClientRecommendations
                     .FirstOrDefaultAsync(r => r.ClientId == clientId);
 
-                if (existingRecommendations != null && 
+                if (existingRecommendations != null &&
                     existingRecommendations.GeneratedAt > DateTime.Now.AddDays(-1) &&
                     existingRecommendations.GigRecommendations?.Count > 0)
                 {
@@ -252,7 +252,7 @@ namespace Infrastructure.Content.Services
                 {
                     // Get the caregiver details from the real database
                     var caregiverDetails = await _caregiverService.GetCaregiverUserAsync(rec.CaregiverId);
-                    
+
                     if (caregiverDetails != null)
                     {
                         // Extract specialties from skills/categories
@@ -261,7 +261,7 @@ namespace Infrastructure.Content.Services
                         {
                             specialties.AddRange(caregiverDetails.Categories);
                         }
-                        
+
                         // Extract languages if available
                         var languages = new List<string> { "English" }; // Default language
                         if (!string.IsNullOrEmpty(caregiverDetails.Languages))
@@ -271,7 +271,7 @@ namespace Infrastructure.Content.Services
                                 .Where(l => !string.IsNullOrEmpty(l))
                                 .ToList();
                         }
-                        
+
                         // Calculate years of experience if available
                         int yearsExperience = 1; // Default to 1 year
                         if (caregiverDetails.YearsOfExperience.HasValue)
@@ -299,7 +299,7 @@ namespace Infrastructure.Content.Services
                     else
                     {
                         _logger.LogWarning($"Caregiver with ID {rec.CaregiverId} not found in the database");
-                        
+
                         // Add a placeholder with the data we have from the recommendation
                         var placeholder = new CaregiverRecommendationDTO
                         {
@@ -315,14 +315,14 @@ namespace Infrastructure.Content.Services
                             Specialties = new List<string>(),
                             Languages = new List<string> { "English" }
                         };
-                        
+
                         result.Add(placeholder);
                     }
                 }
                 catch (Exception ex)
                 {
                     _logger.LogError(ex, $"Error retrieving details for caregiver {rec.CaregiverId}");
-                    
+
                     // Add a placeholder with the data we have from the recommendation
                     var placeholder = new CaregiverRecommendationDTO
                     {
@@ -338,7 +338,7 @@ namespace Infrastructure.Content.Services
                         Specialties = new List<string>(),
                         Languages = new List<string> { "English" }
                     };
-                    
+
                     result.Add(placeholder);
                 }
             }
@@ -357,30 +357,30 @@ namespace Infrastructure.Content.Services
                 {
                     // Get the gig details from the real database
                     var gigDetails = await _gigServices.GetGigAsync(rec.GigId);
-                    
+
                     if (gigDetails != null)
                     {
                         var requiredSkills = new List<string>();
-                        
+
                         // Extract required skills from gig requirements
                         if (gigDetails.Requirements != null && gigDetails.Requirements.Any())
                         {
                             requiredSkills.AddRange(gigDetails.Requirements);
                         }
-                        
+
                         // Extract from categories if requirements not specified
                         if (requiredSkills.Count == 0 && !string.IsNullOrEmpty(gigDetails.SubCategory))
                         {
                             requiredSkills.Add(gigDetails.SubCategory);
                         }
-                        
+
                         // Determine schedule from the gig data
                         string schedule = "flexible";
                         if (!string.IsNullOrEmpty(gigDetails.AvailabilitySchedule))
                         {
                             schedule = gigDetails.AvailabilitySchedule;
                         }
-                        
+
                         var gig = new GigRecommendationDTO
                         {
                             Id = rec.Id.ToString(),
@@ -401,7 +401,7 @@ namespace Infrastructure.Content.Services
                     else
                     {
                         _logger.LogWarning($"Gig with ID {rec.GigId} not found in the database");
-                        
+
                         // Add a placeholder with the data we have from the recommendation
                         var placeholder = new GigRecommendationDTO
                         {
@@ -417,14 +417,14 @@ namespace Infrastructure.Content.Services
                             PayRate = 30m,
                             RequiredSkills = new List<string>()
                         };
-                        
+
                         result.Add(placeholder);
                     }
                 }
                 catch (Exception ex)
                 {
                     _logger.LogError(ex, $"Error retrieving details for gig {rec.GigId}");
-                    
+
                     // Add a placeholder with the data we have from the recommendation
                     var placeholder = new GigRecommendationDTO
                     {
@@ -440,7 +440,7 @@ namespace Infrastructure.Content.Services
                         PayRate = 30m,
                         RequiredSkills = new List<string>()
                     };
-                    
+
                     result.Add(placeholder);
                 }
             }
@@ -454,7 +454,7 @@ namespace Infrastructure.Content.Services
             {
                 // Fetch all caregivers from the real database
                 var caregivers = await _caregiverService.GetAllCaregiverUserAsync();
-                
+
                 if (caregivers == null || !caregivers.Any())
                 {
                     _logger.LogWarning("No caregivers found in the database");
@@ -463,20 +463,20 @@ namespace Infrastructure.Content.Services
 
                 // Convert the caregivers to our recommendation DTO format
                 var recommendationDtos = new List<CaregiverRecommendationDTO>();
-                
+
                 foreach (var caregiver in caregivers)
                 {
                     // Only include active and verified caregivers 
                     if (caregiver.IsActive && caregiver.IsVerified)
                     {
                         var specialties = new List<string>();
-                        
+
                         // Extract specialties from skills/categories
                         if (caregiver.Categories != null && caregiver.Categories.Any())
                         {
                             specialties.AddRange(caregiver.Categories);
                         }
-                        
+
                         // Extract languages if available
                         var languages = new List<string> { "English" }; // Default language
                         if (!string.IsNullOrEmpty(caregiver.Languages))
@@ -487,14 +487,14 @@ namespace Infrastructure.Content.Services
                                 .Where(l => !string.IsNullOrEmpty(l))
                                 .ToList();
                         }
-                        
+
                         // Calculate years of experience if available
                         int yearsExperience = 1; // Default to 1 year
                         if (caregiver.YearsOfExperience.HasValue)
                         {
                             yearsExperience = caregiver.YearsOfExperience.Value;
                         }
-                        
+
                         recommendationDtos.Add(new CaregiverRecommendationDTO
                         {
                             CaregiverId = caregiver.Id,
@@ -508,13 +508,13 @@ namespace Infrastructure.Content.Services
                         });
                     }
                 }
-                
+
                 return recommendationDtos;
             }
             catch (Exception ex)
             {
                 _logger.LogError(ex, "Error retrieving caregivers from database");
-                
+
                 // Fallback to a minimal set of mock data in case of error
                 return new List<CaregiverRecommendationDTO>
                 {
@@ -539,7 +539,7 @@ namespace Infrastructure.Content.Services
             {
                 // Fetch all active gigs from the real database
                 var gigs = await _gigServices.GetAllGigsAsync();
-                
+
                 if (gigs == null || !gigs.Any())
                 {
                     _logger.LogWarning("No gigs found in the database");
@@ -548,33 +548,33 @@ namespace Infrastructure.Content.Services
 
                 // Convert the gigs to our recommendation DTO format
                 var recommendationDtos = new List<GigRecommendationDTO>();
-                
+
                 foreach (var gig in gigs)
                 {
                     // Only include active and published gigs
                     if (gig.IsActive && gig.Status.ToLower() == "published")
                     {
                         var requiredSkills = new List<string>();
-                        
+
                         // Extract required skills from gig requirements
                         if (gig.Requirements != null && gig.Requirements.Any())
                         {
                             requiredSkills.AddRange(gig.Requirements);
                         }
-                        
+
                         // Extract from categories if requirements not specified
                         if (requiredSkills.Count == 0 && !string.IsNullOrEmpty(gig.SubCategory))
                         {
                             requiredSkills.Add(gig.SubCategory);
                         }
-                        
+
                         // Determine schedule from the gig data
                         string schedule = "flexible";
                         if (!string.IsNullOrEmpty(gig.AvailabilitySchedule))
                         {
                             schedule = gig.AvailabilitySchedule;
                         }
-                        
+
                         recommendationDtos.Add(new GigRecommendationDTO
                         {
                             GigId = gig.Id,
@@ -588,13 +588,13 @@ namespace Infrastructure.Content.Services
                         });
                     }
                 }
-                
+
                 return recommendationDtos;
             }
             catch (Exception ex)
             {
                 _logger.LogError(ex, "Error retrieving gigs from database");
-                
+
                 // Fallback to a minimal set of mock data in case of error
                 return new List<GigRecommendationDTO>
                 {
@@ -625,8 +625,8 @@ namespace Infrastructure.Content.Services
                 var matchDetails = new List<string>();
 
                 // Match service type
-                if (preferences.TryGetValue("serviceType", out var serviceTypeObj) && 
-                    !string.IsNullOrEmpty(serviceTypeObj?.ToString()) && 
+                if (preferences.TryGetValue("serviceType", out var serviceTypeObj) &&
+                    !string.IsNullOrEmpty(serviceTypeObj?.ToString()) &&
                     caregiver.Specialties.Contains(serviceTypeObj.ToString()))
                 {
                     matchScore += 20;
@@ -635,8 +635,8 @@ namespace Infrastructure.Content.Services
                 maxPossibleScore += 20;
 
                 // Match location
-                if (preferences.TryGetValue("location", out var locationObj) && 
-                    !string.IsNullOrEmpty(locationObj?.ToString()) && 
+                if (preferences.TryGetValue("location", out var locationObj) &&
+                    !string.IsNullOrEmpty(locationObj?.ToString()) &&
                     caregiver.Location == locationObj.ToString())
                 {
                     matchScore += 15;
@@ -645,14 +645,14 @@ namespace Infrastructure.Content.Services
                 maxPossibleScore += 15;
 
                 // Match gender preference
-                if (preferences.TryGetValue("caregiverPreferences", out var prefObj) && 
+                if (preferences.TryGetValue("caregiverPreferences", out var prefObj) &&
                     prefObj is Dictionary<string, object> caregiverPrefs &&
                     caregiverPrefs.TryGetValue("gender", out var genderObj) &&
                     !string.IsNullOrEmpty(genderObj?.ToString()))
                 {
                     // Assuming caregiver object has a Gender property - add this if needed
                     var caregiverGender = caregiver.Name.Contains("Sarah") || caregiver.Name.Contains("Aisha") ? "female" : "male";
-                    
+
                     if (caregiverGender.Equals(genderObj.ToString(), StringComparison.OrdinalIgnoreCase))
                     {
                         matchScore += 10;
@@ -662,7 +662,7 @@ namespace Infrastructure.Content.Services
                 maxPossibleScore += 10;
 
                 // Match experience level
-                if (preferences.TryGetValue("caregiverPreferences", out var prefExpObj) && 
+                if (preferences.TryGetValue("caregiverPreferences", out var prefExpObj) &&
                     prefExpObj is Dictionary<string, object> caregiverExpPrefs &&
                     caregiverExpPrefs.TryGetValue("experience", out var expObj) &&
                     !string.IsNullOrEmpty(expObj?.ToString()))
@@ -670,7 +670,7 @@ namespace Infrastructure.Content.Services
                     bool matchesExperience = false;
                     var expPreference = expObj.ToString();
 
-                    switch(expPreference.ToLower())
+                    switch (expPreference.ToLower())
                     {
                         case "beginner":
                             matchesExperience = true; // Any experience is fine
@@ -695,7 +695,7 @@ namespace Infrastructure.Content.Services
                 maxPossibleScore += 10;
 
                 // Match budget
-                if (preferences.TryGetValue("budget", out var budgetObj) && 
+                if (preferences.TryGetValue("budget", out var budgetObj) &&
                     budgetObj is Dictionary<string, object> budget &&
                     budget.TryGetValue("min", out var minObj) &&
                     budget.TryGetValue("max", out var maxObj))
@@ -703,7 +703,7 @@ namespace Infrastructure.Content.Services
                     decimal minBudget = 0;
                     decimal maxBudget = 0;
 
-                    if (decimal.TryParse(minObj.ToString(), out minBudget) && 
+                    if (decimal.TryParse(minObj.ToString(), out minBudget) &&
                         decimal.TryParse(maxObj.ToString(), out maxBudget) &&
                         minBudget > 0 && maxBudget > 0)
                     {
@@ -717,7 +717,7 @@ namespace Infrastructure.Content.Services
                 maxPossibleScore += 15;
 
                 // Calculate percentage match
-                int percentageMatch = maxPossibleScore > 0 ? 
+                int percentageMatch = maxPossibleScore > 0 ?
                     (int)Math.Round((double)matchScore / maxPossibleScore * 100) : 0;
 
                 // Only include if match score is high enough
@@ -745,8 +745,8 @@ namespace Infrastructure.Content.Services
                 var matchDetails = new List<string>();
 
                 // Match service type
-                if (preferences.TryGetValue("serviceType", out var serviceTypeObj) && 
-                    !string.IsNullOrEmpty(serviceTypeObj?.ToString()) && 
+                if (preferences.TryGetValue("serviceType", out var serviceTypeObj) &&
+                    !string.IsNullOrEmpty(serviceTypeObj?.ToString()) &&
                     gig.ServiceType == serviceTypeObj.ToString())
                 {
                     matchScore += 25;
@@ -755,8 +755,8 @@ namespace Infrastructure.Content.Services
                 maxPossibleScore += 25;
 
                 // Match location
-                if (preferences.TryGetValue("location", out var locationObj) && 
-                    !string.IsNullOrEmpty(locationObj?.ToString()) && 
+                if (preferences.TryGetValue("location", out var locationObj) &&
+                    !string.IsNullOrEmpty(locationObj?.ToString()) &&
                     gig.Location == locationObj.ToString())
                 {
                     matchScore += 20;
@@ -765,10 +765,10 @@ namespace Infrastructure.Content.Services
                 maxPossibleScore += 20;
 
                 // Match schedule
-                if (preferences.TryGetValue("schedule", out var scheduleObj) && 
-                    !string.IsNullOrEmpty(scheduleObj?.ToString()) && 
-                    (gig.Schedule == scheduleObj.ToString() || 
-                     gig.Schedule == "flexible" || 
+                if (preferences.TryGetValue("schedule", out var scheduleObj) &&
+                    !string.IsNullOrEmpty(scheduleObj?.ToString()) &&
+                    (gig.Schedule == scheduleObj.ToString() ||
+                     gig.Schedule == "flexible" ||
                      scheduleObj.ToString() == "flexible"))
                 {
                     matchScore += 15;
@@ -777,13 +777,13 @@ namespace Infrastructure.Content.Services
                 maxPossibleScore += 15;
 
                 // Match service frequency
-                if (preferences.TryGetValue("serviceFrequency", out var freqObj) && 
+                if (preferences.TryGetValue("serviceFrequency", out var freqObj) &&
                     !string.IsNullOrEmpty(freqObj?.ToString()))
                 {
                     // Assuming gig has a frequency property that matches serviceFrequency
-                    var gigFrequency = gig.Title.Contains("weekly") ? "weekly" : 
+                    var gigFrequency = gig.Title.Contains("weekly") ? "weekly" :
                                       gig.Title.Contains("daily") ? "daily" : "as-needed";
-                    
+
                     if (gigFrequency == freqObj.ToString())
                     {
                         matchScore += 10;
@@ -793,7 +793,7 @@ namespace Infrastructure.Content.Services
                 maxPossibleScore += 10;
 
                 // Match budget range
-                if (preferences.TryGetValue("budget", out var budgetObj) && 
+                if (preferences.TryGetValue("budget", out var budgetObj) &&
                     budgetObj is Dictionary<string, object> budget &&
                     budget.TryGetValue("min", out var minObj) &&
                     budget.TryGetValue("max", out var maxObj))
@@ -801,7 +801,7 @@ namespace Infrastructure.Content.Services
                     decimal minBudget = 0;
                     decimal maxBudget = 0;
 
-                    if (decimal.TryParse(minObj.ToString(), out minBudget) && 
+                    if (decimal.TryParse(minObj.ToString(), out minBudget) &&
                         decimal.TryParse(maxObj.ToString(), out maxBudget) &&
                         minBudget > 0 && maxBudget > 0)
                     {
@@ -815,7 +815,7 @@ namespace Infrastructure.Content.Services
                 maxPossibleScore += 10;
 
                 // Calculate percentage match
-                int percentageMatch = maxPossibleScore > 0 ? 
+                int percentageMatch = maxPossibleScore > 0 ?
                     (int)Math.Round((double)matchScore / maxPossibleScore * 100) : 0;
 
                 // Only include if match score is high enough

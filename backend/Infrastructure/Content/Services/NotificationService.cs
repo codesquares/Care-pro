@@ -20,7 +20,7 @@ namespace Infrastructure.Content.Services
         private readonly ILogger<NotificationService> _logger;
 
         public NotificationService(
-            CareProDbContext dbContext, 
+            CareProDbContext dbContext,
             IHubContext<NotificationHub> notificationHubContext,
             ILogger<NotificationService> logger)
         {
@@ -173,7 +173,7 @@ namespace Infrastructure.Content.Services
                             senderId = notification.SenderId,
                             relatedEntityId = notification.RelatedEntityId
                         });
-                    
+
                     return true;
                 }
 

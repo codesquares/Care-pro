@@ -74,7 +74,7 @@ namespace Application.DTOs
     public class UpdateClientOrderStatusRequest
     {
         public string ClientOrderStatus { get; set; }
-        public string UserId { get; set; }        
+        public string UserId { get; set; }
     }
 
 

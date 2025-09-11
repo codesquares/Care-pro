@@ -10,68 +10,68 @@ using MongoDB.Bson;
 using Org.BouncyCastle.Asn1.X509;
 using System;
 using System.Collections.Generic;
-                existingOrder.ClientOrderStatus = updateClientOrderStatusRequest.ClientOrderStatus;
-                existingOrder.OrderUpdatedOn = DateTime.Now;
+existingOrder.ClientOrderStatus = updateClientOrderStatusRequest.ClientOrderStatus;
+existingOrder.OrderUpdatedOn = DateTime.Now;
 
-                // If the order is marked as completed, update caregiver earnings
-                if (updateClientOrderStatusRequest.ClientOrderStatus == "Completed")
-                {
-                    // Get the gig to find the caregiver
-                    var gig = await gigServices.GetGigByIdAsync(existingOrder.GigId.ToString());
-                    
-                    if (gig != null)
-                    {
-                        // Update caregiver earnings
-                        var updateEarningsRequest = new UpdateEarningsRequest
-                        {
-                            TotalEarned = existingOrder.Amount,
-                            WithdrawableAmount = existingOrder.Amount
-                        };
-                        
-                        // Check if earnings record exists for caregiver
-                        bool earningsExist = await _earningsService.DoesEarningsExistForCaregiverAsync(gig.CareGiverId);
-                        
-                        if (earningsExist)
-                        {
-                            // Get earnings to update
-                            var earnings = await _earningsService.GetEarningsByCaregiverIdAsync(gig.CareGiverId);
-                            await _earningsService.UpdateEarningsAsync(earnings.Id, updateEarningsRequest);
-                        }
-                        else
-                        {
-                            // Create new earnings record
-                            var createEarningsRequest = new CreateEarningsRequest
-                            {
-                                CaregiverId = gig.CareGiverId,
-                                TotalEarned = existingOrder.Amount,
-                                WithdrawableAmount = existingOrder.Amount,
-                                WithdrawnAmount = 0
-                            };
-                            await _earningsService.CreateEarningsAsync(createEarningsRequest);
-                        }
-                        
-                        // Create transaction history record
-                        await _transactionHistoryService.AddEarningTransactionAsync(
-                            gig.CareGiverId,
-                            existingOrder.Amount,
-                            $"Payment for completed gig: {existingOrder.ServiceName}",
-                            existingOrder.Id.ToString()
-                        );
-                        
-                        // Notify caregiver about the earning
-                        await notificationService.AddNotificationAsync(new AddNotificationRequest
-                        {
-                            UserId = gig.CareGiverId,
-                            Title = "Payment Received",
-                            Message = $"You have received {existingOrder.Amount:C} for completing the gig: {existingOrder.ServiceName}",
-                            Type = "Earning",
-                            IsRead = false
-                        });
-                    }
-                }
+// If the order is marked as completed, update caregiver earnings
+if (updateClientOrderStatusRequest.ClientOrderStatus == "Completed")
+{
+    // Get the gig to find the caregiver
+    var gig = await gigServices.GetGigByIdAsync(existingOrder.GigId.ToString());
 
-                careProDbContext.ClientOrders.Update(existingOrder);
-                await careProDbContext.SaveChangesAsync();System.Linq;
+    if (gig != null)
+    {
+        // Update caregiver earnings
+        var updateEarningsRequest = new UpdateEarningsRequest
+        {
+            TotalEarned = existingOrder.Amount,
+            WithdrawableAmount = existingOrder.Amount
+        };
+
+        // Check if earnings record exists for caregiver
+        bool earningsExist = await _earningsService.DoesEarningsExistForCaregiverAsync(gig.CareGiverId);
+
+        if (earningsExist)
+        {
+            // Get earnings to update
+            var earnings = await _earningsService.GetEarningsByCaregiverIdAsync(gig.CareGiverId);
+            await _earningsService.UpdateEarningsAsync(earnings.Id, updateEarningsRequest);
+        }
+        else
+        {
+            // Create new earnings record
+            var createEarningsRequest = new CreateEarningsRequest
+            {
+                CaregiverId = gig.CareGiverId,
+                TotalEarned = existingOrder.Amount,
+                WithdrawableAmount = existingOrder.Amount,
+                WithdrawnAmount = 0
+            };
+            await _earningsService.CreateEarningsAsync(createEarningsRequest);
+        }
+
+        // Create transaction history record
+        await _transactionHistoryService.AddEarningTransactionAsync(
+            gig.CareGiverId,
+            existingOrder.Amount,
+            $"Payment for completed gig: {existingOrder.ServiceName}",
+            existingOrder.Id.ToString()
+        );
+
+        // Notify caregiver about the earning
+        await notificationService.AddNotificationAsync(new AddNotificationRequest
+        {
+            UserId = gig.CareGiverId,
+            Title = "Payment Received",
+            Message = $"You have received {existingOrder.Amount:C} for completing the gig: {existingOrder.ServiceName}",
+            Type = "Earning",
+            IsRead = false
+        });
+    }
+}
+
+careProDbContext.ClientOrders.Update(existingOrder);
+await careProDbContext.SaveChangesAsync(); System.Linq;
 using System.Security.Authentication;
 using System.Text;
 using System.Threading.Tasks;
@@ -91,10 +91,10 @@ namespace Infrastructure.Content.Services
         private readonly IAutoConversationService _autoConversationService;
 
         public ClientOrderService(
-            CareProDbContext careProDbContext, 
-            IGigServices gigServices, 
-            ICareGiverService careGiverService, 
-            IClientService clientService, 
+            CareProDbContext careProDbContext,
+            IGigServices gigServices,
+            ICareGiverService careGiverService,
+            IClientService clientService,
             ILogger<GigServices> logger,
             INotificationService notificationService,
             IEarningsService earningsService,
@@ -158,7 +158,7 @@ namespace Infrastructure.Content.Services
             if (caregiver != null)
             {
                 string notificationContent = $"New order received for your service: {gig.Title} - Amount: ${clientOrder.Amount}";
-                
+
                 await notificationService.CreateNotificationAsync(
                     clientOrder.CaregiverId,
                     clientOrder.ClientId,
@@ -172,8 +172,8 @@ namespace Infrastructure.Content.Services
             try
             {
                 await _autoConversationService.CreateConversationForOrderAsync(
-                    clientOrder.CaregiverId, 
-                    clientOrder.ClientId, 
+                    clientOrder.CaregiverId,
+                    clientOrder.ClientId,
                     clientOrder.Id.ToString()
                 );
                 logger.LogInformation($"Auto-created conversation for order {clientOrder.Id}");
@@ -248,7 +248,7 @@ namespace Infrastructure.Content.Services
                     GigPackageDetails = gig.PackageDetails,
                     GigImage = gig.Image1,
                     GigStatus = gig.Status,
-                    
+
 
                     PaymentOption = caregiverOrder.PaymentOption,
                     Amount = caregiverOrder.Amount,
@@ -313,14 +313,14 @@ namespace Infrastructure.Content.Services
                     GigImage = gig.Image1,
                     GigPackageDetails = gig.PackageDetails,
                     GigStatus = gig.Status,
-                    
+
 
                     PaymentOption = clientOrder.PaymentOption,
                     Amount = clientOrder.Amount,
                     TransactionId = clientOrder.TransactionId,
                     ClientOrderStatus = clientOrder.ClientOrderStatus,
                     OrderCreatedOn = clientOrder.OrderCreatedAt,
-                    
+
                 };
 
                 clientOrdersDTOs.Add(clientOrderDTO);
@@ -378,7 +378,7 @@ namespace Infrastructure.Content.Services
                 TransactionId = order.TransactionId,
                 ClientOrderStatus = order.ClientOrderStatus,
                 OrderCreatedOn = order.OrderCreatedAt,
-                
+
             };
 
             return clientOrderDTO;
@@ -386,8 +386,8 @@ namespace Infrastructure.Content.Services
 
         public async Task<string> UpdateClientOrderStatusAsync(string orderId, UpdateClientOrderStatusRequest updateClientOrderStatusRequest)
         {
-           
-           
+
+
 
             try
             {
@@ -421,7 +421,7 @@ namespace Infrastructure.Content.Services
             }
         }
 
-       
+
         public async Task<string> UpdateClientOrderStatusHasDisputeAsync(string orderId, UpdateClientOrderStatusHasDisputeRequest updateClientOrderStatusHasDisputeRequest)
         {
             try

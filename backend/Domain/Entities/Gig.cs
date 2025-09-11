@@ -23,7 +23,7 @@ namespace Domain.Entities
         public byte[]? Image2 { get; set; }
         public byte[]? Image3 { get; set; }
         public string? VideoURL { get; set; }
-        public string Status { get; set; }             
+        public string Status { get; set; }
 
         public string CaregiverId { get; set; }
         public DateTime CreatedAt { get; set; }

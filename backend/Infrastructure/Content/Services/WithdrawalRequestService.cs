@@ -24,8 +24,8 @@ namespace Infrastructure.Content.Services
         private readonly ITransactionHistoryService _transactionHistoryService;
 
         public WithdrawalRequestService(
-            CareProDbContext dbContext, 
-            IEarningsService earningsService, 
+            CareProDbContext dbContext,
+            IEarningsService earningsService,
             ICareGiverService careGiverService,
 <<<<<<< HEAD
             INotificationService notificationService,
@@ -45,7 +45,7 @@ namespace Infrastructure.Content.Services
 
         public async Task<WithdrawalRequestResponse> GetWithdrawalRequestByIdAsync(string id)
         {
-           // var withdrawal = await _dbContext.WithdrawalRequests.Find(w => w.Id == ObjectId.Parse(id)).FirstOrDefaultAsync();
+            // var withdrawal = await _dbContext.WithdrawalRequests.Find(w => w.Id == ObjectId.Parse(id)).FirstOrDefaultAsync();
             var withdrawal = await _dbContext.WithdrawalRequests.FirstOrDefaultAsync(w => w.Id == ObjectId.Parse(id));
 
             if (withdrawal == null)
@@ -162,7 +162,7 @@ namespace Infrastructure.Content.Services
                 AccountName = request.AccountName
             };
 
-         //   await _dbContext.WithdrawalRequests.InsertOneAsync(withdrawal);
+            //   await _dbContext.WithdrawalRequests.InsertOneAsync(withdrawal);
 
             _dbContext.WithdrawalRequests.Add(withdrawal);
             await _dbContext.SaveChangesAsync();
@@ -303,7 +303,7 @@ namespace Infrastructure.Content.Services
             );
 
             // Notify caregiver that their withdrawal has been completed
-            await NotifyCaregiverAboutWithdrawalStatusChange(withdrawal, "Withdrawal Completed", 
+            await NotifyCaregiverAboutWithdrawalStatusChange(withdrawal, "Withdrawal Completed",
 =======
             // Notify caregiver
             await NotifyCaregiverAboutWithdrawalStatusChange(withdrawal,
@@ -406,7 +406,7 @@ namespace Infrastructure.Content.Services
             var random = new Random();
             var token = new string(Enumerable.Repeat(chars, 8)
                 .Select(s => s[random.Next(s.Length)]).ToArray());
-            
+
             return token;
         }
 
@@ -453,7 +453,7 @@ namespace Infrastructure.Content.Services
         //{
         //    // In a real-world scenario, we'd query for all admin users and notify them
         //    // For now, we'll create a notification for a generic admin role
-            
+
         //    var caregiver = await _careGiverService.GetCaregiverUserAsync(withdrawal.CaregiverId);
         //    string caregiverName = caregiver != null ? $"{caregiver.FirstName} {caregiver.LastName}" : "Unknown";
 
@@ -516,7 +516,7 @@ namespace Infrastructure.Content.Services
                 RelatedEntityId = withdrawal.Id.ToString()
             };
 
-          //  await _dbContext.Notifications.InsertOneAsync(notification);
+            //  await _dbContext.Notifications.InsertOneAsync(notification);
             await _dbContext.Notifications.AddAsync(notification);
             await _dbContext.SaveChangesAsync();
         }

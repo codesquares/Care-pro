@@ -41,7 +41,7 @@ namespace Infrastructure.Content.Services
             this.tokenHandler = tokenHandler;
             this.emailService = emailService;
             this.configuration = configuration;
-           // this.gigServices = gigServices;
+            // this.gigServices = gigServices;
             // this.clientOrderService = clientOrderService;
         }
 
@@ -74,7 +74,7 @@ namespace Infrastructure.Content.Services
 
                 // Assign new ID
                 Id = ObjectId.GenerateNewId(),
-               // Role = Roles.Caregiver.ToString(),
+                // Role = Roles.Caregiver.ToString(),
                 Role = addCaregiverRequest.Role,
                 Status = true,
                 IsDeleted = false,
@@ -133,7 +133,7 @@ namespace Infrastructure.Content.Services
 
             foreach (var caregiver in caregivers)
             {
-                
+
                 var caregiverDTO = new CaregiverResponse()
                 {
                     Id = caregiver.Id.ToString(),
@@ -152,13 +152,13 @@ namespace Infrastructure.Content.Services
                     : caregiver.AboutMe.Length <= 150
                         ? caregiver.AboutMe
                         : caregiver.AboutMe.Substring(0, 150) + "...",
-                    
+
                     Location = caregiver.Location,
                     ReasonForDeactivation = caregiver.ReasonForDeactivation,
                     IsAvailable = caregiver.IsAvailable,
                     IntroVideo = caregiver.IntroVideo,
 
-                    
+
                     CreatedAt = caregiver.CreatedAt,
                 };
 
@@ -202,13 +202,13 @@ namespace Infrastructure.Content.Services
 
             foreach (var clientOrder in clientOrders)
             {
-                
-                totalEarning += clientOrder.Amount;                
+
+                totalEarning += clientOrder.Amount;
             }
 
 
             //var totalEarning = clientOrders.TotalEarning;
-           // var noOfHoursSpent = ;
+            // var noOfHoursSpent = ;
             var noOfOrders = clientOrders.Count;
 
             var caregiverDTO = new CaregiverResponse()
@@ -229,7 +229,7 @@ namespace Infrastructure.Content.Services
                     : caregiver.AboutMe.Length <= 150
                         ? caregiver.AboutMe
                         : caregiver.AboutMe.Substring(0, 150) + "...",
-                
+
                 Location = caregiver.Location,
                 ReasonForDeactivation = caregiver.ReasonForDeactivation,
                 IsAvailable = caregiver.IsAvailable,
@@ -238,10 +238,10 @@ namespace Infrastructure.Content.Services
                 Services = allSubCategories,
 
                 TotalEarning = totalEarning,
-               // NoOfHoursSpent = noOfHoursSpent,
+                // NoOfHoursSpent = noOfHoursSpent,
                 NoOfOrders = noOfOrders,
 
-                
+
                 CreatedAt = caregiver.CreatedAt,
             };
 
@@ -285,13 +285,13 @@ namespace Infrastructure.Content.Services
             }
 
             existingCareGiver.IsAvailable = updateCaregiverAvailabilityRequest.IsAvailable;
-            
+
             careProDbContext.CareGivers.Update(existingCareGiver);
             await careProDbContext.SaveChangesAsync();
 
             return $"Caregiver with ID '{caregiverId}' Availability Status Updated successfully.";
 
-            
+
         }
 
         public async Task<string> UpdateCaregiverInfornmationAsync(string caregiverId, UpdateCaregiverAdditionalInfoRequest updateCaregiverAdditionalInfoRequest)
@@ -299,7 +299,7 @@ namespace Infrastructure.Content.Services
             if (updateCaregiverAdditionalInfoRequest.IntroVideo == null &&
                 string.IsNullOrWhiteSpace(updateCaregiverAdditionalInfoRequest.AboutMe) &&
                 string.IsNullOrWhiteSpace(updateCaregiverAdditionalInfoRequest.Location))
-            
+
             {
                 throw new ArgumentException("At least one field must be provided to update caregiver information.");
             }
@@ -310,7 +310,7 @@ namespace Infrastructure.Content.Services
             {
                 throw new ArgumentException("Invalid Caregiver ID format.");
             }
-                               
+
 
             var existingCareGiver = await careProDbContext.CareGivers.FindAsync(objectId);
 
@@ -318,7 +318,7 @@ namespace Infrastructure.Content.Services
             {
                 throw new KeyNotFoundException($"Caregiver with ID '{caregiverId}' not found.");
             }
-                        
+
 
             if (updateCaregiverAdditionalInfoRequest.IntroVideo != null)
             {
@@ -343,13 +343,13 @@ namespace Infrastructure.Content.Services
             {
                 existingCareGiver.Location = updateCaregiverAdditionalInfoRequest.Location;
             }
-                        
+
 
             careProDbContext.CareGivers.Update(existingCareGiver);
             await careProDbContext.SaveChangesAsync();
 
             return $"Caregiver with ID '{caregiverId}' Additional Information Updated successfully.";
-            
+
         }
 
 

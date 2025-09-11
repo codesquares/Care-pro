@@ -21,7 +21,7 @@ namespace Infrastructure.Services
         private readonly string _messageApiBaseUrl;
 
         public AutoConversationService(
-            HttpClient httpClient, 
+            HttpClient httpClient,
             ILogger<AutoConversationService> logger)
         {
             _httpClient = httpClient;
@@ -38,7 +38,7 @@ namespace Infrastructure.Services
 
                 // Check if conversation already exists
                 var conversationExists = await CheckConversationExistsAsync(caregiverId, clientId);
-                
+
                 if (conversationExists)
                 {
                     _logger.LogInformation($"Conversation already exists between caregiver {caregiverId} and client {clientId}");
@@ -67,11 +67,11 @@ namespace Infrastructure.Services
                 var content = new StringContent(json, Encoding.UTF8, "application/json");
 
                 var response = await _httpClient.PostAsync($"{_messageApiBaseUrl}/conversations", content);
-                
+
                 if (response.IsSuccessStatusCode)
                 {
                     _logger.LogInformation($"Successfully created conversation for order {orderId}");
-                    
+
                     // Optional: Send initial automated message
                     await SendInitialOrderMessageAsync(caregiverId, clientId, orderId);
                 }
@@ -92,7 +92,7 @@ namespace Infrastructure.Services
             try
             {
                 var response = await _httpClient.GetAsync($"{_messageApiBaseUrl}/conversations/{caregiverId}");
-                
+
                 if (!response.IsSuccessStatusCode)
                 {
                     return false;
@@ -101,7 +101,7 @@ namespace Infrastructure.Services
                 var content = await response.Content.ReadAsStringAsync();
                 var conversations = JsonConvert.DeserializeObject<dynamic[]>(content);
 
-                return conversations?.Any(conv => 
+                return conversations?.Any(conv =>
                     conv.participants?.Any(p => p.id?.ToString() == clientId) == true) == true;
             }
             catch (Exception ex)
@@ -133,7 +133,7 @@ namespace Infrastructure.Services
                 var content = new StringContent(json, Encoding.UTF8, "application/json");
 
                 await _httpClient.PostAsync($"{_messageApiBaseUrl}/send", content);
-                
+
                 _logger.LogInformation($"Sent initial message for order {orderId}");
             }
             catch (Exception ex)
