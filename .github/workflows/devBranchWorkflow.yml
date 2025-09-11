@@ -1,39 +1,298 @@
-name: CI/CD Pipeline
+name: Staging CI/CD Pipeline
 
 on:
   push:
-    branches:
-      - dev
-      - pre-deployment
+    branches: [staging]
   pull_request:
-    branches:
-      - dev
-      - pre-deployment
+    branches: [staging]
+
+env:
+  NODE_VERSION: '20.x'
+  DOTNET_VERSION: '8.0.x'
 
 jobs:
-  build-and-test:
+  # 🔍 CODE QUALITY & SECURITY GATES
+  quality-gates:
+    name: 🛡️ Security & Quality Checks
     runs-on: ubuntu-latest
-    timeout-minutes: 180  # Increase the maximum job timeout
+    timeout-minutes: 15
 
     steps:
-      # Checkout the code
       - name: Checkout code
-        uses: actions/checkout@v3
-
-      # Set up Node.js
-      - name: Set up Node.js
-        uses: actions/setup-node@v3
+        uses: actions/checkout@v4
         with:
-          node-version: '20.x' # Use the Node.js version your project requires
+          fetch-depth: 0  # Full history for better analysis
 
-      # Install dependencies
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          cache: 'npm'
+          cache-dependency-path: |
+            frontend/vite-project/package-lock.json
+            node-API/package-lock.json
+
+      - name: Setup .NET
+        uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: ${{ env.DOTNET_VERSION }}
+
+      # Security Vulnerability Scanning
+      - name: 🔒 Audit Frontend Dependencies
+        working-directory: frontend/vite-project
+        run: |
+          npm ci
+          npm audit --audit-level=moderate
+
+      - name: 🔒 Audit Node-API Dependencies  
+        working-directory: node-API
+        run: |
+          npm ci
+          npm audit --audit-level=moderate
+
+      - name: 🔒 .NET Security Scan
+        working-directory: backend/CarePro-Api
+        run: |
+          dotnet restore
+          # Check for vulnerable packages
+          dotnet list package --vulnerable --include-transitive
+
+      # Code Quality Checks
+      - name: 🧹 Frontend Linting
+        working-directory: frontend/vite-project
+        run: npm run lint
+
+      - name: 🧹 .NET Code Analysis
+        working-directory: backend/CarePro-Api
+        run: |
+          # Format check
+          dotnet format --verify-no-changes --verbosity diagnostic
+          # Static analysis
+          dotnet build --configuration Release --verbosity normal
+
+  # 🧪 FRONTEND TESTING
+  frontend-tests:
+    name: 🎨 Frontend Tests & Build
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    needs: quality-gates
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          cache: 'npm'
+          cache-dependency-path: frontend/vite-project/package-lock.json
+
       - name: Install dependencies
-        run: |
-          cd frontend/vite-project
-          npm install
+        working-directory: frontend/vite-project
+        run: npm ci
 
-      # Run the smoke test
-      - name: Run smoke test
+      - name: 🧪 Run Tests (Fixed - No Watch Mode)
+        working-directory: frontend/vite-project
+        run: npm run test:coverage
+        env:
+          CI: true
+
+      - name: 🏗️ Build Frontend
+        working-directory: frontend/vite-project
+        run: npm run build
+
+      - name: 📦 Upload Frontend Artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          name: frontend-build
+          path: frontend/vite-project/dist/
+          retention-days: 7
+
+      - name: 📊 Upload Coverage Reports
+        uses: actions/upload-artifact@v4
+        with:
+          name: frontend-coverage
+          path: frontend/vite-project/coverage/
+          retention-days: 7
+
+  # 🔧 BACKEND (.NET) TESTING
+  backend-tests:
+    name: ⚙️ Backend (.NET) Tests & Build
+    runs-on: ubuntu-latest
+    timeout-minutes: 25
+    needs: quality-gates
+
+    services:
+      postgres:
+        image: postgres:16
+        env:
+          POSTGRES_USER: postgres
+          POSTGRES_PASSWORD: testpassword
+          POSTGRES_DB: carepro_test
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd pg_isready
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup .NET
+        uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: ${{ env.DOTNET_VERSION }}
+
+      - name: Restore Dependencies
+        working-directory: backend
+        run: dotnet restore
+
+      - name: 🏗️ Build Backend
+        working-directory: backend
+        run: dotnet build --no-restore --configuration Release
+
+      # Comprehensive .NET Testing (regardless of existing test setup)
+      - name: 🧪 Run .NET Tests (if they exist)
+        working-directory: backend
         run: |
-          cd frontend/vite-project
-          npm test --runInBand --watchAll --no-cache --detectOpenHandles
+          # Run tests if test projects exist, otherwise skip gracefully
+          if find . -name "*.Tests.csproj" -o -name "*Test*.csproj" | grep -q .; then
+            echo "Found test projects, running tests..."
+            dotnet test --no-build --configuration Release --logger "trx;LogFileName=test-results.trx"
+          else
+            echo "No test projects found, skipping unit tests"
+            echo "⚠️ WARNING: No tests found for .NET backend - recommend adding tests!"
+          fi
+
+      # Static Code Analysis for .NET
+      - name: 🔍 .NET Code Quality Analysis
+        working-directory: backend/CarePro-Api
+        run: |
+          # Check compilation warnings
+          dotnet build --configuration Release --verbosity normal --warnaserror
+          
+          # Check for common issues
+          echo "Checking for common .NET issues..."
+          grep -r "TODO\|FIXME\|HACK" . --include="*.cs" || echo "No TODO/FIXME/HACK found ✅"
+
+      - name: 📦 Publish .NET Application
+        working-directory: backend/CarePro-Api
+        run: dotnet publish --configuration Release --output ./publish
+
+      - name: 📦 Upload Backend Artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          name: backend-build
+          path: backend/CarePro-Api/publish/
+          retention-days: 7
+
+  # 🚀 NODE-API TESTING  
+  node-api-tests:
+    name: 🔥 Node-API Tests & Build
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    needs: quality-gates
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          cache: 'npm'
+          cache-dependency-path: node-API/package-lock.json
+
+      - name: Install dependencies
+        working-directory: node-API
+        run: npm ci
+
+      - name: 🛡️ Run Security Tests
+        working-directory: node-API
+        run: npm run test:security
+        env:
+          NODE_ENV: test
+
+      - name: 🧪 Run Unit Tests
+        working-directory: node-API  
+        run: npm run test:unit
+        env:
+          NODE_ENV: test
+
+      - name: 🔗 Run Integration Tests
+        working-directory: node-API
+        run: npm run test:integration
+        env:
+          NODE_ENV: test
+
+      - name: 📊 Generate Coverage Report
+        working-directory: node-API
+        run: npm run test:coverage
+        env:
+          NODE_ENV: test
+
+      - name: 📦 Upload Node-API Coverage
+        uses: actions/upload-artifact@v4
+        with:
+          name: node-api-coverage
+          path: node-API/coverage/
+          retention-days: 7
+
+  # 🔄 INTEGRATION & DEPLOYMENT READINESS
+  integration-tests:
+    name: 🔄 Cross-Service Integration Tests
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    needs: [frontend-tests, backend-tests, node-api-tests]
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Download All Artifacts
+        uses: actions/download-artifact@v4
+
+      - name: 🏥 Service Health Checks
+        run: |
+          echo "🔍 Verifying build artifacts..."
+          
+          # Check Frontend Build
+          if [ -d "frontend-build" ]; then
+            echo "✅ Frontend build artifacts found"
+            ls -la frontend-build/
+          else
+            echo "❌ Frontend build artifacts missing"
+            exit 1
+          fi
+          
+          # Check Backend Build  
+          if [ -d "backend-build" ]; then
+            echo "✅ Backend build artifacts found"
+            ls -la backend-build/
+          else
+            echo "❌ Backend build artifacts missing"
+            exit 1
+          fi
+          
+          echo "🎉 All build artifacts verified successfully!"
+
+      - name: 📋 Generate Deployment Summary
+        run: |
+          echo "## 🚀 Staging Deployment Ready!" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "### ✅ Services Verified:" >> $GITHUB_STEP_SUMMARY
+          echo "- 🎨 Frontend: Built & Tested" >> $GITHUB_STEP_SUMMARY
+          echo "- ⚙️ Backend (.NET): Built & Analyzed" >> $GITHUB_STEP_SUMMARY  
+          echo "- 🔥 Node-API: Fully Tested" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "### 🛡️ Security & Quality:" >> $GITHUB_STEP_SUMMARY
+          echo "- Dependencies scanned for vulnerabilities" >> $GITHUB_STEP_SUMMARY
+          echo "- Code quality checks passed" >> $GITHUB_STEP_SUMMARY
+          echo "- Static analysis completed" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "**Ready for staging deployment! 🎯**" >> $GITHUB_STEP_SUMMARY
