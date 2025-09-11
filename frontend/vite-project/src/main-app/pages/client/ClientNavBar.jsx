@@ -25,13 +25,11 @@ const ClientNavBar = () => {
 
   const userName = user?.firstName ? `${user.firstName} ${user.lastName}` : "";
 
-  // Early return if no user data - prevents errors during logout
-  if (!user) {
-    return null;
-  }
-
+  // ✅ Move ALL useEffect hooks before any conditional returns
   // Initialize search query from URL on component mount
   useEffect(() => {
+    if (!user) return; // Handle no user case inside the effect
+    
     const urlParams = new URLSearchParams(location.search);
     const searchParam = urlParams.get('q');
     if (searchParam) {
@@ -39,21 +37,49 @@ const ClientNavBar = () => {
     } else {
       setSearchQuery('');
     }
-  }, [location.search]);
+  }, [location.search, user]);
 
   // Listen for clear search events from dashboard
   useEffect(() => {
+    if (!user) return; // Handle no user case inside the effect
+    
     const handleClearSearch = () => {
       setSearchQuery('');
       setIsTyping(false);
     };
 
     window.addEventListener('clearSearch', handleClearSearch);
-    
     return () => {
       window.removeEventListener('clearSearch', handleClearSearch);
     };
+  }, [user]);
+
+  useEffect(() => {
+    const handleClickOutside = (event) => {
+      if (dropdownRef.current && !dropdownRef.current.contains(event.target)) {
+        setShowDropdown(false);
+      }
+    };
+
+    document.addEventListener("mousedown", handleClickOutside);
+    return () => {
+      document.removeEventListener("mousedown", handleClickOutside);
+    };
   }, []);
+
+  // Cleanup debounce on unmount
+  useEffect(() => {
+    return () => {
+      if (debounceRef.current) {
+        clearTimeout(debounceRef.current);
+      }
+    };
+  }, []);
+
+  // Early return if no user data - prevents errors during logout
+  if (!user) {
+    return null;
+  }
 
   const getInitials = (name) => {
     if (!name || typeof name !== "string") return "";
@@ -164,15 +190,6 @@ const ClientNavBar = () => {
       setIsTyping(false);
     }, 300); // 300ms debounce
   };
-
-  // Cleanup debounce on unmount
-  useEffect(() => {
-    return () => {
-      if (debounceRef.current) {
-        clearTimeout(debounceRef.current);
-      }
-    };
-  }, []);
 
   return (
     <nav className="client-navigation-bar">

@@ -20,6 +20,7 @@ const OrderSpecifications = ({
   const userDetails = localStorage.getItem('userDetails');
   console.log('User details:', userDetails);
   const clientId = userDetails ? JSON.parse(userDetails).id : null;
+  const [frequencyPriceData, setFrequencyPriceData] = useState(null);
   useEffect(() => {
     // Fetch or update data based on the selected service
     //fetch caregiver details or service specifications if needed
@@ -29,7 +30,7 @@ const OrderSpecifications = ({
     return <div>Loading...</div>;
   }
   console.log('Service inside order specifications:', service);
-  const [frequencyPriceData, setFrequencyPriceData] = useState(null);
+  
   
   // Task management is now handled by parent (Cart)
   const serviceTitle = service? service.title : 'Service Title Not Available';

@@ -24,6 +24,44 @@ const NavigationBar = () => {
 
   const userName = user?.firstName ? `${user.firstName} ${user.lastName}` : "";
 
+  // ✅ Move useEffect hooks before any conditional returns
+  useEffect(() => {
+    if (!user) return; // Handle no user case inside the effect
+    
+    const fetchEarnings = async () => {
+      try{
+      const earnings = await fetch (`https://carepro-api20241118153443.azurewebsites.net/api/WithdrawalRequests/TotalAmountEarnedAndWithdrawn/${user.id}`, {
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${localStorage.getItem('authToken')}`
+        }
+      });
+      const data = await earnings.json();
+      console.log('earnings data:', data);
+      setEarnings({
+        totalEarned: data.totalAmountEarned,
+      });
+    } catch (error) {
+      console.error('Failed to fetch earnings:', error);
+    }
+    };
+    
+    fetchEarnings();
+  }, [user]);
+
+  useEffect(() => {
+    const handleClickOutside = (event) => {
+      if (dropdownRef.current && !dropdownRef.current.contains(event.target)) {
+        setShowDropdown(false);
+      }
+    };
+
+    document.addEventListener("mousedown", handleClickOutside);
+    return () => {
+      document.removeEventListener("mousedown", handleClickOutside);
+    };
+  }, []);
+
   // Early return if no user data - prevents errors during logout
   if (!user) {
     return null;
@@ -60,59 +98,12 @@ const NavigationBar = () => {
     return null; // Return null when no image, let the initials span handle the display
   };
 
- useEffect(() => {
-    const fetchEarnings = async () => {
-      try{
-      const earnings = await fetch (`https://carepro-api20241118153443.azurewebsites.net/api/WithdrawalRequests/TotalAmountEarnedAndWithdrawn/${user.id}`, {
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': `Bearer ${localStorage.getItem('authToken')}`
-        }
-      });
-
-    const data = await earnings.json();
-    setEarnings({
-      totalEarned: data.totalAmountEarned,
-    });
-    } catch (error) {
-      console.error("Error fetching earnings:", error);
-    }
-  };
-
-  const fetchProfile = async () => {
-    try {
-      const response = await userService.getProfile();
-      if (response && response.success && response.data) {
-        setProfileData(response.data);
-      }
-    } catch (error) {
-      console.error("Error fetching profile:", error);
-    }
-  };
-
-  fetchEarnings();
-  fetchProfile();
-}, [user?.id]); // Add optional chaining to prevent null errors
-
   const handleSignOut = () => {
     const navInfo = handleLogout();
     if (navInfo.shouldNavigate) {
       navigate(navInfo.path, { replace: true });
     }
   };
-
-  useEffect(() => {
-    const handleClickOutside = (event) => {
-      if (dropdownRef.current && !dropdownRef.current.contains(event.target)) {
-        setShowDropdown(false);
-      }
-    };
-
-    document.addEventListener("mousedown", handleClickOutside);
-    return () => {
-      document.removeEventListener("mousedown", handleClickOutside);
-    };
-  }, []);
 
   const toggleMobileMenu = () => {
     setMobileMenuOpen(!mobileMenuOpen);
