@@ -76,6 +76,14 @@ const ClientNavBar = () => {
     };
   }, []);
 
+  // ✅ Move this useEffect before early return
+  useEffect(() => {
+    document.addEventListener("mousedown", handleClickOutside);
+    return () => {
+      document.removeEventListener("mousedown", handleClickOutside);
+    };
+  }, []);
+
   // Early return if no user data - prevents errors during logout
   if (!user) {
     return null;
@@ -112,13 +120,6 @@ const ClientNavBar = () => {
       setShowDropdown(false);
     }
   };
-
-  useEffect(() => {
-    document.addEventListener("mousedown", handleClickOutside);
-    return () => {
-      document.removeEventListener("mousedown", handleClickOutside);
-    };
-  }, []);
 
   const toggleMobileMenu = () => {
     setMobileMenuOpen(!mobileMenuOpen);
