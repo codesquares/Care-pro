@@ -23,12 +23,8 @@ namespace Infrastructure.Content.Services.Authentication
             this.configuration = configuration;
         }
 
-<<<<<<< HEAD
-        public Task<string> CreateTokenAsync(AppUserDTO appUserDTO)
-=======
         
         public Task<string> CreateTokenAsync(AppUserDTO  appUserDTO)
->>>>>>> 7fd5bebcea7e42d1ea3bb78af878ed63cacd043a
         {
             // Create Claims
             var claims = new List<Claim>();
@@ -60,6 +56,36 @@ namespace Infrastructure.Content.Services.Authentication
             var issuer = configuration["JwtSettings:Issuer"];
             var audience = configuration["JwtSettings:Audience"];
             var expires = DateTime.UtcNow.AddMinutes(int.Parse(configuration["JwtSettings:ExpiresInMinutes"]));
+            
+            var key = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(secretKey));
+            var creds = new SigningCredentials(key, SecurityAlgorithms.HmacSha256);
+            
+            var claims = new[]
+            {
+            new Claim(JwtRegisteredClaimNames.Sub, email),
+            new Claim(JwtRegisteredClaimNames.Jti, Guid.NewGuid().ToString())
+            };
+
+            var token = new JwtSecurityToken(
+                issuer,
+                audience,
+                claims,
+                expires: expires,
+                signingCredentials: creds
+            );
+
+            return new JwtSecurityTokenHandler().WriteToken(token);
+        
+    }
+
+       
+
+        public string GeneratePasswordResetToken(string email)
+        {
+            var secretKey = configuration["JwtSettings:Secret"];
+            var issuer = configuration["JwtSettings:Issuer"];
+            var audience = configuration["JwtSettings:Audience"];
+            var expires = DateTime.UtcNow.AddMinutes(int.Parse(configuration["JwtSettings:ExpiresInMinutes"]));
 
             var key = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(secretKey));
             var creds = new SigningCredentials(key, SecurityAlgorithms.HmacSha256);
@@ -79,10 +105,6 @@ namespace Infrastructure.Content.Services.Authentication
             );
 
             return new JwtSecurityTokenHandler().WriteToken(token);
-<<<<<<< HEAD
-
-        }
-=======
         
     }
 
@@ -130,6 +152,5 @@ namespace Infrastructure.Content.Services.Authentication
         //}
 
 
->>>>>>> 7fd5bebcea7e42d1ea3bb78af878ed63cacd043a
     }
 }

@@ -35,20 +35,8 @@ namespace CarePro_Api.Controllers.Content
         {
             try
             {
-<<<<<<< HEAD
-                var userId = User.FindFirstValue(ClaimTypes.NameIdentifier);
-
-                // Added explicit null check as in the other controller
-                if (string.IsNullOrEmpty(userId))
-                {
-                    return Unauthorized("User not authenticated properly.");
-                }
-
-                var notifications = await _notificationService.GetUserNotificationsAsync(userId, page, pageSize);
-=======
                // var userId = User.FindFirstValue(ClaimTypes.NameIdentifier);
                 var notifications = await _notificationService.GetUserNotificationsAsync(userId);
->>>>>>> 7fd5bebcea7e42d1ea3bb78af878ed63cacd043a
                 return Ok(notifications);
             }
             catch (Exception ex)
@@ -64,18 +52,7 @@ namespace CarePro_Api.Controllers.Content
         {
             try
             {
-<<<<<<< HEAD
-                var userId = User.FindFirstValue(ClaimTypes.NameIdentifier);
-
-                // Added explicit null check as in the other controller
-                if (string.IsNullOrEmpty(userId))
-                {
-                    return Unauthorized("User not authenticated properly.");
-                }
-
-=======
                // var userId = User.FindFirstValue(ClaimTypes.NameIdentifier);
->>>>>>> 7fd5bebcea7e42d1ea3bb78af878ed63cacd043a
                 var count = await _notificationService.GetUnreadNotificationCountAsync(userId);
                 return Ok(new { count });
             }
@@ -119,18 +96,7 @@ namespace CarePro_Api.Controllers.Content
         {
             try
             {
-<<<<<<< HEAD
-                var userId = User.FindFirstValue(ClaimTypes.NameIdentifier);
-
-                // Added explicit null check as in the other controller
-                if (string.IsNullOrEmpty(userId))
-                {
-                    return Unauthorized("User not authenticated properly.");
-                }
-
-=======
                 //var userId = User.FindFirstValue(ClaimTypes.NameIdentifier);
->>>>>>> 7fd5bebcea7e42d1ea3bb78af878ed63cacd043a
                 await _notificationService.MarkAllAsReadAsync(userId);
                 return NoContent();
             }
@@ -185,13 +151,8 @@ namespace CarePro_Api.Controllers.Content
 
                 var notification = await _notificationService.CreateNotificationAsync(
                     request.RecipientId,
-<<<<<<< HEAD
-                    userId,
-                    NotificationType.SystemNotice,
-=======
                     User.FindFirstValue(ClaimTypes.NameIdentifier),
                     "System Notice",
->>>>>>> 7fd5bebcea7e42d1ea3bb78af878ed63cacd043a
                     request.Message,
                     "test_notification",
                     "");
