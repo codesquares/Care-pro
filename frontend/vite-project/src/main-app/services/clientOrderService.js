@@ -59,7 +59,9 @@ const ClientOrderService = {
     };
     
     orders.forEach(order => {
-      const orderDate = new Date(order.orderDate);
+      // Handle both orderDate and createdAt
+      const orderDate = new Date(order.orderDate || order.createdAt);
+      // Handle both amount and amount
       const amount = parseFloat(order.amount) || 0;
       
       // Total spending
@@ -75,25 +77,269 @@ const ClientOrderService = {
         metrics.lastMonth += amount;
       }
       
-      // Categories spending
-      if (order.serviceType) {
-        if (!metrics.categories[order.serviceType]) {
-          metrics.categories[order.serviceType] = 0;
+      // Categories spending - handle both serviceType and category
+      const category = order.serviceType || order.category;
+      if (category) {
+        if (!metrics.categories[category]) {
+          metrics.categories[category] = 0;
         }
-        metrics.categories[order.serviceType] += amount;
+        metrics.categories[category] += amount;
       }
     });
     
-    // Calculate average monthly spending
-    const firstOrderDate = new Date(orders[orders.length - 1]?.orderDate || now);
-    const months = (now.getMonth() - firstOrderDate.getMonth()) + 
-                  12 * (now.getFullYear() - firstOrderDate.getFullYear()) || 1;
-    
-    metrics.average = metrics.total / Math.max(1, months);
+    // Calculate average monthly spending over the span of orders
+    if (orders.length > 0) {
+      const dates = orders.map(o => new Date(o.orderDate || o.createdAt)).sort();
+      const firstOrderDate = dates[0];
+      const lastOrderDate = dates[dates.length - 1];
+      
+      // Calculate months between first and last order
+      const monthsDiff = (lastOrderDate.getFullYear() - firstOrderDate.getFullYear()) * 12 + 
+                        (lastOrderDate.getMonth() - firstOrderDate.getMonth()) + 1;
+      
+      metrics.average = parseFloat((metrics.total / Math.max(1, monthsDiff)).toFixed(2));
+    } else {
+      metrics.average = 0;
+    }
     
     return metrics;
   },
-  
+
+  /**
+   * Create a new order
+   * @param {Object} orderData - Order data object
+   * @returns {Promise<Object>} - Result object with success status
+   */
+  async createOrder(orderData) {
+    try {
+      // Validate required fields
+      if (!orderData.serviceType || !orderData.providerId || !orderData.amount) {
+        return {
+          success: false,
+          error: 'Missing required fields: serviceType, providerId, amount'
+        };
+      }
+
+      const API_URL = 'https://carepro-api20241118153443.azurewebsites.net/api/ClientOrders';
+      
+      const response = await fetch(API_URL, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(orderData)
+      });
+      
+      if (!response.ok) {
+        return {
+          success: false,
+          error: `Failed to create order: ${response.status}`
+        };
+      }
+      
+      const data = await response.json();
+      return {
+        success: true,
+        data: data
+      };
+      
+    } catch (error) {
+      console.error("Error in createOrder:", error);
+      return {
+        success: false,
+        error: error.message
+      };
+    }
+  },
+
+  /**
+   * Update order status
+   * @param {string} orderId - Order ID
+   * @param {string} newStatus - New status
+   * @returns {Promise<Object>} - Result object with success status
+   */
+  async updateOrderStatus(orderId, newStatus) {
+    try {
+      // Validate parameters
+      if (!orderId || !newStatus) {
+        return {
+          success: false,
+          error: 'Order ID and status are required'
+        };
+      }
+
+      const API_URL = `https://carepro-api20241118153443.azurewebsites.net/api/ClientOrders/${orderId}/status`;
+      
+      const response = await fetch(API_URL, {
+        method: 'PUT',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ status: newStatus })
+      });
+      
+      if (!response.ok) {
+        return {
+          success: false,
+          error: `Failed to update order status: ${response.status}`
+        };
+      }
+      
+      const data = await response.json();
+      return {
+        success: true,
+        data: data
+      };
+      
+    } catch (error) {
+      console.error("Error in updateOrderStatus:", error);
+      return {
+        success: false,
+        error: error.message
+      };
+    }
+  },
+
+  /**
+   * Cancel an order
+   * @param {string} orderId - Order ID
+   * @returns {Promise<Object>} - Result object with success status
+   */
+  async cancelOrder(orderId) {
+    try {
+      // Validate parameter
+      if (!orderId) {
+        return {
+          success: false,
+          error: 'Order ID is required'
+        };
+      }
+
+      const API_URL = `https://carepro-api20241118153443.azurewebsites.net/api/ClientOrders/${orderId}/cancel`;
+      
+      const response = await fetch(API_URL, {
+        method: 'PUT',
+        headers: {
+          'Content-Type': 'application/json',
+        }
+      });
+      
+      if (!response.ok) {
+        return {
+          success: false,
+          error: `Failed to cancel order: ${response.status}`
+        };
+      }
+      
+      const data = await response.json();
+      return {
+        success: true,
+        data: data
+      };
+      
+    } catch (error) {
+      console.error("Error in cancelOrder:", error);
+      return {
+        success: false,
+        error: error.message
+      };
+    }
+  },
+
+  /**
+   * Update order status
+   * @param {string} orderId - Order ID
+   * @param {string} newStatus - New status
+   * @returns {Promise<Object>} - Result object with success status
+   */
+  async updateOrderStatus(orderId, newStatus) {
+    try {
+      // Validate parameters
+      if (!orderId || !newStatus) {
+        return {
+          success: false,
+          error: 'Order ID and status are required'
+        };
+      }
+
+      const API_URL = `https://carepro-api20241118153443.azurewebsites.net/api/ClientOrders/${orderId}/status`;
+      
+      const response = await fetch(API_URL, {
+        method: 'PATCH',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ status: newStatus })
+      });
+      
+      if (!response.ok) {
+        return {
+          success: false,
+          error: `Failed to update order status: ${response.status}`
+        };
+      }
+      
+      const data = await response.json();
+      return {
+        success: true,
+        data: data
+      };
+      
+    } catch (error) {
+      console.error("Error in updateOrderStatus:", error);
+      return {
+        success: false,
+        error: error.message
+      };
+    }
+  },
+
+  /**
+   * Cancel an order
+   * @param {string} orderId - Order ID
+   * @returns {Promise<Object>} - Result object with success status
+   */
+  async cancelOrder(orderId) {
+    try {
+      // Validate parameter
+      if (!orderId) {
+        return {
+          success: false,
+          error: 'Order ID is required'
+        };
+      }
+
+      const API_URL = `https://carepro-api20241118153443.azurewebsites.net/api/ClientOrders/${orderId}/cancel`;
+      
+      const response = await fetch(API_URL, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        }
+      });
+      
+      if (!response.ok) {
+        return {
+          success: false,
+          error: `Failed to cancel order: ${response.status}`
+        };
+      }
+      
+      const data = await response.json();
+      return {
+        success: true,
+        data: data
+      };
+      
+    } catch (error) {
+      console.error("Error in cancelOrder:", error);
+      return {
+        success: false,
+        error: error.message
+      };
+    }
+  },
+
   /**
    * Get mock orders for testing
    * @returns {Array} - Array of mock order objects

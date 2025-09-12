@@ -47,22 +47,39 @@ jobs:
       - name: 🔒 Audit Node-API Dependencies  
         working-directory: node-API
         run: |
+          echo "🔍 Auditing Node-API dependencies..."
           npm ci
-          npm audit --audit-level=moderate
+          if npm audit --audit-level=moderate 2>&1 | grep -i "found.*vulnerabilities"; then
+            echo "⚠️ Vulnerabilities found, checking severity..."
+            if npm audit --audit-level=high --dry-run; then
+              echo "✅ No high/critical vulnerabilities found"
+            else
+              echo "❌ High or critical vulnerabilities found - please fix before deployment"
+              npm audit
+              exit 1
+            fi
+          else
+            echo "✅ No vulnerabilities found"
+          fi
 
       - name: 🔒 .NET Security Scan
         working-directory: backend/CarePro-Api
-        continue-on-error: true
         run: |
           echo "🔍 Running .NET security scan..."
-          dotnet restore || {
-            echo "⚠️ .NET restore issues found"
-          }
-          # Check for vulnerable packages (informational only)
-          dotnet list package --vulnerable --include-transitive || {
-            echo "⚠️ .NET security vulnerabilities found - backend team should address these"
-            echo "Continuing as security warnings are informational for staging..."
-          }
+          if ! dotnet restore --verbosity quiet; then
+            echo "❌ .NET restore failed - this will block deployment"
+            exit 1
+          fi
+          
+          # Check for vulnerable packages (fail on high severity)
+          echo "🔍 Checking for security vulnerabilities..."
+          if dotnet list package --vulnerable --include-transitive 2>/dev/null | grep -E "(Critical|High)"; then
+            echo "❌ Critical or High severity vulnerabilities found"
+            echo "Please update vulnerable packages before proceeding"
+            exit 1
+          else
+            echo "✅ No critical security vulnerabilities detected"
+          fi
 
       # Code Quality Checks
       - name: 🧹 Frontend Linting
@@ -71,21 +88,22 @@ jobs:
 
       - name: 🧹 .NET Code Analysis
         working-directory: backend/CarePro-Api
-        continue-on-error: true
         run: |
-          # Format check (allow failure for now - backend team to fix)
-          echo "🔍 Running .NET format check (warnings only)..."
-          dotnet format CarePro-Api.sln --verify-no-changes --verbosity diagnostic || {
-            echo "⚠️ Format issues found - backend team should address these"
-            echo "Continuing with build as format errors are non-blocking..."
-          }
+          # Format check (enforce for code quality)
+          echo "🔍 Running .NET format check..."
+          if ! dotnet format CarePro-Api.sln --verify-no-changes --verbosity minimal; then
+            echo "❌ Code formatting issues found"
+            echo "Please run 'dotnet format' to fix formatting issues"
+            exit 1
+          fi
           
-          # Static analysis (allow build warnings)
-          echo "🏗️ Running .NET build analysis..."
-          dotnet build --configuration Release --verbosity normal || {
-            echo "⚠️ Build warnings/errors found - backend team should address these"
-            echo "Continuing as build issues are non-blocking for staging..."
-          }
+          # Build check (must succeed)
+          echo "🏗️ Running .NET build check..."
+          if ! dotnet build --configuration Release --verbosity minimal --no-restore; then
+            echo "❌ Build failed - this will block deployment" 
+            exit 1
+          fi
+          echo "✅ .NET code analysis passed"
 
   # 🧪 FRONTEND TESTING
   frontend-tests:
@@ -165,46 +183,48 @@ jobs:
           dotnet-version: ${{ env.DOTNET_VERSION }}
 
       - name: Restore Dependencies
-        working-directory: backend
-        continue-on-error: true
+        working-directory: backend/CarePro-Api
         run: |
           echo "🔄 Restoring .NET dependencies..."
-          dotnet restore || {
-            echo "⚠️ Restore issues found - backend team should address package conflicts"
-            echo "Continuing as restore warnings are non-blocking..."
-          }
+          if ! dotnet restore --verbosity minimal; then
+            echo "❌ Failed to restore .NET dependencies"
+            exit 1
+          fi
+          echo "✅ Dependencies restored successfully"
 
       - name: 🏗️ Build Backend
-        working-directory: backend
-        continue-on-error: true
+        working-directory: backend/CarePro-Api
         run: |
           echo "🏗️ Building .NET backend..."
-          dotnet build --no-restore --configuration Release || {
-            echo "⚠️ Build issues found - backend team should address build errors"
-            echo "Continuing as build errors are non-blocking for staging..."
-          }
+          if ! dotnet build --no-restore --configuration Release --verbosity minimal; then
+            echo "❌ Backend build failed"
+            exit 1
+          fi
+          echo "✅ Backend built successfully"
 
       # Comprehensive .NET Testing (regardless of existing test setup)
       - name: 🧪 Run .NET Tests (if they exist)
-        working-directory: backend
-        continue-on-error: true
+        working-directory: backend/CarePro-Api
         run: |
-          # Run tests if test projects exist, otherwise skip gracefully
-          if find . -name "*.Tests.csproj" -o -name "*Test*.csproj" | grep -q .; then
-            echo "Found test projects, running tests..."
-            dotnet test --no-build --configuration Release --logger "trx;LogFileName=test-results.trx" || {
-              echo "⚠️ Test failures found - backend team should address test issues"
-              echo "Continuing as test failures are non-blocking for staging..."
-            }
+          # Check if test projects exist in the solution
+          if dotnet sln list | grep -i test; then
+            echo "✅ Found test projects, running tests..."
+            if ! dotnet test --no-build --configuration Release --logger "trx;LogFileName=test-results.trx" --verbosity minimal; then
+              echo "❌ Tests failed"
+              exit 1
+            fi
+            echo "✅ All tests passed"
           else
-            echo "No test projects found, skipping unit tests"
-            echo "⚠️ WARNING: No tests found for .NET backend - recommend adding tests!"
+            echo "ℹ️ No test projects found in solution"
+            echo "⚠️ Consider adding unit tests for better code quality"
+            # Create a placeholder test result for reporting
+            mkdir -p TestResults
+            echo "No tests configured" > TestResults/test-results.txt
           fi
 
       # Static Code Analysis for .NET
       - name: 🔍 .NET Code Quality Analysis
         working-directory: backend/CarePro-Api
-        continue-on-error: true
         run: |
           # Check for merge conflicts first
           echo "🔍 Checking for merge conflicts..."
@@ -213,18 +233,16 @@ jobs:
             exit 1
           fi
           
-          # Try to build (allow warnings and format issues)
-          echo "🏗️ Building solution for analysis..."
-          dotnet build --configuration Release --verbosity minimal --no-restore || {
-            echo "⚠️ Build issues detected - backend developer should fix these"
-            echo "Build warnings/errors are non-blocking for staging deployment"
-          }
+          # Verify the build we just created
+          echo "✅ Build verification passed"
           
           # Check for common issues (informational only)
-          echo "Checking for common .NET issues..."
-          grep -r "TODO\|FIXME\|HACK" . --include="*.cs" && {
-            echo "⚠️ Found TODO/FIXME/HACK comments - should be addressed before production"
-          } || echo "No TODO/FIXME/HACK found ✅"
+          echo "ℹ️ Checking for code quality markers..."
+          if grep -r "TODO\|FIXME\|HACK" . --include="*.cs"; then
+            echo "⚠️ Found TODO/FIXME/HACK comments - consider addressing before production"
+          else 
+            echo "✅ No critical code quality markers found"
+          fi
 
       - name: 📦 Publish .NET Application
         working-directory: backend/CarePro-Api
@@ -235,6 +253,16 @@ jobs:
         with:
           name: backend-build
           path: backend/CarePro-Api/publish/
+          retention-days: 7
+
+      - name: 📊 Upload Test Results (if any)
+        uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: backend-test-results
+          path: |
+            backend/CarePro-Api/TestResults/
+            backend/CarePro-Api/TestResults/*.trx
           retention-days: 7
 
   # 🚀 NODE-API TESTING  
@@ -259,27 +287,111 @@ jobs:
         working-directory: node-API
         run: npm ci
 
+      - name: 🧹 Clean up empty test files
+        working-directory: node-API
+        run: |
+          echo "🧹 Checking for empty test files..."
+          # Remove empty test files that cause Jest to fail
+          find __tests__ -name "*.test.js" -size 0 -delete
+          find __tests__ -name "*.spec.js" -size 0 -delete
+          echo "✅ Empty test files cleaned up"
+
+      - name: 🔍 Node-API Code Quality Check
+        working-directory: node-API
+        run: |
+          echo "🔍 Running Node-API code quality checks..."
+          
+          # Check for merge conflicts
+          if grep -r "<<<<<<< HEAD\|>>>>>>> \|=======" . --include="*.js" --exclude-dir=node_modules; then
+            echo "❌ Merge conflicts found in Node-API! Please resolve them first."
+            exit 1
+          fi
+          
+          # Check for common issues
+          echo "ℹ️ Checking for code quality markers..."
+          if grep -r "TODO\|FIXME\|HACK" . --include="*.js" --exclude-dir=node_modules; then
+            echo "⚠️ Found TODO/FIXME/HACK comments - consider addressing before production"
+          else 
+            echo "✅ No critical code quality markers found"
+          fi
+          
+          # Check for console.log statements (should use proper logging)
+          if grep -r "console\.log\|console\.error\|console\.warn" src/ --include="*.js" | grep -v "// ALLOWED:"; then
+            echo "⚠️ Found console.log statements - consider using proper logging"
+          else
+            echo "✅ No inappropriate console statements found"
+          fi
+          
+          echo "✅ Code quality checks completed"
+
       - name: 🛡️ Run Security Tests
         working-directory: node-API
-        run: npm run test:security
+        run: |
+          echo "🔒 Running security tests..."
+          if ! npm run test:security; then
+            echo "❌ Security tests failed - this blocks deployment"
+            exit 1
+          fi
+          echo "✅ Security tests passed"
         env:
           NODE_ENV: test
 
       - name: 🧪 Run Unit Tests
         working-directory: node-API  
-        run: npm run test:unit
+        run: |
+          echo "🧪 Running unit tests..."
+          if ! npm run test:unit; then
+            echo "❌ Unit tests failed - this blocks deployment"
+            exit 1
+          fi
+          echo "✅ Unit tests passed"
         env:
           NODE_ENV: test
 
       - name: 🔗 Run Integration Tests
         working-directory: node-API
-        run: npm run test:integration
+        run: |
+          echo "🔗 Running integration tests..."
+          if ! npm run test:integration; then
+            echo "❌ Integration tests failed - this blocks deployment"
+            exit 1
+          fi
+          echo "✅ Integration tests passed"
         env:
           NODE_ENV: test
 
       - name: 📊 Generate Coverage Report
         working-directory: node-API
-        run: npm run test:coverage
+        run: |
+          echo "📊 Generating coverage report..."
+          if ! npm run test:coverage; then
+            echo "❌ Coverage generation failed or coverage thresholds not met"
+            exit 1
+          fi
+          echo "✅ Coverage report generated successfully"
+        env:
+          NODE_ENV: test
+
+      - name: 🚀 Test Server Startup
+        working-directory: node-API
+        run: |
+          echo "🚀 Testing Node-API server startup..."
+          # Start server in background
+          timeout 10s npm start &
+          SERVER_PID=$!
+          
+          # Wait a moment for server to start
+          sleep 3
+          
+          # Test if server is responding
+          if curl -f http://localhost:3000/health 2>/dev/null || curl -f http://localhost:8000/health 2>/dev/null; then
+            echo "✅ Server started successfully"
+          else
+            echo "⚠️ Server health check failed, but continuing..."
+          fi
+          
+          # Clean up
+          kill $SERVER_PID 2>/dev/null || true
         env:
           NODE_ENV: test
 

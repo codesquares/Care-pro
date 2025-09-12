@@ -27,13 +27,8 @@ namespace Infrastructure.Content.Services
             CareProDbContext dbContext,
             IEarningsService earningsService,
             ICareGiverService careGiverService,
-<<<<<<< HEAD
-            INotificationService notificationService,
-            ITransactionHistoryService transactionHistoryService)
-=======
             IAdminUserService adminUserService,
             INotificationService notificationService)
->>>>>>> d23f2b0cedb6de3753dc47fa8c77105506e209d1
         {
             _dbContext = dbContext;
             _earningsService = earningsService;
