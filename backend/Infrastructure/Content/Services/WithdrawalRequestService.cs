@@ -38,10 +38,10 @@ namespace Infrastructure.Content.Services
             _transactionHistoryService = transactionHistoryService;
         }
 
-        public async Task<WithdrawalRequestResponse> GetWithdrawalRequestByIdAsync(string id)
+        public async Task<WithdrawalRequestResponse> GetWithdrawalRequestByIdAsync(string withdrawalRequestId)
         {
-            // var withdrawal = await _dbContext.WithdrawalRequests.Find(w => w.Id == ObjectId.Parse(id)).FirstOrDefaultAsync();
-            var withdrawal = await _dbContext.WithdrawalRequests.FirstOrDefaultAsync(w => w.Id == ObjectId.Parse(id));
+           // var withdrawal = await _dbContext.WithdrawalRequests.Find(w => w.Id == ObjectId.Parse(withdrawalRequestId)).FirstOrDefaultAsync();
+            var withdrawal = await _dbContext.WithdrawalRequests.FirstOrDefaultAsync(w => w.Id == ObjectId.Parse(withdrawalRequestId));
 
             if (withdrawal == null)
                 return null;
@@ -60,19 +60,7 @@ namespace Infrastructure.Content.Services
             return await MapWithdrawalToResponseAsync(withdrawal);
         }
 
-        //public async Task<List<WithdrawalRequestResponse>> GetAllWithdrawalRequestsAsync()
-        //{
-        //    var withdrawals = await _dbContext.WithdrawalRequests.Find(_ => true).ToListAsync();
-        //    var responses = new List<WithdrawalRequestResponse>();
-
-        //    foreach (var withdrawal in withdrawals)
-        //    {
-        //        responses.Add(await MapWithdrawalToResponseAsync(withdrawal));
-        //    }
-
-        //    return responses;
-        //}
-
+        
         public async Task<List<WithdrawalRequestResponse>> GetAllWithdrawalRequestsAsync()
         {
             var withdrawals = await _dbContext.WithdrawalRequests.ToListAsync();
@@ -103,6 +91,33 @@ namespace Infrastructure.Content.Services
             return responses;
         }
 
+
+        public async Task<List<CaregiverWithdrawalHistoryResponse>> GetCaregiverWithdrawalRequestHistoryAsync(string caregiverId)
+        {
+            var withdrawals = await _dbContext.WithdrawalRequests
+                .Where(x => x.CaregiverId == caregiverId)
+                .ToListAsync();
+            var responses = new List<CaregiverWithdrawalHistoryResponse>();
+
+            foreach (var withdrawal in withdrawals)
+            {
+                var withdrawalDTO = new CaregiverWithdrawalHistoryResponse
+                {
+                    Id = withdrawal.Id.ToString(),
+                    CaregiverId = withdrawal.CaregiverId,
+                    AmountRequested = withdrawal.AmountRequested,
+                    Activity = "Withdrawal",
+                    Description = withdrawal.Status,
+                    CompletedAt = withdrawal.CreatedAt,                
+                                      
+                };
+                responses.Add(withdrawalDTO);
+            }
+
+            return responses;
+        }
+
+
         public async Task<List<WithdrawalRequestResponse>> GetWithdrawalRequestsByStatusAsync(string status)
         {
             var withdrawals = await _dbContext.WithdrawalRequests.
@@ -120,15 +135,30 @@ namespace Infrastructure.Content.Services
 
         public async Task<WithdrawalRequestResponse> CreateWithdrawalRequestAsync(CreateWithdrawalRequestRequest request)
         {
+            var totalWithdrawnAmount = await GetTotalWithdrawnByCaregiverIdAsync(request.CaregiverId);
+            var totalAmountEarned = 0m;
+            decimal currentWithdrawableAmount = 0m;
+           // var totalWithdrawableAmount = 0m;
+
             // Check if there's already a pending withdrawal for this caregiver
             bool hasPending = await HasPendingRequest(request.CaregiverId);
             if (hasPending)
                 throw new InvalidOperationException("A pending withdrawal request already exists for this caregiver");
 
             // Verify the caregiver has enough withdrawable funds
-            var earnings = await _earningsService.GetEarningsByCaregiverIdAsync(request.CaregiverId);
-            if (earnings == null || earnings.WithdrawableAmount < request.AmountRequested)
-                throw new InvalidOperationException("Insufficient withdrawable funds");
+            var earnings = await _earningsService.GetEarningByCaregiverIdAsync(request.CaregiverId);
+
+            totalAmountEarned = earnings.WithdrawableAmount;
+            currentWithdrawableAmount = totalAmountEarned - totalWithdrawnAmount;
+            
+            //if (earnings == null || earnings.WithdrawableAmount < request.AmountRequested)
+            //{
+            //    throw new InvalidOperationException("Insufficient withdrawable funds");
+            //}
+                
+
+            if (earnings == null || currentWithdrawableAmount < request.AmountRequested)
+                throw new InvalidOperationException("Insufficient withdrawable funds, kindly check your Withdrawable Amount and stay within the limit");
 
             // Calculate service charge and final amount
             decimal serviceCharge = Math.Round(request.AmountRequested * 0.10m, 2);
@@ -169,32 +199,59 @@ namespace Infrastructure.Content.Services
         }
 
 
-        //public async Task<WithdrawalRequestResponse> VerifyWithdrawalRequestAsync(AdminWithdrawalVerificationRequest request)
-        //{
-        //    var withdrawal = await _dbContext.WithdrawalRequests.Find(w => w.Token == request.Token).FirstOrDefaultAsync();
-        //    if (withdrawal == null)
-        //        throw new InvalidOperationException("Withdrawal request not found");
+        public async Task<CaregiverWithdrawalSummaryResponse> GetTotalAmountEarnedAndWithdrawnByCaregiverIdAsync(string caregiverId)
+        {
+            var withdrawals = await _dbContext.WithdrawalRequests
+                    .Where(e => e.CaregiverId == caregiverId && e.Status == "Completed")
+                    .OrderByDescending(n => n.CreatedAt)
+                    .ToListAsync();
 
-        //    if (withdrawal.Status != WithdrawalStatus.Pending)
-        //        throw new InvalidOperationException("Withdrawal request is not in pending state");
+            decimal totalAmountWithdrawn = 0;
+            var totalAmountEarned =  await _earningsService.GetEarningByCaregiverIdAsync(caregiverId);
+            decimal withdrawableAmount = 0;
 
-        //    var update = Builders<WithdrawalRequest>.Update
-        //        .Set(w => w.Status, WithdrawalStatus.Verified)
-        //        .Set(w => w.VerifiedAt, DateTime.UtcNow)
-        //        .Set(w => w.AdminId, request.AdminId)
-        //        .Set(w => w.AdminNotes, request.AdminNotes);
+            foreach (var withdrawal in withdrawals)
+            {
+                //totalAmountEarned += withdrawal.AmountRequested;
+                totalAmountWithdrawn += withdrawal.AmountRequested;
 
-        //    await _dbContext.WithdrawalRequests.UpdateOneAsync(w => w.Id == withdrawal.Id, update);
+            }
 
-        //    // Get updated withdrawal
-        //    withdrawal = await _dbContext.WithdrawalRequests.Find(w => w.Id == withdrawal.Id).FirstOrDefaultAsync();
+            withdrawableAmount = totalAmountEarned.TotalEarning - totalAmountWithdrawn;
 
-        //    // Notify caregiver that their withdrawal has been verified
-        //    await NotifyCaregiverAboutWithdrawalStatusChange(withdrawal, "Withdrawal Request Verified", 
-        //        $"Your withdrawal request for {withdrawal.AmountRequested:C} has been verified by admin. Final amount after service charge: {withdrawal.FinalAmount:C}");
+            return new CaregiverWithdrawalSummaryResponse
+            {
+                TotalAmountEarned = totalAmountEarned.TotalEarning,
+                TotalAmountWithdrawn = totalAmountWithdrawn,
+                WithdrawableAmount = withdrawableAmount,
+            };
+        }
 
-        //    return await MapWithdrawalToResponseAsync(withdrawal);
-        //}
+
+        public async Task<decimal> GetTotalWithdrawnByCaregiverIdAsync(string caregiverId)
+        {
+            var withdrawals = await _dbContext.WithdrawalRequests
+                    .Where(e => e.CaregiverId == caregiverId && e.Status == "Completed")
+                    .OrderByDescending(n => n.CreatedAt)
+                    .ToListAsync();
+
+            var withdrawalsDTO = new List<WithdrawalRequestResponse>();
+            decimal totalWithdrawnAmount = 0;
+            // decimal totalEarnings = 0;
+
+            foreach (var withdrawal in withdrawals)
+            {
+                totalWithdrawnAmount += withdrawal.AmountRequested;
+
+            }
+
+             return totalWithdrawnAmount;
+            //return new CaregiverWithdrawalSummaryResponse
+            //{
+            //    WithdrawableAmount = totalAmountWithdrawn,
+            //};
+        }
+
 
         public async Task<WithdrawalRequestResponse> VerifyWithdrawalRequestAsync(AdminWithdrawalVerificationRequest request)
         {
@@ -226,37 +283,6 @@ namespace Infrastructure.Content.Services
         }
 
 
-        //public async Task<WithdrawalRequestResponse> CompleteWithdrawalRequestAsync(string token, string adminId)
-        //{
-        //    var withdrawal = await _dbContext.WithdrawalRequests.Find(w => w.Token == token).FirstOrDefaultAsync();
-        //    if (withdrawal == null)
-        //        throw new InvalidOperationException("Withdrawal request not found");
-
-        //    if (withdrawal.Status != WithdrawalStatus.Verified)
-        //        throw new InvalidOperationException("Withdrawal request must be verified before completion");
-
-        //    var update = Builders<WithdrawalRequest>.Update
-        //        .Set(w => w.Status, WithdrawalStatus.Completed)
-        //        .Set(w => w.CompletedAt, DateTime.UtcNow)
-        //        .Set(w => w.AdminId, adminId);
-
-        //    await _dbContext.WithdrawalRequests.UpdateOneAsync(w => w.Id == withdrawal.Id, update);
-
-        //    // Update earnings to reflect the withdrawal
-        //    bool updated = await _earningsService.UpdateWithdrawalAmountsAsync(withdrawal.CaregiverId, withdrawal.AmountRequested);
-        //    if (!updated)
-        //        throw new InvalidOperationException("Failed to update caregiver earnings");
-
-        //    // Get updated withdrawal
-        //    withdrawal = await _dbContext.WithdrawalRequests.Find(w => w.Id == withdrawal.Id).FirstOrDefaultAsync();
-
-        //    // Notify caregiver that their withdrawal has been completed
-        //    await NotifyCaregiverAboutWithdrawalStatusChange(withdrawal, "Withdrawal Completed", 
-        //        $"Your withdrawal of {withdrawal.FinalAmount:C} has been completed successfully.");
-
-        //    return await MapWithdrawalToResponseAsync(withdrawal);
-        //}
-
         public async Task<WithdrawalRequestResponse> CompleteWithdrawalRequestAsync(string token, string adminId)
         {
             var withdrawal = await _dbContext.WithdrawalRequests
@@ -277,29 +303,14 @@ namespace Infrastructure.Content.Services
             _dbContext.WithdrawalRequests.Update(withdrawal);
             await _dbContext.SaveChangesAsync();
 
-            // Update caregiver's earnings
+            // Update caregiver's withdrawals
             bool updated = await _earningsService.UpdateWithdrawalAmountsAsync(
                 withdrawal.CaregiverId,
                 withdrawal.AmountRequested);
 
             if (!updated)
-                throw new InvalidOperationException("Failed to update caregiver earnings");
+                throw new InvalidOperationException("Failed to update caregiver withdrawals");
 
-<<<<<<< HEAD
-            // Get updated withdrawal
-            withdrawal = await _dbContext.WithdrawalRequests.Find(w => w.Id == withdrawal.Id).FirstOrDefaultAsync();
-
-            // Create transaction history records for withdrawal and service fee
-            await _transactionHistoryService.AddWithdrawalTransactionsAsync(
-                withdrawal.CaregiverId,
-                withdrawal.AmountRequested,
-                withdrawal.ServiceCharge,
-                withdrawal.Id.ToString()
-            );
-
-            // Notify caregiver that their withdrawal has been completed
-            await NotifyCaregiverAboutWithdrawalStatusChange(withdrawal, "Withdrawal Completed",
-=======
             // Notify caregiver
             await NotifyCaregiverAboutWithdrawalStatusChange(withdrawal,
                 "Withdrawal Completed",
@@ -310,32 +321,6 @@ namespace Infrastructure.Content.Services
         }
 
 
-
-        //public async Task<WithdrawalRequestResponse> RejectWithdrawalRequestAsync(AdminWithdrawalVerificationRequest request)
-        //{
-        //    var withdrawal = await _dbContext.WithdrawalRequests.Find(w => w.Token == request.Token).FirstOrDefaultAsync();
-        //    if (withdrawal == null)
-        //        throw new InvalidOperationException("Withdrawal request not found");
-
-        //    if (withdrawal.Status != WithdrawalStatus.Pending && withdrawal.Status != WithdrawalStatus.Verified)
-        //        throw new InvalidOperationException("Withdrawal request cannot be rejected in current state");
-
-        //    var update = Builders<WithdrawalRequest>.Update
-        //        .Set(w => w.Status, WithdrawalStatus.Rejected)
-        //        .Set(w => w.AdminId, request.AdminId)
-        //        .Set(w => w.AdminNotes, request.AdminNotes);
-
-        //    await _dbContext.WithdrawalRequests.UpdateOneAsync(w => w.Id == withdrawal.Id, update);
-
-        //    // Get updated withdrawal
-        //    withdrawal = await _dbContext.WithdrawalRequests.Find(w => w.Id == withdrawal.Id).FirstOrDefaultAsync();
-
-        //    // Notify caregiver that their withdrawal has been rejected
-        //    await NotifyCaregiverAboutWithdrawalStatusChange(withdrawal, "Withdrawal Request Rejected", 
-        //        $"Your withdrawal request for {withdrawal.AmountRequested:C} has been rejected. Reason: {request.AdminNotes}");
-
-        //    return await MapWithdrawalToResponseAsync(withdrawal);
-        //}
 
         public async Task<WithdrawalRequestResponse> RejectWithdrawalRequestAsync(AdminWithdrawalVerificationRequest request)
         {
@@ -367,12 +352,6 @@ namespace Infrastructure.Content.Services
 
 
 
-        //public async Task<bool> TokenExists(string token)
-        //{
-        //    var count = await _dbContext.WithdrawalRequests.CountDocumentsAsync(w => w.Token == token);
-        //    return count > 0;
-        //}
-
         public async Task<bool> TokenExists(string token)
         {
             return await _dbContext.WithdrawalRequests
@@ -380,13 +359,7 @@ namespace Infrastructure.Content.Services
         }
 
 
-        //public async Task<bool> HasPendingRequest(string caregiverId)
-        //{
-        //    var count = await _dbContext.WithdrawalRequests.CountDocumentsAsync(
-        //        w => w.CaregiverId == caregiverId && w.Status == WithdrawalStatus.Pending);
-        //    return count > 0;
-        //}
-
+        
         public async Task<bool> HasPendingRequest(string caregiverId)
         {
             return await _dbContext.WithdrawalRequests
@@ -444,31 +417,7 @@ namespace Infrastructure.Content.Services
             };
         }
 
-        //private async Task NotifyAdminsAboutWithdrawalRequest(WithdrawalRequest withdrawal)
-        //{
-        //    // In a real-world scenario, we'd query for all admin users and notify them
-        //    // For now, we'll create a notification for a generic admin role
-
-        //    var caregiver = await _careGiverService.GetCaregiverUserAsync(withdrawal.CaregiverId);
-        //    string caregiverName = caregiver != null ? $"{caregiver.FirstName} {caregiver.LastName}" : "Unknown";
-
-        //    var notification = new Notification
-        //    {
-        //        RecipientId = "admin", // This should be replaced with actual admin IDs in production
-        //        SenderId = withdrawal.CaregiverId,
-        //        Type = NotificationType.WithdrawalRequest,
-        //        Title = "New Withdrawal Request",
-        //        Content = $"Caregiver {caregiverName} has requested a withdrawal of {withdrawal.AmountRequested:C}. " +
-        //                  $"Service charge: {withdrawal.ServiceCharge:C}. Final amount: {withdrawal.FinalAmount:C}. " +
-        //                  $"Verification token: {withdrawal.Token}",
-        //        CreatedAt = DateTime.UtcNow,
-        //        IsRead = false,
-        //        RelatedEntityId = withdrawal.Id.ToString()
-        //    };
-
-        //    await _dbContext.Notifications.InsertOneAsync(notification);
-        //}
-
+       
         private async Task NotifyAdminsAboutWithdrawalRequest(WithdrawalRequest withdrawal)
         {
             // In a real-world scenario, we'd query for all admin users and notify them
@@ -481,7 +430,7 @@ namespace Infrastructure.Content.Services
             {
                 RecipientId = "admin", // This should be replaced with actual admin IDs in production
                 SenderId = withdrawal.CaregiverId,
-                Type = NotificationType.WithdrawalRequest,
+                Type = "Withdrawal Request",
                 Title = "New Withdrawal Request",
                 Content = $"Caregiver {caregiverName} has requested a withdrawal of {withdrawal.AmountRequested:C}. " +
                           $"Service charge: {withdrawal.ServiceCharge:C}. Final amount: {withdrawal.FinalAmount:C}. " +
@@ -495,15 +444,13 @@ namespace Infrastructure.Content.Services
             await _dbContext.SaveChangesAsync();
         }
 
-
-
         private async Task NotifyCaregiverAboutWithdrawalStatusChange(WithdrawalRequest withdrawal, string title, string message)
         {
             var notification = new Notification
             {
                 RecipientId = withdrawal.CaregiverId,
                 SenderId = withdrawal.AdminId ?? "system",
-                Type = NotificationType.WithdrawalRequest,
+                Type = "Withdrawal Request",
                 Title = title,
                 Content = message,
                 CreatedAt = DateTime.UtcNow,
@@ -515,5 +462,7 @@ namespace Infrastructure.Content.Services
             await _dbContext.Notifications.AddAsync(notification);
             await _dbContext.SaveChangesAsync();
         }
+
+        
     }
 }

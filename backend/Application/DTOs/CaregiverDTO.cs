@@ -31,6 +31,7 @@ namespace Application.DTOs
         public DateTime CreatedAt { get; set; }
 
         public bool Status { get; set; }
+        public byte[]? ProfileImage { get; set; }
 
 
         public string? HomeAddress { get; set; }
@@ -115,6 +116,7 @@ namespace Application.DTOs
 
         public List<string> Services { get; set; }
 
+        public string? ProfileImage { get; set; }
 
 
         public DateTime CreatedAt { get; set; }
@@ -134,6 +136,11 @@ namespace Application.DTOs
     public class UpdateCaregiverAvailabilityRequest
     {
         public bool IsAvailable { get; set; }
+    }
+
+    public class UpdateProfilePictureRequest
+    {
+        public IFormFile ProfileImage { get; set; }
     }
 
     public class ResetPasswordRequest

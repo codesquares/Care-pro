@@ -1,4 +1,5 @@
-﻿using MongoDB.Bson;
+﻿using Microsoft.AspNet.Identity.EntityFramework;
+using MongoDB.Bson;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -7,7 +8,7 @@ using System.Threading.Tasks;
 
 namespace Domain.Entities
 {
-    public class AppUser
+    public class AppUser /*: IdentityUser*/
     {
         public ObjectId Id { get; set; }
 
@@ -26,6 +27,7 @@ namespace Domain.Entities
         public DateTime CreatedAt { get; set; }
 
         public bool? IsOnline { get; set; }
+        public bool EmailConfirmed { get; set; }
         public string? ConnectionId { get; set; }
     }
 }

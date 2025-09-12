@@ -30,6 +30,8 @@ namespace Domain.Entities
 
         public bool Status { get; set; }
 
+        public string? ProfileImage { get; set; }
+
         public bool IsDeleted { get; set; }
         public DateTime? DeletedOn { get; set; }
 

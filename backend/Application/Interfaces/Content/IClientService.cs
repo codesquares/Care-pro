@@ -9,7 +9,17 @@ namespace Application.Interfaces.Content
 {
     public interface IClientService
     {
-        Task<ClientDTO> CreateClientUserAsync(AddClientUserRequest addClientUserRequest);
+        Task<ClientDTO> CreateClientUserAsync(AddClientUserRequest addClientUserRequest, string? origin);
+
+        Task<string> ConfirmEmailAsync(string token);
+        Task<string> ResendEmailConfirmationAsync(string email, string? origin);
+
+
+        Task<(bool IsValid, string? UserId, string? Email, string? ErrorMessage)> ValidateEmailTokenAsync(string token);
+
+        Task<string> ConfirmEmailFromFrontendAsync(string userId);
+
+
 
         Task<ClientResponse> GetClientUserAsync(string clientId);
 
@@ -17,12 +27,14 @@ namespace Application.Interfaces.Content
 
         Task<string> UpdateClientUserAsync(string clientId, UpdateClientUserRequest updateClientUserRequest);
 
+        Task<string> UpdateProfilePictureAsync(string clientId, UpdateProfilePictureRequest updateProfilePictureRequest);
+
 
         Task<string> SoftDeleteClientAsync(string clientId);
 
-        Task ResetPasswordAsync(ResetPasswordRequest resetPasswordRequest);
+        Task ChangePasswordAsync(ResetPasswordRequest resetPasswordRequest);
 
-        Task GeneratePasswordResetTokenAsync(PasswordResetRequestDto passwordResetRequestDto);
+        Task GeneratePasswordResetTokenAsync(PasswordResetRequestDto passwordResetRequestDto, string? origin);
 
         Task ResetPasswordWithJwtAsync(PasswordResetDto request);
 

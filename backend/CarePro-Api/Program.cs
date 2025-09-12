@@ -4,6 +4,7 @@ using Application.Interfaces.Authentication;
 using Application.Interfaces.Content;
 using Application.Interfaces.Email;
 using CloudinaryDotNet;
+using Domain.Entities;
 using Domain.Settings;
 using Infrastructure.Content.Data;
 using Infrastructure.Content.Services;
@@ -43,7 +44,14 @@ builder.Services.Configure<DataProtectionTokenProviderOptions>(options =>
 });
 
 
+//builder.Services.AddIdentity<AppUser, IdentityRole>()
+//    .AddEntityFrameworkStores<CareProDbContext>()  // replace with your actual DbContext
+//    .AddDefaultTokenProviders();
 
+
+
+
+/// Configure cloudinary service
 var cloudinarySettings = builder.Configuration.GetSection("CloudinarySettings");
 var account = new Account(
     cloudinarySettings["CloudName"],
@@ -95,7 +103,11 @@ builder.Services.AddScoped<INotificationService, NotificationService>();
 builder.Services.AddScoped<IEarningsService, EarningsService>();
 builder.Services.AddScoped<IWithdrawalRequestService, WithdrawalRequestService>();
 builder.Services.AddScoped<IAdminUserService, AdminUserService>();
-builder.Services.AddScoped<IAutoConversationService, AutoConversationService>();
+builder.Services.AddScoped<IReviewService, ReviewService>();
+builder.Services.AddScoped<ISearchService, SearchService>();
+
+builder.Services.AddHostedService<DailyEarningService>();
+
 
 builder.Services.AddScoped<ITokenHandler, Infrastructure.Content.Services.Authentication.TokenHandler>();
 
@@ -179,6 +191,17 @@ builder.Services.AddScoped<ChatRepository>();
 
 
 
+
+
+
+
+builder.Services.AddHttpContextAccessor();
+
+
+
+
+
+
 //Handle CORS
 builder.Services.AddCors(options =>
 {
@@ -201,18 +224,6 @@ builder.Services.AddCors(options =>
         // Removed the SetIsOriginAllowed(_ => true) which was conflicting with WithOrigins
     });
 });
-
-
-//// Handle CORS
-//builder.Services.AddCors(options =>
-//{
-//    options.AddPolicy("default", builder =>
-//    {
-//        builder.AllowAnyOrigin() // Allows requests from any origin
-//               .AllowAnyMethod()  // Allows any HTTP method (GET, POST, PUT, DELETE, etc.)
-//               .AllowAnyHeader(); // Allows any header
-//    });
-//});
 
 
 

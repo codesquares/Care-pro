@@ -14,12 +14,16 @@ namespace Application.Interfaces.Content
 
 
         Task<IEnumerable<ClientOrderResponse>> GetAllClientOrderAsync(string clientUserId);
+        Task<IEnumerable<ClientOrderResponse>> GetCaregiverOrdersAsync(string caregiverId);
+        Task<IEnumerable<ClientOrderResponse>> GetAllClientOrdersByGigIdAsync(string gigId);
 
         Task<ClientOrderResponse> GetClientOrderAsync(string orderId);
 
         Task<CaregiverClientOrdersSummaryResponse> GetAllCaregiverOrderAsync(string caregiverId);
 
         Task<string> UpdateClientOrderStatusAsync(string orderId, UpdateClientOrderStatusRequest updateClientOrderStatusRequest);
+
+        Task<string> UpdateOrderStatusToApproveAsync(string orderId );
 
 
         Task<string> UpdateClientOrderStatusHasDisputeAsync(string orderId, UpdateClientOrderStatusHasDisputeRequest updateClientOrderStatusDeclinedRequest);

@@ -15,11 +15,13 @@ namespace CarePro_Api.Controllers.Content
     {
         private readonly IClientService clientService;
         private readonly ILogger<ClientsController> logger;
+        private readonly IHttpContextAccessor httpContextAccessor;
 
-        public ClientsController(IClientService clientService, ILogger<ClientsController> logger)
+        public ClientsController(IClientService clientService, ILogger<ClientsController> logger, IHttpContextAccessor httpContextAccessor)
         {
             this.clientService = clientService;
             this.logger = logger;
+            this.httpContextAccessor = httpContextAccessor;
         }
 
         /// ENDPOINT TO CREATE  CLIENT USERS TO THE DATABASE
@@ -30,8 +32,15 @@ namespace CarePro_Api.Controllers.Content
         {
             try
             {
-                // Pass Domain Object to Repository, to Persisit this
-                var clientUser = await clientService.CreateClientUserAsync(addClientUserRequest);
+                HttpContext httpContext = httpContextAccessor.HttpContext;
+
+                // Get frontend origin from the request
+                string origin = httpContext.Request.Headers["Origin"].FirstOrDefault()
+                                ?? $"{httpContext.Request.Scheme}://{httpContext.Request.Host}";
+
+
+                // Pass Domain Object to Repository, to Persist this
+                var clientUser = await clientService.CreateClientUserAsync(addClientUserRequest, origin);
 
 
                 // Send DTO response back to ClientUser
@@ -64,6 +73,103 @@ namespace CarePro_Api.Controllers.Content
             }
 
         }
+
+
+        #region Email Handling
+
+
+        //[HttpGet("confirm-email")]
+        //public async Task<IActionResult> ConfirmEmail([FromQuery] string token)
+        //{
+        //    var result = await clientService.ConfirmEmailAsync(token);
+
+        //    if (result.StartsWith("Account confirmed"))
+        //        return Ok(result);
+
+        //    return BadRequest(result);
+        //}
+
+
+        [HttpGet("validate-email-token")]
+        public async Task<IActionResult> ValidateEmailToken([FromQuery] string token)
+        {
+            var result = await clientService.ValidateEmailTokenAsync(token);
+
+            if (!result.IsValid)
+                return BadRequest(new { success = false, message = result.ErrorMessage });
+
+            return Ok(new
+            {
+                success = true,
+                userId = result.UserId,
+                email = result.Email
+            });
+        }
+
+        /// Confirm Email from the Front-end
+        [HttpPost("confirm-email")]
+        public async Task<IActionResult> ConfirmEmail([FromBody] string userId)
+        {
+            var message = await clientService.ConfirmEmailFromFrontendAsync(userId);
+            return Ok(new { message });
+        }
+
+
+
+
+
+        [HttpPost("resend-confirmation")]
+        public async Task<IActionResult> ResendConfirmationEmail([FromBody] string email)
+        {
+            try
+            {
+                HttpContext httpContext = httpContextAccessor.HttpContext;
+
+                // Get frontend origin from the request
+                string origin = httpContext.Request.Headers["Origin"].FirstOrDefault()
+                                ?? $"{httpContext.Request.Scheme}://{httpContext.Request.Host}";
+
+
+
+                var result = await clientService.ResendEmailConfirmationAsync(email, origin);
+                return Ok(new { message = result });
+            }
+            catch (Exception ex)
+            {
+                return BadRequest(new { error = ex.Message });
+            }
+        }
+
+        #endregion
+
+
+        [HttpPut]
+        [Route("UpdateProfilePicture/{clientId}")]
+        //[Authorize(Roles = "Caregiver, Client, Admin")]
+        public async Task<IActionResult> UpdateProfilePictureAsync(string clientId, [FromForm] UpdateProfilePictureRequest updateProfilePictureRequest)
+        {
+            try
+            {
+                logger.LogInformation($"Client with ID: {clientId} Profile Picture has been updated.");
+                var client = await clientService.UpdateProfilePictureAsync(clientId, updateProfilePictureRequest);
+                return Ok(client);
+            }
+            catch (ArgumentException ex)
+            {
+                return BadRequest(new { message = ex.Message });
+            }
+            catch (KeyNotFoundException ex)
+            {
+                return NotFound(new { message = ex.Message });
+            }
+            catch (Exception ex)
+            {
+                return StatusCode(500, new { message = ex.Message });
+            }
+
+        }
+
+
 
 
         [HttpGet]
@@ -164,7 +270,7 @@ namespace CarePro_Api.Controllers.Content
 
             try
             {
-                await clientService.ResetPasswordAsync(request);
+                await clientService.ChangePasswordAsync(request);
                 return Ok(new { message = "Password reset successful." });
             }
             catch (InvalidOperationException ex)
@@ -190,7 +296,14 @@ namespace CarePro_Api.Controllers.Content
         [AllowAnonymous] // Allow unauthenticated access
         public async Task<IActionResult> RequestPasswordReset([FromBody] PasswordResetRequestDto request)
         {
-            await clientService.GeneratePasswordResetTokenAsync(request);
+            HttpContext httpContext = httpContextAccessor.HttpContext;
+
+            // Determine the origin of the request (frontend/backend)
+            string origin = httpContext.Request.Headers["Origin"].FirstOrDefault()
+                            ?? $"{httpContext.Request.Scheme}://{httpContext.Request.Host}";
+
+
+            await clientService.GeneratePasswordResetTokenAsync(request, origin);
             return Ok(new { message = "A reset link has been sent to the registered Email ." });
         }
 

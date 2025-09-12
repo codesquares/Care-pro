@@ -5,7 +5,6 @@ using Microsoft.Extensions.Options;
 using System;
 using System.Collections.Generic;
 using System.Linq;
-//using System.Net.Mail;
 using MailKit.Net.Smtp;
 using System.Net;
 using System.Text;
@@ -16,98 +15,87 @@ using static Org.BouncyCastle.Math.EC.ECCurve;
 using Microsoft.EntityFrameworkCore;
 using Application.Interfaces.Authentication;
 
+
 namespace Infrastructure.Services
 {
     public class EmailService : IEmailService
     {
-        private readonly string smtpServer = "smtp.gmail.com";
-        private readonly int smtpPort = 587;
-        private readonly string fromEmail = "jamesoluwatosinfadeyi@gmail.com"; // your gmail
-        private readonly string fromName = "CarePro Support";
-        private readonly string appPassword = "flvm mvmo avsv kqvr"; // NOT your Gmail password!
+        private readonly MailSettings emailSettings;
         private readonly CareProDbContext careProDbContext;
-        //private readonly IEmailService emailService;
         private readonly ITokenHandler tokenHandler;
 
-        public EmailService(CareProDbContext careProDbContext, /*IEmailService emailService,*/ ITokenHandler tokenHandler)
+        public EmailService(IOptions<MailSettings> emailSettingsOptions, CareProDbContext careProDbContext, ITokenHandler tokenHandler)
         {
+            this.emailSettings = emailSettingsOptions.Value;
             this.careProDbContext = careProDbContext;
-            //this.emailService = emailService;
             this.tokenHandler = tokenHandler;
         }
 
-        public async Task SendPasswordResetEmailAsync(string toEmail, string resetToken)
+        public async Task SendPasswordResetEmailAsync(string toEmail, string resetLink, string firstName)
         {
             var message = new MimeMessage();
-            message.From.Add(new MailboxAddress(fromName, fromEmail));
+            message.From.Add(new MailboxAddress(emailSettings.FromName, emailSettings.FromEmail ));
             message.To.Add(MailboxAddress.Parse(toEmail));
             message.Subject = "Password Reset Request";
 
-            //var resetLink = $"https://yourdomain.com/reset-password?token={resetToken}";
-            var resetLink = $"{resetToken}";
+           
 
-            message.Body = new TextPart("html")
+            var builder = new BodyBuilder
             {
-                Text = $@"
-                <h3>Hello,</h3>
-                <p>You requested a password reset. Click the link below to reset your password:</p>
-                <p><a href='{resetLink}'>Reset Password</a></p>
-                <p>If you did not request this, please ignore this email.</p>
-                <br />
-                <p>Thanks,<br />CarePro Team</p>"
+                HtmlBody = $@"
+                    <h3>Hello {firstName},</h3>
+                    <p>You requested a password reset. Click the link below to reset your password:</p>
+                    <p><a href=""{resetLink}"">Reset Password</a></p>
+                    <br />                    
+                    <p>Or copy and paste this link into your browser:<br /> {resetLink}</p> <br />
+                    <p>If you did not request this, please ignore this email.</p>
+                    <p>Thanks,<br />The CarePro Team</p>"
             };
 
-            using var client = new SmtpClient();
-            await client.ConnectAsync(smtpServer, smtpPort, MailKit.Security.SecureSocketOptions.StartTls);
-            await client.AuthenticateAsync(fromEmail, appPassword);
+            message.Body = builder.ToMessageBody();
+
+
+            using var client = new MailKit.Net.Smtp.SmtpClient();
+            await client.ConnectAsync(emailSettings.SmtpServer, emailSettings.SmtpPort, MailKit.Security.SecureSocketOptions.StartTls);
+            await client.AuthenticateAsync(emailSettings.FromEmail, emailSettings.AppPassword);
             await client.SendAsync(message);
             await client.DisconnectAsync(true);
         }
 
-        //public async Task SendPasswordResetEmailWithJwtAsync(string email)
-        //{
-        //    var user = await careProDbContext.CareGivers.FirstOrDefaultAsync(u => u.Email == email.ToLower());
-
-        //    if (user == null)
-        //        throw new InvalidOperationException("User not found.");
-
-        //    var token = tokenHandler.GeneratePasswordResetToken(email);
-        //    var resetLink = $"https://yourfrontenddomain.com/reset-password?token={token}";
 
 
-        //    await emailService.SendPasswordResetEmailAsync(email, token);
-        //}
+        public async Task SendSignUpVerificationEmailAsync(string toEmail, string verificationLink, string firstName)
+        {
+            var message = new MimeMessage();
+            message.From.Add(new MailboxAddress(emailSettings.FromName, emailSettings.FromEmail));
+            message.To.Add(MailboxAddress.Parse(toEmail));
+            message.Subject = "Confirm Your Email - CarePro";
 
+            var builder = new BodyBuilder
+            {
+                HtmlBody = $@"
+                    <h3>Hello {firstName},</h3>
+                    <h3>Welcome to CarePro!</h3>
+                    <p>Thank you for signing up. Please confirm your email address by clicking the link below:</p>
+                    <p><a href=""{verificationLink}"">Verify My Email</a></p>
+                    <p>Or copy and paste this link into your browser:<br /> {verificationLink}</p>
+                    <p>This helps us ensure we have the right contact information and lets you access your account securely.</p>
+                    <p>If you did not sign up for CarePro, please ignore this email.</p>
+                    <p>Thanks,<br />The CarePro Team</p>"
+            };
 
+            message.Body = builder.ToMessageBody();
 
-
-
-
-
-
-
-
-
-
-
-
-        //private System.Net.Mail.SmtpClient _smtpClient;
-
-        //public MailSettings _mailSettings { get; }
-        //public ILogger<EmailService> _logger { get; }
-
-        //public EmailService(IOptions<MailSettings> mailSettings, ILogger<EmailService> logger)
-        //{
-        //    _mailSettings = mailSettings.Value;
-        //    _logger = logger;
-        //}
+            using var client = new SmtpClient();
+            await client.ConnectAsync(emailSettings.SmtpServer, emailSettings.SmtpPort, MailKit.Security.SecureSocketOptions.StartTls);
+            await client.AuthenticateAsync(emailSettings.FromEmail, emailSettings.AppPassword);
+            await client.SendAsync(message);
+            await client.DisconnectAsync(true);
+        }
 
 
 
-
-
-
-        //public async Task SendEmailAsync2(string toEmail, string subject, string body)
+        //public async Task SendSignUpVerificationEmailAsync(string toEmail, string subject, string body)
         //{
         //    _smtpClient = new System.Net.Mail.SmtpClient(_mailSettings.Host)
         //    {
@@ -133,12 +121,6 @@ namespace Infrastructure.Services
         //        throw new Exception(ex.Message);
         //    }
         //}
-
-
-
-
-
-
 
 
 

@@ -13,5 +13,7 @@ namespace Application.Interfaces.Authentication
     {
         Task<AppUserDTO> AuthenticateUserAsync(LoginRequest loginRequest);
 
+        Task<LoginResponse> AuthenticateUserLoginAsync(LoginRequest loginRequest);
+
     }
 }

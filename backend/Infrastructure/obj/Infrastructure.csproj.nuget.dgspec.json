@@ -115,6 +115,10 @@
         "net8.0": {
           "targetAlias": "net8.0",
           "dependencies": {
+            "Microsoft.AspNet.Identity.EntityFramework": {
+              "target": "Package",
+              "version": "[2.2.4, )"
+            },
             "MongoDB.Bson": {
               "target": "Package",
               "version": "[2.28.0, )"

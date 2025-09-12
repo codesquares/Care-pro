@@ -23,17 +23,20 @@ namespace Infrastructure.Content.Services
         private readonly CareProDbContext careProDbContext;
         private readonly ICareGiverService careGiverService;
         private readonly ILogger<GigServices> logger;
+        private readonly CloudinaryService cloudinaryService;
 
-        public GigServices(CareProDbContext careProDbContext, ICareGiverService careGiverService, ILogger<GigServices> logger)
+        public GigServices(CareProDbContext careProDbContext, ICareGiverService careGiverService, ILogger<GigServices> logger, CloudinaryService cloudinaryService)
         {
             this.careProDbContext = careProDbContext;
             this.careGiverService = careGiverService;
             this.logger = logger;
+            this.cloudinaryService = cloudinaryService;
         }
 
         public async Task<GigDTO> CreateGigAsync(AddGigRequest addGigRequest)
         {
             var gigExist = await careProDbContext.Gigs.FirstOrDefaultAsync(x => x.CaregiverId == addGigRequest.CaregiverId && x.Title == addGigRequest.Title && x.Category == addGigRequest.Category);
+            string imageURL = null;
 
             if (gigExist != null)
             {
@@ -52,13 +55,17 @@ namespace Infrastructure.Content.Services
                 throw new ArgumentException("At least A Service and Sub-Category must be selected before you create a new Gig");
             }
 
-            //// Convert the IFormFile to a byte array
-            //using var memoryStream = new MemoryStream();
-            //await addGigRequest.Image1.CopyToAsync(memoryStream);
-            //var imageBytes = memoryStream.ToArray();
+           
+            if (addGigRequest.Image1 != null)
+            {
+                using var memoryStream = new MemoryStream();
+                await addGigRequest.Image1.CopyToAsync(memoryStream);
+                var imageUri = memoryStream.ToArray();
 
-            // Convert the Base 64 string to a byte array
-            var imageBytes = Convert.FromBase64String(addGigRequest.Image1);
+                // Now upload imageUri to Cloudinary
+                imageURL = await cloudinaryService.UploadGigImageAsync(imageUri, $"{careGiver.FirstName}{careGiver.LastName}{addGigRequest.PackageName}_gig");
+
+            }
 
 
 
@@ -82,10 +89,8 @@ namespace Infrastructure.Content.Services
                         .ToList(),
                 DeliveryTime = addGigRequest.DeliveryTime,
                 Price = addGigRequest.Price,
-                Image1 = imageBytes,
-                //Image2 = addGigRequest.Image2,
-                //Image3 = addGigRequest.Image3,
-                VideoURL = addGigRequest.VideoURL,
+                Image1 = imageURL,
+                
                 Status = addGigRequest.Status,
                 CaregiverId = addGigRequest.CaregiverId,
 
@@ -99,14 +104,7 @@ namespace Infrastructure.Content.Services
 
             await careProDbContext.SaveChangesAsync();
 
-            //// Determine the image format based on the binary data
-            //string logoBase64 = null;
-            //if (gig.Image1 != null)
-            //{
-            //    string imageFormat = GetImageFormat(gig.Image1);  // This method detects the image format
-            //    logoBase64 = $"data:image/{imageFormat};base64,{Convert.ToBase64String(gig.Image1)}";
-            //}
-
+            
             var gigDTO = new GigDTO()
             {
                 Id = gig.Id.ToString(),
@@ -122,10 +120,8 @@ namespace Infrastructure.Content.Services
                 PackageDetails = gig.PackageDetails,
                 DeliveryTime = gig.DeliveryTime,
                 Price = gig.Price,
-                //Image1 = gig.Image1,
-                Image2 = gig.Image2,
-                Image3 = gig.Image3,
-                VideoURL = gig.VideoURL,
+                Image1 = gig.Image1,
+                
                 Status = gig.Status,
                 CaregiverId = gig.CaregiverId,
                 CreatedAt = gig.CreatedAt,
@@ -147,14 +143,7 @@ namespace Infrastructure.Content.Services
 
             foreach (var gig in gigs)
             {
-                // Determine the image format based on the binary data
-                string logoBase64 = null;
-                if (gig.Image1 != null)
-                {
-                    string imageFormat = GetImageFormat(gig.Image1);  // This method detects the image format
-                    logoBase64 = $"data:image/{imageFormat};base64,{Convert.ToBase64String(gig.Image1)}";
-                }
-
+                
                 var gigDTO = new GigDTO()
                 {
                     Id = gig.Id.ToString(),
@@ -172,10 +161,8 @@ namespace Infrastructure.Content.Services
                     PackageDetails = gig.PackageDetails,
                     DeliveryTime = gig.DeliveryTime,
                     Price = gig.Price,
-                    Image1 = logoBase64,
-                    Image2 = gig.Image2,
-                    Image3 = gig.Image3,
-                    //VideoURL = gig.VideoURL,
+                    Image1 = gig.Image1,
+                    
                     VideoURL = caregiver.IntroVideo,
                     Status = gig.Status,
                     CaregiverId = gig.CaregiverId,
@@ -207,14 +194,7 @@ namespace Infrastructure.Content.Services
 
             foreach (var gig in gigs)
             {
-                // Determine the image format based on the binary data
-                string logoBase64 = null;
-                if (gig.Image1 != null)
-                {
-                    string imageFormat = GetImageFormat(gig.Image1);  // This method detects the image format
-                    logoBase64 = $"data:image/{imageFormat};base64,{Convert.ToBase64String(gig.Image1)}";
-                }
-
+                
                 var gigDTO = new GigDTO()
                 {
                     Id = gig.Id.ToString(),
@@ -232,9 +212,7 @@ namespace Infrastructure.Content.Services
                     PackageDetails = gig.PackageDetails,
                     DeliveryTime = gig.DeliveryTime,
                     Price = gig.Price,
-                    Image1 = logoBase64,
-                    Image2 = gig.Image2,
-                    Image3 = gig.Image3,
+                    Image1 = gig.Image1,
                     //VideoURL = gig.VideoURL,
                     VideoURL = caregiver.IntroVideo,
                     Status = gig.Status,
@@ -250,6 +228,13 @@ namespace Infrastructure.Content.Services
 
         public async Task<IEnumerable<GigDTO>> GetAllCaregiverPausedGigsAsync(string caregiverId)
         {
+            var caregiver = await careGiverService.GetCaregiverUserAsync(caregiverId);
+
+            if (caregiver == null)
+            {
+                throw new KeyNotFoundException($"Caregiver with ID:{caregiverId} Not found");
+            }
+
             var gigs = await careProDbContext.Gigs
                 .Where(x => x.CaregiverId == caregiverId && x.Status == "Paused")
                 .OrderBy(x => x.CreatedAt)
@@ -259,14 +244,7 @@ namespace Infrastructure.Content.Services
 
             foreach (var gig in gigs)
             {
-                // Determine the image format based on the binary data
-                string logoBase64 = null;
-                if (gig.Image1 != null)
-                {
-                    string imageFormat = GetImageFormat(gig.Image1);  // This method detects the image format
-                    logoBase64 = $"data:image/{imageFormat};base64,{Convert.ToBase64String(gig.Image1)}";
-                }
-
+                
                 var gigDTO = new GigDTO()
                 {
                     Id = gig.Id.ToString(),
@@ -284,10 +262,9 @@ namespace Infrastructure.Content.Services
                     PackageDetails = gig.PackageDetails,
                     DeliveryTime = gig.DeliveryTime,
                     Price = gig.Price,
-                    Image1 = logoBase64,
-                    Image2 = gig.Image2,
-                    Image3 = gig.Image3,
-                    VideoURL = gig.VideoURL,
+                    Image1 = gig.Image1,
+                    
+                    VideoURL = caregiver.IntroVideo,
                     Status = gig.Status,
                     CaregiverId = gig.CaregiverId,
                     CreatedAt = gig.CreatedAt,
@@ -312,12 +289,12 @@ namespace Infrastructure.Content.Services
 
             foreach (var gig in gigs)
             {
-                // Determine the image format based on the binary data
-                string logoBase64 = null;
-                if (gig.Image1 != null)
+                var caregiver = await careGiverService.GetCaregiverUserAsync(gig.CaregiverId);
+
+                if (caregiver == null)
                 {
-                    string imageFormat = GetImageFormat(gig.Image1);  // This method detects the image format
-                    logoBase64 = $"data:image/{imageFormat};base64,{Convert.ToBase64String(gig.Image1)}";
+                    continue;
+                   // throw new KeyNotFoundException($"Caregiver with ID:{caregiverId} Not found");
                 }
 
                 var serviceDTO = new GigDTO()
@@ -336,10 +313,8 @@ namespace Infrastructure.Content.Services
                     PackageDetails = gig.PackageDetails,
                     DeliveryTime = gig.DeliveryTime,
                     Price = gig.Price,
-                    Image1 = logoBase64,
-                    Image2 = gig.Image2,
-                    Image3 = gig.Image3,
-                    VideoURL = gig.VideoURL,
+                    Image1 = gig.Image1,
+                   
                     Status = gig.Status,
                     CaregiverId = gig.CaregiverId,
                     UpdatedOn = gig.UpdatedOn,
@@ -391,14 +366,7 @@ namespace Infrastructure.Content.Services
             }
 
 
-            // Determine the image format based on the binary data
-            string logoBase64 = null;
-            if (gig.Image1 != null)
-            {
-                string imageFormat = GetImageFormat(gig.Image1);  // This method detects the image format
-                logoBase64 = $"data:image/{imageFormat};base64,{Convert.ToBase64String(gig.Image1)}";
-            }
-
+            
             var gigDTO = new GigDTO()
             {
                 Id = gig.Id.ToString(),
@@ -415,13 +383,12 @@ namespace Infrastructure.Content.Services
                 PackageDetails = gig.PackageDetails,
                 DeliveryTime = gig.DeliveryTime,
                 Price = gig.Price,
-                Image1 = logoBase64,
-                Image2 = gig.Image2,
-                Image3 = gig.Image3,
-                //VideoURL = gig.VideoURL,
+                Image1 = gig.Image1,
+                
                 VideoURL = caregiver.IntroVideo,
                 Status = gig.Status,
                 CaregiverId = gig.CaregiverId,
+                CaregiverName = caregiver.FirstName + " " + caregiver.LastName,
                 UpdatedOn = gig.UpdatedOn,
                 IsUpdatedToPause = gig.IsUpdatedToPause,
                 CreatedAt = gig.CreatedAt,
@@ -488,6 +455,12 @@ namespace Infrastructure.Content.Services
                 throw new KeyNotFoundException($"Gig with ID '{gigId}' not found.");
             }
 
+            var careGiver = await careGiverService.GetCaregiverUserAsync(existingGig.CaregiverId);
+            if (careGiver == null)
+            {
+                throw new KeyNotFoundException("The CaregiverID entered is not a Valid ID");
+            }
+
 
             /// Check if caregiver select a category or sub-category before creating a gig
             if (string.IsNullOrWhiteSpace(updateGigRequest.Category) || updateGigRequest.SubCategory == null || !updateGigRequest.SubCategory.Any(s => !string.IsNullOrWhiteSpace(s)))
@@ -496,21 +469,22 @@ namespace Infrastructure.Content.Services
             }
 
 
-            if (!string.IsNullOrWhiteSpace(updateGigRequest.Image1))
+            
+            if (updateGigRequest.Image1 != null)
             {
-                try
-                {
-                    existingGig.Image1 = Convert.FromBase64String(updateGigRequest.Image1);
-                }
-                catch (FormatException)
-                {
-                    throw new ArgumentException("Image1 is not a valid Base64 string.");
-                }
+                using var memoryStream = new MemoryStream();
+                await updateGigRequest.Image1.CopyToAsync(memoryStream);
+                var imageUri = memoryStream.ToArray();
+
+                // Now upload imageUri to Cloudinary
+                //imageURL = await cloudinaryService.UploadGigImageAsync(imageUri, $"{careGiver.FirstName}{careGiver.LastName}{addGigRequest.PackageName}_gig");
+                existingGig.Image1 = await cloudinaryService.UploadGigImageAsync(imageUri, $"{careGiver.FirstName}{careGiver.LastName}{existingGig.PackageName}_gig");
+
             }
 
 
             //// Convert the Base 64 string to a byte array
-            //var imageBytes = Convert.FromBase64String(updateGigRequest.Image1);
+            //var imageUri = Convert.FromBase64String(updateGigRequest.Image1);
 
 
 
@@ -527,7 +501,7 @@ namespace Infrastructure.Content.Services
                                                 .ToList();
             existingGig.DeliveryTime = updateGigRequest.DeliveryTime;
             existingGig.Price = updateGigRequest.Price;
-            // existingGig.Image1 = imageBytes;
+           // existingGig.Image1 = imageUri;
             existingGig.UpdatedOn = DateTime.Now;
 
 

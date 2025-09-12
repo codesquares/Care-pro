@@ -1,4 +1,5 @@
-﻿using MongoDB.Bson;
+﻿using Microsoft.AspNetCore.Http;
+using MongoDB.Bson;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -63,6 +64,7 @@ namespace Application.DTOs
         public string Role { get; set; }
 
         public string HomeAddress { get; set; }
+        public string ProfileImage { get; set; }
 
         public string PhoneNo { get; set; }
         public bool IsDeleted { get; set; }
@@ -72,6 +74,9 @@ namespace Application.DTOs
 
         public DateTime CreatedAt { get; set; }
     }
+
+
+    
 
     public class UpdateClientUserRequest
     {

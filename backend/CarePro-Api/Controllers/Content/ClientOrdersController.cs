@@ -79,6 +79,85 @@ namespace CarePro_Api.Controllers.Content
         }
 
 
+
+        [HttpGet]
+        [Route("CaregiverOrders/caregiverId")]
+        // [Authorize(Roles = "Caregiver, Client, Admin")]
+        public async Task<IActionResult> GetCaregiverOrdersAsync(string caregiverId)
+        {
+
+            try
+            {
+                logger.LogInformation($"Retrieving all Orders for Client available");
+
+                var clientOrders = await clientOrderService.GetCaregiverOrdersAsync(caregiverId);
+
+                return Ok(clientOrders);
+
+            }
+            catch (KeyNotFoundException ex)
+            {
+                return NotFound(new { message = ex.Message });
+            }
+            catch (ApplicationException appEx)
+            {
+                // Handle application-specific exceptions
+                return BadRequest(new { ErrorMessage = appEx.Message });
+            }
+            catch (HttpRequestException httpEx)
+            {
+                // Handle HTTP request-related exceptions
+                return StatusCode(500, new { ErrorMessage = httpEx.Message });
+            }
+            catch (Exception ex)
+            {
+                // Handle other exceptions
+                return StatusCode(500, new { ex /*ErrorMessage = "An error occurred on the server."*/ });
+            }
+
+        }
+
+
+
+        [HttpGet]
+        [Route("gigId")]
+        // [Authorize(Roles = "Caregiver, Client, Admin")]
+        public async Task<IActionResult> GetAllClientOrdersByGigIdAsync(string gigId)
+        {
+
+            try
+            {
+                logger.LogInformation($"Retrieving all Orders for Client available");
+
+                var clientOrders = await clientOrderService.GetAllClientOrdersByGigIdAsync(gigId);
+
+                return Ok(clientOrders);
+
+            }
+            catch (KeyNotFoundException ex)
+            {
+                return NotFound(new { message = ex.Message });
+            }
+            catch (ApplicationException appEx)
+            {
+                // Handle application-specific exceptions
+                return BadRequest(new { ErrorMessage = appEx.Message });
+            }
+            catch (HttpRequestException httpEx)
+            {
+                // Handle HTTP request-related exceptions
+                return StatusCode(500, new { ErrorMessage = httpEx.Message });
+            }
+            catch (Exception ex)
+            {
+                // Handle other exceptions
+                return StatusCode(500, new { ex /*ErrorMessage = "An error occurred on the server."*/ });
+            }
+
+        }
+
+
+
         [HttpGet]
         [Route("caregiverId")]
         // [Authorize(Roles = "Caregiver, Client, Admin")]
@@ -164,6 +243,34 @@ namespace CarePro_Api.Controllers.Content
             try
             {
                 var result = await clientOrderService.UpdateClientOrderStatusAsync(orderId, updateClientOrderStatusRequest);
+                logger.LogInformation($"Client Order Status with ID: {orderId} updated.");
+                return Ok(result);
+            }
+            catch (ArgumentException ex)
+            {
+                return BadRequest(new { Message = ex.Message }); // Returns 400 Bad Request
+            }
+            catch (KeyNotFoundException ex)
+            {
+                return NotFound(new { message = ex.Message });
+            }
+            catch (Exception ex)
+            {
+                return StatusCode(500, new { message = ex.Message });
+            }
+
+        }
+
+
+
+        [HttpPut]
+        [Route("ClientApproveOrderStatus/orderId")]
+        // [Authorize(Roles = "Client, Admin")]
+        public async Task<ActionResult<string>> UpdateOrderStatusToApproveApproveAsync(string orderId)
+        {
+            try
+            {
+                var result = await clientOrderService.UpdateOrderStatusToApproveAsync(orderId);
                 logger.LogInformation($"Client Order Status with ID: {orderId} updated.");
                 return Ok(result);
             }

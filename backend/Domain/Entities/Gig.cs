@@ -19,11 +19,18 @@ namespace Domain.Entities
         public List<string> PackageDetails { get; set; }
         public string DeliveryTime { get; set; }
         public int Price { get; set; }
+<<<<<<< HEAD
         public byte[]? Image1 { get; set; }
         public byte[]? Image2 { get; set; }
         public byte[]? Image3 { get; set; }
         public string? VideoURL { get; set; }
         public string Status { get; set; }
+=======
+        public string? Image1 { get; set; }
+
+        
+        public string Status { get; set; }             
+>>>>>>> 7fd5bebcea7e42d1ea3bb78af878ed63cacd043a
 
         public string CaregiverId { get; set; }
         public DateTime CreatedAt { get; set; }

@@ -27,6 +27,7 @@ namespace Infrastructure.Content.Data
         {
             base.OnModelCreating(modelBuilder);
             Database.AutoTransactionBehavior = AutoTransactionBehavior.Never;
+
             modelBuilder.Entity<Caregiver>().ToCollection("CareGivers");
             modelBuilder.Entity<AppUser>().ToCollection("AppUsers");
             modelBuilder.Entity<Client>().ToCollection("Clients");
@@ -42,6 +43,7 @@ namespace Infrastructure.Content.Data
             modelBuilder.Entity<Earnings>().ToCollection("Earnings");
             modelBuilder.Entity<WithdrawalRequest>().ToCollection("WithdrawalRequests");
             modelBuilder.Entity<AdminUser>().ToCollection("AdminUsers");
+            modelBuilder.Entity<Review>().ToCollection("Reviews");
 
         }
 
@@ -61,5 +63,6 @@ namespace Infrastructure.Content.Data
         public DbSet<Earnings> Earnings { get; set; }
         public DbSet<WithdrawalRequest> WithdrawalRequests { get; set; }
         public DbSet<AdminUser> AdminUsers { get; set; }
+        public DbSet<Review> Reviews { get; set; }
     }
 }
