@@ -10,70 +10,7 @@ using MongoDB.Bson;
 using Org.BouncyCastle.Asn1.X509;
 using System;
 using System.Collections.Generic;
-existingOrder.ClientOrderStatus = updateClientOrderStatusRequest.ClientOrderStatus;
-existingOrder.OrderUpdatedOn = DateTime.Now;
-
-// If the order is marked as completed, update caregiver earnings
-if (updateClientOrderStatusRequest.ClientOrderStatus == "Completed")
-{
-    // Get the gig to find the caregiver
-    var gig = await gigServices.GetGigByIdAsync(existingOrder.GigId.ToString());
-
-    if (gig != null)
-    {
-        // Update caregiver earnings
-        var updateEarningsRequest = new UpdateEarningsRequest
-        {
-            TotalEarned = existingOrder.Amount,
-            WithdrawableAmount = existingOrder.Amount
-        };
-
-        // Check if earnings record exists for caregiver
-        bool earningsExist = await _earningsService.DoesEarningsExistForCaregiverAsync(gig.CareGiverId);
-
-        if (earningsExist)
-        {
-            // Get earnings to update
-            var earnings = await _earningsService.GetEarningsByCaregiverIdAsync(gig.CareGiverId);
-            await _earningsService.UpdateEarningsAsync(earnings.Id, updateEarningsRequest);
-        }
-        else
-        {
-            // Create new earnings record
-            var createEarningsRequest = new CreateEarningsRequest
-            {
-                CaregiverId = gig.CareGiverId,
-                TotalEarned = existingOrder.Amount,
-                WithdrawableAmount = existingOrder.Amount,
-                WithdrawnAmount = 0
-            };
-            await _earningsService.CreateEarningsAsync(createEarningsRequest);
-        }
-
-        // Create transaction history record
-        await _transactionHistoryService.AddEarningTransactionAsync(
-            gig.CareGiverId,
-            existingOrder.Amount,
-            $"Payment for completed gig: {existingOrder.ServiceName}",
-            existingOrder.Id.ToString()
-        );
-
-        // Notify caregiver about the earning
-        await notificationService.AddNotificationAsync(new AddNotificationRequest
-        {
-            UserId = gig.CareGiverId,
-            Title = "Payment Received",
-            Message = $"You have received {existingOrder.Amount:C} for completing the gig: {existingOrder.ServiceName}",
-            Type = "Earning",
-            IsRead = false
-        });
-    }
-}
-
-careProDbContext.ClientOrders.Update(existingOrder);
-await careProDbContext.SaveChangesAsync(); System.Linq;
-using System.Security.Authentication;
-using System.Text;
+using System.Linq;
 using System.Threading.Tasks;
 
 namespace Infrastructure.Content.Services

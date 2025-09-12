@@ -93,19 +93,4 @@ namespace Application.DTOs
         public string AdminId { get; set; }
         public string? AdminNotes { get; set; }
     }
-
-
-    public class TransactionHistoryResponse
-    {
-        public string Id { get; set; }
-        public string CaregiverId { get; set; }
-        public string CaregiverName { get; set; }
-        public string Activity { get; set; }
-        public string Description { get; set; }
-        public decimal Amount { get; set; }
-        public string Status { get; set; }
-        public DateTime CreatedAt { get; set; }
-        
-       
-    }
 }

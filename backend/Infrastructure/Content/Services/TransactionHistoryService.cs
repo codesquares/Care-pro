@@ -1,7 +1,7 @@
 using Application.DTOs;
 using Application.Interfaces.Content;
 using Domain.Entities;
-using Infrastructure.Data;
+using Infrastructure.Content.Data;
 using Microsoft.EntityFrameworkCore;
 using MongoDB.Bson;
 using System;
@@ -15,12 +15,12 @@ namespace Infrastructure.Content.Services
     public class TransactionHistoryService : ITransactionHistoryService
     {
         private readonly CareProDbContext _dbContext;
-        private readonly IUserProfileService _userProfileService;
+        private readonly ICareGiverService _caregiverService;
 
-        public TransactionHistoryService(CareProDbContext dbContext, IUserProfileService userProfileService)
+        public TransactionHistoryService(CareProDbContext dbContext, ICareGiverService caregiverService)
         {
             _dbContext = dbContext;
-            _userProfileService = userProfileService;
+            _caregiverService = caregiverService;
         }
 
         public async Task<TransactionHistoryResponse> GetTransactionByIdAsync(string id)
@@ -178,7 +178,7 @@ namespace Infrastructure.Content.Services
 
         private async Task<TransactionHistoryResponse> MapToResponseAsync(TransactionHistory transaction)
         {
-            var caregiver = await _userProfileService.GetUserProfileByIdAsync(transaction.CaregiverId);
+            var caregiver = await _caregiverService.GetCaregiverUserAsync(transaction.CaregiverId);
             string caregiverName = caregiver != null ? $"{caregiver.FirstName} {caregiver.LastName}" : "Unknown";
 
             return new TransactionHistoryResponse

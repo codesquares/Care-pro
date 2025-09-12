@@ -1,0 +1,16 @@
+/home/labber/Care-pro-new/backend/Application/obj/Debug/net8.0/Application.csproj.AssemblyReference.cache
+/home/labber/Care-pro-new/backend/Application/obj/Debug/net8.0/Application.GeneratedMSBuildEditorConfig.editorconfig
+/home/labber/Care-pro-new/backend/Application/obj/Debug/net8.0/Application.AssemblyInfoInputs.cache
+/home/labber/Care-pro-new/backend/Application/obj/Debug/net8.0/Application.AssemblyInfo.cs
+/home/labber/Care-pro-new/backend/Application/obj/Debug/net8.0/Application.csproj.CoreCompileInputs.cache
+/home/labber/Care-pro-new/backend/Application/obj/Debug/net8.0/Application.sourcelink.json
+/home/labber/Care-pro-new/backend/Application/bin/Debug/net8.0/Application.deps.json
+/home/labber/Care-pro-new/backend/Application/bin/Debug/net8.0/Application.dll
+/home/labber/Care-pro-new/backend/Application/bin/Debug/net8.0/Application.pdb
+/home/labber/Care-pro-new/backend/Application/bin/Debug/net8.0/Domain.dll
+/home/labber/Care-pro-new/backend/Application/bin/Debug/net8.0/Domain.pdb
+/home/labber/Care-pro-new/backend/Application/obj/Debug/net8.0/Applicat.44B5EDA2.Up2Date
+/home/labber/Care-pro-new/backend/Application/obj/Debug/net8.0/Application.dll
+/home/labber/Care-pro-new/backend/Application/obj/Debug/net8.0/refint/Application.dll
+/home/labber/Care-pro-new/backend/Application/obj/Debug/net8.0/Application.pdb
+/home/labber/Care-pro-new/backend/Application/obj/Debug/net8.0/ref/Application.dll
