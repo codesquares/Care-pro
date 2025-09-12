@@ -21,7 +21,6 @@ namespace Infrastructure.Content.Services
         private readonly ICareGiverService _careGiverService;
         private readonly IAdminUserService _adminUserService;
         private readonly INotificationService _notificationService;
-        private readonly ITransactionHistoryService _transactionHistoryService;
 
         public WithdrawalRequestService(
             CareProDbContext dbContext,
@@ -35,7 +34,6 @@ namespace Infrastructure.Content.Services
             _careGiverService = careGiverService;
             _adminUserService = adminUserService;
             _notificationService = notificationService;
-            _transactionHistoryService = transactionHistoryService;
         }
 
         public async Task<WithdrawalRequestResponse> GetWithdrawalRequestByIdAsync(string withdrawalRequestId)
@@ -314,7 +312,6 @@ namespace Infrastructure.Content.Services
             // Notify caregiver
             await NotifyCaregiverAboutWithdrawalStatusChange(withdrawal,
                 "Withdrawal Completed",
->>>>>>> d23f2b0cedb6de3753dc47fa8c77105506e209d1
                 $"Your withdrawal of {withdrawal.FinalAmount:C} has been completed successfully.");
 
             return await MapWithdrawalToResponseAsync(withdrawal);
