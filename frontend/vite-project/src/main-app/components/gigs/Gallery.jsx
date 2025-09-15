@@ -96,6 +96,7 @@ const GalleryUploads = ({
                           className="remove-image-btn"
                           onClick={(e) => {
                             e.preventDefault();
+                            e.stopPropagation();
                             if (onFileChange) {
                               // Clear the image by calling onFileChange with empty event
                               const clearEvent = { target: { files: [] } };

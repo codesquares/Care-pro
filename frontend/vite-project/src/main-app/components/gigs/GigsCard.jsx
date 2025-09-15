@@ -15,6 +15,7 @@ const GigsCard = ({
   clearValidationErrors,
 }) => {
   const [tagsInput, setTagsInput] = useState("");
+  const [showLimitError, setShowLimitError] = useState(false);
   const tagInputRef = useRef(null);
   const { formData, validationErrors, updateField } = useGigForm();
 
@@ -168,8 +169,9 @@ const GigsCard = ({
             <div className="subcategory-section">
               <div className="subcategory-header">
                 <h4>Select Subcategories</h4>
-                <span className="subcategory-count">
+                <span className={`subcategory-count ${formData.subcategory.length >= 5 ? 'at-limit' : ''}`}>
                   {formData.subcategory.length} of 5 selected
+                  {formData.subcategory.length >= 5 && " (Maximum reached)"}
                 </span>
               </div>
               <div 
@@ -177,29 +179,55 @@ const GigsCard = ({
                 onMouseEnter={() => onFieldHover && onFieldHover('subcategory')}
                 onMouseLeave={onFieldLeave}
               >
-                {categories[formData.category]?.map((subCategory) => (
-                  <label key={subCategory} className="subcategory-checkbox">
-                    <input
-                      className="checkbox-input"
-                      type="checkbox"
-                      value={subCategory}
-                      checked={formData.subcategory.includes(subCategory)}
-                      onChange={(e) => {
-                        const isChecked = e.target.checked;
-                        let updatedSubcategories;
-                        if (isChecked) {
-                          updatedSubcategories = [...formData.subcategory, subCategory];
-                        } else {
-                          updatedSubcategories = formData.subcategory.filter((s) => s !== subCategory);
-                        }
-                        updateField('subcategory', updatedSubcategories);
-                        if (onSubCategoryChange) onSubCategoryChange(updatedSubcategories);
-                      }}
-                    />
-                    <span className="checkbox-label">{subCategory}</span>
-                  </label>
-                ))}
+                {categories[formData.category]?.map((subCategory) => {
+                  const isSelected = formData.subcategory.includes(subCategory);
+                  const isAtLimit = formData.subcategory.length >= 5;
+                  const isDisabled = !isSelected && isAtLimit;
+                  
+                  return (
+                    <label key={subCategory} className={`subcategory-checkbox ${isDisabled ? 'disabled' : ''}`}>
+                      <input
+                        className="checkbox-input"
+                        type="checkbox"
+                        value={subCategory}
+                        checked={isSelected}
+                        disabled={isDisabled}
+                        onChange={(e) => {
+                          const isChecked = e.target.checked;
+                          let updatedSubcategories;
+                          
+                          if (isChecked) {
+                            // Prevent selection if already at max limit
+                            if (formData.subcategory.length >= 5) {
+                              // Show immediate validation feedback
+                              setShowLimitError(true);
+                              // Focus the field to show validation
+                              if (onFieldFocus) onFieldFocus('subcategory');
+                              // Hide error after 3 seconds
+                              setTimeout(() => setShowLimitError(false), 3000);
+                              return; // Don't proceed with the selection
+                            }
+                            updatedSubcategories = [...formData.subcategory, subCategory];
+                          } else {
+                            updatedSubcategories = formData.subcategory.filter((s) => s !== subCategory);
+                            // Clear limit error when deselecting
+                            setShowLimitError(false);
+                          }
+                          
+                          updateField('subcategory', updatedSubcategories);
+                          if (onSubCategoryChange) onSubCategoryChange(updatedSubcategories);
+                        }}
+                      />
+                      <span className="checkbox-label">{subCategory}</span>
+                    </label>
+                  );
+                })}
               </div>
+              {showLimitError && (
+                <div className="validation-error limit-error">
+                  Maximum 5 subcategories allowed
+                </div>
+              )}
               {validationErrors.subcategory && (
                 <div className="validation-error">
                   {validationErrors.subcategory}
