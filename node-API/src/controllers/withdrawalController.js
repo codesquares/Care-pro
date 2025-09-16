@@ -5,8 +5,16 @@ const withdrawFunds = async (req, res) => {
   const { amountRequested,
   accountNumber,
   bankName,
-  accountName, caregiverId, token} = req.body;
-  if (!amountRequested || !caregiverId || !accountNumber || !bankName || !accountName || !token) {
+  accountName, caregiverId} = req.body;
+  
+  // Extract token from Authorization header like other endpoints
+  const authHeader = req.headers.authorization;
+  if (!authHeader || !authHeader.startsWith('Bearer ')) {
+    return res.status(401).json({ errorMessage: "Authorization token is required." });
+  }
+  const token = authHeader.split(' ')[1];
+  
+  if (!amountRequested || !caregiverId || !accountNumber || !bankName || !accountName) {
     return res.status(400).json({ errorMessage: "All fields are required." });
   }
   try {

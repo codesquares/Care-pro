@@ -10,11 +10,11 @@ const WithdrawPage = () => {
     withdrawableAmount: 0,
   });
   const [formData, setFormData] = useState({
+    caregiverId: '',
     amountRequested: '',
     accountNumber: '',
     bankName: '',
-    accountName: '',
-    token: ''
+    accountName: ''
   });
   const [errors, setErrors] = useState({});
   const [serviceCharge, setServiceCharge] = useState(0);
@@ -48,10 +48,6 @@ const WithdrawPage = () => {
           console.error("Error fetching withdrawal history:", historyError);
           setHasPendingWithdrawal(false);
         }
-
-        // Set token
-        const token = localStorage.getItem('authToken');
-        setFormData(prev => ({ ...prev, token: token || '' }));
         
       } catch (err) {
         console.error("Error fetching data:", err);

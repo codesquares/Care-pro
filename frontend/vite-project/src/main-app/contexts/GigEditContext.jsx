@@ -177,9 +177,15 @@ function gigEditReducer(state, action) {
           : [subcategoryData];
       }
 
-      // Debug: Log the parsed arrays
+      // Debug: Log the parsed arrays with detailed info
       console.log('🔍 DEBUG - Parsed searchTags:', searchTagsArray);
       console.log('🔍 DEBUG - Parsed subcategory:', subcategoryArray);
+      console.log('🔍 DEBUG - Raw subcategory data from API:', {
+        'gig.subcategory': gig.subcategory,
+        'gig.SubCategory': gig.SubCategory,
+        'type of subcategoryData': typeof (gig.subcategory || gig.SubCategory),
+        'final parsed array': subcategoryArray
+      });
       console.log('🔍 DEBUG - About to create result object');
 
       const result = {

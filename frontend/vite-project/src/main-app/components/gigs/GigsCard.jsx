@@ -19,7 +19,30 @@ const GigsCard = ({
   const tagInputRef = useRef(null);
   const { formData, validationErrors, updateField } = useGigForm();
 
-  // Debug: Log current formData
+  // Utility function to normalize strings for comparison
+  const normalizeString = (str) => {
+    if (!str) return '';
+    return str.toString().toLowerCase().trim().replace(/\s+/g, ' ');
+  };
+
+  // Enhanced subcategory matching function
+  const isSubcategorySelected = (uiSubcategory, savedSubcategories) => {
+    if (!savedSubcategories || !Array.isArray(savedSubcategories)) return false;
+    
+    const normalizedUiSubcat = normalizeString(uiSubcategory);
+    
+    // Try exact match first
+    if (savedSubcategories.includes(uiSubcategory)) {
+      return true;
+    }
+    
+    // Try normalized match
+    return savedSubcategories.some(savedSubcat => 
+      normalizeString(savedSubcat) === normalizedUiSubcat
+    );
+  };
+
+  // Debug: Log current formData with enhanced subcategory details
   console.log('🔍 DEBUG - GigsCard formData:', {
     title: formData.title,
     category: formData.category,
@@ -27,6 +50,19 @@ const GigsCard = ({
     searchTags: formData.searchTags,
     isEditMode: formData.isEditMode
   });
+
+  // Debug: Log subcategory comparison details when in edit mode
+  if (formData.subcategory && formData.subcategory.length > 0) {
+    console.log('🔍 DEBUG - Saved subcategories:', formData.subcategory);
+    console.log('🔍 DEBUG - Available categories for current category:', categories[formData.category]);
+    
+    if (categories[formData.category]) {
+      categories[formData.category].forEach(uiSubcat => {
+        const isSelected = isSubcategorySelected(uiSubcat, formData.subcategory);
+        console.log(`🔍 DEBUG - UI: "${uiSubcat}" | Selected: ${isSelected} | Saved subcats: [${formData.subcategory.join(', ')}]`);
+      });
+    }
+  }
 
   const handleTagsChange = (e) => {
     const value = e.target.value;
@@ -180,9 +216,12 @@ const GigsCard = ({
                 onMouseLeave={onFieldLeave}
               >
                 {categories[formData.category]?.map((subCategory) => {
-                  const isSelected = formData.subcategory.includes(subCategory);
+                  const isSelected = isSubcategorySelected(subCategory, formData.subcategory);
                   const isAtLimit = formData.subcategory.length >= 5;
                   const isDisabled = !isSelected && isAtLimit;
+                  
+                  // Debug individual subcategory check
+                  console.log(`🔍 DEBUG - Checking "${subCategory}": selected=${isSelected}, disabled=${isDisabled}`);
                   
                   return (
                     <label key={subCategory} className={`subcategory-checkbox ${isDisabled ? 'disabled' : ''}`}>
@@ -209,10 +248,22 @@ const GigsCard = ({
                             }
                             updatedSubcategories = [...formData.subcategory, subCategory];
                           } else {
-                            updatedSubcategories = formData.subcategory.filter((s) => s !== subCategory);
+                            // Remove the subcategory using normalized comparison
+                            updatedSubcategories = formData.subcategory.filter((savedSubcat) => {
+                              const normalizedSaved = normalizeString(savedSubcat);
+                              const normalizedCurrent = normalizeString(subCategory);
+                              return normalizedSaved !== normalizedCurrent;
+                            });
                             // Clear limit error when deselecting
                             setShowLimitError(false);
                           }
+                          
+                          console.log('🔍 DEBUG - Subcategory change:', {
+                            action: isChecked ? 'add' : 'remove',
+                            subcategory: subCategory,
+                            oldArray: formData.subcategory,
+                            newArray: updatedSubcategories
+                          });
                           
                           updateField('subcategory', updatedSubcategories);
                           if (onSubCategoryChange) onSubCategoryChange(updatedSubcategories);
