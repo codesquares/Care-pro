@@ -2,6 +2,7 @@ const {generateWithdrawalRequest} = require('../services/withdrawalService');
 
 const withdrawFunds = async (req, res) => {
   console.log("Withdrawal Request Body:", req.body);
+  console.log("=== CONTROLLER DEBUG: Starting field extraction ===");
   const { amountRequested,
   accountNumber,
   bankName,
@@ -36,7 +37,10 @@ const withdrawFunds = async (req, res) => {
       missingFields: missingFields
     });
   }
+  
+  console.log("=== VALIDATION PASSED - Proceeding to withdrawal service ===");
   try {
+    console.log("=== CALLING generateWithdrawalRequest service ===");
     const withdrawalResponse = await generateWithdrawalRequest({
       caregiverId: caregiverId,
       amountRequested: amountRequested,
@@ -49,6 +53,11 @@ const withdrawFunds = async (req, res) => {
     return res.status(200).json({ message: "Withdrawal request submitted successfully." });
   } catch (error) {
     console.error("Error processing withdrawal:", error);
+    console.error("Error details:", {
+      message: error.message,
+      status: error.response?.status,
+      data: error.response?.data
+    });
     return res.status(500).json({ errorMessage: "Failed to process withdrawal request." });
   }
 }
