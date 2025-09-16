@@ -38,8 +38,9 @@ const CaregiverDashboard = () => {
          }
          const data = await response.json();
  
-         setOrders(Array.isArray(data) ? data : data.clientOrders || []);
-         setTotalOrders(data.length || 0);
+         const ordersArray = Array.isArray(data) ? data : data.clientOrders || [];
+         setOrders(ordersArray);
+         setTotalOrders(ordersArray.length);
           // setTotalEarnings(data.totalEarning);
        } catch (error) {
          console.error("Error fetching orders:", error);
