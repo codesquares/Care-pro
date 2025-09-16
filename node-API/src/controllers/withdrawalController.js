@@ -58,6 +58,12 @@ const withdrawFunds = async (req, res) => {
       status: error.response?.status,
       data: error.response?.data
     });
+    
+    // If it's a CarePro API error with a specific message, pass it through
+    if (error.message && error.message !== 'Failed to generate withdrawal') {
+      return res.status(400).json({ errorMessage: error.message });
+    }
+    
     return res.status(500).json({ errorMessage: "Failed to process withdrawal request." });
   }
 }

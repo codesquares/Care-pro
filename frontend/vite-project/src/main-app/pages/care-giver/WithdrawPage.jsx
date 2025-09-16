@@ -42,8 +42,13 @@ const WithdrawPage = () => {
         // Check for pending withdrawals
         try {
           const history = await withdrawalService.getWithdrawalHistory(currentUser.id);
-          const hasPending = Array.isArray(history) ? history.some(withdrawal => withdrawal.status === 'Pending') : false;
+          const hasPending = Array.isArray(history) ? 
+            history.some(withdrawal => 
+              withdrawal.status && 
+              withdrawal.status.toLowerCase() === 'pending'
+            ) : false;
           setHasPendingWithdrawal(hasPending);
+          console.log("Withdrawal history check:", { history, hasPending });
         } catch (historyError) {
           console.error("Error fetching withdrawal history:", historyError);
           setHasPendingWithdrawal(false);
