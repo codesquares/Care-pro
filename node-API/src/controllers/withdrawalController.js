@@ -14,8 +14,27 @@ const withdrawFunds = async (req, res) => {
   }
   const token = authHeader.split(' ')[1];
   
+  // More detailed logging for debugging
+  console.log("Received fields:");
+  console.log("- amountRequested:", amountRequested, typeof amountRequested);
+  console.log("- caregiverId:", caregiverId, typeof caregiverId);
+  console.log("- accountNumber:", accountNumber, typeof accountNumber);
+  console.log("- bankName:", bankName, typeof bankName);
+  console.log("- accountName:", accountName, typeof accountName);
+  
   if (!amountRequested || !caregiverId || !accountNumber || !bankName || !accountName) {
-    return res.status(400).json({ errorMessage: "All fields are required." });
+    const missingFields = [];
+    if (!amountRequested) missingFields.push('amountRequested');
+    if (!caregiverId) missingFields.push('caregiverId');
+    if (!accountNumber) missingFields.push('accountNumber');
+    if (!bankName) missingFields.push('bankName');
+    if (!accountName) missingFields.push('accountName');
+    
+    console.log("Missing fields:", missingFields);
+    return res.status(400).json({ 
+      errorMessage: "All fields are required.",
+      missingFields: missingFields
+    });
   }
   try {
     const withdrawalResponse = await generateWithdrawalRequest({

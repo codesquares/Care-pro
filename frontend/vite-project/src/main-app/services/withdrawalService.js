@@ -74,7 +74,15 @@ export const withdrawalService = {
 
   // Create a new withdrawal request
   createWithdrawalRequest: async (withdrawalData) => {
-    console.log("Withdrawal Data:", withdrawalData);
+    console.log("Withdrawal Data received in service:", withdrawalData);
+    console.log("All fields present?", {
+      amountRequested: !!withdrawalData.amountRequested,
+      caregiverId: !!withdrawalData.caregiverId,
+      accountNumber: !!withdrawalData.accountNumber,
+      bankName: !!withdrawalData.bankName,
+      accountName: !!withdrawalData.accountName
+    });
+    
     const local_api = `${config.LOCAL_API_URL}/withdrawal?userId=${withdrawalData.caregiverId}`;
     // const authToken = localStorage.getItem('authToken');
     // console.log("Auth Token:", authToken);

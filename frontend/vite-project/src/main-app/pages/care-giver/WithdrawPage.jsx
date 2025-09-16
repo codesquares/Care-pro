@@ -130,13 +130,18 @@ const WithdrawPage = () => {
     try {
       setIsSubmitting(true);
       
-      await withdrawalService.createWithdrawalRequest({
+      const withdrawalRequestData = {
         ...formData,
         caregiverId: currentUser.id,
         amountRequested: parseFloat(formData.amountRequested),
         serviceCharge: serviceCharge,
         finalAmount: finalAmount
-      });
+      };
+      
+      console.log("About to send withdrawal request:", withdrawalRequestData);
+      console.log("Current user:", currentUser);
+      
+      await withdrawalService.createWithdrawalRequest(withdrawalRequestData);
 
       // Create notification for admin
       try {
