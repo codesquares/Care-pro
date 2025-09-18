@@ -3,12 +3,15 @@ name: Staging CI/CD Pipeline
 on:
   push:
     branches: [staging]
+    paths-ignore:
+      - 'backend/**'
   pull_request:
     branches: [staging]
+    paths-ignore:
+      - 'backend/**'
 
 env:
   NODE_VERSION: '20.x'
-  DOTNET_VERSION: '8.0.x'
 
 jobs:
   # 🔍 CODE QUALITY & SECURITY GATES
@@ -32,13 +35,7 @@ jobs:
             frontend/vite-project/package-lock.json
             node-API/package-lock.json
 
-      - name: Setup .NET
-        uses: actions/setup-dotnet@v4
-        with:
-          dotnet-version: ${{ env.DOTNET_VERSION }}
-
-      # Security Vulnerability Scanning
-      - name: 🔒 Audit Frontend Dependencies
+      - name: 🔒 Audit Node-API Dependencies
         working-directory: frontend/vite-project
         run: |
           npm ci
@@ -62,48 +59,10 @@ jobs:
             echo "✅ No vulnerabilities found"
           fi
 
-      - name: 🔒 .NET Security Scan
-        working-directory: backend/CarePro-Api
-        run: |
-          echo "🔍 Running .NET security scan..."
-          if ! dotnet restore --verbosity quiet; then
-            echo "❌ .NET restore failed - this will block deployment"
-            exit 1
-          fi
-          
-          # Check for vulnerable packages (fail on high severity)
-          echo "🔍 Checking for security vulnerabilities..."
-          if dotnet list package --vulnerable --include-transitive 2>/dev/null | grep -E "(Critical|High)"; then
-            echo "❌ Critical or High severity vulnerabilities found"
-            echo "Please update vulnerable packages before proceeding"
-            exit 1
-          else
-            echo "✅ No critical security vulnerabilities detected"
-          fi
-
       # Code Quality Checks
       - name: 🧹 Frontend Linting
         working-directory: frontend/vite-project
         run: npm run lint
-
-      - name: 🧹 .NET Code Analysis
-        working-directory: backend/CarePro-Api
-        run: |
-          # Format check (enforce for code quality)
-          echo "🔍 Running .NET format check..."
-          if ! dotnet format CarePro-Api.sln --verify-no-changes --verbosity minimal; then
-            echo "❌ Code formatting issues found"
-            echo "Please run 'dotnet format' to fix formatting issues"
-            exit 1
-          fi
-          
-          # Build check (must succeed)
-          echo "🏗️ Running .NET build check..."
-          if ! dotnet build --configuration Release --verbosity minimal --no-restore; then
-            echo "❌ Build failed - this will block deployment" 
-            exit 1
-          fi
-          echo "✅ .NET code analysis passed"
 
   # 🧪 FRONTEND TESTING
   frontend-tests:
@@ -151,121 +110,7 @@ jobs:
           path: frontend/vite-project/coverage/
           retention-days: 7
 
-  # 🔧 BACKEND (.NET) TESTING
-  backend-tests:
-    name: ⚙️ Backend (.NET) Tests & Build
-    runs-on: ubuntu-latest
-    timeout-minutes: 25
-    needs: quality-gates
-
-    services:
-      postgres:
-        image: postgres:16
-        env:
-          POSTGRES_USER: postgres
-          POSTGRES_PASSWORD: testpassword
-          POSTGRES_DB: carepro_test
-        ports:
-          - 5432:5432
-        options: >-
-          --health-cmd pg_isready
-          --health-interval 10s
-          --health-timeout 5s
-          --health-retries 5
-
-    steps:
-      - name: Checkout code
-        uses: actions/checkout@v4
-
-      - name: Setup .NET
-        uses: actions/setup-dotnet@v4
-        with:
-          dotnet-version: ${{ env.DOTNET_VERSION }}
-
-      - name: Restore Dependencies
-        working-directory: backend/CarePro-Api
-        run: |
-          echo "🔄 Restoring .NET dependencies..."
-          if ! dotnet restore --verbosity minimal; then
-            echo "❌ Failed to restore .NET dependencies"
-            exit 1
-          fi
-          echo "✅ Dependencies restored successfully"
-
-      - name: 🏗️ Build Backend
-        working-directory: backend/CarePro-Api
-        run: |
-          echo "🏗️ Building .NET backend..."
-          if ! dotnet build --no-restore --configuration Release --verbosity minimal; then
-            echo "❌ Backend build failed"
-            exit 1
-          fi
-          echo "✅ Backend built successfully"
-
-      # Comprehensive .NET Testing (regardless of existing test setup)
-      - name: 🧪 Run .NET Tests (if they exist)
-        working-directory: backend/CarePro-Api
-        run: |
-          # Check if test projects exist in the solution
-          if dotnet sln list | grep -i test; then
-            echo "✅ Found test projects, running tests..."
-            if ! dotnet test --no-build --configuration Release --logger "trx;LogFileName=test-results.trx" --verbosity minimal; then
-              echo "❌ Tests failed"
-              exit 1
-            fi
-            echo "✅ All tests passed"
-          else
-            echo "ℹ️ No test projects found in solution"
-            echo "⚠️ Consider adding unit tests for better code quality"
-            # Create a placeholder test result for reporting
-            mkdir -p TestResults
-            echo "No tests configured" > TestResults/test-results.txt
-          fi
-
-      # Static Code Analysis for .NET
-      - name: 🔍 .NET Code Quality Analysis
-        working-directory: backend/CarePro-Api
-        run: |
-          # Check for merge conflicts first
-          echo "🔍 Checking for merge conflicts..."
-          if grep -r "<<<<<<< HEAD\|>>>>>>> \|=======" . --include="*.cs"; then
-            echo "❌ Merge conflicts found! Please resolve them first."
-            exit 1
-          fi
-          
-          # Verify the build we just created
-          echo "✅ Build verification passed"
-          
-          # Check for common issues (informational only)
-          echo "ℹ️ Checking for code quality markers..."
-          if grep -r "TODO\|FIXME\|HACK" . --include="*.cs"; then
-            echo "⚠️ Found TODO/FIXME/HACK comments - consider addressing before production"
-          else 
-            echo "✅ No critical code quality markers found"
-          fi
-
-      - name: 📦 Publish .NET Application
-        working-directory: backend/CarePro-Api
-        run: dotnet publish --configuration Release --output ./publish
-
-      - name: 📦 Upload Backend Artifacts
-        uses: actions/upload-artifact@v4
-        with:
-          name: backend-build
-          path: backend/CarePro-Api/publish/
-          retention-days: 7
-
-      - name: 📊 Upload Test Results (if any)
-        uses: actions/upload-artifact@v4
-        if: always()
-        with:
-          name: backend-test-results
-          path: |
-            backend/CarePro-Api/TestResults/
-            backend/CarePro-Api/TestResults/*.trx
-          retention-days: 7
-
-  # 🚀 NODE-API TESTING  
+  #  NODE-API TESTING  
   node-api-tests:
     name: 🔥 Node-API Tests & Build
     runs-on: ubuntu-latest
@@ -407,7 +252,7 @@ jobs:
     name: 🔄 Cross-Service Integration Tests
     runs-on: ubuntu-latest
     timeout-minutes: 30
-    needs: [frontend-tests, backend-tests, node-api-tests]
+    needs: [frontend-tests, node-api-tests]
 
     steps:
       - name: Checkout code
@@ -429,15 +274,6 @@ jobs:
             exit 1
           fi
           
-          # Check Backend Build  
-          if [ -d "backend-build" ]; then
-            echo "✅ Backend build artifacts found"
-            ls -la backend-build/
-          else
-            echo "❌ Backend build artifacts missing"
-            exit 1
-          fi
-          
           echo "🎉 All build artifacts verified successfully!"
 
       - name: 📋 Generate Deployment Summary
@@ -446,7 +282,6 @@ jobs:
           echo "" >> $GITHUB_STEP_SUMMARY
           echo "### ✅ Services Verified:" >> $GITHUB_STEP_SUMMARY
           echo "- 🎨 Frontend: Built & Tested" >> $GITHUB_STEP_SUMMARY
-          echo "- ⚙️ Backend (.NET): Built & Analyzed" >> $GITHUB_STEP_SUMMARY  
           echo "- 🔥 Node-API: Fully Tested" >> $GITHUB_STEP_SUMMARY
           echo "" >> $GITHUB_STEP_SUMMARY
           echo "### 🛡️ Security & Quality:" >> $GITHUB_STEP_SUMMARY

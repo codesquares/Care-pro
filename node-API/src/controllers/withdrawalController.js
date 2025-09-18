@@ -49,23 +49,57 @@ const withdrawFunds = async (req, res) => {
       accountName: accountName,
       token: token
     });
-    console.log("Withdrawal Response:", withdrawalResponse);
-    return res.status(200).json({ message: "Withdrawal request submitted successfully." });
-  } catch (error) {
-    console.error("Error processing withdrawal:", error);
-    console.error("Error details:", {
-      message: error.message,
-      status: error.response?.status,
-      data: error.response?.data
-    });
     
-    // If it's a CarePro API error (status 400) with a specific message, pass it through as 400
-    if (error.response?.status === 400 && error.message && error.message !== 'Failed to generate withdrawal') {
-      return res.status(400).json({ errorMessage: error.message });
+    console.log("=== CONTROLLER: Service Response ===");
+    console.log("Withdrawal Response:", withdrawalResponse);
+    
+    // Check if the service indicates success
+    if (withdrawalResponse.success) {
+      console.log("✅ Withdrawal request completed successfully");
+      return res.status(200).json({ 
+        message: "Withdrawal request submitted successfully.",
+        data: withdrawalResponse.data,
+        status: "success"
+      });
+    } else {
+      console.log("⚠️ Service did not indicate success");
+      return res.status(500).json({ 
+        errorMessage: "Withdrawal service did not confirm success" 
+      });
     }
     
-    // For all other errors (network, 500, etc.), return 500
-    return res.status(500).json({ errorMessage: "Failed to process withdrawal request." });
+  } catch (error) {
+    console.error("=== CONTROLLER ERROR HANDLING ===");
+    console.error("Error processing withdrawal:", error);
+    console.error("Error type:", error.constructor.name);
+    console.error("Error has status?", !!error.status);
+    console.error("Error has responseData?", !!error.responseData);
+    
+    // Handle different types of errors
+    if (error.status) {
+      // Error from the C# API with specific status code
+      console.log(`Returning ${error.status} error from C# API`);
+      
+      if (error.status >= 400 && error.status < 500) {
+        // Client errors (400-499) - pass through as-is
+        return res.status(error.status).json({ 
+          errorMessage: error.message,
+          details: error.responseData 
+        });
+      } else {
+        // Server errors (500+) - return as 500
+        return res.status(500).json({ 
+          errorMessage: "Server error occurred while processing withdrawal request",
+          details: error.message 
+        });
+      }
+    } else {
+      // Network or other errors - return as 500
+      console.log("Network or other error - returning 500");
+      return res.status(500).json({ 
+        errorMessage: error.message || "Failed to process withdrawal request." 
+      });
+    }
   }
 }
 

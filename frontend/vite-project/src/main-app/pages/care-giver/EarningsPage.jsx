@@ -263,12 +263,12 @@ const EarningsPage = () => {
                         <span className="activity-icon withdrawal">
                           <FaMoneyBillWave className="withdrawal-icon" />
                         </span>
-                        <span>Withdrawal</span>
+                        <span>{withdrawal.activity || 'N/A'}</span>
                       </div>
                     </td>
-                    <td className="description-cell">{withdrawal.status === 'Completed' ? 'Transferred successfully' : withdrawal.status === null ? 'N/A' : withdrawal.status}</td>
+                    <td className="description-cell">{withdrawal.description === 'Completed' ? 'Transferred successfully' : withdrawal.description === null ? 'N/A' : withdrawal.description}</td>
                     <td className="order-cell">{withdrawal.token || 'N/A'}</td>
-                    <td className="amount-cell amount negative">-{formatCurrency(withdrawal.amountRequested || 0)}</td>
+                    <td className="amount-cell amount negative">-{formatCurrency(withdrawal.amount || 0)}</td>
                   </tr>
                 ))}
               </tbody>

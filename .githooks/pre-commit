@@ -41,7 +41,6 @@ files_changed_in_dir() {
 
 # Initialize flags
 FRONTEND_CHANGED=false
-BACKEND_CHANGED=false
 NODE_API_CHANGED=false
 ROOT_CHANGED=false
 
@@ -51,24 +50,19 @@ if files_changed_in_dir "frontend"; then
     echo -e "${PURPLE}📁 Frontend changes detected${NC}"
 fi
 
-if files_changed_in_dir "backend"; then
-    BACKEND_CHANGED=true
-    echo -e "${PURPLE}📁 Backend changes detected${NC}"
-fi
-
 if files_changed_in_dir "node-API"; then
     NODE_API_CHANGED=true
     echo -e "${PURPLE}📁 Node-API changes detected${NC}"
 fi
 
 # Check for root-level changes (README, package.json, etc.)
-if git diff --cached --name-only | grep -v -E "^(frontend|backend|node-API)/" | grep -q .; then
+if git diff --cached --name-only | grep -v -E "^(frontend|node-API)/" | grep -q .; then
     ROOT_CHANGED=true
     echo -e "${PURPLE}📁 Root-level changes detected${NC}"
 fi
 
 # If no changes detected, something might be wrong
-if ! $FRONTEND_CHANGED && ! $BACKEND_CHANGED && ! $NODE_API_CHANGED && ! $ROOT_CHANGED; then
+if ! $FRONTEND_CHANGED && ! $NODE_API_CHANGED && ! $ROOT_CHANGED; then
     echo -e "${YELLOW}⚠️  No changes detected in staged files. Make sure you've staged your changes with 'git add'${NC}"
 fi
 
@@ -116,26 +110,6 @@ if $FRONTEND_CHANGED; then
     fi
 fi
 
-# Run Backend checks if changes detected
-if $BACKEND_CHANGED; then
-    echo -e "${YELLOW}🏛️  Running Backend (.NET) checks...${NC}"
-    if [ -f "$PROJECT_ROOT/backend/.githooks/pre-commit" ]; then
-        cd "$PROJECT_ROOT/backend"
-        if bash ./.githooks/pre-commit; then
-            echo -e "${GREEN}✅ Backend checks passed${NC}"
-            CHECKS_PASSED=$((CHECKS_PASSED + 1))
-        else
-            cd "$PROJECT_ROOT"
-            handle_error "Backend checks failed"
-        fi
-        CHECKS_RAN=$((CHECKS_RAN + 1))
-        cd "$PROJECT_ROOT"
-    else
-        echo -e "${YELLOW}⚠️  Backend pre-commit hook not found (you may need to create one for .NET)${NC}"
-        echo -e "${BLUE}💡 Backend changes detected but no validation available${NC}"
-    fi
-fi
-
 # Run root-level checks if needed
 if $ROOT_CHANGED; then
     print_section "📋 ROOT-LEVEL VALIDATION"
@@ -172,10 +146,6 @@ fi
 
 if $FRONTEND_CHANGED; then
     echo -e "   🎨 Frontend: Build, tests, linting, and security checks passed"
-fi
-
-if $BACKEND_CHANGED; then
-    echo -e "   🏛️  Backend: Validation completed"
 fi
 
 if $ROOT_CHANGED; then

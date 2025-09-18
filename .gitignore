@@ -51,4 +51,7 @@ node_modules/
 .rts2_cache_es/
 .rts2_cache_umd/
 
+# Exclude backend folder from commits - deployed separately
+backend/
+
 

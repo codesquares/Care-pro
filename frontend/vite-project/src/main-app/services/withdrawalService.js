@@ -120,9 +120,22 @@ export const adminWithdrawalService = {
           'Authorization': `Bearer ${localStorage.getItem('authToken')}`
         }
       });
+      
+      if (!response.ok) {
+        throw new Error(`HTTP error! status: ${response.status}`);
+      }
+      
       const data = await response.json();
+      
+      // Ensure data is an array
+      if (!Array.isArray(data)) {
+        console.warn('Withdrawal requests response is not an array:', data);
+        return [];
+      }
+      
       return data;
     } catch (error) {
+      console.error('Error fetching withdrawal requests:', error);
       throw error;
     }
   },
