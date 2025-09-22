@@ -9,6 +9,8 @@ import FilterBarDropdown from "../components/FilterBar";
 import ClientGigService from "../../../services/clientGigService";
 import ClientCareNeedsService from "../../../services/clientCareNeedsService";
 import CareMatchBanner from "./CareMatchBanner";
+import { FaRedoAlt } from "react-icons/fa"; 
+
 
 const ClientDashboard = () => {
   const location = useLocation();
@@ -140,6 +142,8 @@ const ClientDashboard = () => {
         {!shouldHideComponents() && (
           <FilterBarDropdown filters={filters} onFilterChange={handleFilterChange} />
         )}
+
+        
 
         {loading && (
           <div className="spinner-container">

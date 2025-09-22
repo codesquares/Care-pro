@@ -290,6 +290,7 @@
 // src/components/FilterBarDropdown.js
 import React from 'react';
 import './filterDropdownBar.css';
+import { FaRedoAlt } from 'react-icons/fa';
 
 const FilterBarDropdown = ({ filters, onFilterChange }) => {
   const handleServiceTypeChange = (e) => {
@@ -307,6 +308,16 @@ const FilterBarDropdown = ({ filters, onFilterChange }) => {
 
   const handleLocationChange = (e) => {
     onFilterChange({ ...filters, location: e.target.value });
+  };
+
+    // Reset all dropdown filters
+  const resetDropdownFilters = () => {
+    onFilterChange({
+      ...filters,
+      serviceType: '',
+      priceRange: { min: '', max: '' },
+      location: ''
+    });
   };
 
   return (
@@ -341,6 +352,15 @@ const FilterBarDropdown = ({ filters, onFilterChange }) => {
         <option value="Enugu">Enugu</option>
         <option value="Kaduna">Kaduna</option>
       </select>
+
+       {/* Reset Icon */}
+      <button
+        className="reset-icon-btn"
+        onClick={resetDropdownFilters}
+        title="Reset Filters"
+      >
+        <FaRedoAlt />
+      </button>
     </div>
   );
 };
