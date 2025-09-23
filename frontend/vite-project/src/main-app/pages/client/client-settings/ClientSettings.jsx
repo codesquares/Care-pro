@@ -2,6 +2,7 @@ import React, { useState, useEffect, useRef } from "react";
 import { useNavigate } from "react-router-dom";
 import "./ClientSettings.css";
 import defaultAvatar from "../../../../assets/profilecard1.png";
+import ClientSettingsService from "../../../services/ClientSettingsService";
 
 /**
  * Enhanced Premium Client Settings Page Component
@@ -379,77 +380,88 @@ const ClientSettings = () => {
   };
   
   // Save password changes
-  const handlePasswordSave = async (e) => {
-    e.preventDefault();
-    
-    // Validate password fields
-    const currentPasswordValid = validateField("currentPassword", passwordForm.currentPassword);
-    const newPasswordValid = validateField("newPassword", passwordForm.newPassword);
-    const confirmPasswordValid = validateField("confirmPassword", passwordForm.confirmPassword);
-    
-    if (!currentPasswordValid || !newPasswordValid || !confirmPasswordValid) {
-      setMessage({
-        type: "error",
-        text: "Please correct the errors in the form"
-      });
-      return;
-    }
-    
-    if (passwordForm.newPassword !== passwordForm.confirmPassword) {
-      setValidationStates(prev => ({
-        ...prev,
-        confirmPassword: { isValid: false, message: "Passwords don't match" }
-      }));
-      setMessage({
-        type: "error",
-        text: "New passwords do not match"
-      });
-      return;
-    }
-    
-    if (passwordStrength.score < 3) {
-      setMessage({
-        type: "error",
-        text: "Please choose a stronger password"
-      });
-      return;
-    }
-    
-    try {
-      setIsLoading(true);
-      
-      // In a real application, you would change the password via an API
-      // For now, we'll simulate a successful password change
-      await new Promise(resolve => setTimeout(resolve, 1500));
-      
-      setMessage({
-        type: "success",
-        text: "Password updated successfully!"
-      });
-      
-      // Reset password form
-      setPasswordForm({
-        currentPassword: "",
-        newPassword: "",
-        confirmPassword: ""
-      });
-      
-      setPasswordStrength({
-        score: 0,
-        label: "Very Weak",
-        color: "#f85c70"
-      });
-      
-      setIsLoading(false);
-    } catch (error) {
-      console.error("Error changing password:", error);
-      setMessage({
-        type: "error", 
-        text: "Failed to change password. Please try again later."
-      });
-      setIsLoading(false);
-    }
-  };
+// Save password changes
+const handlePasswordSave = async (e) => {
+  e.preventDefault();
+
+  // Validate password fields
+  const currentPasswordValid = validateField("currentPassword", passwordForm.currentPassword);
+  const newPasswordValid = validateField("newPassword", passwordForm.newPassword);
+  const confirmPasswordValid = validateField("confirmPassword", passwordForm.confirmPassword);
+
+  if (!currentPasswordValid || !newPasswordValid || !confirmPasswordValid) {
+    setMessage({
+      type: "error",
+      text: "Please correct the errors in the form",
+    });
+    return;
+  }
+
+  if (passwordForm.newPassword !== passwordForm.confirmPassword) {
+    setValidationStates((prev) => ({
+      ...prev,
+      confirmPassword: { isValid: false, message: "Passwords don't match" },
+    }));
+    setMessage({
+      type: "error",
+      text: "New passwords do not match",
+    });
+    return;
+  }
+
+  if (passwordStrength.score < 3) {
+    setMessage({
+      type: "error",
+      text: "Please choose a stronger password",
+    });
+    return;
+  }
+
+  try {
+    setIsLoading(true);
+    const userDetails = JSON.parse(localStorage.getItem("userDetails") || "{}");
+
+    // ✅ Real API call here
+    const payload = {
+      email: userDetails.email, // <-- replace with how you access current user email
+      currentPassword: passwordForm.currentPassword,
+      newPassword: passwordForm.newPassword,
+    };
+
+    const res = await ClientSettingsService.changePassword(payload);
+
+    setMessage({
+      type: "success",
+      text: "Password updated successfully!",
+    });
+
+    // Reset password form
+    setPasswordForm({
+      currentPassword: "",
+      newPassword: "",
+      confirmPassword: "",
+    });
+
+    setPasswordStrength({
+      score: 0,
+      label: "Very Weak",
+      color: "#f85c70",
+    });
+
+  } catch (error) {
+    console.error("Error changing password:", error);
+    setMessage({
+      type: "error",
+      text:
+        error?.response?.data?.message ||
+        error.message ||
+        "Failed to change password. Please try again later.",
+    });
+  } finally {
+    setIsLoading(false);
+  }
+};
+
   
   // Save notification preferences
   const handleNotificationSave = async () => {
@@ -772,8 +784,10 @@ const ClientSettings = () => {
                     }`}
                     required
                   />
-                  {!validationStates.currentPassword.isValid && (
-                    <p className="client-settings-password-hint">{validationStates.currentPassword.message}</p>
+                 {!validationStates.currentPassword.isValid && (
+                    <p className="client-settings-password-hint error-text">
+                      {validationStates.currentPassword.message || "Current password is required"}
+                    </p>
                   )}
                 </div>
                 
@@ -801,9 +815,11 @@ const ClientSettings = () => {
                     </div>
                   )}
                   
-                  <p className="client-settings-password-hint">
-                    <i className="fas fa-info-circle"></i> Password should be at least 8 characters and include uppercase, lowercase, numbers, and special characters.
-                  </p>
+                   {!validationStates.newPassword.isValid && (
+                      <p className="client-settings-password-hint error-text">
+                        {validationStates.newPassword.message || "Password must be at least 8 characters"}
+                      </p>
+                    )}
                 </div>
                 
                 <div className="client-settings-form-group">
