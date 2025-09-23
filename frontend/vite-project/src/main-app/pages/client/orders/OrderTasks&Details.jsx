@@ -5,6 +5,7 @@ import { ToastContainer, toast } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
 import { createNotification } from "../../../services/notificationService";
 import "./Order&Tasks.scss";
+import { useNavigate } from "react-router-dom";
 
 const MyOrders = () => {
     const { orderId } = useParams(); // Get orderId from URL params
@@ -21,6 +22,16 @@ const MyOrders = () => {
     const [checkingReviewStatus, setCheckingReviewStatus] = useState(false);
     const userDetails = JSON.parse(localStorage.getItem("userDetails"));
     const userId = userDetails?.id;
+
+    const navigate = useNavigate();
+
+
+    const handlingFaq = () => {
+        navigate("/app/client/faq");
+    }
+
+
+
 
     // Check if user has already submitted a review for this order
     const checkExistingReview = async (gigId, clientId) => {
@@ -303,14 +314,22 @@ const MyOrders = () => {
 
                         <div className="support-section">
                             <h3>Support</h3>
-                            <div className="support-item">
+                            <div className="support-item" onClick={handlingFaq}>
                                 <span>📋 FAQs</span>
                                 <span>Find needed answers</span>
                             </div>
                             <div className="support-item">
+                                <a
+                                    href="https://wa.me/1234567890"
+                                    target="_blank"
+                                    rel="noopener noreferrer"
+                                    className="support-link"
+                                >
                                 <span>📞 Resolution Center</span>
                                 <span>Resolve order issues</span>
+                                </a>
                             </div>
+                           
                         </div>
                     </div>
                 </div>
