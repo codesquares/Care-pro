@@ -320,7 +320,7 @@ const MyOrders = () => {
                             </div>
                             <div className="support-item">
                                 <a
-                                    href="https://wa.me/1234567890"
+                                    href="https://wa.me/2348131952778"
                                     target="_blank"
                                     rel="noopener noreferrer"
                                     className="support-link"

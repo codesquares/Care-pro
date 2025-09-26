@@ -19,6 +19,7 @@ import ErrorBoundary from '../../components/ErrorBoundary';
 import CaregiverOrderDetails from './orders/CaregiverOrderDetails';
 import { GigEditProvider } from '../../contexts/GigEditContext';
 import '../../components/ErrorBoundary.css';
+import FAQPage from '../client/orders/FAQ';
 
 function CareGiverRoutes() {
     return (
@@ -45,6 +46,7 @@ function CareGiverRoutes() {
                 <Route path="/verification" element={<VerificationPage />} />
                 <Route path="/assessment" element={<AssessmentPage />} />
                 <Route path="/order-details/:orderId" element={<CaregiverOrderDetails />} />
+                <Route path="/faq" element={<FAQPage />} />
             </Routes>
         </GigEditProvider>
     );
