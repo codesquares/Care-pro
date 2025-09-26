@@ -29,7 +29,7 @@
 /* Login wrapper styles for register page */
 .login-wrapper {
   display: flex;
-  height: 100vh;
+  min-height: 100vh;
   font-family: "Inter", sans-serif;
 
   .login-left {
@@ -68,19 +68,22 @@
     flex: 1;
     display: flex;
     flex-direction: column;
-    justify-content: center;
+    justify-content: flex-start;
+    align-items: center;
     padding: 2rem 3rem;
-    overflow: visible;
+    overflow-y: auto;
     max-width: 700px;
     margin: 0 auto;
+    min-height: 100vh;
 
     h2 {
       font-weight: 700;
       font-size: 1.75rem;
       color: var(--primary-color);
-      margin: 0 0 1.5rem 0;
+      margin: 2rem 0 1.5rem 0;
       text-align: center;
       line-height: 1.2;
+      width: 100%;
     }
   }
 }
@@ -184,7 +187,7 @@ input:not([type="radio"]) {
   
   input {
     width: 100%;
-    padding: 0.5rem 3rem 0.5rem 0.75rem;
+    padding: 0.5rem 2.5rem 0.5rem 0.75rem;
     border: 2px solid var(--border-color);
     border-radius: var(--border-radius-sm);
     font-size: 0.95rem;
@@ -208,18 +211,22 @@ input:not([type="radio"]) {
   
   .password-toggle {
     position: absolute;
-    right: 12px;
+    right: 8px;
     top: 50%;
     transform: translateY(-50%);
     background: none;
     border: none;
     cursor: pointer;
-    padding: 4px;
+    padding: 6px;
     display: flex;
     align-items: center;
     justify-content: center;
     color: #666;
     transition: color 0.2s ease;
+    z-index: 10;
+    width: 32px;
+    height: 32px;
+    border-radius: 4px;
 
     &:hover {
       color: var(--primary-color);
@@ -498,11 +505,14 @@ input:not([type="radio"]) {
     max-width: 400px;
     
     input {
-      padding: 1.125rem 3.5rem 1.125rem 1.25rem;
+      padding: 1.125rem 3rem 1.125rem 1.25rem;
     }
     
     .password-toggle {
-      right: 15px;
+      right: 12px;
+      width: 36px;
+      height: 36px;
+      padding: 8px;
     }
   }
 
@@ -691,7 +701,9 @@ input:not([type="radio"]) {
   }
 
   .password-toggle {
-    padding: 8px;
+    padding: 10px;
+    width: 36px;
+    height: 36px;
     
     &:hover {
       color: #666;
@@ -699,6 +711,11 @@ input:not([type="radio"]) {
     
     &:active {
       color: var(--primary-color);
+    }
+    
+    svg {
+      width: 18px;
+      height: 18px;
     }
   }
 }
@@ -733,8 +750,10 @@ input:not([type="radio"]) {
     }
     .login-right {
       padding: 1.5rem 2rem;
+      justify-content: flex-start;
       h2 {
         font-size: 1.5rem;
+        margin: 1.5rem 0 1.5rem 0;
       }
     }
   }
@@ -753,10 +772,12 @@ input:not([type="radio"]) {
       width: 100%;
       padding: 1rem;
       max-width: 100%;
+      justify-content: flex-start;
+      min-height: 100vh;
 
       h2 {
         font-size: 1.4rem;
-        margin-bottom: 1rem;
+        margin: 1rem 0 1rem 0;
       }
     }
   }

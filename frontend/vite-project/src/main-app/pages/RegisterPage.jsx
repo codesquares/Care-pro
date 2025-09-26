@@ -6,6 +6,7 @@ import loginLogo from "../../assets/loginLogo.png";
 import useApi from "../services/useApi";
 import { toast } from "react-toastify";
 import Modal from "../components/modal/Modal"; 
+import allUserService from "../services/allUserService";
 
 const CreateAccount = () => {
   const { data, error, loading, fetchData } = useApi("", "post");
@@ -90,6 +91,32 @@ const CreateAccount = () => {
 
     if (Object.keys(fieldErrors).length > 0) return;
 
+    // Check if email already exists in the system
+    try {
+      console.log("Checking if email exists:", formValues.email);
+      const emailCheck = await allUserService.checkEmailExists(formValues.email);
+      
+      if (emailCheck.exists) {
+        console.log(`Email already exists with role: ${emailCheck.role}`);
+        
+        // Show modal asking user to login instead
+        setModalTitle("Email Already Registered");
+        setModalDescription(`An account with the email **${formValues.email}** already exists as a ${emailCheck.role}. 
+
+Please log in to your existing account instead of creating a new one.`);
+        setButtonBgColor("#FF6B6B");
+        setButtonText("Go to Login");
+        setIsEmailVerification(false);
+        setIsModalOpen(true);
+        return; // Stop the registration process
+      }
+    } catch (emailCheckError) {
+      console.error("Error checking email existence:", emailCheckError);
+      // If email check fails, show an error but allow registration to continue
+      toast.error("Unable to verify email availability. Please try again.");
+      return;
+    }
+
     const payload = {
       firstName: formValues.firstName,
       lastName: formValues.lastName,
@@ -147,7 +174,7 @@ You won't be able to log in until your email is verified.`);
 
   return (
     <div className="login-wrapper">
-            <div className="login-left">
+            <div className="login-left" onClick={() => navigate("/")} style={{ cursor: 'pointer' }}>
               <div className="login-logo-section">
                 <img src={loginLogo} alt="Carepro Logo" />
               </div>

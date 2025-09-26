@@ -134,7 +134,7 @@ const LoginPage = () => {
   return (
     <div className="login-wrapper">
       {/* Left section */}
-      <div className="login-left">
+      <div className="login-left" onClick={() => navigate("/")} style={{ cursor: 'pointer' }}>
         <div className="login-logo-section">
           <img src={loginLogo} alt="Carepro Logo" />
         </div>
