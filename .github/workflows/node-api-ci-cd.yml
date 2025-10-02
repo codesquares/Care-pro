@@ -49,17 +49,12 @@ jobs:
       env:
         NODE_ENV: test
         
-    - name: Generate Coverage Report
-      working-directory: node-API
-      run: npm run test:coverage
-      env:
-        NODE_ENV: test
-        
-    - name: Check Coverage Thresholds (MANDATORY)
+    - name: Generate Coverage Report with Thresholds (MANDATORY)
       working-directory: node-API
       run: |
-        # Fail if coverage is below mandatory thresholds
-        npm run test:coverage -- --passWithNoTests=false
+        echo "🧪 Running coverage tests with updated thresholds..."
+        npm run test:coverage
+        echo "✅ Coverage thresholds met"
       env:
         NODE_ENV: test
 
