@@ -15,40 +15,9 @@ import { markNotificationAsRead } from '../Redux/slices/notificationSlice';
 import { toast } from 'react-toastify';
 
 
-// Add new styles for notification permission button
-const notificationStyles = `
-.notification-permission {
-  margin: 10px 0;
-}
-
-.permission-button {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  background-color: #4A90E2;
-  color: white;
-  border: none;
-  border-radius: 4px;
-  padding: 8px 16px;
-  cursor: pointer;
-  font-size: 14px;
-  transition: background-color 0.2s;
-}
-
-.permission-button:hover {
-  background-color: #3A80D2;
-}
-
-.permission-button svg {
-  width: 16px;
-  height: 16px;
-}
-`;
-
+// Notification permission component - single definition
 const NotificationPermissionButton = ({ permissionGranted, requestPermission }) => {
-  
-
-  if (permission === 'granted' || !("Notification" in window)) {
+  if (permissionGranted || !("Notification" in window)) {
     return null;
   }
 
@@ -66,11 +35,6 @@ const NotificationPermissionButton = ({ permissionGranted, requestPermission }) 
   );
 };
 
-// Inject styles
-const styleElement = document.createElement('style');
-styleElement.textContent = notificationStyles;
-document.head.appendChild(styleElement);
-
 const Messages = ({ userId: propsUserId, token: propsToken }) => {
   const [searchParams] = useSearchParams();
   const dispatch = useDispatch();
@@ -86,11 +50,12 @@ const Messages = ({ userId: propsUserId, token: propsToken }) => {
   // Notification permission state
   const [permissionGranted, setPermissionGranted] = useState(Notification.permission === 'granted');
 
-  // Added state to handle offline content display
-  const [showOfflineContent, setShowOfflineContent] = useState(false);
-  
-  // Add initial mount state to prevent flash
-  const [isInitialMount, setIsInitialMount] = useState(true);
+  // Centralized loading state management - simplified to prevent flash
+  const [loadingState, setLoadingState] = useState({
+    isLoading: true,
+    showOfflineOptions: false,
+    hasInitialized: false
+  });
   
   // Refs for preventing unnecessary re-renders
   const notificationProcessedRef = useRef(new Set());
@@ -98,6 +63,11 @@ const Messages = ({ userId: propsUserId, token: propsToken }) => {
 
   // Use custom hooks for performance optimization
   const { debounce } = useDebounce();
+  
+  // Focus management refs for mobile navigation
+  const sidebarRef = useRef(null);
+  const chatAreaRef = useRef(null);
+  const backButtonRef = useRef(null);
 
   // Get user details with better error handling - memoized
   const userDetails = useMemo(() => {
@@ -192,18 +162,15 @@ const Messages = ({ userId: propsUserId, token: propsToken }) => {
       connectionManager.isDestroyed = false;
     }
     
-    // Clear initial mount state after a short delay to prevent flash
-    const mountTimer = setTimeout(() => {
-      setIsInitialMount(false);
-    }, 150);
+    // Set initialized immediately to prevent flash
+    setLoadingState(prev => ({ ...prev, hasInitialized: true }));
     
     // If connection is already initialized, skip
     if (connectionManager.hasInitialized) {
       console.log("[MessagesPage] Chat connection already initialized, skipping");
       isInitializingRef.current = false;
-      clearTimeout(mountTimer);
-      setIsInitialMount(false);
-      return () => clearTimeout(mountTimer);
+      setLoadingState(prev => ({ ...prev, hasInitialized: true, isLoading: false }));
+      return;
     }
     
     // Track if this component is still mounted
@@ -272,7 +239,6 @@ const Messages = ({ userId: propsUserId, token: propsToken }) => {
       console.log("[MessagesPage] Cleaning up chat connection");
       isMounted.current = false;
       isInitializingRef.current = false;
-      clearTimeout(mountTimer);
       connectionManager.clearConnectionTimeout();
       
       // Ensure we call the cleanup function to remove event handlers
@@ -311,6 +277,17 @@ const Messages = ({ userId: propsUserId, token: propsToken }) => {
       selectChat(userIdParam);
     }
   }, [searchParams]); // Removed selectChat from dependencies to prevent loops
+
+  // Effect to show offline options after extended loading
+  useEffect(() => {
+    if (isLoading && !error) {
+      const offlineTimer = setTimeout(() => {
+        setLoadingState(prev => ({ ...prev, showOfflineOptions: true }));
+      }, 15000); // Show offline options after 15 seconds
+      
+      return () => clearTimeout(offlineTimer);
+    }
+  }, [isLoading, error]);
 
   // Handle window resize for mobile detection
   useEffect(() => {
@@ -400,21 +377,39 @@ const Messages = ({ userId: propsUserId, token: propsToken }) => {
   useEffect(() => {
     // Check for user ID in URL params to auto-select a chat
     const userIdParam = searchParams.get('user');
+    console.log('🌐 URL PARAM CHECK:', { userIdParam, selectedChatId, searchParams: Object.fromEntries(searchParams) });
+    
     if (userIdParam && !selectedChatId) {
-      console.log(`[MessagesPage] Auto-selecting chat from URL param: ${userIdParam}`);
+      console.log(`🌐 [MessagesPage] Auto-selecting chat from URL param: ${userIdParam}`);
       selectChat(userIdParam);
     }
   }, [searchParams, selectedChatId, selectChat]);
   
-  const handleSelectChat = (chatId) => {
-    console.log("Messages.jsx: handleSelectChat called with chatId:", chatId);
+  const handleSelectChat = (chatId, forceReload = false) => {
+    console.log("Messages.jsx: handleSelectChat called with chatId:", chatId, "forceReload:", forceReload);
     console.log("Before selectChat - Current selectedChatId:", selectedChatId);
     console.log("Current recipient:", recipient);
-    selectChat(chatId);
     
-    // On mobile, hide sidebar when chat is selected
+    // Only prevent unnecessary selectChat calls if we're not forcing reload
+    if (selectedChatId === chatId && !forceReload) {
+      console.log("Messages.jsx: Already on chat", chatId, "- skipping selectChat call");
+      return;
+    }
+    
+    selectChat(chatId, forceReload);
+    
+    // On mobile, hide sidebar when chat is selected and focus chat area
     if (isMobile) {
       setShowSidebar(false);
+      // Focus chat area after transition
+      setTimeout(() => {
+        if (chatAreaRef.current) {
+          const focusableElement = chatAreaRef.current.querySelector('input, button, [tabindex]:not([tabindex="-1"])');
+          if (focusableElement) {
+            focusableElement.focus();
+          }
+        }
+      }, 300); // Wait for transition to complete
     }
   };
 
@@ -422,6 +417,15 @@ const Messages = ({ userId: propsUserId, token: propsToken }) => {
   const handleBackToConversations = () => {
     if (isMobile) {
       setShowSidebar(true);
+      // Focus first conversation item after transition
+      setTimeout(() => {
+        if (sidebarRef.current) {
+          const firstChatItem = sidebarRef.current.querySelector('.chat-item');
+          if (firstChatItem) {
+            firstChatItem.focus();
+          }
+        }
+      }, 300); // Wait for transition to complete
     }
   };
   
@@ -440,22 +444,7 @@ const Messages = ({ userId: propsUserId, token: propsToken }) => {
     handleSendMessage(userDetails.userId, receiverId, messageText);
   };
   
-  // Added state to handle offline content display
-  // const [showOfflineContent, setShowOfflineContent] = useState(false); // Already declared above
 
-  // Effect to handle offline fallback after connection timeout
-  useEffect(() => {
-    // Set a timeout to show offline content if connection takes too long
-    const offlineContentTimeout = setTimeout(() => {
-      if (isLoading && !error) {
-        setShowOfflineContent(true);
-      }
-    }, 15000); // Show offline content after 15 seconds of loading
-    
-    return () => {
-      clearTimeout(offlineContentTimeout);
-    };
-  }, [isLoading, error]);
   
   // Generate sample conversations for offline mode
   const getSampleConversations = () => {
@@ -481,30 +470,7 @@ const Messages = ({ userId: propsUserId, token: propsToken }) => {
     ];
   };
   
-  // Notification permission component
-  const NotificationPermissionButton = ({ permissionGranted, requestPermission }) => {
-    if (permissionGranted || !("Notification" in window)) {
-      return null;
-    }
-    
-    return (
-      <div className="notification-permission">
-        <button 
-          className="permission-button"
-          onClick={() => {
-            // This is triggered by user interaction, so it's allowed
-            requestPermission();
-          }}
-        >
-          <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-            <path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"></path>
-            <path d="M13.73 21a2 2 0 0 1-3.46 0"></path>
-          </svg>
-          Enable Message Notifications
-        </button>
-      </div>
-    );
-  };
+
 
   // Add connection status display component
   const ConnectionStatus = ({ state, isPolling }) => {
@@ -526,36 +492,30 @@ const Messages = ({ userId: propsUserId, token: propsToken }) => {
       return null;
     }
     
-    let statusConfig = {};
+    let statusClass = 'connection-status';
+    let statusText = '';
+    let statusIcon = '';
     
     if (isPolling) {
-      statusConfig = {
-        color: '#ff9800',
-        text: 'Using backup connection',
-        icon: '🔄'
-      };
+      statusClass += ' polling';
+      statusText = 'Using backup connection';
+      statusIcon = '🔄';
     } else {
       switch (state) {
         case 'Connecting':
-          statusConfig = {
-            color: '#2196f3',
-            text: 'Connecting...',
-            icon: '🔗'
-          };
+          statusClass += ' connecting';
+          statusText = 'Connecting...';
+          statusIcon = '🔗';
           break;
         case 'Reconnecting':
-          statusConfig = {
-            color: '#ff9800',
-            text: 'Reconnecting...',
-            icon: '🔄'
-          };
+          statusClass += ' reconnecting';
+          statusText = 'Reconnecting...';
+          statusIcon = '🔄';
           break;
         case 'Disconnected':
-          statusConfig = {
-            color: '#f44336',
-            text: window.innerWidth <= 768 ? 'Connection issue' : 'Connection issue - tap to dismiss',
-            icon: '❌'
-          };
+          statusClass += ' disconnected';
+          statusText = window.innerWidth <= 768 ? 'Connection issue' : 'Connection issue - tap to dismiss';
+          statusIcon = '❌';
           break;
         default:
           return null;
@@ -564,31 +524,14 @@ const Messages = ({ userId: propsUserId, token: propsToken }) => {
 
     return (
       <div 
-        className={`connection-status ${state.toLowerCase()}`}
+        className={statusClass}
         onClick={() => state === 'Disconnected' && setIsVisible(false)}
-        style={{
-          position: 'fixed',
-          top: window.innerWidth <= 768 ? '10px' : '70px',
-          right: window.innerWidth <= 768 ? '10px' : '20px',
-          backgroundColor: statusConfig.color,
-          color: 'white',
-          padding: window.innerWidth <= 768 ? '6px 12px' : '8px 16px',
-          borderRadius: '20px',
-          fontSize: window.innerWidth <= 768 ? '12px' : '14px',
-          fontWeight: '500',
-          zIndex: 1000,
-          boxShadow: '0 2px 8px rgba(0,0,0,0.2)',
-          display: 'flex',
-          alignItems: 'center',
-          gap: '6px',
-          maxWidth: window.innerWidth <= 768 ? '250px' : 'auto',
-          backdropFilter: 'blur(10px)',
-          cursor: state === 'Disconnected' ? 'pointer' : 'default',
-          transition: 'opacity 0.3s ease'
-        }}
+        role="status"
+        aria-live="polite"
+        aria-label={`Connection status: ${statusText}`}
       >
-        <span>{statusConfig.icon}</span>
-        <span>{statusConfig.text}</span>
+        <span className="status-icon">{statusIcon}</span>
+        <span className="status-text">{statusText}</span>
       </div>
     );
   };
@@ -624,10 +567,10 @@ const Messages = ({ userId: propsUserId, token: propsToken }) => {
 
   const hasUnreadChat = notifications.some(n => n.type === 'chat' && !n.readAt);
 
-  // Show initial loading screen to prevent flash
-  if (isInitialMount) {
+  // Show loading only when we haven't initialized and there are no conversations
+  if (!loadingState.hasInitialized || (isLoading && conversations.length === 0)) {
     return (
-      <div className="messages">
+      <div className="messages" aria-live="polite" aria-label="Loading messages">
         <div className="messages-loading-overlay">
           <div className="loading-content">
             <div className="loading-spinner">
@@ -641,31 +584,15 @@ const Messages = ({ userId: propsUserId, token: propsToken }) => {
   }
   
   return (
-    <div className="messages">{/* Loading overlay - show when initially loading conversations */}
-      {isLoading && conversations.length === 0 && (
-        <div className="messages-loading-overlay">
-          <div className="loading-content">
-            <div className="loading-spinner">
-              <div className="spinner"></div>
-            </div>
-            <p>Loading conversations...</p>
-          </div>
-        </div>
-      )}
-      
-      {hasUnreadChat && <NotificationPermissionButton 
-      permissionGranted={permissionGranted}
-  requestPermission={requestPermission}
-      />}
-
+    <div className="messages" role="main" aria-label="Messages page">
       {/* Add metrics component for monitoring and debugging chat performance */}
       <ChatMetrics />
       
       {(error || !isOnline) && (
-        <div className={`error-message ${(error?.includes('offline') || error?.includes('sample data') || !isOnline) ? 'offline-mode' : ''}`}>
+        <div className={`error-message ${(error?.includes('offline') || error?.includes('sample data') || !isOnline) ? 'offline-mode' : ''}`} role="alert" aria-live="assertive">
           <div className="error-icon">
             {(error?.includes('offline') || error?.includes('sample data') || !isOnline) ? (
-              <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+              <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
                 <path d="M14.5 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V7.5L14.5 2z"></path>
                 <polyline points="14 2 14 8 20 8"></polyline>
                 <line x1="16" y1="13" x2="8" y2="13"></line>
@@ -673,7 +600,7 @@ const Messages = ({ userId: propsUserId, token: propsToken }) => {
                 <line x1="10" y1="9" x2="8" y2="9"></line>
               </svg>
             ) : (
-              <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+              <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
                 <circle cx="12" cy="12" r="10"></circle>
                 <line x1="12" y1="8" x2="12" y2="12"></line>
                 <line x1="12" y1="16" x2="12.01" y2="16"></line>
@@ -683,28 +610,28 @@ const Messages = ({ userId: propsUserId, token: propsToken }) => {
           <div className="error-content">
             <h3>
               {!isOnline ? 'Network Offline' : 
-                error?.includes('offline') || error?.includes('sample data') ? 'Offline Mode' : 'Connection Notice'}
+                error?.includes('offline') || error?.includes('sample data') ? 'Limited Connectivity' : 'Connection Notice'}
             </h3>
             <p>
               {!isOnline ? 
-                'You are currently offline. Messaging will use sample data until your connection is restored.' : 
+                'You are currently offline. Some features may be limited until your connection is restored.' : 
+                error?.includes('offline') || error?.includes('sample data') ?
+                'Running in limited mode. Some features may not be available.' :
                 error}
             </p>
             {isOnline && error && !error.includes('offline') && !error.includes('sample data') && (
               <button 
                 onClick={async () => {
                   console.log("[MessagesPage] Manual retry requested by user");
-                  // Use a one-time retry that won't trigger an infinite loop
                   try {
                     const cleanupFn = await initializeChat(userDetails.userId, token);
-                    // Store the cleanup function somewhere if needed
-                    // Don't trigger additional refreshes - let the system handle it naturally
                   } catch (err) {
                     console.error("[MessagesPage] Error during manual retry:", err);
                   }
                 }}
+                aria-label="Retry connection"
               >
-                <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
                   <path d="M21.5 2v6h-6M21.34 15.57a10 10 0 1 1-.57-8.38"/>
                 </svg>
                 Try Again
@@ -715,50 +642,43 @@ const Messages = ({ userId: propsUserId, token: propsToken }) => {
       )}
       
       {isLoading && !error && (
-        <div className="loading-indicator">
+        <div className="loading-indicator" role="status" aria-live="polite">
           <div className="spinner"></div>
-          <p>Connecting to messaging service{showOfflineContent ? '... taking longer than usual' : '...'}</p>
+          <p>Connecting to messaging service...</p>
           
-          {showOfflineContent && (
+          {loadingState.showOfflineOptions && (
             <div className="fallback-actions">
               <p>This is taking longer than expected. You can:</p>
               <button onClick={() => window.location.reload()}>
                 Refresh the page
               </button>
               <button onClick={() => {
-                setShowOfflineContent(false);
-                setIsLoading(false);
-                setConversations(getSampleConversations());
+                setLoadingState(prev => ({ ...prev, showOfflineOptions: false, isLoading: false }));
               }}>
-                View in offline mode
+                Continue in limited mode
               </button>
             </div>
           )}
         </div>
       )}
       
-      <div className="messages-dashboard-header">
-        <div className="header-content">
-          <h1>My Messages</h1>
-          <div className="header-actions">
-            <ConnectionStatus 
-              state={isLoading ? 'Connecting' : (error && connectionState === 'Disconnected') ? 'Disconnected' : connectionState || 'Connected'} 
-              isPolling={isPollingActive}
-            />
-            <NotificationPermissionButton 
-              permissionGranted={permissionGranted} 
-              requestPermission={requestPermission} 
-            />
-          </div>
-        </div>
-      </div>
-      
       <div className="messages-container">
         {/* Mobile back button - only show when chat is selected on mobile */}
         {isMobile && selectedChatId && !showSidebar && (
           <div className="mobile-back-header">
-            <button className="back-button" onClick={handleBackToConversations}>
-              <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+            <button 
+              ref={backButtonRef}
+              className="back-button" 
+              onClick={handleBackToConversations}
+              onKeyDown={(e) => {
+                if (e.key === 'Enter' || e.key === ' ') {
+                  e.preventDefault();
+                  handleBackToConversations();
+                }
+              }}
+              aria-label="Go back to conversation list"
+            >
+              <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
                 <path d="M19 12H5M12 19l-7-7 7-7"/>
               </svg>
               <span>Back to Conversations</span>
@@ -767,31 +687,55 @@ const Messages = ({ userId: propsUserId, token: propsToken }) => {
         )}
 
         {/* Sidebar - show/hide based on mobile state */}
-        <div className={`sidebar-container ${isMobile && !showSidebar ? 'mobile-hidden' : ''}`}>
+        <div ref={sidebarRef} className={`sidebar-container ${isMobile && !showSidebar ? 'mobile-hidden' : ''}`} role="complementary" aria-label="Conversation list">
           <Sidebar 
             conversations={conversations} 
             selectedChatId={selectedChatId} 
             onSelectChat={handleSelectChat} 
             unreadMessages={unreadMessages}
+            headerActions={(
+              <div className="header-actions">
+                <ConnectionStatus 
+                  state={isLoading ? 'Connecting' : (error && connectionState === 'Disconnected') ? 'Disconnected' : connectionState || 'Connected'} 
+                  isPolling={isPollingActive}
+                />
+                {hasUnreadChat && (
+                  <NotificationPermissionButton 
+                    permissionGranted={permissionGranted} 
+                    requestPermission={requestPermission} 
+                  />
+                )}
+              </div>
+            )}
           />
         </div>
         
         {/* Chat area - show/hide based on mobile state */}
-        <div className={`chat-container ${isMobile && showSidebar ? 'mobile-hidden' : ''}`}>
+        <div ref={chatAreaRef} className={`chat-container ${isMobile && showSidebar ? 'mobile-hidden' : ''}`} role="main" aria-label="Chat conversation">
           {conversations.length === 0 ? (
             <EmptyMessageState isConnecting={isLoading} />
           ) : selectedChatId ? (
-            <ChatArea 
-              messages={messages || []}
-              recipient={recipient || conversations.find(c => c.id === selectedChatId)}
-              userId={userDetails.userId}
-              onSendMessage={handleSendNewMessage}
-            />
+            <>
+              {/* Add debugging for ChatArea props */}
+              {console.log('🎯 Messages.jsx: Rendering ChatArea with:', {
+                selectedChatId,
+                messagesCount: messages?.length || 0,
+                recipientId: recipient?.id,
+                recipientFromConversations: conversations.find(c => c.id === selectedChatId)?.id,
+                userId: userDetails.userId
+              })}
+              <ChatArea 
+                messages={messages || []}
+                recipient={recipient || conversations.find(c => c.id === selectedChatId)}
+                userId={userDetails.userId}
+                onSendMessage={handleSendNewMessage}
+              />
+            </>
           ) : (
             <div className="placeholder">
               <div className="placeholder-content">
-                <div className="placeholder-icon">
-                  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                <div className="placeholder-icon" role="img" aria-label="Message icon">
+                  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
                     <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"></path>
                   </svg>
                 </div>
@@ -805,24 +749,6 @@ const Messages = ({ userId: propsUserId, token: propsToken }) => {
       
       {/* Toast notifications */}
       <ToastContainer />
-      
-      {/* Offline fallback UI - shown when connection fails after multiple attempts */}
-      {showOfflineContent && (
-        <div className="offline-content">
-          <h2>You're Offline</h2>
-          <p>It seems you're not connected to the internet. Please check your connection.</p>
-          
-          <div className="sample-conversations">
-            <h3>Sample Conversations</h3>
-            <Sidebar 
-              conversations={getSampleConversations()} 
-              selectedChatId={selectedChatId} 
-              onSelectChat={handleSelectChat} 
-              unreadMessages={unreadMessages}
-            />
-          </div>
-        </div>
-      )}
     </div>
   );
 };

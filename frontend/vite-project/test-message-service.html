@@ -1,0 +1,162 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Message Service Test</title>
+    <style>
+        body { font-family: Arial, sans-serif; padding: 20px; }
+        .test-section { margin: 20px 0; padding: 15px; border: 1px solid #ccc; }
+        button { padding: 10px; margin: 5px; }
+        .result { margin: 10px 0; padding: 10px; background: #f5f5f5; }
+        .error { background: #ffe6e6; color: red; }
+        .success { background: #e6ffe6; color: green; }
+        input { padding: 5px; margin: 5px; width: 200px; }
+    </style>
+</head>
+<body>
+    <h1>Message Service Test Page</h1>
+    
+    <div class="test-section">
+        <h3>1. Test Backend API Directly</h3>
+        <input id="senderId" placeholder="Sender ID" />
+        <input id="receiverId" placeholder="Receiver ID" />
+        <input id="messageText" placeholder="Message text" value="Test message" />
+        <button onclick="testDirectAPI()">Test Direct API</button>
+        <div id="apiResult" class="result"></div>
+    </div>
+    
+    <div class="test-section">
+        <h3>2. Test Authentication</h3>
+        <button onclick="checkAuth()">Check Auth Token</button>
+        <div id="authResult" class="result"></div>
+    </div>
+    
+    <div class="test-section">
+        <h3>3. Test SignalR Connection</h3>
+        <button onclick="testSignalR()">Test SignalR</button>
+        <div id="signalrResult" class="result"></div>
+    </div>
+
+    <script>
+        const API_BASE_URL = "https://carepro-api20241118153443.azurewebsites.net";
+        
+        async function testDirectAPI() {
+            const senderId = document.getElementById('senderId').value;
+            const receiverId = document.getElementById('receiverId').value;
+            const messageText = document.getElementById('messageText').value;
+            const resultDiv = document.getElementById('apiResult');
+            
+            if (!senderId || !receiverId || !messageText) {
+                resultDiv.innerHTML = '<span class="error">Please fill all fields</span>';
+                return;
+            }
+            
+            try {
+                const token = localStorage.getItem('authToken');
+                const payload = {
+                    SenderId: senderId,
+                    ReceiverId: receiverId,
+                    Message: messageText,
+                    Timestamp: new Date().toISOString()
+                };
+                
+                console.log('Testing API with payload:', payload);
+                
+                const response = await fetch(`${API_BASE_URL}/api/Chat/send`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'Authorization': `Bearer ${token}`
+                    },
+                    body: JSON.stringify(payload)
+                });
+                
+                const responseText = await response.text();
+                console.log('API Response:', response.status, responseText);
+                
+                if (response.ok) {
+                    resultDiv.innerHTML = `<span class="success">Success! Status: ${response.status}, Response: ${responseText}</span>`;
+                } else {
+                    resultDiv.innerHTML = `<span class="error">Failed! Status: ${response.status}, Response: ${responseText}</span>`;
+                }
+            } catch (error) {
+                console.error('API Test Error:', error);
+                resultDiv.innerHTML = `<span class="error">Error: ${error.message}</span>`;
+            }
+        }
+        
+        function checkAuth() {
+            const resultDiv = document.getElementById('authResult');
+            const token = localStorage.getItem('authToken');
+            const userDetails = localStorage.getItem('userDetails');
+            
+            let result = `<strong>Auth Token:</strong> ${token ? 'Present' : 'Missing'}<br>`;
+            
+            if (token) {
+                result += `<strong>Token Preview:</strong> ${token.substring(0, 50)}...<br>`;
+            }
+            
+            if (userDetails) {
+                try {
+                    const user = JSON.parse(userDetails);
+                    result += `<strong>User ID:</strong> ${user.id}<br>`;
+                    result += `<strong>User Name:</strong> ${user.fullName || user.firstName + ' ' + user.lastName}<br>`;
+                    
+                    // Pre-fill the form
+                    document.getElementById('senderId').value = user.id;
+                } catch (e) {
+                    result += `<strong>User Details Error:</strong> ${e.message}<br>`;
+                }
+            } else {
+                result += `<strong>User Details:</strong> Missing<br>`;
+            }
+            
+            resultDiv.innerHTML = result;
+        }
+        
+        async function testSignalR() {
+            const resultDiv = document.getElementById('signalrResult');
+            
+            try {
+                // Check if SignalR is available
+                if (typeof signalR === 'undefined') {
+                    resultDiv.innerHTML = '<span class="error">SignalR not loaded</span>';
+                    return;
+                }
+                
+                resultDiv.innerHTML = 'Testing SignalR connection...';
+                
+                const token = localStorage.getItem('authToken');
+                const connection = new signalR.HubConnectionBuilder()
+                    .withUrl(`${API_BASE_URL}/chathub`, {
+                        accessTokenFactory: () => token
+                    })
+                    .configureLogging(signalR.LogLevel.Information)
+                    .build();
+                
+                await connection.start();
+                
+                resultDiv.innerHTML = '<span class="success">SignalR connected successfully!</span>';
+                
+                // Test sending a message
+                const userDetails = JSON.parse(localStorage.getItem('userDetails'));
+                const receiverId = document.getElementById('receiverId').value;
+                
+                if (userDetails && receiverId) {
+                    const messageId = await connection.invoke('SendMessage', userDetails.id, receiverId, 'Test SignalR message');
+                    resultDiv.innerHTML += `<br><span class="success">Test message sent via SignalR! Message ID: ${messageId}</span>`;
+                }
+                
+                await connection.stop();
+            } catch (error) {
+                console.error('SignalR Test Error:', error);
+                resultDiv.innerHTML = `<span class="error">SignalR Error: ${error.message}</span>`;
+            }
+        }
+        
+        // Auto-check auth on load
+        window.onload = function() {
+            checkAuth();
+        };
+    </script>
+</body>
+</html>

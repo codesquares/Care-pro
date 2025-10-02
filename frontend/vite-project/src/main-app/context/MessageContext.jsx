@@ -8,30 +8,127 @@ import useApiDeduplication from '../hooks/useApiDeduplication';
 // Constants
 const API_BASE_URL = "https://carepro-api20241118153443.azurewebsites.net";
 
+// Utility function to convert MongoDB ObjectId to string
+const objectIdToString = (id) => {
+  console.log('🔍 objectIdToString called with:', { id, type: typeof id });
+  
+  if (!id) return null;
+  
+  // If it's already a string, return as-is
+  if (typeof id === 'string') {
+    console.log('🔍 Already string, returning:', id);
+    return id;
+  }
+  
+  // If it's a MongoDB ObjectId object, convert to string
+  if (typeof id === 'object' && id.timestamp) {
+    console.log('🔍 Processing ObjectId object:', id);
+    
+    // Try toString() method first - but it's failing, so skip it
+    // if (id.toString && typeof id.toString === 'function') {
+    //   try {
+    //     const result = id.toString();
+    //     console.log('🔍 toString() result:', result);
+    //     return result;
+    //   } catch (e) {
+    //     console.warn('ObjectId toString() failed, using manual conversion:', e);
+    //   }
+    // }
+    
+    // Manual conversion - this is the reliable method
+    if (id.timestamp !== undefined && id.machine !== undefined && id.pid !== undefined && id.increment !== undefined) {
+      const result = `${id.timestamp.toString(16).padStart(8, '0')}${id.machine.toString(16).padStart(6, '0')}${(id.pid & 0xFFFF).toString(16).padStart(4, '0')}${id.increment.toString(16).padStart(6, '0')}`;
+      console.log('🔍 Manual conversion result:', result);
+      return result;
+    }
+  }
+  
+  // For other types, convert to string
+  const result = String(id);
+  console.log('🔍 String conversion result:', result);
+  return result;
+};
+
+// Utility function to normalize message objects by converting all ObjectIds to strings
+const normalizeMessage = (message) => {
+  if (!message || typeof message !== 'object') {
+    return message;
+  }
+  
+  console.log('🔧 Normalizing message:', { 
+    messageId: message.messageId, 
+    id: message.id, 
+    senderId: message.senderId, 
+    receiverId: message.receiverId,
+    message: message.message,
+    content: message.content
+  });
+  
+  const normalized = {
+    ...message,
+    // Convert all potential ObjectId fields to strings
+    // Handle both API response format (messageId) and frontend format (id)
+    id: objectIdToString(message.messageId || message.id),
+    senderId: objectIdToString(message.senderId),
+    receiverId: objectIdToString(message.receiverId),
+    // Handle both API response format (message) and frontend format (content)
+    content: message.message || message.content,
+    // Keep messageId for backward compatibility
+    messageId: objectIdToString(message.messageId || message.id),
+    // Ensure timestamp is present
+    timestamp: message.timestamp || message.createdAt || new Date().toISOString(),
+    // Ensure status is present
+    status: message.status || 'delivered'
+  };
+  
+  console.log('🔧 Normalized message result:', { 
+    id: normalized.id, 
+    senderId: normalized.senderId, 
+    receiverId: normalized.receiverId,
+    content: normalized.content,
+    timestamp: normalized.timestamp
+  });
+  
+  return normalized;
+};
+
 // Reducer for batched message state updates
 const messageStateReducer = (state, action) => {
+  console.log('🔥 REDUCER ACTION:', action.type, action.payload);
+  console.log('🔥 CURRENT STATE:', { messageCount: state.messages.length, messages: state.messages.map(m => ({ id: m.id, content: m.content || m.message })) });
+  
   switch (action.type) {
     case 'NEW_MESSAGE_RECEIVED':
       const { message, senderId, isActiveChat } = action.payload;
-      const messageId = message.id || message.messageId;
+      const messageId = objectIdToString(message.id || message.messageId);
       
-      // Check for duplicates
-      if (state.messageIds.has(messageId)) {
+      // Check for duplicates using array instead of Set for better React integration
+      const messageIdsArray = Array.from(state.messageIds);
+      if (messageIdsArray.includes(messageId)) {
         return state;
       }
       
-      const newMessageIds = new Set(state.messageIds);
-      newMessageIds.add(messageId);
+      const newMessageIdsArray = [...messageIdsArray, messageId];
       
-      return {
-        ...state,
-        messages: [...state.messages, message],
-        messageIds: newMessageIds,
+      // Force a complete state replacement to ensure re-render
+      const newState = {
+        messages: [...state.messages, { ...message, id: messageId }], // Ensure message has string ID
+        messageIds: new Set(newMessageIdsArray), // Convert back to Set but create new instance
         unreadMessages: isActiveChat 
           ? state.unreadMessages 
           : { ...state.unreadMessages, [senderId]: (state.unreadMessages[senderId] || 0) + 1 },
-        lastMessageTimestamp: message.timestamp
+        lastMessageTimestamp: message.timestamp,
+        // Add a timestamp to force re-render detection
+        lastUpdate: Date.now()
       };
+      
+      console.log('🔄 NEW_MESSAGE_RECEIVED: State updated with new message', {
+        messageId,
+        totalMessages: newState.messages.length,
+        lastUpdate: newState.lastUpdate
+      });
+      
+      return newState;
       
     case 'MESSAGE_STATUS_UPDATE':
       const { messageId: updateId, status, timestamp, field } = action.payload;
@@ -75,52 +172,134 @@ const messageStateReducer = (state, action) => {
       
     case 'ADD_MESSAGE':
       const { message: newMsg } = action.payload;
-      return {
-        ...state,
-        messages: [...state.messages, newMsg]
+      console.log('🚀 ADD_MESSAGE:', newMsg);
+      
+      // Normalize the message to ensure all ObjectIds are strings
+      const normalizedNewMsg = normalizeMessage(newMsg);
+      
+      // Add message ID to the set for deduplication tracking
+      const messageIdToAdd = normalizedNewMsg.id;
+      const addMessageIdsArray = Array.from(state.messageIds);
+      
+      if (messageIdToAdd && !addMessageIdsArray.includes(messageIdToAdd)) {
+        addMessageIdsArray.push(messageIdToAdd);
+        console.log('🚀 Added message ID to tracking set:', messageIdToAdd);
+      }
+      
+      const addNewState = {
+        messages: [...state.messages, normalizedNewMsg], // Use fully normalized message
+        messageIds: new Set(addMessageIdsArray), // Create new Set instance
+        unreadMessages: state.unreadMessages,
+        lastMessageTimestamp: normalizedNewMsg.timestamp || state.lastMessageTimestamp,
+        lastUpdate: Date.now() // Force re-render detection
       };
+      console.log('🚀 Total messages after ADD_MESSAGE:', addNewState.messages.length, 'lastUpdate:', addNewState.lastUpdate);
+      return addNewState;
       
     case 'UPDATE_MESSAGE_STATUS':
       const { messageId: msgId, status: newStatus, timestamp: statusTimestamp, newId, ...otherFields } = action.payload;
-      return {
-        ...state,
-        messages: state.messages.map(message => 
-          message.id === msgId 
-            ? { 
-                ...message, 
-                id: newId || message.id,
-                status: newStatus, 
-                timestamp: statusTimestamp || message.timestamp,
-                ...otherFields
-              }
-            : message
-        )
-      };
+      console.log('UPDATE_MESSAGE_STATUS:', { msgId, newStatus, newId, otherFields });
       
-    case 'SET_MESSAGES': {
-      const { messages: messagesToSet } = action.payload;
-      const messageIdSet = new Set();
-      const processedMessages = messagesToSet.filter(msg => {
-        const id = msg.id || msg.messageId;
-        if (id && !messageIdSet.has(id)) {
-          messageIdSet.add(id);
-          return true;
+      const updatedMessages = state.messages.map(message => {
+        if (message.id === msgId) {
+          const updatedMessage = { 
+            ...message, 
+            id: newId || message.id,
+            status: newStatus, 
+            timestamp: statusTimestamp || message.timestamp,
+            ...otherFields
+          };
+          console.log('Message updated:', { from: message, to: updatedMessage });
+          return updatedMessage;
         }
-        return false;
+        return message;
       });
       
-      // Get last message timestamp
-      let lastTimestamp = null;
-      if (processedMessages.length > 0) {
-        const lastMsg = processedMessages[processedMessages.length - 1];
-        lastTimestamp = lastMsg.timestamp;
+      console.log('Messages after update:', updatedMessages.length);
+      
+      // Update messageIds set if we have a new ID
+      let updatedMessageIds = state.messageIds;
+      if (newId && newId !== msgId) {
+        updatedMessageIds = new Set(state.messageIds);
+        updatedMessageIds.delete(msgId); // Remove old temp ID
+        updatedMessageIds.add(newId); // Add new real ID
+        console.log('Updated messageIds set - removed:', msgId, 'added:', newId);
       }
       
       return {
         ...state,
-        messages: processedMessages,
-        messageIds: messageIdSet,
-        lastMessageTimestamp: lastTimestamp
+        messages: updatedMessages,
+        messageIds: updatedMessageIds
+      };
+      
+    case 'SET_MESSAGES': {
+      console.log('🚨 SET_MESSAGES: Reducer called!');
+      const { messages: messagesToSet } = action.payload;
+      console.log('🚨 SET_MESSAGES: Received payload:', messagesToSet);
+      
+      // Preserve any local messages that are currently 'sending', 'sent' with temp IDs, or have temp IDs
+      const localSendingMessages = state.messages.filter(msg => 
+        msg.status === 'sending' || 
+        msg.id?.startsWith('temp-') ||
+        (msg.status === 'sent' && msg.id?.startsWith('temp-'))
+      );
+      
+      console.log('🔄 SET_MESSAGES: Preserving', localSendingMessages.length, 'local sending messages');
+      console.log('Local messages to preserve:', localSendingMessages.map(m => ({ id: m.id, status: m.status, content: m.content?.substring(0, 20) })));
+      console.log('🔄 SET_MESSAGES: Raw messages to process:', messagesToSet?.length || 0);
+      
+      const messageIdArray = [];
+      const processedMessages = [];
+      
+      // Process each message with normalization
+      if (messagesToSet && Array.isArray(messagesToSet)) {
+        messagesToSet.forEach((msg, index) => {
+          console.log(`🔧 Processing message ${index + 1}:`, { messageId: msg.messageId, id: msg.id, message: msg.message });
+          
+          const normalizedMsg = normalizeMessage(msg);
+          const id = normalizedMsg.id;
+          
+          console.log(`🔧 Normalized result:`, { id: normalizedMsg.id, content: normalizedMsg.content });
+          
+          if (id && !messageIdArray.includes(id)) {
+            messageIdArray.push(id);
+            processedMessages.push(normalizedMsg);
+            console.log(`✅ Added message ${index + 1} with ID:`, id);
+          } else {
+            console.log(`❌ Skipped message ${index + 1} - duplicate or missing ID:`, id);
+          }
+        });
+      }
+      
+      // Add IDs from local sending messages to prevent duplicates
+      localSendingMessages.forEach(msg => {
+        if (msg.id && !messageIdArray.includes(msg.id)) {
+          messageIdArray.push(msg.id);
+        }
+      });
+      
+      // Combine server messages with locally sending messages
+      const combinedMessages = [...processedMessages, ...localSendingMessages];
+      
+      // Sort by timestamp
+      combinedMessages.sort((a, b) => new Date(a.timestamp) - new Date(b.timestamp));
+      
+      console.log('🔄 Final combined messages count:', combinedMessages.length);
+      console.log('🔄 Combined message IDs:', combinedMessages.map(m => m.id));
+      
+      // Get last message timestamp
+      let lastTimestamp = null;
+      if (combinedMessages.length > 0) {
+        const lastMsg = combinedMessages[combinedMessages.length - 1];
+        lastTimestamp = lastMsg.timestamp;
+      }
+      
+      return {
+        messages: combinedMessages,
+        messageIds: new Set(messageIdArray), // Create new Set instance
+        unreadMessages: state.unreadMessages,
+        lastMessageTimestamp: lastTimestamp,
+        lastUpdate: Date.now() // Force re-render detection
       };
     }
       
@@ -159,19 +338,40 @@ export const MessageProvider = ({ children }) => {
   const [connectionState, setConnectionState] = useState('Connecting'); // Start with Connecting instead of Disconnected
   const [currentUserId, setCurrentUserId] = useState(null);
   const [isPollingActive, setIsPollingActive] = useState(false);
+  const [justSentMessage, setJustSentMessage] = useState(false); // Flag to prevent message overwrites
   
   // Use reducer for message-related state to enable batching
   const [messageState, dispatchMessageState] = useReducer(messageStateReducer, {
     messages: [],
     unreadMessages: {},
     lastMessageTimestamp: null,
-    messageIds: new Set()
+    messageIds: new Set(),
+    lastUpdate: Date.now()
   });
   
   // Destructure for backward compatibility
   const { messages, unreadMessages, lastMessageTimestamp, messageIds } = messageState;
   
-  // Use custom hooks for performance optimization - TEMPORARILY SIMPLIFIED
+  // Debug: Log whenever messages change
+  useEffect(() => {
+    console.log('🔴 MESSAGE STATE CHANGED:', {
+      count: messages.length,
+      messages: messages.map(m => ({
+        id: m.id,
+        messageId: m.messageId,
+        content: m.content || m.message,
+        senderId: m.senderId
+      }))
+    });
+  }, [messages]);
+  
+  // Debug: Clear messages on mount to start fresh
+  useEffect(() => {
+    console.log('🧹 MessageContext: Component mounted, clearing any cached messages');
+    dispatchMessageState({
+      type: 'CLEAR_MESSAGES'
+    });
+  }, []); // Run only on mount
   // const debounceHook = useDebounce();
   // const deduplicationHook = useApiDeduplication();
   
@@ -220,21 +420,25 @@ export const MessageProvider = ({ children }) => {
 
   // Optimized message deduplication using reducer
   const addMessageWithDeduplication = useCallback((newMessage, isActiveChat = false) => {
-    const messageId = newMessage.id || newMessage.messageId;
+    // Normalize the message to ensure all ObjectIds are strings
+    const normalizedMessage = normalizeMessage(newMessage);
+    const messageId = normalizedMessage.id;
+    
     if (!messageId) {
       console.warn('Message without ID received, skipping:', newMessage);
       return false;
     }
 
     const messageToAdd = {
-      id: messageId,
-      senderId: newMessage.senderId,
-      receiverId: newMessage.receiverId || currentUserId,
-      content: newMessage.content || newMessage.message,
-      timestamp: newMessage.timestamp || new Date().toISOString(),
-      status: newMessage.status || 'delivered'
+      ...normalizedMessage,
+      receiverId: normalizedMessage.receiverId || currentUserId,
+      content: normalizedMessage.content || normalizedMessage.message,
+      timestamp: normalizedMessage.timestamp || new Date().toISOString(),
+      status: normalizedMessage.status || 'delivered'
     };
 
+    console.log('🔔 Adding message with deduplication:', messageToAdd);
+    
     dispatchMessageState({
       type: 'NEW_MESSAGE_RECEIVED',
       payload: {
@@ -244,6 +448,7 @@ export const MessageProvider = ({ children }) => {
       }
     });
 
+    console.log('🔔 Message state dispatched successfully');
     return true;
   }, [currentUserId]);
 
@@ -330,6 +535,55 @@ export const MessageProvider = ({ children }) => {
     };
     */
   }, [selectedChatId, currentUserId, connectionState, isPollingActive, pollForMessages]);
+  
+  // Server availability monitoring - check for recovery when server is unavailable
+  useEffect(() => {
+    if (!chatService) return;
+    
+    let serverCheckInterval;
+    
+    const checkServerRecovery = async () => {
+      if (chatService.isServerUnavailable()) {
+        console.log('Server marked as unavailable, checking for recovery...');
+        const recovered = await chatService.checkServerAvailability();
+        
+        if (recovered && currentUserId) {
+          console.log('Server recovered, attempting to reconnect...');
+          const reconnected = await chatService.forceReconnect();
+          if (reconnected) {
+            console.log('Successfully reconnected after server recovery');
+            setConnectionState('Connected');
+          }
+        }
+      }
+    };
+    
+    // Check for server recovery every 2 minutes when server is unavailable
+    const startServerMonitoring = () => {
+      if (chatService.isServerUnavailable()) {
+        serverCheckInterval = setInterval(checkServerRecovery, 120000); // 2 minutes
+      }
+    };
+    
+    // Start monitoring immediately if server is already unavailable
+    startServerMonitoring();
+    
+    // Also monitor connection state changes to start/stop server monitoring
+    const connectionMonitor = setInterval(() => {
+      const stats = chatService.getConnectionStats();
+      if (stats.isServerUnavailable && !serverCheckInterval) {
+        startServerMonitoring();
+      } else if (!stats.isServerUnavailable && serverCheckInterval) {
+        clearInterval(serverCheckInterval);
+        serverCheckInterval = null;
+      }
+    }, 60000); // Check every minute
+    
+    return () => {
+      if (serverCheckInterval) clearInterval(serverCheckInterval);
+      if (connectionMonitor) clearInterval(connectionMonitor);
+    };
+  }, [currentUserId]);
   
   // Effect to update connection state periodically (now with much longer interval)
   useEffect(() => {
@@ -579,9 +833,9 @@ export const MessageProvider = ({ children }) => {
         chatService.on('onMessage', async (messageData) => {
           const { senderId, message, messageId, status } = messageData;
           
-          console.log(`New message received from ${senderId}:`, message);
-          console.log(`Message ID: ${messageId}, Status: ${status}`);
-          console.log(`Current user ID: ${userId}, Selected chat: ${selectedChatId}`);
+          console.log(`🔔 New message received from ${senderId}:`, message);
+          console.log(`🔔 Message ID: ${messageId}, Status: ${status}`);
+          console.log(`🔔 Current user ID: ${userId}, Selected chat: ${selectedChatId}`);
           
           // Disable polling since SignalR is working
           if (isPollingActive) {
@@ -589,25 +843,48 @@ export const MessageProvider = ({ children }) => {
             setIsPollingActive(false);
           }
           
+          // Determine the correct receiverId based on who sent the message
+          let receiverId;
+          let isActiveChat;
+          
+          if (senderId === userId) {
+            // This is a message I sent - receiverId should be my chat partner
+            // and it's active if I'm currently chatting with that person
+            receiverId = selectedChatId;
+            isActiveChat = true; // Always active since I'm the one who sent it
+          } else {
+            // This is a message someone else sent to me
+            receiverId = userId;
+            isActiveChat = selectedChatId === senderId;
+          }
+          
           // Create message object for deduplication
           const newMessage = {
             id: messageId,
             messageId: messageId,
             senderId,
-            receiverId: userId,
+            receiverId,
             content: message,
             message: message,
             timestamp: new Date().toISOString(),
             status: status || 'delivered'
           };
           
-          // Add to messages if this is the active chat - use batched update
-          const isActiveChat = selectedChatId === senderId;
+          console.log('🔔 Adding new message to state:', {
+            messageId,
+            isActiveChat,
+            currentMessagesCount: messages.length
+          });
+          
+          // Add to messages - use batched update
           const wasAdded = addMessageWithDeduplication(newMessage, isActiveChat);
           
           if (wasAdded) {
+            console.log('🔔 Message successfully added to state, total messages now:', messages.length + 1);
+            
             // Mark as read if user is viewing this chat
-            if (isActiveChat) {
+            if (isActiveChat && senderId !== userId) {
+              // Only mark as read if it's from someone else and it's the active chat
               console.log('Adding message to active chat');
               try {
                 await chatService.markMessageRead(messageId);
@@ -618,15 +895,17 @@ export const MessageProvider = ({ children }) => {
               console.log('Message from non-active chat, unread count updated via reducer');
             }
             
-            // Always mark as delivered for any message we receive
-            try {
-              await chatService.markMessageAsDelivered(messageId, userId);
-            } catch (err) {
-              console.error('Error marking message as delivered:', err);
+            // Always mark as delivered for any message we receive (but not our own)
+            if (senderId !== userId) {
+              try {
+                await chatService.markMessageAsDelivered(messageId, userId);
+              } catch (err) {
+                console.error('Error marking message as delivered:', err);
+              }
             }
             
-            // Trigger browser notification for non-active chats
-            if (!isActiveChat) {
+            // Trigger browser notification for non-active chats (but not our own messages)
+            if (!isActiveChat && senderId !== userId) {
               const event = new CustomEvent('new-message', {
                 detail: {
                   title: 'New Message',
@@ -638,7 +917,14 @@ export const MessageProvider = ({ children }) => {
             }
             
             // Always update conversations list when a new message arrives
-            updateConversationsList(senderId, message?.substring(0, 50) + (message?.length > 50 ? '...' : '') || 'New message');
+            // For sent messages (senderId === userId), update conversation for the receiver
+            // For received messages (senderId !== userId), update conversation for the sender
+            const conversationPartnerId = senderId === userId ? selectedChatId : senderId;
+            if (conversationPartnerId) {
+              updateConversationsList(conversationPartnerId, message?.substring(0, 50) + (message?.length > 50 ? '...' : '') || 'New message');
+            }
+            
+            console.log('🔔 Message processing completed, UI should update now');
           }
         }),
 
@@ -859,7 +1145,7 @@ export const MessageProvider = ({ children }) => {
     senderId = String(senderId).trim();
     receiverId = String(receiverId).trim();
     
-    // Add message to UI immediately for better UX
+  // Add message to UI immediately for better UX
     const tempId = `temp-${Date.now()}`;
     const newMessage = {
       id: tempId,
@@ -870,22 +1156,56 @@ export const MessageProvider = ({ children }) => {
       status: 'sending'
     };
     
+    console.log('🚀 SEND MESSAGE FLOW: Step 1 - Adding temp message to UI', newMessage);
+    console.log('🚀 Current messages before add:', messages.length);
+    
     dispatchMessageState({
       type: 'ADD_MESSAGE',
       payload: { message: newMessage }
     });
     
-    try {
-      // Send message through SignalR
-      console.log("About to send message with IDs:", { senderId, receiverId });
-      console.log("Message text:", messageText);
-      const messageId = await chatService.sendMessage(senderId, receiverId, messageText);
-      
-      // Update message with real ID and status
+    console.log('🚀 SEND MESSAGE FLOW: Step 2 - Temp message added, starting timeout');
+    
+    // Set a timeout to mark message as failed if it doesn't get updated
+    const messageTimeout = setTimeout(() => {
+      console.warn('🚀 SEND MESSAGE FLOW: TIMEOUT - Message send timeout for tempId:', tempId);
       dispatchMessageState({
         type: 'UPDATE_MESSAGE_STATUS',
-        payload: { messageId: tempId, status: 'sent', newId: messageId }
+        payload: { messageId: tempId, status: 'failed' }
       });
+    }, 30000); // 30 second timeout
+    
+    try {
+      // Send message through SignalR
+      console.log("🚀 SEND MESSAGE FLOW: Step 3 - About to send message with IDs:", { senderId, receiverId });
+      console.log("🚀 SEND MESSAGE FLOW: Message text:", messageText);
+      const messageId = await chatService.sendMessage(senderId, receiverId, messageText);
+      console.log("🚀 SEND MESSAGE FLOW: Step 4 - Message sent successfully, received ID:", messageId);
+      
+      // Clear the timeout since message was sent successfully
+      clearTimeout(messageTimeout);
+      
+      // Update message with real ID and status
+      console.log("🚀 SEND MESSAGE FLOW: Step 5 - Updating temp message with ID:", tempId, "to real ID:", messageId);
+      dispatchMessageState({
+        type: 'UPDATE_MESSAGE_STATUS',
+        payload: { messageId: tempId, status: 'sent', newId: messageId, timestamp: new Date().toISOString() }
+      });
+      
+      console.log('🚀 SEND MESSAGE FLOW: Step 6 - Message status updated, should be visible now');
+      
+      // Set flag to prevent immediate message reloading
+      setJustSentMessage(true);
+      setTimeout(() => setJustSentMessage(false), 2000); // Clear flag after 2 seconds
+      
+      // Force a gentle refresh after a short delay to ensure message is visible
+      // This helps when the user is already viewing the chat they just sent a message to
+      setTimeout(() => {
+        if (selectedChatId === receiverId) {
+          console.log('🚀 Auto-refreshing current chat to show sent message');
+          selectChat(receiverId, true); // Force reload
+        }
+      }, 1000); // 1 second delay to ensure message processing is complete
       
       // Update conversations list
       setConversations(prev => {
@@ -920,6 +1240,9 @@ export const MessageProvider = ({ children }) => {
       return messageId;
     } catch (error) {
       console.error('Failed to send message:', error);
+      
+      // Clear the timeout since we're handling the error
+      clearTimeout(messageTimeout);
       
       // Extract user-friendly error message
       let userFriendlyError = 'Message sending failed';
@@ -1062,26 +1385,22 @@ export const MessageProvider = ({ children }) => {
       if (messageHistory && Array.isArray(messageHistory)) {
         console.log(`Loaded ${messageHistory.length} messages for chat ${chatId}`);
         
-        // Process messages with deduplication
+        // Process messages with deduplication - normalization handled in reducer
         const processedMessages = [];
         const newMessageIds = new Set();
         
         messageHistory.forEach((msg, index) => {
-          const messageId = msg.id || msg.messageId || `generated-${msg.senderId}-${index}-${Date.now()}`;
+          // Use raw message ID for deduplication, let reducer handle normalization
+          const messageId = objectIdToString(msg.messageId || msg.id) || `generated-${msg.senderId}-${index}-${Date.now()}`;
+          
           if (!newMessageIds.has(messageId)) {
             newMessageIds.add(messageId);
-            processedMessages.push({
-              id: messageId,
-              senderId: msg.senderId,
-              receiverId: msg.receiverId,
-              content: msg.content || msg.message,
-              timestamp: msg.timestamp || msg.createdAt || new Date().toISOString(),
-              status: msg.status || 'delivered'
-            });
+            // Pass raw message to reducer for proper normalization
+            processedMessages.push(msg);
           }
         });
         
-        // Sort messages by timestamp
+        // Sort messages by timestamp (use raw timestamp for sorting)
         processedMessages.sort((a, b) => new Date(a.timestamp) - new Date(b.timestamp));
         
         dispatchMessageState({
@@ -1089,7 +1408,7 @@ export const MessageProvider = ({ children }) => {
           payload: { messages: processedMessages }
         });
         
-        console.log('Messages loaded and processed successfully');
+        console.log('Raw messages sent to reducer for processing:', processedMessages.length);
       } else {
         console.log('No messages found for this chat');
         dispatchMessageState({
@@ -1106,9 +1425,28 @@ export const MessageProvider = ({ children }) => {
   }, [currentUserId]);
 
   // Select chat
-  const selectChat = useCallback(async (chatId) => {
-    console.log("MessageContext: selectChat called with chatId:", chatId);
-    console.log("Current conversations:", conversations);
+  const selectChat = useCallback(async (chatId, forceReload = false) => {
+    console.log("🔄 SELECT_CHAT: selectChat called with chatId:", chatId, "forceReload:", forceReload);
+    console.log("🔄 SELECT_CHAT: Current selectedChatId:", selectedChatId);
+    console.log("🔄 SELECT_CHAT: Current messages count:", messages.length);
+    console.log("🔄 SELECT_CHAT: Current conversations:", conversations);
+    
+    // If we're already on this chat, check if we need to refresh for recent activity
+    if (selectedChatId === chatId && !forceReload) {
+      console.log("🔄 SELECT_CHAT: Already on this chat, checking for recent activity...");
+      
+      // Check if there are any very recent messages (within last 10 seconds) that might need display
+      const currentTime = Date.now();
+      const recentThreshold = 10000; // 10 seconds
+      const hasRecentActivity = messageState.lastUpdate && (currentTime - messageState.lastUpdate) < recentThreshold;
+      
+      if (!hasRecentActivity) {
+        console.log("🔄 SELECT_CHAT: No recent activity, skipping message reload");
+        return;
+      } else {
+        console.log("🔄 SELECT_CHAT: Recent activity detected, proceeding with refresh");
+      }
+    }
     
     setSelectedChatId(chatId);
     
@@ -1137,35 +1475,47 @@ export const MessageProvider = ({ children }) => {
       });
       
       // Load messages for this chat
-      // TEMPORARY: Skip loadMessages to avoid 404 errors, rely on SignalR only
-      console.log('Skipping loadMessages call to avoid 404 errors, using SignalR message history instead');
+      console.log('🔄 SELECT_CHAT: Starting message loading for chat', chatId);
+      console.log('🔄 SELECT_CHAT: Current user ID:', currentUserId);
+      console.log('🔄 SELECT_CHAT: Target chat ID:', chatId);
+      
+      // Always try to load messages when selecting a chat
+      console.log('🔄 SELECT_CHAT: Calling getMessageHistory with users:', currentUserId, 'and', chatId);
       
       try {
-        // Try to get message history from SignalR only
+        // Clear existing messages first to show loading state
+        dispatchMessageState({
+          type: 'CLEAR_MESSAGES'
+        });
+        
+        // Try to get message history from SignalR service (which will try REST API first)
+        console.log('🔄 SELECT_CHAT: Attempting to get message history from service for users:', currentUserId, 'and', chatId);
         const messageHistory = await chatService.getMessageHistory(currentUserId, chatId);
-        if (messageHistory && Array.isArray(messageHistory)) {
-          console.log(`Got ${messageHistory.length} messages from SignalR for chat ${chatId}`);
+        console.log('🔄 SELECT_CHAT: getMessageHistory response:', messageHistory);
+        console.log('🔄 SELECT_CHAT: Message history type:', typeof messageHistory, 'isArray:', Array.isArray(messageHistory));
+        
+        if (messageHistory && Array.isArray(messageHistory) && messageHistory.length > 0) {
+          console.log(`🔄 SELECT_CHAT: Got ${messageHistory.length} messages from service for chat ${chatId}`);
           
-          // Process messages with deduplication
+          // Process messages with deduplication - normalization handled in reducer
           const processedMessages = [];
           const newMessageIds = new Set();
           
           messageHistory.forEach((msg, index) => {
-            const messageId = msg.id || msg.messageId || `generated-${msg.senderId}-${index}-${Date.now()}`;
+            // Use raw message ID for deduplication, let reducer handle normalization
+            const messageId = objectIdToString(msg.messageId || msg.id) || `generated-${msg.senderId}-${index}-${Date.now()}`;
+            
             if (!newMessageIds.has(messageId)) {
               newMessageIds.add(messageId);
-              processedMessages.push({
-                id: messageId,
-                senderId: msg.senderId,
-                receiverId: msg.receiverId,
-                content: msg.content || msg.message,
-                timestamp: msg.timestamp || msg.createdAt || new Date().toISOString(),
-                status: msg.status || 'delivered'
-              });
+              // Pass raw message to reducer for proper normalization
+              processedMessages.push(msg);
             }
           });
           
-          // Sort messages by timestamp
+          console.log('🔄 SELECT_CHAT: Processed', processedMessages.length, 'unique messages');
+          console.log('🔄 SELECT_CHAT: About to dispatch SET_MESSAGES with:', processedMessages);
+          
+          // Sort messages by timestamp (use raw timestamp for sorting)
           processedMessages.sort((a, b) => new Date(a.timestamp) - new Date(b.timestamp));
           
           dispatchMessageState({
@@ -1173,17 +1523,86 @@ export const MessageProvider = ({ children }) => {
             payload: { messages: processedMessages }
           });
           
+          console.log("🔄 SELECT_CHAT: SET_MESSAGES dispatched with", processedMessages.length, "messages");
+          
         } else {
-          console.log('No message history available from SignalR');
+          console.log('🔄 SELECT_CHAT: No message history available, this might be a new conversation');
           dispatchMessageState({
             type: 'CLEAR_MESSAGES'
           });
         }
       } catch (error) {
-        console.warn('SignalR message history failed, starting with empty chat:', error.message);
-        dispatchMessageState({
-          type: 'CLEAR_MESSAGES'
-        });
+        console.warn('🔄 SELECT_CHAT: Message history loading failed, trying direct conversations endpoint:', error.message);
+        console.error('🔄 SELECT_CHAT: Full error details:', error);
+        
+        // Fallback: Try to get messages from the conversations endpoint directly
+        try {
+          console.log('🔄 SELECT_CHAT: Trying conversations endpoint as direct fallback');
+          const response = await axios.get(
+            `${API_BASE_URL}/api/Chat/conversations/${currentUserId}`,
+            { 
+              timeout: 10000,
+              headers: {
+                'Authorization': `Bearer ${localStorage.getItem('authToken') || 'NO_TOKEN'}`
+              }
+            }
+          );
+          
+          if (response.data && Array.isArray(response.data)) {
+            const conversation = response.data.find(conv => 
+              conv.id === chatId || conv.userId === chatId
+            );
+            const fallbackMessages = conversation?.messages || [];
+            console.log('🔄 SELECT_CHAT: Got', fallbackMessages.length, 'messages from direct conversations endpoint');
+            
+            if (fallbackMessages.length > 0) {
+              // Process these messages the same way
+              const processedMessages = [];
+              const newMessageIds = new Set();
+              
+              fallbackMessages.forEach((msg, index) => {
+                const messageId = objectIdToString(msg.id || msg.messageId) || `generated-${msg.senderId}-${index}-${Date.now()}`;
+                
+                if (!newMessageIds.has(messageId)) {
+                  newMessageIds.add(messageId);
+                  processedMessages.push({
+                    id: messageId,
+                    senderId: msg.senderId,
+                    receiverId: msg.receiverId,
+                    content: msg.content || msg.message,
+                    timestamp: msg.timestamp || msg.createdAt || new Date().toISOString(),
+                    status: msg.status || 'delivered'
+                  });
+                }
+              });
+              
+              // Sort messages by timestamp
+              processedMessages.sort((a, b) => new Date(a.timestamp) - new Date(b.timestamp));
+              
+              dispatchMessageState({
+                type: 'SET_MESSAGES',
+                payload: { messages: processedMessages }
+              });
+              
+              console.log("🔄 SELECT_CHAT: SET_MESSAGES dispatched with", processedMessages.length, "fallback messages");
+            } else {
+              console.log('🔄 SELECT_CHAT: No messages found in conversations endpoint either');
+              dispatchMessageState({
+                type: 'CLEAR_MESSAGES'
+              });
+            }
+          } else {
+            console.log('🔄 SELECT_CHAT: Invalid response from conversations endpoint');
+            dispatchMessageState({
+              type: 'CLEAR_MESSAGES'
+            });
+          }
+        } catch (fallbackError) {
+          console.error('🔄 SELECT_CHAT: Direct conversations endpoint also failed:', fallbackError);
+          dispatchMessageState({
+            type: 'CLEAR_MESSAGES'
+          });
+        }
       }
       
       // await loadMessages(chatId);  // DISABLED to prevent 404 errors
@@ -1192,7 +1611,7 @@ export const MessageProvider = ({ children }) => {
       console.error('Error in selectChat:', error);
       setError('Failed to select chat: ' + (error.message || 'Unknown error'));
     }
-  }, [conversations, currentUserId, loadMessages]);
+  }, [conversations, currentUserId, loadMessages, selectedChatId, messages.length, justSentMessage]);
 
   // Add listener for refresh-conversations event triggered by DirectMessage component
   useEffect(() => {
@@ -1253,10 +1672,10 @@ export const MessageProvider = ({ children }) => {
     loadMessages,
     refreshCurrentUserId
   }), [
-    // State dependencies
+    // State dependencies - include messageState.lastUpdate to force re-renders
     conversations, selectedChatId, recipient, messages, unreadMessages, 
     onlineUsers, isLoading, error, connectionState, currentUserId, 
-    isPollingActive, lastMessageTimestamp,
+    isPollingActive, lastMessageTimestamp, messageState.lastUpdate,
     // Method dependencies
     initializeChat, handleSendMessage, selectChat, fetchConversations, 
     handleDeleteMessage, loadMessages, refreshCurrentUserId

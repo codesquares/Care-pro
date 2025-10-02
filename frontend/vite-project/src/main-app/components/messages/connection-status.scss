@@ -1,56 +1,39 @@
+@use './breakpoints' as *;
+
 /* Enhanced Connection Status Styles */
 .connection-status {
   display: flex;
   align-items: center;
-  padding: 0.375rem 0.75rem;
+  padding: $spacing-sm $spacing-md;
   border-radius: 20px;
   font-size: 0.875rem;
   font-weight: 500;
   color: white;
   position: fixed;
-  top: 70px;
-  right: 20px;
-  z-index: 1000;
+  top: $spacing-lg;
+  right: $spacing-lg;
+  z-index: $z-connection-status;
   box-shadow: 0 2px 8px rgba(0, 0, 0, 0.2);
-  transition: all 0.3s ease;
+  transition: all $transition-slow;
   backdrop-filter: blur(10px);
-  gap: 8px;
+  gap: 6px;
+  cursor: default;
+  max-width: 280px;
   
-  /* Responsive adjustments - less intrusive on mobile */
-  @media (max-width: 768px) {
-    top: 10px;
-    right: 10px;
-    padding: 0.25rem 0.5rem;
+  @include mobile-only {
+    top: $spacing-sm;
+    right: $spacing-sm;
+    padding: 4px $spacing-sm;
     font-size: 0.75rem;
     gap: 4px;
-    max-width: 200px;
+    max-width: 220px;
     border-radius: 16px;
-  }
-  
-  &.connecting {
-    background-color: #2196f3;
-    animation: pulse 2s infinite;
-  }
-  
-  &.reconnecting {
-    background-color: #ff9800;
-    animation: pulse 2s infinite;
-  }
-  
-  &.disconnected {
-    background-color: #f44336;
-  }
-  
-  &.polling {
-    background-color: #ff9800;
-    animation: pulse 2s infinite;
   }
   
   .status-icon {
     font-size: 1rem;
-    line-height: 1;
     
-    @media (max-width: 768px) {
+    @include mobile-only {
       font-size: 0.875rem;
     }
   }
@@ -59,10 +42,25 @@
     white-space: nowrap;
     overflow: hidden;
     text-overflow: ellipsis;
-    max-width: 200px;
+  }
+  
+  // State-specific styling
+  &.connecting {
+    background-color: #2196f3;
+    animation: pulse 2s infinite;
+  }
+  
+  &.reconnecting, &.polling {
+    background-color: #ff9800;
+    animation: pulse 2s infinite;
+  }
+  
+  &.disconnected {
+    background-color: #f44336;
+    cursor: pointer;
     
-    @media (max-width: 768px) {
-      max-width: 150px;
+    &:hover {
+      background-color: #d32f2f;
     }
   }
 }
@@ -81,137 +79,4 @@
     opacity: 1;
     transform: scale(1);
   }
-}
-
-/* Legacy connection status (keeping for compatibility) */
-.connection-status-legacy {
-  display: flex;
-  align-items: center;
-  padding: 0.25rem 0.5rem;
-  border-radius: 4px;
-  font-size: 0.75rem;
-  margin-top: 0.25rem;
-  background-color: #f8fafc;
-  max-width: fit-content;
-  border: 1px solid transparent;
-  
-  @media (min-width: 768px) {
-    padding: 0.375rem 0.625rem;
-    border-radius: 6px;
-    font-size: 0.8125rem;
-    margin-top: 0.5rem;
-  }
-  
-  @media (min-width: 1024px) {
-    padding: 0.5rem 0.75rem;
-    font-size: 0.875rem;
-  }
-  
-  &.connecting {
-    background-color: #fffbeb;
-    border-color: #fbbf24;
-  }
-  
-  &.reconnecting {
-    background-color: #fffbeb;
-    border-color: #fbbf24;
-  }
-  
-  &.disconnected {
-    background-color: #fef2f2;
-    border-color: #f87171;
-  }
-  
-  .status-indicator {
-    display: flex;
-    align-items: center;
-    
-    .status-dot {
-      width: 6px;
-      height: 6px;
-      border-radius: 50%;
-      background-color: #ef4444;
-      margin-right: 0.5rem;
-      flex-shrink: 0;
-      
-      @media (min-width: 768px) {
-        width: 7px;
-        height: 7px;
-        margin-right: 0.625rem;
-      }
-      
-      @media (min-width: 1024px) {
-        width: 8px;
-        height: 8px;
-        margin-right: 0.75rem;
-      }
-    }
-    
-    .connecting-spinner {
-      width: 6px;
-      height: 6px;
-      border-radius: 50%;
-      border: 1.5px solid #f59e0b;
-      border-top-color: transparent;
-      margin-right: 0.5rem;
-      flex-shrink: 0;
-      animation: spin 1s linear infinite;
-      
-      @media (min-width: 768px) {
-        width: 7px;
-        height: 7px;
-        border-width: 2px;
-        margin-right: 0.625rem;
-      }
-      
-      @media (min-width: 1024px) {
-        width: 8px;
-        height: 8px;
-        margin-right: 0.75rem;
-      }
-    }
-    
-    .status-text {
-      color: #374151;
-      font-weight: 500;
-      white-space: nowrap;
-    }
-  }
-}
-
-.fallback-actions {
-  margin-top: 16px;
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  
-  p {
-    margin-bottom: 12px;
-    font-size: 0.9rem;
-    color: #616161;
-  }
-  
-  button {
-    background-color: #f5f5f5;
-    border: 1px solid #e0e0e0;
-    border-radius: 4px;
-    padding: 8px 16px;
-    margin: 4px 0;
-    cursor: pointer;
-    font-size: 0.9rem;
-    transition: background-color 0.2s;
-    
-    &:hover {
-      background-color: #e0e0e0;
-    }
-    
-    &:focus {
-      outline: none;
-      box-shadow: 0 0 0 2px rgba(33, 150, 243, 0.4);
-    }
-  }
-}
-
-@keyframes spin {
-  to { transform: rotate(360deg); }
 }
