@@ -1410,31 +1410,6 @@ class SignalRChatService {
   }
 
   /**
-   * Get the current connection state
-   * @returns {string} - Connection state as a string
-   */
-  getConnectionState() {
-    if (!this.connection) {
-      return 'Disconnected';
-    }
-    
-    switch (this.connection.state) {
-      case signalR.HubConnectionState.Connected:
-        return 'Connected';
-      case signalR.HubConnectionState.Disconnected:
-        return 'Disconnected';
-      case signalR.HubConnectionState.Connecting:
-        return 'Connecting';
-      case signalR.HubConnectionState.Reconnecting:
-        return 'Reconnecting';
-      case signalR.HubConnectionState.Disconnecting:
-        return 'Disconnecting';
-      default:
-        return 'Unknown';
-    }
-  }
-
-  /**
    * Creates an automatic reconnect policy with maximum attempts
    * @returns {signalR.IRetryPolicy} - The retry policy
    * @private

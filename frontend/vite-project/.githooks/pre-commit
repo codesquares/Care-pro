@@ -33,20 +33,27 @@ handle_error() {
     exit 1
 }
 
-print_section "🔍 1. LINTING CHECK (WARNING ONLY)"
-echo -e "${YELLOW}Running ESLint to check code quality...${NC}"
-if npm run lint; then
-    echo -e "${GREEN}✅ Linting passed${NC}"
+print_section "🔍 1. LINTING CHECK (ERRORS ONLY)"
+echo -e "${YELLOW}Running ESLint to check for critical issues...${NC}"
+if npm run lint -- --max-warnings 0 --quiet; then
+    echo -e "${GREEN}✅ No linting errors found${NC}"
 else
-    echo -e "${YELLOW}⚠️  Linting issues found - continuing anyway (fix these gradually)${NC}"
+    echo -e "${YELLOW}⚠️  Running full lint check to show all issues...${NC}"
+    npm run lint || true  # Show all issues but don't fail
+    # Only fail on actual errors, not warnings
+    if npm run lint -- --max-warnings 999999 --quiet; then
+        echo -e "${YELLOW}⚠️  Linting warnings found but no errors - continuing${NC}"
+    else
+        handle_error "Linting errors found - commit blocked until critical errors are fixed"
+    fi
 fi
 
-print_section "🧪 2. RUNNING TESTS (WARNING ONLY)"
+print_section "🧪 2. RUNNING TESTS (REQUIRED)"
 echo -e "${YELLOW}Running Jest tests...${NC}"
 if npm test -- --passWithNoTests --watchAll=false; then
     echo -e "${GREEN}✅ All tests passed${NC}"
 else
-    echo -e "${YELLOW}⚠️  Some tests failed - continuing anyway (fix these gradually)${NC}"
+    handle_error "Tests failed - commit blocked until all tests pass"
 fi
 
 print_section "🏗️  3. BUILD CHECK"
@@ -96,10 +103,10 @@ echo
 echo -e "${GREEN}🎉 ALL PRE-COMMIT CHECKS PASSED!${NC}"
 echo -e "${GREEN}✅ Your frontend code is ready to be committed${NC}"
 echo -e "${BLUE}📋 Summary of checks completed:${NC}"
-echo -e "   • Code linting (ESLint)"
-echo -e "   • Unit/Integration tests (Jest)"
-echo -e "   • Build verification (Vite)"
-echo -e "   • Security audit (npm audit)"
-echo -e "   • Dependency verification"
-echo -e "   • TypeScript type checking"
+echo -e "   • Code linting (ESLint) - ERRORS BLOCKED, WARNINGS ALLOWED"
+echo -e "   • Unit/Integration tests (Jest) - REQUIRED"
+echo -e "   • Build verification (Vite) - REQUIRED"
+echo -e "   • Security audit (npm audit) - REQUIRED"
+echo -e "   • Dependency verification - REQUIRED"
+echo -e "   • TypeScript type checking - REQUIRED"
 echo

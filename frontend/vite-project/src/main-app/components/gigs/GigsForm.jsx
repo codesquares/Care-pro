@@ -53,6 +53,7 @@ const GigsForm = () => {
     updateField,
     isLoading,
     isSaving,
+    setSaving,
     validationErrors,
     setValidationErrors
   } = useGigForm();
@@ -370,9 +371,6 @@ const GigsForm = () => {
     e.preventDefault();
     setIsSubmitted(true);
 
-    // Get setSaving from context to manage loading state
-    const { setSaving } = useGigForm();
-    
     try {
       // Start loading state
       setSaving(true);
