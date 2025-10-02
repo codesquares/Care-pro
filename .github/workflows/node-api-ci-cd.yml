@@ -53,6 +53,10 @@ jobs:
       working-directory: node-API
       run: |
         echo "🧪 Running coverage tests with updated thresholds..."
+        echo "📁 Checking test files:"
+        find . -name "*.test.js" -o -name "*.spec.js" | head -10
+        echo "🔧 Jest configuration:"
+        cat jest.config.js | grep -A5 -B5 testMatch || echo "No testMatch found"
         npm run test:coverage
         echo "✅ Coverage thresholds met"
       env:

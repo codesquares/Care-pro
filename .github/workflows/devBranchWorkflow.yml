@@ -142,7 +142,7 @@ jobs:
           echo "🔍 Running Node-API code quality checks..."
           
           # Check for merge conflicts
-          if grep -r "<<<<<<< HEAD\|>>>>>>> \|=======" . --include="*.js" --exclude-dir=node_modules; then
+          if grep -r "^<<<<<<< \|^>>>>>>> \|^=======\$" . --include="*.js" --exclude-dir=node_modules; then
             echo "❌ Merge conflicts found in Node-API! Please resolve them first."
             exit 1
           fi

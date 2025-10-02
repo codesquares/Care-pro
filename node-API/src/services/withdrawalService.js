@@ -20,7 +20,7 @@ const generateWithdrawalRequest = async (withdrawalRequest) => {
       accountName
     };
 
-    console.log('=== WITHDRAWAL SERVICE: Sending to C# API ===');
+    console.log('='.repeat(10) + ' WITHDRAWAL SERVICE: Sending to C# API ' + '='.repeat(10));
     console.log('Data to send:', dataToSend);
     console.log('API URL:', 'https://carepro-api20241118153443.azurewebsites.net/api/WithdrawalRequests');
 
@@ -39,7 +39,7 @@ const generateWithdrawalRequest = async (withdrawalRequest) => {
       }
     );
 
-    console.log('=== WITHDRAWAL SERVICE: C# API Response ===');
+    console.log('='.repeat(10) + ' WITHDRAWAL SERVICE: C# API Response ' + '='.repeat(10));
     console.log('Status:', result.status);
     console.log('Status Text:', result.statusText);
     console.log('Response Data:', result.data);

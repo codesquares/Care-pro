@@ -606,7 +606,7 @@ const handleDojahWebhook = async (req, res) => {
     console.log('Method:', req.method);
     console.log('URL:', req.url);
     console.log('Body keys:', Object.keys(req.body || {}));
-    console.log('================================');
+    console.log('='.repeat(32)); // Separator line
 
     // Log the complete webhook data to file for debugging (sanitized)
     logWebhookData({
