@@ -29,9 +29,9 @@ coverage/
 # Test files and scripts
 test-*.js
 **/test-*.js
-__tests__/
-*.test.js
-*.spec.js
+# __tests__/ - COMMENTED OUT: We need tests in CI
+# *.test.js - COMMENTED OUT: We need tests in CI
+# *.spec.js - COMMENTED OUT: We need tests in CI
 
 # Documentation and notes (markdown files)
 *.md
