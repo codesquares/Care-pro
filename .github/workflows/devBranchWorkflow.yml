@@ -213,7 +213,7 @@ jobs:
           timeout 10s npm start &
           SERVER_PID=$!
           sleep 3
-          if curl -f http://localhost:3000/health 2>/dev/null || curl -f http://localhost:8000/health 2>/dev/null; then
+          if curl -f http://localhost:3000/api/health 2>/dev/null || curl -f http://localhost:8000/api/health 2>/dev/null; then
             echo "✅ Server started successfully"
             kill $SERVER_PID 2>/dev/null || true
           else
