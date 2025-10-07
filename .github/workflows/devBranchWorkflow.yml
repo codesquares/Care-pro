@@ -210,15 +210,25 @@ jobs:
         working-directory: node-API
         run: |
           echo "🚀 Testing Node-API server startup..."
-          timeout 10s npm start &
+          npm start > server.log 2>&1 &
           SERVER_PID=$!
-          sleep 3
-          if curl -f http://localhost:3000/api/health 2>/dev/null || curl -f http://localhost:8000/api/health 2>/dev/null; then
-            echo "✅ Server started successfully"
-            kill $SERVER_PID 2>/dev/null || true
+          echo "⏳ Waiting for server to start (PID: $SERVER_PID)..."
+          sleep 6
+          
+          echo "🔍 Checking server health..."
+          if curl -f http://localhost:3000/api/health 2>/dev/null; then
+            echo "✅ Server started successfully on port 3000"
+            kill $SERVER_PID 2>/dev/null || pkill -f "node app.js" 2>/dev/null || true
+            exit 0
+          elif curl -f http://localhost:8000/api/health 2>/dev/null; then
+            echo "✅ Server started successfully on port 8000"
+            kill $SERVER_PID 2>/dev/null || pkill -f "node app.js" 2>/dev/null || true
+            exit 0
           else
             echo "❌ Server health check FAILED - blocking deployment"
-            kill $SERVER_PID 2>/dev/null || true
+            echo "📋 Server logs:"
+            cat server.log 2>/dev/null || echo "No logs available"
+            kill $SERVER_PID 2>/dev/null || pkill -f "node app.js" 2>/dev/null || true
             exit 1
           fi
         env:
