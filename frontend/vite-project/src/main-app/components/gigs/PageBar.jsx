@@ -1,5 +1,4 @@
 import React from "react";
-import Button from "../button/Button";
 import "./pagebar.scss";
 
 const PageBar = ({ pages, currentPage, onPageClick, pageValidationStatus = {} }) => {

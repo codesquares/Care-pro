@@ -1,15 +1,8 @@
-/**
- * SignalR Chat Service
- * 
- * This service manages the connection to the SignalR ChatHub on the backend.
- * It handles connection management, reconnection, and message transmission/reception.
- * 
- * It follows the best practices for SignalR client as documented in
- * https://learn.microsoft.com/en-us/aspnet/signalr/overview/guide-to-the-api/hubs-api-guide-javascript-client
- */
 import * as signalR from '@microsoft/signalr';
 import { connectionLogger } from '../utils/chatLogger';
 import connectionManager from './connectionManager';
+import signalRConnectionHelper from '../utils/signalRConnectionHelper';
+import messageReliabilityHelper from '../utils/messageReliabilityHelper';
 
 // Constants
 const API_BASE_URL = "https://carepro-api20241118153443.azurewebsites.net";
@@ -52,6 +45,39 @@ class SignalRChatService {
   isValidMongoId(id) {
     if (!id || typeof id !== 'string') return false;
     return /^[0-9a-fA-F]{24}$/.test(id);
+  }
+
+  /**
+   * Check if the SignalR connection is ready for use
+   * @returns {boolean} - Whether the connection is ready
+   */
+  isConnectionReady() {
+    return this.connection && 
+           this.connection.state === signalR.HubConnectionState.Connected &&
+           !this._isConnecting;
+  }
+
+  /**
+   * Get the current connection state as a string
+   * @returns {string} - Current connection state
+   */
+  getConnectionState() {
+    if (!this.connection) return 'Disconnected';
+    
+    switch (this.connection.state) {
+      case signalR.HubConnectionState.Connected:
+        return 'Connected';
+      case signalR.HubConnectionState.Connecting:
+        return 'Connecting';
+      case signalR.HubConnectionState.Reconnecting:
+        return 'Reconnecting';
+      case signalR.HubConnectionState.Disconnecting:
+        return 'Disconnecting';
+      case signalR.HubConnectionState.Disconnected:
+        return 'Disconnected';
+      default:
+        return 'Unknown';
+    }
   }
 
   /**
@@ -167,10 +193,8 @@ class SignalRChatService {
    * @private
    */
   _startConnectionHealthMonitoring() {
-    // Clear any existing interval
-    if (this._connectionHealthInterval) {
-      clearInterval(this._connectionHealthInterval);
-    }
+    // Stop any existing monitoring
+    this._stopConnectionHealthMonitoring();
 
     this._lastHeartbeat = Date.now();
     
@@ -180,16 +204,32 @@ class SignalRChatService {
         console.warn('Connection health check failed - not connected');
         return;
       }
+      
+      // Don't ping if server is marked as unavailable
+      if (this._isServerUnavailable) {
+        console.log('Server marked as unavailable, skipping health check');
+        return;
+      }
 
       // Send a ping to check if connection is responsive
       this.connection.invoke('Ping').then(() => {
         this._lastHeartbeat = Date.now();
+        // Reset failure counter on successful ping
+        this._consecutiveFailures = 0;
+        this._isServerUnavailable = false;
       }).catch(error => {
         console.warn('Connection ping failed:', error);
-        // If ping fails, the connection might be stale
-        if (Date.now() - this._lastHeartbeat > 60000) { // 1 minute without response
-          console.error('Connection appears stale, attempting reconnection');
+        this._consecutiveFailures++;
+        
+        // Only attempt reconnection if we haven't hit the failure limit
+        if (this._consecutiveFailures < this._maxConsecutiveFailures && 
+            Date.now() - this._lastHeartbeat > 60000) { // 1 minute without response
+          console.warn('Connection appears stale, attempting reconnection');
           this._attemptReconnection();
+        } else if (this._consecutiveFailures >= this._maxConsecutiveFailures) {
+          console.error('Too many consecutive failures, marking server as unavailable');
+          this._isServerUnavailable = true;
+          this._stopConnectionHealthMonitoring();
         }
       });
     }, 30000);
@@ -207,15 +247,23 @@ class SignalRChatService {
   }
 
   /**
-   * Attempt to reconnect with existing handlers
+   * Attempt to reconnect with existing handlers and exponential backoff
    * @private
    */
   async _attemptReconnection() {
-    if (this._isConnecting || !this._userId) {
+    if (this._isConnecting || !this._userId || this._isServerUnavailable) {
       return;
     }
-
-    console.log('Attempting to reconnect...');
+    
+    // Prevent too frequent reconnection attempts
+    const now = Date.now();
+    if (now - this._lastReconnectAttempt < this._minReconnectInterval) {
+      console.log('Reconnection attempt too soon, waiting...');
+      return;
+    }
+    
+    this._lastReconnectAttempt = now;
+    console.log('Attempting to reconnect with exponential backoff...');
     
     try {
       // Store current token
@@ -224,19 +272,48 @@ class SignalRChatService {
         console.error('No auth token available for reconnection');
         return;
       }
+      
+      // Wait for backoff delay
+      if (this._backoffDelay > 1000) {
+        console.log(`Waiting ${this._backoffDelay}ms before reconnection attempt`);
+        await new Promise(resolve => setTimeout(resolve, this._backoffDelay));
+      }
 
       // Disconnect and reconnect
       await this.disconnect();
       await this.connect(this._userId, token);
       
+      // Reset backoff on successful connection
+      this._backoffDelay = 1000;
+      this._consecutiveFailures = 0;
+      this._isServerUnavailable = false;
       console.log('Reconnection successful');
     } catch (error) {
       console.error('Reconnection failed:', error);
+      this._consecutiveFailures++;
+      
+      // Check if it's a 404 error (server unavailable)
+      if (error.message?.includes('404') || error.statusCode === 404) {
+        console.error('SignalR hub not found (404) - server may be down');
+        this._isServerUnavailable = true;
+        this._stopConnectionHealthMonitoring();
+        return;
+      }
+      
+      // Exponential backoff
+      this._backoffDelay = Math.min(this._backoffDelay * 2, this._maxBackoffDelay);
+      
+      // Stop trying after max consecutive failures
+      if (this._consecutiveFailures >= this._maxConsecutiveFailures) {
+        console.error('Max reconnection attempts exceeded, marking server as unavailable');
+        this._isServerUnavailable = true;
+        this._stopConnectionHealthMonitoring();
+      }
     }
   }
   
   /**
-   * Initializes the connection to the SignalR hub with limits on retries
+   * Initializes the connection to the SignalR hub with improved reliability
    * @param {string} userId - The current user's ID
    * @param {string} token - JWT authentication token
    * @returns {Promise} - Connection promise
@@ -251,24 +328,28 @@ class SignalRChatService {
     // Save user ID to use in reconnection
     this._userId = userId;
 
-    // Use the central connection manager to track connection state
-    if (connectionManager.connectionAttemptInProgress) {
-      console.log('Connection attempt already in progress (tracked by ConnectionManager)');
+    // Check if we can attempt connection (rate limiting)
+    if (!signalRConnectionHelper.canAttemptConnection()) {
+      console.log('Connection attempt rate limited');
       return this.reconnectPromise || Promise.resolve(this.connection);
     }
-    
+
     // Use existing connection if it's already connected
     if (this.isConnectionReady()) {
       console.log('Using existing connection');
-      
-      // Make sure any pending handlers get registered with the existing connection
       this._registerPendingHandlers();
-      
       return Promise.resolve(this.connection);
     }
 
-    // Mark that we are connecting
+    // Prevent duplicate connection attempts
+    if (this._isConnecting) {
+      console.log('Connection attempt already in progress');
+      return this.reconnectPromise || Promise.resolve(this.connection);
+    }
+
+    // Mark connection attempt
     this._isConnecting = true;
+    signalRConnectionHelper.markConnectionAttempt();
     connectionLogger.info('Starting new connection attempt');
     
     try {
@@ -311,6 +392,15 @@ class SignalRChatService {
       this.connectionId = this.connection.connectionId;
       console.log('Connected to SignalR hub with ID:', this.connectionId);
       
+      // Reset failure tracking on successful connection
+      this._consecutiveFailures = 0;
+      this._backoffDelay = 1000;
+      this._isServerUnavailable = false;
+      
+      // Update connection state
+      this._isConnecting = false;
+      signalRConnectionHelper.updateConnectionState('connected');
+      
       // Start connection health monitoring
       this._startConnectionHealthMonitoring();
       
@@ -342,15 +432,110 @@ class SignalRChatService {
       console.error('Error connecting to SignalR hub:', error);
       this._notifyHandlers('onError', error);
       
+      // Enhanced error handling for specific error types
+      this._consecutiveFailures++;
+      
+      // Check if it's a server availability issue
+      if (error.message?.includes('404') || error.statusCode === 404) {
+        console.error('SignalR hub endpoint not found (404) - server may be down or endpoint incorrect');
+        this._isServerUnavailable = true;
+      } else if (error.message?.includes('timeout') || error.message?.includes('Connection timeout')) {
+        console.error('Connection timeout - server may be slow or unreachable');
+      } else if (error.message?.includes('net::ERR_') || error.message?.includes('NetworkError')) {
+        console.error('Network error - check internet connection');
+      }
+      
+      // Log detailed error information
+      if (error.response) {
+        console.error('Error response:', error.response.status, error.response.statusText);
+      }
+      if (error.request) {
+        console.error('Network error details:', error.request);
+      }
+      
+      // Exponential backoff for next attempt
+      this._backoffDelay = Math.min(this._backoffDelay * 2, this._maxBackoffDelay);
+      
       // Mark connection attempt as failed in the manager
       connectionManager.endConnectionAttempt(null);
       
       // Clear connection state
       this._isConnecting = false;
       this.reconnectPromise = null;
+      this.connection = null;
+      this.connectionId = null;
+      
+      // Update helper connection state
+      signalRConnectionHelper.updateConnectionState('error');
       
       return Promise.reject(error);
     }
+  }
+
+  /**
+   * Check if server is available and reset unavailable state if needed
+   * @returns {Promise<boolean>} - True if server is available
+   */
+  async checkServerAvailability() {
+    if (!this._isServerUnavailable) {
+      return true; // Already considered available
+    }
+    
+    console.log('Checking server availability...');
+    
+    try {
+      // Try a simple HTTP request to the API base to check if server is up
+      const response = await fetch(`${API_BASE_URL}/health`, { 
+        method: 'GET',
+        timeout: 5000 // 5 second timeout
+      });
+      
+      if (response.ok || response.status === 404) {
+        // Server is responding (404 just means the health endpoint doesn't exist)
+        console.log('Server is available, resetting unavailable state');
+        this._isServerUnavailable = false;
+        this._consecutiveFailures = 0;
+        this._backoffDelay = 1000;
+        return true;
+      }
+    } catch (error) {
+      console.log('Server still unavailable:', error.message);
+    }
+    
+    return false;
+  }
+  
+  /**
+   * Force attempt to reconnect even if server was marked unavailable
+   * @returns {Promise<boolean>} - True if reconnection successful
+   */
+  async forceReconnect() {
+    console.log('Force reconnect requested...');
+    
+    // Check server availability first
+    const isAvailable = await this.checkServerAvailability();
+    if (!isAvailable) {
+      console.log('Server still unavailable, cannot reconnect');
+      return false;
+    }
+    
+    // Reset all failure states
+    this._isServerUnavailable = false;
+    this._consecutiveFailures = 0;
+    this._backoffDelay = 1000;
+    
+    // Attempt reconnection
+    try {
+      const token = localStorage.getItem('authToken');
+      if (token && this._userId) {
+        await this.connect(this._userId, token);
+        return true;
+      }
+    } catch (error) {
+      console.error('Force reconnect failed:', error);
+    }
+    
+    return false;
   }
 
   /**
@@ -390,6 +575,10 @@ class SignalRChatService {
     } finally {
       this.connectionId = null;
       this.connection = null;
+      this._isConnecting = false;
+      
+      // Update helper connection state
+      signalRConnectionHelper.updateConnectionState('disconnected');
       
       // Reset connection manager state to ensure future connection attempts can proceed
       connectionManager.endConnectionAttempt(null);
@@ -426,73 +615,99 @@ class SignalRChatService {
         });
       }
       
-      // First try through SignalR if connected
-      if (this.connection && this.connection.state === signalR.HubConnectionState.Connected) {
+      console.log('🚀 SIGNALR SERVICE: sendMessage called with:', {
+        senderId,
+        receiverId,
+        messagePreview: message?.substring(0, 50) + '...',
+        connectionState: this.connection?.state || 'No connection',
+        connectionId: this.connectionId
+      });
+      
+      // First try through SignalR if connected and ready
+      if (this.isConnectionReady() && this.connection.state === signalR.HubConnectionState.Connected) {
         try {
           // Use IDs directly without validation
           const validSenderId = senderId ? String(senderId).trim() : senderId;
           const validReceiverId = receiverId ? String(receiverId).trim() : receiverId;
           
-          console.log('Sending message via SignalR:', {
+          console.log('🚀 SIGNALR SERVICE: Sending message via SignalR:', {
             senderId: validSenderId,
             receiverId: validReceiverId,
-            messagePreview: message?.length > 20 ? message.substring(0, 20) + '...' : message
+            messagePreview: message?.length > 20 ? message.substring(0, 20) + '...' : message,
+            connectionState: this.connection.state
           });
           
-          // Call the SendMessage method on the hub with validated IDs
-          const messageId = await this.connection.invoke('SendMessage', validSenderId, validReceiverId, message);
+          // Add timeout to prevent hanging
+          const sendPromise = this.connection.invoke('SendMessage', validSenderId, validReceiverId, message);
+          const timeoutPromise = new Promise((_, reject) => 
+            setTimeout(() => reject(new Error('SignalR send timeout')), 10000)
+          );
+          
+          const messageId = await Promise.race([sendPromise, timeoutPromise]);
+          
+          console.log('🚀 SIGNALR SERVICE: Message sent successfully via SignalR, received messageId:', messageId);
           
           // Invalidate cache for this conversation to ensure fresh data on next fetch
           this.invalidateConversationCache(validSenderId, validReceiverId);
           
           return messageId;
         } catch (signalRError) {
-          console.warn('SignalR message send failed, falling back to REST API:', signalRError);
+          console.warn('🚨 SIGNALR SERVICE: SignalR message send failed, falling back to REST API:', signalRError);
           // Continue to REST API fallback
         }
+      } else {
+        console.log('� SIGNALR SERVICE: SignalR not ready, using REST API directly');
+        console.warn('🚨 SIGNALR SERVICE: Connection details:', {
+          hasConnection: !!this.connection,
+          connectionState: this.connection?.state || 'No connection',
+          connectionId: this.connectionId
+        });
       }
       
       // Fallback to REST API
       const axios = (await import('axios')).default;
       const timestamp = new Date().toISOString();
       
+      console.log('🚀 SIGNALR SERVICE: Using REST API fallback for message sending');
+      
       // Validate and sanitize input parameters before sending
       if (!senderId) {
-        console.error('Missing senderId in sendMessage call');
+        console.error('🚨 SIGNALR SERVICE: Missing senderId in sendMessage call');
         throw new Error('SenderId is required for sending messages');
       }
       
       if (!receiverId) {
-        console.error('Missing receiverId in sendMessage call');
+        console.error('🚨 SIGNALR SERVICE: Missing receiverId in sendMessage call');
         throw new Error('ReceiverId is required for sending messages');
       }
       
       if (!message) {
-        console.error('Missing message content in sendMessage call');
+        console.error('🚨 SIGNALR SERVICE: Missing message content in sendMessage call');
         throw new Error('Message content is required for sending messages');
       }
       
       // Based on the error response, we know the API is expecting PascalCase property names
       // and MongoDB ObjectId format (24 character hex string)
       try {
-        console.log('Sending message with corrected format');
+        console.log('🚀 SIGNALR SERVICE: Sending message with REST API');
         
         // Use IDs directly without validation
         const senderIdStr = senderId ? String(senderId).trim() : senderId;
         const receiverIdStr = receiverId ? String(receiverId).trim() : receiverId;
         
         // Log details for debugging
-        console.log('Sending message with validated IDs:', {
+        console.log('🚀 SIGNALR SERVICE: Sending message with validated IDs:', {
           senderId: senderIdStr,
           receiverId: receiverIdStr,
           messagePreview: message?.length > 20 ? message.substring(0, 20) + '...' : message
         });
         
         // Log the full payload for debugging
-        console.log('Message payload:', {
+        console.log('🚀 SIGNALR SERVICE: Message payload:', {
           SenderId: senderIdStr,
           ReceiverId: receiverIdStr,
-          MessageLength: message?.length || 0
+          MessageLength: message?.length || 0,
+          Timestamp: timestamp
         });
         
         // Create payload with MongoDB-compatible IDs
@@ -512,8 +727,15 @@ class SignalRChatService {
         
         const response = await axios.post(`${API_BASE_URL}/api/Chat/send`, payload, {
           headers: {
-            'Content-Type': 'application/json'
+            'Content-Type': 'application/json',
+            'Authorization': `Bearer ${localStorage.getItem('authToken') || 'NO_TOKEN'}`
           }
+        });
+        
+        console.log('🚀 SIGNALR SERVICE: REST API message sent successfully:', {
+          status: response.status,
+          messageId: response.data.messageId || response.data.id,
+          responseData: response.data
         });
         
         // Invalidate cache for this conversation to ensure fresh data on next fetch
@@ -522,8 +744,9 @@ class SignalRChatService {
         return response.data.messageId || response.data.id || `fallback-${Date.now()}`;
       } catch (error) {
         // If that fails, let's try one more time with query parameters instead
+        console.error('🚨 SIGNALR SERVICE: First REST API attempt failed:', error);
         try {
-          console.log('Attempting to send message via query parameters');
+          console.log('🚀 SIGNALR SERVICE: Attempting to send message via query parameters');
           
           // Ensure IDs are valid before attempting to send
           if (!senderId || !receiverId) {
@@ -553,19 +776,21 @@ class SignalRChatService {
             messageBody,
             {
               headers: {
-                'Content-Type': 'application/json'
+                'Content-Type': 'application/json',
+                'Authorization': `Bearer ${localStorage.getItem('authToken') || 'NO_TOKEN'}`
               }
             }
           );
           
           return response.data.messageId || response.data.id || `fallback-${Date.now()}`;
         } catch (finalError) {
-          console.error('All message sending attempts failed:', finalError);
+          console.error('🚨 SIGNALR SERVICE: All message sending attempts failed:', finalError);
           // Log the specific error details for better debugging
           if (finalError.response) {
-            console.error('Server response:', {
+            console.error('🚨 SIGNALR SERVICE: Server response:', {
               status: finalError.response.status,
-              data: finalError.response.data
+              data: finalError.response.data,
+              headers: finalError.response.headers
             });
           }
           throw finalError;
@@ -573,13 +798,13 @@ class SignalRChatService {
       }
     } catch (error) {
       // Add more detailed error information for debugging
-      console.error('Error sending message:', error);
+      console.error('🚨 SIGNALR SERVICE: Error sending message:', error);
       
       // Log more details about the error response if available
       if (error.response) {
-        console.error('Error response data:', error.response.data);
-        console.error('Error response status:', error.response.status);
-        console.error('Error response headers:', error.response.headers);
+        console.error('🚨 SIGNALR SERVICE: Error response data:', error.response.data);
+        console.error('🚨 SIGNALR SERVICE: Error response status:', error.response.status);
+        console.error('🚨 SIGNALR SERVICE: Error response headers:', error.response.headers);
         
         // If we have validation errors, log them in a more readable format
         if (error.response.data?.errors) {
@@ -633,46 +858,103 @@ class SignalRChatService {
       // This ensures we can get message history even if SignalR connection isn't established
       try {
         const axios = (await import('axios')).default;
-        console.log('Fetching message history via REST API for:', { user1Id, user2Id });
-        const response = await axios.get(`${API_BASE_URL}/api/Chat/history?user1=${validUser1Id}&user2=${validUser2Id}&skip=${skip}&take=${take}`);
+        console.log('🔍 SIGNALR SERVICE: Fetching message history via REST API for:', { user1Id, user2Id });
+        
+        // Use the correct history endpoint that exists
+        const response = await axios.get(
+          `${API_BASE_URL}/api/Chat/history?user1=${validUser1Id}&user2=${validUser2Id}&skip=${skip}&take=${take}`,
+          { 
+            timeout: 10000,
+            headers: {
+              'Authorization': `Bearer ${localStorage.getItem('authToken') || 'NO_TOKEN'}`
+            }
+          }
+        );
+        
+        console.log('🔍 SIGNALR SERVICE: History API response:', response.status, response.data);
         
         // Safety check - ensure response.data is an array
         const messages = Array.isArray(response.data) ? response.data : [];
         
         // Cache the retrieved message history if we got any messages
         if (messages.length > 0) {
-          console.log(`Caching ${messages.length} messages from REST API for conversation`, cacheKey);
+          console.log(`🔍 SIGNALR SERVICE: Caching ${messages.length} messages from history API for conversation`, cacheKey);
           this._messageCache.set(cacheKey, { messages, timestamp: Date.now() });
           return messages;
         } else {
-          console.log('No messages returned from REST API');
+          console.log('🔍 SIGNALR SERVICE: No messages returned from history API');
         }
       } catch (restError) {
-        console.warn('REST API message history failed:', restError);
-        // Continue to SignalR fallback if available
+        console.warn('🚨 SIGNALR SERVICE: History API failed:', restError);
+        console.warn('🚨 SIGNALR SERVICE: Error details:', {
+          status: restError.response?.status,
+          statusText: restError.response?.statusText,
+          data: restError.response?.data,
+          url: `${API_BASE_URL}/api/Chat/history?user1=${validUser1Id}&user2=${validUser2Id}&skip=${skip}&take=${take}`
+        });
+        
+        // Fallback to conversations endpoint
+        try {
+          console.log('🔍 SIGNALR SERVICE: Trying conversations endpoint as fallback');
+          const fallbackResponse = await axios.get(
+            `${API_BASE_URL}/api/Chat/conversations/${validUser1Id}`,
+            { 
+              timeout: 10000,
+              headers: {
+                'Authorization': `Bearer ${localStorage.getItem('authToken') || 'NO_TOKEN'}`
+              }
+            }
+          );
+          
+          if (fallbackResponse.data && Array.isArray(fallbackResponse.data)) {
+            // Find the conversation with the specific user
+            const conversation = fallbackResponse.data.find(conv => 
+              conv.id === validUser2Id || conv.userId === validUser2Id
+            );
+            
+            const messages = conversation?.messages || [];
+            console.log(`🔍 SIGNALR SERVICE: Found ${messages.length} messages from conversations fallback`);
+            
+            // Safety check - ensure response.data is an array
+            const messageArray = Array.isArray(messages) ? messages : [];
+            
+            // Cache the retrieved message history if we got any messages
+            if (messageArray.length > 0) {
+              console.log(`🔍 SIGNALR SERVICE: Caching ${messageArray.length} messages from conversations fallback`, cacheKey);
+              this._messageCache.set(cacheKey, { messages: messageArray, timestamp: Date.now() });
+              return messageArray.slice(skip, skip + take);
+            } else {
+              console.log('🔍 SIGNALR SERVICE: No messages returned from conversations fallback');
+            }
+          }
+        } catch (fallbackError) {
+          console.warn('🚨 SIGNALR SERVICE: Conversations fallback also failed:', fallbackError);
+        }
       }
       
       // Then try to get history through SignalR if connected
       if (this.isConnectionReady()) {
         try {
-          console.log('Fetching message history via SignalR for:', { user1Id, user2Id });
+          console.log('🔍 SIGNALR SERVICE: Fetching message history via SignalR for:', { user1Id, user2Id });
           // Call the GetMessageHistory method on the hub with validated IDs
           const messages = await this.connection.invoke('GetMessageHistory', validUser1Id, validUser2Id, skip, take);
+          
+          console.log('🔍 SIGNALR SERVICE: SignalR returned messages:', messages);
           
           // Safety check - ensure messages is an array
           const messageArray = Array.isArray(messages) ? messages : [];
           
           // Cache the message history
           this._messageCache.set(cacheKey, { messages: messageArray, timestamp: Date.now() });
-          console.log(`Cached ${messageArray.length} messages for conversation`, cacheKey);
+          console.log(`🔍 SIGNALR SERVICE: Cached ${messageArray.length} messages for conversation`, cacheKey);
           
           return messageArray;
         } catch (signalRError) {
-          console.warn('SignalR message history failed:', signalRError);
+          console.warn('🚨 SIGNALR SERVICE: SignalR message history failed:', signalRError);
           // Continue to return empty array
         }
       } else {
-        console.log('SignalR not connected, can\'t fetch message history via SignalR');
+        console.log('🚨 SIGNALR SERVICE: SignalR not connected, can\'t fetch message history via SignalR');
       }
 
       // If we have pending handlers, try to force register them
@@ -1128,31 +1410,6 @@ class SignalRChatService {
   }
 
   /**
-   * Get the current connection state
-   * @returns {string} - Connection state as a string
-   */
-  getConnectionState() {
-    if (!this.connection) {
-      return 'Disconnected';
-    }
-    
-    switch (this.connection.state) {
-      case signalR.HubConnectionState.Connected:
-        return 'Connected';
-      case signalR.HubConnectionState.Disconnected:
-        return 'Disconnected';
-      case signalR.HubConnectionState.Connecting:
-        return 'Connecting';
-      case signalR.HubConnectionState.Reconnecting:
-        return 'Reconnecting';
-      case signalR.HubConnectionState.Disconnecting:
-        return 'Disconnecting';
-      default:
-        return 'Unknown';
-    }
-  }
-
-  /**
    * Creates an automatic reconnect policy with maximum attempts
    * @returns {signalR.IRetryPolicy} - The retry policy
    * @private
@@ -1233,6 +1490,30 @@ class SignalRChatService {
       // Return empty array instead of throwing - this prevents UI errors
       return [];
     }
+  }
+  
+  /**
+   * Check if the server is currently marked as unavailable
+   * @returns {boolean} - True if server is unavailable
+   */
+  isServerUnavailable() {
+    return this._isServerUnavailable;
+  }
+  
+  /**
+   * Get current connection statistics for debugging
+   * @returns {Object} - Connection statistics
+   */
+  getConnectionStats() {
+    return {
+      isConnected: this.isConnectionReady(),
+      connectionId: this.connectionId,
+      consecutiveFailures: this._consecutiveFailures,
+      isServerUnavailable: this._isServerUnavailable,
+      backoffDelay: this._backoffDelay,
+      lastReconnectAttempt: this._lastReconnectAttempt,
+      userId: this._userId
+    };
   }
 }
 

@@ -1,7 +1,6 @@
-import React, { useState, useEffect } from "react";
+import { useState, useEffect } from "react";
 import { FaStar } from "react-icons/fa";
-import EmptyState from "../../../../components/EmptyState";
-import clock from "../../../../assets/main-app/clock.png";
+
 import CaregiverReviewService from "../../../services/caregiverReviewService";
 import "./reviews.css";
 

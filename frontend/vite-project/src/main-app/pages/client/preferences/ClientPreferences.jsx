@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import { useState, useEffect } from 'react';
 import './ClientPreferences.css';
 import ClientPreferenceService from '../../../services/clientPreferenceService';
 import ClientTaskService from '../../../services/clientTaskService';

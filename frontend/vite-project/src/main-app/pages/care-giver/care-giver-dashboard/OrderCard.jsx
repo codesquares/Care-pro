@@ -1,4 +1,4 @@
-import React from "react";
+
 import "./OrderCard.css";
 
 const OrderCard = ({ title, user, price, status, image, orderId, onClick }) => {

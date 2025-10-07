@@ -1,4 +1,4 @@
-import React from "react";
+
 import "./publishGig.scss";
 
 const PublishGig = ({ 
@@ -16,7 +16,8 @@ const PublishGig = ({
   canPublish = true,
   activeGigsCount = 0,
   isEditingPublishedGig = false,
-  isLoadingGigs = false
+  isLoadingGigs = false,
+  isSaving = false // Add isSaving prop
 }) => {
   return (
     <div className="publish-gig">
@@ -73,14 +74,14 @@ const PublishGig = ({
               Save as Draft
             </button>
             <button 
-              className={`publish-button ${!canPublish || isLoadingGigs ? 'disabled' : ''}`}
+              className={`publish-button ${!canPublish || isLoadingGigs || isSaving ? 'disabled' : ''}`}
               onClick={onPublish}
               onMouseEnter={(e) => onFieldHover && onFieldHover('publish-gig', e)}
               onMouseLeave={(e) => onFieldLeave && onFieldLeave(e)}
-              disabled={Object.keys(validationErrors).length > 0 || !canPublish || isLoadingGigs}
+              disabled={Object.keys(validationErrors).length > 0 || !canPublish || isLoadingGigs || isSaving}
               title={!canPublish ? 'You can only have 2 active gigs. Pause an active gig first.' : ''}
             >
-              {isLoadingGigs ? 'Loading...' : 'Publish Gig'}
+              {isLoadingGigs ? 'Loading...' : isSaving ? 'Publishing...' : 'Publish Gig'}
             </button>
           </div>
         </div>

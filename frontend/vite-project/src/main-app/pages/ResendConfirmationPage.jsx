@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import { useState } from "react";
 import { useNavigate, Link } from "react-router-dom";
 import "../../styles/main-app/pages/ResendConfirmationPage.scss";
 import authImage from "../../assets/authImage.png";

@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import { useState, useEffect } from 'react';
 import { adminWithdrawalService } from '../../../services/withdrawalService';
 import TokenVerificationModal from './TokenVerificationModal';
 import './WithdrawalManagement.css';
@@ -19,7 +19,7 @@ const WithdrawalManagement = () => {
         setError(null);
         
         const data = await adminWithdrawalService.getAllWithdrawalRequests();
-        if (!data || data.length === 0) {
+        if (!data || !Array.isArray(data) || data.length === 0) {
           setWithdrawals([]);
           setFilteredWithdrawals([]);
           return;
@@ -38,10 +38,15 @@ const WithdrawalManagement = () => {
   }, []);
   console.log("withdrawal requests===>", withdrawals);
   useEffect(() => {
+    if (!Array.isArray(withdrawals)) {
+      setFilteredWithdrawals([]);
+      return;
+    }
+    
     if (filter === 'all') {
       setFilteredWithdrawals(withdrawals);
     } else {
-      setFilteredWithdrawals(withdrawals?.filter(w => w.status.toLowerCase() === filter.toLowerCase()));
+      setFilteredWithdrawals(withdrawals.filter(w => w.status.toLowerCase() === filter.toLowerCase()));
     }
   }, [filter, withdrawals]);
   
@@ -198,7 +203,7 @@ const WithdrawalManagement = () => {
               </tr>
             </thead>
             <tbody>
-              {filteredWithdrawals?.map(withdrawal => (
+              {Array.isArray(filteredWithdrawals) && filteredWithdrawals.map(withdrawal => (
                 <tr key={withdrawal.id}>
                   <td>{formatDateTime(withdrawal.createdAt)}</td>
                   <td>{withdrawal.caregiverName}</td>

@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import { useState } from "react";
 import TopBanner from "../components/TopBanner";
 import genralImg from "../assets/nurse.png";
 import HealthcareFacts from "../components/LandingPage/HealthcareFacts";

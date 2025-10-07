@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react';
+import { useEffect, useState } from 'react';
 import ServiceProvider from './ServiceProvider';
 import ServiceFrequency from './ServiceFrequency';
 import TaskList from './TaskList';

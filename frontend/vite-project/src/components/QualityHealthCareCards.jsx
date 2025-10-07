@@ -1,4 +1,4 @@
-import React from 'react';
+
 import "../styles/components/qualityHealthcareCards.scss"
 import star from "../assets/rating_star.png"; // Import the star image
 import QHCC1 from "../assets/QHCC1.jpg";

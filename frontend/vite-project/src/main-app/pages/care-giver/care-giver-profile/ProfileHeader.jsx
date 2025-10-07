@@ -1,4 +1,4 @@
-import React, { useEffect, useState, useRef } from "react";
+import { useEffect, useState, useRef } from "react";
 import "./profile-header.css";
 import { FaMapMarkerAlt, FaCalendarAlt, FaTruck } from "react-icons/fa";
 import profilecard1 from "../../../../assets/profilecard1.png";

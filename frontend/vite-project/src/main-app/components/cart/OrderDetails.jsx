@@ -1,4 +1,4 @@
-import React from 'react';
+
 import './OrderDetails.css';
 import {useState, useEffect } from 'react';
 import { PriceCalculator } from './ServiceFrequency';

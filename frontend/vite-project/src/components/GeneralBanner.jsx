@@ -1,4 +1,4 @@
-import React from 'react';
+
 import '../styles/components/general-banner.scss';
 const GenaralBanner = ({
   title = 'Hire a Caregiver today!',

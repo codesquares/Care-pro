@@ -15,3 +15,28 @@
   width: 100%;
   box-sizing: border-box;
 }
+
+
+.filter-dropdown-bar {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.reset-icon-btn {
+  background: none;
+  border: none;
+  cursor: pointer;
+  font-size: 18px;
+  color: #555;
+  transition: color 0.2s ease;
+}
+
+.reset-icon-btn:hover {
+  color: #000;
+  background-color: #0070ba;
+  border: none;
+  cursor: pointer;
+  font-size: 18px;
+  color: #fff;
+}

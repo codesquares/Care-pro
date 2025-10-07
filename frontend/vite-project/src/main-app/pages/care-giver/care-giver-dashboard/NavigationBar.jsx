@@ -1,11 +1,10 @@
-import React, { useState, useRef, useEffect } from "react";
+import { useState, useRef, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import "./NavigationBar.css";
 import logo from '../../../../assets/careproLogo.svg';
 import hear from "../../../../assets/main-app/heart.svg";
 import { FaBell, FaEnvelope, FaReceipt, FaHome, FaCog } from "react-icons/fa";
 import NotificationBell from "../../../components/notifications/NotificationBell";
-import { userService } from "../../../services/userService";
 import { useAuth } from "../../../context/AuthContext";
 
 

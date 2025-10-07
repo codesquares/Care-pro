@@ -1,4 +1,4 @@
-import React from 'react';
+
 import './messageInput.scss';
 
 const MessageInput = ({ message, setMessage, onSendMessage, onKeyPress, placeholder = "Type a message..." }) => {

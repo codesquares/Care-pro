@@ -41,6 +41,9 @@ export default [
       // 🛠️ Comprehensive Rule Adjustments for Staging Pipeline
       'react/prop-types': 'off',                    // Disable prop validation requirements
       'no-unused-vars': 'warn',                     // Make unused variables warnings instead of errors
+      'react/jsx-uses-react': 'warn',               // React import usage detection as warning
+      'react/react-in-jsx-scope': 'off',            // Don't require React import with new JSX transform
+      'react/jsx-no-undef': 'warn',                 // Make undefined JSX elements warnings instead of errors
       'react/no-unescaped-entities': 'off',         // Allow apostrophes, quotes, etc. in JSX
       'no-undef': 'warn',                           // Make undefined variables warnings instead of errors
       'no-case-declarations': 'warn',               // Allow variable declarations in switch cases

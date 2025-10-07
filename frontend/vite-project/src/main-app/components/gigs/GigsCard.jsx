@@ -15,10 +15,34 @@ const GigsCard = ({
   clearValidationErrors,
 }) => {
   const [tagsInput, setTagsInput] = useState("");
+  const [showLimitError, setShowLimitError] = useState(false);
   const tagInputRef = useRef(null);
   const { formData, validationErrors, updateField } = useGigForm();
 
-  // Debug: Log current formData
+  // Utility function to normalize strings for comparison
+  const normalizeString = (str) => {
+    if (!str) return '';
+    return str.toString().toLowerCase().trim().replace(/\s+/g, ' ');
+  };
+
+  // Enhanced subcategory matching function
+  const isSubcategorySelected = (uiSubcategory, savedSubcategories) => {
+    if (!savedSubcategories || !Array.isArray(savedSubcategories)) return false;
+    
+    const normalizedUiSubcat = normalizeString(uiSubcategory);
+    
+    // Try exact match first
+    if (savedSubcategories.includes(uiSubcategory)) {
+      return true;
+    }
+    
+    // Try normalized match
+    return savedSubcategories.some(savedSubcat => 
+      normalizeString(savedSubcat) === normalizedUiSubcat
+    );
+  };
+
+  // Debug: Log current formData with enhanced subcategory details
   console.log('🔍 DEBUG - GigsCard formData:', {
     title: formData.title,
     category: formData.category,
@@ -26,6 +50,19 @@ const GigsCard = ({
     searchTags: formData.searchTags,
     isEditMode: formData.isEditMode
   });
+
+  // Debug: Log subcategory comparison details when in edit mode
+  if (formData.subcategory && formData.subcategory.length > 0) {
+    console.log('🔍 DEBUG - Saved subcategories:', formData.subcategory);
+    console.log('🔍 DEBUG - Available categories for current category:', categories[formData.category]);
+    
+    if (categories[formData.category]) {
+      categories[formData.category].forEach(uiSubcat => {
+        const isSelected = isSubcategorySelected(uiSubcat, formData.subcategory);
+        console.log(`🔍 DEBUG - UI: "${uiSubcat}" | Selected: ${isSelected} | Saved subcats: [${formData.subcategory.join(', ')}]`);
+      });
+    }
+  }
 
   const handleTagsChange = (e) => {
     const value = e.target.value;
@@ -168,8 +205,9 @@ const GigsCard = ({
             <div className="subcategory-section">
               <div className="subcategory-header">
                 <h4>Select Subcategories</h4>
-                <span className="subcategory-count">
+                <span className={`subcategory-count ${formData.subcategory.length >= 5 ? 'at-limit' : ''}`}>
                   {formData.subcategory.length} of 5 selected
+                  {formData.subcategory.length >= 5 && " (Maximum reached)"}
                 </span>
               </div>
               <div 
@@ -177,29 +215,70 @@ const GigsCard = ({
                 onMouseEnter={() => onFieldHover && onFieldHover('subcategory')}
                 onMouseLeave={onFieldLeave}
               >
-                {categories[formData.category]?.map((subCategory) => (
-                  <label key={subCategory} className="subcategory-checkbox">
-                    <input
-                      className="checkbox-input"
-                      type="checkbox"
-                      value={subCategory}
-                      checked={formData.subcategory.includes(subCategory)}
-                      onChange={(e) => {
-                        const isChecked = e.target.checked;
-                        let updatedSubcategories;
-                        if (isChecked) {
-                          updatedSubcategories = [...formData.subcategory, subCategory];
-                        } else {
-                          updatedSubcategories = formData.subcategory.filter((s) => s !== subCategory);
-                        }
-                        updateField('subcategory', updatedSubcategories);
-                        if (onSubCategoryChange) onSubCategoryChange(updatedSubcategories);
-                      }}
-                    />
-                    <span className="checkbox-label">{subCategory}</span>
-                  </label>
-                ))}
+                {categories[formData.category]?.map((subCategory) => {
+                  const isSelected = isSubcategorySelected(subCategory, formData.subcategory);
+                  const isAtLimit = formData.subcategory.length >= 5;
+                  const isDisabled = !isSelected && isAtLimit;
+                  
+                  // Debug individual subcategory check
+                  console.log(`🔍 DEBUG - Checking "${subCategory}": selected=${isSelected}, disabled=${isDisabled}`);
+                  
+                  return (
+                    <label key={subCategory} className={`subcategory-checkbox ${isDisabled ? 'disabled' : ''}`}>
+                      <input
+                        className="checkbox-input"
+                        type="checkbox"
+                        value={subCategory}
+                        checked={isSelected}
+                        disabled={isDisabled}
+                        onChange={(e) => {
+                          const isChecked = e.target.checked;
+                          let updatedSubcategories;
+                          
+                          if (isChecked) {
+                            // Prevent selection if already at max limit
+                            if (formData.subcategory.length >= 5) {
+                              // Show immediate validation feedback
+                              setShowLimitError(true);
+                              // Focus the field to show validation
+                              if (onFieldFocus) onFieldFocus('subcategory');
+                              // Hide error after 3 seconds
+                              setTimeout(() => setShowLimitError(false), 3000);
+                              return; // Don't proceed with the selection
+                            }
+                            updatedSubcategories = [...formData.subcategory, subCategory];
+                          } else {
+                            // Remove the subcategory using normalized comparison
+                            updatedSubcategories = formData.subcategory.filter((savedSubcat) => {
+                              const normalizedSaved = normalizeString(savedSubcat);
+                              const normalizedCurrent = normalizeString(subCategory);
+                              return normalizedSaved !== normalizedCurrent;
+                            });
+                            // Clear limit error when deselecting
+                            setShowLimitError(false);
+                          }
+                          
+                          console.log('🔍 DEBUG - Subcategory change:', {
+                            action: isChecked ? 'add' : 'remove',
+                            subcategory: subCategory,
+                            oldArray: formData.subcategory,
+                            newArray: updatedSubcategories
+                          });
+                          
+                          updateField('subcategory', updatedSubcategories);
+                          if (onSubCategoryChange) onSubCategoryChange(updatedSubcategories);
+                        }}
+                      />
+                      <span className="checkbox-label">{subCategory}</span>
+                    </label>
+                  );
+                })}
               </div>
+              {showLimitError && (
+                <div className="validation-error limit-error">
+                  Maximum 5 subcategories allowed
+                </div>
+              )}
               {validationErrors.subcategory && (
                 <div className="validation-error">
                   {validationErrors.subcategory}

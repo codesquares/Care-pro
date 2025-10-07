@@ -2,14 +2,45 @@ const {generateWithdrawalRequest} = require('../services/withdrawalService');
 
 const withdrawFunds = async (req, res) => {
   console.log("Withdrawal Request Body:", req.body);
+  console.log("=== CONTROLLER DEBUG: Starting field extraction ===");
   const { amountRequested,
   accountNumber,
   bankName,
-  accountName, caregiverId, token} = req.body;
-  if (!amountRequested || !caregiverId || !accountNumber || !bankName || !accountName || !token) {
-    return res.status(400).json({ errorMessage: "All fields are required." });
+  accountName, caregiverId} = req.body;
+  
+  // Extract token from Authorization header like other endpoints
+  const authHeader = req.headers.authorization;
+  if (!authHeader || !authHeader.startsWith('Bearer ')) {
+    return res.status(401).json({ errorMessage: "Authorization token is required." });
   }
+  const token = authHeader.split(' ')[1];
+  
+  // More detailed logging for debugging
+  console.log("Received fields:");
+  console.log("- amountRequested:", amountRequested, typeof amountRequested);
+  console.log("- caregiverId:", caregiverId, typeof caregiverId);
+  console.log("- accountNumber:", accountNumber, typeof accountNumber);
+  console.log("- bankName:", bankName, typeof bankName);
+  console.log("- accountName:", accountName, typeof accountName);
+  
+  if (!amountRequested || !caregiverId || !accountNumber || !bankName || !accountName) {
+    const missingFields = [];
+    if (!amountRequested) missingFields.push('amountRequested');
+    if (!caregiverId) missingFields.push('caregiverId');
+    if (!accountNumber) missingFields.push('accountNumber');
+    if (!bankName) missingFields.push('bankName');
+    if (!accountName) missingFields.push('accountName');
+    
+    console.log("Missing fields:", missingFields);
+    return res.status(400).json({ 
+      errorMessage: "All fields are required.",
+      missingFields: missingFields
+    });
+  }
+  
+  console.log("=== VALIDATION PASSED - Proceeding to withdrawal service ===");
   try {
+    console.log("=== CALLING generateWithdrawalRequest service ===");
     const withdrawalResponse = await generateWithdrawalRequest({
       caregiverId: caregiverId,
       amountRequested: amountRequested,
@@ -18,75 +49,60 @@ const withdrawFunds = async (req, res) => {
       accountName: accountName,
       token: token
     });
+    
+    console.log("=== CONTROLLER: Service Response ===");
     console.log("Withdrawal Response:", withdrawalResponse);
-    return res.status(200).json({ message: "Withdrawal request submitted successfully." });
+    
+    // Check if the service indicates success
+    if (withdrawalResponse.success) {
+      console.log("✅ Withdrawal request completed successfully");
+      return res.status(200).json({ 
+        message: "Withdrawal request submitted successfully.",
+        data: withdrawalResponse.data,
+        status: "success"
+      });
+    } else {
+      console.log("⚠️ Service did not indicate success");
+      return res.status(500).json({ 
+        errorMessage: "Withdrawal service did not confirm success" 
+      });
+    }
+    
   } catch (error) {
+    console.error("=== CONTROLLER ERROR HANDLING ===");
     console.error("Error processing withdrawal:", error);
-    return res.status(500).json({ errorMessage: "Failed to process withdrawal request." });
+    console.error("Error type:", error.constructor.name);
+    console.error("Error has status?", !!error.status);
+    console.error("Error has responseData?", !!error.responseData);
+    
+    // Handle different types of errors
+    if (error.status) {
+      // Error from the C# API with specific status code
+      console.log(`Returning ${error.status} error from C# API`);
+      
+      if (error.status >= 400 && error.status < 500) {
+        // Client errors (400-499) - pass through as-is
+        return res.status(error.status).json({ 
+          errorMessage: error.message,
+          details: error.responseData 
+        });
+      } else {
+        // Server errors (500+) - return as 500
+        return res.status(500).json({ 
+          errorMessage: "Server error occurred while processing withdrawal request",
+          details: error.message 
+        });
+      }
+    } else {
+      // Network or other errors - return as 500
+      console.log("Network or other error - returning 500");
+      return res.status(500).json({ 
+        errorMessage: error.message || "Failed to process withdrawal request." 
+      });
+    }
   }
 }
 
-
-// const allWithdrawals = async (req, res) => {
-//   try {
-//     // Logic to fetch all withdrawal requests by a certain caregiver
-//     // This could involve querying a database or an external service
-//     const caregiverId = req.user.id; // Assuming you have the caregiver ID from the authenticated user
-//     console.log("Caregiver ID:", caregiverId);
-//     if (!caregiverId) {
-//       return res.status(400).json({ errorMessage: "Caregiver ID is required." });
-//     }
-//     // For demonstration, let's assume we return a static list of 10 previous withdrawal requests 
-//     /*
-//        <td>{new Date(withdrawal.createdAt).toLocaleDateString()}</td>
-//                 <td>{formatCurrency(withdrawal.amountRequested)}</td>
-//                 <td>{formatCurrency(withdrawal.serviceCharge)}</td>
-//                 <td>{formatCurrency(withdrawal.finalAmount)}</td>
-//                 <td className={`withdrawal-status status-${withdrawal.status.toLowerCase()}`}>
-//                   {withdrawal.status}
-//                 </td>
-//                 <td>{withdrawal.token}</td>
-//     */
-//     const withdrawals = [
-//       { id: 1, amountRequested: 100, serviceCharge: 5, finalAmount: 95, status: "Pending", createdAt: "2023-10-01" },
-//       { id: 2, amountRequested: 200, serviceCharge: 10, finalAmount: 190, status: "Completed", createdAt: "2023-09-15" },
-//       { id: 3, amountRequested: 150, serviceCharge: 7.5, finalAmount: 142.5, status: "Pending", createdAt: "2023-09-10" },
-//       { id: 4, amountRequested: 300, serviceCharge: 15, finalAmount: 285, status: "Completed", createdAt: "2023-08-20" },
-//       { id: 5, amountRequested: 250, serviceCharge: 12.5, finalAmount: 237.5, status: "Pending", createdAt: "2023-08-05" },
-//       { id: 6, amountRequested: 400, serviceCharge: 20, finalAmount: 380, status: "Completed", createdAt: "2023-07-25" },
-//       { id: 7, amountRequested: 350, serviceCharge: 17.5, finalAmount: 332.5, status: "Pending", createdAt: "2023-07-10" },
-//       { id: 8, amountRequested: 500, serviceCharge: 25, finalAmount: 475, status: "Completed", createdAt: "2023-06-30" },
-//       { id: 9, amountRequested: 600, serviceCharge: 30, finalAmount: 570, status: "Pending", createdAt: "2023-06-15" },
-//       { id: 10, amountRequested: 700, serviceCharge: 35, finalAmount: 665, status: "Completed", createdAt: "2023-05-20" }
-//     ];
-     
-//     return res.status(200).json(withdrawals);
-//   } catch (error) {
-//     console.error("Error fetching withdrawals:", error);
-//     return res.status(500).json({ errorMessage: "Failed to fetch withdrawal requests." });
-//   }
-// }
-
-// const withdrawableAmount = async (req, res) => {
-//   try {
-//     // Logic to calculate the withdrawable amount for a caregiver
-//     // This could involve checking their earnings, pending withdrawals, etc.
-//     const caregiverId = req.user.id; // Assuming you have the caregiver ID from the authenticated user
-//     if (!caregiverId) {
-//       return res.status(400).json({ errorMessage: "Caregiver ID is required." });
-//     }
-    
-//     // For demonstration, let's assume the withdrawable amount is a static value
-//     const amount = 1000; // Example amount
-//     return res.status(200).json({ withdrawableAmount: amount });
-//   } catch (error) {
-//     console.error("Error calculating withdrawable amount:", error);
-//     return res.status(500).json({ errorMessage: "Failed to calculate withdrawable amount." });
-//   }
-// }
-
-
-// Export the withdrawal controller functions
 module.exports = {
   withdrawFunds
 };

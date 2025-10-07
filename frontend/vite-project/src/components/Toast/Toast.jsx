@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import { useEffect } from 'react';
 import '../../styles/components/toast.scss'; // Ensure you have styles for the toast
 
 const Toast = ({ message, show, onClose, type }) => {

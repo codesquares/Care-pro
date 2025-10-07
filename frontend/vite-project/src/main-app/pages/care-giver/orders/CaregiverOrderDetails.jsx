@@ -1,10 +1,11 @@
-import React, { useState, useEffect } from "react";
+import { useState, useEffect } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import axios from "axios";
 import { toast, ToastContainer } from "react-toastify";
-import { FaClipboardList, FaPhoneAlt } from "react-icons/fa";
+
 import "react-toastify/dist/ReactToastify.css";
 import "./CaregiverOrderDetails.css";
+
 
 const CaregiverOrderDetails = () => {
     const { orderId } = useParams();
@@ -64,6 +65,9 @@ const CaregiverOrderDetails = () => {
         }
     };
 
+    const handlingFaq = () => {
+        navigate("/app/caregiver/faq");
+    }
     // Function to create a new conversation between caregiver and client
     const createConversation = async (caregiverId, clientId) => {
         try {
@@ -268,14 +272,22 @@ const CaregiverOrderDetails = () => {
 
                         <div className="support-section">
                             <h3>Support</h3>
-                            <div className="support-item">
-                                <span><FaClipboardList /> Guidelines</span>
-                                <span>Service delivery guidelines</span>
+                            <div className="support-item" onClick={handlingFaq}>
+                                <span>📋 FAQs</span>
+                                <span>Find needed answers</span>
                             </div>
                             <div className="support-item">
-                                <span><FaPhoneAlt /> Support Center</span>
-                                <span>Get help with order issues</span>
+                                <a
+                                    href="https://wa.me/2348131952778"
+                                    target="_blank"
+                                    rel="noopener noreferrer"
+                                    className="support-link"
+                                >
+                                <span>📞 Resolution Center</span>
+                                <span>Resolve order issues</span>
+                                </a>
                             </div>
+                           
                         </div>
                     </div>
                 </div>

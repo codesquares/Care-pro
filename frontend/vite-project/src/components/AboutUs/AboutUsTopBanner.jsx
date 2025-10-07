@@ -1,4 +1,4 @@
-import React from 'react';
+
 import storyImage from "../../assets/storyImage.svg"
 import './AboutUs-Banner.scss';
 

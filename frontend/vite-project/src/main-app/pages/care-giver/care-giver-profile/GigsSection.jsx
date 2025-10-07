@@ -1,6 +1,6 @@
-import React, { useEffect, useState, useMemo } from "react";
+import { useEffect, useState, useMemo } from "react";
 import { useNavigate } from "react-router-dom";
-import EmptyState from "../../../../components/EmptyState"; 
+
 import clock from "../../../../assets/main-app/clock.png"; // Ensure you have an empty gigs image in your assets
 import Toast from "../../../components/toast/Toast";
 import useToast from "../../../hooks/useToast";

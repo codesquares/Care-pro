@@ -1,4 +1,3 @@
-import React from 'react';
 import './empty-message-state.scss';
 
 const EmptyMessageState = ({ isConnecting = false }) => {

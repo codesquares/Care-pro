@@ -1,4 +1,4 @@
-import React from 'react';
+
 import './ServiceSelectionModal.scss';
 
 const ServiceSelectionModal = ({ 

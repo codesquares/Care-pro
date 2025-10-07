@@ -1,3 +1,5 @@
+@use './breakpoints' as *;
+
 // Mobile-First Sidebar Design
 .sidebar {
   display: flex;
@@ -33,7 +35,7 @@
     background-color: #fff;
     position: sticky;
     top: 0;
-    z-index: 10;
+    z-index: $z-sticky-header;
     
     @media (min-width: 768px) {
       padding: 1.25rem 1.5rem;
@@ -41,6 +43,17 @@
     
     @media (min-width: 1024px) {
       padding: 1.5rem 2rem;
+    }
+    
+    .header-main {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      margin-bottom: 0.75rem;
+      
+      @media (min-width: 768px) {
+        margin-bottom: 1rem;
+      }
     }
     
     h2 {
@@ -51,16 +64,20 @@
       
       @media (min-width: 768px) {
         font-size: 1.25rem;
-        display: block !important; // Show on desktop
       }
       
       @media (min-width: 1024px) {
         font-size: 1.375rem;
       }
+    }
+    
+    .mobile-actions {
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
       
-      // Hide on mobile since it's in main header
-      @media (max-width: 767px) {
-        display: none;
+      @media (min-width: 768px) {
+        gap: 0.75rem;
       }
     }
     
@@ -91,16 +108,18 @@
   }
   
   .search-container {
-    padding: 0.75rem 1rem;
+    padding: 0.5rem 1rem;
     border-bottom: 1px solid #f3f4f6;
     background-color: #fff;
-    position: sticky;
-    top: 65px;
-    z-index: 9;
+    position: relative;
+    z-index: $z-sticky-header;
+    flex: 0 0 auto; /* Don't grow, don't shrink, size based on content */
+    display: block; /* Ensure it's not a flex container itself */
+    height: auto; /* Auto height based on content */
+    margin: 0;
     
     @media (min-width: 768px) {
       padding: 0.5rem 1.5rem;
-      top: 75px;
     }
     
     @media (min-width: 1024px) {
@@ -177,6 +196,14 @@
     flex: 1;
     overflow-y: auto;
     background-color: #fff;
+    padding: 0;
+    margin: 0;
+    margin-top: -1px; /* Close any potential gap */
+    display: flex;
+    flex-direction: column;
+    justify-content: flex-start;
+    align-items: stretch;
+    min-height: 0;
     
     .no-conversations {
       display: flex;
@@ -198,6 +225,12 @@
       list-style: none;
       margin: 0;
       padding: 0;
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      justify-content: flex-start;
+      align-items: stretch;
+      gap: 2px;
     }
     
     .conversation-item,
@@ -210,6 +243,7 @@
       transition: all 0.2s ease;
       position: relative;
       background-color: #fff;
+      outline: none;
       
       @media (min-width: 768px) {
         padding: 1rem 1.5rem;
@@ -228,6 +262,23 @@
         }
       }
       
+      &:focus {
+        background-color: #f3f4f6;
+        box-shadow: inset 3px 0 0 #4f46e5;
+        outline: 2px solid transparent;
+        transform: translateX(2px);
+        
+        @media (min-width: 768px) {
+          box-shadow: inset 4px 0 0 #4f46e5;
+          transform: translateX(4px);
+        }
+      }
+      
+      &:focus-visible {
+        outline: 2px solid #4f46e5;
+        outline-offset: -2px;
+      }
+      
       &.active {
         background-color: #eef2ff;
         border-right: 3px solid #4f46e5;
@@ -239,6 +290,14 @@
         &:hover {
           background-color: #e0e7ff;
           transform: none;
+        }
+        
+        &:focus {
+          box-shadow: inset 3px 0 0 #6366f1, inset -3px 0 0 #4f46e5;
+          
+          @media (min-width: 768px) {
+            box-shadow: inset 4px 0 0 #6366f1, inset -4px 0 0 #4f46e5;
+          }
         }
       }
       

@@ -1,11 +1,10 @@
-import React, { useState, useEffect, useRef } from "react";
+import { useState, useEffect, useRef } from "react";
 import { useNavigate } from "react-router-dom";
 import "./verification-page.css";
 import "./assessment-page.css";
 import "./mobile-assessment.css";
 import "../care-giver-profile/profile-header.css";
 import assessmentService from "../../../services/assessmentService";
-import { userService } from "../../../services/userService";
 import { Helmet } from "react-helmet-async";
 import ProfileCard from "../care-giver-dashboard/ProfileCard";
 

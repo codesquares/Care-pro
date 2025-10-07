@@ -1,4 +1,4 @@
-import React, { useState, useRef, useEffect } from "react";
+import { useState, useRef, useEffect } from "react";
 import { useNavigate, useLocation } from "react-router-dom";
 import { FaHome, FaEnvelope, FaCog, FaSearch } from "react-icons/fa";
 import logo from "../../../assets/careproLogo.svg";

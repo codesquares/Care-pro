@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import { useState, useEffect } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { withdrawalService } from '../../services/withdrawalService';
 import { earningService } from '../../services/earningsService';
@@ -10,11 +10,11 @@ const WithdrawPage = () => {
     withdrawableAmount: 0,
   });
   const [formData, setFormData] = useState({
+    caregiverId: '',
     amountRequested: '',
     accountNumber: '',
     bankName: '',
-    accountName: '',
-    token: ''
+    accountName: ''
   });
   const [errors, setErrors] = useState({});
   const [serviceCharge, setServiceCharge] = useState(0);
@@ -42,16 +42,17 @@ const WithdrawPage = () => {
         // Check for pending withdrawals
         try {
           const history = await withdrawalService.getWithdrawalHistory(currentUser.id);
-          const hasPending = Array.isArray(history) ? history.some(withdrawal => withdrawal.status === 'Pending') : false;
+          const hasPending = Array.isArray(history) ? 
+            history.some(withdrawal => 
+              withdrawal.status && 
+              withdrawal.status.toLowerCase() === 'pending'
+            ) : false;
           setHasPendingWithdrawal(hasPending);
+          console.log("Withdrawal history check:", { history, hasPending });
         } catch (historyError) {
           console.error("Error fetching withdrawal history:", historyError);
           setHasPendingWithdrawal(false);
         }
-
-        // Set token
-        const token = localStorage.getItem('authToken');
-        setFormData(prev => ({ ...prev, token: token || '' }));
         
       } catch (err) {
         console.error("Error fetching data:", err);
@@ -134,13 +135,18 @@ const WithdrawPage = () => {
     try {
       setIsSubmitting(true);
       
-      await withdrawalService.createWithdrawalRequest({
+      const withdrawalRequestData = {
         ...formData,
         caregiverId: currentUser.id,
         amountRequested: parseFloat(formData.amountRequested),
         serviceCharge: serviceCharge,
         finalAmount: finalAmount
-      });
+      };
+      
+      console.log("About to send withdrawal request:", withdrawalRequestData);
+      console.log("Current user:", currentUser);
+      
+      await withdrawalService.createWithdrawalRequest(withdrawalRequestData);
 
       // Create notification for admin
       try {

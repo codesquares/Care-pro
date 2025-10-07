@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import NavigationBar from './NavigationBar';
 import ProfileCard from './ProfileCard';
@@ -38,8 +38,9 @@ const CaregiverDashboard = () => {
          }
          const data = await response.json();
  
-         setOrders(data.clientOrders || []);
-         setTotalOrders(data.noOfOrders || 0);
+         const ordersArray = Array.isArray(data) ? data : data.clientOrders || [];
+         setOrders(ordersArray);
+         setTotalOrders(ordersArray.length);
           // setTotalEarnings(data.totalEarning);
        } catch (error) {
          console.error("Error fetching orders:", error);

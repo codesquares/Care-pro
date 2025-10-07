@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react";
+
 // import Navbar from "../../../components/Navbar";
 import "./ResolutionCenter.scss";
 
@@ -27,7 +27,7 @@ const ResolutionCenter = () => {
               If you have an issue with an order in progress or a completed order,
               our Customer Support team is available to assist you.
             </p>
-            <button className="chat-support-btn">Chat Support Team</button>
+            <button className="chat-support-btn">Chat Support Teams</button>
           </div>
         </div>
   

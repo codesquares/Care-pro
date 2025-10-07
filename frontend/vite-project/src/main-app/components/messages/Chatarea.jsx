@@ -1,10 +1,9 @@
-import React, { useState, useEffect, useRef, useCallback, useMemo } from 'react';
+import { useState, useEffect, useRef, useCallback, useMemo } from 'react';
 import { useLocation } from 'react-router-dom';
 import './chatarea.scss';
 import MessageInput from './MessageInput';
 import MessageStatus from './MessageStatus';
 import ServiceSelectionModal from './ServiceSelectionModal';
-import { formatDistanceToNow } from 'date-fns';
 import { useMessageContext } from '../../context/MessageContext';
 import { createNotification } from '../../services/notificationService';
 import ClientGigService from '../../services/clientGigService';
@@ -57,9 +56,14 @@ const ChatArea = ({ messages, recipient, userId, onSendMessage, isOfflineMode = 
     };
   }, [recipient]);
   
-  console.log("ChatArea received recipient:", recipient);
-  console.log("ChatArea received messages:", messages);
-  console.log("ChatArea created safeRecipient:", safeRecipient);
+  console.log("🎯 ChatArea: Component rendered with props:", {
+    messagesCount: messages?.length || 0,
+    recipientId: recipient?.id,
+    userId,
+    isOfflineMode
+  });
+  console.log("🎯 ChatArea: Messages array:", messages);
+  console.log("🎯 ChatArea: Recipient object:", recipient);
 
   // Memoized scroll to bottom function
   const scrollToBottom = useCallback((force = false) => {
@@ -81,9 +85,13 @@ const ChatArea = ({ messages, recipient, userId, onSendMessage, isOfflineMode = 
   // Memoized message processing to prevent unnecessary re-renders
   const visibleMessages = useMemo(() => {
     if (!messages || !Array.isArray(messages)) {
+      console.log('🎯 ChatArea: No messages or invalid messages array');
       return [];
     }
-
+    
+    console.log('🎯 ChatArea: Processing', messages.length, 'messages for display');
+    console.log('🎯 ChatArea: Latest message:', messages[messages.length - 1]);
+    
     return messages.map((msg, index) => {
       // Ensure each message has an id
       const msgWithId = {
@@ -123,9 +131,12 @@ const ChatArea = ({ messages, recipient, userId, onSendMessage, isOfflineMode = 
   useEffect(() => {
     if (messages && Array.isArray(messages)) {
       const newMessageCount = messages.length;
+      console.log('🎯 ChatArea: useEffect triggered - message count:', newMessageCount, 'previous:', lastMessageCount);
+      
       if (newMessageCount > lastMessageCount) {
         // New messages arrived
-        console.log(`New messages detected: ${newMessageCount - lastMessageCount}`);
+        console.log(`🎯 ChatArea: New messages detected: ${newMessageCount - lastMessageCount}`);
+        console.log('🎯 ChatArea: Latest message:', messages[messages.length - 1]);
         setTimeout(() => scrollToBottom(false), 100); // Small delay to ensure DOM update
       }
       setLastMessageCount(newMessageCount);
@@ -197,33 +208,12 @@ const ChatArea = ({ messages, recipient, userId, onSendMessage, isOfflineMode = 
     }
   }, [recipient?.id, isClientRoute, serviceId]);
 
-  // Handle sending animation
+  // Handle sending animation - simplified to work with existing message flow
   const handleSendMessageWithAnimation = () => {
     if (message.trim()) {
-      // Add the message locally for immediate feedback
-      const tempMsg = {
-        id: `temp-${Date.now()}-${Math.random().toString(36).substring(2, 9)}`,
-        text: message,
-        senderId: userId,
-        timestamp: new Date().toISOString(),
-        status: 'sending',
-        statusText: 'Sending...',
-        // Add animation class flag
-        isNewlySent: true
-      };
-      
-      // Update local state (visibleMessages)
-      setVisibleMessages(prev => [...prev, tempMsg]);
-      
-      // Actually send the message
+      // Just send the message through the existing handler
+      // The parent component will handle adding it to the messages array
       handleSendMessage();
-      
-      // Clear animation flag after animation completes
-      setTimeout(() => {
-        setVisibleMessages(prev => 
-          prev.map(m => m.id === tempMsg.id ? {...m, isNewlySent: false} : m)
-        );
-      }, 500);
     }
   };
 
@@ -359,20 +349,26 @@ const ChatArea = ({ messages, recipient, userId, onSendMessage, isOfflineMode = 
         fromUrlParams: effectiveRecipientId !== safeRecipient?.id,
         senderId: userId
       });
+
+      // Store message text before clearing
+      const messageText = message.trim();
+      
+      // Clear message input immediately for better UX
+      setMessage('');
       
       // Send message with our best determined ID - ensure both userId and recipientId are passed correctly
-      if (message && typeof message === 'string' && 
+      if (messageText && typeof messageText === 'string' && 
           effectiveRecipientId && typeof effectiveRecipientId === 'string') {
         console.log("Sending message from ChatArea:", { 
           userId, 
           recipientId: effectiveRecipientId, 
-          messagePreview: message.length > 20 ? message.substring(0, 20) + '...' : message 
+          messagePreview: messageText.length > 20 ? messageText.substring(0, 20) + '...' : messageText 
         });
         
         try {
           // Based on the error stack trace, onSendMessage should receive recipientId and message
           // onSendMessage is a prop passed from parent that should handle the userId internally
-          const messageId = await onSendMessage(effectiveRecipientId, message);
+          const messageId = await onSendMessage(effectiveRecipientId, messageText);
           
           // Create a notification for the sent message only if message was sent successfully
           if (messageId) {
@@ -397,18 +393,21 @@ const ChatArea = ({ messages, recipient, userId, onSendMessage, isOfflineMode = 
           }
         } catch (sendError) {
           console.error("Failed to send message:", sendError);
-          // Handle message send failure here if needed
+          // Restore message in input if sending failed
+          setMessage(messageText);
+          alert('Failed to send message. Please try again.');
         }
         
       } else {
         console.error("Invalid parameters for sending message:", { 
           userId, 
           recipientId: effectiveRecipientId, 
-          messageType: typeof message,
-          message: message ? (message.length > 20 ? message.substring(0, 20) + '...' : message) : null
+          messageType: typeof messageText,
+          message: messageText ? (messageText.length > 20 ? messageText.substring(0, 20) + '...' : messageText) : null
         });
+        // Restore message in input if parameters were invalid
+        setMessage(messageText);
       }
-      setMessage('');
     }
   };
 

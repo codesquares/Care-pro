@@ -33,7 +33,6 @@ const GigsForm = () => {
   const [buttonBgColor, setButtonBgColor] = useState("#34A853");
   const [serverMessage, setServerMessage] = useState("");
   const [isSubmitted, setIsSubmitted] = useState(null);
-  const [validationErrors, setValidationErrors] = useState({});
   const [pageValidationStatus, setPageValidationStatus] = useState({
     0: false, // Overview
     1: false, // Pricing
@@ -53,7 +52,10 @@ const GigsForm = () => {
     validateForm,
     updateField,
     isLoading,
-    isSaving
+    isSaving,
+    setSaving,
+    validationErrors,
+    setValidationErrors
   } = useGigForm();
   
   // Check if we can publish (considering 2-gig limit)
@@ -351,84 +353,66 @@ const GigsForm = () => {
   const handleCategoryChange = (category) => {
     updateField('category', category);
     updateField('subcategory', []); // Reset subcategory when category changes
-    // Clear category validation error
-    if (validationErrors.category) {
-      setValidationErrors(prev => {
-        const newErrors = { ...prev };
-        delete newErrors.category;
-        return newErrors;
-      });
-    }
   };
 
   const handleSubCategoryChange = (updatedSubcategories) => {
     updateField('subcategory', updatedSubcategories);
-    // Clear subcategory validation error
-    if (validationErrors.subcategory) {
-      setValidationErrors(prev => {
-        const newErrors = { ...prev };
-        delete newErrors.subcategory;
-        return newErrors;
-      });
-    }
   };
 
   const handleSearchTagChange = (tags) => {
     updateField('searchTags', tags);
-    // Clear searchTags validation error
-    if (validationErrors.searchTags) {
-      setValidationErrors(prev => {
-        const newErrors = { ...prev };
-        delete newErrors.searchTags;
-        return newErrors;
-      });
-    }
   };
 
   const handleTitleChange = (title) => {
     updateField('title', title);
-    // Clear title validation error when user starts typing
-    if (validationErrors.title) {
-      setValidationErrors(prev => {
-        const newErrors = { ...prev };
-        delete newErrors.title;
-        return newErrors;
-      });
-    }
   };
 
   const handleSubmit = async (e) => {
     e.preventDefault();
     setIsSubmitted(true);
 
-    // Check gig limit before validation
-    if (!canPublish) {
-      toast.error("You can only have 2 active gigs at a time. Please pause one of your active gigs first to publish this one.");
-      return;
-    }
-
-    // Check if image is selected (for new gigs) or exists (for edit mode)
-    if (!selectedFile && !imagePreview) {
-      console.error("No image selected or existing");
-      setValidationErrors({ image1: "Please upload at least one image to showcase your service" });
-      toast.error("Please upload an image before publishing");
-      return;
-    }
-
-    // Final validation before submission
-    console.log("Form data before validation:", formData);
-    console.log("Selected file:", selectedFile?.name, selectedFile?.size);
-    console.log("Image preview:", imagePreview ? "exists" : "null", imagePreview?.length || "N/A");
-    
-    const validation = validatePublishPage(formData, selectedFile, imagePreview);
-    if (!validation.isValid) {
-      console.log("Validation errors:", validation.errors);
-      setValidationErrors(validation.errors);
-      toast.error("Please fix all validation errors before publishing");
-      return;
-    }
-
     try {
+      // Start loading state
+      setSaving(true);
+
+      // Check gig limit before validation
+      if (!canPublish) {
+        toast.error("You can only have 2 active gigs at a time. Please pause one of your active gigs first to publish this one.");
+        setSaving(false);
+        return;
+      }
+
+      // Check if image is selected (for new gigs) or exists (for edit mode)
+      if (!selectedFile && !imagePreview) {
+        console.error("No image selected or existing");
+        setValidationErrors({ image1: "Please upload at least one image to showcase your service" });
+        toast.error("Please upload an image before publishing");
+        setSaving(false);
+        return;
+      }
+
+      // Final validation before submission
+      console.log("🔍 DEBUG - Form data before validation:", formData);
+      console.log("🔍 DEBUG - Selected file:", selectedFile?.name, selectedFile?.size);
+      console.log("🔍 DEBUG - Image preview:", imagePreview ? "exists" : "null", imagePreview?.length || "N/A");
+      
+      const validation = validatePublishPage(formData, selectedFile, imagePreview);
+      console.log("🔍 DEBUG - Validation result:", validation);
+      
+      if (!validation.isValid) {
+        console.log("❌ Validation failed with errors:", validation.errors);
+        setValidationErrors(validation.errors);
+        toast.error("Please fix all validation errors before publishing");
+        setSaving(false);
+        return;
+      }
+
+      console.log("✅ Validation passed, proceeding with submission...");
+      
+      // Debug: Log the exact subcategories being sent
+      console.log("🔍 DEBUG - Subcategories to be sent:", formData.subcategory);
+      console.log("🔍 DEBUG - Form data pricing:", formData.pricing);
+
       const formDataPayload = new FormData();
 
       // Handle basic fields
@@ -480,64 +464,124 @@ const GigsForm = () => {
         console.log(`FormData field: ${key} = ${value} (type: ${typeof value}, length: ${value?.length || 'N/A'})`);
       }
 
-      console.log("About to send FormData to backend...");
+      console.log("🚀 About to send FormData to backend...");
 
-      let response;
-      if (isEditMode && formData?.id) {
-        // Update existing gig
-        response = await axios.put(
-          `https://carepro-api20241118153443.azurewebsites.net/api/Gigs/UpdateGig/gigId?gigId=${formData.id}`,
-          formDataPayload
-        );
-      } else {
-        // Create new gig
-        response = await axios.post(
-          "https://carepro-api20241118153443.azurewebsites.net/api/Gigs",
-          formDataPayload
-        );
-      }
+      // Create an AbortController for request cancellation
+      const controller = new AbortController();
+      const timeoutId = setTimeout(() => {
+        controller.abort();
+        console.error("⏰ Request timed out after 30 seconds");
+      }, 30000); // 30 second timeout
 
-      if (response.status === 200) {
-        const successMessage = isEditMode ? "Gig updated successfully!" : "Gig published successfully!";
-        const modalDesc = isEditMode ? "Your Gig has been successfully updated." : "Your Gig has been successfully created.";
-        
-        setServerMessage(successMessage);
-        setModalTitle("Success!");
-        setModalDescription(modalDesc);
-        
-        if (!isEditMode) {
-          // Only create notification for new gigs
-          createNotification({
-            recipientId: caregiverId,
-            senderId: caregiverId,
-            type: "NewGig",
-            relatedEntityId: response.data?.id,
-          }).then(() => {
-            console.log("Notification created successfully"); 
-          });
+      try {
+        let response;
+        const requestConfig = {
+          timeout: 30000, // 30 seconds
+          signal: controller.signal,
+          headers: {
+            // Let browser set Content-Type for FormData
+          }
+        };
+
+        if (isEditMode && formData?.id) {
+          console.log(`🔄 Updating existing gig with ID: ${formData.id}`);
+          // Update existing gig
+          response = await axios.put(
+            `https://carepro-api20241118153443.azurewebsites.net/api/Gigs/UpdateGig/gigId?gigId=${formData.id}`,
+            formDataPayload,
+            requestConfig
+          );
+        } else {
+          console.log("✨ Creating new gig");
+          // Create new gig
+          response = await axios.post(
+            "https://carepro-api20241118153443.azurewebsites.net/api/Gigs",
+            formDataPayload,
+            requestConfig
+          );
         }
+
+        // Clear the timeout if request completes successfully
+        clearTimeout(timeoutId);
         
-        setButtonBgColor("#34A853");
-        setButtonText("Proceed");
-        setIsModalOpen(true);
+        console.log("✅ API Response received:", response.status, response.data);
+
+        if (response.status === 200) {
+          const successMessage = isEditMode ? "Gig updated successfully!" : "Gig published successfully!";
+          const modalDesc = isEditMode ? "Your Gig has been successfully updated." : "Your Gig has been successfully created.";
+          
+          setServerMessage(successMessage);
+          setModalTitle("Success!");
+          setModalDescription(modalDesc);
+          
+          if (!isEditMode) {
+            // Only create notification for new gigs
+            createNotification({
+              recipientId: caregiverId,
+              senderId: caregiverId,
+              type: "NewGig",
+              relatedEntityId: response.data?.id,
+            }).then(() => {
+              console.log("Notification created successfully"); 
+            });
+          }
+          
+          setButtonBgColor("#34A853");
+          setButtonText("Proceed");
+          setIsModalOpen(true);
+          
+          // Reset loading state on success as well
+          setSaving(false);
+        }
+      } catch (requestError) {
+        // Clear timeout on error
+        clearTimeout(timeoutId);
+        
+        if (requestError.name === 'AbortError') {
+          console.error("⏰ Request was aborted due to timeout");
+          toast.error("Request timed out. Please try again.");
+        } else {
+          // Re-throw to be caught by outer catch block
+          throw requestError;
+        }
       }
     } catch (err) {
+      console.error("🚨 ERROR - Submission failed:", err);
+      
       if (err.response) {
-        console.error("Validation Errors:", err.response.data.errors);
-        setServerMessage(
-          `Error: ${err.response.data.title || "Submission failed."}`
-        );
-        toast.error("Submission failed. Please try again.");
+        console.error("❌ API Error Response:", err.response.data);
+        const errorMessage = err.response.data?.title || err.response.data?.message || "Submission failed.";
+        setServerMessage(`Error: ${errorMessage}`);
+        toast.error(`Submission failed: ${errorMessage}`);
+        
+        // Show validation errors if available
+        if (err.response.data?.errors) {
+          console.error("Validation Errors from API:", err.response.data.errors);
+          setValidationErrors(err.response.data.errors);
+        }
+      } else if (err.request) {
+        console.error("❌ Network Error - No response received:", err.request);
+        setServerMessage("Network error: Please check your internet connection and try again.");
+        toast.error("Network error. Please check your connection and try again.");
+        setModalTitle("Network Error");
+        setModalDescription("Unable to connect to the server. Please check your internet connection and try again.");
+        setButtonBgColor("#FF0000");
+        setButtonText("Okay");
+        setIsModalOpen(true);
       } else {
-        console.error("Unexpected Error:", err);
+        console.error("❌ Unexpected Error:", err.message);
         setServerMessage("An unexpected error occurred.");
         toast.error("An unexpected error occurred. Please try again.");
         setModalTitle("Error!");
-        setModalDescription("Something went wrong during registration. Please try again.");
+        setModalDescription("Something went wrong during submission. Please try again.");
         setButtonBgColor("#FF0000");
         setButtonText("Okay");
         setIsModalOpen(true);
       }
+    } finally {
+      // Always reset loading state, regardless of success or failure
+      setSaving(false);
+      console.log("🔄 Loading state reset");
     }
   };
 
@@ -657,20 +701,6 @@ const GigsForm = () => {
                 pricing={formData.pricing}
                 onPricingChange={(updatedPricing) => {
                   updateField('pricing', updatedPricing);
-                  // Clear pricing validation errors when user makes changes
-                  if (Object.keys(validationErrors).some(key => 
-                    key.includes('basic') || key.includes('standard') || key.includes('premium') || key === 'general' || key === 'progression'
-                  )) {
-                    setValidationErrors(prev => {
-                      const newErrors = { ...prev };
-                      Object.keys(newErrors).forEach(key => {
-                        if (key.includes('basic') || key.includes('standard') || key.includes('premium') || key === 'general' || key === 'progression') {
-                          delete newErrors[key];
-                        }
-                      });
-                      return newErrors;
-                    });
-                  }
                 }}
                 onFieldFocus={handleFieldFocus}
                 onFieldBlur={handleFieldBlur}
@@ -705,6 +735,7 @@ const GigsForm = () => {
                 activeGigsCount={activeGigsCount}
                 isEditingPublishedGig={isEditingPublishedGig}
                 isLoadingGigs={isLoadingGigs}
+                isSaving={isSaving}
                 validationErrors={(() => {
                   const validation = validatePublishPage(formData, selectedFile, imagePreview);
                   return validation.errors;

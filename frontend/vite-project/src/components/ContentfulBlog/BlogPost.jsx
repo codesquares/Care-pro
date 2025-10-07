@@ -1,4 +1,4 @@
-import React, { useContext, useState } from "react";
+import { useContext, useState } from "react";
 import { useParams } from "react-router-dom";
 import { createClient } from "contentful";
 import { BlogContext } from "../../main-app/context/BlogContext";

@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react";
+import { useState, useEffect } from "react";
 import { useNavigate, Link, useLocation } from "react-router-dom";
 import axios from "axios";
 import loginImg from "../../assets/loginImg.png";
@@ -134,7 +134,7 @@ const LoginPage = () => {
   return (
     <div className="login-wrapper">
       {/* Left section */}
-      <div className="login-left">
+      <div className="login-left" onClick={() => navigate("/")} style={{ cursor: 'pointer' }}>
         <div className="login-logo-section">
           <img src={loginLogo} alt="Carepro Logo" />
         </div>

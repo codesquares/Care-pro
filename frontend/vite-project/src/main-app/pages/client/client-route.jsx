@@ -16,6 +16,8 @@ import CareNeedsSettings from './care-needs/CareNeedsSettings';
 import ClientProfile from './profile/ClientProfile';
 import Cart from '../client/cart/Cart';
 import NotificationsPage from '../../components/Notifications/Notifications';
+import ResolutionCenter from './orders/ResolutionCenter';
+import FAQPage from './orders/FAQ';
 
 
 function ClientRoutes() {
@@ -39,6 +41,7 @@ function ClientRoutes() {
             <Route path="/profile" element={<ClientProfile />} />
             <Route path="/notifications" element={<NotificationsPage />} />
             <Route path="/cart/:id" element={<Cart />} />
+            <Route path="/faq" element={<FAQPage />} />
         </Routes>
         </>
     );

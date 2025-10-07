@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import { useState } from 'react';
 import './TokenVerificationModal.css';
 
 const TokenVerificationModal = ({ withdrawal, onClose, onSubmit }) => {

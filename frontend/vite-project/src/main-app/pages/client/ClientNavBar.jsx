@@ -1,8 +1,8 @@
-import React, { useState, useRef, useEffect } from "react";
+import { useState, useRef, useEffect } from "react";
 import { useNavigate, useLocation } from "react-router-dom";
 import { FaBell, FaEnvelope, FaCog } from "react-icons/fa";
 import logo from '../../../assets/careproLogo.svg';
-import hear from "../../../assets/main-app/heart.svg";
+
 import receipt from "../../../assets/main-app/receipt.svg";
 import homeIcon from "../../../assets/home_icon.png";
 import NotificationBell from "../../components/notifications/NotificationBell";

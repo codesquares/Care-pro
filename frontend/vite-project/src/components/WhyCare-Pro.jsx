@@ -1,4 +1,4 @@
-import React from "react";
+
 import "../styles/components/why-care-pro.scss";
 import background from "../assets/background.png"
 

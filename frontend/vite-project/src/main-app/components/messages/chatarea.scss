@@ -3,16 +3,19 @@
   display: flex;
   flex-direction: column;
   height: 100%;
-  min-height: calc(100vh - 120px); /* Reserve space for mobile UI and headers */
-  min-height: calc(100dvh - 120px); /* Use dynamic viewport height for mobile */
-  max-height: calc(100vh - 120px); /* Ensure chat area doesn't exceed viewport */
-  max-height: calc(100dvh - 120px); /* Use dynamic viewport height for mobile */
+  width: 100%;
   flex: 1;
   background-color: #fff;
   border-radius: 0;
-  overflow: hidden;
+  overflow: hidden; /* Prevent the main container from scrolling */
   opacity: 1;
-  transition: opacity 0.3s ease-in-out; // Smooth transition for entire chat area
+  transition: opacity 0.3s ease-in-out;
+  
+  /* Ensure proper height constraints for all screen sizes */
+  min-height: calc(100vh - 120px);
+  min-height: calc(100dvh - 120px); /* Use dynamic viewport height for mobile */
+  max-height: calc(100vh - 120px);
+  max-height: calc(100dvh - 120px);
   
   @media (min-width: 768px) {
     border-radius: 12px;
@@ -404,10 +407,6 @@
   .messages-container {
     flex: 1;
     min-height: 0; /* Important for flex children to allow shrinking */
-    max-height: calc(100vh - 200px); /* Ensure container doesn't exceed available space */
-    overflow-y: auto;
-    overflow-x: hidden;
-    padding: 0.75rem;
     display: flex;
     flex-direction: column;
     background-color: #f9fafb;
@@ -415,67 +414,47 @@
       radial-gradient(circle at 20px 20px, rgba(0, 0, 0, 0.01) 1%, transparent 0%), 
       radial-gradient(circle at 60px 60px, rgba(0, 0, 0, 0.01) 1%, transparent 0%);
     background-size: 80px 80px;
+    padding: 0.75rem;
     
-    /* Improve scrolling performance and visibility */
-    -webkit-overflow-scrolling: touch;
-    scroll-behavior: smooth;
-    scrollbar-width: thin;
-    scrollbar-color: rgba(0, 0, 0, 0.2) rgba(0, 0, 0, 0.1);
-    
-    /* Always show scrollbar when content overflows */
-    overflow-y: scroll;
-    
-    /* Custom scrollbar for webkit browsers */
-    &::-webkit-scrollbar {
-      width: 8px;
-    }
-    
-    &::-webkit-scrollbar-track {
-      background: rgba(0, 0, 0, 0.05);
-      border-radius: 4px;
-    }
-    
-    &::-webkit-scrollbar-thumb {
-      background-color: rgba(0, 0, 0, 0.2);
-      border-radius: 4px;
-      
-      &:hover {
-        background-color: rgba(0, 0, 0, 0.3);
-      }
-      
-      &:active {
-        background-color: rgba(0, 0, 0, 0.4);
-      }
-    }
+    /* Remove scrolling from container - will be handled by messages-area */
+    overflow: visible;
     
     /* Focus management for keyboard navigation */
     &:focus {
-      outline: none;
+      outline: 2px solid rgba(59, 130, 246, 0.5);
+      outline-offset: -2px;
     }
     
-    /* Add bottom padding on mobile to account for fixed input area */
+    /* Mobile optimizations */
     @media (max-width: 767px) {
-      padding-bottom: 160px; /* Much larger space for fixed input area with increased padding */
-      max-height: calc(100vh - 180px); /* Account for mobile headers */
-      
-      /* Thinner scrollbar on mobile */
-      &::-webkit-scrollbar {
-        width: 4px;
-      }
+      padding: 0.5rem;
+      background-image: 
+        radial-gradient(circle at 20px 20px, rgba(0, 0, 0, 0.01) 1%, transparent 0%), 
+        radial-gradient(circle at 60px 60px, rgba(0, 0, 0, 0.01) 1%, transparent 0%);
+      background-size: 80px 80px;
     }
     
-    @media (min-width: 768px) {
+    /* Tablet optimizations */
+    @media (min-width: 768px) and (max-width: 1023px) {
       padding: 1rem;
-      max-height: calc(100vh - 200px);
       background-image: 
         radial-gradient(circle at 25px 25px, rgba(0, 0, 0, 0.01) 2%, transparent 0%), 
         radial-gradient(circle at 75px 75px, rgba(0, 0, 0, 0.01) 2%, transparent 0%);
       background-size: 100px 100px;
     }
     
+    /* Desktop optimizations */
     @media (min-width: 1024px) {
       padding: 1.25rem;
-      max-height: calc(100vh - 220px);
+      background-image: 
+        radial-gradient(circle at 30px 30px, rgba(0, 0, 0, 0.015) 2%, transparent 0%), 
+        radial-gradient(circle at 90px 90px, rgba(0, 0, 0, 0.015) 2%, transparent 0%);
+      background-size: 120px 120px;
+    }
+    
+    /* Large desktop optimizations */
+    @media (min-width: 1440px) {
+      padding: 1.5rem;
     }
     
     .offline-mode-banner {
@@ -512,7 +491,101 @@
       display: flex;
       flex-direction: column;
       opacity: 1;
-      transition: opacity 0.2s ease-in; // Smooth fade-in for messages
+      transition: opacity 0.2s ease-in;
+      
+      /* Enhanced scrolling for all screen sizes - applied to messages-area */
+      overflow-y: auto;
+      overflow-x: hidden;
+      -webkit-overflow-scrolling: touch;
+      scroll-behavior: smooth;
+      
+      /* Ensure proper height constraints for scrolling */
+      max-height: calc(100vh - 280px); /* Account for container padding and other elements */
+      min-height: 300px; /* Minimum height to ensure scroll area is usable */
+      
+      /* Custom scrollbar styling - always visible and properly sized */
+      scrollbar-width: thin;
+      scrollbar-color: rgba(59, 130, 246, 0.3) rgba(0, 0, 0, 0.05);
+      
+      /* Webkit scrollbar customization */
+      &::-webkit-scrollbar {
+        width: 12px; /* Slightly wider for better usability */
+        background: rgba(0, 0, 0, 0.02);
+      }
+      
+      &::-webkit-scrollbar-track {
+        background: rgba(0, 0, 0, 0.03);
+        border-radius: 6px;
+        margin: 4px 0;
+      }
+      
+      &::-webkit-scrollbar-thumb {
+        background: linear-gradient(180deg, rgba(59, 130, 246, 0.4), rgba(59, 130, 246, 0.6));
+        border-radius: 6px;
+        border: 2px solid rgba(0, 0, 0, 0.02);
+        transition: all 0.2s ease;
+        
+        &:hover {
+          background: linear-gradient(180deg, rgba(59, 130, 246, 0.6), rgba(59, 130, 246, 0.8));
+          transform: scaleX(1.1);
+        }
+        
+        &:active {
+          background: linear-gradient(180deg, rgba(59, 130, 246, 0.8), rgba(59, 130, 246, 1));
+        }
+      }
+      
+      /* Focus management for keyboard navigation */
+      &:focus {
+        outline: 2px solid rgba(59, 130, 246, 0.5);
+        outline-offset: -2px;
+      }
+      
+      /* Mobile optimizations */
+      @media (max-width: 767px) {
+        max-height: calc(100vh - 240px); /* Account for mobile UI elements */
+        min-height: 250px;
+        
+        /* Thinner but still visible scrollbar on mobile */
+        &::-webkit-scrollbar {
+          width: 8px;
+        }
+        
+        &::-webkit-scrollbar-thumb {
+          border: 1px solid rgba(0, 0, 0, 0.02);
+        }
+      }
+      
+      /* Tablet optimizations */
+      @media (min-width: 768px) and (max-width: 1023px) {
+        max-height: calc(100vh - 260px);
+        min-height: 350px;
+        
+        &::-webkit-scrollbar {
+          width: 10px;
+        }
+      }
+      
+      /* Desktop optimizations */
+      @media (min-width: 1024px) {
+        max-height: calc(100vh - 280px);
+        min-height: 400px;
+        
+        &::-webkit-scrollbar {
+          width: 12px;
+        }
+        
+        /* Enhanced hover effects on desktop */
+        &::-webkit-scrollbar-thumb:hover {
+          box-shadow: 0 2px 8px rgba(59, 130, 246, 0.3);
+        }
+      }
+      
+      /* Large desktop optimizations */
+      @media (min-width: 1440px) {
+        max-height: calc(100vh - 300px);
+        min-height: 450px;
+      }
       
       &.fade-in {
         animation: fadeInUp 0.3s ease-out;

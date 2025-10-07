@@ -1,4 +1,4 @@
-import React from "react";
+
 import ProfileHeader from "./ProfileHeader";
 import GigsSection from "./GigsSection";
 import Reviews from "./Reviews";

@@ -13,8 +13,23 @@ const ProfileInformation = ({ profileDescription, onUpdate, services}) => {
   const [certificateName, setCertificateName] = useState('');
   const [certificateIssuer, setCertificateIssuer] = useState('');
   const [certificateYear, setCertificateYear] = useState('');
+  const [uploadLoading, setUploadLoading] = useState(false);
 
   const userDetails = JSON.parse(localStorage.getItem("userDetails"));
+
+  // Helper function to convert file to Base64
+  const convertFileToBase64 = (file) => {
+    return new Promise((resolve, reject) => {
+      const reader = new FileReader();
+      reader.readAsDataURL(file);
+      reader.onload = () => {
+        // Remove the data:image/jpeg;base64, prefix to get just the Base64 string
+        const base64String = reader.result.split(',')[1];
+        resolve(base64String);
+      };
+      reader.onerror = error => reject(error);
+    });
+  };
 
   const handleSave = async () => {
     try {
@@ -35,21 +50,32 @@ const ProfileInformation = ({ profileDescription, onUpdate, services}) => {
 
   const handleUploadCertificate = async () => {
     if (!certificateFile || !certificateName || !certificateIssuer || !certificateYear) {
-      alert("Please complete all fields");
+      toast.error("Please complete all fields");
       return;
     }
 
-    const formData = new FormData();
-    formData.append("file", certificateFile);
-    formData.append("name", certificateName);
-    formData.append("issuer", certificateIssuer);
-    formData.append("year", certificateYear);
-    formData.append("caregiverId", userDetails.id);
-
     try {
-      await axios.post("https://carepro-api20241118153443.azurewebsites.net/api/certificates", formData, {
-        headers: { "Content-Type": "multipart/form-data" }
+      setUploadLoading(true);
+      
+      // Convert file to Base64
+      const base64Certificate = await convertFileToBase64(certificateFile);
+      
+      // Create the request payload matching the API specification
+      const requestPayload = {
+        certificateName: certificateName,
+        caregiverId: userDetails.id,
+        certificateIssuer: certificateIssuer,
+        certificate: base64Certificate,
+        yearObtained: new Date(certificateYear, 0, 1).toISOString() // Convert year to ISO DateTime
+      };
+
+      await axios.post("https://carepro-api20241118153443.azurewebsites.net/api/Certificates", requestPayload, {
+        headers: { 
+          "Content-Type": "application/json",
+          "Accept": "*/*"
+        }
       });
+      
       setShowCertModal(false);
       // Reset fields
       setCertificateFile(null);
@@ -60,7 +86,20 @@ const ProfileInformation = ({ profileDescription, onUpdate, services}) => {
       // Optionally refresh list
     } catch (err) {
       console.error("Upload failed", err);
+      toast.error(`Upload failed: ${err.response?.data?.message || err.message || 'Unknown error'}`);
+    } finally {
+      setUploadLoading(false);
     }
+  };
+
+  const handleCancel = () => {
+    // Reset all form fields
+    setCertificateFile(null);
+    setCertificateName('');
+    setCertificateIssuer('');
+    setCertificateYear('');
+    // Close modal
+    setShowCertModal(false);
   };
 
   // const services = [
@@ -199,16 +238,17 @@ const ProfileInformation = ({ profileDescription, onUpdate, services}) => {
             />
             <div className="modal-actions">
               <button 
-                onClick={() => setShowCertModal(false)}
+                onClick={handleCancel}
                 className="modal-btn cancel"
               >
                 Cancel
               </button>
               <button 
                 onClick={handleUploadCertificate}
+                disabled={uploadLoading}
                 className="modal-btn save"
               >
-                Upload
+                {uploadLoading ? 'Uploading...' : 'Upload'}
               </button>
             </div>
           </div>
