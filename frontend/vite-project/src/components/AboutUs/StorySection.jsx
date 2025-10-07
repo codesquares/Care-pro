@@ -1,4 +1,4 @@
-import React from 'react';
+
 import '../../styles/components/story-section.scss';
 import nurseAndWomen from '../../assets/nurseAndWoman.png'
 

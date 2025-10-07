@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import { useState, useEffect } from 'react';
 import { transactionService } from '../../../services/transactionService';
 import './TransactionHistory.css';
 import { useAuth } from '../../../hooks/useAuth';

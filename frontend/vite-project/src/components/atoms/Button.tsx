@@ -1,6 +1,6 @@
 
 
-import React from 'react';
+
 import '../../styles/components/atom/button.scss';
 
 type ButtonProps = {

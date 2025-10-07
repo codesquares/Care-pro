@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import { FaDollarSign, FaClipboardList, FaChartLine, FaCreditCard, FaInfoCircle, FaMoneyBillWave } from 'react-icons/fa';
 import { earningService } from '../../services/earningsService';

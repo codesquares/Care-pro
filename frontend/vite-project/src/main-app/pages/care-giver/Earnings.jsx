@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import { useState, useEffect } from 'react';
 import { withdrawalService } from '../../services/withdrawalService';
 // import { useAuth } from '../../context/authContext'; // Assuming you have an auth context
  import { earningService } from '../../services/earningsService'; // Uncomment when the service is available

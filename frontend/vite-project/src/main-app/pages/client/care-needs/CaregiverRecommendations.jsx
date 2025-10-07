@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import { useState, useEffect } from 'react';
 import './CaregiverRecommendations.css';
 import ClientCareNeedsService from '../../../services/clientCareNeedsService';
 

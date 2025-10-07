@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import { useState } from 'react';
 import { getAllWebhookData, getWebhookStatistics } from '../../services/dojahService';
 import styles from './DojahDataViewer.module.css';
 

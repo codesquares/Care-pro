@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from "react";
+import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import "./ProfileCard.css";
 import profilecard1 from "../../../../assets/profilecard1.png";

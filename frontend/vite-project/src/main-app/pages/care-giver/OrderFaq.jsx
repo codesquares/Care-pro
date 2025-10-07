@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import{ useState } from 'react';
 import '../../../styles/components/OrderFaq.scss';
 import NavigationBar from './care-giver-dashboard/NavigationBar';
 import home from '../../../assets/home.png'

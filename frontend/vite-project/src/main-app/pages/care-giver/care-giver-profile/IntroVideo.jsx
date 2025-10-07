@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react";
+import { useState, useEffect } from "react";
 import "./intro-video.css";
 import { toast } from "react-toastify";
 

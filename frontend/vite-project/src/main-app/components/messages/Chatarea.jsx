@@ -1,10 +1,9 @@
-import React, { useState, useEffect, useRef, useCallback, useMemo } from 'react';
+import { useState, useEffect, useRef, useCallback, useMemo } from 'react';
 import { useLocation } from 'react-router-dom';
 import './chatarea.scss';
 import MessageInput from './MessageInput';
 import MessageStatus from './MessageStatus';
 import ServiceSelectionModal from './ServiceSelectionModal';
-import { formatDistanceToNow } from 'date-fns';
 import { useMessageContext } from '../../context/MessageContext';
 import { createNotification } from '../../services/notificationService';
 import ClientGigService from '../../services/clientGigService';

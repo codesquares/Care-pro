@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react";
+import { useState, useEffect } from "react";
 import { useNavigate, useSearchParams, Link } from "react-router-dom";
 import "../../styles/main-app/pages/ConfirmEmailPage.scss";
 import authImage from "../../assets/authImage.png";

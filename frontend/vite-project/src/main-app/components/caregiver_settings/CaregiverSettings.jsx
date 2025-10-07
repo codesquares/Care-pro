@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from "react";
+import { useEffect, useState } from "react";
 import "./CaregiverSettings.scss";
 import { toast } from "react-toastify";
 import ProfileHeader from "../../pages/care-giver/care-giver-profile/ProfileHeader";

@@ -1,4 +1,4 @@
-import React from "react";
+
 import "./Pricing.scss";
 import PackageDetailsInput from "./PackageDetailsInput";
 

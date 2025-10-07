@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import { useState } from 'react';
 import './GuidelinesCard.scss';
 
 const GuidelinesCard = ({ currentPage, activeField, onClose }) => {

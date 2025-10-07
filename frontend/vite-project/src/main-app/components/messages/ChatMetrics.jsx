@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import { useState, useEffect } from 'react';
 import { useMessageContext } from '../../context/MessageContext';
 import chatService from '../../services/signalRChatService';
 import { performanceMetrics } from '../../utils/performanceMetrics';

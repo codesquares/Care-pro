@@ -1,8 +1,8 @@
-import React, { useState, useEffect } from "react";
+import { useState, useEffect } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import axios from "axios";
 import { toast, ToastContainer } from "react-toastify";
-import { FaClipboardList, FaPhoneAlt } from "react-icons/fa";
+
 import "react-toastify/dist/ReactToastify.css";
 import "./CaregiverOrderDetails.css";
 

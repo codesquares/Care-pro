@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import { useState } from "react";
 import story4 from "../assets/story4.png";
 import story5 from "../assets/story5.png";
 import arrow from "../assets/arrow-right.svg"; 

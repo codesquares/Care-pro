@@ -1,4 +1,4 @@
-import React from 'react';
+
 import './messageStatus.scss';
 
 const MessageStatus = ({ status }) => {

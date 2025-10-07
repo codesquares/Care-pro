@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import { useState } from 'react';
 import Toast from './Toast.jsx';
 
 const ToastContainer = () => {

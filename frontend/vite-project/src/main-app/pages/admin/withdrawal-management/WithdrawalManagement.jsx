@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import { useState, useEffect } from 'react';
 import { adminWithdrawalService } from '../../../services/withdrawalService';
 import TokenVerificationModal from './TokenVerificationModal';
 import './WithdrawalManagement.css';

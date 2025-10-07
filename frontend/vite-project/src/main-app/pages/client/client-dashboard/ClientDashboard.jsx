@@ -1,5 +1,5 @@
 
-import React, { useState, useEffect } from "react";
+import { useState, useEffect } from "react";
 import { useLocation } from "react-router-dom";
 import "./clientDashboard.css";
 import "./responsiveFixes.css";
@@ -7,9 +7,9 @@ import Banner from "./Banner";
 import ServiceCategory from "./ServiceCategory";
 import FilterBarDropdown from "../components/FilterBar";
 import ClientGigService from "../../../services/clientGigService";
-import ClientCareNeedsService from "../../../services/clientCareNeedsService";
+
 import CareMatchBanner from "./CareMatchBanner";
-import { FaRedoAlt } from "react-icons/fa"; 
+
 
 
 const ClientDashboard = () => {

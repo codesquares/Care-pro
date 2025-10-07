@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useCallback, useMemo } from 'react';
+import { useState,  useCallback, useMemo } from 'react';
 import './sidebar.scss';
 import { formatDistanceToNow } from 'date-fns';
 

@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import { useState, useEffect } from 'react';
 import './question-bank-manager.css';
 import api from '../../../services/api';
 

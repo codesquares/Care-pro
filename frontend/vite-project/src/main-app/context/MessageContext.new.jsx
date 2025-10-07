@@ -1,7 +1,6 @@
-import React, { createContext, useContext, useState, useEffect, useCallback } from 'react';
+import { createContext, useContext, useState, useEffect, useCallback } from 'react';
 import chatService from '../services/signalRChatService';
 import axios from 'axios';
-import config from '../config';
 
 // Constants
 const API_BASE_URL = "https://carepro-api20241118153443.azurewebsites.net";

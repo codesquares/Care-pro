@@ -1,4 +1,4 @@
-import React from "react";
+
 import "./publishGig.scss";
 
 const PublishGig = ({ 

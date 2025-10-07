@@ -1,4 +1,4 @@
-// import React, { useState, useEffect } from 'react';
+// import { useState, useEffect } from 'react';
 // import '../client-dashboard/filterBar.css';
 
 // /**
@@ -288,7 +288,7 @@
 
 
 // src/components/FilterBarDropdown.js
-import React from 'react';
+
 import './filterDropdownBar.css';
 import { FaRedoAlt } from 'react-icons/fa';
 

@@ -1,4 +1,4 @@
-import React from 'react';
+
 import "./expert-team.scss";
 import '../../styles/components/AboutUsTeam.scss';
 import ifeoluwa from "../../assets/ifeoluwa.jpeg"; // Placeholder for expert images

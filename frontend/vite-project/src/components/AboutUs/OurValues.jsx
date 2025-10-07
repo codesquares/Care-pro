@@ -1,4 +1,4 @@
-import React from 'react';
+
 import '../../styles/components/why-us.scss';
 import trustImg from '../../assets/trust-icon.png'
 import verifiedImg from '../../assets/verified-icon.png'

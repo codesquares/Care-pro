@@ -1,4 +1,4 @@
-import React from 'react';
+
 import OrderSpecifications from '../../../components/cart/OrderSpecifications';
 import OrderDetails from '../../../components/cart/OrderDetails';
 import ServiceProvider from '../../../components/cart/ServiceProvider';

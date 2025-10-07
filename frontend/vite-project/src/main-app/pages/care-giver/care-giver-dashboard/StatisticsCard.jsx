@@ -1,4 +1,4 @@
-import React from "react";
+
 import "./StatisticsCard.css";
 import StatisticCard1 from "../../../../assets/statisticCard1.png";
 import StatisticCard2 from "../../../../assets/statisticCard2.png";

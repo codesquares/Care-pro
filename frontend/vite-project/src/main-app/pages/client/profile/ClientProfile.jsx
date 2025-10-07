@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useRef } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
 import './ClientProfile.css';
 import defaultAvatar from '../../../../assets/profilecard1.png';

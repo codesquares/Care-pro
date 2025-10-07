@@ -1,5 +1,4 @@
-import React, { useState, useEffect } from "react";
-import Navbar from "../../../components/Navbar";
+import { useState} from "react";
 import "./Order&Tasks.scss";
 
 const MyOrders = () => {

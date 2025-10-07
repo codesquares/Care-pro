@@ -1,4 +1,4 @@
-import React from 'react';
+
 import './GuidelinesCard.scss';
 
 const GuidelinesCard = ({ currentPage, activeField, onClose }) => {

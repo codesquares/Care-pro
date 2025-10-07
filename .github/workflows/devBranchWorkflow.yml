@@ -41,18 +41,23 @@ jobs:
           npm ci
           npm audit --audit-level=moderate
 
-      - name: 🔒 Audit Node-API Dependencies
+      - name: 🔒 Audit Node-API Dependencies (BLOCKING)
         working-directory: node-API
         run: |
           echo "🔍 Auditing Node-API dependencies..."
           npm ci
-          echo "🔍 Running security audit..."
-          npm audit --audit-level=moderate || echo "⚠️ Non-critical vulnerabilities found, continuing..."
-          echo "✅ Security audit completed"
+          echo "🔍 Running security audit (STRICT MODE)..."
+          npm audit --audit-level=moderate
+          echo "✅ Security audit completed - no vulnerabilities found"
 
-      - name: 🧹 Frontend Linting
+      - name: 🧹 Frontend Linting (Flexible Mode)
         working-directory: frontend/vite-project
-        run: npm run lint
+        run: |
+          echo "🔍 Running frontend linting..."
+          echo "⚠️  Allowing warnings for: unused-vars, React imports"
+          echo "❌ Blocking on: syntax errors, critical issues"
+          npm run lint
+          echo "✅ Linting completed - warnings allowed, errors would fail"
 
   # 🧪 FRONTEND TESTING
   frontend-tests:
@@ -159,41 +164,33 @@ jobs:
 
           echo "✅ Code quality checks completed"
 
-      - name: 🛡️ Run Security Tests
+      - name: 🛡️ Run Security Tests (MANDATORY)
         working-directory: node-API
         run: |
-          echo "🔒 Running security tests..."
-          npm run test:security --passWithNoTests || {
-            echo "⚠️ No security tests found, running all tests to verify security patterns..."
-            npm test -- --testNamePattern="MANDATORY.*SECURITY|security" --passWithNoTests
-          }
-          echo "✅ Security tests completed"
+          echo "🔒 Running MANDATORY security tests..."
+          echo "⚠️  Tests MUST exist and MUST pass - no exceptions"
+          npm run test:security
+          echo "✅ Security tests passed"
         env:
           NODE_ENV: test
 
-      - name: 🧪 Run Unit Tests
+      - name: 🧪 Run Unit Tests (STRICT)
         working-directory: node-API
         run: |
-          echo "🧪 Running unit tests..."
-          npm run test:unit --passWithNoTests || {
-            echo "⚠️ Running all tests as fallback..."
-            npm test --passWithNoTests
-          }
-          echo "✅ Unit tests completed"
+          echo "🧪 Running unit tests (STRICT MODE)..."
+          echo "⚠️  All unit tests MUST pass - no fallbacks allowed"
+          npm run test:unit
+          echo "✅ Unit tests passed"
         env:
           NODE_ENV: test
 
-      - name: 🔗 Run Integration Tests
+      - name: 🔗 Run Integration Tests (STRICT)
         working-directory: node-API
         run: |
-          echo "🔗 Running integration tests..."
-          if npm run test:integration; then
-            echo "✅ Integration tests completed successfully"
-          else
-            echo "⚠️ Integration tests had issues, running all tests as fallback..."
-            npm test --passWithNoTests
-            echo "✅ Fallback tests completed"
-          fi
+          echo "🔗 Running integration tests (STRICT MODE)..."
+          echo "⚠️  Integration tests MUST pass - no fallbacks"
+          npm run test:integration
+          echo "✅ Integration tests passed"
         env:
           NODE_ENV: test
 
@@ -209,7 +206,7 @@ jobs:
         env:
           NODE_ENV: test
 
-      - name: 🚀 Test Server Startup
+      - name: 🚀 Test Server Startup (BLOCKING)
         working-directory: node-API
         run: |
           echo "🚀 Testing Node-API server startup..."
@@ -218,10 +215,12 @@ jobs:
           sleep 3
           if curl -f http://localhost:3000/health 2>/dev/null || curl -f http://localhost:8000/health 2>/dev/null; then
             echo "✅ Server started successfully"
+            kill $SERVER_PID 2>/dev/null || true
           else
-            echo "⚠️ Server health check failed, but continuing..."
+            echo "❌ Server health check FAILED - blocking deployment"
+            kill $SERVER_PID 2>/dev/null || true
+            exit 1
           fi
-          kill $SERVER_PID 2>/dev/null || true
         env:
           NODE_ENV: test
 
