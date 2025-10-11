@@ -1,10 +1,8 @@
 import { useState } from "react";
 import { useNavigate, useSearchParams, Link } from "react-router-dom";
-import axios from "axios";
 import "../../styles/main-app/pages/ForgotPasswordPage.scss";
 import authImage from "../../assets/authImage.png";
 import { toast } from "react-toastify";
-import config from "../config";
 import { forgotPassword, resetPasswordWithToken } from "../services/auth";
 
 const ForgotPasswordPage = () => {
