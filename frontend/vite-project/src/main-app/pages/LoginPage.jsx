@@ -165,12 +165,13 @@ const LoginPage = () => {
           />
 
           <label>Password</label>
-          <div className="password-input">
+          <div className="auth-password-input" style={{ width: '100%' }}>
             <input
               type={showPassword ? "text" : "password"}
               placeholder="Enter password"
               value={password}
               onChange={(e) => setPassword(e.target.value)}
+              style={{ width: '100%' }}
             />
             <button
               type="button"

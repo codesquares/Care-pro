@@ -170,21 +170,25 @@ const ForgotPasswordPage = () => {
                     )}
                   </button>
                 </div>
-                {passwordStrength && (
-                  <div className="password-strength">
-                    <div 
-                      className="strength-bar" 
-                      style={{ 
-                        width: `${(getPasswordStrength(newPassword).label === 'Weak' ? 33 : 
-                                 getPasswordStrength(newPassword).label === 'Medium' ? 66 : 100)}%`,
-                        backgroundColor: passwordStrength.color 
+                <div className="password-strength" aria-live="polite">
+                  <div className="strength-bar">
+                    <div
+                      className="strength-bar-fill"
+                      style={{
+                        width: passwordStrength
+                          ? `${getPasswordStrength(newPassword).label === 'Weak' ? 33 : getPasswordStrength(newPassword).label === 'Medium' ? 66 : 100}%`
+                          : '0%',
+                        backgroundColor: passwordStrength ? passwordStrength.color : '#e0e0e0'
                       }}
-                    ></div>
-                    <span className="strength-text" style={{ color: passwordStrength.color }}>
-                      {passwordStrength.label}
-                    </span>
+                    />
                   </div>
-                )}
+                  <span
+                    className="strength-text"
+                    style={{ color: passwordStrength ? passwordStrength.color : 'transparent' }}
+                  >
+                    {passwordStrength ? passwordStrength.label : ' '}
+                  </span>
+                </div>
               </div>
               
               <div className="password-input">
@@ -216,9 +220,9 @@ const ForgotPasswordPage = () => {
               
               {error && <p className="error-message">{error}</p>}
               
-              <button type="submit" className="btn" disabled={loading}>
+                <button type="submit" className="btn" disabled={loading}>
                 {loading ? "Resetting Password..." : "Reset Password"}
-              </button>
+                </button>
             </form>
             
             <p className="back-to-login">
@@ -271,6 +275,7 @@ const ForgotPasswordPage = () => {
               
               <form onSubmit={handleForgotPasswordSubmit}>
                 <input
+                  style={{ width: '100%', marginBottom: '2rem' }}
                   type="email"
                   placeholder="Email address"
                   value={email}
@@ -281,7 +286,7 @@ const ForgotPasswordPage = () => {
                 {error && <p className="error-message">{error}</p>}
                 
                 <button type="submit" className="btn" disabled={loading}>
-                  {loading ? "Sending Instructions..." : "Send Reset Instructions"}
+                  {loading ? "Sending Reset Link..." : "Send Reset Link"}
                 </button>
               </form>
               

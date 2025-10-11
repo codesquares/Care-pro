@@ -55,7 +55,7 @@ const ResendConfirmationPage = () => {
         <div className="form-container">
           {success ? (
             <div className="success-state">
-              <div className="success-icon">✓</div>
+              <div className="success-icon" aria-hidden="true">✓</div>
               <h1>Confirmation Email Sent!</h1>
               <p className="success-message">
                 We've sent a new confirmation email to <strong>{email}</strong>
@@ -131,3 +131,4 @@ const ResendConfirmationPage = () => {
 };
 
 export default ResendConfirmationPage;
+

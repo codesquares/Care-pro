@@ -208,7 +208,7 @@ You won't be able to log in until your email is verified.`);
               />
               {errors.phone && <p className="error-text">{errors.phone}</p>}
             </div>
-            <div className="password-input">
+            <div className="auth-password-input" style={{ width: '100%' }}>
               <input
                 type={showPassword ? "text" : "password"}
                 name="password"
@@ -216,6 +216,7 @@ You won't be able to log in until your email is verified.`);
                 value={formValues.password}
                 onChange={handleChange}
                 required
+                style={{ width: '100%' }}
               />
               <button
                 type="button"
@@ -236,7 +237,7 @@ You won't be able to log in until your email is verified.`);
               </button>
               {errors.password && <p className="error-text">{errors.password}</p>}
             </div>
-            <div className="password-input">
+            <div className="auth-password-input" style={{ width: '100%' }}>
               <input
                 type={showConfirmPassword ? "text" : "password"}
                 name="confirmPassword"
@@ -244,6 +245,7 @@ You won't be able to log in until your email is verified.`);
                 value={formValues.confirmPassword}
                 onChange={handleChange}
                 required
+                style={{ width: '100%' }}
               />
               <button
                 type="button"
