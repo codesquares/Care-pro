@@ -111,7 +111,18 @@ jobs:
           echo "🏗️ Building frontend for staging..."
           npm run build
         env:
+          VITE_CONTENTFUL_SPACE_ID: qp3ctezw3mqr
+          VITE_CONTENTFUL_ACCESS_TOKEN_PUBLISHED: 69pqIRURSVr7hMKbyUCkSg5HvHYbg3idZIs5o4EuJYA
+          VITE_CONTENTFUL_ACCESS_TOKEN_DRAFT: 6drcdizoknhHdF__X_ZhA3kmRa2sXhpPhdiTBrq1h2I
+          VITE_CONTENTFUL_ENVIRONMENT: master
           VITE_API_URL: https://budmfp9jxr.us-east-1.awsapprunner.com
+          VITE_AZURE_API_URL: https://carepro-api20241118153443.azurewebsites.net/api
+          VITE_LOCAL_API_URL: https://care-pro-node-api.onrender.com/identity-api
+          VITE_DOJAH_WIDGET_ID: 68732f5e97202a07f66bc89a
+          VITE_DOJAH_APP_ID: 686c915878a2b53b2bdb5631
+          VITE_DOJAH_PUBLIC_KEY: prod_pk_QTjK773OoJl6siRJFLNBUq07M
+          VITE_DEBUG: true
+          VITE_REDIRECT_URL: https://carepro-frontend-staging.s3-website-us-east-1.amazonaws.com/app/caregiver/dashboard
           VITE_ENV: staging
 
       - name: 📦 Upload Frontend Build Artifacts
@@ -224,7 +235,18 @@ jobs:
           echo "🏗️ Building frontend Docker image..."
           cd frontend/vite-project
           docker build \
+            --build-arg VITE_CONTENTFUL_SPACE_ID=qp3ctezw3mqr \
+            --build-arg VITE_CONTENTFUL_ACCESS_TOKEN_PUBLISHED=69pqIRURSVr7hMKbyUCkSg5HvHYbg3idZIs5o4EuJYA \
+            --build-arg VITE_CONTENTFUL_ACCESS_TOKEN_DRAFT=6drcdizoknhHdF__X_ZhA3kmRa2sXhpPhdiTBrq1h2I \
+            --build-arg VITE_CONTENTFUL_ENVIRONMENT=master \
             --build-arg VITE_API_URL=https://budmfp9jxr.us-east-1.awsapprunner.com \
+            --build-arg VITE_AZURE_API_URL=https://carepro-api20241118153443.azurewebsites.net/api \
+            --build-arg VITE_LOCAL_API_URL=https://care-pro-node-api.onrender.com/identity-api \
+            --build-arg VITE_DOJAH_WIDGET_ID=68732f5e97202a07f66bc89a \
+            --build-arg VITE_DOJAH_APP_ID=686c915878a2b53b2bdb5631 \
+            --build-arg VITE_DOJAH_PUBLIC_KEY=prod_pk_QTjK773OoJl6siRJFLNBUq07M \
+            --build-arg VITE_DEBUG=true \
+            --build-arg VITE_REDIRECT_URL=https://carepro-frontend-staging.s3-website-us-east-1.amazonaws.com/app/caregiver/dashboard \
             --build-arg VITE_ENV=staging \
             -t $ECR_REGISTRY/$ECR_REPOSITORY_FRONTEND:$IMAGE_TAG \
             -t $ECR_REGISTRY/$ECR_REPOSITORY_FRONTEND:latest \
