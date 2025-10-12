@@ -278,6 +278,12 @@ jobs:
       - name: Checkout code
         uses: actions/checkout@v4
 
+      - name: Download Frontend Build Artifacts
+        uses: actions/download-artifact@v4
+        with:
+          name: frontend-staging-build
+          path: ./frontend-build
+
       - name: Configure AWS credentials
         uses: aws-actions/configure-aws-credentials@v4
         with:
@@ -292,8 +298,10 @@ jobs:
       - name: 🌐 Deploy Frontend to S3
         run: |
           echo "🌐 Deploying frontend to S3..."
-          # Extract and deploy the built frontend
-          aws s3 sync frontend/vite-project/dist/ s3://$S3_BUCKET --delete
+          echo "📁 Checking downloaded artifacts..."
+          ls -la ./frontend-build/
+          # Sync the downloaded frontend build to S3
+          aws s3 sync ./frontend-build/ s3://$S3_BUCKET --delete
           echo "✅ Frontend deployed to S3 successfully"
 
       - name: 🔥 Update App Runner Service
