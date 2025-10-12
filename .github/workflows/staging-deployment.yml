@@ -332,9 +332,42 @@ jobs:
           echo "⏳ Waiting for App Runner deployment to complete..."
           SERVICE_ARN=$(aws apprunner list-services --query "ServiceSummaryList[?ServiceName=='$APP_RUNNER_SERVICE_NAME'].ServiceArn" --output text)
           
-          # Wait for the service to be running
-          aws apprunner wait service-updated --service-arn $SERVICE_ARN
-          echo "✅ App Runner deployment completed"
+          echo "📍 Service ARN: $SERVICE_ARN"
+          
+          # Poll the service status until it's running
+          MAX_ATTEMPTS=30
+          ATTEMPT=1
+          
+          while [ $ATTEMPT -le $MAX_ATTEMPTS ]; do
+            echo "🔄 Attempt $ATTEMPT/$MAX_ATTEMPTS - Checking service status..."
+            
+            STATUS=$(aws apprunner describe-service \
+              --service-arn "$SERVICE_ARN" \
+              --query 'Service.Status' \
+              --output text)
+            
+            echo "📊 Current status: $STATUS"
+            
+            if [ "$STATUS" = "RUNNING" ]; then
+              echo "✅ App Runner service is running and ready!"
+              break
+            elif [ "$STATUS" = "OPERATION_IN_PROGRESS" ]; then
+              echo "⏳ Deployment in progress, waiting 30 seconds..."
+              sleep 30
+            else
+              echo "⚠️ Unexpected status: $STATUS"
+              sleep 15
+            fi
+            
+            ATTEMPT=$((ATTEMPT + 1))
+          done
+          
+          if [ $ATTEMPT -gt $MAX_ATTEMPTS ]; then
+            echo "❌ Timeout waiting for App Runner deployment"
+            exit 1
+          fi
+          
+          echo "✅ App Runner deployment completed successfully"
 
       - name: 🩺 Health Check
         run: |
