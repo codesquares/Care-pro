@@ -54,4 +54,17 @@ node_modules/
 # Exclude backend folder from commits - deployed separately
 backend/
 
+# AWS deployment files with sensitive data
+*bucket-policy.json
+task-definition-*.json
+*cloudformation.yaml
+apprunner-config.json
+*trust-policy.json
+.env.staging
+.env.production
+
+# AWS deployment scripts (keep .example versions)
+aws-config.json
+infrastructure-*.json
+
 
