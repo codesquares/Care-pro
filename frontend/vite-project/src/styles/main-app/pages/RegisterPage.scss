@@ -71,7 +71,8 @@
     justify-content: flex-start;
     align-items: center;
     padding: 2rem 3rem;
-    overflow-y: auto;
+    /* Allow internal scroll if content exceeds viewport height */
+    overflow: visible;
     max-width: 700px;
     margin: 0 auto;
     min-height: 100vh;
@@ -148,6 +149,21 @@ form {
   }
 }
 
+/* Side-by-side first/last name on medium+ screens */
+@media (min-width: 768px) {
+  .login-right .input-group {
+    flex-direction: row;
+    gap: 1rem;
+  }
+  .login-right .input-group > div {
+    flex: 1;
+    min-width: 0; /* prevent overflow */
+  }
+  .login-right .input-group input {
+    width: 100%;
+  }
+}
+
 /* Input Styles - Mobile */
 input:not([type="radio"]) {
   width: 100%;
@@ -214,16 +230,18 @@ input:not([type="radio"]) {
     right: 8px;
     top: 50%;
     transform: translateY(-50%);
-    background: none;
+    background: transparent;
     border: none;
     cursor: pointer;
-    padding: 6px;
+    padding: 0;
+    width: 36px;
+    height: 36px;
     display: flex;
     align-items: center;
     justify-content: center;
     color: #666;
     transition: color 0.2s ease;
-    z-index: 10;
+    z-index: 2; /* keep above input */
     width: 32px;
     height: 32px;
     border-radius: 4px;
@@ -600,8 +618,11 @@ input:not([type="radio"]) {
     gap: 1.5rem;
   }
 
-  input:not([type="radio"]) {
-    max-width: 450px;
+  /* Ensure inputs span full form width for alignment */
+  .login-right input:not([type="radio"]),
+  .login-right .password-input input {
+    width: 100%;
+    max-width: none;
     padding: 1.25rem 1.5rem;
     font-size: 1.15rem;
   }
@@ -652,8 +673,11 @@ input:not([type="radio"]) {
     margin-bottom: 3.5rem;
   }
 
-  input:not([type="radio"]) {
-    max-width: 500px;
+  /* Keep inputs consistent and full-width within form */
+  .login-right input:not([type="radio"]),
+  .login-right .password-input input {
+    width: 100%;
+    max-width: none;
     padding: 1.375rem 1.75rem;
     font-size: 1.2rem;
   }

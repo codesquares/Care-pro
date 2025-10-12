@@ -95,13 +95,15 @@
       }
 
       input {
+        width: 100%;
         padding: 0.8rem;
         margin-bottom: 1.5rem;
         border: 1px solid #ccc;
         border-radius: 6px;
+        box-sizing: border-box;
       }
 
-      .password-input {
+      .auth-password-input {
         position: relative;
         margin-bottom: 1.5rem;
 
@@ -119,15 +121,18 @@
           right: 12px;
           top: 50%;
           transform: translateY(-50%);
-          background: none;
+          background: transparent;
           border: none;
           cursor: pointer;
-          padding: 4px;
+          padding: 0;
+          width: 36px;
+          height: 36px;
           display: flex;
           align-items: center;
           justify-content: center;
           color: #666;
           transition: color 0.2s ease;
+          z-index: 2;
 
           &:hover {
             color: #005fa3;
