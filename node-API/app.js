@@ -115,6 +115,10 @@ app.use('/api/withdrawal', withdrawalRoutes);
 app.use('/api/earnings',earningsRoutes);
 
 // Basic health check endpoint
+app.get('/health', (req, res) => {
+  res.status(200).send('healthy');
+});
+
 app.get('/api/health', (req, res) => {
   res.status(200).json({
     status: 'success',
