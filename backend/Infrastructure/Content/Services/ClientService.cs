@@ -354,9 +354,30 @@ namespace Infrastructure.Content.Services
             return clientUsersDTOs;
         }
 
-        public Task<string> UpdateClientUserAsync(string clientId, UpdateClientUserRequest updateClientUserRequest)
+        public async Task<string> UpdateClientUserAsync(string clientId, UpdateClientUserRequest updateClientUserRequest)
         {
-            throw new NotImplementedException();
+            if (!ObjectId.TryParse(clientId, out var objectId))
+            {
+                throw new ArgumentException("Invalid Client ID format.");
+            }
+
+            var existingClient = await careProDbContext.Clients.FindAsync(objectId);
+            if (existingClient == null)
+            {
+                throw new KeyNotFoundException($"Client with ID '{clientId}' not found.");
+            }
+
+            existingClient.FirstName = updateClientUserRequest.FirstName;
+            existingClient.MiddleName = updateClientUserRequest.MiddleName;
+            existingClient.LastName = updateClientUserRequest.LastName;
+            existingClient.HomeAddress = updateClientUserRequest.HomeAddress;
+            
+            existingClient.PhoneNo = updateClientUserRequest.PhoneNo;
+
+            careProDbContext.Clients.Update(existingClient);
+            await careProDbContext.SaveChangesAsync();
+
+            return $"Client with ID '{clientId}' Availability Status Updated successfully.";
         }
 
 
@@ -419,7 +440,7 @@ namespace Infrastructure.Content.Services
             careProDbContext.Clients.Update(client);
             await careProDbContext.SaveChangesAsync();
 
-            return $"Client with ID '{clientId}' Availability Status Updated successfully.";
+            return $"Client with ID '{clientId}' Soft deleted successfully.";
         }
 
         public async Task ChangePasswordAsync(ResetPasswordRequest resetPasswordRequest)

@@ -13,5 +13,7 @@ namespace Application.Interfaces.Email
         Task SendPasswordResetEmailAsync(string toEmail, string resetLink, string firstName);
 
         Task SendSignUpVerificationEmailAsync(string toEmail, string verificationToken, string firstName);
+
+        Task SendNotificationEmailAsync(string toEmail, string firstName, int messageCount);
     }
 }

@@ -14,6 +14,7 @@ using Infrastructure.Content.Data;
 using static Org.BouncyCastle.Math.EC.ECCurve;
 using Microsoft.EntityFrameworkCore;
 using Application.Interfaces.Authentication;
+using Org.BouncyCastle.Cms;
 
 
 namespace Infrastructure.Services
@@ -29,6 +30,38 @@ namespace Infrastructure.Services
             this.emailSettings = emailSettingsOptions.Value;
             this.careProDbContext = careProDbContext;
             this.tokenHandler = tokenHandler;
+        }
+
+        public async Task SendNotificationEmailAsync(string toEmail, string firstName, int messageCount)
+        {
+            var message = new MimeMessage();
+            message.From.Add(new MailboxAddress(emailSettings.FromName, emailSettings.FromEmail));
+            message.To.Add(MailboxAddress.Parse(toEmail));
+            message.Subject = "You Have Unread Message!";
+
+            var builder = new BodyBuilder
+            {
+                HtmlBody = $@"
+                    
+                    <h3>Dear {firstName},</h3>
+                    <br />
+
+                    <p>You have {messageCount} unread message(s) in your CarePro account.</p>
+
+                    <p>Please log in to your dashboard to check them.</p>
+
+                    <p>Thanks,<br />The CarePro Team</p>"
+
+                    
+            };
+
+            message.Body = builder.ToMessageBody();
+
+            using var client = new SmtpClient();
+            await client.ConnectAsync(emailSettings.SmtpServer, emailSettings.SmtpPort, MailKit.Security.SecureSocketOptions.StartTls);
+            await client.AuthenticateAsync(emailSettings.FromEmail, emailSettings.AppPassword);
+            await client.SendAsync(message);
+            await client.DisconnectAsync(true);
         }
 
         public async Task SendPasswordResetEmailAsync(string toEmail, string resetLink, string firstName)

@@ -67,9 +67,11 @@ namespace Infrastructure.Content.Services
                 AppUserId = adminUser.Id,
                 //Role = Roles.Caregiver.ToString(),
                 Role = adminUser.Role,
+                EmailConfirmed = true,
                 IsDeleted = false,
                 CreatedAt = adminUser.CreatedAt,
             };
+
 
             await careProDbContext.AppUsers.AddAsync(careProAppUser);
 

@@ -240,6 +240,30 @@ namespace CarePro_Api.Controllers.Content
 
 
         [HttpPut]
+        [Route("UpdateClientUser/{clientId}")]
+        //[Authorize(Roles = "Client, Admin")]
+        public async Task<IActionResult> UpdateClientUserAsync(string clientId, UpdateClientUserRequest updateClientUserRequest)
+        {
+            try
+            {
+                logger.LogInformation($"Client with ID: {clientId} Updated");
+                var client = await clientService.UpdateClientUserAsync(clientId, updateClientUserRequest);
+                return Ok(client);
+            }
+            catch (KeyNotFoundException ex)
+            {
+                return NotFound(new { message = ex.Message });
+            }
+            catch (Exception ex)
+            {
+                return StatusCode(500, new { message = ex.Message });
+            }
+
+        }
+
+
+
+        [HttpPut]
         [Route("SoftDeleteClient/{clientId}")]
         //[Authorize(Roles = "Client, Admin")]
         public async Task<IActionResult> SoftDeleteClientAsync(string clientId)

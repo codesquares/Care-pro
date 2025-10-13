@@ -29,6 +29,9 @@ namespace Application.Interfaces.Content
 
         Task<string> UpdateProfilePictureAsync(string clientId, UpdateProfilePictureRequest updateProfilePictureRequest);
 
+      //  Task<string> UpdateCaregiverInformationAsync(string caregiverId, UpdateCaregiverAdditionalInfoRequest updateCaregiverAdditionalInfoRequest);
+
+
 
         Task<string> SoftDeleteClientAsync(string clientId);
 

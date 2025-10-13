@@ -138,7 +138,8 @@ namespace CarePro_Api.Controllers.Content
                 //    return Forbid();
 
                 var withdrawal = await _withdrawalRequestService.CreateWithdrawalRequestAsync(request);
-                return CreatedAtAction(nameof(GetWithdrawalRequestById), new { id = withdrawal.Id }, withdrawal);
+                //return CreatedAtAction(nameof(GetWithdrawalRequestById), new { id = withdrawal.Id }, withdrawal);
+                return Ok(withdrawal);
             }
             catch (InvalidOperationException ex)
             {

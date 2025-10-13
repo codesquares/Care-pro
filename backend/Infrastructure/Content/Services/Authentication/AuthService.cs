@@ -89,7 +89,7 @@ namespace Infrastructure.Content.Services.Authentication
             if (appUser == null)
                 throw new UnauthorizedAccessException("Account does not exist, please check the e-mail you entered or Click on Sign Up!");
 
-            if (!appUser.EmailConfirmed)
+            if (!appUser.EmailConfirmed && appUser.Role != "Admin")
                 throw new UnauthorizedAccessException("Email not yet verified. Please check your inbox to verify your account, or request a resend confirmation.");
 
             // ✅ Verify password here

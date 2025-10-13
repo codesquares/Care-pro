@@ -29,5 +29,6 @@ namespace Domain.Entities
         public bool? IsOnline { get; set; }
         public bool EmailConfirmed { get; set; }
         public string? ConnectionId { get; set; }
+        public List<string>? DeviceIp { get; set; }
     }
 }
