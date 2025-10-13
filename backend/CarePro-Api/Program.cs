@@ -209,8 +209,8 @@ builder.Services.AddCors(options =>
     options.AddPolicy("default", builder =>
     {
         builder.WithOrigins("https://care-pro-frontend.onrender.com", "https://localhost:5173", "http://localhost:5173", 
-            "https://localhost:5174", "http://localhost:5174", " https://budmfp9jxr.us-east-1.awsapprunner.com", 
-            " http://carepro-frontend-staging.s3-website-us-east-1.amazonaws.com", " https://carepro-frontend-staging.s3-website-us-east-1.amazonaws.com")
+            "https://localhost:5174", "http://localhost:5174", "https://budmfp9jxr.us-east-1.awsapprunner.com", 
+            "http://carepro-frontend-staging.s3-website-us-east-1.amazonaws.com", "https://carepro-frontend-staging.s3-website-us-east-1.amazonaws.com")
                .AllowAnyHeader()
                .AllowAnyMethod()
                .AllowCredentials();
