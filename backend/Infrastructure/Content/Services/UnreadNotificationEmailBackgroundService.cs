@@ -6,26 +6,42 @@ using Application.Interfaces.Email;
 using Domain.Entities;
 using Infrastructure.Content.Data;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
 using MongoDB.Driver;
 
 public class UnreadNotificationEmailBackgroundService : BackgroundService
 {
-    private readonly CareProDbContext _dbContext;
-    private readonly IEmailService _emailService;
+    //private readonly CareProDbContext _dbContext;
+    //private readonly IEmailService _emailService;
+    //private readonly ILogger<UnreadNotificationEmailBackgroundService> _logger;
+    //private readonly TimeSpan _interval = TimeSpan.FromHours(2);
+
+    //public UnreadNotificationEmailBackgroundService(
+    //    CareProDbContext dbContext,
+    //    IEmailService emailService,
+    //    ILogger<UnreadNotificationEmailBackgroundService> logger)
+    //{
+    //    _dbContext = dbContext;
+    //    _emailService = emailService;
+    //    _logger = logger;
+    //}
+
+    private readonly IServiceScopeFactory _scopeFactory;
     private readonly ILogger<UnreadNotificationEmailBackgroundService> _logger;
     private readonly TimeSpan _interval = TimeSpan.FromHours(2);
 
     public UnreadNotificationEmailBackgroundService(
-        CareProDbContext dbContext,
-        IEmailService emailService,
+        IServiceScopeFactory scopeFactory,
         ILogger<UnreadNotificationEmailBackgroundService> logger)
     {
-        _dbContext = dbContext;
-        _emailService = emailService;
+        _scopeFactory = scopeFactory;
         _logger = logger;
     }
+
+
+
 
     protected override async Task ExecuteAsync(CancellationToken stoppingToken)
     {
@@ -47,28 +63,79 @@ public class UnreadNotificationEmailBackgroundService : BackgroundService
         }
     }
 
+    //private async Task CheckAndSendUnreadNotificationEmailsAsync(CancellationToken stoppingToken)
+    //{
+    //    var cutoffTime = DateTime.UtcNow.AddHours(-2);
+
+    //    // Fetch unread notifications older than 2 hours
+    //    var filter = Builders<Notification>.Filter.And(
+    //        Builders<Notification>.Filter.Eq(n => n.IsRead, false),
+    //        Builders<Notification>.Filter.Lte(n => n.CreatedAt, cutoffTime)
+    //    );
+    //    var unreadNotifications = await _dbContext.Notifications
+    //            .Where(x => x.IsRead == false && x.CreatedAt <= cutoffTime)
+    //            .OrderBy(x => x.CreatedAt)
+    //            .ToListAsync();
+
+
+    //    if (!unreadNotifications.Any())
+    //    {
+    //        _logger.LogInformation("No unread notifications found older than 2 hours.");
+    //        return;
+    //    }
+
+    //    // Group by recipient
+    //    var groupedByRecipient = unreadNotifications.GroupBy(n => n.RecipientId);
+
+    //    foreach (var group in groupedByRecipient)
+    //    {
+    //        var recipientId = group.Key;
+    //        var messageCount = group.Count();
+
+    //        try
+    //        {
+    //            var recipient = await _dbContext.AppUsers
+    //                .Where(x => x.AppUserId.ToString() == recipientId)
+    //                .FirstOrDefaultAsync(stoppingToken);
+
+    //            if (recipient == null || string.IsNullOrEmpty(recipient.Email))
+    //            {
+    //                _logger.LogWarning($"Recipient with ID {recipientId} not found or has no email.");
+    //                continue;
+    //            }
+
+
+    //            await _emailService.SendNotificationEmailAsync(recipient.Email, recipient.FirstName, messageCount);
+
+    //            _logger.LogInformation($"Sent unread notification reminder to {recipient.Email}");
+    //        }
+    //        catch (Exception ex)
+    //        {
+    //            _logger.LogError(ex, $"Error sending email for recipient {recipientId}");
+    //        }
+    //    }
+    //}
+
     private async Task CheckAndSendUnreadNotificationEmailsAsync(CancellationToken stoppingToken)
     {
+        using var scope = _scopeFactory.CreateScope();
+
+        var dbContext = scope.ServiceProvider.GetRequiredService<CareProDbContext>();
+        var emailService = scope.ServiceProvider.GetRequiredService<IEmailService>();
+
         var cutoffTime = DateTime.UtcNow.AddHours(-2);
 
-        // Fetch unread notifications older than 2 hours
-        var filter = Builders<Notification>.Filter.And(
-            Builders<Notification>.Filter.Eq(n => n.IsRead, false),
-            Builders<Notification>.Filter.Lte(n => n.CreatedAt, cutoffTime)
-        );
-        var unreadNotifications = await _dbContext.Notifications
-                .Where(x => x.IsRead == false && x.CreatedAt <= cutoffTime)
-                .OrderBy(x => x.CreatedAt)
-                .ToListAsync();
+        var unreadNotifications = await dbContext.Notifications
+            .Where(x => x.IsRead == false && x.CreatedAt <= cutoffTime)
+            .OrderBy(x => x.CreatedAt)
+            .ToListAsync(stoppingToken);
 
-        
         if (!unreadNotifications.Any())
         {
             _logger.LogInformation("No unread notifications found older than 2 hours.");
             return;
         }
 
-        // Group by recipient
         var groupedByRecipient = unreadNotifications.GroupBy(n => n.RecipientId);
 
         foreach (var group in groupedByRecipient)
@@ -78,7 +145,7 @@ public class UnreadNotificationEmailBackgroundService : BackgroundService
 
             try
             {
-                var recipient = await _dbContext.AppUsers
+                var recipient = await dbContext.AppUsers
                     .Where(x => x.AppUserId.ToString() == recipientId)
                     .FirstOrDefaultAsync(stoppingToken);
 
@@ -87,10 +154,8 @@ public class UnreadNotificationEmailBackgroundService : BackgroundService
                     _logger.LogWarning($"Recipient with ID {recipientId} not found or has no email.");
                     continue;
                 }
-                                
 
-                await _emailService.SendNotificationEmailAsync(recipient.Email, recipient.FirstName, messageCount);
-
+                await emailService.SendNotificationEmailAsync(recipient.Email, recipient.FirstName, messageCount);
                 _logger.LogInformation($"Sent unread notification reminder to {recipient.Email}");
             }
             catch (Exception ex)
@@ -98,5 +163,9 @@ public class UnreadNotificationEmailBackgroundService : BackgroundService
                 _logger.LogError(ex, $"Error sending email for recipient {recipientId}");
             }
         }
+
+
+
     }
+
 }
