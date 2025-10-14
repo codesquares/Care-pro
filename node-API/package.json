@@ -34,8 +34,7 @@
     "jsonwebtoken": "^9.0.2",
     "mongoose": "^8.0.3",
     "multer": "^2.0.1",
-    "openai": "^6.2.0",
-    "validator": "^13.11.0"
+    "openai": "^6.2.0"
   },
   "devDependencies": {
     "@types/jest": "^29.5.8",
@@ -46,6 +45,6 @@
     "nock": "^13.4.0",
     "nodemon": "^3.1.10",
     "sinon": "^17.0.0",
-    "supertest": "^6.3.3"
+    "supertest": "^7.1.4"
   }
 }
