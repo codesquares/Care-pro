@@ -26,7 +26,6 @@ import MainAppRoutes from './main-app/routes';
 import { logout } from './main-app/services/auth';
 import { AuthProvider } from './main-app/context/AuthContext';
 import ErrorBoundary from './main-app/components/ErrorBoundary';
-import CreateGig from './main-app/pages/care-giver/CreateGig';
 // import Messages from './main-app/pages/Messages';
 import NotificationBell from './main-app/components/notifications/NotificationBell';
 import ContentBlog from './components/ContentfulBlog/Blog';
@@ -92,7 +91,6 @@ function AppContent() {
     '/forgot-password',
     '/confirm-email',
     '/resend-confirmation',
-    '/create-gig',
     '/unauthorized',
     '/splash',
     '/Caregivergigpage',
@@ -139,7 +137,6 @@ function AppContent() {
         <Route path="/contentful-blog/:id" element={<ContentBlogPost />} />
         <Route path="/care-facts" element={<CareFacts />} />
         <Route path="/our-process" element={<OurProcess />} />
-        <Route path="/create-gig" element={<CreateGig />} />
         {/* <Route path="/messages" element={<Messages />} /> */}
         <Route path="/plans" element={<Plans />} />
         <Route path="/book-caregiver" element={<BookCaregiver />} />
