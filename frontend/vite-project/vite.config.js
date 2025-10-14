@@ -4,7 +4,11 @@ import fs from 'fs'
 
 // https://vitejs.dev/config/
 export default defineConfig({
-  plugins: [react()],
+  plugins: [
+    react({
+      jsxRuntime: 'automatic',
+    })
+  ],
   server: {
     proxy: {
       // Proxy all API requests including notifications with detailed logging

@@ -1,4 +1,4 @@
-import React from "react";
+import React, { Fragment } from "react";
 import "./pagebar.scss";
 
 const PageBar = ({ pages, currentPage, onPageClick, pageValidationStatus = {} }) => {
@@ -28,7 +28,7 @@ const PageBar = ({ pages, currentPage, onPageClick, pageValidationStatus = {} })
       <div className="page-bar-card">
         <div className="page-bar-steps">
           {pages.map((page, index) => (
-            <React.Fragment key={index}>
+            <Fragment key={index}>
               <div
                 className={getStepClasses(index)}
                 onClick={() => index <= currentPage && onPageClick(index)}
@@ -41,7 +41,7 @@ const PageBar = ({ pages, currentPage, onPageClick, pageValidationStatus = {} })
               {index < pages.length - 1 && (
                 <div className="step-separator">{'>'}</div>
               )}
-            </React.Fragment>
+            </Fragment>
           ))}
         </div>
       </div>
