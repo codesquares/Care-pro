@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState, Fragment } from "react";
 import star from '../../../assets/rating_star.png';
 import experplaceholder from '../../../assets/expert-placeholder.jpg';
 import videoPlaceholder from "../../../assets/Video.png";
@@ -396,7 +396,7 @@ const Caregivergigpage = () => {
           <div style={{ border: '1px solid #ccc', borderRadius: '8px', marginBottom: '15px', padding: '15px', backgroundColor: currentPlan.backgroundColor, color: currentPlan.textColor }}>
             <div style={{ marginBottom: '10px', borderBottom: '2px solid #ccc', paddingBottom: '10px', display: 'flex', justifyContent: 'space-around' }}>
               {Object.keys(plansData).map((planName, index, array) => (
-                <React.Fragment key={planName}>
+                <Fragment key={planName}>
                   <button
                     style={{
                       border: 'none',
@@ -421,7 +421,7 @@ const Caregivergigpage = () => {
                       }}
                     />
                   )}
-                </React.Fragment>
+                </Fragment>
               ))}
             </div>
 

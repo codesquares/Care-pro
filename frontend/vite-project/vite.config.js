@@ -4,7 +4,17 @@ import fs from 'fs'
 
 // https://vitejs.dev/config/
 export default defineConfig({
-  plugins: [react()],
+  plugins: [
+    react({
+      jsxRuntime: 'automatic',
+      // Include React in the bundle for older components that use React.Component
+      include: "**/*.{jsx,tsx}",
+    })
+  ],
+  define: {
+    // Ensure React is available globally for class components
+    global: 'globalThis',
+  },
   server: {
     proxy: {
       // Proxy all API requests including notifications with detailed logging
