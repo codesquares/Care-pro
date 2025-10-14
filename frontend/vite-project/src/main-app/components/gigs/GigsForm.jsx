@@ -300,33 +300,52 @@ const GigsForm = () => {
     try {
       const formDataPayload = new FormData();
 
-      Object.keys(formData).forEach((key) => {
-        if (key === "searchTags") {
-          formDataPayload.append("Tags", searchtags);
-        } else if (key === "status") {
-          formDataPayload.append("status", "Draft");
-        } else if (key === "pricing") {
-          Object.keys(formData.pricing).forEach((packageType) => {
-            const packageData = formData.pricing[packageType];
-            formDataPayload.append("PackageType", packageType);
-            formDataPayload.append("PackageName", packageData.name);
-            formDataPayload.append("PackageDetails", packageData.details);
-            formDataPayload.append("DeliveryTime", packageData.deliveryTime);
-            formDataPayload.append("Price", packageData.amount);
-          });
-        } else {
-          formDataPayload.append(key, formData[key]);
+      // Map frontend form data to backend expected field names
+      if (formData.title) {
+        formDataPayload.append("Title", formData.title);
+      }
+      
+      if (formData.category) {
+        formDataPayload.append("Category", formData.category);
+      }
+      
+      if (searchtags) {
+        formDataPayload.append("Tags", searchtags);
+      }
+      
+      // Always set status as Draft for this function
+      formDataPayload.append("Status", "Draft");
+      
+      // Add CaregiverId (you'll need to get this from user context)
+      const userDetails = JSON.parse(localStorage.getItem('userDetails') || '{}');
+      if (userDetails.id) {
+        formDataPayload.append("CaregiverId", userDetails.id);
+      }
+
+      // Handle pricing - only send the first package for now
+      if (formData.pricing) {
+        const packageTypes = Object.keys(formData.pricing);
+        if (packageTypes.length > 0) {
+          const firstPackageType = packageTypes[0];
+          const packageData = formData.pricing[firstPackageType];
+          
+          formDataPayload.append("PackageType", firstPackageType);
+          formDataPayload.append("PackageName", packageData.name || "");
+          formDataPayload.append("PackageDetails", packageData.details || "");
+          formDataPayload.append("DeliveryTime", packageData.deliveryTime || "");
+          formDataPayload.append("Price", packageData.amount || "");
         }
-      });
+      }
 
       // Handle image for draft save
       if (selectedFile) {
         console.log("Adding Image1 file to draft FormData:", selectedFile.name);
         formDataPayload.append("Image1", selectedFile);
-      } else if (isEditMode && formData?.image1) {
-        // For edit mode without new image, don't append anything - the backend should keep existing
-        console.log("Edit mode: keeping existing image, not appending to FormData");
-        // Note: Backend should preserve existing image when no new Image1 is provided
+      }
+
+      // Add any other fields that might be missing but required by backend
+      if (formData.description) {
+        formDataPayload.append("Description", formData.description);
       }
 
       const response = await axios.post(
