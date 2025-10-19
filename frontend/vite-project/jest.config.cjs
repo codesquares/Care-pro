@@ -8,7 +8,9 @@ module.exports = {
   setupFilesAfterEnv: ['<rootDir>/src/setupTests.js'],
   moduleNameMapper: {
     '\\.(css|less|scss|sass)$': 'identity-obj-proxy',
-    '\\.(jpg|jpeg|png|gif|svg)$': '<rootDir>/__mocks__/fileMock.js'
+    '\\.(jpg|jpeg|png|gif|svg)$': '<rootDir>/__mocks__/fileMock.js',
+    '^../config$': '<rootDir>/__mocks__/config.js',
+    '^.*config$': '<rootDir>/__mocks__/config.js'
   },
   testPathIgnorePatterns: [
     '/node_modules/', 

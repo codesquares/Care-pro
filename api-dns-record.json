@@ -1,0 +1,13 @@
+{
+    "Changes": [{
+        "Action": "CREATE",
+        "ResourceRecordSet": {
+            "Name": "api.oncarepro.com",
+            "Type": "CNAME",
+            "TTL": 300,
+            "ResourceRecords": [{
+                "Value": "carepro-production-alb-518134746.us-east-1.elb.amazonaws.com"
+            }]
+        }
+    }]
+}

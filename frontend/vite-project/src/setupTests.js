@@ -1,5 +1,19 @@
 import '@testing-library/jest-dom';
 
+// Mock import.meta for Jest
+global.importMeta = {
+  env: {
+    VITE_API_URL: 'http://localhost:3000/api',
+    VITE_AZURE_API_URL: 'http://localhost:3000/api',
+    VITE_LOCAL_API_URL: 'http://localhost:3000/api',
+    VITE_DOJAH_APP_ID: 'test-app-id',
+    VITE_DOJAH_WIDGET_ID: 'test-widget-id',
+    VITE_DOJAH_PUBLIC_KEY: 'test-public-key',
+    VITE_DEBUG: 'true',
+    MODE: 'test'
+  }
+};
+
 // Add TextEncoder/TextDecoder for MSW
 if (typeof global.TextEncoder === 'undefined') {
   const { TextEncoder, TextDecoder } = require('util');

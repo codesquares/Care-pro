@@ -24,8 +24,7 @@ const CaregiverDashboard = () => {
    // Retrieve user details from localStorage
    const userDetails = JSON.parse(localStorage.getItem("userDetails") || "{}");
    const caregiverId = userDetails?.id;
-   // const vite_API_URL = import.meta.env.VITE_API_URL; // Use the environment variable for the API URL
-   const vite_API_URL = 'https://carepro-api20241118153443.azurewebsites.net/api'; 
+   const vite_API_URL = import.meta.env.VITE_API_URL || 'https://carepro-api20241118153443.azurewebsites.net/api'; // Use the environment variable for the API URL 
    // Ensure this is set in your .env file
    const API_URL = `${vite_API_URL}/ClientOrders/CaregiverOrders/caregiverId?caregiverId=${caregiverId}`;
 

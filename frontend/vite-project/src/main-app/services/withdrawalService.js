@@ -2,7 +2,7 @@
 import { use } from 'react';
 import config from '../config'; // Import the config file for API URLs
 
-const BASE_API_URL = 'https://carepro-api20241118153443.azurewebsites.net/api';
+const BASE_API_URL = config.BASE_URL;
 const userDetails = JSON.parse(localStorage.getItem('userDetails') || '{}');
 
 export const withdrawalService = {

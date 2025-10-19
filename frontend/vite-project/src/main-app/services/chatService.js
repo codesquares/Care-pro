@@ -1,6 +1,7 @@
-import * as signalR from "@microsoft/signalr";
+import * as signalR from '@microsoft/signalr';
+import config from '../config';
 
-const API_URL = "https://carepro-api20241118153443.azurewebsites.net/chathub"; // Replace with your actual API URL
+const API_URL = `${config.FALLBACK_URL}/chathub`; // Use environment-aware URL
 
 let connection = null;
 
