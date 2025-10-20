@@ -1,5 +1,25 @@
 import '@testing-library/jest-dom';
 
+// Mock import.meta for Jest
+global.importMeta = {
+  env: {
+    VITE_API_URL: 'https://oncarepro.com/api',
+    VITE_AZURE_API_URL: 'https://oncarepro.com/api',
+    VITE_LOCAL_API_URL: 'https://carepro-api-service-768822997.us-east-1.elb.amazonaws.com',
+    VITE_MIDDLEWARE_API_URL: 'https://carepro-api-service-768822997.us-east-1.elb.amazonaws.com',
+    VITE_DOJAH_APP_ID: 'test-app-id',
+    VITE_DOJAH_WIDGET_ID: 'test-widget-id',
+    VITE_DOJAH_PUBLIC_KEY: 'test-public-key',
+    VITE_DEBUG: 'true',
+    MODE: 'test'
+  }
+};
+
+// Also set global import for compatibility
+global.import = {
+  meta: global.importMeta
+};
+
 // Add TextEncoder/TextDecoder for MSW
 if (typeof global.TextEncoder === 'undefined') {
   const { TextEncoder, TextDecoder } = require('util');

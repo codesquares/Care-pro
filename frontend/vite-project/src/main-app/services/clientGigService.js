@@ -4,7 +4,10 @@
  */
 import axios from 'axios';
 
-const BASE_API_URL = 'https://carepro-api20241118153443.azurewebsites.net/api';
+// import api from './api';
+import config from '../config';
+
+const BASE_API_URL = config.BASE_URL;
 
 const ClientGigService = {
   /**

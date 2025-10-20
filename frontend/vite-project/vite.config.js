@@ -13,7 +13,7 @@ export default defineConfig({
     proxy: {
       // Proxy all API requests including notifications with detailed logging
       '/api': {
-        target: 'https://carepro-api20241118153443.azurewebsites.net',
+        target: 'https://oncarepro.com',
         changeOrigin: true,
         secure: false,
         rewrite: (path) => {
@@ -45,7 +45,7 @@ export default defineConfig({
       },
       // Keep WebSocket proxying for real-time notifications
       '/notificationHub': {
-        target: 'https://carepro-api20241118153443.azurewebsites.net',
+        target: 'https://oncarepro.com',
         changeOrigin: true,
         secure: false,
         ws: true, // Enable WebSocket proxying

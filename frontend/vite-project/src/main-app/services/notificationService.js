@@ -1,6 +1,7 @@
 import axios from 'axios';
+import config from '../config';
 
-const API_URL = 'https://carepro-api20241118153443.azurewebsites.net';
+const API_URL = config.FALLBACK_URL;
 
 /**
  * Creates a notification.

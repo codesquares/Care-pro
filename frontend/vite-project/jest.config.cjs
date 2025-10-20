@@ -5,10 +5,26 @@ module.exports = {
     '^.+\\.(ts|tsx)?$': 'ts-jest',
     '^.+\\.(js|jsx)$': 'babel-jest',
   },
+  globals: {
+    'ts-jest': {
+      useESM: false
+    },
+    importMeta: {
+      env: {
+        VITE_API_URL: 'https://oncarepro.com/api',
+        VITE_AZURE_API_URL: 'https://oncarepro.com/api',
+        VITE_LOCAL_API_URL: 'https://carepro-api-service-768822997.us-east-1.elb.amazonaws.com',
+        VITE_MIDDLEWARE_API_URL: 'https://carepro-api-service-768822997.us-east-1.elb.amazonaws.com',
+        MODE: 'test'
+      }
+    }
+  },
   setupFilesAfterEnv: ['<rootDir>/src/setupTests.js'],
   moduleNameMapper: {
     '\\.(css|less|scss|sass)$': 'identity-obj-proxy',
-    '\\.(jpg|jpeg|png|gif|svg)$': '<rootDir>/__mocks__/fileMock.js'
+    '\\.(jpg|jpeg|png|gif|svg)$': '<rootDir>/__mocks__/fileMock.js',
+    '^../config$': '<rootDir>/__mocks__/config.js',
+    '^.*config$': '<rootDir>/__mocks__/config.js'
   },
   testPathIgnorePatterns: [
     '/node_modules/', 

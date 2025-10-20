@@ -3,8 +3,9 @@
  * Handles all API calls related to client settings (password, profile updates, etc.)
  */
 import axios from "axios";
+import config from "../config";
 
-const BASE_API_URL = "https://carepro-api20241118153443.azurewebsites.net/api";
+const BASE_API_URL = config.BASE_URL;
 
 const ClientSettingsService = {
   /**

@@ -31,7 +31,7 @@ The main UI component for messaging:
 ### Expected Backend Endpoints
 The frontend expects a SignalR Hub available at:
 ```
-https://carepro-api20241118153443.azurewebsites.net/chathub
+https://oncarepro.com/chathub
 ```
 
 ### Required Methods

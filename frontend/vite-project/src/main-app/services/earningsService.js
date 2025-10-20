@@ -1,4 +1,6 @@
-const BASE_API_URL = 'https://carepro-api20241118153443.azurewebsites.net/api';
+import config from '../config';
+
+const BASE_API_URL = config.BASE_URL;
 
 export const earningService = {
   // Get earnings for the current caregiver

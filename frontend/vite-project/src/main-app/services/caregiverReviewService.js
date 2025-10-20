@@ -4,7 +4,9 @@
  */
 import axios from 'axios';
 
-const BASE_API_URL = 'https://carepro-api20241118153443.azurewebsites.net/api';
+import config from '../config';
+
+const BASE_API_URL = config.BASE_URL;
 
 // Cache for client profiles to avoid duplicate API calls
 const clientProfileCache = new Map();

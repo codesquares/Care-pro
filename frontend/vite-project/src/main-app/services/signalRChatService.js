@@ -5,7 +5,9 @@ import signalRConnectionHelper from '../utils/signalRConnectionHelper';
 import messageReliabilityHelper from '../utils/messageReliabilityHelper';
 
 // Constants
-const API_BASE_URL = "https://carepro-api20241118153443.azurewebsites.net";
+import config from '../config';
+
+const API_BASE_URL = config.FALLBACK_URL;
 const HUB_URL = `${API_BASE_URL}/chathub`;
 
 // Message and history cache
