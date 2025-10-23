@@ -11,9 +11,9 @@ export default defineConfig({
   ],
   server: {
     proxy: {
-      // Proxy all API requests including notifications with detailed logging
+      // Proxy all API requests to Azure API (temporary until AWS backend is ready)
       '/api': {
-        target: 'https://oncarepro.com',
+        target: 'https://carepro-api20241118153443.azurewebsites.net',
         changeOrigin: true,
         secure: false,
         rewrite: (path) => {
@@ -43,17 +43,32 @@ export default defineConfig({
           });
         },
       },
-      // Keep WebSocket proxying for real-time notifications
+      
+      // TODO: Switch to production when ready
+      // '/api': {
+      //   target: 'https://oncarepro.com',
+      //   changeOrigin: true,
+      //   secure: false,
+      // },
+      // WebSocket proxying for real-time notifications (Azure API - temporary)
       '/notificationHub': {
-        target: 'https://oncarepro.com',
+        target: 'https://carepro-api20241118153443.azurewebsites.net',
         changeOrigin: true,
         secure: false,
         ws: true, // Enable WebSocket proxying
       },
+      
+      // TODO: Switch to production when ready
+      // '/notificationHub': {
+      //   target: 'https://oncarepro.com',
+      //   changeOrigin: true,
+      //   secure: false,
+      //   ws: true,
+      // },
 
-      // Proxy for identity verification API (care-pro-node-api)
+      // Proxy for identity verification API (Node-API on AWS App Runner)
       '/identity-api': {
-        target: 'https://care-pro-node-api.onrender.com',
+        target: 'https://budmfp9jxr.us-east-1.awsapprunner.com',
         changeOrigin: true,
         secure: false,
         rewrite: (path) => path.replace(/^\/identity-api/, '/api'),
