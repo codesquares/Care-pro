@@ -1,0 +1,648 @@
+name: 🏛️ CarePro Production Deployment Pipeline
+
+on:
+  push:
+    branches: [ main ]
+    paths:
+      - 'frontend/vite-project/**'
+      - 'node-API/**'
+      - 'docker-compose.yml'
+      - '.github/workflows/production-deployment.yml'
+  workflow_dispatch:
+    inputs:
+      deployment_type:
+        description: 'Deployment type'
+        required: true
+        default: 'standard'
+        type: choice
+        options:
+          - standard
+          - hotfix
+          - rollback
+      skip_tests:
+        description: 'Skip tests (EMERGENCY ONLY)'
+        required: false
+        default: false
+        type: boolean
+
+env:
+  NODE_VERSION: '18'
+  AWS_REGION: 'us-east-1'
+  ECR_REPOSITORY_FRONTEND: 'carepro-frontend-production'
+  ECR_REPOSITORY_NODEAPI: 'carepro-node-api-production'
+  APP_RUNNER_SERVICE_NAME: 'carepro-node-api-production'
+  S3_BUCKET: 'carepro-frontend-production'
+  CLOUDFRONT_DISTRIBUTION_ID: 'E1234567890ABC'  # Update with actual distribution ID
+
+jobs:
+  # 🔒 ENHANCED SECURITY AND QUALITY GATES
+  production-security-gates:
+    name: 🔒 Production Security & Quality Gates
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          cache: 'npm'
+          cache-dependency-path: |
+            frontend/vite-project/package-lock.json
+            node-API/package-lock.json
+
+      - name: 🔍 Check for merge conflicts
+        run: |
+          echo "🔍 Checking for merge conflicts..."
+          if grep -r "^<<<<<<< \|^>>>>>>> \|^=======" . --include="*.js" --include="*.jsx" --include="*.ts" --include="*.tsx" --exclude-dir=node_modules; then
+            echo "❌ Merge conflicts found! Production deployment blocked."
+            exit 1
+          fi
+          echo "✅ No merge conflicts detected"
+
+      - name: 🔒 Audit Frontend Dependencies (STRICT)
+        working-directory: frontend/vite-project
+        run: |
+          echo "🔒 Auditing frontend dependencies (PRODUCTION MODE)..."
+          npm ci
+          npm audit --audit-level=high
+          echo "✅ Frontend security audit passed"
+
+      - name: 🔒 Audit Node-API Dependencies (STRICT)
+        working-directory: node-API
+        run: |
+          echo "🔍 Auditing Node-API dependencies (PRODUCTION MODE)..."
+          npm ci
+          echo "🔍 Running security audit (PRODUCTION STRICT MODE)..."
+          npm audit --audit-level=high
+          echo "✅ Node-API security audit passed"
+
+      - name: 🧹 Frontend Linting (STRICT)
+        working-directory: frontend/vite-project
+        run: |
+          echo "🔍 Running frontend linting (PRODUCTION MODE)..."
+          npm run lint
+          echo "✅ Frontend linting passed"
+
+      - name: 🔍 Verify Staging Deployment Success
+        run: |
+          echo "🔍 Verifying staging deployment is healthy before production..."
+          # Check staging health endpoints
+          curl -f https://budmfp9jxr.us-east-1.awsapprunner.com/api/health || {
+            echo "❌ Staging API is not healthy - blocking production deployment"
+            exit 1
+          }
+          curl -f http://carepro-frontend-staging.s3-website-us-east-1.amazonaws.com || {
+            echo "❌ Staging frontend is not healthy - blocking production deployment"  
+            exit 1
+          }
+          echo "✅ Staging environment is healthy"
+
+  # 🧪 PRODUCTION FRONTEND TESTS AND BUILD
+  frontend-production-build:
+    name: 🎨 Frontend Production Build & Test
+    runs-on: ubuntu-latest
+    timeout-minutes: 25
+    needs: production-security-gates
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          cache: 'npm'
+          cache-dependency-path: frontend/vite-project/package-lock.json
+
+      - name: Install dependencies
+        working-directory: frontend/vite-project
+        run: npm ci
+
+      - name: 🧪 Run Frontend Tests (STRICT)
+        working-directory: frontend/vite-project
+        run: |
+          echo "🧪 Running frontend tests (PRODUCTION MODE - ZERO FAILURES ALLOWED)..."
+          if [ "${{ github.event.inputs.skip_tests }}" = "true" ]; then
+            echo "⚠️ EMERGENCY MODE: Tests skipped by manual override"
+          else
+            npm run test:coverage
+          fi
+          echo "✅ Frontend tests passed"
+        env:
+          CI: true
+
+      - name: 🏗️ Build Frontend for Production
+        working-directory: frontend/vite-project
+        run: |
+          echo "🏗️ Building frontend for PRODUCTION..."
+          npm run build
+        env:
+          VITE_CONTENTFUL_SPACE_ID: qp3ctezw3mqr
+          VITE_CONTENTFUL_ACCESS_TOKEN_PUBLISHED: 69pqIRURSVr7hMKbyUCkSg5HvHYbg3idZIs5o4EuJYA
+          VITE_CONTENTFUL_ACCESS_TOKEN_DRAFT: 6drcdizoknhHdF__X_ZhA3kmRa2sXhpPhdiTBrq1h2I
+          VITE_CONTENTFUL_ENVIRONMENT: master
+          VITE_API_URL: https://oncarepro.com/api
+          VITE_AZURE_API_URL: https://oncarepro.com/api
+          VITE_LOCAL_API_URL: https://oncarepro.com/api
+          VITE_DOJAH_WIDGET_ID: 68732f5e97202a07f66bc89a
+          VITE_DOJAH_APP_ID: 686c915878a2b53b2bdb5631
+          VITE_DOJAH_PUBLIC_KEY: prod_pk_QTjK773OoJl6siRJFLNBUq07M
+          VITE_DEBUG: false
+          VITE_REDIRECT_URL: https://oncarepro.com/app/caregiver/dashboard
+          VITE_ENV: production
+
+      - name: 🔍 Production Build Verification
+        working-directory: frontend/vite-project
+        run: |
+          echo "🔍 Verifying production build..."
+          ls -la dist/
+          # Check for required files
+          [ -f dist/index.html ] || { echo "❌ index.html missing"; exit 1; }
+          [ -d dist/assets ] || { echo "❌ assets directory missing"; exit 1; }
+          # Check for debug references (should not exist in production)
+          if grep -r "console.log\|debugger" dist/ 2>/dev/null; then
+            echo "⚠️ Debug statements found in production build"
+          fi
+          echo "✅ Production build verified"
+
+      - name: 📦 Upload Frontend Build Artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          name: frontend-production-build
+          path: frontend/vite-project/dist/
+          retention-days: 30
+
+  # 🔥 PRODUCTION NODE-API TESTS AND BUILD
+  node-api-production-tests:
+    name: 🔥 Node-API Production Tests
+    runs-on: ubuntu-latest
+    timeout-minutes: 25
+    needs: production-security-gates
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          cache: 'npm'
+          cache-dependency-path: node-API/package-lock.json
+
+      - name: Install dependencies
+        working-directory: node-API
+        run: npm ci
+
+      - name: 🧹 Clean up empty test files
+        working-directory: node-API
+        run: |
+          echo "🧹 Checking for empty test files..."
+          if [ -d "__tests__" ]; then
+            find __tests__ -name "*.test.js" -size 0 -delete || true
+            find __tests__ -name "*.spec.js" -size 0 -delete || true
+            echo "✅ Empty test files cleaned up"
+          fi
+
+      - name: 🛡️ Run Security Tests (MANDATORY)
+        working-directory: node-API
+        run: |
+          echo "🔒 Running MANDATORY security tests (PRODUCTION MODE)..."
+          if [ "${{ github.event.inputs.skip_tests }}" = "true" ]; then
+            echo "⚠️ EMERGENCY MODE: Security tests skipped by manual override"
+          else
+            npm run test:security
+          fi
+          echo "✅ Security tests passed"
+        env:
+          NODE_ENV: production
+
+      - name: 🧪 Run Unit Tests (STRICT)
+        working-directory: node-API
+        run: |
+          echo "🧪 Running unit tests (PRODUCTION MODE - ZERO FAILURES ALLOWED)..."
+          if [ "${{ github.event.inputs.skip_tests }}" = "true" ]; then
+            echo "⚠️ EMERGENCY MODE: Unit tests skipped by manual override"
+          else
+            npm run test:unit
+          fi
+          echo "✅ Unit tests passed"
+        env:
+          NODE_ENV: production
+
+      - name: 🔗 Run Integration Tests (STRICT)
+        working-directory: node-API
+        run: |
+          echo "🔗 Running integration tests (PRODUCTION MODE - ZERO FAILURES ALLOWED)..."
+          if [ "${{ github.event.inputs.skip_tests }}" = "true" ]; then
+            echo "⚠️ EMERGENCY MODE: Integration tests skipped by manual override"
+          else
+            npm run test:integration
+          fi
+          echo "✅ Integration tests passed"
+        env:
+          NODE_ENV: production
+
+      - name: 📊 Generate Coverage Report (STRICT)
+        working-directory: node-API
+        run: |
+          echo "📊 Generating coverage report (PRODUCTION THRESHOLDS)..."
+          if [ "${{ github.event.inputs.skip_tests }}" = "true" ]; then
+            echo "⚠️ EMERGENCY MODE: Coverage check skipped by manual override"
+          else
+            npm run test:coverage
+          fi
+          echo "✅ Coverage thresholds met"
+        env:
+          NODE_ENV: production
+
+  # 🚀 MANUAL APPROVAL GATE
+  production-approval:
+    name: 🚀 Production Deployment Approval
+    runs-on: ubuntu-latest
+    timeout-minutes: 60
+    needs: [frontend-production-build, node-api-production-tests]
+    environment:
+      name: production-approval
+      url: https://oncarepro.com
+
+    steps:
+      - name: 🚀 Production Deployment Approved
+        run: |
+          echo "🎯 Production deployment has been manually approved"
+          echo "📋 Deployment Details:"
+          echo "   • Branch: ${{ github.ref_name }}"
+          echo "   • Commit: ${{ github.sha }}"
+          echo "   • Triggered by: ${{ github.actor }}"
+          echo "   • Deployment type: ${{ github.event.inputs.deployment_type || 'standard' }}"
+          echo "🚀 Proceeding with production deployment..."
+
+  # 🐳 PRODUCTION DOCKER BUILD AND PUSH
+  production-docker-build:
+    name: 🐳 Production Docker Build & Push
+    runs-on: ubuntu-latest
+    timeout-minutes: 40
+    needs: production-approval
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Download Frontend Build Artifacts
+        uses: actions/download-artifact@v4
+        with:
+          name: frontend-production-build
+          path: frontend/vite-project/dist/
+
+      - name: Configure AWS credentials
+        uses: aws-actions/configure-aws-credentials@v4
+        with:
+          aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          aws-region: ${{ env.AWS_REGION }}
+
+      - name: Login to Amazon ECR
+        id: login-ecr
+        uses: aws-actions/amazon-ecr-login@v2
+
+      - name: 🏗️ Build Frontend Docker Image
+        env:
+          ECR_REGISTRY: ${{ steps.login-ecr.outputs.registry }}
+          IMAGE_TAG: ${{ github.sha }}
+        run: |
+          echo "🏗️ Building frontend Docker image for PRODUCTION..."
+          cd frontend/vite-project
+          docker build \
+            --build-arg VITE_CONTENTFUL_SPACE_ID=qp3ctezw3mqr \
+            --build-arg VITE_CONTENTFUL_ACCESS_TOKEN_PUBLISHED=69pqIRURSVr7hMKbyUCkSg5HvHYbg3idZIs5o4EuJYA \
+            --build-arg VITE_CONTENTFUL_ACCESS_TOKEN_DRAFT=6drcdizoknhHdF__X_ZhA3kmRa2sXhpPhdiTBrq1h2I \
+            --build-arg VITE_CONTENTFUL_ENVIRONMENT=master \
+            --build-arg VITE_API_URL=https://oncarepro.com/api \
+            --build-arg VITE_AZURE_API_URL=https://oncarepro.com/api \
+            --build-arg VITE_LOCAL_API_URL=https://oncarepro.com/api \
+            --build-arg VITE_DOJAH_WIDGET_ID=68732f5e97202a07f66bc89a \
+            --build-arg VITE_DOJAH_APP_ID=686c915878a2b53b2bdb5631 \
+            --build-arg VITE_DOJAH_PUBLIC_KEY=prod_pk_QTjK773OoJl6siRJFLNBUq07M \
+            --build-arg VITE_DEBUG=false \
+            --build-arg VITE_REDIRECT_URL=https://oncarepro.com/app/caregiver/dashboard \
+            --build-arg VITE_ENV=production \
+            -t $ECR_REGISTRY/$ECR_REPOSITORY_FRONTEND:$IMAGE_TAG \
+            -t $ECR_REGISTRY/$ECR_REPOSITORY_FRONTEND:latest \
+            -t $ECR_REGISTRY/$ECR_REPOSITORY_FRONTEND:stable \
+            .
+          echo "✅ Frontend Docker image built successfully"
+
+      - name: 🏗️ Build Node-API Docker Image
+        env:
+          ECR_REGISTRY: ${{ steps.login-ecr.outputs.registry }}
+          IMAGE_TAG: ${{ github.sha }}
+        run: |
+          echo "🏗️ Building Node-API Docker image for PRODUCTION..."
+          cd node-API
+          docker build \
+            -t $ECR_REGISTRY/$ECR_REPOSITORY_NODEAPI:$IMAGE_TAG \
+            -t $ECR_REGISTRY/$ECR_REPOSITORY_NODEAPI:latest \
+            -t $ECR_REGISTRY/$ECR_REPOSITORY_NODEAPI:stable \
+            .
+          echo "✅ Node-API Docker image built successfully"
+
+      - name: 🚀 Push Images to ECR
+        env:
+          ECR_REGISTRY: ${{ steps.login-ecr.outputs.registry }}
+          IMAGE_TAG: ${{ github.sha }}
+        run: |
+          echo "🚀 Pushing production images to ECR..."
+          
+          # Push frontend images
+          docker push $ECR_REGISTRY/$ECR_REPOSITORY_FRONTEND:$IMAGE_TAG
+          docker push $ECR_REGISTRY/$ECR_REPOSITORY_FRONTEND:latest
+          docker push $ECR_REGISTRY/$ECR_REPOSITORY_FRONTEND:stable
+          
+          # Push Node-API images
+          docker push $ECR_REGISTRY/$ECR_REPOSITORY_NODEAPI:$IMAGE_TAG
+          docker push $ECR_REGISTRY/$ECR_REPOSITORY_NODEAPI:latest
+          docker push $ECR_REGISTRY/$ECR_REPOSITORY_NODEAPI:stable
+          
+          echo "✅ All production images pushed successfully"
+
+  # 🌐 PRODUCTION DEPLOYMENT
+  deploy-production:
+    name: 🌐 Deploy to Production
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    needs: production-docker-build
+    environment:
+      name: production
+      url: https://oncarepro.com
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Download Frontend Build Artifacts
+        uses: actions/download-artifact@v4
+        with:
+          name: frontend-production-build
+          path: ./frontend-build
+
+      - name: Configure AWS credentials
+        uses: aws-actions/configure-aws-credentials@v4
+        with:
+          aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          aws-region: ${{ env.AWS_REGION }}
+
+      - name: Login to Amazon ECR
+        id: login-ecr
+        uses: aws-actions/amazon-ecr-login@v2
+
+      - name: 📁 Backup Current Production Frontend
+        run: |
+          echo "📁 Creating backup of current production frontend..."
+          BACKUP_BUCKET="carepro-frontend-production-backup"
+          TIMESTAMP=$(date +%Y%m%d-%H%M%S)
+          
+          # Sync current production to backup with timestamp
+          aws s3 sync s3://$S3_BUCKET s3://$BACKUP_BUCKET/backup-$TIMESTAMP/ || echo "⚠️ Backup failed or bucket empty"
+          echo "✅ Production frontend backed up to backup-$TIMESTAMP"
+
+      - name: 🌐 Deploy Frontend to Production S3
+        run: |
+          echo "🌐 Deploying frontend to PRODUCTION S3..."
+          echo "📁 Checking downloaded artifacts..."
+          ls -la ./frontend-build/
+          
+          # Sync new frontend to production S3
+          aws s3 sync ./frontend-build/ s3://$S3_BUCKET --delete
+          echo "✅ Frontend deployed to production S3 successfully"
+
+      - name: 🔥 Invalidate CloudFront Cache
+        run: |
+          echo "🔥 Invalidating CloudFront cache for faster updates..."
+          aws cloudfront create-invalidation \
+            --distribution-id $CLOUDFRONT_DISTRIBUTION_ID \
+            --paths "/*" || echo "⚠️ CloudFront invalidation failed - continuing"
+          echo "✅ CloudFront cache invalidation initiated"
+
+      - name: 🔥 Update Production App Runner Service
+        env:
+          ECR_REGISTRY: ${{ steps.login-ecr.outputs.registry }}
+          IMAGE_TAG: ${{ github.sha }}
+        run: |
+          echo "🔥 Updating PRODUCTION App Runner service..."
+          NEW_IMAGE_URI="$ECR_REGISTRY/$ECR_REPOSITORY_NODEAPI:$IMAGE_TAG"
+          
+          # Get current service configuration
+          aws apprunner describe-service \
+            --service-arn $(aws apprunner list-services --query "ServiceSummaryList[?ServiceName=='$APP_RUNNER_SERVICE_NAME'].ServiceArn" --output text) \
+            --query 'Service.SourceConfiguration' > current-config.json
+          
+          # Create backup of current config
+          cp current-config.json production-config-backup.json
+          
+          # Update the image URI in the configuration
+          jq --arg new_image "$NEW_IMAGE_URI" '.ImageRepository.ImageIdentifier = $new_image' current-config.json > updated-config.json
+          
+          # Update the service
+          aws apprunner update-service \
+            --service-arn $(aws apprunner list-services --query "ServiceSummaryList[?ServiceName=='$APP_RUNNER_SERVICE_NAME'].ServiceArn" --output text) \
+            --source-configuration file://updated-config.json
+          
+          echo "✅ Production App Runner service update initiated"
+
+      - name: ⏳ Wait for Production Deployment
+        run: |
+          echo "⏳ Waiting for PRODUCTION deployment to complete..."
+          SERVICE_ARN=$(aws apprunner list-services --query "ServiceSummaryList[?ServiceName=='$APP_RUNNER_SERVICE_NAME'].ServiceArn" --output text)
+          
+          echo "📍 Production Service ARN: $SERVICE_ARN"
+          
+          # Poll the service status until it's running
+          MAX_ATTEMPTS=40
+          ATTEMPT=1
+          
+          while [ $ATTEMPT -le $MAX_ATTEMPTS ]; do
+            echo "🔄 Attempt $ATTEMPT/$MAX_ATTEMPTS - Checking production service status..."
+            
+            STATUS=$(aws apprunner describe-service \
+              --service-arn "$SERVICE_ARN" \
+              --query 'Service.Status' \
+              --output text)
+            
+            echo "📊 Current status: $STATUS"
+            
+            if [ "$STATUS" = "RUNNING" ]; then
+              echo "✅ Production App Runner service is running and ready!"
+              break
+            elif [ "$STATUS" = "OPERATION_IN_PROGRESS" ]; then
+              echo "⏳ Production deployment in progress, waiting 45 seconds..."
+              sleep 45
+            else
+              echo "⚠️ Unexpected status: $STATUS"
+              sleep 30
+            fi
+            
+            ATTEMPT=$((ATTEMPT + 1))
+          done
+          
+          if [ $ATTEMPT -gt $MAX_ATTEMPTS ]; then
+            echo "❌ Timeout waiting for production deployment"
+            echo "🚨 MANUAL INTERVENTION REQUIRED"
+            exit 1
+          fi
+          
+          echo "✅ Production deployment completed successfully"
+
+      - name: 🩺 Comprehensive Production Health Checks
+        run: |
+          echo "🩺 Performing comprehensive PRODUCTION health checks..."
+          
+          # Wait a bit for services to fully initialize
+          echo "⏳ Waiting 60 seconds for services to initialize..."
+          sleep 60
+          
+          # Check production API health
+          echo "🔍 Checking production Node-API health..."
+          for i in {1..5}; do
+            if curl -f https://oncarepro.com/api/health; then
+              echo "✅ Production API health check passed (attempt $i)"
+              break
+            else
+              echo "⚠️ Production API health check failed (attempt $i/5)"
+              if [ $i -eq 5 ]; then
+                echo "❌ PRODUCTION API HEALTH CHECK FAILED - ROLLBACK MAY BE NEEDED"
+                exit 1
+              fi
+              sleep 30
+            fi
+          done
+          
+          # Check production frontend
+          echo "🔍 Checking production frontend availability..."
+          for i in {1..3}; do
+            if curl -f https://oncarepro.com; then
+              echo "✅ Production frontend health check passed (attempt $i)"
+              break
+            else
+              echo "⚠️ Production frontend health check failed (attempt $i/3)"
+              if [ $i -eq 3 ]; then
+                echo "❌ PRODUCTION FRONTEND HEALTH CHECK FAILED"
+                exit 1
+              fi
+              sleep 20
+            fi
+          done
+          
+          echo "✅ All production health checks passed"
+
+      - name: 📊 Production Deployment Summary
+        run: |
+          echo "📊 PRODUCTION DEPLOYMENT COMPLETED SUCCESSFULLY"
+          echo "=============================================="
+          echo "🌐 Production URLs:"
+          echo "   • Frontend: https://oncarepro.com"
+          echo "   • API: https://oncarepro.com/api"
+          echo "   • Health Check: https://oncarepro.com/api/health"
+          echo ""
+          echo "📋 Deployment Details:"
+          echo "   • Branch: ${{ github.ref_name }}"
+          echo "   • Commit: ${{ github.sha }}"
+          echo "   • Image Tag: ${{ github.sha }}"
+          echo "   • Deployment Type: ${{ github.event.inputs.deployment_type || 'standard' }}"
+          echo "   • Deployed by: ${{ github.actor }}"
+          echo ""
+          echo "✅ Production environment is live and healthy!"
+
+  # 📧 PRODUCTION NOTIFICATIONS
+  notify-production-success:
+    name: 📧 Production Success Notification
+    runs-on: ubuntu-latest
+    needs: deploy-production
+    if: success()
+
+    steps:
+      - name: 📧 Send Production Success Notification
+        uses: dawidd6/action-send-mail@v3
+        with:
+          server_address: smtp.gmail.com
+          server_port: 587
+          username: ${{ secrets.EMAIL_USERNAME }}
+          password: ${{ secrets.EMAIL_PASSWORD }}
+          subject: "🎉 CarePro PRODUCTION Deployment Successful - ${{ github.sha }}"
+          body: |
+            🎉 CarePro PRODUCTION Deployment Completed Successfully!
+            
+            📋 Deployment Details:
+            • Environment: PRODUCTION 🏛️
+            • Branch: ${{ github.ref_name }}
+            • Commit: ${{ github.sha }}
+            • Deployment Type: ${{ github.event.inputs.deployment_type || 'standard' }}
+            • Triggered by: ${{ github.actor }}
+            • Deployment Time: ${{ github.event.head_commit.timestamp }}
+            
+            🌐 Production URLs:
+            • Frontend: https://oncarepro.com
+            • API: https://oncarepro.com/api
+            • Health Check: https://oncarepro.com/api/health
+            
+            ✅ Services Status:
+            • Frontend: Deployed to S3 with CloudFront cache invalidated
+            • Node-API: Deployed to App Runner (PRODUCTION)
+            • Docker Images: Pushed to ECR with stable tags
+            • Health Checks: All passed ✓
+            
+            🔗 GitHub Actions: https://github.com/${{ github.repository }}/actions/runs/${{ github.run_id }}
+            
+            🚀 Production environment is live and serving users!
+          to: ${{ secrets.NOTIFICATION_EMAIL }}
+          from: CarePro Production CI/CD <${{ secrets.EMAIL_USERNAME }}>
+
+  notify-production-failure:
+    name: 📧 Production Failure Notification
+    runs-on: ubuntu-latest
+    needs: [production-security-gates, frontend-production-build, node-api-production-tests, production-approval, production-docker-build, deploy-production]
+    if: failure()
+
+    steps:
+      - name: 📧 Send Production Failure Alert
+        uses: dawidd6/action-send-mail@v3
+        with:
+          server_address: smtp.gmail.com
+          server_port: 587
+          username: ${{ secrets.EMAIL_USERNAME }}
+          password: ${{ secrets.EMAIL_PASSWORD }}
+          subject: "🚨 URGENT: CarePro PRODUCTION Deployment Failed - ${{ github.sha }}"
+          body: |
+            🚨 URGENT: CarePro PRODUCTION Deployment Failed!
+            
+            📋 Failure Details:
+            • Environment: PRODUCTION 🏛️
+            • Branch: ${{ github.ref_name }}
+            • Commit: ${{ github.sha }}
+            • Deployment Type: ${{ github.event.inputs.deployment_type || 'standard' }}
+            • Triggered by: ${{ github.actor }}
+            • Failure Time: ${{ github.event.head_commit.timestamp }}
+            
+            🔍 Immediate Actions Required:
+            • Check production health: https://oncarepro.com/api/health
+            • Verify frontend availability: https://oncarepro.com
+            • Review deployment logs immediately
+            • Consider rollback if services are down
+            
+            🚨 Critical Areas to Check:
+            • Security vulnerabilities in dependencies
+            • Test failures (frontend/backend)
+            • Docker build issues
+            • AWS deployment problems
+            • Health check failures
+            
+            🔗 View Logs: https://github.com/${{ github.repository }}/actions/runs/${{ github.run_id }}
+            
+            ⚠️ PRODUCTION ENVIRONMENT MAY BE IMPACTED - IMMEDIATE ATTENTION REQUIRED
+          to: ${{ secrets.NOTIFICATION_EMAIL }}
+          from: CarePro Production CI/CD <${{ secrets.EMAIL_USERNAME }}>

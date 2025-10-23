@@ -1,14 +1,17 @@
-name: Care-Pro Node-API CI/CD Pipeline
+name: 🧪 CarePro CI/CD Testing Pipeline
 
 on:
-  push:
-    paths:
-      - 'node-API/**'
-    branches: [ main, develop, staging ]
   pull_request:
+    branches: [ main, staging, development ]
     paths:
+      - 'frontend/vite-project/**'
       - 'node-API/**'
-    branches: [ main, develop, staging ]
+      - '.github/workflows/**'
+  push:
+    branches: [ development ]
+    paths:
+      - 'frontend/vite-project/**'
+      - 'node-API/**'
 
 jobs:
   # MANDATORY TESTS - Must pass before any deployment
@@ -144,62 +147,105 @@ jobs:
       working-directory: node-API
       run: npx audit-ci --moderate
 
-  # Deployment gates based on branch
-  deploy-staging:
-    name: 🚀 Deploy to Staging
-    needs: [mandatory-tests, complete-test-suite, security-audit]
+  # 🎨 FRONTEND TESTS & BUILD
+  frontend-tests:
+    name: 🎨 Frontend Tests & Build
     runs-on: ubuntu-latest
-    if: github.ref == 'refs/heads/develop' && github.event_name == 'push'
-
-    environment:
-      name: staging
 
     steps:
     - name: Checkout code
       uses: actions/checkout@v4
 
-    - name: Deploy to staging
+    - name: Setup Node.js
+      uses: actions/setup-node@v4
+      with:
+        node-version: '18'
+        cache: 'npm'
+        cache-dependency-path: frontend/vite-project/package-lock.json
+
+    - name: Install dependencies
+      working-directory: frontend/vite-project
+      run: npm ci
+
+    - name: Run frontend tests
+      working-directory: frontend/vite-project
+      run: npm run test
+      env:
+        NODE_ENV: test
+
+    - name: Build frontend
+      working-directory: frontend/vite-project
+      run: npm run build
+
+  # 🔥 NODE-API TESTS (Renamed for consistency)
+  node-api-tests:
+    name: 🔥 Node-API Tests & Build
+    needs: mandatory-tests
+    runs-on: ubuntu-latest
+
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+
+    - name: Setup Node.js
+      uses: actions/setup-node@v4
+      with:
+        node-version: '18'
+        cache: 'npm'
+        cache-dependency-path: node-API/package-lock.json
+
+    - name: Install dependencies
+      working-directory: node-API
+      run: npm ci
+
+    - name: Run all Node-API tests
+      working-directory: node-API
+      run: npm run test:ci
+      env:
+        NODE_ENV: test
+
+  # 🎯 PR VALIDATION SUMMARY
+  pr-validation-summary:
+    name: 🎯 PR Validation Summary
+    needs: [mandatory-tests, complete-test-suite, security-audit, frontend-tests, node-api-tests]
+    runs-on: ubuntu-latest
+    if: github.event_name == 'pull_request'
+
+    steps:
+    - name: 🎯 PR Validation Complete
       run: |
-        echo "🎯 All mandatory tests passed - deploying to staging"
+        echo "🎯 PULL REQUEST VALIDATION COMPLETED"
+        echo "===================================="
+        echo "✅ All mandatory tests passed"
         echo "✅ Security tests: PASSED"
         echo "✅ Critical controller tests: PASSED"
         echo "✅ Integration tests: PASSED"
         echo "✅ Coverage thresholds: MET"
         echo "✅ Security audit: PASSED"
-        # Add actual deployment commands here
+        echo ""
+        echo "🚀 This PR is ready to be merged!"
+        echo "📋 Deployment will happen via dedicated deployment workflows"
 
-  deploy-production:
-    name: 🏛️ Deploy to Production
-    needs: [mandatory-tests, complete-test-suite, security-audit]
+  # 🧪 DEVELOPMENT BUILD VALIDATION
+  dev-build-validation:
+    name: 🧪 Development Build Validation
+    needs: [mandatory-tests, complete-test-suite, security-audit, frontend-tests, node-api-tests]
     runs-on: ubuntu-latest
-    if: github.ref == 'refs/heads/main' && github.event_name == 'push'
-
-    environment:
-      name: production
+    if: github.ref == 'refs/heads/develop' && github.event_name == 'push'
 
     steps:
-    - name: Checkout code
-      uses: actions/checkout@v4
-
-    - name: Final deployment verification
+    - name: 🧪 Development Validation Complete
       run: |
-        echo "🎯 PRODUCTION DEPLOYMENT VERIFICATION"
-        echo "✅ All mandatory tests MUST pass before this step"
-        echo "✅ Security tests: PASSED"
-        echo "✅ Controller tests (95% coverage): PASSED"
-        echo "✅ Integration tests: PASSED"
-        echo "✅ Security audit: PASSED"
-        echo "✅ Multi-node compatibility: PASSED"
-
-    - name: Deploy to production
-      run: |
-        echo "🚀 Deploying to production environment"
-        # Add actual production deployment commands here
+        echo "🧪 DEVELOPMENT BUILD VALIDATION COMPLETED"
+        echo "========================================"
+        echo "✅ All tests passed on develop branch"
+        echo "✅ Code is ready for staging deployment"
+        echo "� Use staging deployment workflow for actual deployment"
 
   # Notification on failure
   notify-failure:
     name: 📢 Notify on Failure
-    needs: [mandatory-tests, complete-test-suite, security-audit]
+    needs: [mandatory-tests, complete-test-suite, security-audit, frontend-tests, node-api-tests]
     runs-on: ubuntu-latest
     if: failure()
 
