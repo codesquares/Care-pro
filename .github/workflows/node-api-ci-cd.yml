@@ -2,13 +2,13 @@ name: 🧪 CarePro CI/CD Testing Pipeline
 
 on:
   pull_request:
-    branches: [ main, staging, develop ]
+    branches: [ main, staging, development ]
     paths:
       - 'frontend/vite-project/**'
       - 'node-API/**'
       - '.github/workflows/**'
   push:
-    branches: [ develop ]
+    branches: [ development ]
     paths:
       - 'frontend/vite-project/**'
       - 'node-API/**'
