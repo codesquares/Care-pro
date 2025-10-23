@@ -147,10 +147,67 @@ jobs:
       working-directory: node-API
       run: npx audit-ci --moderate
 
+  # 🎨 FRONTEND TESTS & BUILD
+  frontend-tests:
+    name: 🎨 Frontend Tests & Build
+    runs-on: ubuntu-latest
+
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+
+    - name: Setup Node.js
+      uses: actions/setup-node@v4
+      with:
+        node-version: '18'
+        cache: 'npm'
+        cache-dependency-path: frontend/vite-project/package-lock.json
+
+    - name: Install dependencies
+      working-directory: frontend/vite-project
+      run: npm ci
+
+    - name: Run frontend tests
+      working-directory: frontend/vite-project
+      run: npm run test
+      env:
+        NODE_ENV: test
+
+    - name: Build frontend
+      working-directory: frontend/vite-project
+      run: npm run build
+
+  # 🔥 NODE-API TESTS (Renamed for consistency)
+  node-api-tests:
+    name: 🔥 Node-API Tests & Build
+    needs: mandatory-tests
+    runs-on: ubuntu-latest
+
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+
+    - name: Setup Node.js
+      uses: actions/setup-node@v4
+      with:
+        node-version: '18'
+        cache: 'npm'
+        cache-dependency-path: node-API/package-lock.json
+
+    - name: Install dependencies
+      working-directory: node-API
+      run: npm ci
+
+    - name: Run all Node-API tests
+      working-directory: node-API
+      run: npm run test:ci
+      env:
+        NODE_ENV: test
+
   # 🎯 PR VALIDATION SUMMARY
   pr-validation-summary:
     name: 🎯 PR Validation Summary
-    needs: [mandatory-tests, complete-test-suite, security-audit]
+    needs: [mandatory-tests, complete-test-suite, security-audit, frontend-tests, node-api-tests]
     runs-on: ubuntu-latest
     if: github.event_name == 'pull_request'
 
@@ -172,7 +229,7 @@ jobs:
   # 🧪 DEVELOPMENT BUILD VALIDATION
   dev-build-validation:
     name: 🧪 Development Build Validation
-    needs: [mandatory-tests, complete-test-suite, security-audit]
+    needs: [mandatory-tests, complete-test-suite, security-audit, frontend-tests, node-api-tests]
     runs-on: ubuntu-latest
     if: github.ref == 'refs/heads/develop' && github.event_name == 'push'
 
@@ -188,7 +245,7 @@ jobs:
   # Notification on failure
   notify-failure:
     name: 📢 Notify on Failure
-    needs: [mandatory-tests, complete-test-suite, security-audit]
+    needs: [mandatory-tests, complete-test-suite, security-audit, frontend-tests, node-api-tests]
     runs-on: ubuntu-latest
     if: failure()
 
