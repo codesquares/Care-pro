@@ -1,9 +1,13 @@
-import { defineConfig } from 'vite'
+import { defineConfig, loadEnv } from 'vite'
 import react from '@vitejs/plugin-react'
 import fs from 'fs'
 
 // https://vitejs.dev/config/
-export default defineConfig({
+export default defineConfig(({ mode }) => {
+  // Load environment variables based on mode
+  const env = loadEnv(mode, process.cwd(), 'VITE_')
+  
+  return {
   plugins: [
     react({
       jsxRuntime: 'automatic',
@@ -11,9 +15,9 @@ export default defineConfig({
   ],
   server: {
     proxy: {
-      // Proxy all API requests to Azure API (temporary until AWS backend is ready)
+      // Proxy all API requests - environment aware
       '/api': {
-        target: 'https://carepro-api20241118153443.azurewebsites.net',
+        target: env.VITE_AZURE_API_URL || 'https://carepro-api20241118153443.azurewebsites.net',
         changeOrigin: true,
         secure: false,
         rewrite: (path) => {
@@ -50,9 +54,9 @@ export default defineConfig({
       //   changeOrigin: true,
       //   secure: false,
       // },
-      // WebSocket proxying for real-time notifications (Azure API - temporary)
+      // WebSocket proxying for real-time notifications - environment aware
       '/notificationHub': {
-        target: 'https://carepro-api20241118153443.azurewebsites.net',
+        target: env.VITE_NOTIFICATION_HUB_URL || 'https://carepro-api20241118153443.azurewebsites.net',
         changeOrigin: true,
         secure: false,
         ws: true, // Enable WebSocket proxying
@@ -66,9 +70,9 @@ export default defineConfig({
       //   ws: true,
       // },
 
-      // Proxy for identity verification API (Node-API on AWS App Runner)
+      // Proxy for identity verification API - environment aware
       '/identity-api': {
-        target: 'https://budmfp9jxr.us-east-1.awsapprunner.com',
+        target: env.VITE_IDENTITY_API_URL || 'https://budmfp9jxr.us-east-1.awsapprunner.com',
         changeOrigin: true,
         secure: false,
         rewrite: (path) => path.replace(/^\/identity-api/, '/api'),
@@ -93,4 +97,5 @@ export default defineConfig({
   build: {
     sourcemap: false, // avoid eval-based source maps
   },
+  }
 })
