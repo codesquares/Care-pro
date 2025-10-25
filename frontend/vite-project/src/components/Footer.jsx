@@ -16,9 +16,11 @@ const Footer = () => {
             <li>
               <Link to="/our-process">Caregiver Process</Link>
             </li>
-            {/* <li>Our Plans</li> */}
             <li>
-              <Link to="/blog">Blogs</Link>
+              <Link to="/plans">Our Plans</Link>
+            </li>
+            <li>
+              <Link to="/contentful-blog">Blogs</Link>
             </li>
             {/* <li>Contact us</li> */}
           </ul>
