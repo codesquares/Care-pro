@@ -15,11 +15,11 @@ export const connectToChat = (userToken, onMessageReceived) => {
         .build();
 
     connection.start()
-        .then(() => console.log("Connected to chat"))
+        .then(() => {})
         .catch(err => console.error("Connection failed: ", err));
 
     connection.on("ReceiveMessage", (senderId, message) => {
-        console.log(`New message from ${senderId}: ${message}`);
+
         showNotification("New Message", message);
         onMessageReceived(senderId, message);
     });
@@ -36,7 +36,7 @@ export const sendMessage = async (senderId, receiverId, message) => {
 export const disconnectFromChat = () => {
     if (connection) {
         connection.stop();
-        console.log("Disconnected from chat");
+
     }
 };
 

@@ -3,6 +3,10 @@
   "version": "1.0.0",
   "description": "Care-Pro API Service for caregiver verification and qualification",
   "main": "app.js",
+  "engines": {
+    "node": ">=22.0.0",
+    "npm": ">=10.0.0"
+  },
   "scripts": {
     "test": "jest --detectOpenHandles --forceExit",
     "test:watch": "jest --watch --detectOpenHandles",

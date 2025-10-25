@@ -8,13 +8,10 @@ const API_BASE_URL = "https://carepro-api20241118153443.azurewebsites.net";
 
 // Utility function to convert MongoDB ObjectId to string
 const objectIdToString = (id) => {
-  console.log('🔍 objectIdToString called with:', { id, type: typeof id });
-  
   if (!id) return null;
   
   // If it's already a string, return as-is
   if (typeof id === 'string') {
-    console.log('🔍 Already string, returning:', id);
     return id;
   }
   
@@ -92,8 +89,7 @@ const normalizeMessage = (message) => {
 
 // Reducer for batched message state updates
 const messageStateReducer = (state, action) => {
-  console.log('🔥 REDUCER ACTION:', action.type, action.payload);
-  console.log('🔥 CURRENT STATE:', { messageCount: state.messages.length, messages: state.messages.map(m => ({ id: m.id, content: m.content || m.message })) });
+
   
   switch (action.type) {
     case 'NEW_MESSAGE_RECEIVED':
@@ -615,7 +611,7 @@ export const MessageProvider = ({ children }) => {
         // Fetch user info
         const response = await axios.get(`${API_BASE_URL}/api/users/${senderId}`);
         const userData = response.data;
-        console.log('User data received for new conversation:', userData);
+
         
         // Add to conversations
         setConversations(prev => {
@@ -712,7 +708,7 @@ export const MessageProvider = ({ children }) => {
         });
         
         // Log conversations data received from API for debugging
-        console.log('Conversations data received from API:', response.data);
+
         
         // Limit processing conversations to avoid excessive API calls
         const maxConversationsToProcess = 10;

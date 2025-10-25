@@ -628,7 +628,7 @@ const verificationService = {
    */
   async saveVerificationData(verificationData) {
     try {
-      console.log('Saving verification data to Azure:', verificationData);
+
 
       const token = localStorage.getItem('authToken');
       if (!token) {

@@ -8,7 +8,7 @@ import { BlogContext } from "../../main-app/context/BlogContext";
 export default function Blog() {
   const { posts, loading } = useContext(BlogContext);
   if (loading) return <p>Loading...</p>;
-  // console.log("posts inside blog===========>", posts);
+
   if (posts.length === 0) return <p className="no-post">No posts found</p>;
   return (
     <div className="blog-view">

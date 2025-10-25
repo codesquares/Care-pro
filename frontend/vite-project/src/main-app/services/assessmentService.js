@@ -178,7 +178,7 @@ const assessmentService = {
         data: assessmentData
       });
       
-      console.log('Submitting assessment data:', JSON.stringify(assessmentData, null, 2));
+
       // Submit to backend API
       const token = localStorage.getItem('authToken');
       if (!token) {
@@ -187,7 +187,7 @@ const assessmentService = {
       
       try {
         // Submit to the exact endpoint
-        console.log('Submitting to endpoint: /Assessments');
+
         const response = await api.post(
           '/Assessments', 
           assessmentData, 
@@ -271,18 +271,14 @@ const assessmentService = {
         }
       } catch (err) {
         console.error('Error submitting assessment to API:', err);
-        console.log('Error details:', err.response?.data || 'No response data');
-        console.log('Error status:', err.response?.status || 'No status code');
-        console.log('API URL used:', err.config?.url || 'Unknown URL');
+
         throw err;
       }
     } catch (err) {
       console.error('Assessment submission error:', err);
       // Try to get more information about the API request
       if (err.isAxiosError) {
-        console.log('Full request config:', err.config);
-        console.log('Request data sent:', err.config?.data);
-        console.log('Response received:', err.response?.data);
+
       }
       throw err;
     }
@@ -313,7 +309,7 @@ const assessmentService = {
         { headers: { Authorization: `Bearer ${token}` } }
       );
       
-      console.log('Score calculation response:', response.data);
+
       
       if (response.data) {
         // Extract score and passing status
