@@ -27,7 +27,7 @@ export const withdrawalService = {
     // const api_to_use = config.BASE_URL;
     // const api_to_use = `http://localhost:3000/api/withdrawal`;
     const authToken = localStorage.getItem('authToken');
-    console.log("Auth Token:", authToken);
+
     
     try {
       const response = await fetch(`${BASE_API_URL}/Earnings/transaction-history/${caregiverId}`, {
@@ -74,7 +74,7 @@ export const withdrawalService = {
 
   // Create a new withdrawal request
   createWithdrawalRequest: async (withdrawalData) => {
-    console.log("Withdrawal Data received in service:", withdrawalData);
+
     console.log("All fields present?", {
       amountRequested: !!withdrawalData.amountRequested,
       caregiverId: !!withdrawalData.caregiverId,

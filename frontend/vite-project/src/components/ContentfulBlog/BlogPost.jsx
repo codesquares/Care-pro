@@ -40,12 +40,12 @@ const extractText = (content) => {
 export default function BlogPost() {
 
   const { id } = useParams();
-  // console.log("id========>",id);
+
   const { posts, loading } = useContext(BlogContext);
   if (loading) return <p className="no-post-error">Loading...</p>;
 
   const post = posts.find((post) => post.sys.id === id);
-  // console.log("post========>",post);
+
   const allText = extractText(post.fields.content);
 
   if (!post) return <p className="no-post-error">Post not found</p>;

@@ -80,8 +80,6 @@ const Messages = ({ userId: propsUserId, token: propsToken }) => {
         userId = user?.id;
         if (!userId) {
           console.error("User ID is missing from userDetails in localStorage");
-        } else {
-          console.log("User ID loaded successfully:", userId);
         }
       } else {
         console.error("No userDetails found in localStorage");
@@ -89,11 +87,11 @@ const Messages = ({ userId: propsUserId, token: propsToken }) => {
     } catch (error) {
       console.error("Error parsing userDetails from localStorage:", error);
     }
+
     return { userId, user };
   }, []); // Empty deps - localStorage data shouldn't change during component lifecycle
 
   const token = propsToken || localStorage.getItem('authToken') || "mock-token";
-  console.log("Auth token loaded:", token?.substring(0, 10) + "...");
   
   // Monitor online/offline status
   useEffect(() => {
@@ -541,9 +539,7 @@ const Messages = ({ userId: propsUserId, token: propsToken }) => {
     import('../services/signalRChatService').then(module => {
       const chatService = module.default;
       if (chatService && typeof chatService.getDebugInfo === 'function') {
-        console.log('=== SignalR Chat Service Debug Info ===');
-        console.log(chatService.getDebugInfo());
-        console.log('=====================================');
+        chatService.getDebugInfo();
       } else {
         console.warn('Chat service debug method not available');
       }

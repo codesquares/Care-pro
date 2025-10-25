@@ -4,6 +4,10 @@
   "version": "0.0.0",
   "homepage": "https://codesquares.github.io/Care-pro",
   "type": "module",
+  "engines": {
+    "node": ">=22.0.0",
+    "npm": ">=10.0.0"
+  },
   "scripts": {
     "dev": "vite",
     "build": "vite build",

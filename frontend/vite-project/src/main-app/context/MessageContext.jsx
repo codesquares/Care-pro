@@ -8,13 +8,10 @@ const API_BASE_URL = "https://carepro-api20241118153443.azurewebsites.net";
 
 // Utility function to convert MongoDB ObjectId to string
 const objectIdToString = (id) => {
-  console.log('🔍 objectIdToString called with:', { id, type: typeof id });
-  
   if (!id) return null;
   
   // If it's already a string, return as-is
   if (typeof id === 'string') {
-    console.log('🔍 Already string, returning:', id);
     return id;
   }
   
@@ -92,8 +89,18 @@ const normalizeMessage = (message) => {
 
 // Reducer for batched message state updates
 const messageStateReducer = (state, action) => {
-  console.log('🔥 REDUCER ACTION:', action.type, action.payload);
-  console.log('🔥 CURRENT STATE:', { messageCount: state.messages.length, messages: state.messages.map(m => ({ id: m.id, content: m.content || m.message })) });
+  /**
+   * Handles all message-related state updates in a batched and predictable way.
+   * This reducer manages messages, deduplicates them using a Set of message IDs,
+   * and ensures that state updates (such as adding new messages, updating message status,
+   * or deleting messages) are performed in a way that triggers React re-renders.
+   * 
+   * The reducer uses a full state replacement pattern to ensure React detects changes,
+   * and maintains additional metadata (like unread counts and last update timestamps).
+   * 
+   * Note: Debugging logs were removed for production, so this comment documents the
+   * reducer's purpose and the batched update pattern for future maintainers.
+   */
   
   switch (action.type) {
     case 'NEW_MESSAGE_RECEIVED':
@@ -615,7 +622,7 @@ export const MessageProvider = ({ children }) => {
         // Fetch user info
         const response = await axios.get(`${API_BASE_URL}/api/users/${senderId}`);
         const userData = response.data;
-        console.log('User data received for new conversation:', userData);
+
         
         // Add to conversations
         setConversations(prev => {
@@ -712,7 +719,7 @@ export const MessageProvider = ({ children }) => {
         });
         
         // Log conversations data received from API for debugging
-        console.log('Conversations data received from API:', response.data);
+
         
         // Limit processing conversations to avoid excessive API calls
         const maxConversationsToProcess = 10;

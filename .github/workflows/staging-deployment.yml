@@ -17,7 +17,7 @@ on:
         type: boolean
 
 env:
-  NODE_VERSION: '18'
+  NODE_VERSION: '22'
   AWS_REGION: 'us-east-1'
   ECR_REPOSITORY_FRONTEND: 'carepro-frontend-staging'
   ECR_REPOSITORY_NODEAPI: 'carepro-node-api-staging'

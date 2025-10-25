@@ -97,7 +97,7 @@ const CreateAccount = () => {
       const emailCheck = await allUserService.checkEmailExists(formValues.email);
       
       if (emailCheck.exists) {
-        console.log(`Email already exists with role: ${emailCheck.role}`);
+
         
         // Show modal asking user to login instead
         setModalTitle("Email Already Registered");
@@ -133,7 +133,7 @@ Please log in to your existing account instead of creating a new one.`);
         : userType === "Client"
         ? "/Clients/AddClientUser"
         : "/Admins/AddAdminUser";
-      console.log("Submitting registration with payload:", payload);
+
       await fetchData(payload, endpoint);
 
       // Show success modal with email verification instructions

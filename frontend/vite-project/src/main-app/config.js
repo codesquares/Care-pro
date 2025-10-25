@@ -27,11 +27,6 @@ const config = {
 };
 
 // Log config for debugging
-console.log('📋 App config loaded:', {
-    DOJAH_APP_ID: config.DOJAH.APP_ID,
-    DOJAH_WIDGET_ID: config.DOJAH.WIDGET_ID,
-    ENV_MODE: config.ENV.ENVIRONMENT,
-    API_URL: config.ENV.API_URL
-});
+
 
 export default config;

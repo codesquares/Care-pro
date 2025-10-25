@@ -103,7 +103,7 @@ const ClientTaskService = {
           if (response.headers.get('content-type')?.includes('application/json')) {
             try {
               const errorData = await response.json();
-              console.log('API error details:', errorData);
+
             } catch (jsonError) {
               console.warn('No valid JSON in error response');
             }

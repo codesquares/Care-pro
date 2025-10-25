@@ -4,7 +4,7 @@ import { preserveUserJourney } from './sessionRestoration';
 
 // Create an Axios instance
 const baseURL = import.meta.env.VITE_API_URL || 'https://carepro-api20241118153443.azurewebsites.net/api';
-console.log('API base URL:', baseURL);
+
 
 const api = axios.create({
     baseURL: baseURL,

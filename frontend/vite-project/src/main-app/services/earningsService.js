@@ -16,7 +16,6 @@ export const earningService = {
       if (response.status !== 200) {
         throw new Error(`Error fetching earnings: ${data.message || 'Unknown error'}`);
       }
-      console.log("Earnings Data:", data);
       return data;
     } catch (error) {
       console.error("Error fetching caregiver earnings:", error);
@@ -36,7 +35,6 @@ export const earningService = {
       if (response.status !== 200) {
         throw new Error(`Error fetching earnings: ${data.message || 'Unknown error'}`);
       }
-      console.log("Earnings Data:", data);
       return data;
     } catch (error) {
       console.error("Error fetching caregiver earnings:", error);
@@ -55,7 +53,7 @@ export const earningService = {
       if (response.status !== 200) {
         throw new Error(`Error fetching order details: ${data.message || 'Unknown error'}`);
       }
-      console.log("Order Details:", data);
+
       return data;
     } catch (error) {
       console.error("Error fetching caregiver order details:", error);

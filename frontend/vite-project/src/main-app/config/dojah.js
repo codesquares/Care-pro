@@ -29,7 +29,7 @@ export const DOJAH_CONFIG = {
     user_id: "", // Will be set dynamically
   },
   callback: (response) => {
-    console.log("Verification completed:", response);
+
   },
   onError: (error) => {
     console.error("Verification error:", error);

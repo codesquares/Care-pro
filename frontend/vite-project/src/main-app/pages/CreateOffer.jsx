@@ -56,7 +56,7 @@ const CreateOffer = () => {
 
   const handleSubmit = (e) => {
     e.preventDefault();
-    console.log('Offer data:', formData);
+
     // Handle form submission
   };
 
