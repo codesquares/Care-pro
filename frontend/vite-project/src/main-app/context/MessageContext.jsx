@@ -89,7 +89,18 @@ const normalizeMessage = (message) => {
 
 // Reducer for batched message state updates
 const messageStateReducer = (state, action) => {
-
+  /**
+   * Handles all message-related state updates in a batched and predictable way.
+   * This reducer manages messages, deduplicates them using a Set of message IDs,
+   * and ensures that state updates (such as adding new messages, updating message status,
+   * or deleting messages) are performed in a way that triggers React re-renders.
+   * 
+   * The reducer uses a full state replacement pattern to ensure React detects changes,
+   * and maintains additional metadata (like unread counts and last update timestamps).
+   * 
+   * Note: Debugging logs were removed for production, so this comment documents the
+   * reducer's purpose and the batched update pattern for future maintainers.
+   */
   
   switch (action.type) {
     case 'NEW_MESSAGE_RECEIVED':
