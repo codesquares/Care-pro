@@ -12,6 +12,8 @@ import Plans from './pages/Plans';
 import BookCaregiver from './pages/BookCaregiver';
 import Home from './pages/Home';
 import BecomeCaregiver from './pages/BecomeCaregiver';
+import PrivacyPolicy from './pages/PrivacyPolicy';
+import TermsAndConditions from './pages/TermsAndConditions';
 import OrderFaq from './main-app/pages/care-giver/OrderFaq';
 import LoginPage from './main-app/pages/LoginPage';
 import RegisterPage from './main-app/pages/RegisterPage';
@@ -86,6 +88,8 @@ function AppContent() {
     '/plans',
     '/book-caregiver',
     '/become-caregiver',
+    '/privacy-policy',
+    '/terms-and-conditions',
     '/login',
     '/register',
     '/forgot-password',
@@ -141,6 +145,8 @@ function AppContent() {
         <Route path="/plans" element={<Plans />} />
         <Route path="/book-caregiver" element={<BookCaregiver />} />
         <Route path="/become-caregiver" element={<BecomeCaregiver />} />
+        <Route path="/privacy-policy" element={<PrivacyPolicy />} />
+        <Route path="/terms-and-conditions" element={<TermsAndConditions />} />
         <Route path="/login" element={<LoginPage />} />
         <Route path="/register" element={<RegisterPage />} />
         <Route path="/forgot-password" element={<ForgotPasswordPage />} />

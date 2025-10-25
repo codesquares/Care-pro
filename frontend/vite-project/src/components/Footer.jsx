@@ -1,6 +1,7 @@
 
 import "../styles/components/footer.scss";
-import logo from '../assets/careproLogoWhite.svg'
+import logo from '../assets/careproLogoWhite.svg';
+import { Link } from 'react-router-dom';
 
 const Footer = () => {
   return (
@@ -9,34 +10,45 @@ const Footer = () => {
         <div className="footer-column">
           <h4>CAREPRO</h4>
           <ul>
-            <li>Healthcare facts</li>
-            <li>Caregiver Process</li>
-            <li>Our Plans</li>
-            <li>Blogs</li>
-            <li>Contact us</li>
+            <li>
+              <Link to="/care-facts">Healthcare facts</Link>
+            </li>
+            <li>
+              <Link to="/our-process">Caregiver Process</Link>
+            </li>
+            {/* <li>Our Plans</li> */}
+            <li>
+              <Link to="/blog">Blogs</Link>
+            </li>
+            {/* <li>Contact us</li> */}
           </ul>
         </div>
         <div className="footer-column">
           <h4>LEGAL</h4>
           <ul>
-            <li>Privacy policy</li>
-            <li>Terms & Conditions</li>
+            <li>
+              <Link to="/privacy-policy">Privacy policy</Link>
+            </li>
+            <li>
+              <Link to="/terms-and-conditions">Terms & Conditions</Link>
+            </li>
           </ul>
         </div>
         <div className="footer-column">
           <h4>CONTACT US</h4>
           <ul>
-            <li>+1 891 989-11-91</li>
+            <li>+234 813 195 2778</li>
           </ul>
           <h4>EMAIL</h4>
           <ul>
-            <li>info@carepro.com</li>
+            <li>careproorg@gmail.com</li>
+            <li>codesquare.team@oncarepro.com</li>
           </ul>
         </div>
         <div className="footer-column">
           <h4>ADDRESS</h4>
           <ul>
-            <li>1801 Thornridge Cir. Shiloh, Hawaii 81063</li>
+            <li>12 Bisiriyu Lawal Str, Akowonjo, Lagos State</li>
           </ul>
         </div>
         <div className="footer-logo">
@@ -44,7 +56,7 @@ const Footer = () => {
         </div>
       </div>
       <div className="footer-bottom">
-        <p>© 2024 — Copyright</p>
+        <p>© 2025 — Copyright</p>
       </div>
     </footer>
   );
