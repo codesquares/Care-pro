@@ -284,7 +284,7 @@ const PrivacyPolicy = () => {
           <div className="privacy-footer">
             <p>
               This Privacy Policy is part of our Terms of Service and should be read in conjunction with our 
-              <a href="/terms-conditions"> Terms and Conditions</a>.
+              <a href="/terms-and-conditions"> Terms and Conditions</a>.
             </p>
             <p>
               For the most current version of this Privacy Policy, please visit this page. 
