@@ -94,11 +94,13 @@ const Navbar = () => {
                         Hire Caregiver
                     </Link>
                 </li>
-                <li>
-                    <Link to="/become-caregiver" onClick={handleLinkClick}>
-                        Become a caregiver
-                    </Link>
-                </li>
+                {(!isAuthenticated || user?.role?.toLowerCase() !== 'caregiver') && (
+                    <li>
+                        <Link to="/become-caregiver" onClick={handleLinkClick}>
+                            Become a caregiver
+                        </Link>
+                    </li>
+                )}
                 <li>
                     <Link to="/about-us" onClick={handleLinkClick}>
                         About us

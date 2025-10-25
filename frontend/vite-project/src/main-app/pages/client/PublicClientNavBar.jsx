@@ -276,9 +276,11 @@ const PublicClientNavBar = () => {
                 <div className="mobile-menu-item" onClick={() => handleMobileNavClick('/about-us')}>
                   <span>About Us</span>
                 </div>
-                <div className="mobile-menu-item" onClick={() => handleMobileNavClick('/become-caregiver')}>
-                  <span>Become a Caregiver</span>
-                </div>
+                {(!isAuthenticated || user?.role?.toLowerCase() !== 'caregiver') && (
+                  <div className="mobile-menu-item" onClick={() => handleMobileNavClick('/become-caregiver')}>
+                    <span>Become a Caregiver</span>
+                  </div>
+                )}
               </>
             )}
           </div>
@@ -379,12 +381,14 @@ const PublicClientNavBar = () => {
                 >
                   About
                 </button>
-                <button 
-                  className="nav-link-btn"
-                  onClick={() => navigate('/become-caregiver')}
-                >
-                  Become a Caregiver
-                </button>
+                {(!isAuthenticated || user?.role?.toLowerCase() !== 'caregiver') && (
+                  <button 
+                    className="nav-link-btn"
+                    onClick={() => navigate('/become-caregiver')}
+                  >
+                    Become a Caregiver
+                  </button>
+                )}
               </div>
               <div className="auth-buttons">
                 <button 
