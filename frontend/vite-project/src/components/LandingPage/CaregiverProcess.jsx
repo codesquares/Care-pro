@@ -25,10 +25,10 @@ const CaregiverProcess = ({buttonText="Hire a Caregiver", btnBgColor="#373732", 
     
   ];
   
-  const handleButtonClick = () => {
+  const handleButtonClick = async () => {
     if (isAuthenticated && user?.role?.toLowerCase() === 'client') {
       // Log out client and redirect to register
-      handleLogout();
+      await handleLogout();
       navigate('/register');
     } else {
       // Default behavior for non-authenticated users
