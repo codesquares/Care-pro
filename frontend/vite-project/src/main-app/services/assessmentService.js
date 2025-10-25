@@ -278,7 +278,7 @@ const assessmentService = {
       console.error('Assessment submission error:', err);
       // Try to get more information about the API request
       if (err.isAxiosError) {
-
+        console.error('Axios error details:', err.response?.data);
       }
       throw err;
     }
