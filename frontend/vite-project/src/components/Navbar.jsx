@@ -54,7 +54,7 @@ const Navbar = () => {
             }
             
             // Navigate to appropriate route based on user role
-            if (user.role === 'Caregiver') {
+            if (user.role && user.role.toLowerCase() === 'caregiver') {
                 navigate('/app/caregiver/message');
             } else {
                 navigate('/app/client/message');
