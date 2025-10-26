@@ -509,7 +509,7 @@ jobs:
           # Check production API health
           echo "🔍 Checking production Node-API health..."
           for i in {1..5}; do
-            if curl -f https://oncarepro.com/api/health; then
+            if curl -f https://api.oncarepro.com/swagger; then
               echo "✅ Production API health check passed (attempt $i)"
               break
             else
@@ -543,11 +543,11 @@ jobs:
       - name: 📊 Production Deployment Summary
         run: |
           echo "📊 PRODUCTION DEPLOYMENT COMPLETED SUCCESSFULLY"
-          echo "=============================================="
+          echo "==============================================" 
           echo "🌐 Production URLs:"
           echo "   • Frontend: https://oncarepro.com"
-          echo "   • API: https://oncarepro.com/api"
-          echo "   • Health Check: https://oncarepro.com/api/health"
+          echo "   • API: https://api.oncarepro.com"
+          echo "   • Health Check: https://api.oncarepro.com/swagger"
           echo ""
           echo "📋 Deployment Details:"
           echo "   • Branch: ${{ github.ref_name }}"
@@ -587,8 +587,8 @@ jobs:
             
             🌐 Production URLs:
             • Frontend: https://oncarepro.com
-            • API: https://oncarepro.com/api
-            • Health Check: https://oncarepro.com/api/health
+            • API: https://api.oncarepro.com
+            • Health Check: https://api.oncarepro.com/swagger
             
             ✅ Services Status:
             • Frontend: Deployed to S3 with CloudFront cache invalidated
@@ -629,7 +629,7 @@ jobs:
             • Failure Time: ${{ github.event.head_commit.timestamp }}
             
             🔍 Immediate Actions Required:
-            • Check production health: https://oncarepro.com/api/health
+            • Check production health: https://api.oncarepro.com/swagger
             • Verify frontend availability: https://oncarepro.com
             • Review deployment logs immediately
             • Consider rollback if services are down
