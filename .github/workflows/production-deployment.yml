@@ -91,7 +91,7 @@ jobs:
         run: |
           echo "🔍 Verifying staging deployment is healthy before production..."
           # Check staging health endpoints
-          curl -f https://budmfp9jxr.us-east-1.awsapprunner.com/api/health || {
+          curl -f https://api.oncarepro.com/swagger || {
             echo "❌ Staging API is not healthy - blocking production deployment"
             exit 1
           }
@@ -146,9 +146,9 @@ jobs:
           VITE_CONTENTFUL_ACCESS_TOKEN_PUBLISHED: 69pqIRURSVr7hMKbyUCkSg5HvHYbg3idZIs5o4EuJYA
           VITE_CONTENTFUL_ACCESS_TOKEN_DRAFT: 6drcdizoknhHdF__X_ZhA3kmRa2sXhpPhdiTBrq1h2I
           VITE_CONTENTFUL_ENVIRONMENT: master
-          VITE_API_URL: https://oncarepro.com/api
-          VITE_AZURE_API_URL: https://oncarepro.com/api
-          VITE_LOCAL_API_URL: https://oncarepro.com/api
+          VITE_API_URL: https://api.oncarepro.com
+          VITE_AZURE_API_URL: https://api.oncarepro.com
+          VITE_LOCAL_API_URL: https://care-pro-node-api.onrender.com/api
           VITE_DOJAH_WIDGET_ID: 68732f5e97202a07f66bc89a
           VITE_DOJAH_APP_ID: 686c915878a2b53b2bdb5631
           VITE_DOJAH_PUBLIC_KEY: prod_pk_QTjK773OoJl6siRJFLNBUq07M
@@ -322,9 +322,9 @@ jobs:
             --build-arg VITE_CONTENTFUL_ACCESS_TOKEN_PUBLISHED=69pqIRURSVr7hMKbyUCkSg5HvHYbg3idZIs5o4EuJYA \
             --build-arg VITE_CONTENTFUL_ACCESS_TOKEN_DRAFT=6drcdizoknhHdF__X_ZhA3kmRa2sXhpPhdiTBrq1h2I \
             --build-arg VITE_CONTENTFUL_ENVIRONMENT=master \
-            --build-arg VITE_API_URL=https://oncarepro.com/api \
-            --build-arg VITE_AZURE_API_URL=https://oncarepro.com/api \
-            --build-arg VITE_LOCAL_API_URL=https://oncarepro.com/api \
+            --build-arg VITE_API_URL=https://api.oncarepro.com \
+            --build-arg VITE_AZURE_API_URL=https://api.oncarepro.com \
+            --build-arg VITE_LOCAL_API_URL=https://api.oncarepro.com \
             --build-arg VITE_DOJAH_WIDGET_ID=68732f5e97202a07f66bc89a \
             --build-arg VITE_DOJAH_APP_ID=686c915878a2b53b2bdb5631 \
             --build-arg VITE_DOJAH_PUBLIC_KEY=prod_pk_QTjK773OoJl6siRJFLNBUq07M \

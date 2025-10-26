@@ -7,8 +7,18 @@ WORKDIR /app
 # Copy package files
 COPY package*.json ./
 
-# Install dependencies
-RUN npm install --legacy-peer-deps && npm cache clean --force
+# Set npm configuration for better reliability
+RUN npm config set fetch-retry-mintimeout 20000 && \
+    npm config set fetch-retry-maxtimeout 120000 && \
+    npm config set fetch-retries 3 && \
+    npm config set registry https://registry.npmjs.org/
+
+# Install dependencies with retries and better error handling
+RUN for i in 1 2 3; do \
+        npm install --legacy-peer-deps --no-audit --no-fund && break || \
+        (echo "npm install attempt $i failed, retrying..." && sleep 10); \
+    done && \
+    npm cache clean --force
 
 # Copy source code
 COPY . .
@@ -18,8 +28,8 @@ ARG VITE_CONTENTFUL_SPACE_ID=qp3ctezw3mqr
 ARG VITE_CONTENTFUL_ACCESS_TOKEN_PUBLISHED=69pqIRURSVr7hMKbyUCkSg5HvHYbg3idZIs5o4EuJYA
 ARG VITE_CONTENTFUL_ACCESS_TOKEN_DRAFT=6drcdizoknhHdF__X_ZhA3kmRa2sXhpPhdiTBrq1h2I
 ARG VITE_CONTENTFUL_ENVIRONMENT=master
-ARG VITE_API_URL=https://carepro-api20241118153443.azurewebsites.net/api
-ARG VITE_LOCAL_API_URL=https://care-pro-node-api.onrender.com/identity-api
+ARG VITE_API_URL=https://api.oncarepro.com
+ARG VITE_LOCAL_API_URL=https://care-pro-node-api.onrender.com/api
 ARG VITE_DOJAH_WIDGET_ID=68732f5e97202a07f66bc89a
 ARG VITE_DOJAH_APP_ID=686c915878a2b53b2bdb5631
 ARG VITE_DOJAH_PUBLIC_KEY=prod_pk_QTjK773OoJl6siRJFLNBUq07M
