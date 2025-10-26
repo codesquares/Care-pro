@@ -30,7 +30,7 @@ env:
   AWS_REGION: 'us-east-1'
   ECR_REPOSITORY_FRONTEND: 'carepro-frontend'
   ECR_REPOSITORY_NODEAPI: 'carepro-node-api-staging'
-  APP_RUNNER_SERVICE_NAME: 'carepro-node-api-production'
+  APP_RUNNER_SERVICE_NAME: 'carepro-node-api-staging'
   S3_BUCKET: 'oncarepro-frontend-production'
   CLOUDFRONT_DISTRIBUTION_ID: 'E2QISC8I3F6K8U'  # Update with actual distribution ID
 
