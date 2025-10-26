@@ -59,7 +59,7 @@ const authHeaders = () => ({
 
 export const getNotifications = async (id, page = 1, pageSize = 10) => {
   try {
-    const response = await axios.get(`${API_URL}/api/Notifications?userId=${id}&page=${page}&pageSize=${pageSize}`, {
+    const response = await axios.get(`${API_URL}/Notifications?userId=${id}&page=${page}&pageSize=${pageSize}`, {
       headers: authHeaders()
     });
 
@@ -88,7 +88,7 @@ export const getNotifications = async (id, page = 1, pageSize = 10) => {
 
 export const getUnreadCount = async (id) => {
   try {
-    const res = await axios.get(`${API_URL}/api/Notifications/unread/count?userId=${id}`, {
+    const res = await axios.get(`${API_URL}/Notifications/unread/count?userId=${id}`, {
       headers: authHeaders()
     });
 
@@ -102,7 +102,7 @@ export const getUnreadCount = async (id) => {
 
 export const markAsRead = async (id) => {
   try {
-    return await axios.put(`${API_URL}/api/Notifications/${id}/read`, null, {
+    return await axios.put(`${API_URL}/Notifications/${id}/read`, null, {
       headers: authHeaders()
     });
   } catch (err) {
@@ -113,7 +113,7 @@ export const markAsRead = async (id) => {
 
 export const markAllAsRead = async () => {
   try {
-    return await axios.put(`${API_URL}/api/Notifications/read-all`, null, {
+    return await axios.put(`${API_URL}/Notifications/read-all`, null, {
       headers: authHeaders()
     });
   } catch (err) {
@@ -124,7 +124,7 @@ export const markAllAsRead = async () => {
 
 export const deleteNotification = async (id) => {
   try {
-    return await axios.delete(`${API_URL}/api/Notifications/${id}`, {
+    return await axios.delete(`${API_URL}/Notifications/${id}`, {
       headers: authHeaders()
     });
   } catch (err) {
@@ -169,7 +169,7 @@ export const createNotification = async ({
 
     console.log('Creating notification with payload:', notificationPayload);
 
-    const response = await axios.post(`${API_URL}/api/Notifications`, notificationPayload, {
+    const response = await axios.post(`${API_URL}/Notifications`, notificationPayload, {
       headers: authHeaders()
     });
 
