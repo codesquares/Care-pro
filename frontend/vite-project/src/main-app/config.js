@@ -1,8 +1,8 @@
 const config = {
     // Base URL without trailing slash - don't add '/api' in API calls since it's included here
     BASE_URL: import.meta.env.VITE_API_URL || "https://carepro-api20241118153443.azurewebsites.net/api",
-    // Alternate URL in case the main one doesn't work
-    FALLBACK_URL: (import.meta.env.VITE_AZURE_API_URL || "https://carepro-api20241118153443.azurewebsites.net/api").replace('/api', ''),
+    // Alternate URL in case the main one doesn't work - Remove /api to get the base domain
+    FALLBACK_URL: (import.meta.env.VITE_API_URL || "https://carepro-api20241118153443.azurewebsites.net/api").replace('/api', ''),
 
     LOCAL_API_URL: "https://care-pro-node-api.onrender.com/api",
     LOCALHOST_API_URL: "http://localhost:3000/api",
