@@ -1,7 +1,7 @@
 import axios from 'axios';
 import config from '../config';
 
-const API_URL = config.FALLBACK_URL;
+const API_URL = config.BASE_URL;
 
 /**
  * Creates a notification.
