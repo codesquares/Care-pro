@@ -1,0 +1,604 @@
+// Modern Settings Page Styles
+// .settings-container {
+//   padding: 20px;
+//   // background-color: #f8f9fa;
+//   min-height: 100vh;
+//   font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+//   background-color: transparent;
+//   border-radius: 0;
+// }
+// .settings-page-header-text{
+//   margin: 0 0 20px 0;
+// }
+.settings-title {
+  font-size: 24px;
+  font-weight: 600;
+  color: #1a1a1a;
+  margin: 0 0 12px 0;
+  list-style: none;
+  padding:20px;
+  
+  &::before,
+  &::after {
+    content: none !important;
+    display: none !important;
+  }
+}
+// .profile-section{
+//   padding: 0;
+//   background-color: transparent;
+// }
+.settings-content {
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+  padding: 0.75rem;
+  background-color: #f8f9fa;
+  min-height: 100vh;
+  color: #333;
+  max-width: 100%;
+  overflow-x: hidden;
+
+  /* Small mobile landscape and up */
+  @media (min-width: 480px) {
+    padding: 1rem;
+    gap: 1.25rem;
+  }
+
+  /* Tablet and up */
+  @media (min-width: 768px) {
+    flex-direction: row;
+    gap: 1.5rem;
+    padding: 1.5rem;
+  }
+
+  /* Desktop and up */
+  @media (min-width: 1024px) {
+    gap: 2rem;
+    padding: 2rem;
+  }
+
+  /* Large desktop */
+  @media (min-width: 1200px) {
+    padding: 2rem 4rem;
+    gap: 1.5rem;
+  }
+
+  /* Extra large desktop */
+  @media (min-width: 1400px) {
+    gap: 2rem;
+    max-width: 1400px;
+    margin: 0 auto;
+  }
+}
+.caregiver-settings-profile-section{
+ width: 100%;
+  display: flex;
+  flex-direction: column;
+  gap: 0;
+  order: 1;
+
+  /* Tablet and up */
+  @media (min-width: 768px) {
+    width: 30%;
+    flex: 0 0 30%;
+    order: 1;
+  }
+
+  /* Desktop and up */
+  @media (min-width: 1024px) {
+    width: 30%;
+    flex: 0 0 30%;
+  }
+
+  /* Large desktop - maintain 30% */
+  @media (min-width: 1200px) {
+    width: 30%;
+    flex: 0 0 30%;
+  }
+}
+// Settings Panel Section
+.settings-panel {
+  width: 100%;
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+  order: 2;
+
+  /* Small mobile landscape and up */
+  @media (min-width: 480px) {
+    gap: 1.25rem;
+  }
+
+  /* Tablet and up */
+  @media (min-width: 768px) {
+    width: 70%;
+    flex: 0 0 70%;
+    gap: 1.5rem;
+    order: 2;
+  }
+
+  /* Desktop and up */
+  @media (min-width: 1024px) {
+    width: 70%;
+    flex: 0 0 70%;
+    gap: 1.75rem;
+  }
+
+  /* Large desktop */
+  @media (min-width: 1200px) {
+    width: 70%;
+    flex: 0 0 70%;
+    gap: 2rem;
+  }
+}
+
+/* Enhanced mobile experience */
+@media (max-width: 767px) {
+  .settings-content {
+    background-color: #fff;
+  }
+
+  /* Add some visual separation on mobile */
+  .caregiver-settings-profile-section {
+    background: #ffffff;
+    border-radius: 12px;
+    padding: 1rem;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+    border: 1px solid #e8eaed;
+    margin-bottom: 1rem;
+  }
+
+  .settings-panel {
+    background: transparent;
+  }
+}
+
+/* Improved tablet layout */
+@media (min-width: 768px) and (max-width: 1023px) {
+  .settings-content {
+    padding: 1.25rem;
+  }
+
+  .caregiver-settings-profile-section {
+    width: 30%;
+    flex: 0 0 30%;
+  }
+
+  .settings-panel {
+    width: 70%;
+    flex: 0 0 70%;
+  }
+}
+
+.settings-panel-title {
+  font-size: 18px;
+  font-weight: 600;
+  color: #1a1a1a;
+  margin: 0 0 20px 0;
+}
+
+.settings-option {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 16px 0;
+  border-bottom: 1px solid #f0f0f0;
+  
+  &:last-child {
+    border-bottom: none;
+  }
+}
+
+.option-info {
+  display: flex;
+  flex-direction: column;
+  
+  .option-title {
+    font-size: 14px;
+    font-weight: 500;
+    color: #1a1a1a;
+    margin: 0 0 4px 0;
+  }
+  
+  .option-description {
+    font-size: 12px;
+    color: #6b7280;
+    margin: 0;
+  }
+}
+
+.setting-toggle {
+  position: relative;
+  width: 44px;
+  height: 24px;
+  background-color: #e5e7eb;
+  border-radius: 12px;
+  border: none;
+  cursor: pointer;
+  transition: background-color 0.2s ease;
+  
+  &:before {
+    content: '';
+    position: absolute;
+    top: 2px;
+    left: 2px;
+    width: 20px;
+    height: 20px;
+    background-color: white;
+    border-radius: 50%;
+    transition: transform 0.2s ease;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+  }
+  
+  &.active {
+    background-color: #3b82f6;
+    
+    &:before {
+      transform: translateX(20px);
+    }
+  }
+}
+
+.setting-button {
+  padding: 8px 16px;
+  background-color: #f8f9fa;
+  color: #374151;
+  border: 1px solid #e5e7eb;
+  border-radius: 6px;
+  font-size: 12px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  
+  &:hover {
+    background-color: #e5e7eb;
+  }
+  
+  &.danger {
+    color: #ef4444;
+    border-color: #fca5a5;
+    
+    &:hover {
+      background-color: #fef2f2;
+    }
+  }
+}
+
+// Settings Box Styles for the existing form elements
+.settings-box {
+  border: 1px solid #e5e7eb;
+  border-radius: 8px;
+  padding: 20px;
+  margin-bottom: 20px;
+  background: #fafafa;
+  
+  h3 {
+    font-size: 16px;
+    font-weight: 600;
+    color: #1a1a1a;
+    margin: 0 0 12px 0;
+  }
+  
+  input[type="text"],
+  input[type="email"],
+  input[type="password"] {
+    width: 100%;
+    padding: 12px;
+    border: 1px solid #d1d5db;
+    border-radius: 6px;
+    font-size: 14px;
+    margin-bottom: 16px;
+    background: white;
+    
+    &:focus {
+      outline: none;
+      border-color: #3b82f6;
+      box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
+    }
+    
+    &[readonly] {
+      background-color: #f9fafb;
+      color: #6b7280;
+    }
+  }
+  
+  .status-buttons {
+    display: flex;
+    gap: 12px;
+    margin-bottom: 16px;
+    
+    button {
+      padding: 8px 16px;
+      border: none;
+      border-radius: 6px;
+      font-size: 14px;
+      font-weight: 500;
+      cursor: pointer;
+      transition: all 0.2s ease;
+      
+      &.available {
+        background-color: #10b981;
+        color: white;
+        
+        &:hover {
+          background-color: #059669;
+        }
+      }
+      
+      &.inactive {
+        background-color: #ef4444;
+        color: white;
+        
+        &:hover {
+          background-color: #dc2626;
+        }
+      }
+    }
+  }
+  
+  .save-button {
+    background-color: #3b82f6;
+    color: white;
+    border: none;
+    padding: 12px 24px;
+    border-radius: 6px;
+    font-size: 14px;
+    font-weight: 500;
+    cursor: pointer;
+    transition: background-color 0.2s ease;
+    
+    &:hover:not(:disabled) {
+      background-color: #2563eb;
+    }
+    
+    &:disabled {
+      background-color: #9ca3af;
+      cursor: not-allowed;
+    }
+  }
+  
+  .password-hint {
+    font-size: 12px;
+    color: #6b7280;
+    margin: 8px 0;
+    line-height: 1.4;
+  }
+  
+  .status-message {
+    font-size: 14px;
+    color: #059669;
+    margin: 8px 0;
+    font-weight: 500;
+  }
+  
+  .deactivation-info {
+    font-size: 14px;
+    color: #6b7280;
+    line-height: 1.5;
+    margin-bottom: 16px;
+  }
+  
+  .reason-dropdown {
+    width: 100%;
+    padding: 12px;
+    border: 1px solid #d1d5db;
+    border-radius: 6px;
+    font-size: 14px;
+    margin-bottom: 16px;
+    background: white;
+    
+    &:focus {
+      outline: none;
+      border-color: #3b82f6;
+      box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
+    }
+  }
+  
+  .deactivate-button {
+    background-color: #ef4444;
+    color: white;
+    border: none;
+    padding: 12px 24px;
+    border-radius: 6px;
+    font-size: 14px;
+    font-weight: 500;
+    cursor: pointer;
+    transition: background-color 0.2s ease;
+    
+    &:hover {
+      background-color: #dc2626;
+    }
+  }
+}
+
+// Mobile Responsive
+@media (max-width: 768px) {
+  .settings-container {
+    padding: 16px;
+  }
+  
+  .settings-content {
+    grid-template-columns: 1fr;
+    gap: 16px;
+  }
+  
+  .settings-panel {
+    padding: 16px;
+  }
+  
+  .settings-box {
+    padding: 16px;
+  }
+}
+
+// Settings Panel
+.settings-panel {
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+}
+
+.settings-card {
+  background: white;
+  border-radius: 12px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+  padding: 24px;
+  border: 1px solid #e8eaed;
+  
+  h3 {
+    font-size: 18px;
+    font-weight: 600;
+    color: #1a1a1a;
+    margin: 0 0 16px 0;
+  }
+}
+
+.form-group {
+  margin-bottom: 16px;
+  
+  label {
+    display: block;
+    font-size: 14px;
+    font-weight: 500;
+    color: #374151;
+    margin-bottom: 6px;
+  }
+  
+  input {
+    width: 100%;
+    padding: 12px;
+    border: 1px solid #d1d5db;
+    border-radius: 8px;
+    font-size: 14px;
+    transition: border-color 0.2s ease;
+    
+    &:focus {
+      outline: none;
+      border-color: #3b82f6;
+      box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
+    }
+    
+    &:read-only {
+      background-color: #f9fafb;
+      color: #6b7280;
+    }
+  }
+}
+
+.save-changes-btn {
+  padding: 10px 20px;
+  background-color: #6b7280;
+  color: white;
+  border: none;
+  border-radius: 6px;
+  font-size: 14px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: background-color 0.2s ease;
+  
+  &:hover:not(:disabled) {
+    background-color: #4b5563;
+  }
+  
+  &:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+  }
+}
+
+// Account Deactivation Styles
+.deactivation-warning {
+  font-size: 14px;
+  color: #374151;
+  font-weight: 500;
+  margin: 0 0 12px 0;
+}
+
+.deactivation-list {
+  margin: 0 0 16px 0;
+  padding-left: 16px;
+  
+  li {
+    font-size: 14px;
+    color: #6b7280;
+    margin-bottom: 4px;
+    line-height: 1.4;
+  }
+}
+
+.leaving-reason {
+  font-size: 14px;
+  color: #374151;
+  font-weight: 500;
+  margin: 16px 0 8px 0;
+}
+
+.reason-dropdown {
+  width: 100%;
+  padding: 12px;
+  border: 1px solid #d1d5db;
+  border-radius: 8px;
+  font-size: 14px;
+  background-color: white;
+  margin-bottom: 16px;
+  
+  &:focus {
+    outline: none;
+    border-color: #3b82f6;
+    box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
+  }
+}
+
+.deactivate-btn {
+  padding: 10px 20px;
+  background-color: #ef4444;
+  color: white;
+  border: none;
+  border-radius: 6px;
+  font-size: 14px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: background-color 0.2s ease;
+  
+  &:hover {
+    background-color: #dc2626;
+  }
+}
+
+.status-message {
+  font-size: 14px;
+  color: #ef4444;
+  margin: 8px 0;
+}
+
+// Responsive Design
+@media (max-width: 1200px) {
+  .settings-content {
+    grid-template-columns: 1fr;
+  }
+}
+
+@media (max-width: 768px) {
+  .settings-container {
+    padding: 16px;
+  }
+  
+  .settings-content {
+    gap: 16px;
+  }
+  
+  // .profile-card,
+  // .settings-card {
+  //   padding: 16px;
+  // }
+  
+  .service-tags {
+    justify-content: center;
+  }
+  
+  .availability-section {
+    flex-direction: column;
+    align-items: center;
+  }
+}

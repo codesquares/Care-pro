@@ -1,0 +1,79 @@
+.verify-button {
+  background-color: transparent;
+  color: rgb(57, 92, 158);
+  border: 1px solid rgb(79, 73, 73);
+  border-radius: 6px;
+  padding: 10px 20px;
+  font-size: 16px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+  width: 100%;
+  max-width: 250px;
+  height: 40px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  margin: 10px auto 0 auto;
+  text-align: center;
+}
+
+.verify-button:hover {
+  background-color: #2563eb;
+  transform: translateY(-2px);
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.15);
+}
+
+.verify-button:active {
+  transform: translateY(0);
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+}
+
+.verify-button-pending {
+  background-color: #6b7280;
+  cursor: not-allowed;
+}
+
+.verify-button-pending:hover {
+  background-color: #6b7280;
+  transform: none;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+}
+
+.verify-button-retry {
+  background-color: #ef4444;
+}
+
+.verify-button-retry:hover {
+  background-color: #dc2626;
+}
+
+.verify-button-verified {
+  background-color: #10b981;
+  cursor: default;
+}
+
+.verify-button-verified:hover {
+  background-color: #10b981;
+  transform: none;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+}
+
+.verify-button-success {
+  background-color: transparent;
+  color: #10b981;
+  border: 1px solid #10b981;
+}
+
+.verify-button-success:hover {
+  background-color: rgba(16, 185, 129, 0.1);
+  color: #059669;
+  border-color: #059669;
+}
+
+.verify-button-success:focus {
+  outline: 2px solid #10b981;
+  outline-offset: 2px;
+}

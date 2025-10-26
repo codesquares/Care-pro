@@ -1,4 +1,4 @@
-import React from "react";
+
 import "../../styles/components/detailed-story-view.scss";
 
 const DetailedStoryView = ({ story, goBack }) => {

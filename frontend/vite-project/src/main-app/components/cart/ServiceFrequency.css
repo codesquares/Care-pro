@@ -1,0 +1,362 @@
+/* Mobile-first service frequency */
+.service-frequency {
+  /* Mobile-first: smaller margin */
+  margin-bottom: 20px;
+}
+
+.service-frequency__title {
+  /* Mobile-first: smaller font */
+  font-size: 15px;
+  font-weight: 600;
+  color: #333;
+  margin-bottom: 12px;
+}
+
+.service-frequency__options {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.service-frequency__option {
+  display: flex;
+  align-items: flex-start;
+  gap: 10px;
+  /* Mobile-first: smaller padding */
+  padding: 12px;
+  border: 2px solid #e5e7eb;
+  border-radius: 8px;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.service-frequency__option:hover {
+  border-color: #3b82f6;
+}
+
+.service-frequency__option--selected {
+  border-color: #3b82f6;
+  background-color: #eff6ff;
+}
+
+.service-frequency__option-content {
+  flex: 1;
+  min-width: 0; /* Allow text to wrap */
+}
+
+.service-frequency__option-title {
+  /* Mobile-first: smaller font */
+  font-size: 13px;
+  font-weight: 600;
+  color: #333;
+  margin-bottom: 3px;
+  line-height: 1.3;
+}
+
+.service-frequency__option-description {
+  /* Mobile-first: smaller font */
+  font-size: 11px;
+  color: #666;
+  line-height: 1.4;
+}
+
+.service-frequency__radio {
+  margin-top: 2px;
+}
+
+.service-frequency__radio input[type="radio"] {
+  width: 16px;
+  height: 16px;
+  accent-color: #3b82f6;
+}
+
+/* Enhanced Price Breakdown Styling - Compact Version */
+.service-frequency__price-breakdown {
+  margin-top: 16px;
+  background: linear-gradient(135deg, #f8fafc 0%, #f1f5f9 100%);
+  border: 1px solid #e2e8f0;
+  border-radius: 12px;
+  padding: 16px;
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.04);
+  position: relative;
+  overflow: hidden;
+}
+
+.service-frequency__price-breakdown::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 2px;
+  background: linear-gradient(90deg, #3b82f6, #1d4ed8, #0ea5e9);
+}
+
+.service-frequency__price-breakdown h4 {
+  font-size: 14px;
+  font-weight: 600;
+  color: #1e293b;
+  margin: 0 0 12px 0;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.service-frequency__price-breakdown h4::before {
+  content: '�';
+  font-size: 14px;
+}
+
+.price-breakdown__details {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.price-breakdown__row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 6px 12px;
+  background: white;
+  border-radius: 6px;
+  border: 1px solid #e2e8f0;
+  transition: all 0.1s ease;
+  position: relative;
+}
+
+.price-breakdown__row:hover {
+  transform: translateY(-1px);
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.08);
+}
+
+.price-breakdown__row span:first-child {
+  font-size: 12px;
+  color: #64748b;
+  font-weight: 500;
+  display: flex;
+  align-items: center;
+  gap: 4px;
+}
+
+.price-breakdown__row span:first-child::before {
+  content: '•';
+  color: #3b82f6;
+  font-weight: bold;
+  font-size: 12px;
+}
+
+.price-breakdown__row span:last-child {
+  font-size: 12px;
+  font-weight: 600;
+  color: #1e293b;
+  background: #f1f5f9;
+  padding: 2px 8px;
+  border-radius: 12px;
+  border: 1px solid #cbd5e1;
+}
+
+/* Special styling for discount row */
+.price-breakdown__discount {
+  background: linear-gradient(135deg, #fef3c7 0%, #fde68a 100%);
+  border: 1px solid #f59e0b;
+}
+
+.price-breakdown__discount span:first-child {
+  color: #92400e;
+  font-weight: 500;
+}
+
+.price-breakdown__discount span:first-child::before {
+  content: '🏷️';
+  font-size: 12px;
+}
+
+.price-breakdown__discount span:last-child {
+  color: #92400e;
+  background: white;
+  border: 1px solid #f59e0b;
+  font-weight: 600;
+}
+
+/* Special styling for savings row */
+.price-breakdown__savings {
+  background: linear-gradient(135deg, #dcfce7 0%, #bbf7d0 100%);
+  border: 1px solid #10b981;
+}
+
+.price-breakdown__savings span:first-child {
+  color: #059669;
+  font-weight: 500;
+}
+
+.price-breakdown__savings span:first-child::before {
+  content: '💚';
+  font-size: 12px;
+}
+
+.price-breakdown__savings span:last-child {
+  color: #059669;
+  background: white;
+  border: 1px solid #10b981;
+  font-weight: 600;
+}
+
+/* Special styling for total row */
+.price-breakdown__total {
+  background: linear-gradient(135deg, #dbeafe 0%, #bfdbfe 100%);
+  border: 2px solid #3b82f6;
+  padding: 8px 12px;
+  margin-top: 4px;
+}
+
+.price-breakdown__total span:first-child {
+  color: #1e40af;
+  font-weight: 600;
+  font-size: 13px;
+}
+
+.price-breakdown__total span:first-child::before {
+  content: '🎯';
+  font-size: 12px;
+}
+
+.price-breakdown__total span:last-child {
+  color: #1e40af;
+  background: white;
+  border: 1px solid #3b82f6;
+  font-weight: 700;
+  font-size: 13px;
+  padding: 3px 10px;
+  box-shadow: 0 1px 2px rgba(59, 130, 246, 0.15);
+}
+
+/* Error styling */
+.service-frequency__error {
+  background: linear-gradient(135deg, #fef2f2 0%, #fee2e2 100%);
+  border: 1px solid #f87171;
+  color: #dc2626;
+  padding: 12px 16px;
+  border-radius: 8px;
+  margin-bottom: 16px;
+  font-size: 14px;
+  font-weight: 500;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.service-frequency__error::before {
+  content: '⚠️';
+  font-size: 16px;
+}
+
+/* Responsive adjustments - updated for mobile-first approach */
+@media (min-width: 768px) {
+  .service-frequency {
+    margin-bottom: 28px;
+  }
+  
+  .service-frequency__title {
+    font-size: 16px;
+    margin-bottom: 14px;
+  }
+  
+  .service-frequency__options {
+    gap: 10px;
+  }
+  
+  .service-frequency__option {
+    gap: 12px;
+    padding: 14px;
+  }
+  
+  .service-frequency__option-title {
+    font-size: 14px;
+    margin-bottom: 4px;
+  }
+  
+  .service-frequency__option-description {
+    font-size: 12px;
+  }
+  
+  .service-frequency__price-breakdown {
+    padding: 14px;
+    margin-top: 14px;
+  }
+  
+  .price-breakdown__row {
+    padding: 6px 10px;
+  }
+  
+  .price-breakdown__row span:first-child {
+    font-size: 12px;
+  }
+  
+  .price-breakdown__row span:last-child {
+    font-size: 12px;
+  }
+}
+
+@media (min-width: 1024px) {
+  .service-frequency {
+    margin-bottom: 32px;
+  }
+  
+  .service-frequency__title {
+    margin-bottom: 16px;
+  }
+  
+  .service-frequency__options {
+    gap: 12px;
+  }
+  
+  .service-frequency__option {
+    padding: 16px;
+  }
+  
+  .service-frequency__price-breakdown {
+    padding: 16px;
+    margin-top: 16px;
+  }
+  
+  .price-breakdown__row {
+    padding: 8px 12px;
+  }
+}
+
+/* Legacy mobile styles kept for compatibility */
+@media (max-width: 767px) {
+  .service-frequency__price-breakdown {
+    padding: 12px;
+    margin-top: 12px;
+  }
+  
+  .price-breakdown__row {
+    padding: 4px 8px;
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 2px;
+  }
+  
+  .price-breakdown__row span:first-child {
+    font-size: 11px;
+  }
+  
+  .price-breakdown__row span:last-child {
+    align-self: flex-end;
+    font-size: 11px;
+  }
+  .price-breakdown__row span:last-child {
+    align-self: flex-end;
+    font-size: 11px;
+  }
+  
+  .price-breakdown__total {
+    padding: 6px 8px;
+  }
+  
+  .service-frequency__price-breakdown h4 {
+    font-size: 13px;
+  }
+}

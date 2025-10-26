@@ -1,0 +1,184 @@
+/* General Styles */
+.earnings-container {
+    font-family: 'Arial', sans-serif;
+    margin: 40px auto;
+    max-width: 1000px;
+    color: #333;
+  }
+  
+  .earnings-title {
+    font-size: 24px;
+    font-weight: bold;
+    margin-bottom: 20px;
+  }
+  
+  /* Summary Cards */
+  .earnings-summary {
+    display: flex;
+    justify-content: space-between;
+    margin-bottom: 30px;
+  }
+  
+  .funds-card,
+  .total-card {
+    background: #f9f9f9;
+    border-radius: 8px;
+    padding: 20px;
+    text-align: center;
+    width: 48%;
+    box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+  }
+  
+  .funds-card p,
+  .total-card p {
+    color: #888;
+    margin: 0;
+  }
+  
+  .funds-card h3,
+  .total-card h3 {
+    font-size: 20px;
+    margin: 10px 0;
+  }
+  
+  .card-buttons {
+    margin-top: 10px;
+  }
+  
+  .btn {
+    background: #e0e0e0;
+    border: none;
+    border-radius: 5px;
+    color: #333;
+    cursor: pointer;
+    font-size: 14px;
+    margin: 5px;
+    padding: 8px 12px;
+  }
+  
+  .withdraw {
+    background: #444;
+    color: white;
+  }
+  
+  .btn:disabled {
+    background-color: #cccccc;
+    color: #666666;
+    cursor: not-allowed;
+  }
+  
+  .withdrawn-amount {
+    font-size: 14px;
+    color: #888;
+    margin-top: 5px;
+  }
+  
+  .loading-spinner {
+    text-align: center;
+    margin: 50px 0;
+    font-size: 16px;
+    color: #666;
+  }
+  
+  .error-message {
+    background-color: #ffecec;
+    color: #cc0000;
+    border: 1px solid #cc0000;
+    border-radius: 5px;
+    padding: 15px;
+    margin: 20px 0;
+    text-align: center;
+  }
+  
+  .withdrawal-status {
+    font-weight: 600;
+  }
+  
+  .status-pending {
+    color: #f39c12;
+  }
+  
+  .status-verified {
+    color: #2980b9;
+  }
+  
+  .status-completed {
+    color: #27ae60;
+  }
+  
+  .status-rejected {
+    color: #e74c3c;
+  }
+  
+  .no-transactions {
+    text-align: center;
+    color: #888;
+    padding: 20px;
+    font-style: italic;
+  }
+  
+/* Transactions Table */
+.transactions-title {
+    margin-top: 30px;
+    font-size: 18px;
+    font-weight: bold;
+  }
+  
+  .transactions-table {
+    width: 100%;
+    border-collapse: separate; /* Enable spacing between cells */
+    border-spacing: 0; /* Remove default spacing */
+    margin-top: 10px;
+    border-radius: 8px;
+    overflow: hidden; /* Ensures rounded corners apply */
+  }
+  
+  .transactions-table thead {
+    background: #F4F4F4;
+  }
+  
+  .transactions-table th,
+  .transactions-table td {
+    border-bottom: 1px solid #ddd; /* Only horizontal lines */
+    padding: 10px;
+    text-align: left;
+  }
+  
+  .transactions-table thead th {
+    font-size: 14px;
+    font-weight: bold;
+  }
+  
+  .transactions-table tbody tr:last-child td {
+    border-bottom: none; /* Remove bottom border from last row */
+  }
+  
+  /* Apply rounded corners to the table */
+  .transactions-table thead tr:first-child th:first-child {
+    border-top-left-radius: 8px;
+  }
+  
+  .transactions-table thead tr:first-child th:last-child {
+    border-top-right-radius: 8px;
+  }
+  
+  .transactions-table tbody tr:last-child td:first-child {
+    border-bottom-left-radius: 8px;
+  }
+  
+  .transactions-table tbody tr:last-child td:last-child {
+    border-bottom-right-radius: 8px;
+  }
+  
+  /* Amount Styling */
+  .amount.positive {
+    color: #28a745;
+    font-weight: bold;
+  }
+  
+  .amount.negative {
+    color: #dc3545;
+    font-weight: bold;
+  }
+  
+  

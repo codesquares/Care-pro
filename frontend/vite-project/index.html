@@ -2,9 +2,32 @@
 <html lang="en">
   <head>
     <meta charset="UTF-8" />
-    <link rel="icon" type="image/svg+xml" href="./dist//assets/careproLogo-B0SK5rQ1.svg" />
+    <link rel="icon" type="image/svg+xml" href="/vite.svg" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>Access premium and vetted care providers from Home</title>
+    <title>Premium care for you</title>
+    
+    <!-- Cloudflare optimization exclusions to prevent JS parsing errors -->
+    <meta name="cf-2fa-verify" content="false" />
+    
+    
+    <!-- Content Security Policy to control script loading -->
+    <meta http-equiv="Content-Security-Policy" content="
+      default-src 'self' https:;
+      script-src 'self' 'unsafe-inline' 'unsafe-eval' https://identity.dojah.io https://widget.dojah.io https://api.dojah.io;
+      frame-src 'self' https://identity.dojah.io https://api.dojah.io https://widget.dojah.io;
+      img-src 'self' data: https:;
+      style-src 'self' 'unsafe-inline' https:;
+      connect-src 'self' https: wss: ws:;
+      font-src 'self' https:;
+      media-src 'self' https:;
+    ">
+    
+    <!-- Font Awesome -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/css/all.min.css" />
+    
+   
+        
+
   </head>
   <body>
     <div id="root"></div>

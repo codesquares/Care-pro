@@ -1,0 +1,82 @@
+@use './breakpoints' as *;
+
+/* Enhanced Connection Status Styles */
+.connection-status {
+  display: flex;
+  align-items: center;
+  padding: $spacing-sm $spacing-md;
+  border-radius: 20px;
+  font-size: 0.875rem;
+  font-weight: 500;
+  color: white;
+  position: fixed;
+  top: $spacing-lg;
+  right: $spacing-lg;
+  z-index: $z-connection-status;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.2);
+  transition: all $transition-slow;
+  backdrop-filter: blur(10px);
+  gap: 6px;
+  cursor: default;
+  max-width: 280px;
+  
+  @include mobile-only {
+    top: $spacing-sm;
+    right: $spacing-sm;
+    padding: 4px $spacing-sm;
+    font-size: 0.75rem;
+    gap: 4px;
+    max-width: 220px;
+    border-radius: 16px;
+  }
+  
+  .status-icon {
+    font-size: 1rem;
+    
+    @include mobile-only {
+      font-size: 0.875rem;
+    }
+  }
+  
+  .status-text {
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+  
+  // State-specific styling
+  &.connecting {
+    background-color: #2196f3;
+    animation: pulse 2s infinite;
+  }
+  
+  &.reconnecting, &.polling {
+    background-color: #ff9800;
+    animation: pulse 2s infinite;
+  }
+  
+  &.disconnected {
+    background-color: #f44336;
+    cursor: pointer;
+    
+    &:hover {
+      background-color: #d32f2f;
+    }
+  }
+}
+
+/* Pulse animation for connecting/reconnecting states */
+@keyframes pulse {
+  0% {
+    opacity: 1;
+    transform: scale(1);
+  }
+  50% {
+    opacity: 0.8;
+    transform: scale(1.02);
+  }
+  100% {
+    opacity: 1;
+    transform: scale(1);
+  }
+}

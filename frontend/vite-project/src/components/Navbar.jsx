@@ -1,13 +1,17 @@
-import React, { useState, useEffect, useRef } from 'react';
-import { Link } from 'react-router-dom';
+import { useState, useEffect, useRef } from 'react';
+import { Link, useNavigate } from 'react-router-dom';
 import logo from '../assets/careproLogo.svg';
 import arrow from '../assets/arrow-right.svg';
 import hambugerImg from '../assets/ci_hamburger-md.svg';
+import messageIcon from '../assets/message_icon.png';
 import '../styles/components/nav-bar.scss';
+import { useAuth } from '../main-app/context/AuthContext';
 
 const Navbar = () => {
+    const navigate = useNavigate();
     const [isMenuOpen, setIsMenuOpen] = useState(false);
     const menuRef = useRef(null);
+    const { isAuthenticated, user, handleLogout } = useAuth();
 
     const toggleMenu = () => {
         setIsMenuOpen(!isMenuOpen);
@@ -29,6 +33,49 @@ const Navbar = () => {
         setIsMenuOpen(false); // Close menu after clicking a link
     };
 
+    // Function to navigate to the appropriate messages page based on user role
+    const handleMessageClick = () => {
+        if (!isAuthenticated) {
+            navigate('/login', { state: { from: '/messages' } });
+            return;
+        }
+
+        // Check if user details exist to prevent API calls with invalid user data
+        if (!user) {
+            console.error('User details missing but logged in state is true');
+            navigate('/login', { state: { from: '/messages' } });
+            return;
+        }
+
+        try {
+            // Pre-validate user data to prevent issues
+            if (!user.id) {
+                throw new Error('User ID missing');
+            }
+            
+            // Navigate to appropriate route based on user role
+            if (user.role && user.role.toLowerCase() === 'caregiver') {
+                navigate('/app/caregiver/message');
+            } else {
+                navigate('/app/client/message');
+            }
+        } catch (error) {
+            console.error('Error processing user data:', error);
+            // Handle invalid user data gracefully
+            handleLogout();
+            navigate('/login', { state: { from: '/messages', error: 'Session data corrupted. Please login again.' } });
+        }
+    };
+
+    // Handle the CTA button click
+    const handleCtaClick = () => {
+        if (isAuthenticated) {
+            handleLogout();
+        } else {
+            navigate('/register');
+        }
+    };
+
     return (
         <nav className="navbar">
             <div className="navbar-logo">
@@ -47,11 +94,13 @@ const Navbar = () => {
                         Hire Caregiver
                     </Link>
                 </li>
-                <li>
-                    <Link to="/become-caregiver" onClick={handleLinkClick}>
-                        Become a caregiver
-                    </Link>
-                </li>
+                {(!isAuthenticated || user?.role?.toLowerCase() !== 'caregiver') && (
+                    <li>
+                        <Link to="/become-caregiver" onClick={handleLinkClick}>
+                            Become a caregiver
+                        </Link>
+                    </li>
+                )}
                 <li>
                     <Link to="/about-us" onClick={handleLinkClick}>
                         About us
@@ -64,10 +113,17 @@ const Navbar = () => {
                 </li>
             </ul>
 
-            <div className="navbar-cta">
-                <Link to="/book-caregiver" className="btn-primary">
-                    Join the waitlist <span className="calendar-icon"><img src={arrow} alt="arrow-right" /></span>
-                </Link>
+            <div className="navbar-actions">
+                {isAuthenticated && (
+                    <div className="navbar-message-icon" onClick={handleMessageClick}>
+                        <img src={messageIcon} alt="Messages" />
+                    </div>
+                )}
+                <div className="navbar-cta">
+                    <button onClick={handleCtaClick} className="btn-primary">
+                        {isAuthenticated ? 'Sign Out' : 'Sign Up'} <span className="calendar-icon"><img src={arrow} alt="arrow-right" /></span>
+                    </button>
+                </div>
             </div>
         </nav>
     );

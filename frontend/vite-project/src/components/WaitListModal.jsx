@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import { useState } from "react";
 import "../styles/components/waitlist-modal.scss";
 import { toast } from "react-toastify";
 

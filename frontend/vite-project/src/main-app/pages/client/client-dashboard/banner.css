@@ -1,0 +1,197 @@
+.banner-top {
+  background: 
+    linear-gradient(rgba(0, 50, 0, 0.3), rgba(0, 30, 0, 0.4)),
+    url('../../../../assets/design_specs/clientBannerImage.svg') center top/cover no-repeat;
+  padding: 40px 30px;
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 20px;
+  min-height: 280px;
+  position: relative;
+}
+
+/* Public banner styles */
+.public-banner {
+  min-height: 350px;
+  text-align: left;
+  align-items: flex-start;
+  justify-content: space-between;
+}
+
+.public-hero-content {
+  color: white;
+  margin-bottom: 30px;
+}
+
+.public-hero-title {
+  font-size: 2.5rem;
+  font-weight: bold;
+  margin: 0 0 15px 0;
+  line-height: 1.2;
+}
+
+.public-hero-subtitle {
+  font-size: 1.2rem;
+  margin: 0;
+  opacity: 0.9;
+  max-width: 500px;
+  line-height: 1.4;
+}
+
+.public-features {
+  display: flex;
+  gap: 25px;
+  margin: 20px 0;
+}
+
+.feature-item {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  color: white;
+  font-size: 0.95rem;
+}
+
+.feature-icon {
+  background: #4CAF50;
+  color: white;
+  border-radius: 50%;
+  width: 20px;
+  height: 20px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 0.8rem;
+  font-weight: bold;
+}
+
+.public-cta-banner {
+  background: rgba(255, 255, 255, 0.95);
+  padding: 20px 25px;
+  border-radius: 12px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  width: 100%;
+  max-width: 600px;
+  box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
+  margin-top: auto;
+}
+
+.cta-content h3 {
+  margin: 0 0 5px 0;
+  font-size: 1.3rem;
+  color: #333;
+}
+
+.cta-content p {
+  margin: 0;
+  color: #666;
+  font-size: 0.95rem;
+}
+
+.cta-actions {
+  display: flex;
+  gap: 12px;
+}
+
+.btn-primary, .btn-secondary {
+  padding: 12px 20px;
+  border-radius: 8px;
+  font-weight: 500;
+  font-size: 0.95rem;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  border: none;
+}
+
+.btn-primary {
+  background: #1769aa;
+  color: white;
+}
+
+.btn-primary:hover {
+  background: #145a8a;
+  transform: translateY(-1px);
+}
+
+.btn-secondary {
+  background: transparent;
+  color: #1769aa;
+  border: 1px solid #1769aa;
+}
+
+.btn-secondary:hover {
+  background: #1769aa;
+  color: white;
+}
+
+.welcome-section {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  color: white;
+}
+
+.avatar-circle {
+  width: 40px;
+  height: 40px;
+  border-radius: 50%;
+  background: #1769aa;
+  color: white;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-weight: bold;
+  font-size: 1.2rem;
+}
+
+.welcome-text {
+  font-size: 1.5rem;
+  margin: 0;
+}
+
+.search-box {
+  background: white;
+  width: 100%;
+  max-width: 600px;
+  padding: 20px;
+  border-radius: 12px;
+  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.08);
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.search-info {
+  display: flex;
+  gap: 15px;
+  align-items: center;
+}
+
+.search-icon {
+  font-size: 2rem;
+  color: #d97706; /* orange tone */
+}
+
+.search-title {
+  font-size: 1rem;
+  font-weight: bold;
+  margin: 0;
+}
+
+.search-subtitle {
+  font-size: 0.875rem;
+  color: #6b7280;
+  margin: 0;
+}
+
+.view-orders {
+  background: #f9fafb;
+  border: 1px solid #d1d5db;
+  padding: 8px 16px;
+  border-radius: 8px;
+  cursor: pointer;
+  font-size: 0.9rem;
+}

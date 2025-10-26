@@ -14,7 +14,7 @@
     flex-wrap: wrap;
     justify-content: space-between;
 
-    .faq-item {
+    .faq-item { 
       background-color: #fff;
       border-radius: 10px;
       padding: 20px;
@@ -29,17 +29,18 @@
       }
 
       &.active {
-        background-color: #e7f0f7;
+        background-color: white;
       }
 
       .faq-question {
         display: flex;
         justify-content: space-between;
         align-items: center;
-        font-size: 1.2rem;
+        font-size: 1.5rem;
         color: #2e4f6b;
         font-weight: 600;
         margin-bottom: 10px;
+        text-align: left;
       }
 
       .faq-icon {
@@ -51,39 +52,90 @@
         font-size: 1rem;
         color: #777;
         text-align: left;
+        display: none; // Hide by default
+
+        &.active {
+          display: block; // Show when active
+        }
+      }
+    }
+  }
+
+  @media (max-width: 1024px) {
+    padding: 4rem 40px;
+    
+    h2 {
+      font-size: 1.8rem;
+      margin-bottom: 35px;
+    }
+    
+    .faq-list {
+      gap: 20px;
+      
+      .faq-item {
+        width: 48%;
+        padding: 18px;
+        
+        .faq-question {
+          font-size: 1.3rem;
+        }
       }
     }
   }
 
   @media (max-width: 768px) {
+    padding: 3rem 25px;
+    
+    h2 {
+      font-size: 1.6rem;
+      margin-bottom: 30px;
+    }
+    
     .faq-list {
+      flex-direction: column;
+      
       .faq-item {
-        width: 100%; /* Full width on tablets */
-        margin-bottom: 20px; /* Increased margin for better spacing */
-        padding: 25px; /* Increased padding for better touch targets */
+        width: 100%;
+        margin-bottom: 20px;
+        padding: 20px;
+        
+        .faq-question {
+          font-size: 1.2rem;
+        }
+        
+        .faq-icon {
+          font-size: 1.3rem;
+        }
+        
+        .faq-answer {
+          font-size: 0.95rem;
+        }
       }
     }
   }
 
   @media (max-width: 480px) {
-    padding: 30px 15px; /* Increased padding for mobile devices */
-
+    padding: 2rem 15px;
+    
     h2 {
-      font-size: 1.5rem;
-      margin-bottom: 30px; /* Increased margin bottom for the title */
+      font-size: 1.4rem;
+      margin-bottom: 25px;
     }
-
-    .faq-item {
-      width: 100%; /* Full width on mobile */
-      margin-bottom: 20px; /* Increased margin for better spacing */
-      padding: 25px; /* Increased padding for better touch targets */
-
+    
+    .faq-list .faq-item {
+      padding: 15px;
+      
       .faq-question {
-        font-size: 1.1rem; /* Slightly larger font size for mobile */
+        font-size: 1.1rem;
       }
-
+      
+      .faq-icon {
+        font-size: 1.2rem;
+      }
+      
       .faq-answer {
-        font-size: 1rem; /* Larger font size for readability */
+        font-size: 0.9rem;
+        line-height: 1.5;
       }
     }
   }

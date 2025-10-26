@@ -1,0 +1,34 @@
+{
+    "ServiceName": "carepro-node-api-staging",
+    "SourceConfiguration": {
+        "ImageRepository": {
+            "ImageIdentifier": "[ACCOUNT_ID].dkr.ecr.[REGION].amazonaws.com/carepro-api:latest",
+            "ImageConfiguration": {
+                "Port": "3000",
+                "RuntimeEnvironmentVariables": {
+                    "NODE_ENV": "staging",
+                    "PORT": "3000",
+                    "API_URL": "https://[SERVICE_NAME].[REGION].awsapprunner.com/api",
+                    "AZURE_API_ENDPOINT": "[AZURE_API_URL]"
+                }
+            },
+            "ImageRepositoryType": "ECR"
+        },
+        "AutoDeploymentsEnabled": false,
+        "AuthenticationConfiguration": {
+            "AccessRoleArn": "arn:aws:iam::[ACCOUNT_ID]:role/service-role/AppRunnerECRAccessRole"
+        }
+    },
+    "InstanceConfiguration": {
+        "Cpu": "0.25 vCPU",
+        "Memory": "0.5 GB"
+    },
+    "HealthCheckConfiguration": {
+        "Protocol": "HTTP",
+        "Path": "/api/health",
+        "Interval": 10,
+        "Timeout": 5,
+        "HealthyThreshold": 1,
+        "UnhealthyThreshold": 5
+    }
+}

@@ -1,6 +1,17 @@
 import "./Input.scss";
 
-const Input = ({ label, name, type = "text", value, onChange, placeholder }) => {
+const Input = ({ 
+  label, 
+  name, 
+  type = "text", 
+  value, 
+  onChange, 
+  placeholder, 
+  className = "",
+  onFocus,
+  onBlur,
+  ...props 
+}) => {
   return (
     <div className="input-field">
       <label htmlFor={name}>{label}</label>
@@ -10,8 +21,11 @@ const Input = ({ label, name, type = "text", value, onChange, placeholder }) => 
         type={type}
         value={value}
         onChange={onChange}
+        onFocus={onFocus}
+        onBlur={onBlur}
         placeholder={placeholder}
-        required
+        className={className}
+        {...props}
       />
     </div>
   );

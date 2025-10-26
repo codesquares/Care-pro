@@ -1,0 +1,49 @@
+/* Mobile-first responsive cart page */
+.cart-page {
+  min-height: 100vh;
+  background-color: #f5f5f5;
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', sans-serif;
+  /* Mobile-first: minimal padding on small screens */
+  padding: 12px;
+}
+
+.cart-container {
+  max-width: 1200px;
+  margin: 0 auto;
+  /* Mobile-first: single column layout */
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+/* Tablet and up: side-by-side layout */
+@media (min-width: 768px) {
+  .cart-page {
+    padding: 20px;
+  }
+  
+  .cart-container {
+    display: grid;
+    grid-template-columns: 1fr 380px;
+    gap: 20px;
+  }
+}
+
+/* Desktop: larger gap and padding */
+@media (min-width: 1024px) {
+  .cart-page {
+    padding: 24px;
+  }
+  
+  .cart-container {
+    grid-template-columns: 1fr 400px;
+    gap: 24px;
+  }
+}
+
+/* Large desktop: max width constraint */
+@media (min-width: 1440px) {
+  .cart-container {
+    max-width: 1200px;
+  }
+}

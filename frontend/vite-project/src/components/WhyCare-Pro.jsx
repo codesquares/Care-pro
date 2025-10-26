@@ -1,31 +1,33 @@
-import React from "react";
+
 import "../styles/components/why-care-pro.scss";
+import background from "../assets/background.png"
 
 const WhyCarepro = () => {
   const cards = [
     {
-      title: "Reliable Senior Care",
+      title: "Reach More Patients",
       description:
-        "Our trusted caregivers are dedicated to offering respectful and dignified care for seniors, promoting a fulfilling and independent lifestyle. We're here to make everyday life easier and more enjoyable.",
+        "Expand your visibility and connect with a wider patient base.The platform provides tools and resources to help caregivers market their services effectively, ensuring they can reach those in need of quality care and support.",
       highlighted: true,
     },
     {
-      title: "Personalized Care",
+      title: "Build your professional network",
       description:
-        "Our compassionate caregivers provide tailored support, ensuring the comfort, safety, and well-being of your loved ones. From daily assistance to specialized care, we are here every step of the way.",
+        "The platform creates a community where caregivers can connect wth fellow professionals in the field. This gives craegivers the opportunity to share experiences, exchange knowledge, and build professional network that support their practice.",
       highlighted: false,
     },
     {
-      title: "Expert Medical Support",
+      title: "Better Opportunity",
       description:
-        "From medication management to post-hospitalization care, our skilled caregivers provide the medical support your loved ones need. Receive professional care without leaving the comfort of home.",
+        "Create a profile that showcases your skill, experience, and passion for caregiving. Attract more patient and connect with employers looking for dedicated professionals.",
       highlighted: false,
     },
   ];
 
   return (
     <section className="why-carepro">
-      <h2 className="why-carepro__title">Why Carepro?</h2>
+      <h2 className="why-carepro__title">Why signup to Carepro?</h2>
+      
       <div className="why-carepro__card-container">
         {cards.map((card, index) => (
           <div
@@ -34,6 +36,7 @@ const WhyCarepro = () => {
               card.highlighted ? "why-carepro__card--highlighted" : ""
             }`}
           >
+          
             <h3 className="why-carepro__card-title">{card.title}</h3>
             <p className="why-carepro__card-description">{card.description}</p>
           </div>

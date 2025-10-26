@@ -6,6 +6,45 @@
   font-family: 'Poppins', Helvetica, sans-serif;
 }
 
+/* Responsive base font size to ensure better scaling */
+html {
+  font-size: 16px; /* Base font size */
+}
+
+/* Media queries for responsive typography */
+@media (max-width: 768px) {
+  html {
+    font-size: 14px; /* Slightly smaller on tablets */
+  }
+}
+
+@media (max-width: 480px) {
+  html {
+    font-size: 12px; /* Smaller on mobile */
+  }
+}
+
+/* Improved responsive accessibility for touch devices */
+@media (hover: none) {
+  /* Increase touch targets for better mobile accessibility */
+  button, 
+  input[type="button"],
+  input[type="submit"],
+  input[type="reset"],
+  a.btn,
+  .nav-link,
+  .clickable {
+    min-height: 44px; /* Minimum touch target height */
+    min-width: 44px; /* Minimum touch target width */
+  }
+  
+  /* Increase spacing between interactive elements */
+  .nav-links li,
+  .interactive-elements > * {
+    margin-bottom: 8px;
+  }
+}
+
 :root {
   color-scheme: light dark;
   color: rgba(255, 255, 255, 0.87); /* Adjust this for contrast */
@@ -40,6 +79,20 @@
   --spacing-small: 8px;
   --spacing-medium: 16px;
   --spacing-large: 24px;
+
+  /* Base spacing variables */
+  --spacing-xs: 4px;
+  --spacing-sm: 8px;
+  --spacing-md: 16px;
+  --spacing-lg: 24px;
+  --spacing-xl: 32px;
+  --spacing-xxl: 48px;
+  
+  /* Responsive container widths */
+  --container-sm: 540px;
+  --container-md: 720px;
+  --container-lg: 960px;
+  --container-xl: 1140px;
 }
 
 a {
@@ -82,4 +135,123 @@ a {
   src: url('./assets/fonts/poppins/Poppins-SemiBold.ttf') format('truetype');
   font-weight: normal;
   font-style: normal;
+}
+
+/* Responsive Utilities */
+.container {
+  width: 100%;
+  padding-left: 15px;
+  padding-right: 15px;
+  margin-left: auto;
+  margin-right: auto;
+}
+
+/* Responsive container widths */
+@media (min-width: 576px) {
+  .container {
+    max-width: 540px;
+  }
+}
+
+@media (min-width: 768px) {
+  .container {
+    max-width: 720px;
+  }
+}
+
+@media (min-width: 992px) {
+  .container {
+    max-width: 960px;
+  }
+}
+
+@media (min-width: 1200px) {
+  .container {
+    max-width: 1140px;
+  }
+}
+
+/* Responsive grid utilities */
+.row {
+  display: flex;
+  flex-wrap: wrap;
+  margin-left: -15px;
+  margin-right: -15px;
+}
+
+.col {
+  position: relative;
+  width: 100%;
+  padding-left: 15px;
+  padding-right: 15px;
+}
+
+/* Responsive flex utilities */
+.flex-row {
+  display: flex;
+  flex-direction: row;
+}
+
+.flex-column {
+  display: flex;
+  flex-direction: column;
+}
+
+@media (max-width: 768px) {
+  .flex-md-column {
+    flex-direction: column;
+  }
+}
+
+@media (max-width: 576px) {
+  .flex-sm-column {
+    flex-direction: column;
+  }
+}
+
+/* Responsive spacing utilities */
+.m-auto {
+  margin: auto;
+}
+
+/* Additional responsive utility classes */
+.responsive-image {
+  max-width: 100%;
+  height: auto;
+}
+
+.text-center-mobile {
+  @media (max-width: 768px) {
+    text-align: center !important;
+  }
+}
+
+.hidden-mobile {
+  @media (max-width: 768px) {
+    display: none !important;
+  }
+}
+
+.visible-mobile {
+  display: none !important;
+  
+  @media (max-width: 768px) {
+    display: block !important;
+  }
+}
+
+.flex-mobile-column {
+  @media (max-width: 768px) {
+    flex-direction: column !important;
+  }
+}
+
+/* Improved focus states for accessibility */
+a:focus,
+button:focus,
+input:focus,
+textarea:focus,
+select:focus {
+  outline: 2px solid #3EDDCD;
+  outline-offset: 2px;
 }

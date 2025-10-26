@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import { useState } from 'react';
 import '../../styles/components/contact-form.scss';
 
 const ContactForm = () => {
@@ -20,7 +20,7 @@ const ContactForm = () => {
   const handleSubmit = (e) => {
     e.preventDefault();
     // Handle form submission
-    console.log('Form data submitted:', formData);
+
   };
 
   return (

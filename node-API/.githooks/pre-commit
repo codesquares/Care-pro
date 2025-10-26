@@ -1,0 +1,176 @@
+#!/bin/bash
+# Pre-commit hook for Care-Pro Node-API
+# Runs mandatory tests before allowing commits
+
+set -e
+
+echo "🔍 Running mandatory pre-commit tests for Node-API..."
+
+# Get the Node-API directory - check if we're already in the correct directory
+if [ -f "package.json" ] && [ -f "app.js" ]; then
+    # We're already in the node-API directory
+    NODE_API_DIR="$(pwd)"
+    echo "✓ Found Node-API in current directory: $NODE_API_DIR"
+elif [ -d "node-API" ] && [ -f "node-API/package.json" ] && [ -f "node-API/app.js" ]; then
+    # We're in the parent directory
+    NODE_API_DIR="$(pwd)/node-API"
+    cd node-API
+    echo "✓ Found Node-API directory: $NODE_API_DIR"
+else
+    echo "❌ Cannot find node-API directory with package.json and app.js"
+    exit 1
+fi
+
+# Install dependencies if node_modules doesn't exist
+if [ ! -d "node_modules" ]; then
+    echo "📦 Installing dependencies..."
+    npm ci
+fi
+
+# Function to run tests and capture results
+run_test() {
+    local test_name="$1"
+    local test_command="$2"
+    local is_mandatory="$3"
+    
+    echo "🧪 Running $test_name..."
+    
+    if $test_command > /dev/null 2>&1; then
+        echo "✅ $test_name: PASSED"
+        return 0
+    else
+        if [ "$is_mandatory" = "true" ]; then
+            echo "❌ $test_name: FAILED (MANDATORY)"
+            echo "🚫 Commit blocked due to mandatory test failure"
+            return 1
+        else
+            echo "⚠️  $test_name: FAILED (WARNING)"
+            return 0
+        fi
+    fi
+}
+
+# Track overall status
+MANDATORY_FAILED=false
+
+echo ""
+echo "🚨 MANDATORY SECURITY TESTS"
+echo "=============================="
+
+# Run security tests (MANDATORY)
+if ! run_test "Security Tests" "npm run test:security" "true"; then
+    MANDATORY_FAILED=true
+fi
+
+# Run critical controller tests (MANDATORY)
+if ! run_test "Auth Controller Tests" "npm run test:unit -- --testPathPattern=auth-controller" "true"; then
+    MANDATORY_FAILED=true
+fi
+
+if ! run_test "KYC Controller Tests" "npm run test:unit -- --testPathPattern=kyc-controller" "true"; then
+    MANDATORY_FAILED=true
+fi
+
+# Run critical integration tests (MANDATORY)
+if ! run_test "Critical Integration Tests" "npm run test:integration -- --testPathPattern=critical" "true"; then
+    MANDATORY_FAILED=true
+fi
+
+echo ""
+echo "📊 COVERAGE VERIFICATION"
+echo "========================"
+
+# Check coverage thresholds (MANDATORY)
+if ! run_test "Coverage Thresholds" "npm run test:coverage -- --passWithNoTests=false --silent" "true"; then
+    MANDATORY_FAILED=true
+    echo "💡 Coverage requirements:"
+    echo "   - Global: 15% lines, 10% functions, 5% branches, 15% statements"
+    echo "   - Auth Controller: 50% coverage"
+    echo "   - Dojah Controller: 10% coverage"
+    echo "   - KYC Controller: 0% coverage (using mocks)"
+fi
+
+echo ""
+echo "🔐 SECURITY AUDIT"
+echo "=================="
+
+# Security audit (MANDATORY for production)
+if git branch --contains HEAD | grep -q "main\|master\|production"; then
+    if ! run_test "Security Audit" "npm audit --audit-level high" "true"; then
+        MANDATORY_FAILED=true
+        echo "💡 Fix high/critical security vulnerabilities before committing to production branch"
+    fi
+else
+    run_test "Security Audit" "npm audit --audit-level high" "false"
+fi
+
+echo ""
+echo "📋 OPTIONAL TESTS"
+echo "=================="
+
+# Linting (optional but recommended)
+if command -v eslint >/dev/null 2>&1; then
+    run_test "ESLint" "npx eslint src/ --quiet" "false"
+fi
+
+# Full test suite (optional for feature branches)
+if ! git branch --contains HEAD | grep -q "main\|master\|develop\|staging"; then
+    echo "ℹ️  Skipping full test suite for feature branch"
+else
+    run_test "Full Test Suite" "npm test" "false"
+fi
+
+echo ""
+echo "📝 COMMIT ANALYSIS"
+echo "==================="
+
+# Analyze changed files
+CHANGED_FILES=$(git diff --cached --name-only | grep -E "node-API/" || true)
+
+if [ -n "$CHANGED_FILES" ]; then
+    echo "🔍 Changed files in node-API:"
+    echo "$CHANGED_FILES" | sed 's/^/   - /'
+    
+    # Check for critical file changes
+    if echo "$CHANGED_FILES" | grep -qE "(auth|kyc|dojah|security)" ; then
+        echo "⚠️  Critical files modified - mandatory tests are extra important!"
+    fi
+    
+    if echo "$CHANGED_FILES" | grep -qE "(package\.json|yarn\.lock|package-lock\.json)"; then
+        echo "📦 Dependencies changed - ensure security audit passes"
+    fi
+fi
+
+echo ""
+echo "🎯 FINAL RESULT"
+echo "==============="
+
+if [ "$MANDATORY_FAILED" = "true" ]; then
+    echo "❌ COMMIT REJECTED"
+    echo "🚫 One or more mandatory tests failed"
+    echo ""
+    echo "💡 To fix and retry:"
+    echo "   1. Fix the failing tests"
+    echo "   2. Run: npm run test:mandatory"
+    echo "   3. Commit again when all tests pass"
+    echo ""
+    echo "🔧 Quick test commands:"
+    echo "   - npm run test:security"
+    echo "   - npm run test:unit -- --testPathPattern=controllers"
+    echo "   - npm run test:integration -- --testPathPattern=critical"
+    echo "   - npm run test:coverage"
+    exit 1
+else
+    echo "✅ ALL MANDATORY TESTS PASSED"
+    echo "🎉 Commit approved for staging/production deployment"
+    echo ""
+    echo "🚀 Ready for:"
+    if git branch --contains HEAD | grep -q "main\|master"; then
+        echo "   - Production deployment"
+    elif git branch --contains HEAD | grep -q "develop\|staging"; then
+        echo "   - Staging deployment" 
+    else
+        echo "   - Code review and merge"
+    fi
+    exit 0
+fi

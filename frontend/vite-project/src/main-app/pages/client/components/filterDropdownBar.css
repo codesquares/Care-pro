@@ -1,0 +1,42 @@
+.filter-dropdown-bar {
+  display: flex;
+  flex-direction: row;  /* Align items vertically */
+  gap: 12px;                /* Space between dropdowns */
+  margin: 20px 6rem;
+  width: 100%;
+  max-width: 400px;         /* Optional: limit width on large screens */
+}
+
+.filter-dropdown-bar select {
+  padding: 10px 12px;
+  font-size: 14px;
+  border-radius: 8px;
+  border: 1px solid #ccc;
+  width: 100%;
+  box-sizing: border-box;
+}
+
+
+.filter-dropdown-bar {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.reset-icon-btn {
+  background: none;
+  border: none;
+  cursor: pointer;
+  font-size: 18px;
+  color: #555;
+  transition: color 0.2s ease;
+}
+
+.reset-icon-btn:hover {
+  color: #000;
+  background-color: #0070ba;
+  border: none;
+  cursor: pointer;
+  font-size: 18px;
+  color: #fff;
+}

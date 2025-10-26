@@ -1,4 +1,6 @@
 @use "sass:color";
+
+
 .pricing-plans {
   padding: 50px 20px;
   background-color: #ffffff;
@@ -106,8 +108,7 @@
         background-color: #FBB040; /* Standard button color */
 
         &:hover {
-          background-color: color.scale(#FBB040, $lightness: -16.19%);
- /* Darkens button color on hover */
+          background-color: color.scale(#FBB040, $lightness: -16.19%);/* Darkens button color on hover */
           transform: scale(1.05); /* Slightly enlarge button on hover */
         }
       }
@@ -118,14 +119,107 @@
     }
   }
 
+  @media (max-width: 1024px) {
+    padding: 40px 15px;
+    
+    .title {
+      font-size: 2.2rem;
+    }
+    
+    .subtitle {
+      font-size: 1.1rem;
+      max-width: 90%;
+    }
+    
+    .plans-list {
+      justify-content: center;
+      gap: 30px;
+      
+      .plan-item {
+        flex: 1 1 45%;
+        min-width: 300px;
+      }
+    }
+  }
+
   @media (max-width: 768px) {
+    padding: 30px 15px;
+    
+    .title {
+      font-size: 2rem;
+    }
+    
+    .subtitle {
+      font-size: 1rem;
+      padding: 15px;
+      margin-bottom: 30px;
+    }
+    
     .plans-list {
       flex-direction: column;
       align-items: center;
+      
+      .plan-item {
+        width: 90%;
+        max-width: 400px;
+        margin-bottom: 25px;
+        
+        h3 {
+          font-size: 1.3rem;
+        }
+        
+        .price {
+          font-size: 1.6rem;
+        }
+        
+        .select-button {
+          padding: 12px;
+        }
+      }
     }
-
-    .plan-item {
-      width: 90%; /* Ensures full width for smaller screens */
+  }
+  
+  @media (max-width: 480px) {
+    padding: 25px 10px;
+    
+    .title {
+      font-size: 1.8rem;
+    }
+    
+    .subtitle {
+      font-size: 0.9rem;
+      padding: 12px;
+      margin-bottom: 25px;
+    }
+    
+    .plans-list .plan-item {
+      width: 100%;
+      padding: 15px;
+      
+      .badge {
+        font-size: 0.8rem;
+      }
+      
+      h3 {
+        font-size: 1.2rem;
+      }
+      
+      .price {
+        font-size: 1.4rem;
+        
+        span {
+          font-size: 0.9rem;
+        }
+      }
+      
+      .features li {
+        font-size: 0.85rem;
+      }
+      
+      .select-button {
+        font-size: 1rem;
+        padding: 10px;
+      }
     }
   }
 }
