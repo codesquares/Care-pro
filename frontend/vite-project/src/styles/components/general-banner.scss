@@ -5,6 +5,13 @@
   border-radius: 20px;
   margin: 5rem;
   flex-wrap: wrap; /* Allow items to wrap for smaller screens */
+  /* Add top margin to account for fixed navbar */
+  margin-top: calc(5rem + var(--navbar-height-mobile, 70px));
+
+  @media (min-width: 768px) {
+    /* Use desktop navbar height on larger screens */
+    margin-top: calc(5rem + var(--navbar-height-desktop, 100px));
+  }
 }
 
 .general-banner-content {

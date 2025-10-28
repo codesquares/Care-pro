@@ -10,13 +10,18 @@
 .blog-view{
   display: flex;
   flex-wrap: wrap;
-  padding-top: 5rem;
+  /* Update padding-top to account for fixed navbar */
+  padding-top: calc(5rem + var(--navbar-height-mobile, 70px));
   width: 80%;
   flex-direction: column;
-
   margin-left:auto;
   margin-right:auto;
   margin-bottom: 50px;
+
+  @media (min-width: 768px) {
+    /* Use desktop navbar height on larger screens */
+    padding-top: calc(5rem + var(--navbar-height-desktop, 100px));
+  }
 }
 .post-list{
   

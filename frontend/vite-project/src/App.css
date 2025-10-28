@@ -1,6 +1,15 @@
 /* Import responsive utilities */
 @import "./styles/responsive-utilities.css";
 
+/* Navbar height variables for consistent spacing */
+:root {
+  --navbar-height-desktop: 100px;
+  --navbar-height-mobile: 70px;
+  --public-navbar-height-desktop: 64px;
+  --public-navbar-height-mobile: 56px;
+  --public-navbar-search-height-mobile: 60px;
+}
+
 .landImage {
   display: flex;
   flex-direction: column;
