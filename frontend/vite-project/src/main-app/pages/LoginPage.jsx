@@ -211,8 +211,8 @@ const LoginPage = () => {
 
         <p className="terms">
           By creating an account, you agree to the{" "}
-          <Link to="#">Terms of use</Link> and{" "}
-          <Link to="#">Privacy Policy</Link>
+          <Link to="/terms-and-conditions">Terms of use</Link> and{" "}
+          <Link to="/privacy-policy">Privacy Policy</Link>
         </p>
       </div>
     </div>

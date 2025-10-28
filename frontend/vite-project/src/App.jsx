@@ -14,6 +14,7 @@ import Home from './pages/Home';
 import BecomeCaregiver from './pages/BecomeCaregiver';
 import PrivacyPolicy from './pages/PrivacyPolicy';
 import TermsAndConditions from './pages/TermsAndConditions';
+import NotFoundPage from './pages/NotFoundPage';
 import OrderFaq from './main-app/pages/care-giver/OrderFaq';
 import LoginPage from './main-app/pages/LoginPage';
 import RegisterPage from './main-app/pages/RegisterPage';
@@ -182,6 +183,8 @@ function AppContent() {
             return <Navigate to="/login" replace />;
           }}
         />
+        {/* Catch-all route for non-existent pages */}
+        <Route path="*" element={<NotFoundPage />} />
       </Routes>
       {shouldShowFooter && <Footer />}
       <ToastContainer
