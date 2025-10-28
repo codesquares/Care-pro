@@ -1,6 +1,13 @@
 .stories-section {
   padding: 2rem;
   color: #6e6e6e;
+  /* Add top margin to account for fixed navbar */
+  margin-top: var(--navbar-height-mobile, 70px);
+
+  @media (min-width: 768px) {
+    /* Use desktop navbar height on larger screens */
+    margin-top: var(--navbar-height-desktop, 100px);
+  }
 
   h2 {
     max-width: 40rem;

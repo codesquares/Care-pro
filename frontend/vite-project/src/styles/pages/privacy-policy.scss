@@ -3,6 +3,13 @@
   min-height: 100vh;
   background-color: #f8f9fa;
   padding: 2rem 0;
+  /* Add top margin to account for fixed navbar */
+  margin-top: var(--navbar-height-mobile, 70px);
+
+  @media (min-width: 768px) {
+    /* Use desktop navbar height on larger screens */
+    margin-top: var(--navbar-height-desktop, 100px);
+  }
 }
 
 .privacy-container {
