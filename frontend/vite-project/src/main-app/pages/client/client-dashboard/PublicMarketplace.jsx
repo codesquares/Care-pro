@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react";
-import { useLocation } from "react-router-dom";
+import { useLocation, useNavigate } from "react-router-dom";
 import { useAuth } from "../../../context/AuthContext";
 import "./clientDashboard.css";
 import "./responsiveFixes.css";
@@ -12,6 +12,7 @@ import CareMatchBanner from "./CareMatchBanner";
 
 const PublicMarketplace = () => {
   const location = useLocation();
+  const navigate = useNavigate();
   const { user, isAuthenticated } = useAuth();
   const [services, setServices] = useState([]);
   const [filteredServices, setFilteredServices] = useState([]);
@@ -258,13 +259,13 @@ const PublicMarketplace = () => {
                   <div className="subtle-cta-buttons">
                     <button 
                       className="subtle-cta-primary"
-                      onClick={() => window.location.href = '/register'}
+                      onClick={() => navigate('/register')}
                     >
                       Sign Up Free
                     </button>
                     <button 
                       className="subtle-cta-secondary"
-                      onClick={() => window.location.href = '/login'}
+                      onClick={() => navigate('/login')}
                     >
                       Sign In
                     </button>

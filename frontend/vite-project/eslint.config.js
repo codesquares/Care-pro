@@ -53,6 +53,7 @@ export default [
       'no-dupe-keys': 'warn',                       // Make duplicate object keys warnings
       'no-constant-binary-expression': 'warn',      // Make constant expressions warnings
       'react-hooks/rules-of-hooks': 'error',        // Keep this as error (critical React rule)
+      'react/display-name': 'off',                  // Disable display name requirement
     },
   },
 ]

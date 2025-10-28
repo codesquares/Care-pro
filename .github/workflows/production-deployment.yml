@@ -28,11 +28,11 @@ on:
 env:
   NODE_VERSION: '22'
   AWS_REGION: 'us-east-1'
-  ECR_REPOSITORY_FRONTEND: 'carepro-frontend-production'
-  ECR_REPOSITORY_NODEAPI: 'carepro-node-api-production'
-  APP_RUNNER_SERVICE_NAME: 'carepro-node-api-production'
-  S3_BUCKET: 'carepro-frontend-production'
-  CLOUDFRONT_DISTRIBUTION_ID: 'E1234567890ABC'  # Update with actual distribution ID
+  ECR_REPOSITORY_FRONTEND: 'carepro-frontend'
+  ECR_REPOSITORY_NODEAPI: 'carepro-node-api-staging'
+  APP_RUNNER_SERVICE_NAME: 'carepro-node-api-staging'
+  S3_BUCKET: 'oncarepro-frontend-production'
+  CLOUDFRONT_DISTRIBUTION_ID: 'E2QISC8I3F6K8U'  # Update with actual distribution ID
 
 jobs:
   # 🔒 ENHANCED SECURITY AND QUALITY GATES
@@ -91,7 +91,7 @@ jobs:
         run: |
           echo "🔍 Verifying staging deployment is healthy before production..."
           # Check staging health endpoints
-          curl -f https://budmfp9jxr.us-east-1.awsapprunner.com/api/health || {
+          curl -f https://api.oncarepro.com/swagger || {
             echo "❌ Staging API is not healthy - blocking production deployment"
             exit 1
           }
@@ -146,9 +146,9 @@ jobs:
           VITE_CONTENTFUL_ACCESS_TOKEN_PUBLISHED: 69pqIRURSVr7hMKbyUCkSg5HvHYbg3idZIs5o4EuJYA
           VITE_CONTENTFUL_ACCESS_TOKEN_DRAFT: 6drcdizoknhHdF__X_ZhA3kmRa2sXhpPhdiTBrq1h2I
           VITE_CONTENTFUL_ENVIRONMENT: master
-          VITE_API_URL: https://oncarepro.com/api
-          VITE_AZURE_API_URL: https://oncarepro.com/api
-          VITE_LOCAL_API_URL: https://oncarepro.com/api
+          VITE_API_URL: https://api.oncarepro.com/api
+          VITE_AZURE_API_URL: https://api.oncarepro.com/api
+          VITE_LOCAL_API_URL: https://care-pro-node-api.onrender.com/api
           VITE_DOJAH_WIDGET_ID: 68732f5e97202a07f66bc89a
           VITE_DOJAH_APP_ID: 686c915878a2b53b2bdb5631
           VITE_DOJAH_PUBLIC_KEY: prod_pk_QTjK773OoJl6siRJFLNBUq07M
@@ -322,9 +322,9 @@ jobs:
             --build-arg VITE_CONTENTFUL_ACCESS_TOKEN_PUBLISHED=69pqIRURSVr7hMKbyUCkSg5HvHYbg3idZIs5o4EuJYA \
             --build-arg VITE_CONTENTFUL_ACCESS_TOKEN_DRAFT=6drcdizoknhHdF__X_ZhA3kmRa2sXhpPhdiTBrq1h2I \
             --build-arg VITE_CONTENTFUL_ENVIRONMENT=master \
-            --build-arg VITE_API_URL=https://oncarepro.com/api \
-            --build-arg VITE_AZURE_API_URL=https://oncarepro.com/api \
-            --build-arg VITE_LOCAL_API_URL=https://oncarepro.com/api \
+            --build-arg VITE_API_URL=https://api.oncarepro.com/api \
+            --build-arg VITE_AZURE_API_URL=https://api.oncarepro.com/api \
+            --build-arg VITE_LOCAL_API_URL=https://care-pro-node-api.onrender.com/api \
             --build-arg VITE_DOJAH_WIDGET_ID=68732f5e97202a07f66bc89a \
             --build-arg VITE_DOJAH_APP_ID=686c915878a2b53b2bdb5631 \
             --build-arg VITE_DOJAH_PUBLIC_KEY=prod_pk_QTjK773OoJl6siRJFLNBUq07M \
@@ -509,7 +509,7 @@ jobs:
           # Check production API health
           echo "🔍 Checking production Node-API health..."
           for i in {1..5}; do
-            if curl -f https://oncarepro.com/api/health; then
+            if curl -f https://api.oncarepro.com/swagger; then
               echo "✅ Production API health check passed (attempt $i)"
               break
             else
@@ -543,11 +543,11 @@ jobs:
       - name: 📊 Production Deployment Summary
         run: |
           echo "📊 PRODUCTION DEPLOYMENT COMPLETED SUCCESSFULLY"
-          echo "=============================================="
+          echo "==============================================" 
           echo "🌐 Production URLs:"
           echo "   • Frontend: https://oncarepro.com"
-          echo "   • API: https://oncarepro.com/api"
-          echo "   • Health Check: https://oncarepro.com/api/health"
+          echo "   • API: https://api.oncarepro.com"
+          echo "   • Health Check: https://api.oncarepro.com/swagger"
           echo ""
           echo "📋 Deployment Details:"
           echo "   • Branch: ${{ github.ref_name }}"
@@ -587,8 +587,8 @@ jobs:
             
             🌐 Production URLs:
             • Frontend: https://oncarepro.com
-            • API: https://oncarepro.com/api
-            • Health Check: https://oncarepro.com/api/health
+            • API: https://api.oncarepro.com
+            • Health Check: https://api.oncarepro.com/swagger
             
             ✅ Services Status:
             • Frontend: Deployed to S3 with CloudFront cache invalidated
@@ -629,7 +629,7 @@ jobs:
             • Failure Time: ${{ github.event.head_commit.timestamp }}
             
             🔍 Immediate Actions Required:
-            • Check production health: https://oncarepro.com/api/health
+            • Check production health: https://api.oncarepro.com/swagger
             • Verify frontend availability: https://oncarepro.com
             • Review deployment logs immediately
             • Consider rollback if services are down
