@@ -1,0 +1,171 @@
+.not-found-page {
+  min-height: 100vh;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  padding: 2rem 1rem;
+
+  .not-found-container {
+    max-width: 800px;
+    width: 100%;
+    background: white;
+    border-radius: 20px;
+    box-shadow: 0 20px 40px rgba(0, 0, 0, 0.1);
+    overflow: hidden;
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    align-items: center;
+    min-height: 500px;
+
+    @media (max-width: 768px) {
+      grid-template-columns: 1fr;
+      text-align: center;
+    }
+  }
+
+  .not-found-content {
+    padding: 3rem;
+
+    @media (max-width: 768px) {
+      padding: 2rem;
+    }
+
+    .error-code {
+      font-size: 6rem;
+      font-weight: 900;
+      color: #3b82f6;
+      margin-bottom: 1rem;
+      text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.1);
+
+      @media (max-width: 768px) {
+        font-size: 4rem;
+      }
+    }
+
+    h1 {
+      font-size: 2.5rem;
+      color: #1e293b;
+      margin-bottom: 1rem;
+      font-weight: 700;
+
+      @media (max-width: 768px) {
+        font-size: 2rem;
+      }
+    }
+
+    .error-message {
+      font-size: 1.1rem;
+      color: #64748b;
+      line-height: 1.6;
+      margin-bottom: 2rem;
+    }
+
+    .action-buttons {
+      display: flex;
+      gap: 1rem;
+      flex-wrap: wrap;
+
+      @media (max-width: 768px) {
+        justify-content: center;
+      }
+
+      .home-button,
+      .login-button {
+        padding: 0.75rem 1.5rem;
+        border-radius: 8px;
+        text-decoration: none;
+        font-weight: 600;
+        font-size: 1rem;
+        transition: all 0.3s ease;
+        border: none;
+        cursor: pointer;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        min-width: 120px;
+
+        &:hover {
+          transform: translateY(-2px);
+          box-shadow: 0 8px 16px rgba(0, 0, 0, 0.2);
+        }
+      }
+
+      .home-button {
+        background: #3b82f6;
+        color: white;
+
+        &:hover {
+          background: #2563eb;
+        }
+      }
+
+      .login-button {
+        background: #f1f5f9;
+        color: #475569;
+        border: 2px solid #e2e8f0;
+
+        &:hover {
+          background: #e2e8f0;
+          border-color: #cbd5e1;
+        }
+      }
+    }
+  }
+
+  .illustration {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 2rem;
+    background: #f8fafc;
+
+    @media (max-width: 768px) {
+      padding: 1rem;
+    }
+
+    .illustration-content {
+      opacity: 0.8;
+      
+      svg {
+        width: 100%;
+        max-width: 200px;
+        height: auto;
+      }
+    }
+  }
+}
+
+// Dark mode support
+@media (prefers-color-scheme: dark) {
+  .not-found-page {
+    .not-found-container {
+      background: #1e293b;
+    }
+
+    .not-found-content {
+      h1 {
+        color: #f1f5f9;
+      }
+
+      .error-message {
+        color: #94a3b8;
+      }
+
+      .login-button {
+        background: #334155;
+        color: #e2e8f0;
+        border-color: #475569;
+
+        &:hover {
+          background: #475569;
+          border-color: #64748b;
+        }
+      }
+    }
+
+    .illustration {
+      background: #0f172a;
+    }
+  }
+}
