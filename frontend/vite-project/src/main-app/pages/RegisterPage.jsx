@@ -235,7 +235,7 @@ You won't be able to log in until your email is verified.`);
               />
               {errors.phone && <p className="error-text">{errors.phone}</p>}
             </div>
-            <div className="auth-password-input" style={{ width: '100%' }}>
+            <div className="password-input" style={{ width: '100%' }}>
               <input
                 type={showPassword ? "text" : "password"}
                 name="password"
@@ -264,7 +264,7 @@ You won't be able to log in until your email is verified.`);
               </button>
               {errors.password && <p className="error-text">{errors.password}</p>}
             </div>
-            <div className="auth-password-input" style={{ width: '100%' }}>
+            <div className="password-input" style={{ width: '100%' }}>
               <input
                 type={showConfirmPassword ? "text" : "password"}
                 name="confirmPassword"

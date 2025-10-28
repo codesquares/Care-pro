@@ -205,13 +205,6 @@ const LoginPage = () => {
           </button>
         </form>
 
-        <div className="divider">or</div>
-
-        <div className="social-login">
-          <button className="google-btn">Google</button>
-          <button className="apple-btn">Apple</button>
-        </div>
-
         <p className="signup-text">
           Don’t have an account? <Link to="/register">Signup →</Link>
         </p>
