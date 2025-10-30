@@ -1,6 +1,7 @@
 import * as signalR from "@microsoft/signalr";
+import config from "../config"; // Centralized API configuration
 
-const CHAT_HUB_URL = "https://carepro-api20241118153443.azurewebsites.net/chathub";
+const CHAT_HUB_URL = `${config.BASE_URL.replace('/api', '')}/chathub`; // Using centralized API config
 
 let connection = null;
 let connectionPromise = null;

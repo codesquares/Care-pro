@@ -2,6 +2,7 @@ import { useEffect, useState } from "react";
 import "./CaregiverSettings.scss";
 import { toast } from "react-toastify";
 import ProfileHeader from "../../pages/care-giver/care-giver-profile/ProfileHeader";
+import config from "../../config"; // Import centralized config for API URLs
 
 const CaregiverSettings = () => {
   const [currentPassword, setCurrentPassword] = useState("");
@@ -22,8 +23,9 @@ const CaregiverSettings = () => {
           return;
         }
 
+        // Use centralized config instead of hardcoded URL for consistent API routing
         const response = await fetch(
-          `https://carepro-api20241118153443.azurewebsites.net/api/CareGivers/${userId}`
+          `${config.BASE_URL}/CareGivers/${userId}`
         );
 
         if (response.ok) {
@@ -58,8 +60,9 @@ const CaregiverSettings = () => {
     }
 
     try {
+      // Use centralized config instead of hardcoded URL for consistent API routing
       const response = await fetch(
-        "https://carepro-api20241118153443.azurewebsites.net/api/CareGivers/reset-password",
+        `${config.BASE_URL}/CareGivers/reset-password`,
         {
           method: "POST",
           headers: {

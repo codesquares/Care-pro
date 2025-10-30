@@ -2,6 +2,7 @@
  * Client Review Service
  * Handles review-related operations for clients
  */
+import config from "../config"; // Centralized API configuration
 
 const ClientReviewService = {
   /**
@@ -11,7 +12,7 @@ const ClientReviewService = {
    */
   async getCompletedOrders(clientId) {
     try {
-      const API_URL = `https://carepro-api20241118153443.azurewebsites.net/api/ClientOrders/clientUserId?clientUserId=${clientId}`;
+      const API_URL = `${config.BASE_URL}/ClientOrders/clientUserId?clientUserId=${clientId}`; // Using centralized API config
       
       const response = await fetch(API_URL, {
         method: 'GET',
@@ -45,7 +46,7 @@ const ClientReviewService = {
    */
   async getAllOrders(clientId) {
     try {
-      const API_URL = `https://carepro-api20241118153443.azurewebsites.net/api/ClientOrders/clientUserId?clientUserId=${clientId}`;
+      const API_URL = `${config.BASE_URL}/ClientOrders/clientUserId?clientUserId=${clientId}`; // Using centralized API config
       
       const response = await fetch(API_URL, {
         method: 'GET',
@@ -73,7 +74,7 @@ const ClientReviewService = {
    */
   async getReviewsForOrder(gigId) {
     try {
-      const API_URL = `https://carepro-api20241118153443.azurewebsites.net/api/Reviews?gigId=${gigId}`;
+      const API_URL = `${config.BASE_URL}/Reviews?gigId=${gigId}`; // Using centralized API config
       
       const response = await fetch(API_URL, {
         method: 'GET',

@@ -17,7 +17,7 @@ export default defineConfig(({ mode }) => {
     proxy: {
       // Proxy all API requests - environment aware
       '/api': {
-        target: env.VITE_AZURE_API_URL || 'https://carepro-api20241118153443.azurewebsites.net',
+        target: env.VITE_API_URL?.replace('/api', '') || env.VITE_AZURE_API_URL?.replace('/api', '') || 'https://api.oncarepro.com',
         changeOrigin: true,
         secure: false,
         rewrite: (path) => {

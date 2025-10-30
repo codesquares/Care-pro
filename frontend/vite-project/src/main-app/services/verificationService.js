@@ -636,12 +636,12 @@ const verificationService = {
       }
 
       // Azure API endpoint
-      const externalApiUrl = 'https://carepro-api20241118153443.azurewebsites.net/api';
+      const externalApiUrl = config.BASE_URL.replace('/api', ''); // Using centralized API config
       
       // Choose endpoint based on user type
       const endpoint = verificationData.userType === 'client'
-        ? `${externalApiUrl}/Verifications`
-        : `${externalApiUrl}/Verifications`;
+        ? `${externalApiUrl}/api/Verifications`
+        : `${externalApiUrl}/api/Verifications`;
 
         const dataToSave = {
            userId: verificationData.userId,
@@ -963,8 +963,8 @@ const verificationService = {
         verificationStatus: verificationData.verificationStatus || verificationData.status || ''
       };
 
-      const externalApiUrl = 'https://carepro-api20241118153443.azurewebsites.net/api';
-      const endpoint = `${externalApiUrl}/Verifications`;
+      const externalApiUrl = config.BASE_URL.replace('/api', ''); // Using centralized API config
+      const endpoint = `${externalApiUrl}/api/Verifications`;
 
       const response = await axios.post(
         endpoint,

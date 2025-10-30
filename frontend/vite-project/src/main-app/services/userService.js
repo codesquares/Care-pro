@@ -1,4 +1,5 @@
 import verificationService from './verificationService';
+import config from '../config'; // Centralized API configuration
 
 // User Service for managing user-related API calls
 export const userService = {
@@ -34,7 +35,7 @@ export const userService = {
       }
 
       console.log("Fetching profile for user ID:", userDetails.id);
-      const response = await fetch(`https://carepro-api20241118153443.azurewebsites.net/api/CareGivers/${userDetails.id}`);
+      const response = await fetch(`${config.BASE_URL}/CareGivers/${userDetails.id}`); // Using centralized API config
       
       if (!response.ok) {
         console.error("API response not ok:", response.status, response.statusText);
@@ -126,7 +127,7 @@ export const userService = {
         throw new Error("User ID not found");
       }
 
-      const response = await fetch(`https://carepro-api20241118153443.azurewebsites.net/api/CareGivers/UpdateCaregiverLocation/${userDetails.id}`, {
+      const response = await fetch(`${config.BASE_URL}/CareGivers/UpdateCaregiverLocation/${userDetails.id}`, { // Using centralized API config
         method: 'PUT',
         headers: {
           'Content-Type': 'application/json',

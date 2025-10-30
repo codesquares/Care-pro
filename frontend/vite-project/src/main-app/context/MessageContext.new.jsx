@@ -1,9 +1,9 @@
-import { createContext, useContext, useState, useEffect, useCallback } from 'react';
-import chatService from '../services/signalRChatService';
-import axios from 'axios';
+import React, { createContext, useContext, useState, useEffect, useRef } from "react";
+import { HubConnectionBuilder, LogLevel } from "@microsoft/signalr";
+import config from "../config"; // Import centralized config for API URLs
 
-// Constants
-const API_BASE_URL = "https://carepro-api20241118153443.azurewebsites.net";
+// FIXED: Use centralized config instead of hardcoded Azure staging API URL
+const API_BASE_URL = config.BASE_URL.replace('/api', ''); // Remove /api suffix for SignalR hub
 
 // Create context
 const MessageContext = createContext();

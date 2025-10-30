@@ -2,6 +2,8 @@
  * Client Care Needs Service
  * Handles all API calls related to client care needs
  */
+import config from "../config"; // Centralized API configuration
+
 class ClientCareNeedsService {
   /**
    * Get care needs for the current user
@@ -24,7 +26,7 @@ class ClientCareNeedsService {
         // Try to fetch from API first
         try {
           const token = localStorage.getItem('authToken');
-          const API_URL = `https://carepro-api20241118153443.azurewebsites.net/api/ClientPreferences/clientId?clientId=${clientId}`;
+          const API_URL = `${config.BASE_URL}/ClientPreferences/clientId?clientId=${clientId}`; // Using centralized API config
           
           const response = await fetch(API_URL, {
             method: 'GET',
@@ -89,7 +91,7 @@ class ClientCareNeedsService {
         // Try to save to API
         try {
           const token = localStorage.getItem('authToken');
-          const API_URL = 'https://carepro-api20241118153443.azurewebsites.net/api/ClientPreferences';
+          const API_URL = `${config.BASE_URL}/ClientPreferences`; // Using centralized API config
           
           // Convert careNeeds object to the format expected by the API
           const preferencesData = this.convertCareNeedsToApiData(careNeeds);

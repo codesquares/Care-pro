@@ -2,6 +2,8 @@
  * Client Preference Service
  * Handles client service preferences and recommendation operations
  */
+import config from "../config"; // Centralized API configuration
+
 const ClientPreferenceService = {
   /**
    * Get client preferences
@@ -24,7 +26,7 @@ const ClientPreferenceService = {
       }
       
       // Use the Azure API endpoint
-      const API_URL = `https://carepro-api20241118153443.azurewebsites.net/api/ClientPreferences/clientId?clientId=${clientId}`;
+      const API_URL = `${config.BASE_URL}/ClientPreferences/clientId?clientId=${clientId}`; // Using centralized API config
       
       // Use timeout for better UX
       const controller = new AbortController();
@@ -94,7 +96,7 @@ const ClientPreferenceService = {
       }
       
       // Use the Azure API endpoint
-      const API_URL = 'https://carepro-api20241118153443.azurewebsites.net/api/ClientPreferences';
+      const API_URL = `${config.BASE_URL}/ClientPreferences`; // Using centralized API config
       
       // Convert preferences object to array of serialized data strings
       // Format required by Azure endpoint: { "clientId": "string", "data": ["string"] }
@@ -264,7 +266,7 @@ const ClientPreferenceService = {
       }
       
       // Use the Azure API endpoint
-      const API_URL = `https://carepro-api20241118153443.azurewebsites.net/api/ClientRecommendations/${clientId}`;
+      const API_URL = `${config.BASE_URL}/ClientRecommendations/${clientId}`; // Using centralized API config
       
       // Prepare recommendations in the required format
       const recommendationData = recommendations.map(rec => ({

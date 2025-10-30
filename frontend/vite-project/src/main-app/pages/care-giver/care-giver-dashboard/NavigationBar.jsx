@@ -6,6 +6,7 @@ import hear from "../../../../assets/main-app/heart.svg";
 import { FaBell, FaEnvelope, FaReceipt, FaHome, FaCog } from "react-icons/fa";
 import NotificationBell from "../../../components/notifications/NotificationBell";
 import { useAuth } from "../../../context/AuthContext";
+import config from "../../../config"; // Import centralized config for API URLs
 
 
 const NavigationBar = () => {
@@ -29,7 +30,8 @@ const NavigationBar = () => {
     
     const fetchEarnings = async () => {
       try{
-      const earnings = await fetch (`https://carepro-api20241118153443.azurewebsites.net/api/WithdrawalRequests/TotalAmountEarnedAndWithdrawn/${user.id}`, {
+      // Use centralized config instead of hardcoded URL for consistent API routing
+      const earnings = await fetch (`${config.BASE_URL}/WithdrawalRequests/TotalAmountEarnedAndWithdrawn/${user.id}`, {
         headers: {
           'Content-Type': 'application/json',
           'Authorization': `Bearer ${localStorage.getItem('authToken')}`

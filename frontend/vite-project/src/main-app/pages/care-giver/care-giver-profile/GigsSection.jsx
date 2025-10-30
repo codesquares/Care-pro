@@ -1,5 +1,6 @@
 import { useEffect, useState, useMemo } from "react";
 import { useNavigate } from "react-router-dom";
+import config from "../../../config"; // Import centralized config for API URLs
 
 import clock from "../../../../assets/main-app/clock.png"; // Ensure you have an empty gigs image in your assets
 import Toast from "../../../components/toast/Toast";
@@ -68,7 +69,7 @@ const GigsSection = () => {
       }
 
       const response = await fetch(
-        `https://carepro-api20241118153443.azurewebsites.net/api/Gigs/UpdateGigStatusToPause/gigId?gigId=${gig.id}`,
+        `${config.BASE_URL}/Gigs/UpdateGigStatusToPause/gigId?gigId=${gig.id}`, // Using centralized API config
         {
           method: 'PUT',
           headers: {
@@ -121,7 +122,7 @@ const GigsSection = () => {
       }
 
       const response = await fetch(
-        `https://carepro-api20241118153443.azurewebsites.net/api/Gigs/UpdateGigStatusToPause/gigId?gigId=${gig.id}`,
+        `${config.BASE_URL}/Gigs/UpdateGigStatusToPause/gigId?gigId=${gig.id}`, // Using centralized API config
         {
           method: 'PUT',
           headers: {
@@ -178,7 +179,7 @@ const GigsSection = () => {
       }
 
       const response = await fetch(
-        `https://carepro-api20241118153443.azurewebsites.net/api/Gigs/UpdateGigStatusToPause/gigId?gigId=${gig.id}`,
+        `${config.BASE_URL}/Gigs/UpdateGigStatusToPause/gigId?gigId=${gig.id}`, // Using centralized API config
         {
           method: 'PUT',
           headers: {
@@ -234,7 +235,7 @@ const GigsSection = () => {
         }
 
         const response = await fetch(
-          `https://carepro-api20241118153443.azurewebsites.net/api/Gigs/caregiver/caregiverId?caregiverId=${userDetails.id}`
+          `${config.BASE_URL}/Gigs/caregiver/caregiverId?caregiverId=${userDetails.id}` // Using centralized API config
         );
         if (!response.ok) {
           throw new Error("Failed to fetch gigs data.");

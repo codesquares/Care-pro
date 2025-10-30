@@ -5,6 +5,7 @@
  */
 import ClientPreferenceService from './clientPreferenceService';
 import ClientCareNeedsService from './clientCareNeedsService';
+import config from "../config"; // Centralized API configuration
 
 class MatchingService {
   /**
@@ -278,7 +279,7 @@ class MatchingService {
         return this.getMockCaregivers();
       }
       
-      const API_URL = 'https://carepro-api20241118153443.azurewebsites.net/api/Caregivers';
+      const API_URL = `${config.BASE_URL}/Caregivers`; // Using centralized API config
       
       // Use timeout for better UX
       const controller = new AbortController();

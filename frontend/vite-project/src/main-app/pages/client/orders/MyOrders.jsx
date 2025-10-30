@@ -3,6 +3,7 @@ import axios from "axios";
 import { useNavigate } from "react-router-dom";
 import { FaStar, FaRegStar, FaStarHalfAlt } from "react-icons/fa";
 import ClientReviewService from "../../../services/clientReviewService.js";
+import config from "../../../config"; // Centralized API configuration
 import "./Orders.scss";
 
 const statusColors = {
@@ -38,7 +39,7 @@ const MyOrders = () => {
       try {
         // First fetch all orders
         const response = await axios.get(
-          `https://carepro-api20241118153443.azurewebsites.net/api/ClientOrders/clientUserId?clientUserId=${clientUserId}`
+          `${config.BASE_URL}/ClientOrders/clientUserId?clientUserId=${clientUserId}` // Using centralized API config
         );
         const fetchedOrders = response.data;
         setOrders(fetchedOrders);

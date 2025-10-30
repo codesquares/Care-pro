@@ -90,17 +90,41 @@ const NotificationsPage = () => {
         </div>
 
         <div className="notifications-content-section">
-          <h2 className="notifications-header">
-            Notifications
-            {notifications.length > 0 && unreadCount > 0 && (
-              <button 
-                onClick={handleMarkAllAsRead} 
-                className="mark-all-read-btn"
+          <div className="notifications-header-container">
+            <h2 className="notifications-header">
+              Notifications
+              {notifications.length > 0 && unreadCount > 0 && (
+                <button 
+                  onClick={handleMarkAllAsRead} 
+                  className="mark-all-read-btn"
+                >
+                  Mark all as read ({unreadCount})
+                </button>
+              )}
+            </h2>
+            <button 
+              className="close-notifications-btn" 
+              onClick={handleGoBack}
+              aria-label="Close notifications"
+              title="Close notifications"
+            >
+              <svg 
+                width="20" 
+                height="20" 
+                viewBox="0 0 24 24" 
+                fill="none" 
+                xmlns="http://www.w3.org/2000/svg"
               >
-                Mark all as read ({unreadCount})
-              </button>
-            )}
-          </h2>
+                <path 
+                  d="M18 6L6 18M6 6L18 18" 
+                  stroke="currentColor" 
+                  strokeWidth="2" 
+                  strokeLinecap="round" 
+                  strokeLinejoin="round"
+                />
+              </svg>
+            </button>
+          </div>
           
           <div className="notifications-box">
             {loading ? (

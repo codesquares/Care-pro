@@ -8,6 +8,7 @@ import './Cart.css';
 import { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import ClientGigService from '../../../services/clientGigService';
+import config from '../../../config'; // Import centralized config for API URLs
 
 const Cart = () => {
    const { id } = useParams();
@@ -146,8 +147,9 @@ const Cart = () => {
           redirectUrl: `${window.location.origin}/app/client/payment-success`,
         };
     
+        // FIXED: Use centralized config instead of hardcoded Azure staging API URL for payment initiation
         const response = await fetch(
-          "https://carepro-api20241118153443.azurewebsites.net/api/payments/initiate",
+          `${config.BASE_URL}/payments/initiate`,
           {
             method: "POST",
             headers: {

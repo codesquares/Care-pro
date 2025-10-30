@@ -2,6 +2,12 @@
  * Client Profile Service
  * Handles API operations related to client profiles
  */
+/**
+ * Client Profile Service
+ * Handles client profile operations including CRUD and service management
+ */
+import config from "../config"; // Centralized API configuration
+
 class ClientProfileService {
   /**
    * Get client profile information
@@ -15,7 +21,7 @@ class ClientProfileService {
       }
       
       // API endpoint
-      const API_URL = `https://carepro-api20241118153443.azurewebsites.net/api/Clients/${clientId}`;
+      const API_URL = `${config.BASE_URL}/Clients/${clientId}`; // Using centralized API config
       
       // Make API request
       const response = await fetch(API_URL);
@@ -44,7 +50,7 @@ class ClientProfileService {
       }
       
       // API endpoint
-      const API_URL = `https://carepro-api20241118153443.azurewebsites.net/api/Clients/${clientId}`;
+      const API_URL = `${config.BASE_URL}/Clients/${clientId}`; // Using centralized API config
       
       // Get the authentication token
       const token = localStorage.getItem("authToken");
@@ -91,7 +97,7 @@ class ClientProfileService {
       }
       
       // API endpoint 
-      const API_URL = `https://carepro-api20241118153443.azurewebsites.net/api/Clients/${clientId}/profile-picture`;
+      const API_URL = `${config.BASE_URL}/Clients/${clientId}/profile-picture`; // Using centralized API config
       
       // Get the authentication token
       const token = localStorage.getItem("authToken");
@@ -136,7 +142,7 @@ class ClientProfileService {
       }
       
       // API endpoint
-      const API_URL = `https://carepro-api20241118153443.azurewebsites.net/api/Clients/${clientId}/services`;
+      const API_URL = `${config.BASE_URL}/Clients/${clientId}/services`; // Using centralized API config
       
       // Get the authentication token
       const token = localStorage.getItem("authToken");

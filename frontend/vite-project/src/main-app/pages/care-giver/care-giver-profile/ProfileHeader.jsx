@@ -9,6 +9,7 @@ import AssessmentButton from "./AssessmentButton";
 import TestVerificationToggle from "../../../components/dev/TestVerificationToggle";
 import verificationService from "../../../services/verificationService";
 import { toast } from "react-toastify";
+import config from "../../../config"; // Import centralized config for API URLs
 import { generateUsername } from "../../../utils/usernameGenerator";
 
 const ProfileHeader = () => {
@@ -63,7 +64,8 @@ const ProfileHeader = () => {
       setLocationLoading(true);
       
       // API call to update location using the correct endpoint with query parameter
-      const response = await fetch(`https://carepro-api20241118153443.azurewebsites.net/api/CareGivers/UpdateCaregiverAboutMeInfo/${userDetails.id}?Location=${encodeURIComponent(editedLocation)}`, {
+      // Use centralized config instead of hardcoded URL for consistent API routing
+      const response = await fetch(`${config.BASE_URL}/CareGivers/UpdateCaregiverAboutMeInfo/${userDetails.id}?Location=${encodeURIComponent(editedLocation)}`, {
         method: 'PUT',
         headers: {
           'accept': '*/*',
@@ -124,7 +126,8 @@ const ProfileHeader = () => {
       const formData = new FormData();
       formData.append('ProfileImage', file);
 
-      const response = await fetch(`https://carepro-api20241118153443.azurewebsites.net/api/CareGivers/UpdateProfilePicture/${userDetails.id}`, {
+      // Use centralized config instead of hardcoded URL for consistent API routing
+      const response = await fetch(`${config.BASE_URL}/CareGivers/UpdateProfilePicture/${userDetails.id}`, {
         method: 'PUT',
         headers: {
           'accept': '*/*',
@@ -200,7 +203,8 @@ const ProfileHeader = () => {
       }
 
       console.log("Fetching profile for user ID:", userDetails.id);
-      const response = await fetch(`https://carepro-api20241118153443.azurewebsites.net/api/CareGivers/${userDetails.id}`);
+      // Use centralized config instead of hardcoded URL for consistent API routing
+      const response = await fetch(`${config.BASE_URL}/CareGivers/${userDetails.id}`);
       
       if (!response.ok) {
         console.error("API response not ok:", response.status, response.statusText);

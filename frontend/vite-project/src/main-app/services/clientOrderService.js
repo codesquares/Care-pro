@@ -2,6 +2,8 @@
  * Client Order Service
  * Handles order-related operations for clients
  */
+import config from "../config"; // Centralized API configuration
+
 const ClientOrderService = {
   /**
    * Get order history for a client
@@ -12,7 +14,7 @@ const ClientOrderService = {
     try {
       // In a real implementation, this would make an API call
       // For now, we'll use mock data
-      const API_URL = `https://carepro-api20241118153443.azurewebsites.net/api/ClientOrders/clientUserId?clientUserId=${clientId}`;
+      const API_URL = `${config.BASE_URL}/ClientOrders/clientUserId?clientUserId=${clientId}`; // Using centralized API config
       
       const response = await fetch(API_URL);
       
@@ -120,7 +122,7 @@ const ClientOrderService = {
         };
       }
 
-      const API_URL = 'https://carepro-api20241118153443.azurewebsites.net/api/ClientOrders';
+      const API_URL = `${config.BASE_URL}/ClientOrders`; // Using centralized API config
       
       const response = await fetch(API_URL, {
         method: 'POST',
@@ -168,7 +170,7 @@ const ClientOrderService = {
         };
       }
 
-      const API_URL = `https://carepro-api20241118153443.azurewebsites.net/api/ClientOrders/${orderId}/status`;
+      const API_URL = `${config.BASE_URL}/ClientOrders/${orderId}/status`; // Using centralized API config
       
       const response = await fetch(API_URL, {
         method: 'PUT',
@@ -215,7 +217,7 @@ const ClientOrderService = {
         };
       }
 
-      const API_URL = `https://carepro-api20241118153443.azurewebsites.net/api/ClientOrders/${orderId}/cancel`;
+      const API_URL = `${config.BASE_URL}/ClientOrders/${orderId}/cancel`; // Using centralized API config
       
       const response = await fetch(API_URL, {
         method: 'PUT',
@@ -262,7 +264,7 @@ const ClientOrderService = {
         };
       }
 
-      const API_URL = `https://carepro-api20241118153443.azurewebsites.net/api/ClientOrders/${orderId}/status`;
+      const API_URL = `${config.BASE_URL}/ClientOrders/${orderId}/status`; // Using centralized API config
       
       const response = await fetch(API_URL, {
         method: 'PATCH',
@@ -309,7 +311,7 @@ const ClientOrderService = {
         };
       }
 
-      const API_URL = `https://carepro-api20241118153443.azurewebsites.net/api/ClientOrders/${orderId}/cancel`;
+      const API_URL = `${config.BASE_URL}/ClientOrders/${orderId}/cancel`; // Using centralized API config
       
       const response = await fetch(API_URL, {
         method: 'POST',
