@@ -9,6 +9,7 @@ import "./Pricing.scss";
 import "./galleryUploads.scss";
 import { useState, useEffect } from "react";
 import PublishGig from "./Publish";
+import config from "../../config"; // Import centralized config for API URLs
 import axios from "axios";
 import validateFormData, { 
   validateOverviewPage, 
@@ -199,8 +200,9 @@ const GigsForm = () => {
           return;
         }
 
+        // FIXED: Use centralized config instead of hardcoded Azure staging API URL
         const response = await fetch(
-          `https://carepro-api20241118153443.azurewebsites.net/api/Gigs/caregiver/caregiverId?caregiverId=${userDetails.id}`
+          `${config.BASE_URL}/Gigs/caregiver/caregiverId?caregiverId=${userDetails.id}`
         );
         
         if (!response.ok) {
@@ -348,8 +350,9 @@ const GigsForm = () => {
         formDataPayload.append("Description", formData.description);
       }
 
+      // FIXED: Use centralized config instead of hardcoded Azure staging API URL for gig creation
       const response = await axios.post(
-        "https://carepro-api20241118153443.azurewebsites.net/api/Gigs",
+        `${config.BASE_URL}/Gigs`,
         formDataPayload
       );
 
@@ -434,36 +437,34 @@ const GigsForm = () => {
 
       const formDataPayload = new FormData();
 
+      // Get caregiver ID from localStorage if not in formData
+      const userDetails = JSON.parse(localStorage.getItem("userDetails") || "{}");
+      const caregiverId = formData.caregiverId || userDetails.id || "";
+      
+      console.log("🔍 DEBUG - Caregiver ID resolution:");
+      console.log("- formData.caregiverId:", formData.caregiverId);
+      console.log("- userDetails.id:", userDetails.id);
+      console.log("- Final caregiverId:", caregiverId);
+
       // Handle basic fields
       formDataPayload.append("Title", formData.title || "");
       formDataPayload.append("Category", formData.category || "");
       
-      // Handle subcategory array - backend expects List<string>
+      // Handle subcategory array - API requires this field
       if (formData.subcategory && Array.isArray(formData.subcategory)) {
         formData.subcategory.forEach(sub => {
           formDataPayload.append("SubCategory", sub);
         });
+        console.log("📋 Added SubCategory fields:", formData.subcategory);
+      } else {
+        // If no subcategories, we need to handle this error
+        console.error("❌ No subcategories found in formData - this will cause validation error");
       }
       
       formDataPayload.append("Tags", searchtags || "");
       formDataPayload.append("Status", "Published");
-      formDataPayload.append("CaregiverId", formData.caregiverId || "");
+      formDataPayload.append("CaregiverId", caregiverId);
       
-      // Handle image - append the file directly or existing base64 for edit mode
-      if (selectedFile) {
-        console.log("Adding new Image1 file to FormData:", selectedFile.name, selectedFile.type, selectedFile.size);
-        formDataPayload.append("Image1", selectedFile);
-      } else if (isEditMode && formData?.image1) {
-        // For edit mode without new image, don't append anything - the backend should keep existing
-        console.log("Edit mode: keeping existing image, not appending to FormData");
-        // Note: Backend should preserve existing image when no new Image1 is provided
-      }
-      
-      // Handle video URL
-      if (formData.video) {
-        formDataPayload.append("VideoURL", formData.video);
-      }
-
       // Handle pricing - find the first completed package
       const completedPackage = Object.keys(formData.pricing).find(packageType => {
         const pkg = formData.pricing[packageType];
@@ -472,11 +473,33 @@ const GigsForm = () => {
       
       if (completedPackage) {
         const packageData = formData.pricing[completedPackage];
-        formDataPayload.append("PackageType", completedPackage);
-        formDataPayload.append("PackageName", packageData.name);
-        formDataPayload.append("PackageDetails", packageData.details);
-        formDataPayload.append("DeliveryTime", packageData.deliveryTime);
-        formDataPayload.append("Price", parseInt(packageData.amount, 10).toString());
+        formDataPayload.append("PackageType", completedPackage || "");
+        formDataPayload.append("PackageName", packageData.name || "");
+        formDataPayload.append("PackageDetails", packageData.details || "");
+        formDataPayload.append("DeliveryTime", packageData.deliveryTime || "");
+        formDataPayload.append("Price", packageData.amount ? parseInt(packageData.amount, 10).toString() : "");
+      } else {
+        // Add empty values for required pricing fields if no package is completed
+        formDataPayload.append("PackageType", "");
+        formDataPayload.append("PackageName", "");
+        formDataPayload.append("PackageDetails", "");
+        formDataPayload.append("DeliveryTime", "");
+        formDataPayload.append("Price", "");
+      }
+      
+      // Handle image - append the file directly or existing base64 for edit mode
+      if (selectedFile) {
+        console.log("Adding new Image1 file to FormData:", selectedFile.name, selectedFile.type, selectedFile.size);
+        formDataPayload.append("Image1", selectedFile);
+      } else {
+        // Add empty Image1 field if no file selected
+        formDataPayload.append("Image1", "");
+        console.log("No image file selected, appending empty Image1 field");
+      }
+      
+      // Handle video URL
+      if (formData.video) {
+        formDataPayload.append("VideoURL", formData.video);
       }
 
       for (let [key, value] of formDataPayload.entries()) {
@@ -484,6 +507,15 @@ const GigsForm = () => {
       }
 
       console.log("🚀 About to send FormData to backend...");
+      console.log("📋 FormData Summary:");
+      console.log("- Title:", formData.title || "EMPTY");
+      console.log("- Category:", formData.category || "EMPTY");
+      console.log("- CaregiverId:", caregiverId || "EMPTY");
+      console.log("- SubCategory count:", formData.subcategory?.length || 0);
+      console.log("- SubCategories:", formData.subcategory || "NONE");
+      console.log("- Status: Published");
+      console.log("- Has Image:", selectedFile ? "YES" : "NO");
+      console.log("- Package Data:", completedPackage ? "YES" : "NO");
 
       // Create an AbortController for request cancellation
       const controller = new AbortController();
@@ -504,17 +536,17 @@ const GigsForm = () => {
 
         if (isEditMode && formData?.id) {
           console.log(`🔄 Updating existing gig with ID: ${formData.id}`);
-          // Update existing gig
+          // Use centralized config for gig operations
           response = await axios.put(
-            `https://carepro-api20241118153443.azurewebsites.net/api/Gigs/UpdateGig/gigId?gigId=${formData.id}`,
+            `${config.BASE_URL}/Gigs/UpdateGig/gigId?gigId=${formData.id}`,
             formDataPayload,
             requestConfig
           );
         } else {
           console.log("✨ Creating new gig");
-          // Create new gig
+          // Use centralized config for gig operations
           response = await axios.post(
-            "https://carepro-api20241118153443.azurewebsites.net/api/Gigs",
+            `${config.BASE_URL}/Gigs`,
             formDataPayload,
             requestConfig
           );
@@ -540,6 +572,8 @@ const GigsForm = () => {
               senderId: caregiverId,
               type: "NewGig",
               relatedEntityId: response.data?.id,
+              title: "🛠️ New gig created by you",
+              content: "You have successfully posted a new gig."
             }).then(() => {
               console.log("Notification created successfully"); 
             });

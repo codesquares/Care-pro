@@ -4,6 +4,7 @@ import { useParams } from "react-router-dom";
 import { ToastContainer, toast } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
 import { createNotification } from "../../../services/notificationService";
+import config from "../../../config"; // Centralized API configuration
 import "./Order&Tasks.scss";
 import { useNavigate } from "react-router-dom";
 
@@ -40,7 +41,7 @@ const MyOrders = () => {
         try {
             setCheckingReviewStatus(true);
             const response = await axios.get(
-                `https://carepro-api20241118153443.azurewebsites.net/api/Reviews?gigId=${gigId}`
+                `${config.BASE_URL}/Reviews?gigId=${gigId}` // Using centralized API config
             );
             
             if (response.status === 200 && response.data) {
@@ -67,7 +68,7 @@ const MyOrders = () => {
 
             try {
                 const response = await axios.get(
-                    `https://carepro-api20241118153443.azurewebsites.net/api/ClientOrders/orderId?orderId=${orderId}`
+                    `${config.BASE_URL}/ClientOrders/orderId?orderId=${orderId}` // Using centralized API config
                 );
                 const orderData = response.data;
                 setOrders([orderData]); // API returns a single order, so wrap it in an array
@@ -100,7 +101,7 @@ const MyOrders = () => {
     const handleSubmitStatus = async () => {
         if (!orderId || !userId || (modalType === "dispute" && !reason)) return;
 
-        const baseUrl = "https://carepro-api20241118153443.azurewebsites.net/api/ClientOrders";
+        const baseUrl = `${config.BASE_URL}/ClientOrders`; // Using centralized API config
         const endpoint =
             modalType === "complete"
                 ? `${baseUrl}/UpdateClientOrderStatus/orderId?orderId=${orderId}`
@@ -126,7 +127,7 @@ const MyOrders = () => {
             
             // Refresh the order data to reflect the new status
             const response = await axios.get(
-                `https://carepro-api20241118153443.azurewebsites.net/api/ClientOrders/orderId?orderId=${orderId}`
+                `${config.BASE_URL}/ClientOrders/orderId?orderId=${orderId}` // Using centralized API config
             );
             setOrders([response.data]);
         } catch (err) {
@@ -164,7 +165,7 @@ const MyOrders = () => {
         try {
             // Submit the review
             await axios.post(
-                "https://carepro-api20241118153443.azurewebsites.net/api/Reviews",
+                `${config.BASE_URL}/Reviews`, // Using centralized API config
                 reviewPayload,
                 {
                     headers: {

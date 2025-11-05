@@ -3,6 +3,7 @@ import Navbar from "../../../components/Navbar";
 import "./CaregiverProfile.scss";
 import { useEffect, useState } from "react";
 import profileCardImage from "../../../assets/profilecard1.png"; // Placeholder image
+import config from "../../config"; // Import centralized config for API URLs
 
 const ProfilePage = () => {
     const [profile, setProfile] = useState({
@@ -27,8 +28,9 @@ const ProfilePage = () => {
             }
     
             // Use the id from userDetails
+            // Use centralized config instead of hardcoded URL for consistent API routing
             const response = await fetch(
-              `https://carepro-api20241118153443.azurewebsites.net/api/CareGivers/${userDetails.id}`
+              `${config.BASE_URL}/CareGivers/${userDetails.id}`
             );
             
     

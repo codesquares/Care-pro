@@ -3,6 +3,7 @@ import { useNavigate } from "react-router-dom";
 import "./ClientSettings.css";
 import defaultAvatar from "../../../../assets/profilecard1.png";
 import ClientSettingsService from "../../../services/ClientSettingsService";
+import AddressInput from "../../../components/AddressInput";
 
 /**
  * Enhanced Premium Client Settings Page Component
@@ -66,6 +67,18 @@ const ClientSettings = () => {
     promotions: false
   });
 
+  // Address form state
+  const [addressForm, setAddressForm] = useState({
+    address: "",
+    city: "",
+    state: "",
+    country: "",
+    postalCode: ""
+  });
+
+  // Address validation state
+  const [addressValidation, setAddressValidation] = useState(null);
+
   // Field validation states
   const [validationStates, setValidationStates] = useState({
     firstName: { isValid: true, message: "" },
@@ -97,6 +110,28 @@ const ClientSettings = () => {
           email: userDetails.email || "",
           phoneNumber: userDetails.phoneNumber || ""
         });
+
+        // Set address form data
+        setAddressForm({
+          address: userDetails.address || "",
+          city: userDetails.city || "",
+          state: userDetails.state || "",
+          country: userDetails.country || "",
+          postalCode: userDetails.postalCode || ""
+        });
+
+        // Load notification preferences from API
+        if (userDetails.id) {
+          try {
+            const preferencesResponse = await ClientSettingsService.getNotificationPreferences(userDetails.id);
+            if (preferencesResponse.success && preferencesResponse.data) {
+              setNotificationPreferences(preferencesResponse.data);
+            }
+          } catch (error) {
+            console.warn("Failed to load notification preferences, using defaults:", error);
+            // Keep default preferences if API call fails
+          }
+        }
         
         // In a real application, you would fetch notification preferences from API
         // For now, we'll leave the default values
@@ -254,6 +289,31 @@ const ClientSettings = () => {
       ...prev,
       [setting]: !prev[setting]
     }));
+  };
+
+  // Handle address change
+  const handleAddressChange = (address) => {
+    setAddressForm(prev => ({
+      ...prev,
+      address: address
+    }));
+  };
+
+  // Handle address validation
+  const handleAddressValidation = (validation) => {
+    setAddressValidation(validation);
+    
+    // Update address form with validated components if available
+    if (validation && validation.addressComponents) {
+      const components = validation.addressComponents;
+      setAddressForm(prev => ({
+        ...prev,
+        city: components.city || prev.city,
+        state: components.state || prev.state,
+        country: components.country || prev.country,
+        postalCode: components.postalCode || prev.postalCode
+      }));
+    }
   };
   
   // Handle image selection
@@ -468,21 +528,107 @@ const handlePasswordSave = async (e) => {
     try {
       setIsLoading(true);
       
-      // In a real application, you would save notification preferences via an API
-      // For now, we'll simulate a successful save
-      await new Promise(resolve => setTimeout(resolve, 1000));
-      
-      setMessage({
-        type: "success",
-        text: "Notification preferences updated successfully!"
-      });
+      // Get client ID from localStorage
+      const userDetails = JSON.parse(localStorage.getItem("userDetails") || "{}");
+      if (!userDetails.id) {
+        setMessage({
+          type: "error",
+          text: "Unable to identify user. Please log in again."
+        });
+        setIsLoading(false);
+        return;
+      }
+
+      // Call API to update notification preferences
+      const response = await ClientSettingsService.updateNotificationPreferences(
+        userDetails.id, 
+        notificationPreferences
+      );
+
+      if (response.success) {
+        setMessage({
+          type: "success",
+          text: response.message || "Notification preferences updated successfully!"
+        });
+
+        // Update local state with response data if provided
+        if (response.data) {
+          setNotificationPreferences(response.data);
+        }
+      } else {
+        setMessage({
+          type: "error",
+          text: response.message || "Failed to save notification preferences"
+        });
+      }
       
       setIsLoading(false);
     } catch (error) {
       console.error("Error saving notification preferences:", error);
       setMessage({
         type: "error",
-        text: "Failed to save notification preferences. Please try again later."
+        text: error.message || "Failed to save notification preferences. Please try again later."
+      });
+      setIsLoading(false);
+    }
+  };
+
+  // Save address changes
+  const handleAddressSave = async (e) => {
+    e.preventDefault();
+    
+    // Validate that address is provided
+    if (!addressForm.address || addressForm.address.trim() === "") {
+      setMessage({
+        type: "error",
+        text: "Please enter a valid address"
+      });
+      return;
+    }
+
+    // Check if address is validated by Google Maps
+    if (!addressValidation || !addressValidation.isValid) {
+      setMessage({
+        type: "error",
+        text: "Please select a valid address from the suggestions"
+      });
+      return;
+    }
+
+    try {
+      setIsLoading(true);
+      
+      // Update user details in local storage
+      const userDetails = JSON.parse(localStorage.getItem("userDetails") || "{}");
+      const updatedDetails = {
+        ...userDetails,
+        address: addressForm.address,
+        city: addressForm.city,
+        state: addressForm.state,
+        country: addressForm.country,
+        postalCode: addressForm.postalCode,
+        coordinates: addressValidation.coordinates
+      };
+      
+      localStorage.setItem("userDetails", JSON.stringify(updatedDetails));
+      
+      // In a real application, you would save to API here
+      // await ClientSettingsService.updateAddress(updatedDetails);
+      
+      // Simulate API call
+      await new Promise(resolve => setTimeout(resolve, 1000));
+      
+      setMessage({
+        type: "success",
+        text: "Address updated successfully!"
+      });
+      
+      setIsLoading(false);
+    } catch (error) {
+      console.error("Error saving address:", error);
+      setMessage({
+        type: "error",
+        text: "Failed to save address. Please try again later."
       });
       setIsLoading(false);
     }
@@ -580,6 +726,16 @@ const handlePasswordSave = async (e) => {
               <i className="fas fa-bell"></i>
               <span>Notifications</span>
             </li>
+            <li 
+              className={`client-settings-sidebar-menu-item ${activeTab === "address" ? "active" : ""}`}
+              onClick={() => {
+                setActiveTab("address");
+                setSidebarOpen(false);
+              }}
+            >
+              <i className="fas fa-map-marker-alt"></i>
+              <span>Update Location</span>
+            </li>
           </ul>
         </div>
         
@@ -589,6 +745,7 @@ const handlePasswordSave = async (e) => {
             {activeTab === "account" && "Account Information"}
             {activeTab === "password" && "Change Password"}
             {activeTab === "notifications" && "Notification Preferences"}
+            {activeTab === "address" && "Update Location"}
           </h1>
           
           {/* Message display */}
@@ -986,6 +1143,116 @@ const handlePasswordSave = async (e) => {
                   )}
                 </button>
               </div>
+            </div>
+          )}
+          
+          {/* Update Location Tab */}
+          {activeTab === "address" && (
+            <div className="client-settings-section">
+              <div className="client-settings-address-info">
+                <p><i className="fas fa-info-circle"></i> Update your location to help us provide better service recommendations and connect you with nearby caregivers.</p>
+              </div>
+              
+              <form className="client-settings-form" onSubmit={handleAddressSave}>
+                <div className="client-settings-form-group">
+                  <label htmlFor="address">Full Address</label>
+                  <AddressInput
+                    value={addressForm.address}
+                    onChange={handleAddressChange}
+                    onValidation={handleAddressValidation}
+                    placeholder="Enter your full address (e.g., 123 Main Street, Lagos, Nigeria)"
+                    className="client-settings-address-input"
+                    showValidationIcon={true}
+                    autoValidate={true}
+                    country="ng"
+                  />
+                  
+                  {/* Show validation status */}
+                  {addressValidation && (
+                    <div style={{ 
+                      marginTop: '8px',
+                      padding: '8px',
+                      borderRadius: '4px',
+                      fontSize: '14px',
+                      backgroundColor: addressValidation.isValid ? '#d4edda' : '#f8d7da',
+                      color: addressValidation.isValid ? '#155724' : '#721c24',
+                      border: `1px solid ${addressValidation.isValid ? '#c3e6cb' : '#f5c6cb'}`
+                    }}>
+                      <i className={`fas ${addressValidation.isValid ? 'fa-check-circle' : 'fa-exclamation-circle'}`}></i>
+                      {addressValidation.isValid ? 
+                        ` Address validated: ${addressValidation.formattedAddress}` : 
+                        ` ${addressValidation.errorMessage || 'Please select a valid address from suggestions'}`
+                      }
+                    </div>
+                  )}
+                </div>
+
+                {/* Display address components if validated */}
+                {addressValidation && addressValidation.isValid && addressValidation.addressComponents && (
+                  <div className="client-settings-address-components">
+                    <h4>Address Details</h4>
+                    <div className="client-settings-address-grid">
+                      <div className="client-settings-form-group">
+                        <label>City</label>
+                        <input 
+                          type="text"
+                          value={addressForm.city}
+                          className="client-settings-input-readonly"
+                          readOnly
+                        />
+                      </div>
+                      
+                      <div className="client-settings-form-group">
+                        <label>State</label>
+                        <input 
+                          type="text"
+                          value={addressForm.state}
+                          className="client-settings-input-readonly"
+                          readOnly
+                        />
+                      </div>
+                      
+                      <div className="client-settings-form-group">
+                        <label>Country</label>
+                        <input 
+                          type="text"
+                          value={addressForm.country}
+                          className="client-settings-input-readonly"
+                          readOnly
+                        />
+                      </div>
+                      
+                      <div className="client-settings-form-group">
+                        <label>Postal Code</label>
+                        <input 
+                          type="text"
+                          value={addressForm.postalCode}
+                          className="client-settings-input-readonly"
+                          readOnly
+                        />
+                      </div>
+                    </div>
+                  </div>
+                )}
+                
+                <div className="client-settings-form-actions">
+                  <button 
+                    type="submit" 
+                    className="client-settings-button"
+                    disabled={isLoading || !addressValidation?.isValid}
+                  >
+                    {isLoading ? (
+                      <>
+                        <i className="fas fa-spinner fa-spin"></i> Saving...
+                      </>
+                    ) : (
+                      <>
+                        <i className="fas fa-map-marker-alt"></i> Save Location
+                      </>
+                    )}
+                  </button>
+                </div>
+              </form>
             </div>
           )}
         </div>

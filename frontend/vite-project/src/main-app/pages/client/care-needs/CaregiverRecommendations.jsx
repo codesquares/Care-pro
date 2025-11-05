@@ -29,8 +29,8 @@ const CaregiverRecommendations = ({ careNeeds, visible }) => {
         
         setLoading(false);
       } catch (err) {
-        console.error('Error fetching recommendations:', err);
-        setError('Unable to load caregiver recommendations');
+        console.log('Caregiver recommendations service temporarily unavailable');
+        setError('Caregiver recommendations will be available once our caregiver database is active.');
         setLoading(false);
       }
     };

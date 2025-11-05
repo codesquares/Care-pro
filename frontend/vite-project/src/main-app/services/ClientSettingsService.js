@@ -42,6 +42,47 @@ const ClientSettingsService = {
       throw error;
     }
   },
+
+  /**
+   * Get client notification preferences
+   * @param {string} clientId - Client ID
+   * @returns {Promise<Object>} Response data with notification preferences
+   */
+  async getNotificationPreferences(clientId) {
+    try {
+      const response = await axios.get(`${BASE_API_URL}/ClientPreferences/notification-preferences/${clientId}`);
+      return response.data;
+    } catch (error) {
+      console.error("Error getting notification preferences:", error);
+      
+      // Normalize error response
+      if (error.response && error.response.data) {
+        throw new Error(error.response.data.message || "Failed to get notification preferences");
+      }
+      throw new Error("Network error while getting notification preferences");
+    }
+  },
+
+  /**
+   * Update client notification preferences
+   * @param {string} clientId - Client ID
+   * @param {Object} preferences - Notification preferences object
+   * @returns {Promise<Object>} Response data
+   */
+  async updateNotificationPreferences(clientId, preferences) {
+    try {
+      const response = await axios.put(`${BASE_API_URL}/ClientPreferences/notification-preferences/${clientId}`, preferences);
+      return response.data;
+    } catch (error) {
+      console.error("Error updating notification preferences:", error);
+      
+      // Normalize error response
+      if (error.response && error.response.data) {
+        throw new Error(error.response.data.message || "Failed to update notification preferences");
+      }
+      throw new Error("Network error while updating notification preferences");
+    }
+  },
 };
 
 export default ClientSettingsService;

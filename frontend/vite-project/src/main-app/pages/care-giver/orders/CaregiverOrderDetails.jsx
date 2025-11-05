@@ -2,6 +2,7 @@ import { useState, useEffect } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import axios from "axios";
 import { toast, ToastContainer } from "react-toastify";
+import config from "../../../config"; // Import centralized config for API URLs
 
 import "react-toastify/dist/ReactToastify.css";
 import "./CaregiverOrderDetails.css";
@@ -32,8 +33,9 @@ const CaregiverOrderDetails = () => {
             }
 
             try {
+                // FIXED: Use centralized config instead of hardcoded Azure staging API URL
                 const response = await axios.get(
-                    `https://carepro-api20241118153443.azurewebsites.net/api/ClientOrders/orderId?orderId=${orderId}`
+                    `${config.BASE_URL}/ClientOrders/orderId?orderId=${orderId}`
                 );
                 setOrders([response.data]); // API returns a single order, so wrap it in an array
             } catch (err) {
@@ -50,8 +52,9 @@ const CaregiverOrderDetails = () => {
     // Function to check if conversation exists between caregiver and client
     const checkConversationExists = async (caregiverId, clientId) => {
         try {
-            const response = await axios.get(
-                `https://carepro-api20241118153443.azurewebsites.net/api/Messages/conversations/${caregiverId}`
+            // FIXED: Use centralized config instead of hardcoded Azure staging API URL for message conversations
+            const conversationResponse = await axios.get(
+                `${config.BASE_URL}/Messages/conversations/${caregiverId}`
             );
             
             // Check if any conversation includes the specific client
@@ -71,8 +74,9 @@ const CaregiverOrderDetails = () => {
     // Function to create a new conversation between caregiver and client
     const createConversation = async (caregiverId, clientId) => {
         try {
+            // FIXED: Use centralized config instead of hardcoded Azure staging API URL for creating conversations
             const response = await axios.post(
-                'https://carepro-api20241118153443.azurewebsites.net/api/Messages/conversations',
+                `${config.BASE_URL}/Messages/conversations`,
                 {
                     participants: [
                         {

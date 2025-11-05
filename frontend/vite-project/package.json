@@ -28,6 +28,7 @@
     "contentful": "^11.4.6",
     "cross-spawn": "^7.0.6",
     "date-fns": "^4.1.0",
+    "dojah-kyc-sdk-react": "^0.0.5",
     "react": "^18.3.1",
     "react-dojah": "^1.1.0",
     "react-dom": "^18.3.1",

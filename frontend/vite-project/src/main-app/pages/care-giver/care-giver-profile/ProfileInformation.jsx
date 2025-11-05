@@ -2,6 +2,7 @@ import './profile-information.css'
 import { useState } from 'react'
 import axios from 'axios'
 import { toast } from 'react-toastify';
+import config from '../../../config'; // Centralized API configuration
 
 const ProfileInformation = ({ profileDescription, onUpdate, services}) => {
   const [showModal, setShowModal] = useState(false);
@@ -34,7 +35,7 @@ const ProfileInformation = ({ profileDescription, onUpdate, services}) => {
   const handleSave = async () => {
     try {
       setLoading(true);
-      await axios.put(`https://carepro-api20241118153443.azurewebsites.net/api/CareGivers/UpdateCaregiverAboutMeInfo/${userDetails.id}?AboutMe=${encodeURIComponent(editedAboutMe)}`, {
+      await axios.put(`${config.BASE_URL}/CareGivers/UpdateCaregiverAboutMeInfo/${userDetails.id}?AboutMe=${encodeURIComponent(editedAboutMe)}`, { // Using centralized API config
         AboutMe: editedAboutMe,
       });
       setShowModal(false);
@@ -69,7 +70,7 @@ const ProfileInformation = ({ profileDescription, onUpdate, services}) => {
         yearObtained: new Date(certificateYear, 0, 1).toISOString() // Convert year to ISO DateTime
       };
 
-      await axios.post("https://carepro-api20241118153443.azurewebsites.net/api/Certificates", requestPayload, {
+      await axios.post(`${config.BASE_URL}/Certificates`, requestPayload, { // Using centralized API config
         headers: { 
           "Content-Type": "application/json",
           "Accept": "*/*"

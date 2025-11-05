@@ -3,6 +3,7 @@ import { useNavigate } from "react-router-dom";
 import "./ProfileCard.css";
 import profilecard1 from "../../../../assets/profilecard1.png";
 import { generateUsername } from "../../../utils/usernameGenerator";
+import config from "../../../config"; // Import centralized config for API URLs
 
 const ProfileCard = () => {
   const navigate = useNavigate();
@@ -24,8 +25,9 @@ const ProfileCard = () => {
 
     const fetchProfile = async () => {
       try {
+        // Use centralized config instead of hardcoded URL for consistent API routing
         const response = await fetch(
-          `https://carepro-api20241118153443.azurewebsites.net/api/CareGivers/${caregiverId}`
+          `${config.BASE_URL}/CareGivers/${caregiverId}`
         );
 
         if (!response.ok) {

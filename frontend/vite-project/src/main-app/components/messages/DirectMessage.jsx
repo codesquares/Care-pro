@@ -5,8 +5,10 @@ import ChatArea from './Chatarea';
 import axios from 'axios';
 import './messages.scss';
 import './direct-message.scss';
+import config from '../../config'; // Import centralized config for API URLs
 
-const API_BASE_URL = "https://carepro-api20241118153443.azurewebsites.net";
+// FIXED: Use centralized config instead of hardcoded Azure staging API URL
+const API_BASE_URL = config.BASE_URL.replace('/api', ''); // Remove /api suffix for consistency
 
 const DirectMessage = () => {
   const { recipientId } = useParams();

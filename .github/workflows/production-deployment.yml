@@ -149,8 +149,8 @@ jobs:
           VITE_API_URL: https://api.oncarepro.com/api
           VITE_AZURE_API_URL: https://api.oncarepro.com/api
           VITE_LOCAL_API_URL: https://care-pro-node-api.onrender.com/api
-          VITE_DOJAH_WIDGET_ID: 68732f5e97202a07f66bc89a
-          VITE_DOJAH_APP_ID: 686c915878a2b53b2bdb5631
+          VITE_DOJAH_WIDGET_ID: 69048546a4b1ea078950d7b9
+          VITE_DOJAH_APP_ID: 690484faa4b1ea078950c1cb
           VITE_DOJAH_PUBLIC_KEY: prod_pk_QTjK773OoJl6siRJFLNBUq07M
           VITE_DEBUG: false
           VITE_REDIRECT_URL: https://oncarepro.com/app/caregiver/dashboard
@@ -325,8 +325,8 @@ jobs:
             --build-arg VITE_API_URL=https://api.oncarepro.com/api \
             --build-arg VITE_AZURE_API_URL=https://api.oncarepro.com/api \
             --build-arg VITE_LOCAL_API_URL=https://care-pro-node-api.onrender.com/api \
-            --build-arg VITE_DOJAH_WIDGET_ID=68732f5e97202a07f66bc89a \
-            --build-arg VITE_DOJAH_APP_ID=686c915878a2b53b2bdb5631 \
+            --build-arg VITE_DOJAH_WIDGET_ID=69048546a4b1ea078950d7b9 \
+            --build-arg VITE_DOJAH_APP_ID=690484faa4b1ea078950c1cb \
             --build-arg VITE_DOJAH_PUBLIC_KEY=prod_pk_QTjK773OoJl6siRJFLNBUq07M \
             --build-arg VITE_DEBUG=false \
             --build-arg VITE_REDIRECT_URL=https://oncarepro.com/app/caregiver/dashboard \

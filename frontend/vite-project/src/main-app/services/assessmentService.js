@@ -371,7 +371,7 @@ const assessmentService = {
         throw new Error('CareGiver ID is required');
       }
 
-      const apiUrl = `https://carepro-api20241118153443.azurewebsites.net/api/Assessments/user/${careGiverId}`;
+      const apiUrl = `${config.BASE_URL}/Assessments/user/${careGiverId}`; // Using centralized API config
 
       const response = await fetch(apiUrl, {
         method: 'GET',

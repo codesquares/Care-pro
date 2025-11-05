@@ -1,12 +1,13 @@
 const config = {
   BASE_URL: "http://localhost:3000",
   FALLBACK_URL: "http://localhost:3000",
-  LOCAL_API_URL: "http://localhost:3000/api",
-  LOCALHOST_API_URL: "http://localhost:3000/api",
+  
+  // REMOVED: LOCAL_API_URL and LOCALHOST_API_URL are no longer needed
+  // All API calls now go through the .NET backend BASE_URL
   
   DOJAH: {
-    APP_ID: "686c915878a2b53b2bdb5631",
-    WIDGET_ID: "68732f5e97202a07f66bc89a",
+    APP_ID: "690484faa4b1ea078950c1cb",
+    WIDGET_ID: "69048546a4b1ea078950d7b9",
     API_URL: "https://api.dojah.io",
     IDENTITY_URL: "https://identity.dojah.io",
     PUBLIC_KEY: "test-public-key"

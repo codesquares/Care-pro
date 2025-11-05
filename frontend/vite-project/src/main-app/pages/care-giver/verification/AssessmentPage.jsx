@@ -5,6 +5,7 @@ import "./assessment-page.css";
 import "./mobile-assessment.css";
 import "../care-giver-profile/profile-header.css";
 import assessmentService from "../../../services/assessmentService";
+import trainingMaterialsService from "../../../services/trainingMaterialsService";
 import { Helmet } from "react-helmet-async";
 import ProfileCard from "../care-giver-dashboard/ProfileCard";
 
@@ -20,6 +21,9 @@ const AssessmentPage = () => {
   const [isLoading, setIsLoading] = useState(true);
   const [assessmentResult, setAssessmentResult] = useState(null);
   const [questionsWithAnswers, setQuestionsWithAnswers] = useState([]);
+  const [trainingMaterials, setTrainingMaterials] = useState([]);
+  const [loadingMaterials, setLoadingMaterials] = useState(false);
+  const [materialsError, setMaterialsError] = useState("");
 
   // Get token and user ID from localStorage
   const userDetails = JSON.parse(localStorage.getItem("userDetails") || "{}");
@@ -27,6 +31,101 @@ const AssessmentPage = () => {
   
   // To track and abort ongoing fetch requests
   const abortControllerRef = useRef(null);
+
+  // Function to fetch training materials
+  const fetchTrainingMaterials = async () => {
+    try {
+      setLoadingMaterials(true);
+      setMaterialsError("");
+      
+      // Get user type (caregiver or cleaner) - capitalize for API
+      const userType = userDetails.role?.toLowerCase() || 'caregiver';
+      const normalizedUserType = userType.charAt(0).toUpperCase() + userType.slice(1);
+      
+      const response = await trainingMaterialsService.getTrainingMaterials(normalizedUserType);
+      
+      if (response.success && response.data) {
+        const materials = Array.isArray(response.data) ? response.data : [];
+        
+        // Filter to get only the latest training material (most recent by createdAt or updatedAt)
+        let latestMaterial = null;
+        if (materials.length > 0) {
+          latestMaterial = materials.reduce((latest, current) => {
+            const latestDate = new Date(latest.updatedAt || latest.createdAt);
+            const currentDate = new Date(current.updatedAt || current.createdAt);
+            return currentDate > latestDate ? current : latest;
+          });
+        }
+        
+        setTrainingMaterials(latestMaterial ? [latestMaterial] : []);
+        console.log(`Loaded latest training material:`, latestMaterial?.title || 'None available');
+      } else {
+        setMaterialsError("No training manual available at the moment.");
+      }
+    } catch (err) {
+      console.error("Error fetching training materials:", err);
+      
+      // Check if it's a 404 error (endpoint not implemented)
+      if (err.response?.status === 404 || err.message?.includes('404')) {
+        console.log("Training materials endpoint not available on this backend");
+        setMaterialsError("Training manual feature is not available in this environment.");
+      } else {
+        setMaterialsError("Failed to load training materials.");
+      }
+    } finally {
+      setLoadingMaterials(false);
+    }
+  };
+
+  // Function to handle training material download
+  const handleDownloadMaterial = async (materialId, fileName) => {
+    try {
+      setMaterialsError(""); // Clear any previous errors
+      
+      // You could add a loading state per material here if needed
+      console.log(`Starting download for material: ${materialId}`);
+      console.log(`Expected filename: ${fileName}`);
+      
+      const result = await trainingMaterialsService.downloadMaterial(materialId, fileName);
+      
+      if (result.success) {
+        console.log(`Successfully downloaded: ${result.fileName} using method: ${result.method}`);
+        
+        // Show success feedback to user
+        if (result.method === 'window_open') {
+          setMaterialsError(`Download initiated for ${result.fileName}. Check your browser's download folder.`);
+        } else {
+          setMaterialsError(`Successfully downloaded: ${result.fileName}`);
+        }
+        
+        // Clear success message after 5 seconds
+        setTimeout(() => {
+          setMaterialsError("");
+        }, 5000);
+      } else {
+        console.error("Download failed:", result);
+        setMaterialsError(`Failed to download ${fileName}. Please try again.`);
+      }
+    } catch (err) {
+      console.error("Error downloading material:", err);
+      
+      if (err.message?.includes('authentication')) {
+        setMaterialsError(`Download failed: File requires authentication. The backend proxy download feature will resolve this issue.`);
+      } else if (err.message?.includes('not accessible')) {
+        setMaterialsError(`Download failed: File is currently not accessible. Please try again later or contact support.`);
+      } else if (err.response?.status === 404) {
+        setMaterialsError(`Download failed: Endpoint not found. The enhanced download feature is being deployed.`);
+      } else if (err.response?.status === 405) {
+        setMaterialsError(`Download failed: Method not allowed. The download endpoint configuration is being updated.`);
+      } else if (err.response?.status === 500) {
+        setMaterialsError(`Download failed: Server error. The backend proxy is being configured. Please try again shortly.`);
+      } else if (err.message?.includes('401') || err.message?.includes('deny or ACL failure')) {
+        setMaterialsError(`Download failed: File access restricted. The new backend proxy will resolve this authentication issue.`);
+      } else {
+        setMaterialsError(`Download failed: ${err.message || 'Unknown error'}. Please try again or contact support.`);
+      }
+    }
+  };
 
   // Declare fetchQuestions outside of useEffect so it can be called from other functions
   const fetchQuestions = async () => {
@@ -117,7 +216,14 @@ const AssessmentPage = () => {
     let isMounted = true;
     
     // Check if user is already qualified or has assessment restrictions
-    const qualificationStatus = assessmentService.getQualificationStatus();
+    // First check localStorage for cached qualification status
+    let qualificationStatus;
+    try {
+      qualificationStatus = JSON.parse(localStorage.getItem('qualificationStatus') || '{}');
+    } catch (err) {
+      console.warn('Error parsing qualification status from localStorage:', err);
+      qualificationStatus = {};
+    }
     
     // If user is already qualified, show a message and redirect to profile
     if (qualificationStatus.isQualified) {
@@ -137,6 +243,9 @@ const AssessmentPage = () => {
     
     // Fetch questions
     fetchQuestions();
+    
+    // Fetch training materials (optional - if endpoint doesn't exist, it will fail gracefully)
+    fetchTrainingMaterials();
     
     // Cleanup function to abort any ongoing requests when unmounting
     return () => {
@@ -195,7 +304,14 @@ const AssessmentPage = () => {
     setAnswers({});
     
     // If this is a retake, mark it as such in localStorage
-    const qualificationStatus = assessmentService.getQualificationStatus();
+    // First check localStorage for cached qualification status
+    let qualificationStatus;
+    try {
+      qualificationStatus = JSON.parse(localStorage.getItem('qualificationStatus') || '{}');
+    } catch (err) {
+      console.warn('Error parsing qualification status from localStorage:', err);
+      qualificationStatus = {};
+    }
     if (qualificationStatus.assessmentCompleted) {
       // Update qualification status to indicate this is a retake
       const updatedStatus = {
@@ -339,7 +455,14 @@ const AssessmentPage = () => {
 
   const renderWelcomeScreen = () => {
     // Check if this is a retake
-    const qualificationStatus = assessmentService.getQualificationStatus();
+    // First check localStorage for cached qualification status
+    let qualificationStatus;
+    try {
+      qualificationStatus = JSON.parse(localStorage.getItem('qualificationStatus') || '{}');
+    } catch (err) {
+      console.warn('Error parsing qualification status from localStorage:', err);
+      qualificationStatus = {};
+    }
     const isRetake = qualificationStatus.assessmentCompleted && qualificationStatus.canRetake;
     
     return (
@@ -413,6 +536,101 @@ const AssessmentPage = () => {
                 </div>
               </div>
             </div>
+
+            {/* Training Materials Section - Only show if endpoint is available */}
+            {(trainingMaterials.length > 0 || loadingMaterials || (materialsError && !materialsError.includes('not available'))) && (
+              <div className="training-materials-section">
+                <div className="training-materials-header">
+                  <h3>📚 Latest Training Manual</h3>
+                  <p>Review the latest training manual before starting your assessment to improve your chances of success.</p>
+                  <div className="download-notice" style={{
+                    background: '#fff3cd',
+                    border: '1px solid #ffeaa7',
+                    borderRadius: '4px',
+                    padding: '8px 12px',
+                    marginTop: '8px',
+                    fontSize: '14px',
+                    color: '#856404'
+                  }}>
+                    <i className="fas fa-tools" style={{marginRight: '6px'}}></i>
+                    <strong>Download system update in progress:</strong> Enhanced backend proxy is being configured. Downloads may have temporary issues.
+                  </div>
+                </div>
+                
+                {loadingMaterials ? (
+                  <div className="loading-materials">
+                    <div className="spinner"></div>
+                    <p>Loading latest training manual...</p>
+                  </div>
+                ) : materialsError ? (
+                  <div className="materials-error">
+                    <p>{materialsError}</p>
+                    {!materialsError.includes('not available') && (
+                      <button 
+                        className="retry-materials-btn"
+                        onClick={fetchTrainingMaterials}
+                      >
+                        <i className="fas fa-redo"></i>
+                        Retry
+                      </button>
+                    )}
+                  </div>
+                ) : trainingMaterials.length > 0 ? (
+                  <div className="training-materials-list">
+                    {trainingMaterials.map((material) => (
+                      <div key={material.id} className="training-material-item">
+                        <div className="material-info">
+                          <div className="material-icon">
+                            <i className={`fas ${
+                              material.fileType?.toLowerCase() === 'pdf' ? 'fa-file-pdf' :
+                              material.fileType?.toLowerCase() === 'doc' || material.fileType?.toLowerCase() === 'docx' ? 'fa-file-word' :
+                              'fa-file-download'
+                            }`}></i>
+                          </div>
+                          <div className="material-details">
+                            <h4>{material.title}</h4>
+                            {material.description && (
+                              <p className="material-description">{material.description}</p>
+                            )}
+                            <div className="material-meta">
+                              <span className="file-type">{material.fileType}</span>
+                              {material.fileSize && material.fileSize > 0 ? (
+                                <span className="file-size">
+                                  {material.fileSize >= 1024 * 1024 
+                                    ? `${(material.fileSize / 1024 / 1024).toFixed(1)} MB`
+                                    : material.fileSize >= 1024 
+                                    ? `${(material.fileSize / 1024).toFixed(1)} KB`
+                                    : `${material.fileSize} bytes`
+                                  }
+                                </span>
+                              ) : (
+                                <span className="file-size" style={{color: '#888'}}>
+                                  Size unknown
+                                </span>
+                              )}
+                            </div>
+                          </div>
+                        </div>
+                        <div className="material-actions">
+                          <button
+                            className="download-material-btn"
+                            onClick={() => handleDownloadMaterial(material.id, material.fileName)}
+                            title={`Download ${material.title}`}
+                          >
+                            <i className="fas fa-download"></i>
+                            Download
+                          </button>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                ) : (
+                  <div className="no-materials">
+                    <p>No training manual is currently available.</p>
+                  </div>
+                )}
+              </div>
+            )}
 
             {isLoading ? (
               <div className="loading-indicator">

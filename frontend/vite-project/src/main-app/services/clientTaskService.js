@@ -2,6 +2,8 @@
  * Client Task Service
  * Handles task generation, management and saving to Azure
  */
+import config from "../config"; // Centralized API configuration
+
 const ClientTaskService = {
   /**
    * Generate tasks based on client preferences
@@ -65,7 +67,7 @@ const ClientTaskService = {
       }
       
       // Use the Azure API endpoint
-      const API_URL = `https://carepro-api20241118153443.azurewebsites.net/api/ClientTasks`;
+      const API_URL = `${config.BASE_URL}/ClientTasks`; // Using centralized API config
       
       const payload = {
         clientId: clientId,
@@ -175,7 +177,7 @@ const ClientTaskService = {
       }
       
       // Use the Azure API endpoint
-      const API_URL = `https://carepro-api20241118153443.azurewebsites.net/api/ClientTasks/${clientId}`;
+      const API_URL = `${config.BASE_URL}/ClientTasks/${clientId}`; // Using centralized API config
       
       // Use timeout for better UX
       const controller = new AbortController();
@@ -273,7 +275,7 @@ const ClientTaskService = {
       }
       
       // Use the Azure API endpoint
-      const API_URL = `https://carepro-api20241118153443.azurewebsites.net/api/ClientTasks/${clientId}/task/${taskId}`;
+      const API_URL = `${config.BASE_URL}/ClientTasks/${clientId}/task/${taskId}`; // Using centralized API config
       
       const payload = {
         isComplete: isComplete

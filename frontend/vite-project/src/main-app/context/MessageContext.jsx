@@ -1,10 +1,11 @@
 import { createContext, useContext, useState, useEffect, useCallback, useMemo, useReducer} from 'react';
 import chatService from '../services/signalRChatService';
 import axios from 'axios';
+import config from '../config'; // Centralized API configuration
 
 
 // Constants
-const API_BASE_URL = "https://carepro-api20241118153443.azurewebsites.net";
+const API_BASE_URL = config.BASE_URL.replace('/api', ''); // Using centralized API config
 
 // Utility function to convert MongoDB ObjectId to string
 const objectIdToString = (id) => {

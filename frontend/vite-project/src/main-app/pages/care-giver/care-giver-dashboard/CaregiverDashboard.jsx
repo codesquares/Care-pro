@@ -6,6 +6,7 @@ import StatisticsCard from './StatisticsCard';
 import OrderList from './OrderList';
 import './CaregiverDashboard.css';
 import setting from '../../../../assets/setting.png';
+import config from '../../../config'; // Import centralized config for API URLs
 
 const CaregiverDashboard = () => {
   const [filter, setFilter] = useState('All Orders'); // Default filter is 'All Orders'
@@ -24,7 +25,8 @@ const CaregiverDashboard = () => {
    // Retrieve user details from localStorage
    const userDetails = JSON.parse(localStorage.getItem("userDetails") || "{}");
    const caregiverId = userDetails?.id;
-   const vite_API_URL = import.meta.env.VITE_API_URL || 'https://carepro-api20241118153443.azurewebsites.net/api'; // Use the environment variable for the API URL 
+   // FIXED: Use centralized config instead of hardcoded Azure staging API URL fallback
+   const vite_API_URL = config.BASE_URL; // Use centralized config for consistent API routing
    // Ensure this is set in your .env file
    const API_URL = `${vite_API_URL}/ClientOrders/CaregiverOrders/caregiverId?caregiverId=${caregiverId}`;
 

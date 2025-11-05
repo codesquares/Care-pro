@@ -2,6 +2,12 @@
  * Client Profile Service
  * Handles API operations related to client profiles
  */
+/**
+ * Client Profile Service
+ * Handles client profile operations including CRUD and service management
+ */
+import config from "../config"; // Centralized API configuration
+
 class ClientProfileService {
   /**
    * Get client profile information
@@ -15,7 +21,7 @@ class ClientProfileService {
       }
       
       // API endpoint
-      const API_URL = `https://carepro-api20241118153443.azurewebsites.net/api/Clients/${clientId}`;
+      const API_URL = `${config.BASE_URL}/Clients/${clientId}`; // Using centralized API config
       
       // Make API request
       const response = await fetch(API_URL);
@@ -24,7 +30,15 @@ class ClientProfileService {
         throw new Error(`Failed to fetch profile: ${response.status}`);
       }
       
-      return await response.json();
+      const profileData = await response.json();
+      
+      // Map backend field names to frontend field names
+      return {
+        ...profileData,
+        location: profileData.homeAddress,        // Map homeAddress → location
+        phoneNumber: profileData.phoneNo,         // Map phoneNo → phoneNumber  
+        profilePicture: profileData.profileImage  // Map profileImage → profilePicture
+      };
     } catch (error) {
       console.error("Error fetching client profile:", error);
       throw error;
@@ -43,8 +57,8 @@ class ClientProfileService {
         throw new Error("Client ID is required");
       }
       
-      // API endpoint
-      const API_URL = `https://carepro-api20241118153443.azurewebsites.net/api/Clients/${clientId}`;
+      // API endpoint - corrected to use the right endpoint
+      const API_URL = `${config.BASE_URL}/Clients/UpdateClientUser/${clientId}`; // Using centralized API config
       
       // Get the authentication token
       const token = localStorage.getItem("authToken");
@@ -53,6 +67,17 @@ class ClientProfileService {
         throw new Error("Authentication token not found");
       }
       
+      // Prepare payload with only supported fields
+      const payload = {
+        firstName: profileData.firstName || '',
+        middleName: profileData.middleName || '', // Added middleName support
+        lastName: profileData.lastName || '',
+        homeAddress: profileData.location || '', // Map location to homeAddress
+        phoneNo: profileData.phoneNumber || '' // Map phoneNumber to phoneNo
+      };
+      
+      console.log('Updating client profile with payload:', payload); // Debug log
+      
       // Make API request
       const response = await fetch(API_URL, {
         method: 'PUT',
@@ -60,14 +85,37 @@ class ClientProfileService {
           'Content-Type': 'application/json',
           'Authorization': `Bearer ${token}`
         },
-        body: JSON.stringify(profileData)
+        body: JSON.stringify(payload)
       });
       
       if (!response.ok) {
         throw new Error(`Failed to update profile: ${response.status}`);
       }
       
-      return await response.json();
+      // Handle response - it might be JSON or plain text
+      let result;
+      const contentType = response.headers.get('content-type');
+      
+      if (contentType && contentType.includes('application/json')) {
+        result = await response.json();
+      } else {
+        // Handle plain text response
+        const textResult = await response.text();
+        console.log('API returned text response:', textResult);
+        result = { message: textResult, success: true };
+      }
+      
+      console.log('API response:', result); // Debug log
+      
+      // Return the updated profile data in the expected format
+      return {
+        ...profileData, // Keep all original data
+        firstName: payload.firstName,
+        middleName: payload.middleName,
+        lastName: payload.lastName,
+        location: payload.homeAddress, // Map back to location
+        phoneNumber: payload.phoneNo // Map back to phoneNumber
+      };
     } catch (error) {
       console.error("Error updating client profile:", error);
       throw error;
@@ -91,7 +139,7 @@ class ClientProfileService {
       }
       
       // API endpoint 
-      const API_URL = `https://carepro-api20241118153443.azurewebsites.net/api/Clients/${clientId}/profile-picture`;
+      const API_URL = `${config.BASE_URL}/Clients/${clientId}/profile-picture`; // Using centralized API config
       
       // Get the authentication token
       const token = localStorage.getItem("authToken");
@@ -136,7 +184,7 @@ class ClientProfileService {
       }
       
       // API endpoint
-      const API_URL = `https://carepro-api20241118153443.azurewebsites.net/api/Clients/${clientId}/services`;
+      const API_URL = `${config.BASE_URL}/Clients/${clientId}/services`; // Using centralized API config
       
       // Get the authentication token
       const token = localStorage.getItem("authToken");

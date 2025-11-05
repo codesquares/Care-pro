@@ -3,6 +3,7 @@ import { useNavigate, Link } from "react-router-dom";
 import "./clientProfileCard.css";
 import defaultAvatar from '../../../../assets/profilecard1.png';
 import { generateUsername } from "../../utils/usernameGenerator";
+import config from "../../../config"; // Centralized API configuration
 
 const ClientProfileCard = () => {
   const navigate = useNavigate();
@@ -12,7 +13,7 @@ const ClientProfileCard = () => {
 
   const userDetails = JSON.parse(localStorage.getItem("userDetails") || "{}");
   const clientId = userDetails?.id;
-  const API_URL = `https://carepro-api20241118153443.azurewebsites.net/api/Clients/${clientId}`;
+  const API_URL = `${config.BASE_URL}/Clients/${clientId}`; // Using centralized API config
 
   useEffect(() => {
     const fetchProfile = async () => {

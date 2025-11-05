@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react';
 import './WithdrawalModal.css';
 import { createNotification } from '../../../services/notificationService';
+import config from '../../../config'; // Import centralized config for API URLs
 
 
 const WithdrawalModal = ({ onClose, onSubmit, maxAmount }) => {
@@ -36,7 +37,8 @@ const WithdrawalModal = ({ onClose, onSubmit, maxAmount }) => {
   //load admin id to send notification
   const getAdmin = async () => {
     try{
-      const response = await fetch('https://carepro-api20241118153443.azurewebsites.net/api/Admins/AllAdminUsers'); // Assuming admin ID is 1
+      // Use centralized config instead of hardcoded URL for consistent API routing
+      const response = await fetch(`${config.BASE_URL}/Admins/AllAdminUsers`); // Assuming admin ID is 1
       if (!response.ok) {
         throw new Error('Failed to fetch admin ID');
       }

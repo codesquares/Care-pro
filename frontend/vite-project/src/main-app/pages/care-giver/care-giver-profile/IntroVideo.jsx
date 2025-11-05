@@ -1,6 +1,7 @@
 import { useState, useEffect } from "react";
 import "./intro-video.css";
 import { toast } from "react-toastify";
+import config from '../../../config'; // Centralized API configuration
 
 const ensureMp4Format = (url) => {
   if (url && url.includes("/upload/") && !url.includes(".mp4")) {
@@ -90,7 +91,7 @@ const IntroVideo = ({ profileIntrovideo, onVideoUpdate }) => {
       setIsUploading(true);
 
       const response = await fetch(
-        `https://carepro-api20241118153443.azurewebsites.net/api/CareGivers/UpdateCaregiverInfo/${userDetails.id}`,
+        `${config.BASE_URL}/CareGivers/UpdateCaregiverInfo/${userDetails.id}`, // Using centralized API config
         {
           method: "PUT",
           headers: {
