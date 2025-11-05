@@ -1,0 +1,27 @@
+/* Dojah Widget DOM Conflict Fix CSS - NO ANIMATIONS */
+
+/* Simple Web SDK container - no transitions */
+.web-sdk-container {
+  width: 100%;
+  position: static;
+  z-index: 1;
+}
+
+/* Basic button styling without transitions */
+dojah-button {
+  display: block;
+  width: 100%;
+  max-width: 400px;
+  margin: 0 auto;
+}
+
+/* Prevent any layout shifts */
+.mobile-verification-page {
+  position: relative;
+}
+
+/* Ensure stable layout */
+.verification-buttons-container {
+  width: 100%;
+  padding: 20px 0;
+}

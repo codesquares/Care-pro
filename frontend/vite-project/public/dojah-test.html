@@ -1,0 +1,42 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Dojah Test - Pure HTML</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            padding: 20px;
+            text-align: center;
+        }
+        .container {
+            max-width: 400px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>Dojah Web SDK Test</h1>
+        <p>This is a pure HTML test to isolate the shaking issue.</p>
+        
+        <div style="margin: 40px 0;">
+            <dojah-button
+                widgetId="69048546a4b1ea078950d7b9"
+                text="Start Verification"
+                textColor="#FFFFFF"
+                backgroundColor="#06b6d4">
+            </dojah-button>
+        </div>
+        
+        <p style="font-size: 12px; color: #666;">
+            Pure HTML test - no React interference
+        </p>
+    </div>
+
+    <!-- Load Dojah Web SDK -->
+    <script src="https://widget.dojah.io/websdk.js"></script>
+</body>
+</html>

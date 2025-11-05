@@ -8,6 +8,7 @@ import { useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import DojahDataViewer from '../../components/admin/DojahDataViewer';
 import DojahAdminDashboard from '../../components/admin/DojahAdminDashboard';
+import WebhookDataAdmin from '../../components/admin/WebhookDataAdmin';
 
 function AdminRoutes() {
     const navigate = useNavigate();
@@ -32,6 +33,7 @@ function AdminRoutes() {
             <Route path='/users' element={<UsersManagement />} />
             <Route path='/dojah-data' element={<DojahDataViewer />} />
             <Route path="dojah-admin" element={<DojahAdminDashboard />} />
+            <Route path="webhook-data" element={<WebhookDataAdmin />} />
 
         </Routes>
         </>

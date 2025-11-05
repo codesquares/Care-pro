@@ -1,15 +1,13 @@
 import { useState, useEffect, useRef } from "react";
 import { useNavigate } from "react-router-dom";
 import { useDispatch } from "react-redux";
-import Dojah from "react-dojah";
 import "./verification-page.css";
 import "./verification-page-footer.css";
 import "./mobile-verification.css";
+import "./dojah-widget-fix.css";
 import "../care-giver-profile/profile-header.css";
 import verificationService from "../../../services/verificationService";
-import { userService } from "../../../services/userService"; // Ensure this is the correct import path
-import { createNotification } from "../../../services/notificationService";
-import { fetchNotifications } from "../../../Redux/slices/notificationSlice";
+import { userService } from "../../../services/userService";
 import { Helmet } from "react-helmet-async";
 import config from "../../../config";
 
@@ -23,7 +21,10 @@ const CaregiverVerificationPage = () => {
   const [verificationStatus, setVerificationStatus] = useState(null);
   const [progress, setProgress] = useState(0);
   const [progressMessage, setProgressMessage] = useState("");
-  const [showDojahWidget, setShowDojahWidget] = useState(false);
+  
+  // Refs for stable DOM and lifecycle management
+  const isMountedRef = useRef(true);
+  const timeoutRef = useRef(null);
   
   // Profile-related state variables (from ProfileHeader)
   const [userData, setUserData] = useState(null);
@@ -45,24 +46,78 @@ const CaregiverVerificationPage = () => {
     const fullStars = Math.floor(rating);
     const hasHalfStar = rating % 1 >= 0.5;
     const emptyStars = 5 - fullStars - (hasHalfStar ? 1 : 0);
-    
+
     return (
       <>
-        {'★'.repeat(fullStars)}
-        {hasHalfStar && '☆'}
-        {'☆'.repeat(emptyStars)}
+        {[...Array(fullStars)].map((_, i) => (
+          <i key={`full-${i}`} className="fas fa-star"></i>
+        ))}
+        {hasHalfStar && <i className="fas fa-star-half-alt"></i>}
+        {[...Array(emptyStars)].map((_, i) => (
+          <i key={`empty-${i}`} className="far fa-star"></i>
+        ))}
       </>
     );
   };
 
-  // Dojah Configuration - Replace with your actual keys from dashboard
+  // Dojah configuration object
   const dojahConfig = {
-    // Get these from https://dojah.io/dashboard
-    appID: config.DOJAH.APP_ID || "", // Your Dojah App ID
-    publicKey: config.DOJAH.PUBLIC_KEY || "", // Your Dojah Public Key
-    type: "custom", // Widget type
-    config: {
-      widget_id: config.DOJAH.WIDGET_ID|| "" // Generated from Easy Onboard
+    WIDGET_ID: config.DOJAH.WIDGET_ID,
+    WIDGET_URL: `https://identity.dojah.io?widget_id=${config.DOJAH.WIDGET_ID}`,
+    APP_ID: config.DOJAH.APP_ID,
+    PUBLIC_KEY: config.DOJAH.PUBLIC_KEY
+  };
+
+  console.log('🔧 Dojah configuration loaded:', {
+    widgetURL: dojahConfig.WIDGET_URL,
+    widgetID: dojahConfig.WIDGET_ID,
+    appID: dojahConfig.APP_ID,
+    hasPublicKey: !!dojahConfig.PUBLIC_KEY,
+    configSource: 'Environment Variables'
+  });
+
+  // Fetch profile data function
+  const fetchProfileData = async () => {
+    try {
+      setIsLoading(true);
+      
+      // Fetch user profile data
+      const response = await userService.getProfile();
+      
+      if (isMountedRef.current) {
+        if (response && response.success && response.data) {
+          const profileData = response.data;
+          setUserData(profileData);
+          setUserRating(parseFloat(profileData.averageRating || profileData.rating || 0));
+          setReviewCount(parseInt(profileData.reviewCount || profileData.reviewsCount || 0));
+          setLocation(profileData.location || 'Location not specified');
+          
+          // Format member since date
+          if (profileData.createdAt) {
+            const memberDate = new Date(profileData.createdAt);
+            setMemberSince(memberDate.toLocaleDateString('en-US', { 
+              year: 'numeric', 
+              month: 'long' 
+            }));
+          } else {
+            setMemberSince('Member since signup');
+          }
+          
+          console.log('✅ Profile data loaded successfully:', profileData);
+        } else {
+          console.log('❌ No profile data found, using userDetails from localStorage');
+          setUserData(userDetails);
+        }
+      }
+    } catch (error) {
+      console.error('Error fetching profile data:', error);
+      if (isMountedRef.current) {
+        setUserData(userDetails);
+      }
+    } finally {
+      if (isMountedRef.current) {
+        setIsLoading(false);
+      }
     }
   };
 
@@ -71,91 +126,29 @@ const CaregiverVerificationPage = () => {
     if (effectRan.current) return;
     effectRan.current = true;
 
+    // Request notification permission for completion alerts
+    if ('Notification' in window && Notification.permission === 'default') {
+      Notification.requestPermission().then(permission => {
+        console.log('Notification permission:', permission);
+      });
+    }
+
     // Redirect if no token or user ID
     if (!token || !userDetails.id) {
       navigate("/login");
       return;
     }
 
-    let isMounted = true;
+    // Set mounted flag
+    isMountedRef.current = true;
 
     // Fetch profile data
-    const fetchProfileData = async () => {
-      try {
-        setIsLoading(true);
-        
-        // Fetch user profile data
-        const response = await userService.getProfile();
-        
-        if (isMounted) {
-          if (response && response.success && response.data) {
-            const profileData = response.data;
-            setUserData(profileData);
-            setUserRating(parseFloat(profileData.averageRating || profileData.rating || 0));
-            setReviewCount(parseInt(profileData.reviewCount || profileData.reviewsCount || 0));
-            setLocation(profileData.location || 'Location not specified');
-            
-            // Format member since date
-            if (profileData.createdAt) {
-              const memberDate = new Date(profileData.createdAt);
-              setMemberSince(memberDate.toLocaleDateString('en-US', { 
-                year: 'numeric', 
-                month: 'long' 
-              }));
-            } else {
-              setMemberSince('Member since signup');
-            }
-            
-            // Format last delivery (you may need to adjust this based on your data structure)
-            if (profileData.lastDelivery) {
-              const lastDeliveryDate = new Date(profileData.lastDelivery);
-              const now = new Date();
-              const diffTime = Math.abs(now - lastDeliveryDate);
-              const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
-              
-              if (diffDays === 1) {
-                setLastDelivery('1 day ago');
-              } else if (diffDays < 30) {
-                setLastDelivery(`${diffDays} days ago`);
-              } else if (diffDays < 365) {
-                const months = Math.floor(diffDays / 30);
-                setLastDelivery(`${months} month${months > 1 ? 's' : ''} ago`);
-              } else {
-                const years = Math.floor(diffDays / 365);
-                setLastDelivery(`${years} year${years > 1 ? 's' : ''} ago`);
-              }
-            } else {
-              setLastDelivery('No recent activity');
-            }
-          } else {
-            // Handle API error - use fallback data from localStorage
-            console.warn('API response was not successful:', response);
-            setUserData(userDetails);
-            setLocation('Location not specified');
-            setMemberSince('Member since signup');
-            setLastDelivery('No recent activity');
-          }
-        }
-      } catch (error) {
-        console.error('Error fetching profile data:', error);
-        if (isMounted) {
-          // Set fallback data from localStorage
-          setUserData(userDetails);
-          setLocation('Location not specified');
-          setMemberSince('Member since signup');
-          setLastDelivery('No recent activity');
-        }
-      } finally {
-        if (isMounted) {
-          setIsLoading(false);
-        }
-      }
-    };
+    fetchProfileData();
 
     // Check initial verification status
     const checkStatus = async () => {
       try {
-        if (isMounted) {
+        if (isMountedRef.current) {
           setProgress(10);
           setProgressMessage("Checking verification status...");
         }
@@ -165,701 +158,407 @@ const CaregiverVerificationPage = () => {
           "caregiver"
         );
 
-        console.log("Verification Status Response while checking=====>>>:", status);
-
-        if (!isMounted) return;
-        console.log("Verification Status in the check function:", status);
-        setVerificationStatus(status);
-
-        // Check if user has successful verification using enhanced status
-        if (status.hasSuccess || status.currentStatus === "success" || status.verified === true) {
-          setProgress(100);
-          setProgressMessage("Account already verified!");
-          setSuccess("Your account is already verified! Redirecting to assessments...");
-          setTimeout(() => {
-            if (isMounted) {
-              window.location.href = "/app/caregiver/assessments";
-            }
-          }, 2000);
-        } else if (status.hasPending && !status.hasSuccess) {
-          setProgress(50);
-          setProgressMessage("Verification is pending review...");
-          setSuccess("Your verification is being processed. You will be notified when complete.");
-        } else {
+        if (isMountedRef.current) {
+          setVerificationStatus(status);
           setProgress(0);
           setProgressMessage("");
+          
+          if (status.hasSuccess) {
+            setSuccess("Your account is already verified!");
+          } else if (status.hasPending) {
+            setSuccess("Your verification is being processed. You'll be notified when complete.");
+          }
         }
-      } catch (err) {
-        console.error("Failed to check verification status", err);
-        if (isMounted) {
+      } catch (error) {
+        console.error("Error checking verification status:", error);
+        if (isMountedRef.current) {
           setProgress(0);
           setProgressMessage("");
         }
       }
     };
 
-    // Run both profile fetch and verification check
-    fetchProfileData();
+    // Run verification check
     checkStatus();
 
     return () => {
-      isMounted = false;
+      isMountedRef.current = false;
+      if (timeoutRef.current) {
+        clearTimeout(timeoutRef.current);
+      }
     };
   }, []);
 
-  // Dojah Response Handler
-  // NEW IMPLEMENTATION: Always sends data to Azure regardless of verification status
-  // and uses notifications to communicate outcomes to users
-  const handleDojahResponse = async (type, data) => {
-    console.log("Dojah Response:", type, data);
+  // Debug effect to monitor user data changes
+  useEffect(() => {
+    console.log('🔍 User data state changed:', {
+      userData: userData,
+      userDetails: userDetails,
+      localStorage: JSON.parse(localStorage.getItem("userDetails") || "{}"),
+      timestamp: new Date().toISOString()
+    });
+  }, [userData, userDetails]);
 
-    if (type === 'loading') {
-      setProgress(25);
-      setProgressMessage("Initializing verification...");
-      setIsSubmitting(true);
-    } else if (type === 'begin') {
-      setProgress(50);
-      setProgressMessage("Starting verification process...");
-    } else if (type === 'success') {
-      console.log("completed dojah verification", data);
-      try {
-        setProgress(75);
-        setProgressMessage("Processing verification results...");
-
-        // ALWAYS process and send to Azure regardless of status
-        const verificationResult = await processDojahVerification(data);
-        console.log("Processed Verification Result:", verificationResult);
-        
-        // Determine the overall status based on Dojah response
-        const overallStatus = determineVerificationStatus(data);
-        
-        // Send appropriate notification based on status
-        await sendVerificationNotification(overallStatus, {
-          ...verificationResult,
-          dojahData: data,
-          verificationNo: verificationResult.verificationNo || data.value || data.reference_id || ''
-        });
-        
-        // Always redirect to dashboard - let notifications handle communication
-        setProgress(100);
-        setProgressMessage("Verification processed successfully!");
-        
-        // Show brief success message based on status
-        if (overallStatus === 'Verified') {
-          setSuccess("Verification completed successfully! Redirecting to dashboard...");
-        } else if (overallStatus === 'Pending') {
-          setSuccess("Verification submitted for review! You'll be notified once complete. Redirecting to dashboard...");
-        } else if (overallStatus === 'Partial') {
-          setSuccess("Verification partially completed. Please check notifications for details. Redirecting to profile...");
-        } else {
-          setSuccess("Verification processed. Please check notifications for details. Redirecting to profile...");
-        }
-        
-        // Always redirect after a short delay - using window.location for reliable navigation
-        setTimeout(() => {
-          window.location.href = "/app/caregiver/profile";
-        }, 3000);
-        
-      } catch (err) {
-        console.error("Error processing Dojah verification:", err);
-        
-        // Even on error, try to send a notification
-        await sendVerificationNotification('error', { 
-          message: err.message,
-          verificationNo: '',
-          verifiedFirstName: userDetails.firstName || '',
-          verifiedLastName: userDetails.lastName || ''
-        });
-        
-        // Still redirect - notifications will inform user of issues - using window.location for reliability
-        setSuccess("Verification processed. Please check notifications for details. Redirecting to profile...");
-        setTimeout(() => {
-          window.location.href = "/app/caregiver/profile";
-        }, 3000);
-      } finally {
-        setIsSubmitting(false);
-        setShowDojahWidget(false);
-      }
-    } else if (type === 'error') {
-      console.error("Dojah verification error:", data);
-      
-      // Send error notification
-      await sendVerificationNotification('error', { 
-        message: data?.message || "Verification failed",
-        verificationNo: '',
-        verifiedFirstName: userDetails.firstName || '',
-        verifiedLastName: userDetails.lastName || ''
-      });
-      
-      setProgress(100);
-      setProgressMessage("Verification failed");
-      setSuccess("Verification error occurred. Please check notifications for details. Redirecting to dashboard...");
-      setIsSubmitting(false);
-      setShowDojahWidget(false);
-      
-      // Still redirect after error - using window.location for reliable navigation
-      setTimeout(() => {
-        window.location.href = "/app/caregiver/profile";
-      }, 3000);
-    } else if (type === 'close') {
-      setIsSubmitting(false);
-      setShowDojahWidget(false);
-      // Reset progress if verification wasn't completed
-      if (progress < 100) {
-        setProgress(0);
-        setProgressMessage("");
-      }
+  // Safe state update functions that check if component is still mounted
+  const safeSetProgress = (value) => {
+    if (isMountedRef.current) {
+      setProgress(value);
     }
   };
 
-  // Determine overall verification status based on Dojah response
-  const determineVerificationStatus = (dojahData) => {
-    // If overall status is true, it's verified
-    if (dojahData.status === true) {
-      return 'verified';
-    }
-    
-    // If overall status is false, check individual components
-    const components = dojahData.data || {};
-    
-    // Count successful verifications
-    const successfulChecks = [
-      components.user_data?.status,
-      components.government_data?.status, // BVN/NIN
-      components.selfie?.status,
-      components.id?.status
-    ].filter(Boolean).length;
-    
-    // If some critical checks passed but not all, it might be pending review
-    if (successfulChecks >= 2 && (dojahData.verification_status === 'Pending' || dojahData.message?.includes('review'))) {
-      return 'pending';
-    }
-    
-    // If some checks passed but not critical ones
-    if (successfulChecks >= 1) {
-      return 'partial';
-    }
-    
-    // All failed
-    return 'failed';
-  };
-
-  // Send appropriate notification based on verification status
-  const sendVerificationNotification = async (status, verificationResult = {}) => {
-    try {
-      // Generate detailed notification content based on verification status
-      const notificationContent = generateVerificationNotificationContent(status, verificationResult);
-      
-      const notificationData = {
-        recipientId: userDetails.id,
-        senderId: 'system',
-        type: 'VerificationUpdate', // More specific type than 'SystemNotice'
-        relatedEntityId: 'verification',
-        title: notificationContent.title,
-        content: notificationContent.content,
-        metadata: {
-          verificationStatus: status,
-          verificationMethod: 'Dojah KYC',
-          attemptTime: new Date().toISOString(),
-          verificationNumber: verificationResult.verificationNo || '',
-          userName: `${verificationResult.verifiedFirstName || userDetails.firstName || ''} ${verificationResult.verifiedLastName || userDetails.lastName || ''}`.trim(),
-          processingVersion: '2.0',
-          userType: 'caregiver'
-        }
-      };
-      
-      // Create a detailed notification for the verification attempt
-      await createNotification(notificationData);
-
-      // Refresh notifications to show the new one
-      dispatch(fetchNotifications());
-      
-    } catch (notificationError) {
-      console.error('Failed to send verification notification:', notificationError);
-      // Don't let notification failures block the main flow
+  const safeSetProgressMessage = (message) => {
+    if (isMountedRef.current) {
+      setProgressMessage(message);
     }
   };
 
-  // Generate detailed notification content based on verification status
-  const generateVerificationNotificationContent = (status, verificationResult = {}) => {
-    const timestamp = new Date().toLocaleString();
-    const userName = `${verificationResult.verifiedFirstName || userDetails.firstName || ''} ${verificationResult.verifiedLastName || userDetails.lastName || ''}`.trim() || 'User';
-    
-    const titles = {
-      verified: '✅ Identity Verification Successful',
-      pending: '⏳ Identity Verification Under Review',
-      partial: '⚠️ Identity Verification Partially Complete',
-      failed: '❌ Identity Verification Failed',
-      error: '🔧 Identity Verification Error',
-      default: '📋 Identity Verification Update'
-    };
-
-    const baseContents = {
-      verified: `Hello ${userName}, your identity has been successfully verified through Dojah KYC on ${timestamp}. You can now access all caregiver features and start browsing available opportunities.`,
-      pending: `Hello ${userName}, your identity verification has been submitted for manual review on ${timestamp}. We'll notify you once the review is complete (usually within 24-48 hours). No action is required from you at this time.`,
-      partial: `Hello ${userName}, your identity verification was partially successful on ${timestamp}. Some verification components may need attention. Please check your verification status for specific details.`,
-      failed: `Hello ${userName}, your identity verification could not be completed on ${timestamp}. This may be due to document quality, lighting issues, or information mismatch. You can retry with clearer documents.`,
-      error: `Hello ${userName}, there was a technical issue with your identity verification on ${timestamp}. Our technical team has been notified and will resolve this shortly. You may try again later.`,
-      default: `Hello ${userName}, your identity verification status has been updated on ${timestamp}. Please check your verification dashboard for details.`
-    };
-
-    const title = titles[status] || titles.default;
-    let content = baseContents[status] || baseContents.default;
-
-    // Add verification details if available
-    if (verificationResult.dojahData) {
-      const checkedComponents = getVerificationComponents(verificationResult.dojahData);
-      if (checkedComponents.length > 0) {
-        content += `\n\nVerification components processed: ${checkedComponents.join(', ')}`;
-      }
-    }
-
-    // Add next steps based on status
-    const nextSteps = {
-      verified: '\n\n🎉 Next steps: You can now browse and apply for caregiver opportunities! Visit your dashboard to get started.',
-      pending: '\n\n⏳ Next steps: No action required. You will receive an automatic notification once our review team completes the verification process.',
-      partial: '\n\n📋 Next steps: Please review the verification details and resubmit any failed components with clearer documentation.',
-      failed: '\n\n🔄 Next steps: Ensure good lighting, clear document photos, and accurate personal information before retrying verification.',
-      error: '\n\n🛠️ Next steps: Our technical team is working on this issue. You may try again in a few minutes, or contact support if the problem persists.'
-    };
-
-    if (nextSteps[status]) {
-      content += nextSteps[status];
-    }
-
-    // Add verification number if available
-    if (verificationResult.verificationNo && verificationResult.verificationNo.trim() !== '') {
-      content += `\n\nReference: ${verificationResult.verificationNo}`;
-    }
-
-    return { title, content };
-  };
-
-  // Extract verification components that were checked
-  const getVerificationComponents = (dojahData) => {
-    const components = [];
-    
-    if (dojahData?.data?.government_data?.status) {
-      const govType = dojahData.id_type || 'Government ID';
-      components.push(`${govType} verification`);
-    }
-    
-    if (dojahData?.data?.selfie?.status) {
-      components.push('Facial recognition');
-    }
-    
-    if (dojahData?.data?.id?.status) {
-      components.push('Document verification');
-    }
-    
-    if (dojahData?.data?.user_data?.status) {
-      components.push('Personal information');
-    }
-
-    if (dojahData?.data?.email?.status) {
-      components.push('Email verification');
-    }
-
-    return components;
-  };
-
-  // Process Dojah verification data and save to your backend
-  const processDojahVerification = async (dojahData) => {
-    try {
-      // Debug logging to understand what we're receiving
-      console.log("Processing Dojah Data:", dojahData);
-      console.log("User Details:", userDetails);
-      
-      // Always determine status first
-      const overallStatus = determineVerificationStatus(dojahData);
-      
-      // Extract verified identity data (prefer government data over user input)
-      const governmentData = dojahData.data?.government_data?.data?.bvn?.entity;
-      const userData = dojahData.data?.user_data?.data;
-      
-      console.log("Government Data:", governmentData);
-      console.log("User Data:", userData);
-      
-      // Use government verified data if available, fallback to user data, then to userDetails
-      const verifiedFirstName = governmentData?.first_name || 
-                               userData?.first_name || 
-                               userDetails.firstName || 
-                               "Unknown";
-      const verifiedLastName = governmentData?.last_name || 
-                              userData?.last_name || 
-                              userDetails.lastName || 
-                              "Unknown";
-      
-      console.log("Extracted Names:", { verifiedFirstName, verifiedLastName });
-      
-      // Validate required fields for Azure API
-      if (!userDetails.id) {
-        throw new Error("User ID is missing from userDetails");
-      }
-      
-      if (!verifiedFirstName || verifiedFirstName.trim() === "" || verifiedFirstName === "Unknown") {
-        console.warn("No verified first name found, using fallback");
-      }
-      
-      if (!verifiedLastName || verifiedLastName.trim() === "" || verifiedLastName === "Unknown") {
-        console.warn("No verified last name found, using fallback");
-      }
-      
-      // Determine verification number (BVN, NIN, or reference)
-      // Try multiple possible locations for the verification number in Dojah response
-      const verificationNo = dojahData.value || // Primary location for BVN/NIN number
-                            dojahData.bvn || // Direct BVN field
-                            dojahData.nin || // Direct NIN field
-                            dojahData.id_number || // ID number field
-                            governmentData?.bvn || // From government data
-                            governmentData?.nin || // NIN from government data
-                            userData?.bvn || // From user data
-                            userData?.nin || // NIN from user data
-                            dojahData.reference_id || // Fallback to reference
-                            dojahData.verification_id || // Alternative reference
-                            ""; // Final fallback
-      
-      console.log("Verification number extraction:", {
-        dojahDataValue: dojahData.value,
-        dojahBvn: dojahData.bvn,
-        dojahNin: dojahData.nin,
-        dojahIdNumber: dojahData.id_number,
-        governmentBvn: governmentData?.bvn,
-        governmentNin: governmentData?.nin,
-        userDataBvn: userData?.bvn,
-        userDataNin: userData?.nin,
-        referenceId: dojahData.reference_id,
-        verificationId: dojahData.verification_id,
-        finalVerificationNo: verificationNo
-      });
-
-      // Required Azure backend format with guaranteed non-empty values
-      const azurePayload = {
-        userId: userDetails.id,
-        verifiedFirstName: verifiedFirstName.trim() || "Unknown",
-        verifiedLastName: verifiedLastName.trim() || "Unknown",
-        verificationMethod: "dojah",
-        verificationNo: verificationNo,
-        verificationStatus: overallStatus
-      };
-
-      // Additional data for comprehensive storage (your backend can ignore what it doesn't need)
-      const extendedPayload = {
-        ...azurePayload,
-        // Additional context data
-        referenceId: dojahData.reference_id,
-        dojahWidgetId: dojahData.widget_id,
-        verificationType: dojahData.verification_type,
-        verificationMode: dojahData.verification_mode,
-        
-        // Individual component statuses
-        components: {
-          userData: {
-            status: dojahData.data?.user_data?.status || false,
-            firstName: userData?.first_name,
-            lastName: userData?.last_name,
-            email: userData?.email,
-            dateOfBirth: userData?.dob
-          },
-          government: {
-            status: dojahData.data?.government_data?.status || false,
-            type: dojahData.id_type,
-            number: dojahData.value,
-            verifiedName: governmentData ? `${governmentData.first_name} ${governmentData.last_name}` : "",
-            phone: governmentData?.phone_number1,
-            dateOfBirth: governmentData?.date_of_birth
-          },
-          documents: {
-            idStatus: dojahData.data?.id?.status || false,
-            idMessage: dojahData.data?.id?.message || "",
-            selfieStatus: dojahData.data?.selfie?.status || false,
-            selfieMessage: dojahData.data?.selfie?.message || "",
-            emailStatus: dojahData.data?.email?.status || false
-          }
-        },
-        
-        // Document URLs for storage
-        documents: {
-          idUrl: dojahData.id_url,
-          selfieUrl: dojahData.selfie_url,
-          bvnPhotoUrl: governmentData?.image_url
-        },
-        
-        // Metadata - Always include attempt metadata
-        metadata: {
-          submissionTime: new Date().toISOString(),
-          attemptStatus: overallStatus,
-          processingVersion: '2.0',
-          userAgent: navigator.userAgent,
-          requiresReview: overallStatus === 'pending',
-          dojahMessage: dojahData.message,
-          ipInfo: dojahData.metadata?.ipinfo,
-          // Always mark that data was sent to Azure
-          sentToAzure: true
-        }
-      };
-
-      // Final validation before sending to Azure
-      console.log("Final Azure Payload:", azurePayload);
-      
-      // Validate required fields one more time
-      if (!azurePayload.userId || !azurePayload.verifiedFirstName || !azurePayload.verifiedLastName) {
-        throw new Error(`Missing required fields for Azure API: ${JSON.stringify({
-          userId: !!azurePayload.userId,
-          verifiedFirstName: !!azurePayload.verifiedFirstName,
-          verifiedLastName: !!azurePayload.verifiedLastName
-        })}`);
-      }
-
-      // ALWAYS send to Azure - don't condition this
-      const response = await verificationService.processDojahVerification(extendedPayload);
-      
-      // Return result with status for notification handling
-      return {
-        success: true, // Azure call succeeded
-        message: response.message || 'Verification data processed',
-        data: response.data,
-        status: overallStatus,
-        azureResponse: response,
-        verificationNo: verificationNo,
-        verifiedFirstName: verifiedFirstName.trim() || "Unknown",
-        verifiedLastName: verifiedLastName.trim() || "Unknown",
-        dojahData: dojahData // Include original Dojah data for detailed notifications
-      };
-    } catch (error) {
-      console.error("Error processing Dojah verification:", error);
-      
-      // Even on Azure error, return a result for notification handling
-      return {
-        success: false,
-        message: 'Verification data could not be processed completely',
-        status: 'error',
-        error: error.message,
-        verificationNo: verificationNo || '',
-        verifiedFirstName: verifiedFirstName.trim() || userDetails.firstName || "Unknown",
-        verifiedLastName: verifiedLastName.trim() || userDetails.lastName || "Unknown",
-        dojahData: dojahData // Include original Dojah data for detailed notifications
-      };
+  const safeSetSuccess = (message) => {
+    if (isMountedRef.current) {
+      setSuccess(message);
     }
   };
 
-  // Get user-friendly status message
-  const getStatusMessage = (status) => {
-    switch (status) {
-      case 'verified':
-        return "Verification completed successfully";
-      case 'pending':
-        return "Verification submitted for review - you'll be notified once complete";
-      case 'partial':
-        return "Some verifications passed, others need attention";
-      case 'failed':
-        return "Verification failed - please try again";
-      default:
-        return "Verification status unknown";
+  const safeSetIsSubmitting = (value) => {
+    if (isMountedRef.current) {
+      setIsSubmitting(value);
     }
   };
 
   const handleStartVerification = () => {
-    if (!dojahConfig.appID || !dojahConfig.publicKey) {
+    if (!dojahConfig.WIDGET_ID) {
       setError("Verification service is not properly configured. Please contact support.");
       return;
     }
 
     setError("");
     setSuccess("");
-    setShowDojahWidget(true);
-  };
+    
+    console.log('🚀 Starting Dojah verification redirect flow');
 
-  // Prepare user data for Dojah (pre-fill if available)
-  const dojahUserData = {
-    first_name: userDetails.firstName || "",
-    last_name: userDetails.lastName || "",
-    email: userDetails.email || "",
-    residence_country: 'NG', // Default to Nigeria, modify as needed
-  };
+    // Create user-specific reference and redirect URL to dashboard
+    const userReferenceId = `caregiver_${userDetails.id}_${Date.now()}`;
+    const redirectURL = `${window.location.origin}/app/caregiver/dashboard`;
+    
+    // Use userData (from profile) if available, otherwise fallback to userDetails (from localStorage)
+    const currentUser = userData || userDetails;
+    
+    console.log('👤 Current user data being used:', {
+      currentUser,
+      hasUserData: !!userData,
+      hasUserDetails: !!userDetails,
+      userDetailsKeys: Object.keys(userDetails || {}),
+      userDataKeys: userData ? Object.keys(userData) : []
+    });
+    
+    // Prepare user metadata for pre-population
+    const userMetadata = {
+      // Essential widget parameters
+      widget_id: dojahConfig.WIDGET_ID,
+      app_id: dojahConfig.APP_ID,
+      reference_id: userReferenceId,
+      callback_url: encodeURIComponent(redirectURL),
+      redirect_url: encodeURIComponent(redirectURL),
+      // User data for pre-population
+      first_name: encodeURIComponent(currentUser.firstName || ''),
+      last_name: encodeURIComponent(currentUser.lastName || ''),
+      email: encodeURIComponent(currentUser.email || ''),
+      phone: encodeURIComponent(currentUser.phoneNumber || currentUser.phone || ''),
+      user_id: encodeURIComponent(currentUser.id || userDetails.id || ''),
+      // Additional fields
+      date_of_birth: currentUser.dateOfBirth ? encodeURIComponent(currentUser.dateOfBirth) : '',
+      address: currentUser.address ? encodeURIComponent(currentUser.address) : '',
+      city: currentUser.city ? encodeURIComponent(currentUser.city) : '',
+      state: currentUser.state ? encodeURIComponent(currentUser.state) : '',
+      country: encodeURIComponent(currentUser.country || 'Nigeria')
+    };
 
-  const metadata = {
-    user_id: userDetails.id,
-    user_type: 'caregiver',
-    platform: 'care-pro',
-    timestamp: new Date().toISOString()
+    // Build URL parameters from metadata (excluding empty values)
+    const urlParams = Object.entries(userMetadata)
+      .filter(([key, value]) => value && value !== '')
+      .map(([key, value]) => `${key}=${value}`)
+      .join('&');
+    
+    // Build complete widget URL
+    const baseURL = 'https://identity.dojah.io';
+    const completeWidgetURL = `${baseURL}?${urlParams}`;
+    
+    console.log('🚀 Final widget URL that will be opened:', completeWidgetURL);
+    
+    // Show transition message
+    safeSetProgress(25);
+    safeSetProgressMessage("Redirecting to our verification partner...");
+    safeSetIsSubmitting(true);
+    
+    // Open Dojah widget in new tab
+    const verificationTab = window.open(completeWidgetURL, '_blank');
+    
+    if (!verificationTab) {
+      setError("Please allow popups for this site to complete verification.");
+      safeSetIsSubmitting(false);
+      safeSetProgress(0);
+      safeSetProgressMessage("");
+      return;
+    }
+    
+    // Show informative messages and redirect user to profile
+    setTimeout(() => {
+      safeSetProgress(50);
+      safeSetProgressMessage("Verification partner opened in new tab. You will be redirected to your dashboard after verification.");
+      
+      setTimeout(() => {
+        safeSetProgress(75);
+        safeSetProgressMessage("Redirecting you to your profile page...");
+        
+        setTimeout(() => {
+          safeSetProgress(100);
+          // Redirect to profile page
+          window.location.href = "/app/caregiver/profile";
+        }, 1500);
+      }, 2500);
+    }, 1000);
   };
 
   return (
-    <>
+    <div className="mobile-verification-page">
       <Helmet>
-        <title>Caregiver Verification | Care Pro</title>
-        <meta name="description" content="Verify your identity to become a trusted caregiver on Care Pro" />
+        <title>Account Verification - CareGiver | CarePro</title>
+        <meta 
+          name="description" 
+          content="Verify your identity to access all caregiver features and start connecting with families who need care services." 
+        />
+        <meta name="keywords" content="caregiver verification, identity verification, KYC, caregiver profile" />
       </Helmet>
 
-      <div className="mobile-verification-page">
-        {!showDojahWidget ? (
-          <div className="mobile-verification-container fade-in">
-            {/* User Profile Card */}
-            <div className="profile-header-card">
-              {isLoading ? (
-                <div className="loading-profile">
-                  <div className="profile-img skeleton"></div>
-                  <div className="skeleton-text"></div>
-                  <div className="skeleton-text short"></div>
+      <div className="mobile-verification-container">
+        {/* Enhanced Progress Indicator */}
+        {(progress > 0 || progressMessage) && (
+          <div className="verification-progress-overlay">
+            <div className="progress-content">
+              <div className="progress-circle">
+                <div className="progress-bar">
+                  <div 
+                    className="progress-fill" 
+                    style={{ width: `${progress}%` }}
+                  ></div>
                 </div>
+                <span className="progress-text">{progress}%</span>
+              </div>
+              {progressMessage && (
+                <p className="progress-message">{progressMessage}</p>
+              )}
+            </div>
+          </div>
+        )}
+
+        <div className="content-wrapper">
+          {/* Profile Header */}
+          <div className="profile-header-card">
+            <div className="profile-img-container">
+              {isLoading ? (
+                <div className="skeleton profile-img"></div>
+              ) : (
+                <img 
+                  className="profile-img"
+                  src={userData?.profilePicture || userData?.profileImage || userDetails.profilePicture || `https://ui-avatars.com/api/?name=${encodeURIComponent((userData?.firstName || userDetails.firstName) + ' ' + (userData?.lastName || userDetails.lastName))}&background=06b6d4&color=fff&size=120`} 
+                  alt="Profile" 
+                  onError={(e) => {
+                    e.target.src = `https://ui-avatars.com/api/?name=${encodeURIComponent((userData?.firstName || userDetails.firstName) + ' ' + (userData?.lastName || userDetails.lastName))}&background=06b6d4&color=fff&size=120`;
+                  }}
+                />
+              )}
+            </div>
+            <div className="profile-basic-info">
+              <h2>{isLoading ? <div className="skeleton-text"></div> : `${userData?.firstName || userDetails.firstName || 'Unknown'} ${userData?.lastName || userDetails.lastName || 'User'}`}</h2>
+              {(userData?.bio || userData?.aboutMe) && <p className="bio">{userData.bio || userData.aboutMe}</p>}
+            </div>
+            <div className="profile-rating-section">
+              {isLoading ? (
+                <>
+                  <div className="skeleton-text short"></div>
+                  <div className="skeleton-text short"></div>
+                </>
               ) : (
                 <>
-                  {/* Profile Image */}
-                  <img 
-                    src={userData?.profilePicture || userData?.profileImage || userDetails.profilePicture || `https://ui-avatars.com/api/?name=${encodeURIComponent((userData?.firstName || userDetails.firstName) + ' ' + (userData?.lastName || userDetails.lastName))}&background=06b6d4&color=fff&size=120`} 
-                    alt="Profile" 
-                    className="profile-img"
-                    onError={(e) => {
-                      e.target.src = `https://ui-avatars.com/api/?name=${encodeURIComponent((userData?.firstName || userDetails.firstName) + ' ' + (userData?.lastName || userDetails.lastName))}&background=06b6d4&color=fff&size=120`;
-                    }}
-                  />
-                  
-                  {/* Basic Info */}
-                  <div className="profile-basic-info">
-                    <h2>
-                      {userData?.firstName || userDetails.firstName} {userData?.lastName || userDetails.lastName}
-                    </h2>
-                    <p className="username">@{userData?.username || userData?.email || userDetails.username || userDetails.email || 'caregiver'}</p>
-                    {(userData?.bio || userData?.aboutMe) && <p className="bio">{userData.bio || userData.aboutMe}</p>}
-                  </div>
-
-                  {/* Rating Section */}
-                  <div className="profile-rating-section">
-                    <div className="rating">
-                      <span className="stars">
-                        {renderStars(userRating)}
-                      </span>
-                      <span className="rating-text">
-                        {userRating.toFixed(1)} ({reviewCount} reviews)
-                      </span>
-                    </div>
-                  </div>
-
-                  {/* Profile Details */}
-                  <div className="profile-details">
-                    <div className="detail-item">
-                      <i className="fas fa-map-marker-alt"></i>
-                      <span>{location}</span>
-                    </div>
-                    <div className="detail-item">
-                      <i className="fas fa-calendar"></i>
-                      <span>Member since {memberSince}</span>
-                    </div>
-                    <div className="detail-item">
-                      <i className="fas fa-truck"></i>
-                      <span>Last delivery: {lastDelivery}</span>
-                    </div>
-                  </div>
-
-                  {/* Availability Status */}
-                  <div className={`availability-status ${userData?.isAvailable ? 'available' : 'unavailable'}`}>
-                    {userData?.isAvailable ? 'Available for work' : 'Currently unavailable'}
+                  <div className="rating">
+                    {renderStars(userRating)}
+                    <span>({reviewCount} reviews)</span>
                   </div>
                 </>
               )}
             </div>
-
-            {/* Account Verification Card */}
-            <div className="verification-card">
-              <div className="verification-content">
-                <h2>Account Verification</h2>
-                <p className="verification-subtitle">
-                  To ensure the safety of our clients and maintain high-quality services, we require all 
-                  caregivers to verify their identity. Please choose a verification method below.
-                </p>
-
-                {/* Verification Instructions */}
-                <div className="verification-instructions">
-                  <div className="instruction-item">
-                    <div className="instruction-icon">
-                      <i className="fas fa-id-card"></i>
-                    </div>
-                    <div className="instruction-content">
-                      <h4>Government ID verification</h4>
-                      <p>Get verified with your Bank verification Number</p>
-                    </div>
+            <div className="profile-details">
+              {!isLoading && (
+                <>
+                  <div className="detail-item">
+                    <span>📍 {location}</span>
                   </div>
-
-                  <div className="instruction-item">
-                    <div className="instruction-icon">
-                      <i className="fas fa-mobile-alt"></i>
-                    </div>
-                    <div className="instruction-content">
-                      <h4>NIN Verification</h4>
-                      <p>Get verified with your National Identification Number</p>
-                    </div>
+                  <div className="detail-item">
+                    <span>📅 {memberSince}</span>
                   </div>
+                </>
+              )}
+            </div>
+          </div>
 
-                  <div className="instruction-item">
-                    <div className="instruction-icon">
-                      <i className="fas fa-camera"></i>
-                    </div>
-                    <div className="instruction-content">
-                      <h4>E-Selfie</h4>
-                      <p>Get verified by uploading your Photo on accompanying selfie</p>
-                    </div>
+          {/* Account Verification Card */}
+          <div className="verification-card">
+            <div className="verification-content">
+              <h2>Account Verification</h2>
+              <p className="verification-subtitle">
+                To ensure the safety of our clients and maintain high-quality services, we require all 
+                caregivers to verify their identity. Please choose a verification method below.
+              </p>
+
+              {/* Verification Instructions */}
+              <div className="verification-instructions">
+                <div className="instruction-item">
+                  <div className="instruction-icon">
+                    <i className="fas fa-id-card"></i>
+                  </div>
+                  <div className="instruction-content">
+                    <h4>Government ID verification</h4>
+                    <p>Get verified with your Bank verification Number</p>
                   </div>
                 </div>
 
-                {/* Progress Bar */}
-                {progress > 0 && (
-                  <div className="progress-container">
-                    <div className="progress-bar">
-                      <div 
-                        className="progress-fill" 
-                        style={{ width: `${progress}%` }}
-                      ></div>
+                <div className="instruction-item">
+                  <div className="instruction-icon">
+                    <i className="fas fa-mobile-alt"></i>
+                  </div>
+                  <div className="instruction-content">
+                    <h4>NIN Verification</h4>
+                    <p>Get verified with your National Identification Number</p>
+                  </div>
+                </div>
+
+                <div className="instruction-item">
+                  <div className="instruction-icon">
+                    <i className="fas fa-camera"></i>
+                  </div>
+                  <div className="instruction-content">
+                    <h4>Selfie Verification</h4>
+                    <p>Take a selfie to confirm your identity</p>
+                  </div>
+                </div>
+              </div>
+
+              {/* Error Display */}
+              {error && (
+                <div className="error-message">
+                  <p>{error}</p>
+                </div>
+              )}
+
+              {/* Success Display */}
+              {success && (
+                <div className="success-message">
+                  <p>{success}</p>
+                </div>
+              )}
+
+              {/* Enhanced Verification Status Display */}
+              {verificationStatus?.hasSuccess && (
+                <div className="verification-status verified">
+                  <h3>✅ Account Verified</h3>
+                  <p>Your identity has been successfully verified!</p>
+                  <button
+                    type="button"
+                    onClick={() => window.location.href = "/app/caregiver/assessments"}
+                    className="proceed-btn start-assessment"
+                  >
+                    Start Assessment
+                    <i className="fas fa-arrow-right"></i>
+                  </button>
+                </div>
+              )}
+
+              {verificationStatus?.hasPending && !verificationStatus?.hasSuccess && (
+                <div className="verification-status pending">
+                  <h3>⏳ Verification Pending</h3>
+                  <p>Your verification is being processed. You will be notified when complete.</p>
+                  <div className="pending-info">
+                    <p>Estimated processing time: 24-48 hours</p>
+                  </div>
+                </div>
+              )}
+
+              {/* Start/Retry Verification Button */}
+              {!verificationStatus?.hasSuccess && !verificationStatus?.hasPending && (
+                <div>
+                  {/* User Info Notice */}
+                  <div className="user-info-notice">
+                    <div className="notice-icon">
+                      <i className="fas fa-info-circle"></i>
                     </div>
-                    <p className="progress-message">{progressMessage}</p>
-                  </div>
-                )}
-
-                {/* Error Display */}
-                {error && (
-                  <div className="error-message">
-                    <p>{error}</p>
-                  </div>
-                )}
-
-                {/* Success Display */}
-                {success && (
-                  <div className="success-message">
-                    <p>{success}</p>
-                  </div>
-                )}
-
-                {/* Enhanced Verification Status Display */}
-                {verificationStatus?.hasSuccess && (
-                  <div className="verification-status verified">
-                    <h3>✅ Account Verified</h3>
-                    <p>Your identity has been successfully verified!</p>
-                    <button
-                      type="button"
-                      onClick={() => window.location.href = "/app/caregiver/assessments"}
-                      className="proceed-btn start-assessment"
-                    >
-                      Start Assessment
-                      <i className="fas fa-arrow-right"></i>
-                    </button>
-                  </div>
-                )}
-
-                {verificationStatus?.hasPending && !verificationStatus?.hasSuccess && (
-                  <div className="verification-status pending">
-                    <h3>⏳ Verification Pending</h3>
-                    <p>Your verification is being processed. You will be notified when complete.</p>
-                    <div className="pending-info">
-                      <p><strong>Total Attempts:</strong> {verificationStatus.totalAttempts}</p>
-                      {verificationStatus.lastAttempt && (
-                        <p><strong>Last Attempt:</strong> {new Date(verificationStatus.lastAttempt).toLocaleString()}</p>
-                      )}
+                    <div className="notice-content">
+                      <p>
+                        <strong>Verification Process:</strong> You will be taken to our verification partner in a new tab, 
+                        where your information 
+                        {(() => {
+                          const currentUser = userData || userDetails;
+                          const name = `${currentUser?.firstName || ''} ${currentUser?.lastName || ''}`.trim();
+                          const email = currentUser?.email || '';
+                          
+                          if (name && email) {
+                            return ` (${name}, ${email})`;
+                          } else if (name) {
+                            return ` (${name})`;
+                          } else if (email) {
+                            return ` (${email})`;
+                          } else {
+                            return '';
+                          }
+                        })()} 
+                        will be pre-filled. After verification, you will be redirected back to your dashboard.
+                      </p>
+                      {(() => {
+                        const currentUser = userData || userDetails;
+                        if (!currentUser?.firstName && !currentUser?.email) {
+                          return (
+                            <div>
+                              <p style={{color: '#dc2626', fontSize: '13px', marginTop: '8px'}}>
+                                <strong>Note:</strong> No profile data found. Please ensure your profile is complete for faster verification.
+                              </p>
+                              <button
+                                type="button"
+                                onClick={async () => {
+                                  console.log('🔄 Refreshing profile data...');
+                                  setIsLoading(true);
+                                  try {
+                                    const response = await userService.getProfile();
+                                    if (response && response.success && response.data) {
+                                      setUserData(response.data);
+                                      console.log('✅ Profile data refreshed:', response.data);
+                                    } else {
+                                      console.log('❌ No profile data found');
+                                    }
+                                  } catch (error) {
+                                    console.error('❌ Error refreshing profile:', error);
+                                  } finally {
+                                    setIsLoading(false);
+                                  }
+                                }}
+                                style={{
+                                  background: '#3b82f6',
+                                  color: 'white',
+                                  border: 'none',
+                                  borderRadius: '6px',
+                                  padding: '6px 12px',
+                                  fontSize: '12px',
+                                  marginTop: '8px',
+                                  cursor: 'pointer'
+                                }}
+                              >
+                                Refresh Profile Data
+                              </button>
+                            </div>
+                          );
+                        }
+                        return null;
+                      })()}
                     </div>
                   </div>
-                )}
-
-                {/* Start/Retry Verification Button */}
-                {!verificationStatus?.hasSuccess && !verificationStatus?.hasPending && (
+                  
                   <button
                     type="button"
                     onClick={handleStartVerification}
@@ -869,36 +568,23 @@ const CaregiverVerificationPage = () => {
                     {isSubmitting ? "Processing..." : (verificationStatus?.hasFailed ? "Retry Verification" : "Start Verification")}
                     <i className="fas fa-arrow-right"></i>
                   </button>
-                )}
-
-                {/* Additional Info */}
-                <div className="verification-info">
-                  <p className="privacy-note">
-                    🔒 Your data is protected with bank-level security and encryption.
-                    We comply with all data protection regulations.
-                  </p>
                 </div>
+              )}
+
+              {/* Additional Info */}
+              <div className="verification-info">
+                <p className="privacy-note">
+                  🔒 Your data is protected with bank-level security and encryption.
+                </p>
+                <p className="time-note">
+                  ⏱️ Verification typically takes 2-5 minutes to complete.
+                </p>
               </div>
             </div>
           </div>
-        ) : (
-          /* Dojah Widget */
-          <div className="dojah-widget-container">
-            {dojahConfig.appID && dojahConfig.publicKey && (
-              <Dojah
-                response={handleDojahResponse}
-                appID={dojahConfig.appID}
-                publicKey={dojahConfig.publicKey}
-                type={dojahConfig.type}
-                config={dojahConfig.config}
-                userData={dojahUserData}
-                metadata={metadata}
-              />
-            )}
-          </div>
-        )}
+        </div>
       </div>
-    </>
+    </div>
   );
 };
 

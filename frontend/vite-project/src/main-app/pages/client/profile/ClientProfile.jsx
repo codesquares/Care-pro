@@ -4,6 +4,7 @@ import './ClientProfile.css';
 import defaultAvatar from '../../../../assets/profilecard1.png';
 import ClientProfileService from '../../../services/clientProfileService';
 import OrderMetrics from '../../../components/client/OrderMetrics';
+import AddressInput from '../../../components/AddressInput';
 import { toast } from 'react-toastify';
 import { generateUsername } from '../../../utils/usernameGenerator';
 
@@ -28,6 +29,9 @@ const ClientProfile = () => {
   const fileInputRef = useRef(null);
   const [selectedFile, setSelectedFile] = useState(null);
   const [uploadingImage, setUploadingImage] = useState(false);
+
+  // Address validation state
+  const [addressValidation, setAddressValidation] = useState(null);
 
   // Get user details from localStorage
   const userDetails = JSON.parse(localStorage.getItem("userDetails") || "{}");
@@ -82,6 +86,29 @@ const ClientProfile = () => {
       ...prev,
       [name]: value
     }));
+  };
+
+  // Handle address change
+  const handleAddressChange = (address) => {
+    setEditedProfile(prev => ({
+      ...prev,
+      location: address
+    }));
+  };
+
+  // Handle address validation
+  const handleAddressValidation = (validation) => {
+    setAddressValidation(validation);
+    
+    // Update profile with validated address if available
+    if (validation && validation.isValid && validation.formattedAddress) {
+      setEditedProfile(prev => ({
+        ...prev,
+        location: validation.formattedAddress,
+        // Optionally store coordinates for future use
+        coordinates: validation.coordinates
+      }));
+    }
   };
 
   // Format date for display
@@ -146,11 +173,24 @@ const ClientProfile = () => {
         clearInterval(intervalId);
         setUploadProgress(100);
         
-        // Update local state
-        setProfile(updatedProfile);
+        console.log('Profile updated successfully with image:', updatedProfile); // Debug log
+        
+        // Update local state with API response or editedProfile as fallback
+        const profileToSet = updatedProfile || editedProfile;
+        setProfile(profileToSet);
+        setEditedProfile(profileToSet); // Also update editedProfile to sync
         setIsEditing(false);
         setSelectedFile(null);
+        setAddressValidation(null); // Clear address validation
         setSuccessMessage('Profile updated successfully!');
+        
+        // Update localStorage with new profile data
+        const userDetails = JSON.parse(localStorage.getItem("userDetails") || "{}");
+        const updatedUserDetails = {
+          ...userDetails,
+          ...profileToSet
+        };
+        localStorage.setItem("userDetails", JSON.stringify(updatedUserDetails));
         
         toast.success('Profile updated successfully!', {
           position: "top-right",
@@ -160,6 +200,19 @@ const ClientProfile = () => {
           pauseOnHover: true,
           draggable: true,
         });
+        
+        // Force refresh profile data from API after a short delay to ensure data persistence
+        setTimeout(async () => {
+          try {
+            console.log('Refreshing profile data from API after image upload...');
+            const refreshedProfile = await ClientProfileService.getProfile(clientId);
+            console.log('Refreshed profile from API:', refreshedProfile);
+            setProfile(refreshedProfile);
+            setEditedProfile(refreshedProfile);
+          } catch (error) {
+            console.warn('Failed to refresh profile from API:', error);
+          }
+        }, 1000); // Wait 1 second before refreshing
         
         // Clear success message after 5 seconds
         setTimeout(() => {
@@ -171,10 +224,23 @@ const ClientProfile = () => {
         // Just update profile without image
         const updatedProfile = await ClientProfileService.updateProfile(clientId, editedProfile);
         
-        // Update local state
-        setProfile(updatedProfile);
+        console.log('Profile updated successfully:', updatedProfile); // Debug log
+        
+        // Update local state with API response or editedProfile as fallback
+        const profileToSet = updatedProfile || editedProfile;
+        setProfile(profileToSet);
+        setEditedProfile(profileToSet); // Also update editedProfile to sync
         setIsEditing(false);
+        setAddressValidation(null); // Clear address validation
         setSuccessMessage('Profile updated successfully!');
+        
+        // Update localStorage with new profile data
+        const userDetails = JSON.parse(localStorage.getItem("userDetails") || "{}");
+        const updatedUserDetails = {
+          ...userDetails,
+          ...profileToSet
+        };
+        localStorage.setItem("userDetails", JSON.stringify(updatedUserDetails));
         
         toast.success('Profile updated successfully!', {
           position: "top-right",
@@ -184,6 +250,19 @@ const ClientProfile = () => {
           pauseOnHover: true,
           draggable: true,
         });
+        
+        // Force refresh profile data from API after a short delay to ensure data persistence
+        setTimeout(async () => {
+          try {
+            console.log('Refreshing profile data from API...');
+            const refreshedProfile = await ClientProfileService.getProfile(clientId);
+            console.log('Refreshed profile from API:', refreshedProfile);
+            setProfile(refreshedProfile);
+            setEditedProfile(refreshedProfile);
+          } catch (error) {
+            console.warn('Failed to refresh profile from API:', error);
+          }
+        }, 1000); // Wait 1 second before refreshing
         
         // Clear success message after 5 seconds
         setTimeout(() => setSuccessMessage(''), 5000);
@@ -212,6 +291,7 @@ const ClientProfile = () => {
     setSelectedFile(null);
     setUploadProgress(0);
     setUploadingImage(false);
+    setAddressValidation(null);
   };
 
   if (loading) {
@@ -317,7 +397,7 @@ const ClientProfile = () => {
             )}
           </div>
           <div className="profile-status">
-            <h3>{profile?.firstName} {profile?.lastName}</h3>
+            <h3>{profile?.firstName} {profile?.middleName ? `${profile.middleName} ` : ''}{profile?.lastName}</h3>
             <p className="username">@{username}</p>
             
             <div className="verification-status">
@@ -345,6 +425,17 @@ const ClientProfile = () => {
                     value={editedProfile?.firstName || ''}
                     onChange={handleChange}
                     placeholder="Enter your first name"
+                  />
+                </div>
+                
+                <div className="form-group">
+                  <label>Middle Name</label>
+                  <input
+                    type="text"
+                    name="middleName"
+                    value={editedProfile?.middleName || ''}
+                    onChange={handleChange}
+                    placeholder="Enter your middle name (optional)"
                   />
                 </div>
                 
@@ -383,13 +474,35 @@ const ClientProfile = () => {
                 
                 <div className="form-group">
                   <label>Location</label>
-                  <input
-                    type="text"
-                    name="location"
+                  <AddressInput
                     value={editedProfile?.location || ''}
-                    onChange={handleChange}
-                    placeholder="Enter your location"
+                    onChange={handleAddressChange}
+                    onValidation={handleAddressValidation}
+                    placeholder="Enter your full address (e.g., 123 Main Street, Lagos, Nigeria)"
+                    className="client-profile-address-input"
+                    showValidationIcon={true}
+                    autoValidate={true}
+                    country="ng"
                   />
+                  
+                  {/* Show validation status */}
+                  {addressValidation && (
+                    <div style={{ 
+                      marginTop: '8px',
+                      padding: '8px',
+                      borderRadius: '4px',
+                      fontSize: '14px',
+                      backgroundColor: addressValidation.isValid ? '#d4edda' : '#f8d7da',
+                      color: addressValidation.isValid ? '#155724' : '#721c24',
+                      border: `1px solid ${addressValidation.isValid ? '#c3e6cb' : '#f5c6cb'}`
+                    }}>
+                      <i className={`fas ${addressValidation.isValid ? 'fa-check-circle' : 'fa-exclamation-circle'}`}></i>
+                      {addressValidation.isValid ? 
+                        ` Address validated: ${addressValidation.formattedAddress}` : 
+                        ` ${addressValidation.errorMessage || 'Please select a valid address from suggestions'}`
+                      }
+                    </div>
+                  )}
                 </div>
                 
                 <div className="form-group">
@@ -407,7 +520,7 @@ const ClientProfile = () => {
               <div className="profile-info">
                 <div className="info-item">
                   <label>Full Name</label>
-                  <p>{profile?.firstName} {profile?.lastName}</p>
+                  <p>{profile?.firstName} {profile?.middleName ? `${profile.middleName} ` : ''}{profile?.lastName}</p>
                 </div>
                 
                 <div className="info-item">

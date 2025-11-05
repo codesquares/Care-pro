@@ -19,6 +19,211 @@
   gap: 16px;
 }
 
+/* Dojah Widget Container */
+.dojah-widget-container {
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+  padding: 20px;
+  background: linear-gradient(135deg, #f0f9ff 0%, #e0f2fe 100%);
+}
+
+.dojah-widget-header {
+  background: white;
+  border-radius: 16px;
+  padding: 24px;
+  margin-bottom: 20px;
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.1);
+  text-align: center;
+}
+
+.dojah-widget-header h2 {
+  margin: 0 0 8px 0;
+  color: #1f2937;
+  font-size: 24px;
+  font-weight: 600;
+}
+
+.dojah-widget-header p {
+  margin: 0 0 20px 0;
+  color: #6b7280;
+  font-size: 16px;
+}
+
+.dojah-sdk-wrapper {
+  background: white;
+  border-radius: 16px;
+  padding: 20px;
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.1);
+  flex: 1;
+  min-height: 500px;
+}
+
+.back-btn {
+  margin-top: 12px;
+  background: #6b7280;
+  color: white;
+  border: none;
+  padding: 10px 20px;
+  border-radius: 8px;
+  font-size: 14px;
+  cursor: pointer;
+  transition: background-color 0.2s;
+}
+
+.back-btn:hover {
+  background: #4b5563;
+}
+
+/* Verification Progress Overlay */
+.verification-progress-overlay {
+  min-height: 100vh;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 20px;
+  background: linear-gradient(135deg, #f0f9ff 0%, #e0f2fe 100%);
+}
+
+.verification-progress-content {
+  background: white;
+  border-radius: 16px;
+  padding: 32px 24px;
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.1);
+  text-align: center;
+  max-width: 500px;
+  width: 100%;
+}
+
+.verification-progress-content h2 {
+  margin: 0 0 24px 0;
+  color: #1f2937;
+  font-size: 24px;
+  font-weight: 600;
+}
+
+.verification-progress-content .progress-container {
+  margin-bottom: 32px;
+}
+
+.verification-progress-content .progress-message {
+  font-size: 16px;
+  color: #374151;
+  margin-top: 16px;
+  font-weight: 500;
+  line-height: 1.5;
+}
+
+/* Verification Guidance Steps */
+.verification-guidance {
+  margin: 24px 0;
+  text-align: left;
+}
+
+.guidance-item {
+  display: flex;
+  align-items: center;
+  margin-bottom: 12px;
+  padding: 12px;
+  background: #f8fafc;
+  border-radius: 8px;
+  border-left: 4px solid #3b82f6;
+}
+
+.step-number {
+  background: #3b82f6;
+  color: white;
+  width: 24px;
+  height: 24px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 12px;
+  font-weight: 600;
+  margin-right: 12px;
+  flex-shrink: 0;
+}
+
+.guidance-item span:last-child {
+  color: #374151;
+  font-size: 14px;
+  line-height: 1.4;
+}
+
+/* Manual Actions */
+.manual-actions {
+  margin: 24px 0;
+  padding: 20px;
+  background: #fef3c7;
+  border-radius: 8px;
+  border: 1px solid #fbbf24;
+}
+
+.manual-check-btn {
+  background: #3b82f6;
+  color: white;
+  border: none;
+  padding: 12px 24px;
+  border-radius: 8px;
+  font-size: 16px;
+  font-weight: 500;
+  cursor: pointer;
+  margin-bottom: 8px;
+  transition: background-color 0.2s;
+}
+
+.manual-check-btn:hover:not(:disabled) {
+  background: #2563eb;
+}
+
+.manual-check-btn:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+.manual-check-note {
+  font-size: 12px;
+  color: #92400e;
+  margin: 0;
+  line-height: 1.4;
+}
+
+/* Success and Error Messages */
+.verification-progress-content .success-message {
+  margin-top: 20px;
+  padding: 16px;
+  background: #dcfce7;
+  border: 1px solid #bbf7d0;
+  border-radius: 8px;
+  color: #166534;
+}
+
+.verification-progress-content .error-message {
+  margin-top: 20px;
+  padding: 16px;
+  background: #fef2f2;
+  border: 1px solid #fecaca;
+  border-radius: 8px;
+  color: #dc2626;
+}
+
+.retry-btn {
+  margin-top: 12px;
+  background: #dc2626;
+  color: white;
+  border: none;
+  padding: 8px 16px;
+  border-radius: 6px;
+  font-size: 14px;
+  cursor: pointer;
+  transition: background-color 0.2s;
+}
+
+.retry-btn:hover {
+  background: #b91c1c;
+}
+
 /* Profile Header Card Mobile Overrides */
 .mobile-verification-page .profile-header-card {
   background: white;
@@ -672,5 +877,148 @@
   }
   100% {
     background-position: -200% 0;
+  }
+}
+
+/* User Info Notice Styles */
+.user-info-notice {
+  display: flex;
+  align-items: flex-start;
+  gap: 12px;
+  background: #eff6ff;
+  border: 1px solid #dbeafe;
+  border-radius: 12px;
+  padding: 16px;
+  margin-bottom: 20px;
+}
+
+.notice-icon {
+  flex-shrink: 0;
+  color: #3b82f6;
+  font-size: 18px;
+  margin-top: 2px;
+}
+
+.notice-content {
+  flex: 1;
+}
+
+.notice-content p {
+  margin: 0;
+  color: #1f2937;
+  font-size: 14px;
+  line-height: 1.5;
+}
+
+.notice-content strong {
+  color: #1f2937;
+  font-weight: 600;
+}
+
+/* Mobile responsive adjustments */
+@media (max-width: 480px) {
+  .user-info-notice {
+    padding: 12px;
+    gap: 10px;
+  }
+  
+  .notice-content p {
+    font-size: 13px;
+  }
+  
+  .notice-icon {
+    font-size: 16px;
+  }
+}
+
+/* Star Rating Styles */
+.rating .fas.fa-star,
+.rating .fas.fa-star-half-alt,
+.rating .far.fa-star {
+  color: #fbbf24;
+  margin-right: 2px;
+  font-size: 14px;
+}
+
+.rating .far.fa-star {
+  color: #d1d5db;
+}
+
+.rating span {
+  margin-left: 8px;
+  color: #6b7280;
+  font-size: 14px;
+}
+
+/* Desktop Responsive Layout - 40/60 split */
+@media (min-width: 768px) {
+  .mobile-verification-container {
+    max-width: 1200px;
+    margin: 0 auto;
+    padding: 24px;
+  }
+  
+  .content-wrapper {
+    display: flex;
+    gap: 32px;
+    align-items: flex-start;
+  }
+  
+  /* Profile Header - 40% width on desktop */
+  .profile-header-card {
+    flex: 0 0 40%;
+    max-width: 40%;
+    position: sticky;
+    top: 24px;
+    margin-bottom: 0 !important;
+  }
+  
+  /* Verification Content - 60% width on desktop */
+  .verification-card {
+    flex: 1;
+    max-width: 60%;
+  }
+  
+  /* Adjust profile image size for desktop */
+  .mobile-verification-page .profile-header-card .profile-img {
+    width: 120px;
+    height: 120px;
+    margin: 0 auto 16px auto;
+  }
+  
+  /* Adjust text sizes for desktop */
+  .mobile-verification-page .profile-header-card .profile-basic-info h2 {
+    font-size: 24px;
+    margin: 0 0 8px 0;
+  }
+  
+  .mobile-verification-page .profile-header-card .profile-basic-info .bio {
+    font-size: 14px;
+    margin: 0 0 16px 0;
+  }
+  
+  .mobile-verification-page .profile-header-card .profile-rating-section .rating {
+    font-size: 16px;
+  }
+  
+  .mobile-verification-page .profile-header-card .profile-details .detail-item {
+    font-size: 14px;
+    margin-bottom: 8px;
+  }
+}
+
+/* Large Desktop adjustments */
+@media (min-width: 1024px) {
+  .mobile-verification-container {
+    max-width: 1400px;
+    padding: 32px;
+  }
+  
+  .content-wrapper {
+    gap: 48px;
+  }
+  
+  .profile-header-card {
+    top: 32px;
   }
 }

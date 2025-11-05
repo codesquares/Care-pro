@@ -7,7 +7,9 @@ import ProfileInformation from "./ProfileInformation";
 import VerifyButton from "./VerifyButton";
 import AssessmentButton from "./AssessmentButton";
 import TestVerificationToggle from "../../../components/dev/TestVerificationToggle";
+import AddressInput from "../../../components/AddressInput";
 import verificationService from "../../../services/verificationService";
+import { getDojahStatus } from "../../../services/dojahService";
 import { toast } from "react-toastify";
 import config from "../../../config"; // Import centralized config for API URLs
 import { generateUsername } from "../../../utils/usernameGenerator";
@@ -35,6 +37,7 @@ const ProfileHeader = () => {
   const [showLocationModal, setShowLocationModal] = useState(false);
   const [editedLocation, setEditedLocation] = useState("");
   const [locationLoading, setLocationLoading] = useState(false);
+  const [addressValidation, setAddressValidation] = useState(null);
   const [imageUploadLoading, setImageUploadLoading] = useState(false);
   const [statusFromApi, setStatusFromApi] = useState(null);
   const fileInputRef = useRef(null);
@@ -60,26 +63,50 @@ const ProfileHeader = () => {
       return;
     }
 
+    // Check address validation
+    if (addressValidation && !addressValidation.isValid) {
+      toast.warning("Please enter a valid address or select from suggestions");
+      return;
+    }
+
     try {
       setLocationLoading(true);
       
-      // API call to update location using the correct endpoint with query parameter
-      // Use centralized config instead of hardcoded URL for consistent API routing
-      const response = await fetch(`${config.BASE_URL}/CareGivers/UpdateCaregiverAboutMeInfo/${userDetails.id}?Location=${encodeURIComponent(editedLocation)}`, {
+      // Use formatted address if available from Google validation, otherwise use input
+      const addressToSend = addressValidation?.formattedAddress || editedLocation;
+      
+      // API call to update location using the new dedicated endpoint
+      const response = await fetch(`${config.BASE_URL}/CareGivers/UpdateCaregiverLocation/${userDetails.id}`, {
         method: 'PUT',
         headers: {
-          'accept': '*/*',
-          'Content-Type': 'multipart/form-data',
+          'Content-Type': 'application/json',
         },
-        body: new FormData().append('IntroVideo', ''),
+        body: JSON.stringify({ address: addressToSend }),
       });
 
       if (!response.ok) {
-        throw new Error('Failed to update location');
+        const result = await response.json();
+        let errorMessage = 'Failed to update location';
+        
+        switch (response.status) {
+          case 400:
+            errorMessage = `Validation Error: ${result.message || 'Invalid address format'}`;
+            break;
+          case 404:
+            errorMessage = 'Caregiver not found. Please check your account.';
+            break;
+          case 500:
+            errorMessage = 'Server error. Please try again later.';
+            break;
+          default:
+            errorMessage = result.message || 'Unexpected error occurred';
+        }
+        
+        throw new Error(errorMessage);
       }
 
-      // API returns plain text message, not JSON
-      const result = await response.text();
+      // API returns JSON response with geocoded data
+      const result = await response.json();
       console.log('Location update response:', result);
 
       // Call fetchProfile to get updated profile data
@@ -87,12 +114,15 @@ const ProfileHeader = () => {
 
       setShowLocationModal(false);
       setEditedLocation("");
+      setAddressValidation(null);
       
-      toast.success('Location updated successfully!');
+      // Show success message with city if available
+      const cityName = result.data?.city || addressValidation?.addressComponents?.city || 'location';
+      toast.success(`Location updated successfully! Now serving in ${cityName}.`);
       
     } catch (err) {
       console.error('Error updating location:', err);
-      toast.error('Failed to update location. Please try again.');
+      toast.error(err.message || 'Failed to update location. Please try again.');
     } finally {
       setLocationLoading(false);
     }
@@ -213,17 +243,75 @@ const ProfileHeader = () => {
       
       const data = await response.json();
       console.log("Fetched caregiver data:", data);
+      console.log("Location fields in response:", {
+        location: data.location,
+        serviceCity: data.serviceCity,
+        serviceState: data.serviceState,
+        serviceAddress: data.serviceAddress,
+        latitude: data.latitude,
+        longitude: data.longitude
+      });
 
       if (!isMountedRef.current) return;
 
-      // Get verification status
+      // Get verification status using dojahService (same as admin)
       let verificationStatus = null;
       try {
-        verificationStatus = await verificationService.getVerificationFromAPI(userDetails.id);
-        console.log("Fetched verification status:", verificationStatus);
-        setStatusFromApi(verificationStatus);
+        const token = localStorage.getItem('authToken');
+        console.log('ProfileHeader - token available:', !!token, 'token length:', token?.length);
+        console.log('ProfileHeader - userDetails.id:', userDetails.id);
+        
+        // Check if token is expired and handle it
+        if (token) {
+          try {
+            const payload = JSON.parse(atob(token.split('.')[1]));
+            const currentTime = Date.now() / 1000;
+            const isExpired = payload.exp < currentTime;
+            console.log('ProfileHeader - token expires at:', new Date(payload.exp * 1000), 'is expired:', isExpired);
+            
+            if (isExpired) {
+              console.log('ProfileHeader - Token expired, clearing localStorage and redirecting to login');
+              localStorage.clear();
+              toast.error('Your session has expired. Please log in again.');
+              window.location.href = '/login';
+              return;
+            }
+          } catch (e) {
+            console.log('ProfileHeader - could not parse token payload, assuming invalid:', e);
+            localStorage.clear();
+            toast.error('Invalid session. Please log in again.');
+            window.location.href = '/login';
+            return;
+          }
+        }
+        
+        if (token) {
+          verificationStatus = await getDojahStatus(userDetails.id, 'Caregiver', token);
+          console.log("Fetched verification status from dojahService:", verificationStatus);
+          setStatusFromApi(verificationStatus);
+        } else {
+          console.warn("No auth token available for verification status check");
+        }
       } catch (verErr) {
         console.warn("Failed to fetch verification status:", verErr);
+        
+        // Handle 401 Unauthorized (expired/invalid token)
+        if (verErr.message?.includes('Unauthorized') || verErr.message?.includes('401')) {
+          console.log('ProfileHeader - Got 401, token likely expired, clearing localStorage and redirecting');
+          localStorage.clear();
+          toast.error('Your session has expired. Please log in again.');
+          window.location.href = '/login';
+          return;
+        }
+        
+        // For other errors, set a default unverified state
+        console.log("Setting default unverified state due to error");
+        setStatusFromApi({
+          verified: false,
+          verificationStatus: 'error',
+          message: 'Could not fetch verification status',
+          hasVerification: false
+        });
       }
 
       const updatedProfile = {
@@ -232,7 +320,11 @@ const ProfileHeader = () => {
         bio: data.aboutMe || "Passionate caregiver dedicated to providing quality care.",
         rating: data.rating || 4.8,
         reviews: data.reviewsCount || 24,
-        location: data.location || "New York, NY",
+        // Show only the city from the new location fields, fallback to full location/address
+        location: data.serviceCity || 
+                 (data.location && data.location.includes(',') ? data.location.split(',')[0].trim() : data.location) || 
+                 (data.serviceAddress && data.serviceAddress.includes(',') ? data.serviceAddress.split(',')[1]?.trim() : null) ||
+                 "New York",
         memberSince: data.createdAt ? new Date(data.createdAt).toLocaleDateString() : "January 2023",
         lastDelivery: data.lastDelivery ? new Date(data.lastDelivery).toLocaleDateString() : "2 days ago",
         picture: data.profileImage || profilecard1,
@@ -378,9 +470,9 @@ const ProfileHeader = () => {
           
         </div>
        <div className="caregiver-profile-actions">
-          {statusFromApi === "completed" ? (
+          {statusFromApi?.verificationStatus === "completed" || statusFromApi?.isVerified === true ? (
             <AssessmentButton 
-              verificationStatus={statusFromApi} 
+              verificationStatus={statusFromApi?.verificationStatus || "completed"} 
               userId={userDetails?.id} 
             />
           ) : (
@@ -404,27 +496,88 @@ const ProfileHeader = () => {
               className="caregiver-location-modal"
               onClick={(e) => e.stopPropagation()}
             >
-              <h3>Edit Location</h3>
-              <input
-                type="text"
+              <h3>Update Your Service Location</h3>
+              <p style={{ 
+                fontSize: '14px', 
+                color: '#6c757d', 
+                marginBottom: '16px',
+                lineHeight: '1.4'
+              }}>
+                Enter your full address to help clients find you. We'll use this to show your city in your profile.
+              </p>
+              
+              <AddressInput
                 value={editedLocation}
-                onChange={(e) => setEditedLocation(e.target.value)}
-                placeholder="Enter new location"
+                onChange={setEditedLocation}
+                onValidation={setAddressValidation}
+                placeholder="Enter full address (e.g., 123 Main St, Los Angeles, CA 90210)"
                 className="caregiver-location-input"
+                showValidationIcon={true}
+                autoValidate={true}
+                country="ng"
               />
+              
+              {/* Show validation status */}
+              {addressValidation && (
+                <div style={{ 
+                  fontSize: '13px', 
+                  marginTop: '8px',
+                  padding: '8px 12px',
+                  borderRadius: '4px',
+                  backgroundColor: addressValidation.isValid 
+                    ? (addressValidation.isGoogleValidated ? '#d4edda' : '#fff3cd')
+                    : '#f8d7da',
+                  color: addressValidation.isValid 
+                    ? (addressValidation.isGoogleValidated ? '#155724' : '#856404')
+                    : '#721c24',
+                  border: `1px solid ${addressValidation.isValid 
+                    ? (addressValidation.isGoogleValidated ? '#c3e6cb' : '#ffeaa7')
+                    : '#f5c6cb'}`
+                }}>
+                  {addressValidation.isGoogleValidated && addressValidation.isValid && (
+                    <>
+                      <strong>✓ Address verified by Google Maps</strong>
+                      <br />
+                      Your profile will show: <strong>{addressValidation.addressComponents?.city}</strong>
+                    </>
+                  )}
+                  {!addressValidation.isGoogleValidated && addressValidation.isValid && (
+                    <>
+                      <strong>⚠ Basic validation passed</strong>
+                      <br />
+                      For better accuracy, select from the address suggestions above.
+                    </>
+                  )}
+                  {addressValidation.hasError && (
+                    <>
+                      <strong>✗ Address validation failed</strong>
+                      <br />
+                      {addressValidation.errorMessage}
+                    </>
+                  )}
+                </div>
+              )}
+              
               <div className="caregiver-modal-buttons">
                 <button 
-                  onClick={() => setShowLocationModal(false)}
+                  onClick={() => {
+                    setShowLocationModal(false);
+                    setEditedLocation("");
+                    setAddressValidation(null);
+                  }}
                   className="caregiver-modal-btn caregiver-modal-cancel"
                 >
                   Cancel
                 </button>
                 <button 
                   onClick={handleLocationSave}
-                  disabled={locationLoading}
+                  disabled={locationLoading || !editedLocation.trim() || (addressValidation && !addressValidation.isValid)}
                   className="caregiver-modal-btn caregiver-modal-save"
+                  style={{
+                    opacity: (locationLoading || !editedLocation.trim() || (addressValidation && !addressValidation.isValid)) ? 0.6 : 1
+                  }}
                 >
-                  {locationLoading ? 'Saving...' : 'Save'}
+                  {locationLoading ? 'Updating Location...' : 'Update Location'}
                 </button>
               </div>
             </div>

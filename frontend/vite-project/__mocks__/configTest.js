@@ -2,8 +2,9 @@
 const config = {
   BASE_URL: "http://localhost:3000/api",
   FALLBACK_URL: "http://localhost:3000",
-  LOCAL_API_URL: "http://localhost:3000/api",
-  LOCALHOST_API_URL: "http://localhost:3000/api",
+  
+  // REMOVED: LOCAL_API_URL and LOCALHOST_API_URL are no longer needed
+  // All API calls now go through the .NET backend BASE_URL
   
   DOJAH: {
     APP_ID: "test-app-id",

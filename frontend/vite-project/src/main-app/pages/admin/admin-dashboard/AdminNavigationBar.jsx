@@ -57,6 +57,18 @@ const AdminNavigationBar = () => {
             </Link>
           </li>
           <li>
+            <Link to="/app/admin/dojah-admin" className="nav-link">
+              <i className="fas fa-id-card"></i>
+              <span>Verifications</span>
+            </Link>
+          </li>
+          <li>
+            <Link to="/app/admin/webhook-data" className="nav-link">
+              <i className="fas fa-server"></i>
+              <span>Webhook Data</span>
+            </Link>
+          </li>
+          <li>
             <Link to="/app/admin/reports" className="nav-link">
               <i className="fas fa-chart-bar"></i>
               <span>Reports</span>

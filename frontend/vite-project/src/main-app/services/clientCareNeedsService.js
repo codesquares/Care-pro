@@ -57,15 +57,99 @@ class ClientCareNeedsService {
       
       // Default care needs if none found
       return {
-        primaryCondition: '',
-        additionalConditions: [],
-        mobilityLevel: '',
-        assistanceLevel: '',
-        dietaryRestrictions: [],
-        medicationManagement: false,
-        frequentMonitoring: false,
-        specialEquipment: [],
-        additionalNotes: ''
+        // Service categories (always required first)
+        serviceCategories: [],
+        specificServices: {},
+        specificServicesOthers: {}, // For custom specific services
+        
+        // Medical needs (only for medical-related categories)
+        medicalNeeds: {
+          primaryCondition: '',
+          additionalConditions: [],
+          additionalConditionsOther: '',
+          mobilityLevel: '',
+          assistanceLevel: '',
+          dietaryRestrictions: [],
+          dietaryRestrictionsOther: '',
+          medicationManagement: false,
+          frequentMonitoring: false,
+          specialEquipment: [],
+          specialEquipmentOther: '',
+          additionalNotes: ''
+        },
+        
+        // Child care specific needs
+        childCareNeeds: {
+          ageRanges: [],
+          ageRangesOther: '',
+          numberOfChildren: '',
+          specialNeeds: [],
+          specialNeedsOther: '',
+          activitiesPreferences: [],
+          activitiesPreferencesOther: '',
+          supervisionLevel: '',
+          emergencyContacts: '',
+          additionalNotes: ''
+        },
+        
+        // Pet care specific needs
+        petCareNeeds: {
+          petTypes: [],
+          petTypesOther: '',
+          numberOfPets: '',
+          petSizes: [],
+          petSizesOther: '',
+          specialCareRequirements: [],
+          specialCareRequirementsOther: '',
+          exerciseNeeds: [],
+          exerciseNeedsOther: '',
+          dietaryRequirements: [],
+          dietaryRequirementsOther: '',
+          behavioralNotes: '',
+          additionalNotes: ''
+        },
+        
+        // Home care specific needs
+        homeCareNeeds: {
+          homeSize: '',
+          focusAreas: [],
+          focusAreasOther: '',
+          serviceFrequency: '',
+          specialEquipment: [],
+          specialEquipmentOther: '',
+          accessibilityNeeds: [],
+          accessibilityNeedsOther: '',
+          additionalNotes: ''
+        },
+        
+        // Therapy & wellness specific needs
+        therapyNeeds: {
+          therapyTypes: [],
+          therapyTypesOther: '',
+          currentLimitations: [],
+          currentLimitationsOther: '',
+          therapyGoals: [],
+          therapyGoalsOther: '',
+          equipmentAvailable: [],
+          equipmentAvailableOther: '',
+          previousExperience: '',
+          additionalNotes: ''
+        },
+        
+        // Caregiver requirements (always visible)
+        caregiverRequirements: {
+          certifications: [],
+          certificationsOther: '',
+          experienceLevel: '',
+          languages: [],
+          languagesOther: '',
+          personalityTraits: [],
+          personalityTraitsOther: '',
+          availability: [],
+          availabilityOther: '',
+          specialSkills: [],
+          specialSkillsOther: ''
+        }
       };
     } catch (error) {
       console.error('Error in getCareNeeds:', error);
@@ -80,12 +164,17 @@ class ClientCareNeedsService {
    */
   static async saveCareNeeds(careNeeds) {
     try {
+      console.log('=== CLIENT CARE NEEDS SERVICE DEBUG ===');
+      console.log('4. saveCareNeeds called with:', JSON.stringify(careNeeds, null, 2));
+      
       // For demo purposes, save to localStorage
       localStorage.setItem('careNeeds', JSON.stringify(careNeeds));
       
       // Get the current client ID
       const userDetails = JSON.parse(localStorage.getItem('userDetails') || '{}');
       const clientId = userDetails.id;
+      
+      console.log('5. Client ID:', clientId);
       
       if (clientId) {
         // Try to save to API
@@ -96,10 +185,14 @@ class ClientCareNeedsService {
           // Convert careNeeds object to the format expected by the API
           const preferencesData = this.convertCareNeedsToApiData(careNeeds);
           
+          console.log('6. Converted preferences data:', preferencesData);
+          
           const payload = {
             clientId: clientId,
             data: preferencesData
           };
+          
+          console.log('7. Final payload being sent to API:', JSON.stringify(payload, null, 2));
           
           const response = await fetch(API_URL, {
             method: 'POST',
@@ -110,10 +203,16 @@ class ClientCareNeedsService {
             body: JSON.stringify(payload)
           });
           
+          console.log('14. API Response status:', response.status);
+          
           if (!response.ok) {
             console.warn(`API returned ${response.status} when saving care needs`);
+            const responseText = await response.text();
+            console.log('15. API Error response:', responseText);
           } else {
             console.log('Care needs saved to API successfully');
+            const responseData = await response.json();
+            console.log('16. API Success response:', responseData);
             return careNeeds;
           }
         } catch (apiError) {
@@ -134,25 +233,37 @@ class ClientCareNeedsService {
    * @returns {Array} Array of serialized data strings for API
    */
   static convertCareNeedsToApiData(careNeeds) {
+    console.log('=== CONVERSION DEBUG ===');
+    console.log('8. convertCareNeedsToApiData input:', JSON.stringify(careNeeds, null, 2));
+    
     const dataArray = [];
     
     // Process each property in the care needs object
     Object.entries(careNeeds).forEach(([key, value]) => {
+      console.log(`9. Processing key: ${key}, value:`, value, `(type: ${typeof value})`);
+      
       if (typeof value === 'object' && value !== null) {
         if (Array.isArray(value)) {
-          dataArray.push(`${key}:${JSON.stringify(value)}`);
+          const serialized = `${key}:${JSON.stringify(value)}`;
+          console.log(`10. Array - adding: ${serialized}`);
+          dataArray.push(serialized);
         } else {
           // For nested objects
           Object.entries(value).forEach(([nestedKey, nestedValue]) => {
-            dataArray.push(`${key}.${nestedKey}:${JSON.stringify(nestedValue)}`);
+            const serialized = `${key}.${nestedKey}:${JSON.stringify(nestedValue)}`;
+            console.log(`11. Nested object - adding: ${serialized}`);
+            dataArray.push(serialized);
           });
         }
       } else {
         // For simple key-value pairs
-        dataArray.push(`${key}:${JSON.stringify(value)}`);
+        const serialized = `${key}:${JSON.stringify(value)}`;
+        console.log(`12. Simple value - adding: ${serialized}`);
+        dataArray.push(serialized);
       }
     });
     
+    console.log('13. Final converted dataArray:', dataArray);
     return dataArray;
   }
   
@@ -163,15 +274,99 @@ class ClientCareNeedsService {
    */
   static convertApiDataToCareNeeds(dataArray) {
     const careNeeds = {
-      primaryCondition: '',
-      additionalConditions: [],
-      mobilityLevel: '',
-      assistanceLevel: '',
-      dietaryRestrictions: [],
-      medicationManagement: false,
-      frequentMonitoring: false,
-      specialEquipment: [],
-      additionalNotes: ''
+      // Service categories (always required first)
+      serviceCategories: [],
+      specificServices: {},
+      specificServicesOthers: {}, // For custom specific services
+      
+      // Medical needs (only for medical-related categories)
+      medicalNeeds: {
+        primaryCondition: '',
+        additionalConditions: [],
+        additionalConditionsOther: '',
+        mobilityLevel: '',
+        assistanceLevel: '',
+        dietaryRestrictions: [],
+        dietaryRestrictionsOther: '',
+        medicationManagement: false,
+        frequentMonitoring: false,
+        specialEquipment: [],
+        specialEquipmentOther: '',
+        additionalNotes: ''
+      },
+      
+      // Child care specific needs
+      childCareNeeds: {
+        ageRanges: [],
+        ageRangesOther: '',
+        numberOfChildren: '',
+        specialNeeds: [],
+        specialNeedsOther: '',
+        activitiesPreferences: [],
+        activitiesPreferencesOther: '',
+        supervisionLevel: '',
+        emergencyContacts: '',
+        additionalNotes: ''
+      },
+      
+      // Pet care specific needs
+      petCareNeeds: {
+        petTypes: [],
+        petTypesOther: '',
+        numberOfPets: '',
+        petSizes: [],
+        petSizesOther: '',
+        specialCareRequirements: [],
+        specialCareRequirementsOther: '',
+        exerciseNeeds: [],
+        exerciseNeedsOther: '',
+        dietaryRequirements: [],
+        dietaryRequirementsOther: '',
+        behavioralNotes: '',
+        additionalNotes: ''
+      },
+      
+      // Home care specific needs
+      homeCareNeeds: {
+        homeSize: '',
+        focusAreas: [],
+        focusAreasOther: '',
+        serviceFrequency: '',
+        specialEquipment: [],
+        specialEquipmentOther: '',
+        accessibilityNeeds: [],
+        accessibilityNeedsOther: '',
+        additionalNotes: ''
+      },
+      
+      // Therapy & wellness specific needs
+      therapyNeeds: {
+        therapyTypes: [],
+        therapyTypesOther: '',
+        currentLimitations: [],
+        currentLimitationsOther: '',
+        therapyGoals: [],
+        therapyGoalsOther: '',
+        equipmentAvailable: [],
+        equipmentAvailableOther: '',
+        previousExperience: '',
+        additionalNotes: ''
+      },
+      
+      // Caregiver requirements (always visible)
+      caregiverRequirements: {
+        certifications: [],
+        certificationsOther: '',
+        experienceLevel: '',
+        languages: [],
+        languagesOther: '',
+        personalityTraits: [],
+        personalityTraitsOther: '',
+        availability: [],
+        availabilityOther: '',
+        specialSkills: [],
+        specialSkillsOther: ''
+      }
     };
     
     dataArray.forEach(item => {
