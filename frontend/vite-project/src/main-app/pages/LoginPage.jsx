@@ -7,6 +7,7 @@ import "../../styles/main-app/pages/LoginPage.scss";
 import { toast } from "react-toastify";
 import config from "../config";
 import { useAuth } from "../context/AuthContext";
+import Modal from "../components/modal/Modal";
 
 const LoginPage = () => {
   const [email, setEmail] = useState("");
@@ -15,6 +16,16 @@ const LoginPage = () => {
   const [loading, setLoading] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
   const [redirecting, setRedirecting] = useState(false);
+  const [showSuccessModal, setShowSuccessModal] = useState(false);
+  
+  // Modal states
+  const [isModalOpen, setIsModalOpen] = useState(false);
+  const [modalTitle, setModalTitle] = useState("");
+  const [modalDescription, setModalDescription] = useState("");
+  const [buttonText, setButtonText] = useState("Okay");
+  const [buttonBgColor, setButtonBgColor] = useState("#00B4A6");
+  const [isError, setIsError] = useState(false);
+  
   const navigate = useNavigate();
   const location = useLocation();
   const { isAuthenticated, userRole, loading: authLoading, login } = useAuth();
@@ -26,7 +37,7 @@ const LoginPage = () => {
 
   // Only redirect if already authenticated (no duplicate navigation logic)
   useEffect(() => {
-    if (!authLoading && isAuthenticated && userRole) {
+    if (!authLoading && isAuthenticated && userRole && !showSuccessModal) {
       setRedirecting(true);
       // Reduced delay since toast auto-closes in 1.5s
       const navigationTimer = setTimeout(() => {
@@ -55,7 +66,7 @@ const LoginPage = () => {
         setRedirecting(false);
       };
     }
-  }, [isAuthenticated, userRole, authLoading, navigate, returnTo]);
+  }, [isAuthenticated, userRole, authLoading, navigate, returnTo, showSuccessModal]);
 
   const handleSubmit = async (e) => {
     e.preventDefault();
@@ -81,33 +92,32 @@ const LoginPage = () => {
 
       const { data } = response;
       
-      // Show success toast and store the toast ID
-      const toastId = toast.success("Login successful", {
-        toastId: 'login-success',
-        autoClose: 1500,
-        containerId: 'main-toast-container',
-        closeOnClick: false,
-        draggable: false,
-        pauseOnHover: false
-      });
+      // Show success modal first, then update authentication state
+      setModalTitle("Login Successful!");
+      setModalDescription("Welcome back! You will be redirected to your dashboard.");
+      setButtonBgColor("#00B4A6");
+      setButtonText("Continue");
+      setIsError(false);
+      setShowSuccessModal(true);
+      setIsModalOpen(true);
       
-      // Update authentication state
-      login(data, data.token, data.refreshToken);
-      
-      // Dismiss the toast before navigation to prevent conflicts
+      // Update authentication state after a short delay to allow modal to show
       setTimeout(() => {
-        toast.dismiss(toastId);
-      }, 1000);
+        login(data, data.token, data.refreshToken);
+      }, 100);
       
-      // Navigation will be handled by the useEffect that watches isAuthenticated
     } catch (err) {
       const errorMessage =
         err.response?.data?.message || "Invalid email or password.";
-      setError(errorMessage);
-      toast.error(errorMessage, {
-        containerId: 'main-toast-container',
-        autoClose: 5000
-      });
+      setError(null); // Clear inline error since we're using modal
+      
+      // Show error modal
+      setModalTitle("Login Failed");
+      setModalDescription(errorMessage);
+      setButtonBgColor("#FF4B4B");
+      setButtonText("Try Again");
+      setIsError(true);
+      setIsModalOpen(true);
     } finally {
       setLoading(false);
     }
@@ -115,6 +125,18 @@ const LoginPage = () => {
 
   const togglePasswordVisibility = () => {
     setShowPassword(!showPassword);
+  };
+
+  const handleModalProceed = () => {
+    if (isError) {
+      // For error modal, just close and let user try again
+      setIsModalOpen(false);
+    } else {
+      // For success modal, proceed with redirect
+      setIsModalOpen(false);
+      setShowSuccessModal(false);
+      // The useEffect will handle the navigation once showSuccessModal is false
+    }
   };
 
   // Show loading screen during redirect to prevent flash of content
@@ -196,8 +218,6 @@ const LoginPage = () => {
             <Link to="/forgot-password">Forgot Password?</Link>
           </div>
 
-          {error && <p className="error-message">{error}</p>}
-
           <button type="submit" className="btn-primary" disabled={loading || authLoading || redirecting}>
             {loading ? "Logging in..." : 
              authLoading ? "Checking authentication..." : 
@@ -215,6 +235,18 @@ const LoginPage = () => {
           <Link to="/privacy-policy">Privacy Policy</Link>
         </p>
       </div>
+      
+      {/* Modal */}
+      <Modal
+        isOpen={isModalOpen}
+        onClose={() => setIsModalOpen(false)}
+        title={modalTitle}
+        description={modalDescription}
+        buttonText={buttonText}
+        buttonBgColor={buttonBgColor}
+        isError={isError}
+        onProceed={handleModalProceed}
+      />
     </div>
   );
 };

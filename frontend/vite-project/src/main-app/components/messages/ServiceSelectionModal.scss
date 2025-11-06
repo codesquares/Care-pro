@@ -266,6 +266,23 @@
         }
       }
     }
+    
+    .contact-caregiver-btn {
+      margin-top: 1rem;
+      background: #00B4A6;
+      color: white;
+      border: none;
+      border-radius: 6px;
+      padding: 0.75rem 1.5rem;
+      font-size: 0.875rem;
+      font-weight: 500;
+      cursor: pointer;
+      transition: background-color 0.2s ease;
+
+      &:hover {
+        background: #009688;
+      }
+    }
   }
 
   .modal-footer {

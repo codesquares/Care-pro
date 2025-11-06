@@ -4,6 +4,7 @@ import "../../styles/main-app/pages/ForgotPasswordPage.scss";
 import authImage from "../../assets/authImage.png";
 import { toast } from "react-toastify";
 import { forgotPassword, resetPasswordWithToken } from "../services/auth";
+import Modal from "../components/modal/Modal";
 
 const ForgotPasswordPage = () => {
   const [searchParams] = useSearchParams();
@@ -25,6 +26,16 @@ const ForgotPasswordPage = () => {
   const [confirmPassword, setConfirmPassword] = useState("");
   const [showNewPassword, setShowNewPassword] = useState(false);
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
+
+  // Modal states
+  const [isModalOpen, setIsModalOpen] = useState(false);
+  const [modalTitle, setModalTitle] = useState("");
+  const [modalDescription, setModalDescription] = useState("");
+  const [buttonText, setButtonText] = useState("Go to Login");
+  const [buttonBgColor, setButtonBgColor] = useState("#00B4A6");
+  const [isError, setIsError] = useState(false);
+  const [secondaryButtonText, setSecondaryButtonText] = useState("");
+  const [showSecondaryButton, setShowSecondaryButton] = useState(false);
 
   // Handle forgot password request (send reset email)
   const handleForgotPasswordSubmit = async (e) => {
@@ -49,13 +60,36 @@ const ForgotPasswordPage = () => {
       await forgotPassword(email);
       
       setSuccess(true);
-      toast.success("Password reset instructions sent to your email");
+      
+      // Show success modal
+      setModalTitle("Check Your Email");
+      setModalDescription(`We've sent password reset instructions to **${email}**. Please check your email and follow the instructions to reset your password. If you don't see the email, check your spam folder.`);
+      setButtonBgColor("#00B4A6");
+      setButtonText("Back to Login");
+      setSecondaryButtonText("Try Different Email");
+      setShowSecondaryButton(true);
+      setIsError(false);
+      setIsModalOpen(true);
+      
+      // Remove toast since we're using modal
+      // toast.success("Password reset instructions sent to your email");
     } catch (err) {
       console.error("Forgot password error:", err);
       const errorMessage =
         err.response?.data?.message || "Failed to send reset email. Please try again.";
       setError(errorMessage);
-      toast.error(errorMessage);
+      
+      // Show error modal
+      setModalTitle("Failed to Send Reset Email");
+      setModalDescription(errorMessage);
+      setButtonBgColor("#FF4B4B");
+      setButtonText("Try Again");
+      setShowSecondaryButton(false);
+      setIsError(true);
+      setIsModalOpen(true);
+      
+      // Remove toast since we're using modal
+      // toast.error(errorMessage);
     } finally {
       setLoading(false);
     }
@@ -88,19 +122,36 @@ const ForgotPasswordPage = () => {
       // Using auth service - calls the token-based reset endpoint
       await resetPasswordWithToken(resetToken, newPassword);
       
-      toast.success("Password reset successful! You can now login with your new password.");
+      // Show success modal
+      setModalTitle("Password Reset Successful!");
+      setModalDescription("Your password has been successfully reset. You can now login with your new password.");
+      setButtonBgColor("#00B4A6");
+      setButtonText("Go to Login");
+      setShowSecondaryButton(false);
+      setIsError(false);
+      setIsModalOpen(true);
       
-      // Redirect to login page after successful reset
-      setTimeout(() => {
-        navigate("/login");
-      }, 2000);
+      // Remove toast and setTimeout since modal will handle redirect
+      // toast.success("Password reset successful! You can now login with your new password.");
+      // setTimeout(() => { navigate("/login"); }, 2000);
       
     } catch (err) {
       console.error("Reset password error:", err);
       const errorMessage =
         err.response?.data?.message || "Failed to reset password. Please try again.";
       setError(errorMessage);
-      toast.error(errorMessage);
+      
+      // Show error modal
+      setModalTitle("Password Reset Failed");
+      setModalDescription(errorMessage);
+      setButtonBgColor("#FF4B4B");
+      setButtonText("Try Again");
+      setShowSecondaryButton(false);
+      setIsError(true);
+      setIsModalOpen(true);
+      
+      // Remove toast since we're using modal
+      // toast.error(errorMessage);
     } finally {
       setLoading(false);
     }
@@ -122,6 +173,24 @@ const ForgotPasswordPage = () => {
   };
 
   const passwordStrength = newPassword ? getPasswordStrength(newPassword) : null;
+
+  // Modal handlers
+  const handleModalProceed = () => {
+    if (isError) {
+      // For error modals, just close and let user try again
+      setIsModalOpen(false);
+    } else {
+      // For success modals, navigate to login
+      navigate("/login");
+    }
+  };
+
+  const handleModalSecondary = () => {
+    // For "Try Different Email" option
+    setIsModalOpen(false);
+    setSuccess(false);
+    setEmail("");
+  };
 
   const toggleNewPasswordVisibility = () => {
     setShowNewPassword(!showNewPassword);
@@ -223,82 +292,81 @@ const ForgotPasswordPage = () => {
                 </button>
             </form>
             
-            <p className="back-to-login">
-              <Link to="/login">Back to Login</Link>
-            </p>
-          </div>
-          
-          <div className="image-container">
-            <img src={authImage} alt="Password reset" />
-          </div>
-        </div>
-      </div>
-    );
-  }
-
-  // Forgot Password Form (initial request)
-  return (
-    <div className="forgot-password-page">
-      <div className="forgot-password-container">
-        <div className="form-container">
-          {success ? (
-            <div className="success-state">
-              <h1>Check Your Email</h1>
-              <p className="success-message">
-                We've sent password reset instructions to <strong>{email}</strong>
-              </p>
-              <p className="subtitle">
-                Please check your email and follow the instructions to reset your password.
-                If you don't see the email, check your spam folder.
-              </p>
-              <button 
-                className="btn secondary" 
-                onClick={() => {
-                  setSuccess(false);
-                  setEmail("");
-                }}
-              >
-                Try Different Email
-              </button>
               <p className="back-to-login">
                 <Link to="/login">Back to Login</Link>
               </p>
             </div>
-          ) : (
-            <>
-              <h1>Forgot Password?</h1>
-              <p className="subtitle">
-                Enter your email address and we'll send you instructions to reset your password.
-              </p>
-              
-              <form onSubmit={handleForgotPasswordSubmit}>
-                <input
-                  style={{ width: '100%', marginBottom: '2rem' }}
-                  type="email"
-                  placeholder="Email address"
-                  value={email}
-                  onChange={(e) => setEmail(e.target.value)}
-                  required
-                />
-                
-                {error && <p className="error-message">{error}</p>}
-                
-                <button type="submit" className="btn" disabled={loading}>
-                  {loading ? "Sending Reset Link..." : "Send Reset Link"}
-                </button>
-              </form>
-              
-              <p className="back-to-login">
-                <Link to="/login">Back to Login</Link>
-              </p>
-            </>
-          )}
+            
+            <div className="image-container">
+              <img src={authImage} alt="Password reset" />
+            </div>
+          </div>
+          
+          {/* Modal */}
+          <Modal
+            isOpen={isModalOpen}
+            onClose={() => setIsModalOpen(false)}
+            title={modalTitle}
+            description={modalDescription}
+            buttonText={buttonText}
+            buttonBgColor={buttonBgColor}
+            isError={isError}
+            secondaryButtonText={showSecondaryButton ? secondaryButtonText : undefined}
+            onSecondaryAction={showSecondaryButton ? handleModalSecondary : undefined}
+            onProceed={handleModalProceed}
+          />
+        </div>
+      );
+    }  // Forgot Password Form (initial request)
+  return (
+    <div className="forgot-password-page">
+      <div className="forgot-password-container">
+        <div className="form-container">
+          <h1>Forgot Password?</h1>
+          <p className="subtitle">
+            Enter your email address and we'll send you instructions to reset your password.
+          </p>
+          
+          <form onSubmit={handleForgotPasswordSubmit}>
+            <input
+              style={{ width: '100%', marginBottom: '2rem' }}
+              type="email"
+              placeholder="Email address"
+              value={email}
+              onChange={(e) => setEmail(e.target.value)}
+              required
+            />
+            
+            {error && <p className="error-message">{error}</p>}
+            
+            <button type="submit" className="btn" disabled={loading}>
+              {loading ? "Sending Reset Link..." : "Send Reset Link"}
+            </button>
+          </form>
+          
+          <p className="back-to-login">
+            <Link to="/login">Back to Login</Link>
+          </p>
         </div>
         
         <div className="image-container">
           <img src={authImage} alt="Password reset" />
         </div>
       </div>
+      
+      {/* Modal */}
+      <Modal
+        isOpen={isModalOpen}
+        onClose={() => setIsModalOpen(false)}
+        title={modalTitle}
+        description={modalDescription}
+        buttonText={buttonText}
+        buttonBgColor={buttonBgColor}
+        isError={isError}
+        secondaryButtonText={showSecondaryButton ? secondaryButtonText : undefined}
+        onSecondaryAction={showSecondaryButton ? handleModalSecondary : undefined}
+        onProceed={handleModalProceed}
+      />
     </div>
   );
 };

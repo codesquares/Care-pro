@@ -4,6 +4,7 @@ import "../../styles/main-app/pages/ConfirmEmailPage.scss";
 import authImage from "../../assets/authImage.png";
 import { toast } from "react-toastify";
 import { validateEmailToken, confirmEmail } from "../services/auth";
+import Modal from "../components/modal/Modal";
 
 /**
  * ConfirmEmailPage Component
@@ -32,12 +33,32 @@ const ConfirmEmailPage = () => {
   const [confirmationAttempted, setConfirmationAttempted] = useState(false);
   const [userInfo, setUserInfo] = useState(null);
 
+  // Modal states
+  const [isModalOpen, setIsModalOpen] = useState(false);
+  const [modalTitle, setModalTitle] = useState("");
+  const [modalDescription, setModalDescription] = useState("");
+  const [buttonText, setButtonText] = useState("Go to Login");
+  const [buttonBgColor, setButtonBgColor] = useState("#00B4A6");
+  const [isError, setIsError] = useState(false);
+  const [secondaryButtonText, setSecondaryButtonText] = useState("");
+  const [showSecondaryButton, setShowSecondaryButton] = useState(false);
+
   // Auto-confirm email when component mounts if we have the required parameters
   useEffect(() => {
     if (token && !confirmationAttempted) {
       handleEmailConfirmation();
     } else if (!token) {
       setError("Invalid confirmation link. Missing required parameters.");
+      
+      // Show error modal for missing token
+      setModalTitle("Invalid Confirmation Link");
+      setModalDescription("The confirmation link appears to be invalid or incomplete. Please check your email for the correct confirmation link, or register for a new account.");
+      setButtonBgColor("#FF4B4B");
+      setButtonText("Register Again");
+      setSecondaryButtonText("Back to Login");
+      setShowSecondaryButton(true);
+      setIsError(true);
+      setIsModalOpen(true);
     }
   }, [token, confirmationAttempted]);
 
@@ -64,12 +85,27 @@ const ConfirmEmailPage = () => {
       await confirmEmail(tokenValidationResult.userId);
       
       setSuccess(true);
-      toast.success("Email confirmed successfully! You can now login to your account.");
       
-      // Redirect to login page after 3 seconds
+      // Show success modal
+      setModalTitle("Email Confirmed!");
+      setModalDescription(
+        userInfo?.email 
+          ? `Your email address **${userInfo.email}** has been successfully verified. You can now login to your account with full access to all features.`
+          : "Your email confirmation link has been processed. You can now proceed to login to your account with full access to all features."
+      );
+      setButtonBgColor("#00B4A6");
+      setButtonText("Go to Login");
+      setIsError(false);
+      setShowSecondaryButton(false);
+      setIsModalOpen(true);
+      
+      // Remove the toast since we're using modal
+      // toast.success("Email confirmed successfully! You can now login to your account.");
+      
+      // Auto-redirect after 5 seconds if user doesn't click
       setTimeout(() => {
         navigate("/login");
-      }, 3000);
+      }, 5000);
     } catch (err) {
       console.error("Email confirmation error:", err);
       
@@ -91,10 +127,61 @@ const ConfirmEmailPage = () => {
       }
       
       setError(errorMessage);
-      toast.error(errorMessage);
+      
+      // Show error modal
+      setModalTitle("Email Confirmation Failed");
+      setModalDescription(getErrorDescription(errorMessage));
+      setButtonBgColor("#FF4B4B");
+      setButtonText(token ? "Try Again" : "Go to Login");
+      setIsError(true);
+      
+      // Show secondary button for additional options
+      if (token) {
+        setSecondaryButtonText("Register Again");
+        setShowSecondaryButton(true);
+      } else {
+        setShowSecondaryButton(false);
+      }
+      
+      setIsModalOpen(true);
+      
+      // Remove toast since we're using modal
+      // toast.error(errorMessage);
     } finally {
       setLoading(false);
     }
+  };
+
+  // Helper function to get detailed error descriptions for modal
+  const getErrorDescription = (errorMessage) => {
+    if (errorMessage.includes('user type') || errorMessage.includes('different user')) {
+      return "This confirmation link may be for a different account type (client vs caregiver) or the account may not exist. Please try registering with the correct account type or contact support.";
+    } else if (errorMessage.includes('expired') || errorMessage.includes('invalid')) {
+      return "This confirmation link has expired or is no longer valid. Please try registering again to receive a new confirmation email.";
+    } else if (errorMessage.includes('service') || errorMessage.includes('temporarily unavailable')) {
+      return "Our email confirmation service is temporarily experiencing issues. Please try again in a few minutes or contact support if the problem persists.";
+    } else {
+      return "This could happen if the confirmation link has expired, has already been used, or if there's a temporary service issue. Please try registering again or contact support.";
+    }
+  };
+
+  // Modal handlers
+  const handleModalProceed = () => {
+    if (isError) {
+      if (buttonText === "Try Again") {
+        setIsModalOpen(false);
+        handleRetry();
+      } else {
+        navigate("/login");
+      }
+    } else {
+      // Success case - go to login
+      navigate("/login");
+    }
+  };
+
+  const handleModalSecondary = () => {
+    navigate("/register");
   };
 
   // Manual retry function
@@ -117,86 +204,12 @@ const ConfirmEmailPage = () => {
                 Please wait while we verify your email address...
               </p>
             </div>
-          ) : success ? (
-            <div className="success-state">
-              <div className="success-icon">✓</div>
-              <h1>Email Confirmed!</h1>
-              <p className="success-message">
-                {userInfo?.email ? (
-                  <>Your email address <strong>{userInfo.email}</strong> has been successfully verified.</>
-                ) : (
-                  "Your email confirmation link has been processed. You can now proceed to login to your account."
-                )}
-              </p>
-              <p className="subtitle">
-                You can now login to your account with full access to all features.
-                You will be redirected to the login page in a few seconds.
-              </p>
-              <button 
-                className="btn primary" 
-                onClick={() => navigate("/login")}
-              >
-                Go to Login
-              </button>
-            </div>
-          ) : error ? (
-            <div className="error-state">
-              <div className="error-icon">✗</div>
-              <h1>Email Confirmation Failed</h1>
-              <p className="error-message">{error}</p>
-              <p className="subtitle">
-                {error.includes('user type') || error.includes('different user') ? (
-                  <>
-                    This confirmation link may be for a different account type (client vs caregiver) 
-                    or the account may not exist. Please try registering with the correct account type 
-                    or contact support if you believe this is an error.
-                  </>
-                ) : error.includes('expired') || error.includes('invalid') ? (
-                  <>
-                    This confirmation link has expired or is no longer valid. 
-                    Please try registering again to receive a new confirmation email.
-                  </>
-                ) : error.includes('service') || error.includes('temporarily unavailable') ? (
-                  <>
-                    Our email confirmation service is temporarily experiencing issues. 
-                    Please try again in a few minutes or contact support if the problem persists.
-                  </>
-                ) : (
-                  <>
-                    This could happen if the confirmation link has expired, has already been used, 
-                    or if there's a temporary service issue. Please try registering again or contact support.
-                  </>
-                )}
-              </p>
-              {token && (
-                <button 
-                  className="btn secondary" 
-                  onClick={handleRetry}
-                >
-                  Try Again
-                </button>
-              )}
-              <div className="action-links">
-                <Link to="/register" className="link">Register Again</Link>
-                <span className="separator">•</span>
-                <Link to="/login" className="link">Back to Login</Link>
-              </div>
-            </div>
           ) : (
-            <div className="invalid-link-state">
-              <div className="error-icon">⚠</div>
-              <h1>Invalid Confirmation Link</h1>
-              <p className="error-message">
-                The confirmation link appears to be invalid or incomplete.
-              </p>
+            <div className="waiting-state">
+              <h1>Email Confirmation</h1>
               <p className="subtitle">
-                Please check your email for the correct confirmation link, or register for a new account.
+                Processing your email confirmation...
               </p>
-              <div className="action-links">
-                <Link to="/register" className="link">Register New Account</Link>
-                <span className="separator">•</span>
-                <Link to="/login" className="link">Back to Login</Link>
-              </div>
             </div>
           )}
         </div>
@@ -205,6 +218,20 @@ const ConfirmEmailPage = () => {
           <img src={authImage} alt="Email confirmation" />
         </div>
       </div>
+      
+      {/* Modal */}
+      <Modal
+        isOpen={isModalOpen}
+        onClose={() => setIsModalOpen(false)}
+        title={modalTitle}
+        description={modalDescription}
+        buttonText={buttonText}
+        buttonBgColor={buttonBgColor}
+        isError={isError}
+        secondaryButtonText={showSecondaryButton ? secondaryButtonText : undefined}
+        onSecondaryAction={showSecondaryButton ? handleModalSecondary : undefined}
+        onProceed={handleModalProceed}
+      />
     </div>
   );
 };

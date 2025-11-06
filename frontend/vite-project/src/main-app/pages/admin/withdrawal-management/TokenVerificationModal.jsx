@@ -1,10 +1,19 @@
 import { useState } from 'react';
 import './TokenVerificationModal.css';
+import Modal from '../../../components/modal/Modal';
 
 const TokenVerificationModal = ({ withdrawal, onClose, onSubmit }) => {
   const [notes, setNotes] = useState('');
   const [error, setError] = useState('');
   const [activeAction, setActiveAction] = useState(null);
+  
+  // Modal state management
+  const [isModalOpen, setIsModalOpen] = useState(false);
+  const [modalTitle, setModalTitle] = useState('');
+  const [modalDescription, setModalDescription] = useState('');
+  const [buttonText, setButtonText] = useState('');
+  const [buttonBgColor, setButtonBgColor] = useState('');
+  const [isError, setIsError] = useState(false);
   
   const getModalTitle = () => {
     switch (withdrawal.status.toLowerCase()) {
@@ -29,7 +38,28 @@ const TokenVerificationModal = ({ withdrawal, onClose, onSubmit }) => {
     setActiveAction(action);
     
     if (action === 'complete' && withdrawal.status === 'Verified') {
-      onSubmit('complete', {});
+      try {
+        onSubmit('complete', {});
+        
+        // Show success modal for completion
+        setModalTitle('Withdrawal Completed!');
+        setModalDescription(`Withdrawal of ${formatCurrency(withdrawal.finalAmount)} for ${withdrawal.caregiverName} has been marked as completed successfully.`);
+        setButtonText('Close');
+        setButtonBgColor('#00B4A6');
+        setIsError(false);
+        setIsModalOpen(true);
+        
+      } catch (error) {
+        console.error('Completion error:', error);
+        
+        // Show error modal
+        setModalTitle('Completion Failed');
+        setModalDescription('Failed to complete the withdrawal request. Please try again.');
+        setButtonText('Try Again');
+        setButtonBgColor('#FF4B4B');
+        setIsError(true);
+        setIsModalOpen(true);
+      }
     }
   };
   
@@ -41,9 +71,51 @@ const TokenVerificationModal = ({ withdrawal, onClose, onSubmit }) => {
       return;
     }
     
-    onSubmit(activeAction, { notes });
+    try {
+      onSubmit(activeAction, { notes });
+      
+      // Show success modal based on action type
+      if (activeAction === 'verify') {
+        setModalTitle('Request Verified!');
+        setModalDescription(`Withdrawal request for ${withdrawal.caregiverName} has been successfully verified. The request is now ready for completion.`);
+        setButtonText('Close');
+        setButtonBgColor('#00B4A6');
+        setIsError(false);
+        setIsModalOpen(true);
+        
+      } else if (activeAction === 'reject') {
+        setModalTitle('Request Rejected');
+        setModalDescription(`Withdrawal request for ${withdrawal.caregiverName} has been rejected. The caregiver will be notified.`);
+        setButtonText('Close');
+        setButtonBgColor('#FF4B4B');
+        setIsError(false);
+        setIsModalOpen(true);
+      }
+      
+    } catch (error) {
+      console.error('Submit error:', error);
+      
+      // Show error modal
+      setModalTitle('Action Failed');
+      setModalDescription(`Failed to ${activeAction} the withdrawal request. Please try again.`);
+      setButtonText('Try Again');
+      setButtonBgColor('#FF4B4B');
+      setIsError(true);
+      setIsModalOpen(true);
+    }
   };
-  
+
+  // Modal handlers
+  const handleModalProceed = () => {
+    setIsModalOpen(false);
+    if (!isError) {
+      onClose(); // Close the verification modal on success
+    }
+    // Reset active action state
+    setActiveAction(null);
+    setError('');
+  };
+
   return (
     <div className="token-verification-modal-overlay">
       <div className="token-verification-modal">
@@ -157,6 +229,17 @@ const TokenVerificationModal = ({ withdrawal, onClose, onSubmit }) => {
           </div>
         )}
       </div>
+
+      {/* Standardized Modal Component for Success/Error Feedback */}
+      <Modal
+        isOpen={isModalOpen}
+        title={modalTitle}
+        description={modalDescription}
+        buttonText={buttonText}
+        buttonBgColor={buttonBgColor}
+        isError={isError}
+        onProceed={handleModalProceed}
+      />
     </div>
   );
 };

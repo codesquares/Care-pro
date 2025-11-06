@@ -10,6 +10,7 @@ import verificationService from "../../../services/verificationService";
 import { userService } from "../../../services/userService";
 import { Helmet } from "react-helmet-async";
 import config from "../../../config";
+import Modal from "../../../components/modal/Modal";
 
 const CaregiverVerificationPage = () => {
   const navigate = useNavigate();
@@ -21,6 +22,14 @@ const CaregiverVerificationPage = () => {
   const [verificationStatus, setVerificationStatus] = useState(null);
   const [progress, setProgress] = useState(0);
   const [progressMessage, setProgressMessage] = useState("");
+  
+  // Modal state management
+  const [isModalOpen, setIsModalOpen] = useState(false);
+  const [modalTitle, setModalTitle] = useState('');
+  const [modalDescription, setModalDescription] = useState('');
+  const [buttonText, setButtonText] = useState('');
+  const [buttonBgColor, setButtonBgColor] = useState('');
+  const [isError, setIsError] = useState(false);
   
   // Refs for stable DOM and lifecycle management
   const isMountedRef = useRef(true);
@@ -164,9 +173,19 @@ const CaregiverVerificationPage = () => {
           setProgressMessage("");
           
           if (status.hasSuccess) {
-            setSuccess("Your account is already verified!");
+            setModalTitle('Account Already Verified!');
+            setModalDescription('Your identity has been successfully verified. You can now proceed to start your assessment.');
+            setButtonText('Start Assessment');
+            setButtonBgColor('#00B4A6');
+            setIsError(false);
+            setIsModalOpen(true);
           } else if (status.hasPending) {
-            setSuccess("Your verification is being processed. You'll be notified when complete.");
+            setModalTitle('Verification In Progress');
+            setModalDescription('Your verification is being processed. You will be notified when complete. Estimated processing time: 24-48 hours.');
+            setButtonText('OK');
+            setButtonBgColor('#00B4A6');
+            setIsError(false);
+            setIsModalOpen(true);
           }
         }
       } catch (error) {
@@ -226,7 +245,12 @@ const CaregiverVerificationPage = () => {
 
   const handleStartVerification = () => {
     if (!dojahConfig.WIDGET_ID) {
-      setError("Verification service is not properly configured. Please contact support.");
+      setModalTitle('Configuration Error');
+      setModalDescription('Verification service is not properly configured. Please contact support for assistance.');
+      setButtonText('OK');
+      setButtonBgColor('#FF4B4B');
+      setIsError(true);
+      setIsModalOpen(true);
       return;
     }
 
@@ -293,7 +317,12 @@ const CaregiverVerificationPage = () => {
     const verificationTab = window.open(completeWidgetURL, '_blank');
     
     if (!verificationTab) {
-      setError("Please allow popups for this site to complete verification.");
+      setModalTitle('Popup Blocked');
+      setModalDescription('Please allow popups for this site to complete verification. Enable popups in your browser settings and try again.');
+      setButtonText('Try Again');
+      setButtonBgColor('#FF4B4B');
+      setIsError(true);
+      setIsModalOpen(true);
       safeSetIsSubmitting(false);
       safeSetProgress(0);
       safeSetProgressMessage("");
@@ -316,6 +345,14 @@ const CaregiverVerificationPage = () => {
         }, 1500);
       }, 2500);
     }, 1000);
+  };
+
+  // Modal handlers
+  const handleModalProceed = () => {
+    setIsModalOpen(false);
+    if (modalTitle === 'Account Already Verified!') {
+      window.location.href = "/app/caregiver/assessments";
+    }
   };
 
   return (
@@ -449,13 +486,6 @@ const CaregiverVerificationPage = () => {
                 </div>
               )}
 
-              {/* Success Display */}
-              {success && (
-                <div className="success-message">
-                  <p>{success}</p>
-                </div>
-              )}
-
               {/* Enhanced Verification Status Display */}
               {verificationStatus?.hasSuccess && (
                 <div className="verification-status verified">
@@ -584,6 +614,17 @@ const CaregiverVerificationPage = () => {
           </div>
         </div>
       </div>
+
+      {/* Standardized Modal Component for Success/Error Feedback */}
+      <Modal
+        isOpen={isModalOpen}
+        title={modalTitle}
+        description={modalDescription}
+        buttonText={buttonText}
+        buttonBgColor={buttonBgColor}
+        isError={isError}
+        onProceed={handleModalProceed}
+      />
     </div>
   );
 };
