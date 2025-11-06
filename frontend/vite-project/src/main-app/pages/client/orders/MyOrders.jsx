@@ -2,7 +2,9 @@ import{ useState, useEffect } from "react";
 import axios from "axios";
 import { useNavigate } from "react-router-dom";
 import { FaStar, FaRegStar, FaStarHalfAlt } from "react-icons/fa";
+import { toast } from "react-toastify";
 import ClientReviewService from "../../../services/clientReviewService.js";
+import ContractService from "../../../services/contractService.js";
 import config from "../../../config"; // Centralized API configuration
 import "./Orders.scss";
 
@@ -18,10 +20,101 @@ const MyOrders = () => {
   const [filter, setFilter] = useState("All orders");
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
+  
+  // Contract-related state
+  const [contractStates, setContractStates] = useState({}); // Store contract state for each order
+  const [generatingContract, setGeneratingContract] = useState({}); // Track which orders are generating contracts
+  
   const navigate = useNavigate();
 
   const handleOrderClick = (orderId) => {
     navigate(`/app/client/my-order/${orderId}`); // Navigate to details page
+  };
+
+  // Handle contract generation
+  const handleGenerateContract = async (e, orderId) => {
+    e.stopPropagation(); // Prevent navigation when clicking contract button
+    
+    setGeneratingContract(prev => ({ ...prev, [orderId]: true }));
+
+    try {
+      const result = await ContractService.generateContractFromOrder(orderId);
+      
+      if (result.success) {
+        toast.success("Contract generated and sent to caregiver successfully!");
+        
+        // Update contract state for this order
+        setContractStates(prev => ({
+          ...prev,
+          [orderId]: {
+            hasContract: true,
+            contract: result.data,
+            error: null
+          }
+        }));
+      } else {
+        toast.error(result.error || "Failed to generate contract");
+        
+        // Update error state
+        setContractStates(prev => ({
+          ...prev,
+          [orderId]: {
+            ...prev[orderId],
+            error: result.error
+          }
+        }));
+      }
+    } catch (error) {
+      console.error("Contract generation error:", error);
+      toast.error("Failed to generate contract. Please try again.");
+      
+      setContractStates(prev => ({
+        ...prev,
+        [orderId]: {
+          ...prev[orderId],
+          error: "Failed to generate contract"
+        }
+      }));
+    } finally {
+      setGeneratingContract(prev => ({ ...prev, [orderId]: false }));
+    }
+  };
+
+  // Check existing contracts for orders
+  const checkContractsForOrders = async (ordersData) => {
+    const contractChecks = ordersData.map(async (order) => {
+      try {
+        const result = await ContractService.checkExistingContract(order.id);
+        return {
+          orderId: order.id,
+          hasContract: result.success && result.hasContract,
+          contract: result.data,
+          error: result.success ? null : result.error
+        };
+      } catch (error) {
+        console.error(`Error checking contract for order ${order.id}:`, error);
+        return {
+          orderId: order.id,
+          hasContract: false,
+          contract: null,
+          error: "Failed to check contract status"
+        };
+      }
+    });
+
+    const contractResults = await Promise.all(contractChecks);
+    
+    // Update contract states
+    const newContractStates = {};
+    contractResults.forEach(result => {
+      newContractStates[result.orderId] = {
+        hasContract: result.hasContract,
+        contract: result.contract,
+        error: result.error
+      };
+    });
+    
+    setContractStates(newContractStates);
   };
 
   // Retrieve user details from localStorage
@@ -92,6 +185,10 @@ const MyOrders = () => {
         );
         
         setOrdersWithReviews(ordersWithReviewData);
+        
+        // Check contracts for all orders
+        await checkContractsForOrders(ordersWithReviewData);
+        
       } catch (err) {
         setError("Failed to fetch orders.");
         console.error("Error fetching orders:", err);
@@ -141,6 +238,63 @@ const MyOrders = () => {
     );
   };
 
+  // Render contract status and button
+  const renderContractSection = (order) => {
+    const orderId = order.id;
+    const contractState = contractStates[orderId];
+    const isGenerating = generatingContract[orderId];
+    
+    // Check if order can generate contract
+    const canGenerate = ContractService.canGenerateContract(order, contractState?.contract);
+    
+    if (contractState?.hasContract) {
+      return (
+        <div className="contract-status">
+          <span className="contract-exists">
+            ✅ Contract Generated
+          </span>
+        </div>
+      );
+    }
+    
+    if (canGenerate) {
+      return (
+        <div className="contract-actions">
+          <button
+            className={`generate-contract-btn ${isGenerating ? 'loading' : ''}`}
+            onClick={(e) => handleGenerateContract(e, orderId)}
+            disabled={isGenerating}
+          >
+            {isGenerating ? 'Generating...' : 'Generate Contract'}
+          </button>
+        </div>
+      );
+    }
+    
+    // Show reason why contract can't be generated
+    if (!order.transactionId && !order.paymentTransactionId) {
+      return (
+        <div className="contract-status">
+          <span className="contract-unavailable">
+            Payment required for contract
+          </span>
+        </div>
+      );
+    }
+    
+    if (order.clientOrderStatus === 'Cancelled') {
+      return (
+        <div className="contract-status">
+          <span className="contract-unavailable">
+            Cannot generate contract for cancelled order
+          </span>
+        </div>
+      );
+    }
+    
+    return null;
+  };
+
 
   return (
     <div className="client-orders-page">
@@ -182,6 +336,7 @@ const MyOrders = () => {
                     </span>
                     {renderStarRating(order.calculatedRating, order.reviewCount)}
                   </div>
+                  {renderContractSection(order)}
                 </div>
               </div>
             ))}

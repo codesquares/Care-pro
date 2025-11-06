@@ -123,6 +123,52 @@
               color: #ffa000;
             }
           }
+          
+          // Contract-related styles
+          .contract-status, .contract-actions {
+            margin-top: 8px;
+            
+            .contract-exists {
+              color: #00CAB6;
+              font-size: 12px;
+              font-weight: 500;
+              display: flex;
+              align-items: center;
+              gap: 4px;
+            }
+            
+            .contract-unavailable {
+              color: #666;
+              font-size: 11px;
+              font-style: italic;
+            }
+          }
+          
+          .generate-contract-btn {
+            background: #007bff;
+            color: white;
+            border: none;
+            padding: 6px 12px;
+            border-radius: 4px;
+            font-size: 12px;
+            font-weight: 500;
+            cursor: pointer;
+            transition: background-color 0.3s ease;
+            
+            &:hover:not(:disabled) {
+              background: #0056b3;
+            }
+            
+            &:disabled {
+              background: #ccc;
+              cursor: not-allowed;
+            }
+            
+            &.loading {
+              background: #ccc;
+              cursor: wait;
+            }
+          }
         }
       }
     }
