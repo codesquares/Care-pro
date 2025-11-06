@@ -5,7 +5,6 @@ on:
     branches: [ staging ]
     paths:
       - 'frontend/vite-project/**'
-      - 'node-API/**'
       - 'docker-compose.yml'
       - '.github/workflows/staging-deployment.yml'
   workflow_dispatch:
@@ -20,8 +19,9 @@ env:
   NODE_VERSION: '22'
   AWS_REGION: 'us-east-1'
   ECR_REPOSITORY_FRONTEND: 'carepro-frontend-staging'
-  ECR_REPOSITORY_NODEAPI: 'carepro-node-api-staging'
-  APP_RUNNER_SERVICE_NAME: 'carepro-node-api-staging'
+  # NODE-API REMOVED: No longer deploying to AppRunner
+  # ECR_REPOSITORY_NODEAPI: 'carepro-node-api-staging'
+  # APP_RUNNER_SERVICE_NAME: 'carepro-node-api-staging'
   S3_BUCKET: 'carepro-frontend-staging'
 
 jobs:
@@ -42,7 +42,6 @@ jobs:
           cache: 'npm'
           cache-dependency-path: |
             frontend/vite-project/package-lock.json
-            node-API/package-lock.json
 
       - name: 🔍 Check for merge conflicts
         run: |
@@ -60,14 +59,15 @@ jobs:
           npm ci
           npm audit --audit-level=moderate
 
-      - name: 🔒 Audit Node-API Dependencies (BLOCKING)
-        working-directory: node-API
-        run: |
-          echo "🔍 Auditing Node-API dependencies..."
-          npm ci
-          echo "🔍 Running security audit (STRICT MODE)..."
-          npm audit --audit-level=moderate
-          echo "✅ Security audit completed - no vulnerabilities found"
+      # NODE-API AUDIT REMOVED: No longer deploying node-API to AppRunner
+      # - name: 🔒 Audit Node-API Dependencies (BLOCKING)
+      #   working-directory: node-API
+      #   run: |
+      #     echo "🔍 Auditing Node-API dependencies..."
+      #     npm ci
+      #     echo "🔍 Running security audit (STRICT MODE)..."
+      #     npm audit --audit-level=moderate
+      #     echo "✅ Security audit completed - no vulnerabilities found"
 
       - name: 🧹 Frontend Linting
         working-directory: frontend/vite-project
@@ -132,78 +132,12 @@ jobs:
           path: frontend/vite-project/dist/
           retention-days: 7
 
-  # 🔥 NODE-API TESTS AND BUILD
-  node-api-staging-tests:
-    name: 🔥 Node-API Tests
-    runs-on: ubuntu-latest
-    timeout-minutes: 20
-    needs: security-quality-gates
-
-    steps:
-      - name: Checkout code
-        uses: actions/checkout@v4
-
-      - name: Setup Node.js
-        uses: actions/setup-node@v4
-        with:
-          node-version: ${{ env.NODE_VERSION }}
-          cache: 'npm'
-          cache-dependency-path: node-API/package-lock.json
-
-      - name: Install dependencies
-        working-directory: node-API
-        run: npm ci
-
-      - name: 🧹 Clean up empty test files
-        working-directory: node-API
-        run: |
-          echo "🧹 Checking for empty test files..."
-          if [ -d "__tests__" ]; then
-            find __tests__ -name "*.test.js" -size 0 -delete || true
-            find __tests__ -name "*.spec.js" -size 0 -delete || true
-            echo "✅ Empty test files cleaned up"
-          else
-            echo "ℹ️ No __tests__ directory found, skipping cleanup"
-          fi
-
-      - name: 🛡️ Run Security Tests (MANDATORY)
-        working-directory: node-API
-        run: |
-          echo "🔒 Running MANDATORY security tests..."
-          npm run test:security --passWithNoTests || echo "⚠️ Security test warnings but continuing for staging"
-        env:
-          NODE_ENV: test
-
-      - name: 🧪 Run Unit Tests
-        working-directory: node-API
-        run: |
-          echo "🧪 Running unit tests..."
-          npm run test:unit --passWithNoTests || echo "⚠️ Unit test warnings but continuing for staging"
-        env:
-          NODE_ENV: test
-
-      - name: 🔗 Run Integration Tests
-        working-directory: node-API
-        run: |
-          echo "🔗 Running integration tests..."
-          npm run test:integration --passWithNoTests || echo "⚠️ Integration test warnings but continuing for staging"
-        env:
-          NODE_ENV: test
-
-      - name: 📊 Generate Coverage Report
-        working-directory: node-API
-        run: |
-          echo "📊 Generating coverage report..."
-          npm run test:coverage --passWithNoTests || echo "⚠️ Coverage warnings but continuing for staging"
-        env:
-          NODE_ENV: test
-
-  # 🐳 DOCKER BUILD AND PUSH
+  #  DOCKER BUILD AND PUSH
   docker-build-push:
     name: 🐳 Docker Build & Push to ECR
     runs-on: ubuntu-latest
     timeout-minutes: 30
-    needs: [frontend-staging-build, node-api-staging-tests]
+    needs: [frontend-staging-build]
     if: ${{ !failure() || github.event.inputs.force_deploy == 'true' }}
 
     steps:
@@ -253,18 +187,19 @@ jobs:
             .
           echo "✅ Frontend Docker image built successfully"
 
-      - name: 🏗️ Build Node-API Docker Image
-        env:
-          ECR_REGISTRY: ${{ steps.login-ecr.outputs.registry }}
-          IMAGE_TAG: ${{ github.sha }}
-        run: |
-          echo "🏗️ Building Node-API Docker image..."
-          cd node-API
-          docker build \
-            -t $ECR_REGISTRY/$ECR_REPOSITORY_NODEAPI:$IMAGE_TAG \
-            -t $ECR_REGISTRY/$ECR_REPOSITORY_NODEAPI:latest \
-            .
-          echo "✅ Node-API Docker image built successfully"
+      # NODE-API BUILD REMOVED: No longer deploying to AppRunner
+      # - name: 🏗️ Build Node-API Docker Image
+      #   env:
+      #     ECR_REGISTRY: ${{ steps.login-ecr.outputs.registry }}
+      #     IMAGE_TAG: ${{ github.sha }}
+      #   run: |
+      #     echo "🏗️ Building Node-API Docker image..."
+      #     cd node-API
+      #     docker build \
+      #       -t $ECR_REGISTRY/$ECR_REPOSITORY_NODEAPI:$IMAGE_TAG \
+      #       -t $ECR_REGISTRY/$ECR_REPOSITORY_NODEAPI:latest \
+      #       .
+      #     echo "✅ Node-API Docker image built successfully"
 
       - name: 🚀 Push Frontend Image to ECR
         env:
@@ -276,15 +211,16 @@ jobs:
           docker push $ECR_REGISTRY/$ECR_REPOSITORY_FRONTEND:latest
           echo "✅ Frontend image pushed successfully"
 
-      - name: 🚀 Push Node-API Image to ECR
-        env:
-          ECR_REGISTRY: ${{ steps.login-ecr.outputs.registry }}
-          IMAGE_TAG: ${{ github.sha }}
-        run: |
-          echo "🚀 Pushing Node-API image to ECR..."
-          docker push $ECR_REGISTRY/$ECR_REPOSITORY_NODEAPI:$IMAGE_TAG
-          docker push $ECR_REGISTRY/$ECR_REPOSITORY_NODEAPI:latest
-          echo "✅ Node-API image pushed successfully"
+      # NODE-API PUSH REMOVED: No longer deploying to AppRunner
+      # - name: 🚀 Push Node-API Image to ECR
+      #   env:
+      #     ECR_REGISTRY: ${{ steps.login-ecr.outputs.registry }}
+      #     IMAGE_TAG: ${{ github.sha }}
+      #   run: |
+      #     echo "🚀 Pushing Node-API image to ECR..."
+      #     docker push $ECR_REGISTRY/$ECR_REPOSITORY_NODEAPI:$IMAGE_TAG
+      #     docker push $ECR_REGISTRY/$ECR_REPOSITORY_NODEAPI:latest
+      #     echo "✅ Node-API image pushed successfully"
 
   # 🌐 DEPLOY TO AWS STAGING
   deploy-staging:
@@ -326,78 +262,17 @@ jobs:
           aws s3 sync ./frontend-build/ s3://$S3_BUCKET --delete
           echo "✅ Frontend deployed to S3 successfully"
 
-      - name: 🔥 Update App Runner Service
-        env:
-          ECR_REGISTRY: ${{ steps.login-ecr.outputs.registry }}
-          IMAGE_TAG: ${{ github.sha }}
-        run: |
-          echo "🔥 Updating App Runner service with new Node-API image..."
-          NEW_IMAGE_URI="$ECR_REGISTRY/$ECR_REPOSITORY_NODEAPI:$IMAGE_TAG"
-          
-          # Get current service configuration
-          aws apprunner describe-service \
-            --service-arn $(aws apprunner list-services --query "ServiceSummaryList[?ServiceName=='$APP_RUNNER_SERVICE_NAME'].ServiceArn" --output text) \
-            --query 'Service.SourceConfiguration' > current-config.json
-          
-          # Update the image URI in the configuration
-          jq --arg new_image "$NEW_IMAGE_URI" '.ImageRepository.ImageIdentifier = $new_image' current-config.json > updated-config.json
-          
-          # Update the service
-          aws apprunner update-service \
-            --service-arn $(aws apprunner list-services --query "ServiceSummaryList[?ServiceName=='$APP_RUNNER_SERVICE_NAME'].ServiceArn" --output text) \
-            --source-configuration file://updated-config.json
-          
-          echo "✅ App Runner service update initiated"
-
-      - name: ⏳ Wait for App Runner Deployment
-        run: |
-          echo "⏳ Waiting for App Runner deployment to complete..."
-          SERVICE_ARN=$(aws apprunner list-services --query "ServiceSummaryList[?ServiceName=='$APP_RUNNER_SERVICE_NAME'].ServiceArn" --output text)
-          
-          echo "📍 Service ARN: $SERVICE_ARN"
-          
-          # Poll the service status until it's running
-          MAX_ATTEMPTS=30
-          ATTEMPT=1
-          
-          while [ $ATTEMPT -le $MAX_ATTEMPTS ]; do
-            echo "🔄 Attempt $ATTEMPT/$MAX_ATTEMPTS - Checking service status..."
-            
-            STATUS=$(aws apprunner describe-service \
-              --service-arn "$SERVICE_ARN" \
-              --query 'Service.Status' \
-              --output text)
-            
-            echo "📊 Current status: $STATUS"
-            
-            if [ "$STATUS" = "RUNNING" ]; then
-              echo "✅ App Runner service is running and ready!"
-              break
-            elif [ "$STATUS" = "OPERATION_IN_PROGRESS" ]; then
-              echo "⏳ Deployment in progress, waiting 30 seconds..."
-              sleep 30
-            else
-              echo "⚠️ Unexpected status: $STATUS"
-              sleep 15
-            fi
-            
-            ATTEMPT=$((ATTEMPT + 1))
-          done
-          
-          if [ $ATTEMPT -gt $MAX_ATTEMPTS ]; then
-            echo "❌ Timeout waiting for App Runner deployment"
-            exit 1
-          fi
-          
-          echo "✅ App Runner deployment completed successfully"
+      # APPRUNNER DEPLOYMENT REMOVED: No longer deploying node-API
+      # - name: 🔥 Update App Runner Service
+      # - name: ⏳ Wait for App Runner Deployment  
+      # All AppRunner deployment logic has been removed
 
       - name: 🩺 Health Check
         run: |
           echo "🩺 Performing health checks..."
           
-          # Check App Runner service health
-          echo "Checking Node-API health..."
-          curl -f https://budmfp9jxr.us-east-1.awsapprunner.com/api/health || echo "⚠️ Node-API health check failed"
+          # NODE-API HEALTH CHECK REMOVED: No longer deploying to AppRunner
+          # curl -f https://budmfp9jxr.us-east-1.awsapprunner.com/api/health
           
           # Check frontend availability
           echo "Checking frontend availability..."

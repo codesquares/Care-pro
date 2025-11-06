@@ -5,7 +5,6 @@ on:
     branches: [ main ]
     paths:
       - 'frontend/vite-project/**'
-      - 'node-API/**'
       - 'docker-compose.yml'
       - '.github/workflows/production-deployment.yml'
   workflow_dispatch:
@@ -29,8 +28,9 @@ env:
   NODE_VERSION: '22'
   AWS_REGION: 'us-east-1'
   ECR_REPOSITORY_FRONTEND: 'carepro-frontend'
-  ECR_REPOSITORY_NODEAPI: 'carepro-node-api-staging'
-  APP_RUNNER_SERVICE_NAME: 'carepro-node-api-staging'
+  # NODE-API REMOVED: No longer deploying to AppRunner
+  # ECR_REPOSITORY_NODEAPI: 'carepro-node-api-staging'
+  # APP_RUNNER_SERVICE_NAME: 'carepro-node-api-staging'
   S3_BUCKET: 'oncarepro-frontend-production'
   CLOUDFRONT_DISTRIBUTION_ID: 'E2QISC8I3F6K8U'  # Update with actual distribution ID
 
@@ -71,14 +71,15 @@ jobs:
           npm audit --audit-level=high
           echo "✅ Frontend security audit passed"
 
-      - name: 🔒 Audit Node-API Dependencies (STRICT)
-        working-directory: node-API
-        run: |
-          echo "🔍 Auditing Node-API dependencies (PRODUCTION MODE)..."
-          npm ci
-          echo "🔍 Running security audit (PRODUCTION STRICT MODE)..."
-          npm audit --audit-level=high
-          echo "✅ Node-API security audit passed"
+      # NODE-API AUDIT REMOVED: No longer deploying to AppRunner
+      # - name: 🔒 Audit Node-API Dependencies (STRICT)
+      #   working-directory: node-API
+      #   run: |
+      #     echo "🔍 Auditing Node-API dependencies (PRODUCTION MODE)..."
+      #     npm ci
+      #     echo "🔍 Running security audit (PRODUCTION STRICT MODE)..."
+      #     npm audit --audit-level=high
+      #     echo "✅ Node-API security audit passed"
 
       - name: 🧹 Frontend Linting (STRICT)
         working-directory: frontend/vite-project
@@ -177,96 +178,15 @@ jobs:
           path: frontend/vite-project/dist/
           retention-days: 30
 
-  # 🔥 PRODUCTION NODE-API TESTS AND BUILD
-  node-api-production-tests:
-    name: 🔥 Node-API Production Tests
-    runs-on: ubuntu-latest
-    timeout-minutes: 25
-    needs: production-security-gates
-
-    steps:
-      - name: Checkout code
-        uses: actions/checkout@v4
-
-      - name: Setup Node.js
-        uses: actions/setup-node@v4
-        with:
-          node-version: ${{ env.NODE_VERSION }}
-          cache: 'npm'
-          cache-dependency-path: node-API/package-lock.json
-
-      - name: Install dependencies
-        working-directory: node-API
-        run: npm ci
-
-      - name: 🧹 Clean up empty test files
-        working-directory: node-API
-        run: |
-          echo "🧹 Checking for empty test files..."
-          if [ -d "__tests__" ]; then
-            find __tests__ -name "*.test.js" -size 0 -delete || true
-            find __tests__ -name "*.spec.js" -size 0 -delete || true
-            echo "✅ Empty test files cleaned up"
-          fi
-
-      - name: 🛡️ Run Security Tests (MANDATORY)
-        working-directory: node-API
-        run: |
-          echo "🔒 Running MANDATORY security tests (PRODUCTION MODE)..."
-          if [ "${{ github.event.inputs.skip_tests }}" = "true" ]; then
-            echo "⚠️ EMERGENCY MODE: Security tests skipped by manual override"
-          else
-            npm run test:security
-          fi
-          echo "✅ Security tests passed"
-        env:
-          NODE_ENV: production
-
-      - name: 🧪 Run Unit Tests (STRICT)
-        working-directory: node-API
-        run: |
-          echo "🧪 Running unit tests (PRODUCTION MODE - ZERO FAILURES ALLOWED)..."
-          if [ "${{ github.event.inputs.skip_tests }}" = "true" ]; then
-            echo "⚠️ EMERGENCY MODE: Unit tests skipped by manual override"
-          else
-            npm run test:unit
-          fi
-          echo "✅ Unit tests passed"
-        env:
-          NODE_ENV: production
-
-      - name: 🔗 Run Integration Tests (STRICT)
-        working-directory: node-API
-        run: |
-          echo "🔗 Running integration tests (PRODUCTION MODE - ZERO FAILURES ALLOWED)..."
-          if [ "${{ github.event.inputs.skip_tests }}" = "true" ]; then
-            echo "⚠️ EMERGENCY MODE: Integration tests skipped by manual override"
-          else
-            npm run test:integration
-          fi
-          echo "✅ Integration tests passed"
-        env:
-          NODE_ENV: production
-
-      - name: 📊 Generate Coverage Report (STRICT)
-        working-directory: node-API
-        run: |
-          echo "📊 Generating coverage report (PRODUCTION THRESHOLDS)..."
-          if [ "${{ github.event.inputs.skip_tests }}" = "true" ]; then
-            echo "⚠️ EMERGENCY MODE: Coverage check skipped by manual override"
-          else
-            npm run test:coverage
-          fi
-          echo "✅ Coverage thresholds met"
-        env:
-          NODE_ENV: production
+  # NODE-API PRODUCTION TESTS REMOVED: No longer deploying to AppRunner
+  # All node-API production testing has been removed
 
   # 🚀 MANUAL APPROVAL GATE
   production-approval:
-    name: 🚀 Production Deployment Approval
+    name:  Production Deployment Approval
     runs-on: ubuntu-latest
     timeout-minutes: 60
-    needs: [frontend-production-build, node-api-production-tests]
+    needs: [frontend-production-build]
     environment:
       name: production-approval
       url: https://oncarepro.com
@@ -287,7 +207,7 @@ jobs:
     name: 🐳 Production Docker Build & Push
     runs-on: ubuntu-latest
     timeout-minutes: 40
-    needs: production-approval
+    needs: [frontend-production-build, production-approval]
 
     steps:
       - name: Checkout code
@@ -337,19 +257,20 @@ jobs:
             .
           echo "✅ Frontend Docker image built successfully"
 
-      - name: 🏗️ Build Node-API Docker Image
-        env:
-          ECR_REGISTRY: ${{ steps.login-ecr.outputs.registry }}
-          IMAGE_TAG: ${{ github.sha }}
-        run: |
-          echo "🏗️ Building Node-API Docker image for PRODUCTION..."
-          cd node-API
-          docker build \
-            -t $ECR_REGISTRY/$ECR_REPOSITORY_NODEAPI:$IMAGE_TAG \
-            -t $ECR_REGISTRY/$ECR_REPOSITORY_NODEAPI:latest \
-            -t $ECR_REGISTRY/$ECR_REPOSITORY_NODEAPI:stable \
-            .
-          echo "✅ Node-API Docker image built successfully"
+      # NODE-API BUILD REMOVED: No longer deploying to AppRunner  
+      # - name: 🏗️ Build Node-API Docker Image
+      #   env:
+      #     ECR_REGISTRY: ${{ steps.login-ecr.outputs.registry }}
+      #     IMAGE_TAG: ${{ github.sha }}
+      #   run: |
+      #     echo "🏗️ Building Node-API Docker image for PRODUCTION..."
+      #     cd node-API
+      #     docker build \
+      #       -t $ECR_REGISTRY/$ECR_REPOSITORY_NODEAPI:$IMAGE_TAG \
+      #       -t $ECR_REGISTRY/$ECR_REPOSITORY_NODEAPI:latest \
+      #       -t $ECR_REGISTRY/$ECR_REPOSITORY_NODEAPI:stable \
+      #       .
+      #     echo "✅ Node-API Docker image built successfully"
 
       - name: 🚀 Push Images to ECR
         env:
@@ -357,18 +278,17 @@ jobs:
           IMAGE_TAG: ${{ github.sha }}
         run: |
           echo "🚀 Pushing production images to ECR..."
-          
           # Push frontend images
           docker push $ECR_REGISTRY/$ECR_REPOSITORY_FRONTEND:$IMAGE_TAG
           docker push $ECR_REGISTRY/$ECR_REPOSITORY_FRONTEND:latest
           docker push $ECR_REGISTRY/$ECR_REPOSITORY_FRONTEND:stable
           
-          # Push Node-API images
-          docker push $ECR_REGISTRY/$ECR_REPOSITORY_NODEAPI:$IMAGE_TAG
-          docker push $ECR_REGISTRY/$ECR_REPOSITORY_NODEAPI:latest
-          docker push $ECR_REGISTRY/$ECR_REPOSITORY_NODEAPI:stable
+          # NODE-API PUSH REMOVED: No longer deploying to AppRunner
+          # docker push $ECR_REGISTRY/$ECR_REPOSITORY_NODEAPI:$IMAGE_TAG
+          # docker push $ECR_REGISTRY/$ECR_REPOSITORY_NODEAPI:latest
+          # docker push $ECR_REGISTRY/$ECR_REPOSITORY_NODEAPI:stable
           
-          echo "✅ All production images pushed successfully"
+          echo "✅ Frontend production images pushed successfully"
 
   # 🌐 PRODUCTION DEPLOYMENT
   deploy-production:
@@ -605,7 +525,7 @@ jobs:
   notify-production-failure:
     name: 📧 Production Failure Notification
     runs-on: ubuntu-latest
-    needs: [production-security-gates, frontend-production-build, node-api-production-tests, production-approval, production-docker-build, deploy-production]
+    needs: [production-security-gates, frontend-production-build, production-approval, production-docker-build, deploy-production]
     if: failure()
 
     steps:

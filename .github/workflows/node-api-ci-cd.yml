@@ -1,17 +1,30 @@
-name: 🧪 CarePro CI/CD Testing Pipeline
+name: 🧪 CarePro CI/CD Testing Pipeline (DISABLED - Node-API deprecated)
 
+# DISABLED: Node-API is no longer deployed to AppRunner
+# Main backend now handles all API calls
+# This workflow is kept for reference but will not trigger
 on:
-  pull_request:
-    branches: [ main, staging, development ]
-    paths:
-      - 'frontend/vite-project/**'
-      - 'node-API/**'
-      - '.github/workflows/**'
-  push:
-    branches: [ development ]
-    paths:
-      - 'frontend/vite-project/**'
-      - 'node-API/**'
+  # Commented out to disable automatic triggers
+  # pull_request:
+  #   branches: [ main, staging, development ]
+  #   paths:
+  #     - 'frontend/vite-project/**'
+  #     - 'node-API/**'
+  #     - '.github/workflows/**'
+  # push:
+  #   branches: [ development ]
+  #   paths:
+  #     - 'frontend/vite-project/**'
+  #     - 'node-API/**'
+  
+  # Manual trigger only for local testing purposes
+  workflow_dispatch:
+    inputs:
+      run_tests:
+        description: 'Run node-API tests locally (no deployment)'
+        required: false
+        default: false
+        type: boolean
 
 jobs:
   # MANDATORY TESTS - Must pass before any deployment
