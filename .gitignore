@@ -39,6 +39,28 @@ node_modules/
 # md files
 *.md
 
+# Documentation and guide files (generated during development)
+*SUMMARY.md
+*GUIDE.md
+*STATUS.md
+*ANALYSIS.md
+*PLAN.md
+*IMPLEMENTATION*.md
+*DEPLOYMENT*.md
+*VERIFICATION*.md
+*ARCHITECTURE*.md
+*TESTING*.md
+*FIXES*.md
+*COMPLETE.md
+*DEBUG*.md
+*MIGRATION*.md
+
+# Setup and testing files
+*setup*test*
+*test*setup*
+setupTests.js
+setup-testing-environment.*
+
 # Optional npm cache directory
 .npm
 

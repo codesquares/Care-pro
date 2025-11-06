@@ -1,40 +1,103 @@
-const config = {
-    // Base URL without trailing slash - includes '/api' for REST endpoints  
-    BASE_URL: import.meta.env.VITE_API_URL || "https://carepro-api20241118153443.azurewebsites.net/api",
-    // Alternate URL for WebSocket/SignalR connections - domain only without /api
-    FALLBACK_URL: (import.meta.env.VITE_API_URL || "https://carepro-api20241118153443.azurewebsites.net/api").replace('/api', '').replace('https://api.', 'https://'),
+// Environment detection and API URL resolution
+const resolveApiUrl = () => {
+    // If explicit API URL is set, use it
+    if (import.meta.env.VITE_API_URL) {
+        return import.meta.env.VITE_API_URL;
+    }
+    
+    // Auto-detect environment based on current location
+    const hostname = window.location.hostname;
+    const isDevelopment = import.meta.env.MODE === 'development';
+    
+    // Production environment
+    if (hostname === 'oncarepro.com' || hostname === 'www.oncarepro.com') {
+        return import.meta.env.VITE_PRODUCTION_API_URL || 'https://api.oncarepro.com/api';
+    }
+    
+    // Staging environment (S3 static hosting)
+    if (hostname.includes('carepro-frontend-staging') || hostname.includes('s3-website')) {
+        return import.meta.env.VITE_STAGING_API_URL || 'https://carepro-api20241118153443.azurewebsites.net/api';
+    }
+    
+    // Local development - try local backend first, fallback to staging
+    if (isDevelopment && (hostname === 'localhost' || hostname === '127.0.0.1')) {
+        // For local development, we'll check if local backend is available
+        // If VITE_LOCAL_API_URL is set, prefer local backend
+        const localApiUrl = import.meta.env.VITE_LOCAL_API_URL || 'http://localhost:5005/api';
+        const stagingApiUrl = import.meta.env.VITE_STAGING_API_URL || 'https://carepro-api20241118153443.azurewebsites.net/api';
+        
+        // Return local URL - the app will handle fallback at runtime
+        return localApiUrl;
+    }
+    
+    // Default fallback to staging
+    return import.meta.env.VITE_STAGING_API_URL || 'https://carepro-api20241118153443.azurewebsites.net/api';
+};
 
-    // Local development API URL for localhost backend
-    LOCAL_API_URL: import.meta.env.VITE_LOCAL_API_URL || "http://localhost:5005",
+const config = {
+    // Base URL with intelligent environment detection
+    BASE_URL: resolveApiUrl(),
+    // Alternate URL for WebSocket/SignalR connections - domain only without /api
+    FALLBACK_URL: (() => {
+        const baseUrl = resolveApiUrl();
+        return baseUrl ? baseUrl.replace('/api', '').replace('https://api.', 'https://') : null;
+    })(),
+
+    // Environment-specific URLs
+    LOCAL_API_URL: import.meta.env.VITE_LOCAL_API_URL || 'http://localhost:5005/api',
+    STAGING_API_URL: import.meta.env.VITE_STAGING_API_URL || 'https://carepro-api20241118153443.azurewebsites.net/api',
+    PRODUCTION_API_URL: import.meta.env.VITE_PRODUCTION_API_URL || 'https://api.oncarepro.com/api',
     
     // Dojah Configuration
     DOJAH: {
-        APP_ID: import.meta.env.VITE_DOJAH_APP_ID || "690484faa4b1ea078950c1cb",
-        WIDGET_ID: import.meta.env.VITE_DOJAH_WIDGET_ID || "69048546a4b1ea078950d7b9",
+        APP_ID: import.meta.env.VITE_DOJAH_APP_ID || null,
+        WIDGET_ID: import.meta.env.VITE_DOJAH_WIDGET_ID || null,
         API_URL: "https://api.dojah.io",
         IDENTITY_URL: "https://identity.dojah.io",
-        PUBLIC_KEY: import.meta.env.VITE_DOJAH_PUBLIC_KEY 
+        PUBLIC_KEY: import.meta.env.VITE_DOJAH_PUBLIC_KEY || null
     },
     
     // Environment Configuration
     ENV: {
         ENVIRONMENT: import.meta.env.MODE || 'development',
-        API_URL: import.meta.env.VITE_API_URL || "https://carepro-api20241118153443.azurewebsites.net/api",
-        AZURE_API_URL: import.meta.env.VITE_AZURE_API_URL || "https://carepro-api20241118153443.azurewebsites.net/api",
+        API_URL: resolveApiUrl(),
+        CURRENT_HOSTNAME: window.location.hostname,
+        IS_PRODUCTION: window.location.hostname.includes('oncarepro.com'),
+        IS_STAGING: window.location.hostname.includes('carepro-frontend-staging') || window.location.hostname.includes('s3-website'),
+        IS_LOCAL: import.meta.env.MODE === 'development' && (window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1'),
         REDIRECT_URL: import.meta.env.VITE_REDIRECT_URL || `${window.location.origin}/app/caregiver/dashboard`,
         DEBUG: import.meta.env.VITE_DEBUG === 'true' || import.meta.env.MODE === 'development'
     }
 };
 
-// Debug config for development
+// Debug config for development (sanitized logging)
 if (import.meta.env.MODE === 'development') {
     console.log('🔧 CONFIG DEBUG:', {
         environment: import.meta.env.MODE,
-        VITE_DOJAH_APP_ID_from_env: import.meta.env.VITE_DOJAH_APP_ID,
-        DOJAH_APP_ID_resolved: config.DOJAH.APP_ID,
-        BASE_URL: config.BASE_URL,
-        all_env_vars: import.meta.env
+        hostname: window.location.hostname,
+        detected_environment: config.ENV.IS_PRODUCTION ? 'production' : 
+                            config.ENV.IS_STAGING ? 'staging' : 
+                            config.ENV.IS_LOCAL ? 'local' : 'unknown',
+        resolved_api_url: config.BASE_URL,
+        has_DOJAH_credentials: !!(config.DOJAH.APP_ID && config.DOJAH.WIDGET_ID),
+        has_CONTENTFUL_credentials: !!(config.DOJAH.PUBLIC_KEY),
+        config_valid: !!(config.DOJAH.APP_ID && config.DOJAH.WIDGET_ID && config.BASE_URL)
     });
+    
+    // Warn about missing required environment variables
+    const requiredVars = ['VITE_DOJAH_APP_ID', 'VITE_DOJAH_WIDGET_ID', 'VITE_DOJAH_PUBLIC_KEY'];
+    const missingVars = requiredVars.filter(varName => !import.meta.env[varName]);
+    
+    if (missingVars.length > 0) {
+        console.warn('⚠️ Missing required environment variables:', missingVars);
+        console.warn('🔧 Add these to your .env.local file');
+    }
+    
+    // Local backend availability check
+    if (config.ENV.IS_LOCAL && config.BASE_URL.includes('localhost')) {
+        console.log('🔍 Local backend detection enabled - will attempt to connect to:', config.BASE_URL);
+        console.log('📡 Fallback URL if local backend unavailable:', config.STAGING_API_URL);
+    }
 }
 
 // Log config for debugging

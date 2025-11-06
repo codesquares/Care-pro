@@ -3,6 +3,7 @@ import { useParams, useNavigate } from "react-router-dom";
 import axios from "axios";
 import { toast, ToastContainer } from "react-toastify";
 import config from "../../../config"; // Import centralized config for API URLs
+import ContractService from "../../../services/contractService";
 
 import "react-toastify/dist/ReactToastify.css";
 import "./CaregiverOrderDetails.css";
@@ -16,9 +17,17 @@ const CaregiverOrderDetails = () => {
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState(null);
     const [isModalOpen, setIsModalOpen] = useState(false);
-    const [modalType, setModalType] = useState(""); // Only "update" now
+    const [modalType, setModalType] = useState(""); // "update", "contract", "reject", "review"
     const [notes, setNotes] = useState("");
     const [isContactLoading, setIsContactLoading] = useState(false);
+
+    // Contract-related state
+    const [contract, setContract] = useState(null);
+    const [contractLoading, setContractLoading] = useState(false);
+    const [contractError, setContractError] = useState(null);
+    const [contractActionLoading, setContractActionLoading] = useState(false);
+    const [rejectionReason, setRejectionReason] = useState("");
+    const [reviewComments, setReviewComments] = useState("");
 
     // Get user details from localStorage
     const userDetails = JSON.parse(localStorage.getItem("userDetails"));
@@ -38,6 +47,10 @@ const CaregiverOrderDetails = () => {
                     `${config.BASE_URL}/ClientOrders/orderId?orderId=${orderId}`
                 );
                 setOrders([response.data]); // API returns a single order, so wrap it in an array
+                
+                // Fetch contract for this order
+                await fetchContractForOrder(orderId);
+                
             } catch (err) {
                 setError("Failed to fetch order details.");
                 console.error("Error fetching order details:", err);
@@ -48,6 +61,100 @@ const CaregiverOrderDetails = () => {
 
         fetchOrderDetails();
     }, [orderId]);
+
+    // Fetch contract for the order
+    const fetchContractForOrder = async (orderId) => {
+        try {
+            setContractLoading(true);
+            setContractError(null);
+            
+            const result = await ContractService.checkExistingContract(orderId);
+            
+            if (result.success && result.hasContract) {
+                setContract(result.data);
+            } else if (!result.success && result.statusCode !== 404) {
+                // Only set error if it's not a 404 (no contract found)
+                setContractError(result.error);
+            }
+        } catch (error) {
+            console.error("Error fetching contract:", error);
+            setContractError("Failed to load contract information");
+        } finally {
+            setContractLoading(false);
+        }
+    };
+
+    // Contract action handlers
+    const handleAcceptContract = async () => {
+        if (!contract?.id) return;
+        
+        setContractActionLoading(true);
+        try {
+            const result = await ContractService.acceptContract(contract.id);
+            
+            if (result.success) {
+                setContract(result.data);
+                toast.success("Contract accepted successfully!");
+                closeModal();
+            } else {
+                toast.error(result.error || "Failed to accept contract");
+            }
+        } catch (error) {
+            console.error("Error accepting contract:", error);
+            toast.error("Failed to accept contract. Please try again.");
+        } finally {
+            setContractActionLoading(false);
+        }
+    };
+
+    const handleRejectContract = async () => {
+        if (!contract?.id) return;
+        
+        setContractActionLoading(true);
+        try {
+            const result = await ContractService.rejectContract(contract.id, rejectionReason);
+            
+            if (result.success) {
+                setContract(result.data);
+                toast.success("Contract rejected successfully!");
+                closeModal();
+                setRejectionReason("");
+            } else {
+                toast.error(result.error || "Failed to reject contract");
+            }
+        } catch (error) {
+            console.error("Error rejecting contract:", error);
+            toast.error("Failed to reject contract. Please try again.");
+        } finally {
+            setContractActionLoading(false);
+        }
+    };
+
+    const handleRequestReview = async () => {
+        if (!contract?.id || !reviewComments.trim()) {
+            toast.error("Please provide comments for the review request");
+            return;
+        }
+        
+        setContractActionLoading(true);
+        try {
+            const result = await ContractService.requestContractReview(contract.id, reviewComments);
+            
+            if (result.success) {
+                setContract(result.data);
+                toast.success("Review request sent successfully!");
+                closeModal();
+                setReviewComments("");
+            } else {
+                toast.error(result.error || "Failed to request contract review");
+            }
+        } catch (error) {
+            console.error("Error requesting contract review:", error);
+            toast.error("Failed to request contract review. Please try again.");
+        } finally {
+            setContractActionLoading(false);
+        }
+    };
 
     // Function to check if conversation exists between caregiver and client
     const checkConversationExists = async (caregiverId, clientId) => {
@@ -135,11 +242,27 @@ const CaregiverOrderDetails = () => {
                 toast.error("Client information not available.");
             }
         } else {
-            // Handle update modal
+            // Handle all modal types: update, contract, reject, review
             setModalType(type);
-            setNotes("");
             setIsModalOpen(true);
+            
+            // Reset form data based on modal type
+            if (type === "update") {
+                setNotes("");
+            } else if (type === "reject") {
+                setRejectionReason("");
+            } else if (type === "review") {
+                setReviewComments("");
+            }
         }
+    };
+
+    const closeModal = () => {
+        setIsModalOpen(false);
+        setModalType("");
+        setNotes("");
+        setRejectionReason("");
+        setReviewComments("");
     };
 
     const handleSubmitAction = async () => {
@@ -254,6 +377,125 @@ const CaregiverOrderDetails = () => {
                                             <p>Order date: {new Date(orders[0].orderCreatedOn).toLocaleDateString()}</p>
                                         )}
                                     </div>
+                                    
+                                    {/* Contract Section */}
+                                    <div className="contract-section">
+                                        {contractLoading ? (
+                                            <div className="contract-loading">
+                                                <p>Loading contract information...</p>
+                                            </div>
+                                        ) : contractError ? (
+                                            <div className="contract-error">
+                                                <h4>Contract</h4>
+                                                <p>⚠️ {contractError}</p>
+                                            </div>
+                                        ) : contract ? (
+                                            <div className="contract-available">
+                                                <h4>📋 Contract Available</h4>
+                                                <div className="contract-status">
+                                                    <p><strong>Status:</strong> <span className={`status-${contract.status?.toLowerCase().replace(' ', '-')}`}>
+                                                        {contract.status}
+                                                    </span></p>
+                                                    <p><strong>Total Amount:</strong> ₦{contract.totalAmount?.toLocaleString()}</p>
+                                                    {contract.sentAt && (
+                                                        <p><strong>Received:</strong> {new Date(contract.sentAt).toLocaleString()}</p>
+                                                    )}
+                                                </div>
+                                                
+                                                {(() => {
+                                                    const actions = ContractService.getCaregiverContractActions(contract);
+                                                    const status = contract.status?.toLowerCase();
+                                                    
+                                                    if (status === 'accepted') {
+                                                        return (
+                                                            <div className="contract-accepted">
+                                                                <p>✅ You have accepted this contract</p>
+                                                                <button 
+                                                                    className="view-contract-btn"
+                                                                    onClick={() => openModal("contract")}
+                                                                >
+                                                                    View Contract Details
+                                                                </button>
+                                                            </div>
+                                                        );
+                                                    } else if (status === 'rejected') {
+                                                        return (
+                                                            <div className="contract-rejected">
+                                                                <p>❌ You have rejected this contract</p>
+                                                                <button 
+                                                                    className="view-contract-btn"
+                                                                    onClick={() => openModal("contract")}
+                                                                >
+                                                                    View Contract Details
+                                                                </button>
+                                                            </div>
+                                                        );
+                                                    } else if (status === 'review requested') {
+                                                        return (
+                                                            <div className="contract-review-requested">
+                                                                <p>🔄 Review requested - awaiting client response</p>
+                                                                <button 
+                                                                    className="view-contract-btn"
+                                                                    onClick={() => openModal("contract")}
+                                                                >
+                                                                    View Contract Details
+                                                                </button>
+                                                            </div>
+                                                        );
+                                                    } else if (actions.canAccept || actions.canReject) {
+                                                        return (
+                                                            <div className="contract-actions">
+                                                                <p>⏳ Please review and respond to this contract</p>
+                                                                <div className="contract-buttons">
+                                                                    <button 
+                                                                        className="view-contract-btn"
+                                                                        onClick={() => openModal("contract")}
+                                                                    >
+                                                                        Read Full Contract
+                                                                    </button>
+                                                                    <button 
+                                                                        className="accept-contract-btn"
+                                                                        onClick={handleAcceptContract}
+                                                                        disabled={contractActionLoading}
+                                                                    >
+                                                                        {contractActionLoading ? 'Processing...' : 'Accept'}
+                                                                    </button>
+                                                                    <button 
+                                                                        className="reject-contract-btn"
+                                                                        onClick={() => openModal("reject")}
+                                                                    >
+                                                                        Reject
+                                                                    </button>
+                                                                    <button 
+                                                                        className="review-contract-btn"
+                                                                        onClick={() => openModal("review")}
+                                                                    >
+                                                                        Request Review
+                                                                    </button>
+                                                                </div>
+                                                            </div>
+                                                        );
+                                                    } else {
+                                                        return (
+                                                            <div className="contract-no-action">
+                                                                <button 
+                                                                    className="view-contract-btn"
+                                                                    onClick={() => openModal("contract")}
+                                                                >
+                                                                    View Contract Details
+                                                                </button>
+                                                            </div>
+                                                        );
+                                                    }
+                                                })()}
+                                            </div>
+                                        ) : (
+                                            <div className="contract-not-available">
+                                                <h4>Contract</h4>
+                                                <p>No contract has been generated for this order yet.</p>
+                                            </div>
+                                        )}
+                                    </div>
                                     {/* Only show Mark as Completed button if status is not already Completed */}
                                     {orders[0].clientOrderStatus && orders[0].clientOrderStatus.toLowerCase() !== "completed" && (
                                         <button 
@@ -300,19 +542,127 @@ const CaregiverOrderDetails = () => {
             {isModalOpen && (
                 <div className="modal-overlay">
                     <div className="modal-content">
-                        <h3>Mark Order as Completed</h3>
-                        <textarea
-                            placeholder="Enter completion notes (optional)..."
-                            value={notes}
-                            onChange={(e) => setNotes(e.target.value)}
-                            rows="4"
-                        />
-                        <div className="modal-actions">
-                            <button onClick={handleSubmitAction}>
-                                Mark as Completed
-                            </button>
-                            <button onClick={() => setIsModalOpen(false)}>Cancel</button>
-                        </div>
+                        {modalType === "update" && (
+                            <>
+                                <h3>Mark Order as Completed</h3>
+                                <textarea
+                                    placeholder="Enter completion notes (optional)..."
+                                    value={notes}
+                                    onChange={(e) => setNotes(e.target.value)}
+                                    rows="4"
+                                />
+                                <div className="modal-actions">
+                                    <button onClick={handleSubmitAction}>
+                                        Mark as Completed
+                                    </button>
+                                    <button onClick={closeModal}>Cancel</button>
+                                </div>
+                            </>
+                        )}
+
+                        {modalType === "contract" && contract && (
+                            <>
+                                <h3>Contract Details</h3>
+                                <div className="contract-details-modal">
+                                    <div className="contract-header">
+                                        <p><strong>Contract ID:</strong> {contract.id}</p>
+                                        <p><strong>Status:</strong> <span className={`status-${contract.status?.toLowerCase().replace(' ', '-')}`}>
+                                            {contract.status}
+                                        </span></p>
+                                    </div>
+                                    
+                                    <div className="contract-summary">
+                                        <h4>Service Details</h4>
+                                        <p><strong>Total Amount:</strong> ₦{contract.totalAmount?.toLocaleString()}</p>
+                                        {contract.contractStartDate && contract.contractEndDate && (
+                                            <p><strong>Duration:</strong> {new Date(contract.contractStartDate).toLocaleDateString()} - {new Date(contract.contractEndDate).toLocaleDateString()}</p>
+                                        )}
+                                        {contract.selectedPackage && (
+                                            <div className="package-details">
+                                                <h5>Package Information</h5>
+                                                <p><strong>Type:</strong> {contract.selectedPackage.packageType}</p>
+                                                <p><strong>Visits per Week:</strong> {contract.selectedPackage.visitsPerWeek}</p>
+                                                <p><strong>Price per Visit:</strong> ₦{contract.selectedPackage.pricePerVisit?.toLocaleString()}</p>
+                                                <p><strong>Duration:</strong> {contract.selectedPackage.durationWeeks} weeks</p>
+                                            </div>
+                                        )}
+                                    </div>
+
+                                    {contract.tasks && contract.tasks.length > 0 && (
+                                        <div className="contract-tasks">
+                                            <h4>Tasks & Requirements</h4>
+                                            {contract.tasks.map((task, index) => (
+                                                <div key={index} className="task-item">
+                                                    <h5>{task.title}</h5>
+                                                    <p>{task.description}</p>
+                                                    <p><strong>Category:</strong> {task.category}</p>
+                                                    <p><strong>Priority:</strong> {task.priority}</p>
+                                                    {task.specialRequirements && task.specialRequirements.length > 0 && (
+                                                        <p><strong>Special Requirements:</strong> {task.specialRequirements.join(', ')}</p>
+                                                    )}
+                                                </div>
+                                            ))}
+                                        </div>
+                                    )}
+
+                                    {contract.generatedTerms && (
+                                        <div className="contract-terms">
+                                            <h4>Contract Terms</h4>
+                                            <div className="terms-content">
+                                                {contract.generatedTerms}
+                                            </div>
+                                        </div>
+                                    )}
+                                </div>
+                                <div className="modal-actions">
+                                    <button onClick={closeModal}>Close</button>
+                                </div>
+                            </>
+                        )}
+
+                        {modalType === "reject" && (
+                            <>
+                                <h3>Reject Contract</h3>
+                                <p>Please provide a reason for rejecting this contract:</p>
+                                <textarea
+                                    placeholder="Enter reason for rejection..."
+                                    value={rejectionReason}
+                                    onChange={(e) => setRejectionReason(e.target.value)}
+                                    rows="4"
+                                />
+                                <div className="modal-actions">
+                                    <button 
+                                        onClick={handleRejectContract}
+                                        disabled={contractActionLoading || !rejectionReason.trim()}
+                                    >
+                                        {contractActionLoading ? 'Rejecting...' : 'Reject Contract'}
+                                    </button>
+                                    <button onClick={closeModal}>Cancel</button>
+                                </div>
+                            </>
+                        )}
+
+                        {modalType === "review" && (
+                            <>
+                                <h3>Request Contract Review</h3>
+                                <p>Please provide comments about what you'd like to review or change:</p>
+                                <textarea
+                                    placeholder="Enter your review comments and requests for changes..."
+                                    value={reviewComments}
+                                    onChange={(e) => setReviewComments(e.target.value)}
+                                    rows="4"
+                                />
+                                <div className="modal-actions">
+                                    <button 
+                                        onClick={handleRequestReview}
+                                        disabled={contractActionLoading || !reviewComments.trim()}
+                                    >
+                                        {contractActionLoading ? 'Sending...' : 'Request Review'}
+                                    </button>
+                                    <button onClick={closeModal}>Cancel</button>
+                                </div>
+                            </>
+                        )}
                     </div>
                 </div>
             )}

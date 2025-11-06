@@ -4,6 +4,7 @@ import { useParams } from "react-router-dom";
 import { ToastContainer, toast } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
 import { createNotification } from "../../../services/notificationService";
+import ContractService from "../../../services/contractService";
 import config from "../../../config"; // Centralized API configuration
 import "./Order&Tasks.scss";
 import { useNavigate } from "react-router-dom";
@@ -21,6 +22,13 @@ const MyOrders = () => {
     const [reviewComment, setReviewComment] = useState("");
     const [isReviewSubmitted, setIsReviewSubmitted] = useState(false);
     const [checkingReviewStatus, setCheckingReviewStatus] = useState(false);
+    
+    // Contract-related state
+    const [contract, setContract] = useState(null);
+    const [isGeneratingContract, setIsGeneratingContract] = useState(false);
+    const [contractError, setContractError] = useState(null);
+    const [checkingContract, setCheckingContract] = useState(false);
+    
     const userDetails = JSON.parse(localStorage.getItem("userDetails"));
     const userId = userDetails?.id;
 
@@ -58,6 +66,73 @@ const MyOrders = () => {
         }
     };
 
+    // Check if contract exists for this order
+    const checkExistingContract = async (orderId) => {
+        if (!orderId) return;
+        
+        try {
+            setCheckingContract(true);
+            const result = await ContractService.checkExistingContract(orderId);
+            
+            if (result.success && result.hasContract) {
+                setContract(result.data);
+            } else if (!result.success) {
+                console.warn("Error checking existing contract:", result.error);
+            }
+        } catch (error) {
+            console.error("Error checking existing contract:", error);
+        } finally {
+            setCheckingContract(false);
+        }
+    };
+
+    // Handle contract generation
+    const handleGenerateContract = async () => {
+        if (!orderId) {
+            toast.error("Order ID is missing");
+            return;
+        }
+
+        setIsGeneratingContract(true);
+        setContractError(null);
+
+        try {
+            const result = await ContractService.generateContractFromOrder(orderId);
+            
+            if (result.success) {
+                setContract(result.data);
+                toast.success("Contract generated and sent to caregiver successfully!");
+                
+                // Optional: Create notification for caregiver if needed
+                if (orders.length > 0 && orders[0].caregiverId) {
+                    try {
+                        await createNotification({
+                            recipientId: orders[0].caregiverId,
+                            senderId: userId,
+                            type: "SystemNotice",
+                            title: "New Contract Generated",
+                            content: `A contract has been generated for order: ${orders[0].gigTitle || 'your service'}`,
+                            relatedEntityId: orderId
+                        });
+                    } catch (notificationError) {
+                        console.error("Failed to send contract notification:", notificationError);
+                        // Don't fail contract generation if notification fails
+                    }
+                }
+            } else {
+                setContractError(result.error);
+                toast.error(result.error || "Failed to generate contract");
+            }
+        } catch (error) {
+            const errorMessage = "Failed to generate contract. Please try again.";
+            setContractError(errorMessage);
+            toast.error(errorMessage);
+            console.error("Contract generation error:", error);
+        } finally {
+            setIsGeneratingContract(false);
+        }
+    };
+
     useEffect(() => {
         const fetchOrderDetails = async () => {
             if (!orderId) {
@@ -78,6 +153,9 @@ const MyOrders = () => {
                     const hasExistingReview = await checkExistingReview(orderData.gigId, userId);
                     setIsReviewSubmitted(hasExistingReview);
                 }
+                
+                // Check if contract exists for this order
+                await checkExistingContract(orderId);
             } catch (err) {
                 setError("Failed to fetch order details.");
             } finally {
@@ -280,6 +358,58 @@ const MyOrders = () => {
                                         <p>Ordered from: {orders[0].caregiverName}</p>
                                         <p>Total price: {orders[0].amount}</p>
                                         <p>Order number: #{orders[0].id}</p>
+                                    </div>
+                                    
+                                    {/* Contract Section */}
+                                    <div className="contract-section">
+                                        {checkingContract ? (
+                                            <div className="contract-checking">
+                                                <p>Checking contract status...</p>
+                                            </div>
+                                        ) : contract ? (
+                                            <div className="contract-exists">
+                                                <h4>✅ Contract Generated</h4>
+                                                <div className="contract-details">
+                                                    <p><strong>Contract ID:</strong> {contract.id}</p>
+                                                    <p><strong>Status:</strong> {contract.status}</p>
+                                                    <p><strong>Total Amount:</strong> ₦{contract.totalAmount?.toLocaleString() || 'N/A'}</p>
+                                                    {contract.sentAt && (
+                                                        <p><strong>Sent to caregiver:</strong> {new Date(contract.sentAt).toLocaleString()}</p>
+                                                    )}
+                                                    {contract.contractStartDate && contract.contractEndDate && (
+                                                        <p><strong>Duration:</strong> {new Date(contract.contractStartDate).toLocaleDateString()} - {new Date(contract.contractEndDate).toLocaleDateString()}</p>
+                                                    )}
+                                                </div>
+                                            </div>
+                                        ) : ContractService.canGenerateContract(orders[0], contract) ? (
+                                            <div className="contract-generation">
+                                                <h4>Contract</h4>
+                                                <p>Generate a formal contract for this order that will be sent to your caregiver.</p>
+                                                {contractError && (
+                                                    <div className="contract-error">
+                                                        <p>❌ {contractError}</p>
+                                                    </div>
+                                                )}
+                                                <button 
+                                                    className={`generate-contract-btn ${isGeneratingContract ? 'loading' : ''}`}
+                                                    onClick={handleGenerateContract}
+                                                    disabled={isGeneratingContract}
+                                                >
+                                                    {isGeneratingContract ? 'Generating Contract...' : 'Generate Contract'}
+                                                </button>
+                                            </div>
+                                        ) : (
+                                            <div className="contract-unavailable">
+                                                <h4>Contract</h4>
+                                                {!orders[0].transactionId && !orders[0].paymentTransactionId ? (
+                                                    <p>Contract generation requires payment completion.</p>
+                                                ) : orders[0].clientOrderStatus === 'Cancelled' ? (
+                                                    <p>Contract cannot be generated for cancelled orders.</p>
+                                                ) : (
+                                                    <p>Contract generation not available for this order.</p>
+                                                )}
+                                            </div>
+                                        )}
                                     </div>
                                     {orders[0].clientOrderStatus === "Completed" ? (
                                         isReviewSubmitted ? (

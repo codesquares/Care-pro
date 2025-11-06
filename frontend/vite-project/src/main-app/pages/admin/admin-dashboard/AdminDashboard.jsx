@@ -2,9 +2,10 @@ import { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import './admin-dashboard.css';
 import axios from 'axios';
+import config from '../../../config';
 
 const AdminDashboard = () => {
-  const apiUrl = import.meta.env.VITE_API_URL //Use environment variable or default to localhost
+  const apiUrl = config.BASE_URL; // Use centralized API configuration
   const [stats, setStats] = useState({
     users: {
       total: 0,
