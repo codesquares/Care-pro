@@ -7,6 +7,12 @@ on:
       - 'frontend/vite-project/**'
       - 'docker-compose.yml'
       - '.github/workflows/staging-deployment.yml'
+  pull_request:
+    branches: [ staging ]
+    paths:
+      - 'frontend/vite-project/**'
+      - 'docker-compose.yml'
+      - '.github/workflows/staging-deployment.yml'
   workflow_dispatch:
     inputs:
       force_deploy:
@@ -156,7 +162,7 @@ jobs:
     runs-on: ubuntu-latest
     timeout-minutes: 30
     needs: [frontend-staging-tests, node-api-staging-tests]
-    if: ${{ !failure() || github.event.inputs.force_deploy == 'true' }}
+    if: ${{ success() || github.event.inputs.force_deploy == 'true' }}
 
     steps:
       - name: Checkout code
@@ -340,7 +346,7 @@ jobs:
     name: 📧 Failure Notification
     runs-on: ubuntu-latest
     needs: [security-quality-gates, frontend-staging-tests, node-api-staging-tests, docker-build-push, deploy-staging]
-    if: failure()
+    if: ${{ always() && (failure() || cancelled()) }}
 
     steps:
       - name: 📧 Send Failure Email
