@@ -1,130 +1,199 @@
-/* Overlay */
+/* Modal Overlay */
 .modal-overlay {
-    position: fixed;
-    top: 0;
-    left: 0;
-    width: 100vw;
-    height: 100vh;
-    background-color: rgba(0, 0, 0, 0.5);
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    z-index: 1000;
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100vw;
+  height: 100vh;
+  background-color: rgba(0, 0, 0, 0.4);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 1000;
+  animation: overlayFadeIn 0.2s ease-out;
+}
+
+@keyframes overlayFadeIn {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+
+/* Modal Container */
+.modal-container {
+  background: #ffffff;
+  border-radius: 12px;
+  width: 90%;
+  max-width: 400px;
+  position: relative;
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.1);
+  animation: modalSlideIn 0.3s ease-out;
+}
+
+@keyframes modalSlideIn {
+  from {
+    opacity: 0;
+    transform: translateY(-20px);
   }
-  
-  /* Modal Container */
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+/* Modal Content */
+.modal-content {
+  padding: 32px 24px 24px;
+  text-align: center;
+}
+
+/* Close Button */
+.close-button {
+  position: absolute;
+  top: 12px;
+  right: 12px;
+  background: none;
+  border: none;
+  border-radius: 50%;
+  width: 32px;
+  height: 32px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  transition: background-color 0.2s ease;
+}
+
+.close-button:hover {
+  background-color: #f5f5f5;
+}
+
+/* Icon Container */
+.icon-container {
+  width: 64px;
+  height: 64px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin: 0 auto 24px;
+}
+
+/* Icon Variants */
+.success-icon {
+  background-color: #00B4A6;
+}
+
+.email-icon {
+  background-color: #00B4A6;
+}
+
+.error-icon {
+  background-color: #FF4B4B;
+}
+
+/* Modal Title */
+.modal-title {
+  font-size: 20px;
+  font-weight: 500;
+  color: #1a1a1a;
+  margin: 0 0 12px 0;
+  line-height: 1.3;
+}
+
+/* Modal Description */
+.modal-description {
+  color: #6b7280;
+  font-size: 14px;
+  line-height: 1.5;
+  margin-bottom: 32px;
+  text-align: center;
+}
+
+.modal-description strong {
+  color: #1a1a1a;
+  font-weight: 500;
+}
+
+/* Modal Actions */
+.modal-actions {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+/* Primary Button */
+.primary-button {
+  background-color: #00B4A6;
+  color: #ffffff;
+  border: none;
+  border-radius: 8px;
+  padding: 12px 24px;
+  font-size: 14px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: background-color 0.2s ease;
+  width: 100%;
+}
+
+.primary-button:hover {
+  background-color: #009688;
+}
+
+.primary-button:active {
+  background-color: #00897b;
+}
+
+/* Secondary Button */
+.secondary-button {
+  background: transparent;
+  color: #6b7280;
+  border: 1px solid #d1d5db;
+  border-radius: 8px;
+  padding: 10px 24px;
+  font-size: 14px;
+  font-weight: 400;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  width: 100%;
+}
+
+.secondary-button:hover {
+  background-color: #f9fafb;
+  color: #374151;
+}
+
+.secondary-button:active {
+  background-color: #f3f4f6;
+}
+
+/* Error State Styling */
+.modal-container .error-icon + .modal-title {
+  color: #dc2626;
+}
+
+/* Responsive Design */
+@media (max-width: 480px) {
   .modal-container {
-    background-color: #fff;
-    padding: 2rem;
-    border-radius: 10px;
-    width: 90%;
-    max-width: 500px;
-    text-align: center;
-    position: relative;
-    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
-    animation: modalFadeIn 0.3s ease-out;
+    width: 95%;
+    margin: 0 16px;
   }
   
-  @keyframes modalFadeIn {
-    from {
-      opacity: 0;
-      transform: translateY(-20px);
-    }
-    to {
-      opacity: 1;
-      transform: translateY(0);
-    }
+  .modal-content {
+    padding: 24px 20px 20px;
   }
   
-  /* Close Button */
-  .close-button {
-    position: absolute;
-    top: 10px;
-    right: 10px;
-    background: none;
-    border: none;
-    font-size: 1.5rem;
-    color: #000;
-    cursor: pointer;
+  .icon-container {
+    width: 56px;
+    height: 56px;
+    margin-bottom: 20px;
   }
   
-  /* Success Icon */
-  .success-icon {
-    margin: 1rem 0;
+  .modal-title {
+    font-size: 18px;
   }
   
-  /* Heading */
-  h2 {
-    font-size: 1.5rem;
-    margin: 1rem 0;
-    color: #333;
+  .modal-description {
+    margin-bottom: 24px;
   }
-  
-  /* Subtext */
-  .description {
-    color: #555;
-    font-size: 1rem;
-    margin-bottom: 2rem;
-    line-height: 1.6;
-    text-align: left;
-    padding: 0 0.5rem;
-    white-space: pre-line; /* Allows line breaks from \n */
-  }
-  
-  /* Email highlighting within description */
-  .description strong {
-    color: #2c8b45;
-    font-weight: 600;
-    background-color: rgba(44, 139, 69, 0.1);
-    padding: 2px 4px;
-    border-radius: 3px;
-  }
-  
-  /* Additional styling for better text hierarchy */
-  .description p {
-    margin: 0.5rem 0;
-  }
-  
-  /* Modal Actions Container */
-  .modal-actions {
-    display: flex;
-    flex-direction: column;
-    gap: 0.75rem;
-  }
-  
-  /* Proceed Button */
-  .proceed-button {
-    background-color: #34A853;
-    color: #fff;
-    padding: 0.75rem 1.5rem;
-    font-size: 1rem;
-    border: none;
-    border-radius: 5px;
-    cursor: pointer;
-    transition: background-color 0.3s ease;
-    width: 100%;
-  }
-  
-  .proceed-button:hover {
-    background-color: #2c8b45;
-  }
-  
-  /* Secondary Button */
-  .secondary-button {
-    background-color: transparent;
-    color: #666;
-    padding: 0.5rem 1rem;
-    font-size: 0.9rem;
-    border: 1px solid #ddd;
-    border-radius: 5px;
-    cursor: pointer;
-    transition: all 0.3s ease;
-    width: 100%;
-  }
-  
-  .secondary-button:hover {
-    background-color: #f5f5f5;
-    border-color: #bbb;
-    color: #333;
-  }
+}
   

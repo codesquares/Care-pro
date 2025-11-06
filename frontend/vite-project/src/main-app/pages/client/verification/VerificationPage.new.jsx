@@ -5,6 +5,7 @@ import "../../care-giver/verification/verification-page-footer.css";
 import verificationService from "../../../services/verificationService";
 import { Helmet } from "react-helmet-async";
 import convertFileToBase64 from "./convertFileToBase64";
+import Modal from "../../../components/modal/Modal";
 
 const ClientVerificationPage = () => {
   // Constants for test values
@@ -35,6 +36,14 @@ const ClientVerificationPage = () => {
   const [progress, setProgress] = useState(0);
   const [progressMessage, setProgressMessage] = useState("");
 
+  // Modal state management
+  const [isModalOpen, setIsModalOpen] = useState(false);
+  const [modalTitle, setModalTitle] = useState('');
+  const [modalDescription, setModalDescription] = useState('');
+  const [buttonText, setButtonText] = useState('');
+  const [buttonBgColor, setButtonBgColor] = useState('');
+  const [isError, setIsError] = useState(false);
+
   // Get token and user ID from localStorage
   const userDetails = JSON.parse(localStorage.getItem("userDetails") || "{}");
   const token = localStorage.getItem("authToken");
@@ -43,6 +52,26 @@ const ClientVerificationPage = () => {
   const pollRef = useRef(null);
   const progressIntervalRef = useRef(null);
   const effectRan = useRef(false);
+
+  // Helper function to show error modal
+  const showErrorModal = (title, description) => {
+    setModalTitle(title);
+    setModalDescription(description);
+    setButtonText('Try Again');
+    setButtonBgColor('#FF4B4B');
+    setIsError(true);
+    setIsModalOpen(true);
+  };
+
+  // Helper function to show success modal
+  const showSuccessModal = (title, description, buttonText = 'OK') => {
+    setModalTitle(title);
+    setModalDescription(description);
+    setButtonText(buttonText);
+    setButtonBgColor('#00B4A6');
+    setIsError(false);
+    setIsModalOpen(true);
+  };
 
   useEffect(() => {
     // Skip the second run caused by Strict Mode in development
@@ -78,7 +107,12 @@ const ClientVerificationPage = () => {
         if (status.verified === true) {
           setProgress(100);
           setProgressMessage("Account already verified!");
-          setSuccess("Your account is already verified!");
+          setModalTitle('Account Already Verified!');
+          setModalDescription('Your identity has been successfully verified. You will be redirected to your dashboard.');
+          setButtonText('Go to Dashboard');
+          setButtonBgColor('#00B4A6');
+          setIsError(false);
+          setIsModalOpen(true);
           setTimeout(() => {
             if (isMounted) {
               navigate("/app/client/dashboard");
@@ -425,9 +459,6 @@ const ClientVerificationPage = () => {
           verification method below.
         </p>
 
-        {error && <div className="error-message"><i className="fas fa-exclamation-circle"></i> {error}</div>}
-        {success && <div className="success-message"><i className="fas fa-check-circle"></i> {success}</div>}
-
         {/* Progress indicator */}
         {progress > 0 && (
           <div className="progress-container">
@@ -682,6 +713,22 @@ const ClientVerificationPage = () => {
           </div>
         </div>
       </div>
+
+      {/* Standardized Modal Component for Success/Error Feedback */}
+      <Modal
+        isOpen={isModalOpen}
+        title={modalTitle}
+        description={modalDescription}
+        buttonText={buttonText}
+        buttonBgColor={buttonBgColor}
+        isError={isError}
+        onProceed={() => {
+          setIsModalOpen(false);
+          if (modalTitle === 'Account Already Verified!') {
+            navigate("/app/client/dashboard");
+          }
+        }}
+      />
     </div>
   );
 };

@@ -1,9 +1,17 @@
 import { useState } from "react";
 import "../styles/components/waitlist-modal.scss";
-import { toast } from "react-toastify";
+import Modal from "../main-app/components/modal/Modal";
 
 const WaitlistModal = ({ isOpen, onClose, option }) => {
   const [loading, setLoading] = useState(false);
+
+  // Modal state management
+  const [isModalOpen, setIsModalOpen] = useState(false);
+  const [modalTitle, setModalTitle] = useState('');
+  const [modalDescription, setModalDescription] = useState('');
+  const [buttonText, setButtonText] = useState('');
+  const [buttonBgColor, setButtonBgColor] = useState('');
+  const [isError, setIsError] = useState(false);
 
   const [formData, setFormData] = useState({
     firstName: "",
@@ -43,6 +51,7 @@ const WaitlistModal = ({ isOpen, onClose, option }) => {
     )
       .then((response) => {
         if (response.ok) {
+          // Reset form data
           setFormData({
             firstName: "",
             lastName: "",
@@ -51,16 +60,31 @@ const WaitlistModal = ({ isOpen, onClose, option }) => {
             state: "",
             serviceOfIntrest: "",
             source: "",
+            option: option,
           });
-          toast.success("Success! Your response has been submitted.");
-          onClose();
+          
+          // Show success modal
+          setModalTitle('Successfully Joined Waitlist!');
+          setModalDescription(`Thank you ${formData.firstName}! You're now on our waitlist. We'll notify you as soon as Care-pro services become available in your area.`);
+          setButtonText('Close');
+          setButtonBgColor('#00B4A6');
+          setIsError(false);
+          setIsModalOpen(true);
+          
         } else {
           throw new Error("Submission failed");
         }
       })
       .catch((error) => {
         console.error("Error submitting form:", error);
-        toast.error("Oops! There was an error submitting your response.");
+        
+        // Show error modal
+        setModalTitle('Submission Failed');
+        setModalDescription('Oops! There was an error submitting your response. Please check your details and try again.');
+        setButtonText('Try Again');
+        setButtonBgColor('#FF4B4B');
+        setIsError(true);
+        setIsModalOpen(true);
       })
       .finally(() => {
         setLoading(false);
@@ -68,6 +92,14 @@ const WaitlistModal = ({ isOpen, onClose, option }) => {
   };
 
   if (!isOpen) return null;
+
+  // Modal handlers
+  const handleModalProceed = () => {
+    setIsModalOpen(false);
+    if (!isError) {
+      onClose(); // Close the waitlist modal on success
+    }
+  };
 
   return (
     <div className="waitlist-modal">
@@ -191,6 +223,17 @@ const WaitlistModal = ({ isOpen, onClose, option }) => {
           </button>
         </form>
       </div>
+
+      {/* Standardized Modal Component for Success/Error Feedback */}
+      <Modal
+        isOpen={isModalOpen}
+        title={modalTitle}
+        description={modalDescription}
+        buttonText={buttonText}
+        buttonBgColor={buttonBgColor}
+        isError={isError}
+        onProceed={handleModalProceed}
+      />
     </div>
   );
 };
