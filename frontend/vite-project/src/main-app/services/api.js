@@ -1,13 +1,11 @@
 import axios from 'axios';
 import * as authService from './auth';
 import { preserveUserJourney } from './sessionRestoration';
+import config from '../config';
 
-// Create an Axios instance
-const baseURL = import.meta.env.VITE_API_URL || 'https://carepro-api20241118153443.azurewebsites.net/api';
-
-
+// Create an Axios instance with environment-aware base URL
 const api = axios.create({
-    baseURL: baseURL,
+    baseURL: config.BASE_URL,
     headers: {
         'Content-Type': 'application/json',
     },

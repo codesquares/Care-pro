@@ -11,10 +11,16 @@ module.exports = {
     },
     importMeta: {
       env: {
-        VITE_API_URL: 'https://oncarepro.com/api',
-        VITE_AZURE_API_URL: 'https://oncarepro.com/api',
-        VITE_LOCAL_API_URL: 'https://carepro-api-service-768822997.us-east-1.elb.amazonaws.com',
-        VITE_MIDDLEWARE_API_URL: 'https://carepro-api-service-768822997.us-east-1.elb.amazonaws.com',
+        VITE_PRODUCTION_API_URL: 'https://api.oncarepro.com/api',
+        VITE_STAGING_API_URL: 'https://carepro-api20241118153443.azurewebsites.net/api',
+        VITE_LOCAL_API_URL: 'http://localhost:5005/api',
+        VITE_CONTENTFUL_SPACE_ID: 'test-space-id',
+        VITE_CONTENTFUL_ACCESS_TOKEN_PUBLISHED: 'test-published-token',
+        VITE_CONTENTFUL_ACCESS_TOKEN_DRAFT: 'test-draft-token',
+        VITE_DOJAH_APP_ID: 'test-app-id',
+        VITE_DOJAH_WIDGET_ID: 'test-widget-id',
+        VITE_DOJAH_PUBLIC_KEY: 'test-public-key',
+        VITE_DEBUG: 'true',
         MODE: 'test'
       }
     }

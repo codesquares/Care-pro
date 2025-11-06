@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react';
 import { getAllVerificationData, getVerificationStatistics, testAllDojahEndpoints, checkWebhookStatus, getDojahStatus } from '../../services/dojahService';
 import './WebhookDataAdmin.scss';
+import config from '../../config';
 
 const WebhookDataAdmin = () => {
   const [webhookData, setWebhookData] = useState([]);
@@ -41,8 +42,8 @@ const WebhookDataAdmin = () => {
     }
     
     try {
-      // Test with a simpler endpoint first
-      const response = await fetch(`${import.meta.env.VITE_API_BASE_URL || 'http://localhost:5005'}/api/Dojah/admin/statistics`, {
+      // Test with a simpler endpoint first - FIXED: Use centralized config instead of hardcoded URL
+      const response = await fetch(`${config.BASE_URL}/api/Dojah/admin/statistics`, {
         method: 'GET',
         headers: {
           'Authorization': `Bearer ${token}`,
@@ -299,11 +300,11 @@ const WebhookDataAdmin = () => {
       {/* API Endpoint Information */}
       <div className="api-info">
         <h4>Available Backend Endpoints</h4>
-        <code>GET {import.meta.env.VITE_API_BASE_URL || 'http://localhost:5005'}/api/Dojah/webhook</code>
-        <code>GET {import.meta.env.VITE_API_BASE_URL || 'http://localhost:5005'}/api/Dojah/admin/statistics</code>
-        <code>GET {import.meta.env.VITE_API_BASE_URL || 'http://localhost:5005'}/api/Dojah/admin/all-data</code>
-        <code>GET {import.meta.env.VITE_API_BASE_URL || 'http://localhost:5005'}/api/Dojah/admin/all-data?term=search&start=2024-01-01&end=2024-12-31</code>
-        <code>GET {import.meta.env.VITE_API_BASE_URL || 'http://localhost:5005'}/api/Dojah/status?userId=&userType=&token=</code>
+        <code>GET {config.BASE_URL}/Dojah/webhook</code>
+        <code>GET {config.BASE_URL}/Dojah/admin/statistics</code>
+        <code>GET {config.BASE_URL}/Dojah/admin/all-data</code>
+        <code>GET {config.BASE_URL}/Dojah/admin/all-data?term=search&start=2024-01-01&end=2024-12-31</code>
+        <code>GET {config.BASE_URL}/Dojah/status?userId=&userType=&token=</code>
       </div>
 
       {/* Endpoint Test Results */}
@@ -505,7 +506,7 @@ const WebhookDataAdmin = () => {
           <h4>Debug Information</h4>
           <p><strong>Token:</strong> {token ? 'Present' : 'Missing'}</p>
           <p><strong>User Role:</strong> {user?.role || 'Unknown'}</p>
-          <p><strong>API Base URL:</strong> {import.meta.env.VITE_API_BASE_URL || 'http://localhost:5005'}</p>
+          <p><strong>API Base URL:</strong> {config.BASE_URL}</p>
           <p><strong>Test User ID:</strong> {testUserId}</p>
           <p><strong>Statistics Loaded:</strong> {statistics ? 'Yes' : 'No'}</p>
         </div>

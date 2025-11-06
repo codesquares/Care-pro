@@ -142,16 +142,16 @@ jobs:
           echo "🏗️ Building frontend for PRODUCTION..."
           npm run build
         env:
-          VITE_CONTENTFUL_SPACE_ID: qp3ctezw3mqr
-          VITE_CONTENTFUL_ACCESS_TOKEN_PUBLISHED: 69pqIRURSVr7hMKbyUCkSg5HvHYbg3idZIs5o4EuJYA
-          VITE_CONTENTFUL_ACCESS_TOKEN_DRAFT: 6drcdizoknhHdF__X_ZhA3kmRa2sXhpPhdiTBrq1h2I
+          VITE_CONTENTFUL_SPACE_ID: ${{ secrets.VITE_CONTENTFUL_SPACE_ID }}
+          VITE_CONTENTFUL_ACCESS_TOKEN_PUBLISHED: ${{ secrets.VITE_CONTENTFUL_ACCESS_TOKEN_PUBLISHED }}
+          VITE_CONTENTFUL_ACCESS_TOKEN_DRAFT: ${{ secrets.VITE_CONTENTFUL_ACCESS_TOKEN_DRAFT }}
           VITE_CONTENTFUL_ENVIRONMENT: master
-          VITE_API_URL: https://api.oncarepro.com/api
-          VITE_AZURE_API_URL: https://api.oncarepro.com/api
-          VITE_LOCAL_API_URL: https://care-pro-node-api.onrender.com/api
-          VITE_DOJAH_WIDGET_ID: 69048546a4b1ea078950d7b9
-          VITE_DOJAH_APP_ID: 690484faa4b1ea078950c1cb
-          VITE_DOJAH_PUBLIC_KEY: prod_pk_QTjK773OoJl6siRJFLNBUq07M
+          VITE_PRODUCTION_API_URL: https://api.oncarepro.com/api
+          VITE_STAGING_API_URL: https://carepro-api20241118153443.azurewebsites.net/api
+          VITE_LOCAL_API_URL: http://localhost:5005/api
+          VITE_DOJAH_WIDGET_ID: ${{ secrets.VITE_DOJAH_WIDGET_ID_PROD }}
+          VITE_DOJAH_APP_ID: ${{ secrets.VITE_DOJAH_APP_ID_PROD }}
+          VITE_DOJAH_PUBLIC_KEY: ${{ secrets.VITE_DOJAH_PUBLIC_KEY }}
           VITE_DEBUG: false
           VITE_REDIRECT_URL: https://oncarepro.com/app/caregiver/dashboard
           VITE_ENV: production
@@ -318,16 +318,16 @@ jobs:
           echo "🏗️ Building frontend Docker image for PRODUCTION..."
           cd frontend/vite-project
           docker build \
-            --build-arg VITE_CONTENTFUL_SPACE_ID=qp3ctezw3mqr \
-            --build-arg VITE_CONTENTFUL_ACCESS_TOKEN_PUBLISHED=69pqIRURSVr7hMKbyUCkSg5HvHYbg3idZIs5o4EuJYA \
-            --build-arg VITE_CONTENTFUL_ACCESS_TOKEN_DRAFT=6drcdizoknhHdF__X_ZhA3kmRa2sXhpPhdiTBrq1h2I \
+            --build-arg VITE_CONTENTFUL_SPACE_ID=${{ secrets.VITE_CONTENTFUL_SPACE_ID }} \
+            --build-arg VITE_CONTENTFUL_ACCESS_TOKEN_PUBLISHED=${{ secrets.VITE_CONTENTFUL_ACCESS_TOKEN_PUBLISHED }} \
+            --build-arg VITE_CONTENTFUL_ACCESS_TOKEN_DRAFT=${{ secrets.VITE_CONTENTFUL_ACCESS_TOKEN_DRAFT }} \
             --build-arg VITE_CONTENTFUL_ENVIRONMENT=master \
-            --build-arg VITE_API_URL=https://api.oncarepro.com/api \
-            --build-arg VITE_AZURE_API_URL=https://api.oncarepro.com/api \
-            --build-arg VITE_LOCAL_API_URL=https://care-pro-node-api.onrender.com/api \
-            --build-arg VITE_DOJAH_WIDGET_ID=69048546a4b1ea078950d7b9 \
-            --build-arg VITE_DOJAH_APP_ID=690484faa4b1ea078950c1cb \
-            --build-arg VITE_DOJAH_PUBLIC_KEY=prod_pk_QTjK773OoJl6siRJFLNBUq07M \
+            --build-arg VITE_PRODUCTION_API_URL=https://api.oncarepro.com/api \
+            --build-arg VITE_STAGING_API_URL=https://carepro-api20241118153443.azurewebsites.net/api \
+            --build-arg VITE_LOCAL_API_URL=http://localhost:5005/api \
+            --build-arg VITE_DOJAH_WIDGET_ID=${{ secrets.VITE_DOJAH_WIDGET_ID_PROD }} \
+            --build-arg VITE_DOJAH_APP_ID=${{ secrets.VITE_DOJAH_APP_ID_PROD }} \
+            --build-arg VITE_DOJAH_PUBLIC_KEY=${{ secrets.VITE_DOJAH_PUBLIC_KEY }} \
             --build-arg VITE_DEBUG=false \
             --build-arg VITE_REDIRECT_URL=https://oncarepro.com/app/caregiver/dashboard \
             --build-arg VITE_ENV=production \

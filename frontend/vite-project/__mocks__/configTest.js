@@ -2,9 +2,9 @@
 const config = {
   BASE_URL: "http://localhost:3000/api",
   FALLBACK_URL: "http://localhost:3000",
-  
-  // REMOVED: LOCAL_API_URL and LOCALHOST_API_URL are no longer needed
-  // All API calls now go through the .NET backend BASE_URL
+  LOCAL_API_URL: "http://localhost:5005/api",
+  STAGING_API_URL: "https://carepro-api20241118153443.azurewebsites.net/api",
+  PRODUCTION_API_URL: "https://api.oncarepro.com/api",
   
   DOJAH: {
     APP_ID: "test-app-id",
@@ -17,7 +17,10 @@ const config = {
   ENV: {
     ENVIRONMENT: 'test',
     API_URL: "http://localhost:3000/api",
-    AZURE_API_URL: "http://localhost:3000/api",
+    CURRENT_HOSTNAME: "localhost",
+    IS_PRODUCTION: false,
+    IS_STAGING: false,
+    IS_LOCAL: true,
     REDIRECT_URL: "http://localhost:3000/app/caregiver/dashboard",
     DEBUG: true
   }
