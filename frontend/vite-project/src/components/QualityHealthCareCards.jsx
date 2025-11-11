@@ -11,9 +11,52 @@ import QHCC7 from "../assets/QHCC7.jpg";
 import QHCC8 from "../assets/QHCC8.jpg";
 import "../styles/components/qualityHealthCareCards.scss";
 
+const categories = {
+    "Adult Care": [
+      "Companionship", "Meal preparation", "Mobility assistance", "Medication reminders",
+      "Bathing and grooming", "Dressing assistance", "Toileting and hygiene support",
+      "Incontinence care", "Overnight supervision", "Chronic illness management"
+    ],
+    "Post Surgery Care": [
+      "Wound care", "Medication management", "Post-surgery care",
+      "Mobility assistance", "Home safety assessment", "Feeding assistance"
+    ],
+    "Child Care": [
+      "Respite", "Babysitting", "Meal preparation", "Recreational activities assistance",
+      "Emotional support and check-ins"
+    ],
+    "Pet Care": [
+      "Pet minding", "Dog walking", "Feeding assistance", "Companionship"
+    ],
+    "Home Care": [
+      "Light housekeeping", "Cleaning", "Cooking", "Home safety assessment",
+      "Errands and shopping", "Transportation to appointments"
+    ],
+    "Special Needs Care": [
+      "Dementia care", "Autism support", "Behavioral support", "Disability support services",
+      "Assistive device training", "Language or communication support"
+    ],
+    "Medical Support": [
+      "Nursing care", "Medication reminders", "Medical appointment coordination",
+      "Palliative care support", "Chronic illness management"
+    ],
+    "Mobility Support": [
+      "Mobility assistance", "Fall prevention monitoring", "Exercise and fitness support",
+      "Assistive device training", "Transportation to appointments"
+    ],
+    "Therapy & Wellness": [
+      "Physical therapy support", "Cognitive stimulation activities", "Emotional support and check-ins",
+      "Recreational activities assistance", "Acupuncture", "Massage therapy"
+    ],
+    "Palliative": [
+      "Palliative care support", "Overnight supervision", "Emotional support and check-ins",
+      "Home safety assessment"
+    ],
+  };
+
 const services = [
   {
-    title: 'Expert Medical Support',
+    title: 'Adult Care',
     rating: 4.5,
     caregivers: 302,
     image: QHCC1,
@@ -22,7 +65,7 @@ const services = [
     titleColor: '#5B3E7A', 
   },
   {
-    title: 'House cleaning and management',
+    title: 'Home Care Services',
     rating: 4.7,
     caregivers: 44,
     image: QHCC2,
@@ -31,7 +74,7 @@ const services = [
     titleColor: '#27614B', 
   },
   {
-    title: 'Reliable Senior Care',
+    title: 'Mobility Support',
     rating: 3.2,
     caregivers: 112,
     image: QHCC3,
@@ -49,7 +92,7 @@ const services = [
     titleColor: '#475A76', 
   },
   {
-    title: 'Children Care & Pregnancy support',
+    title: 'Children Care & Medical Support',
     rating: 4.5,
     caregivers: 302,
     image: QHCC5,
@@ -67,7 +110,7 @@ const services = [
     titleColor: '#506231', 
   },
   {
-    title: 'Physical and speech therapy',
+    title: 'Therapy and Wellness',
     rating: 3.2,
     caregivers: 112,
     image: QHCC7,
@@ -76,7 +119,7 @@ const services = [
     titleColor: '#6A6626', 
   },
   {
-    title: 'Companionship',
+    title: 'Palliative Care',
     rating: 4.2,
     caregivers: 2,
     image: QHCC8,

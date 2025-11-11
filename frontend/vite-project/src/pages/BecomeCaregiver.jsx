@@ -10,7 +10,7 @@ import WaitlistModal from "../components/WaitListModal";
 import QualityHealthCareCards from "../components/QualityHealthCareCards";
 import OurBlogs from "../components/OurBlogs";
 import { useAuth } from "../main-app/context/AuthContext";
-
+import "./BeomeCaregiver.scss";
 
 
 const BecomeCaregiver = () => {
@@ -31,7 +31,8 @@ const BecomeCaregiver = () => {
     };
   return (
     <div className="book-caregiver">
-      <TopBanner
+      
+        <TopBanner 
         title="Become Caregiver"
         description="As a Carepro caregiver, you have the opportunity to support your patients while also building a rewarding career in healthcare. Take the first step today!."
         buttonText="Become a Caregiver"
@@ -39,6 +40,7 @@ const BecomeCaregiver = () => {
         onButtonClick={handleBecomeCaregiver}
         backgroundColor="#015476"
       />
+      
       <WhyCarepro/>
       <QualityHealthCareCards/>
       <CaregiverProcess

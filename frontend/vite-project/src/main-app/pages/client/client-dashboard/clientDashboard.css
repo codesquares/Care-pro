@@ -7,6 +7,9 @@
   background-color: #F9FAFB;
   border-radius: 12px;
 }
+.dashboard-book-caregiver{
+  margin: 0px 20px;
+}
 
 /* Smooth transition for hiding/showing components during search */
 .banner, .mid-banner, .filter-bar {

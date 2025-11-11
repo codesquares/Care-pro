@@ -22,11 +22,13 @@ import Modal from "../../components/modal/Modal";
 import { useNavigate, useLocation } from "react-router-dom";
 import { createNotification } from "../../services/notificationService";
 import { useGigForm } from "../../contexts/GigEditContext";
+import { useCaregiverStatus } from "../../contexts/CaregiverStatusContext";
 
 const GigsForm = () => {
   const pages = ["Overview", "Pricing", "Gallery", "Publish"];
   const [activeField, setActiveField] = useState(null);
   const [blurTimeout, setBlurTimeout] = useState(null);
+  const [showGuidelines, setShowGuidelines] = useState(true);
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [modalTitle, setModalTitle] = useState("");
   const [modalDescription, setModalDescription] = useState("");
@@ -44,6 +46,15 @@ const GigsForm = () => {
   const [isLoadingGigs, setIsLoadingGigs] = useState(true);
   const navigate = useNavigate();
   
+  // Use caregiver status context for eligibility
+  const { 
+    canPublishGigs, 
+    isLoading: isLoadingStatus,
+    isVerified,
+    isQualified,
+    hasCertificates
+  } = useCaregiverStatus();
+  
   // Use context for form state and current step
   const { 
     formData, 
@@ -59,15 +70,17 @@ const GigsForm = () => {
     setValidationErrors
   } = useGigForm();
   
-  // Check if we can publish (considering 2-gig limit)
-  const canPublish = isEditMode || activeGigsCount < 2;
+  // Check if we can publish (considering 2-gig limit and caregiver eligibility)
+  const canPublish = (isEditMode || activeGigsCount < 2) && canPublishGigs;
   
   // Debug logging for publish logic
   console.log('🔍 Publish Logic Debug:', {
     isEditMode,
     activeGigsCount,
+    canPublishGigs,
     canPublish,
-    formDataStatus: formData.status
+    formDataStatus: formData.status,
+    isLoadingStatus
   });
   
   // Check if we're editing a published gig
@@ -159,6 +172,7 @@ const GigsForm = () => {
       setBlurTimeout(null);
     }
     setActiveField(null);
+    setShowGuidelines(false);
   };
 
   const handleInputChange = (name, value) => {
@@ -345,6 +359,14 @@ const GigsForm = () => {
         formDataPayload.append("Image1", selectedFile);
       }
 
+      // Handle subcategory array - API requires this field
+      if (formData.subcategory && Array.isArray(formData.subcategory)) {
+        formData.subcategory.forEach(sub => {
+          formDataPayload.append("SubCategory", sub);
+        });
+        console.log("📋 Added SubCategory fields to draft:", formData.subcategory);
+      }
+
       // Add any other fields that might be missing but required by backend
       if (formData.description) {
         formDataPayload.append("Description", formData.description);
@@ -468,7 +490,7 @@ const GigsForm = () => {
       // Handle pricing - find the first completed package
       const completedPackage = Object.keys(formData.pricing).find(packageType => {
         const pkg = formData.pricing[packageType];
-        return pkg.name && pkg.details && pkg.deliveryTime && pkg.amount;
+        return pkg.name && pkg.details && pkg.amount; // deliveryTime is auto-set
       });
       
       if (completedPackage) {
@@ -789,6 +811,11 @@ const GigsForm = () => {
                 isEditingPublishedGig={isEditingPublishedGig}
                 isLoadingGigs={isLoadingGigs}
                 isSaving={isSaving}
+                caregiverStatus={{
+                  isVerified,
+                  isQualified,
+                  hasCertificates
+                }}
                 validationErrors={(() => {
                   const validation = validatePublishPage(formData, selectedFile, imagePreview);
                   return validation.errors;
@@ -809,11 +836,13 @@ const GigsForm = () => {
         </div>
       </div>
 
-      <GuidelinesCard 
-        currentPage={currentStep} 
-        activeField={activeField} 
-        onClose={handleCloseGuidelines}
-      />
+      {showGuidelines && (
+        <GuidelinesCard 
+          currentPage={currentStep} 
+          activeField={activeField} 
+          onClose={handleCloseGuidelines}
+        />
+      )}
 
       <Modal
         isOpen={isModalOpen}

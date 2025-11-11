@@ -45,9 +45,9 @@ export const validatePricingPage = (pricing) => {
   const errors = {};
   const packages = ['Basic', 'Standard', 'Premium'];
   
-  // Check if at least one package is filled
+  // Check if at least one package is filled (deliveryTime is auto-set)
   const hasValidPackage = packages.some(pkg => 
-    pricing[pkg].name && pricing[pkg].details && pricing[pkg].deliveryTime && pricing[pkg].amount
+    pricing[pkg].name && pricing[pkg].details && pricing[pkg].amount
   );
   
   if (!hasValidPackage) {
@@ -59,8 +59,8 @@ export const validatePricingPage = (pricing) => {
     const packageData = pricing[pkg];
     const packageErrors = {};
     
-    // If any field is filled, all fields must be filled for that package
-    const hasAnyField = packageData.name || packageData.details || packageData.deliveryTime || packageData.amount;
+    // If any field is filled, all fields must be filled for that package (deliveryTime is auto-set)
+    const hasAnyField = packageData.name || packageData.details || packageData.amount;
     
     if (hasAnyField) {
       if (!packageData.name || packageData.name.trim().length === 0) {
@@ -94,14 +94,15 @@ export const validatePricingPage = (pricing) => {
         }
       }
       
-      if (!packageData.deliveryTime) {
-        packageErrors.deliveryTime = "Delivery time is required";
-      }
+      // Delivery time is auto-set to "1 Day Per Week", no validation needed
+      // if (!packageData.deliveryTime) {
+      //   packageErrors.deliveryTime = "Delivery time is required";
+      // }
       
       if (!packageData.amount || packageData.amount <= 0) {
         packageErrors.amount = "Package amount must be greater than 0";
-      } else if (packageData.amount < 1000) {
-        packageErrors.amount = "Minimum amount is ₦1,000";
+      } else if (packageData.amount < 10000) {
+        packageErrors.amount = "Minimum amount is ₦10,000";
       } else if (packageData.amount > 1000000) {
         packageErrors.amount = "Maximum amount is ₦1,000,000";
       }
