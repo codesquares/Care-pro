@@ -64,8 +64,8 @@
     flex: 1; // Make both sections take equal width
     display: flex;
     flex-direction: column; // Ensure content stacks properly
-    justify-content: flex-start; // Align items at the start
     max-width: 50%; // Ensure equal width
+    min-height: 0; // Allow flex items to shrink
 
     @media (max-width: 768px) {
       max-width: 100%; // On mobile, both sections take full width
@@ -73,20 +73,24 @@
   }
 
   .steps-list {
+    justify-content: space-between; // Maintain equal height with image
+    
     @media (max-width: 768px) {
       padding: 1.5rem;
+      justify-content: flex-start; // Reset for mobile
+      gap: 1rem;
     }
 
     .step-item {
       display: flex;
       align-items: center;
-      padding: 1.5rem;
+      padding: 1rem;
       background-color: #ffffff;
       border-radius: 10px;
       box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
       transition: transform 0.3s ease;
-      margin-bottom: 2rem;
-      margin-bottom: 2rem; // Add margin bottom to the cards
+      flex-shrink: 0; // Prevent items from shrinking too much
+      min-height: 80px; // Set minimum height for consistent sizing
 
       &:hover {
         transform: translateY(-5px);
@@ -118,16 +122,15 @@
     margin: 0;
     display: flex;
     justify-content: center;
-    align-items: center;
-    height: 100%; // Make sure the image section takes full height
+    align-items: stretch; // Stretch to match steps-list height
+    flex-grow: 1; // Allow it to grow to match the other section
 
     img {
       width: 100%;
       height: 100%; // Ensure image fills the entire section
       border-radius: 1.5rem;
       box-shadow: 0 4px 15px rgba(0, 0, 0, 0.2);
-      object-fit: cover;
-      margin-bottom: 1.5rem; // Maintain image aspect ratio while covering
+      object-fit: cover; // Maintain image aspect ratio while covering
     }
 
     @media (max-width: 768px) {

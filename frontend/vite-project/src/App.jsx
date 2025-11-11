@@ -36,6 +36,7 @@ import ContentBlogPost from './components/ContentfulBlog/BlogPost';
 import { BlogProvider } from './main-app/context/BlogContext';
 import PaymentSuccess from './main-app/pages/client/home-care-service/PaymentSuccess';
 import { MessageProvider } from './main-app/context/MessageContext';
+import { CaregiverStatusProvider } from './main-app/contexts/CaregiverStatusContext';
 // import { NotificationProvider } from './main-app/context/NotificationContext';
 import SplashScreen from './main-app/components/SplashScreen/SplashScreen';
 import PublicMarketplace from './main-app/pages/client/client-dashboard/PublicMarketplace';
@@ -63,9 +64,11 @@ function App() {
           <MessageProvider>
             <Router>
               <AuthProvider>
-                <ErrorBoundary>
-                  <AppContent />
-                </ErrorBoundary>
+                <CaregiverStatusProvider>
+                  <ErrorBoundary>
+                    <AppContent />
+                  </ErrorBoundary>
+                </CaregiverStatusProvider>
               </AuthProvider>
             </Router>
           </MessageProvider>

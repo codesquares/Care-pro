@@ -52,12 +52,16 @@ const GalleryUploads = ({
       <div className="galleryUploads">
         <div className="uploads-card-section">
           <div className="uploads-card-details">
-            <h3>Image (Required)</h3>
+            <h3>Images (up to 3)</h3>
             <p className="gigs-card-gallery-instructions">
-              Upload a high-quality image to showcase your service. Drag & drop or click to browse.
-              <br />
-              <small>Supported formats: JPG, PNG, GIF, WebP. Max size: 5MB.</small>
+              Upload an image to showcase your service. Drag & drop or click to browse.
             </p>
+            <ul className="gallery-requirements">
+              <li>Use high-res images only</li>
+              <li>Show your professionalism</li>
+              <li>Include relevant certifications</li>
+              <li>Supported formats: JPG, PNG, GIF, WebP. Max size: 5MB</li>
+            </ul>
             {selectedFile && (
               <div className="file-info">
                 <small>
@@ -73,57 +77,70 @@ const GalleryUploads = ({
           </div>
 
           <div className="uploads-card-area">
-            {[0].map((index) => (
-              <div className="uploads-card-input" key={index}>
-                <label 
-                  className={`file-upload ${isDragOver ? 'drag-over' : ''}`}
-                  onMouseEnter={() => onFieldFocus('gallery-upload')}
-                  onMouseLeave={onFieldBlur}
-                  onDragOver={handleDragOver}
-                  onDragLeave={handleDragLeave}
-                  onDrop={(e) => handleDrop(e, index)}
-                >
-                  <div className="upload-area">
-                    {imagePreview ? (
-                      <div className="image-container">
-                        <img
-                          src={imagePreview}
-                          alt={`Preview ${index + 1}`}
-                          className="galleryImage"
-                        />
-                        <button
-                          type="button"
-                          className="remove-image-btn"
-                          onClick={(e) => {
-                            e.preventDefault();
-                            e.stopPropagation();
-                            if (onFileChange) {
-                              // Clear the image by calling onFileChange with empty event
-                              const clearEvent = { target: { files: [] } };
-                              onFileChange(clearEvent, index);
-                            }
-                          }}
-                          title="Remove image"
-                        >
-                          ×
-                        </button>
-                      </div>
-                    ) : (
-                      <div className="placeholder-content">
-                        <div className="placeholder-icon">📷</div>
-                        <span>Drag & drop image or</span>
-                        <p>Click to browse</p>
-                      </div>
-                    )}
+            <div className="main-image-upload">
+              <label 
+                className={`file-upload-large ${isDragOver ? 'drag-over' : ''} ${imagePreview ? 'has-image' : ''}`}
+                onMouseEnter={() => onFieldFocus('gallery-upload')}
+                onMouseLeave={onFieldBlur}
+                onDragOver={handleDragOver}
+                onDragLeave={handleDragLeave}
+                onDrop={(e) => handleDrop(e, 0)}
+              >
+                {imagePreview ? (
+                  <div className="image-preview-container">
+                    <img
+                      src={imagePreview}
+                      alt="Service preview"
+                      className="full-size-preview"
+                    />
+                    <div className="image-overlay">
+                      <button
+                        type="button"
+                        className="change-image-btn"
+                        onClick={(e) => {
+                          e.preventDefault();
+                          e.stopPropagation();
+                          // Trigger file input click
+                          e.target.closest('label').querySelector('input[type="file"]').click();
+                        }}
+                        title="Change image"
+                      >
+                        📷 Change Image
+                      </button>
+                      <button
+                        type="button"
+                        className="remove-image-btn"
+                        onClick={(e) => {
+                          e.preventDefault();
+                          e.stopPropagation();
+                          if (onFileChange) {
+                            const clearEvent = { target: { files: [] } };
+                            onFileChange(clearEvent, 0);
+                          }
+                        }}
+                        title="Remove image"
+                      >
+                        🗑️ Remove
+                      </button>
+                    </div>
                   </div>
-                  <input
-                    type="file"
-                    accept="image/*"
-                    onChange={(e) => handleImageChange(e, index)}
-                  />
-                </label>
-              </div>
-            ))}
+                ) : (
+                  <div className="upload-placeholder">
+                    <div className="upload-icon">📷</div>
+                    <div className="upload-text">
+                      <span className="primary-text">Drag & drop a Photo or</span>
+                      <span className="secondary-text">Browse</span>
+                    </div>
+                  </div>
+                )}
+                <input
+                  type="file"
+                  accept="image/*"
+                  onChange={(e) => handleImageChange(e, 0)}
+                  style={{ display: 'none' }}
+                />
+              </label>
+            </div>
           </div>
         </div>
       </div>

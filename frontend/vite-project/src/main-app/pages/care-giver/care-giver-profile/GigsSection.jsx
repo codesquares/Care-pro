@@ -6,6 +6,7 @@ import clock from "../../../../assets/main-app/clock.png"; // Ensure you have an
 import Toast from "../../../components/toast/Toast";
 import useToast from "../../../hooks/useToast";
 import { useGigEdit } from "../../../contexts/GigEditContext";
+import { useCaregiverStatus } from "../../../contexts/CaregiverStatusContext";
 import "./gigs-section.css";
 
 const GigsSection = () => {
@@ -20,11 +21,16 @@ const GigsSection = () => {
   const basePath = "/app/caregiver";
   const { toasts, showSuccess, showError, removeToast } = useToast();
   const { populateFromGig, resetForm } = useGigEdit();
+  const { canPublishGigs, isVerified, isQualified, hasCertificates } = useCaregiverStatus();
 
   // Debug: Check if we have the context functions
   console.log('🔍 DEBUG - GigsSection context check:', {
     hasPopulateFromGig: typeof populateFromGig,
-    hasResetForm: typeof resetForm
+    hasResetForm: typeof resetForm,
+    canPublishGigs,
+    isVerified,
+    isQualified,
+    hasCertificates
   });
 
   const handleNavigateToCreateGig = () => {
@@ -53,9 +59,19 @@ const GigsSection = () => {
   };
 
   const handlePublishGig = async (gig) => {
-    // Check if we can publish (less than 2 active gigs)
+    // Check if we can publish (less than 2 active gigs AND caregiver eligibility)
     if (!canPublishNewGig) {
-      showError('You can only have 2 active gigs at a time. Please pause one of your active gigs first to publish this one.');
+      if (activeGigs.length >= 2) {
+        showError('You can only have 2 active gigs at a time. Please pause one of your active gigs first to publish this one.');
+      } else if (!canPublishGigs) {
+        // Build specific eligibility error message
+        const missingRequirements = [];
+        if (!isVerified) missingRequirements.push('Complete identity verification');
+        if (!isQualified) missingRequirements.push('Pass qualification assessment');
+        if (!hasCertificates) missingRequirements.push('Upload at least one certificate');
+        
+        showError(`To publish gigs, you need to: ${missingRequirements.join(', ')}`);
+      }
       return;
     }
 
@@ -224,7 +240,10 @@ const GigsSection = () => {
   }, [gigs]);
 
   // Check if user can publish new gigs (max 2 active gigs allowed)
-  const canPublishNewGig = useMemo(() => activeGigs.length < 2, [activeGigs]);
+  const canPublishNewGig = useMemo(() => 
+    activeGigs.length < 2 && canPublishGigs, 
+    [activeGigs, canPublishGigs]
+  );
 
   useEffect(() => {
     const fetchGigs = async () => {
@@ -314,7 +333,24 @@ const GigsSection = () => {
         {/* Active Gigs Limit Notice */}
         {activeTab === "paused" && !canPublishNewGig && (
           <div className="gig-limit-notice">
-            <p>⚠️ You have reached the maximum of 2 active gigs. Pause an active gig to publish more.</p>
+            {activeGigs.length >= 2 ? (
+              <p>⚠️ You have reached the maximum of 2 active gigs. Pause an active gig to publish more.</p>
+            ) : (
+              <div>
+                <p>⚠️ To publish gigs, you need to complete the following requirements:</p>
+                <ul className="eligibility-requirements">
+                  <li className={isVerified ? 'completed' : 'pending'}>
+                    {isVerified ? '✅' : '❌'} Complete identity verification
+                  </li>
+                  <li className={isQualified ? 'completed' : 'pending'}>
+                    {isQualified ? '✅' : '❌'} Pass qualification assessment
+                  </li>
+                  <li className={hasCertificates ? 'completed' : 'pending'}>
+                    {hasCertificates ? '✅' : '❌'} Upload at least one certificate
+                  </li>
+                </ul>
+              </div>
+            )}
           </div>
         )}
 
@@ -377,7 +413,12 @@ const GigsSection = () => {
                     className={`caregiver-gig-action-btn caregiver-publish ${!canPublishNewGig ? 'disabled' : ''}`}
                     onClick={() => handlePublishGig(gig)}
                     disabled={publishingGigs.has(gig.id) || !canPublishNewGig}
-                    title={!canPublishNewGig ? 'You can only have 2 active gigs. Pause an active gig first.' : ''}
+                    title={!canPublishNewGig ? 
+                      (activeGigs.length >= 2 ? 
+                        'You can only have 2 active gigs. Pause an active gig first.' : 
+                        'Complete verification, assessment, and upload certificates to publish gigs.'
+                      ) : ''
+                    }
                   >
                     {publishingGigs.has(gig.id) ? 'Publishing...' : 'Publish'}
                   </button>

@@ -156,11 +156,9 @@ const GuidelinesCard = ({ currentPage, activeField, onClose }) => {
             <h3>{activeGuideline ? displayContent.heading : displayContent.title}</h3>
             <p>{activeField ? "Field-specific guidance" : "Follow these guidelines to create an effective gig"}</p>
           </div>
-          {activeField && (
-            <button className="close-guidelines" onClick={handleCloseGuidelines}>
-              ✕
-            </button>
-          )}
+          <button className="close-guidelines" onClick={handleCloseGuidelines}>
+            ✕
+          </button>
         </div>
           
           <div className="guidelines-content">

@@ -483,6 +483,29 @@
   font-weight: 500;
 }
 
+.eligibility-requirements {
+  list-style: none;
+  padding: 0;
+  margin: 8px 0 0 0;
+  text-align: left;
+}
+
+.eligibility-requirements li {
+  display: flex;
+  align-items: center;
+  padding: 4px 0;
+  font-size: 13px;
+  color: #856404;
+}
+
+.eligibility-requirements li.completed {
+  color: #28a745;
+}
+
+.eligibility-requirements li.pending {
+  color: #dc3545;
+}
+
 /* Enhanced disabled state for publish button */
 .caregiver-gig-action-btn.caregiver-publish.disabled {
   opacity: 0.6;

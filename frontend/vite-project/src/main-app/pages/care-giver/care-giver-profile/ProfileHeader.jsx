@@ -127,7 +127,7 @@ const ProfileHeader = () => {
       setLocationLoading(false);
     }
   };
-
+ 
   const handleImageUpload = async (event) => {
     const file = event.target.files[0];
     if (!file) return;
@@ -325,8 +325,16 @@ const ProfileHeader = () => {
                  (data.location && data.location.includes(',') ? data.location.split(',')[0].trim() : data.location) || 
                  (data.serviceAddress && data.serviceAddress.includes(',') ? data.serviceAddress.split(',')[1]?.trim() : null) ||
                  "New York",
-        memberSince: data.createdAt ? new Date(data.createdAt).toLocaleDateString() : "January 2023",
-        lastDelivery: data.lastDelivery ? new Date(data.lastDelivery).toLocaleDateString() : "2 days ago",
+        memberSince: data.createdAt ? new Date(data.createdAt).toLocaleDateString('en-US', { 
+          month: 'short', 
+          day: 'numeric', 
+          year: 'numeric' 
+        }).replace(',', ',') : "January 2023",
+        lastDelivery: data.lastDelivery ? new Date(data.lastDelivery).toLocaleDateString('en-US', { 
+          month: 'short', 
+          day: 'numeric', 
+          year: 'numeric' 
+        }).replace(',', ',') : "2 days ago",
         picture: data.profileImage || profilecard1,
         introVideo: data.introVideo || "",
         aboutMe: data.aboutMe || "",
@@ -420,7 +428,7 @@ const ProfileHeader = () => {
           <h2 className="caregiver-profile-name">{profile.name}</h2>
           {userName && <p className="caregiver-username">@{userName}</p>}
           {/*bio should be limited to 60 characters */}
-          <p className="caregiver-bio">{`"${profile.bio.slice(0, 60)}${profile.bio.length > 60 ? '...' : ''}"`}</p>
+          <p className="caregiver-bio">{`"${profile.aboutMe.slice(0, 60)}${profile.aboutMe.length > 60 ? '...' : ''}"`}</p>
         </div>
       
         {/* <div className="caregiver-profile-rating-section">

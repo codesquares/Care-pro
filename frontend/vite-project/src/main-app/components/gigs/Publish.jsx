@@ -17,7 +17,8 @@ const PublishGig = ({
   activeGigsCount = 0,
   isEditingPublishedGig = false,
   isLoadingGigs = false,
-  isSaving = false // Add isSaving prop
+  isSaving = false, // Add isSaving prop
+  caregiverStatus = null // Add caregiver status for detailed messaging
 }) => {
   return (
     <div className="publish-gig">
@@ -33,7 +34,24 @@ const PublishGig = ({
             )}
             {!isLoadingGigs && !canPublish && !isEditingPublishedGig && (
               <div className="gig-limit-warning">
-                <p>⚠️ You already have 2 active gigs (the maximum allowed). Please pause one of your active gigs to publish this one, or save as draft for now.</p>
+                {activeGigsCount >= 2 ? (
+                  <p>⚠️ You already have 2 active gigs (the maximum allowed). Please pause one of your active gigs to publish this one, or save as draft for now.</p>
+                ) : caregiverStatus && (
+                  <div>
+                    <p>⚠️ To publish gigs, you need to complete the following requirements:</p>
+                    <ul className="eligibility-checklist">
+                      <li className={caregiverStatus.isVerified ? 'completed' : 'pending'}>
+                        {caregiverStatus.isVerified ? '✅' : '❌'} Complete identity verification
+                      </li>
+                      <li className={caregiverStatus.isQualified ? 'completed' : 'pending'}>
+                        {caregiverStatus.isQualified ? '✅' : '❌'} Pass qualification assessment
+                      </li>
+                      <li className={caregiverStatus.hasCertificates ? 'completed' : 'pending'}>
+                        {caregiverStatus.hasCertificates ? '✅' : '❌'} Upload at least one certificate
+                      </li>
+                    </ul>
+                  </div>
+                )}
               </div>
             )}
             {!isLoadingGigs && activeGigsCount >= 0 && (

@@ -28,6 +28,9 @@
     display: flex;
     flex-direction: column;
     align-items: center;
+    overflow: hidden;
+    word-wrap: break-word;
+    overflow-wrap: break-word;
   }
 
   /* Profile Basic Info Section */
@@ -37,6 +40,11 @@
     padding-bottom: 16px;
     border-bottom: 1px solid #f3f4f6;
     list-style: none;
+    width: 100%;
+    max-width: 100%;
+    min-width: 0;
+    box-sizing: border-box;
+    overflow: hidden;
   }
 
   .caregiver-profile-basic-info::before,
@@ -132,6 +140,11 @@
     color: #1a1a1a;
     line-height: 1.2;
     list-style: none;
+    width: 100%;
+    max-width: 100%;
+    word-break: break-word;
+    hyphens: auto;
+    box-sizing: border-box;
   }
 
   .caregiver-profile-header-card h2::before,
@@ -145,40 +158,61 @@
     font-size: 0.6rem;
     color: #6b7280;
     font-family: 'ag', sans-serif;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+    max-width: 100%;
   }
   .caregiver-profile-name{
     font-family: 'kanit', sans-serif;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+    max-width: 100%;
   }
   .caregiver-profile-header-card .caregiver-bio {
     margin: 0 0 16px 0;
     font-size: 12px;
     line-height: 1.4;
     color: #4b5563;
-    width: 100%;
+    width: calc(100% - 8px);
+    max-width: calc(100% - 8px);
     text-align: center;
     font-style: italic;
     font-weight: bold;
     position: relative;
-    padding: 0 20px;
+    padding: 0 24px;
     font-family:'Ag', 'Kanit', sans-serif;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    display: -webkit-box;
+    -webkit-line-clamp: 2;
+    line-clamp: 2;
+    -webkit-box-orient: vertical;
+    white-space: normal;
+    box-sizing: border-box;
+    word-break: break-word;
+    hyphens: auto;
   }
 
   .caregiver-profile-header-card .caregiver-bio::before {
     content: '"';
     position: absolute;
-    left: 0;
+    left: 2px;
     top: 0;
     font-size: 14px;
     color: #6b7280;
+    z-index: 1;
   }
 
   .caregiver-profile-header-card .caregiver-bio::after {
     content: '"';
     position: absolute;
-    right: 0;
+    right: 2px;
     bottom: 0;
     font-size: 14px;
     color: #6b7280;
+    z-index: 1;
   }
 
   .caregiver-profile-header-card .caregiver-rating {
@@ -228,6 +262,9 @@
     margin-bottom: 0;
     box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05);
     transition: background-color 0.2s ease;
+    min-width: 0;
+    box-sizing: border-box;
+    overflow: hidden;
   }
 
   .caregiver-profile-details .caregiver-detail-item:hover {
@@ -236,6 +273,9 @@
   .caregiver-detail-button{
     display:flex;
     gap: 8px;
+    flex-wrap: wrap;
+    align-items: center;
+    justify-content: center;
   }
   .caregiver-detail-button .caregiver-edit-location-btn {
     padding: 6px 12px;
@@ -248,6 +288,9 @@
     font-weight: 500;
     transition: all 0.2s ease;
     text-align: center;
+    min-width: 0;
+    flex: 1;
+    max-width: 150px;
   }
   .caregiver-detail-button .caregiver-edit-location-btn:last-child {
     background-color: transparent;
@@ -287,6 +330,13 @@
     text-align: right;
     flex-grow: 1;
     margin-left: 16px;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+    min-width: 0;
+    max-width: 50%;
+    word-break: break-all;
+    box-sizing: border-box;
   }
 
   .caregiver-location-section {
@@ -484,7 +534,72 @@
 }
 
 /* Responsive Styles */
-@media (min-width: 768px) {
+/* Tablet Portrait - iPad Air 5 and similar devices (768px - 900px) */
+@media (min-width: 768px) and (max-width: 900px) {
+  .caregiver-profile-header-card {
+    padding: 20px;
+    max-width: 100%;
+  }
+  
+  .caregiver-profile-header-card .caregiver-profile-img {
+    width: 130px;
+    height: 130px;
+  }
+  
+  .caregiver-profile-header-card h2 {
+    font-size: 22px;
+    max-width: calc(100% - 16px);
+  }
+  
+  .caregiver-profile-header-card .caregiver-username {
+    font-size: 13px;
+    max-width: calc(100% - 16px);
+  }
+  
+  .caregiver-profile-header-card .caregiver-bio {
+    font-size: 12px;
+    padding: 0 20px;
+    width: calc(100% - 16px);
+    max-width: calc(100% - 16px);
+  }
+  
+  .caregiver-profile-header-card .caregiver-rating {
+    font-size: 16px;
+  }
+  
+  .caregiver-profile-header-card .caregiver-rating .caregiver-rating-text {
+    font-size: 14px;
+  }
+  
+  .caregiver-profile-details .caregiver-detail-item {
+    font-size: 13px;
+    padding: 8px 10px;
+  }
+  
+  .caregiver-detail-value {
+    max-width: 45%;
+    font-size: 12px;
+  }
+  
+  .caregiver-detail-button .caregiver-edit-location-btn {
+    font-size: 10px;
+    padding: 4px 8px;
+    max-width: 110px;
+  }
+  
+  .caregiver-availability-status {
+    font-size: 14px;
+    padding: 8px 16px;
+  }
+  
+  .caregiver-edit-location-btn {
+    font-size: 14px;
+    padding: 8px 16px;
+  }
+}
+
+/* Larger Tablets and Small Desktops (901px+) */
+@media (min-width: 901px) {
   .caregiver-profile-header-card {
     padding: 28px;
   }
