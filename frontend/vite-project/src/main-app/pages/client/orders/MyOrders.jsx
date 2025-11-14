@@ -402,7 +402,7 @@ const MyOrders = () => {
                     </span>
                     {renderStarRating(order.calculatedRating, order.reviewCount)}
                   </div>
-                  {renderContractSection(order)}
+                  {renderContractStatus(order)}
                 </div>
               </div>
             ))}
