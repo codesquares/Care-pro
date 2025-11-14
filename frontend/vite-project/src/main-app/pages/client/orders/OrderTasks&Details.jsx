@@ -5,6 +5,8 @@ import { ToastContainer, toast } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
 import { createNotification } from "../../../services/notificationService";
 import ContractService from "../../../services/contractService";
+import OrderTasksService from "../../../services/orderTasksService";
+import CreateOrderTasksModal from "../../../components/modals/CreateOrderTasksModal";
 import config from "../../../config"; // Centralized API configuration
 import "./Order&Tasks.scss";
 import { useNavigate } from "react-router-dom";
@@ -28,6 +30,12 @@ const MyOrders = () => {
     const [isGeneratingContract, setIsGeneratingContract] = useState(false);
     const [contractError, setContractError] = useState(null);
     const [checkingContract, setCheckingContract] = useState(false);
+    
+    // OrderTasks-related state
+    const [orderTasks, setOrderTasks] = useState(null);
+    const [hasOrderTasks, setHasOrderTasks] = useState(false);
+    const [checkingOrderTasks, setCheckingOrderTasks] = useState(false);
+    const [showCreateOrderTasksModal, setShowCreateOrderTasksModal] = useState(false);
     
     const userDetails = JSON.parse(localStorage.getItem("userDetails"));
     const userId = userDetails?.id;
@@ -84,6 +92,43 @@ const MyOrders = () => {
         } finally {
             setCheckingContract(false);
         }
+    };
+
+    // Check if OrderTasks exist for this order
+    const checkExistingOrderTasks = async (orderId) => {
+        if (!orderId) return;
+        
+        try {
+            setCheckingOrderTasks(true);
+            const result = await OrderTasksService.checkOrderTasks(orderId);
+            
+            if (result.success && result.hasOrderTasks) {
+                setOrderTasks(result.data);
+                setHasOrderTasks(true);
+            } else {
+                setHasOrderTasks(false);
+                setOrderTasks(null);
+            }
+        } catch (error) {
+            console.error("Error checking OrderTasks:", error);
+            setHasOrderTasks(false);
+        } finally {
+            setCheckingOrderTasks(false);
+        }
+    };
+
+    // Handle OrderTasks creation
+    const handleOrderTasksCreated = (orderTasksData) => {
+        setOrderTasks(orderTasksData);
+        setHasOrderTasks(true);
+        setShowCreateOrderTasksModal(false);
+        toast.success("Task requirements created! You can now generate a contract.");
+    };
+
+    // Check if order allows task creation
+    const canCreateTasks = (order) => {
+        if (!order) return false;
+        return order.clientOrderStatus !== 'Completed' && order.clientOrderStatus !== 'Cancelled';
     };
 
     // Handle contract generation
@@ -156,6 +201,9 @@ const MyOrders = () => {
                 
                 // Check if contract exists for this order
                 await checkExistingContract(orderId);
+                
+                // Check if OrderTasks exist for this order
+                await checkExistingOrderTasks(orderId);
             } catch (err) {
                 setError("Failed to fetch order details.");
             } finally {
@@ -360,11 +408,11 @@ const MyOrders = () => {
                                         <p>Order number: #{orders[0].id}</p>
                                     </div>
                                     
-                                    {/* Contract Section */}
+                                    {/* Contract and OrderTasks Section */}
                                     <div className="contract-section">
-                                        {checkingContract ? (
+                                        {checkingContract || checkingOrderTasks ? (
                                             <div className="contract-checking">
-                                                <p>Checking contract status...</p>
+                                                <p>Checking contract and task status...</p>
                                             </div>
                                         ) : contract ? (
                                             <div className="contract-exists">
@@ -381,32 +429,57 @@ const MyOrders = () => {
                                                     )}
                                                 </div>
                                             </div>
-                                        ) : ContractService.canGenerateContract(orders[0], contract) ? (
-                                            <div className="contract-generation">
-                                                <h4>Contract</h4>
-                                                <p>Generate a formal contract for this order that will be sent to your caregiver.</p>
-                                                {contractError && (
-                                                    <div className="contract-error">
-                                                        <p>❌ {contractError}</p>
+                                        ) : hasOrderTasks ? (
+                                            ContractService.canGenerateContract(orders[0], contract, hasOrderTasks) ? (
+                                                <div className="contract-generation">
+                                                    <h4>Contract</h4>
+                                                    <div className="order-tasks-status">
+                                                        <p>✅ Task requirements created ({orderTasks?.careTasks?.length || 0} tasks)</p>
                                                     </div>
-                                                )}
-                                                <button 
-                                                    className={`generate-contract-btn ${isGeneratingContract ? 'loading' : ''}`}
-                                                    onClick={handleGenerateContract}
-                                                    disabled={isGeneratingContract}
-                                                >
-                                                    {isGeneratingContract ? 'Generating Contract...' : 'Generate Contract'}
-                                                </button>
-                                            </div>
+                                                    <p>Generate a formal contract for this order that will be sent to your caregiver.</p>
+                                                    {contractError && (
+                                                        <div className="contract-error">
+                                                            <p>❌ {contractError}</p>
+                                                        </div>
+                                                    )}
+                                                    <button 
+                                                        className={`generate-contract-btn ${isGeneratingContract ? 'loading' : ''}`}
+                                                        onClick={handleGenerateContract}
+                                                        disabled={isGeneratingContract}
+                                                    >
+                                                        {isGeneratingContract ? 'Generating Contract...' : 'Generate Contract'}
+                                                    </button>
+                                                </div>
+                                            ) : (
+                                                <div className="contract-unavailable">
+                                                    <h4>Contract</h4>
+                                                    <div className="order-tasks-status">
+                                                        <p>✅ Task requirements created</p>
+                                                    </div>
+                                                    {!orders[0].transactionId && !orders[0].paymentTransactionId ? (
+                                                        <p>Contract generation requires payment completion.</p>
+                                                    ) : orders[0].clientOrderStatus === 'Cancelled' ? (
+                                                        <p>Contract cannot be generated for cancelled orders.</p>
+                                                    ) : (
+                                                        <p>Contract generation not available for this order.</p>
+                                                    )}
+                                                </div>
+                                            )
                                         ) : (
-                                            <div className="contract-unavailable">
-                                                <h4>Contract</h4>
-                                                {!orders[0].transactionId && !orders[0].paymentTransactionId ? (
-                                                    <p>Contract generation requires payment completion.</p>
-                                                ) : orders[0].clientOrderStatus === 'Cancelled' ? (
-                                                    <p>Contract cannot be generated for cancelled orders.</p>
+                                            <div className="order-tasks-required">
+                                                <h4>Contract Generation Unavailable</h4>
+                                                <div className="alert alert-info">
+                                                    <p>📋 To generate a contract for this order, you must first create detailed task requirements.</p>
+                                                </div>
+                                                {canCreateTasks(orders[0]) ? (
+                                                    <button 
+                                                        className="create-tasks-btn"
+                                                        onClick={() => setShowCreateOrderTasksModal(true)}
+                                                    >
+                                                        Create Task Requirements
+                                                    </button>
                                                 ) : (
-                                                    <p>Contract generation not available for this order.</p>
+                                                    <p className="tasks-unavailable">Task creation is not available for {orders[0].clientOrderStatus.toLowerCase()} orders.</p>
                                                 )}
                                             </div>
                                         )}
@@ -527,6 +600,16 @@ const MyOrders = () => {
                         )}
                     </div>
                 </div>
+            )}
+
+            {/* OrderTasks Creation Modal */}
+            {showCreateOrderTasksModal && (
+                <CreateOrderTasksModal
+                    isOpen={showCreateOrderTasksModal}
+                    onClose={() => setShowCreateOrderTasksModal(false)}
+                    orderData={orders[0]}
+                    onOrderTasksCreated={handleOrderTasksCreated}
+                />
             )}
 
             {/* Remove duplicate ToastContainer - main app already has one */}

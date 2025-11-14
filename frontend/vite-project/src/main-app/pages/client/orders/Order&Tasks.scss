@@ -359,6 +359,10 @@
             font-size: 14px;
           }
 
+          .order-tasks-status {
+            margin: 10px 0 15px 0;
+          }
+
           .contract-error {
             margin: 10px 0;
             padding: 8px;
@@ -380,6 +384,75 @@
             color: #999;
             font-size: 14px;
             font-style: italic;
+          }
+        }
+
+        .order-tasks-status {
+          margin: 10px 0;
+          padding: 8px 12px;
+          background: #e8f5e8;
+          border-radius: 4px;
+          border-left: 4px solid #00CAB6;
+
+          p {
+            margin: 0;
+            color: #2e7d32;
+            font-size: 13px;
+            font-weight: 500;
+          }
+        }
+
+        .order-tasks-required {
+          padding: 20px;
+          background: #fff3cd;
+          border: 1px solid #ffeaa7;
+          border-radius: 8px;
+          margin: 15px 0;
+          
+          h4 {
+            color: #856404;
+            margin: 0 0 10px 0;
+            font-size: 16px;
+          }
+          
+          .alert {
+            padding: 10px;
+            margin: 10px 0;
+            border-radius: 4px;
+            
+            &.alert-info {
+              background: #d4edda;
+              border: 1px solid #c3e6cb;
+              color: #155724;
+            }
+
+            p {
+              margin: 0;
+              font-size: 14px;
+            }
+          }
+          
+          .create-tasks-btn {
+            background: #007bff;
+            color: white;
+            border: none;
+            padding: 12px 24px;
+            border-radius: 6px;
+            cursor: pointer;
+            font-weight: 500;
+            font-size: 14px;
+            transition: all 0.3s ease;
+            
+            &:hover {
+              background: #0056b3;
+              transform: translateY(-1px);
+            }
+          }
+
+          .tasks-unavailable {
+            color: #856404;
+            font-style: italic;
+            margin-top: 10px;
           }
         }
 

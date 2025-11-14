@@ -80,6 +80,25 @@
     display: block;
   }
 
+  /* Initials Avatar */
+  .caregiver-profile-initials-avatar {
+    width: 120px;
+    height: 120px;
+    border-radius: 50%;
+    background-color: #3b82f6;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 48px;
+    font-weight: bold;
+    color: white;
+    margin: 0 auto 16px auto;
+    border: 3px solid #f0f0f0;
+    text-transform: uppercase;
+    font-family: 'Kanit', sans-serif;
+    letter-spacing: 2px;
+  }
+
   /* Profile Image Container for Upload Functionality */
   .caregiver-profile-img-container {
     position: relative;
@@ -270,12 +289,134 @@
   .caregiver-profile-details .caregiver-detail-item:hover {
     background-color: #f1f3f4;
   }
+
+  /* Clickable location item */
+  .caregiver-detail-item-clickable:hover {
+    background-color: #e3f2fd !important;
+    transform: translateY(-1px);
+    box-shadow: 0 2px 4px rgba(59, 130, 246, 0.15);
+  }
+
+  .caregiver-detail-item-clickable:active {
+    transform: translateY(0);
+    box-shadow: 0 1px 2px rgba(59, 130, 246, 0.1);
+  }
   .caregiver-detail-button{
     display:flex;
     gap: 8px;
     flex-wrap: wrap;
     align-items: center;
     justify-content: center;
+  }
+
+  /* Availability Toggle Button */
+  .caregiver-availability-toggle-btn {
+    padding: 10px 20px;
+    border-radius: 8px;
+    border: 2px solid;
+    cursor: pointer;
+    font-size: 14px;
+    font-weight: 600;
+    transition: all 0.3s ease;
+    text-align: center;
+    min-width: 120px;
+    height: 44px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    outline: none;
+  }
+
+  .caregiver-availability-toggle-btn.available {
+    background-color: #10b981;
+    border-color: #10b981;
+    color: white;
+  }
+
+  .caregiver-availability-toggle-btn.available:hover:not(:disabled) {
+    background-color: #059669;
+    border-color: #059669;
+    transform: translateY(-1px);
+    box-shadow: 0 4px 12px rgba(16, 185, 129, 0.4);
+  }
+
+  .caregiver-availability-toggle-btn.unavailable {
+    background-color: #ef4444;
+    border-color: #ef4444;
+    color: white;
+  }
+
+  .caregiver-availability-toggle-btn.unavailable:hover:not(:disabled) {
+    background-color: #dc2626;
+    border-color: #dc2626;
+    transform: translateY(-1px);
+    box-shadow: 0 4px 12px rgba(239, 68, 68, 0.4);
+  }
+
+  .caregiver-availability-toggle-btn:disabled {
+    opacity: 0.6;
+    cursor: not-allowed;
+    transform: none;
+    box-shadow: none;
+  }
+
+  /* Two Separate Availability Buttons */
+  .caregiver-availability-btn {
+    padding: 8px 16px;
+    border-radius: 6px;
+    border: 2px solid;
+    cursor: pointer;
+    font-size: 12px;
+    font-weight: 600;
+    transition: all 0.3s ease;
+    text-align: center;
+    min-width: 80px;
+    height: 36px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    outline: none;
+    flex: 1;
+  }
+
+  /* Active Button - Blue (Current State) */
+  .caregiver-availability-btn.active {
+    background-color: #0f3f8b;
+    border-color: #0f3f8b;
+    color: white;
+    box-shadow: 0 2px 8px rgba(15, 63, 139, 0.3);
+  }
+
+  .caregiver-availability-btn.active:hover:not(:disabled) {
+    background-color: #0a2c63;
+    border-color: #0a2c63;
+    transform: translateY(-1px);
+    box-shadow: 0 4px 12px rgba(15, 63, 139, 0.4);
+  }
+
+  /* Inactive Button - Gray (Alternative Option) */
+  .caregiver-availability-btn.inactive {
+    background-color: transparent;
+    border-color: #d1d5db;
+    color: #6b7280;
+  }
+
+  .caregiver-availability-btn.inactive:hover:not(:disabled) {
+    background-color: #f9fafb;
+    border-color: #9ca3af;
+    color: #374151;
+    transform: translateY(-1px);
+  }
+
+  .caregiver-availability-btn:disabled {
+    opacity: 0.6;
+    cursor: not-allowed;
+    transform: none;
+    box-shadow: none;
+  }
+
+  .caregiver-loading-text {
+    font-size: 11px;
   }
   .caregiver-detail-button .caregiver-edit-location-btn {
     padding: 6px 12px;
@@ -296,6 +437,39 @@
     background-color: transparent;
     border-color: #0f3f8b;
     color: rgb(65, 56, 56);
+  }
+
+  /* Mobile responsive styles for availability toggle */
+  @media (max-width: 768px) {
+    .caregiver-availability-toggle-btn {
+      font-size: 12px;
+      padding: 8px 16px;
+      min-width: 100px;
+      height: 36px;
+    }
+
+    .caregiver-availability-btn {
+      font-size: 11px;
+      padding: 6px 12px;
+      min-width: 70px;
+      height: 32px;
+    }
+  }
+
+  @media (max-width: 480px) {
+    .caregiver-availability-toggle-btn {
+      font-size: 11px;
+      padding: 6px 12px;
+      min-width: 90px;
+      height: 32px;
+    }
+
+    .caregiver-availability-btn {
+      font-size: 10px;
+      padding: 4px 8px;
+      min-width: 60px;
+      height: 28px;
+    }
   }
   .caregiver-profile-details .caregiver-detail-item:first-child {
     border-top-left-radius: 6px;
@@ -545,6 +719,12 @@
     width: 130px;
     height: 130px;
   }
+
+  .caregiver-profile-initials-avatar {
+    width: 130px;
+    height: 130px;
+    font-size: 52px;
+  }
   
   .caregiver-profile-header-card h2 {
     font-size: 22px;
@@ -608,6 +788,12 @@
     width: 140px;
     height: 140px;
   }
+
+  .caregiver-profile-initials-avatar {
+    width: 140px;
+    height: 140px;
+    font-size: 56px;
+  }
   
   .caregiver-profile-header-card h2 {
     font-size: 26px;
@@ -652,6 +838,12 @@
   .caregiver-profile-header-card .caregiver-profile-img {
     width: 160px;
     height: 160px;
+  }
+
+  .caregiver-profile-initials-avatar {
+    width: 160px;
+    height: 160px;
+    font-size: 64px;
   }
   
   .caregiver-profile-header-card h2 {
@@ -760,6 +952,12 @@
     height: 100px;
     display: block;
   }
+
+  .caregiver-profile-initials-avatar {
+    width: 100px !important;
+    height: 100px !important;
+    font-size: 40px !important;
+  }
   
   .profile-header-card h2 {
     font-size: 20px;
@@ -792,6 +990,12 @@
     width: 80px;
     height: 80px;
     display: block;
+  }
+
+  .caregiver-profile-initials-avatar {
+    width: 80px !important;
+    height: 80px !important;
+    font-size: 32px !important;
   }
   
   .profile-header-card h2 {

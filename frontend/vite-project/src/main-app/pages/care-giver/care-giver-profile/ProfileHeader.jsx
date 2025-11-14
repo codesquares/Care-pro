@@ -39,6 +39,7 @@ const ProfileHeader = () => {
   const [locationLoading, setLocationLoading] = useState(false);
   const [addressValidation, setAddressValidation] = useState(null);
   const [imageUploadLoading, setImageUploadLoading] = useState(false);
+  const [availabilityLoading, setAvailabilityLoading] = useState(false);
   const [statusFromApi, setStatusFromApi] = useState(null);
   const fileInputRef = useRef(null);
 
@@ -193,6 +194,68 @@ const ProfileHeader = () => {
 
   const triggerImageUpload = () => {
     fileInputRef.current?.click();
+  };
+
+  const handleAvailabilityToggle = async (newAvailability) => {
+    const userDetails = JSON.parse(localStorage.getItem("userDetails"));
+    if (!userDetails?.id) {
+      toast.error('User session expired. Please log in again.');
+      return;
+    }
+
+    // Don't make API call if already in the desired state
+    if (profile.isAvailable === newAvailability) {
+      return;
+    }
+
+    try {
+      setAvailabilityLoading(true);
+      
+      // API call to update availability using the endpoint you provided
+      const response = await fetch(`${config.BASE_URL}/CareGivers/UpdateCaregiverAvailability/${userDetails.id}`, {
+        method: 'PUT',
+        headers: {
+          'Content-Type': 'application/json',
+          'accept': '*/*'
+        },
+        body: JSON.stringify({ 
+          isAvailable: newAvailability 
+        }),
+      });
+
+      if (!response.ok) {
+        const result = await response.text();
+        let errorMessage = 'Failed to update availability';
+        
+        switch (response.status) {
+          case 400:
+            errorMessage = 'Invalid request. Please try again.';
+            break;
+          case 404:
+            errorMessage = 'Caregiver not found. Please check your account.';
+            break;
+          case 500:
+            errorMessage = 'Server error. Please try again later.';
+            break;
+          default:
+            errorMessage = result || 'Unexpected error occurred';
+        }
+        
+        throw new Error(errorMessage);
+      }
+
+      // Update the profile state immediately for better UX
+      setProfile(prev => ({ ...prev, isAvailable: newAvailability }));
+      
+      // Show success message
+      toast.success(`You are now ${newAvailability ? 'Available' : 'Unavailable'} for new requests`);
+      
+    } catch (err) {
+      console.error('Error updating availability:', err);
+      toast.error(err.message || 'Failed to update availability. Please try again.');
+    } finally {
+      setAvailabilityLoading(false);
+    }
   };
 
   const fetchProfile = async (skipLoadingStates = false) => {
@@ -400,11 +463,17 @@ const ProfileHeader = () => {
       <div className="caregiver-profile-header-card">
         <div className="caregiver-profile-basic-info">
           <div className="caregiver-profile-img-container">
-            <img
-              src={profile.picture}
-              alt="Profile"
-              className="caregiver-profile-img"
-            />
+            {profile.picture && profile.picture !== profilecard1 ? (
+              <img
+                src={profile.picture}
+                alt="Profile"
+                className="caregiver-profile-img"
+              />
+            ) : (
+              <div className="caregiver-profile-initials-avatar">
+                {profile.name.split(' ').map(name => name.charAt(0).toUpperCase()).join('').slice(0, 2)}
+              </div>
+            )}
             <button 
               onClick={triggerImageUpload}
               disabled={imageUploadLoading}
@@ -443,7 +512,11 @@ const ProfileHeader = () => {
         </div> */}
 
         <div className="caregiver-profile-details">
-          <div className="caregiver-detail-item">
+          <div 
+            className="caregiver-detail-item caregiver-detail-item-clickable"
+            onClick={() => setShowLocationModal(true)}
+            style={{ cursor: 'pointer' }}
+          >
             <span className="caregiver-detail-label">
               <FaMapMarkerAlt className="caregiver-detail-icon" /> Location
             </span>
@@ -463,17 +536,27 @@ const ProfileHeader = () => {
           </div>
           <div className="caregiver-detail-button">
             <button 
-            onClick={() => setShowLocationModal(true)}
-            className="caregiver-edit-location-btn"
-          >
-            Edit Location
-          </button>
-          <button 
-            onClick={() => setShowLocationModal(false)}
-            className="caregiver-edit-location-btn"
-          >
-            {profile.isAvailable ? "Available" : "Not Available"}
-          </button>
+              onClick={() => handleAvailabilityToggle(true)}
+              disabled={availabilityLoading}
+              className={`caregiver-availability-btn ${profile.isAvailable ? 'active' : 'inactive'}`}
+            >
+              {availabilityLoading && profile.isAvailable !== true ? (
+                <span className="caregiver-loading-text">...</span>
+              ) : (
+                "Available"
+              )}
+            </button>
+            <button 
+              onClick={() => handleAvailabilityToggle(false)}
+              disabled={availabilityLoading}
+              className={`caregiver-availability-btn ${!profile.isAvailable ? 'active' : 'inactive'}`}
+            >
+              {availabilityLoading && profile.isAvailable !== false ? (
+                <span className="caregiver-loading-text">...</span>
+              ) : (
+                "Unavailable"
+              )}
+            </button>
           </div>
           
         </div>
@@ -598,7 +681,7 @@ const ProfileHeader = () => {
         onVideoUpdate={() => fetchProfile(true)}
       />
       <ProfileInformation 
-        profileDescription={profile.aboutMe} 
+        aboutMe={profile.aboutMe} 
         services={profile.services}
         onUpdate={(newAboutMe) => setProfile(prev => ({ ...prev, aboutMe: newAboutMe }))}
       />

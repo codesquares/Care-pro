@@ -1,12 +1,13 @@
 import './profile-information.css'
-import { useState, useEffect } from 'react'
-import axios from 'axios'
-import { toast } from 'react-toastify';
-import config from '../../../config'; // Centralized API configuration
+import { useEffect, useState } from "react";
+import axios from "axios";
+import { toast } from "react-toastify";
+import config from "../../../config";
+import { useCaregiverStatus } from "../../../contexts/CaregiverStatusContext";
 
-const ProfileInformation = ({ profileDescription, onUpdate, services}) => {
+const ProfileInformation = ({ aboutMe, onUpdate, services = [] }) => {
   const [showModal, setShowModal] = useState(false);
-  const [editedAboutMe, setEditedAboutMe] = useState(profileDescription);
+  const [editedAboutMe, setEditedAboutMe] = useState(aboutMe || '');
   const [loading, setLoading] = useState(false);
 
   const [showCertModal, setShowCertModal] = useState(false);
@@ -16,11 +17,18 @@ const ProfileInformation = ({ profileDescription, onUpdate, services}) => {
   const [certificateYear, setCertificateYear] = useState('');
   const [uploadLoading, setUploadLoading] = useState(false);
   
+  // State for certificate viewing modal
+  const [showViewModal, setShowViewModal] = useState(false);
+  const [selectedCertificate, setSelectedCertificate] = useState(null);
+  
   // New state for certificates
   const [certificates, setCertificates] = useState([]);
   const [certificatesLoading, setCertificatesLoading] = useState(true);
 
   const userDetails = JSON.parse(localStorage.getItem("userDetails"));
+  
+  // Get the caregiver status context to refresh certificate status
+  const { updateCertificates } = useCaregiverStatus();
 
   // Fetch certificates for the user
   const fetchCertificates = async () => {
@@ -37,9 +45,19 @@ const ProfileInformation = ({ profileDescription, onUpdate, services}) => {
         throw new Error(`Failed to fetch certificates: ${response.status}`);
       }
 
-      const data = await response.json();
-      console.log('Fetched certificates:', data);
-      setCertificates(data || []);
+      const response_data = await response.json();
+      console.log('Fetched certificates response:', response_data);
+      
+      // Handle the API response structure: { success: true, data: [...] }
+      const certificates = response_data?.success ? response_data.data : (response_data || []);
+      
+      console.log('Certificate structure check:', {
+        count: certificates?.length || 0,
+        firstCert: certificates?.[0] || null,
+        hasUrls: certificates?.some(cert => cert.certificateUrl) || false,
+        allHaveUrls: certificates?.every(cert => cert.certificateUrl) || false
+      });
+      setCertificates(certificates || []);
     } catch (error) {
       console.error('Error fetching certificates:', error);
       toast.error('Failed to load certificates');
@@ -124,6 +142,8 @@ const ProfileInformation = ({ profileDescription, onUpdate, services}) => {
       toast.success("Certificate uploaded successfully!");
       // Refresh the certificates list
       await fetchCertificates();
+      // IMPORTANT: Update the global caregiver status context
+      await updateCertificates();
     } catch (err) {
       console.error("Upload failed", err);
       toast.error(`Upload failed: ${err.response?.data?.message || err.message || 'Unknown error'}`);
@@ -147,11 +167,23 @@ const ProfileInformation = ({ profileDescription, onUpdate, services}) => {
     return `${config.BASE_URL}/Certificates/certificateId?certificateId=${certificateId}`;
   };
 
+  // Function to open certificate in modal
+  const handleViewCertificate = (certificate) => {
+    setSelectedCertificate(certificate);
+    setShowViewModal(true);
+  };
+
+  // Function to close certificate view modal
+  const handleCloseViewModal = () => {
+    setShowViewModal(false);
+    setSelectedCertificate(null);
+  };
+
   return (
     <div>
       <div className="profile-information-section">
         <h3>Description</h3>
-        <p>{profileDescription}</p>
+        <p>{aboutMe || 'No description provided'}</p>
         <button 
           onClick={() => setShowModal(true)}
           className="edit-description-btn"
@@ -207,25 +239,46 @@ const ProfileInformation = ({ profileDescription, onUpdate, services}) => {
             </div>
           ) : certificates.length > 0 ? (
             certificates.map((cert) => (
-              <div key={cert.id || cert.certificateId} className="certification-item">
-                <h4>{cert.name || cert.certificateName}</h4>
-                {cert.issuer && (
-                  <p style={{ margin: '4px 0', fontSize: '13px', color: '#6b7280' }}>
-                    Issued by: {cert.issuer}
-                  </p>
-                )}
-                {cert.year && (
-                  <p style={{ margin: '4px 0', fontSize: '13px', color: '#6b7280' }}>
-                    Year: {cert.year}
-                  </p>
-                )}
-                <a 
-                  href={getCertificateViewUrl(cert.id || cert.certificateId)} 
-                  target="_blank" 
-                  rel="noopener noreferrer"
-                >
-                  View Certificate
-                </a>
+              <div key={cert.id} className="certification-item">
+                <h4>{cert.certificateName}</h4>
+                <p style={{ margin: '4px 0', fontSize: '13px', color: '#6b7280' }}>
+                  Issued by: {cert.certificateIssuer}
+                </p>
+                <p style={{ margin: '4px 0', fontSize: '13px', color: '#6b7280' }}>
+                  Year: {new Date(cert.yearObtained).getFullYear()}
+                </p>
+                <div style={{ display: 'flex', alignItems: 'center', gap: '10px', marginTop: '8px' }}>
+                  {cert.certificateUrl && (
+                    <button 
+                      onClick={() => handleViewCertificate(cert)}
+                      className="certificate-view-link"
+                      style={{
+                        color: '#0066cc',
+                        textDecoration: 'none',
+                        fontSize: '13px',
+                        fontWeight: '500',
+                        padding: '4px 8px',
+                        borderRadius: '4px',
+                        border: '1px solid #0066cc',
+                        transition: 'all 0.2s ease',
+                        backgroundColor: 'transparent',
+                        cursor: 'pointer'
+                      }}
+                    >
+                      📜 View Certificate
+                    </button>
+                  )}
+                  <span style={{
+                    fontSize: '12px',
+                    color: cert.isVerified ? '#28a745' : '#dc3545',
+                    fontWeight: '500',
+                    padding: '2px 6px',
+                    borderRadius: '3px',
+                    backgroundColor: cert.isVerified ? '#d4edda' : '#f8d7da'
+                  }}>
+                    {cert.isVerified ? '✅ Verified' : '⏳ Pending Verification'}
+                  </span>
+                </div>
               </div>
             ))
           ) : (
@@ -333,6 +386,82 @@ const ProfileInformation = ({ profileDescription, onUpdate, services}) => {
               >
                 {uploadLoading ? 'Uploading...' : 'Upload'}
               </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Certificate View Modal */}
+      {showViewModal && selectedCertificate && (
+        <div className="modal-overlay" onClick={handleCloseViewModal}>
+          <div className="modal-content" onClick={(e) => e.stopPropagation()} style={{ maxWidth: '80vw', maxHeight: '80vh', padding: '20px' }}>
+            <div className="modal-header">
+              <h3>Certificate: {selectedCertificate.certificateName}</h3>
+              <button 
+                onClick={handleCloseViewModal}
+                className="modal-close"
+                style={{
+                  position: 'absolute',
+                  top: '10px',
+                  right: '15px',
+                  background: 'none',
+                  border: 'none',
+                  fontSize: '24px',
+                  cursor: 'pointer',
+                  color: '#666'
+                }}
+              >
+                ×
+              </button>
+            </div>
+            <div className="modal-body" style={{ textAlign: 'center', marginTop: '20px' }}>
+              <div style={{ marginBottom: '15px' }}>
+                <p style={{ margin: '5px 0', fontSize: '14px', color: '#666' }}>
+                  <strong>Issuer:</strong> {selectedCertificate.certificateIssuer}
+                </p>
+                <p style={{ margin: '5px 0', fontSize: '14px', color: '#666' }}>
+                  <strong>Year:</strong> {new Date(selectedCertificate.yearObtained).getFullYear()}
+                </p>
+                <p style={{ margin: '5px 0', fontSize: '14px' }}>
+                  <span style={{
+                    color: selectedCertificate.isVerified ? '#28a745' : '#dc3545',
+                    fontWeight: '500',
+                    padding: '2px 6px',
+                    borderRadius: '3px',
+                    backgroundColor: selectedCertificate.isVerified ? '#d4edda' : '#f8d7da'
+                  }}>
+                    {selectedCertificate.isVerified ? '✅ Verified' : '⏳ Pending Verification'}
+                  </span>
+                </p>
+              </div>
+              <div style={{ maxHeight: '60vh', overflow: 'auto' }}>
+                <img 
+                  src={selectedCertificate.certificateUrl} 
+                  alt={selectedCertificate.certificateName}
+                  style={{
+                    maxWidth: '100%',
+                    maxHeight: '100%',
+                    objectFit: 'contain',
+                    borderRadius: '8px',
+                    boxShadow: '0 2px 8px rgba(0,0,0,0.1)'
+                  }}
+                  onError={(e) => {
+                    e.target.style.display = 'none';
+                    e.target.nextSibling.style.display = 'block';
+                  }}
+                />
+                <div style={{ display: 'none', padding: '20px', color: '#666' }}>
+                  <p>Unable to load certificate image</p>
+                  <a 
+                    href={selectedCertificate.certificateUrl} 
+                    target="_blank" 
+                    rel="noopener noreferrer"
+                    style={{ color: '#0066cc' }}
+                  >
+                    Open in new tab
+                  </a>
+                </div>
+              </div>
             </div>
           </div>
         </div>
