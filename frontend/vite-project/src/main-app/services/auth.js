@@ -1,25 +1,34 @@
 import config from "../config";
 
-// Mock Refresh Token API Call
+// Refresh Token API Call
 export const refreshToken = async () => {
     try {
-        const refreshToken = localStorage.getItem('refreshToken');
-        if (!refreshToken) throw new Error('No refresh token available');
+        const refreshTokenValue = localStorage.getItem('refreshToken');
+        if (!refreshTokenValue) throw new Error('No refresh token available');
 
-        const response = await fetch('https://your-api-url.com/refresh-token', {
+        const response = await fetch(`${config.BASE_URL}/Authentications/RefreshToken`, {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ refreshToken }),
+            body: JSON.stringify({ refreshToken: refreshTokenValue }),
         });
 
         if (!response.ok) {
-            throw new Error('Failed to refresh token');
+            const errorData = await response.json().catch(() => ({}));
+            throw new Error(errorData.message || 'Failed to refresh token');
         }
 
         const data = await response.json();
-        return data.newAuthToken; // Assume API returns newAuthToken
+        
+        // Store both new tokens (rotating refresh tokens)
+        localStorage.setItem('authToken', data.token);
+        localStorage.setItem('refreshToken', data.refreshToken);
+        
+        return data.token;
     } catch (error) {
         console.error('Refresh token failed:', error);
+        // Clear invalid tokens
+        localStorage.removeItem('authToken');
+        localStorage.removeItem('refreshToken');
         throw error;
     }
 };

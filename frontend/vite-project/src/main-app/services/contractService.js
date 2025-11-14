@@ -251,9 +251,10 @@ const ContractService = {
    * Helper function to determine if an order can generate a contract
    * @param {Object} order - Order object
    * @param {Object|null} existingContract - Existing contract data or null
+   * @param {boolean} hasOrderTasks - Whether OrderTasks exist for this order
    * @returns {boolean} - Whether contract can be generated
    */
-  canGenerateContract(order, existingContract = null) {
+  canGenerateContract(order, existingContract = null, hasOrderTasks = false) {
     if (!order) return false;
     
     // Check if order exists and has transaction ID (is paid)
@@ -265,7 +266,44 @@ const ContractService = {
     // Check if order is not cancelled
     const isNotCancelled = order.clientOrderStatus !== 'Cancelled';
     
-    return isPaid && hasNoContract && isNotCancelled;
+    // Check if OrderTasks exist
+    const hasRequiredOrderTasks = hasOrderTasks;
+    
+    return isPaid && hasNoContract && isNotCancelled && hasRequiredOrderTasks;
+  },
+
+  /**
+   * Get contract generation requirements
+   * @param {Object} order - Order object
+   * @param {Object|null} existingContract - Existing contract data or null
+   * @param {boolean} hasOrderTasks - Whether OrderTasks exist for this order
+   * @returns {Object} - Requirements and missing items
+   */
+  getContractRequirements(order, existingContract = null, hasOrderTasks = false) {
+    if (!order) return { canGenerate: false, missing: ['Order data'] };
+    
+    const missing = [];
+    
+    if (!order.transactionId && !order.paymentTransactionId) {
+      missing.push('Payment completion');
+    }
+    
+    if (existingContract) {
+      missing.push('Contract already exists');
+    }
+    
+    if (order.clientOrderStatus === 'Cancelled') {
+      missing.push('Order is cancelled');
+    }
+    
+    if (!hasOrderTasks) {
+      missing.push('Order task requirements');
+    }
+    
+    return {
+      canGenerate: missing.length === 0,
+      missing: missing
+    };
   },
 
   /**

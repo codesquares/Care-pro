@@ -132,8 +132,10 @@ export function CaregiverStatusProvider({ children }) {
         throw new Error(`Failed to fetch certificates: ${response.status}`);
       }
 
-      const certificates = await response.json();
-      const certificatesArray = Array.isArray(certificates) ? certificates : [];
+      const response_data = await response.json();
+      
+      // Handle the API response structure: { success: true, data: [...] }
+      const certificatesArray = response_data?.success ? response_data.data : (Array.isArray(response_data) ? response_data : []);
       const certificatesCount = certificatesArray.length;
       const hasCertificates = certificatesCount >= 1;
       
@@ -146,7 +148,7 @@ export function CaregiverStatusProvider({ children }) {
         certificatesError: null
       }));
       
-      console.log('CaregiverStatusContext - Certificates updated:', { certificatesCount, hasCertificates });
+      console.log('CaregiverStatusContext - Certificates updated:', { certificatesCount, hasCertificates, responseStructure: response_data?.success ? 'wrapped' : 'direct' });
       return { certificatesCount, hasCertificates, certificates: certificatesArray };
       
     } catch (error) {

@@ -62,11 +62,12 @@ api.interceptors.response.use(
                 originalRequest._retry = true;
                 try {
                     const newToken = await authService.refreshToken();
-                    localStorage.setItem('authToken', newToken);
+                    // Token and refreshToken are already stored in refreshToken function
                     api.defaults.headers.Authorization = `Bearer ${newToken}`;
                     originalRequest.headers.Authorization = `Bearer ${newToken}`;
                     return api(originalRequest);
                 } catch (refreshError) {
+                    console.error('Token refresh failed:', refreshError);
                     authService.logout();
                     return Promise.reject(error); // Return original 401 error, not refresh error
                 }
@@ -138,13 +139,14 @@ export const setupEnhancedInterceptors = (config = {}) => {
                     originalRequest._retry = true;
                     try {
                         const newToken = await authService.refreshToken();
-                        localStorage.setItem('authToken', newToken);
+                        // Token and refreshToken are already stored in refreshToken function
                         api.defaults.headers.Authorization = `Bearer ${newToken}`;
                         originalRequest.headers.Authorization = `Bearer ${newToken}`;
                         return api(originalRequest);
                     } catch (refreshError) {
+                        console.error('Token refresh failed:', refreshError);
                         authService.logout();
-                        return Promise.reject(error); // Return original 401 error, not refresh error
+                        return Promise.reject(error);
                     }
                 } else {
                     authService.logout();

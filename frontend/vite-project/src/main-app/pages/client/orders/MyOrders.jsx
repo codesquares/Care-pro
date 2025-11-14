@@ -5,6 +5,7 @@ import { FaStar, FaRegStar, FaStarHalfAlt } from "react-icons/fa";
 import { toast } from "react-toastify";
 import ClientReviewService from "../../../services/clientReviewService.js";
 import ContractService from "../../../services/contractService.js";
+import OrderTasksService from "../../../services/orderTasksService.js";
 import config from "../../../config"; // Centralized API configuration
 import "./Orders.scss";
 
@@ -24,6 +25,9 @@ const MyOrders = () => {
   // Contract-related state
   const [contractStates, setContractStates] = useState({}); // Store contract state for each order
   const [generatingContract, setGeneratingContract] = useState({}); // Track which orders are generating contracts
+  
+  // OrderTasks-related state
+  const [orderTasksStates, setOrderTasksStates] = useState({}); // Store OrderTasks state for each order
   
   const navigate = useNavigate();
 
@@ -117,6 +121,43 @@ const MyOrders = () => {
     setContractStates(newContractStates);
   };
 
+  // Check OrderTasks for orders
+  const checkOrderTasksForOrders = async (ordersData) => {
+    const orderTasksChecks = ordersData.map(async (order) => {
+      try {
+        const result = await OrderTasksService.checkOrderTasks(order.id);
+        return {
+          orderId: order.id,
+          hasOrderTasks: result.success && result.hasOrderTasks,
+          orderTasks: result.data,
+          error: result.success ? null : result.error
+        };
+      } catch (error) {
+        console.error(`Error checking OrderTasks for order ${order.id}:`, error);
+        return {
+          orderId: order.id,
+          hasOrderTasks: false,
+          orderTasks: null,
+          error: "Failed to check OrderTasks status"
+        };
+      }
+    });
+
+    const results = await Promise.all(orderTasksChecks);
+    
+    // Convert array to object keyed by orderId
+    const orderTasksStatesMap = results.reduce((acc, result) => {
+      acc[result.orderId] = {
+        hasOrderTasks: result.hasOrderTasks,
+        orderTasks: result.orderTasks,
+        error: result.error
+      };
+      return acc;
+    }, {});
+    
+    setOrderTasksStates(orderTasksStatesMap);
+  };
+
   // Retrieve user details from localStorage
   const userDetails = JSON.parse(localStorage.getItem("userDetails"));
   const clientUserId = userDetails?.id; // Ensure this matches your API user ID
@@ -186,8 +227,11 @@ const MyOrders = () => {
         
         setOrdersWithReviews(ordersWithReviewData);
         
-        // Check contracts for all orders
-        await checkContractsForOrders(ordersWithReviewData);
+        // Check contracts and OrderTasks for all orders
+        await Promise.all([
+          checkContractsForOrders(ordersWithReviewData),
+          checkOrderTasksForOrders(ordersWithReviewData)
+        ]);
         
       } catch (err) {
         setError("Failed to fetch orders.");
@@ -239,13 +283,18 @@ const MyOrders = () => {
   };
 
   // Render contract status and button
-  const renderContractSection = (order) => {
+    const renderContractStatus = (order) => {
     const orderId = order.id;
-    const contractState = contractStates[orderId];
-    const isGenerating = generatingContract[orderId];
+    const contractState = contractStates[orderId] || {};
+    const orderTasksState = orderTasksStates[orderId] || {};
+    const isGenerating = generatingContract[orderId] || false;
     
-    // Check if order can generate contract
-    const canGenerate = ContractService.canGenerateContract(order, contractState?.contract);
+    // Check requirements using updated service method
+    const requirements = ContractService.getContractRequirements(
+      order, 
+      contractState?.contract, 
+      orderTasksState?.hasOrderTasks
+    );
     
     if (contractState?.hasContract) {
       return (
@@ -257,7 +306,7 @@ const MyOrders = () => {
       );
     }
     
-    if (canGenerate) {
+    if (requirements.canGenerate) {
       return (
         <div className="contract-actions">
           <button
@@ -271,8 +320,19 @@ const MyOrders = () => {
       );
     }
     
-    // Show reason why contract can't be generated
-    if (!order.transactionId && !order.paymentTransactionId) {
+    // Show what's missing with more specific messaging
+    const missing = requirements.missing;
+    if (missing.includes('Order task requirements')) {
+      return (
+        <div className="contract-status">
+          <span className="contract-unavailable">
+            📋 Tasks required - Click order to add
+          </span>
+        </div>
+      );
+    }
+    
+    if (missing.includes('Payment completion')) {
       return (
         <div className="contract-status">
           <span className="contract-unavailable">
@@ -282,7 +342,7 @@ const MyOrders = () => {
       );
     }
     
-    if (order.clientOrderStatus === 'Cancelled') {
+    if (missing.includes('Order is cancelled')) {
       return (
         <div className="contract-status">
           <span className="contract-unavailable">
@@ -292,7 +352,13 @@ const MyOrders = () => {
       );
     }
     
-    return null;
+    return (
+      <div className="contract-status">
+        <span className="contract-unavailable">
+          {missing.join(', ')}
+        </span>
+      </div>
+    );
   };
 
 
