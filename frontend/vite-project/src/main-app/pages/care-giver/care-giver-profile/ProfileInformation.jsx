@@ -21,6 +21,9 @@ const ProfileInformation = ({ aboutMe, onUpdate, services = [] }) => {
   const [showViewModal, setShowViewModal] = useState(false);
   const [selectedCertificate, setSelectedCertificate] = useState(null);
   
+  // Success modal state
+  const [showSuccessModal, setShowSuccessModal] = useState(false);
+  
   // New state for certificates
   const [certificates, setCertificates] = useState([]);
   const [certificatesLoading, setCertificatesLoading] = useState(true);
@@ -139,7 +142,8 @@ const ProfileInformation = ({ aboutMe, onUpdate, services = [] }) => {
       setCertificateName('');
       setCertificateIssuer('');
       setCertificateYear('');
-      toast.success("Certificate uploaded successfully!");
+      // Show success modal instead of toast
+      setShowSuccessModal(true);
       // Refresh the certificates list
       await fetchCertificates();
       // IMPORTANT: Update the global caregiver status context
@@ -363,9 +367,12 @@ const ProfileInformation = ({ aboutMe, onUpdate, services = [] }) => {
             />
             <input
               type="number"
-              placeholder="Year Obtained"
+              placeholder="Year Obtained (e.g. 2020)"
               value={certificateYear}
               onChange={(e) => setCertificateYear(e.target.value)}
+              min="1950"
+              max={new Date().getFullYear()}
+              step="1"
             />
             <input
               type="file"
@@ -463,6 +470,42 @@ const ProfileInformation = ({ aboutMe, onUpdate, services = [] }) => {
                 </div>
               </div>
             </div>
+          </div>
+        </div>
+      )}
+
+      {/* Success Modal */}
+      {showSuccessModal && (
+        <div className="modal-overlay" onClick={() => setShowSuccessModal(false)}>
+          <div className="success-modal-content" onClick={(e) => e.stopPropagation()}>
+            <div className="success-icon-container">
+              <div className="success-checkmark">
+                <svg width="64" height="64" viewBox="0 0 100 100" fill="none" xmlns="http://www.w3.org/2000/svg">
+                  <defs>
+                    <linearGradient id="tickGradient" x1="0%" y1="0%" x2="100%" y2="100%">
+                      <stop offset="0%" stopColor="#06b6d4"/>
+                      <stop offset="50%" stopColor="#0891b2"/>
+                      <stop offset="100%" stopColor="#a7f3d0"/>
+                    </linearGradient>
+                  </defs>
+                  <path 
+                    d="M25 50 L42 67 L75 33" 
+                    stroke="url(#tickGradient)" 
+                    strokeWidth="8" 
+                    strokeLinecap="round" 
+                    strokeLinejoin="round"
+                    fill="none"
+                  />
+                </svg>
+              </div>
+            </div>
+            <h3>Your certificate has been successfully uploaded</h3>
+            <button 
+              onClick={() => setShowSuccessModal(false)}
+              className="success-modal-btn"
+            >
+              Continue
+            </button>
           </div>
         </div>
       )}

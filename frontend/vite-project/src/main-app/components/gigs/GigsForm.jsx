@@ -44,6 +44,9 @@ const GigsForm = () => {
   });
   const [activeGigsCount, setActiveGigsCount] = useState(0);
   const [isLoadingGigs, setIsLoadingGigs] = useState(true);
+  const [showSuccessModal, setShowSuccessModal] = useState(false);
+  const [showFailureModal, setShowFailureModal] = useState(false);
+  const [failureMessage, setFailureMessage] = useState("");
   const navigate = useNavigate();
   
   // Use caregiver status context for eligibility
@@ -581,11 +584,6 @@ const GigsForm = () => {
 
         if (response.status === 200) {
           const successMessage = isEditMode ? "Gig updated successfully!" : "Gig published successfully!";
-          const modalDesc = isEditMode ? "Your Gig has been successfully updated." : "Your Gig has been successfully created.";
-          
-          setServerMessage(successMessage);
-          setModalTitle("Success!");
-          setModalDescription(modalDesc);
           
           if (!isEditMode) {
             // Only create notification for new gigs
@@ -601,9 +599,8 @@ const GigsForm = () => {
             });
           }
           
-          setButtonBgColor("#34A853");
-          setButtonText("Proceed");
-          setIsModalOpen(true);
+          // Show custom success modal instead of generic modal
+          setShowSuccessModal(true);
           
           // Reset loading state on success as well
           setSaving(false);
@@ -638,20 +635,14 @@ const GigsForm = () => {
         console.error("❌ Network Error - No response received:", err.request);
         setServerMessage("Network error: Please check your internet connection and try again.");
         toast.error("Network error. Please check your connection and try again.");
-        setModalTitle("Network Error");
-        setModalDescription("Unable to connect to the server. Please check your internet connection and try again.");
-        setButtonBgColor("#FF0000");
-        setButtonText("Okay");
-        setIsModalOpen(true);
+        setFailureMessage("Unable to connect to the server. Please check your internet connection and try again.");
+        setShowFailureModal(true);
       } else {
         console.error("❌ Unexpected Error:", err.message);
         setServerMessage("An unexpected error occurred.");
         toast.error("An unexpected error occurred. Please try again.");
-        setModalTitle("Error!");
-        setModalDescription("Something went wrong during submission. Please try again.");
-        setButtonBgColor("#FF0000");
-        setButtonText("Okay");
-        setIsModalOpen(true);
+        setFailureMessage("Something went wrong during submission. Please try again.");
+        setShowFailureModal(true);
       }
     } finally {
       // Always reset loading state, regardless of success or failure
@@ -853,6 +844,83 @@ const GigsForm = () => {
         buttonText={buttonText}
         buttonBgColor={buttonBgColor}
       />
+
+      {/* Custom Success Modal for Gig Creation */}
+      {showSuccessModal && (
+        <div className="gig-success-modal-overlay" onClick={() => setShowSuccessModal(false)}>
+          <div className="gig-success-modal-content" onClick={(e) => e.stopPropagation()}>
+            <div className="success-icon-container">
+              <div className="success-checkmark">
+                <svg width="64" height="64" viewBox="0 0 100 100" fill="none" xmlns="http://www.w3.org/2000/svg">
+                  <defs>
+                    <linearGradient id="gigTickGradient" x1="0%" y1="0%" x2="100%" y2="100%">
+                      <stop offset="0%" stopColor="#06b6d4"/>
+                      <stop offset="50%" stopColor="#0891b2"/>
+                      <stop offset="100%" stopColor="#a7f3d0"/>
+                    </linearGradient>
+                  </defs>
+                  <path 
+                    d="M25 50 L42 67 L75 33" 
+                    stroke="url(#gigTickGradient)" 
+                    strokeWidth="8" 
+                    strokeLinecap="round" 
+                    strokeLinejoin="round"
+                    fill="none"
+                  />
+                </svg>
+              </div>
+            </div>
+            <h2 className="success-title">Your gig has been published</h2>
+            <p className="success-description">Spread the word to boost your sales.</p>
+            <button 
+              className="success-continue-btn" 
+              onClick={() => {
+                setShowSuccessModal(false);
+                navigate("/app/caregiver/profile");
+              }}
+            >
+              Continue
+            </button>
+          </div>
+        </div>
+      )}
+
+      {/* Custom Failure Modal for Gig Creation */}
+      {showFailureModal && (
+        <div className="gig-failure-modal-overlay" onClick={() => setShowFailureModal(false)}>
+          <div className="gig-failure-modal-content" onClick={(e) => e.stopPropagation()}>
+            <div className="failure-icon-container">
+              <div className="failure-cross">
+                <svg width="64" height="64" viewBox="0 0 100 100" fill="none" xmlns="http://www.w3.org/2000/svg">
+                  <defs>
+                    <linearGradient id="gigErrorGradient" x1="0%" y1="0%" x2="100%" y2="100%">
+                      <stop offset="0%" stopColor="#ef4444"/>
+                      <stop offset="50%" stopColor="#dc2626"/>
+                      <stop offset="100%" stopColor="#b91c1c"/>
+                    </linearGradient>
+                  </defs>
+                  <path 
+                    d="M25 25 L75 75 M75 25 L25 75" 
+                    stroke="url(#gigErrorGradient)" 
+                    strokeWidth="8" 
+                    strokeLinecap="round" 
+                    strokeLinejoin="round"
+                    fill="none"
+                  />
+                </svg>
+              </div>
+            </div>
+            <h2 className="failure-title">Publication failed</h2>
+            <p className="failure-description">{failureMessage}</p>
+            <button 
+              className="failure-retry-btn" 
+              onClick={() => setShowFailureModal(false)}
+            >
+              Try Again
+            </button>
+          </div>
+        </div>
+      )}
     </div>
   );
 };

@@ -12,10 +12,6 @@
   display: flex;
   flex-direction: column;
 }
-.caregiver-profile-card-assesment {
-  width:30%;
-  margin-top: 120px;
-}
 /* Welcome Screen */
 .assessment-welcome {
   text-align: center;
