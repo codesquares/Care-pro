@@ -1,5 +1,24 @@
 /* Client NavBar Specific Styles */
 
+.nav-link-btn-special-link {
+    width: 100%;
+    background-color: #ffff;
+    color: #55595e;
+    border-radius: 6px;
+    font-size: 14px;
+    font-weight: 500;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    white-space: nowrap;   /* <-- prevents text from wrapping */   /* optional: hides overflow */
+}
+
+.nav-link-btn-special-link:hover {
+    background-color: #f0f0f0;
+    color: #3664b9;
+}
+
+  
+
 /* Hide mobile search on larger screens */
 @media (min-width: 901px) {
   .client-mobile-user-search {
@@ -60,6 +79,8 @@
     background: #e3f2fd;
     border: 1px solid #007bff;
   }
+
+
 
   .client-mobile-search-button {
     position: absolute;

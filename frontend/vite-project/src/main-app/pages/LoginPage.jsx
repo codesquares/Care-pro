@@ -177,7 +177,7 @@ const LoginPage = () => {
             <p>{decodeURIComponent(message)}</p>
           </div>
         )}
-        <form onSubmit={handleSubmit}>
+        <form className="login-form" onSubmit={handleSubmit}>
           <label>Email Address</label>
           <input
             type="email"
@@ -187,13 +187,12 @@ const LoginPage = () => {
           />
 
           <label>Password</label>
-          <div className="auth-password-input" style={{ width: '100%' }}>
+          <div className="auth-password-input">
             <input
               type={showPassword ? "text" : "password"}
               placeholder="Enter password"
               value={password}
               onChange={(e) => setPassword(e.target.value)}
-              style={{ width: '100%' }}
             />
             <button
               type="button"

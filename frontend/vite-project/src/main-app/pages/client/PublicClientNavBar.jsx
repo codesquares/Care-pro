@@ -383,7 +383,7 @@ const PublicClientNavBar = () => {
                 </button>
                 {(!isAuthenticated || user?.role?.toLowerCase() !== 'caregiver') && (
                   <button 
-                    className="nav-link-btn"
+                    className="nav-link-btn-special-link"
                     onClick={() => navigate('/become-caregiver')}
                   >
                     Become a Caregiver
