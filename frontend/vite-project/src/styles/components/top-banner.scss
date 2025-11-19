@@ -2,36 +2,27 @@
 
 .banner {
     display: flex;
-    /* Update padding-top to account for fixed navbar */
-    // padding-top: calc(100px + var(--navbar-height-desktop, 100px));
     justify-content: space-between;
     align-items: center;
-
     background-color: #f0f0f0;
-    align-items: center;
     padding: 20px;
-
-
-    @media (max-width: 768px) {
-        /* Use mobile navbar height on smaller screens */
-        // padding-top: calc(50px + var(--navbar-height-mobile, 70px));
-    }
+    overflow: hidden;
 }
 
-/* Content styles removed - now using direct banner children */
+/* Content styles */
 .banner .text-content {
     flex: 1;
     padding: 50px;
-    width: 30%;
+    max-width: 600px;
     display: flex;
     flex-direction: column;
     align-items: flex-start;
-    
 }
+
 .banner h1 {
     font-size: 3rem;
     margin-bottom: 20px;
-    width: 65%;
+    max-width: 100%;
     word-wrap: break-word;
     color: white;
     text-align: left;
@@ -41,7 +32,8 @@
     font-size: 1rem;
     margin-bottom: 40px;
     color: rgb(186, 178, 178);
-    width: 70%;
+    max-width: 100%;
+    line-height: 1.6;
 }
 
 .banner .hire-button {
@@ -54,28 +46,58 @@
     font-size: 16px;
     font-weight: 600;
     transition: background-color 0.3s ease;
-    width: 50%;
     display: inline-flex;
     align-items: center;
     gap: 8px;
+    white-space: nowrap;
+    min-width: fit-content;
+}
+
+.banner .hire-button:hover {
+    background-color: #f0f0f0;
+    transform: translateY(-2px);
 }
 
 .banner .image-content {
-    width: 70%;
+    flex: 1;
     display: flex;
     justify-content: flex-end;
-    align-items: stretch;
+    align-items: center;
     height: 100%;
-    margin: -20px;
-    padding: 0;
+    max-width: 50%;
+    margin: -20px -20px -20px 0;
 }
 
 .banner .image-content img {
     width: 100%;
-    height: calc(100% + 40px);
-    border-radius: 50% 0 0 50;
+    height: auto;
+    min-height: 400px;
     object-fit: cover;
     display: block;
+}
+
+/* Tablet Styles (max-width: 1024px) */
+@media (max-width: 1024px) {
+    .banner {
+        padding: 30px 20px;
+    }
+
+    .banner .text-content {
+        padding: 30px 20px;
+        max-width: 50%;
+    }
+
+    .banner h1 {
+        font-size: 2.5rem;
+    }
+
+    .banner p {
+        font-size: 0.95rem;
+    }
+
+    .banner .image-content {
+        max-width: 45%;
+    }
 }
 
 /* Tablet Styles (max-width: 768px) */
@@ -83,81 +105,98 @@
     .banner {
         flex-direction: column;
         align-items: center;
-        padding: 15px;
+        padding: 30px 20px;
         text-align: center;
+    }
+
+    .banner .text-content {
+        max-width: 100%;
+        width: 100%;
+        padding: 20px;
+        align-items: center;
     }
 
     .banner h1 {
-        font-size: 2.5rem;
+        font-size: 2.2rem;
         width: 100%;
-        word-wrap: break-word;
         text-align: center;
+        margin-bottom: 16px;
     }
 
     .banner p {
-        font-size: 1.1rem;
-        width: 90%;
+        font-size: 1rem;
+        width: 100%;
+        max-width: 90%;
         text-align: center;
+        margin-bottom: 30px;
     }
 
     .banner .hire-button {
-        font-size: 16px;
-        padding: 12px 20px;
-        width: 70%;
+        font-size: 15px;
+        padding: 14px 24px;
+        width: auto;
+        min-width: 200px;
+        max-width: 80%;
         justify-content: center;
     }
 
     .banner .image-content {
         width: 100%;
-        margin-top: 20px;
+        max-width: 100%;
+        margin: 20px 0 0 0;
         justify-content: center;
     }
 
     .banner .image-content img {
+        width: 100%;
+        max-width: 500px;
+        min-height: auto;
         height: auto;
-        width: 80%;
-        border-radius: 20px;
+        border-radius: 16px;
     }
 }
 
 /* Mobile Styles (max-width: 480px) */
 @media (max-width: 480px) {
     .banner {
-        flex-direction: column;
-        align-items: center;
-        padding: 15px;
-        text-align: center;
+        padding: 20px 16px;
+    }
+
+    .banner .text-content {
+        padding: 16px;
     }
 
     .banner h1 {
-        font-size: 2rem;
-        width: 100%;
-        word-wrap: break-word;
-        text-align: center;
+        font-size: 1.75rem;
+        margin-bottom: 12px;
     }
 
     .banner p {
         font-size: 0.9rem;
-        width: 95%;
-        text-align: center;
+        max-width: 100%;
+        margin-bottom: 24px;
+        line-height: 1.5;
     }
 
     .banner .hire-button {
         font-size: 14px;
-        padding: 12px 18px;
-        width: 90%;
-        justify-content: center;
+        padding: 12px 20px;
+        min-width: 180px;
+        max-width: 100%;
+        gap: 6px;
+    }
+
+    .banner .hire-button img {
+        width: 16px;
+        height: 16px;
     }
 
     .banner .image-content {
-        width: 100%;
-        margin-top: 15px;
-        justify-content: center;
+        margin-top: 16px;
     }
 
     .banner .image-content img {
-        height: auto;
-        width: 90%;
-        border-radius: 20px;
+        max-width: 100%;
+        border-radius: 12px;
     }
 }

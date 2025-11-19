@@ -34,33 +34,52 @@ const Modal = ({
     
     if (iconType === 'error') {
       return (
-        <div className="icon-container error-icon">
-          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" width="56" height="56">
+        <div className="icon-wrapper">
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 80 80" width="80" height="80">
+            <circle cx="40" cy="40" r="35" fill="#FF4B4B"/>
             <path
               fill="#ffffff"
-              d="M12 0C5.373 0 0 5.373 0 12s5.373 12 12 12 12-5.373 12-12S18.627 0 12 0zm6 13H6v-2h12v2z"
+              d="M50 30 L30 50 M30 30 L50 50"
+              stroke="#ffffff"
+              strokeWidth="4"
+              strokeLinecap="round"
             />
           </svg>
         </div>
       );
     } else if (iconType === 'email') {
       return (
-        <div className="icon-container email-icon">
-          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" width="56" height="56">
+        <div className="icon-wrapper">
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 80 80" width="80" height="80">
+            <circle cx="40" cy="40" r="35" fill="#00B4A6"/>
             <path
               fill="#ffffff"
-              d="M20 4H4c-1.1 0-2 .9-2 2v12c0 1.1.9 2 2 2h16c1.1 0 2-.9 2-2V6c0-1.1-.9-2-2-2zm0 4l-8 5-8-5V6l8 5 8-5v2z"
+              d="M20 25h40c2 0 4 2 4 4v22c0 2-2 4-4 4H20c-2 0-4-2-4-4V29c0-2 2-4 4-4z M20 29l20 12 20-12"
+              stroke="#ffffff"
+              strokeWidth="2"
             />
           </svg>
         </div>
       );
     } else {
       return (
-        <div className="icon-container success-icon">
-          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" width="56" height="56">
+        <div className="icon-wrapper">
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 120 120" width="120" height="120">
+            <defs>
+              <linearGradient id="checkGradient" x1="0%" y1="0%" x2="100%" y2="100%">
+                <stop offset="0%" style={{ stopColor: '#0ea5e9', stopOpacity: 1 }} />
+                <stop offset="50%" style={{ stopColor: '#14b8a6', stopOpacity: 1 }} />
+                <stop offset="100%" style={{ stopColor: '#10b981', stopOpacity: 0.8 }} />
+              </linearGradient>
+            </defs>
+            <circle cx="60" cy="60" r="55" fill="url(#checkGradient)"/>
             <path
-              fill="#ffffff"
-              d="M9 16.17L4.83 12l-1.42 1.41L9 19 21 7l-1.41-1.41z"
+              fill="none"
+              d="M35 60 L52 77 L85 40"
+              stroke="#ffffff"
+              strokeWidth="8"
+              strokeLinecap="round"
+              strokeLinejoin="round"
             />
           </svg>
         </div>
@@ -71,11 +90,6 @@ const Modal = ({
   return (
     <div className="modal-overlay" onClick={onClose}>
       <div className="modal-container" onClick={(e) => e.stopPropagation()}>
-        <button className="close-button" onClick={onClose}>
-          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" width="24" height="24">
-            <path fill="#999" d="M19 6.41L17.59 5 12 10.59 6.41 5 5 6.41 10.59 12 5 17.59 6.41 19 12 13.41 17.59 19 19 17.59 13.41 12z"/>
-          </svg>
-        </button>
         
         <div className="modal-content">
           {renderIcon()}
