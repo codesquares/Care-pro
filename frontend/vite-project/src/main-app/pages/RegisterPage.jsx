@@ -192,7 +192,7 @@ You won't be able to log in until your email is verified.`);
             </div>
         <div className="login-right">
           <h2>Create an account</h2>
-          <form onSubmit={handleSubmit} noValidate>
+          <form className="login-form" onSubmit={handleSubmit} noValidate>
             <div className="input-group">
               <div>
                 <input
@@ -239,7 +239,7 @@ You won't be able to log in until your email is verified.`);
               />
               {errors.phone && <p className="error-text">{errors.phone}</p>}
             </div>
-            <div className="password-input" style={{ width: '100%' }}>
+            <div className="password-input">
               <input
                 type={showPassword ? "text" : "password"}
                 name="password"
@@ -247,7 +247,6 @@ You won't be able to log in until your email is verified.`);
                 value={formValues.password}
                 onChange={handleChange}
                 required
-                style={{ width: '100%' }}
               />
               <button
                 type="button"
@@ -268,7 +267,7 @@ You won't be able to log in until your email is verified.`);
               </button>
               {errors.password && <p className="error-text">{errors.password}</p>}
             </div>
-            <div className="password-input" style={{ width: '100%' }}>
+            <div className="password-input">
               <input
                 type={showConfirmPassword ? "text" : "password"}
                 name="confirmPassword"
@@ -276,7 +275,6 @@ You won't be able to log in until your email is verified.`);
                 value={formValues.confirmPassword}
                 onChange={handleChange}
                 required
-                style={{ width: '100%' }}
               />
               <button
                 type="button"
