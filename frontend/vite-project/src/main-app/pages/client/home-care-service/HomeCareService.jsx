@@ -23,7 +23,7 @@
 //     localStorage.setItem("providerId", service.caregiverId);
 
 //     console.log(user);
-  
+
 //     try {
 //       const payload = {
 //         amount: service.price,
@@ -31,7 +31,7 @@
 //         currency: "NIGN",
 //         redirectUrl: `${window.location.origin}/app/client/payment-success`,
 //       };
-  
+
 //       const response = await fetch(
 //         "https://carepro-api20241118153443.azurewebsites.net/api/payments/initiate",
 //         {
@@ -42,14 +42,14 @@
 //           body: JSON.stringify(payload),
 //         }
 //       );
-  
+
 //       if (!response.ok) {
 //         throw new Error("Payment initiation failed");
 //       }
-  
+
 //       const data = await response.json();
 //       console.log("Payment Response:", data);
-  
+
 //       if (data.status === "success" && data.data?.link) {
 //         window.location.href = data.data.link; // Redirect to payment gateway
 //       } else {
@@ -60,7 +60,7 @@
 //       setError(error.message);
 //     }
 //   };
-  
+
 
 //   const handleMessage = () => {
 //     // Navigate directly to conversation with this caregiver
@@ -74,7 +74,7 @@
 //   useEffect(() => {
 
 //     //get user details from local storage
- 
+
 //     const fetchServiceDetails = async () => {
 //       try {
 //         const response = await fetch(
@@ -199,17 +199,25 @@ const HomeCareService = () => {
   const basePath = "/app/client";
   const serviceCardRef = useRef(null);
 
- const handleHire = async () => {
+  // Helper function to get initials from name
+  const getInitials = (name) => {
+    if (!name || typeof name !== "string") return "?";
+    const names = name.trim().split(" ").filter(Boolean);
+    const initials = names.map((n) => n[0].toUpperCase()).join("");
+    return initials.slice(0, 2) || "?";
+  };
+
+  const handleHire = async () => {
     if (!service) return;
-    
+
     // If not authenticated, redirect to login with return URL
     if (!isAuthenticated) {
       navigate(`/login?returnTo=/service/${id}`);
       return;
     }
-  
+
     navigate(`${basePath}/cart/${id}`);
- };
+  };
 
   const handleMessage = () => {
     navigate(`${basePath}/message/${service.caregiverId}`, {
@@ -222,20 +230,20 @@ const HomeCareService = () => {
       try {
         setLoading(true);
         setError(null);
-        
+
         // Use the enhanced ClientGigService to get all enriched gigs
         const allGigs = await ClientGigService.getAllGigs();
-        
+
         // Find the specific gig by ID
         const foundGig = allGigs.find(gig => gig.id === id);
-        
+
         if (!foundGig) {
           throw new Error("Service not found or no longer available");
         }
-        
+
         setService(foundGig);
         console.log("Enriched service details:", foundGig);
-        
+
       } catch (err) {
         console.error("Error fetching service details:", err);
         setError(err.message);
@@ -243,7 +251,7 @@ const HomeCareService = () => {
         setLoading(false);
       }
     };
-    
+
     if (id) {
       fetchServiceDetails();
     }
@@ -271,16 +279,16 @@ const HomeCareService = () => {
   }, [service]); // Re-run when service data is loaded
 
   if (loading) return <div className="spinner-container">
-            <div className="loading-spinner"></div>
-          </div>;
+    <div className="loading-spinner"></div>
+  </div>;
   if (error) return <div className="error-container">
-            <p className="error">{error}</p>
-            <button className="back-btn" onClick={() => navigate(-1)}>← Go Back</button>
-          </div>;
+    <p className="error">{error}</p>
+    <button className="back-btn" onClick={() => navigate(-1)}>← Go Back</button>
+  </div>;
   if (!service) return <div className="error-container">
-            <p className="error">Service not found</p>
-            <button className="back-btn" onClick={() => navigate(-1)}>← Go Back</button>
-          </div>;
+    <p className="error">Service not found</p>
+    <button className="back-btn" onClick={() => navigate(-1)}>← Go Back</button>
+  </div>;
 
   // Extract all available fields from enriched service data
   const {
@@ -329,24 +337,32 @@ const HomeCareService = () => {
 
       {/* Top Section */}
       <div className="service-top-header">
-        <div 
+        <div
           ref={serviceCardRef}
           className="service-card-section"
-          // style={{
-          //   backgroundImage: image1 ? `url(${image1})` : 'none'
-          // }}
+        // style={{
+        //   backgroundImage: image1 ? `url(${image1})` : 'none'
+        // }}
         >
           <h2 className="gig-title">{title}</h2>
           <div className="provider-info-card">
-            {/* if caregiverProfileImage is not available, show defaultAvatar */}
-            <img 
-              src={caregiverProfileImage && (caregiverProfileImage.startsWith('http') || caregiverProfileImage.startsWith('/')) ? caregiverProfileImage : defaultAvatar} 
-              alt={caregiverName} 
-              className="provider-avatar"
-              onError={(e) => {
-                e.target.src = defaultAvatar;
-              }}
-            />
+            {/* Show image if available, otherwise blue background with initials */}
+            {caregiverProfileImage && (caregiverProfileImage.startsWith('http') || caregiverProfileImage.startsWith('/')) ? (
+              <img 
+                src={caregiverProfileImage} 
+                alt={caregiverName} 
+                className="provider-avatar"
+                onError={(e) => {
+                  // On error, replace with initials
+                  e.target.style.display = 'none';
+                  e.target.nextElementSibling.style.display = 'flex';
+                }}
+              />
+            ) : (
+              <div className="provider-avatar provider-avatar-initials">
+                <span>{getInitials(caregiverName)}</span>
+              </div>
+            )}
             <div className="provider-details">
               <p className="provider-name">{caregiverName}</p>
               <div className="provider-tags">
@@ -399,7 +415,7 @@ const HomeCareService = () => {
       </div>
 
       {/** Video Section - Now under service-top-header on large screens **/}
-      {(introVideo ) && (
+      {(introVideo) && (
         <div className="video-section">
           <h3>Introduction video</h3>
           <div className="video-thumbnail-container" onClick={() => setShowVideoModal(true)}>
@@ -417,9 +433,9 @@ const HomeCareService = () => {
       {/* Floating Message Button - Only show for authenticated clients */}
       {isAuthenticated && userRole === 'Client' && (
         <div className="floating-message">
-          <img 
-            src={caregiverProfileImage && (caregiverProfileImage.startsWith('http') || caregiverProfileImage.startsWith('/')) ? caregiverProfileImage : defaultAvatar} 
-            className="floating-avatar" 
+          <img
+            src={caregiverProfileImage && (caregiverProfileImage.startsWith('http') || caregiverProfileImage.startsWith('/')) ? caregiverProfileImage : defaultAvatar}
+            className="floating-avatar"
             alt={caregiverName}
             onError={(e) => {
               e.target.src = defaultAvatar;
@@ -430,7 +446,7 @@ const HomeCareService = () => {
               Message: {caregiverFirstName || caregiverName}
             </p>
             <span className="status-text">
-              {caregiverIsAvailable ? "Available" : "Away"} · 
+              {caregiverIsAvailable ? "Available" : "Away"} ·
               <span> for {lastDeliveryDate || "Unknown days"}</span>
             </span>
           </div>
@@ -448,7 +464,7 @@ const HomeCareService = () => {
       {/* Package Details */}
       <div className="package-details">
         <h2 className="section-title">What this package includes:</h2>
-        
+
         {/* Service Details and Categories - Side by Side */}
         <div className="service-details-container">
           {/* Package Details List */}
@@ -462,7 +478,7 @@ const HomeCareService = () => {
               </ul>
             </div>
           )}
-          
+
           {/* SubCategory Services */}
           {subCategory && subCategory.length > 0 && (
             <div className="package-section">
@@ -517,7 +533,7 @@ const HomeCareService = () => {
               )}
             </div>
           </div>
-          
+
           {/* Sample Review - In a real app, you'd fetch actual reviews */}
           <div className="review-card">
             <div className="review-header">
@@ -528,18 +544,18 @@ const HomeCareService = () => {
               </div>
             </div>
             <p className="review-text">
-              "I can't thank {caregiverFirstName || caregiverName} enough for the care and kindness provided to my father. 
+              "I can't thank {caregiverFirstName || caregiverName} enough for the care and kindness provided to my father.
               Their attention to detail and genuine concern for his well-being went above and beyond expectations..."
             </p>
           </div>
-          
+
           {/* Note about reviews */}
           <div className="reviews-note">
             <p><em>Reviews are based on the caregiver's overall performance across all services.</em></p>
           </div>
         </div>
       )}
-      
+
       {/* Video Modal */}
       <VideoModal
         isOpen={showVideoModal}
