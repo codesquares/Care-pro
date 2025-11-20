@@ -759,6 +759,21 @@ const handlePasswordSave = async (e) => {
           </form>
         </div>
 
+        {/* Care Preferences Card */}
+        <div className="settings-card">
+          <h3>Care Preferences</h3>
+          <p className="card-description">
+            Set your care preferences to get personalized caregiver recommendations
+          </p>
+          <button 
+            type="button"
+            className="save-changes-btn"
+            onClick={() => navigate('/app/client/preferences')}
+          >
+            Manage Care Preferences
+          </button>
+        </div>
+
         {/* Notification Preferences Card */}
         <div className="settings-card">
           <h3>Notification Preferences</h3>
