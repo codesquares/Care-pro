@@ -83,6 +83,37 @@ const ClientSettingsService = {
       throw new Error("Network error while updating notification preferences");
     }
   },
+
+  /**
+   * Update client address/location
+   * @param {string} clientId - Client ID
+   * @param {string} homeAddress - Full home address string
+   * @returns {Promise<Object>} Response data
+   */
+  async updateClientAddress(clientId, homeAddress) {
+    try {
+      const response = await axios.put(`${BASE_API_URL}/Clients/UpdateClientUser/${clientId}`, {
+        homeAddress: homeAddress
+      });
+      
+      return {
+        success: true,
+        data: response.data,
+        message: "Address updated successfully"
+      };
+    } catch (error) {
+      console.error("Error updating address:", error);
+      
+      // Normalize error response
+      if (error.response && error.response.data) {
+        return {
+          success: false,
+          message: error.response.data.message || "Failed to update address"
+        };
+      }
+      throw new Error("Network error while updating address");
+    }
+  },
 };
 
 export default ClientSettingsService;

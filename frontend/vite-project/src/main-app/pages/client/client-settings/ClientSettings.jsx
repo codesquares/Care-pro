@@ -1,27 +1,28 @@
 import { useState, useEffect, useRef } from "react";
 import { useNavigate } from "react-router-dom";
-import "./ClientSettings.css";
-import defaultAvatar from "../../../../assets/profilecard1.png";
+import "./ClientSettings.scss";
+import ClientProfileHeader from "./ClientProfileHeader";
 import ClientSettingsService from "../../../services/ClientSettingsService";
 import AddressInput from "../../../components/AddressInput";
+import { toast } from "react-toastify";
+import { useAuth } from "../../../context/AuthContext";
 
 /**
- * Enhanced Premium Client Settings Page Component
+ * Enhanced Client Settings Page Component - Hybrid Design
  * 
  * Allows clients to:
  * - Update their account information
  * - Change their password
  * - Manage notification preferences
- * - Upload a profile picture
+ * - Update their location
  * - Deactivate their account
  */
 const ClientSettings = () => {
   const navigate = useNavigate();
-  const [activeTab, setActiveTab] = useState("account");
+  const { updateUser } = useAuth();
   const [isLoading, setIsLoading] = useState(false);
   const [message, setMessage] = useState({ type: "", text: "" });
   const fileInputRef = useRef(null);
-  const [sidebarOpen, setSidebarOpen] = useState(false); // For mobile sidebar toggle
   
   // Modal state
   const [showModal, setShowModal] = useState(false);
@@ -31,11 +32,8 @@ const ClientSettings = () => {
     confirmAction: () => {},
   });
   
-  // Image upload state
-  const [selectedFile, setSelectedFile] = useState(null);
-  const [previewUrl, setPreviewUrl] = useState(null);
-  const [uploadingImage, setUploadingImage] = useState(false);
-  const [uploadProgress, setUploadProgress] = useState(0);
+  // Deactivation reason state
+  const [deactivationReason, setDeactivationReason] = useState("");
   
   // Form states
   const [accountForm, setAccountForm] = useState({
@@ -97,11 +95,6 @@ const ClientSettings = () => {
         setIsLoading(true);
         // Get user details from local storage
         const userDetails = JSON.parse(localStorage.getItem("userDetails") || "{}");
-        
-        // Set profile photo preview if available
-        if (userDetails.profilePicture) {
-          setPreviewUrl(userDetails.profilePicture);
-        }
         
         // Set account form data
         setAccountForm({
@@ -316,77 +309,6 @@ const ClientSettings = () => {
     }
   };
   
-  // Handle image selection
-  const handleImageSelect = (e) => {
-    if (e.target.files && e.target.files[0]) {
-      const file = e.target.files[0];
-      setSelectedFile(file);
-      
-      // Create preview URL
-      const fileReader = new FileReader();
-      fileReader.onload = () => {
-        setPreviewUrl(fileReader.result);
-      };
-      fileReader.readAsDataURL(file);
-    }
-  };
-  
-  // Handle image upload click
-  const handleImageUploadClick = () => {
-    fileInputRef.current.click();
-  };
-  
-  // Upload image with simulated progress
-  const handleImageUpload = async () => {
-    if (!selectedFile) return;
-    
-    try {
-      setUploadingImage(true);
-      setUploadProgress(0);
-      
-      // Simulate upload progress
-      const intervalId = setInterval(() => {
-        setUploadProgress(prevProgress => {
-          const newProgress = prevProgress + 5;
-          return newProgress >= 100 ? 100 : newProgress;
-        });
-      }, 100);
-      
-      // In a real application, you would upload the image to an API
-      // For now, we'll simulate a successful upload
-      await new Promise(resolve => setTimeout(resolve, 2000));
-      
-      clearInterval(intervalId);
-      setUploadProgress(100);
-      
-      // Update user details in local storage with the new image URL
-      const userDetails = JSON.parse(localStorage.getItem("userDetails") || "{}");
-      userDetails.profilePicture = previewUrl;
-      localStorage.setItem("userDetails", JSON.stringify(userDetails));
-      
-      setMessage({
-        type: "success",
-        text: "Profile picture updated successfully!"
-      });
-      
-      // Small delay before resetting upload state
-      setTimeout(() => {
-        setUploadingImage(false);
-        setSelectedFile(null);
-        setUploadProgress(0);
-      }, 500);
-      
-    } catch (error) {
-      console.error("Error uploading image:", error);
-      setMessage({
-        type: "error",
-        text: "Failed to upload profile picture. Please try again later."
-      });
-      setUploadingImage(false);
-      setUploadProgress(0);
-    }
-  };
-  
   // Save account changes
   const handleAccountSave = async (e) => {
     e.preventDefault();
@@ -419,6 +341,13 @@ const ClientSettings = () => {
       };
       
       localStorage.setItem("userDetails", JSON.stringify(updatedDetails));
+      
+      // Update AuthContext with new data
+      updateUser({
+        firstName: accountForm.firstName,
+        lastName: accountForm.lastName,
+        phoneNumber: accountForm.phoneNumber
+      });
       
       // Simulate API call
       await new Promise(resolve => setTimeout(resolve, 1000));
@@ -598,37 +527,48 @@ const handlePasswordSave = async (e) => {
     try {
       setIsLoading(true);
       
-      // Update user details in local storage
       const userDetails = JSON.parse(localStorage.getItem("userDetails") || "{}");
-      const updatedDetails = {
-        ...userDetails,
-        address: addressForm.address,
-        city: addressForm.city,
-        state: addressForm.state,
-        country: addressForm.country,
-        postalCode: addressForm.postalCode,
-        coordinates: addressValidation.coordinates
-      };
       
-      localStorage.setItem("userDetails", JSON.stringify(updatedDetails));
+      // Use the formatted address if available from Google validation
+      const addressToSend = addressValidation?.formattedAddress || addressForm.address;
       
-      // In a real application, you would save to API here
-      // await ClientSettingsService.updateAddress(updatedDetails);
-      
-      // Simulate API call
-      await new Promise(resolve => setTimeout(resolve, 1000));
-      
-      setMessage({
-        type: "success",
-        text: "Address updated successfully!"
-      });
+      // Update address via API - only send homeAddress, backend handles geocoding
+      const response = await ClientSettingsService.updateClientAddress(userDetails.id, addressToSend);
+
+      if (response.success) {
+        setMessage({
+          type: "success",
+          text: "Address updated successfully!"
+        });
+        
+        // Update AuthContext with new address
+        updateUser({ 
+          homeAddress: addressToSend,
+          address: addressToSend 
+        });
+        
+        // Reload user data from localStorage (which should be updated by the API response)
+        const refreshedDetails = JSON.parse(localStorage.getItem("userDetails") || "{}");
+        setAddressForm({
+          address: refreshedDetails.address || refreshedDetails.homeAddress || "",
+          city: refreshedDetails.city || "",
+          state: refreshedDetails.state || "",
+          country: refreshedDetails.country || "",
+          postalCode: refreshedDetails.postalCode || ""
+        });
+      } else {
+        setMessage({
+          type: "error",
+          text: response.message || "Failed to update address"
+        });
+      }
       
       setIsLoading(false);
     } catch (error) {
       console.error("Error saving address:", error);
       setMessage({
         type: "error",
-        text: "Failed to save address. Please try again later."
+        text: error.message || "Failed to save address. Please try again later."
       });
       setIsLoading(false);
     }
@@ -672,619 +612,373 @@ const handlePasswordSave = async (e) => {
     }
   };
 
-  // Toggle mobile sidebar
-  const toggleSidebar = () => {
-    setSidebarOpen(!sidebarOpen);
-  };
-  
   return (
-    <div className="client-settings-container">
-      {/* Mobile toggle button */}
-      <div className="client-settings-mobile-toggle-button" onClick={toggleSidebar}>
-        <i className={`fas ${sidebarOpen ? 'fa-times' : 'fa-bars'}`}></i>
+    <div className="settings-content">
+      {/* Message display */}
+      {message.text && (
+        <div className={`status-message ${message.type === 'error' ? 'error' : ''}`}>
+          {message.text}
+        </div>
+      )}
+
+      {/* Left Section - Profile Header */}
+      <div className="client-settings-profile-section">
+        <ClientProfileHeader />
       </div>
       
-      <div className="client-settings-layout">
-        {/* Left Sidebar */}
-        <div className={`client-settings-sidebar ${sidebarOpen ? 'open' : ''}`}>
-          <div className="client-settings-sidebar-header">
-            <img src={previewUrl || defaultAvatar} alt="Profile" className="client-settings-sidebar-avatar" />
-            <div className="client-settings-sidebar-user-info">
-              <h3>{`${accountForm.firstName} ${accountForm.lastName}`}</h3>
-              <p>{accountForm.email}</p>
+      {/* Right Section - Settings Cards */}
+      <div className="settings-panel">
+        {/* Personal Information Card */}
+        <div className="settings-card">
+          <h3>Personal Information</h3>
+          <form onSubmit={handleAccountSave}>
+            <div className="form-group">
+              <label>First Name</label>
+              <input 
+                type="text"
+                name="firstName"
+                value={accountForm.firstName}
+                onChange={handleAccountChange}
+              />
+              {!validationStates.firstName.isValid && (
+                <span className="validation-message error">{validationStates.firstName.message}</span>
+              )}
+            </div>
+            <div className="form-group">
+              <label>Last Name</label>
+              <input 
+                type="text"
+                name="lastName"
+                value={accountForm.lastName}
+                onChange={handleAccountChange}
+              />
+              {!validationStates.lastName.isValid && (
+                <span className="validation-message error">{validationStates.lastName.message}</span>
+              )}
+            </div>
+            <div className="form-group">
+              <label>Email</label>
+              <input 
+                type="email"
+                value={accountForm.email}
+                readOnly
+              />
+            </div>
+            <div className="form-group">
+              <label>Phone Number</label>
+              <input 
+                type="tel"
+                name="phoneNumber"
+                value={accountForm.phoneNumber}
+                onChange={handleAccountChange}
+              />
+              {!validationStates.phoneNumber.isValid && (
+                <span className="validation-message error">{validationStates.phoneNumber.message}</span>
+              )}
+            </div>
+            <button 
+              type="submit" 
+              className="save-changes-btn"
+              disabled={isLoading}
+            >
+              {isLoading ? 'Saving...' : 'Save Changes'}
+            </button>
+          </form>
+        </div>
+
+        {/* Update Password Card */}
+        <div className="settings-card">
+          <h3>Update Password</h3>
+          <form onSubmit={handlePasswordSave}>
+            <div className="form-group">
+              <label>Current Password</label>
+              <input
+                type="password"
+                name="currentPassword"
+                placeholder="Enter current password"
+                value={passwordForm.currentPassword}
+                onChange={handlePasswordChange}
+              />
+              {!validationStates.currentPassword.isValid && (
+                <span className="validation-message error">{validationStates.currentPassword.message}</span>
+              )}
+            </div>
+            <div className="form-group">
+              <label>New Password</label>
+              <input
+                type="password"
+                name="newPassword"
+                placeholder="Enter new password"
+                value={passwordForm.newPassword}
+                onChange={handlePasswordChange}
+              />
+              {passwordForm.newPassword && (
+                <div className="password-strength-indicator">
+                  <div 
+                    className="password-strength-bar" 
+                    style={{ 
+                      width: `${(passwordStrength.score / 6) * 100}%`,
+                      backgroundColor: passwordStrength.color 
+                    }}
+                  ></div>
+                  <span 
+                    className="password-strength-text" 
+                    style={{ color: passwordStrength.color }}
+                  >
+                    {passwordStrength.label}
+                  </span>
+                </div>
+              )}
+              {!validationStates.newPassword.isValid && (
+                <span className="validation-message error">{validationStates.newPassword.message}</span>
+              )}
+            </div>
+            <div className="form-group">
+              <label>Confirm New Password</label>
+              <input
+                type="password"
+                name="confirmPassword"
+                placeholder="Confirm new password"
+                value={passwordForm.confirmPassword}
+                onChange={handlePasswordChange}
+              />
+              {!validationStates.confirmPassword.isValid && (
+                <span className="validation-message error">{validationStates.confirmPassword.message}</span>
+              )}
+            </div>
+            <p className="password-hint">
+              * 8 characters or longer. Combine upper and lowercase letters and numbers.
+            </p>
+            <button 
+              type="submit" 
+              className="save-changes-btn"
+              disabled={isLoading}
+            >
+              {isLoading ? 'Saving...' : 'Save Changes'}
+            </button>
+          </form>
+        </div>
+
+        {/* Notification Preferences Card */}
+        <div className="settings-card">
+          <h3>Notification Preferences</h3>
+          <div className="notification-options">
+            <div className="notification-item">
+              <div className="notification-info">
+                <span className="notification-title">Email Notifications</span>
+                <span className="notification-description">Receive updates via email</span>
+              </div>
+              <button
+                type="button"
+                className={`notification-toggle ${notificationPreferences.emailNotifications ? 'active' : ''}`}
+                onClick={() => handleNotificationToggle('emailNotifications')}
+              />
+            </div>
+            <div className="notification-item">
+              <div className="notification-info">
+                <span className="notification-title">SMS Notifications</span>
+                <span className="notification-description">Receive updates via SMS</span>
+              </div>
+              <button
+                type="button"
+                className={`notification-toggle ${notificationPreferences.smsNotifications ? 'active' : ''}`}
+                onClick={() => handleNotificationToggle('smsNotifications')}
+              />
+            </div>
+            <div className="notification-item">
+              <div className="notification-info">
+                <span className="notification-title">Marketing Emails</span>
+                <span className="notification-description">Receive promotional content</span>
+              </div>
+              <button
+                type="button"
+                className={`notification-toggle ${notificationPreferences.marketingEmails ? 'active' : ''}`}
+                onClick={() => handleNotificationToggle('marketingEmails')}
+              />
+            </div>
+            <div className="notification-item">
+              <div className="notification-info">
+                <span className="notification-title">Order Updates</span>
+                <span className="notification-description">Get notified about order status</span>
+              </div>
+              <button
+                type="button"
+                className={`notification-toggle ${notificationPreferences.orderUpdates ? 'active' : ''}`}
+                onClick={() => handleNotificationToggle('orderUpdates')}
+              />
+            </div>
+            <div className="notification-item">
+              <div className="notification-info">
+                <span className="notification-title">Service Updates</span>
+                <span className="notification-description">Updates about services you use</span>
+              </div>
+              <button
+                type="button"
+                className={`notification-toggle ${notificationPreferences.serviceUpdates ? 'active' : ''}`}
+                onClick={() => handleNotificationToggle('serviceUpdates')}
+              />
+            </div>
+            <div className="notification-item">
+              <div className="notification-info">
+                <span className="notification-title">Promotions</span>
+                <span className="notification-description">Special offers and deals</span>
+              </div>
+              <button
+                type="button"
+                className={`notification-toggle ${notificationPreferences.promotions ? 'active' : ''}`}
+                onClick={() => handleNotificationToggle('promotions')}
+              />
             </div>
           </div>
-          
-          <ul className="client-settings-sidebar-menu">
-            <li 
-              className={`client-settings-sidebar-menu-item ${activeTab === "account" ? "active" : ""}`}
-              onClick={() => {
-                setActiveTab("account");
-                setSidebarOpen(false);
-              }}
-            >
-              <i className="fas fa-user-circle"></i>
-              <span>Account Information</span>
-            </li>
-            <li 
-              className={`client-settings-sidebar-menu-item ${activeTab === "password" ? "active" : ""}`}
-              onClick={() => {
-                setActiveTab("password");
-                setSidebarOpen(false);
-              }}
-            >
-              <i className="fas fa-lock"></i>
-              <span>Password</span>
-            </li>
-            <li 
-              className={`client-settings-sidebar-menu-item ${activeTab === "notifications" ? "active" : ""}`}
-              onClick={() => {
-                setActiveTab("notifications");
-                setSidebarOpen(false);
-              }}
-            >
-              <i className="fas fa-bell"></i>
-              <span>Notifications</span>
-            </li>
-            <li 
-              className={`client-settings-sidebar-menu-item ${activeTab === "address" ? "active" : ""}`}
-              onClick={() => {
-                setActiveTab("address");
-                setSidebarOpen(false);
-              }}
-            >
-              <i className="fas fa-map-marker-alt"></i>
-              <span>Update Location</span>
-            </li>
-          </ul>
+          <button 
+            type="button"
+            className="save-changes-btn"
+            onClick={handleNotificationSave}
+            disabled={isLoading}
+          >
+            {isLoading ? 'Saving...' : 'Save Changes'}
+          </button>
         </div>
-        
-        {/* Main Content Area */}
-        <div className="client-settings-content">
-          <h1 className="client-settings-title">
-            {activeTab === "account" && "Account Information"}
-            {activeTab === "password" && "Change Password"}
-            {activeTab === "notifications" && "Notification Preferences"}
-            {activeTab === "address" && "Update Location"}
-          </h1>
-          
-          {/* Message display */}
-          {message.text && (
-            <div className={`client-settings-message ${message.type}`}>
-              {message.text}
-            </div>
-          )}
-      
-          {/* Account Info Tab */}
-          {activeTab === "account" && (
-            <div className="client-settings-section">
-              <div className="client-settings-profile-picture-section">
-                <img 
-                  src={previewUrl || defaultAvatar} 
-                  alt="Profile" 
-                  className="client-settings-profile-picture-preview"
-                />
-                <div className="client-settings-profile-picture-actions">
-                  <button 
-                    className="client-settings-button"
-                    onClick={handleImageUploadClick}
-                    disabled={uploadingImage}
-                  >
-                    <i className="fas fa-camera"></i> {uploadingImage ? "Uploading..." : "Change Picture"}
-                  </button>
-                  <input 
-                    type="file" 
-                    ref={fileInputRef}
-                    className="client-settings-file-input"
-                    accept="image/*"
-                    onChange={handleImageSelect}
-                  />
-                  {selectedFile && (
-                    <>
-                      {uploadingImage ? (
-                        <div className="client-settings-upload-progress">
-                          <div 
-                            className="client-settings-progress-bar" 
-                            style={{ 
-                              width: `${uploadProgress}%`,
-                              backgroundColor: uploadProgress < 100 ? '#4a6bdf' : '#20c997'
-                            }}
-                          ></div>
-                          <span className="client-settings-progress-text">{uploadProgress}%</span>
-                        </div>
-                      ) : (
-                        <button 
-                          className="client-settings-button"
-                          onClick={handleImageUpload}
-                        >
-                          <i className="fas fa-cloud-upload-alt"></i> Upload
-                        </button>
-                      )}
-                    </>
-                  )}
-                </div>
-              </div>
-              
-              <form className="client-settings-form" onSubmit={handleAccountSave}>
-                <div className="client-settings-form-group">
-                  <label htmlFor="firstName">First Name</label>
-                  <input 
-                    type="text"
-                    id="firstName"
-                    name="firstName"
-                    value={accountForm.firstName}
-                    onChange={handleAccountChange}
-                    className={`client-settings-input-validated ${
-                      accountForm.firstName && 
-                      (validationStates.firstName.isValid ? "valid" : "invalid")
-                    }`}
-                    required
-                  />
-                  {accountForm.firstName && validationStates.firstName.isValid && (
-                    <i className="fas fa-check client-settings-validation-icon"></i>
-                  )}
-                  {!validationStates.firstName.isValid && (
-                    <p className="client-settings-password-hint">{validationStates.firstName.message}</p>
-                  )}
-                </div>
-                
-                <div className="client-settings-form-group">
-                  <label htmlFor="lastName">Last Name</label>
-                  <input 
-                    type="text"
-                    id="lastName"
-                    name="lastName"
-                    value={accountForm.lastName}
-                    onChange={handleAccountChange}
-                    className={`client-settings-input-validated ${
-                      accountForm.lastName && 
-                      (validationStates.lastName.isValid ? "valid" : "invalid")
-                    }`}
-                    required
-                  />
-                  {accountForm.lastName && validationStates.lastName.isValid && (
-                    <i className="fas fa-check client-settings-validation-icon"></i>
-                  )}
-                  {!validationStates.lastName.isValid && (
-                    <p className="client-settings-password-hint">{validationStates.lastName.message}</p>
-                  )}
-                </div>
-                
-                <div className="client-settings-form-group">
-                  <label htmlFor="email">Email Address</label>
-                  <input 
-                    type="email"
-                    id="email"
-                    name="email"
-                    value={accountForm.email}
-                    className="client-settings-input-readonly"
-                    readOnly
-                    disabled
-                  />
-                  <p className="client-settings-field-info">
-                    <i className="fas fa-info-circle"></i> Email address cannot be changed
-                  </p>
-                </div>
-                
-                <div className="client-settings-form-group">
-                  <label htmlFor="phoneNumber">Phone Number</label>
-                  <input 
-                    type="tel"
-                    id="phoneNumber"
-                    name="phoneNumber"
-                    value={accountForm.phoneNumber}
-                    onChange={handleAccountChange}
-                    className={`client-settings-input-validated ${
-                      accountForm.phoneNumber && 
-                      (validationStates.phoneNumber.isValid ? "valid" : "invalid")
-                    }`}
-                    required
-                  />
-                  {accountForm.phoneNumber && validationStates.phoneNumber.isValid && (
-                    <i className="fas fa-check client-settings-validation-icon"></i>
-                  )}
-                  {!validationStates.phoneNumber.isValid && (
-                    <p className="client-settings-password-hint">{validationStates.phoneNumber.message}</p>
-                  )}
-                </div>
-                
-                <div className="client-settings-form-actions">
-                  <button 
-                    type="submit" 
-                    className="client-settings-button"
-                    disabled={isLoading}
-                  >
-                    {isLoading ? (
-                      <>
-                        <i className="fas fa-spinner fa-spin"></i> Saving...
-                      </>
-                    ) : (
-                      <>
-                        <i className="fas fa-save"></i> Save Changes
-                      </>
-                    )}
-                  </button>
-                </div>
-              </form>
-              
-              <div className="client-settings-deactivate-section">
-                <h3><i className="fas fa-exclamation-triangle"></i> Deactivate Account</h3>
-                <p>Once you deactivate your account, all your data will be permanently deleted. This action cannot be undone.</p>
-                <div className="right-aligned">
-                  <button 
-                    className="client-settings-button danger"
-                    onClick={showDeactivateConfirmation}
-                    disabled={isLoading}
-                  >
-                    <i className="fas fa-user-slash"></i> Deactivate Account
-                  </button>
-                </div>
-              </div>
-            </div>
-          )}
-          
-          {/* Password Tab */}
-          {activeTab === "password" && (
-            <div className="client-settings-section">
-              <form className="client-settings-form" onSubmit={handlePasswordSave}>
-                <div className="client-settings-form-group">
-                  <label htmlFor="currentPassword">Current Password</label>
-                  <input 
-                    type="password"
-                    id="currentPassword"
-                    name="currentPassword"
-                    value={passwordForm.currentPassword}
-                    onChange={handlePasswordChange}
-                    className={`client-settings-input-validated ${
-                      passwordForm.currentPassword && 
-                      (validationStates.currentPassword.isValid ? "valid" : "invalid")
-                    }`}
-                    required
-                  />
-                 {!validationStates.currentPassword.isValid && (
-                    <p className="client-settings-password-hint error-text">
-                      {validationStates.currentPassword.message || "Current password is required"}
-                    </p>
-                  )}
-                </div>
-                
-                <div className="client-settings-form-group">
-                  <label htmlFor="newPassword">New Password</label>
-                  <input 
-                    type="password"
-                    id="newPassword"
-                    name="newPassword"
-                    value={passwordForm.newPassword}
-                    onChange={handlePasswordChange}
-                    className={`client-settings-input-validated ${
-                      passwordForm.newPassword && 
-                      (validationStates.newPassword.isValid ? "valid" : "invalid")
-                    }`}
-                    required
-                  />
-                  
-                  {passwordForm.newPassword && (
-                    <div className="client-settings-password-strength">
-                      <div className="client-settings-strength-bar" style={{ width: `${(passwordStrength.score / 6) * 100}%`, backgroundColor: passwordStrength.color }}></div>
-                      <span className="client-settings-strength-text" style={{ color: passwordStrength.color }}>
-                        {passwordStrength.label}
-                      </span>
-                    </div>
-                  )}
-                  
-                   {!validationStates.newPassword.isValid && (
-                      <p className="client-settings-password-hint error-text">
-                        {validationStates.newPassword.message || "Password must be at least 8 characters"}
-                      </p>
-                    )}
-                </div>
-                
-                <div className="client-settings-form-group">
-                  <label htmlFor="confirmPassword">Confirm New Password</label>
-                  <input 
-                    type="password"
-                    id="confirmPassword"
-                    name="confirmPassword"
-                    value={passwordForm.confirmPassword}
-                    onChange={handlePasswordChange}
-                    className={`client-settings-input-validated ${
-                      passwordForm.confirmPassword && 
-                      (validationStates.confirmPassword.isValid ? "valid" : "invalid")
-                    }`}
-                    required
-                  />
-                  {!validationStates.confirmPassword.isValid && (
-                    <p className="client-settings-password-hint">{validationStates.confirmPassword.message}</p>
-                  )}
-                </div>
-                
-                <div className="client-settings-form-actions">
-                  <button 
-                    type="submit" 
-                    className="client-settings-button"
-                    disabled={isLoading}
-                  >
-                    {isLoading ? (
-                      <>
-                        <i className="fas fa-spinner fa-spin"></i> Changing Password...
-                      </>
-                    ) : (
-                      <>
-                        <i className="fas fa-key"></i> Change Password
-                      </>
-                    )}
-                  </button>
-                </div>
-              </form>
-            </div>
-          )}
-          
-          {/* Notifications Tab */}
-          {activeTab === "notifications" && (
-            <div className="client-settings-section">
-              <div className="client-settings-notification-settings">
-                <div className="client-settings-switch-container">
-                  <div>
-                    <div className="client-settings-switch-label">Email Notifications</div>
-                    <div className="client-settings-switch-description">
-                      Receive email notifications about account updates and service information
-                    </div>
-                  </div>
-                  <label className="client-settings-switch">
-                    <input 
-                      type="checkbox" 
-                      checked={notificationPreferences.emailNotifications}
-                      onChange={() => handleNotificationToggle("emailNotifications")}
-                    />
-                    <span className="client-settings-slider"></span>
-                  </label>
-                </div>
-                
-                <div className="client-settings-switch-container">
-                  <div>
-                    <div className="client-settings-switch-label">SMS Notifications</div>
-                    <div className="client-settings-switch-description">
-                      Receive text messages for important updates and reminders
-                    </div>
-                  </div>
-                  <label className="client-settings-switch">
-                    <input 
-                      type="checkbox" 
-                      checked={notificationPreferences.smsNotifications}
-                      onChange={() => handleNotificationToggle("smsNotifications")}
-                    />
-                    <span className="client-settings-slider"></span>
-                  </label>
-                </div>
-                
-                <div className="client-settings-switch-container">
-                  <div>
-                    <div className="client-settings-switch-label">Marketing Emails</div>
-                    <div className="client-settings-switch-description">
-                      Receive promotional emails about new services and special offers
-                    </div>
-                  </div>
-                  <label className="client-settings-switch">
-                    <input 
-                      type="checkbox" 
-                      checked={notificationPreferences.marketingEmails}
-                      onChange={() => handleNotificationToggle("marketingEmails")}
-                    />
-                    <span className="client-settings-slider"></span>
-                  </label>
-                </div>
-                
-                <div className="client-settings-switch-container">
-                  <div>
-                    <div className="client-settings-switch-label">Order Updates</div>
-                    <div className="client-settings-switch-description">
-                      Receive notifications about your orders and bookings
-                    </div>
-                  </div>
-                  <label className="client-settings-switch">
-                    <input 
-                      type="checkbox" 
-                      checked={notificationPreferences.orderUpdates}
-                      onChange={() => handleNotificationToggle("orderUpdates")}
-                    />
-                    <span className="client-settings-slider"></span>
-                  </label>
-                </div>
-                
-                <div className="client-settings-switch-container">
-                  <div>
-                    <div className="client-settings-switch-label">Service Updates</div>
-                    <div className="client-settings-switch-description">
-                      Receive notifications about service changes and important information
-                    </div>
-                  </div>
-                  <label className="client-settings-switch">
-                    <input 
-                      type="checkbox" 
-                      checked={notificationPreferences.serviceUpdates}
-                      onChange={() => handleNotificationToggle("serviceUpdates")}
-                    />
-                    <span className="client-settings-slider"></span>
-                  </label>
-                </div>
-                
-                <div className="client-settings-switch-container">
-                  <div>
-                    <div className="client-settings-switch-label">Promotions</div>
-                    <div className="client-settings-switch-description">
-                      Receive notifications about discounts and promotional offers
-                    </div>
-                  </div>
-                  <label className="client-settings-switch">
-                    <input 
-                      type="checkbox" 
-                      checked={notificationPreferences.promotions}
-                      onChange={() => handleNotificationToggle("promotions")}
-                    />
-                    <span className="client-settings-slider"></span>
-                  </label>
-                </div>
-              </div>
-              
-              <div className="client-settings-form-actions">
-                <button 
-                  className="client-settings-button"
-                  onClick={handleNotificationSave}
-                  disabled={isLoading}
-                >
-                  {isLoading ? (
-                    <>
-                      <i className="fas fa-spinner fa-spin"></i> Saving...
-                    </>
-                  ) : (
-                    <>
-                      <i className="fas fa-save"></i> Save Preferences
-                    </>
-                  )}
-                </button>
-              </div>
-            </div>
-          )}
-          
-          {/* Update Location Tab */}
-          {activeTab === "address" && (
-            <div className="client-settings-section">
-              <div className="client-settings-address-info">
-                <p><i className="fas fa-info-circle"></i> Update your location to help us provide better service recommendations and connect you with nearby caregivers.</p>
-              </div>
-              
-              <form className="client-settings-form" onSubmit={handleAddressSave}>
-                <div className="client-settings-form-group">
-                  <label htmlFor="address">Full Address</label>
-                  <AddressInput
-                    value={addressForm.address}
-                    onChange={handleAddressChange}
-                    onValidation={handleAddressValidation}
-                    placeholder="Enter your full address (e.g., 123 Main Street, Lagos, Nigeria)"
-                    className="client-settings-address-input"
-                    showValidationIcon={true}
-                    autoValidate={true}
-                    country="ng"
-                  />
-                  
-                  {/* Show validation status */}
-                  {addressValidation && (
-                    <div style={{ 
-                      marginTop: '8px',
-                      padding: '8px',
-                      borderRadius: '4px',
-                      fontSize: '14px',
-                      backgroundColor: addressValidation.isValid ? '#d4edda' : '#f8d7da',
-                      color: addressValidation.isValid ? '#155724' : '#721c24',
-                      border: `1px solid ${addressValidation.isValid ? '#c3e6cb' : '#f5c6cb'}`
-                    }}>
-                      <i className={`fas ${addressValidation.isValid ? 'fa-check-circle' : 'fa-exclamation-circle'}`}></i>
-                      {addressValidation.isValid ? 
-                        ` Address validated: ${addressValidation.formattedAddress}` : 
-                        ` ${addressValidation.errorMessage || 'Please select a valid address from suggestions'}`
-                      }
-                    </div>
-                  )}
-                </div>
 
-                {/* Display address components if validated */}
-                {addressValidation && addressValidation.isValid && addressValidation.addressComponents && (
-                  <div className="client-settings-address-components">
-                    <h4>Address Details</h4>
-                    <div className="client-settings-address-grid">
-                      <div className="client-settings-form-group">
-                        <label>City</label>
-                        <input 
-                          type="text"
-                          value={addressForm.city}
-                          className="client-settings-input-readonly"
-                          readOnly
-                        />
-                      </div>
-                      
-                      <div className="client-settings-form-group">
-                        <label>State</label>
-                        <input 
-                          type="text"
-                          value={addressForm.state}
-                          className="client-settings-input-readonly"
-                          readOnly
-                        />
-                      </div>
-                      
-                      <div className="client-settings-form-group">
-                        <label>Country</label>
-                        <input 
-                          type="text"
-                          value={addressForm.country}
-                          className="client-settings-input-readonly"
-                          readOnly
-                        />
-                      </div>
-                      
-                      <div className="client-settings-form-group">
-                        <label>Postal Code</label>
-                        <input 
-                          type="text"
-                          value={addressForm.postalCode}
-                          className="client-settings-input-readonly"
-                          readOnly
-                        />
-                      </div>
-                    </div>
-                  </div>
-                )}
-                
-                <div className="client-settings-form-actions">
-                  <button 
-                    type="submit" 
-                    className="client-settings-button"
-                    disabled={isLoading || !addressValidation?.isValid}
-                  >
-                    {isLoading ? (
-                      <>
-                        <i className="fas fa-spinner fa-spin"></i> Saving...
-                      </>
-                    ) : (
-                      <>
-                        <i className="fas fa-map-marker-alt"></i> Save Location
-                      </>
-                    )}
-                  </button>
-                </div>
-              </form>
+        {/* Service Address Card */}
+        <div className="settings-card">
+          <h3>Service Address</h3>
+          <form onSubmit={handleAddressSave}>
+            <div className="form-group">
+              <label>Full Address</label>
+              <AddressInput
+                value={addressForm.address}
+                onChange={handleAddressChange}
+                onValidation={handleAddressValidation}
+                placeholder="Enter your full address"
+                showValidationIcon={true}
+                autoValidate={true}
+                country="ng"
+              />
+              {addressValidation && !addressValidation.isValid && (
+                <span className="validation-message error">
+                  {addressValidation.errorMessage || 'Please enter a valid address'}
+                </span>
+              )}
+              {addressValidation && addressValidation.isValid && addressValidation.isGoogleValidated && (
+                <span className="validation-message success">
+                  ✓ Address verified by Google Maps
+                </span>
+              )}
             </div>
-          )}
+            
+            {addressValidation && addressValidation.isValid && addressForm.city && (
+              <div style={{ 
+                display: 'grid', 
+                gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', 
+                gap: '16px',
+                marginTop: '16px'
+              }}>
+                <div className="form-group">
+                  <label>City</label>
+                  <input 
+                    type="text"
+                    value={addressForm.city}
+                    readOnly
+                  />
+                </div>
+                
+                <div className="form-group">
+                  <label>State</label>
+                  <input 
+                    type="text"
+                    value={addressForm.state}
+                    readOnly
+                  />
+                </div>
+                
+                <div className="form-group">
+                  <label>Country</label>
+                  <input 
+                    type="text"
+                    value={addressForm.country}
+                    readOnly
+                  />
+                </div>
+                
+                <div className="form-group">
+                  <label>Postal Code</label>
+                  <input 
+                    type="text"
+                    value={addressForm.postalCode}
+                    readOnly
+                  />
+                </div>
+              </div>
+            )}
+            
+            <button 
+              type="submit" 
+              className="save-changes-btn"
+              disabled={isLoading || !addressValidation?.isValid}
+            >
+              {isLoading ? 'Saving...' : 'Save Location'}
+            </button>
+          </form>
+        </div>
+
+        {/* Account Deactivation Card */}
+        <div className="settings-card">
+          <h3>Account Deactivation</h3>
+          <p className="deactivation-warning">
+            When you deactivate your account:
+          </p>
+          <ul className="deactivation-list">
+            <li>Your profile won't be visible to caregivers.</li>
+            <li>Active bookings will be canceled.</li>
+            <li>You won't be able to re-activate your account.</li>
+            <li>All your data will be permanently deleted.</li>
+          </ul>
+          <div className="form-group">
+            <label className="leaving-reason">Why are you leaving?</label>
+            <select 
+              className="reason-dropdown"
+              value={deactivationReason}
+              onChange={(e) => setDeactivationReason(e.target.value)}
+            >
+              <option value="">Choose reason</option>
+              <option value="no-longer-need">I no longer need this account</option>
+              <option value="not-satisfied">I'm not satisfied with the service</option>
+              <option value="privacy-concerns">Privacy concerns</option>
+              <option value="found-alternative">Found an alternative service</option>
+              <option value="other">Other</option>
+            </select>
+          </div>
+          <button 
+            type="button"
+            className="deactivate-btn"
+            onClick={showDeactivateConfirmation}
+          >
+            Deactivate account
+          </button>
         </div>
       </div>
-      
+
       {/* Confirmation Modal */}
       {showModal && (
-        <div className="client-settings-modal-overlay">
-          <div className="client-settings-modal-content">
-            <h3><i className="fas fa-exclamation-triangle"></i> {modalConfig.title}</h3>
+        <div className="client-location-modal-overlay" onClick={() => setShowModal(false)}>
+          <div className="client-location-modal" onClick={(e) => e.stopPropagation()}>
+            <h3>{modalConfig.title}</h3>
             <p>{modalConfig.text}</p>
-            <div className="client-settings-modal-actions">
+            <div className="client-modal-buttons">
               <button 
-                className="client-settings-button cancel"
+                className="client-modal-btn client-modal-cancel"
                 onClick={() => setShowModal(false)}
               >
-                <i className="fas fa-times"></i> Cancel
+                Cancel
               </button>
               <button 
-                className="client-settings-button danger"
+                className="client-modal-btn client-modal-save"
+                style={{ backgroundColor: '#ef4444' }}
                 onClick={modalConfig.confirmAction}
                 disabled={isLoading}
               >
-                {isLoading ? (
-                  <>
-                    <i className="fas fa-spinner fa-spin"></i> Processing...
-                  </>
-                ) : (
-                  <>
-                    <i className="fas fa-check"></i> Confirm
-                  </>
-                )}
+                {isLoading ? 'Processing...' : 'Confirm'}
               </button>
             </div>
           </div>
