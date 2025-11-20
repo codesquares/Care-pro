@@ -103,17 +103,14 @@ const ClientPreferences = () => {
         if (!token) {
           setOfflineMode(true);
           console.warn("No authentication token found, operating in offline mode");
+        } else {
+          // If we have a token, we're online
+          setOfflineMode(false);
         }
         
         // Attempt to fetch preferences from service
         const fetchedPreferences = await ClientPreferenceService.getPreferences(clientId);
         setPreferences(fetchedPreferences);
-        
-        // Check if we're using local storage (offline mode)
-        const storedPreferences = localStorage.getItem(`client_preferences_${clientId}`);
-        if (storedPreferences) {
-          setOfflineMode(true);
-        }
         
         // Get initial recommendations
         const initialRecommendations = await ClientPreferenceService.getRecommendations(

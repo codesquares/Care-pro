@@ -3,6 +3,7 @@
  * Handles client service preferences and recommendation operations
  */
 import config from "../config"; // Centralized API configuration
+import ClientGigService from "./clientGigService"; // Import for real recommendations
 
 const ClientPreferenceService = {
   /**
@@ -57,7 +58,23 @@ const ClientPreferenceService = {
           const data = await response.json();
           // If data is in different format than expected, extract preferences
           const preferences = data.preferences || data;
-          return preferences || this.getDefaultPreferences();
+          
+          // Ensure all required fields exist with defaults
+          const defaultPrefs = this.getDefaultPreferences();
+          const mergedPreferences = {
+            ...defaultPrefs,
+            ...preferences,
+            caregiverPreferences: {
+              ...defaultPrefs.caregiverPreferences,
+              ...(preferences.caregiverPreferences || {})
+            },
+            budget: {
+              ...defaultPrefs.budget,
+              ...(preferences.budget || {})
+            }
+          };
+          
+          return mergedPreferences;
         } catch (parseError) {
           console.warn('Failed to parse response data:', parseError);
           return this.getDefaultPreferences();
@@ -198,8 +215,8 @@ const ClientPreferenceService = {
    */
   async getRecommendations(clientId, preferences) {
     try {
-      // Get recommendations
-      const recommendations = this.getMockRecommendations(preferences);
+      // Get real recommendations from gigs
+      const recommendations = await this.getRealRecommendations(preferences);
       
       // Try to load cached recommendations from local storage if they exist
       const storedRecommendationsJson = localStorage.getItem(`client_recommendations_${clientId}`);
@@ -382,7 +399,178 @@ const ClientPreferenceService = {
   },
   
   /**
-   * Get mock recommendations based on preferences
+   * Get real recommendations based on preferences using ClientGigService
+   * @param {Object} preferences - Client preferences
+   * @returns {Promise<Array>} - Array of recommended services from actual gigs
+   */
+  async getRealRecommendations(preferences) {
+    try {
+      // Get all enriched gigs from ClientGigService
+      const allGigs = await ClientGigService.getAllGigs();
+      
+      if (!allGigs || allGigs.length === 0) {
+        console.log('No gigs available for recommendations');
+        return [];
+      }
+      
+      // Apply filtering based on preferences
+      let filteredGigs = [...allGigs];
+      
+      // Filter by service type (category)
+      if (preferences.serviceType && preferences.serviceType.trim() !== '') {
+        filteredGigs = filteredGigs.filter(gig => {
+          const gigCategory = (gig.category || '').toLowerCase();
+          const prefServiceType = preferences.serviceType.toLowerCase();
+          
+          // Handle subCategory - it can be string or array
+          let gigSubCategory = '';
+          if (Array.isArray(gig.subCategory)) {
+            gigSubCategory = gig.subCategory.join(' ').toLowerCase();
+          } else if (typeof gig.subCategory === 'string') {
+            gigSubCategory = gig.subCategory.toLowerCase();
+          }
+          
+          return gigCategory.includes(prefServiceType) || 
+                 gigSubCategory.includes(prefServiceType) ||
+                 prefServiceType.includes(gigCategory);
+        });
+      }
+      
+      // Filter by location
+      if (preferences.location && preferences.location.trim() !== '') {
+        filteredGigs = filteredGigs.filter(gig => {
+          const gigLocation = (gig.caregiverLocation || '').toLowerCase();
+          const prefLocation = preferences.location.toLowerCase();
+          const serviceArea = (gig.serviceArea || '').toLowerCase();
+          
+          return gigLocation.includes(prefLocation) || 
+                 prefLocation.includes(gigLocation) ||
+                 serviceArea.includes(prefLocation);
+        });
+      }
+      
+      // Filter by budget range
+      if (preferences.budget) {
+        if (preferences.budget.min && preferences.budget.min !== '') {
+          const minBudget = parseFloat(preferences.budget.min);
+          filteredGigs = filteredGigs.filter(gig => 
+            (gig.price || 0) >= minBudget
+          );
+        }
+        
+        if (preferences.budget.max && preferences.budget.max !== '') {
+          const maxBudget = parseFloat(preferences.budget.max);
+          filteredGigs = filteredGigs.filter(gig => 
+            (gig.price || 0) <= maxBudget
+          );
+        }
+      }
+      
+      // Filter by caregiver preferences
+      if (preferences.caregiverPreferences) {
+        const cgPrefs = preferences.caregiverPreferences;
+        
+        // Filter by experience level
+        if (cgPrefs.experience && cgPrefs.experience.trim() !== '') {
+          const experienceMap = {
+            'beginner': 0,
+            'intermediate': 2,
+            'experienced': 5,
+            'expert': 10
+          };
+          
+          const minExp = experienceMap[cgPrefs.experience.toLowerCase()] || 0;
+          filteredGigs = filteredGigs.filter(gig => 
+            (gig.caregiverExperience || 0) >= minExp
+          );
+        }
+        
+        // Filter by languages
+        if (cgPrefs.languages && Array.isArray(cgPrefs.languages) && cgPrefs.languages.length > 0) {
+          filteredGigs = filteredGigs.filter(gig => {
+            if (!gig.caregiverLanguages || !Array.isArray(gig.caregiverLanguages) || gig.caregiverLanguages.length === 0) {
+              return false;
+            }
+            
+            // Check if caregiver speaks at least one of the preferred languages
+            return cgPrefs.languages.some(prefLang => {
+              if (!prefLang || typeof prefLang !== 'string') return false;
+              return gig.caregiverLanguages.some(cgLang => {
+                if (!cgLang || typeof cgLang !== 'string') return false;
+                return cgLang.toLowerCase().includes(prefLang.toLowerCase()) ||
+                       prefLang.toLowerCase().includes(cgLang.toLowerCase());
+              });
+            });
+          });
+        }
+        
+        // Filter by gender preference (if available in caregiver data)
+        if (cgPrefs.gender && cgPrefs.gender.trim() !== '' && cgPrefs.gender.toLowerCase() !== 'no preference') {
+          filteredGigs = filteredGigs.filter(gig => {
+            // Check if gender field exists in caregiver data
+            if (gig.caregiverGender) {
+              return gig.caregiverGender.toLowerCase() === cgPrefs.gender.toLowerCase();
+            }
+            // If no gender data, include the gig (don't filter out)
+            return true;
+          });
+        }
+      }
+      
+      // Filter by availability (if schedule preference is set)
+      if (preferences.schedule && preferences.schedule.trim() !== '') {
+        filteredGigs = filteredGigs.filter(gig => 
+          gig.caregiverIsAvailable !== false
+        );
+      }
+      
+      // Calculate relevance score for each gig
+      const gigsWithScore = filteredGigs.map(gig => ({
+        ...gig,
+        relevanceScore: (
+          (gig.caregiverRating || 0) * 20 + // Rating weight
+          (gig.caregiverReviewCount || 0) * 0.5 + // Review count weight
+          (gig.caregiverIsVerified ? 15 : 0) + // Verified boost
+          (gig.caregiverExperience || 0) * 2 // Experience weight
+        )
+      }));
+      
+      // Sort by relevance score (highest first)
+      gigsWithScore.sort((a, b) => b.relevanceScore - a.relevanceScore);
+      
+      // Transform to expected recommendation format and limit to top 10
+      const recommendations = gigsWithScore.slice(0, 10).map(gig => ({
+        id: gig.id,
+        title: gig.title || 'Untitled Service',
+        provider: gig.caregiverName || 'Unknown Provider',
+        rating: gig.caregiverRating || 0,
+        reviewCount: gig.caregiverReviewCount || 0,
+        price: gig.price || 0,
+        priceUnit: gig.priceUnit || 'hour',
+        serviceType: gig.category || 'General Care',
+        location: gig.caregiverLocation || 'Location not specified',
+        image: gig.gigImage || gig.caregiverProfileImage || 'https://via.placeholder.com/150',
+        // Additional enriched data for future use
+        caregiverId: gig.caregiverId,
+        caregiverBio: gig.caregiverBio,
+        caregiverExperience: gig.caregiverExperience,
+        caregiverIsVerified: gig.caregiverIsVerified,
+        caregiverSpecializations: gig.caregiverSpecializations,
+        description: gig.description
+      }));
+      
+      console.log(`Generated ${recommendations.length} real recommendations from ${allGigs.length} available gigs`);
+      return recommendations;
+      
+    } catch (error) {
+      console.error('Error generating real recommendations:', error);
+      // Return empty array if real recommendations fail
+      return [];
+    }
+  },
+  
+  /**
+   * Get mock recommendations based on preferences (fallback)
    * @param {Object} preferences - Client preferences
    * @returns {Array} - Array of mock recommended services
    */
