@@ -356,7 +356,12 @@ const GigsSection = () => {
 
         {/* Active Tab Content */}
           {activeTab === "active" && activeGigs.map((gig) => (
-            <div key={gig.id} className="caregiver-gig-card">
+            <div 
+              key={gig.id} 
+              className="caregiver-gig-card"
+              onClick={() => navigate(`/service/${gig.id}`)}
+              style={{ cursor: 'pointer' }}
+            >
               <img
                 src={gig.image1 || "https://via.placeholder.com/300x160"}
                 alt={gig.title}
@@ -368,20 +373,29 @@ const GigsSection = () => {
                 <div className="caregiver-gig-actions">
                   <button 
                     className="caregiver-gig-action-btn caregiver-edit"
-                    onClick={() => handleEditGig(gig)}
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      handleEditGig(gig);
+                    }}
                   >
                     Edit
                   </button>
                   <button 
                     className="caregiver-gig-action-btn caregiver-pause"
-                    onClick={() => handlePauseGig(gig)}
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      handlePauseGig(gig);
+                    }}
                     disabled={pausingGigs.has(gig.id)}
                   >
                     {pausingGigs.has(gig.id) ? 'Pausing...' : 'Pause'}
                   </button>
                   <button 
                     className="caregiver-gig-action-btn caregiver-delete"
-                    onClick={() => handleDeleteGig(gig)}
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      handleDeleteGig(gig);
+                    }}
                     disabled={deletingGigs.has(gig.id)}
                   >
                     {deletingGigs.has(gig.id) ? 'Deleting...' : 'Delete'}
@@ -393,7 +407,12 @@ const GigsSection = () => {
 
           {/* Paused Tab Content */}
           {activeTab === "paused" && draftGigs.map((gig) => (
-            <div key={gig.id} className="caregiver-gig-card">
+            <div 
+              key={gig.id} 
+              className="caregiver-gig-card"
+              onClick={() => navigate(`/service/${gig.id}`)}
+              style={{ cursor: 'pointer' }}
+            >
               <img
                 src={gig.image1 || "https://via.placeholder.com/300x160"}
                 alt={gig.title}
@@ -405,13 +424,19 @@ const GigsSection = () => {
                 <div className="caregiver-gig-actions">
                   <button 
                     className="caregiver-gig-action-btn caregiver-edit"
-                    onClick={() => handleEditGig(gig)}
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      handleEditGig(gig);
+                    }}
                   >
                     Edit
                   </button>
                   <button 
                     className={`caregiver-gig-action-btn caregiver-publish ${!canPublishNewGig ? 'disabled' : ''}`}
-                    onClick={() => handlePublishGig(gig)}
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      handlePublishGig(gig);
+                    }}
                     disabled={publishingGigs.has(gig.id) || !canPublishNewGig}
                     title={!canPublishNewGig ? 
                       (activeGigs.length >= 2 ? 

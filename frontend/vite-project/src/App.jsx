@@ -35,6 +35,7 @@ import ContentBlog from './components/ContentfulBlog/Blog';
 import ContentBlogPost from './components/ContentfulBlog/BlogPost';
 import { BlogProvider } from './main-app/context/BlogContext';
 import PaymentSuccess from './main-app/pages/client/home-care-service/PaymentSuccess';
+import HomeCareService from './main-app/pages/client/home-care-service/HomeCareService';
 import { MessageProvider } from './main-app/context/MessageContext';
 import { CaregiverStatusProvider } from './main-app/contexts/CaregiverStatusContext';
 // import { NotificationProvider } from './main-app/context/NotificationContext';
@@ -157,6 +158,7 @@ function AppContent() {
         <Route path="/confirm-email" element={<ConfirmEmailPage />} />
         <Route path="/resend-confirmation" element={<ResendConfirmationPage />} />
         <Route path="/" element={<PublicMarketplace />} />
+        <Route path="/service/:id" element={<HomeCareService />} />
         <Route path="/splash" element={<SplashScreen />} />
 
         {/* <Route path="/Caregivergigpage" element={<Caregivergigpage />} /> */}

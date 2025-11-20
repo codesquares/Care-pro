@@ -185,6 +185,7 @@ import "./home-care-service.css";
 import ClientGigService from "../../../services/clientGigService";
 import defaultAvatar from "../../../../assets/profilecard1.png";
 import VideoModal from "../../../components/VideoModal/VideoModal";
+import { useAuth } from "../../../context/AuthContext";
 
 const HomeCareService = () => {
   const { id } = useParams();
@@ -194,11 +195,18 @@ const HomeCareService = () => {
   const [showVideoModal, setShowVideoModal] = useState(false);
   const [serviceCardDimensions, setServiceCardDimensions] = useState({ width: 0, height: 0 });
   const navigate = useNavigate();
+  const { isAuthenticated, userRole } = useAuth();
   const basePath = "/app/client";
   const serviceCardRef = useRef(null);
 
  const handleHire = async () => {
     if (!service) return;
+    
+    // If not authenticated, redirect to login with return URL
+    if (!isAuthenticated) {
+      navigate(`/login?returnTo=/service/${id}`);
+      return;
+    }
   
     navigate(`${basePath}/cart/${id}`);
  };
@@ -382,9 +390,11 @@ const HomeCareService = () => {
               </li>
             )}
           </ul>
-          <button className="accept-offer-btn" onClick={handleHire}>
-            Accept offer →
-          </button>
+          {(!isAuthenticated || userRole === 'Client') && (
+            <button className="accept-offer-btn" onClick={handleHire}>
+              {!isAuthenticated ? 'Hire Me →' : 'Accept offer →'}
+            </button>
+          )}
         </div>
       </div>
 
@@ -404,26 +414,28 @@ const HomeCareService = () => {
         </div>
       )}
 
-      {/* Floating Message Button */}
-      <div className="floating-message">
-        <img 
-          src={caregiverProfileImage && (caregiverProfileImage.startsWith('http') || caregiverProfileImage.startsWith('/')) ? caregiverProfileImage : defaultAvatar} 
-          className="floating-avatar" 
-          alt={caregiverName}
-          onError={(e) => {
-            e.target.src = defaultAvatar;
-          }}
-        />
-        <div className="floating-info">
-          <p className="message-provider-btn" onClick={handleMessage}>
-            Message: {caregiverFirstName || caregiverName}
-          </p>
-          <span className="status-text">
-            {caregiverIsAvailable ? "Available" : "Away"} · 
-            <span> for {lastDeliveryDate || "Unknown days"}</span>
-          </span>
+      {/* Floating Message Button - Only show for authenticated clients */}
+      {isAuthenticated && userRole === 'Client' && (
+        <div className="floating-message">
+          <img 
+            src={caregiverProfileImage && (caregiverProfileImage.startsWith('http') || caregiverProfileImage.startsWith('/')) ? caregiverProfileImage : defaultAvatar} 
+            className="floating-avatar" 
+            alt={caregiverName}
+            onError={(e) => {
+              e.target.src = defaultAvatar;
+            }}
+          />
+          <div className="floating-info">
+            <p className="message-provider-btn" onClick={handleMessage}>
+              Message: {caregiverFirstName || caregiverName}
+            </p>
+            <span className="status-text">
+              {caregiverIsAvailable ? "Available" : "Away"} · 
+              <span> for {lastDeliveryDate || "Unknown days"}</span>
+            </span>
+          </div>
         </div>
-      </div>
+      )}
 
       {/* Caregiver Bio Section */}
       {caregiverBio && (
