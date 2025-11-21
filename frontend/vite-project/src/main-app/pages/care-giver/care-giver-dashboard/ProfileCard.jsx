@@ -84,12 +84,23 @@ const ProfileCard = () => {
 
   return (
     <div className="profile-card">
-      <div className="caregiver-profile-card-bio-head">
-         <img
-        src={profile?.profileImage || profilecard1}
-        alt="Profile"
-        className="profile-picture"
-      />
+      <div className="profile-picture-container">
+        {profile?.profileImage && profile.profileImage !== profilecard1 ? (
+          <img
+            src={profile.profileImage}
+            alt="Profile"
+            className="profile-picture"
+          />
+        ) : (
+          <div className="profile-initials-avatar">
+            {profile?.firstName && profile?.lastName
+              ? `${profile.firstName.charAt(0).toUpperCase()}${profile.lastName.charAt(0).toUpperCase()}`
+              : "AR"
+            }
+          </div>
+        )}
+      </div>
+      
       {/* capitalize first letter of each word in name */}
       <h3 className="profile-name">
         {profile?.firstName && profile?.lastName
@@ -97,7 +108,6 @@ const ProfileCard = () => {
           : "Ahmed Rufai"}
       </h3>
       <p className="profile-username">@{userName}</p>
-      </div>
       
       <div
         className="view-profile"

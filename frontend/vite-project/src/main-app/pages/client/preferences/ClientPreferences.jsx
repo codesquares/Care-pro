@@ -1,7 +1,9 @@
 import { useState, useEffect } from 'react';
+import { useNavigate } from 'react-router-dom';
 import './ClientPreferences.css';
 import ClientPreferenceService from '../../../services/clientPreferenceService';
-import ClientTaskService from '../../../services/clientTaskService';
+import ServiceCard from '../client-dashboard/ServiceCard';
+// import ClientTaskService from '../../../services/clientTaskService'; // Disabled for now
 
 /**
  * ClientPreferences component for managing client service preferences and recommendations
@@ -29,12 +31,12 @@ const ClientPreferences = () => {
   });
   
   const [recommendations, setRecommendations] = useState([]);
-  const [tasks, setTasks] = useState([]);
+  // const [tasks, setTasks] = useState([]); // Disabled tasks feature
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
   const [success, setSuccess] = useState(null);
   const [offlineMode, setOfflineMode] = useState(false);
-  const [activeTab, setActiveTab] = useState('preferences'); // 'preferences', 'recommendations', 'tasks'
+  const [activeTab, setActiveTab] = useState('preferences'); // 'preferences', 'recommendations'
   
   const serviceTypes = [
     'Home Care',
@@ -85,7 +87,7 @@ const ClientPreferences = () => {
     'Arabic'
   ];
   
-  // Fetch client's current preferences, recommendations, and tasks
+  // Fetch client's current preferences and recommendations
   useEffect(() => {
     const fetchData = async () => {
       try {
@@ -103,17 +105,14 @@ const ClientPreferences = () => {
         if (!token) {
           setOfflineMode(true);
           console.warn("No authentication token found, operating in offline mode");
+        } else {
+          // If we have a token, we're online
+          setOfflineMode(false);
         }
         
         // Attempt to fetch preferences from service
         const fetchedPreferences = await ClientPreferenceService.getPreferences(clientId);
         setPreferences(fetchedPreferences);
-        
-        // Check if we're using local storage (offline mode)
-        const storedPreferences = localStorage.getItem(`client_preferences_${clientId}`);
-        if (storedPreferences) {
-          setOfflineMode(true);
-        }
         
         // Get initial recommendations
         const initialRecommendations = await ClientPreferenceService.getRecommendations(
@@ -122,16 +121,16 @@ const ClientPreferences = () => {
         );
         setRecommendations(initialRecommendations);
         
-        // Fetch existing tasks if available
-        try {
-          const existingTasks = await ClientTaskService.getTasks(clientId);
-          if (existingTasks && existingTasks.length > 0) {
-            setTasks(existingTasks);
-          }
-        } catch (taskError) {
-          console.error('Error fetching tasks:', taskError);
-          // Continue with the app even if task fetching fails
-        }
+        // // Fetch existing tasks if available - DISABLED
+        // try {
+        //   const existingTasks = await ClientTaskService.getTasks(clientId);
+        //   if (existingTasks && existingTasks.length > 0) {
+        //     setTasks(existingTasks);
+        //   }
+        // } catch (taskError) {
+        //   console.error('Error fetching tasks:', taskError);
+        //   // Continue with the app even if task fetching fails
+        // }
         
         setLoading(false);
       } catch (err) {
@@ -211,7 +210,8 @@ const ClientPreferences = () => {
   };
   
   // Handle task status toggle
-  const handleTaskStatusChange = async (taskId, isComplete) => {
+  // Tasks feature disabled
+  /* const handleTaskStatusChange = async (taskId, isComplete) => {
     try {
       const userDetails = JSON.parse(localStorage.getItem("userDetails") || "{}");
       if (!userDetails.id) {
@@ -246,7 +246,7 @@ const ClientPreferences = () => {
       setSuccess(tempMsg);
       setTimeout(() => setSuccess(null), 3000);
     }
-  };
+  }; */
   
   // Save preferences
   const handleSavePreferences = async () => {
@@ -296,27 +296,25 @@ const ClientPreferences = () => {
         // We'll continue with any recommendations we might have
       }
       
-      // Generate and save tasks based on preferences
-      let generatedTasks = [];
-      try {
-        generatedTasks = await ClientTaskService.generateTasks(
-          clientId,
-          preferences
-        );
-        setTasks(generatedTasks);
-      } catch (taskError) {
-        console.warn('Error generating tasks:', taskError);
-        // Continue with any tasks we might have
-      }
+      // // Generate and save tasks based on preferences - DISABLED
+      // let generatedTasks = [];
+      // try {
+      //   generatedTasks = await ClientTaskService.generateTasks(
+      //     clientId,
+      //     preferences
+      //   );
+      //   setTasks(generatedTasks);
+      // } catch (taskError) {
+      //   console.warn('Error generating tasks:', taskError);
+      //   // Continue with any tasks we might have
+      // }
       
       // Clear success message after 5 seconds
       setTimeout(() => setSuccess(null), 5000);
       
-      // Switch to recommendations tab if we have recommendations, otherwise tasks
+      // Switch to recommendations tab if we have recommendations
       if (updatedRecommendations && updatedRecommendations.length > 0) {
         setActiveTab('recommendations');
-      } else if (generatedTasks && generatedTasks.length > 0) {
-        setActiveTab('tasks');
       }
       
       setLoading(false);
@@ -387,12 +385,13 @@ const ClientPreferences = () => {
         >
           <i className="fas fa-star"></i> Recommendations
         </button>
-        <button 
+        {/* Tasks tab disabled for now */}
+        {/* <button 
           className={`tab-button ${activeTab === 'tasks' ? 'active' : ''}`}
           onClick={() => setActiveTab('tasks')}
         >
           <i className="fas fa-tasks"></i> Tasks
-        </button>
+        </button> */}
       </div>
       
       <div className="preferences-content">
@@ -624,31 +623,11 @@ const ClientPreferences = () => {
             ) : recommendations.length > 0 ? (
               <div className="recommendations-grid">
                 {recommendations.map(service => (
-                  <div className="service-card" key={service.id}>
-                    <div className="service-image">
-                      <img src={service.image || 'https://via.placeholder.com/150'} alt={service.title} />
-                    </div>
-                    <div className="service-content">
-                      <h3>{service.title}</h3>
-                      <div className="service-provider">
-                        <i className="fas fa-user"></i>
-                        <span>{service.provider}</span>
-                      </div>
-                      <div className="service-rating">
-                        <i className="fas fa-star"></i>
-                        <span>{service.rating} ({service.reviewCount} reviews)</span>
-                      </div>
-                      <div className="service-price">
-                        <i className="fas fa-tag"></i>
-                        <span>₦{service.price}/{service.priceUnit}</span>
-                      </div>
-                      <div className="service-location">
-                        <i className="fas fa-map-marker-alt"></i>
-                        <span>{service.location}</span>
-                      </div>
-                      <button className="view-service-btn">View Service</button>
-                    </div>
-                  </div>
+                  <ServiceCard 
+                    key={service.id} 
+                    {...service}
+                    isPublic={false}
+                  />
                 ))}
               </div>
             ) : (
@@ -660,8 +639,8 @@ const ClientPreferences = () => {
           </div>
         )}
         
-        {/* Tasks Section */}
-        {activeTab === 'tasks' && (
+        {/* Tasks Section - DISABLED */}
+        {/* {activeTab === 'tasks' && (
           <div className="tasks-section">
             <h2>Your Care Tasks</h2>
             
@@ -734,7 +713,7 @@ const ClientPreferences = () => {
               </div>
             )}
           </div>
-        )}
+        )} */}
       </div>
     </div>
   );

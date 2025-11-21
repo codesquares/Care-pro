@@ -20,7 +20,6 @@ const NavigationBar = () => {
   const [earnings, setEarnings] = useState({
     totalEarned: 0,
   });
-  const [profileData, setProfileData] = useState(null);
 
   const userName = user?.firstName ? `${user.firstName} ${user.lastName}` : "";
 
@@ -79,7 +78,7 @@ const NavigationBar = () => {
 
   // Helper function to render avatar content
   const renderAvatarContent = (className = "") => {
-    const profileImage = profileData?.profilePicture;
+    const profileImage = user?.profileImage || user?.profilePicture;
     
     if (profileImage) {
       return (
@@ -148,7 +147,7 @@ const NavigationBar = () => {
               <div className="mobile-menu-user">
                 <div className="avatar">
                   {renderAvatarContent()}
-                  <span className="avatar-initials" style={{ display: profileData?.profilePicture ? 'none' : 'flex' }}>
+                  <span className="avatar-initials" style={{ display: (user?.profileImage || user?.profilePicture) ? 'none' : 'flex' }}>
                     {getInitials(userName)}
                   </span>
                 </div>
@@ -204,7 +203,7 @@ const NavigationBar = () => {
                 <div className="menu-item-content">
                   <div className="avatar small-avatar">
                     {renderAvatarContent("small-avatar")}
-                    <span className="avatar-initials" style={{ display: profileData?.profilePicture ? 'none' : 'flex' }}>
+                    <span className="avatar-initials" style={{ display: (user?.profileImage || user?.profilePicture) ? 'none' : 'flex' }}>
                       {getInitials(userName)}
                     </span>
                   </div>
@@ -264,12 +263,12 @@ const NavigationBar = () => {
           </div>
 
           <div className="profile-avatar" ref={dropdownRef}>
-            {!profileData?.profilePicture && (
+            {!(user?.profileImage || user?.profilePicture) && (
               <span onClick={() => setShowDropdown(!showDropdown)}>{userName}</span>
             )}
             <div className="avatar" onClick={() => setShowDropdown(!showDropdown)}>
               {renderAvatarContent()}
-              <span className="avatar-initials" style={{ display: profileData?.profilePicture ? 'none' : 'flex' }}>
+              <span className="avatar-initials" style={{ display: (user?.profileImage || user?.profilePicture) ? 'none' : 'flex' }}>
                 {getInitials(userName)}
               </span>
             </div>

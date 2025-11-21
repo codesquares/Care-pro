@@ -125,10 +125,11 @@
 }
 
 .form-section {
-  background-color: #f8f9fa;
+  background-color: rgba(248, 249, 250, 0.6);
   border-radius: 10px;
   padding: 1.5rem;
   margin-bottom: 1rem;
+  backdrop-filter: blur(10px);
 }
 
 .form-section h3 {
@@ -190,11 +191,41 @@
   display: flex;
   align-items: center;
   cursor: pointer;
+  padding: 0.5rem;
+  border-radius: 6px;
+  transition: background-color 0.2s ease;
+}
+
+.radio-label:hover {
+  background-color: rgba(100, 116, 196, 0.1);
 }
 
 .radio-label input {
   margin-right: 0.5rem;
   accent-color: #6474c4;
+  cursor: pointer;
+  width: 20px;
+  height: 20px;
+  position: relative;
+  z-index: 1;
+}
+
+.radio-label input:checked {
+  accent-color: #2d3748;
+  background-color: #2d3748;
+  border: 3px solid #2d3748;
+  box-shadow: 0 0 0 2px #ffffff, 0 0 0 4px #2d3748;
+}
+
+.radio-label input:checked + span {
+  color: #2d3748;
+  font-weight: 600;
+}
+
+.radio-label span {
+  user-select: none;
+  color: #333;
+  font-weight: 500;
 }
 
 /* Checkbox Options */
@@ -266,9 +297,10 @@
   justify-content: center;
   padding: 4rem 0;
   color: #696f79;
-  background-color: #f8f9fa;
+  background-color: rgba(248, 249, 250, 0.7);
   border-radius: 10px;
   margin-top: 1rem;
+  backdrop-filter: blur(10px);
 }
 
 .no-recommendations i {
@@ -286,10 +318,11 @@
 
 .service-card {
   display: flex;
-  background-color: #f8f9fa;
+  background-color: rgba(248, 249, 250, 0.7);
   border-radius: 10px;
   overflow: hidden;
   transition: all 0.3s ease;
+  backdrop-filter: blur(10px);
 }
 
 .service-card:hover {
@@ -417,8 +450,17 @@
 }
 
 .tab-button.active {
-  background-color: #4361ee;
-  color: white;
+  background-color: rgba(0, 0, 0, 0.75);
+  color: #ffffff;
+  font-weight: 600;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
+  border: 2px solid rgba(0, 0, 0, 0.9);
+  text-shadow: 0 1px 2px rgba(0, 0, 0, 0.5);
+}
+
+.tab-button.active i {
+  color: #ffffff;
+  filter: drop-shadow(0 1px 2px rgba(0, 0, 0, 0.5));
 }
 
 .tab-button i {
@@ -430,7 +472,8 @@
   flex: 1;
   padding: 1.5rem;
   border-radius: 12px;
-  background-color: #f9fafb;
+  background-color: rgba(249, 250, 251, 0.6);
+  backdrop-filter: blur(10px);
 }
 
 .tasks-list {

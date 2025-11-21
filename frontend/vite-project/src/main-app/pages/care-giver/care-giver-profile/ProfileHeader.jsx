@@ -13,8 +13,10 @@ import { getDojahStatus } from "../../../services/dojahService";
 import { toast } from "react-toastify";
 import config from "../../../config"; // Import centralized config for API URLs
 import { generateUsername } from "../../../utils/usernameGenerator";
+import { useAuth } from "../../../context/AuthContext";
 
 const ProfileHeader = () => {
+  const { updateUser } = useAuth();
   const [profile, setProfile] = useState({
     name: "",
     username: "",
@@ -109,6 +111,14 @@ const ProfileHeader = () => {
       // API returns JSON response with geocoded data
       const result = await response.json();
       console.log('Location update response:', result);
+
+      // Update AuthContext with new location
+      updateUser({
+        serviceAddress: addressToSend,
+        serviceCity: result?.data?.city || addressValidation?.addressComponents?.city,
+        serviceState: result?.data?.state || addressValidation?.addressComponents?.state,
+        location: addressToSend
+      });
 
       // Call fetchProfile to get updated profile data
       await fetchProfile(true);
@@ -409,6 +419,25 @@ const ProfileHeader = () => {
 
       console.log("Updated profile with new image:", updatedProfile.picture);
       setProfile(updatedProfile);
+      
+      // Update AuthContext with fresh profile data
+      const userUpdates = {};
+      if (data.profileImage) {
+        userUpdates.profileImage = data.profileImage;
+        userUpdates.profilePicture = data.profileImage;
+      }
+      if (data.firstName) userUpdates.firstName = data.firstName;
+      if (data.lastName) userUpdates.lastName = data.lastName;
+      if (data.email) userUpdates.email = data.email;
+      if (data.serviceCity) userUpdates.serviceCity = data.serviceCity;
+      if (data.serviceState) userUpdates.serviceState = data.serviceState;
+      if (data.serviceAddress) userUpdates.serviceAddress = data.serviceAddress;
+      if (data.location) userUpdates.location = data.location;
+      if (data.aboutMe) userUpdates.aboutMe = data.aboutMe;
+      
+      if (Object.keys(userUpdates).length > 0) {
+        updateUser(userUpdates);
+      }
       
       // Generate and save username using centralized utility
       if (data.firstName && data.email && data.createdAt) {
