@@ -1,3 +1,15 @@
+/* Force light mode - prevent dark mode styles */
+:root {
+  color-scheme: light only;
+}
+
+/* Override system dark mode preference */
+@media (prefers-color-scheme: dark) {
+  :root {
+    color-scheme: light;
+  }
+}
+
 /* Global Reset */
 * {
   margin: 0;
