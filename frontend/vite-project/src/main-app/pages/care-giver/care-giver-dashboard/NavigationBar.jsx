@@ -99,10 +99,7 @@ const NavigationBar = () => {
   };
 
   const handleSignOut = () => {
-    const navInfo = handleLogout();
-    if (navInfo.shouldNavigate) {
-      navigate(navInfo.path, { replace: true });
-    }
+    handleLogout();
   };
 
   const toggleMobileMenu = () => {

@@ -247,10 +247,15 @@
   
   // Error message - mobile-first
   .error-message {
+    position: fixed;
+    top: 60px; // Position below navigation bar
+    left: 0;
+    right: 0;
+    z-index: 999;
     display: flex;
     align-items: flex-start;
     padding: 0.75rem;
-    margin-bottom: 1rem;
+    margin: 0 1rem;
     background-color: #fee2e2;
     border-radius: 8px;
     border-left: 4px solid #ef4444;
