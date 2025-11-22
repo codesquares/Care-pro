@@ -112,23 +112,32 @@ const ProfileHeader = () => {
       const result = await response.json();
       console.log('Location update response:', result);
 
+      // Extract city from response
+      const cityName = result.data?.city || addressValidation?.addressComponents?.city || 'location';
+
       // Update AuthContext with new location
       updateUser({
         serviceAddress: addressToSend,
-        serviceCity: result?.data?.city || addressValidation?.addressComponents?.city,
+        serviceCity: cityName,
         serviceState: result?.data?.state || addressValidation?.addressComponents?.state,
         location: addressToSend
       });
 
-      // Call fetchProfile to get updated profile data
-      await fetchProfile(true);
+      // Update the profile display with the new location (city only)
+      setProfile(prev => {
+        const updatedProfile = {
+          ...prev,
+          location: cityName
+        };
+        console.log('Profile state updated with new location:', updatedProfile.location);
+        return updatedProfile;
+      });
 
       setShowLocationModal(false);
       setEditedLocation("");
       setAddressValidation(null);
       
       // Show success message with city if available
-      const cityName = result.data?.city || addressValidation?.addressComponents?.city || 'location';
       toast.success(`Location updated successfully! Now serving in ${cityName}.`);
       
     } catch (err) {
@@ -325,6 +334,22 @@ const ProfileHeader = () => {
         longitude: data.longitude
       });
 
+      // Fetch location from Location table (new location system)
+      let locationData = null;
+      try {
+        const locationResponse = await fetch(`${config.BASE_URL}/Location/user-location?userId=${userDetails.id}&userType=Caregiver`);
+        if (locationResponse.ok) {
+          const locationResult = await locationResponse.json();
+          locationData = locationResult.data || locationResult;
+          console.log("Fetched location from Location table:", locationData);
+        } else {
+          console.warn("Location endpoint returned non-OK status:", locationResponse.status);
+        }
+      } catch (locErr) {
+        console.warn("Failed to fetch location from Location table:", locErr);
+        // Not critical, continue with caregiver data
+      }
+
       if (!isMountedRef.current) return;
 
       // Get verification status using dojahService (same as admin)
@@ -393,8 +418,9 @@ const ProfileHeader = () => {
         bio: data.aboutMe || "Passionate caregiver dedicated to providing quality care.",
         rating: data.rating || 4.8,
         reviews: data.reviewsCount || 24,
-        // Show only the city from the new location fields, fallback to full location/address
-        location: data.serviceCity || 
+        // Prioritize location from Location table, then fallback to old fields
+        location: locationData?.city || 
+                 data.serviceCity || 
                  (data.location && data.location.includes(',') ? data.location.split(',')[0].trim() : data.location) || 
                  (data.serviceAddress && data.serviceAddress.includes(',') ? data.serviceAddress.split(',')[1]?.trim() : null) ||
                  "New York",
@@ -418,6 +444,7 @@ const ProfileHeader = () => {
       };
 
       console.log("Updated profile with new image:", updatedProfile.picture);
+      console.log("Updated profile location (from Location table):", updatedProfile.location);
       setProfile(updatedProfile);
       
       // Update AuthContext with fresh profile data
@@ -429,10 +456,15 @@ const ProfileHeader = () => {
       if (data.firstName) userUpdates.firstName = data.firstName;
       if (data.lastName) userUpdates.lastName = data.lastName;
       if (data.email) userUpdates.email = data.email;
-      if (data.serviceCity) userUpdates.serviceCity = data.serviceCity;
-      if (data.serviceState) userUpdates.serviceState = data.serviceState;
-      if (data.serviceAddress) userUpdates.serviceAddress = data.serviceAddress;
-      if (data.location) userUpdates.location = data.location;
+      // Prioritize location data from Location table
+      if (locationData?.city) userUpdates.serviceCity = locationData.city;
+      else if (data.serviceCity) userUpdates.serviceCity = data.serviceCity;
+      if (locationData?.state) userUpdates.serviceState = locationData.state;
+      else if (data.serviceState) userUpdates.serviceState = data.serviceState;
+      if (locationData?.address) userUpdates.serviceAddress = locationData.address;
+      else if (data.serviceAddress) userUpdates.serviceAddress = data.serviceAddress;
+      if (locationData?.address) userUpdates.location = locationData.address;
+      else if (data.location) userUpdates.location = data.location;
       if (data.aboutMe) userUpdates.aboutMe = data.aboutMe;
       
       if (Object.keys(userUpdates).length > 0) {

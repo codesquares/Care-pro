@@ -536,24 +536,31 @@ const handlePasswordSave = async (e) => {
       const response = await ClientSettingsService.updateClientAddress(userDetails.id, addressToSend);
 
       if (response.success) {
+        // Extract location data from response
+        const locationData = response.data?.data || response.data;
+        const cityName = locationData?.city || addressValidation?.addressComponents?.city || 'location';
+        
         setMessage({
           type: "success",
-          text: "Address updated successfully!"
+          text: `Address updated successfully! Now serving in ${cityName}.`
         });
         
-        // Update AuthContext with new address
+        // Update AuthContext with new address and location data
         updateUser({ 
           homeAddress: addressToSend,
-          address: addressToSend 
+          address: addressToSend,
+          serviceCity: locationData?.city || addressValidation?.addressComponents?.city,
+          serviceState: locationData?.state || addressValidation?.addressComponents?.state,
+          location: addressToSend
         });
         
         // Reload user data from localStorage (which should be updated by the API response)
         const refreshedDetails = JSON.parse(localStorage.getItem("userDetails") || "{}");
         setAddressForm({
           address: refreshedDetails.address || refreshedDetails.homeAddress || "",
-          city: refreshedDetails.city || "",
-          state: refreshedDetails.state || "",
-          country: refreshedDetails.country || "",
+          city: refreshedDetails.city || locationData?.city || "",
+          state: refreshedDetails.state || locationData?.state || "",
+          country: refreshedDetails.country || locationData?.country || "",
           postalCode: refreshedDetails.postalCode || ""
         });
       } else {

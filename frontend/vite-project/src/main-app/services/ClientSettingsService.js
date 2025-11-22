@@ -85,15 +85,15 @@ const ClientSettingsService = {
   },
 
   /**
-   * Update client address/location
+   * Update client address/location using new dedicated location endpoint
    * @param {string} clientId - Client ID
-   * @param {string} homeAddress - Full home address string
-   * @returns {Promise<Object>} Response data
+   * @param {string} address - Full address string
+   * @returns {Promise<Object>} Response data with geocoded location info
    */
-  async updateClientAddress(clientId, homeAddress) {
+  async updateClientAddress(clientId, address) {
     try {
-      const response = await axios.put(`${BASE_API_URL}/Clients/UpdateClientUser/${clientId}`, {
-        homeAddress: homeAddress
+      const response = await axios.put(`${BASE_API_URL}/Clients/UpdateClientLocation/${clientId}`, {
+        address: address
       });
       
       return {
