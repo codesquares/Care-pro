@@ -55,52 +55,62 @@ const ClientProfileHeader = () => {
       // Use formatted address if available from Google validation, otherwise use input
       const addressToSend = addressValidation?.formattedAddress || editedLocation;
       
-      // API call to update location - only send homeAddress, backend handles geocoding
-      const response = await fetch(`${config.BASE_URL}/Clients/UpdateClientUser/${userDetails.id}`, {
+      // API call to update location using the new dedicated endpoint
+      const response = await fetch(`${config.BASE_URL}/Clients/UpdateClientLocation/${userDetails.id}`, {
         method: 'PUT',
         headers: {
           'Content-Type': 'application/json',
         },
-        body: JSON.stringify({ homeAddress: addressToSend }),
+        body: JSON.stringify({ address: addressToSend }),
       });
 
       if (!response.ok) {
-        const result = await response.text();
+        const result = await response.json();
         let errorMessage = 'Failed to update location';
         
         switch (response.status) {
           case 400:
-            errorMessage = `Validation Error: ${result || 'Invalid address format'}`;
+            errorMessage = `Validation Error: ${result.message || 'Invalid address format'}`;
             break;
           case 404:
-            errorMessage = result || 'Client not found. Please check your account.';
+            errorMessage = 'Client not found. Please check your account.';
             break;
           case 500:
             errorMessage = 'Server error. Please try again later.';
             break;
           default:
-            errorMessage = result || 'Unexpected error occurred';
+            errorMessage = result.message || 'Unexpected error occurred';
         }
         
         throw new Error(errorMessage);
       }
 
-      // API returns plain text message
-      const result = await response.text();
+      // API returns JSON response with geocoded data
+      const result = await response.json();
       console.log('Location update response:', result);
 
-      // Update AuthContext with new address
-      updateUser({ homeAddress: editedLocation });
+      // Update AuthContext with new location data
+      updateUser({
+        homeAddress: addressToSend,
+        serviceCity: result?.data?.city || addressValidation?.addressComponents?.city,
+        serviceState: result?.data?.state || addressValidation?.addressComponents?.state,
+        location: addressToSend
+      });
 
-      // Call fetchProfile to get updated profile data
-      await fetchProfile(true);
+      // Update the profile display with the new location
+      // Do this AFTER fetchProfile would overwrite it, or skip fetchProfile entirely
+      setProfile(prev => ({
+        ...prev,
+        location: addressToSend
+      }));
 
       setShowLocationModal(false);
       setEditedLocation("");
       setAddressValidation(null);
       
-      // Show success message
-      toast.success(`Location updated successfully!`);
+      // Show success message with city if available
+      const cityName = result.data?.city || addressValidation?.addressComponents?.city || 'location';
+      toast.success(`Location updated successfully! Now serving in ${cityName}.`);
       
     } catch (err) {
       console.error('Error updating location:', err);
@@ -219,6 +229,22 @@ const ClientProfileHeader = () => {
       const data = await response.json();
       console.log("Fetched client data:", data);
 
+      // Fetch location from Location table (new location system)
+      let locationData = null;
+      try {
+        const locationResponse = await fetch(`${config.BASE_URL}/Location/user-location?userId=${userDetails.id}&userType=Client`);
+        if (locationResponse.ok) {
+          const locationResult = await locationResponse.json();
+          locationData = locationResult.data || locationResult;
+          console.log("Fetched location from Location table:", locationData);
+        } else {
+          console.warn("Location endpoint returned non-OK status:", locationResponse.status);
+        }
+      } catch (locErr) {
+        console.warn("Failed to fetch location from Location table:", locErr);
+        // Not critical, continue with client data
+      }
+
       if (!isMountedRef.current) return;
 
       const updatedProfile = {
@@ -226,7 +252,8 @@ const ClientProfileHeader = () => {
         email: data.email || "user@example.com",
         phoneNumber: data.phoneNumber || data.phoneNo || "Not provided",
         bio: data.bio || "Care Pro client seeking quality care services.",
-        location: data.homeAddress || data.address || "Not set",
+        // Prioritize location from Location table, then fallback to old fields
+        location: locationData?.address || data.homeAddress || data.address || "Not set",
         memberSince: data.createdAt ? new Date(data.createdAt).toLocaleDateString('en-US', { 
           month: 'short', 
           day: 'numeric', 
@@ -236,6 +263,7 @@ const ClientProfileHeader = () => {
       };
 
       console.log("Updated profile with new data:", updatedProfile);
+      console.log("Updated profile location (from Location table):", updatedProfile.location);
       console.log("Profile picture URL:", data.profilePicture, data.profileImage, data.image);
       
       // Update AuthContext and localStorage with fresh data
@@ -248,8 +276,13 @@ const ClientProfileHeader = () => {
       if (data.lastName) userUpdates.lastName = data.lastName;
       if (data.email) userUpdates.email = data.email;
       if (data.phoneNumber || data.phoneNo) userUpdates.phoneNumber = data.phoneNumber || data.phoneNo;
-      if (data.homeAddress) userUpdates.homeAddress = data.homeAddress;
-      if (data.address) userUpdates.address = data.address;
+      // Prioritize location data from Location table
+      if (locationData?.address) userUpdates.homeAddress = locationData.address;
+      else if (data.homeAddress) userUpdates.homeAddress = data.homeAddress;
+      if (locationData?.address) userUpdates.address = locationData.address;
+      else if (data.address) userUpdates.address = data.address;
+      if (locationData?.city) userUpdates.serviceCity = locationData.city;
+      if (locationData?.state) userUpdates.serviceState = locationData.state;
       if (data.bio) userUpdates.bio = data.bio;
       
       if (Object.keys(userUpdates).length > 0) {
