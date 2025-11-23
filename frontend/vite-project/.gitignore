@@ -22,10 +22,28 @@ __tests__/
 *.test.js
 *.spec.js
 **/testingUtils.js
+setupTests.js
+*setup*test*
+*test*setup*
+setup-testing-environment.*
 
 # Documentation and notes (markdown files)
 *.md
 !README.md
+*SUMMARY.md
+*GUIDE.md
+*STATUS.md
+*ANALYSIS.md
+*PLAN.md
+*IMPLEMENTATION*.md
+*DEPLOYMENT*.md
+*VERIFICATION*.md
+*ARCHITECTURE*.md
+*TESTING*.md
+*FIXES*.md
+*COMPLETE.md
+*DEBUG*.md
+*MIGRATION*.md
 
 # Editor directories and files
 .vscode/*

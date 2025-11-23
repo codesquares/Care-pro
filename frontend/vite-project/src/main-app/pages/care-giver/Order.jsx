@@ -1,5 +1,6 @@
 import { useState } from "react";
 import "./FormComponent.css"; // Import the CSS file
+import config from "../../config"; // Import centralized config for API URLs
 
 const FormComponent = () => {
   const [formData, setFormData] = useState({
@@ -61,8 +62,9 @@ const FormComponent = () => {
       });
   
       // Send the data as multipart/form-data
+      // FIXED: Use centralized config instead of hardcoded Azure staging API URL
       const response = await fetch(
-        "https://carepro-api20241118153443.azurewebsites.net/api/Gigs",
+        `${config.BASE_URL}/Gigs`,
         {
           method: "POST",
           body: formDataPayload,

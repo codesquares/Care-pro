@@ -14,9 +14,9 @@ import config from '../config';
  * token
  * id (for user validation)
  **/
-// Create a separate Axios instance for verification API calls
+// Create a separate Axios instance for verification API calls - Updated for .NET backend
 const verificationApi = axios.create({
-  baseURL: config.LOCAL_API_URL,
+  baseURL: config.BASE_URL,
   headers: {
     'Content-Type': 'application/json',
   },
@@ -24,32 +24,32 @@ const verificationApi = axios.create({
 
 // Request Interceptor to attach token and user ID to every verification request
 verificationApi.interceptors.request.use(
-  (config) => {
+  (requestConfig) => {
     const token = localStorage.getItem('authToken');
     const userDetails = JSON.parse(localStorage.getItem('userDetails') || '{}');
     
     // Log outgoing requests for debugging
-    console.log(`Verification API Request: ${config.method} ${config.url}`);
+    console.log(`Verification API Request: ${requestConfig.method} ${requestConfig.url}`);
     console.log('Request config:', { 
-      headers: config.headers,
-      params: config.params,
-      data: config.data
+      headers: requestConfig.headers,
+      params: requestConfig.params,
+      data: requestConfig.data
     });
     
     // Add auth token to all requests if available
     if (token) {
-      config.headers.Authorization = `Bearer ${token}`;
+      requestConfig.headers.Authorization = `Bearer ${token}`;
       console.log('Authorization token added to request');
     } else {
-      console.warn('No auth token found for verification API request:', config.url);
+      console.warn('No auth token found for verification API request:', requestConfig.url);
     }
     
     // Add verification force header if we have verification status in localStorage
     try {
       // Try to get user-specific verification status if userId is in params
       let storageKey = 'verificationStatus';
-      if (config.params?.userId && config.params?.userType) {
-        storageKey = `verificationStatus_${config.params.userType}_${config.params.userId}`;
+      if (requestConfig.params?.userId && requestConfig.params?.userType) {
+        storageKey = `verificationStatus_${requestConfig.params.userType}_${requestConfig.params.userId}`;
       } else if (userDetails && userDetails.id) {
         // Default to user-specific key if not in params but user is available
         const userType = userDetails.userType || 'caregiver';
@@ -60,7 +60,7 @@ verificationApi.interceptors.request.use(
       if (localStatus) {
         const parsed = JSON.parse(localStatus);
         if (parsed && parsed.verified) {
-          config.headers['X-Force-Verification'] = 'true';
+          requestConfig.headers['X-Force-Verification'] = 'true';
         }
       }
     } catch (err) {
@@ -82,17 +82,19 @@ verificationApi.interceptors.request.use(
       console.log(`Adding auth data to request: userId=${userDetails.id}, userType=${userType}`);
       
       // For GET requests, append to params
-      if (!config.params) {
-        config.params = {};
+      if (!requestConfig.params) {
+        requestConfig.params = {};
       }
       
       // Always set these values to ensure consistency
-      config.params.userId = userDetails.id;
-      config.params.userType = userType;
+      requestConfig.params.userId = userDetails.id;
+      requestConfig.params.userType = userType;
       
-      // For POST requests, add to body if it's JSON
-      if (config.method === 'post' && config.data && config.headers['Content-Type'].includes('application/json')) {
-        let data = config.data;
+      // For POST requests, add to body if it's JSON - only for specific endpoints that need user context
+      if (requestConfig.method === 'post' && requestConfig.data && 
+          requestConfig.headers['Content-Type'].includes('application/json') &&
+          (requestConfig.url.includes('/kyc/') || requestConfig.url.includes('/verifications'))) {
+        let data = requestConfig.data;
         
         // Parse if it's a string
         if (typeof data === 'string') {
@@ -110,16 +112,16 @@ verificationApi.interceptors.request.use(
           data.userType = userType;
           
           // Convert back to string if it was originally a string
-          if (typeof config.data === 'string') {
-            config.data = JSON.stringify(data);
+          if (typeof requestConfig.data === 'string') {
+            requestConfig.data = JSON.stringify(data);
           } else {
-            config.data = data;
+            requestConfig.data = data;
           }
         }
       }
     }
     
-    return config;
+    return requestConfig;
   },
   (error) => {
     return Promise.reject(error);
@@ -136,12 +138,25 @@ verificationApi.interceptors.response.use(
     return response;
   },
   (error) => {
-    console.error('Verification API Error:', {
-      message: error.message,
-      url: error.config?.url,
-      status: error.response?.status,
-      data: error.response?.data
-    });
+    // Handle 401 Unauthorized globally - likely expired token
+    if (error.response?.status === 401) {
+      console.log('Verification API got 401 - handling token expiration');
+      verificationService.handleTokenExpiration();
+      return Promise.reject(error);
+    }
+    
+    // Don't log 404 "No verification found" as errors - these are expected responses
+    if (error.response?.status === 404 && 
+        error.response?.data?.message === 'No verification found for user') {
+      console.log(`Verification API Info (${error.config?.url}): No verification found for user (expected)`);
+    } else {
+      console.error('Verification API Error:', {
+        message: error.message,
+        url: error.config?.url,
+        status: error.response?.status,
+        data: error.response?.data
+      });
+    }
     return Promise.reject(error);
   }
 );
@@ -155,6 +170,51 @@ const verificationService = {
   
   // Track last verification request timestamp for debouncing
   _lastVerificationRequest: 0,
+
+  /**
+   * Check if auth token is expired and handle cleanup
+   * @param {string} token - JWT token to check
+   * @returns {boolean} - true if token is valid, false if expired/invalid
+   */
+  isTokenValid(token) {
+    if (!token) return false;
+    
+    try {
+      const payload = JSON.parse(atob(token.split('.')[1]));
+      const currentTime = Date.now() / 1000;
+      const isExpired = payload.exp < currentTime;
+      
+      if (isExpired) {
+        console.log('Token expired at:', new Date(payload.exp * 1000));
+        this.handleTokenExpiration();
+        return false;
+      }
+      
+      return true;
+    } catch (error) {
+      console.error('Error parsing token:', error);
+      this.handleTokenExpiration();
+      return false;
+    }
+  },
+
+  /**
+   * Handle token expiration by clearing storage and redirecting
+   */
+  handleTokenExpiration() {
+    console.log('Handling token expiration - clearing localStorage');
+    localStorage.clear();
+    
+    // Import toast dynamically to avoid circular dependencies
+    import('react-toastify').then(({ toast }) => {
+      toast.error('Your session has expired. Please log in again.');
+    });
+    
+    // Redirect to login after a short delay to allow toast to show
+    setTimeout(() => {
+      window.location.href = '/login';
+    }, 1000);
+  },
 
   /**
    * Helper function to get test values for different verification types
@@ -636,12 +696,12 @@ const verificationService = {
       }
 
       // Azure API endpoint
-      const externalApiUrl = 'https://carepro-api20241118153443.azurewebsites.net/api';
+      const externalApiUrl = config.BASE_URL.replace('/api', ''); // Using centralized API config
       
       // Choose endpoint based on user type
       const endpoint = verificationData.userType === 'client'
-        ? `${externalApiUrl}/Verifications`
-        : `${externalApiUrl}/Verifications`;
+        ? `${externalApiUrl}/api/Verifications`
+        : `${externalApiUrl}/api/Verifications`;
 
         const dataToSave = {
            userId: verificationData.userId,
@@ -714,7 +774,7 @@ const verificationService = {
    * @param {string} userType - Type of user ('caregiver' or 'client')
    * @returns {Promise} - API response with verification status
    */
-  async getVerificationStatus(userId, userType,token) {
+  async getVerificationStatus(userId, userType, token) {
 
     token = token || localStorage.getItem('authToken');
     
@@ -745,38 +805,54 @@ const verificationService = {
         return this._cachedStatus;
       }
 
-      const response = await verificationApi.get('/dojah/status', {
-        params: { userId, userType, token },
+      // Updated to use new .NET backend verification endpoint
+      const response = await verificationApi.get('/verifications/userId', {
+        params: { userId },
+        headers: {
+          'Authorization': `Bearer ${token}`
+        }
       });
 
-      // Process the enhanced response data from new backend endpoint
-      const statusData = response.data.data || response.data;
+      // Process the .NET backend response data
+      const verificationData = response.data;
       
-      // Create enhanced status object for frontend use
+      // Map .NET backend response to frontend expected format
       const enhancedStatus = {
         // Legacy fields for backward compatibility
-        verified: statusData.isVerified || false,
-        verificationStatus: statusData.verificationStatus || 'not_verified',
+        verified: verificationData ? verificationData.isVerified || false : false,
+        verificationStatus: verificationData ? verificationData.verificationStatus || 'not_verified' : 'not_verified',
         
-        // New enhanced fields
-        hasSuccess: statusData.hasSuccess || false,
-        hasPending: statusData.hasPending || false,
-        hasFailed: statusData.hasFailed || false,
-        hasAny: statusData.hasAny || false,
-        totalAttempts: statusData.totalAttempts || 0,
-        lastAttempt: statusData.lastAttempt,
-        needsVerification: statusData.needsVerification || false,
-        message: statusData.message || 'No verification status available',
-        mostRecentRecord: statusData.mostRecentRecord,
+        // New enhanced fields from .NET backend
+        verificationId: verificationData ? verificationData.verificationId : null,
+        verificationMethod: verificationData ? verificationData.verificationMethod : null,
+        verificationNo: verificationData ? verificationData.verificationNo : null,
+        verifiedOn: verificationData ? verificationData.verifiedOn : null,
+        updatedOn: verificationData ? verificationData.updatedOn : null,
+        
+        // Computed fields for UI logic
+        hasSuccess: verificationData ? verificationData.verificationStatus === 'Completed' : false,
+        hasPending: verificationData ? verificationData.verificationStatus === 'Pending' : false,
+        hasFailed: verificationData ? verificationData.verificationStatus === 'Failed' : false,
+        hasAny: verificationData ? true : false,
+        totalAttempts: verificationData ? 1 : 0,
+        lastAttempt: verificationData ? verificationData.verifiedOn : null,
+        needsVerification: !verificationData || !verificationData.isVerified,
+        message: verificationData ? 
+          (verificationData.isVerified ? 'Verification completed successfully' : 
+           verificationData.verificationStatus === 'Pending' ? 'Verification pending review' :
+           verificationData.verificationStatus === 'Failed' ? 'Verification failed' :
+           'Verification in progress') : 
+          'No verification found',
+        mostRecentRecord: verificationData,
         
         // Current status for UI logic
-        currentStatus: statusData.verificationStatus || 'not_verified',
+        currentStatus: verificationData ? verificationData.verificationStatus || 'not_verified' : 'not_verified',
         
         // Legacy methods structure for compatibility
         methods: {
-          bvn: { status: statusData.hasSuccess ? 'verified' : 'not_verified' },
-          nin: { status: statusData.hasSuccess ? 'verified' : 'not_verified' },
-          idSelfie: { status: statusData.hasSuccess ? 'verified' : 'not_verified' }
+          bvn: { status: verificationData && verificationData.isVerified ? 'verified' : 'not_verified' },
+          nin: { status: verificationData && verificationData.isVerified ? 'verified' : 'not_verified' },
+          idSelfie: { status: verificationData && verificationData.isVerified ? 'verified' : 'not_verified' }
         }
       };
 
@@ -963,8 +1039,8 @@ const verificationService = {
         verificationStatus: verificationData.verificationStatus || verificationData.status || ''
       };
 
-      const externalApiUrl = 'https://carepro-api20241118153443.azurewebsites.net/api';
-      const endpoint = `${externalApiUrl}/Verifications`;
+      const externalApiUrl = config.BASE_URL.replace('/api', ''); // Using centralized API config
+      const endpoint = `${externalApiUrl}/api/Verifications`;
 
       const response = await axios.post(
         endpoint,
@@ -1043,7 +1119,7 @@ const verificationService = {
         selfieImage: payload.selfieImage ? 'base64_image_data' : null
       });
 
-      const response = await verificationApi.post('/api/kyc/verify-bvn-with-selfie', payload);
+      const response = await verificationApi.post('/kyc/verify-bvn-with-selfie', payload);
       console.log('[verificationService] verifyBVNWithSelfie - response:', response.data);
 
       return response.data;
@@ -1057,7 +1133,7 @@ const verificationService = {
   },
 
   /**
-   * Process Dojah verification results and save to backend
+   * Process Dojah verification results and save to backend (.NET API)
    * @param {Object} verificationPayload - The verification data from Dojah
    * @returns {Promise<Object>} - Response from backend
    */
@@ -1065,38 +1141,59 @@ const verificationService = {
     try {
       console.log('[verificationService] processDojahVerification - payload:', verificationPayload);
 
-      // Validate required Azure backend format fields
+      // Validate required .NET backend format fields
       if (!verificationPayload.userId || !verificationPayload.verifiedFirstName || !verificationPayload.verifiedLastName) {
-        throw new Error('userId, verifiedFirstName, and verifiedLastName are required for Azure API');
+        throw new Error('userId, verifiedFirstName, and verifiedLastName are required for .NET API');
       }
 
       // For verificationMethod and verificationStatus - these cannot be undefined/null
       if (!verificationPayload.verificationMethod || !verificationPayload.verificationStatus) {
-        throw new Error('verificationMethod and verificationStatus are required for Azure API');
+        throw new Error('verificationMethod and verificationStatus are required for .NET API');
       }
 
       // verificationNo can be empty string but should be defined (not null/undefined)
       if (verificationPayload.verificationNo === undefined || verificationPayload.verificationNo === null) {
-        throw new Error('verificationNo must be defined (can be empty string) for Azure API');
+        throw new Error('verificationNo must be defined (can be empty string) for .NET API');
       }
 
-      // Send the verification data directly to Azure API (not through local Node API)
+      // Map frontend status to .NET backend expected status
+      let backendStatus = verificationPayload.verificationStatus;
+      if (verificationPayload.verificationStatus === 'verified') {
+        backendStatus = 'Completed';
+      } else if (verificationPayload.verificationStatus === 'pending') {
+        backendStatus = 'Pending';
+      } else if (verificationPayload.verificationStatus === 'failed') {
+        backendStatus = 'Failed';
+      }
+
+      // Prepare .NET API payload format
+      const dotNetPayload = {
+        userId: verificationPayload.userId.toString(),
+        verifiedFirstName: verificationPayload.verifiedFirstName,
+        verifiedLastName: verificationPayload.verifiedLastName,
+        verificationMethod: verificationPayload.verificationMethod,
+        verificationNo: verificationPayload.verificationNo.toString(),
+        verificationStatus: backendStatus
+      };
+
+      // Send the verification data to .NET API
       const token = localStorage.getItem('authToken');
       if (!token) {
-        throw new Error('Authentication token missing for Azure API');
+        throw new Error('Authentication token missing for .NET API');
       }
 
-      const response = await axios.post(`${config.BASE_URL}/Verifications`, verificationPayload, {
+      const response = await verificationApi.post('/verifications', dotNetPayload, {
         headers: {
           'Authorization': `Bearer ${token}`,
           'Content-Type': 'application/json'
         }
       });
-      console.log('[verificationService] processDojahVerification - Azure API response:', response.data);
+      
+      console.log('[verificationService] processDojahVerification - .NET API response:', response.data);
 
       // Handle different verification statuses
-      const status = verificationPayload.verificationStatus;
-      if (status === 'verified') {
+      const status = backendStatus;
+      if (status === 'Completed') {
         // Save verification status locally for verified users
         this.saveVerificationStatus(
           true,
@@ -1105,7 +1202,7 @@ const verificationService = {
           verificationPayload.userId,
           'caregiver'
         );
-      } else if (status === 'pending') {
+      } else if (status === 'Pending') {
         // Save pending status locally
         this.saveVerificationStatus(
           false,
@@ -1114,12 +1211,22 @@ const verificationService = {
           verificationPayload.userId,
           'caregiver'
         );
+      } else if (status === 'Failed') {
+        // Save failed status locally
+        this.saveVerificationStatus(
+          false,
+          'failed',
+          'Dojah KYC verification failed',
+          verificationPayload.userId,
+          'caregiver'
+        );
       }
 
+      // .NET API returns verification ID as string, not object
       return {
         success: true,
-        message: response.data?.message || 'Verification data saved successfully',
-        data: response.data,
+        message: 'Verification data saved successfully to .NET backend',
+        verificationId: response.data, // .NET API returns verification ID as string
         status: status
       };
 
@@ -1133,16 +1240,111 @@ const verificationService = {
     }
   },
 
-  async getVerificationFromAPI(userId) {
+  /**
+   * Create a new verification record using .NET API
+   * @param {Object} verificationData - The verification data
+   * @returns {Promise<string>} - Verification ID
+   */
+  async createVerification(verificationData) {
     try {
-      const response = await axios.get(`${config.BASE_URL}/Verifications/userId?userId=${userId}`);
-      console.log('[verificationService] getVerificationFromAPI - response:', response.data);
-      return response.data.verificationStatus;
+      const token = localStorage.getItem('authToken');
+      if (!token) {
+        throw new Error('Authentication token missing');
+      }
+
+      const response = await verificationApi.post('/verifications', verificationData, {
+        headers: {
+          'Authorization': `Bearer ${token}`,
+          'Content-Type': 'application/json'
+        }
+      });
+
+      return response.data; // Returns verification ID as string
+    } catch (error) {
+      console.error('Error creating verification:', error);
+      throw error.response?.data || error;
+    }
+  },
+
+  /**
+   * Update an existing verification using .NET API
+   * @param {string} verificationId - The verification ID
+   * @param {Object} updateData - The update data
+   * @returns {Promise<string>} - Success message
+   */
+  async updateVerification(verificationId, updateData) {
+    try {
+      const token = localStorage.getItem('authToken');
+      if (!token) {
+        throw new Error('Authentication token missing');
+      }
+
+      const response = await verificationApi.put(`/verifications/verificationId`, updateData, {
+        params: { verificationId },
+        headers: {
+          'Authorization': `Bearer ${token}`,
+          'Content-Type': 'application/json'
+        }
+      });
+
+      return response.data; // Returns success message as string
+    } catch (error) {
+      console.error('Error updating verification:', error);
+      throw error.response?.data || error;
+    }
+  },
+
+  /**
+   * Get verification data from .NET API
+   * @deprecated Use dojahService.getDojahStatus() instead for new webhook-based verification flow
+   * @param {string} userId - User ID
+   * @returns {Promise<Object>} - Verification data
+   */
+  async getVerificationFromAPI(userId) {
+    console.warn('⚠️ getVerificationFromAPI is deprecated. Use dojahService.getDojahStatus() instead.');
+    
+    try {
+      const token = localStorage.getItem('authToken');
+      if (!token) {
+        throw new Error('Authentication token missing');
+      }
+      
+      // Use the regular verifications endpoint instead of Dojah/status which might be admin-only
+      const response = await verificationApi.get('/verifications/userId', {
+        params: { 
+          userId: userId
+        },
+        headers: {
+          'Authorization': `Bearer ${token}`
+        }
+      });
+
+      console.log('[verificationService] getVerificationFromAPI - response status:', response.status);
+      
+      if (!response.ok) {
+        // Handle 404 as a valid "no verification found" response, not an error
+        if (response.status === 404) {
+          console.log('[verificationService] getVerificationFromAPI - no verification found (404)');
+          return {
+            verified: false,
+            verificationStatus: 'not_found',
+            message: 'No verification found for user',
+            hasVerification: false
+          };
+        }
+        
+        // For other errors, get the response body
+        const errorText = await response.text().catch(() => '');
+        console.error('[verificationService] getVerificationFromAPI - error:', response.status, errorText);
+        throw new Error(`HTTP error! status: ${response.status}. Details: ${errorText}`);
+      }
+
+      const data = await response.json();
+      console.log('[verificationService] getVerificationFromAPI - response:', data);
+      return data;
     } catch (error) {
       console.error('Error fetching verification data:', error);
-      throw error.response?.data || {
-        message: error.message || 'Failed to fetch verification data'
-      };
+      throw error;
     }
   }
 

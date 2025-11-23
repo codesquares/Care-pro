@@ -83,7 +83,7 @@ export const withdrawalService = {
       accountName: !!withdrawalData.accountName
     });
     
-    const local_api = `${config.LOCAL_API_URL}/withdrawal?userId=${withdrawalData.caregiverId}`;
+    const local_api = `${config.BASE_URL}/withdrawal?userId=${withdrawalData.caregiverId}`;
     // const authToken = localStorage.getItem('authToken');
     // console.log("Auth Token:", authToken);
     if (!withdrawalData || !withdrawalData.amountRequested || !withdrawalData.caregiverId) {

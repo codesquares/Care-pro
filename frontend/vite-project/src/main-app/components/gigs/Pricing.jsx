@@ -64,26 +64,7 @@ const PricingTable = ({ pricing, onPricingChange, onFieldFocus, onFieldBlur, onF
           )}
         </div>
 
-        <div className="pricing-field">
-          <label>Service Frequency</label>
-          <select
-            value={pricing.Basic.deliveryTime}
-            onChange={(e) => handleInputChange("Basic", "deliveryTime", e.target.value)}
-            onFocus={() => onFieldFocus && onFieldFocus('basic-delivery')}
-            onBlur={onFieldBlur}
-            className={hasFieldError("Basic", "deliveryTime") ? 'error' : ''}
-          >
-            <option value="">Select Service Frequency</option>
-            <option value="1 Day Per Week">1 Day Per Week Service</option>
-            <option value="3 Days Per Week">3 Days Per Week Service</option>
-            <option value="5+ Days Per Week">5+ Days Per Week Service</option>
-          </select>
-          {getFieldError("Basic", "deliveryTime") && (
-            <div className="validation-error">
-              {getFieldError("Basic", "deliveryTime")}
-            </div>
-          )}
-        </div>
+
 
         <div className="pricing-field">
           <label>Price (₦)</label>

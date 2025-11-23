@@ -5,12 +5,16 @@
   background-color: #fdfdfd;
   padding: 2rem 1.5rem;
   text-align: center;
+  /* Add top margin to account for fixed navbar */
+  margin-top: var(--navbar-height-mobile, 70px);
 
   @media (min-width: 768px) {
     flex-direction: row;
     justify-content: space-between;
     padding: 4rem 3rem;
     text-align: left;
+    /* Use desktop navbar height on larger screens */
+    margin-top: var(--navbar-height-desktop, 100px);
   }
 
   .banner-image-container {

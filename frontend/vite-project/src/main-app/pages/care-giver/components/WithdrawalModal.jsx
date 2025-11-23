@@ -1,6 +1,8 @@
 import { useState, useEffect } from 'react';
 import './WithdrawalModal.css';
 import { createNotification } from '../../../services/notificationService';
+import config from '../../../config'; // Import centralized config for API URLs
+import Modal from '../../../components/modal/Modal';
 
 
 const WithdrawalModal = ({ onClose, onSubmit, maxAmount }) => {
@@ -23,6 +25,14 @@ const WithdrawalModal = ({ onClose, onSubmit, maxAmount }) => {
     email: '',
     phoneNumber: ''
   });
+
+  // Modal state management
+  const [isModalOpen, setIsModalOpen] = useState(false);
+  const [modalTitle, setModalTitle] = useState('');
+  const [modalDescription, setModalDescription] = useState('');
+  const [buttonText, setButtonText] = useState('');
+  const [buttonBgColor, setButtonBgColor] = useState('');
+  const [isError, setIsError] = useState(false);
   
  useEffect(() => {
    const token = localStorage.getItem('authToken'); // Get token from local storage
@@ -36,7 +46,8 @@ const WithdrawalModal = ({ onClose, onSubmit, maxAmount }) => {
   //load admin id to send notification
   const getAdmin = async () => {
     try{
-      const response = await fetch('https://carepro-api20241118153443.azurewebsites.net/api/Admins/AllAdminUsers'); // Assuming admin ID is 1
+      // Use centralized config instead of hardcoded URL for consistent API routing
+      const response = await fetch(`${config.BASE_URL}/Admins/AllAdminUsers`); // Assuming admin ID is 1
       if (!response.ok) {
         throw new Error('Failed to fetch admin ID');
       }
@@ -120,34 +131,54 @@ const WithdrawalModal = ({ onClose, onSubmit, maxAmount }) => {
     console.log("withdrawal modal clicked");
 
     if (validateForm()) {
-      onSubmit({
-        ...formData,
-        amountRequested: parseFloat(formData.amountRequested)
-      });
-      createNotification({
-                recipientId: adminData?.id ? admin.id : null, // Assuming admin ID is available
-            
-                senderId: userId,
-                type: "withdrawal",
-                relatedEntityId: userId, // Assuming you have a withdrawal ID
-              }).then(() => {
-                console.log("Notification created successfully"); 
-              }).catch((error) => {
-                console.error("Error creating notification:", error);
-              });
+      try {
+        onSubmit({
+          ...formData,
+          amountRequested: parseFloat(formData.amountRequested)
+        });
+
+        // Create notifications
         createNotification({
-                recipientId: userId, // Assuming user ID is available
-                
-                senderId: userId,
-                type: "withdrawal",
-                relatedEntityId: userId, // Assuming you have a withdrawal ID
-              }).then(() => {
-                console.log("Notification created successfully"); 
-              })
-              .catch((error) => {
-                console.error("Error creating notification:", error);
-              });
-      
+          recipientId: adminData?.id ? admin.id : null,
+          senderId: userId,
+          type: "withdrawal",
+          relatedEntityId: userId,
+        }).then(() => {
+          console.log("Admin notification created successfully"); 
+        }).catch((error) => {
+          console.error("Error creating admin notification:", error);
+        });
+
+        createNotification({
+          recipientId: userId,
+          senderId: userId,
+          type: "withdrawal",
+          relatedEntityId: userId,
+        }).then(() => {
+          console.log("User notification created successfully"); 
+        }).catch((error) => {
+          console.error("Error creating user notification:", error);
+        });
+
+        // Show success modal
+        setModalTitle('Withdrawal Request Submitted!');
+        setModalDescription(`Your withdrawal request for ${formatCurrency(parseFloat(formData.amountRequested))} has been submitted successfully. You will receive ${formatCurrency(finalAmount)} after processing fees.`);
+        setButtonText('Close');
+        setButtonBgColor('#00B4A6');
+        setIsError(false);
+        setIsModalOpen(true);
+
+      } catch (error) {
+        console.error('Withdrawal submission error:', error);
+        
+        // Show error modal
+        setModalTitle('Submission Failed');
+        setModalDescription('Failed to submit withdrawal request. Please check your details and try again.');
+        setButtonText('Try Again');
+        setButtonBgColor('#FF4B4B');
+        setIsError(true);
+        setIsModalOpen(true);
+      }
     }
   };
 
@@ -157,6 +188,14 @@ const WithdrawalModal = ({ onClose, onSubmit, maxAmount }) => {
       currency: 'NGN',
       minimumFractionDigits: 2
     }).format(amount);
+  };
+
+  // Modal handlers
+  const handleModalProceed = () => {
+    setIsModalOpen(false);
+    if (!isError) {
+      onClose(); // Close the withdrawal modal on success
+    }
   };
 
   return (
@@ -248,6 +287,17 @@ const WithdrawalModal = ({ onClose, onSubmit, maxAmount }) => {
           </div>
         </form>
       </div>
+
+      {/* Standardized Modal Component for Success/Error Feedback */}
+      <Modal
+        isOpen={isModalOpen}
+        title={modalTitle}
+        description={modalDescription}
+        buttonText={buttonText}
+        buttonBgColor={buttonBgColor}
+        isError={isError}
+        onProceed={handleModalProceed}
+      />
     </div>
   );
 };

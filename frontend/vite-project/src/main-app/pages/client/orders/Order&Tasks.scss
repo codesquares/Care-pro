@@ -311,6 +311,191 @@
         }
       }
 
+      // Contract-related styles
+      .contract-section {
+        margin: 15px 0;
+        padding: 15px;
+        background-color: #f8f9fa;
+        border-radius: 8px;
+        border: 1px solid #e9ecef;
+
+        h4 {
+          margin: 0 0 10px 0;
+          font-size: 16px;
+          color: #333;
+          font-weight: 600;
+        }
+
+        .contract-checking {
+          text-align: center;
+          color: #666;
+          font-style: italic;
+        }
+
+        .contract-exists {
+          .contract-details {
+            background: #e8f5e8;
+            padding: 12px;
+            border-radius: 6px;
+            border-left: 4px solid #00CAB6;
+            margin-top: 10px;
+
+            p {
+              margin: 5px 0;
+              font-size: 14px;
+              color: #333;
+
+              strong {
+                color: #000;
+              }
+            }
+          }
+        }
+
+        .contract-generation {
+          p {
+            margin: 8px 0;
+            color: #666;
+            font-size: 14px;
+          }
+
+          .order-tasks-status {
+            margin: 10px 0 15px 0;
+          }
+
+          .contract-error {
+            margin: 10px 0;
+            padding: 8px;
+            background: #ffebee;
+            border-radius: 4px;
+            border-left: 4px solid #f44336;
+
+            p {
+              margin: 0;
+              color: #c62828;
+              font-size: 13px;
+            }
+          }
+        }
+
+        .contract-unavailable {
+          p {
+            margin: 8px 0;
+            color: #999;
+            font-size: 14px;
+            font-style: italic;
+          }
+        }
+
+        .order-tasks-status {
+          margin: 10px 0;
+          padding: 8px 12px;
+          background: #e8f5e8;
+          border-radius: 4px;
+          border-left: 4px solid #00CAB6;
+
+          p {
+            margin: 0;
+            color: #2e7d32;
+            font-size: 13px;
+            font-weight: 500;
+          }
+        }
+
+        .order-tasks-required {
+          padding: 20px;
+          background: #fff3cd;
+          border: 1px solid #ffeaa7;
+          border-radius: 8px;
+          margin: 15px 0;
+          
+          h4 {
+            color: #856404;
+            margin: 0 0 10px 0;
+            font-size: 16px;
+          }
+          
+          .alert {
+            padding: 10px;
+            margin: 10px 0;
+            border-radius: 4px;
+            
+            &.alert-info {
+              background: #d4edda;
+              border: 1px solid #c3e6cb;
+              color: #155724;
+            }
+
+            p {
+              margin: 0;
+              font-size: 14px;
+            }
+          }
+          
+          .create-tasks-btn {
+            background: #007bff;
+            color: white;
+            border: none;
+            padding: 12px 24px;
+            border-radius: 6px;
+            cursor: pointer;
+            font-weight: 500;
+            font-size: 14px;
+            transition: all 0.3s ease;
+            
+            &:hover {
+              background: #0056b3;
+              transform: translateY(-1px);
+            }
+          }
+
+          .tasks-unavailable {
+            color: #856404;
+            font-style: italic;
+            margin-top: 10px;
+          }
+        }
+
+        .generate-contract-btn {
+          background-color: #007bff;
+          color: white;
+          border: none;
+          padding: 12px 24px;
+          border-radius: 8px;
+          cursor: pointer;
+          width: 100%;
+          font-weight: bold;
+          font-size: 14px;
+          transition: background-color 0.3s ease;
+
+          &:hover:not(:disabled) {
+            background-color: #0056b3;
+          }
+
+          &:disabled {
+            background-color: #ccc;
+            cursor: not-allowed;
+          }
+
+          &.loading {
+            background-color: #6c757d;
+            cursor: wait;
+            
+            &::after {
+              content: '';
+              display: inline-block;
+              width: 12px;
+              height: 12px;
+              margin-left: 8px;
+              border: 2px solid transparent;
+              border-top-color: #ffffff;
+              border-radius: 50%;
+              animation: spin 1s linear infinite;
+            }
+          }
+        }
+      }
+
       .review-submitted {
         text-align: center;
         padding: 15px;
@@ -597,5 +782,15 @@
       padding: 20px;
       max-width: 95%;
     }
+  }
+}
+
+// Animation for loading spinner
+@keyframes spin {
+  0% {
+    transform: rotate(0deg);
+  }
+  100% {
+    transform: rotate(360deg);
   }
 }

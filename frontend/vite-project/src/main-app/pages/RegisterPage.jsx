@@ -49,6 +49,7 @@ const CreateAccount = () => {
   const [buttonText, setButtonText] = useState("Okay");
   const [buttonBgColor, setButtonBgColor] = useState("#34A853");
   const [isEmailVerification, setIsEmailVerification] = useState(false);
+  const [isError, setIsError] = useState(false);
 
   const validate = () => {
     const newErrors = {};
@@ -107,6 +108,7 @@ Please log in to your existing account instead of creating a new one.`);
         setButtonBgColor("#FF6B6B");
         setButtonText("Go to Login");
         setIsEmailVerification(false);
+        setIsError(true);
         setIsModalOpen(true);
         return; // Stop the registration process
       }
@@ -143,9 +145,10 @@ Please log in to your existing account instead of creating a new one.`);
 We've sent a verification email to **${formValues.email}**. Please check your inbox and click the verification link to activate your account.
 
 You won't be able to log in until your email is verified.`);
-      setButtonBgColor("#34A853");
+      setButtonBgColor("#00B4A6");
       setButtonText("Go to Login");
       setIsEmailVerification(true);
+      setIsError(false);
       setIsModalOpen(true);
       
     } catch (err) {
@@ -153,11 +156,12 @@ You won't be able to log in until your email is verified.`);
       toast.error("Registration failed. Please try again.");
 
       // Show error modal
-      setModalTitle("Error!");
-      setModalDescription("Something went wrong during registration. Please try again.");
-      setButtonBgColor("#FF0000");
-      setButtonText("Okay");
+      setModalTitle("Registration Failed");
+      setModalDescription("Something went wrong during registration. Please check your information and try again.");
+      setButtonBgColor("#FF4B4B");
+      setButtonText("Try Again");
       setIsEmailVerification(false);
+      setIsError(true);
       setIsModalOpen(true);
     }
   };
@@ -188,7 +192,7 @@ You won't be able to log in until your email is verified.`);
             </div>
         <div className="login-right">
           <h2>Create an account</h2>
-          <form onSubmit={handleSubmit} noValidate>
+          <form className="login-form" onSubmit={handleSubmit} noValidate>
             <div className="input-group">
               <div>
                 <input
@@ -235,7 +239,7 @@ You won't be able to log in until your email is verified.`);
               />
               {errors.phone && <p className="error-text">{errors.phone}</p>}
             </div>
-            <div className="auth-password-input" style={{ width: '100%' }}>
+            <div className="password-input">
               <input
                 type={showPassword ? "text" : "password"}
                 name="password"
@@ -243,7 +247,6 @@ You won't be able to log in until your email is verified.`);
                 value={formValues.password}
                 onChange={handleChange}
                 required
-                style={{ width: '100%' }}
               />
               <button
                 type="button"
@@ -264,7 +267,7 @@ You won't be able to log in until your email is verified.`);
               </button>
               {errors.password && <p className="error-text">{errors.password}</p>}
             </div>
-            <div className="auth-password-input" style={{ width: '100%' }}>
+            <div className="password-input">
               <input
                 type={showConfirmPassword ? "text" : "password"}
                 name="confirmPassword"
@@ -272,7 +275,6 @@ You won't be able to log in until your email is verified.`);
                 value={formValues.confirmPassword}
                 onChange={handleChange}
                 required
-                style={{ width: '100%' }}
               />
               <button
                 type="button"
@@ -350,6 +352,7 @@ You won't be able to log in until your email is verified.`);
         buttonText={buttonText}
         buttonBgColor={buttonBgColor}
         isEmailVerification={isEmailVerification}
+        isError={isError}
         secondaryButtonText={isEmailVerification ? "Didn't receive email?" : undefined}
         onSecondaryAction={isEmailVerification ? handleResendEmail : undefined}
         onProceed={handleProceed}

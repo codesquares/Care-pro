@@ -9,7 +9,11 @@ import FilterBarDropdown from "../components/FilterBar";
 import ClientGigService from "../../../services/clientGigService";
 import ClientCareNeedsService from "../../../services/clientCareNeedsService";
 import CareMatchBanner from "./CareMatchBanner";
-
+import QualityHealthCareCards from "../../../../components/QualityHealthCareCards";
+import TopBanner from "../../../../components/TopBanner";
+import genralImg from "../../../../assets/nurseAndWoman.png";
+import CareFacts from "../../../../components/LandingPage/HealthcareFacts";
+import Nurse from "../../../../assets/nurse.png";
 const PublicMarketplace = () => {
   const location = useLocation();
   const navigate = useNavigate();
@@ -33,6 +37,16 @@ const PublicMarketplace = () => {
   });
 
   const [careNeedsSet, setCareNeedsSet] = useState(false);
+  // Handle TopBanner button click - smart navigation based on auth status
+  const handleBookCaregiver = () => {
+    if (isAuthenticated && user?.role?.toLowerCase() === 'client') {
+      // Authenticated clients go to dashboard to browse gigs
+      navigate('/app/client/dashboard');
+    } else {
+      // Non-authenticated users go to register
+      navigate('/register');
+    }
+  };
 
   // Extract search query from URL parameters
   useEffect(() => {
@@ -52,7 +66,7 @@ const PublicMarketplace = () => {
         ...prevFilters,
         searchTerm: searchQuery || ''
       }));
-      
+
       // Update active searching state
       if (isSearching !== undefined) {
         setIsActivelySearching(isSearching);
@@ -60,7 +74,7 @@ const PublicMarketplace = () => {
     };
 
     window.addEventListener('searchChanged', handleSearchChange);
-    
+
     return () => {
       window.removeEventListener('searchChanged', handleSearchChange);
     };
@@ -116,13 +130,13 @@ const PublicMarketplace = () => {
   // Check if any filters or search are active
   const hasActiveFiltersOrSearch = () => {
     return filters.quickFilter ||
-           filters.sortBy ||
-           filters.serviceType ||
-           filters.location ||
-           filters.minRating ||
-           filters.priceRange.min ||
-           filters.priceRange.max ||
-           filters.searchTerm;
+      filters.sortBy ||
+      filters.serviceType ||
+      filters.location ||
+      filters.minRating ||
+      filters.priceRange.min ||
+      filters.priceRange.max ||
+      filters.searchTerm;
   };
 
   // Check if components should be hidden during search
@@ -134,22 +148,22 @@ const PublicMarketplace = () => {
     <div className="dashboard client-dashboard-flex">
       <div className="rightbar">
         {/* Only show banner for authenticated users, exactly like ClientDashboard */}
-        {!shouldHideComponents() && isAuthenticated && user && (
+        {!shouldHideComponents() && (
           <Banner
-            name={`${user.firstName} ${user.lastName}`}
-            careNeedsSet={careNeedsSet}
+            name={`Guest User`}
+            careNeedsSet={false}
           />
         )}
 
         {/* Only show CareMatch banner for authenticated users */}
-        {!shouldHideComponents() && isAuthenticated && (
+        {!shouldHideComponents() && (
           <div className="mid-banner">
             <CareMatchBanner />
           </div>
         )}
 
         {/* Filter bar available to all users */}
-        {!shouldHideComponents() && (
+        {shouldHideComponents() && (
           <FilterBarDropdown filters={filters} onFilterChange={handleFilterChange} />
         )}
 
@@ -164,31 +178,31 @@ const PublicMarketplace = () => {
           <div className="service-categories">
             {/* Show categories if no filters or search are active */}
             {!hasActiveFiltersOrSearch() && (
-                <>
-                  {popularGigs.length > 0 && (
-                    <ServiceCategory
-                      title="Popular Services"
-                      services={popularGigs}
-                      seeMoreLink="/dashboard?filter=popular"
-                      isPublic={!isAuthenticated}
-                    />
-                  )}
+              <>
+                {popularGigs.length > 0 && (
+                  <ServiceCategory
+                    title="Popular Services"
+                    services={popularGigs}
+                    seeMoreLink="/dashboard?filter=popular"
+                    isPublic={!isAuthenticated}
+                  />
+                )}
 
-                  {topRatedGigs.length > 0 && (
-                    <ServiceCategory
-                      title="Top Rated Services"
-                      services={topRatedGigs}
-                      seeMoreLink="/dashboard?filter=top-rated"
-                      isPublic={!isAuthenticated}
-                    />
-                  )}
-                </>
+                {topRatedGigs.length > 0 && (
+                  <ServiceCategory
+                    title="Top Rated Services"
+                    services={topRatedGigs}
+                    seeMoreLink="/dashboard?filter=top-rated"
+                    isPublic={!isAuthenticated}
+                  />
+                )}
+              </>
             )}
 
             <ServiceCategory
               title={
                 hasActiveFiltersOrSearch()
-                  ? filters.searchTerm 
+                  ? filters.searchTerm
                     ? `Search Results${filters.searchTerm ? ` for "${filters.searchTerm}"` : ''}`
                     : "Filtered Services"
                   : "All Services"
@@ -201,7 +215,7 @@ const PublicMarketplace = () => {
               <div className="no-results">
                 <h3>No services found</h3>
                 <p>
-                  {filters.searchTerm 
+                  {filters.searchTerm
                     ? `No results found for "${filters.searchTerm}". Try searching for something else or adjusting your filters.`
                     : "Try adjusting your filters or search for something else."
                   }
@@ -252,7 +266,9 @@ const PublicMarketplace = () => {
 
             {/* Subtle call-to-action for unauthenticated users when no results */}
             {!isAuthenticated && filteredServices.length === 0 && !hasActiveFiltersOrSearch() && (
-              <div className="public-subtle-cta">
+              <div>
+                {/* 
+                <div className="public-subtle-cta">
                 <div className="subtle-cta-content">
                   <h3>🎯 Get Personalized Matches</h3>
                   <p>Sign up to receive tailored caregiver recommendations based on your specific needs.</p>
@@ -270,6 +286,32 @@ const PublicMarketplace = () => {
                       Sign In
                     </button>
                   </div>
+                </div>
+              </div>
+              */}
+                <QualityHealthCareCards />
+                <div className="dashboard-book-caregiver">
+                  <TopBanner
+                    title="Your wellness starts here"
+                    description="Take charge of your health and break free from the limitations to a fulfilling life with your loved ones. It’s time to prioritise your well-being"
+                    buttonText="Hire a Caregiver"
+                    imageUrl={genralImg}
+                    onButtonClick={handleBookCaregiver}
+                    backgroundColor="#373732"
+                  />
+                </div>
+                <div>
+                    <CareFacts />
+                </div>
+                <div className="dashboard-book-caregiver">
+                  <TopBanner
+                    title="Become a Caregiver"
+                    description="As a caregiver, you are provided the opportunity to support your patients while also building a rewarding career in healthcare. Take the first step today!"
+                    buttonText="Become a Caregiver"
+                    imageUrl={Nurse}
+                    onButtonClick={handleBookCaregiver}
+                    backgroundColor="#324CA6"
+                  />
                 </div>
               </div>
             )}

@@ -363,8 +363,8 @@ class SignalRChatService {
       this.connection = new signalR.HubConnectionBuilder()
         .withUrl(HUB_URL, {
           accessTokenFactory: () => token,
-          skipNegotiation: false, // Allow negotiation to find best transport
-          transport: signalR.HttpTransportType.WebSockets | signalR.HttpTransportType.LongPolling // Try WebSockets first, fallback to long polling
+          transport: signalR.HttpTransportType.WebSockets,
+          skipNegotiation: true
         })
         .withAutomaticReconnect(retryPolicy) // Use our custom policy with max attempts
         .configureLogging(signalR.LogLevel.Information)

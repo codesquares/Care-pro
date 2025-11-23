@@ -1,12 +1,13 @@
 const config = {
-  BASE_URL: "http://localhost:3000",
+  BASE_URL: "http://localhost:3000/api",
   FALLBACK_URL: "http://localhost:3000",
-  LOCAL_API_URL: "http://localhost:3000/api",
-  LOCALHOST_API_URL: "http://localhost:3000/api",
+  LOCAL_API_URL: "http://localhost:5005/api",
+  STAGING_API_URL: "https://carepro-api20241118153443.azurewebsites.net/api",
+  PRODUCTION_API_URL: "https://api.oncarepro.com/api",
   
   DOJAH: {
-    APP_ID: "686c915878a2b53b2bdb5631",
-    WIDGET_ID: "68732f5e97202a07f66bc89a",
+    APP_ID: "test-app-id",
+    WIDGET_ID: "test-widget-id",
     API_URL: "https://api.dojah.io",
     IDENTITY_URL: "https://identity.dojah.io",
     PUBLIC_KEY: "test-public-key"
@@ -14,8 +15,11 @@ const config = {
   
   ENV: {
     ENVIRONMENT: 'test',
-    API_URL: "http://localhost:3000",
-    AZURE_API_URL: "http://localhost:3000/api",
+    API_URL: "http://localhost:3000/api",
+    CURRENT_HOSTNAME: "localhost",
+    IS_PRODUCTION: false,
+    IS_STAGING: false,
+    IS_LOCAL: true,
     REDIRECT_URL: "http://localhost:3000/app/caregiver/dashboard",
     DEBUG: true
   },

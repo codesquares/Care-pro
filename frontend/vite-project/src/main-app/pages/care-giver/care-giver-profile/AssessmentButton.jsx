@@ -29,7 +29,12 @@ console.log("AssessmentButton render - userId:", userId, "verificationStatus:", 
   };
 
   // Only show the button if user is verified/completed
-  if (verificationStatus !== "verified" && verificationStatus !== "completed") {
+  // Handle both string format and object format for verification status
+  const isVerified = typeof verificationStatus === 'object' 
+    ? (verificationStatus?.verificationStatus === "completed" || verificationStatus?.isVerified === true)
+    : (verificationStatus === "verified" || verificationStatus === "completed");
+    
+  if (!isVerified) {
     return null;
   }
 

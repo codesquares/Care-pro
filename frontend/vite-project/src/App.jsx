@@ -14,6 +14,7 @@ import Home from './pages/Home';
 import BecomeCaregiver from './pages/BecomeCaregiver';
 import PrivacyPolicy from './pages/PrivacyPolicy';
 import TermsAndConditions from './pages/TermsAndConditions';
+import NotFoundPage from './pages/NotFoundPage';
 import OrderFaq from './main-app/pages/care-giver/OrderFaq';
 import LoginPage from './main-app/pages/LoginPage';
 import RegisterPage from './main-app/pages/RegisterPage';
@@ -34,7 +35,9 @@ import ContentBlog from './components/ContentfulBlog/Blog';
 import ContentBlogPost from './components/ContentfulBlog/BlogPost';
 import { BlogProvider } from './main-app/context/BlogContext';
 import PaymentSuccess from './main-app/pages/client/home-care-service/PaymentSuccess';
+import HomeCareService from './main-app/pages/client/home-care-service/HomeCareService';
 import { MessageProvider } from './main-app/context/MessageContext';
+import { CaregiverStatusProvider } from './main-app/contexts/CaregiverStatusContext';
 // import { NotificationProvider } from './main-app/context/NotificationContext';
 import SplashScreen from './main-app/components/SplashScreen/SplashScreen';
 import PublicMarketplace from './main-app/pages/client/client-dashboard/PublicMarketplace';
@@ -62,9 +65,11 @@ function App() {
           <MessageProvider>
             <Router>
               <AuthProvider>
-                <ErrorBoundary>
-                  <AppContent />
-                </ErrorBoundary>
+                <CaregiverStatusProvider>
+                  <ErrorBoundary>
+                    <AppContent />
+                  </ErrorBoundary>
+                </CaregiverStatusProvider>
               </AuthProvider>
             </Router>
           </MessageProvider>
@@ -153,6 +158,7 @@ function AppContent() {
         <Route path="/confirm-email" element={<ConfirmEmailPage />} />
         <Route path="/resend-confirmation" element={<ResendConfirmationPage />} />
         <Route path="/" element={<PublicMarketplace />} />
+        <Route path="/service/:id" element={<HomeCareService />} />
         <Route path="/splash" element={<SplashScreen />} />
 
         {/* <Route path="/Caregivergigpage" element={<Caregivergigpage />} /> */}
@@ -182,6 +188,8 @@ function AppContent() {
             return <Navigate to="/login" replace />;
           }}
         />
+        {/* Catch-all route for non-existent pages */}
+        <Route path="*" element={<NotFoundPage />} />
       </Routes>
       {shouldShowFooter && <Footer />}
       <ToastContainer

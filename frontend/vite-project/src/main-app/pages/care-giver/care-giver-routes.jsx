@@ -13,6 +13,7 @@ import CreateOffer from '../CreateOffer';
 import Messages from '../Messages';
 import DirectMessage from '../../components/messages/DirectMessage';
 import VerificationPage from './verification/VerificationPage';
+import VerificationCallback from './verification/VerificationCallback';
 import AssessmentPage from './verification/AssessmentPage';
 import NotificationsPage from '../../components/Notifications/Notifications';
 import ErrorBoundary from '../../components/ErrorBoundary';
@@ -44,6 +45,7 @@ function CareGiverRoutes() {
                 <Route path="/message/:recipientId" element={<DirectMessage />} />
                 <Route path="/notifications" element={<NotificationsPage />} />
                 <Route path="/verification" element={<VerificationPage />} />
+                <Route path="/verification-callback" element={<VerificationCallback />} />
                 <Route path="/assessment" element={<AssessmentPage />} />
                 <Route path="/order-details/:orderId" element={<CaregiverOrderDetails />} />
                 <Route path="/faq" element={<FAQPage />} />

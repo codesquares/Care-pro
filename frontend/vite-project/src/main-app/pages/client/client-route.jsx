@@ -26,7 +26,6 @@ function ClientRoutes() {
         <NavigationBar />
         <Routes>
             <Route path='/dashboard' element={<ClientDashboard />} />
-            <Route path="/service/:id" element={<HomeCareService />} />
             <Route path="/payment" element={<PaymentPage />} />
             <Route path="/message" element={<Messages />} />
             <Route path="/message/:recipientId" element={<DirectMessage />} />

@@ -6,6 +6,7 @@ import hear from "../../../../assets/main-app/heart.svg";
 import { FaBell, FaEnvelope, FaReceipt, FaHome, FaCog } from "react-icons/fa";
 import NotificationBell from "../../../components/notifications/NotificationBell";
 import { useAuth } from "../../../context/AuthContext";
+import config from "../../../config"; // Import centralized config for API URLs
 
 
 const NavigationBar = () => {
@@ -19,7 +20,6 @@ const NavigationBar = () => {
   const [earnings, setEarnings] = useState({
     totalEarned: 0,
   });
-  const [profileData, setProfileData] = useState(null);
 
   const userName = user?.firstName ? `${user.firstName} ${user.lastName}` : "";
 
@@ -29,7 +29,8 @@ const NavigationBar = () => {
     
     const fetchEarnings = async () => {
       try{
-      const earnings = await fetch (`https://carepro-api20241118153443.azurewebsites.net/api/WithdrawalRequests/TotalAmountEarnedAndWithdrawn/${user.id}`, {
+      // Use centralized config instead of hardcoded URL for consistent API routing
+      const earnings = await fetch (`${config.BASE_URL}/WithdrawalRequests/TotalAmountEarnedAndWithdrawn/${user.id}`, {
         headers: {
           'Content-Type': 'application/json',
           'Authorization': `Bearer ${localStorage.getItem('authToken')}`
@@ -77,7 +78,7 @@ const NavigationBar = () => {
 
   // Helper function to render avatar content
   const renderAvatarContent = (className = "") => {
-    const profileImage = profileData?.profilePicture;
+    const profileImage = user?.profileImage || user?.profilePicture;
     
     if (profileImage) {
       return (
@@ -98,10 +99,7 @@ const NavigationBar = () => {
   };
 
   const handleSignOut = () => {
-    const navInfo = handleLogout();
-    if (navInfo.shouldNavigate) {
-      navigate(navInfo.path, { replace: true });
-    }
+    handleLogout();
   };
 
   const toggleMobileMenu = () => {
@@ -146,7 +144,7 @@ const NavigationBar = () => {
               <div className="mobile-menu-user">
                 <div className="avatar">
                   {renderAvatarContent()}
-                  <span className="avatar-initials" style={{ display: profileData?.profilePicture ? 'none' : 'flex' }}>
+                  <span className="avatar-initials" style={{ display: (user?.profileImage || user?.profilePicture) ? 'none' : 'flex' }}>
                     {getInitials(userName)}
                   </span>
                 </div>
@@ -202,7 +200,7 @@ const NavigationBar = () => {
                 <div className="menu-item-content">
                   <div className="avatar small-avatar">
                     {renderAvatarContent("small-avatar")}
-                    <span className="avatar-initials" style={{ display: profileData?.profilePicture ? 'none' : 'flex' }}>
+                    <span className="avatar-initials" style={{ display: (user?.profileImage || user?.profilePicture) ? 'none' : 'flex' }}>
                       {getInitials(userName)}
                     </span>
                   </div>
@@ -262,12 +260,12 @@ const NavigationBar = () => {
           </div>
 
           <div className="profile-avatar" ref={dropdownRef}>
-            {!profileData?.profilePicture && (
+            {!(user?.profileImage || user?.profilePicture) && (
               <span onClick={() => setShowDropdown(!showDropdown)}>{userName}</span>
             )}
             <div className="avatar" onClick={() => setShowDropdown(!showDropdown)}>
               {renderAvatarContent()}
-              <span className="avatar-initials" style={{ display: profileData?.profilePicture ? 'none' : 'flex' }}>
+              <span className="avatar-initials" style={{ display: (user?.profileImage || user?.profilePicture) ? 'none' : 'flex' }}>
                 {getInitials(userName)}
               </span>
             </div>

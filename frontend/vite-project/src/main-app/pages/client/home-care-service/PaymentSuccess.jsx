@@ -41,7 +41,7 @@ const PaymentSuccess = () => {
           };
 
           const orderResponse = await fetch(
-            "https://carepro-api20241118153443.azurewebsites.net/api/ClientOrders",
+            `${configs.BASE_URL}/ClientOrders`, // Using centralized API config
             {
               method: "POST",
               headers: {

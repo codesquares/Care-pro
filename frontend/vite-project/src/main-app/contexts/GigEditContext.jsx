@@ -13,10 +13,10 @@ const initialState = {
     location: '',
     hourlyRate: '',
     pricing: {
-      Basic: { name: "", details: "", deliveryTime: "", amount: "" },
-      Standard: { name: "", details: "", deliveryTime: "", amount: "" },
-      Premium: { name: "", details: "", deliveryTime: "", amount: "" },
-    },
+        Basic: { name: "", details: "", deliveryTime: "1 Day Per Week", amount: "" },
+        Standard: { name: "", details: "", deliveryTime: "1 Day Per Week", amount: "" },
+        Premium: { name: "", details: "", deliveryTime: "1 Day Per Week", amount: "" },
+      },
     video: "https://www.youtube.com/watch?v=RVFAyFWO4go",
     status: "",
     caregiverId: localStorage.getItem("userId") || "",
@@ -152,7 +152,7 @@ function gigEditReducer(state, action) {
         pricingData.Basic = {
           name: packageName,
           details: Array.isArray(packageDetails) ? packageDetails.join('; ') : packageDetails,
-          deliveryTime: deliveryTime,
+          deliveryTime: "1 Day Per Week", // Auto-set to default frequency
           amount: price
         };
       }

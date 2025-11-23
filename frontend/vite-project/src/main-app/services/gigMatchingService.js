@@ -2,6 +2,8 @@
  * GigMatchingService
  * Handles matching gigs to clients based on their preferences and needs
  */
+import config from "../config"; // Centralized API configuration
+
 class GigMatchingService {
   /**
    * Get relevant gigs for a client 
@@ -18,7 +20,7 @@ class GigMatchingService {
       }
       
       // First, try to use our new dedicated recommendation endpoint
-      const API_URL = `https://carepro-api20241118153443.azurewebsites.net/api/Recommendations/gigs/${clientId}`;
+      const API_URL = `${config.BASE_URL}/Recommendations/gigs/${clientId}`; // Using centralized API config
       
       // Use timeout for better UX
       const controller = new AbortController();
@@ -48,7 +50,7 @@ class GigMatchingService {
         // Fallback: get all gigs and filter based on client preferences
         try {
           // Get client preferences
-          const prefResponse = await fetch(`https://carepro-api20241118153443.azurewebsites.net/api/ClientPreferences/clientId?clientId=${clientId}`, {
+          const prefResponse = await fetch(`${config.BASE_URL}/ClientPreferences/clientId?clientId=${clientId}`, { // Using centralized API config
             method: 'GET',
             headers: {
               'Authorization': `Bearer ${token}`
@@ -71,7 +73,7 @@ class GigMatchingService {
           }
           
           // Get all gigs
-          const gigsResponse = await fetch('https://carepro-api20241118153443.azurewebsites.net/api/Gigs', {
+          const gigsResponse = await fetch(`${config.BASE_URL}/Gigs`, { // Using centralized API config
             method: 'GET',
             headers: {
               'Authorization': `Bearer ${token}`

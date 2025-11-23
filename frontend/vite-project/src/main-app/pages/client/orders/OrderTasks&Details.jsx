@@ -4,6 +4,10 @@ import { useParams } from "react-router-dom";
 import { ToastContainer, toast } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
 import { createNotification } from "../../../services/notificationService";
+import ContractService from "../../../services/contractService";
+import OrderTasksService from "../../../services/orderTasksService";
+import CreateOrderTasksModal from "../../../components/modals/CreateOrderTasksModal";
+import config from "../../../config"; // Centralized API configuration
 import "./Order&Tasks.scss";
 import { useNavigate } from "react-router-dom";
 
@@ -20,6 +24,19 @@ const MyOrders = () => {
     const [reviewComment, setReviewComment] = useState("");
     const [isReviewSubmitted, setIsReviewSubmitted] = useState(false);
     const [checkingReviewStatus, setCheckingReviewStatus] = useState(false);
+    
+    // Contract-related state
+    const [contract, setContract] = useState(null);
+    const [isGeneratingContract, setIsGeneratingContract] = useState(false);
+    const [contractError, setContractError] = useState(null);
+    const [checkingContract, setCheckingContract] = useState(false);
+    
+    // OrderTasks-related state
+    const [orderTasks, setOrderTasks] = useState(null);
+    const [hasOrderTasks, setHasOrderTasks] = useState(false);
+    const [checkingOrderTasks, setCheckingOrderTasks] = useState(false);
+    const [showCreateOrderTasksModal, setShowCreateOrderTasksModal] = useState(false);
+    
     const userDetails = JSON.parse(localStorage.getItem("userDetails"));
     const userId = userDetails?.id;
 
@@ -40,7 +57,7 @@ const MyOrders = () => {
         try {
             setCheckingReviewStatus(true);
             const response = await axios.get(
-                `https://carepro-api20241118153443.azurewebsites.net/api/Reviews?gigId=${gigId}`
+                `${config.BASE_URL}/Reviews?gigId=${gigId}` // Using centralized API config
             );
             
             if (response.status === 200 && response.data) {
@@ -57,6 +74,110 @@ const MyOrders = () => {
         }
     };
 
+    // Check if contract exists for this order
+    const checkExistingContract = async (orderId) => {
+        if (!orderId) return;
+        
+        try {
+            setCheckingContract(true);
+            const result = await ContractService.checkExistingContract(orderId);
+            
+            if (result.success && result.hasContract) {
+                setContract(result.data);
+            } else if (!result.success) {
+                console.warn("Error checking existing contract:", result.error);
+            }
+        } catch (error) {
+            console.error("Error checking existing contract:", error);
+        } finally {
+            setCheckingContract(false);
+        }
+    };
+
+    // Check if OrderTasks exist for this order
+    const checkExistingOrderTasks = async (orderId) => {
+        if (!orderId) return;
+        
+        try {
+            setCheckingOrderTasks(true);
+            const result = await OrderTasksService.checkOrderTasks(orderId);
+            
+            if (result.success && result.hasOrderTasks) {
+                setOrderTasks(result.data);
+                setHasOrderTasks(true);
+            } else {
+                setHasOrderTasks(false);
+                setOrderTasks(null);
+            }
+        } catch (error) {
+            console.error("Error checking OrderTasks:", error);
+            setHasOrderTasks(false);
+        } finally {
+            setCheckingOrderTasks(false);
+        }
+    };
+
+    // Handle OrderTasks creation
+    const handleOrderTasksCreated = (orderTasksData) => {
+        setOrderTasks(orderTasksData);
+        setHasOrderTasks(true);
+        setShowCreateOrderTasksModal(false);
+        toast.success("Task requirements created! You can now generate a contract.");
+    };
+
+    // Check if order allows task creation
+    const canCreateTasks = (order) => {
+        if (!order) return false;
+        return order.clientOrderStatus !== 'Completed' && order.clientOrderStatus !== 'Cancelled';
+    };
+
+    // Handle contract generation
+    const handleGenerateContract = async () => {
+        if (!orderId) {
+            toast.error("Order ID is missing");
+            return;
+        }
+
+        setIsGeneratingContract(true);
+        setContractError(null);
+
+        try {
+            const result = await ContractService.generateContractFromOrder(orderId);
+            
+            if (result.success) {
+                setContract(result.data);
+                toast.success("Contract generated and sent to caregiver successfully!");
+                
+                // Optional: Create notification for caregiver if needed
+                if (orders.length > 0 && orders[0].caregiverId) {
+                    try {
+                        await createNotification({
+                            recipientId: orders[0].caregiverId,
+                            senderId: userId,
+                            type: "SystemNotice",
+                            title: "New Contract Generated",
+                            content: `A contract has been generated for order: ${orders[0].gigTitle || 'your service'}`,
+                            relatedEntityId: orderId
+                        });
+                    } catch (notificationError) {
+                        console.error("Failed to send contract notification:", notificationError);
+                        // Don't fail contract generation if notification fails
+                    }
+                }
+            } else {
+                setContractError(result.error);
+                toast.error(result.error || "Failed to generate contract");
+            }
+        } catch (error) {
+            const errorMessage = "Failed to generate contract. Please try again.";
+            setContractError(errorMessage);
+            toast.error(errorMessage);
+            console.error("Contract generation error:", error);
+        } finally {
+            setIsGeneratingContract(false);
+        }
+    };
+
     useEffect(() => {
         const fetchOrderDetails = async () => {
             if (!orderId) {
@@ -67,7 +188,7 @@ const MyOrders = () => {
 
             try {
                 const response = await axios.get(
-                    `https://carepro-api20241118153443.azurewebsites.net/api/ClientOrders/orderId?orderId=${orderId}`
+                    `${config.BASE_URL}/ClientOrders/orderId?orderId=${orderId}` // Using centralized API config
                 );
                 const orderData = response.data;
                 setOrders([orderData]); // API returns a single order, so wrap it in an array
@@ -77,6 +198,12 @@ const MyOrders = () => {
                     const hasExistingReview = await checkExistingReview(orderData.gigId, userId);
                     setIsReviewSubmitted(hasExistingReview);
                 }
+                
+                // Check if contract exists for this order
+                await checkExistingContract(orderId);
+                
+                // Check if OrderTasks exist for this order
+                await checkExistingOrderTasks(orderId);
             } catch (err) {
                 setError("Failed to fetch order details.");
             } finally {
@@ -100,7 +227,7 @@ const MyOrders = () => {
     const handleSubmitStatus = async () => {
         if (!orderId || !userId || (modalType === "dispute" && !reason)) return;
 
-        const baseUrl = "https://carepro-api20241118153443.azurewebsites.net/api/ClientOrders";
+        const baseUrl = `${config.BASE_URL}/ClientOrders`; // Using centralized API config
         const endpoint =
             modalType === "complete"
                 ? `${baseUrl}/UpdateClientOrderStatus/orderId?orderId=${orderId}`
@@ -126,7 +253,7 @@ const MyOrders = () => {
             
             // Refresh the order data to reflect the new status
             const response = await axios.get(
-                `https://carepro-api20241118153443.azurewebsites.net/api/ClientOrders/orderId?orderId=${orderId}`
+                `${config.BASE_URL}/ClientOrders/orderId?orderId=${orderId}` // Using centralized API config
             );
             setOrders([response.data]);
         } catch (err) {
@@ -164,7 +291,7 @@ const MyOrders = () => {
         try {
             // Submit the review
             await axios.post(
-                "https://carepro-api20241118153443.azurewebsites.net/api/Reviews",
+                `${config.BASE_URL}/Reviews`, // Using centralized API config
                 reviewPayload,
                 {
                     headers: {
@@ -279,6 +406,83 @@ const MyOrders = () => {
                                         <p>Ordered from: {orders[0].caregiverName}</p>
                                         <p>Total price: {orders[0].amount}</p>
                                         <p>Order number: #{orders[0].id}</p>
+                                    </div>
+                                    
+                                    {/* Contract and OrderTasks Section */}
+                                    <div className="contract-section">
+                                        {checkingContract || checkingOrderTasks ? (
+                                            <div className="contract-checking">
+                                                <p>Checking contract and task status...</p>
+                                            </div>
+                                        ) : contract ? (
+                                            <div className="contract-exists">
+                                                <h4>✅ Contract Generated</h4>
+                                                <div className="contract-details">
+                                                    <p><strong>Contract ID:</strong> {contract.id}</p>
+                                                    <p><strong>Status:</strong> {contract.status}</p>
+                                                    <p><strong>Total Amount:</strong> ₦{contract.totalAmount?.toLocaleString() || 'N/A'}</p>
+                                                    {contract.sentAt && (
+                                                        <p><strong>Sent to caregiver:</strong> {new Date(contract.sentAt).toLocaleString()}</p>
+                                                    )}
+                                                    {contract.contractStartDate && contract.contractEndDate && (
+                                                        <p><strong>Duration:</strong> {new Date(contract.contractStartDate).toLocaleDateString()} - {new Date(contract.contractEndDate).toLocaleDateString()}</p>
+                                                    )}
+                                                </div>
+                                            </div>
+                                        ) : hasOrderTasks ? (
+                                            ContractService.canGenerateContract(orders[0], contract, hasOrderTasks) ? (
+                                                <div className="contract-generation">
+                                                    <h4>Contract</h4>
+                                                    <div className="order-tasks-status">
+                                                        <p>✅ Task requirements created ({orderTasks?.careTasks?.length || 0} tasks)</p>
+                                                    </div>
+                                                    <p>Generate a formal contract for this order that will be sent to your caregiver.</p>
+                                                    {contractError && (
+                                                        <div className="contract-error">
+                                                            <p>❌ {contractError}</p>
+                                                        </div>
+                                                    )}
+                                                    <button 
+                                                        className={`generate-contract-btn ${isGeneratingContract ? 'loading' : ''}`}
+                                                        onClick={handleGenerateContract}
+                                                        disabled={isGeneratingContract}
+                                                    >
+                                                        {isGeneratingContract ? 'Generating Contract...' : 'Generate Contract'}
+                                                    </button>
+                                                </div>
+                                            ) : (
+                                                <div className="contract-unavailable">
+                                                    <h4>Contract</h4>
+                                                    <div className="order-tasks-status">
+                                                        <p>✅ Task requirements created</p>
+                                                    </div>
+                                                    {!orders[0].transactionId && !orders[0].paymentTransactionId ? (
+                                                        <p>Contract generation requires payment completion.</p>
+                                                    ) : orders[0].clientOrderStatus === 'Cancelled' ? (
+                                                        <p>Contract cannot be generated for cancelled orders.</p>
+                                                    ) : (
+                                                        <p>Contract generation not available for this order.</p>
+                                                    )}
+                                                </div>
+                                            )
+                                        ) : (
+                                            <div className="order-tasks-required">
+                                                <h4>Contract Generation Unavailable</h4>
+                                                <div className="alert alert-info">
+                                                    <p>📋 To generate a contract for this order, you must first create detailed task requirements.</p>
+                                                </div>
+                                                {canCreateTasks(orders[0]) ? (
+                                                    <button 
+                                                        className="create-tasks-btn"
+                                                        onClick={() => setShowCreateOrderTasksModal(true)}
+                                                    >
+                                                        Create Task Requirements
+                                                    </button>
+                                                ) : (
+                                                    <p className="tasks-unavailable">Task creation is not available for {orders[0].clientOrderStatus.toLowerCase()} orders.</p>
+                                                )}
+                                            </div>
+                                        )}
                                     </div>
                                     {orders[0].clientOrderStatus === "Completed" ? (
                                         isReviewSubmitted ? (
@@ -396,6 +600,16 @@ const MyOrders = () => {
                         )}
                     </div>
                 </div>
+            )}
+
+            {/* OrderTasks Creation Modal */}
+            {showCreateOrderTasksModal && (
+                <CreateOrderTasksModal
+                    isOpen={showCreateOrderTasksModal}
+                    onClose={() => setShowCreateOrderTasksModal(false)}
+                    orderData={orders[0]}
+                    onOrderTasksCreated={handleOrderTasksCreated}
+                />
             )}
 
             {/* Remove duplicate ToastContainer - main app already has one */}

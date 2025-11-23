@@ -130,11 +130,9 @@ const GuidelinesCard = ({ currentPage, activeField, onClose }) => {
             <button className="minimize-guidelines mobile-only" onClick={handleToggleMinimize}>
               {isMinimized ? '▲' : '▼'}
             </button>
-            {activeField && (
-              <button className="close-guidelines" onClick={handleCloseGuidelines}>
-                ✕
-              </button>
-            )}
+            <button className="close-guidelines" onClick={handleCloseGuidelines}>
+              ✕
+            </button>
           </div>
         </div>
         

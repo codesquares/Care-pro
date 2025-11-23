@@ -3,6 +3,7 @@ import { useNavigate } from "react-router-dom";
 import "./ProfileCard.css";
 import profilecard1 from "../../../../assets/profilecard1.png";
 import { generateUsername } from "../../../utils/usernameGenerator";
+import config from "../../../config"; // Import centralized config for API URLs
 
 const ProfileCard = () => {
   const navigate = useNavigate();
@@ -24,8 +25,9 @@ const ProfileCard = () => {
 
     const fetchProfile = async () => {
       try {
+        // Use centralized config instead of hardcoded URL for consistent API routing
         const response = await fetch(
-          `https://carepro-api20241118153443.azurewebsites.net/api/CareGivers/${caregiverId}`
+          `${config.BASE_URL}/CareGivers/${caregiverId}`
         );
 
         if (!response.ok) {
@@ -82,12 +84,23 @@ const ProfileCard = () => {
 
   return (
     <div className="profile-card">
-      <div className="caregiver-profile-card-bio-head">
-         <img
-        src={profile?.profileImage || profilecard1}
-        alt="Profile"
-        className="profile-picture"
-      />
+      <div className="profile-picture-container">
+        {profile?.profileImage && profile.profileImage !== profilecard1 ? (
+          <img
+            src={profile.profileImage}
+            alt="Profile"
+            className="profile-picture"
+          />
+        ) : (
+          <div className="profile-initials-avatar">
+            {profile?.firstName && profile?.lastName
+              ? `${profile.firstName.charAt(0).toUpperCase()}${profile.lastName.charAt(0).toUpperCase()}`
+              : "AR"
+            }
+          </div>
+        )}
+      </div>
+      
       {/* capitalize first letter of each word in name */}
       <h3 className="profile-name">
         {profile?.firstName && profile?.lastName
@@ -95,7 +108,6 @@ const ProfileCard = () => {
           : "Ahmed Rufai"}
       </h3>
       <p className="profile-username">@{userName}</p>
-      </div>
       
       <div
         className="view-profile"

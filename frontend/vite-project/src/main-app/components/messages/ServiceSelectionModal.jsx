@@ -1,5 +1,7 @@
 
 import './ServiceSelectionModal.scss';
+import Modal from '../modal/Modal';
+import { useState } from 'react';
 
 const ServiceSelectionModal = ({ 
   isOpen, 
@@ -9,6 +11,16 @@ const ServiceSelectionModal = ({
   onSelectService,
   isLoading 
 }) => {
+  // Modal state management
+  const [isModalOpen, setIsModalOpen] = useState(false);
+  const [modalTitle, setModalTitle] = useState('');
+  const [modalDescription, setModalDescription] = useState('');
+  const [buttonText, setButtonText] = useState('');
+  const [buttonBgColor, setButtonBgColor] = useState('');
+  const [isError, setIsError] = useState(false);
+  const [secondaryButtonText, setSecondaryButtonText] = useState('');
+  const [showSecondaryButton, setShowSecondaryButton] = useState(false);
+
   if (!isOpen) return null;
 
   const handleBackdropClick = (e) => {
@@ -18,8 +30,35 @@ const ServiceSelectionModal = ({
   };
 
   const handleSelectService = (service) => {
-    onSelectService(service);
-    onClose();
+    try {
+      onSelectService(service);
+      
+      // Show success modal
+      setModalTitle('Service Selected!');
+      setModalDescription(`You've selected "${service.title}" from ${caregiverName}. You will be redirected to the service page to complete your booking.`);
+      setButtonText('Continue');
+      setButtonBgColor('#00B4A6');
+      setIsError(false);
+      setShowSecondaryButton(false);
+      setIsModalOpen(true);
+      
+      // Close the main modal after a brief delay to show success
+      setTimeout(() => {
+        onClose();
+      }, 500);
+      
+    } catch (error) {
+      console.error('Error selecting service:', error);
+      
+      // Show error modal
+      setModalTitle('Selection Failed');
+      setModalDescription('Failed to select the service. Please try again or contact support if the issue persists.');
+      setButtonText('Try Again');
+      setButtonBgColor('#FF4B4B');
+      setIsError(true);
+      setShowSecondaryButton(false);
+      setIsModalOpen(true);
+    }
   };
 
   return (
@@ -49,6 +88,21 @@ const ServiceSelectionModal = ({
               </svg>
               <h4>No services available</h4>
               <p>This caregiver doesn't have any published services at the moment.</p>
+              <button 
+                className="contact-caregiver-btn"
+                onClick={() => {
+                  setModalTitle('Contact Caregiver');
+                  setModalDescription(`Since ${caregiverName} doesn't have published services, you can send them a direct message to discuss your care needs and potential services.`);
+                  setButtonText('Send Message');
+                  setButtonBgColor('#00B4A6');
+                  setIsError(false);
+                  setSecondaryButtonText('Close');
+                  setShowSecondaryButton(true);
+                  setIsModalOpen(true);
+                }}
+              >
+                Contact {caregiverName}
+              </button>
             </div>
           ) : (
             <div className="services-grid">
@@ -120,6 +174,28 @@ const ServiceSelectionModal = ({
           </button>
         </div>
       </div>
+
+      {/* Standardized Modal Component for Success/Error Feedback */}
+      <Modal
+        isOpen={isModalOpen}
+        title={modalTitle}
+        description={modalDescription}
+        buttonText={buttonText}
+        buttonBgColor={buttonBgColor}
+        isError={isError}
+        secondaryButtonText={secondaryButtonText}
+        showSecondaryButton={showSecondaryButton}
+        onProceed={() => {
+          setIsModalOpen(false);
+          if (modalTitle === 'Contact Caregiver') {
+            // Close the service selection modal and let user send message
+            onClose();
+          }
+        }}
+        onSecondary={() => {
+          setIsModalOpen(false);
+        }}
+      />
     </div>
   );
 };

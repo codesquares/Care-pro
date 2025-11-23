@@ -2,7 +2,11 @@ import{ useState, useEffect } from "react";
 import axios from "axios";
 import { useNavigate } from "react-router-dom";
 import { FaStar, FaRegStar, FaStarHalfAlt } from "react-icons/fa";
+import { toast } from "react-toastify";
 import ClientReviewService from "../../../services/clientReviewService.js";
+import ContractService from "../../../services/contractService.js";
+import OrderTasksService from "../../../services/orderTasksService.js";
+import config from "../../../config"; // Centralized API configuration
 import "./Orders.scss";
 
 const statusColors = {
@@ -17,10 +21,141 @@ const MyOrders = () => {
   const [filter, setFilter] = useState("All orders");
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
+  
+  // Contract-related state
+  const [contractStates, setContractStates] = useState({}); // Store contract state for each order
+  const [generatingContract, setGeneratingContract] = useState({}); // Track which orders are generating contracts
+  
+  // OrderTasks-related state
+  const [orderTasksStates, setOrderTasksStates] = useState({}); // Store OrderTasks state for each order
+  
   const navigate = useNavigate();
 
   const handleOrderClick = (orderId) => {
     navigate(`/app/client/my-order/${orderId}`); // Navigate to details page
+  };
+
+  // Handle contract generation
+  const handleGenerateContract = async (e, orderId) => {
+    e.stopPropagation(); // Prevent navigation when clicking contract button
+    
+    setGeneratingContract(prev => ({ ...prev, [orderId]: true }));
+
+    try {
+      const result = await ContractService.generateContractFromOrder(orderId);
+      
+      if (result.success) {
+        toast.success("Contract generated and sent to caregiver successfully!");
+        
+        // Update contract state for this order
+        setContractStates(prev => ({
+          ...prev,
+          [orderId]: {
+            hasContract: true,
+            contract: result.data,
+            error: null
+          }
+        }));
+      } else {
+        toast.error(result.error || "Failed to generate contract");
+        
+        // Update error state
+        setContractStates(prev => ({
+          ...prev,
+          [orderId]: {
+            ...prev[orderId],
+            error: result.error
+          }
+        }));
+      }
+    } catch (error) {
+      console.error("Contract generation error:", error);
+      toast.error("Failed to generate contract. Please try again.");
+      
+      setContractStates(prev => ({
+        ...prev,
+        [orderId]: {
+          ...prev[orderId],
+          error: "Failed to generate contract"
+        }
+      }));
+    } finally {
+      setGeneratingContract(prev => ({ ...prev, [orderId]: false }));
+    }
+  };
+
+  // Check existing contracts for orders
+  const checkContractsForOrders = async (ordersData) => {
+    const contractChecks = ordersData.map(async (order) => {
+      try {
+        const result = await ContractService.checkExistingContract(order.id);
+        return {
+          orderId: order.id,
+          hasContract: result.success && result.hasContract,
+          contract: result.data,
+          error: result.success ? null : result.error
+        };
+      } catch (error) {
+        console.error(`Error checking contract for order ${order.id}:`, error);
+        return {
+          orderId: order.id,
+          hasContract: false,
+          contract: null,
+          error: "Failed to check contract status"
+        };
+      }
+    });
+
+    const contractResults = await Promise.all(contractChecks);
+    
+    // Update contract states
+    const newContractStates = {};
+    contractResults.forEach(result => {
+      newContractStates[result.orderId] = {
+        hasContract: result.hasContract,
+        contract: result.contract,
+        error: result.error
+      };
+    });
+    
+    setContractStates(newContractStates);
+  };
+
+  // Check OrderTasks for orders
+  const checkOrderTasksForOrders = async (ordersData) => {
+    const orderTasksChecks = ordersData.map(async (order) => {
+      try {
+        const result = await OrderTasksService.checkOrderTasks(order.id);
+        return {
+          orderId: order.id,
+          hasOrderTasks: result.success && result.hasOrderTasks,
+          orderTasks: result.data,
+          error: result.success ? null : result.error
+        };
+      } catch (error) {
+        console.error(`Error checking OrderTasks for order ${order.id}:`, error);
+        return {
+          orderId: order.id,
+          hasOrderTasks: false,
+          orderTasks: null,
+          error: "Failed to check OrderTasks status"
+        };
+      }
+    });
+
+    const results = await Promise.all(orderTasksChecks);
+    
+    // Convert array to object keyed by orderId
+    const orderTasksStatesMap = results.reduce((acc, result) => {
+      acc[result.orderId] = {
+        hasOrderTasks: result.hasOrderTasks,
+        orderTasks: result.orderTasks,
+        error: result.error
+      };
+      return acc;
+    }, {});
+    
+    setOrderTasksStates(orderTasksStatesMap);
   };
 
   // Retrieve user details from localStorage
@@ -38,7 +173,7 @@ const MyOrders = () => {
       try {
         // First fetch all orders
         const response = await axios.get(
-          `https://carepro-api20241118153443.azurewebsites.net/api/ClientOrders/clientUserId?clientUserId=${clientUserId}`
+          `${config.BASE_URL}/ClientOrders/clientUserId?clientUserId=${clientUserId}` // Using centralized API config
         );
         const fetchedOrders = response.data;
         setOrders(fetchedOrders);
@@ -91,6 +226,13 @@ const MyOrders = () => {
         );
         
         setOrdersWithReviews(ordersWithReviewData);
+        
+        // Check contracts and OrderTasks for all orders
+        await Promise.all([
+          checkContractsForOrders(ordersWithReviewData),
+          checkOrderTasksForOrders(ordersWithReviewData)
+        ]);
+        
       } catch (err) {
         setError("Failed to fetch orders.");
         console.error("Error fetching orders:", err);
@@ -140,6 +282,85 @@ const MyOrders = () => {
     );
   };
 
+  // Render contract status and button
+    const renderContractStatus = (order) => {
+    const orderId = order.id;
+    const contractState = contractStates[orderId] || {};
+    const orderTasksState = orderTasksStates[orderId] || {};
+    const isGenerating = generatingContract[orderId] || false;
+    
+    // Check requirements using updated service method
+    const requirements = ContractService.getContractRequirements(
+      order, 
+      contractState?.contract, 
+      orderTasksState?.hasOrderTasks
+    );
+    
+    if (contractState?.hasContract) {
+      return (
+        <div className="contract-status">
+          <span className="contract-exists">
+            ✅ Contract Generated
+          </span>
+        </div>
+      );
+    }
+    
+    if (requirements.canGenerate) {
+      return (
+        <div className="contract-actions">
+          <button
+            className={`generate-contract-btn ${isGenerating ? 'loading' : ''}`}
+            onClick={(e) => handleGenerateContract(e, orderId)}
+            disabled={isGenerating}
+          >
+            {isGenerating ? 'Generating...' : 'Generate Contract'}
+          </button>
+        </div>
+      );
+    }
+    
+    // Show what's missing with more specific messaging
+    const missing = requirements.missing;
+    if (missing.includes('Order task requirements')) {
+      return (
+        <div className="contract-status">
+          <span className="contract-unavailable">
+            📋 Tasks required - Click order to add
+          </span>
+        </div>
+      );
+    }
+    
+    if (missing.includes('Payment completion')) {
+      return (
+        <div className="contract-status">
+          <span className="contract-unavailable">
+            Payment required for contract
+          </span>
+        </div>
+      );
+    }
+    
+    if (missing.includes('Order is cancelled')) {
+      return (
+        <div className="contract-status">
+          <span className="contract-unavailable">
+            Cannot generate contract for cancelled order
+          </span>
+        </div>
+      );
+    }
+    
+    return (
+      <div className="contract-status">
+        <span className="contract-unavailable">
+          {missing.join(', ')}
+        </span>
+      </div>
+    );
+  };
+
 
   return (
     <div className="client-orders-page">
@@ -181,6 +402,7 @@ const MyOrders = () => {
                     </span>
                     {renderStarRating(order.calculatedRating, order.reviewCount)}
                   </div>
+                  {renderContractStatus(order)}
                 </div>
               </div>
             ))}

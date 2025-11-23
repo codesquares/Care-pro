@@ -5,29 +5,39 @@
  */
 import ClientPreferenceService from './clientPreferenceService';
 import ClientCareNeedsService from './clientCareNeedsService';
+import ComprehensivePreferencesService from './comprehensivePreferencesService';
+import config from "../config"; // Centralized API configuration
 
 class MatchingService {
   /**
-   * Get recommended caregivers for a client based on their preferences and care needs
+   * Get recommended caregivers for a client based on their comprehensive preferences
    * @param {string} clientId - The client's ID
    * @returns {Promise<Array>} Array of matched caregivers with match scores
    */
   static async getRecommendedCaregivers(clientId) {
     try {
-      // 1. Fetch client preferences
-      const clientPreferences = await ClientPreferenceService.getPreferences(clientId);
+      // 1. Fetch comprehensive client preferences (combines basic prefs + detailed care needs)
+      const matchingCriteria = await ComprehensivePreferencesService.getMatchingCriteria(clientId);
       
-      // 2. Fetch client care needs
-      const careNeeds = await ClientCareNeedsService.getCareNeeds();
-      
-      // 3. Fetch all available caregivers (in a real app, this would call an API endpoint)
+      // 2. Fetch all available caregivers
       const caregivers = await this.fetchAvailableCaregivers();
       
-      // 4. Generate matches with scores based on both preferences and needs
-      return this.matchCaregivers(caregivers, clientPreferences, careNeeds);
+      // 3. Generate matches with enhanced scoring based on comprehensive criteria
+      return this.matchCaregiversWithComprehensiveCriteria(caregivers, matchingCriteria);
     } catch (error) {
       console.error('Error in getRecommendedCaregivers:', error);
-      throw error;
+      
+      // Fallback to legacy method if comprehensive preferences fail
+      try {
+        console.log('Falling back to legacy matching method');
+        const clientPreferences = await ClientPreferenceService.getPreferences(clientId);
+        const careNeeds = await ClientCareNeedsService.getCareNeeds();
+        const caregivers = await this.fetchAvailableCaregivers();
+        return this.matchCaregivers(caregivers, clientPreferences, careNeeds);
+      } catch (fallbackError) {
+        console.error('Fallback matching also failed:', fallbackError);
+        throw fallbackError;
+      }
     }
   }
   
@@ -154,6 +164,187 @@ class MatchingService {
   }
   
   /**
+   * Enhanced matching using comprehensive client criteria
+   * @param {Array} caregivers - Available caregivers
+   * @param {Object} matchingCriteria - Comprehensive matching criteria
+   * @returns {Array} Matched caregivers with enhanced scores
+   */
+  static matchCaregiversWithComprehensiveCriteria(caregivers, matchingCriteria) {
+    return caregivers.map(caregiver => {
+      let matchScore = 0;
+      let maxPossibleScore = 0;
+      const matchDetails = [];
+
+      // 1. Location matching (25 points)
+      maxPossibleScore += 25;
+      if (matchingCriteria.location && caregiver.location) {
+        if (caregiver.location.toLowerCase().includes(matchingCriteria.location.toLowerCase())) {
+          matchScore += 25;
+          matchDetails.push('Location match');
+        }
+      }
+
+      // 2. Service category matching (30 points)
+      maxPossibleScore += 30;
+      if (matchingCriteria.serviceCategories && matchingCriteria.serviceCategories.length > 0) {
+        const matchedCategories = matchingCriteria.serviceCategories.filter(category => 
+          caregiver.specialties?.some(specialty => 
+            specialty.toLowerCase().includes(category.toLowerCase()) ||
+            category.toLowerCase().includes(specialty.toLowerCase())
+          )
+        );
+        
+        if (matchedCategories.length > 0) {
+          const categoryScore = Math.min(30, (matchedCategories.length / matchingCriteria.serviceCategories.length) * 30);
+          matchScore += categoryScore;
+          matchDetails.push(`Service categories: ${matchedCategories.join(', ')}`);
+        }
+      }
+
+      // 3. Experience level matching (20 points)
+      maxPossibleScore += 20;
+      if (matchingCriteria.caregiverRequirements?.experienceLevel) {
+        const requiredYears = this.extractYearsFromExperienceLevel(matchingCriteria.caregiverRequirements.experienceLevel);
+        if (caregiver.yearsExperience >= requiredYears) {
+          matchScore += 20;
+          matchDetails.push(`Experience: ${caregiver.yearsExperience}+ years`);
+        } else if (caregiver.yearsExperience >= requiredYears * 0.7) {
+          matchScore += 10; // Partial match
+          matchDetails.push(`Partial experience match`);
+        }
+      }
+
+      // 4. Certification matching (15 points)
+      maxPossibleScore += 15;
+      if (matchingCriteria.caregiverRequirements?.certifications?.length > 0) {
+        const matchedCerts = matchingCriteria.caregiverRequirements.certifications.filter(cert =>
+          caregiver.certifications?.some(caregiverCert =>
+            caregiverCert.toLowerCase().includes(cert.toLowerCase()) ||
+            cert.toLowerCase().includes(caregiverCert.toLowerCase())
+          )
+        );
+        
+        if (matchedCerts.length > 0) {
+          const certScore = Math.min(15, (matchedCerts.length / matchingCriteria.caregiverRequirements.certifications.length) * 15);
+          matchScore += certScore;
+          matchDetails.push(`Certifications: ${matchedCerts.length} matched`);
+        }
+      }
+
+      // 5. Language matching (10 points)
+      maxPossibleScore += 10;
+      if (matchingCriteria.caregiverRequirements?.preferredLanguages?.length > 0) {
+        const matchedLanguages = matchingCriteria.caregiverRequirements.preferredLanguages.filter(lang =>
+          caregiver.languages?.some(caregiverLang =>
+            caregiverLang.toLowerCase().includes(lang.toLowerCase())
+          )
+        );
+        
+        if (matchedLanguages.length > 0) {
+          matchScore += 10;
+          matchDetails.push(`Languages: ${matchedLanguages.join(', ')}`);
+        }
+      }
+
+      // 6. Medical needs compatibility (20 points)
+      maxPossibleScore += 20;
+      if (matchingCriteria.medicalNeeds?.primaryCondition) {
+        const conditionCompatible = caregiver.specialties?.some(specialty =>
+          specialty.toLowerCase().includes('medical') ||
+          specialty.toLowerCase().includes('nursing') ||
+          specialty.toLowerCase().includes('elder') ||
+          specialty.toLowerCase().includes('health')
+        );
+        
+        if (conditionCompatible) {
+          matchScore += 20;
+          matchDetails.push('Medical care experience');
+        }
+      }
+
+      // 7. Gender preference (5 points)
+      maxPossibleScore += 5;
+      if (matchingCriteria.caregiverRequirements?.gender) {
+        if (caregiver.gender?.toLowerCase() === matchingCriteria.caregiverRequirements.gender.toLowerCase()) {
+          matchScore += 5;
+          matchDetails.push('Gender preference match');
+        }
+      }
+
+      // 8. Budget compatibility (10 points)
+      maxPossibleScore += 10;
+      if (matchingCriteria.budget?.max) {
+        const maxBudget = parseFloat(matchingCriteria.budget.max);
+        if (caregiver.hourlyRate <= maxBudget) {
+          matchScore += 10;
+          matchDetails.push('Within budget');
+        } else if (caregiver.hourlyRate <= maxBudget * 1.1) {
+          matchScore += 5; // Slightly over budget
+          matchDetails.push('Close to budget');
+        }
+      }
+
+      // 9. Specific services matching (15 points)
+      maxPossibleScore += 15;
+      if (matchingCriteria.specificServices && Object.keys(matchingCriteria.specificServices).length > 0) {
+        let specificServiceMatches = 0;
+        let totalSpecificServices = 0;
+        
+        Object.values(matchingCriteria.specificServices).forEach(services => {
+          totalSpecificServices += services.length;
+          services.forEach(service => {
+            if (caregiver.specialties?.some(specialty =>
+              specialty.toLowerCase().includes(service.toLowerCase()) ||
+              service.toLowerCase().includes(specialty.toLowerCase())
+            )) {
+              specificServiceMatches++;
+            }
+          });
+        });
+        
+        if (specificServiceMatches > 0 && totalSpecificServices > 0) {
+          const serviceScore = Math.min(15, (specificServiceMatches / totalSpecificServices) * 15);
+          matchScore += serviceScore;
+          matchDetails.push(`Specific services: ${specificServiceMatches}/${totalSpecificServices} matched`);
+        }
+      }
+
+      // Calculate final match percentage
+      const matchPercentage = maxPossibleScore > 0 ? Math.round((matchScore / maxPossibleScore) * 100) : 0;
+
+      return {
+        ...caregiver,
+        matchScore: matchPercentage,
+        matchDetails,
+        rawScore: matchScore,
+        maxPossibleScore,
+        comprehensiveMatch: true // Flag to indicate this used comprehensive matching
+      };
+    })
+    .filter(caregiver => caregiver.matchScore > 0) // Only return caregivers with some match
+    .sort((a, b) => b.matchScore - a.matchScore); // Sort by match score descending
+  }
+
+  /**
+   * Extract years from experience level string
+   * @param {string} experienceLevel - Experience level string
+   * @returns {number} Minimum years of experience
+   */
+  static extractYearsFromExperienceLevel(experienceLevel) {
+    if (!experienceLevel) return 0;
+    
+    const levelMap = {
+      'Entry Level (0-1 years)': 0,
+      'Some Experience (1-3 years)': 1,
+      'Experienced (3-5 years)': 3,
+      'Very Experienced (5-10 years)': 5,
+      'Expert (10+ years)': 10
+    };
+    
+    return levelMap[experienceLevel] || 0;
+  }
+
+  /**
    * Match gigs to client preferences and needs
    * @param {Array} gigs - Available gigs
    * @param {Object} preferences - Client preferences
@@ -278,7 +469,7 @@ class MatchingService {
         return this.getMockCaregivers();
       }
       
-      const API_URL = 'https://carepro-api20241118153443.azurewebsites.net/api/Caregivers';
+      const API_URL = `${config.BASE_URL}/Caregivers`; // Using centralized API config
       
       // Use timeout for better UX
       const controller = new AbortController();
@@ -296,7 +487,11 @@ class MatchingService {
       clearTimeout(timeoutId);
       
       if (!response.ok) {
-        console.warn(`API returned ${response.status} when fetching caregivers`);
+        if (response.status === 404) {
+          console.log('Caregivers endpoint not available, using mock data');
+        } else {
+          console.warn(`API returned ${response.status} when fetching caregivers`);
+        }
         return this.getMockCaregivers();
       }
       
@@ -322,7 +517,13 @@ class MatchingService {
           ['English']
       }));
     } catch (error) {
-      console.error('Error fetching caregivers:', error);
+      if (error.name === 'AbortError') {
+        console.log('Caregivers API request timed out, using mock data');
+      } else if (error.message.includes('fetch')) {
+        console.log('Caregivers API not available, using mock data');
+      } else {
+        console.error('Error fetching caregivers:', error);
+      }
       return this.getMockCaregivers();
     }
   }

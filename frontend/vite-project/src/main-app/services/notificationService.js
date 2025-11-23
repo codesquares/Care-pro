@@ -27,7 +27,7 @@ const generateTitle = (type, senderId) => {
     case 'VerificationUpdate':
       return `Identity Verification Update`;
     case 'NewGig':
-      return `New gig created by user ${senderId}`;
+      return `🛠️ New gig created by you`;
     default:
       return `New notification`;
   }
@@ -47,7 +47,7 @@ const generateContent = (type, senderId) => {
     case 'VerificationUpdate':
       return `Your identity verification status has been updated.`;
     case 'NewGig':
-      return `User ${senderId} posted a new gig.`;
+      return `You have successfully posted a new gig.`;
     default:
       return `You have a new notification from user ${senderId}.`;
   }
@@ -113,7 +113,15 @@ export const markAsRead = async (id) => {
 
 export const markAllAsRead = async () => {
   try {
-    return await axios.put(`${API_URL}/Notifications/read-all`, null, {
+    // Get user ID from localStorage
+    const userDetails = JSON.parse(localStorage.getItem("userDetails") || "{}");
+    const userId = userDetails.id;
+    
+    if (!userId) {
+      throw new Error("User ID not found in localStorage");
+    }
+    
+    return await axios.put(`${API_URL}/Notifications/read-all?userId=${userId}`, null, {
       headers: authHeaders()
     });
   } catch (err) {

@@ -55,7 +55,7 @@ window.Dojah = {
 // Initialize Dojah with basic config
 window.Dojah.init({
     appId: "686c915878a2b53b2bdb5631",
-    widgetId: "68732f5e97202a07f66bc89a",
+    widgetId: "69048546a4b1ea078950d7b9",
     debug: true,
     webhook: true,
     stages: ["government-data", "selfie"],

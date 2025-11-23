@@ -8,7 +8,7 @@ import CaregiverProcess from "../components/LandingPage/CaregiverProcess";
 import WhyCarepro from "../components/WhyCare-Pro";
 import WaitlistModal from "../components/WaitListModal";
 import { useAuth } from "../main-app/context/AuthContext";
-
+import "./BeomeCaregiver.scss";
 const BookCaregiver = () => {
   const [isModalOpen, setIsModalOpen] = useState(false);
   const { isAuthenticated, user } = useAuth();

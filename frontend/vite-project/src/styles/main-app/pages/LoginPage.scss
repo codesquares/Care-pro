@@ -1,14 +1,18 @@
 .login-wrapper {
   display: flex;
-  height: 100vh;
+  min-height: 100vh;
   font-family: "Inter", sans-serif;
+  align-items: stretch;
 
   .login-left {
-    flex: 0.5;
-    background: linear-gradient(to bottom, #0070ba, #005fa3);
+    flex: 0.4;
+    background: linear-gradient(180deg, #119CD4 0%, #05668D 100%);
     padding: 2rem;
     display: flex;
     flex-direction: column;
+    min-height: 100%;
+    align-self: stretch;
+    
 
     .login-logo-section {
       display: flex;
@@ -40,6 +44,7 @@
     display: flex;
     flex-direction: column;
     justify-content: center;
+    align-self: stretch;
     padding: 3rem 6rem;
     overflow: visible;
 
@@ -88,6 +93,8 @@
     form {
       display: flex;
       flex-direction: column;
+      width: 100%;
+      max-width: 460px;
 
       label {
         font-weight: 500;
@@ -96,6 +103,7 @@
 
       input {
         width: 100%;
+        max-width: 100%;
         padding: 0.8rem;
         margin-bottom: 1.5rem;
         border: 1px solid #ccc;
@@ -105,10 +113,12 @@
 
       .auth-password-input {
         position: relative;
+        width: 100%;
         margin-bottom: 1.5rem;
 
         input {
           width: 100%;
+          max-width: 100%;
           padding: 0.8rem 3rem 0.8rem 0.8rem;
           margin-bottom: 0;
           border: 1px solid #ccc;
@@ -241,6 +251,68 @@
 
       form .password-input .password-toggle {
         right: 10px;
+      }
+    }
+  }
+}
+
+@media (prefers-color-scheme: dark) {
+  .login-wrapper {
+    background: linear-gradient(180deg, #0f172a 0%, #1e293b 100%);
+
+    .login-right {
+      color: #e2e8f0;
+
+      h2 {
+        color: #e0f2ff;
+      }
+
+      .login-message {
+        background: rgba(14, 165, 233, 0.15);
+        border-color: rgba(14, 165, 233, 0.35);
+
+        p {
+          color: #bae6fd;
+        }
+      }
+
+      label,
+      .signup-text,
+      .terms,
+      .divider {
+        color: #cbd5f5;
+      }
+
+      input {
+        background: rgba(15, 23, 42, 0.45);
+        border-color: rgba(148, 163, 184, 0.5);
+        color: #e2e8f0;
+
+        &::placeholder {
+          color: #94a3b8;
+        }
+      }
+
+      .auth-password-input .password-toggle {
+        color: #cbd5f5;
+
+        &:hover {
+          color: #38bdf8;
+        }
+
+        &:focus {
+          outline-color: #0ea5e9;
+        }
+      }
+    }
+
+    .btn-primary {
+      background: #0ea5e9;
+      color: #0f172a;
+      box-shadow: 0 8px 20px rgba(14, 165, 233, 0.3);
+
+      &:hover {
+        box-shadow: 0 10px 24px rgba(14, 165, 233, 0.45);
       }
     }
   }

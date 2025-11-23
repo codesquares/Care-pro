@@ -177,11 +177,34 @@ export const AuthProvider = ({ children }) => {
         }
     };
 
+    const updateUser = (updates) => {
+        try {
+            const currentUser = JSON.parse(localStorage.getItem('userDetails') || '{}');
+            const updatedUser = { ...currentUser, ...updates };
+            
+            localStorage.setItem('userDetails', JSON.stringify(updatedUser));
+            setUser(updatedUser);
+            
+            // Broadcast user update to other tabs
+            try {
+                window.postMessage({ 
+                    type: 'USER_UPDATE', 
+                    userData: updatedUser 
+                }, window.location.origin);
+            } catch (error) {
+                console.warn('Cross-tab communication failed:', error);
+            }
+        } catch (error) {
+            console.error('Update user error:', error);
+        }
+    };
+
     return (
         <AuthContext.Provider value={{ 
             user, 
             isAuthenticated, 
             login, 
+            updateUser,
             handleLogout,
             loading,
             userRole,

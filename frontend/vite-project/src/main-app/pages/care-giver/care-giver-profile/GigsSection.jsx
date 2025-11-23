@@ -1,10 +1,12 @@
 import { useEffect, useState, useMemo } from "react";
 import { useNavigate } from "react-router-dom";
+import config from "../../../config"; // Import centralized config for API URLs
 
 import clock from "../../../../assets/main-app/clock.png"; // Ensure you have an empty gigs image in your assets
 import Toast from "../../../components/toast/Toast";
 import useToast from "../../../hooks/useToast";
 import { useGigEdit } from "../../../contexts/GigEditContext";
+import { useCaregiverStatus } from "../../../contexts/CaregiverStatusContext";
 import "./gigs-section.css";
 
 const GigsSection = () => {
@@ -19,11 +21,16 @@ const GigsSection = () => {
   const basePath = "/app/caregiver";
   const { toasts, showSuccess, showError, removeToast } = useToast();
   const { populateFromGig, resetForm } = useGigEdit();
+  const { canPublishGigs, isVerified, isQualified, hasCertificates } = useCaregiverStatus();
 
   // Debug: Check if we have the context functions
   console.log('🔍 DEBUG - GigsSection context check:', {
     hasPopulateFromGig: typeof populateFromGig,
-    hasResetForm: typeof resetForm
+    hasResetForm: typeof resetForm,
+    canPublishGigs,
+    isVerified,
+    isQualified,
+    hasCertificates
   });
 
   const handleNavigateToCreateGig = () => {
@@ -52,9 +59,19 @@ const GigsSection = () => {
   };
 
   const handlePublishGig = async (gig) => {
-    // Check if we can publish (less than 2 active gigs)
+    // Check if we can publish (less than 2 active gigs AND caregiver eligibility)
     if (!canPublishNewGig) {
-      showError('You can only have 2 active gigs at a time. Please pause one of your active gigs first to publish this one.');
+      if (activeGigs.length >= 2) {
+        showError('You can only have 2 active gigs at a time. Please pause one of your active gigs first to publish this one.');
+      } else if (!canPublishGigs) {
+        // Build specific eligibility error message
+        const missingRequirements = [];
+        if (!isVerified) missingRequirements.push('Complete identity verification');
+        if (!isQualified) missingRequirements.push('Pass qualification assessment');
+        if (!hasCertificates) missingRequirements.push('Upload at least one certificate');
+        
+        showError(`To publish gigs, you need to: ${missingRequirements.join(', ')}`);
+      }
       return;
     }
 
@@ -68,7 +85,7 @@ const GigsSection = () => {
       }
 
       const response = await fetch(
-        `https://carepro-api20241118153443.azurewebsites.net/api/Gigs/UpdateGigStatusToPause/gigId?gigId=${gig.id}`,
+        `${config.BASE_URL}/Gigs/UpdateGigStatusToPause/gigId?gigId=${gig.id}`, // Using centralized API config
         {
           method: 'PUT',
           headers: {
@@ -121,7 +138,7 @@ const GigsSection = () => {
       }
 
       const response = await fetch(
-        `https://carepro-api20241118153443.azurewebsites.net/api/Gigs/UpdateGigStatusToPause/gigId?gigId=${gig.id}`,
+        `${config.BASE_URL}/Gigs/UpdateGigStatusToPause/gigId?gigId=${gig.id}`, // Using centralized API config
         {
           method: 'PUT',
           headers: {
@@ -178,7 +195,7 @@ const GigsSection = () => {
       }
 
       const response = await fetch(
-        `https://carepro-api20241118153443.azurewebsites.net/api/Gigs/UpdateGigStatusToPause/gigId?gigId=${gig.id}`,
+        `${config.BASE_URL}/Gigs/UpdateGigStatusToPause/gigId?gigId=${gig.id}`, // Using centralized API config
         {
           method: 'PUT',
           headers: {
@@ -223,7 +240,10 @@ const GigsSection = () => {
   }, [gigs]);
 
   // Check if user can publish new gigs (max 2 active gigs allowed)
-  const canPublishNewGig = useMemo(() => activeGigs.length < 2, [activeGigs]);
+  const canPublishNewGig = useMemo(() => 
+    activeGigs.length < 2 && canPublishGigs, 
+    [activeGigs, canPublishGigs]
+  );
 
   useEffect(() => {
     const fetchGigs = async () => {
@@ -234,7 +254,7 @@ const GigsSection = () => {
         }
 
         const response = await fetch(
-          `https://carepro-api20241118153443.azurewebsites.net/api/Gigs/caregiver/caregiverId?caregiverId=${userDetails.id}`
+          `${config.BASE_URL}/Gigs/caregiver/caregiverId?caregiverId=${userDetails.id}` // Using centralized API config
         );
         if (!response.ok) {
           throw new Error("Failed to fetch gigs data.");
@@ -313,13 +333,35 @@ const GigsSection = () => {
         {/* Active Gigs Limit Notice */}
         {activeTab === "paused" && !canPublishNewGig && (
           <div className="gig-limit-notice">
-            <p>⚠️ You have reached the maximum of 2 active gigs. Pause an active gig to publish more.</p>
+            {activeGigs.length >= 2 ? (
+              <p>⚠️ You have reached the maximum of 2 active gigs. Pause an active gig to publish more.</p>
+            ) : (
+              <div>
+                <p>⚠️ To publish gigs, you need to complete the following requirements:</p>
+                <ul className="eligibility-requirements">
+                  <li className={isVerified ? 'completed' : 'pending'}>
+                    {isVerified ? '✅' : '❌'} Complete identity verification
+                  </li>
+                  <li className={isQualified ? 'completed' : 'pending'}>
+                    {isQualified ? '✅' : '❌'} Pass qualification assessment
+                  </li>
+                  <li className={hasCertificates ? 'completed' : 'pending'}>
+                    {hasCertificates ? '✅' : '❌'} Upload at least one certificate
+                  </li>
+                </ul>
+              </div>
+            )}
           </div>
         )}
 
         {/* Active Tab Content */}
           {activeTab === "active" && activeGigs.map((gig) => (
-            <div key={gig.id} className="caregiver-gig-card">
+            <div 
+              key={gig.id} 
+              className="caregiver-gig-card"
+              onClick={() => navigate(`/service/${gig.id}`)}
+              style={{ cursor: 'pointer' }}
+            >
               <img
                 src={gig.image1 || "https://via.placeholder.com/300x160"}
                 alt={gig.title}
@@ -331,20 +373,29 @@ const GigsSection = () => {
                 <div className="caregiver-gig-actions">
                   <button 
                     className="caregiver-gig-action-btn caregiver-edit"
-                    onClick={() => handleEditGig(gig)}
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      handleEditGig(gig);
+                    }}
                   >
                     Edit
                   </button>
                   <button 
                     className="caregiver-gig-action-btn caregiver-pause"
-                    onClick={() => handlePauseGig(gig)}
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      handlePauseGig(gig);
+                    }}
                     disabled={pausingGigs.has(gig.id)}
                   >
                     {pausingGigs.has(gig.id) ? 'Pausing...' : 'Pause'}
                   </button>
                   <button 
                     className="caregiver-gig-action-btn caregiver-delete"
-                    onClick={() => handleDeleteGig(gig)}
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      handleDeleteGig(gig);
+                    }}
                     disabled={deletingGigs.has(gig.id)}
                   >
                     {deletingGigs.has(gig.id) ? 'Deleting...' : 'Delete'}
@@ -356,7 +407,12 @@ const GigsSection = () => {
 
           {/* Paused Tab Content */}
           {activeTab === "paused" && draftGigs.map((gig) => (
-            <div key={gig.id} className="caregiver-gig-card">
+            <div 
+              key={gig.id} 
+              className="caregiver-gig-card"
+              onClick={() => navigate(`/service/${gig.id}`)}
+              style={{ cursor: 'pointer' }}
+            >
               <img
                 src={gig.image1 || "https://via.placeholder.com/300x160"}
                 alt={gig.title}
@@ -368,15 +424,26 @@ const GigsSection = () => {
                 <div className="caregiver-gig-actions">
                   <button 
                     className="caregiver-gig-action-btn caregiver-edit"
-                    onClick={() => handleEditGig(gig)}
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      handleEditGig(gig);
+                    }}
                   >
                     Edit
                   </button>
                   <button 
                     className={`caregiver-gig-action-btn caregiver-publish ${!canPublishNewGig ? 'disabled' : ''}`}
-                    onClick={() => handlePublishGig(gig)}
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      handlePublishGig(gig);
+                    }}
                     disabled={publishingGigs.has(gig.id) || !canPublishNewGig}
-                    title={!canPublishNewGig ? 'You can only have 2 active gigs. Pause an active gig first.' : ''}
+                    title={!canPublishNewGig ? 
+                      (activeGigs.length >= 2 ? 
+                        'You can only have 2 active gigs. Pause an active gig first.' : 
+                        'Complete verification, assessment, and upload certificates to publish gigs.'
+                      ) : ''
+                    }
                   >
                     {publishingGigs.has(gig.id) ? 'Publishing...' : 'Publish'}
                   </button>
