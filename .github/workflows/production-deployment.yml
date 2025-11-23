@@ -90,17 +90,13 @@ jobs:
 
       - name: 🔍 Verify Staging Deployment Success
         run: |
-          echo "🔍 Verifying staging deployment is healthy before production..."
-          # Check staging health endpoints
-          curl -f https://api.oncarepro.com/swagger || {
-            echo "❌ Staging API is not healthy - blocking production deployment"
-            exit 1
-          }
+          echo "🔍 Verifying staging frontend is healthy before production..."
+          # Check staging frontend only (backend deployed separately)
           curl -f http://carepro-frontend-staging.s3-website-us-east-1.amazonaws.com || {
             echo "❌ Staging frontend is not healthy - blocking production deployment"  
             exit 1
           }
-          echo "✅ Staging environment is healthy"
+          echo "✅ Staging frontend is healthy"
 
   # 🧪 PRODUCTION FRONTEND TESTS AND BUILD
   frontend-production-build:
@@ -349,101 +345,19 @@ jobs:
             --paths "/*" || echo "⚠️ CloudFront invalidation failed - continuing"
           echo "✅ CloudFront cache invalidation initiated"
 
-      - name: 🔥 Update Production App Runner Service
-        env:
-          ECR_REGISTRY: ${{ steps.login-ecr.outputs.registry }}
-          IMAGE_TAG: ${{ github.sha }}
-        run: |
-          echo "🔥 Updating PRODUCTION App Runner service..."
-          NEW_IMAGE_URI="$ECR_REGISTRY/$ECR_REPOSITORY_NODEAPI:$IMAGE_TAG"
-          
-          # Get current service configuration
-          aws apprunner describe-service \
-            --service-arn $(aws apprunner list-services --query "ServiceSummaryList[?ServiceName=='$APP_RUNNER_SERVICE_NAME'].ServiceArn" --output text) \
-            --query 'Service.SourceConfiguration' > current-config.json
-          
-          # Create backup of current config
-          cp current-config.json production-config-backup.json
-          
-          # Update the image URI in the configuration
-          jq --arg new_image "$NEW_IMAGE_URI" '.ImageRepository.ImageIdentifier = $new_image' current-config.json > updated-config.json
-          
-          # Update the service
-          aws apprunner update-service \
-            --service-arn $(aws apprunner list-services --query "ServiceSummaryList[?ServiceName=='$APP_RUNNER_SERVICE_NAME'].ServiceArn" --output text) \
-            --source-configuration file://updated-config.json
-          
-          echo "✅ Production App Runner service update initiated"
+      # NODE-API APP RUNNER DEPLOYMENT REMOVED: No longer using App Runner for production
+      # The API is deployed separately via Azure App Service
 
-      - name: ⏳ Wait for Production Deployment
+      - name: 🩺 Production Frontend Health Check
         run: |
-          echo "⏳ Waiting for PRODUCTION deployment to complete..."
-          SERVICE_ARN=$(aws apprunner list-services --query "ServiceSummaryList[?ServiceName=='$APP_RUNNER_SERVICE_NAME'].ServiceArn" --output text)
+          echo "🩺 Performing PRODUCTION frontend health check..."
           
-          echo "📍 Production Service ARN: $SERVICE_ARN"
+          # Wait for CloudFront invalidation to propagate
+          echo "⏳ Waiting 30 seconds for CloudFront..."
+          sleep 30
           
-          # Poll the service status until it's running
-          MAX_ATTEMPTS=40
-          ATTEMPT=1
-          
-          while [ $ATTEMPT -le $MAX_ATTEMPTS ]; do
-            echo "🔄 Attempt $ATTEMPT/$MAX_ATTEMPTS - Checking production service status..."
-            
-            STATUS=$(aws apprunner describe-service \
-              --service-arn "$SERVICE_ARN" \
-              --query 'Service.Status' \
-              --output text)
-            
-            echo "📊 Current status: $STATUS"
-            
-            if [ "$STATUS" = "RUNNING" ]; then
-              echo "✅ Production App Runner service is running and ready!"
-              break
-            elif [ "$STATUS" = "OPERATION_IN_PROGRESS" ]; then
-              echo "⏳ Production deployment in progress, waiting 45 seconds..."
-              sleep 45
-            else
-              echo "⚠️ Unexpected status: $STATUS"
-              sleep 30
-            fi
-            
-            ATTEMPT=$((ATTEMPT + 1))
-          done
-          
-          if [ $ATTEMPT -gt $MAX_ATTEMPTS ]; then
-            echo "❌ Timeout waiting for production deployment"
-            echo "🚨 MANUAL INTERVENTION REQUIRED"
-            exit 1
-          fi
-          
-          echo "✅ Production deployment completed successfully"
-
-      - name: 🩺 Comprehensive Production Health Checks
-        run: |
-          echo "🩺 Performing comprehensive PRODUCTION health checks..."
-          
-          # Wait a bit for services to fully initialize
-          echo "⏳ Waiting 60 seconds for services to initialize..."
-          sleep 60
-          
-          # Check production API health
-          echo "🔍 Checking production Node-API health..."
-          for i in {1..5}; do
-            if curl -f https://api.oncarepro.com/swagger; then
-              echo "✅ Production API health check passed (attempt $i)"
-              break
-            else
-              echo "⚠️ Production API health check failed (attempt $i/5)"
-              if [ $i -eq 5 ]; then
-                echo "❌ PRODUCTION API HEALTH CHECK FAILED - ROLLBACK MAY BE NEEDED"
-                exit 1
-              fi
-              sleep 30
-            fi
-          done
-          
-          # Check production frontend
-          echo "🔍 Checking production frontend availability..."
+          # Check production frontend only (backend deployed separately)
+          echo "🔍 Checking production frontend..."
           for i in {1..3}; do
             if curl -f https://oncarepro.com; then
               echo "✅ Production frontend health check passed (attempt $i)"
@@ -458,7 +372,8 @@ jobs:
             fi
           done
           
-          echo "✅ All production health checks passed"
+          echo "✅ Production frontend is healthy"
+
 
       - name: 📊 Production Deployment Summary
         run: |
