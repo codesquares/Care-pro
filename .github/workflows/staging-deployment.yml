@@ -138,30 +138,14 @@ jobs:
           path: frontend/vite-project/dist/
           retention-days: 7
 
-  # 🔥 NODE-API REPLACEMENT (Frontend Only)
-  node-api-staging-tests:
-    name: 🔥 Node-API Tests & Build
-    runs-on: ubuntu-latest
-    timeout-minutes: 15
-    needs: security-quality-gates
 
-    steps:
-      - name: 📢 Node-API Deprecated Notice
-        run: |
-          echo "🚨 NODE-API DEPLOYMENT DEPRECATED"
-          echo "================================="
-          echo "✅ Node-API is no longer deployed to AppRunner"
-          echo "✅ Main backend now handles all API calls"
-          echo "✅ This job exists only for branch protection compatibility"
-          echo "🔧 Update your branch protection rules to remove this requirement"
-          exit 0
 
-  # 🐳 DOCKER BUILD AND PUSH
+  # 🐳 DOCKER BUILD AND PUSH (Frontend Only)
   docker-build-push:
     name: 🐳 Docker Build & Push to ECR
     runs-on: ubuntu-latest
     timeout-minutes: 30
-    needs: [frontend-staging-tests, node-api-staging-tests]
+    needs: [frontend-staging-tests]
     if: ${{ success() || github.event.inputs.force_deploy == 'true' }}
 
     steps:
@@ -331,12 +315,11 @@ jobs:
             
             🌐 Staging URLs:
             • Frontend: http://carepro-frontend-staging.s3-website-us-east-1.amazonaws.com
-            • Node-API: https://budmfp9jxr.us-east-1.awsapprunner.com
+            • Backend API: Managed separately (Azure App Service)
             
             ✅ Services Status:
             • Frontend: Deployed to S3
-            • Node-API: Deployed to App Runner
-            • Docker Images: Pushed to ECR
+            • Docker Image: Pushed to ECR
             
             🔗 GitHub Actions: https://github.com/${{ github.repository }}/actions/runs/${{ github.run_id }}
           to: ${{ secrets.NOTIFICATION_EMAIL }}
@@ -345,7 +328,7 @@ jobs:
   notify-failure:
     name: 📧 Failure Notification
     runs-on: ubuntu-latest
-    needs: [security-quality-gates, frontend-staging-tests, node-api-staging-tests, docker-build-push, deploy-staging]
+    needs: [security-quality-gates, frontend-staging-tests, docker-build-push, deploy-staging]
     if: ${{ always() && (failure() || cancelled()) }}
 
     steps:
