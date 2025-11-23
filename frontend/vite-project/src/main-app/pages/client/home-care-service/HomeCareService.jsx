@@ -648,7 +648,7 @@ const HomeCareService = () => {
             </div>
             <p className="review-text">
               "I can't thank {caregiverFirstName || caregiverName} enough for the care and kindness provided to my father.
-              Their attention to detail and genuine concern for his well-being went above and beyond expectations..."
+              Their attention to detail and concern for his well-being went above and beyond expectations..."
             </p>
           </div>
 
