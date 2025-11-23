@@ -22,7 +22,7 @@ __tests__/
 *.test.js
 *.spec.js
 **/testingUtils.js
-setupTests.js
+
 *setup*test*
 *test*setup*
 setup-testing-environment.*

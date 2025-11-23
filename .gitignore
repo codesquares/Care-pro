@@ -58,7 +58,7 @@ node_modules/
 # Setup and testing files
 *setup*test*
 *test*setup*
-setupTests.js
+
 setup-testing-environment.*
 
 # Optional npm cache directory
