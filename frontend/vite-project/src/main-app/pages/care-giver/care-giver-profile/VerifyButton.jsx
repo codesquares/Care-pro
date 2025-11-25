@@ -19,8 +19,13 @@ const VerifyButton = ({ verificationStatus }) => {
     navigate("/app/caregiver/assessment");
   };
 
+  // Normalize status to lowercase for comparison
+  const normalizedStatus = verificationStatus?.toLowerCase?.() || verificationStatus || '';
+  
+  console.log('VerifyButton - received status:', verificationStatus, 'normalized:', normalizedStatus);
+
   // Show the button with text processing verification if verification is pending
-  if (verificationStatus === "pending") {
+  if (normalizedStatus === "pending") {
     return (
       <button className="verify-button verify-button-pending" disabled>
         Processing Verification...
@@ -30,8 +35,13 @@ const VerifyButton = ({ verificationStatus }) => {
 
   // Handle different verification statuses with enhanced logic
   const getButtonContent = () => {
-    // Handle the main statuses: "successful", "completed", "success", "Pending", "pending", "failed", "Failed"
-    if (verificationStatus === "successful" || verificationStatus === "completed" || verificationStatus === "success") {
+    // Handle the main statuses: "successful", "completed", "success", "verified"
+    if (
+      normalizedStatus === "successful" || 
+      normalizedStatus === "completed" || 
+      normalizedStatus === "success" || 
+      normalizedStatus === "verified"
+    ) {
       return {
         text: "Start Assessment",
         className: "verify-button verify-button-success",
@@ -41,7 +51,7 @@ const VerifyButton = ({ verificationStatus }) => {
       };
     }
     
-    if (verificationStatus === "Pending" || verificationStatus === "pending") {
+    if (normalizedStatus === "pending") {
       return {
         text: "Verification Pending...",
         className: "verify-button verify-button-pending",
@@ -49,7 +59,7 @@ const VerifyButton = ({ verificationStatus }) => {
       };
     }
     
-    if (verificationStatus === "failed" || verificationStatus === "Failed") {
+    if (normalizedStatus === "failed") {
       return {
         text: "Retry Verification",
         className: "verify-button verify-button-retry",
