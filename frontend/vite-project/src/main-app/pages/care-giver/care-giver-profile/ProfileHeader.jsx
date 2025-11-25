@@ -15,6 +15,54 @@ import config from "../../../config"; // Import centralized config for API URLs
 import { generateUsername } from "../../../utils/usernameGenerator";
 import { useAuth } from "../../../context/AuthContext";
 
+/**
+ * Normalize verification status from API response
+ * Handles various status formats and returns a consistent object
+ */
+const normalizeVerificationStatus = (status) => {
+  // If status is null or undefined, return not verified
+  if (!status) {
+    return {
+      verified: false,
+      verificationStatus: 'not_verified',
+      isVerified: false,
+      hasVerification: false
+    };
+  }
+
+  // Extract status string from object or use as-is if it's a string
+  let statusString = '';
+  if (typeof status === 'string') {
+    statusString = status.toLowerCase();
+  } else if (typeof status === 'object') {
+    // Check various possible property names
+    statusString = (
+      status.verificationStatus || 
+      status.status || 
+      status.verificationType || 
+      ''
+    ).toString().toLowerCase();
+  }
+
+  // Check if verification is successful (multiple possible values)
+  const isVerified = 
+    statusString === 'success' ||
+    statusString === 'verified' ||
+    statusString === 'completed' ||
+    statusString === 'successful' ||
+    status?.verified === true ||
+    status?.isVerified === true;
+
+  // Return normalized status object
+  return {
+    ...status, // Preserve original properties
+    verified: isVerified,
+    verificationStatus: isVerified ? 'completed' : statusString || 'not_verified',
+    isVerified: isVerified,
+    hasVerification: isVerified || statusString === 'pending'
+  };
+};
+
 const ProfileHeader = () => {
   const { updateUser } = useAuth();
   const [profile, setProfile] = useState({
@@ -386,7 +434,12 @@ const ProfileHeader = () => {
         if (token) {
           verificationStatus = await getDojahStatus(userDetails.id, 'Caregiver', token);
           console.log("Fetched verification status from dojahService:", verificationStatus);
-          setStatusFromApi(verificationStatus);
+          
+          // Normalize verification status to handle different formats
+          const normalizedStatus = normalizeVerificationStatus(verificationStatus);
+          console.log("Normalized verification status:", normalizedStatus);
+          
+          setStatusFromApi(normalizedStatus);
         } else {
           console.warn("No auth token available for verification status check");
         }
@@ -406,7 +459,7 @@ const ProfileHeader = () => {
         console.log("Setting default unverified state due to error");
         setStatusFromApi({
           verified: false,
-          verificationStatus: 'error',
+          verificationStatus: 'not_verified',
           message: 'Could not fetch verification status',
           hasVerification: false
         });
@@ -622,14 +675,14 @@ const ProfileHeader = () => {
           
         </div>
        <div className="caregiver-profile-actions">
-          {statusFromApi?.verificationStatus === "completed" || statusFromApi?.isVerified === true ? (
+          {statusFromApi?.verified === true || statusFromApi?.isVerified === true ? (
             <AssessmentButton 
-              verificationStatus={statusFromApi?.verificationStatus || "completed"} 
+              verificationStatus={statusFromApi} 
               userId={userDetails?.id} 
             />
           ) : (
             <VerifyButton 
-              verificationStatus={statusFromApi} 
+              verificationStatus={statusFromApi?.verificationStatus || 'not_verified'} 
               userId={userDetails?.id}
             />
           )}
