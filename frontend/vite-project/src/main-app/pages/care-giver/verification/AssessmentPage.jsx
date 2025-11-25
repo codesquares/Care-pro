@@ -6,9 +6,11 @@ import "./mobile-assessment.css";
 import assessmentService from "../../../services/assessmentService";
 import trainingMaterialsService from "../../../services/trainingMaterialsService";
 import { Helmet } from "react-helmet-async";
+import { useCaregiverStatus } from "../../../contexts/CaregiverStatusContext";
 
 const AssessmentPage = () => {
   const navigate = useNavigate();
+  const { refreshStatusData } = useCaregiverStatus();
   const [currentStep, setCurrentStep] = useState("welcome"); // welcome, instructions, questions, thank-you
   const [currentQuestion, setCurrentQuestion] = useState(0);
   const [answers, setAnswers] = useState({});
@@ -418,6 +420,13 @@ const AssessmentPage = () => {
         currentUserDetails.assessmentCompleted = true;
         currentUserDetails.isQualified = assessmentResult.isPassing;
         localStorage.setItem('userDetails', JSON.stringify(currentUserDetails));
+        
+        // Refresh the caregiver status context to update publishing eligibility
+        console.log('🔄 Assessment completed, refreshing caregiver status context...');
+        if (refreshStatusData) {
+          await refreshStatusData();
+          console.log('✅ Caregiver status context refreshed after assessment');
+        }
         
         // Set results for display
         setSuccess(
