@@ -39,8 +39,13 @@ const config = {
     BASE_URL: resolveApiUrl(),
     // Alternate URL for WebSocket/SignalR connections - domain only without /api
     FALLBACK_URL: (() => {
+        // First check if explicit WebSocket URL is provided
+        if (import.meta.env.VITE_WEBSOCKET_URL) {
+            return import.meta.env.VITE_WEBSOCKET_URL;
+        }
+        // Otherwise derive from base URL by removing /api suffix only
         const baseUrl = resolveApiUrl();
-        return baseUrl ? baseUrl.replace('/api', '').replace('https://api.', 'https://') : null;
+        return baseUrl ? baseUrl.replace('/api', '') : null;
     })(),
 
     // Environment-specific URLs
