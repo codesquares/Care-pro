@@ -5,6 +5,30 @@ import { toast } from "react-toastify";
 import config from "../../../config";
 import { useCaregiverStatus } from "../../../contexts/CaregiverStatusContext";
 
+// Approved certificate types for caregivers
+const APPROVED_CERTIFICATES = [
+  { 
+    name: 'West African Senior School Certificate Examination (WASSCE)', 
+    issuer: 'West African Examinations Council (WAEC)',
+    shortName: 'WASSCE'
+  },
+  { 
+    name: 'National Examination Council (NECO) Senior School Certificate Examination (SSCE)', 
+    issuer: 'National Examination Council (NECO)',
+    shortName: 'NECO SSCE'
+  },
+  { 
+    name: 'National Business and Technical Examinations Board (NABTEB)', 
+    issuer: 'National Business and Technical Examinations Board (NABTEB)',
+    shortName: 'NABTEB'
+  },
+  { 
+    name: 'National Youth Service Corps (NYSC) Certificate', 
+    issuer: 'National Youth Service Corps (NYSC)',
+    shortName: 'NYSC Certificate'
+  }
+];
+
 const ProfileInformation = ({ aboutMe, onUpdate, services = [] }) => {
   const [showModal, setShowModal] = useState(false);
   const [editedAboutMe, setEditedAboutMe] = useState(aboutMe || '');
@@ -12,8 +36,7 @@ const ProfileInformation = ({ aboutMe, onUpdate, services = [] }) => {
 
   const [showCertModal, setShowCertModal] = useState(false);
   const [certificateFile, setCertificateFile] = useState(null);
-  const [certificateName, setCertificateName] = useState('');
-  const [certificateIssuer, setCertificateIssuer] = useState('');
+  const [selectedCertificateType, setSelectedCertificateType] = useState('');
   const [certificateYear, setCertificateYear] = useState('');
   const [uploadLoading, setUploadLoading] = useState(false);
   
@@ -109,8 +132,15 @@ const ProfileInformation = ({ aboutMe, onUpdate, services = [] }) => {
   };
 
   const handleUploadCertificate = async () => {
-    if (!certificateFile || !certificateName || !certificateIssuer || !certificateYear) {
-      toast.error("Please complete all fields");
+    if (!certificateFile || !selectedCertificateType || !certificateYear) {
+      toast.error("Please select certificate type, year, and upload file");
+      return;
+    }
+
+    // Get the selected certificate details
+    const selectedCert = APPROVED_CERTIFICATES.find(cert => cert.name === selectedCertificateType);
+    if (!selectedCert) {
+      toast.error("Invalid certificate type selected");
       return;
     }
 
@@ -122,14 +152,14 @@ const ProfileInformation = ({ aboutMe, onUpdate, services = [] }) => {
       
       // Create the request payload matching the API specification
       const requestPayload = {
-        certificateName: certificateName,
+        certificateName: selectedCert.name,
         caregiverId: userDetails.id,
-        certificateIssuer: certificateIssuer,
+        certificateIssuer: selectedCert.issuer,
         certificate: base64Certificate,
         yearObtained: new Date(certificateYear, 0, 1).toISOString() // Convert year to ISO DateTime
       };
 
-      await axios.post(`${config.BASE_URL}/Certificates`, requestPayload, { // Using centralized API config
+      const response = await axios.post(`${config.BASE_URL}/Certificates`, requestPayload, { // Using centralized API config
         headers: { 
           "Content-Type": "application/json",
           "Accept": "*/*"
@@ -139,11 +169,32 @@ const ProfileInformation = ({ aboutMe, onUpdate, services = [] }) => {
       setShowCertModal(false);
       // Reset fields
       setCertificateFile(null);
-      setCertificateName('');
-      setCertificateIssuer('');
+      setSelectedCertificateType('');
       setCertificateYear('');
-      // Show success modal instead of toast
-      setShowSuccessModal(true);
+      
+      // Handle response based on verification status
+      const verification = response.data?.verification;
+      if (verification) {
+        const status = verification.status;
+        const confidence = verification.confidence ? (verification.confidence * 100).toFixed(0) : null;
+        
+        if (status === 'Verified') {
+          toast.success(`Certificate verified successfully! ${confidence ? `Confidence: ${confidence}%` : ''}`);
+        } else if (status === 'ManualReviewRequired') {
+          toast.warning('Your certificate is under review. You will be notified within 24-48 hours.');
+        } else if (status === 'Invalid' || status === 'Rejected') {
+          const errors = parseErrorMessages(verification.errorMessage);
+          toast.error(`Certificate validation failed: ${errors[0] || 'Please check your certificate and try again'}`);
+        } else if (status === 'VerificationFailed') {
+          toast.error('Verification failed due to a technical error. Please try again.');
+        } else {
+          toast.info('Certificate uploaded. Verification in progress...');
+        }
+      } else {
+        // Fallback for old API response format
+        setShowSuccessModal(true);
+      }
+      
       // Refresh the certificates list
       await fetchCertificates();
       // IMPORTANT: Update the global caregiver status context
@@ -159,8 +210,7 @@ const ProfileInformation = ({ aboutMe, onUpdate, services = [] }) => {
   const handleCancel = () => {
     // Reset all form fields
     setCertificateFile(null);
-    setCertificateName('');
-    setCertificateIssuer('');
+    setSelectedCertificateType('');
     setCertificateYear('');
     // Close modal
     setShowCertModal(false);
@@ -169,6 +219,77 @@ const ProfileInformation = ({ aboutMe, onUpdate, services = [] }) => {
   // Function to get certificate view URL
   const getCertificateViewUrl = (certificateId) => {
     return `${config.BASE_URL}/Certificates/certificateId?certificateId=${certificateId}`;
+  };
+
+  // Helper function to get status badge configuration
+  const getStatusBadgeConfig = (cert) => {
+    const status = cert.verificationStatus || (cert.isVerified ? 'Verified' : 'PendingVerification');
+    
+    const configs = {
+      'Verified': {
+        text: '✅ Verified',
+        color: '#22c55e',
+        bgColor: '#d1fae5',
+        icon: '✅'
+      },
+      'ManualReviewRequired': {
+        text: '⚠️ Under Review',
+        color: '#f59e0b',
+        bgColor: '#fef3c7',
+        icon: '⚠️'
+      },
+      'Invalid': {
+        text: '❌ Invalid',
+        color: '#ef4444',
+        bgColor: '#fee2e2',
+        icon: '❌'
+      },
+      'Rejected': {
+        text: '❌ Rejected',
+        color: '#ef4444',
+        bgColor: '#fee2e2',
+        icon: '❌'
+      },
+      'VerificationFailed': {
+        text: '🔄 Verification Failed',
+        color: '#6b7280',
+        bgColor: '#f3f4f6',
+        icon: '🔄'
+      },
+      'PendingVerification': {
+        text: '⏳ Pending',
+        color: '#3b82f6',
+        bgColor: '#dbeafe',
+        icon: '⏳'
+      }
+    };
+    
+    return configs[status] || configs['PendingVerification'];
+  };
+
+  // Helper function to parse error messages
+  const parseErrorMessages = (errorMessage) => {
+    if (!errorMessage) return [];
+    return errorMessage.split(' | ').filter(msg => msg.trim());
+  };
+
+  // Function to retry verification for a certificate
+  const handleRetryVerification = async (certificateId) => {
+    try {
+      setUploadLoading(true);
+      await axios.post(`${config.BASE_URL}/Certificates/${certificateId}/retry-verification`, {}, {
+        headers: { 
+          "Authorization": `Bearer ${localStorage.getItem('authToken')}`
+        }
+      });
+      toast.success("Verification retry initiated");
+      await fetchCertificates();
+    } catch (err) {
+      console.error("Retry verification failed", err);
+      toast.error(`Retry failed: ${err.response?.data?.message || err.message || 'Unknown error'}`);
+    } finally {
+      setUploadLoading(false);
+    }
   };
 
   // Function to open certificate in modal
@@ -242,49 +363,133 @@ const ProfileInformation = ({ aboutMe, onUpdate, services = [] }) => {
               Loading certificates...
             </div>
           ) : certificates.length > 0 ? (
-            certificates.map((cert) => (
-              <div key={cert.id} className="certification-item">
-                <h4>{cert.certificateName}</h4>
-                <p style={{ margin: '4px 0', fontSize: '13px', color: '#6b7280' }}>
-                  Issued by: {cert.certificateIssuer}
-                </p>
-                <p style={{ margin: '4px 0', fontSize: '13px', color: '#6b7280' }}>
-                  Year: {new Date(cert.yearObtained).getFullYear()}
-                </p>
-                <div style={{ display: 'flex', alignItems: 'center', gap: '10px', marginTop: '8px' }}>
-                  {cert.certificateUrl && (
-                    <button 
-                      onClick={() => handleViewCertificate(cert)}
-                      className="certificate-view-link"
-                      style={{
-                        color: '#0066cc',
-                        textDecoration: 'none',
-                        fontSize: '13px',
-                        fontWeight: '500',
-                        padding: '4px 8px',
-                        borderRadius: '4px',
-                        border: '1px solid #0066cc',
-                        transition: 'all 0.2s ease',
-                        backgroundColor: 'transparent',
-                        cursor: 'pointer'
-                      }}
-                    >
-                      📜 View Certificate
-                    </button>
+            certificates.map((cert) => {
+              const statusConfig = getStatusBadgeConfig(cert);
+              const errorMessages = parseErrorMessages(cert.verificationErrorMessage || cert.errorMessage);
+              const confidence = cert.verificationConfidence ? (cert.verificationConfidence * 100).toFixed(0) : null;
+              const canRetry = cert.verificationStatus === 'VerificationFailed' || cert.verificationStatus === 'Invalid';
+              
+              return (
+                <div key={cert.id} className="certification-item" style={{
+                  border: '1px solid #e5e7eb',
+                  borderRadius: '8px',
+                  padding: '16px',
+                  marginBottom: '12px',
+                  backgroundColor: 'white'
+                }}>
+                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'start', marginBottom: '8px' }}>
+                    <h4 style={{ margin: 0, fontSize: '15px', fontWeight: '600' }}>{cert.certificateName}</h4>
+                    <span style={{
+                      fontSize: '12px',
+                      color: statusConfig.color,
+                      fontWeight: '500',
+                      padding: '4px 8px',
+                      borderRadius: '4px',
+                      backgroundColor: statusConfig.bgColor,
+                      whiteSpace: 'nowrap'
+                    }}>
+                      {statusConfig.text}
+                    </span>
+                  </div>
+                  
+                  <p style={{ margin: '4px 0', fontSize: '13px', color: '#6b7280' }}>
+                    Issued by: {cert.certificateIssuer}
+                  </p>
+                  <p style={{ margin: '4px 0', fontSize: '13px', color: '#6b7280' }}>
+                    Year: {new Date(cert.yearObtained).getFullYear()}
+                  </p>
+                  
+                  {confidence && (
+                    <p style={{ margin: '4px 0', fontSize: '12px', color: '#4b5563' }}>
+                      Confidence: <strong>{confidence}%</strong>
+                    </p>
                   )}
-                  <span style={{
-                    fontSize: '12px',
-                    color: cert.isVerified ? '#28a745' : '#dc3545',
-                    fontWeight: '500',
-                    padding: '2px 6px',
-                    borderRadius: '3px',
-                    backgroundColor: cert.isVerified ? '#d4edda' : '#f8d7da'
-                  }}>
-                    {cert.isVerified ? '✅ Verified' : '⏳ Pending Verification'}
-                  </span>
+                  
+                  {cert.verificationDate && (
+                    <p style={{ margin: '4px 0', fontSize: '12px', color: '#9ca3af' }}>
+                      Verified: {new Date(cert.verificationDate).toLocaleDateString()}
+                    </p>
+                  )}
+                  
+                  {errorMessages.length > 0 && (
+                    <div style={{
+                      marginTop: '8px',
+                      padding: '8px',
+                      backgroundColor: '#fef2f2',
+                      borderRadius: '4px',
+                      borderLeft: '3px solid #ef4444'
+                    }}>
+                      <p style={{ margin: '0 0 4px 0', fontSize: '12px', fontWeight: '600', color: '#dc2626' }}>
+                        Validation Issues:
+                      </p>
+                      <ul style={{ margin: 0, paddingLeft: '20px', fontSize: '11px', color: '#991b1b' }}>
+                        {errorMessages.map((msg, idx) => (
+                          <li key={idx} style={{ marginBottom: '2px' }}>{msg}</li>
+                        ))}
+                      </ul>
+                    </div>
+                  )}
+                  
+                  {cert.verificationStatus === 'ManualReviewRequired' && (
+                    <div style={{
+                      marginTop: '8px',
+                      padding: '8px',
+                      backgroundColor: '#fffbeb',
+                      borderRadius: '4px',
+                      borderLeft: '3px solid #f59e0b'
+                    }}>
+                      <p style={{ margin: 0, fontSize: '12px', color: '#92400e' }}>
+                        ⏱️ Your certificate is being reviewed by our team. Expected response: 24-48 hours.
+                      </p>
+                    </div>
+                  )}
+                  
+                  <div style={{ display: 'flex', alignItems: 'center', gap: '10px', marginTop: '12px', flexWrap: 'wrap' }}>
+                    {cert.certificateUrl && (
+                      <button 
+                        onClick={() => handleViewCertificate(cert)}
+                        className="certificate-view-link"
+                        style={{
+                          color: '#0066cc',
+                          textDecoration: 'none',
+                          fontSize: '13px',
+                          fontWeight: '500',
+                          padding: '6px 12px',
+                          borderRadius: '4px',
+                          border: '1px solid #0066cc',
+                          transition: 'all 0.2s ease',
+                          backgroundColor: 'transparent',
+                          cursor: 'pointer'
+                        }}
+                      >
+                        📜 View Certificate
+                      </button>
+                    )}
+                    
+                    {canRetry && (
+                      <button 
+                        onClick={() => handleRetryVerification(cert.id)}
+                        disabled={uploadLoading}
+                        style={{
+                          color: '#6b7280',
+                          fontSize: '13px',
+                          fontWeight: '500',
+                          padding: '6px 12px',
+                          borderRadius: '4px',
+                          border: '1px solid #d1d5db',
+                          transition: 'all 0.2s ease',
+                          backgroundColor: 'white',
+                          cursor: uploadLoading ? 'not-allowed' : 'pointer',
+                          opacity: uploadLoading ? 0.6 : 1
+                        }}
+                      >
+                        🔄 Retry Verification
+                      </button>
+                    )}
+                  </div>
                 </div>
-              </div>
-            ))
+              );
+            })
           ) : (
             <div style={{
               display: 'flex',
@@ -353,18 +558,42 @@ const ProfileInformation = ({ aboutMe, onUpdate, services = [] }) => {
         <div className="modal-overlay" onClick={() => setShowCertModal(false)}>
           <div className="modal-content" onClick={(e) => e.stopPropagation()}>
             <h3>Upload Certificate</h3>
-            <input
-              type="text"
-              placeholder="Certificate Name"
-              value={certificateName}
-              onChange={(e) => setCertificateName(e.target.value)}
-            />
-            <input
-              type="text"
-              placeholder="Certificate Issuer"
-              value={certificateIssuer}
-              onChange={(e) => setCertificateIssuer(e.target.value)}
-            />
+            <div style={{ marginBottom: '15px' }}>
+              <label style={{ display: 'block', marginBottom: '8px', fontWeight: '500', fontSize: '14px', color: '#333' }}>
+                Select Certificate Type <span style={{ color: '#dc3545' }}>*</span>
+              </label>
+              <select
+                value={selectedCertificateType}
+                onChange={(e) => setSelectedCertificateType(e.target.value)}
+                style={{
+                  width: '100%',
+                  padding: '10px',
+                  fontSize: '14px',
+                  border: '1px solid #ddd',
+                  borderRadius: '4px',
+                  backgroundColor: 'white',
+                  cursor: 'pointer'
+                }}
+                required
+              >
+                <option value="">-- Select a certificate type --</option>
+                {APPROVED_CERTIFICATES.map((cert, index) => (
+                  <option key={index} value={cert.name}>
+                    {cert.shortName}
+                  </option>
+                ))}
+              </select>
+              {selectedCertificateType && (
+                <p style={{ 
+                  marginTop: '8px', 
+                  fontSize: '12px', 
+                  color: '#666',
+                  fontStyle: 'italic'
+                }}>
+                  Issuer: {APPROVED_CERTIFICATES.find(c => c.name === selectedCertificateType)?.issuer}
+                </p>
+              )}
+            </div>
             <input
               type="number"
               placeholder="Year Obtained (e.g. 2020)"
@@ -429,17 +658,60 @@ const ProfileInformation = ({ aboutMe, onUpdate, services = [] }) => {
                 <p style={{ margin: '5px 0', fontSize: '14px', color: '#666' }}>
                   <strong>Year:</strong> {new Date(selectedCertificate.yearObtained).getFullYear()}
                 </p>
-                <p style={{ margin: '5px 0', fontSize: '14px' }}>
-                  <span style={{
-                    color: selectedCertificate.isVerified ? '#28a745' : '#dc3545',
-                    fontWeight: '500',
-                    padding: '2px 6px',
-                    borderRadius: '3px',
-                    backgroundColor: selectedCertificate.isVerified ? '#d4edda' : '#f8d7da'
+                
+                {(() => {
+                  const statusConfig = getStatusBadgeConfig(selectedCertificate);
+                  const confidence = selectedCertificate.verificationConfidence ? (selectedCertificate.verificationConfidence * 100).toFixed(0) : null;
+                  
+                  return (
+                    <div style={{ margin: '10px 0' }}>
+                      <span style={{
+                        color: statusConfig.color,
+                        fontWeight: '500',
+                        padding: '4px 10px',
+                        borderRadius: '4px',
+                        backgroundColor: statusConfig.bgColor,
+                        fontSize: '14px'
+                      }}>
+                        {statusConfig.text}
+                      </span>
+                      {confidence && (
+                        <p style={{ margin: '8px 0', fontSize: '13px', color: '#4b5563' }}>
+                          Verification Confidence: <strong>{confidence}%</strong>
+                        </p>
+                      )}
+                    </div>
+                  );
+                })()}
+                
+                {selectedCertificate.extractedInfo && (
+                  <div style={{
+                    marginTop: '15px',
+                    padding: '12px',
+                    backgroundColor: '#f9fafb',
+                    borderRadius: '6px',
+                    textAlign: 'left'
                   }}>
-                    {selectedCertificate.isVerified ? '✅ Verified' : '⏳ Pending Verification'}
-                  </span>
-                </p>
+                    <p style={{ margin: '0 0 8px 0', fontSize: '13px', fontWeight: '600', color: '#374151' }}>
+                      Extracted Information:
+                    </p>
+                    {selectedCertificate.extractedInfo.firstName && (
+                      <p style={{ margin: '4px 0', fontSize: '12px', color: '#6b7280' }}>
+                        Name: {selectedCertificate.extractedInfo.firstName} {selectedCertificate.extractedInfo.lastName}
+                      </p>
+                    )}
+                    {selectedCertificate.extractedInfo.documentNumber && (
+                      <p style={{ margin: '4px 0', fontSize: '12px', color: '#6b7280' }}>
+                        Document Number: {selectedCertificate.extractedInfo.documentNumber}
+                      </p>
+                    )}
+                    {selectedCertificate.extractedInfo.issueDate && (
+                      <p style={{ margin: '4px 0', fontSize: '12px', color: '#6b7280' }}>
+                        Issue Date: {new Date(selectedCertificate.extractedInfo.issueDate).toLocaleDateString()}
+                      </p>
+                    )}
+                  </div>
+                )}
               </div>
               <div style={{ maxHeight: '60vh', overflow: 'auto' }}>
                 <img 
