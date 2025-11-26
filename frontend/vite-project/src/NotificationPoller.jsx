@@ -1,7 +1,7 @@
 import { useEffect } from 'react';
 import { useDispatch } from 'react-redux';
 import { fetchNotifications, fetchUnreadCount } from './main-app/Redux/slices/notificationSlice';
-
+// NotificationPoller component to periodically fetch notifications and unread count
 const NotificationPoller = () => {
   const dispatch = useDispatch();
 
