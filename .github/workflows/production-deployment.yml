@@ -143,6 +143,8 @@ jobs:
           VITE_CONTENTFUL_ACCESS_TOKEN_PUBLISHED: ${{ secrets.VITE_CONTENTFUL_ACCESS_TOKEN_PUBLISHED }}
           VITE_CONTENTFUL_ACCESS_TOKEN_DRAFT: ${{ secrets.VITE_CONTENTFUL_ACCESS_TOKEN_DRAFT }}
           VITE_CONTENTFUL_ENVIRONMENT: master
+          VITE_API_URL: https://api.oncarepro.com/api
+          VITE_WEBSOCKET_URL: https://api.oncarepro.com
           VITE_PRODUCTION_API_URL: https://api.oncarepro.com/api
           VITE_STAGING_API_URL: https://carepro-api20241118153443.azurewebsites.net/api
           VITE_LOCAL_API_URL: http://localhost:5005/api
@@ -238,6 +240,8 @@ jobs:
             --build-arg VITE_CONTENTFUL_ACCESS_TOKEN_PUBLISHED=${{ secrets.VITE_CONTENTFUL_ACCESS_TOKEN_PUBLISHED }} \
             --build-arg VITE_CONTENTFUL_ACCESS_TOKEN_DRAFT=${{ secrets.VITE_CONTENTFUL_ACCESS_TOKEN_DRAFT }} \
             --build-arg VITE_CONTENTFUL_ENVIRONMENT=master \
+            --build-arg VITE_API_URL=https://api.oncarepro.com/api \
+            --build-arg VITE_WEBSOCKET_URL=https://api.oncarepro.com \
             --build-arg VITE_PRODUCTION_API_URL=https://api.oncarepro.com/api \
             --build-arg VITE_STAGING_API_URL=https://carepro-api20241118153443.azurewebsites.net/api \
             --build-arg VITE_LOCAL_API_URL=http://localhost:5005/api \
