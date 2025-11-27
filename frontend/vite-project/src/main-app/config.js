@@ -43,9 +43,10 @@ const config = {
         if (import.meta.env.VITE_WEBSOCKET_URL) {
             return import.meta.env.VITE_WEBSOCKET_URL;
         }
-        // Otherwise derive from base URL by removing /api suffix only
+        // Otherwise derive from base URL by removing /api suffix only (must end with /api)
         const baseUrl = resolveApiUrl();
-        return baseUrl ? baseUrl.replace('/api', '') : null;
+        // Use a regex to only replace /api at the end of the URL, not in the domain
+        return baseUrl ? baseUrl.replace(/\/api$/, '') : null;
     })(),
 
     // Environment-specific URLs

@@ -16,7 +16,8 @@ const ensureAbsoluteUrl = (url) => {
   return url;
 };
 
-const API_BASE_URL = ensureAbsoluteUrl(config.BASE_URL.replace('/api', '')); // Using centralized API config
+// Use regex to only replace /api at the end of the URL, not in the domain (e.g., api.oncarepro.com)
+const API_BASE_URL = ensureAbsoluteUrl(config.BASE_URL.replace(/\/api$/, '')); // Using centralized API config
 
 // Utility function to convert MongoDB ObjectId to string
 const objectIdToString = (id) => {
