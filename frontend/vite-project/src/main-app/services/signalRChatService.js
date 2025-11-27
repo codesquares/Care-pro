@@ -7,8 +7,18 @@ import messageReliabilityHelper from '../utils/messageReliabilityHelper';
 // Constants
 import config from '../config';
 
-const HUB_URL = `${config.FALLBACK_URL}/chathub`; // WebSocket URL
-const API_BASE_URL = config.BASE_URL; // REST API URL with /api suffix
+// Ensure URLs are absolute to prevent relative URL issues in production
+const ensureAbsoluteUrl = (url) => {
+  if (!url) return url;
+  if (!url.startsWith('http://') && !url.startsWith('https://')) {
+    console.error('🚨 MALFORMED URL DETECTED:', url);
+    return null;
+  }
+  return url;
+};
+
+const HUB_URL = ensureAbsoluteUrl(`${config.FALLBACK_URL}/chathub`); // WebSocket URL
+const API_BASE_URL = ensureAbsoluteUrl(config.BASE_URL); // REST API URL with /api suffix
 
 // Message and history cache
 const MESSAGE_CACHE_TTL = 30 * 60 * 1000; // 30 minutes in milliseconds
