@@ -4,8 +4,19 @@ import axios from 'axios';
 import config from '../config'; // Centralized API configuration
 
 
-// Constants
-const API_BASE_URL = config.BASE_URL.replace('/api', ''); // Using centralized API config
+// Constants - Ensure the BASE_URL has protocol to prevent relative URL issues
+const ensureAbsoluteUrl = (url) => {
+  if (!url) return url;
+  // If URL doesn't start with http:// or https://, it's malformed
+  if (!url.startsWith('http://') && !url.startsWith('https://')) {
+    console.error('🚨 MALFORMED API URL DETECTED:', url);
+    // Default to production API as fallback
+    return 'https://api.oncarepro.com';
+  }
+  return url;
+};
+
+const API_BASE_URL = ensureAbsoluteUrl(config.BASE_URL.replace('/api', '')); // Using centralized API config
 
 // Utility function to convert MongoDB ObjectId to string
 const objectIdToString = (id) => {
@@ -1537,16 +1548,14 @@ export const MessageProvider = ({ children }) => {
         try {
           console.log('🔄 SELECT_CHAT: Trying conversations endpoint as direct fallback');
           const response = await axios.get(
-            `${API_BASE_URL}/api/Chat/conversations/${currentUserId}`,
+            `${API_BASE_URL}/Chat/conversations/${currentUserId}`,
             { 
               timeout: 10000,
               headers: {
                 'Authorization': `Bearer ${localStorage.getItem('authToken') || 'NO_TOKEN'}`
               }
             }
-          );
-          
-          if (response.data && Array.isArray(response.data)) {
+          );        if (response.data && Array.isArray(response.data)) {
             const conversation = response.data.find(conv => 
               conv.id === chatId || conv.userId === chatId
             );
