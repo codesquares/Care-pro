@@ -8,7 +8,7 @@ import './direct-message.scss';
 import config from '../../config'; // Import centralized config for API URLs
 
 // FIXED: Use centralized config instead of hardcoded Azure staging API URL
-const API_BASE_URL = config.BASE_URL.replace('/api', ''); // Remove /api suffix for consistency
+const API_BASE_URL = config.BASE_URL.replace(/\/api$/, ''); // Remove /api suffix for consistency (only trailing)
 
 const DirectMessage = () => {
   const { recipientId } = useParams();

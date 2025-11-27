@@ -1,7 +1,7 @@
 import * as signalR from "@microsoft/signalr";
 import config from "../config"; // Centralized API configuration
 
-const CHAT_HUB_URL = `${config.BASE_URL.replace('/api', '')}/chathub`; // Using centralized API config
+const CHAT_HUB_URL = `${config.BASE_URL.replace(/\/api$/, '')}/chathub`; // Using centralized API config (only trailing)
 
 let connection = null;
 let connectionPromise = null;
