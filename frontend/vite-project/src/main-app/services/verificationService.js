@@ -696,7 +696,7 @@ const verificationService = {
       }
 
       // Azure API endpoint
-      const externalApiUrl = config.BASE_URL.replace('/api', ''); // Using centralized API config
+      const externalApiUrl = config.BASE_URL.replace(/\/api$/, ''); // Using centralized API config (only trailing)
       
       // Choose endpoint based on user type
       const endpoint = verificationData.userType === 'client'
@@ -1039,7 +1039,7 @@ const verificationService = {
         verificationStatus: verificationData.verificationStatus || verificationData.status || ''
       };
 
-      const externalApiUrl = config.BASE_URL.replace('/api', ''); // Using centralized API config
+      const externalApiUrl = config.BASE_URL.replace(/\/api$/, ''); // Using centralized API config (only trailing)
       const endpoint = `${externalApiUrl}/api/Verifications`;
 
       const response = await axios.post(
