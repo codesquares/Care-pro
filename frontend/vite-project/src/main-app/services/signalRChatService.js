@@ -7,8 +7,8 @@ import messageReliabilityHelper from '../utils/messageReliabilityHelper';
 // Constants
 import config from '../config';
 
-const API_BASE_URL = config.FALLBACK_URL;
-const HUB_URL = `${API_BASE_URL}/chathub`;
+const HUB_URL = `${config.FALLBACK_URL}/chathub`; // WebSocket URL
+const API_BASE_URL = config.BASE_URL; // REST API URL with /api suffix
 
 // Message and history cache
 const MESSAGE_CACHE_TTL = 30 * 60 * 1000; // 30 minutes in milliseconds
@@ -727,7 +727,7 @@ class SignalRChatService {
           timestamp: timestamp
         };
         
-        const response = await axios.post(`${API_BASE_URL}/api/Chat/send`, payload, {
+        const response = await axios.post(`${API_BASE_URL}/Chat/send`, payload, {
           headers: {
             'Content-Type': 'application/json',
             'Authorization': `Bearer ${localStorage.getItem('authToken') || 'NO_TOKEN'}`
@@ -774,7 +774,7 @@ class SignalRChatService {
           };
           
           const response = await axios.post(
-            `${API_BASE_URL}/api/Chat/send?senderId=${encodeURIComponent(validSenderId)}&receiverId=${encodeURIComponent(validReceiverId)}`,
+            `${API_BASE_URL}/Chat/send?senderId=${encodeURIComponent(validSenderId)}&receiverId=${encodeURIComponent(validReceiverId)}`,
             messageBody,
             {
               headers: {
@@ -864,7 +864,7 @@ class SignalRChatService {
         
         // Use the correct history endpoint that exists
         const response = await axios.get(
-          `${API_BASE_URL}/api/Chat/history?user1=${validUser1Id}&user2=${validUser2Id}&skip=${skip}&take=${take}`,
+          `${API_BASE_URL}/Chat/history?user1=${validUser1Id}&user2=${validUser2Id}&skip=${skip}&take=${take}`,
           { 
             timeout: 10000,
             headers: {
@@ -892,14 +892,14 @@ class SignalRChatService {
           status: restError.response?.status,
           statusText: restError.response?.statusText,
           data: restError.response?.data,
-          url: `${API_BASE_URL}/api/Chat/history?user1=${validUser1Id}&user2=${validUser2Id}&skip=${skip}&take=${take}`
+          url: `${API_BASE_URL}/Chat/history?user1=${validUser1Id}&user2=${validUser2Id}&skip=${skip}&take=${take}`
         });
         
         // Fallback to conversations endpoint
         try {
           console.log('🔍 SIGNALR SERVICE: Trying conversations endpoint as fallback');
           const fallbackResponse = await axios.get(
-            `${API_BASE_URL}/api/Chat/conversations/${validUser1Id}`,
+            `${API_BASE_URL}/Chat/conversations/${validUser1Id}`,
             { 
               timeout: 10000,
               headers: {
@@ -1100,7 +1100,7 @@ class SignalRChatService {
         if (!userId) throw new Error('User ID is required to mark message as read');
         
         const axios = (await import('axios')).default;
-        const response = await axios.post(`${API_BASE_URL}/api/chat/mark-read/${messageId}?userId=${userId}`);
+        const response = await axios.post(`${API_BASE_URL}/chat/mark-read/${messageId}?userId=${userId}`);
         return response.data.success;
       } catch (error) {
         console.error('Error marking message as read via API:', error);
@@ -1136,7 +1136,7 @@ class SignalRChatService {
         const validReceiverId = receiverId ? String(receiverId).trim() : receiverId;
         
         // Fall back to REST API with direct IDs
-        const response = await axios.post(`${API_BASE_URL}/api/chat/mark-all-read`, {
+        const response = await axios.post(`${API_BASE_URL}/chat/mark-all-read`, {
           senderId: validSenderId,
           receiverId: validReceiverId
         });
@@ -1473,7 +1473,7 @@ class SignalRChatService {
       // Fallback to REST API
       const axios = (await import('axios')).default;
       console.log('Fetching all conversations via REST API');
-      const response = await axios.get(`${API_BASE_URL}/api/Chat/conversations/${userId}`);
+      const response = await axios.get(`${API_BASE_URL}/Chat/conversations/${userId}`);
       
       // Return conversations (ensure we always return an array)
       return Array.isArray(response.data) ? response.data : [];
