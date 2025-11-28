@@ -262,7 +262,7 @@ const HomeCareService = () => {
   };
 
   const handleCopyLink = async () => {
-    const shareUrl = `${window.location.origin}/service/${id}`;
+    const shareUrl = `https://api.oncarepro.com/api/share/gig/${id}`;
     try {
       await navigator.clipboard.writeText(shareUrl);
       setCopySuccess(true);
@@ -276,7 +276,7 @@ const HomeCareService = () => {
   };
 
   const handleSocialShare = (platform) => {
-    const shareUrl = `${window.location.origin}/service/${id}`;
+    const shareUrl = `https://api.oncarepro.com/api/share/gig/${id}`;
     const text = `Check out this care service: ${service?.title || ''}`;
     
     let url = '';
