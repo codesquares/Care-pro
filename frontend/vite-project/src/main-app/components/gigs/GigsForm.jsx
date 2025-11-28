@@ -181,6 +181,42 @@ const GigsForm = () => {
     setShowGuidelines(false);
   };
 
+  const handleCopyGigLink = async () => {
+    const shareUrl = `https://api.oncarepro.com/api/share/gig/${publishedGigId}`;
+    try {
+      await navigator.clipboard.writeText(shareUrl);
+      setCopySuccess(true);
+      setTimeout(() => setCopySuccess(false), 2000);
+    } catch (err) {
+      console.error('Failed to copy:', err);
+    }
+  };
+
+  const handleSocialShareGig = (platform) => {
+    const shareUrl = `https://api.oncarepro.com/api/share/gig/${publishedGigId}`;
+    const text = `Check out this care service: ${formData?.title || ''}`;
+    
+    let url = '';
+    switch (platform) {
+      case 'facebook':
+        url = `https://www.facebook.com/sharer/sharer.php?u=${encodeURIComponent(shareUrl)}`;
+        break;
+      case 'twitter':
+        url = `https://twitter.com/intent/tweet?url=${encodeURIComponent(shareUrl)}&text=${encodeURIComponent(text)}`;
+        break;
+      case 'whatsapp':
+        url = `https://wa.me/?text=${encodeURIComponent(text + ' ' + shareUrl)}`;
+        break;
+      case 'linkedin':
+        url = `https://www.linkedin.com/sharing/share-offsite/?url=${encodeURIComponent(shareUrl)}`;
+        break;
+      default:
+        return;
+    }
+    
+    window.open(url, '_blank', 'width=600,height=400');
+  };
+
   const handleInputChange = (name, value) => {
     updateField(name, value);
   };
