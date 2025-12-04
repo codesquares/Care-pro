@@ -76,21 +76,25 @@ const GigsForm = () => {
     setValidationErrors
   } = useGigForm();
   
+  // Check if we're editing a published gig (not a draft)
+  const isEditingPublishedGig = isEditMode && (formData.status === "Published" || formData.status === "Active");
+  
   // Check if we can publish (considering 2-gig limit and caregiver eligibility)
-  const canPublish = (isEditMode || activeGigsCount < 2) && canPublishGigs;
+  // - If editing an already published gig: Allow (not adding a new active gig)
+  // - If editing a draft or creating new: Only allow if activeGigsCount < 2
+  // - All cases require eligibility (canPublishGigs)
+  const canPublish = (isEditingPublishedGig || activeGigsCount < 2) && canPublishGigs;
   
   // Debug logging for publish logic
   console.log('🔍 Publish Logic Debug:', {
     isEditMode,
+    isEditingPublishedGig,
     activeGigsCount,
     canPublishGigs,
     canPublish,
     formDataStatus: formData.status,
     isLoadingStatus
   });
-  
-  // Check if we're editing a published gig
-  const isEditingPublishedGig = isEditMode && (formData.status === "Published" || formData.status === "Active");
 
   const goToNextPage = () => {
     const currentPageValidation = validateCurrentPage();
@@ -461,9 +465,19 @@ const GigsForm = () => {
       // Start loading state
       setSaving(true);
 
-      // Check gig limit before validation
+      // Check gig limit and eligibility before validation
       if (!canPublish) {
-        toast.error("You can only have 2 active gigs at a time. Please pause one of your active gigs first to publish this one.");
+        // Provide specific error messages based on the reason
+        if (!canPublishGigs) {
+          const missingRequirements = [];
+          if (!isVerified) missingRequirements.push('complete identity verification');
+          if (!isQualified) missingRequirements.push('pass qualification assessment');
+          if (!hasCertificates) missingRequirements.push('upload at least one certificate');
+          
+          toast.error(`To publish gigs, you need to: ${missingRequirements.join(', ')}`);
+        } else if (activeGigsCount >= 2 && !isEditingPublishedGig) {
+          toast.error("You can only have 2 active gigs at a time. Please pause one of your active gigs first to publish this one.");
+        }
         setSaving(false);
         return;
       }
