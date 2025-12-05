@@ -1,5 +1,5 @@
 import { useEffect, useState, useMemo } from "react";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, useLocation } from "react-router-dom";
 import config from "../../../config"; // Import centralized config for API URLs
 
 import clock from "../../../../assets/main-app/clock.png"; // Ensure you have an empty gigs image in your assets
@@ -18,6 +18,7 @@ const GigsSection = () => {
   const [deletingGigs, setDeletingGigs] = useState(new Set());
   const [activeTab, setActiveTab] = useState("active");
   const navigate = useNavigate();
+  const location = useLocation();
   const basePath = "/app/caregiver";
   const { toasts, showSuccess, showError, removeToast } = useToast();
   const { populateFromGig, resetForm } = useGigEdit();
@@ -245,32 +246,48 @@ const GigsSection = () => {
     [activeGigs, canPublishGigs]
   );
 
-  useEffect(() => {
-    const fetchGigs = async () => {
-      try {
-        const userDetails = JSON.parse(localStorage.getItem("userDetails"));
-        if (!userDetails?.id) {
-          throw new Error("Caregiver ID not found in local storage.");
-        }
-
-        const response = await fetch(
-          `${config.BASE_URL}/Gigs/caregiver/caregiverId?caregiverId=${userDetails.id}` // Using centralized API config
-        );
-        if (!response.ok) {
-          throw new Error("Failed to fetch gigs data.");
-        }
-
-        const data = await response.json();
-        setGigs(data);
-        setIsLoading(false);
-      } catch (err) {
-        setError(err.message);
-        setIsLoading(false);
+  // Extract fetchGigs as a reusable function
+  const fetchGigs = async () => {
+    try {
+      setIsLoading(true);
+      const userDetails = JSON.parse(localStorage.getItem("userDetails"));
+      if (!userDetails?.id) {
+        throw new Error("Caregiver ID not found in local storage.");
       }
-    };
 
+      console.log('🔍 Fetching gigs for caregiver:', userDetails.id);
+      const response = await fetch(
+        `${config.BASE_URL}/Gigs/caregiver/caregiverId?caregiverId=${userDetails.id}` // Using centralized API config
+      );
+      if (!response.ok) {
+        throw new Error("Failed to fetch gigs data.");
+      }
+
+      const data = await response.json();
+      console.log('🔍 Fetched gigs data:', data);
+      console.log('🔍 Gigs statuses:', data.map(g => ({ id: g.id, title: g.title, status: g.status })));
+      setGigs(data);
+      setIsLoading(false);
+    } catch (err) {
+      setError(err.message);
+      setIsLoading(false);
+    }
+  };
+
+  // Fetch gigs on mount and when returning from edit page
+  useEffect(() => {
+    console.log('🔍 GigsSection useEffect triggered');
+    console.log('🔍 location.state:', location.state);
+    console.log('🔍 refreshGigs flag:', location.state?.refreshGigs);
+    
     fetchGigs();
-  }, []);
+    
+    // Clear the navigation state after using it
+    if (location.state?.refreshGigs) {
+      console.log('✅ Refresh triggered by navigation state');
+      window.history.replaceState({}, document.title);
+    }
+  }, [location.state?.refreshGigs]);
 
   if (isLoading) {
     return (

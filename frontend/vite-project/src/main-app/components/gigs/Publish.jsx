@@ -20,14 +20,23 @@ const PublishGig = ({
   isSaving = false, // Add isSaving prop
   caregiverStatus = null // Add caregiver status for detailed messaging
 }) => {
+  // Determine UI text based on gig status for idempotent behavior
+  const isUpdatingPublishedGig = isEditingPublishedGig;
+  const headerText = isUpdatingPublishedGig ? 'Update your gig' : 'Ready to publish your gig?';
+  const descriptionText = isUpdatingPublishedGig
+    ? 'Update your gig details. Your gig will remain published and visible to clients.'
+    : 'You can save your gig as a draft or publish now and start receiving orders.';
+  const buttonText = isUpdatingPublishedGig ? 'Update Gig' : 'Publish Gig';
+  const savingText = isUpdatingPublishedGig ? 'Updating...' : 'Publishing...';
+
   return (
     <div className="publish-gig">
       <div className="publish-gig-container">
         <div className="publish-gig-main">
           <div className="publish-gig-header">
-            <h2>Ready to publish your gig?</h2>
+            <h2>{headerText}</h2>
             <p>
-              You can save your gig as a draft or publish now and start receiving orders.
+              {descriptionText}
             </p>
             {isLoadingGigs && (
               <p className="loading-message">Checking your current gigs...</p>
@@ -83,14 +92,17 @@ const PublishGig = ({
           )}
 
           <div className="publish-gig-buttons">
-            <button 
-              className="draft-button" 
-              onClick={onSaveAsDraft}
-              onMouseEnter={(e) => onFieldHover && onFieldHover('publish-save-draft', e)}
-              onMouseLeave={(e) => onFieldLeave && onFieldLeave(e)}
-            >
-              Save as Draft
-            </button>
+            {/* Only show "Save as Draft" for new gigs or drafts - prevents unpublishing active gigs */}
+            {!isEditingPublishedGig && (
+              <button 
+                className="draft-button" 
+                onClick={onSaveAsDraft}
+                onMouseEnter={(e) => onFieldHover && onFieldHover('publish-save-draft', e)}
+                onMouseLeave={(e) => onFieldLeave && onFieldLeave(e)}
+              >
+                Save as Draft
+              </button>
+            )}
             <button 
               className={`publish-button ${!canPublish || isLoadingGigs || isSaving ? 'disabled' : ''}`}
               onClick={onPublish}
@@ -99,7 +111,7 @@ const PublishGig = ({
               disabled={Object.keys(validationErrors).length > 0 || !canPublish || isLoadingGigs || isSaving}
               title={!canPublish ? 'You can only have 2 active gigs. Pause an active gig first.' : ''}
             >
-              {isLoadingGigs ? 'Loading...' : isSaving ? 'Publishing...' : 'Publish Gig'}
+              {isLoadingGigs ? 'Loading...' : isSaving ? savingText : buttonText}
             </button>
           </div>
         </div>
