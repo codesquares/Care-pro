@@ -34,6 +34,9 @@ const Footer = () => {
             <li>
               <Link to="/terms-and-conditions">Terms & Conditions</Link>
             </li>
+            <li>
+              <Link to="/refund-policy">Refund Policy</Link>
+            </li>
           </ul>
         </div>
         <div className="footer-column">
