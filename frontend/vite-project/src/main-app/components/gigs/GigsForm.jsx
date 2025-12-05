@@ -77,10 +77,13 @@ const GigsForm = () => {
   } = useGigForm();
   
   // Check if we're editing a published gig (not a draft)
-  const isEditingPublishedGig = isEditMode && (formData.status === "Published" || formData.status === "Active");
+  // Normalize status comparison for idempotency - handle both "Published" and "published"
+  const isEditingPublishedGig = isEditMode && 
+    (formData.status?.toLowerCase() === "published" || formData.status?.toLowerCase() === "active");
   
   // Check if we can publish (considering 2-gig limit and caregiver eligibility)
-  // - If editing an already published gig: Allow (not adding a new active gig)
+  // Idempotent logic:
+  // - If editing an already published gig: Always allow (not adding a new active gig)
   // - If editing a draft or creating new: Only allow if activeGigsCount < 2
   // - All cases require eligibility (canPublishGigs)
   const canPublish = (isEditingPublishedGig || activeGigsCount < 2) && canPublishGigs;
@@ -399,10 +402,17 @@ const GigsForm = () => {
         }
       }
 
-      // Handle image for draft save
+      // Handle image for draft save - same logic as publish
       if (selectedFile) {
         console.log("Adding Image1 file to draft FormData:", selectedFile.name);
         formDataPayload.append("Image1", selectedFile);
+      } else if (isEditMode && imagePreview) {
+        console.log("Edit mode (draft): Preserving existing image, not appending Image1 field");
+        // Don't append Image1 - backend will keep existing image
+      } else {
+        // New draft creation without image - backend may require this
+        console.log("New draft without image, appending empty Image1 field");
+        formDataPayload.append("Image1", "");
       }
 
       // Handle subcategory array - API requires this field
@@ -418,11 +428,21 @@ const GigsForm = () => {
         formDataPayload.append("Description", formData.description);
       }
 
-      // FIXED: Use centralized config instead of hardcoded Azure staging API URL for gig creation
-      const response = await axios.post(
-        `${config.BASE_URL}/Gigs`,
-        formDataPayload
-      );
+      // Handle create vs update based on edit mode
+      let response;
+      if (isEditMode && formData?.id) {
+        console.log(`🔄 Updating existing draft gig with ID: ${formData.id}`);
+        response = await axios.put(
+          `${config.BASE_URL}/Gigs/UpdateGig/gigId?gigId=${formData.id}`,
+          formDataPayload
+        );
+      } else {
+        console.log("✨ Creating new draft gig");
+        response = await axios.post(
+          `${config.BASE_URL}/Gigs`,
+          formDataPayload
+        );
+      }
 
       if (response.status === 200) {
         setServerMessage("Gig saved as draft successfully!");
@@ -540,7 +560,22 @@ const GigsForm = () => {
       }
       
       formDataPayload.append("Tags", searchtags || "");
-      formDataPayload.append("Status", "Published");
+      
+      // Idempotent status handling:
+      // - If editing a published gig: maintain "published" status
+      // - If editing a draft OR creating new: set to "Published" (user clicked Publish)
+      // This ensures consistent behavior regardless of entry point
+      const targetStatus = (isEditMode && formData.status?.toLowerCase() === "published") 
+        ? "published"  // Preserve published status
+        : "Published"; // Publish draft or new gig
+      
+      console.log("🔍 DEBUG - Status handling:");
+      console.log("- isEditMode:", isEditMode);
+      console.log("- formData.status:", formData.status);
+      console.log("- targetStatus:", targetStatus);
+      
+      formDataPayload.append("Status", targetStatus);
+      
       formDataPayload.append("CaregiverId", caregiverId);
       
       // Handle pricing - find the first completed package
@@ -565,14 +600,18 @@ const GigsForm = () => {
         formDataPayload.append("Price", "");
       }
       
-      // Handle image - append the file directly or existing base64 for edit mode
+      // Handle image - only append if a new file is selected
+      // For edit mode without image changes, omit Image1 field to preserve existing image
       if (selectedFile) {
         console.log("Adding new Image1 file to FormData:", selectedFile.name, selectedFile.type, selectedFile.size);
         formDataPayload.append("Image1", selectedFile);
+      } else if (isEditMode && imagePreview) {
+        console.log("Edit mode: Preserving existing image, not appending Image1 field");
+        // Don't append Image1 - backend will keep existing image
       } else {
-        // Add empty Image1 field if no file selected
+        // New gig creation without image - this should not happen due to validation
+        console.warn("No image provided for new gig creation");
         formDataPayload.append("Image1", "");
-        console.log("No image file selected, appending empty Image1 field");
       }
       
       // Handle video URL
@@ -636,7 +675,10 @@ const GigsForm = () => {
         console.log("✅ API Response received:", response.status, response.data);
 
         if (response.status === 200) {
-          const successMessage = isEditMode ? "Gig updated successfully!" : "Gig published successfully!";
+          // Idempotent success messaging based on actual action taken
+          const successMessage = isEditMode 
+            ? (isEditingPublishedGig ? "Gig updated successfully!" : "Gig published successfully!") 
+            : "Gig published successfully!";
           
           // Store the published gig ID for sharing
           if (response.data?.id) {
@@ -711,7 +753,7 @@ const GigsForm = () => {
 
   const handleProceed = () => {
     setIsModalOpen(false);
-    navigate("/app/caregiver/profile");
+    navigate("/app/caregiver/profile", { state: { refreshGigs: true } });
   };
 
   const onFileChange = (e, index) => {
@@ -953,7 +995,7 @@ const GigsForm = () => {
                 onClick={() => {
                   setShowSuccessModal(false);
                   setShowShareOptions(false);
-                  navigate("/app/caregiver/profile");
+                  navigate("/app/caregiver/profile", { state: { refreshGigs: true } });
                 }}
               >
                 Continue
