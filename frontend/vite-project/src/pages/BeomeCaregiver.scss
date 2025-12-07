@@ -6,6 +6,10 @@
 .book-caregiver{
   margin-top: 100px;
 
+  @media (max-width: 768px) {
+    margin-top: 70px;
+  }
+
   // First TopBanner should span full width
   .banner:first-child {
     margin-left: calc(-50vw + 50%);
@@ -16,10 +20,21 @@
     margin-top:0px;
     padding: 0px 0 0px max(20px, calc((100vw - 1200px) / 2)); // Remove right padding
     
+    @media (max-width: 768px) {
+      margin-left: 0;
+      margin-right: 0;
+      width: 100%;
+      padding: 60px 20px 40px;
+    }
+    
     // Adjust text content to take less space
     .text-content {
       // Take only 40% of space, don't grow or shrink
       margin-left:-170px;
+      
+      @media (max-width: 768px) {
+        margin-left: 0;
+      }
     }
     
     // Give image more space and extend to cover right side
@@ -30,8 +45,14 @@
       margin-right: -10px; // Extend further beyond container
       position: relative;
       right: -10px; // Push it further right
-      min-width: 60%
+      min-width: 60%;
       
+      @media (max-width: 768px) {
+        margin-right: 0;
+        right: 0;
+        min-width: 100%;
+        position: static;
+      }
       
       img {
         margin: 0;
@@ -39,6 +60,10 @@
         width: 100%;
         
         object-fit: cover;
+        
+        @media (max-width: 768px) {
+          object-fit: contain;
+        }
       }
     }
   }
