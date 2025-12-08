@@ -1,12 +1,14 @@
 /* Notification Bell Container */
 .notification-bell-container {
   position: relative;
-  display: inline-block;
+  display: inline-flex;
   width: 40px;
   height: 40px;
-  display: flex;
   align-items: center;
   justify-content: center;
+  z-index: 1003;
+  pointer-events: auto !important;
+  isolation: isolate;
 }
 
 /* Notification Bell Button */
@@ -15,7 +17,7 @@
   background: transparent;
   border: none;
   cursor: pointer;
-  padding: 0;
+  padding: 8px;
   border-radius: 50%;
   transition: background-color 0.2s ease;
   display: flex;
@@ -23,6 +25,12 @@
   justify-content: center;
   width: 100%;
   height: 100%;
+  z-index: 1003;
+  pointer-events: auto !important;
+}
+
+.notification-bell:active {
+  transform: scale(0.95);
 }
 
 .notification-bell:hover {
@@ -62,19 +70,41 @@
 
 /* Notification Dropdown */
 .notification-dropdown {
-  position: absolute;
-  top: 100%;
-  right: 0;
-  background: white;
-  border: 1px solid #e1e8ed;
-  border-radius: 8px;
-  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
-  width: 380px;
-  max-height: 500px;
-  overflow: hidden;
-  z-index: 1000;
-  display: flex;
-  flex-direction: column;
+  position: fixed !important;
+  top: 70px !important;
+  right: 16px !important;
+  background: white !important;
+  border: 1px solid #e1e8ed !important;
+  border-radius: 8px !important;
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.25) !important;
+  width: 380px !important;
+  max-width: calc(100vw - 32px) !important;
+  max-height: 500px !important;
+  overflow: hidden !important;
+  z-index: 999999 !important;
+  display: flex !important;
+  flex-direction: column !important;
+  pointer-events: auto !important;
+  visibility: visible !important;
+  opacity: 1 !important;
+  transform: translateY(0) !important;
+}
+
+/* Mobile adjustments */
+@media (max-width: 768px) {
+  .notification-dropdown {
+    right: 8px !important;
+    width: 320px !important;
+  }
+}
+
+/* Desktop adjustments - position relative to button */
+@media (min-width: 1024px) {
+  .notification-dropdown {
+    position: absolute !important;
+    top: calc(100% + 8px) !important;
+    right: 0 !important;
+  }
 }
 
 /* Notification Header */

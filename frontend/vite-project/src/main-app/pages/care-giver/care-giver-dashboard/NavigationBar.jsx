@@ -247,7 +247,7 @@ const NavigationBar = () => {
 
         <div className="nav-actions">
           <ul className="nav-icons">
-            <li className="nav-link icon-link">
+            <li className="nav-link notification-bell-wrapper">
               <NotificationBell navigateTo={(path) => navigate(path)} bellIcon={FaBell} />
             </li>
             <IconLink to={`${basePath}/message`} icon={FaEnvelope} alt="Messages" isReactIcon={true} />

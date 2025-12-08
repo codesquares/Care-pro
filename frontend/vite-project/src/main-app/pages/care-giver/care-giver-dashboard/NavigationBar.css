@@ -49,6 +49,28 @@
   object-fit: contain;
 }
 
+/* Notification Bell Wrapper - Special styling to not interfere with dropdown */
+.notification-bell-wrapper {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: auto !important;
+  height: auto !important;
+  border-radius: 0;
+  cursor: default;
+  pointer-events: none !important;
+  position: relative;
+  z-index: 1003;
+}
+
+.notification-bell-wrapper > * {
+  pointer-events: auto !important;
+}
+
+.notification-bell-wrapper:hover {
+  background-color: transparent !important;
+}
+
 /* Mobile Navigation (default) */
 .mobile-nav {
   display: grid;
@@ -461,6 +483,9 @@
     height: 40px !important;
     box-sizing: border-box !important;
     flex-shrink: 0 !important;
+    overflow: visible !important;
+    position: relative !important;
+    z-index: 1001 !important;
   }
   
   .icon-link {
@@ -473,6 +498,31 @@
     transition: background-color 0.2s ease !important;
     cursor: pointer !important;
     flex-shrink: 0 !important;
+    position: relative !important;
+    z-index: 1002 !important;
+  }
+  
+  /* Notification Bell Wrapper - Desktop specific */
+  .notification-bell-wrapper {
+    display: flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+    width: auto !important;
+    height: auto !important;
+    border-radius: 0 !important;
+    cursor: default !important;
+    pointer-events: none !important;
+    position: relative !important;
+    z-index: 1003 !important;
+    background: transparent !important;
+  }
+  
+  .notification-bell-wrapper:hover {
+    background-color: transparent !important;
+  }
+  
+  .notification-bell-wrapper > * {
+    pointer-events: auto !important;
   }
   
   .icon-link:hover {
