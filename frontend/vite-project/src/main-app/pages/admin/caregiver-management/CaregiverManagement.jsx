@@ -263,7 +263,7 @@ const CaregiverManagement = () => {
       {/* Modal for viewing caregiver details */}
       {showModal && selectedCaregiver && (
         <div className="modal-overlay" onClick={closeModal}>
-          <div className="modal-content" onClick={(e) => e.stopPropagation()}>
+          <div className="modal-content caregiver-details-modal" onClick={(e) => e.stopPropagation()}>
             <button className="modal-close" onClick={closeModal}>
               <i className="fas fa-times"></i>
             </button>
