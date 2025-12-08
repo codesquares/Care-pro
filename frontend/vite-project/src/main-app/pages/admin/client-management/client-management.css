@@ -245,11 +245,26 @@
 .modal-content {
   background: white;
   border-radius: 12px;
-  max-width: 700px;
+  max-width: 95vw;
   width: 100%;
+  min-width: 320px;
   max-height: 90vh;
   overflow-y: auto;
+  overflow-x: hidden;
   position: relative;
+}
+
+.client-details-modal {
+  min-width: 1200px;
+  max-width: 1600px;
+}
+
+/* Ensure desktop modal width on larger screens */
+@media (min-width: 769px) {
+  .client-details-modal {
+    min-width: 1200px !important;
+    max-width: 1600px !important;
+  }
 }
 
 .modal-close {
@@ -339,6 +354,15 @@
 
   .modal-overlay {
     padding: 1rem;
+  }
+  
+  .modal-content {
+    max-width: 95vw;
+  }
+  
+  .client-details-modal {
+    min-width: unset;
+    max-width: 95vw;
   }
 
   .modal-header {

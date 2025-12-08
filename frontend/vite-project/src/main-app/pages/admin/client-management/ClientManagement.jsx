@@ -220,7 +220,7 @@ const ClientManagement = () => {
       {/* Modal for viewing client details */}
       {showModal && selectedClient && (
         <div className="modal-overlay" onClick={closeModal}>
-          <div className="modal-content" onClick={(e) => e.stopPropagation()}>
+          <div className="modal-content client-details-modal" onClick={(e) => e.stopPropagation()}>
             <button className="modal-close" onClick={closeModal}>
               <i className="fas fa-times"></i>
             </button>
