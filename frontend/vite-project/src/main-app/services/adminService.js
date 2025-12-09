@@ -1376,7 +1376,8 @@ const adminService = {
    * @param {string} emailData.recipientName - Recipient name
    * @param {string} emailData.subject - Email subject
    * @param {string} emailData.message - Email message (HTML)
-   * @returns {Promise<{success: boolean, message?: string, error?: string}>}
+   * @param {File[]} emailData.attachments - Optional file attachments (max 5 files, 100MB total)
+   * @returns {Promise<{success: boolean, message?: string, attachmentCount?: number, error?: string}>}
    */
   sendEmail: async (emailData) => {
     try {
@@ -1389,17 +1390,33 @@ const adminService = {
       }
 
       console.log('Sending email to:', emailData.recipientEmail);
-      const response = await api.post('/Admins/SendEmail', {
-        recipientEmail: emailData.recipientEmail,
-        recipientName: emailData.recipientName,
-        subject: emailData.subject,
-        message: emailData.message
+      
+      // Create FormData for multipart/form-data request
+      const formData = new FormData();
+      formData.append('RecipientEmail', emailData.recipientEmail);
+      formData.append('RecipientName', emailData.recipientName);
+      formData.append('Subject', emailData.subject);
+      formData.append('Message', emailData.message);
+
+      // Add attachments if provided
+      if (emailData.attachments && emailData.attachments.length > 0) {
+        emailData.attachments.forEach(file => {
+          formData.append('Attachments', file);
+        });
+        console.log(`Adding ${emailData.attachments.length} attachment(s)`);
+      }
+
+      const response = await api.post('/Admins/SendEmail', formData, {
+        headers: {
+          // Do NOT set Content-Type - browser will set it with boundary
+        }
       });
 
       if (response.data && response.data.success) {
         return {
           success: true,
-          message: response.data.message || `Email sent successfully to ${emailData.recipientEmail}`
+          message: response.data.message || `Email sent successfully to ${emailData.recipientEmail}`,
+          attachmentCount: response.data.attachmentCount || 0
         };
       }
 

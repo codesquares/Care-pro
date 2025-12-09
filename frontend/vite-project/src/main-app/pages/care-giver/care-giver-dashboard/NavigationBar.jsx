@@ -207,7 +207,7 @@ const NavigationBar = () => {
                   <span>Profile</span>
                 </div>
               </li>
-              <li className="notifications-item">
+              <li className="caregiver-notifications-item">
                 <div className="menu-item-content" onClick={() => setMobileMenuOpen(false)}>
                   <NotificationBell navigateTo={(path) => navigate(path)} bellIcon={FaBell} />
                   <span>Notifications</span>
@@ -247,7 +247,7 @@ const NavigationBar = () => {
 
         <div className="nav-actions">
           <ul className="nav-icons">
-            <li className="nav-link icon-link">
+            <li className="caregiver-icon-link">
               <NotificationBell navigateTo={(path) => navigate(path)} bellIcon={FaBell} />
             </li>
             <IconLink to={`${basePath}/message`} icon={FaEnvelope} alt="Messages" isReactIcon={true} />

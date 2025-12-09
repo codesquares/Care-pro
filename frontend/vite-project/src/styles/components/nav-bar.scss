@@ -199,8 +199,42 @@
     }
   }
 
-  // Tablet Styles
-  @media (min-width: 769px) and (max-width: 1024px) {
+  // Tablet Styles (Portrait 820x1180 and similar)
+  @media (min-width: 769px) and (max-width: 900px) {
+    height: 80px;
+    padding: 0 15px;
+
+    &-logo {
+      padding-left: 20px;
+
+      img {
+        height: 32px;
+      }
+    }
+
+    &-links {
+      gap: 20px;
+      padding-left: 30px;
+
+      li a {
+        font-size: 0.85rem;
+      }
+    }
+
+    &-actions {
+      padding-right: 20px;
+      gap: 15px;
+    }
+
+    &-cta .btn-primary {
+      padding: 8px 14px;
+      margin-right: 20px;
+      font-size: 0.9rem;
+    }
+  }
+
+  // Tablet Styles (Larger tablets)
+  @media (min-width: 901px) and (max-width: 1024px) {
     height: 80px;
     padding: 0 20px;
 

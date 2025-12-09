@@ -10,12 +10,23 @@ const NotificationBell = ({ navigateTo, bellIcon: BellIcon }) => {
   const [isOpen, setIsOpen] = useState(false);
   const [expandedNotificationId, setExpandedNotificationId] = useState(null);
   const dropdownRef = useRef(null);
+  const buttonRef = useRef(null);
 
-  const toggleNotifications = () => setIsOpen(!isOpen);
+  const toggleNotifications = (e) => {
+    e.preventDefault();
+    e.stopPropagation();
+    setIsOpen(prev => !prev);
+  };
 
   useEffect(() => {
     const handleClickOutside = (e) => {
-      if (dropdownRef.current && !dropdownRef.current.contains(e.target)) {
+      // Check if click is outside both the dropdown and the button
+      if (
+        dropdownRef.current && 
+        !dropdownRef.current.contains(e.target) &&
+        buttonRef.current &&
+        !buttonRef.current.contains(e.target)
+      ) {
         setIsOpen(false);
         setExpandedNotificationId(null);
       }
@@ -63,12 +74,9 @@ const NotificationBell = ({ navigateTo, bellIcon: BellIcon }) => {
     }
   };
 
-  console.log('Notifications:', notifications);
-  console.log('Unread Count:', unreadCount);
-
   return (
-    <div className="notification-bell-container" ref={dropdownRef}>
-      <button className="notification-bell" onClick={toggleNotifications}>
+    <div className="notification-bell-container">
+      <button className="notification-bell" onClick={toggleNotifications} ref={buttonRef}>
         {BellIcon ? (
           <BellIcon className="bell-icon" />
         ) : (
@@ -78,7 +86,7 @@ const NotificationBell = ({ navigateTo, bellIcon: BellIcon }) => {
       </button>
 
       {isOpen && (
-        <div className="notification-dropdown">
+        <div className="notification-dropdown" ref={dropdownRef}>
           <div className="notification-header">
             <h3>Notifications</h3>
             {notifications.length > 0 && (
