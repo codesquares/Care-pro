@@ -25,6 +25,8 @@ const EmailComposer = () => {
   
   const [showUserSelector, setShowUserSelector] = useState(false);
   const [userSearchTerm, setUserSearchTerm] = useState('');
+  const [attachments, setAttachments] = useState([]);
+  const [attachmentErrors, setAttachmentErrors] = useState([]);
 
   useEffect(() => {
     loadUsers();
@@ -56,6 +58,99 @@ const EmailComposer = () => {
       console.error('Error loading users:', err);
     } finally {
       setLoading(false);
+    }
+  };
+
+  const validateAttachments = (files) => {
+    const errors = [];
+    const allowedTypes = {
+      'image/jpeg': ['.jpg', '.jpeg'],
+      'image/jpg': ['.jpg', '.jpeg'],
+      'video/mp4': ['.mp4'],
+      'application/pdf': ['.pdf']
+    };
+    const maxFileSize = 50 * 1024 * 1024; // 50MB
+    const maxTotalSize = 100 * 1024 * 1024; // 100MB
+    
+    // Check count
+    if (files.length > 5) {
+      errors.push('Maximum 5 files allowed');
+      return { isValid: false, errors };
+    }
+    
+    let totalSize = 0;
+    
+    files.forEach((file) => {
+      totalSize += file.size;
+      
+      // Check file size
+      if (file.size > maxFileSize) {
+        errors.push(`${file.name}: Exceeds 50MB limit (${(file.size / 1024 / 1024).toFixed(1)}MB)`);
+      }
+      
+      // Check file type
+      const extension = file.name.substring(file.name.lastIndexOf('.')).toLowerCase();
+      const mimeType = file.type;
+      
+      if (!allowedTypes[mimeType] || !allowedTypes[mimeType].includes(extension)) {
+        errors.push(`${file.name}: Invalid file type (only JPG, JPEG, MP4, PDF allowed)`);
+      }
+    });
+    
+    // Check total size
+    if (totalSize > maxTotalSize) {
+      errors.push(`Total size (${(totalSize / 1024 / 1024).toFixed(1)}MB) exceeds 100MB limit`);
+    }
+    
+    return { isValid: errors.length === 0, errors };
+  };
+
+  const handleFileSelect = (e) => {
+    const files = Array.from(e.target.files);
+    const currentFileCount = attachments.length;
+    const newFiles = files.slice(0, 5 - currentFileCount);
+    
+    if (newFiles.length === 0) {
+      setAttachmentErrors(['Maximum 5 files allowed']);
+      return;
+    }
+    
+    const updatedAttachments = [...attachments, ...newFiles];
+    const validation = validateAttachments(updatedAttachments);
+    
+    setAttachments(updatedAttachments);
+    setAttachmentErrors(validation.errors);
+    
+    // Reset input
+    e.target.value = '';
+  };
+
+  const handleRemoveFile = (index) => {
+    const updatedAttachments = attachments.filter((_, i) => i !== index);
+    const validation = validateAttachments(updatedAttachments);
+    
+    setAttachments(updatedAttachments);
+    setAttachmentErrors(validation.errors);
+  };
+
+  const formatFileSize = (bytes) => {
+    if (bytes < 1024) return bytes + ' B';
+    if (bytes < 1024 * 1024) return (bytes / 1024).toFixed(1) + ' KB';
+    return (bytes / 1024 / 1024).toFixed(1) + ' MB';
+  };
+
+  const getFileIcon = (filename) => {
+    const extension = filename.substring(filename.lastIndexOf('.')).toLowerCase();
+    switch (extension) {
+      case '.pdf':
+        return '📄';
+      case '.jpg':
+      case '.jpeg':
+        return '🖼️';
+      case '.mp4':
+        return '🎬';
+      default:
+        return '📎';
     }
   };
 
@@ -94,7 +189,8 @@ const EmailComposer = () => {
           recipientEmail: individualRecipient.email,
           recipientName: individualRecipient.name,
           subject,
-          message
+          message,
+          attachments
         });
       } else {
         // Send bulk email
@@ -120,6 +216,8 @@ const EmailComposer = () => {
           setMessage('');
           setIndividualRecipient({ email: '', name: '' });
           setSelectedUsers([]);
+          setAttachments([]);
+          setAttachmentErrors([]);
           setResult(null);
         }, 5000);
       }
@@ -224,6 +322,12 @@ const EmailComposer = () => {
           <div className="alert-content">
             <strong>{result.success ? 'Success!' : 'Error'}</strong>
             <p>{result.message || result.error}</p>
+            {result.attachmentCount > 0 && (
+              <p className="attachment-info-result">
+                <i className="fas fa-paperclip"></i>
+                {result.attachmentCount} file(s) attached
+              </p>
+            )}
             {result.stats && (
               <div className="email-stats">
                 <span>Total: {result.stats.totalRecipients}</span>
@@ -261,6 +365,8 @@ const EmailComposer = () => {
               onClick={() => {
                 setEmailMode('bulk');
                 setIndividualRecipient({ email: '', name: '' });
+                setAttachments([]);
+                setAttachmentErrors([]);
               }}
             >
               <i className="fas fa-users"></i>
@@ -442,6 +548,83 @@ const EmailComposer = () => {
             </span>
           </div>
 
+          {/* Attachments Section (Individual Mode Only) */}
+          {emailMode === 'individual' && (
+            <div className="form-group attachments-section">
+              <label>Attachments (Optional)</label>
+              <div className="attachment-info">
+                <i className="fas fa-info-circle"></i>
+                <span>Max 5 files • JPG, JPEG, MP4, PDF only • 50MB per file • 100MB total</span>
+              </div>
+              
+              <input
+                type="file"
+                accept=".jpg,.jpeg,.mp4,.pdf"
+                multiple
+                onChange={handleFileSelect}
+                disabled={attachments.length >= 5}
+                className="file-input"
+                id="file-upload"
+              />
+              <label htmlFor="file-upload" className="file-upload-label">
+                <i className="fas fa-paperclip"></i>
+                {attachments.length >= 5 ? 'Maximum files reached' : 'Choose Files'}
+              </label>
+
+              {/* Attachment Errors */}
+              {attachmentErrors.length > 0 && (
+                <div className="attachment-errors">
+                  {attachmentErrors.map((error, index) => (
+                    <div key={index} className="error-item">
+                      <i className="fas fa-exclamation-circle"></i>
+                      {error}
+                    </div>
+                  ))}
+                </div>
+              )}
+
+              {/* Attached Files List */}
+              {attachments.length > 0 && (
+                <div className="attached-files-list">
+                  <div className="list-header">
+                    <span>📎 {attachments.length} file(s) attached</span>
+                    <span className="total-size">
+                      Total: {formatFileSize(attachments.reduce((sum, f) => sum + f.size, 0))}
+                    </span>
+                  </div>
+                  {attachments.map((file, index) => (
+                    <div key={index} className="attached-file-item">
+                      <span className="file-icon">{getFileIcon(file.name)}</span>
+                      <div className="file-info">
+                        <span className="file-name">{file.name}</span>
+                        <span className="file-size">{formatFileSize(file.size)}</span>
+                      </div>
+                      <button
+                        type="button"
+                        className="remove-file-btn"
+                        onClick={() => handleRemoveFile(index)}
+                        title="Remove file"
+                      >
+                        <i className="fas fa-times"></i>
+                      </button>
+                    </div>
+                  ))}
+                </div>
+              )}
+            </div>
+          )}
+
+          {/* Bulk Mode Notice */}
+          {emailMode === 'bulk' && (
+            <div className="bulk-attachment-notice">
+              <i className="fas fa-info-circle"></i>
+              <div>
+                <strong>Note:</strong> Attachments are only available for individual emails.
+                Bulk emails support text and HTML content only.
+              </div>
+            </div>
+          )}
+
           {/* Preview Button */}
           <button
             className="btn-preview"
@@ -458,7 +641,7 @@ const EmailComposer = () => {
           <button
             className="btn-send"
             onClick={handleSendEmail}
-            disabled={sending || !subject || !message || (emailMode === 'individual' && (!individualRecipient.email || !individualRecipient.name))}
+            disabled={sending || !subject || !message || (emailMode === 'individual' && (!individualRecipient.email || !individualRecipient.name)) || attachmentErrors.length > 0}
           >
             {sending ? (
               <>

@@ -793,3 +793,254 @@
     font-size: 0.9rem;
   }
 }
+
+/* ============================================
+   ATTACHMENT STYLES
+   ============================================ */
+
+.attachments-section {
+  margin-top: 1.5rem;
+  padding: 1.5rem;
+  background: #f8f9fa;
+  border-radius: 8px;
+  border: 2px dashed #dee2e6;
+}
+
+.attachments-section label {
+  display: block;
+  margin-bottom: 0.5rem;
+  font-weight: 600;
+  color: #495057;
+}
+
+.attachment-info {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  margin-bottom: 1rem;
+  padding: 0.75rem;
+  background: #e7f3ff;
+  border-radius: 6px;
+  color: #0056b3;
+  font-size: 0.9rem;
+}
+
+.attachment-info i {
+  font-size: 1rem;
+}
+
+.file-input {
+  display: none;
+}
+
+.file-upload-label {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.75rem 1.5rem;
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  color: white;
+  border-radius: 8px;
+  cursor: pointer;
+  font-weight: 500;
+  transition: all 0.3s ease;
+  box-shadow: 0 2px 8px rgba(102, 126, 234, 0.3);
+}
+
+.file-upload-label:hover:not([disabled]) {
+  transform: translateY(-2px);
+  box-shadow: 0 4px 12px rgba(102, 126, 234, 0.4);
+}
+
+.file-upload-label:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+.file-input:disabled + .file-upload-label {
+  opacity: 0.6;
+  cursor: not-allowed;
+  background: #6c757d;
+}
+
+.attachment-errors {
+  margin-top: 1rem;
+  padding: 1rem;
+  background: #fff3cd;
+  border-left: 4px solid #ffc107;
+  border-radius: 6px;
+}
+
+.attachment-errors .error-item {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  color: #856404;
+  font-size: 0.9rem;
+  margin-bottom: 0.5rem;
+}
+
+.attachment-errors .error-item:last-child {
+  margin-bottom: 0;
+}
+
+.attachment-errors i {
+  color: #ffc107;
+}
+
+.attached-files-list {
+  margin-top: 1rem;
+  border: 1px solid #dee2e6;
+  border-radius: 8px;
+  background: white;
+  overflow: hidden;
+}
+
+.list-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 0.75rem 1rem;
+  background: #e9ecef;
+  border-bottom: 1px solid #dee2e6;
+  font-weight: 600;
+  color: #495057;
+  font-size: 0.9rem;
+}
+
+.total-size {
+  color: #6c757d;
+  font-weight: 500;
+}
+
+.attached-file-item {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  padding: 1rem;
+  border-bottom: 1px solid #f1f3f5;
+  transition: background 0.2s ease;
+}
+
+.attached-file-item:last-child {
+  border-bottom: none;
+}
+
+.attached-file-item:hover {
+  background: #f8f9fa;
+}
+
+.file-icon {
+  font-size: 1.5rem;
+  min-width: 30px;
+  text-align: center;
+}
+
+.file-info {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem;
+  min-width: 0;
+}
+
+.file-name {
+  font-weight: 500;
+  color: #212529;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.file-size {
+  font-size: 0.85rem;
+  color: #6c757d;
+}
+
+.remove-file-btn {
+  padding: 0.5rem;
+  background: #dc3545;
+  color: white;
+  border: none;
+  border-radius: 6px;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 36px;
+  height: 36px;
+}
+
+.remove-file-btn:hover {
+  background: #c82333;
+  transform: scale(1.05);
+}
+
+.remove-file-btn i {
+  font-size: 0.9rem;
+}
+
+.bulk-attachment-notice {
+  display: flex;
+  align-items: flex-start;
+  gap: 1rem;
+  padding: 1rem;
+  margin-top: 1rem;
+  background: #e7f3ff;
+  border-left: 4px solid #0056b3;
+  border-radius: 6px;
+  color: #0056b3;
+}
+
+.bulk-attachment-notice i {
+  font-size: 1.25rem;
+  margin-top: 0.15rem;
+}
+
+.bulk-attachment-notice strong {
+  font-weight: 600;
+}
+
+.attachment-info-result {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  margin-top: 0.5rem;
+  color: #28a745;
+  font-size: 0.95rem;
+}
+
+.attachment-info-result i {
+  font-size: 1rem;
+}
+
+/* Responsive attachment styles */
+@media (max-width: 768px) {
+  .attachments-section {
+    padding: 1rem;
+  }
+
+  .list-header {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 0.5rem;
+  }
+
+  .attached-file-item {
+    padding: 0.75rem;
+    gap: 0.75rem;
+  }
+
+  .file-icon {
+    font-size: 1.25rem;
+  }
+
+  .file-name {
+    font-size: 0.9rem;
+  }
+
+  .file-size {
+    font-size: 0.8rem;
+  }
+}
