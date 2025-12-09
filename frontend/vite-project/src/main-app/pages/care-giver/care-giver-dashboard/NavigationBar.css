@@ -35,6 +35,8 @@
   border-radius: 8px;
   transition: background-color 0.2s ease;
   cursor: pointer;
+  position: relative;
+  overflow: visible;
 }
 
 .icon-link:hover {
@@ -47,28 +49,6 @@
   font-size: 20px;
   color: #333;
   object-fit: contain;
-}
-
-/* Notification Bell Wrapper - Special styling to not interfere with dropdown */
-.notification-bell-wrapper {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  width: auto !important;
-  height: auto !important;
-  border-radius: 0;
-  cursor: default;
-  pointer-events: none !important;
-  position: relative;
-  z-index: 1003;
-}
-
-.notification-bell-wrapper > * {
-  pointer-events: auto !important;
-}
-
-.notification-bell-wrapper:hover {
-  background-color: transparent !important;
 }
 
 /* Mobile Navigation (default) */
@@ -311,17 +291,34 @@
   border-bottom: none;
 }
 
-.mobile-menu-links li.notifications-item {
+.mobile-menu-links li.caregiver-notifications-item {
   color: #007bff;
+  padding: 0;
+  overflow: visible;
 }
 
-.mobile-menu-links li.notifications-item .menu-item-content {
+.mobile-menu-links li.caregiver-notifications-item .menu-item-content {
   display: flex;
   align-items: center;
   gap: 12px;
+  padding: 16px 20px;
+  position: relative;
+  overflow: visible;
 }
 
-.mobile-menu-links li.notifications-item img {
+.mobile-menu-links li.caregiver-notifications-item .notification-bell-container {
+  width: 20px;
+  height: 20px;
+  overflow: visible;
+}
+
+.mobile-menu-links li.caregiver-notifications-item .notification-bell {
+  width: 20px;
+  height: 20px;
+  padding: 0;
+}
+
+.mobile-menu-links li.caregiver-notifications-item img {
   width: 20px;
   height: 20px;
 }
@@ -423,6 +420,7 @@
     box-sizing: border-box !important;
     height: 64px !important;
     min-height: 64px !important;
+    margin: 0 !important;
   }
   
   .logo img {
@@ -463,17 +461,20 @@
     display: flex !important;
     align-items: center !important;
     gap: 16px !important;
-    overflow: visible !important;
     position: relative !important;
     flex-shrink: 0 !important;
     min-width: auto !important;
     height: 100% !important;
+    overflow: visible !important;
+    padding: 0 !important;
+    margin: 0 !important;
+    box-sizing: border-box !important;
   }
   
   .nav-icons {
     display: flex !important;
     align-items: center !important;
-    gap: 2px !important;
+    gap: 12px !important;
     list-style: none !important;
     margin: 0 !important;
     padding: 6px 12px !important;
@@ -483,9 +484,8 @@
     height: 40px !important;
     box-sizing: border-box !important;
     flex-shrink: 0 !important;
-    overflow: visible !important;
     position: relative !important;
-    z-index: 1001 !important;
+    overflow: visible !important;
   }
   
   .icon-link {
@@ -494,39 +494,23 @@
     justify-content: center !important;
     width: 32px !important;
     height: 32px !important;
-    border-radius: 8px !important;
+    border-radius: 6px !important;
     transition: background-color 0.2s ease !important;
     cursor: pointer !important;
     flex-shrink: 0 !important;
     position: relative !important;
-    z-index: 1002 !important;
-  }
-  
-  /* Notification Bell Wrapper - Desktop specific */
-  .notification-bell-wrapper {
-    display: flex !important;
-    align-items: center !important;
-    justify-content: center !important;
-    width: auto !important;
-    height: auto !important;
-    border-radius: 0 !important;
-    cursor: default !important;
-    pointer-events: none !important;
-    position: relative !important;
-    z-index: 1003 !important;
-    background: transparent !important;
-  }
-  
-  .notification-bell-wrapper:hover {
-    background-color: transparent !important;
-  }
-  
-  .notification-bell-wrapper > * {
-    pointer-events: auto !important;
+    overflow: visible !important;
+    padding: 0 !important;
+    box-sizing: border-box !important;
   }
   
   .icon-link:hover {
     background-color: #ffffff !important;
+  }
+  
+  /* Disable hover for notification icon parent */
+  .desktop-nav .nav-icons .caregiver-icon-link:hover {
+    background-color: transparent !important;
   }
   
   .icon-link img {
@@ -541,6 +525,62 @@
     color: #333 !important;
     display: inline-block !important;
     flex-shrink: 0 !important;
+  }
+  
+  /* Notification bell specific styling for caregiver */
+  .desktop-nav .nav-icons .caregiver-icon-link {
+    width: 32px !important;
+    height: 32px !important;
+    padding: 0 !important;
+    overflow: visible !important;
+    cursor: default !important;
+    transition: none !important;
+    background-color: transparent !important;
+  }
+  
+  .desktop-nav .nav-icons .caregiver-icon-link .notification-bell-container {
+    width: 32px !important;
+    height: 32px !important;
+    display: flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+    box-sizing: border-box !important;
+    margin: 0 !important;
+    padding: 0 !important;
+    overflow: visible !important;
+  }
+  
+  .desktop-nav .nav-icons .caregiver-icon-link .notification-bell {
+    display: flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+    width: 32px !important;
+    height: 32px !important;
+    box-sizing: border-box !important;
+    padding: 6px !important;
+    margin: 0 !important;
+    cursor: pointer !important;
+    border-radius: 6px !important;
+  }
+  
+  .desktop-nav .nav-icons .caregiver-icon-link .notification-bell img {
+    width: 16px !important;
+    height: 16px !important;
+    object-fit: contain !important;
+  }
+  
+  .desktop-nav .nav-icons .caregiver-icon-link .bell-icon {
+    font-size: 16px !important;
+    width: 16px !important;
+    height: 16px !important;
+    color: #333 !important;
+  }
+  
+  .desktop-nav .nav-icons .caregiver-icon-link .notification-badge {
+    position: absolute !important;
+    top: -2px !important;
+    right: -2px !important;
+    transform: none !important;
   }
   
   .nav-react-icon {
@@ -606,7 +646,7 @@
   }
 
 /* Profile avatar for desktop */
-  .profile-avatar {
+  .desktop-nav .profile-avatar {
     display: flex !important;
     align-items: center !important;
     gap: 8px !important;
