@@ -1408,7 +1408,7 @@ const adminService = {
 
       const response = await api.post('/Admins/SendEmail', formData, {
         headers: {
-          // Do NOT set Content-Type - browser will set it with boundary
+          'Content-Type': undefined  // Remove default JSON Content-Type for FormData
         }
       });
 
