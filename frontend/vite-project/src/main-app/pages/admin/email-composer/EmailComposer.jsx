@@ -197,7 +197,8 @@ const EmailComposer = () => {
         const bulkData = {
           recipientType,
           subject,
-          message
+          message,
+          attachments
         };
 
         if (recipientType === 'Specific') {
@@ -365,8 +366,6 @@ const EmailComposer = () => {
               onClick={() => {
                 setEmailMode('bulk');
                 setIndividualRecipient({ email: '', name: '' });
-                setAttachments([]);
-                setAttachmentErrors([]);
               }}
             >
               <i className="fas fa-users"></i>
@@ -548,13 +547,13 @@ const EmailComposer = () => {
             </span>
           </div>
 
-          {/* Attachments Section (Individual Mode Only) */}
-          {emailMode === 'individual' && (
+          {/* Attachments Section (Available for both modes) */}
+          {
             <div className="form-group attachments-section">
               <label>Attachments (Optional)</label>
               <div className="attachment-info">
                 <i className="fas fa-info-circle"></i>
-                <span>Max 5 files • JPG, JPEG, MP4, PDF only • 50MB per file • 100MB total</span>
+                <span>Max 5 files • JPG, JPEG, MP4, PDF only • 50MB per file • 100MB total{emailMode === 'bulk' ? ' • Same files sent to all recipients' : ''}</span>
               </div>
               
               <input
@@ -612,18 +611,7 @@ const EmailComposer = () => {
                 </div>
               )}
             </div>
-          )}
-
-          {/* Bulk Mode Notice */}
-          {emailMode === 'bulk' && (
-            <div className="bulk-attachment-notice">
-              <i className="fas fa-info-circle"></i>
-              <div>
-                <strong>Note:</strong> Attachments are only available for individual emails.
-                Bulk emails support text and HTML content only.
-              </div>
-            </div>
-          )}
+          }
 
           {/* Preview Button */}
           <button
