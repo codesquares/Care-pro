@@ -548,13 +548,12 @@ const EmailComposer = () => {
           </div>
 
           {/* Attachments Section (Available for both modes) */}
-          {
-            <div className="form-group attachments-section">
-              <label>Attachments (Optional)</label>
-              <div className="attachment-info">
-                <i className="fas fa-info-circle"></i>
-                <span>Max 5 files • JPG, JPEG, MP4, PDF only • 50MB per file • 100MB total{emailMode === 'bulk' ? ' • Same files sent to all recipients' : ''}</span>
-              </div>
+          <div className="form-group attachments-section">
+            <label>Attachments (Optional)</label>
+            <div className="attachment-info">
+              <i className="fas fa-info-circle"></i>
+              <span>Max 5 files • JPG, JPEG, MP4, PDF only • 50MB per file • 100MB total{emailMode === 'bulk' ? ' • Same files sent to all recipients' : ''}</span>
+            </div>
               
               <input
                 type="file"
@@ -610,8 +609,7 @@ const EmailComposer = () => {
                   ))}
                 </div>
               )}
-            </div>
-          }
+          </div>
 
           {/* Preview Button */}
           <button
