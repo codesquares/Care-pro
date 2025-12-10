@@ -1393,10 +1393,12 @@ const adminService = {
       
       // Create FormData for multipart/form-data request
       const formData = new FormData();
-      formData.append('RecipientEmail', emailData.recipientEmail);
-      formData.append('RecipientName', emailData.recipientName);
+      formData.append('ToEmail', emailData.recipientEmail);
+      // Extract first name from full name (backend expects only first name for personalization)
+      const firstName = emailData.recipientName.split(' ')[0];
+      formData.append('FirstName', firstName);
       formData.append('Subject', emailData.subject);
-      formData.append('Message', emailData.message);
+      formData.append('HtmlContent', emailData.message);
 
       // Add attachments if provided
       if (emailData.attachments && emailData.attachments.length > 0) {
@@ -1440,6 +1442,7 @@ const adminService = {
    * @param {Array<string>} bulkEmailData.specificUserIds - User IDs (required for Specific type)
    * @param {string} bulkEmailData.subject - Email subject
    * @param {string} bulkEmailData.message - Email message (HTML)
+   * @param {File[]} bulkEmailData.attachments - Optional file attachments (max 5 files, 100MB total)
    * @returns {Promise<{success: boolean, message?: string, stats?: Object, error?: string}>}
    */
   sendBulkEmail: async (bulkEmailData) => {
@@ -1453,17 +1456,32 @@ const adminService = {
       }
 
       console.log('Sending bulk email to:', bulkEmailData.recipientType);
-      const requestBody = {
-        recipientType: bulkEmailData.recipientType,
-        subject: bulkEmailData.subject,
-        message: bulkEmailData.message
-      };
+      
+      // Create FormData for multipart/form-data request
+      const formData = new FormData();
+      formData.append('RecipientType', bulkEmailData.recipientType);
+      formData.append('Subject', bulkEmailData.subject);
+      formData.append('Message', bulkEmailData.message);
 
       if (bulkEmailData.recipientType === 'Specific' && bulkEmailData.specificUserIds) {
-        requestBody.specificUserIds = bulkEmailData.specificUserIds;
+        bulkEmailData.specificUserIds.forEach(id => {
+          formData.append('SpecificUserIds', id);
+        });
       }
 
-      const response = await api.post('/Admins/SendBulkEmail', requestBody);
+      // Add attachments if provided
+      if (bulkEmailData.attachments && bulkEmailData.attachments.length > 0) {
+        bulkEmailData.attachments.forEach(file => {
+          formData.append('Attachments', file);
+        });
+        console.log(`Adding ${bulkEmailData.attachments.length} attachment(s) to bulk email`);
+      }
+
+      const response = await api.post('/Admins/SendBulkEmail', formData, {
+        headers: {
+          'Content-Type': undefined  // Remove default JSON Content-Type for FormData
+        }
+      });
 
       if (response.data && response.data.success) {
         return {
