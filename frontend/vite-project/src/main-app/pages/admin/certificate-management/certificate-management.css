@@ -694,11 +694,160 @@
   color: #856404;
 }
 
+/* Validation Issues Card */
+.validation-issues-card {
+  background: #fff5f5;
+  border-color: #fc8181;
+}
+
+.validation-issues-card h3 {
+  color: #c53030;
+}
+
+.validation-issues-list {
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+}
+
+.validation-issue-item {
+  display: flex;
+  align-items: flex-start;
+  gap: 0.75rem;
+  padding: 0.75rem;
+  background: white;
+  border-radius: 8px;
+  border-left: 3px solid #fc8181;
+}
+
+.validation-issue-item i {
+  color: #fc8181;
+  font-size: 0.5rem;
+  margin-top: 0.5rem;
+}
+
+.validation-issue-item span {
+  color: #2d3748;
+  flex: 1;
+  line-height: 1.5;
+}
+
+/* Review Notes Card */
+.review-notes-card {
+  background: #f0f9ff;
+  border-color: #60a5fa;
+}
+
+.review-notes-card h3 {
+  color: #1e40af;
+}
+
+.review-notes-content {
+  padding: 1rem;
+  background: white;
+  border-radius: 8px;
+  border-left: 3px solid #60a5fa;
+  margin-bottom: 1rem;
+}
+
+.review-notes-content p {
+  margin: 0;
+  color: #2d3748;
+  line-height: 1.6;
+}
+
+.review-metadata {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+  padding-top: 0.75rem;
+  border-top: 1px solid #bfdbfe;
+}
+
+.review-metadata .detail-row {
+  padding: 0.5rem 0;
+  border-bottom: none;
+}
+
+.review-metadata .label {
+  font-size: 0.9rem;
+  color: #64748b;
+}
+
+.review-metadata .value {
+  font-size: 0.9rem;
+  color: #475569;
+}
+
+/* Review Form Context */
+.review-context {
+  background: #fef3c7;
+  padding: 1rem;
+  border-radius: 8px;
+  margin-bottom: 1rem;
+  border-left: 3px solid #f59e0b;
+}
+
+.review-context .context-label {
+  margin: 0 0 0.75rem 0;
+  font-weight: 600;
+  color: #92400e;
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.context-issues-list {
+  margin: 0;
+  padding-left: 1.5rem;
+  list-style: disc;
+}
+
+.context-issues-list li {
+  color: #78350f;
+  margin-bottom: 0.5rem;
+  line-height: 1.5;
+}
+
 /* Action Buttons */
 .action-buttons {
   display: flex;
   gap: 1rem;
   margin-top: 1rem;
+}
+
+/* Status Messages */
+.status-message {
+  padding: 1rem 1.25rem;
+  border-radius: 8px;
+  margin-top: 1rem;
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  font-weight: 500;
+  line-height: 1.5;
+}
+
+.status-message i {
+  font-size: 1.25rem;
+}
+
+.success-message {
+  background: #d4edda;
+  color: #155724;
+  border: 1px solid #c3e6cb;
+}
+
+.warning-message {
+  background: #fff3cd;
+  color: #856404;
+  border: 1px solid #ffeaa7;
+}
+
+.info-message {
+  background: #d1ecf1;
+  color: #0c5460;
+  border: 1px solid #bee5eb;
 }
 
 .btn-approve,
