@@ -13,10 +13,9 @@ const CertificateManagement = () => {
   const [showCertModal, setShowCertModal] = useState(false);
   const [statistics, setStatistics] = useState(null);
   const [actionLoading, setActionLoading] = useState(false);
-  const [rejectionReason, setRejectionReason] = useState('');
-  const [approvalNotes, setApprovalNotes] = useState('');
-  const [showRejectModal, setShowRejectModal] = useState(false);
-  const [showApprovalModal, setShowApprovalModal] = useState(false);
+  const [adminNotes, setAdminNotes] = useState('');
+  const [showReviewModal, setShowReviewModal] = useState(false);
+  const [reviewAction, setReviewAction] = useState(null); // 'approve' or 'reject'
   const [successMessage, setSuccessMessage] = useState('');
   const [imageZoom, setImageZoom] = useState(false);
 
@@ -72,100 +71,87 @@ const CertificateManagement = () => {
 
   const handleViewCertificate = async (certificateId) => {
     try {
+      console.log('Fetching certificate details for ID:', certificateId);
       const result = await adminService.getCertificateDetails(certificateId);
+      console.log('Certificate details result:', result);
+      
       if (result.success) {
-        setSelectedCertificate(adminService.formatCertificateData(result.data));
+        const formattedData = adminService.formatCertificateData(result.data);
+        console.log('Formatted certificate data:', formattedData);
+        console.log('Status value:', formattedData?.statusValue);
+        setSelectedCertificate(formattedData);
         setShowCertModal(true);
-        setRejectionReason('');
-        setApprovalNotes('');
       } else {
+        console.error('Failed to load certificate:', result.error);
         alert(result.error || 'Failed to load certificate details');
       }
     } catch (err) {
       console.error('Error loading certificate:', err);
-      alert('Failed to load certificate details');
+      alert('Failed to load certificate details: ' + err.message);
     }
   };
 
   const closeCertModal = () => {
     setShowCertModal(false);
     setSelectedCertificate(null);
-    setShowRejectModal(false);
-    setShowApprovalModal(false);
-    setRejectionReason('');
-    setApprovalNotes('');
+    setShowReviewModal(false);
+    setAdminNotes('');
+    setReviewAction(null);
     setImageZoom(false);
   };
 
-  const handleApprove = async () => {
+  // New unified review handler
+  const handleReviewCertificate = async () => {
     if (!selectedCertificate) return;
 
-    setActionLoading(true);
-    try {
-      const result = await adminService.approveCertificate(
-        selectedCertificate.id,
-        adminId,
-        approvalNotes
-      );
+    const approved = reviewAction === 'approve';
 
-      if (result.success) {
-        setSuccessMessage('Certificate approved successfully! Caregiver has been notified.');
-        setTimeout(() => setSuccessMessage(''), 5000);
-        closeCertModal();
-        loadCertificates(); // Reload to get updated data
-      } else {
-        alert(result.error || 'Failed to approve certificate');
-      }
-    } catch (err) {
-      console.error('Error approving certificate:', err);
-      alert('Failed to approve certificate');
-    } finally {
-      setActionLoading(false);
-    }
-  };
-
-  const handleReject = async () => {
-    if (!selectedCertificate) return;
-
-    if (!rejectionReason || rejectionReason.trim() === '') {
-      alert('Rejection reason is required');
+    // Require notes for rejection
+    if (!approved && !adminNotes.trim()) {
+      alert('Please provide a reason for rejection');
       return;
     }
 
+    console.log('handleReviewCertificate called with:', {
+      certificateId: selectedCertificate.id,
+      adminId,
+      approved,
+      adminNotes,
+      reviewAction
+    });
+
     setActionLoading(true);
     try {
-      const result = await adminService.rejectCertificate(
+      const result = await adminService.reviewCertificate(
         selectedCertificate.id,
         adminId,
-        rejectionReason
+        approved,
+        adminNotes
       );
 
+      console.log('Review result:', result);
+
       if (result.success) {
-        setSuccessMessage('Certificate rejected. Caregiver has been notified with detailed feedback.');
+        const action = approved ? 'approved' : 'rejected';
+        setSuccessMessage(`Certificate ${action} successfully! Caregiver has been notified.`);
         setTimeout(() => setSuccessMessage(''), 5000);
         closeCertModal();
         loadCertificates(); // Reload to get updated data
       } else {
-        alert(result.error || 'Failed to reject certificate');
+        alert(result.error || `Failed to ${approved ? 'approve' : 'reject'} certificate`);
       }
     } catch (err) {
-      console.error('Error rejecting certificate:', err);
-      alert('Failed to reject certificate');
+      console.error('Error reviewing certificate:', err);
+      alert('Failed to review certificate');
     } finally {
       setActionLoading(false);
     }
   };
 
-  const showApprovalConfirmation = () => {
-    setShowApprovalModal(true);
-  };
-
-  const showRejectionForm = () => {
-    setShowRejectModal(true);
-  };
-
-  const selectRejectionReason = (reason) => {
-    setRejectionReason(reason);
+  const showReview = (action) => {
+    setReviewAction(action);
+    setShowReviewModal(true);
+    setAdminNotes('');
   };
 
   if (loading) {
@@ -379,6 +365,11 @@ const CertificateManagement = () => {
             </div>
 
             <div className="modal-body">
+              {!selectedCertificate || !selectedCertificate.imageUrl ? (
+                <div className="loading-state">
+                  <p>Loading certificate details...</p>
+                </div>
+              ) : (
               <div className="cert-review-grid">
                 {/* Left: Certificate Image */}
                 <div className="cert-image-section">
@@ -404,7 +395,7 @@ const CertificateManagement = () => {
                     <h3>Certificate Information</h3>
                     <div className="detail-row">
                       <span className="label">Certificate Name:</span>
-                      <span className="value">{selectedCertificate.name}</span>
+                      <span className="value">{selectedCertificate.name || 'N/A'}</span>
                     </div>
                     <div className="detail-row">
                       <span className="label">Issuer:</span>
@@ -471,15 +462,15 @@ const CertificateManagement = () => {
                     <h3>Verification Details</h3>
                     <div className="detail-row">
                       <span className="label">Confidence Score:</span>
-                      <span className={`confidence-badge confidence-${selectedCertificate.confidence.color}`}>
-                        {selectedCertificate.confidence.percentage}% ({selectedCertificate.confidence.level})
+                      <span className={`confidence-badge confidence-${selectedCertificate.confidence?.color || 'gray'}`}>
+                        {selectedCertificate.confidence?.percentage || 0}% ({selectedCertificate.confidence?.level || 'Unknown'})
                       </span>
                     </div>
                     <div className="detail-row">
                       <span className="label">Verification Attempts:</span>
-                      <span className="value">{selectedCertificate.attempts}</span>
+                      <span className="value">{selectedCertificate.attempts || 0}</span>
                     </div>
-                    {selectedCertificate.verifiedDate !== 'N/A' && (
+                    {selectedCertificate.verifiedDate && selectedCertificate.verifiedDate !== 'N/A' && (
                       <div className="detail-row">
                         <span className="label">Verified Date:</span>
                         <span className="value">{selectedCertificate.verifiedDate}</span>
@@ -487,12 +478,57 @@ const CertificateManagement = () => {
                     )}
                   </div>
 
+                  {/* Validation Issues */}
+                  {selectedCertificate.validationIssues && selectedCertificate.validationIssues.length > 0 && (
+                    <div className="detail-card validation-issues-card">
+                      <h3>
+                        <i className="fas fa-exclamation-triangle"></i>
+                        Validation Issues
+                      </h3>
+                      <div className="validation-issues-list">
+                        {selectedCertificate.validationIssues.map((issue, idx) => (
+                          <div key={idx} className="validation-issue-item">
+                            <i className="fas fa-circle"></i>
+                            <span>{issue}</span>
+                          </div>
+                        ))}
+                      </div>
+                    </div>
+                  )}
+
+                  {/* Admin Review Information */}
+                  {selectedCertificate.adminReviewNotes && (
+                    <div className="detail-card review-notes-card">
+                      <h3>
+                        <i className="fas fa-clipboard-list"></i>
+                        Admin Review Notes
+                      </h3>
+                      <div className="review-notes-content">
+                        <p>{selectedCertificate.adminReviewNotes}</p>
+                      </div>
+                      {selectedCertificate.reviewedByAdminId && (
+                        <div className="review-metadata">
+                          <div className="detail-row">
+                            <span className="label">Reviewed By:</span>
+                            <span className="value">Admin ID: {selectedCertificate.reviewedByAdminId}</span>
+                          </div>
+                          {selectedCertificate.reviewedAt && (
+                            <div className="detail-row">
+                              <span className="label">Reviewed At:</span>
+                              <span className="value">{new Date(selectedCertificate.reviewedAt).toLocaleString()}</span>
+                            </div>
+                          )}
+                        </div>
+                      )}
+                    </div>
+                  )}
+
                   {/* Action Buttons */}
-                  {selectedCertificate.statusValue === 4 && !showRejectModal && !showApprovalModal && (
+                  {selectedCertificate.statusValue === 4 && !showReviewModal && (
                     <div className="action-buttons">
                       <button
                         className="btn-approve"
-                        onClick={showApprovalConfirmation}
+                        onClick={() => showReview('approve')}
                         disabled={actionLoading}
                       >
                         <i className="fas fa-check"></i>
@@ -500,7 +536,7 @@ const CertificateManagement = () => {
                       </button>
                       <button
                         className="btn-reject"
-                        onClick={showRejectionForm}
+                        onClick={() => showReview('reject')}
                         disabled={actionLoading}
                       >
                         <i className="fas fa-times"></i>
@@ -509,93 +545,109 @@ const CertificateManagement = () => {
                     </div>
                   )}
 
-                  {/* Approval Form */}
-                  {showApprovalModal && (
-                    <div className="action-form approval-form">
-                      <h4>
-                        <i className="fas fa-check-circle"></i>
-                        Approve Certificate
-                      </h4>
-                      <p>You are about to approve this certificate. The caregiver will be notified.</p>
-                      <div className="form-group">
-                        <label>Approval Notes (Optional):</label>
-                        <textarea
-                          value={approvalNotes}
-                          onChange={(e) => setApprovalNotes(e.target.value)}
-                          placeholder="Add any notes about this approval..."
-                          rows="3"
-                        />
-                      </div>
-                      <div className="form-actions">
-                        <button
-                          className="btn-confirm"
-                          onClick={handleApprove}
-                          disabled={actionLoading}
-                        >
-                          {actionLoading ? 'Processing...' : 'Confirm Approval'}
-                        </button>
-                        <button
-                          className="btn-cancel"
-                          onClick={() => setShowApprovalModal(false)}
-                          disabled={actionLoading}
-                        >
-                          Cancel
-                        </button>
-                      </div>
+                  {/* Status message for non-reviewable certificates */}
+                  {selectedCertificate.statusValue === 1 && (
+                    <div className="status-message success-message">
+                      <i className="fas fa-check-circle"></i>
+                      This certificate has already been verified and approved.
+                    </div>
+                  )}
+                  {(selectedCertificate.statusValue === 2 || selectedCertificate.statusValue === 3) && (
+                    <div className="status-message warning-message">
+                      <i className="fas fa-info-circle"></i>
+                      This certificate has already been reviewed and marked as {selectedCertificate.status}. 
+                      Only certificates flagged for manual review can be re-reviewed through this interface.
+                    </div>
+                  )}
+                  {selectedCertificate.statusValue === 0 && (
+                    <div className="status-message info-message">
+                      <i className="fas fa-clock"></i>
+                      This certificate is pending automatic verification. It will be available for manual review if verification fails.
                     </div>
                   )}
 
-                  {/* Rejection Form */}
-                  {showRejectModal && (
-                    <div className="action-form rejection-form">
+                  {/* Unified Review Modal */}
+                  {showReviewModal && (
+                    <div className={`action-form review-form ${reviewAction === 'approve' ? 'approval-form' : 'rejection-form'}`}>
                       <h4>
-                        <i className="fas fa-times-circle"></i>
-                        Reject Certificate
+                        <i className={`fas fa-${reviewAction === 'approve' ? 'check-circle' : 'times-circle'}`}></i>
+                        {reviewAction === 'approve' ? 'Approve Certificate' : 'Reject Certificate'}
                       </h4>
-                      <p className="warning-text">
-                        <i className="fas fa-exclamation-triangle"></i>
-                        You must provide a specific reason. The caregiver will receive this in their notification.
-                      </p>
-                      <div className="form-group">
-                        <label>Quick Select Reason:</label>
-                        <div className="quick-reasons">
-                          {adminService.getCommonRejectionReasons().map((reason, idx) => (
-                            <button
-                              key={idx}
-                              className={`reason-chip ${rejectionReason === reason ? 'selected' : ''}`}
-                              onClick={() => selectRejectionReason(reason)}
-                            >
-                              {reason}
-                            </button>
-                          ))}
+                      
+                      {/* Show validation issues for context */}
+                      {selectedCertificate.validationIssues && selectedCertificate.validationIssues.length > 0 && (
+                        <div className="review-context">
+                          <p className="context-label">
+                            <i className="fas fa-info-circle"></i>
+                            AI Validation Issues Detected:
+                          </p>
+                          <ul className="context-issues-list">
+                            {selectedCertificate.validationIssues.map((issue, idx) => (
+                              <li key={idx}>{issue}</li>
+                            ))}
+                          </ul>
                         </div>
-                      </div>
+                      )}
+
+                      <p className={reviewAction === 'reject' ? 'warning-text' : ''}>
+                        {reviewAction === 'approve' 
+                          ? 'You are about to approve this certificate. The caregiver will be notified.'
+                          : (
+                            <>
+                              <i className="fas fa-exclamation-triangle"></i>
+                              You must provide a specific reason. The caregiver will receive this in their notification.
+                            </>
+                          )
+                        }
+                      </p>
+
+                      {reviewAction === 'reject' && (
+                        <div className="form-group">
+                          <label>Quick Select Reason:</label>
+                          <div className="quick-reasons">
+                            {adminService.getCommonRejectionReasons().map((reason, idx) => (
+                              <button
+                                key={idx}
+                                className={`reason-chip ${adminNotes === reason ? 'selected' : ''}`}
+                                onClick={() => setAdminNotes(reason)}
+                              >
+                                {reason}
+                              </button>
+                            ))}
+                          </div>
+                        </div>
+                      )}
+
                       <div className="form-group">
-                        <label>Rejection Reason (Required):</label>
+                        <label>{reviewAction === 'approve' ? 'Approval Notes (Optional):' : 'Rejection Reason (Required):'}</label>
                         <textarea
-                          value={rejectionReason}
-                          onChange={(e) => setRejectionReason(e.target.value)}
-                          placeholder="Provide a clear and specific reason for rejection..."
+                          value={adminNotes}
+                          onChange={(e) => setAdminNotes(e.target.value)}
+                          placeholder={reviewAction === 'approve' 
+                            ? 'Add any notes about this approval...'
+                            : 'Provide a clear and specific reason for rejection...'
+                          }
                           rows="4"
-                          required
+                          required={reviewAction === 'reject'}
                         />
-                        {rejectionReason && (
+                        {adminNotes && (
                           <small className="char-count">
-                            {rejectionReason.length} characters
+                            {adminNotes.length} characters
                           </small>
                         )}
                       </div>
+
                       <div className="form-actions">
                         <button
-                          className="btn-confirm btn-reject"
-                          onClick={handleReject}
-                          disabled={actionLoading || !rejectionReason.trim()}
+                          className="btn-confirm"
+                          onClick={handleReviewCertificate}
+                          disabled={actionLoading || (reviewAction === 'reject' && !adminNotes.trim())}
                         >
-                          {actionLoading ? 'Processing...' : 'Confirm Rejection'}
+                          {actionLoading ? 'Processing...' : `Confirm ${reviewAction === 'approve' ? 'Approval' : 'Rejection'}`}
                         </button>
                         <button
                           className="btn-cancel"
-                          onClick={() => setShowRejectModal(false)}
+                          onClick={closeCertModal}
                           disabled={actionLoading}
                         >
                           Cancel
@@ -605,6 +657,7 @@ const CertificateManagement = () => {
                   )}
                 </div>
               </div>
+              )}
             </div>
           </div>
         </div>

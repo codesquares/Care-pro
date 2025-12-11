@@ -12,6 +12,7 @@ import GigsManagement from './gigs-management/GigsManagement';
 import OrdersManagement from './orders-management/OrdersManagement';
 import EmailComposer from './email-composer/EmailComposer';
 import CertificateManagement from './certificate-management/CertificateManagement';
+import VerificationManagement from './verification-management/VerificationManagement';
 import { useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import DojahDataViewer from '../../components/admin/DojahDataViewer';
@@ -48,7 +49,7 @@ function AdminRoutes() {
             <Route path='/emails' element={<EmailComposer />} />
             <Route path='/certificates' element={<CertificateManagement />} />
             <Route path='/dojah-data' element={<DojahDataViewer />} />
-            <Route path="dojah-admin" element={<DojahAdminDashboard />} />
+            <Route path="dojah-admin" element={<VerificationManagement />} />
             <Route path="webhook-data" element={<WebhookDataAdmin />} />
         </Routes>
         </>

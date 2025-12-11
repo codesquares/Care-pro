@@ -1949,14 +1949,15 @@ const adminService = {
   },
 
   /**
-   * Manually approve a certificate after review
-   * Endpoint: POST /api/Admins/Certificates/{certificateId}/Approve
+   * Review a certificate (approve or reject) - NEW UNIFIED ENDPOINT
+   * Endpoint: POST /api/Admins/Certificates/Review
    * @param {string} certificateId - Certificate ID
    * @param {string} adminId - Admin user ID performing the action
-   * @param {string} [approvalNotes] - Optional admin notes/comments about the approval
-   * @returns {Promise<{success: boolean, message?: string, certificate?: Object, error?: string}>}
+   * @param {boolean} approved - true to verify, false to reject
+   * @param {string} [adminNotes] - Optional admin notes (required for rejection)
+   * @returns {Promise<{success: boolean, message?: string, newStatus?: string, certificateId?: string, error?: string}>}
    */
-  approveCertificate: async (certificateId, adminId, approvalNotes = '') => {
+  reviewCertificate: async (certificateId, adminId, approved, adminNotes = '') => {
     try {
       // Validation
       if (!certificateId || certificateId.trim() === '') {
@@ -1973,96 +1974,72 @@ const adminService = {
         };
       }
 
-      console.log(`Approving certificate: ${certificateId}`);
-      const requestBody = {
-        certificateId: certificateId,
-        adminId: adminId,
-        approvalNotes: approvalNotes || undefined
-      };
+      if (typeof approved !== 'boolean') {
+        return {
+          success: false,
+          error: 'Approved must be true or false'
+        };
+      }
 
-      const response = await api.post(`/Admins/Certificates/${certificateId}/Approve`, requestBody);
+      // Admin notes recommended for rejections
+      if (!approved && !adminNotes.trim()) {
+        console.warn('Rejecting certificate without admin notes - caregivers won\'t know why');
+      }
+
+      console.log(`Reviewing certificate: ${certificateId}, Approved: ${approved}`);
+      const requestBody = {
+        CertificateId: certificateId,
+        AdminId: adminId,
+        Approved: approved,
+        AdminNotes: adminNotes
+      };
       
-      if (response.data && response.data.success) {
+      console.log('Review request body:', JSON.stringify(requestBody, null, 2));
+
+      const response = await api.post('/Admins/Certificates/Review', requestBody);
+      
+      console.log('Review response:', response.data);
+      
+      if (response.data && response.data.Success) {
         return {
           success: true,
-          message: response.data.message || 'Certificate approved successfully',
-          certificate: response.data.certificate
+          message: response.data.Message || (approved ? 'Certificate approved successfully' : 'Certificate rejected'),
+          newStatus: response.data.NewStatus,
+          certificateId: response.data.CertificateId
         };
       }
       
       return {
         success: false,
-        error: response.data?.message || 'Failed to approve certificate'
+        error: response.data?.Message || 'Failed to review certificate'
       };
     } catch (error) {
-      console.error('Error approving certificate:', error);
+      console.error('Error reviewing certificate:', error);
+      console.error('Error response data:', error.response?.data);
+      console.error('Error response status:', error.response?.status);
       return {
         success: false,
-        error: error.response?.data?.message || error.message || 'Failed to approve certificate'
+        error: error.response?.data?.Message || error.response?.data?.message || error.message || 'Failed to review certificate'
       };
     }
   },
 
   /**
-   * Manually reject a certificate with specific reason
-   * Endpoint: POST /api/Admins/Certificates/{certificateId}/Reject
-   * @param {string} certificateId - Certificate ID
-   * @param {string} adminId - Admin user ID performing the action
-   * @param {string} rejectionReason - Specific reason for rejection (REQUIRED - shown to caregiver)
-   * @returns {Promise<{success: boolean, message?: string, certificate?: Object, error?: string}>}
+   * @deprecated Use reviewCertificate() instead
+   * Approve certificate - kept for backward compatibility
+   */
+  approveCertificate: async (certificateId, adminId, approvalNotes = '') => {
+    console.warn('approveCertificate() is deprecated. Use reviewCertificate() instead.');
+    return adminService.reviewCertificate(certificateId, adminId, true, approvalNotes);
+  },
+
+  /**
+   * @deprecated Use reviewCertificate() instead
+   * Reject certificate - kept for backward compatibility
    */
   rejectCertificate: async (certificateId, adminId, rejectionReason) => {
-    try {
-      // Validation
-      if (!certificateId || certificateId.trim() === '') {
-        return {
-          success: false,
-          error: 'Certificate ID is required'
-        };
-      }
-
-      if (!adminId || adminId.trim() === '') {
-        return {
-          success: false,
-          error: 'Admin ID is required'
-        };
-      }
-
-      if (!rejectionReason || rejectionReason.trim() === '') {
-        return {
-          success: false,
-          error: 'Rejection reason is required'
-        };
-      }
-
-      console.log(`Rejecting certificate: ${certificateId}`);
-      const requestBody = {
-        certificateId: certificateId,
-        adminId: adminId,
-        rejectionReason: rejectionReason
-      };
-
-      const response = await api.post(`/Admins/Certificates/${certificateId}/Reject`, requestBody);
-      
-      if (response.data && response.data.success) {
-        return {
-          success: true,
-          message: response.data.message || 'Certificate rejected successfully',
-          certificate: response.data.certificate
-        };
-      }
-      
-      return {
-        success: false,
-        error: response.data?.message || 'Failed to reject certificate'
-      };
-    } catch (error) {
-      console.error('Error rejecting certificate:', error);
-      return {
-        success: false,
-        error: error.response?.data?.message || error.message || 'Failed to reject certificate'
-      };
-    }
+    console.warn('rejectCertificate() is deprecated. Use reviewCertificate() instead.');
+    return adminService.reviewCertificate(certificateId, adminId, false, rejectionReason);
   },
 
   /**
@@ -2201,7 +2178,22 @@ const adminService = {
           certificate.caregiverDetails.firstName,
           certificate.caregiverDetails.lastName,
           certificate.extractedInfo.holderName
-        ) : null
+        ) : null,
+      // New fields for admin review tracking
+      validationIssues: (() => {
+        const issues = certificate.ValidationIssues || certificate.validationIssues;
+        if (!issues) return null;
+        // If it's a string (comma-separated), split it into an array
+        if (typeof issues === 'string') {
+          return issues.split(',').map(i => i.trim()).filter(i => i.length > 0);
+        }
+        // If it's already an array, return it
+        return Array.isArray(issues) ? issues : null;
+      })(),
+      reviewedByAdminId: certificate.ReviewedByAdminId || certificate.reviewedByAdminId || null,
+      reviewedAt: certificate.ReviewedAt || certificate.reviewedAt ? 
+        new Date(certificate.ReviewedAt || certificate.reviewedAt).toLocaleDateString() : null,
+      adminReviewNotes: certificate.AdminReviewNotes || certificate.adminReviewNotes || null
     };
   },
 
