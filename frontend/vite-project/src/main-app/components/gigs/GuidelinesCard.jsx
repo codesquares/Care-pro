@@ -1,5 +1,5 @@
 
-import './GuidelinesCard.scss';
+import './GuidelinesCard.css';
 
 const GuidelinesCard = ({ currentPage, activeField, onClose }) => {
   const fieldGuidelines = {

@@ -1,6 +1,6 @@
 import React from 'react';
 import { Helmet } from 'react-helmet-async';
-import '../styles/pages/terms-and-conditions.scss';
+import '../styles/pages/terms-and-conditions.css';
 
 const TermsAndConditions = () => {
   return (

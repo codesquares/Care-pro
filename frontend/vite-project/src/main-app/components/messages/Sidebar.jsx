@@ -1,5 +1,5 @@
 import { useState,  useCallback, useMemo } from 'react';
-import './sidebar.scss';
+import './sidebar.css';
 import { formatDistanceToNow } from 'date-fns';
 
 const Sidebar = ({ conversations, selectedChatId, onSelectChat, unreadMessages, headerActions }) => {

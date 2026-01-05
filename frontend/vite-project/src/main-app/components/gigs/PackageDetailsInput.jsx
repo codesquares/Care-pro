@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import './PackageDetailsInput.scss';
+import './PackageDetailsInput.css';
 
 const PackageDetailsInput = ({ 
   value, 

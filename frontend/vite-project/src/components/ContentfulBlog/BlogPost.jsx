@@ -2,7 +2,7 @@ import { useContext, useState } from "react";
 import { useParams } from "react-router-dom";
 import { createClient } from "contentful";
 import { BlogContext } from "../../main-app/context/BlogContext";
-import "./styles.scss";
+import "./styles.css";
 import ReactMarkdown from "react-markdown";
 
 const removeText = (text) => {

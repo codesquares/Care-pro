@@ -1,6 +1,6 @@
 import { useState, useRef } from "react";
 import { useGigForm } from "../../contexts/GigEditContext";
-import "./gigs.scss";
+import "./gigs.css";
 
 const GigsCard = ({
   categories,

@@ -3,8 +3,8 @@ import { useParams, useLocation } from 'react-router-dom';
 import { useMessageContext } from '../../context/MessageContext';
 import ChatArea from './Chatarea';
 import axios from 'axios';
-import './messages.scss';
-import './direct-message.scss';
+import './messages.css';
+import './direct-message.css';
 import config from '../../config'; // Import centralized config for API URLs
 
 // FIXED: Use centralized config instead of hardcoded Azure staging API URL

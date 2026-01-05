@@ -1,5 +1,5 @@
 
-import '../../styles/components/header.scss'; 
+import '../../styles/components/header.css'; 
 import video from '../../assets/Video.png'
 import { Link } from 'react-router-dom';
 import arrow from '../../assets/arrow-right.svg'

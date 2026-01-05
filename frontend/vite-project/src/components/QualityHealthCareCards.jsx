@@ -1,5 +1,5 @@
 
-import "../styles/components/qualityHealthcareCards.scss"
+import "../styles/components/qualityHealthcareCards.css"
 import star from "../assets/rating_star.png"; // Import the star image
 import QHCC1 from "../assets/QHCC1.jpg";
 import QHCC2 from "../assets/QHCC2.jpg";
@@ -9,7 +9,7 @@ import QHCC5 from "../assets/QHCC5.jpg";
 import QHCC6 from "../assets/QHCC6.jpg";
 import QHCC7 from "../assets/QHCC7.jpg";
 import QHCC8 from "../assets/QHCC8.jpg";
-import "../styles/components/qualityHealthCareCards.scss";
+import "../styles/components/qualityHealthCareCards.css";
 
 const categories = {
     "Adult Care": [

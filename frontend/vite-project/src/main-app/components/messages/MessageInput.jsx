@@ -1,5 +1,5 @@
 
-import './messageInput.scss';
+import './messageInput.css';
 
 const MessageInput = ({ message, setMessage, onSendMessage, onKeyPress, placeholder = "Type a message..." }) => {
   return (

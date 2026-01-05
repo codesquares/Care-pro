@@ -1,0 +1,316 @@
+.pricing-table {
+  background: white;
+  width: 90%;
+  max-width: 1200px;
+  margin: 2rem auto;
+  padding: 2rem;
+  border-radius: 12px;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05);
+  font-family: "Arial", sans-serif;
+  position: relative;
+}
+.pricing-table .pricing-table-header {
+  margin-bottom: 2rem;
+}
+.pricing-table .pricing-table-header h3 {
+  font-size: 1.5rem;
+  font-weight: 600;
+  margin-bottom: 0.5rem;
+  color: #000;
+}
+.pricing-table .pricing-table-header p {
+  font-size: 1rem;
+  color: #555;
+  margin-bottom: 1rem;
+}
+.pricing-table .general-error {
+  background-color: #fdf2f2;
+  border: 1px solid #e74c3c;
+  color: #e74c3c;
+  padding: 0.75rem 1rem;
+  border-radius: 8px;
+  margin-bottom: 1.5rem;
+  font-size: 0.9rem;
+}
+@media (min-width: 769px) {
+  .pricing-table .pricing-table-container {
+    overflow-x: auto;
+  }
+  .pricing-table table {
+    width: 100%;
+    border-collapse: separate;
+    border-spacing: 0;
+    border: 1px solid #e0e0e0;
+    border-radius: 8px;
+    overflow: hidden;
+  }
+  .pricing-table table th {
+    background-color: #f8f9fa;
+    padding: 1rem;
+    text-align: center;
+    font-weight: 600;
+    color: #333;
+    border-bottom: 2px solid #e0e0e0;
+    font-size: 1.1rem;
+  }
+  .pricing-table table td {
+    padding: 1rem;
+    border-bottom: 1px solid #e0e0e0;
+    border-right: 1px solid #e0e0e0;
+    position: relative;
+    vertical-align: top;
+  }
+  .pricing-table table td:last-child {
+    border-right: none;
+  }
+  .pricing-table table td input, .pricing-table table td textarea, .pricing-table table td select {
+    width: 100%;
+    padding: 0.75rem;
+    border: 1px solid #ddd;
+    border-radius: 6px;
+    font-size: 0.95rem;
+    color: #333;
+    background-color: #fff;
+    transition: border-color 0.3s, box-shadow 0.3s;
+  }
+  .pricing-table table td input:focus, .pricing-table table td textarea:focus, .pricing-table table td select:focus {
+    border-color: #007bff;
+    box-shadow: 0 0 0 3px rgba(0, 123, 255, 0.1);
+    outline: none;
+  }
+  .pricing-table table td input.error, .pricing-table table td textarea.error, .pricing-table table td select.error {
+    border-color: #e74c3c !important;
+    background-color: #fdf2f2 !important;
+    box-shadow: 0 0 0 3px rgba(231, 76, 60, 0.1) !important;
+  }
+  .pricing-table table td input::placeholder, .pricing-table table td textarea::placeholder, .pricing-table table td select::placeholder {
+    color: #aaa;
+  }
+  .pricing-table table td textarea {
+    resize: vertical;
+    min-height: 80px;
+    font-family: inherit;
+  }
+  .pricing-table table td select {
+    cursor: pointer;
+    background-image: url("data:image/svg+xml;charset=UTF-8,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='currentColor' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3e%3cpolyline points='6,9 12,15 18,9'%3e%3c/polyline%3e%3c/svg%3e");
+    background-repeat: no-repeat;
+    background-position: right 0.75rem center;
+    background-size: 1rem;
+    padding-right: 2.5rem;
+  }
+  .pricing-table table td .validation-error {
+    color: #e74c3c;
+    font-size: 0.8rem;
+    margin-top: 0.5rem;
+    display: block;
+    background-color: #fdf2f2;
+    padding: 0.25rem 0.5rem;
+    border-radius: 4px;
+    border: 1px solid #e74c3c;
+    position: absolute;
+    bottom: -2.5rem;
+    left: 1rem;
+    right: 1rem;
+    z-index: 10;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+  }
+  .pricing-table table tbody tr:last-child td {
+    border-bottom: none;
+  }
+  .pricing-table .amount-row input {
+    font-weight: 600;
+    color: #000 !important;
+  }
+  .pricing-table .amount-row input::placeholder {
+    color: #666 !important;
+    font-weight: normal;
+  }
+}
+@media (max-width: 768px) {
+  .pricing-table {
+    width: 95%;
+    padding: 1.5rem;
+    margin: 1rem auto;
+  }
+  .pricing-table .pricing-packages {
+    display: flex;
+    flex-direction: column;
+    gap: 2rem;
+  }
+  .pricing-table .package-card {
+    background: #f8f9fa;
+    border-radius: 12px;
+    padding: 1.5rem;
+    border: 1px solid #e0e0e0;
+  }
+  .pricing-table .package-card .package-header {
+    text-align: center;
+    margin-bottom: 1.5rem;
+    padding-bottom: 1rem;
+    border-bottom: 2px solid #e0e0e0;
+  }
+  .pricing-table .package-card .package-header h4 {
+    font-size: 1.25rem;
+    font-weight: 600;
+    color: #333;
+    margin: 0;
+  }
+  .pricing-table .package-card .pricing-field {
+    margin-bottom: 1.5rem;
+  }
+  .pricing-table .package-card .pricing-field label {
+    display: block;
+    font-size: 0.9rem;
+    font-weight: 500;
+    color: #333;
+    margin-bottom: 0.5rem;
+  }
+  .pricing-table .package-card .pricing-field input, .pricing-table .package-card .pricing-field textarea, .pricing-table .package-card .pricing-field select {
+    width: 100%;
+    padding: 0.75rem;
+    border: 1px solid #ddd;
+    border-radius: 8px;
+    font-size: 1rem;
+    color: #333;
+    background-color: #fff;
+    transition: border-color 0.3s, box-shadow 0.3s;
+  }
+  .pricing-table .package-card .pricing-field input:focus, .pricing-table .package-card .pricing-field textarea:focus, .pricing-table .package-card .pricing-field select:focus {
+    border-color: #007bff;
+    box-shadow: 0 0 0 3px rgba(0, 123, 255, 0.1);
+    outline: none;
+  }
+  .pricing-table .package-card .pricing-field input.error, .pricing-table .package-card .pricing-field textarea.error, .pricing-table .package-card .pricing-field select.error {
+    border-color: #e74c3c !important;
+    background-color: #fdf2f2 !important;
+    box-shadow: 0 0 0 3px rgba(231, 76, 60, 0.1) !important;
+  }
+  .pricing-table .package-card .pricing-field input::placeholder, .pricing-table .package-card .pricing-field textarea::placeholder, .pricing-table .package-card .pricing-field select::placeholder {
+    color: #aaa;
+  }
+  .pricing-table .package-card .pricing-field textarea {
+    resize: vertical;
+    min-height: 80px;
+    font-family: inherit;
+  }
+  .pricing-table .package-card .pricing-field select {
+    cursor: pointer;
+    background-image: url("data:image/svg+xml;charset=UTF-8,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='currentColor' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3e%3cpolyline points='6,9 12,15 18,9'%3e%3c/polyline%3e%3c/svg%3e");
+    background-repeat: no-repeat;
+    background-position: right 0.75rem center;
+    background-size: 1rem;
+    padding-right: 2.5rem;
+  }
+  .pricing-table .package-card .pricing-field .validation-error {
+    color: #e74c3c;
+    font-size: 0.85rem;
+    margin-top: 0.5rem;
+    display: block;
+    background-color: #fdf2f2;
+    padding: 0.5rem;
+    border-radius: 6px;
+    border: 1px solid #e74c3c;
+  }
+  .pricing-table .package-card .pricing-field.amount-field input {
+    font-weight: 600;
+    color: #000 !important;
+  }
+  .pricing-table .package-card .pricing-field.amount-field input::placeholder {
+    color: #666 !important;
+    font-weight: normal;
+  }
+}
+
+.pricing-card {
+  background: white;
+  width: 90%;
+  margin: 2rem auto;
+  padding: 2rem;
+  border-radius: 12px;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05);
+  font-family: "Arial", sans-serif;
+}
+.pricing-card .pricing-header {
+  margin-bottom: 1.5rem;
+}
+.pricing-card .pricing-header h3 {
+  font-size: 1.25rem;
+  font-weight: 600;
+  margin-bottom: 0.5rem;
+  color: #000;
+}
+.pricing-card .pricing-header p {
+  font-size: 0.95rem;
+  color: #555;
+}
+.pricing-card .pricing-field {
+  display: flex;
+  flex-direction: column;
+  margin-bottom: 1.5rem;
+}
+.pricing-card .pricing-field label {
+  font-size: 0.95rem;
+  color: #333;
+  margin-bottom: 0.5rem;
+}
+.pricing-card .pricing-field input,
+.pricing-card .pricing-field select,
+.pricing-card .pricing-field textarea {
+  padding: 0.75rem 1rem;
+  border: 1px solid #ddd;
+  border-radius: 8px;
+  font-size: 1rem;
+  color: #222;
+  background-color: #fff;
+  transition: border-color 0.3s, box-shadow 0.3s;
+}
+.pricing-card .pricing-field input:focus,
+.pricing-card .pricing-field select:focus,
+.pricing-card .pricing-field textarea:focus {
+  border-color: #007bff;
+  box-shadow: 0 0 0 3px rgba(0, 123, 255, 0.1);
+  outline: none;
+}
+.pricing-card .pricing-field input.error,
+.pricing-card .pricing-field select.error,
+.pricing-card .pricing-field textarea.error {
+  border-color: #e74c3c !important;
+  background-color: #fdf2f2 !important;
+  box-shadow: 0 0 0 3px rgba(231, 76, 60, 0.1) !important;
+}
+.pricing-card .pricing-field input::placeholder,
+.pricing-card .pricing-field select::placeholder,
+.pricing-card .pricing-field textarea::placeholder {
+  color: #aaa;
+}
+.pricing-card .pricing-field textarea {
+  resize: vertical;
+  min-height: 80px;
+}
+.pricing-card .pricing-field .validation-error {
+  color: #e74c3c;
+  font-size: 0.85rem;
+  margin-top: 0.5rem;
+  display: block;
+  background-color: #fdf2f2;
+  padding: 0.5rem;
+  border-radius: 6px;
+  border: 1px solid #e74c3c;
+}
+@media (max-width: 768px) {
+  .pricing-card {
+    padding: 1.5rem;
+  }
+}
+
+.page-bar-container {
+  width: 100%;
+  padding: 1rem 8rem;
+  background-color: #f9f9f9;
+}
+@media (max-width: 768px) {
+  .page-bar-container {
+    padding: 1rem 2rem;
+  }
+}

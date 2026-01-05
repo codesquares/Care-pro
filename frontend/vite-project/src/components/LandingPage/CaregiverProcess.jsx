@@ -1,4 +1,4 @@
-import "../../styles/components/caregiver-process.scss";
+import "../../styles/components/caregiver-process.css";
 import caregiverImg from "../../assets/grandimg.png";
 import tdesign from "../../assets/tdesign_money.svg";
 import solar from "../../assets/solar_health-broken.svg";

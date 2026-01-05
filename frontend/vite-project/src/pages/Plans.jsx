@@ -1,6 +1,6 @@
 import { Helmet } from 'react-helmet';
 import GeneralBanner from '../components/GeneralBanner';
-import '../styles/components/our-plans.scss';
+import '../styles/components/our-plans.css';
 
 const Plans = () => {
   const servicePlans = [

@@ -1,5 +1,5 @@
 
-import "../styles/components/why-care-pro.scss";
+import "../styles/components/why-care-pro.css";
 import background from "../assets/background.png"
 
 const WhyCarepro = () => {

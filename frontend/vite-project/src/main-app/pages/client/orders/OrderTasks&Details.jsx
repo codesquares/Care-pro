@@ -8,7 +8,7 @@ import ContractService from "../../../services/contractService";
 import OrderTasksService from "../../../services/orderTasksService";
 import CreateOrderTasksModal from "../../../components/modals/CreateOrderTasksModal";
 import config from "../../../config"; // Centralized API configuration
-import "./Order&Tasks.scss";
+import "./Order&Tasks.css";
 import { useNavigate } from "react-router-dom";
 
 const MyOrders = () => {

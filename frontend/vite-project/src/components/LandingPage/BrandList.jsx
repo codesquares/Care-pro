@@ -1,5 +1,5 @@
 
-import '../../styles/components/brand-list.scss';
+import '../../styles/components/brand-list.css';
 import brandLogo1 from '../../assets/brandLogo1.png'
 import brandLogo2 from '../../assets/brandLogo2.png'
 import brandLogo3 from '../../assets/brandLogo3.png'

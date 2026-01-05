@@ -1,0 +1,348 @@
+.waitlist-modal {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100vw;
+  height: 100vh;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  z-index: 1000000000;
+  overflow: hidden; /* Prevent any overflow of the modal itself */
+}
+
+.waitlist-modal__overlay {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background: rgba(0, 0, 0, 0.5);
+}
+
+.waitlist-modal__content {
+  position: relative;
+  background: #fff;
+  border-radius: 12px;
+  padding: 4rem;
+  width: 90%;
+  height: 90%;
+  max-width: 600px;
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+  text-align: center;
+  display: flex;
+  flex-direction: column;
+  box-sizing: border-box; /* Prevent padding from adding to size */
+  overflow: auto; /* Ensure scrollability for overflow content */
+}
+
+.waitlist-modal__close {
+  position: absolute;
+  top: 1rem;
+  right: 1rem;
+  background: none;
+  border: none;
+  font-size: 1.5rem;
+  cursor: pointer;
+}
+
+.waitlist-modal__title {
+  font-size: 1.5rem;
+  font-weight: bolder;
+  margin-bottom: 0.5rem;
+  color: #333;
+}
+
+.waitlist-modal__subtitle {
+  font-size: 1rem;
+  margin-bottom: 1.5rem;
+  color: #666;
+}
+
+.waitlist-modal__form {
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+  flex-grow: 1; /* Allow the form to grow */
+  overflow-y: auto; /* Add vertical scroll for long forms */
+}
+
+.waitlist-modal__form-field {
+  text-align: left;
+  margin-bottom: 1rem;
+}
+
+.waitlist-modal__label {
+  display: block;
+  font-size: 1rem;
+  margin-bottom: 0.5rem;
+  font-weight: 600;
+  color: #444;
+  text-align: start;
+}
+
+.waitlist-modal__form-field-input {
+  width: 100%;
+  padding: 0.5rem;
+  border: 1px solid #ccc;
+  border-radius: 8px;
+  font-size: 1rem;
+  color: #333;
+  background-color: #f9f9f9;
+  transition: border-color 0.3s, background-color 0.3s;
+}
+
+.waitlist-modal__form-field-input:focus {
+  outline: none;
+  border-color: #007bff;
+  background-color: #fff;
+  box-shadow: 0 0 4px rgba(0, 123, 255, 0.3);
+}
+
+.waitlist-modal__form-field input::placeholder {
+  color: #aaa;
+  font-style: italic;
+}
+
+.waitlist-modal__options {
+  display: flex;
+  gap: 1rem;
+  justify-content: space-between;
+  flex-wrap: wrap; /* Wrap options to avoid overflow */
+}
+
+.waitlist-modal__options label {
+  font-size: 0.9rem;
+  display: flex;
+  align-items: center;
+  color: #666;
+}
+
+.waitlist-modal__options input {
+  margin-right: 0.5rem;
+}
+
+.waitlist-modal__option-subtitle {
+  display: block;
+  font-size: 1rem;
+  margin-bottom: 0.5rem;
+  font-weight: 600;
+  color: #444;
+  text-align: start;
+}
+
+.waitlist-modal__submit {
+  background: #000;
+  color: #fff;
+  padding: 0.75rem;
+  font-size: 1rem;
+  border: none;
+  border-radius: 20px;
+  cursor: pointer;
+  transition: background 0.3s;
+  width: 100%; /* Make button take full width */
+  max-width: 100%; /* Ensure it stays within content boundaries */
+}
+
+.waitlist-modal__submit:hover {
+  background: #333;
+}
+
+/* Add spinner styles */
+.waitlist-modal__submit.loading {
+  position: relative;
+  padding-left: 30px;
+}
+
+.waitlist-modal__submit.loading:before {
+  content: "";
+  position: absolute;
+  left: 20px;
+  top: 50%;
+  width: 20px;
+  height: 20px;
+  border: 3px solid #fff;
+  border-top: 3px solid transparent;
+  border-radius: 50%;
+  animation: spin 1s linear infinite;
+  margin-top: -15px;
+}
+
+@keyframes spin {
+  0% {
+    transform: rotate(0deg);
+  }
+  100% {
+    transform: rotate(360deg);
+  }
+}
+/* Responsive adjustments for smaller screens */
+@media (max-width: 768px) {
+  .waitlist-modal__content {
+    width: 95%;
+    height: auto;
+    padding: 1rem;
+    max-height: 90%; /* Ensure the modal doesn't take too much vertical space */
+  }
+  .waitlist-modal__form {
+    max-height: 80%; /* Constrain the form in small screens */
+  }
+}
+/* General responsive adjustments */
+@media (max-width: 768px) {
+  .waitlist-modal__content {
+    width: 95%;
+    height: auto;
+    padding: 1.5rem;
+    max-height: 90%; /* Ensure the modal doesn't take too much vertical space */
+    border-radius: 10px; /* Slightly smaller radius for smaller screens */
+  }
+  .waitlist-modal__title {
+    font-size: 1.25rem; /* Smaller title for mobile */
+  }
+  .waitlist-modal__subtitle {
+    font-size: 0.9rem;
+  }
+  .waitlist-modal__form {
+    max-height: 75%; /* Constrain the form's vertical space */
+    gap: 0.75rem; /* Smaller gaps between form fields */
+  }
+  .waitlist-modal__form-field-input {
+    font-size: 0.9rem;
+    padding: 0.4rem;
+  }
+  .waitlist-modal__submit {
+    padding: 0.5rem;
+    font-size: 0.9rem;
+    border-radius: 15px;
+  }
+  .waitlist-modal__close {
+    font-size: 1.25rem; /* Smaller close button */
+  }
+}
+/* Specific adjustments for smaller phones (width < 480px) */
+@media (max-width: 480px) {
+  .waitlist-modal__content {
+    padding: 1rem;
+    max-height: 85%; /* Slightly less height for very small screens */
+  }
+  .waitlist-modal__title {
+    font-size: 1rem; /* Compact title */
+  }
+  .waitlist-modal__form {
+    max-height: 70%; /* Further constrain the form */
+    gap: 0.5rem; /* Tighter spacing */
+  }
+  .waitlist-modal__submit {
+    padding: 0.4rem;
+    font-size: 0.8rem;
+  }
+  .waitlist-modal__form-field-input {
+    font-size: 0.8rem;
+    padding: 0.35rem;
+  }
+  .waitlist-modal__close {
+    font-size: 1rem;
+    top: 0.5rem;
+    right: 0.5rem;
+  }
+}
+/* Adjust overlay for smaller screens */
+@media (max-width: 768px) {
+  .waitlist-modal__overlay {
+    background: rgba(0, 0, 0, 0.7); /* Slightly darker overlay for smaller screens */
+  }
+}
+/* Responsive adjustments */
+@media (max-width: 992px) {
+  .waitlist-modal__content {
+    width: 90%;
+    max-width: 500px;
+    padding: 3rem;
+  }
+  .waitlist-modal__title {
+    font-size: 1.4rem;
+  }
+  .waitlist-modal__subtitle {
+    font-size: 0.95rem;
+  }
+}
+@media (max-width: 768px) {
+  .waitlist-modal__content {
+    width: 95%;
+    height: auto;
+    max-height: 90%;
+    padding: 2rem;
+    border-radius: 10px;
+    overflow-y: auto;
+  }
+  .waitlist-modal__title {
+    font-size: 1.25rem;
+    margin-bottom: 0.4rem;
+  }
+  .waitlist-modal__subtitle {
+    font-size: 0.9rem;
+    margin-bottom: 1.2rem;
+  }
+  .waitlist-modal__form {
+    max-height: 75%;
+    gap: 0.75rem;
+  }
+  .waitlist-modal__form-field {
+    margin-bottom: 0.75rem;
+  }
+  .waitlist-modal__label {
+    font-size: 0.95rem;
+    margin-bottom: 0.4rem;
+  }
+  .waitlist-modal__form-field-input {
+    font-size: 16px; /* Prevent mobile zoom */
+    padding: 0.5rem;
+  }
+  .waitlist-modal__submit {
+    padding: 0.6rem;
+    font-size: 1rem;
+  }
+  .waitlist-modal__options {
+    flex-direction: column;
+    gap: 0.5rem;
+    align-items: flex-start;
+  }
+  .waitlist-modal__options label {
+    margin-bottom: 0.3rem;
+  }
+  .waitlist-modal__overlay {
+    background: rgba(0, 0, 0, 0.7);
+  }
+}
+@media (max-width: 480px) {
+  .waitlist-modal__content {
+    width: 95%;
+    max-height: 85%;
+    padding: 1.5rem 1rem;
+    border-radius: 8px;
+  }
+  .waitlist-modal__title {
+    font-size: 1.1rem;
+  }
+  .waitlist-modal__subtitle {
+    font-size: 0.85rem;
+    margin-bottom: 1rem;
+  }
+  .waitlist-modal__label {
+    font-size: 0.9rem;
+  }
+  .waitlist-modal__submit {
+    padding: 0.5rem;
+    font-size: 0.9rem;
+    border-radius: 15px;
+  }
+  .waitlist-modal__close {
+    font-size: 1.2rem;
+    top: 0.7rem;
+    right: 0.7rem;
+  }
+  .waitlist-modal__form-field-input {
+    padding: 0.5rem;
+  }
+}

@@ -1,5 +1,5 @@
 import { useState } from "react";
-import "./galleryUploads.scss";
+import "./galleryUploads.css";
 
 const GalleryUploads = ({ 
   onFileChange, 

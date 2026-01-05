@@ -1,0 +1,96 @@
+.banner-container {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  padding: 5rem 2rem;
+  margin: 0 auto;
+}
+@media (max-width: 768px) {
+  .banner-container {
+    padding: 3rem 1rem;
+  }
+}
+
+.banner {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  background-color: #015476;
+  color: white;
+  padding: 3rem 2rem;
+  border-radius: 20px;
+  width: 100%;
+  max-width: 1200px;
+  overflow: hidden;
+}
+@media (min-width: 768px) {
+  .banner {
+    flex-direction: row; /* Align content side by side on tablets and larger screens */
+    justify-content: space-between;
+    padding: 3rem 5rem;
+  }
+}
+
+.content {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  text-align: center;
+}
+@media (min-width: 768px) {
+  .content {
+    align-items: flex-start;
+    text-align: left;
+  }
+}
+.content h1 {
+  font-size: 2.2rem;
+  font-family: "PoppinsSemiBold", sans-serif;
+  margin-bottom: 1rem;
+  line-height: 1.4;
+}
+@media (max-width: 768px) {
+  .content h1 {
+    font-size: 1.6rem;
+  }
+}
+.content p {
+  font-size: 1rem;
+  margin-bottom: 2rem;
+  line-height: 1.6;
+  color: #f1f1f1;
+}
+.content .hire-button {
+  background-color: #FCCD56;
+  color: #015476;
+  padding: 12px 20px;
+  border: none;
+  border-radius: 30px;
+  font-size: 1rem;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+  transition: background-color 0.3s ease;
+}
+.content .hire-button:hover {
+  background-color: #ffbb33;
+}
+.content .hire-button img {
+  width: 25px;
+  height: auto;
+}
+
+.image-content {
+  margin-top: 2rem;
+  width: 100%;
+  max-width: 500px;
+  display: flex;
+  justify-content: center;
+}
+.image-content img {
+  width: 100%;
+  height: auto;
+  border-radius: 15px;
+}

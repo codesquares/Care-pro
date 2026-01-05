@@ -7,7 +7,7 @@ import ClientReviewService from "../../../services/clientReviewService.js";
 import ContractService from "../../../services/contractService.js";
 import OrderTasksService from "../../../services/orderTasksService.js";
 import config from "../../../config"; // Centralized API configuration
-import "./Orders.scss";
+import "./Orders.css";
 
 const statusColors = {
   "In Progress": "yellow",

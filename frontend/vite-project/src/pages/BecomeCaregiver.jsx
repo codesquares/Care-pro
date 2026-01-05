@@ -10,7 +10,7 @@ import WaitlistModal from "../components/WaitListModal";
 import QualityHealthCareCards from "../components/QualityHealthCareCards";
 import OurBlogs from "../components/OurBlogs";
 import { useAuth } from "../main-app/context/AuthContext";
-import "./BeomeCaregiver.scss";
+import "./BeomeCaregiver.css";
 
 
 const BecomeCaregiver = () => {

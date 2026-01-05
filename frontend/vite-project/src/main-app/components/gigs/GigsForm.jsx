@@ -4,9 +4,9 @@ import PageBar from "./PageBar";
 import PricingTable from "./Pricing";
 import GalleryUploads from "./Gallery";
 import GuidelinesCard from "./GuidelinesCard_fixed";
-import "./gigs.scss";
-import "./Pricing.scss";
-import "./galleryUploads.scss";
+import "./gigs.css";
+import "./Pricing.css";
+import "./galleryUploads.css";
 import { useState, useEffect } from "react";
 import PublishGig from "./Publish";
 import config from "../../config"; // Import centralized config for API URLs

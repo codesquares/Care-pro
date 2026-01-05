@@ -1,5 +1,5 @@
 
-import '../../styles/components/healthcare-fact.scss';
+import '../../styles/components/healthcare-fact.css';
 import HeathIcon from '../../assets/HealthIcon.svg'
 
 const HealthcareFacts = () => {

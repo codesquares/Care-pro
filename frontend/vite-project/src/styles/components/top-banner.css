@@ -1,0 +1,148 @@
+/* Default styles for desktop */
+.banner {
+  display: flex;
+  /* Update padding-top to account for fixed navbar */
+  justify-content: space-between;
+  align-items: center;
+  background-color: #f0f0f0;
+  align-items: center;
+  padding: 20px;
+}
+@media (max-width: 768px) {
+  .banner {
+    /* Use mobile navbar height on smaller screens */
+  }
+}
+
+/* Content styles removed - now using direct banner children */
+.banner .text-content {
+  flex: 1;
+  padding: 50px;
+  width: 30%;
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+}
+
+.banner h1 {
+  font-size: 3rem;
+  margin-bottom: 20px;
+  width: 65%;
+  word-wrap: break-word;
+  color: white;
+  text-align: left;
+}
+
+.banner p {
+  font-size: 1rem;
+  margin-bottom: 40px;
+  color: rgb(186, 178, 178);
+  width: 70%;
+}
+
+.banner .hire-button {
+  padding: 15px 25px;
+  background-color: #fff;
+  color: #000;
+  border: none;
+  border-radius: 8px;
+  cursor: pointer;
+  font-size: 16px;
+  font-weight: 600;
+  transition: background-color 0.3s ease;
+  width: 50%;
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.banner .image-content {
+  width: 70%;
+  display: flex;
+  justify-content: flex-end;
+  align-items: stretch;
+  height: 100%;
+  margin: -20px;
+  padding: 0;
+}
+
+.banner .image-content img {
+  width: 100%;
+  height: calc(100% + 40px);
+  border-radius: 50% 0 0 50;
+  object-fit: cover;
+  display: block;
+}
+
+/* Tablet Styles (max-width: 768px) */
+@media (max-width: 768px) {
+  .banner {
+    flex-direction: column;
+    align-items: center;
+    padding: 15px;
+    text-align: center;
+  }
+  .banner h1 {
+    font-size: 2.5rem;
+    width: 100%;
+    word-wrap: break-word;
+    text-align: center;
+  }
+  .banner p {
+    font-size: 1.1rem;
+    width: 90%;
+    text-align: center;
+  }
+  .banner .hire-button {
+    font-size: 16px;
+    padding: 12px 20px;
+    width: 70%;
+    justify-content: center;
+  }
+  .banner .image-content {
+    width: 100%;
+    margin-top: 20px;
+    justify-content: center;
+  }
+  .banner .image-content img {
+    height: auto;
+    width: 80%;
+    border-radius: 20px;
+  }
+}
+/* Mobile Styles (max-width: 480px) */
+@media (max-width: 480px) {
+  .banner {
+    flex-direction: column;
+    align-items: center;
+    padding: 15px;
+    text-align: center;
+  }
+  .banner h1 {
+    font-size: 2rem;
+    width: 100%;
+    word-wrap: break-word;
+    text-align: center;
+  }
+  .banner p {
+    font-size: 0.9rem;
+    width: 95%;
+    text-align: center;
+  }
+  .banner .hire-button {
+    font-size: 14px;
+    padding: 12px 18px;
+    width: 90%;
+    justify-content: center;
+  }
+  .banner .image-content {
+    width: 100%;
+    margin-top: 15px;
+    justify-content: center;
+  }
+  .banner .image-content img {
+    height: auto;
+    width: 90%;
+    border-radius: 20px;
+  }
+}

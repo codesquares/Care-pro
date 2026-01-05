@@ -1,0 +1,32 @@
+.message-status {
+  display: inline-flex;
+  margin-left: 4px;
+}
+.message-status.sent {
+  color: #9ca3af;
+}
+.message-status.delivered {
+  color: #60a5fa;
+}
+.message-status.read {
+  color: #10b981;
+}
+.message-status.pending {
+  color: #f59e0b;
+  animation: pulse 1.5s infinite;
+}
+.message-status.failed {
+  color: #ef4444;
+}
+
+@keyframes pulse {
+  0% {
+    opacity: 1;
+  }
+  50% {
+    opacity: 0.5;
+  }
+  100% {
+    opacity: 1;
+  }
+}

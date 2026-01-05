@@ -1,6 +1,6 @@
 // src/pages/FAQPage.tsx
 import { useState } from "react";
-import "./FAQPage.scss";
+import "./FAQPage.css";
 
 
 

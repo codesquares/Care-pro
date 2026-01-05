@@ -1,209 +1,135 @@
-import { useState, useEffect, useRef } from "react";
+import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import "./ClientSettings.css";
 import defaultAvatar from "../../../../assets/profilecard1.png";
 import ClientSettingsService from "../../../services/ClientSettingsService";
-import AddressInput from "../../../components/AddressInput";
 
-/**
- * Enhanced Premium Client Settings Page Component
- * 
- * Allows clients to:
- * - Update their account information
- * - Change their password
- * - Manage notification preferences
- * - Upload a profile picture
- * - Deactivate their account
- */
+const deactivationReasons = [
+  "I'm no longer hiring caregivers",
+  "I found another platform",
+  "I'm concerned about my privacy",
+  "I'm getting too many notifications",
+  "Other",
+];
+
+const formatDate = (value) => {
+  if (!value) return "";
+  const date = new Date(value);
+  if (Number.isNaN(date.getTime())) return "";
+
+  return new Intl.DateTimeFormat("en-GB", {
+    day: "numeric",
+    month: "long",
+    year: "numeric",
+  }).format(date);
+};
+
 const ClientSettings = () => {
   const navigate = useNavigate();
-  const [activeTab, setActiveTab] = useState("account");
   const [isLoading, setIsLoading] = useState(false);
   const [message, setMessage] = useState({ type: "", text: "" });
-  const fileInputRef = useRef(null);
-  const [sidebarOpen, setSidebarOpen] = useState(false); // For mobile sidebar toggle
-  
-  // Modal state
+  const [userDetails, setUserDetails] = useState({});
+  const [previewUrl, setPreviewUrl] = useState(null);
+  const [deactivationReason, setDeactivationReason] = useState("");
+
+  const [accountForm, setAccountForm] = useState({
+    firstName: "",
+    lastName: "",
+    email: "",
+  });
+
+  const [passwordForm, setPasswordForm] = useState({
+    currentPassword: "",
+    newPassword: "",
+    confirmPassword: "",
+  });
+
+  const [passwordStrength, setPasswordStrength] = useState({
+    score: 0,
+    label: "Very Weak",
+    color: "#f85c70",
+  });
+
+  const [, setValidationStates] = useState({
+    firstName: { isValid: true, message: "" },
+    lastName: { isValid: true, message: "" },
+    email: { isValid: true, message: "" },
+    currentPassword: { isValid: true, message: "" },
+    newPassword: { isValid: true, message: "" },
+    confirmPassword: { isValid: true, message: "" },
+  });
+
   const [showModal, setShowModal] = useState(false);
   const [modalConfig, setModalConfig] = useState({
     title: "",
     text: "",
     confirmAction: () => {},
   });
-  
-  // Image upload state
-  const [selectedFile, setSelectedFile] = useState(null);
-  const [previewUrl, setPreviewUrl] = useState(null);
-  const [uploadingImage, setUploadingImage] = useState(false);
-  const [uploadProgress, setUploadProgress] = useState(0);
-  
-  // Form states
-  const [accountForm, setAccountForm] = useState({
-    firstName: "",
-    lastName: "",
-    email: "",
-    phoneNumber: ""
-  });
-  
-  const [passwordForm, setPasswordForm] = useState({
-    currentPassword: "",
-    newPassword: "",
-    confirmPassword: ""
-  });
 
-  // Password strength state
-  const [passwordStrength, setPasswordStrength] = useState({
-    score: 0,
-    label: "Very Weak",
-    color: "#f85c70"
-  });
-  
-  const [notificationPreferences, setNotificationPreferences] = useState({
-    emailNotifications: true,
-    smsNotifications: false,
-    marketingEmails: false,
-    orderUpdates: true,
-    serviceUpdates: true,
-    promotions: false
-  });
-
-  // Address form state
-  const [addressForm, setAddressForm] = useState({
-    address: "",
-    city: "",
-    state: "",
-    country: "",
-    postalCode: ""
-  });
-
-  // Address validation state
-  const [addressValidation, setAddressValidation] = useState(null);
-
-  // Field validation states
-  const [validationStates, setValidationStates] = useState({
-    firstName: { isValid: true, message: "" },
-    lastName: { isValid: true, message: "" },
-    email: { isValid: true, message: "" },
-    phoneNumber: { isValid: true, message: "" },
-    currentPassword: { isValid: true, message: "" },
-    newPassword: { isValid: true, message: "" },
-    confirmPassword: { isValid: true, message: "" }
-  });
-  
-  // Get client information from local storage
   useEffect(() => {
     const fetchClientInfo = async () => {
       try {
         setIsLoading(true);
-        // Get user details from local storage
-        const userDetails = JSON.parse(localStorage.getItem("userDetails") || "{}");
-        
-        // Set profile photo preview if available
-        if (userDetails.profilePicture) {
-          setPreviewUrl(userDetails.profilePicture);
-        }
-        
-        // Set account form data
+        const stored = JSON.parse(localStorage.getItem("userDetails") || "{}");
+
+        setUserDetails(stored);
+        setPreviewUrl(stored.profilePicture || null);
         setAccountForm({
-          firstName: userDetails.firstName || "",
-          lastName: userDetails.lastName || "",
-          email: userDetails.email || "",
-          phoneNumber: userDetails.phoneNumber || ""
+          firstName: stored.firstName || "",
+          lastName: stored.lastName || "",
+          email: stored.email || "",
         });
-
-        // Set address form data
-        setAddressForm({
-          address: userDetails.address || "",
-          city: userDetails.city || "",
-          state: userDetails.state || "",
-          country: userDetails.country || "",
-          postalCode: userDetails.postalCode || ""
-        });
-
-        // Load notification preferences from API
-        if (userDetails.id) {
-          try {
-            const preferencesResponse = await ClientSettingsService.getNotificationPreferences(userDetails.id);
-            if (preferencesResponse.success && preferencesResponse.data) {
-              setNotificationPreferences(preferencesResponse.data);
-            }
-          } catch (error) {
-            console.warn("Failed to load notification preferences, using defaults:", error);
-            // Keep default preferences if API call fails
-          }
-        }
-        
-        // In a real application, you would fetch notification preferences from API
-        // For now, we'll leave the default values
-        
-        setIsLoading(false);
       } catch (error) {
         console.error("Error fetching client info:", error);
         setMessage({
           type: "error",
-          text: "Failed to load account information. Please try again later."
+          text: "Failed to load account information. Please try again later.",
         });
+      } finally {
         setIsLoading(false);
       }
     };
-    
+
     fetchClientInfo();
   }, []);
 
-  // Display messages for a limited time
   useEffect(() => {
-    if (message.text) {
-      const timer = setTimeout(() => {
-        setMessage({ type: "", text: "" });
-      }, 5000);
-      
-      return () => clearTimeout(timer);
-    }
+    if (!message.text) return undefined;
+    const timer = setTimeout(() => setMessage({ type: "", text: "" }), 5000);
+    return () => clearTimeout(timer);
   }, [message]);
-  
-  // Validate email format
+
   const validateEmail = (email) => {
-    const re = /^(([^<>()[\]\\.,;:\s@"]+(\.[^<>()[\]\\.,;:\s@"]+)*)|(".+"))@((\[[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\])|(([a-zA-Z\-0-9]+\.)+[a-zA-Z]{2,}))$/;
+    const re =
+      /^(([^<>()[\]\\.,;:\s@"]+(\.[^<>()[\]\\.,;:\s@"]+)*)|(".+"))@((\[[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\])|(([a-zA-Z\-0-9]+\.)+[a-zA-Z]{2,}))$/;
     return re.test(String(email).toLowerCase());
   };
 
-  // Validate phone number format
-  const validatePhone = (phone) => {
-    const re = /^[+]?[(]?[0-9]{3}[)]?[-\s.]?[0-9]{3}[-\s.]?[0-9]{4,6}$/;
-    return phone === "" || re.test(String(phone));
-  };
-
-  // Check password strength
   const checkPasswordStrength = (password) => {
-    // Simple password strength check
     let score = 0;
-    
-    // Length check
     if (password.length >= 8) score += 1;
     if (password.length >= 12) score += 1;
-    
-    // Character variety
     if (/[A-Z]/.test(password)) score += 1;
     if (/[a-z]/.test(password)) score += 1;
     if (/[0-9]/.test(password)) score += 1;
     if (/[^A-Za-z0-9]/.test(password)) score += 1;
-    
-    // Return score and label
-    let label, color;
-    switch(true) {
-      case (score <= 2):
+
+    let label;
+    let color;
+    switch (true) {
+      case score <= 2:
         label = "Very Weak";
         color = "#f85c70";
         break;
-      case (score <= 3):
+      case score <= 3:
         label = "Weak";
         color = "#ffa500";
         break;
-      case (score <= 4):
+      case score <= 4:
         label = "Medium";
         color = "#ffca28";
         break;
-      case (score <= 5):
+      case score <= 5:
         label = "Strong";
         color = "#8bc34a";
         break;
@@ -211,1080 +137,426 @@ const ClientSettings = () => {
         label = "Very Strong";
         color = "#20c997";
     }
-    
+
     return { score, label, color };
   };
-  
-  // Handle account form changes
-  const handleAccountChange = (e) => {
-    const { name, value } = e.target;
-    setAccountForm(prev => ({ ...prev, [name]: value }));
-    
-    // Validate fields as user types
-    validateField(name, value);
-  };
 
-  // Validate individual field
   const validateField = (name, value) => {
     let isValid = true;
-    let message = "";
-    
+    let validationMessage = "";
+
     switch (name) {
       case "firstName":
       case "lastName":
         isValid = value.trim() !== "";
-        message = isValid ? "" : "This field is required";
+        validationMessage = isValid ? "" : "This field is required";
         break;
       case "email":
         isValid = validateEmail(value);
-        message = isValid ? "" : "Please enter a valid email address";
+        validationMessage = isValid ? "" : "Please enter a valid email address";
         break;
-      case "phoneNumber":
-        isValid = validatePhone(value);
-        message = isValid ? "" : "Please enter a valid phone number";
+      case "currentPassword":
+        isValid = value.trim().length > 0;
+        validationMessage = isValid ? "" : "Current password is required";
         break;
-      case "newPassword":
+      case "newPassword": {
         const strength = checkPasswordStrength(value);
         setPasswordStrength(strength);
         isValid = value.length >= 8;
-        message = isValid ? "" : "Password must be at least 8 characters";
+        validationMessage = isValid ? "" : "Password must be at least 8 characters";
         break;
+      }
       case "confirmPassword":
         isValid = value === passwordForm.newPassword;
-        message = isValid ? "" : "Passwords don't match";
+        validationMessage = isValid ? "" : "Passwords don't match";
         break;
       default:
         break;
     }
-    
-    setValidationStates(prev => ({
+
+    setValidationStates((prev) => ({
       ...prev,
-      [name]: { isValid, message }
+      [name]: { isValid, message: validationMessage },
     }));
-    
+
     return isValid;
   };
-  
-  // Handle password form changes
+
+  const handleFullNameChange = (e) => {
+    const value = e.target.value;
+    const [firstName, ...rest] = value.split(" ");
+    const lastName = rest.join(" ");
+    setAccountForm((prev) => ({ ...prev, firstName: firstName || "", lastName }));
+    validateField("firstName", firstName || "");
+    validateField("lastName", lastName);
+  };
+
   const handlePasswordChange = (e) => {
     const { name, value } = e.target;
-    setPasswordForm(prev => ({ ...prev, [name]: value }));
-    
-    if (name === "newPassword") {
-      const strength = checkPasswordStrength(value);
-      setPasswordStrength(strength);
-      
-      // Also validate confirmPassword if it exists
-      if (passwordForm.confirmPassword) {
-        validateField("confirmPassword", passwordForm.confirmPassword);
-      }
-    }
-    
+    setPasswordForm((prev) => ({ ...prev, [name]: value }));
     validateField(name, value);
-  };
-  
-  // Handle notification toggle
-  const handleNotificationToggle = (setting) => {
-    setNotificationPreferences(prev => ({
-      ...prev,
-      [setting]: !prev[setting]
-    }));
+
+    if (name === "newPassword" && passwordForm.confirmPassword) {
+      validateField("confirmPassword", passwordForm.confirmPassword);
+    }
   };
 
-  // Handle address change
-  const handleAddressChange = (address) => {
-    setAddressForm(prev => ({
-      ...prev,
-      address: address
-    }));
-  };
-
-  // Handle address validation
-  const handleAddressValidation = (validation) => {
-    setAddressValidation(validation);
-    
-    // Update address form with validated components if available
-    if (validation && validation.addressComponents) {
-      const components = validation.addressComponents;
-      setAddressForm(prev => ({
-        ...prev,
-        city: components.city || prev.city,
-        state: components.state || prev.state,
-        country: components.country || prev.country,
-        postalCode: components.postalCode || prev.postalCode
-      }));
-    }
-  };
-  
-  // Handle image selection
-  const handleImageSelect = (e) => {
-    if (e.target.files && e.target.files[0]) {
-      const file = e.target.files[0];
-      setSelectedFile(file);
-      
-      // Create preview URL
-      const fileReader = new FileReader();
-      fileReader.onload = () => {
-        setPreviewUrl(fileReader.result);
-      };
-      fileReader.readAsDataURL(file);
-    }
-  };
-  
-  // Handle image upload click
-  const handleImageUploadClick = () => {
-    fileInputRef.current.click();
-  };
-  
-  // Upload image with simulated progress
-  const handleImageUpload = async () => {
-    if (!selectedFile) return;
-    
-    try {
-      setUploadingImage(true);
-      setUploadProgress(0);
-      
-      // Simulate upload progress
-      const intervalId = setInterval(() => {
-        setUploadProgress(prevProgress => {
-          const newProgress = prevProgress + 5;
-          return newProgress >= 100 ? 100 : newProgress;
-        });
-      }, 100);
-      
-      // In a real application, you would upload the image to an API
-      // For now, we'll simulate a successful upload
-      await new Promise(resolve => setTimeout(resolve, 2000));
-      
-      clearInterval(intervalId);
-      setUploadProgress(100);
-      
-      // Update user details in local storage with the new image URL
-      const userDetails = JSON.parse(localStorage.getItem("userDetails") || "{}");
-      userDetails.profilePicture = previewUrl;
-      localStorage.setItem("userDetails", JSON.stringify(userDetails));
-      
-      setMessage({
-        type: "success",
-        text: "Profile picture updated successfully!"
-      });
-      
-      // Small delay before resetting upload state
-      setTimeout(() => {
-        setUploadingImage(false);
-        setSelectedFile(null);
-        setUploadProgress(0);
-      }, 500);
-      
-    } catch (error) {
-      console.error("Error uploading image:", error);
-      setMessage({
-        type: "error",
-        text: "Failed to upload profile picture. Please try again later."
-      });
-      setUploadingImage(false);
-      setUploadProgress(0);
-    }
-  };
-  
-  // Save account changes
   const handleAccountSave = async (e) => {
     e.preventDefault();
-    
-    // Validate editable fields
     const firstNameValid = validateField("firstName", accountForm.firstName);
     const lastNameValid = validateField("lastName", accountForm.lastName);
-    const phoneValid = validateField("phoneNumber", accountForm.phoneNumber);
-    
-    if (!firstNameValid || !lastNameValid || !phoneValid) {
-      setMessage({
-        type: "error",
-        text: "Please correct the errors in the form"
-      });
+
+    if (!firstNameValid || !lastNameValid) {
+      setMessage({ type: "error", text: "Please correct the errors in the form" });
       return;
     }
-    
+
     try {
       setIsLoading(true);
-      
-      // In a real application, you would save changes via an API
-      // For now, we'll update local storage
-      const userDetails = JSON.parse(localStorage.getItem("userDetails") || "{}");
+      const stored = JSON.parse(localStorage.getItem("userDetails") || "{}");
       const updatedDetails = {
-        ...userDetails,
+        ...stored,
         firstName: accountForm.firstName,
         lastName: accountForm.lastName,
-        // email is read-only and remains unchanged
-        phoneNumber: accountForm.phoneNumber
       };
-      
       localStorage.setItem("userDetails", JSON.stringify(updatedDetails));
-      
-      // Simulate API call
-      await new Promise(resolve => setTimeout(resolve, 1000));
-      
+      setUserDetails(updatedDetails);
+
+      await new Promise((resolve) => setTimeout(resolve, 800));
       setMessage({
         type: "success",
-        text: "Account information updated successfully!"
+        text: "Account information updated successfully!",
       });
-      
-      setIsLoading(false);
     } catch (error) {
       console.error("Error saving account changes:", error);
       setMessage({
         type: "error",
-        text: "Failed to save changes. Please try again later."
+        text: "Failed to save changes. Please try again later.",
       });
-      setIsLoading(false);
-    }
-  };
-  
-  // Save password changes
-// Save password changes
-const handlePasswordSave = async (e) => {
-  e.preventDefault();
-
-  // Validate password fields
-  const currentPasswordValid = validateField("currentPassword", passwordForm.currentPassword);
-  const newPasswordValid = validateField("newPassword", passwordForm.newPassword);
-  const confirmPasswordValid = validateField("confirmPassword", passwordForm.confirmPassword);
-
-  if (!currentPasswordValid || !newPasswordValid || !confirmPasswordValid) {
-    setMessage({
-      type: "error",
-      text: "Please correct the errors in the form",
-    });
-    return;
-  }
-
-  if (passwordForm.newPassword !== passwordForm.confirmPassword) {
-    setValidationStates((prev) => ({
-      ...prev,
-      confirmPassword: { isValid: false, message: "Passwords don't match" },
-    }));
-    setMessage({
-      type: "error",
-      text: "New passwords do not match",
-    });
-    return;
-  }
-
-  if (passwordStrength.score < 3) {
-    setMessage({
-      type: "error",
-      text: "Please choose a stronger password",
-    });
-    return;
-  }
-
-  try {
-    setIsLoading(true);
-    const userDetails = JSON.parse(localStorage.getItem("userDetails") || "{}");
-
-    // ✅ Real API call here
-    const payload = {
-      email: userDetails.email, // <-- replace with how you access current user email
-      currentPassword: passwordForm.currentPassword,
-      newPassword: passwordForm.newPassword,
-    };
-
-    const res = await ClientSettingsService.changePassword(payload);
-
-    setMessage({
-      type: "success",
-      text: "Password updated successfully!",
-    });
-
-    // Reset password form
-    setPasswordForm({
-      currentPassword: "",
-      newPassword: "",
-      confirmPassword: "",
-    });
-
-    setPasswordStrength({
-      score: 0,
-      label: "Very Weak",
-      color: "#f85c70",
-    });
-
-  } catch (error) {
-    console.error("Error changing password:", error);
-    setMessage({
-      type: "error",
-      text:
-        error?.response?.data?.message ||
-        error.message ||
-        "Failed to change password. Please try again later.",
-    });
-  } finally {
-    setIsLoading(false);
-  }
-};
-
-  
-  // Save notification preferences
-  const handleNotificationSave = async () => {
-    try {
-      setIsLoading(true);
-      
-      // Get client ID from localStorage
-      const userDetails = JSON.parse(localStorage.getItem("userDetails") || "{}");
-      if (!userDetails.id) {
-        setMessage({
-          type: "error",
-          text: "Unable to identify user. Please log in again."
-        });
-        setIsLoading(false);
-        return;
-      }
-
-      // Call API to update notification preferences
-      const response = await ClientSettingsService.updateNotificationPreferences(
-        userDetails.id, 
-        notificationPreferences
-      );
-
-      if (response.success) {
-        setMessage({
-          type: "success",
-          text: response.message || "Notification preferences updated successfully!"
-        });
-
-        // Update local state with response data if provided
-        if (response.data) {
-          setNotificationPreferences(response.data);
-        }
-      } else {
-        setMessage({
-          type: "error",
-          text: response.message || "Failed to save notification preferences"
-        });
-      }
-      
-      setIsLoading(false);
-    } catch (error) {
-      console.error("Error saving notification preferences:", error);
-      setMessage({
-        type: "error",
-        text: error.message || "Failed to save notification preferences. Please try again later."
-      });
+    } finally {
       setIsLoading(false);
     }
   };
 
-  // Save address changes
-  const handleAddressSave = async (e) => {
+  const handlePasswordSave = async (e) => {
     e.preventDefault();
-    
-    // Validate that address is provided
-    if (!addressForm.address || addressForm.address.trim() === "") {
-      setMessage({
-        type: "error",
-        text: "Please enter a valid address"
-      });
+
+    const currentPasswordValid = validateField(
+      "currentPassword",
+      passwordForm.currentPassword
+    );
+    const newPasswordValid = validateField("newPassword", passwordForm.newPassword);
+    const confirmPasswordValid = validateField(
+      "confirmPassword",
+      passwordForm.confirmPassword
+    );
+
+    if (!currentPasswordValid || !newPasswordValid || !confirmPasswordValid) {
+      setMessage({ type: "error", text: "Please correct the errors in the form" });
       return;
     }
 
-    // Check if address is validated by Google Maps
-    if (!addressValidation || !addressValidation.isValid) {
+    if (passwordStrength.score < 3) {
       setMessage({
         type: "error",
-        text: "Please select a valid address from the suggestions"
+        text: "Please choose a stronger password",
       });
       return;
     }
 
     try {
       setIsLoading(true);
-      
-      // Update user details in local storage
-      const userDetails = JSON.parse(localStorage.getItem("userDetails") || "{}");
-      const updatedDetails = {
-        ...userDetails,
-        address: addressForm.address,
-        city: addressForm.city,
-        state: addressForm.state,
-        country: addressForm.country,
-        postalCode: addressForm.postalCode,
-        coordinates: addressValidation.coordinates
+      const stored = JSON.parse(localStorage.getItem("userDetails") || "{}");
+
+      const payload = {
+        email: stored.email,
+        currentPassword: passwordForm.currentPassword,
+        newPassword: passwordForm.newPassword,
       };
-      
-      localStorage.setItem("userDetails", JSON.stringify(updatedDetails));
-      
-      // In a real application, you would save to API here
-      // await ClientSettingsService.updateAddress(updatedDetails);
-      
-      // Simulate API call
-      await new Promise(resolve => setTimeout(resolve, 1000));
-      
+
+      await ClientSettingsService.changePassword(payload);
+
       setMessage({
         type: "success",
-        text: "Address updated successfully!"
+        text: "Password updated successfully!",
       });
-      
-      setIsLoading(false);
+
+      setPasswordForm({
+        currentPassword: "",
+        newPassword: "",
+        confirmPassword: "",
+      });
+
+      setPasswordStrength({
+        score: 0,
+        label: "Very Weak",
+        color: "#f85c70",
+      });
     } catch (error) {
-      console.error("Error saving address:", error);
+      console.error("Error changing password:", error);
       setMessage({
         type: "error",
-        text: "Failed to save address. Please try again later."
+        text:
+          error?.response?.data?.message ||
+          error.message ||
+          "Failed to change password. Please try again later.",
       });
+    } finally {
       setIsLoading(false);
     }
   };
-  
-  // Show deactivation confirmation modal
+
   const showDeactivateConfirmation = () => {
+    if (!deactivationReason) {
+      setMessage({
+        type: "error",
+        text: "Please choose a reason before deactivating.",
+      });
+      return;
+    }
+
     setModalConfig({
       title: "Deactivate Account",
-      text: "Are you sure you want to deactivate your account? This action cannot be undone and all your data will be permanently deleted.",
-      confirmAction: handleDeactivateAccount
+      text: "Are you sure you want to deactivate your account? Active orders will be cancelled and your gigs will be hidden.",
+      confirmAction: handleDeactivateAccount,
     });
     setShowModal(true);
   };
-  
-  // Handle account deactivation
+
   const handleDeactivateAccount = async () => {
     try {
       setIsLoading(true);
       setShowModal(false);
-      
-      // In a real application, you would deactivate the account via an API
-      // For now, we'll simulate a successful deactivation
-      await new Promise(resolve => setTimeout(resolve, 1500));
-      
-      // Clear local storage
+      await new Promise((resolve) => setTimeout(resolve, 1200));
       localStorage.removeItem("userDetails");
       localStorage.removeItem("authToken");
-      
-      // Redirect to home page
       navigate("/");
-      
-      setIsLoading(false);
     } catch (error) {
       console.error("Error deactivating account:", error);
       setMessage({
         type: "error",
-        text: "Failed to deactivate account. Please try again later."
+        text: "Failed to deactivate account. Please try again later.",
       });
+    } finally {
       setIsLoading(false);
     }
   };
 
-  // Toggle mobile sidebar
-  const toggleSidebar = () => {
-    setSidebarOpen(!sidebarOpen);
-  };
-  
+  const fullName = `${accountForm.firstName} ${accountForm.lastName}`.trim() || "Your name";
+  const username =
+    userDetails.username ||
+    userDetails.handle ||
+    (accountForm.email ? accountForm.email.split("@")[0] : "your-handle");
+  const locationDisplay =
+    userDetails.location ||
+    [userDetails.city, userDetails.state, userDetails.country].filter(Boolean).join(", ");
+  const memberSinceDisplay = formatDate(userDetails.createdAt);
+
+  const isAccountDirty =
+    accountForm.firstName !== (userDetails.firstName || "") ||
+    accountForm.lastName !== (userDetails.lastName || "");
+  const isPasswordReady =
+    passwordForm.currentPassword &&
+    passwordForm.newPassword &&
+    passwordForm.confirmPassword;
+
   return (
-    <div className="client-settings-container">
-      {/* Mobile toggle button */}
-      <div className="client-settings-mobile-toggle-button" onClick={toggleSidebar}>
-        <i className={`fas ${sidebarOpen ? 'fa-times' : 'fa-bars'}`}></i>
-      </div>
-      
-      <div className="client-settings-layout">
-        {/* Left Sidebar */}
-        <div className={`client-settings-sidebar ${sidebarOpen ? 'open' : ''}`}>
-          <div className="client-settings-sidebar-header">
-            <img src={previewUrl || defaultAvatar} alt="Profile" className="client-settings-sidebar-avatar" />
-            <div className="client-settings-sidebar-user-info">
-              <h3>{`${accountForm.firstName} ${accountForm.lastName}`}</h3>
-              <p>{accountForm.email}</p>
+    <div className="client-settings-page">
+      <h1 className="client-settings-page__title">My Settings</h1>
+
+      <div className="client-settings-page__grid">
+        <aside className="profile-card">
+          <img
+            src={previewUrl || defaultAvatar}
+            alt="Profile"
+            className="profile-card__avatar"
+          />
+          <h3 className="profile-card__name">{fullName || "Your Name"}</h3>
+          <p className="profile-card__handle">@{username}</p>
+
+          <div className="profile-card__rating">
+            <span className="stars">★★★★★</span>
+            <span className="score">4.7</span>
+            <span>(200 Reviews)</span>
+          </div>
+
+          <div className="profile-card__divider" />
+
+          <div className="profile-card__meta">
+            <div className="profile-card__meta-row location">
+              <span className="label">Location:</span>
+              <span className="value">{locationDisplay || "Lagos, Nigeria"}</span>
+            </div>
+            <div className="profile-card__meta-row member">
+              <span className="label">Member since:</span>
+              <span className="value">{memberSinceDisplay || "20th June, 2024"}</span>
             </div>
           </div>
-          
-          <ul className="client-settings-sidebar-menu">
-            <li 
-              className={`client-settings-sidebar-menu-item ${activeTab === "account" ? "active" : ""}`}
-              onClick={() => {
-                setActiveTab("account");
-                setSidebarOpen(false);
-              }}
-            >
-              <i className="fas fa-user-circle"></i>
-              <span>Account Information</span>
-            </li>
-            <li 
-              className={`client-settings-sidebar-menu-item ${activeTab === "password" ? "active" : ""}`}
-              onClick={() => {
-                setActiveTab("password");
-                setSidebarOpen(false);
-              }}
-            >
-              <i className="fas fa-lock"></i>
-              <span>Password</span>
-            </li>
-            <li 
-              className={`client-settings-sidebar-menu-item ${activeTab === "notifications" ? "active" : ""}`}
-              onClick={() => {
-                setActiveTab("notifications");
-                setSidebarOpen(false);
-              }}
-            >
-              <i className="fas fa-bell"></i>
-              <span>Notifications</span>
-            </li>
-            <li 
-              className={`client-settings-sidebar-menu-item ${activeTab === "address" ? "active" : ""}`}
-              onClick={() => {
-                setActiveTab("address");
-                setSidebarOpen(false);
-              }}
-            >
-              <i className="fas fa-map-marker-alt"></i>
-              <span>Update Location</span>
-            </li>
-          </ul>
-        </div>
-        
-        {/* Main Content Area */}
-        <div className="client-settings-content">
-          <h1 className="client-settings-title">
-            {activeTab === "account" && "Account Information"}
-            {activeTab === "password" && "Change Password"}
-            {activeTab === "notifications" && "Notification Preferences"}
-            {activeTab === "address" && "Update Location"}
-          </h1>
-          
-          {/* Message display */}
+        </aside>
+
+        <div className="settings-panel">
           {message.text && (
-            <div className={`client-settings-message ${message.type}`}>
-              {message.text}
-            </div>
+            <div className={`settings-alert ${message.type}`}>{message.text}</div>
           )}
-      
-          {/* Account Info Tab */}
-          {activeTab === "account" && (
-            <div className="client-settings-section">
-              <div className="client-settings-profile-picture-section">
-                <img 
-                  src={previewUrl || defaultAvatar} 
-                  alt="Profile" 
-                  className="client-settings-profile-picture-preview"
+
+          <section className="panel-section">
+            <div className="panel-section__header">
+              <h2>Account Details</h2>
+            </div>
+            <form className="panel-form" onSubmit={handleAccountSave}>
+              <div>
+                <label htmlFor="fullName">Full Name</label>
+                <input
+                  id="fullName"
+                  name="fullName"
+                  type="text"
+                  value={fullName}
+                  onChange={handleFullNameChange}
+                  placeholder="Enter full name"
                 />
-                <div className="client-settings-profile-picture-actions">
-                  <button 
-                    className="client-settings-button"
-                    onClick={handleImageUploadClick}
-                    disabled={uploadingImage}
-                  >
-                    <i className="fas fa-camera"></i> {uploadingImage ? "Uploading..." : "Change Picture"}
-                  </button>
-                  <input 
-                    type="file" 
-                    ref={fileInputRef}
-                    className="client-settings-file-input"
-                    accept="image/*"
-                    onChange={handleImageSelect}
-                  />
-                  {selectedFile && (
-                    <>
-                      {uploadingImage ? (
-                        <div className="client-settings-upload-progress">
-                          <div 
-                            className="client-settings-progress-bar" 
-                            style={{ 
-                              width: `${uploadProgress}%`,
-                              backgroundColor: uploadProgress < 100 ? '#4a6bdf' : '#20c997'
-                            }}
-                          ></div>
-                          <span className="client-settings-progress-text">{uploadProgress}%</span>
-                        </div>
-                      ) : (
-                        <button 
-                          className="client-settings-button"
-                          onClick={handleImageUpload}
-                        >
-                          <i className="fas fa-cloud-upload-alt"></i> Upload
-                        </button>
-                      )}
-                    </>
-                  )}
-                </div>
               </div>
-              
-              <form className="client-settings-form" onSubmit={handleAccountSave}>
-                <div className="client-settings-form-group">
-                  <label htmlFor="firstName">First Name</label>
-                  <input 
-                    type="text"
-                    id="firstName"
-                    name="firstName"
-                    value={accountForm.firstName}
-                    onChange={handleAccountChange}
-                    className={`client-settings-input-validated ${
-                      accountForm.firstName && 
-                      (validationStates.firstName.isValid ? "valid" : "invalid")
-                    }`}
-                    required
-                  />
-                  {accountForm.firstName && validationStates.firstName.isValid && (
-                    <i className="fas fa-check client-settings-validation-icon"></i>
-                  )}
-                  {!validationStates.firstName.isValid && (
-                    <p className="client-settings-password-hint">{validationStates.firstName.message}</p>
-                  )}
-                </div>
-                
-                <div className="client-settings-form-group">
-                  <label htmlFor="lastName">Last Name</label>
-                  <input 
-                    type="text"
-                    id="lastName"
-                    name="lastName"
-                    value={accountForm.lastName}
-                    onChange={handleAccountChange}
-                    className={`client-settings-input-validated ${
-                      accountForm.lastName && 
-                      (validationStates.lastName.isValid ? "valid" : "invalid")
-                    }`}
-                    required
-                  />
-                  {accountForm.lastName && validationStates.lastName.isValid && (
-                    <i className="fas fa-check client-settings-validation-icon"></i>
-                  )}
-                  {!validationStates.lastName.isValid && (
-                    <p className="client-settings-password-hint">{validationStates.lastName.message}</p>
-                  )}
-                </div>
-                
-                <div className="client-settings-form-group">
-                  <label htmlFor="email">Email Address</label>
-                  <input 
-                    type="email"
-                    id="email"
-                    name="email"
-                    value={accountForm.email}
-                    className="client-settings-input-readonly"
-                    readOnly
-                    disabled
-                  />
-                  <p className="client-settings-field-info">
-                    <i className="fas fa-info-circle"></i> Email address cannot be changed
-                  </p>
-                </div>
-                
-                <div className="client-settings-form-group">
-                  <label htmlFor="phoneNumber">Phone Number</label>
-                  <input 
-                    type="tel"
-                    id="phoneNumber"
-                    name="phoneNumber"
-                    value={accountForm.phoneNumber}
-                    onChange={handleAccountChange}
-                    className={`client-settings-input-validated ${
-                      accountForm.phoneNumber && 
-                      (validationStates.phoneNumber.isValid ? "valid" : "invalid")
-                    }`}
-                    required
-                  />
-                  {accountForm.phoneNumber && validationStates.phoneNumber.isValid && (
-                    <i className="fas fa-check client-settings-validation-icon"></i>
-                  )}
-                  {!validationStates.phoneNumber.isValid && (
-                    <p className="client-settings-password-hint">{validationStates.phoneNumber.message}</p>
-                  )}
-                </div>
-                
-                <div className="client-settings-form-actions">
-                  <button 
-                    type="submit" 
-                    className="client-settings-button"
-                    disabled={isLoading}
-                  >
-                    {isLoading ? (
-                      <>
-                        <i className="fas fa-spinner fa-spin"></i> Saving...
-                      </>
-                    ) : (
-                      <>
-                        <i className="fas fa-save"></i> Save Changes
-                      </>
-                    )}
-                  </button>
-                </div>
-              </form>
-              
-              <div className="client-settings-deactivate-section">
-                <h3><i className="fas fa-exclamation-triangle"></i> Deactivate Account</h3>
-                <p>Once you deactivate your account, all your data will be permanently deleted. This action cannot be undone.</p>
-                <div className="right-aligned">
-                  <button 
-                    className="client-settings-button danger"
-                    onClick={showDeactivateConfirmation}
-                    disabled={isLoading}
-                  >
-                    <i className="fas fa-user-slash"></i> Deactivate Account
-                  </button>
-                </div>
+
+              <div>
+                <label htmlFor="email">Email</label>
+                <input
+                  id="email"
+                  name="email"
+                  type="email"
+                  value={accountForm.email}
+                  readOnly
+                  disabled
+                />
+                <p className="helper-text">Email updates require contacting support.</p>
               </div>
+
+              <div className="panel-actions">
+                <button type="submit" disabled={isLoading || !isAccountDirty}>
+                  Save Changes
+                </button>
+              </div>
+            </form>
+          </section>
+
+          <section className="panel-section">
+            <div className="panel-section__header">
+              <h2>Update Password</h2>
             </div>
-          )}
-          
-          {/* Password Tab */}
-          {activeTab === "password" && (
-            <div className="client-settings-section">
-              <form className="client-settings-form" onSubmit={handlePasswordSave}>
-                <div className="client-settings-form-group">
-                  <label htmlFor="currentPassword">Current Password</label>
-                  <input 
-                    type="password"
-                    id="currentPassword"
-                    name="currentPassword"
-                    value={passwordForm.currentPassword}
-                    onChange={handlePasswordChange}
-                    className={`client-settings-input-validated ${
-                      passwordForm.currentPassword && 
-                      (validationStates.currentPassword.isValid ? "valid" : "invalid")
-                    }`}
-                    required
-                  />
-                 {!validationStates.currentPassword.isValid && (
-                    <p className="client-settings-password-hint error-text">
-                      {validationStates.currentPassword.message || "Current password is required"}
-                    </p>
-                  )}
-                </div>
-                
-                <div className="client-settings-form-group">
-                  <label htmlFor="newPassword">New Password</label>
-                  <input 
-                    type="password"
-                    id="newPassword"
-                    name="newPassword"
-                    value={passwordForm.newPassword}
-                    onChange={handlePasswordChange}
-                    className={`client-settings-input-validated ${
-                      passwordForm.newPassword && 
-                      (validationStates.newPassword.isValid ? "valid" : "invalid")
-                    }`}
-                    required
-                  />
-                  
-                  {passwordForm.newPassword && (
-                    <div className="client-settings-password-strength">
-                      <div className="client-settings-strength-bar" style={{ width: `${(passwordStrength.score / 6) * 100}%`, backgroundColor: passwordStrength.color }}></div>
-                      <span className="client-settings-strength-text" style={{ color: passwordStrength.color }}>
-                        {passwordStrength.label}
-                      </span>
-                    </div>
-                  )}
-                  
-                   {!validationStates.newPassword.isValid && (
-                      <p className="client-settings-password-hint error-text">
-                        {validationStates.newPassword.message || "Password must be at least 8 characters"}
-                      </p>
-                    )}
-                </div>
-                
-                <div className="client-settings-form-group">
-                  <label htmlFor="confirmPassword">Confirm New Password</label>
-                  <input 
-                    type="password"
-                    id="confirmPassword"
-                    name="confirmPassword"
-                    value={passwordForm.confirmPassword}
-                    onChange={handlePasswordChange}
-                    className={`client-settings-input-validated ${
-                      passwordForm.confirmPassword && 
-                      (validationStates.confirmPassword.isValid ? "valid" : "invalid")
-                    }`}
-                    required
-                  />
-                  {!validationStates.confirmPassword.isValid && (
-                    <p className="client-settings-password-hint">{validationStates.confirmPassword.message}</p>
-                  )}
-                </div>
-                
-                <div className="client-settings-form-actions">
-                  <button 
-                    type="submit" 
-                    className="client-settings-button"
-                    disabled={isLoading}
-                  >
-                    {isLoading ? (
-                      <>
-                        <i className="fas fa-spinner fa-spin"></i> Changing Password...
-                      </>
-                    ) : (
-                      <>
-                        <i className="fas fa-key"></i> Change Password
-                      </>
-                    )}
-                  </button>
-                </div>
-              </form>
-            </div>
-          )}
-          
-          {/* Notifications Tab */}
-          {activeTab === "notifications" && (
-            <div className="client-settings-section">
-              <div className="client-settings-notification-settings">
-                <div className="client-settings-switch-container">
-                  <div>
-                    <div className="client-settings-switch-label">Email Notifications</div>
-                    <div className="client-settings-switch-description">
-                      Receive email notifications about account updates and service information
-                    </div>
-                  </div>
-                  <label className="client-settings-switch">
-                    <input 
-                      type="checkbox" 
-                      checked={notificationPreferences.emailNotifications}
-                      onChange={() => handleNotificationToggle("emailNotifications")}
+            <form className="panel-form" onSubmit={handlePasswordSave}>
+              <div>
+                <label htmlFor="currentPassword">Current Password</label>
+                <input
+                  id="currentPassword"
+                  name="currentPassword"
+                  type="password"
+                  value={passwordForm.currentPassword}
+                  onChange={handlePasswordChange}
+                  placeholder="Enter current password"
+                />
+              </div>
+
+              <div>
+                <label htmlFor="newPassword">New Password</label>
+                <input
+                  id="newPassword"
+                  name="newPassword"
+                  type="password"
+                  value={passwordForm.newPassword}
+                  onChange={handlePasswordChange}
+                  placeholder="Enter new password"
+                />
+                <div className="password-strength">
+                  <div className="password-strength__bar">
+                    <span
+                      style={{
+                        width: `${(passwordStrength.score / 6) * 100}%`,
+                        background: passwordStrength.color,
+                      }}
                     />
-                    <span className="client-settings-slider"></span>
-                  </label>
-                </div>
-                
-                <div className="client-settings-switch-container">
-                  <div>
-                    <div className="client-settings-switch-label">SMS Notifications</div>
-                    <div className="client-settings-switch-description">
-                      Receive text messages for important updates and reminders
-                    </div>
                   </div>
-                  <label className="client-settings-switch">
-                    <input 
-                      type="checkbox" 
-                      checked={notificationPreferences.smsNotifications}
-                      onChange={() => handleNotificationToggle("smsNotifications")}
-                    />
-                    <span className="client-settings-slider"></span>
-                  </label>
-                </div>
-                
-                <div className="client-settings-switch-container">
-                  <div>
-                    <div className="client-settings-switch-label">Marketing Emails</div>
-                    <div className="client-settings-switch-description">
-                      Receive promotional emails about new services and special offers
-                    </div>
-                  </div>
-                  <label className="client-settings-switch">
-                    <input 
-                      type="checkbox" 
-                      checked={notificationPreferences.marketingEmails}
-                      onChange={() => handleNotificationToggle("marketingEmails")}
-                    />
-                    <span className="client-settings-slider"></span>
-                  </label>
-                </div>
-                
-                <div className="client-settings-switch-container">
-                  <div>
-                    <div className="client-settings-switch-label">Order Updates</div>
-                    <div className="client-settings-switch-description">
-                      Receive notifications about your orders and bookings
-                    </div>
-                  </div>
-                  <label className="client-settings-switch">
-                    <input 
-                      type="checkbox" 
-                      checked={notificationPreferences.orderUpdates}
-                      onChange={() => handleNotificationToggle("orderUpdates")}
-                    />
-                    <span className="client-settings-slider"></span>
-                  </label>
-                </div>
-                
-                <div className="client-settings-switch-container">
-                  <div>
-                    <div className="client-settings-switch-label">Service Updates</div>
-                    <div className="client-settings-switch-description">
-                      Receive notifications about service changes and important information
-                    </div>
-                  </div>
-                  <label className="client-settings-switch">
-                    <input 
-                      type="checkbox" 
-                      checked={notificationPreferences.serviceUpdates}
-                      onChange={() => handleNotificationToggle("serviceUpdates")}
-                    />
-                    <span className="client-settings-slider"></span>
-                  </label>
-                </div>
-                
-                <div className="client-settings-switch-container">
-                  <div>
-                    <div className="client-settings-switch-label">Promotions</div>
-                    <div className="client-settings-switch-description">
-                      Receive notifications about discounts and promotional offers
-                    </div>
-                  </div>
-                  <label className="client-settings-switch">
-                    <input 
-                      type="checkbox" 
-                      checked={notificationPreferences.promotions}
-                      onChange={() => handleNotificationToggle("promotions")}
-                    />
-                    <span className="client-settings-slider"></span>
-                  </label>
+                  <span>{passwordStrength.label}</span>
                 </div>
               </div>
-              
-              <div className="client-settings-form-actions">
-                <button 
-                  className="client-settings-button"
-                  onClick={handleNotificationSave}
-                  disabled={isLoading}
+
+              <div>
+                <label htmlFor="confirmPassword">Confirm New Password</label>
+                <input
+                  id="confirmPassword"
+                  name="confirmPassword"
+                  type="password"
+                  value={passwordForm.confirmPassword}
+                  onChange={handlePasswordChange}
+                  placeholder="Re-enter new password"
+                />
+              </div>
+
+              <div className="panel-actions">
+                <button type="submit" disabled={isLoading || !isPasswordReady}>
+                  Save Changes
+                </button>
+              </div>
+            </form>
+          </section>
+
+          <section className="panel-section">
+            <div className="panel-section__header">
+              <h2>Account Deactivation</h2>
+            </div>
+            <div className="deactivate-card">
+              <p>What happens when you deactivate your account?</p>
+              <ul>
+                <li>Your profile and gigs won't be shown anymore.</li>
+                <li>Active orders will be cancelled.</li>
+                <li>You won't be able to re-activate your gigs.</li>
+              </ul>
+
+              <div className="panel-form">
+                <div>
+                  <label htmlFor="deactivationReason">I'm leaving because...</label>
+                  <select
+                    id="deactivationReason"
+                    value={deactivationReason}
+                    onChange={(e) => setDeactivationReason(e.target.value)}
+                  >
+                    <option value="">Choose a reason</option>
+                    {deactivationReasons.map((reason) => (
+                      <option key={reason} value={reason}>
+                        {reason}
+                      </option>
+                    ))}
+                  </select>
+                </div>
+              </div>
+
+              <div className="deactivate-actions">
+                <button
+                  type="button"
+                  onClick={showDeactivateConfirmation}
+                  disabled={isLoading || !deactivationReason}
                 >
-                  {isLoading ? (
-                    <>
-                      <i className="fas fa-spinner fa-spin"></i> Saving...
-                    </>
-                  ) : (
-                    <>
-                      <i className="fas fa-save"></i> Save Preferences
-                    </>
-                  )}
+                  Deactivate account
                 </button>
               </div>
             </div>
-          )}
-          
-          {/* Update Location Tab */}
-          {activeTab === "address" && (
-            <div className="client-settings-section">
-              <div className="client-settings-address-info">
-                <p><i className="fas fa-info-circle"></i> Update your location to help us provide better service recommendations and connect you with nearby caregivers.</p>
-              </div>
-              
-              <form className="client-settings-form" onSubmit={handleAddressSave}>
-                <div className="client-settings-form-group">
-                  <label htmlFor="address">Full Address</label>
-                  <AddressInput
-                    value={addressForm.address}
-                    onChange={handleAddressChange}
-                    onValidation={handleAddressValidation}
-                    placeholder="Enter your full address (e.g., 123 Main Street, Lagos, Nigeria)"
-                    className="client-settings-address-input"
-                    showValidationIcon={true}
-                    autoValidate={true}
-                    country="ng"
-                  />
-                  
-                  {/* Show validation status */}
-                  {addressValidation && (
-                    <div style={{ 
-                      marginTop: '8px',
-                      padding: '8px',
-                      borderRadius: '4px',
-                      fontSize: '14px',
-                      backgroundColor: addressValidation.isValid ? '#d4edda' : '#f8d7da',
-                      color: addressValidation.isValid ? '#155724' : '#721c24',
-                      border: `1px solid ${addressValidation.isValid ? '#c3e6cb' : '#f5c6cb'}`
-                    }}>
-                      <i className={`fas ${addressValidation.isValid ? 'fa-check-circle' : 'fa-exclamation-circle'}`}></i>
-                      {addressValidation.isValid ? 
-                        ` Address validated: ${addressValidation.formattedAddress}` : 
-                        ` ${addressValidation.errorMessage || 'Please select a valid address from suggestions'}`
-                      }
-                    </div>
-                  )}
-                </div>
-
-                {/* Display address components if validated */}
-                {addressValidation && addressValidation.isValid && addressValidation.addressComponents && (
-                  <div className="client-settings-address-components">
-                    <h4>Address Details</h4>
-                    <div className="client-settings-address-grid">
-                      <div className="client-settings-form-group">
-                        <label>City</label>
-                        <input 
-                          type="text"
-                          value={addressForm.city}
-                          className="client-settings-input-readonly"
-                          readOnly
-                        />
-                      </div>
-                      
-                      <div className="client-settings-form-group">
-                        <label>State</label>
-                        <input 
-                          type="text"
-                          value={addressForm.state}
-                          className="client-settings-input-readonly"
-                          readOnly
-                        />
-                      </div>
-                      
-                      <div className="client-settings-form-group">
-                        <label>Country</label>
-                        <input 
-                          type="text"
-                          value={addressForm.country}
-                          className="client-settings-input-readonly"
-                          readOnly
-                        />
-                      </div>
-                      
-                      <div className="client-settings-form-group">
-                        <label>Postal Code</label>
-                        <input 
-                          type="text"
-                          value={addressForm.postalCode}
-                          className="client-settings-input-readonly"
-                          readOnly
-                        />
-                      </div>
-                    </div>
-                  </div>
-                )}
-                
-                <div className="client-settings-form-actions">
-                  <button 
-                    type="submit" 
-                    className="client-settings-button"
-                    disabled={isLoading || !addressValidation?.isValid}
-                  >
-                    {isLoading ? (
-                      <>
-                        <i className="fas fa-spinner fa-spin"></i> Saving...
-                      </>
-                    ) : (
-                      <>
-                        <i className="fas fa-map-marker-alt"></i> Save Location
-                      </>
-                    )}
-                  </button>
-                </div>
-              </form>
-            </div>
-          )}
+          </section>
         </div>
       </div>
-      
-      {/* Confirmation Modal */}
+
       {showModal && (
-        <div className="client-settings-modal-overlay">
-          <div className="client-settings-modal-content">
-            <h3><i className="fas fa-exclamation-triangle"></i> {modalConfig.title}</h3>
+        <div className="settings-modal">
+          <div className="settings-modal__content">
+            <h3>{modalConfig.title}</h3>
             <p>{modalConfig.text}</p>
-            <div className="client-settings-modal-actions">
-              <button 
-                className="client-settings-button cancel"
-                onClick={() => setShowModal(false)}
-              >
-                <i className="fas fa-times"></i> Cancel
+            <div className="settings-modal__actions">
+              <button type="button" onClick={() => setShowModal(false)}>
+                Cancel
               </button>
-              <button 
-                className="client-settings-button danger"
+              <button
+                type="button"
+                className="danger"
                 onClick={modalConfig.confirmAction}
                 disabled={isLoading}
               >
-                {isLoading ? (
-                  <>
-                    <i className="fas fa-spinner fa-spin"></i> Processing...
-                  </>
-                ) : (
-                  <>
-                    <i className="fas fa-check"></i> Confirm
-                  </>
-                )}
+                Confirm
               </button>
             </div>
           </div>

@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { useNavigate, useSearchParams, Link } from "react-router-dom";
-import "../../styles/main-app/pages/ForgotPasswordPage.scss";
+import "../../styles/main-app/pages/ForgotPasswordPage.css";
 import loginImg from "../../assets/loginImg.png";
 import loginLogo from "../../assets/loginLogo.png";
 import { forgotPassword, resetPasswordWithToken } from "../services/auth";

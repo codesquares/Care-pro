@@ -1,5 +1,5 @@
 import React, { Fragment } from "react";
-import "./pagebar.scss";
+import "./pagebar.css";
 
 const PageBar = ({ pages, currentPage, onPageClick, pageValidationStatus = {} }) => {
   const getStepClasses = (index) => {

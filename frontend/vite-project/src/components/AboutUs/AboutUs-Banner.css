@@ -1,0 +1,60 @@
+.full-width-banner {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  background-color: #fdfdfd;
+  padding: 2rem 1.5rem;
+  text-align: center;
+  /* Add top margin to account for fixed navbar */
+  margin-top: var(--navbar-height-mobile, 70px);
+}
+@media (min-width: 768px) {
+  .full-width-banner {
+    flex-direction: row;
+    justify-content: space-between;
+    padding: 4rem 3rem;
+    text-align: left;
+    /* Use desktop navbar height on larger screens */
+    margin-top: var(--navbar-height-desktop, 100px);
+  }
+}
+.full-width-banner .banner-image-container {
+  width: 100%;
+  max-width: 500px;
+  margin-bottom: 2rem;
+}
+@media (min-width: 768px) {
+  .full-width-banner .banner-image-container {
+    margin-bottom: 0;
+    margin-right: 3rem;
+  }
+}
+.full-width-banner .banner-image-container .banner-image {
+  width: 100%;
+  height: auto;
+  border-radius: 12px;
+  box-shadow: 0 8px 20px rgba(0, 0, 0, 0.08);
+}
+.full-width-banner .banner-content {
+  max-width: 600px;
+  margin: 0 auto;
+}
+.full-width-banner .banner-content .banner-title {
+  font-size: 1.8rem;
+  font-family: PoppinsSemiBold, sans-serif;
+  color: #02445F;
+  line-height: 1.3;
+  margin: 0 auto; /* Ensures the title is centered */
+}
+@media (min-width: 768px) {
+  .full-width-banner .banner-content .banner-title {
+    font-size: 2.4rem;
+    margin-right: 0; /* Resets margin in larger screens */
+    margin-left: 0; /* Ensures title isn't off-center */
+  }
+}
+@media (min-width: 1024px) {
+  .full-width-banner .banner-content .banner-title {
+    font-size: 2.8rem;
+  }
+}

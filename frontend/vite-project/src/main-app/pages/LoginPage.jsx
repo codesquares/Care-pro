@@ -3,7 +3,7 @@ import { useNavigate, Link, useLocation } from "react-router-dom";
 import axios from "axios";
 import loginImg from "../../assets/loginImg.png";
 import loginLogo from "../../assets/loginLogo.png";
-import "../../styles/main-app/pages/LoginPage.scss";
+import "../../styles/main-app/pages/LoginPage.css";
 import { toast } from "react-toastify";
 import config from "../config";
 import { useAuth } from "../context/AuthContext";

@@ -1,6 +1,6 @@
 
-import "./expert-team.scss";
-import '../../styles/components/AboutUsTeam.scss';
+import "./expert-team.css";
+import '../../styles/components/AboutUsTeam.css';
 import ifeoluwa from "../../assets/ifeoluwa.jpeg"; // Placeholder for expert images
 import faniyi from "../../assets/faniyi.jpeg"; // Placeholder for expert images
 import funmilola from "../../assets/lolaidowu2.jpg"; // Placeholder for expert images

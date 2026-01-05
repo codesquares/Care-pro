@@ -1,7 +1,7 @@
 import NavIcon from "./NavIcon";
 import NavImage from "./NavImage";
 import NavItem from "./NavItem";
-import "./gigs.scss";
+import "./gigs.css";
 
 const GigsHeader = () => {
   return (

@@ -4,7 +4,7 @@ import logo from '../assets/careproLogo.svg';
 import arrow from '../assets/arrow-right.svg';
 import hambugerImg from '../assets/ci_hamburger-md.svg';
 import messageIcon from '../assets/message_icon.png';
-import '../styles/components/nav-bar.scss';
+import '../styles/components/nav-bar.css';
 import { useAuth } from '../main-app/context/AuthContext';
 
 const Navbar = () => {
