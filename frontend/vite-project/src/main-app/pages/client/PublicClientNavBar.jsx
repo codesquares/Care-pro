@@ -80,15 +80,15 @@ const PublicClientNavBar = () => {
     e.preventDefault();
     setIsTyping(false); // Reset typing state on form submission
     if (searchQuery.trim()) {
-      // Navigate to root with search query parameter
-      navigate(`/?q=${encodeURIComponent(searchQuery.trim())}`);
+      // Navigate to marketplace with search query parameter
+      navigate(`/marketplace?q=${encodeURIComponent(searchQuery.trim())}`);
       // Dispatch search event with completed search
       window.dispatchEvent(new CustomEvent('searchChanged', { 
         detail: { searchQuery: searchQuery.trim(), isSearching: false } 
       }));
     } else {
-      // If empty search, go to root without query
-      navigate('/');
+      // If empty search, go to marketplace without query
+      navigate('/marketplace');
       window.dispatchEvent(new CustomEvent('searchChanged', { 
         detail: { searchQuery: '', isSearching: false } 
       }));

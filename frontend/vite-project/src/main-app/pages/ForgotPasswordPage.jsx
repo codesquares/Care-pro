@@ -186,6 +186,7 @@ const ForgotPasswordPage = () => {
             placeholder="New Password"
             value={newPassword}
             onChange={(e) => setNewPassword(e.target.value)}
+            autoComplete="new-password"
             required
           />
           <button
@@ -249,6 +250,7 @@ const ForgotPasswordPage = () => {
             placeholder="Confirm New Password"
             value={confirmPassword}
             onChange={(e) => setConfirmPassword(e.target.value)}
+            autoComplete="new-password"
             required
           />
           <button

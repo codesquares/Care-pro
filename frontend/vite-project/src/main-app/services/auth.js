@@ -97,23 +97,27 @@ export const resetPasswordWithToken = async (token, newPassword) => {
     try {
         // Try CareGivers endpoint first
         let response = await fetch(`${config.BASE_URL}/CareGivers/resetPassword`, {
-            method: 'POST',  
-            headers: { 'Content-Type': 'application/json' },
+            method: 'POST',
+            headers: { 
+                'Content-Type': 'application/json',
+            },
             body: JSON.stringify({ token, newPassword }),
         });
 
         // If CareGiver endpoint fails with 404/user not found, try Clients endpoint
         if (!response.ok) {
-            const errorData = await response.json();
+            const errorData = await response.json().catch(() => ({}));
             if (errorData.message && errorData.message.includes('User not found')) {
                 response = await fetch(`${config.BASE_URL}/Clients/resetPassword`, {
                     method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
+                    headers: { 
+                        'Content-Type': 'application/json',
+                    },
                     body: JSON.stringify({ token, newPassword }),
                 });
                 
                 if (!response.ok) {
-                    const clientErrorData = await response.json(); 
+                    const clientErrorData = await response.json().catch(() => ({})); 
                     throw new Error(clientErrorData.message || 'Failed to reset password');
                 }
             } else {

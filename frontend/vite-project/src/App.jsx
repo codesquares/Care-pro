@@ -4,13 +4,14 @@ import './App.css';
 import { BrowserRouter as Router, Route, Routes } from 'react-router-dom';
 import Navbar from './components/Navbar';
 import Footer from './components/Footer';
+import MarketingNavBar from './components/MarketingNavBar';
 import AboutUs from './pages/AboutUs';
 import Blog from './pages/Blog';
 import CareFacts from './pages/CareFacts';
 import OurProcess from './pages/OurProcess';
 import Plans from './pages/Plans';
 import BookCaregiver from './pages/BookCaregiver';
-import Home from './pages/Home';
+import MarketingPage from './pages/MarketingPage';
 import BecomeCaregiver from './pages/BecomeCaregiver';
 import PrivacyPolicy from './pages/PrivacyPolicy';
 import TermsAndConditions from './pages/TermsAndConditions';
@@ -28,7 +29,7 @@ import 'react-toastify/dist/ReactToastify.css';
 import ProtectedRoute from './main-app/components/auth/ProtectedRoute';
 import MainAppRoutes from './main-app/routes';
 import { logout } from './main-app/services/auth';
-import { AuthProvider } from './main-app/context/AuthContext';
+import { AuthProvider, useAuth } from './main-app/context/AuthContext';
 import ErrorBoundary from './main-app/components/ErrorBoundary';
 // import Messages from './main-app/pages/Messages';
 import NotificationBell from './main-app/components/notifications/NotificationBell';
@@ -82,10 +83,12 @@ function App() {
 
 function AppContent() {
   const location = useLocation();
+  const { user, isAuthenticated } = useAuth();
 
   // Define unprotected routes
   const unprotectedRoutes = [
     '/',
+    '/marketplace',
     '/about-us',
     '/blog',
     '/contentful-blog',
@@ -123,12 +126,18 @@ function AppContent() {
   // Check if current path is unprotected
   const isUnprotectedRoute = unprotectedRoutes.includes(location.pathname.toLowerCase());
   const isRootRoute = location.pathname === '/';
+  const isMarketplaceRoute = location.pathname === '/marketplace';
   
   // Check if current route should show navbar and footer
-  const shouldShowClientNavbar = isRootRoute;
+  // Marketing navbar for root and marketing-related pages
+  const shouldShowMarketingNavbar = isRootRoute;
+  // Client navbar (with search) for marketplace
+  const shouldShowClientNavbar = isMarketplaceRoute;
+  // Basic navbar for other public pages
   const shouldShowBasicNavbar = isUnprotectedRoute && 
                                 !routesWithoutNavbar.includes(location.pathname) && 
-                                !isRootRoute;
+                                !isRootRoute &&
+                                !isMarketplaceRoute;
   const shouldShowFooter = !routesWithoutFooter.includes(location.pathname);
 
   
@@ -136,11 +145,29 @@ function AppContent() {
   return (
     <div className="App">
       {shouldShowBasicNavbar && <Navbar />}
+      {shouldShowMarketingNavbar && <MarketingNavBar />}
       {shouldShowClientNavbar && <PublicClientNavBar />}
       <ScrollToTop />
       {/* Remove duplicate ToastContainer to prevent conflicts - main one is at bottom */}
       {/* <ConnectionStatusIndicator /> */}
       <Routes>
+        {/* Root route with redirect logic for authenticated users */}
+        <Route 
+          path="/" 
+          element={
+            isAuthenticated && user ? (
+              user.role?.toLowerCase() === 'caregiver' ? (
+                <Navigate to="/app/caregiver/dashboard" replace />
+              ) : (
+                <Navigate to="/marketplace" replace />
+              )
+            ) : (
+              <MarketingPage />
+            )
+          } 
+        />
+        {/* Marketplace route */}
+        <Route path="/marketplace" element={<PublicMarketplace />} />
         <Route path="/about-us" element={<AboutUs />} />
         <Route path="/blog" element={<Blog />} />
         <Route path="/contentful-blog" element={<ContentBlog />} />
@@ -159,7 +186,6 @@ function AppContent() {
         <Route path="/forgot-password" element={<ForgotPasswordPage />} />
         <Route path="/confirm-email" element={<ConfirmEmailPage />} />
         <Route path="/resend-confirmation" element={<ResendConfirmationPage />} />
-        <Route path="/" element={<PublicMarketplace />} />
         <Route path="/service/:id" element={<HomeCareService />} />
         <Route path="/splash" element={<SplashScreen />} />
 

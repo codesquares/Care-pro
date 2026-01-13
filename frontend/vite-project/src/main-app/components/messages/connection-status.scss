@@ -4,34 +4,34 @@
 .connection-status {
   display: flex;
   align-items: center;
-  padding: $spacing-sm $spacing-md;
+  padding: 8px 16px;
   border-radius: 20px;
   font-size: 0.875rem;
-  font-weight: 500;
+  font-weight: 600;
   color: white;
   position: fixed;
-  top: $spacing-lg;
-  right: $spacing-lg;
+  top: 70px; /* Position below navbar to ensure full visibility */
+  right: 16px;
   z-index: $z-connection-status;
   box-shadow: 0 2px 8px rgba(0, 0, 0, 0.2);
   transition: all $transition-slow;
   backdrop-filter: blur(10px);
-  gap: 6px;
+  gap: 8px;
   cursor: default;
-  max-width: 280px;
   
   @include mobile-only {
-    top: $spacing-sm;
-    right: $spacing-sm;
-    padding: 4px $spacing-sm;
-    font-size: 0.75rem;
-    gap: 4px;
-    max-width: 220px;
+    top: 60px; /* Account for mobile navbar height */
+    right: 8px;
+    padding: 6px 12px;
+    font-size: 0.8125rem;
+    gap: 6px;
     border-radius: 16px;
   }
   
   .status-icon {
     font-size: 1rem;
+    flex-shrink: 0;
+    color: #ffffff;
     
     @include mobile-only {
       font-size: 0.875rem;
@@ -40,8 +40,9 @@
   
   .status-text {
     white-space: nowrap;
-    overflow: hidden;
-    text-overflow: ellipsis;
+    font-size: inherit;
+    letter-spacing: 0.01em;
+    color: #ffffff;
   }
   
   // State-specific styling

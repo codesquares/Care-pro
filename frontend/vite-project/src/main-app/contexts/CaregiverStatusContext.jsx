@@ -251,6 +251,30 @@ export function CaregiverStatusProvider({ children }) {
     initializeStatus();
   }, [currentUserId]); // Re-run when currentUserId changes
 
+  // Helper function to recalculate canPublishGigs with optional override values
+  // This allows us to pass in freshly fetched values that may not yet be in state
+  const recalculatePublishingEligibility = (overrides = {}) => {
+    setStatusData(prev => {
+      const isVerified = overrides.isVerified !== undefined ? overrides.isVerified : prev.isVerified;
+      const isQualified = overrides.isQualified !== undefined ? overrides.isQualified : prev.isQualified;
+      const hasCertificates = overrides.hasCertificates !== undefined ? overrides.hasCertificates : prev.hasCertificates;
+      
+      const canPublishGigs = isVerified && isQualified && hasCertificates;
+      console.log('CaregiverStatusContext - Recalculating publishing eligibility:', {
+        isVerified,
+        isQualified,
+        hasCertificates,
+        canPublishGigs,
+        overrides
+      });
+      return {
+        ...prev,
+        canPublishGigs,
+        lastUpdated: new Date().toISOString()
+      };
+    });
+  };
+
   // Public methods to update specific parts of the status
   const updateVerificationStatus = async () => {
     const userDetails = getUserDetails();
@@ -258,21 +282,30 @@ export function CaregiverStatusProvider({ children }) {
     
     if (!userDetails?.id || !token) return;
     
-    return await fetchVerificationStatus(userDetails.id, token);
+    const result = await fetchVerificationStatus(userDetails.id, token);
+    // Recalculate canPublishGigs with the fresh verification result
+    recalculatePublishingEligibility({ isVerified: result?.isVerified });
+    return result;
   };
 
   const updateQualificationStatus = async () => {
     const userDetails = getUserDetails();
     if (!userDetails?.id) return;
     
-    return await fetchQualificationStatus(userDetails.id);
+    const result = await fetchQualificationStatus(userDetails.id);
+    // Recalculate canPublishGigs with the fresh qualification result
+    recalculatePublishingEligibility({ isQualified: result?.isQualified });
+    return result;
   };
 
   const updateCertificates = async () => {
     const userDetails = getUserDetails();
     if (!userDetails?.id) return;
     
-    return await fetchCertificates(userDetails.id);
+    const result = await fetchCertificates(userDetails.id);
+    // Recalculate canPublishGigs with the fresh certificates result
+    recalculatePublishingEligibility({ hasCertificates: result?.hasCertificates });
+    return result;
   };
 
   // Context value
