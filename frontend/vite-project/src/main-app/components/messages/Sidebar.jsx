@@ -122,6 +122,8 @@ const Sidebar = ({ conversations, selectedChatId, onSelectChat, unreadMessages, 
               // Use chat.id if available, otherwise fall back to chat.userId
               const chatId = chat.id || chat.userId;
               const unreadCount = unreadMessages?.[chatId] || 0;
+              // Get the role of the conversation partner (if available)
+              const partnerRole = chat.role || chat.partnerRole || chat.userRole;
               
               if (!chatId) {
                 console.error("Chat without ID:", chat);
@@ -140,7 +142,7 @@ const Sidebar = ({ conversations, selectedChatId, onSelectChat, unreadMessages, 
                   }}
                   tabIndex={0}
                   role="button"
-                  aria-label={`Chat with ${chat.name || chat.FullName || chat.fullName}${unreadCount > 0 ? `, ${unreadCount} unread messages` : ''}`}
+                  aria-label={`Chat with ${chat.name || chat.FullName || chat.fullName}${partnerRole ? ` (${partnerRole})` : ''}${unreadCount > 0 ? `, ${unreadCount} unread messages` : ''}`}
                 >
                   <div className="avatar-container">
                     <div className="avatar avatar-receiver">
@@ -151,7 +153,14 @@ const Sidebar = ({ conversations, selectedChatId, onSelectChat, unreadMessages, 
                   
                   <div className="chat-preview">
                     <div className="chat-header">
-                      <h4>{chat.name || chat.FullName || chat.fullName}</h4>
+                      <div className="chat-name-row">
+                        <h4>{chat.name || chat.FullName || chat.fullName}</h4>
+                        {partnerRole && (
+                          <span className={`role-badge ${partnerRole.toLowerCase()}`}>
+                            {partnerRole}
+                          </span>
+                        )}
+                      </div>
                       <span className="chat-time">
                         {chat.lastMessage?.timestamp ? 
                           formatDistanceToNow(new Date(chat.lastMessage.timestamp), { addSuffix: false }) : 

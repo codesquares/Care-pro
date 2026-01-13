@@ -409,7 +409,7 @@ const HomeCareService = () => {
   return (
     <div className="container-service">
       {/* Back Button */}
-      <button className="back-btn" onClick={() => navigate('/')}>← Back to Homepage</button>
+      <button className="back-btn" onClick={() => navigate('/marketplace')}>← Back to Marketplace</button>
 
       {/* Top Section */}
       <div className="service-top-header">

@@ -172,6 +172,12 @@ const NavigationBar = () => {
                   <span>Dashboard</span>
                 </div>
               </li>
+              <li onClick={() => { navigate(`${basePath}/create-gigs`); setMobileMenuOpen(false); }}>
+                <div className="menu-item-content">
+                  <span>➕</span>
+                  <span>Create Gig</span>
+                </div>
+              </li>
               {/* <li onClick={() => { navigate(`${basePath}/orders`); setMobileMenuOpen(false); }}>
                 <div className="menu-item-content">
                   <img src={receipt} alt="Orders" />
@@ -233,6 +239,9 @@ const NavigationBar = () => {
         <ul className="nav-links">
           <li className="nav-link text-link" onClick={() => navigate(`${basePath}/dashboard`)}>
             Dashboard
+          </li>
+          <li className="nav-link text-link" onClick={() => navigate(`${basePath}/create-gigs`)}>
+            Create Gig
           </li>
           {/* <li className="nav-link text-link" onClick={() => navigate(`${basePath}/orders`)}>
             Orders

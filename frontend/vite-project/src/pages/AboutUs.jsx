@@ -16,7 +16,7 @@ const AboutUs = () => {
       <OurValues/>
       <AboutUsTeam/>
       {/* <BrandList/> */}
-      <BottomBanner/> 
+      {/* <BottomBanner/>  */}
     </div>
 
   );

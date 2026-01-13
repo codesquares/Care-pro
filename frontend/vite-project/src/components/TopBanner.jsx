@@ -11,24 +11,35 @@ const TopBanner = ({
   onButtonClick 
 }) => {
   return (
-    <div className='banner' style={{ backgroundColor }}>
+    <div className='banner' style={{ '--banner-color': backgroundColor }}>
+      {/* Decorative background elements */}
+      <div className="banner-bg-elements">
+        <div className="floating-shape shape-1"></div>
+        <div className="floating-shape shape-2"></div>
+        <div className="floating-shape shape-3"></div>
+        <div className="glow-effect"></div>
+      </div>
+      
       <div className='text-content'>
-          <h1>
-            {/* <img src={star} alt="star img" /> */}
-            {title}
-          </h1>
+          <div className="badge-pill">
+            <img src={star} alt="star" className="badge-icon" />
+            <span>Trusted Care Services</span>
+          </div>
+          <h1>{title}</h1>
           <p>{description}</p>
           <button className='hire-button' onClick={onButtonClick}>
-            {buttonText}
-            <img src={solarhealth} alt="Solar Health img" />
+            <span>{buttonText}</span>
+            <div className="button-icon">
+              <img src={solarhealth} alt="" />
+            </div>
           </button>
         </div>
-      <div className='image-content'>
-        {imageUrl && (
+      
+      {imageUrl && (
+        <div className='image-content'>
           <img src={imageUrl} alt="Caregiver assisting a senior" />
-        )}
-      </div>
-        
+        </div>
+      )}
     </div>
   );
 };

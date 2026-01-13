@@ -2,20 +2,25 @@
 .message-input-container {
   display: flex;
   align-items: flex-end;
-  background-color: #f9fafb;
-  border-radius: 8px;
-  padding: 0.5rem;
-  border: 2px solid #e5e7eb;
-  min-height: 48px; /* Ensure minimum touch-friendly height on mobile */
+  background-color: #ffffff;
+  border-radius: 24px;
+  padding: 0.5rem 0.75rem;
+  border: 1px solid #e2e8f0;
+  min-height: 48px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.04);
+  transition: box-shadow 0.2s ease;
   
-  /* Make it more visible on mobile */
+  &:focus-within {
+    box-shadow: 0 2px 12px rgba(0, 0, 0, 0.08);
+  }
+  
   @media (max-width: 767px) {
     background-color: #ffffff;
-    border: 2px solid #4f46e5;
-    border-radius: 12px;
-    padding: 1.25rem; /* Much larger padding */
-    min-height: 80px; /* Much larger minimum height */
-    box-shadow: 0 2px 8px rgba(79, 70, 229, 0.15);
+    border: 1px solid #e2e8f0;
+    border-radius: 24px;
+    padding: 0.75rem 1rem;
+    min-height: 56px;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.06);
   }
   
   @media (min-width: 768px) {
