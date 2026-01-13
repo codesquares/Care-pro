@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react';
 import { useParams, useLocation } from 'react-router-dom';
 import { useMessageContext } from '../../context/MessageContext';
+import { useAuth } from '../../context/AuthContext';
 import ChatArea from './Chatarea';
 import axios from 'axios';
 import './messages.scss';
@@ -13,79 +14,119 @@ const API_BASE_URL = config.BASE_URL.replace(/\/api$/, ''); // Remove /api suffi
 const DirectMessage = () => {
   const { recipientId } = useParams();
   const location = useLocation();
+  const { userRole } = useAuth(); // Get current user's role
   const [recipientName, setRecipientName] = useState(location.state?.recipientName || "User");
   
-  // Extract caregiverId from location state if this is a gig-related message
-  // This is crucial for service messaging functionality
-  const [caregiverId, setCaregiverId] = useState(null);
+  // Recipient ID - can be either caregiver or client depending on current user's role
+  const [recipientUserId, setRecipientUserId] = useState(null);
+  const [recipientRole, setRecipientRole] = useState(null); // Track whether recipient is 'Caregiver' or 'Client'
   const [loading, setLoading] = useState(false);
   const [apiError, setApiError] = useState(null);
   
-  // Extract this on component mount to ensure we have it throughout the component's lifecycle
+  // Determine if current user is a caregiver (viewing a client) or client (viewing a caregiver)
+  const isCurrentUserCaregiver = userRole === 'Caregiver';
+  const isCurrentUserClient = userRole === 'Client';
+  
+  // Extract recipient ID on component mount
   useEffect(() => {
     console.log('DirectMessage component mounted/updated with:', {
       recipientId,
       locationState: location.state,
-      currentName: recipientName
+      currentName: recipientName,
+      userRole
     });
     
-    // Method 1: Check for caregiverId in multiple possible locations in location state
-    let extractedCaregiverId = 
+    // Extract recipient ID from multiple possible sources
+    let extractedRecipientId = 
+      location.state?.recipientId ||
       location.state?.caregiverId || 
+      location.state?.clientId ||
       location.state?.caregiver?.id || 
+      location.state?.client?.id ||
       location.state?.gig?.caregiverId;
     
-    // Method 2: If there's a recipientId from URL params, use that as fallback
-    if (!extractedCaregiverId && recipientId) {
-      console.log('No caregiverId in location state, using recipientId as fallback:', recipientId);
-      extractedCaregiverId = recipientId;
+    // If there's a recipientId from URL params, use that as fallback
+    if (!extractedRecipientId && recipientId) {
+      console.log('No ID in location state, using recipientId from URL:', recipientId);
+      extractedRecipientId = recipientId;
     }
     
-    // Method 3: Last resort - try to check for URL format that might contain a caregiver ID
-    if (!extractedCaregiverId) {
+    // Last resort - extract from URL path
+    if (!extractedRecipientId) {
       const pathSegments = window.location.pathname.split('/');
       const possibleId = pathSegments[pathSegments.length - 1];
-      if (possibleId && possibleId.length > 8) {  // Simple validation that it looks like an ID
+      if (possibleId && possibleId.length > 8) {
         console.log('Extracted possible ID from URL:', possibleId);
-        extractedCaregiverId = possibleId;
+        extractedRecipientId = possibleId;
       }
     }
     
-    // If we have a caregiverId from any method, set it and check if we need name details
-    if (extractedCaregiverId) {
-      console.log('Using caregiverId:', extractedCaregiverId);
-      setCaregiverId(extractedCaregiverId);
+    // If we have a recipient ID, set it and fetch details based on current user's role
+    if (extractedRecipientId) {
+      console.log('Using recipientId:', extractedRecipientId);
+      setRecipientUserId(extractedRecipientId);
       
-      // If we don't have a recipient name from location.state, fetch the details
+      // If we don't have a recipient name, fetch the details based on user role
       if (!location.state?.recipientName) {
-        console.log('No recipient name available, fetching details');
-        fetchCaregiverDetails(extractedCaregiverId);
+        console.log('No recipient name available, fetching details based on role:', userRole);
+        fetchRecipientDetails(extractedRecipientId);
       }
     } else {
-      // Absolute last resort - something went wrong if we get here
-      console.error('CRITICAL: Failed to determine recipientId or caregiverId from any source');
+      console.error('CRITICAL: Failed to determine recipientId from any source');
       setApiError('Unable to establish chat recipient. Please return to the previous page and try again.');
     }
-  }, [location.state, recipientId]);
+  }, [location.state, recipientId, userRole]);
   
-  // Function to fetch caregiver details using the API endpoint
-  const fetchCaregiverDetails = async (id) => {
+  // Function to fetch recipient details - calls appropriate API based on current user's role
+  const fetchRecipientDetails = async (id) => {
     if (!id) {
-      console.error('fetchCaregiverDetails called with no ID');
-      setApiError('Missing caregiver ID. Cannot load conversation details.');
+      console.error('fetchRecipientDetails called with no ID');
+      setApiError('Missing recipient ID. Cannot load conversation details.');
       return;
     }
     
     setLoading(true);
+    setApiError(null);
+    
     try {
-      console.log(`Fetching caregiver details for ID: ${id}`);
-      const response = await axios.get(`${API_BASE_URL}/api/CareGivers/${id}`);
+      let response;
+      let expectedRole;
+      
+      // If current user is a caregiver, the recipient should be a client
+      // If current user is a client, the recipient should be a caregiver
+      if (isCurrentUserCaregiver) {
+        console.log(`Caregiver viewing chat - fetching Client details for ID: ${id}`);
+        try {
+          response = await axios.get(`${API_BASE_URL}/api/Clients/${id}`);
+          expectedRole = 'Client';
+        } catch (clientErr) {
+          // Fallback: try generic users endpoint
+          console.log('Client endpoint failed, trying generic users endpoint');
+          response = await axios.get(`${API_BASE_URL}/api/users/${id}`);
+          expectedRole = response.data?.role || 'Client';
+        }
+      } else {
+        // Client viewing caregiver (default behavior)
+        console.log(`Client viewing chat - fetching Caregiver details for ID: ${id}`);
+        try {
+          response = await axios.get(`${API_BASE_URL}/api/CareGivers/${id}`);
+          expectedRole = 'Caregiver';
+        } catch (caregiverErr) {
+          // Fallback: try generic users endpoint
+          console.log('Caregiver endpoint failed, trying generic users endpoint');
+          response = await axios.get(`${API_BASE_URL}/api/users/${id}`);
+          expectedRole = response.data?.role || 'Caregiver';
+        }
+      }
       
       if (response.data) {
-        console.log('Caregiver details fetched:', response.data);
+        console.log('Recipient details fetched:', response.data);
+        
+        // Set the recipient's role
+        setRecipientRole(expectedRole);
         
         // Extract name from response with better error handling
-        let name = 'Unknown Provider';
+        let name = isCurrentUserCaregiver ? 'Client' : 'Care Provider';
         if (response.data.firstName && response.data.lastName) {
           name = response.data.firstName + ' ' + response.data.lastName;
         } else if (response.data.firstName) {
@@ -98,18 +139,12 @@ const DirectMessage = () => {
           name = response.data.userName || response.data.username;
         }
         
-        // Critical: Set the ID first BEFORE changing the loading state
-        if (response.data.id || response.data.caregiverId) {
-          const confirmedId = response.data.id || response.data.caregiverId;
-          console.log(`Setting confirmed caregiverId: ${confirmedId}`);
-          setCaregiverId(confirmedId);
-        } else {
-          // If no ID in response, ensure we're using the original ID
-          console.log(`No ID in API response, using original ID: ${id}`);
-          setCaregiverId(id);
-        }
+        // Set the confirmed ID
+        const confirmedId = response.data.id || response.data.caregiverId || response.data.clientId || id;
+        console.log(`Setting confirmed recipientUserId: ${confirmedId}, role: ${expectedRole}`);
+        setRecipientUserId(confirmedId);
         
-        // Then set the name (order matters for state updates)
+        // Set the name
         setRecipientName(name);
         
         // Add a small delay before marking as not loading to ensure state updates are processed
@@ -117,27 +152,30 @@ const DirectMessage = () => {
           setLoading(false);
         }, 100);
       } else {
-        console.warn('API returned empty data for caregiver ID:', id);
-        setRecipientName('Care Provider');
-        setCaregiverId(id); // Use the ID we were given as fallback
+        console.warn('API returned empty data for ID:', id);
+        setRecipientName(isCurrentUserCaregiver ? 'Client' : 'Care Provider');
+        setRecipientUserId(id);
+        setRecipientRole(expectedRole);
         setLoading(false);
       }
     } catch (error) {
-      console.error('Error fetching caregiver details:', error);
-      setApiError(`Failed to load caregiver details: ${error.message || 'Unknown error'}`);
-      // Set a fallback name so the UI doesn't break completely
-      setRecipientName('Care Provider');
-      setCaregiverId(id); // Use the ID we were given as fallback
+      console.error('Error fetching recipient details:', error);
+      setApiError(`Failed to load conversation details: ${error.message || 'Unknown error'}`);
+      // Set fallback values so the UI doesn't break completely
+      setRecipientName(isCurrentUserCaregiver ? 'Client' : 'Care Provider');
+      setRecipientUserId(id);
+      setRecipientRole(isCurrentUserCaregiver ? 'Client' : 'Caregiver');
       setLoading(false);
     }
   };
   
   console.log('DirectMessage component rendering with state:', {
     recipientId,
-    caregiverId,
+    recipientUserId,
     recipientName,
+    recipientRole,
+    userRole,
     loading,
-    
   })
   const {
     messages,
@@ -193,18 +231,18 @@ const DirectMessage = () => {
       }
     }
     
-    // Use caregiverId from state if this is a gig-related message
+    // Use recipientUserId from state - this is the confirmed ID of the person we're messaging
     // Fall back to receiverId from params if needed
-    // This ensures we use the correct receiver in all navigation scenarios
-    const effectiveReceiverId = caregiverId || receiverId || recipientId;
+    const effectiveReceiverId = recipientUserId || receiverId || recipientId;
 
     // Log this to help with debugging
     console.log('Sending message in handleSendMessage with:', {
       senderId: userId,
       receiverId: effectiveReceiverId,
       originalReceiverId: receiverId,
-      caregiverId: caregiverId, 
+      recipientUserId: recipientUserId, 
       recipientId: recipientId,
+      recipientRole: recipientRole,
       messageLength: messageText?.length || 0,
       messagePreview: messageText ? (messageText.length > 20 ? `${messageText.substring(0, 20)}...` : messageText) : null
     });
@@ -231,7 +269,7 @@ const DirectMessage = () => {
       }
     } else if (!effectiveReceiverId) {
       console.error('Missing receiverId in handleSendNewMessage. Available sources:', {
-        caregiverId,
+        recipientUserId,
         receiverId,
         recipientId,
         recipientObj: recipientObj?.id ? 'Has ID' : 'Missing ID'
@@ -293,17 +331,17 @@ const DirectMessage = () => {
     );
   }
 
-  // Display API error if any occurred during caregiver fetch
+  // Display API error if any occurred during recipient fetch
   if (apiError) {
     return (
       <div className="error-container">
         <p>{apiError}</p>
-        <button onClick={() => fetchCaregiverDetails(recipientId)}>Retry</button>
+        <button onClick={() => fetchRecipientDetails(recipientId)}>Retry</button>
       </div>
     );
   }
   
-  // If we're still loading caregiver details, show loading state instead of error
+  // If we're still loading recipient details, show loading state instead of error
   if (loading) {
     return (
       <div className="loading-overlay">
@@ -314,12 +352,11 @@ const DirectMessage = () => {
   }
 
   // Create a default recipient object if recipient doesn't exist yet
-  // Always use caregiverId as the recipientId for messaging
+  // Use recipientUserId which works for both caregivers and clients
   const recipientObj = recipient || { 
-    id: caregiverId || recipientId, // Use either caregiverId or recipientId from URL
+    id: recipientUserId || recipientId,
     name: recipientName,
-    // Track the original source of the ID
-    idSource: 'caregiver',
+    role: recipientRole, // Include role for display purposes
     // Add default values for properties used in ChatArea
     isOnline: Math.random() > 0.5, 
     lastActive: new Date().toISOString(), 
@@ -330,8 +367,9 @@ const DirectMessage = () => {
   // Debug the actual values that we're using
   console.log('Creating recipientObj with:', {
     recipientId,
-    caregiverId,
+    recipientUserId,
     recipientName,
+    recipientRole,
     finalId: recipientObj.id
   });
 
@@ -339,7 +377,6 @@ const DirectMessage = () => {
 
   
   // Extra validation - use recipientId as ultimate fallback if nothing else works
-  // This handles the case where caregiverId might still be null in a race condition
   if (!loading && !recipientObj.id && !recipientId) {
     console.error('Failed to establish recipient ID from any source - last resort fallback check');
     return (
@@ -361,8 +398,9 @@ const DirectMessage = () => {
   console.log('Using recipient:', recipientObj);
   const validMessageObject = {
     senderId: userId,
-    receiverId: recipientId || caregiverId || recipientObj.id,
+    receiverId: recipientUserId || recipientId || recipientObj.id,
     recipientName: recipientName,
+    recipientRole: recipientRole, // Include role for display
     messageText: '',
     timestamp: new Date().toISOString(),
     avatar: recipientObj.avatar || "/avatar.jpg",
@@ -377,6 +415,11 @@ const DirectMessage = () => {
       <div className="direct-message-container">
         <div className="messages-header">
           <h2>Conversation with {recipientName}</h2>
+          {recipientRole && (
+            <span className={`recipient-role-badge ${recipientRole.toLowerCase()}`}>
+              {recipientRole}
+            </span>
+          )}
           {error && (
             <div className="connection-status">
               <span className="status-indicator offline"></span>

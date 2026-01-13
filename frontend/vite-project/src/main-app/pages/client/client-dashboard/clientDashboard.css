@@ -7,6 +7,65 @@
   background-color: #F9FAFB;
   border-radius: 12px;
 }
+
+/* Category Page Header */
+.category-page-header {
+  background: linear-gradient(135deg, #1a5f4a 0%, #2d8a6e 100%);
+  padding: 24px 20px;
+  margin-bottom: 16px;
+  border-radius: 12px;
+  color: white;
+}
+
+.category-header-content {
+  max-width: 800px;
+}
+
+.back-to-marketplace {
+  background: rgba(255, 255, 255, 0.15);
+  border: 1px solid rgba(255, 255, 255, 0.3);
+  color: white;
+  padding: 8px 16px;
+  border-radius: 6px;
+  font-size: 14px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  margin-bottom: 16px;
+}
+
+.back-to-marketplace:hover {
+  background: rgba(255, 255, 255, 0.25);
+}
+
+.category-title {
+  font-size: 28px;
+  font-weight: 700;
+  margin: 0 0 8px 0;
+  color: white;
+}
+
+.category-subtitle {
+  font-size: 16px;
+  margin: 0;
+  opacity: 0.9;
+  color: rgba(255, 255, 255, 0.9);
+}
+
+@media (max-width: 576px) {
+  .category-page-header {
+    padding: 16px;
+  }
+  
+  .category-title {
+    font-size: 22px;
+  }
+  
+  .category-subtitle {
+    font-size: 14px;
+  }
+}
+
 .dashboard-book-caregiver{
   margin: 0px 20px;
 }

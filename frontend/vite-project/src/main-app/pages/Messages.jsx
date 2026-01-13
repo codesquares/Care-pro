@@ -687,10 +687,6 @@ const Messages = ({ userId: propsUserId, token: propsToken }) => {
             unreadMessages={unreadMessages}
             headerActions={(
               <div className="header-actions">
-                <ConnectionStatus 
-                  state={isLoading ? 'Connecting' : (error && connectionState === 'Disconnected') ? 'Disconnected' : connectionState || 'Connected'} 
-                  isPolling={isPollingActive}
-                />
                 {hasUnreadChat && (
                   <NotificationPermissionButton 
                     permissionGranted={permissionGranted} 

@@ -48,13 +48,13 @@ const OrderFaq = () => {
     {/* <NavigationBar /> */}
 
     <div className="links">
-      <a href="/">
+      <a href="/marketplace">
         <img src={home} alt="Home" className="home-button" />
       </a>
 
       <span className="separator">/</span>
 
-      <a href="/" className="profile-link">Profile</a>
+      <a href="/marketplace" className="profile-link">Home</a>
 
       <span className="separator">/</span>
 

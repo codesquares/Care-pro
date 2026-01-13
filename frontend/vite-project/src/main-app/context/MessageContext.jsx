@@ -762,6 +762,8 @@ export const MessageProvider = ({ children }) => {
             id: conversationId,
             // Normalize name field from API's FullName
             name: conversation.FullName || conversation.fullName || conversation.name,
+            // Include role information for the conversation partner
+            role: conversation.role || conversation.userRole || conversation.partnerRole,
             isOnline,
             unreadCount: unreadMessages[conversationId] || 0,
             // Ensure preview message exists
