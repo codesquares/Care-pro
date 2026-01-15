@@ -266,7 +266,7 @@ const ChatArea = ({ messages, recipient, userId, onSendMessage, isOfflineMode = 
       
       // Navigate to the specific service page
       // Note: If service becomes unavailable, the service page will handle the error
-      window.location.href = `/app/client/service/${serviceId}`;
+      window.location.href = `/service/${serviceId}`;
       return;
     }
 
@@ -286,7 +286,7 @@ const ChatArea = ({ messages, recipient, userId, onSendMessage, isOfflineMode = 
       // Direct navigation if only one service
       const service = caregiverGigs[0];
       console.log('Single service navigation:', service.title);
-      window.location.href = `/app/client/service/${service.id}`;
+      window.location.href = `/service/${service.id}`;
     } else {
       // Open modal for multiple services
       console.log(`Multiple services available: ${caregiverGigs.length} options`);
@@ -296,7 +296,7 @@ const ChatArea = ({ messages, recipient, userId, onSendMessage, isOfflineMode = 
 
   // Handle service selection from modal
   const handleSelectService = (service) => {
-    window.location.href = `/app/client/service/${service.id}`;
+    window.location.href = `/service/${service.id}`;
   };
 
   const handleSendMessage = async () => {

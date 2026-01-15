@@ -3,14 +3,14 @@ import { useNavigate } from "react-router-dom";
 import "./verification-page.css";
 import "./assessment-page.css";
 import "./mobile-assessment.css";
-import "../care-giver-profile/profile-header.css";
 import assessmentService from "../../../services/assessmentService";
 import trainingMaterialsService from "../../../services/trainingMaterialsService";
 import { Helmet } from "react-helmet-async";
-import ProfileCard from "../care-giver-dashboard/ProfileCard";
+import { useCaregiverStatus } from "../../../contexts/CaregiverStatusContext";
 
 const AssessmentPage = () => {
   const navigate = useNavigate();
+  const { refreshStatusData } = useCaregiverStatus();
   const [currentStep, setCurrentStep] = useState("welcome"); // welcome, instructions, questions, thank-you
   const [currentQuestion, setCurrentQuestion] = useState(0);
   const [answers, setAnswers] = useState({});
@@ -421,6 +421,13 @@ const AssessmentPage = () => {
         currentUserDetails.isQualified = assessmentResult.isPassing;
         localStorage.setItem('userDetails', JSON.stringify(currentUserDetails));
         
+        // Refresh the caregiver status context to update publishing eligibility
+        console.log('🔄 Assessment completed, refreshing caregiver status context...');
+        if (refreshStatusData) {
+          await refreshStatusData();
+          console.log('✅ Caregiver status context refreshed after assessment');
+        }
+        
         // Set results for display
         setSuccess(
           assessmentResult.isPassing 
@@ -468,9 +475,9 @@ const AssessmentPage = () => {
     return (
       <div className="mobile-assessment-container fade-in">
         {/* User Profile Card */}
-        <div className="caregiver-profile-card-assesment">
+        {/* <div className="caregiver-profile-card-assesment">
           <ProfileCard />
-        </div>
+        </div> */}
 
         {/* Assessment Content */}
         <div className="assessment-content">
@@ -488,7 +495,39 @@ const AssessmentPage = () => {
           <div className="assessment-welcome-card">
             <div className="welcome-content">
               <div className="assessment-illustration">
-                <i className="fas fa-clipboard-list"></i>
+                <svg width="120" height="130" viewBox="0 0 218 230" fill="none" xmlns="http://www.w3.org/2000/svg">
+                  <path d="M12.2489 184.52C14.4489 178.308 13.5195 172.799 12.2488 165.271C10.6606 155.861 8.01348 134.732 21.4255 121.239C32.1551 110.444 44.3671 104.904 49.1319 103.484" stroke="#18181B" strokeWidth="3.01337" strokeLinecap="round"/>
+                  <path d="M39.2969 184.264C40.0641 181.576 47.6073 169.889 46.6482 162.004C46.3031 159.761 46.5447 154.602 51.3071 151.91" stroke="#18181B" strokeWidth="3.01337" strokeLinecap="round"/>
+                  <path d="M35 131.457C38.6236 125.504 48.4591 117.739 56.2239 116.445C63.9887 115.151 64.6753 120.43 63.6742 122.671C62.1724 126.032 58.9039 129.748 52.3668 136.825C45.8906 143.836 42.355 156.818 41.9427 163.011" stroke="#18181B" strokeWidth="3.01337" strokeLinecap="round"/>
+                  <path d="M163.324 110.51C158.291 106.192 145.776 98.5482 135.972 102.524C135.084 102.879 133.237 104.547 132.953 108.381" stroke="#18181B" strokeWidth="3.01337" strokeLinecap="round"/>
+                  <path d="M188.899 172.628C188.426 170.735 187.443 164.677 188.011 159.849C188.722 153.815 188.079 131.038 178.133 124.472" stroke="#18181B" strokeWidth="3.01337" strokeLinecap="round"/>
+                  <path d="M187.194 124.989L166.738 123.648" stroke="#18181B" strokeWidth="3.01337" strokeLinecap="round"/>
+                  <ellipse cx="187.088" cy="118.753" rx="5.43539" ry="7.50602" fill="#18181B"/>
+                  <path d="M179.739 123.052C176.978 118.579 179.005 114.97 180.942 113.196C181.426 112.752 182.085 112.582 182.74 112.612L186.257 112.776C187.917 112.853 189.202 114.26 189.128 115.92L188.866 121.789C188.789 123.524 187.265 124.834 185.538 124.651L181.759 124.25C180.939 124.164 180.172 123.754 179.739 123.052Z" fill="#18181B"/>
+                  <path d="M120.612 112.827C120.461 114.165 118.984 114.905 117.822 114.226C116.428 113.412 116.66 111.331 118.198 110.843C119.483 110.435 120.763 111.487 120.612 112.827Z" fill="#18181B"/>
+                  <path d="M51.092 117.483L48.6133 49.1202C48.613 39.0305 50.4901 21.9317 71.4537 22.2149C92.4173 22.4981 103.796 22.3329 106.865 22.2149" stroke="#18181B" strokeWidth="3.01337" strokeLinecap="round"/>
+                  <path d="M130.945 22.2173H166.18C175.918 22.3943 184.24 26.6425 184.24 42.9273C184.24 59.212 183.758 93.2553 183.05 111.015" stroke="#18181B" strokeWidth="3.01337" strokeLinecap="round"/>
+                  <path d="M153.545 195.39C139.026 196.452 100.198 199.282 76.7671 200.285C66.8519 200.285 53.7141 199.01 52.1561 181.168L51.0938 138.509" stroke="#18181B" strokeWidth="3.01337" strokeLinecap="round"/>
+                  <circle cx="118.754" cy="14.1912" r="6.51698" stroke="#18181B" strokeWidth="3.01337"/>
+                  <path d="M107.782 18.5694C109.052 22.2438 107.252 24.9289 103.195 25.8122C101.254 26.2346 98.5374 26.2715 93.3154 28.1086C86.7879 30.405 85.553 36.9412 85.3765 42.5941C85.2354 47.1164 87.8465 48.6003 92.4333 48.7769C105.782 48.718 134.374 49.1302 142.007 49.1302C149.946 49.1302 151.1 46.1271 151.357 44.184C152.627 34.5741 149.24 30.7216 146.241 29.3452C144.829 28.6974 140.701 27.084 135.479 25.8122C130.257 24.5403 129.317 22.809 129.834 20.3359C131.104 14.2591 130.363 9.3246 129.834 7.61698C129.246 5.26162 125.812 0.762869 116.779 1.6108C105.488 2.67071 106.194 13.9765 107.782 18.5694Z" stroke="#18181B" strokeWidth="3.01337" strokeLinecap="round"/>
+                  <path d="M169.591 109.721L170.264 44.2381C170.264 42.8245 169.463 40.3506 166.199 40.3506C162.841 40.3506 155.3 40.4684 151.883 40.3506" stroke="#18181B" strokeWidth="3.01337" strokeLinecap="round"/>
+                  <path d="M84.5471 40.3509H68.287C66.5196 40.1742 63.1261 41.1991 63.6917 46.7123C64.2573 52.2255 66.9909 137.716 68.287 179.772C68.2281 181.893 69.1707 186.063 73.4124 185.78C76.6394 185.565 126.856 182.737 156.911 181.417" stroke="#18181B" strokeWidth="3.01337" strokeLinecap="round"/>
+                  <path d="M174.51 110.497L175.441 45.452C175.441 43.5044 174.593 40.6715 169.785 41.3797" stroke="#18181B" strokeWidth="3.01337" strokeLinecap="round"/>
+                  <path d="M65.1461 40.8506C63.3786 40.8506 59.3135 40.8506 59.4899 45.4539C59.6595 49.8781 61.2575 95.182 61.7877 116.193" stroke="#18181B" strokeWidth="3.01337" strokeLinecap="round"/>
+                  <path d="M61.7852 126.367L63.3759 181.609C63.5527 183.556 64.2597 186.389 72.7438 185.681" stroke="#18181B" strokeWidth="3.01337" strokeLinecap="round"/>
+                  <path d="M82.2617 70.8726H115.392" stroke="#0ea5e9" strokeWidth="3.01337" strokeLinecap="round"/>
+                  <path d="M82.4844 82.626L154.01 82.2719" stroke="#0ea5e9" strokeWidth="3.01337" strokeLinecap="round"/>
+                  <path d="M82.6641 94.4854L138.787 93.9542" stroke="#0ea5e9" strokeWidth="3.01337" strokeLinecap="round"/>
+                  <path d="M83.2 112.909L110.811 111.659" stroke="#0ea5e9" strokeWidth="3.01337" strokeLinecap="round"/>
+                  <path d="M176.584 111.789C175.29 114.204 172.442 117.483 175.548 123.695" stroke="#18181B" strokeWidth="3.01337" strokeLinecap="round"/>
+                  <path d="M135.422 140.569C133.697 142.623 132.731 148.491 142.67 155.531C147.587 158.723 157.785 168.42 159.235 181.672" stroke="#18181B" strokeWidth="3.01337" strokeLinecap="round"/>
+                  <path d="M132.838 119.811C131.913 121.545 131.507 124.882 134.391 128.079C135.811 129.654 138.03 131.195 141.379 132.493" stroke="#18181B" strokeWidth="3.01337" strokeLinecap="round"/>
+                  <path d="M134.393 128.08C132.543 130.756 130.856 136.244 135.428 140.568C136.613 141.687 140.546 143.764 142.676 144.659" stroke="#18181B" strokeWidth="3.01337" strokeLinecap="round"/>
+                  <path d="M170.333 226.974C164.811 214.119 157.081 186.286 170.333 177.797C186.898 167.185 208.38 191.256 215.886 211.962" stroke="#18181B" strokeWidth="3.01337" strokeLinecap="round"/>
+                  <path d="M187.451 112.563L126.526 108.176C126.191 108.152 125.845 108.185 125.522 108.279C117.057 110.754 120.226 115.464 123.348 118.2C123.789 118.586 124.349 118.803 124.933 118.856L138.274 120.069" stroke="#18181B" strokeWidth="3.01337" strokeLinecap="round"/>
+                  <path d="M1.50781 216.873C2.80195 204.794 11.8092 180.142 27.1318 183.248C42.4544 186.354 46.6302 214.048 46.8027 227.507" stroke="#18181B" strokeWidth="3.01337" strokeLinecap="round"/>
+                  <path d="M152.769 147.769C142.934 136.639 137.239 127.839 138.534 116.709C139.255 110.506 142.828 107.948 146.098 111.045C150.44 115.156 153.804 120.333 158.531 122.404C159.457 122.835 162.398 123.698 166.746 123.698" stroke="#18181B" strokeWidth="3.01337" strokeLinecap="round"/>
+                </svg>
               </div>
               <h2>Welcome to the Caregiver Assessment</h2>
               <p>This assessment will help us understand your caregiving experience, skills, and approach. It will be used to match you with clients based on your specific expertise.</p>
@@ -660,9 +699,6 @@ const AssessmentPage = () => {
   const renderInstructionsScreen = () => {
     return (
       <div className="mobile-assessment-container fade-in">
-        {/* User Profile Card */}
-        <ProfileCard />
-
         {/* Assessment Content */}
         <div className="assessment-content">
           {/* Account Verification Header */}
@@ -728,9 +764,6 @@ const AssessmentPage = () => {
     
     return (
       <div className="mobile-assessment-container fade-in">
-        {/* User Profile Card */}
-        <ProfileCard />
-
         {/* Assessment Content */}
         <div className="assessment-content">
           {/* Account Verification Header */}
@@ -831,9 +864,6 @@ const AssessmentPage = () => {
     
     return (
       <div className="mobile-assessment-container fade-in">
-        {/* User Profile Card */}
-        <ProfileCard />
-
         {/* Assessment Content */}
         <div className="assessment-content">
           {/* Account Verification Header */}
@@ -853,24 +883,164 @@ const AssessmentPage = () => {
               
               {/* Result Status */}
               <div className={`result-status ${isPassing ? 'success' : 'failure'}`}>
-                <div className="result-icon">
+                <div className="result-illustration">
                   {isPassing ? (
-                    <div className="success-icon">
-                      <i className="fas fa-trophy"></i>
-                    </div>
+                    <svg width="120" height="120" viewBox="0 0 500 500" fill="none" xmlns="http://www.w3.org/2000/svg">
+                      {/* Background circle */}
+                      <circle cx="250" cy="250" r="240" fill="#FFF8E1" stroke="#FFD54F" strokeWidth="8"/>
+                      
+                      {/* Trophy cup */}
+                      <g transform="translate(150, 120)">
+                        {/* Main cup body */}
+                        <path d="M50 80 L150 80 L140 180 L60 180 Z" fill="#FFD700" stroke="#FFA000" strokeWidth="3"/>
+                        
+                        {/* Cup rim */}
+                        <ellipse cx="100" cy="80" rx="50" ry="8" fill="#FFE082"/>
+                        
+                        {/* Cup handles */}
+                        <path d="M40 100 Q20 100 20 120 Q20 140 40 140" fill="none" stroke="#FFD700" strokeWidth="8" strokeLinecap="round"/>
+                        <path d="M160 100 Q180 100 180 120 Q180 140 160 140" fill="none" stroke="#FFD700" strokeWidth="8" strokeLinecap="round"/>
+                        
+                        {/* Trophy base */}
+                        <rect x="70" y="180" width="60" height="20" rx="10" fill="#C0C0C0"/>
+                        <rect x="60" y="200" width="80" height="15" rx="7" fill="#9E9E9E"/>
+                        <rect x="50" y="215" width="100" height="10" rx="5" fill="#757575"/>
+                        
+                        {/* Trophy stem */}
+                        <rect x="95" y="170" width="10" height="20" fill="#FFD700"/>
+                      </g>
+                      
+                      {/* Stars around trophy */}
+                      <g fill="#FFD700">
+                        {/* Large stars */}
+                        <g transform="translate(100, 100) rotate(15)">
+                          <path d="M0 -20 L6 -6 L20 -6 L10 2 L16 16 L0 8 L-16 16 L-10 2 L-20 -6 L-6 -6 Z"/>
+                        </g>
+                        <g transform="translate(400, 150) rotate(-20)">
+                          <path d="M0 -18 L5 -5 L18 -5 L9 2 L14 14 L0 7 L-14 14 L-9 2 L-18 -5 L-5 -5 Z"/>
+                        </g>
+                        <g transform="translate(350, 320) rotate(30)">
+                          <path d="M0 -16 L4 -4 L16 -4 L8 2 L12 12 L0 6 L-12 12 L-8 2 L-16 -4 L-4 -4 Z"/>
+                        </g>
+                        
+                        {/* Medium stars */}
+                        <g transform="translate(80, 200) rotate(-45)">
+                          <path d="M0 -12 L3 -3 L12 -3 L6 1 L9 9 L0 4 L-9 9 L-6 1 L-12 -3 L-3 -3 Z"/>
+                        </g>
+                        <g transform="translate(420, 280) rotate(60)">
+                          <path d="M0 -12 L3 -3 L12 -3 L6 1 L9 9 L0 4 L-9 9 L-6 1 L-12 -3 L-3 -3 Z"/>
+                        </g>
+                        <g transform="translate(150, 350) rotate(-30)">
+                          <path d="M0 -10 L2.5 -2.5 L10 -2.5 L5 1 L7.5 7.5 L0 3 L-7.5 7.5 L-5 1 L-10 -2.5 L-2.5 -2.5 Z"/>
+                        </g>
+                        
+                        {/* Small stars */}
+                        <g transform="translate(120, 80) rotate(0)">
+                          <path d="M0 -8 L2 -2 L8 -2 L4 1 L6 6 L0 2 L-6 6 L-4 1 L-8 -2 L-2 -2 Z"/>
+                        </g>
+                        <g transform="translate(380, 100) rotate(45)">
+                          <path d="M0 -8 L2 -2 L8 -2 L4 1 L6 6 L0 2 L-6 6 L-4 1 L-8 -2 L-2 -2 Z"/>
+                        </g>
+                        <g transform="translate(320, 380) rotate(-60)">
+                          <path d="M0 -6 L1.5 -1.5 L6 -1.5 L3 1 L4.5 4.5 L0 1.5 L-4.5 4.5 L-3 1 L-6 -1.5 L-1.5 -1.5 Z"/>
+                        </g>
+                        <g transform="translate(70, 320) rotate(90)">
+                          <path d="M0 -6 L1.5 -1.5 L6 -1.5 L3 1 L4.5 4.5 L0 1.5 L-4.5 4.5 L-3 1 L-6 -1.5 L-1.5 -1.5 Z"/>
+                        </g>
+                      </g>
+                      
+                      {/* Sparkle effects */}
+                      <g fill="#FFF" opacity="0.8">
+                        <circle cx="180" cy="120" r="3"/>
+                        <circle cx="320" cy="140" r="2"/>
+                        <circle cx="150" cy="300" r="2.5"/>
+                        <circle cx="380" cy="250" r="2"/>
+                        <circle cx="100" cy="380" r="3"/>
+                        <circle cx="400" cy="350" r="2.5"/>
+                      </g>
+                      
+                      {/* Additional glow effects */}
+                      <g fill="#FFE082" opacity="0.3">
+                        <circle cx="250" cy="200" r="80"/>
+                      </g>
+                    </svg>
                   ) : (
-                    <div className="failure-icon">
-                      <i className="fas fa-exclamation-triangle"></i>
-                    </div>
+                    <svg width="120" height="120" viewBox="0 0 200 200" fill="none" xmlns="http://www.w3.org/2000/svg">
+                      {/* Person sitting with book */}
+                      <g transform="translate(20,40)">
+                        {/* Person's head */}
+                        <circle cx="80" cy="30" r="15" fill="#2D3748" stroke="#1A202C" strokeWidth="2"/>
+                        
+                        {/* Hair */}
+                        <path d="M65 25c0-12 10-20 15-20s15 8 15 20c0 3-2 8-5 10-3-2-7-2-10 0s-7 0-10 0c-3-2-5-7-5-10z" fill="#1A202C"/>
+                        
+                        {/* Face details */}
+                        <circle cx="75" cy="28" r="1.5" fill="#1A202C"/>
+                        <circle cx="85" cy="28" r="1.5" fill="#1A202C"/>
+                        <path d="M75 33c2 2 5 2 7 0" stroke="#1A202C" strokeWidth="1.5" strokeLinecap="round" fill="none"/>
+                        
+                        {/* Body */}
+                        <ellipse cx="80" cy="60" rx="18" ry="25" fill="#E2E8F0" stroke="#CBD5E0" strokeWidth="2"/>
+                        
+                        {/* Arms */}
+                        <ellipse cx="55" cy="55" rx="8" ry="20" fill="#E2E8F0" stroke="#CBD5E0" strokeWidth="2" transform="rotate(-20 55 55)"/>
+                        <ellipse cx="105" cy="65" rx="8" ry="18" fill="#E2E8F0" stroke="#CBD5E0" strokeWidth="2" transform="rotate(30 105 65)"/>
+                        
+                        {/* Open book */}
+                        <g transform="translate(45,70)">
+                          <path d="M0 0 L35 0 L35 25 L0 25 Z" fill="#FFF" stroke="#CBD5E0" strokeWidth="2"/>
+                          <path d="M35 0 L70 0 L70 25 L35 25 Z" fill="#FFF" stroke="#CBD5E0" strokeWidth="2"/>
+                          <path d="M35 0 L35 25" stroke="#CBD5E0" strokeWidth="2"/>
+                          
+                          {/* Book lines */}
+                          <line x1="5" y1="8" x2="30" y2="8" stroke="#A0AEC0" strokeWidth="1"/>
+                          <line x1="5" y1="12" x2="25" y2="12" stroke="#A0AEC0" strokeWidth="1"/>
+                          <line x1="5" y1="16" x2="28" y2="16" stroke="#A0AEC0" strokeWidth="1"/>
+                          
+                          <line x1="40" y1="8" x2="65" y2="8" stroke="#A0AEC0" strokeWidth="1"/>
+                          <line x1="40" y1="12" x2="60" y2="12" stroke="#A0AEC0" strokeWidth="1"/>
+                          <line x1="40" y1="16" x2="63" y2="16" stroke="#A0AEC0" strokeWidth="1"/>
+                        </g>
+                        
+                        {/* Stack of books beside */}
+                        <g transform="translate(120,75)">
+                          <rect x="0" y="0" width="25" height="4" rx="2" fill="#4299E1"/>
+                          <rect x="0" y="4" width="23" height="4" rx="2" fill="#48BB78"/>
+                          <rect x="0" y="8" width="27" height="4" rx="2" fill="#ED8936"/>
+                          <rect x="0" y="12" width="24" height="4" rx="2" fill="#9F7AEA"/>
+                        </g>
+                      </g>
+                      
+                      {/* Question marks floating around */}
+                      <g fill="#A0AEC0" opacity="0.7">
+                        <g transform="translate(30,20)">
+                          <circle cx="0" cy="0" r="12" fill="none" stroke="#A0AEC0" strokeWidth="2"/>
+                          <path d="M-4 -3c0-3 2-5 4-5s4 2 4 5c0 2-1 3-2 4l0 2" stroke="#A0AEC0" strokeWidth="2" fill="none" strokeLinecap="round"/>
+                          <circle cx="0" cy="6" r="1" fill="#A0AEC0"/>
+                        </g>
+                        
+                        <g transform="translate(150,30)">
+                          <circle cx="0" cy="0" r="10" fill="none" stroke="#A0AEC0" strokeWidth="1.5"/>
+                          <path d="M-3 -2c0-2 1-3 3-3s3 1 3 3c0 1-1 2-2 3l0 1" stroke="#A0AEC0" strokeWidth="1.5" fill="none" strokeLinecap="round"/>
+                          <circle cx="0" cy="4" r="0.8" fill="#A0AEC0"/>
+                        </g>
+                        
+                        <g transform="translate(170,100)">
+                          <circle cx="0" cy="0" r="8" fill="none" stroke="#A0AEC0" strokeWidth="1"/>
+                          <path d="M-2 -1c0-1 1-2 2-2s2 1 2 2c0 1 0 1-1 2l0 1" stroke="#A0AEC0" strokeWidth="1" fill="none" strokeLinecap="round"/>
+                          <circle cx="0" cy="3" r="0.6" fill="#A0AEC0"/>
+                        </g>
+                      </g>
+                    </svg>
                   )}
                 </div>
                 
                 <div className="result-message">
                   {isPassing ? (
                     <>
-                      <h3 className="result-title">YAY!!</h3>
+                      <h3 className="result-title">Congratulations!</h3>
                       <p className="result-subtitle">
-                        You met the qualifications threshold to work with CarePro
+                        You have successfully qualified as a caregiver
                       </p>
                     </>
                   ) : (
@@ -889,8 +1059,8 @@ const AssessmentPage = () => {
                   </div>
                   <p className="score-message">
                     {isPassing 
-                      ? "Your answers demonstrate a good understanding of caregiving principles. You are now qualified and practical knowledge." 
-                      : "You have one more shot at getting this right, you can either back in time or start the again now."
+                      ? "Your assessment demonstrates excellent understanding of caregiving principles. You are now ready to start helping clients." 
+                      : "You have one more shot at getting this right, you can come back in time or try again now."
                     }
                   </p>
                 </div>

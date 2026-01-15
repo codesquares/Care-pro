@@ -2,7 +2,6 @@ import { useEffect, useState, useCallback, useMemo, useRef } from 'react';
 import { useSearchParams } from 'react-router-dom';
 import Sidebar from '../components/messages/Sidebar.jsx';
 import ChatArea from '../components/messages/Chatarea.jsx';
-import ChatMetrics from '../components/messages/ChatMetrics.jsx';
 import EmptyMessageState from '../components/messages/EmptyMessageState.jsx';
 import ToastContainer from '../components/toast/ToastContainer.jsx';
 import { useMessageContext } from '../context/MessageContext.jsx';
@@ -581,9 +580,6 @@ const Messages = ({ userId: propsUserId, token: propsToken }) => {
   
   return (
     <div className="messages" role="main" aria-label="Messages page">
-      {/* Add metrics component for monitoring and debugging chat performance */}
-      <ChatMetrics />
-      
       {(error || !isOnline) && (
         <div className={`error-message ${(error?.includes('offline') || error?.includes('sample data') || !isOnline) ? 'offline-mode' : ''}`} role="alert" aria-live="assertive">
           <div className="error-icon">

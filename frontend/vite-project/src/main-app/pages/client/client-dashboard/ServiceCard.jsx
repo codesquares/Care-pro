@@ -88,15 +88,9 @@ const ServiceCard = ({
   const basePath = "/app/client";
 
   const handleClick = () => {
-    // If this is a public view and user is not authenticated, redirect to login
-    if (isPublic && !isAuthenticated) {
-      const returnUrl = encodeURIComponent(`${basePath}/service/${id}`);
-      navigate(`/login?returnTo=${returnUrl}&message=Please sign in to view service details and make bookings`);
-      return;
-    }
-    
-    // Normal navigation for authenticated users
-    navigate(`${basePath}/service/${id}`);
+    // All users go directly to the public service route
+    // The HomeCareService component will handle showing appropriate UI based on auth status
+    navigate(`/service/${id}`);
   };
  //create initials from first and last name
   const initials = `${caregiverFirstName?.charAt(0) || ''}${caregiverLastName?.charAt(0) || ''}`.toUpperCase();

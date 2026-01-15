@@ -36,7 +36,8 @@ export function CaregiverStatusProvider({ children }) {
     lastUpdated: null
   });
 
-  const [isInitialized, setIsInitialized] = useState(false);
+  // Track the current userId to detect changes
+  const [currentUserId, setCurrentUserId] = useState(null);
 
   // Get user details from localStorage
   const getUserDetails = () => {
@@ -87,10 +88,19 @@ export function CaregiverStatusProvider({ children }) {
   // Fetch qualification status
   const fetchQualificationStatus = async (userId) => {
     try {
+      console.log('🔍 CaregiverStatusContext - fetchQualificationStatus called for userId:', userId);
       setStatusData(prev => ({ ...prev, qualificationLoading: true, qualificationError: null }));
       
       const qualificationData = await assessmentService.getQualificationStatus(userId);
+      console.log('🔍 CaregiverStatusContext - getQualificationStatus returned:', qualificationData);
+      
       const isQualified = qualificationData?.isQualified === true;
+      console.log('🔍 CaregiverStatusContext - isQualified check:', {
+        rawValue: qualificationData?.isQualified,
+        type: typeof qualificationData?.isQualified,
+        isQualified,
+        score: qualificationData?.score
+      });
       
       setStatusData(prev => ({
         ...prev,
@@ -100,7 +110,7 @@ export function CaregiverStatusProvider({ children }) {
         qualificationError: null
       }));
       
-      console.log('CaregiverStatusContext - Qualification status updated:', { isQualified, qualificationData });
+      console.log('✅ CaregiverStatusContext - Qualification status updated:', { isQualified, qualificationData });
       return { isQualified, qualificationData };
       
     } catch (error) {
@@ -217,21 +227,29 @@ export function CaregiverStatusProvider({ children }) {
   // Initialize status data on mount and when user changes
   useEffect(() => {
     const initializeStatus = async () => {
-      if (isInitialized) return;
-      
       const userDetails = getUserDetails();
       if (!userDetails?.id) {
         console.log('CaregiverStatusContext - No user details, skipping initialization');
+        // Reset state when no user
+        setCurrentUserId(null);
         return;
       }
 
-      console.log('CaregiverStatusContext - Initializing for user:', userDetails.id);
-      await refreshStatusData();
-      setIsInitialized(true);
+      // Check if userId has changed
+      if (currentUserId !== userDetails.id) {
+        console.log('CaregiverStatusContext - User changed, refreshing data. Old:', currentUserId, 'New:', userDetails.id);
+        setCurrentUserId(userDetails.id);
+        await refreshStatusData();
+      } else if (!currentUserId) {
+        // First initialization
+        console.log('CaregiverStatusContext - First initialization for user:', userDetails.id);
+        setCurrentUserId(userDetails.id);
+        await refreshStatusData();
+      }
     };
 
     initializeStatus();
-  }, []); // Only run once on mount
+  }, [currentUserId]); // Re-run when currentUserId changes
 
   // Public methods to update specific parts of the status
   const updateVerificationStatus = async () => {

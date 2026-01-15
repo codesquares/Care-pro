@@ -34,24 +34,27 @@ const Footer = () => {
             <li>
               <Link to="/terms-and-conditions">Terms & Conditions</Link>
             </li>
+            <li>
+              <Link to="/refund-policy">Refund Policy</Link>
+            </li>
           </ul>
         </div>
         <div className="footer-column">
-          <h4>CONTACT US</h4>
+          {/* <h4>CONTACT US</h4>
           <ul>
             <li>+234 813 195 2778</li>
           </ul>
-          <h4>EMAIL</h4>
-          <ul>
+          <h4>EMAIL</h4> */}
+          {/* <ul>
             <li>careproorg@gmail.com</li>
             <li>codesquare.team@oncarepro.com</li>
-          </ul>
+          </ul> */}
         </div>
         <div className="footer-column">
-          <h4>ADDRESS</h4>
+          {/* <h4>ADDRESS</h4>
           <ul>
             <li>12 Bisiriyu Lawal Str, Akowonjo, Lagos State</li>
-          </ul>
+          </ul> */}
         </div>
         <div className="footer-logo">
           <img src={logo} alt="Carepro Logo" />

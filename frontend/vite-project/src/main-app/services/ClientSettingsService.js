@@ -83,6 +83,37 @@ const ClientSettingsService = {
       throw new Error("Network error while updating notification preferences");
     }
   },
+
+  /**
+   * Update client address/location using new dedicated location endpoint
+   * @param {string} clientId - Client ID
+   * @param {string} address - Full address string
+   * @returns {Promise<Object>} Response data with geocoded location info
+   */
+  async updateClientAddress(clientId, address) {
+    try {
+      const response = await axios.put(`${BASE_API_URL}/Clients/UpdateClientLocation/${clientId}`, {
+        address: address
+      });
+      
+      return {
+        success: true,
+        data: response.data,
+        message: "Address updated successfully"
+      };
+    } catch (error) {
+      console.error("Error updating address:", error);
+      
+      // Normalize error response
+      if (error.response && error.response.data) {
+        return {
+          success: false,
+          message: error.response.data.message || "Failed to update address"
+        };
+      }
+      throw new Error("Network error while updating address");
+    }
+  },
 };
 
 export default ClientSettingsService;

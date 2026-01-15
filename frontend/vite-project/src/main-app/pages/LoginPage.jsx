@@ -217,6 +217,10 @@ const LoginPage = () => {
             <Link to="/forgot-password">Forgot Password?</Link>
           </div>
 
+          <div className="resend-confirmation">
+            <Link to="/resend-confirmation">Didn't receive confirmation email?</Link>
+          </div>
+
           <button type="submit" className="btn-primary" disabled={loading || authLoading || redirecting}>
             {loading ? "Logging in..." : 
              authLoading ? "Checking authentication..." : 

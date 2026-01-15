@@ -1,17 +1,31 @@
 import { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import './admin-dashboard.css';
-import axios from 'axios';
-import config from '../../../config';
+import adminService from '../../../services/adminService';
 
 const AdminDashboard = () => {
-  const apiUrl = config.BASE_URL; // Use centralized API configuration
   const [stats, setStats] = useState({
     users: {
       total: 0,
       caregivers: 0,
       clients: 0,
-      cleaners: 0
+      activeCaregivers: 0,
+      availableCaregivers: 0,
+      activeClients: 0
+    },
+    caregivers: {
+      total: 0,
+      active: 0,
+      inactive: 0,
+      available: 0,
+      totalEarnings: 0,
+      totalOrders: 0,
+      totalHours: 0
+    },
+    clients: {
+      total: 0,
+      active: 0,
+      inactive: 0
     },
     assessments: {
       total: 0,
@@ -32,83 +46,40 @@ const AdminDashboard = () => {
       rejected: 0
     }
   });
-  const [caregivers, setCaregivers] = useState(0);
-  const [clients, setClients] = useState(0);
-  const [cleaners, setCleaners] = useState(0);
-  useEffect(() => {
-    const fetchData = async () => {
-      try {
-        const careGiversData = await axios.get(`${apiUrl}/CareGivers/AllCareGivers`, {
-          headers: {
-            'Content-Type': 'application/json',
-            'Authorization': `Bearer ${localStorage.getItem('authToken')}`
-          }
-        });
-        const caregivers = careGiversData.data.filter(user => user.role === 'Caregiver').length;
-        setCaregivers(caregivers);
-      } catch (error) {
-        console.error("Error fetching caregivers:", error);
-      }
-    };
-    fetchData();
-  }, []);
   
-  useEffect(() => {
-    const fetchData = async () => {
-      try {
-        const clientData = await axios.get(`${apiUrl}/Clients/AllClientUsers`, {
-          headers: {
-            'Content-Type': 'application/json',
-            'Authorization': `Bearer ${localStorage.getItem('authToken')}`
-          }
-        });
-        const clients = clientData.data.filter(user => user.role === 'Client').length;
-        setClients(clients);
-      } catch (error) {
-        console.error("Error fetching clients:", error);
-      }
-    };
-    fetchData();
-  }, []);
-  
-  // const assessments = {};//load assessment data from API.
-
-  // const questions = {};//load question data from API.
-  // const withdrawals = {};//load withdrawal data from API.
   const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(null);
   
   useEffect(() => {
-    // Simulate loading data
-    setTimeout(() => {
-      // Mock data for development
-      setStats({
-        users: {
-          total: caregivers + clients + cleaners,
-          caregivers: caregivers,
-          clients: clients,
-          cleaners: cleaners
-        },
-        assessments: {
-          total: 127,
-          passed: 89,
-          failed: 32,
-          pending: 6
-        },
-        questions: {
-          total: 200,
-          caregiver: 150,
-          cleaner: 50
-        },
-        withdrawals: {
-          total: 43,
-          pending: 12,
-          verified: 8,
-          completed: 20,
-          rejected: 3
+    const fetchDashboardData = async () => {
+      try {
+        setLoading(true);
+        setError(null);
+        
+        // Fetch real dashboard statistics using admin service
+        const result = await adminService.getDashboardStats();
+        
+        if (result.success) {
+          setStats(prevStats => ({
+            ...prevStats,
+            users: result.data.users,
+            caregivers: result.data.caregivers,
+            clients: result.data.clients
+          }));
+        } else {
+          setError(result.error || 'Failed to fetch dashboard data');
+          console.error('Error fetching dashboard stats:', result.error);
         }
-      });
-      setLoading(false);
-    }, 1000);
+        
+      } catch (error) {
+        console.error('Error loading dashboard:', error);
+        setError('An unexpected error occurred while loading dashboard data');
+      } finally {
+        setLoading(false);
+      }
+    };
+    
+    fetchDashboardData();
   }, []);
   
   return (
@@ -117,6 +88,13 @@ const AdminDashboard = () => {
         <h1>Admin Dashboard</h1>
         <p>Welcome to the Care Pro administration panel</p>
       </header>
+      
+      {error && (
+        <div className="error-message">
+          <i className="fas fa-exclamation-triangle"></i>
+          <p>{error}</p>
+        </div>
+      )}
       
       {loading ? (
         <div className="loading-container">
@@ -136,54 +114,49 @@ const AdminDashboard = () => {
                 <div className="stat-breakdown">
                   <span>Caregivers: {stats.users.caregivers}</span>
                   <span>Clients: {stats.users.clients}</span>
-                  <span>Cleaners: {stats.users.cleaners}</span>
                 </div>
               </div>
             </div>
             
             <div className="stat-card">
               <div className="stat-icon">
-                <i className="fas fa-clipboard-check"></i>
+                <i className="fas fa-user-nurse"></i>
               </div>
               <div className="stat-content">
-                <h3>Assessments</h3>
-                <p className="stat-number">{stats.assessments.total}</p>
+                <h3>Caregivers</h3>
+                <p className="stat-number">{stats.caregivers.total}</p>
                 <div className="stat-breakdown">
-                  <span>Passed: {stats.assessments.passed}</span>
-                  <span>Failed: {stats.assessments.failed}</span>
-                  <span>Pending: {stats.assessments.pending}</span>
+                  <span>Active: {stats.caregivers.active}</span>
+                  <span>Available: {stats.caregivers.available}</span>
+                  <span>Total Earnings: ${stats.caregivers.totalEarnings.toFixed(2)}</span>
                 </div>
               </div>
             </div>
             
             <div className="stat-card">
               <div className="stat-icon">
-                <i className="fas fa-money-bill-wave"></i>
+                <i className="fas fa-user-friends"></i>
               </div>
               <div className="stat-content">
-                <h3>Withdrawals</h3>
-                <p className="stat-number">{stats.withdrawals.total}</p>
+                <h3>Clients</h3>
+                <p className="stat-number">{stats.clients.total}</p>
                 <div className="stat-breakdown">
-                  <span>Pending: {stats.withdrawals.pending}</span>
-                  <span>Verified: {stats.withdrawals.verified}</span>
-                  <span>Completed: {stats.withdrawals.completed}</span>
+                  <span>Active: {stats.clients.active}</span>
+                  <span>Inactive: {stats.clients.inactive}</span>
                 </div>
-                <a href="/app/admin/withdrawals" className="view-all-link">
-                  Manage Withdrawals &rarr;
-                </a>
               </div>
             </div>
             
             <div className="stat-card">
               <div className="stat-icon">
-                <i className="fas fa-question-circle"></i>
+                <i className="fas fa-briefcase"></i>
               </div>
               <div className="stat-content">
-                <h3>Question Bank</h3>
-                <p className="stat-number">{stats.questions.total}</p>
+                <h3>Orders & Hours</h3>
+                <p className="stat-number">{stats.caregivers.totalOrders}</p>
                 <div className="stat-breakdown">
-                  <span>Caregiver: {stats.questions.caregiver}</span>
-                  <span>Cleaner: {stats.questions.cleaner}</span>
+                  <span>Total Orders: {stats.caregivers.totalOrders}</span>
+                  <span>Total Hours: {stats.caregivers.totalHours}</span>
                 </div>
               </div>
             </div>
@@ -192,13 +165,63 @@ const AdminDashboard = () => {
           <div className="quick-actions">
             <h2>Quick Actions</h2>
             <div className="actions-grid">
-              <Link to="/app/admin/question-bank" className="action-card">
+              <Link to="/app/admin/notifications" className="action-card">
                 <div className="action-icon">
-                  <i className="fas fa-plus-circle"></i>
+                  <i className="fas fa-bell"></i>
                 </div>
                 <div className="action-content">
-                  <h3>Manage Question Bank</h3>
-                  <p>Add, edit or remove assessment questions</p>
+                  <h3>Send Notifications</h3>
+                  <p>Broadcast messages to caregivers and clients</p>
+                </div>
+              </Link>
+              
+              <Link to="/app/admin/emails" className="action-card">
+                <div className="action-icon">
+                  <i className="fas fa-envelope"></i>
+                </div>
+                <div className="action-content">
+                  <h3>Send Emails</h3>
+                  <p>Send custom emails to users or bulk emails</p>
+                </div>
+              </Link>
+              
+              <Link to="/app/admin/certificates" className="action-card">
+                <div className="action-icon">
+                  <i className="fas fa-certificate"></i>
+                </div>
+                <div className="action-content">
+                  <h3>Review Certificates</h3>
+                  <p>Review and approve caregiver certificates</p>
+                </div>
+              </Link>
+              
+              <Link to="/app/admin/training-materials" className="action-card">
+                <div className="action-icon">
+                  <i className="fas fa-graduation-cap"></i>
+                </div>
+                <div className="action-content">
+                  <h3>Upload Training Materials</h3>
+                  <p>Add training resources for caregivers and cleaners</p>
+                </div>
+              </Link>
+              
+              <Link to="/app/admin/gigs" className="action-card">
+                <div className="action-icon">
+                  <i className="fas fa-briefcase"></i>
+                </div>
+                <div className="action-content">
+                  <h3>Manage Gigs</h3>
+                  <p>View and monitor all gigs in the system</p>
+                </div>
+              </Link>
+              
+              <Link to="/app/admin/orders" className="action-card">
+                <div className="action-icon">
+                  <i className="fas fa-shopping-cart"></i>
+                </div>
+                <div className="action-content">
+                  <h3>Manage Orders</h3>
+                  <p>View and track all orders and transactions</p>
                 </div>
               </Link>
               
@@ -212,6 +235,36 @@ const AdminDashboard = () => {
                 </div>
               </Link>
               
+              <Link to="/app/admin/caregivers" className="action-card">
+                <div className="action-icon">
+                  <i className="fas fa-user-nurse"></i>
+                </div>
+                <div className="action-content">
+                  <h3>Manage Caregivers</h3>
+                  <p>View caregiver profiles and performance</p>
+                </div>
+              </Link>
+              
+              <Link to="/app/admin/clients" className="action-card">
+                <div className="action-icon">
+                  <i className="fas fa-user-friends"></i>
+                </div>
+                <div className="action-content">
+                  <h3>Manage Clients</h3>
+                  <p>View and manage client accounts</p>
+                </div>
+              </Link>
+              
+              <Link to="/app/admin/question-bank" className="action-card">
+                <div className="action-icon">
+                  <i className="fas fa-question-circle"></i>
+                </div>
+                <div className="action-content">
+                  <h3>Question Bank</h3>
+                  <p>Manage assessment questions</p>
+                </div>
+              </Link>
+              
               <Link to="/app/admin/reports" className="action-card">
                 <div className="action-icon">
                   <i className="fas fa-chart-line"></i>
@@ -221,41 +274,6 @@ const AdminDashboard = () => {
                   <p>Access analytics and performance reports</p>
                 </div>
               </Link>
-            </div>
-          </div>
-          
-          <div className="recent-activity">
-            <h2>Recent Activity</h2>
-            <div className="activity-list">
-              <div className="activity-item">
-                <div className="activity-icon">
-                  <i className="fas fa-clipboard-check"></i>
-                </div>
-                <div className="activity-content">
-                  <p><strong>New Assessment Completed</strong> by John Smith</p>
-                  <span className="activity-time">5 minutes ago</span>
-                </div>
-              </div>
-              
-              <div className="activity-item">
-                <div className="activity-icon">
-                  <i className="fas fa-user-plus"></i>
-                </div>
-                <div className="activity-content">
-                  <p><strong>New Caregiver Registered</strong> - Sarah Johnson</p>
-                  <span className="activity-time">2 hours ago</span>
-                </div>
-              </div>
-              
-              <div className="activity-item">
-                <div className="activity-icon">
-                  <i className="fas fa-question-circle"></i>
-                </div>
-                <div className="activity-content">
-                  <p><strong>10 New Questions Added</strong> to the question bank</p>
-                  <span className="activity-time">Yesterday</span>
-                </div>
-              </div>
             </div>
           </div>
         </>

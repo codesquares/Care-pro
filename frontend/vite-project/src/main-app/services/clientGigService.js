@@ -76,7 +76,7 @@ const ClientGigService = {
           caregiverRating: caregiver.rating || 0,
           caregiverReviewCount: caregiver.reviewCount || 0,
           caregiverLocation: caregiver.location || caregiver.address || '',
-          caregiverBio: caregiver.bio || caregiver.description || '',
+          caregiverBio: caregiver.aboutMe || caregiver.description || '',
           caregiverExperience: caregiver.yearsOfExperience || caregiver.experience || 0,
           caregiverSpecializations: caregiver.specializations || caregiver.skills || [],
           caregiverIsVerified: caregiver.isVerified || false,

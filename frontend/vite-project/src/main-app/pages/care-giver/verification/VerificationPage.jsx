@@ -5,7 +5,6 @@ import "./verification-page.css";
 import "./verification-page-footer.css";
 import "./mobile-verification.css";
 import "./dojah-widget-fix.css";
-import "../care-giver-profile/profile-header.css";
 import verificationService from "../../../services/verificationService";
 import { userService } from "../../../services/userService";
 import { Helmet } from "react-helmet-async";
@@ -35,39 +34,15 @@ const CaregiverVerificationPage = () => {
   const isMountedRef = useRef(true);
   const timeoutRef = useRef(null);
   
-  // Profile-related state variables (from ProfileHeader)
+  // Essential user data for verification (keep minimal for verification functionality)
   const [userData, setUserData] = useState(null);
   const [isLoading, setIsLoading] = useState(true);
-  const [userRating, setUserRating] = useState(0);
-  const [reviewCount, setReviewCount] = useState(0);
-  const [memberSince, setMemberSince] = useState('');
-  const [lastDelivery, setLastDelivery] = useState('');
-  const [location, setLocation] = useState('');
 
   // Get token and user ID from localStorage
   const userDetails = JSON.parse(localStorage.getItem("userDetails") || "{}");
   const token = localStorage.getItem("authToken");
 
   const effectRan = useRef(false);
-  
-  // Helper function to render stars
-  const renderStars = (rating) => {
-    const fullStars = Math.floor(rating);
-    const hasHalfStar = rating % 1 >= 0.5;
-    const emptyStars = 5 - fullStars - (hasHalfStar ? 1 : 0);
-
-    return (
-      <>
-        {[...Array(fullStars)].map((_, i) => (
-          <i key={`full-${i}`} className="fas fa-star"></i>
-        ))}
-        {hasHalfStar && <i className="fas fa-star-half-alt"></i>}
-        {[...Array(emptyStars)].map((_, i) => (
-          <i key={`empty-${i}`} className="far fa-star"></i>
-        ))}
-      </>
-    );
-  };
 
   // Dojah configuration object
   const dojahConfig = {
@@ -85,34 +60,19 @@ const CaregiverVerificationPage = () => {
     configSource: 'Environment Variables'
   });
 
-  // Fetch profile data function
+  // Fetch essential user data for verification pre-filling
   const fetchProfileData = async () => {
     try {
       setIsLoading(true);
       
-      // Fetch user profile data
+      // Fetch user profile data (essential fields only for verification)
       const response = await userService.getProfile();
       
       if (isMountedRef.current) {
         if (response && response.success && response.data) {
           const profileData = response.data;
           setUserData(profileData);
-          setUserRating(parseFloat(profileData.averageRating || profileData.rating || 0));
-          setReviewCount(parseInt(profileData.reviewCount || profileData.reviewsCount || 0));
-          setLocation(profileData.location || 'Location not specified');
-          
-          // Format member since date
-          if (profileData.createdAt) {
-            const memberDate = new Date(profileData.createdAt);
-            setMemberSince(memberDate.toLocaleDateString('en-US', { 
-              year: 'numeric', 
-              month: 'long' 
-            }));
-          } else {
-            setMemberSince('Member since signup');
-          }
-          
-          console.log('✅ Profile data loaded successfully:', profileData);
+          console.log('✅ Essential profile data loaded for verification:', profileData);
         } else {
           console.log('❌ No profile data found, using userDetails from localStorage');
           setUserData(userDetails);
@@ -366,7 +326,7 @@ const CaregiverVerificationPage = () => {
         <meta name="keywords" content="caregiver verification, identity verification, KYC, caregiver profile" />
       </Helmet>
 
-      <div className="mobile-verification-container">
+      <div className="mobile-verification-container fade-in">
         {/* Enhanced Progress Indicator */}
         {(progress > 0 || progressMessage) && (
           <div className="verification-progress-overlay">
@@ -388,55 +348,6 @@ const CaregiverVerificationPage = () => {
         )}
 
         <div className="content-wrapper">
-          {/* Profile Header */}
-          <div className="profile-header-card">
-            <div className="profile-img-container">
-              {isLoading ? (
-                <div className="skeleton profile-img"></div>
-              ) : (
-                <img 
-                  className="profile-img"
-                  src={userData?.profilePicture || userData?.profileImage || userDetails.profilePicture || `https://ui-avatars.com/api/?name=${encodeURIComponent((userData?.firstName || userDetails.firstName) + ' ' + (userData?.lastName || userDetails.lastName))}&background=06b6d4&color=fff&size=120`} 
-                  alt="Profile" 
-                  onError={(e) => {
-                    e.target.src = `https://ui-avatars.com/api/?name=${encodeURIComponent((userData?.firstName || userDetails.firstName) + ' ' + (userData?.lastName || userDetails.lastName))}&background=06b6d4&color=fff&size=120`;
-                  }}
-                />
-              )}
-            </div>
-            <div className="profile-basic-info">
-              <h2>{isLoading ? <div className="skeleton-text"></div> : `${userData?.firstName || userDetails.firstName || 'Unknown'} ${userData?.lastName || userDetails.lastName || 'User'}`}</h2>
-              {(userData?.bio || userData?.aboutMe) && <p className="bio">{userData.bio || userData.aboutMe}</p>}
-            </div>
-            <div className="profile-rating-section">
-              {isLoading ? (
-                <>
-                  <div className="skeleton-text short"></div>
-                  <div className="skeleton-text short"></div>
-                </>
-              ) : (
-                <>
-                  <div className="rating">
-                    {renderStars(userRating)}
-                    <span>({reviewCount} reviews)</span>
-                  </div>
-                </>
-              )}
-            </div>
-            <div className="profile-details">
-              {!isLoading && (
-                <>
-                  <div className="detail-item">
-                    <span>📍 {location}</span>
-                  </div>
-                  <div className="detail-item">
-                    <span>📅 {memberSince}</span>
-                  </div>
-                </>
-              )}
-            </div>
-          </div>
-
           {/* Account Verification Card */}
           <div className="verification-card">
             <div className="verification-content">

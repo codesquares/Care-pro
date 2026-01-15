@@ -17,9 +17,9 @@ export default defineConfig(({ mode }) => {
     proxy: {
       // Proxy all API requests - environment aware
       '/api': {
-        target: env.VITE_PRODUCTION_API_URL?.replace('/api', '') || 
-                env.VITE_STAGING_API_URL?.replace('/api', '') || 
-                env.VITE_LOCAL_API_URL?.replace('/api', '') || 
+        target: env.VITE_PRODUCTION_API_URL?.replace(/\/api$/, '') || 
+                env.VITE_STAGING_API_URL?.replace(/\/api$/, '') || 
+                env.VITE_LOCAL_API_URL?.replace(/\/api$/, '') || 
                 'https://api.oncarepro.com',
         changeOrigin: true,
         secure: false,
@@ -59,7 +59,7 @@ export default defineConfig(({ mode }) => {
       // },
       // WebSocket proxying for real-time notifications - environment aware
       '/notificationHub': {
-        target: env.VITE_STAGING_API_URL?.replace('/api', '') || 'https://carepro-api20241118153443.azurewebsites.net',
+        target: env.VITE_STAGING_API_URL?.replace(/\/api$/, '') || 'https://carepro-api20241118153443.azurewebsites.net',
         changeOrigin: true,
         secure: false,
         ws: true, // Enable WebSocket proxying
@@ -75,7 +75,7 @@ export default defineConfig(({ mode }) => {
 
       // Proxy for identity verification API - environment aware
       '/identity-api': {
-        target: env.VITE_LOCAL_API_URL?.replace('/api', '') || 'http://localhost:5005',
+        target: env.VITE_LOCAL_API_URL?.replace(/\/api$/, '') || 'http://localhost:5005',
         changeOrigin: true,
         secure: false,
         rewrite: (path) => path.replace(/^\/identity-api/, '/api'),

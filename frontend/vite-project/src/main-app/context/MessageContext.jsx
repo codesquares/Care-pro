@@ -4,8 +4,20 @@ import axios from 'axios';
 import config from '../config'; // Centralized API configuration
 
 
-// Constants
-const API_BASE_URL = config.BASE_URL.replace('/api', ''); // Using centralized API config
+// Constants - Ensure the BASE_URL has protocol to prevent relative URL issues
+const ensureAbsoluteUrl = (url) => {
+  if (!url) return url;
+  // If URL doesn't start with http:// or https://, it's malformed
+  if (!url.startsWith('http://') && !url.startsWith('https://')) {
+    console.error('🚨 MALFORMED API URL DETECTED:', url);
+    // Default to production API as fallback
+    return 'https://api.oncarepro.com';
+  }
+  return url;
+};
+
+// Use regex to only replace /api at the end of the URL, not in the domain (e.g., api.oncarepro.com)
+const API_BASE_URL = ensureAbsoluteUrl(config.BASE_URL.replace(/\/api$/, '')); // Using centralized API config
 
 // Utility function to convert MongoDB ObjectId to string
 const objectIdToString = (id) => {
@@ -16,33 +28,42 @@ const objectIdToString = (id) => {
     return id;
   }
   
-  // If it's a MongoDB ObjectId object, convert to string
-  if (typeof id === 'object' && id.timestamp) {
-    console.log('🔍 Processing ObjectId object:', id);
-    
-    // Try toString() method first - but it's failing, so skip it
-    // if (id.toString && typeof id.toString === 'function') {
-    //   try {
-    //     const result = id.toString();
-    //     console.log('🔍 toString() result:', result);
-    //     return result;
-    //   } catch (e) {
-    //     console.warn('ObjectId toString() failed, using manual conversion:', e);
-    //   }
-    // }
-    
-    // Manual conversion - this is the reliable method
-    if (id.timestamp !== undefined && id.machine !== undefined && id.pid !== undefined && id.increment !== undefined) {
-      const result = `${id.timestamp.toString(16).padStart(8, '0')}${id.machine.toString(16).padStart(6, '0')}${(id.pid & 0xFFFF).toString(16).padStart(4, '0')}${id.increment.toString(16).padStart(6, '0')}`;
-      console.log('🔍 Manual conversion result:', result);
-      return result;
+  // If it's an object, try various methods to extract the ID
+  if (typeof id === 'object') {
+    // Check if it has a toString method that returns something other than [object Object]
+    if (id.toString && typeof id.toString === 'function') {
+      try {
+        const stringValue = id.toString();
+        if (stringValue !== '[object Object]') {
+          return stringValue;
+        }
+      } catch (e) {
+        // toString failed, continue to other methods
+      }
     }
+    
+    // Check for $oid property (MongoDB extended JSON format)
+    if (id.$oid) {
+      return id.$oid;
+    }
+    
+    // Check for _id property
+    if (id._id) {
+      return objectIdToString(id._id);
+    }
+    
+    // Manual conversion for ObjectId with timestamp/machine/pid/increment
+    if (id.timestamp !== undefined && id.machine !== undefined && id.pid !== undefined && id.increment !== undefined) {
+      return `${id.timestamp.toString(16).padStart(8, '0')}${id.machine.toString(16).padStart(6, '0')}${(id.pid & 0xFFFF).toString(16).padStart(4, '0')}${id.increment.toString(16).padStart(6, '0')}`;
+    }
+    
+    // If all else fails and we have an object, return null to avoid [object Object]
+    console.warn('Unable to convert ObjectId to string:', id);
+    return null;
   }
   
-  // For other types, convert to string
-  const result = String(id);
-  console.log('🔍 String conversion result:', result);
-  return result;
+  // For primitive types (number, etc), convert to string
+  return String(id);
 };
 
 // Utility function to normalize message objects by converting all ObjectIds to strings
@@ -51,39 +72,29 @@ const normalizeMessage = (message) => {
     return message;
   }
   
-  console.log('🔧 Normalizing message:', { 
-    messageId: message.messageId, 
-    id: message.id, 
-    senderId: message.senderId, 
-    receiverId: message.receiverId,
-    message: message.message,
-    content: message.content
-  });
+  // Extract and convert IDs
+  const messageId = objectIdToString(message.messageId || message.id || message._id);
+  const senderId = objectIdToString(message.senderId);
+  const receiverId = objectIdToString(message.receiverId);
+  
+  // If we couldn't get a valid message ID, generate one
+  const finalMessageId = messageId || `temp-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`;
   
   const normalized = {
     ...message,
     // Convert all potential ObjectId fields to strings
-    // Handle both API response format (messageId) and frontend format (id)
-    id: objectIdToString(message.messageId || message.id),
-    senderId: objectIdToString(message.senderId),
-    receiverId: objectIdToString(message.receiverId),
+    id: finalMessageId,
+    senderId: senderId,
+    receiverId: receiverId,
     // Handle both API response format (message) and frontend format (content)
     content: message.message || message.content,
     // Keep messageId for backward compatibility
-    messageId: objectIdToString(message.messageId || message.id),
+    messageId: finalMessageId,
     // Ensure timestamp is present
     timestamp: message.timestamp || message.createdAt || new Date().toISOString(),
     // Ensure status is present
     status: message.status || 'delivered'
   };
-  
-  console.log('🔧 Normalized message result:', { 
-    id: normalized.id, 
-    senderId: normalized.senderId, 
-    receiverId: normalized.receiverId,
-    content: normalized.content,
-    timestamp: normalized.timestamp
-  });
   
   return normalized;
 };
@@ -371,13 +382,6 @@ export const MessageProvider = ({ children }) => {
     });
   }, [messages]);
   
-  // Debug: Clear messages on mount to start fresh
-  useEffect(() => {
-    console.log('🧹 MessageContext: Component mounted, clearing any cached messages');
-    dispatchMessageState({
-      type: 'CLEAR_MESSAGES'
-    });
-  }, []); // Run only on mount
   // const debounceHook = useDebounce();
   // const deduplicationHook = useApiDeduplication();
   
@@ -1545,16 +1549,14 @@ export const MessageProvider = ({ children }) => {
         try {
           console.log('🔄 SELECT_CHAT: Trying conversations endpoint as direct fallback');
           const response = await axios.get(
-            `${API_BASE_URL}/api/Chat/conversations/${currentUserId}`,
+            `${API_BASE_URL}/Chat/conversations/${currentUserId}`,
             { 
               timeout: 10000,
               headers: {
                 'Authorization': `Bearer ${localStorage.getItem('authToken') || 'NO_TOKEN'}`
               }
             }
-          );
-          
-          if (response.data && Array.isArray(response.data)) {
+          );        if (response.data && Array.isArray(response.data)) {
             const conversation = response.data.find(conv => 
               conv.id === chatId || conv.userId === chatId
             );
