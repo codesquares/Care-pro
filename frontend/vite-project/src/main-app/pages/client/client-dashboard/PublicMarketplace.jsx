@@ -14,6 +14,21 @@ import TopBanner from "../../../../components/TopBanner";
 import genralImg from "../../../../assets/nurseAndWoman.png";
 import CareFacts from "../../../../components/LandingPage/HealthcareFacts";
 import Nurse from "../../../../assets/nurse.png";
+
+// Category slug to backend category name mapping
+const categorySlugMap = {
+  'adult-care': 'Adult Care',
+  'post-surgery-care': 'Post Surgery Care',
+  'child-care': 'Child Care',
+  'pet-care': 'Pet Care',
+  'home-care': 'Home Care',
+  'special-needs-care': 'Special Needs Care',
+  'medical-support': 'Medical Support',
+  'mobility-support': 'Mobility Support',
+  'therapy-wellness': 'Therapy & Wellness',
+  'palliative': 'Palliative'
+};
+
 const PublicMarketplace = () => {
   const location = useLocation();
   const navigate = useNavigate();
@@ -25,6 +40,7 @@ const PublicMarketplace = () => {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   const [isActivelySearching, setIsActivelySearching] = useState(false);
+  const [activeCategory, setActiveCategory] = useState(null);
 
   const [filters, setFilters] = useState({
     sortBy: '',
@@ -48,13 +64,20 @@ const PublicMarketplace = () => {
     }
   };
 
-  // Extract search query from URL parameters
+  // Extract search query and category from URL parameters
   useEffect(() => {
     const urlParams = new URLSearchParams(location.search);
     const searchQuery = urlParams.get('q');
+    const categorySlug = urlParams.get('category');
+    
+    // Map category slug to backend category name
+    const categoryName = categorySlug ? categorySlugMap[categorySlug] : null;
+    setActiveCategory(categoryName);
+    
     setFilters(prevFilters => ({
       ...prevFilters,
-      searchTerm: searchQuery || ''
+      searchTerm: searchQuery || '',
+      serviceType: categoryName || ''
     }));
   }, [location.search]);
 
@@ -139,24 +162,56 @@ const PublicMarketplace = () => {
       filters.searchTerm;
   };
 
+  // Check if viewing a specific category
+  const isViewingCategory = () => {
+    return activeCategory !== null && activeCategory !== undefined && activeCategory !== '';
+  };
+
   // Check if components should be hidden during search
   const shouldHideComponents = () => {
-    return isActivelySearching || (filters.searchTerm && filters.searchTerm.trim() !== '');
+    return isActivelySearching || 
+      (filters.searchTerm && filters.searchTerm.trim() !== '') ||
+      isViewingCategory();
+  };
+
+  // Get the page title based on current state
+  const getPageTitle = () => {
+    if (activeCategory) {
+      return activeCategory;
+    }
+    if (filters.searchTerm) {
+      return `Search Results for "${filters.searchTerm}"`;
+    }
+    if (hasActiveFiltersOrSearch()) {
+      return "Filtered Services";
+    }
+    return "All Services";
+  };
+
+  // Handle clearing category filter
+  const handleClearCategory = () => {
+    setActiveCategory(null);
+    setFilters(prevFilters => ({
+      ...prevFilters,
+      serviceType: ''
+    }));
+    // Update URL to remove category param
+    navigate('/marketplace', { replace: true });
   };
 
   return (
     <div className="dashboard client-dashboard-flex">
       <div className="rightbar">
         {/* Only show banner for authenticated users, exactly like ClientDashboard */}
-        {!shouldHideComponents() && (
+        {isAuthenticated && !shouldHideComponents() && (
           <Banner
-            name={`Guest User`}
-            careNeedsSet={false}
+            name={user?.firstName || user?.name || 'User'}
+            careNeedsSet={careNeedsSet}
           />
         )}
 
         {/* Only show CareMatch banner for authenticated users */}
-        {!shouldHideComponents() && (
+        {isAuthenticated && !shouldHideComponents() && (
           <div className="mid-banner">
             <CareMatchBanner />
           </div>
@@ -164,7 +219,26 @@ const PublicMarketplace = () => {
 
         {/* Filter bar available to all users */}
         {shouldHideComponents() && (
-          <FilterBarDropdown filters={filters} onFilterChange={handleFilterChange} />
+          <>
+            {/* Category Header when viewing a specific category */}
+            {isViewingCategory() && activeCategory && (
+              <div className="category-page-header">
+                <div className="category-header-content">
+                  <button 
+                    className="back-to-marketplace"
+                    onClick={handleClearCategory}
+                  >
+                    ← Back to Marketplace
+                  </button>
+                  <h1 className="category-title">{activeCategory}</h1>
+                  <p className="category-subtitle">
+                    Browse {filteredServices.length} {activeCategory.toLowerCase()} services
+                  </p>
+                </div>
+              </div>
+            )}
+            <FilterBarDropdown filters={filters} onFilterChange={handleFilterChange} />
+          </>
         )}
 
         {loading && (
@@ -200,13 +274,7 @@ const PublicMarketplace = () => {
             )}
 
             <ServiceCategory
-              title={
-                hasActiveFiltersOrSearch()
-                  ? filters.searchTerm
-                    ? `Search Results${filters.searchTerm ? ` for "${filters.searchTerm}"` : ''}`
-                    : "Filtered Services"
-                  : "All Services"
-              }
+              title={getPageTitle()}
               services={filteredServices}
               isPublic={!isAuthenticated}
             />

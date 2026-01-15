@@ -36,12 +36,6 @@ const VideoModal = ({
       <div 
         className="video-modal-content" 
         onClick={(e) => e.stopPropagation()}
-        style={{ 
-          width: width || 'auto', 
-          height: height || 'auto',
-          maxWidth: width ? '95vw' : '900px',
-          maxHeight: height ? '95vh' : '90vh'
-        }}
       >
         <div className="video-modal-header">
           <h3>{title}</h3>
@@ -59,10 +53,6 @@ const VideoModal = ({
             controls 
             autoPlay
             className="video-modal-player"
-            style={{
-              width: width || '100%',
-              height: height || 'auto'
-            }}
             onError={(e) => {
               console.error("Video playback error:", e);
             }}

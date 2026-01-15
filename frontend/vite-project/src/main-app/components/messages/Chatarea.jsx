@@ -133,11 +133,16 @@ const ChatArea = ({ messages, recipient, userId, onSendMessage, isOfflineMode = 
       const newMessageCount = messages.length;
       console.log('🎯 ChatArea: useEffect triggered - message count:', newMessageCount, 'previous:', lastMessageCount);
       
-      if (newMessageCount > lastMessageCount) {
-        // New messages arrived
+      if (newMessageCount > lastMessageCount || lastMessageCount === 0) {
+        // New messages arrived or initial load
         console.log(`🎯 ChatArea: New messages detected: ${newMessageCount - lastMessageCount}`);
         console.log('🎯 ChatArea: Latest message:', messages[messages.length - 1]);
-        setTimeout(() => scrollToBottom(false), 100); // Small delay to ensure DOM update
+        // Force scroll on initial load
+        const isInitialLoad = lastMessageCount === 0;
+        setTimeout(() => scrollToBottom(isInitialLoad), 50);
+        if (isInitialLoad) {
+          setTimeout(() => scrollToBottom(true), 200);
+        }
       }
       setLastMessageCount(newMessageCount);
     }
@@ -146,7 +151,10 @@ const ChatArea = ({ messages, recipient, userId, onSendMessage, isOfflineMode = 
   // Scroll to bottom when recipient changes (new chat selected)
   useEffect(() => {
     if (recipient) {
-      setTimeout(() => scrollToBottom(true), 200); // Force scroll for new chat
+      // Multiple scroll attempts to ensure it works after render
+      scrollToBottom(true);
+      setTimeout(() => scrollToBottom(true), 100);
+      setTimeout(() => scrollToBottom(true), 300);
     }
   }, [recipient?.id, scrollToBottom]);
   

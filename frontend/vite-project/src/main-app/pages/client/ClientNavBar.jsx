@@ -196,7 +196,7 @@ const ClientNavBar = () => {
     <nav className="client-navigation-bar">
       {/* Mobile Navigation */}
       <div className="client-mobile-nav">
-        <div className="client-logo" onClick={() => navigate('/')}>
+        <div className="client-logo" onClick={() => navigate('/marketplace')}>
           <img src={logo} alt="CarePro Logo" />
         </div>
         <button 
@@ -303,7 +303,7 @@ const ClientNavBar = () => {
 
       {/* Desktop Navigation */}
       <div className="client-desktop-nav">
-        <div className="client-logo" onClick={() => navigate('/')}>
+        <div className="client-logo" onClick={() => navigate('/marketplace')}>
           <img src={logo} alt="CarePro Logo" />
         </div>
 

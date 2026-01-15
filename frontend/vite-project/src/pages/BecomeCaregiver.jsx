@@ -42,14 +42,14 @@ const BecomeCaregiver = () => {
       />
       
       <WhyCarepro/>
-      <QualityHealthCareCards/>
+      {/* <QualityHealthCareCards/> */}
       <CaregiverProcess
         buttonText="Become a Caregiver "
         title="How Carepro Works"
         btnBgColor="#015476"
          />
       {/* <OurBlogs/> */}
-      <HealthcareFacts/>
+      {/* <HealthcareFacts/> */}
       <FAQ/>
       <WaitlistModal isOpen={isModalOpen} onClose={() => setIsModalOpen(false)} option="becomeCaregiver" />    
     </div>
