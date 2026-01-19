@@ -203,6 +203,9 @@ const HomeCareService = () => {
   const [gigReviews, setGigReviews] = useState([]);
   const [reviewStats, setReviewStats] = useState(null);
   const [reviewsLoading, setReviewsLoading] = useState(false);
+  // Gig-specific review data (fetched on mount)
+  const [gigReviewCount, setGigReviewCount] = useState(0);
+  const [gigRating, setGigRating] = useState(0);
   const navigate = useNavigate();
   const { isAuthenticated, userRole } = useAuth();
   const basePath = "/app/client";
@@ -324,6 +327,28 @@ const HomeCareService = () => {
       setReviewsLoading(false);
     }
   };
+
+  // Fetch gig-specific reviews on mount
+  useEffect(() => {
+    const fetchGigReviews = async () => {
+      if (!id) return;
+      try {
+        const reviews = await GigReviewService.getReviewsByGigId(id);
+        const count = reviews.length;
+        setGigReviewCount(count);
+        
+        // Calculate average rating if there are reviews
+        if (count > 0) {
+          const totalRating = reviews.reduce((sum, r) => sum + (r.rating || r.Rating || 0), 0);
+          setGigRating(Math.round((totalRating / count) * 10) / 10);
+        }
+      } catch (err) {
+        // Silent fail - will show 0 reviews
+      }
+    };
+    
+    fetchGigReviews();
+  }, [id]);
 
   useEffect(() => {
     const fetchServiceDetails = async () => {
@@ -483,7 +508,7 @@ const HomeCareService = () => {
                   onKeyDown={(e) => e.key === 'Enter' && handleOpenReviews()}
                   title="Click to see reviews"
                 >
-                  ⭐ {caregiverRating || 0} ({caregiverReviewCount || 0} reviews)
+                  ⭐ {gigRating || 0} ({gigReviewCount || 0} reviews)
                 </span>
                 {caregiverExperience > 0 && (
                   <span className="experience-tag">
@@ -652,13 +677,13 @@ const HomeCareService = () => {
       </div>
 
       {/* Reviews */}
-      {caregiverReviewCount > 0 && (
+      {gigReviewCount > 0 && (
         <div className="reviews">
           <h2 className="review-title">Reviews</h2>
           <div className="reviews-summary">
             <div className="rating-overview">
-              <span className="average-rating">⭐ {caregiverRating || 0}</span>
-              <span className="review-count">({caregiverReviewCount || 0} reviews)</span>
+              <span className="average-rating">⭐ {gigRating || 0}</span>
+              <span className="review-count">({gigReviewCount || 0} reviews)</span>
               {caregiverExperience > 0 && (
                 <span className="experience-info">• {caregiverExperience} years experience</span>
               )}
