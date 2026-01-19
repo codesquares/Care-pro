@@ -215,37 +215,78 @@ const AssessmentPage = () => {
     
     let isMounted = true;
     
-    // Check if user is already qualified or has assessment restrictions
-    // First check localStorage for cached qualification status
-    let qualificationStatus;
-    try {
-      qualificationStatus = JSON.parse(localStorage.getItem('qualificationStatus') || '{}');
-    } catch (err) {
-      console.warn('Error parsing qualification status from localStorage:', err);
-      qualificationStatus = {};
-    }
+    // Check qualification status from API (not just localStorage) to prevent stale data issues
+    const checkQualificationAndLoad = async () => {
+      try {
+        // Fetch qualification status from API - this is the source of truth
+        const qualificationData = await assessmentService.getQualificationStatus(userDetails.id);
+        
+        if (!isMounted) return;
+        
+        // If user is already qualified (verified from API), show message and redirect
+        if (qualificationData.isQualified) {
+          alert("You are already qualified as a caregiver! No need to retake the assessment.");
+          navigate("/app/caregiver/profile");
+          return;
+        }
+        
+        // If user has completed assessment but cannot retake yet
+        // Check localStorage for retake timing (API doesn't track this)
+        let localStatus = {};
+        try {
+          localStatus = JSON.parse(localStorage.getItem('qualificationStatus') || '{}');
+        } catch (err) {
+          console.warn('Error parsing qualification status from localStorage:', err);
+        }
+        
+        // Only check retake restriction if assessment is completed but not qualified
+        if (qualificationData.assessmentCompleted && !qualificationData.isQualified) {
+          if (localStatus.canRetakeAfter) {
+            const retakeDate = new Date(localStatus.canRetakeAfter);
+            if (retakeDate > new Date()) {
+              const formattedDate = retakeDate.toLocaleDateString();
+              alert(`You can retake the assessment after ${formattedDate}. Please try again later.`);
+              navigate("/app/caregiver/profile");
+              return;
+            }
+          }
+        }
+        
+        // User is eligible to take/retake assessment - load questions
+        fetchQuestions();
+        
+        // Fetch training materials (optional - if endpoint doesn't exist, it will fail gracefully)
+        fetchTrainingMaterials();
+        
+      } catch (err) {
+        console.error('Error checking qualification status:', err);
+        
+        if (!isMounted) return;
+        
+        // On API error, fall back to localStorage (but be permissive - let user attempt assessment)
+        console.warn('Falling back to localStorage for qualification check');
+        let localStatus = {};
+        try {
+          localStatus = JSON.parse(localStorage.getItem('qualificationStatus') || '{}');
+        } catch (parseErr) {
+          console.warn('Error parsing localStorage:', parseErr);
+        }
+        
+        // Only block if we're confident from localStorage that user is qualified
+        // In case of doubt, let them proceed
+        if (localStatus.isQualified && localStatus.fetchedFromAPI) {
+          alert("You are already qualified as a caregiver! No need to retake the assessment.");
+          navigate("/app/caregiver/profile");
+          return;
+        }
+        
+        // Proceed with loading questions even if qualification check failed
+        fetchQuestions();
+        fetchTrainingMaterials();
+      }
+    };
     
-    // If user is already qualified, show a message and redirect to profile
-    if (qualificationStatus.isQualified) {
-      alert("You are already qualified as a caregiver! No need to retake the assessment.");
-      navigate("/app/caregiver/profile");
-      return;
-    }
-    
-    // If user has completed assessment but cannot retake yet
-    if (qualificationStatus.assessmentCompleted && !qualificationStatus.canRetake) {
-      const retakeDate = new Date(qualificationStatus.canRetakeAfter);
-      const formattedDate = retakeDate.toLocaleDateString();
-      alert(`You can retake the assessment after ${formattedDate}. Please try again later.`);
-      navigate("/app/caregiver/profile");
-      return;
-    }
-    
-    // Fetch questions
-    fetchQuestions();
-    
-    // Fetch training materials (optional - if endpoint doesn't exist, it will fail gracefully)
-    fetchTrainingMaterials();
+    checkQualificationAndLoad();
     
     // Cleanup function to abort any ongoing requests when unmounting
     return () => {

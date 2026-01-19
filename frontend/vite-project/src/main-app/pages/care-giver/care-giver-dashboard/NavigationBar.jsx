@@ -37,7 +37,6 @@ const NavigationBar = () => {
         }
       });
       const data = await earnings.json();
-      console.log('earnings data:', data);
       setEarnings({
         totalEarned: data.totalAmountEarned,
       });

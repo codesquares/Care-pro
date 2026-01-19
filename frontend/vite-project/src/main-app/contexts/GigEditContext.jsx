@@ -60,10 +60,6 @@ const GIG_EDIT_ACTIONS = {
 
 // Reducer function
 function gigEditReducer(state, action) {
-  // Debug: Log every action that comes through
-  console.log('🔍 DEBUG - Reducer called with action type:', action.type);
-  console.log('🔍 DEBUG - Available action types:', Object.values(GIG_EDIT_ACTIONS));
-  
   switch (action.type) {
     case GIG_EDIT_ACTIONS.SET_EDIT_MODE:
       return {
@@ -117,11 +113,6 @@ function gigEditReducer(state, action) {
 
     case GIG_EDIT_ACTIONS.POPULATE_FROM_GIG:
       const gig = action.payload;
-      
-      // Debug: Log what we receive
-      console.log('🔍 DEBUG - PopulateFromGig received:', gig);
-      console.log('🔍 DEBUG - Available keys:', Object.keys(gig));
-      console.log('🔍 DEBUG - Reducer is processing POPULATE_FROM_GIG action');
       
       // Parse pricing data if it exists
       let pricingData = {
@@ -177,17 +168,6 @@ function gigEditReducer(state, action) {
           : [subcategoryData];
       }
 
-      // Debug: Log the parsed arrays with detailed info
-      console.log('🔍 DEBUG - Parsed searchTags:', searchTagsArray);
-      console.log('🔍 DEBUG - Parsed subcategory:', subcategoryArray);
-      console.log('🔍 DEBUG - Raw subcategory data from API:', {
-        'gig.subcategory': gig.subcategory,
-        'gig.SubCategory': gig.SubCategory,
-        'type of subcategoryData': typeof (gig.subcategory || gig.SubCategory),
-        'final parsed array': subcategoryArray
-      });
-      console.log('🔍 DEBUG - About to create result object');
-
       const result = {
         ...state,
         formData: {
@@ -211,11 +191,6 @@ function gigEditReducer(state, action) {
         currentStep: 0,
         validationErrors: {}
       };
-
-      // Debug: Log the final result
-      console.log('🔍 DEBUG - Final result being returned from reducer:', result);
-      console.log('🔍 DEBUG - Result isEditMode:', result.isEditMode);
-      console.log('🔍 DEBUG - Result formData.title:', result.formData.title);
 
       return result;
 
@@ -269,11 +244,7 @@ export function GigEditProvider({ children }) {
     },
 
     populateFromGig: (gig) => {
-      console.log('🔍 DEBUG - populateFromGig called with:', gig);
-      console.log('🔍 DEBUG - About to dispatch POPULATE_FROM_GIG action');
-      console.log('🔍 DEBUG - Action type constant:', GIG_EDIT_ACTIONS.POPULATE_FROM_GIG);
       dispatch({ type: GIG_EDIT_ACTIONS.POPULATE_FROM_GIG, payload: gig });
-      console.log('🔍 DEBUG - Dispatch completed');
     },
 
     // Convenience methods
@@ -301,16 +272,6 @@ export function GigEditProvider({ children }) {
     ...actions
   };
 
-  // Debug: Log current state
-  console.log('🔍 DEBUG - GigEditProvider current state:', {
-    isEditMode: state.isEditMode,
-    currentStep: state.currentStep,
-    formDataTitle: state.formData?.title,
-    formDataCategory: state.formData?.category,
-    formDataSubcategory: state.formData?.subcategory,
-    formDataSearchTags: state.formData?.searchTags
-  });
-
   return (
     <GigEditContext.Provider value={value}>
       {children}
@@ -332,15 +293,6 @@ export function useGigEdit() {
 // Custom hook for form operations
 export function useGigForm() {
   const context = useGigEdit();
-  
-  // Debug: Log what context we're getting
-  console.log('🔍 DEBUG - useGigForm context:', {
-    isEditMode: context?.isEditMode,
-    currentStep: context?.currentStep,
-    formDataKeys: context?.formData ? Object.keys(context.formData) : 'no formData',
-    title: context?.formData?.title,
-    category: context?.formData?.category
-  });
   
   const updateField = (field, value) => {
     context.updateFormField(field, value);

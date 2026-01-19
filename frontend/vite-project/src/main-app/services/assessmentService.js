@@ -386,14 +386,6 @@ const assessmentService = {
 
       const assessmentData = await response.json();
 
-      console.log('🔍 getQualificationStatus - Raw API Response:', {
-        isArray: Array.isArray(assessmentData),
-        length: assessmentData?.length,
-        firstItem: assessmentData?.[0],
-        score: assessmentData?.[0]?.score,
-        passed: assessmentData?.[0]?.passed
-      });
-
       // Check if assessment exists, using the assessedDate field, check the last assessment and see if the score is 70 or above
       // check if assessmentData is an array and has at least one entry
       // check if the last entry in the array has a score >= 70, if it has one entry then just check its score, if it does not have an entry and returns that the user has not been verified, just return status as awaiting assessment
@@ -410,7 +402,6 @@ const assessmentService = {
           fetchedFromAPI: true
         };
 
-        console.log('✅ getQualificationStatus - Returning qualified status:', result);
         return result;
       } else {
         // No assessment found or no score available
@@ -423,7 +414,6 @@ const assessmentService = {
           fetchedFromAPI: true
         };
 
-        console.log('❌ getQualificationStatus - No assessment found, returning:', result);
         return result;
       }
     } catch (err) {
