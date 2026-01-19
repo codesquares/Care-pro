@@ -407,6 +407,21 @@
   font-size: 10px;
 }
 
+.rating-tag-clickable {
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.rating-tag-clickable:hover {
+  background: #fde68a;
+  transform: scale(1.05);
+}
+
+.rating-tag-clickable:focus {
+  outline: 2px solid #f59e0b;
+  outline-offset: 2px;
+}
+
 .experience-tag {
   background: #e0e7ff;
   color: #3730a3;

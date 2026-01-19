@@ -197,10 +197,35 @@
   flex-shrink: 0;
 }
 
+/* Clickable rating styles */
+.rating-clickable {
+  cursor: pointer;
+  padding: 4px 8px;
+  margin: -4px -8px;
+  border-radius: 8px;
+  transition: all 0.2s ease;
+}
+
+.rating-clickable:hover {
+  background: #fef3c7;
+  transform: scale(1.05);
+}
+
+.rating-clickable:focus {
+  outline: 2px solid #f59e0b;
+  outline-offset: 2px;
+}
+
 .rating-number {
   font-size: 14px;
   font-weight: 600;
   color: #374151;
+}
+
+.review-count-badge {
+  font-size: 12px;
+  font-weight: 500;
+  color: #6b7280;
 }
 
 /* Service title */
