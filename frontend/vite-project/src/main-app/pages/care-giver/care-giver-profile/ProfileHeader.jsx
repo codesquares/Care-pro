@@ -102,8 +102,7 @@ const ProfileHeader = () => {
   }, []);
 
   useEffect(() => {
-    console.log("MOUNTED ProfileHeader");
-    return () => console.log("UNMOUNTED ProfileHeader");
+    return () => {};
   }, []);
 
   const handleLocationSave = async () => {
@@ -158,7 +157,6 @@ const ProfileHeader = () => {
 
       // API returns JSON response with geocoded data
       const result = await response.json();
-      console.log('Location update response:', result);
 
       // Extract city from response
       const cityName = result.data?.city || addressValidation?.addressComponents?.city || 'location';
@@ -177,7 +175,6 @@ const ProfileHeader = () => {
           ...prev,
           location: cityName
         };
-        console.log('Profile state updated with new location:', updatedProfile.location);
         return updatedProfile;
       });
 
@@ -239,7 +236,6 @@ const ProfileHeader = () => {
 
       // API returns plain text message, not JSON
       const result = await response.text();
-      console.log('Upload response:', result);
       
       // Call fetchProfile to get updated profile data with new image
       // Skip loading states since we're already in upload loading state
@@ -354,7 +350,6 @@ const ProfileHeader = () => {
       }
 
       if (!userDetails?.id) {
-        console.warn("No user ID found in userDetails");
         setError("Invalid user session");
         if (!skipLoadingStates) {
           setIsLoading(false);
@@ -362,7 +357,6 @@ const ProfileHeader = () => {
         return;
       }
 
-      console.log("Fetching profile for user ID:", userDetails.id);
       // Use centralized config instead of hardcoded URL for consistent API routing
       const response = await fetch(`${config.BASE_URL}/CareGivers/${userDetails.id}`);
       
@@ -372,15 +366,6 @@ const ProfileHeader = () => {
       }
       
       const data = await response.json();
-      console.log("Fetched caregiver data:", data);
-      console.log("Location fields in response:", {
-        location: data.location,
-        serviceCity: data.serviceCity,
-        serviceState: data.serviceState,
-        serviceAddress: data.serviceAddress,
-        latitude: data.latitude,
-        longitude: data.longitude
-      });
 
       // Fetch location from Location table (new location system)
       let locationData = null;
@@ -389,12 +374,8 @@ const ProfileHeader = () => {
         if (locationResponse.ok) {
           const locationResult = await locationResponse.json();
           locationData = locationResult.data || locationResult;
-          console.log("Fetched location from Location table:", locationData);
-        } else {
-          console.warn("Location endpoint returned non-OK status:", locationResponse.status);
         }
       } catch (locErr) {
-        console.warn("Failed to fetch location from Location table:", locErr);
         // Not critical, continue with caregiver data
       }
 
@@ -404,8 +385,6 @@ const ProfileHeader = () => {
       let verificationStatus = null;
       try {
         const token = localStorage.getItem('authToken');
-        console.log('ProfileHeader - token available:', !!token, 'token length:', token?.length);
-        console.log('ProfileHeader - userDetails.id:', userDetails.id);
         
         // Check if token is expired and handle it
         if (token) {
@@ -413,17 +392,14 @@ const ProfileHeader = () => {
             const payload = JSON.parse(atob(token.split('.')[1]));
             const currentTime = Date.now() / 1000;
             const isExpired = payload.exp < currentTime;
-            console.log('ProfileHeader - token expires at:', new Date(payload.exp * 1000), 'is expired:', isExpired);
             
             if (isExpired) {
-              console.log('ProfileHeader - Token expired, clearing localStorage and redirecting to login');
               localStorage.clear();
               toast.error('Your session has expired. Please log in again.');
               window.location.href = '/login';
               return;
             }
           } catch (e) {
-            console.log('ProfileHeader - could not parse token payload, assuming invalid:', e);
             localStorage.clear();
             toast.error('Invalid session. Please log in again.');
             window.location.href = '/login';
@@ -433,22 +409,16 @@ const ProfileHeader = () => {
         
         if (token) {
           verificationStatus = await getDojahStatus(userDetails.id, 'Caregiver', token);
-          console.log("Fetched verification status from dojahService:", verificationStatus);
           
           // Normalize verification status to handle different formats
           const normalizedStatus = normalizeVerificationStatus(verificationStatus);
-          console.log("Normalized verification status:", normalizedStatus);
           
           setStatusFromApi(normalizedStatus);
-        } else {
-          console.warn("No auth token available for verification status check");
         }
       } catch (verErr) {
-        console.warn("Failed to fetch verification status:", verErr);
         
         // Handle 401 Unauthorized (expired/invalid token)
         if (verErr.message?.includes('Unauthorized') || verErr.message?.includes('401')) {
-          console.log('ProfileHeader - Got 401, token likely expired, clearing localStorage and redirecting');
           localStorage.clear();
           toast.error('Your session has expired. Please log in again.');
           window.location.href = '/login';
@@ -456,7 +426,6 @@ const ProfileHeader = () => {
         }
         
         // For other errors, set a default unverified state
-        console.log("Setting default unverified state due to error");
         setStatusFromApi({
           verified: false,
           verificationStatus: 'not_verified',
@@ -496,8 +465,6 @@ const ProfileHeader = () => {
         isAvailable: data.isAvailable || false,
       };
 
-      console.log("Updated profile with new image:", updatedProfile.picture);
-      console.log("Updated profile location (from Location table):", updatedProfile.location);
       setProfile(updatedProfile);
       
       // Update AuthContext with fresh profile data
@@ -532,7 +499,6 @@ const ProfileHeader = () => {
           data.createdAt
         );
         localStorage.setItem("userName", generatedUsername);
-        console.log("Generated and saved username:", generatedUsername);
       }
       
     } catch (err) {
@@ -569,8 +535,6 @@ const ProfileHeader = () => {
 
   const userDetails = JSON.parse(localStorage.getItem("userDetails"));
   const userName = localStorage.getItem("userName");
-
-  console.log("Rendering profile component with data========>:", profile);
 
   return (
     <div className="caregiver-profile-header">

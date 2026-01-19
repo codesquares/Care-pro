@@ -24,38 +24,19 @@ const GigsSection = () => {
   const { populateFromGig, resetForm } = useGigEdit();
   const { canPublishGigs, isVerified, isQualified, hasCertificates } = useCaregiverStatus();
 
-  // Debug: Check if we have the context functions
-  console.log('🔍 DEBUG - GigsSection context check:', {
-    hasPopulateFromGig: typeof populateFromGig,
-    hasResetForm: typeof resetForm,
-    canPublishGigs,
-    isVerified,
-    isQualified,
-    hasCertificates
-  });
-
   const handleNavigateToCreateGig = () => {
     // Reset form when creating new gig
-    console.log('🔍 DEBUG - handleNavigateToCreateGig - resetting form');
     resetForm();
     navigate(`${basePath}/create-gigs`);
   };
 
   const handleEditGig = async (gig) => {
-    // Debug: Very basic click detection
-    console.log('🚨 EDIT BUTTON CLICKED!');
-    console.log('🔍 DEBUG - HandleEditGig gig data:', gig);
-    console.log('🔍 DEBUG - Available keys:', Object.keys(gig));
-    
     // Populate the context with all gig data for editing
-    console.log('🔍 DEBUG - About to call populateFromGig');
     populateFromGig(gig);
-    console.log('🔍 DEBUG - populateFromGig called, waiting before navigation');
     
     // Add a small delay to allow the reducer to process
     await new Promise(resolve => setTimeout(resolve, 100));
     
-    console.log('🔍 DEBUG - Now navigating after delay');
     navigate(`${basePath}/create-gigs`);
   };
 
@@ -255,7 +236,6 @@ const GigsSection = () => {
         throw new Error("Caregiver ID not found in local storage.");
       }
 
-      console.log('🔍 Fetching gigs for caregiver:', userDetails.id);
       const response = await fetch(
         `${config.BASE_URL}/Gigs/caregiver/caregiverId?caregiverId=${userDetails.id}` // Using centralized API config
       );
@@ -264,8 +244,6 @@ const GigsSection = () => {
       }
 
       const data = await response.json();
-      console.log('🔍 Fetched gigs data:', data);
-      console.log('🔍 Gigs statuses:', data.map(g => ({ id: g.id, title: g.title, status: g.status })));
       setGigs(data);
       setIsLoading(false);
     } catch (err) {
@@ -276,15 +254,10 @@ const GigsSection = () => {
 
   // Fetch gigs on mount and when returning from edit page
   useEffect(() => {
-    console.log('🔍 GigsSection useEffect triggered');
-    console.log('🔍 location.state:', location.state);
-    console.log('🔍 refreshGigs flag:', location.state?.refreshGigs);
-    
     fetchGigs();
     
     // Clear the navigation state after using it
     if (location.state?.refreshGigs) {
-      console.log('✅ Refresh triggered by navigation state');
       window.history.replaceState({}, document.title);
     }
   }, [location.state?.refreshGigs]);

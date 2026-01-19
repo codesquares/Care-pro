@@ -22,7 +22,7 @@ const AssessmentButton = ({ verificationStatus, userId }) => {
     };
     fetchQualificationStatus();
   }, [userId]);
-console.log("AssessmentButton render - userId:", userId, "verificationStatus:", verificationStatus, "qualificationStatus:", qualificationStatus?.isQualified);
+
   // Redirect to assessment page when clicked
   const handleAssessmentClick = () => {
     navigate("/app/caregiver/assessment");

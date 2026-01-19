@@ -69,7 +69,6 @@ export function CaregiverStatusProvider({ children }) {
         verificationError: null
       }));
       
-      console.log('CaregiverStatusContext - Verification status updated:', { isVerified, verificationData });
       return { isVerified, verificationData };
       
     } catch (error) {
@@ -88,19 +87,11 @@ export function CaregiverStatusProvider({ children }) {
   // Fetch qualification status
   const fetchQualificationStatus = async (userId) => {
     try {
-      console.log('🔍 CaregiverStatusContext - fetchQualificationStatus called for userId:', userId);
       setStatusData(prev => ({ ...prev, qualificationLoading: true, qualificationError: null }));
       
       const qualificationData = await assessmentService.getQualificationStatus(userId);
-      console.log('🔍 CaregiverStatusContext - getQualificationStatus returned:', qualificationData);
       
       const isQualified = qualificationData?.isQualified === true;
-      console.log('🔍 CaregiverStatusContext - isQualified check:', {
-        rawValue: qualificationData?.isQualified,
-        type: typeof qualificationData?.isQualified,
-        isQualified,
-        score: qualificationData?.score
-      });
       
       setStatusData(prev => ({
         ...prev,
@@ -110,7 +101,6 @@ export function CaregiverStatusProvider({ children }) {
         qualificationError: null
       }));
       
-      console.log('✅ CaregiverStatusContext - Qualification status updated:', { isQualified, qualificationData });
       return { isQualified, qualificationData };
       
     } catch (error) {
@@ -158,7 +148,6 @@ export function CaregiverStatusProvider({ children }) {
         certificatesError: null
       }));
       
-      console.log('CaregiverStatusContext - Certificates updated:', { certificatesCount, hasCertificates, responseStructure: response_data?.success ? 'wrapped' : 'direct' });
       return { certificatesCount, hasCertificates, certificates: certificatesArray };
       
     } catch (error) {
@@ -181,11 +170,8 @@ export function CaregiverStatusProvider({ children }) {
     const token = localStorage.getItem('authToken');
     
     if (!userDetails?.id) {
-      console.warn('CaregiverStatusContext - No user ID available');
       return;
     }
-
-    console.log('CaregiverStatusContext - Refreshing all status data for user:', userDetails.id);
     
     // Fetch all data in parallel
     const [verificationResult, qualificationResult, certificatesResult] = await Promise.allSettled([
@@ -209,13 +195,6 @@ export function CaregiverStatusProvider({ children }) {
       lastUpdated: new Date().toISOString()
     }));
 
-    console.log('CaregiverStatusContext - Publishing eligibility calculated:', {
-      isVerified,
-      isQualified,
-      hasCertificates,
-      canPublishGigs
-    });
-
     return {
       isVerified,
       isQualified,
@@ -229,7 +208,6 @@ export function CaregiverStatusProvider({ children }) {
     const initializeStatus = async () => {
       const userDetails = getUserDetails();
       if (!userDetails?.id) {
-        console.log('CaregiverStatusContext - No user details, skipping initialization');
         // Reset state when no user
         setCurrentUserId(null);
         return;
@@ -237,12 +215,10 @@ export function CaregiverStatusProvider({ children }) {
 
       // Check if userId has changed
       if (currentUserId !== userDetails.id) {
-        console.log('CaregiverStatusContext - User changed, refreshing data. Old:', currentUserId, 'New:', userDetails.id);
         setCurrentUserId(userDetails.id);
         await refreshStatusData();
       } else if (!currentUserId) {
         // First initialization
-        console.log('CaregiverStatusContext - First initialization for user:', userDetails.id);
         setCurrentUserId(userDetails.id);
         await refreshStatusData();
       }
