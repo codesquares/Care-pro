@@ -22,7 +22,7 @@ const GigsSection = () => {
   const basePath = "/app/caregiver";
   const { toasts, showSuccess, showError, removeToast } = useToast();
   const { populateFromGig, resetForm } = useGigEdit();
-  const { canPublishGigs, isVerified, isQualified, hasCertificates } = useCaregiverStatus();
+  const { canPublishGigs, isVerified, isQualified, hasCertificates, isLoading: statusLoading, eligibilityChecked } = useCaregiverStatus();
 
   const handleNavigateToCreateGig = () => {
     // Reset form when creating new gig
@@ -320,8 +320,8 @@ const GigsSection = () => {
           <p className="caregiver-create-subtext">Add a new service offering</p>
         </div>
 
-        {/* Active Gigs Limit Notice */}
-        {activeTab === "paused" && !canPublishNewGig && (
+        {/* Active Gigs Limit Notice - Only show after eligibility has been checked */}
+        {activeTab === "paused" && !canPublishNewGig && eligibilityChecked && (
           <div className="gig-limit-notice">
             {activeGigs.length >= 2 ? (
               <p>⚠️ You have reached the maximum of 2 active gigs. Pause an active gig to publish more.</p>
