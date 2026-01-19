@@ -53,7 +53,7 @@
 
 
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { useAuth } from "../../../context/AuthContext";
 import "./serviceCard.css";
@@ -81,7 +81,6 @@ const ServiceCard = ({
   rating, 
   isVerified = true, 
   isPremium = false,
-  reviewCount,
   isPopular = false,
   isAvailable = true, // New prop for availability status
   isPublic = false // New prop to indicate if this is for public viewing
@@ -89,6 +88,32 @@ const ServiceCard = ({
   const navigate = useNavigate();
   const { isAuthenticated } = useAuth();
   const basePath = "/app/client";
+
+  // Gig-specific review data (fetched on mount)
+  const [gigReviewCount, setGigReviewCount] = useState(0);
+  const [gigRating, setGigRating] = useState(0);
+
+  // Fetch actual review count for this gig on mount
+  useEffect(() => {
+    const fetchReviewCount = async () => {
+      if (!id) return;
+      try {
+        const reviews = await GigReviewService.getReviewsByGigId(id);
+        const count = reviews.length;
+        setGigReviewCount(count);
+        
+        // Calculate average rating if there are reviews
+        if (count > 0) {
+          const totalRating = reviews.reduce((sum, r) => sum + (r.rating || r.Rating || 0), 0);
+          setGigRating(Math.round((totalRating / count) * 10) / 10);
+        }
+      } catch (err) {
+        // Silent fail - will show 0 reviews
+      }
+    };
+    
+    fetchReviewCount();
+  }, [id]);
 
   const handleClick = () => {
     // All users go directly to the public service route
@@ -142,8 +167,11 @@ const ServiceCard = ({
   //check if caregiverProfileImage is not empty string
   const displayAvatar = (caregiverProfileImage && caregiverProfileImage.trim() !== '') ? caregiverProfileImage : defaultAvatar;
   const displayLocation = caregiverLocation || "Lagos, Nigeria";
-  const formattedRating = rating ? parseFloat(rating).toFixed(1) : "0.0";
-  const displayReviewCount = reviewCount || 0;
+  
+  // Use gig-specific rating/reviews (fetched from Reviews API), not caregiver profile data
+  const formattedRating = gigRating > 0 ? gigRating.toFixed(1) : "0.0";
+  const displayReviewCount = gigReviewCount;
+  
   const imgSrc = image1 || "https://via.placeholder.com/380x200?text=Care+Service&bgcolor=f3f4f6&color=6b7280";
   
   // Handle package details - show first item or fallback
@@ -217,8 +245,8 @@ const ServiceCard = ({
               />
               {isVerified && (
                 <div className="verification-badge">
-                  <svg width="8" height="8" viewBox="0 0 24 24" fill="#3b82f6">
-                    <path d="M9 16.17L4.83 12l-1.42 1.41L9 19 21 7l-1.41-1.41z"/>
+                  <svg width="14" height="14" viewBox="0 0 20 20" fill="none" xmlns="http://www.w3.org/2000/svg">
+                    <path d="M17.9658 8.95046L16.8324 7.63379C16.6158 7.38379 16.4408 6.91712 16.4408 6.58379V5.16712C16.4408 4.28379 15.7158 3.55879 14.8324 3.55879H13.4158C13.0908 3.55879 12.6158 3.38379 12.3658 3.16712L11.0491 2.03379C10.4741 1.54212 9.53242 1.54212 8.94909 2.03379L7.64076 3.17546C7.39076 3.38379 6.91576 3.55879 6.59075 3.55879H5.14909C4.26576 3.55879 3.54076 4.28379 3.54076 5.16712V6.59212C3.54076 6.91712 3.36576 7.38379 3.15742 7.63379L2.03242 8.95879C1.54909 9.53379 1.54909 10.4671 2.03242 11.0421L3.15742 12.3671C3.36576 12.6171 3.54076 13.0838 3.54076 13.4088V14.8338C3.54076 15.7171 4.26576 16.4421 5.14909 16.4421H6.59075C6.91576 16.4421 7.39076 16.6171 7.64076 16.8338L8.95742 17.9671C9.53242 18.4588 10.4741 18.4588 11.0574 17.9671L12.3741 16.8338C12.6241 16.6171 13.0908 16.4421 13.4241 16.4421H14.8408C15.7241 16.4421 16.4491 15.7171 16.4491 14.8338V13.4171C16.4491 13.0921 16.6241 12.6171 16.8408 12.3671L17.9741 11.0505C18.4574 10.4755 18.4574 9.52546 17.9658 8.95046ZM13.4658 8.42546L9.44076 12.4505C9.32409 12.5671 9.16576 12.6338 8.99909 12.6338C8.83242 12.6338 8.67409 12.5671 8.55742 12.4505L6.54076 10.4338C6.29909 10.1921 6.29909 9.79212 6.54076 9.55046C6.78242 9.30879 7.18242 9.30879 7.42409 9.55046L8.99909 11.1255L12.5824 7.54212C12.8241 7.30046 13.2241 7.30046 13.4658 7.54212C13.7074 7.78379 13.7074 8.18379 13.4658 8.42546Z" fill="#135DFF"/>
                   </svg>
                 </div>
               )}

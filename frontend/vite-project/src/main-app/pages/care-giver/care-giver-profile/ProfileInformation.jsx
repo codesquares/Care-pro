@@ -72,17 +72,10 @@ const ProfileInformation = ({ aboutMe, onUpdate, services = [] }) => {
       }
 
       const response_data = await response.json();
-      console.log('Fetched certificates response:', response_data);
       
       // Handle the API response structure: { success: true, data: [...] }
       const certificates = response_data?.success ? response_data.data : (response_data || []);
       
-      console.log('Certificate structure check:', {
-        count: certificates?.length || 0,
-        firstCert: certificates?.[0] || null,
-        hasUrls: certificates?.some(cert => cert.certificateUrl) || false,
-        allHaveUrls: certificates?.every(cert => cert.certificateUrl) || false
-      });
       setCertificates(certificates || []);
     } catch (error) {
       console.error('Error fetching certificates:', error);

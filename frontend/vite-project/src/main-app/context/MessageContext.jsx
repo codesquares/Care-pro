@@ -369,19 +369,6 @@ export const MessageProvider = ({ children }) => {
   // Destructure for backward compatibility
   const { messages, unreadMessages, lastMessageTimestamp, messageIds } = messageState;
   
-  // Debug: Log whenever messages change
-  useEffect(() => {
-    console.log('🔴 MESSAGE STATE CHANGED:', {
-      count: messages.length,
-      messages: messages.map(m => ({
-        id: m.id,
-        messageId: m.messageId,
-        content: m.content || m.message,
-        senderId: m.senderId
-      }))
-    });
-  }, [messages]);
-  
   // const debounceHook = useDebounce();
   // const deduplicationHook = useApiDeduplication();
   
@@ -398,7 +385,6 @@ export const MessageProvider = ({ children }) => {
   
   // Log hook initialization status (moved to useEffect to avoid conditional logic in render)
   useEffect(() => {
-    console.log('MessageProvider hooks initialized successfully');
     // Set loading to false after a brief delay to allow initial state setup
     const initTimer = setTimeout(() => {
       if (!currentUserId) {
@@ -512,7 +498,6 @@ export const MessageProvider = ({ children }) => {
   useEffect(() => {
     // TEMPORARY: Disable all polling to fix 404 errors
     // Polling will only activate if manually enabled during debugging
-    console.log('Polling effect triggered but currently disabled to prevent 404 errors');
     setIsPollingActive(false);
     return () => {}; // No polling for now
     
@@ -786,7 +771,6 @@ export const MessageProvider = ({ children }) => {
     });
   }, [selectedChatId, unreadMessages, onlineUsers, safeDeduplicate]); // Added deduplicate to dependencies
 
-  console.log("conversations of this user:", conversations);
   // Initialize chat connection
   const initializeChat = useCallback(async (userId, token) => {
     if (!userId || !token) {

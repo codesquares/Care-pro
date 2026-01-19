@@ -900,7 +900,7 @@ const GigsForm = () => {
                 canPublish={canPublish}
                 activeGigsCount={activeGigsCount}
                 isEditingPublishedGig={isEditingPublishedGig}
-                isLoadingGigs={isLoadingGigs}
+                isLoadingGigs={isLoadingGigs || isLoadingStatus}
                 isSaving={isSaving}
                 caregiverStatus={{
                   isVerified,
