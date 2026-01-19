@@ -92,9 +92,6 @@ const ClientGigService = {
         };
       });
 
-    console.log(`Filtered ${validAndEnrichedGigs.length} valid gigs out of ${allGigs.length} total gigs`);
-    console.log('Enriched gig data:', validAndEnrichedGigs);
-
     return validAndEnrichedGigs;
     
   } catch (error) {
@@ -103,7 +100,6 @@ const ClientGigService = {
     // In case of error, still try to return basic gig data if available
     try {
       const fallbackResponse = await axios.get(`${BASE_API_URL}/Gigs`);
-      console.warn('Returning basic gig data without caregiver enrichment due to error');
       return fallbackResponse.data || [];
     } catch (fallbackError) {
       console.error('Complete failure to fetch gigs:', fallbackError);
