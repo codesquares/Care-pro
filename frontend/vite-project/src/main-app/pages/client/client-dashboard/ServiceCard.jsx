@@ -53,10 +53,13 @@
 
 
 
+import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { useAuth } from "../../../context/AuthContext";
 import "./serviceCard.css";
 import defaultAvatar from "../../../../assets/profilecard1.png";
+import GigReviewService from "../../../services/gigReviewService";
+import ReviewsModal from "../../../components/ReviewsModal/ReviewsModal";
 
 const ServiceCard = ({ 
   // Available props from backend
@@ -107,6 +110,31 @@ const ServiceCard = ({
     console.log("Toggle favorite for service:", id);
   };
 
+  // Reviews modal state
+  const [showReviewsModal, setShowReviewsModal] = useState(false);
+  const [gigReviews, setGigReviews] = useState([]);
+  const [reviewStats, setReviewStats] = useState(null);
+  const [reviewsLoading, setReviewsLoading] = useState(false);
+
+  // Handle rating click to show reviews modal
+  const handleRatingClick = async (e) => {
+    e.stopPropagation(); // Prevent card click
+    setShowReviewsModal(true);
+    setReviewsLoading(true);
+    
+    try {
+      const { reviews, stats } = await GigReviewService.getReviewsWithStats(id);
+      setGigReviews(reviews);
+      setReviewStats(stats);
+    } catch (err) {
+      console.error('Error fetching reviews:', err);
+      setGigReviews([]);
+      setReviewStats(null);
+    } finally {
+      setReviewsLoading(false);
+    }
+  };
+
   // console.log("ServiceCard props:", service);
 
   // Fallback values for missing data
@@ -114,8 +142,8 @@ const ServiceCard = ({
   //check if caregiverProfileImage is not empty string
   const displayAvatar = (caregiverProfileImage && caregiverProfileImage.trim() !== '') ? caregiverProfileImage : defaultAvatar;
   const displayLocation = caregiverLocation || "Lagos, Nigeria";
-  const formattedRating = rating ? parseFloat(rating).toFixed(1) : "4.5";
-  const displayReviewCount = reviewCount || Math.floor(Math.random() * 50) + 10; // Random fallback between 10-59
+  const formattedRating = rating ? parseFloat(rating).toFixed(1) : "0.0";
+  const displayReviewCount = reviewCount || 0;
   const imgSrc = image1 || "https://via.placeholder.com/380x200?text=Care+Service&bgcolor=f3f4f6&color=6b7280";
   
   // Handle package details - show first item or fallback
@@ -159,7 +187,7 @@ const ServiceCard = ({
           </div>
         )}
         
-        {/* Heart favorite button - show login prompt for unauthenticated users */}
+        {/* Heart favorite button - commented out pending feature implementation
         <button 
           className="favorite-btn"
           onClick={handleFavoriteClick}
@@ -170,6 +198,7 @@ const ServiceCard = ({
             <path d="M12 21.35l-1.45-1.32C5.4 15.36 2 12.28 2 8.5 2 5.42 4.42 3 7.5 3c1.74 0 3.41.81 4.5 2.09C13.09 3.81 14.76 3 16.5 3 19.58 3 22 5.42 22 8.5c0 3.78-3.4 6.86-8.55 11.54L12 21.35z"/>
           </svg>
         </button>
+        */}
       </div>
 
       <div className="card-content">
@@ -198,13 +227,23 @@ const ServiceCard = ({
             <div className={`availability-dot ${isAvailable ? 'available' : 'unavailable'}`}></div>
           </div>
 
-          {/* Right side: Rating */}
-          <div className="rating-section">
-            <svg width="14" height="14" viewBox="0 0 24 24" fill="#ffc107">
-              <path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/>
-            </svg>
-            <span className="rating-number">{formattedRating}</span>
-          </div>
+          {/* Right side: Rating - Only show if there are reviews */}
+          {displayReviewCount > 0 && (
+            <div 
+              className="rating-section rating-clickable"
+              onClick={handleRatingClick}
+              role="button"
+              tabIndex={0}
+              onKeyDown={(e) => e.key === 'Enter' && handleRatingClick(e)}
+              title="Click to see reviews"
+            >
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="#ffc107">
+                <path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/>
+              </svg>
+              <span className="rating-number">{formattedRating}</span>
+              <span className="review-count-badge">({displayReviewCount})</span>
+            </div>
+          )}
         </div>
 
         {/* Service title */}
@@ -217,6 +256,16 @@ const ServiceCard = ({
           </div>
         )}
       </div>
+
+      {/* Reviews Modal */}
+      <ReviewsModal
+        isOpen={showReviewsModal}
+        onClose={() => setShowReviewsModal(false)}
+        reviews={gigReviews}
+        stats={reviewStats}
+        loading={reviewsLoading}
+        gigTitle={title}
+      />
     </div>
   );
 };

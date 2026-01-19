@@ -183,8 +183,10 @@ import { useState, useEffect, useRef } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import "./home-care-service.css";
 import ClientGigService from "../../../services/clientGigService";
+import GigReviewService from "../../../services/gigReviewService";
 import defaultAvatar from "../../../../assets/profilecard1.png";
 import VideoModal from "../../../components/VideoModal/VideoModal";
+import ReviewsModal from "../../../components/ReviewsModal/ReviewsModal";
 import { useAuth } from "../../../context/AuthContext";
 
 const HomeCareService = () => {
@@ -197,6 +199,10 @@ const HomeCareService = () => {
   const [isFavorite, setIsFavorite] = useState(false);
   const [showShareModal, setShowShareModal] = useState(false);
   const [copySuccess, setCopySuccess] = useState(false);
+  const [showReviewsModal, setShowReviewsModal] = useState(false);
+  const [gigReviews, setGigReviews] = useState([]);
+  const [reviewStats, setReviewStats] = useState(null);
+  const [reviewsLoading, setReviewsLoading] = useState(false);
   const navigate = useNavigate();
   const { isAuthenticated, userRole } = useAuth();
   const basePath = "/app/client";
@@ -299,6 +305,24 @@ const HomeCareService = () => {
     
     window.open(url, '_blank', 'width=600,height=400');
     setShowShareModal(false);
+  };
+
+  // Handle opening reviews modal
+  const handleOpenReviews = async () => {
+    setShowReviewsModal(true);
+    setReviewsLoading(true);
+    
+    try {
+      const { reviews, stats } = await GigReviewService.getReviewsWithStats(id);
+      setGigReviews(reviews);
+      setReviewStats(stats);
+    } catch (err) {
+      console.error('Error fetching reviews:', err);
+      setGigReviews([]);
+      setReviewStats(null);
+    } finally {
+      setReviewsLoading(false);
+    }
   };
 
   useEffect(() => {
@@ -451,7 +475,14 @@ const HomeCareService = () => {
                 <span className="location-tag">
                   {caregiverLocation || "Location not specified"}
                 </span>
-                <span className="rating-tag">
+                <span 
+                  className="rating-tag rating-tag-clickable"
+                  onClick={handleOpenReviews}
+                  role="button"
+                  tabIndex={0}
+                  onKeyDown={(e) => e.key === 'Enter' && handleOpenReviews()}
+                  title="Click to see reviews"
+                >
                   ⭐ {caregiverRating || 0} ({caregiverReviewCount || 0} reviews)
                 </span>
                 {caregiverExperience > 0 && (
@@ -719,6 +750,16 @@ const HomeCareService = () => {
           </div>
         </div>
       )}
+
+      {/* Reviews Modal */}
+      <ReviewsModal
+        isOpen={showReviewsModal}
+        onClose={() => setShowReviewsModal(false)}
+        reviews={gigReviews}
+        stats={reviewStats}
+        loading={reviewsLoading}
+        gigTitle={title}
+      />
     </div>
   );
 };
