@@ -53,7 +53,7 @@
 
 
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { useAuth } from "../../../context/AuthContext";
 import "./serviceCard.css";
@@ -81,7 +81,6 @@ const ServiceCard = ({
   rating, 
   isVerified = true, 
   isPremium = false,
-  reviewCount,
   isPopular = false,
   isAvailable = true, // New prop for availability status
   isPublic = false // New prop to indicate if this is for public viewing
@@ -89,6 +88,32 @@ const ServiceCard = ({
   const navigate = useNavigate();
   const { isAuthenticated } = useAuth();
   const basePath = "/app/client";
+
+  // Gig-specific review data (fetched on mount)
+  const [gigReviewCount, setGigReviewCount] = useState(0);
+  const [gigRating, setGigRating] = useState(0);
+
+  // Fetch actual review count for this gig on mount
+  useEffect(() => {
+    const fetchReviewCount = async () => {
+      if (!id) return;
+      try {
+        const reviews = await GigReviewService.getReviewsByGigId(id);
+        const count = reviews.length;
+        setGigReviewCount(count);
+        
+        // Calculate average rating if there are reviews
+        if (count > 0) {
+          const totalRating = reviews.reduce((sum, r) => sum + (r.rating || r.Rating || 0), 0);
+          setGigRating(Math.round((totalRating / count) * 10) / 10);
+        }
+      } catch (err) {
+        // Silent fail - will show 0 reviews
+      }
+    };
+    
+    fetchReviewCount();
+  }, [id]);
 
   const handleClick = () => {
     // All users go directly to the public service route
@@ -142,8 +167,11 @@ const ServiceCard = ({
   //check if caregiverProfileImage is not empty string
   const displayAvatar = (caregiverProfileImage && caregiverProfileImage.trim() !== '') ? caregiverProfileImage : defaultAvatar;
   const displayLocation = caregiverLocation || "Lagos, Nigeria";
-  const formattedRating = rating ? parseFloat(rating).toFixed(1) : "0.0";
-  const displayReviewCount = reviewCount || 0;
+  
+  // Use gig-specific rating/reviews (fetched from Reviews API), not caregiver profile data
+  const formattedRating = gigRating > 0 ? gigRating.toFixed(1) : "0.0";
+  const displayReviewCount = gigReviewCount;
+  
   const imgSrc = image1 || "https://via.placeholder.com/380x200?text=Care+Service&bgcolor=f3f4f6&color=6b7280";
   
   // Handle package details - show first item or fallback
