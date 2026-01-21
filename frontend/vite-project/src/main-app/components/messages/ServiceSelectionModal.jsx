@@ -1,5 +1,5 @@
 
-import './ServiceSelectionModal.scss';
+import './ServiceSelectionModal.css';
 import Modal from '../modal/Modal';
 import { useState } from 'react';
 

@@ -1,6 +1,6 @@
 import { useState, useEffect } from "react";
 import { useNavigate, useSearchParams } from "react-router-dom";
-import "../../styles/main-app/pages/ConfirmEmailPage.scss";
+import "../../styles/main-app/pages/ConfirmEmailPage.css";
 import loginImg from "../../assets/loginImg.png";
 import loginLogo from "../../assets/loginLogo.png";
 import { validateEmailToken, confirmEmail } from "../services/auth";

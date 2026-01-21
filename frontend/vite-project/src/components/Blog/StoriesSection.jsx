@@ -1,5 +1,5 @@
 import { useState } from "react";
-import "../../styles/components/stories-section.scss";
+import "../../styles/components/stories-section.css";
 import storyImage1 from "../../assets/story1.png";
 import storyImage2 from "../../assets/story2.png";
 import storyImage3 from "../../assets/story3.png";

@@ -1,4 +1,4 @@
-import "./gigs.scss";
+import "./gigs.css";
 const NavItem = ({link, text}) => {
   return (
     <div className="nav-item">

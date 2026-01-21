@@ -1,6 +1,6 @@
 import { useState, useEffect, useRef, useCallback, useMemo } from 'react';
 import { useLocation } from 'react-router-dom';
-import './chatarea.scss';
+import './chatarea.css';
 import MessageInput from './MessageInput';
 import MessageStatus from './MessageStatus';
 import ServiceSelectionModal from './ServiceSelectionModal';

@@ -1,7 +1,7 @@
 import { useState } from "react";
 import { toast } from "react-toastify";
 import OrderTasksService from "../../services/orderTasksService";
-import "./CreateOrderTasksModal.scss";
+import "./CreateOrderTasksModal.css";
 
 const CreateOrderTasksModal = ({ 
   isOpen, 

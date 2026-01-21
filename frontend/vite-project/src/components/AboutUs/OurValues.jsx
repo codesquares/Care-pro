@@ -1,5 +1,5 @@
 
-import '../../styles/components/why-us.scss';
+import '../../styles/components/why-us.css';
 import trustImg from '../../assets/trust-icon.png'
 import verifiedImg from '../../assets/verified-icon.png'
 import healthExpertImg from '../../assets/health-expert-icon.png'

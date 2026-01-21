@@ -1,5 +1,5 @@
 import { useEffect } from 'react';
-import '../../styles/components/toast.scss'; // Ensure you have styles for the toast
+import '../../styles/components/toast.css'; // Ensure you have styles for the toast
 
 const Toast = ({ message, show, onClose, type }) => {
   useEffect(() => {

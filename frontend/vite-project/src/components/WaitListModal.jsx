@@ -1,5 +1,5 @@
 import { useState } from "react";
-import "../styles/components/waitlist-modal.scss";
+import "../styles/components/waitlist-modal.css";
 import Modal from "../main-app/components/modal/Modal";
 
 const WaitlistModal = ({ isOpen, onClose, option }) => {

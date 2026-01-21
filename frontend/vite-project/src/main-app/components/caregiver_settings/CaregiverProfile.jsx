@@ -1,6 +1,6 @@
 
 import Navbar from "../../../components/Navbar";
-import "./CaregiverProfile.scss";
+import "./CaregiverProfile.css";
 import { useEffect, useState } from "react";
 import profileCardImage from "../../../assets/profilecard1.png"; // Placeholder image
 import config from "../../config"; // Import centralized config for API URLs

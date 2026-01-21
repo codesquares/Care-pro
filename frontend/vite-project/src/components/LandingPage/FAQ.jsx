@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import '../../styles/components/FAQ.scss';
+import '../../styles/components/FAQ.css';
 
 const FAQ = () => {
   const [activeIndex, setActiveIndex] = useState(null);

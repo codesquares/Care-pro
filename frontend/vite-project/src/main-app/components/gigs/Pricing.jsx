@@ -1,5 +1,5 @@
 
-import "./Pricing.scss";
+import "./Pricing.css";
 import PackageDetailsInput from "./PackageDetailsInput";
 
 const PricingTable = ({ pricing, onPricingChange, onFieldFocus, onFieldBlur, onFieldHover, onFieldLeave, validationErrors = {} }) => {

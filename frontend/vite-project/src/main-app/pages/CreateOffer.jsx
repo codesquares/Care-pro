@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import './CreateOffer.scss';
+import './CreateOffer.css';
 
 const CreateOffer = () => {
   const [formData, setFormData] = useState({
