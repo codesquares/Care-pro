@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { getAllVerificationData, getVerificationStatistics, testAllDojahEndpoints, checkWebhookStatus, getDojahStatus } from '../../services/dojahService';
-import './WebhookDataAdmin.scss';
+import './WebhookDataAdmin.css';
 import config from '../../config';
 
 const WebhookDataAdmin = () => {

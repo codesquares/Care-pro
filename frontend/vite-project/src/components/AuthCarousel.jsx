@@ -1,4 +1,4 @@
-import "../styles/components/authCarousel.scss";
+import "../styles/components/authCarousel.css";
 import authImage from "../assets/authImage.png";
 
 

@@ -139,11 +139,11 @@ const messageStateReducer = (state, action) => {
         lastUpdate: Date.now()
       };
       
-      console.log('🔄 NEW_MESSAGE_RECEIVED: State updated with new message', {
-        messageId,
-        totalMessages: newState.messages.length,
-        lastUpdate: newState.lastUpdate
-      });
+      // console.log('🔄 NEW_MESSAGE_RECEIVED: State updated with new message', {
+      //   messageId,
+      //   totalMessages: newState.messages.length,
+      //   lastUpdate: newState.lastUpdate
+      // });
       
       return newState;
       
@@ -189,7 +189,7 @@ const messageStateReducer = (state, action) => {
       
     case 'ADD_MESSAGE':
       const { message: newMsg } = action.payload;
-      console.log('🚀 ADD_MESSAGE:', newMsg);
+      // console.log('🚀 ADD_MESSAGE:', newMsg);
       
       // Normalize the message to ensure all ObjectIds are strings
       const normalizedNewMsg = normalizeMessage(newMsg);
@@ -200,7 +200,7 @@ const messageStateReducer = (state, action) => {
       
       if (messageIdToAdd && !addMessageIdsArray.includes(messageIdToAdd)) {
         addMessageIdsArray.push(messageIdToAdd);
-        console.log('🚀 Added message ID to tracking set:', messageIdToAdd);
+        // console.log('🚀 Added message ID to tracking set:', messageIdToAdd);
       }
       
       const addNewState = {
@@ -210,12 +210,12 @@ const messageStateReducer = (state, action) => {
         lastMessageTimestamp: normalizedNewMsg.timestamp || state.lastMessageTimestamp,
         lastUpdate: Date.now() // Force re-render detection
       };
-      console.log('🚀 Total messages after ADD_MESSAGE:', addNewState.messages.length, 'lastUpdate:', addNewState.lastUpdate);
+      // console.log('🚀 Total messages after ADD_MESSAGE:', addNewState.messages.length, 'lastUpdate:', addNewState.lastUpdate);
       return addNewState;
       
     case 'UPDATE_MESSAGE_STATUS':
       const { messageId: msgId, status: newStatus, timestamp: statusTimestamp, newId, ...otherFields } = action.payload;
-      console.log('UPDATE_MESSAGE_STATUS:', { msgId, newStatus, newId, otherFields });
+      // console.log('UPDATE_MESSAGE_STATUS:', { msgId, newStatus, newId, otherFields });
       
       const updatedMessages = state.messages.map(message => {
         if (message.id === msgId) {
@@ -226,13 +226,13 @@ const messageStateReducer = (state, action) => {
             timestamp: statusTimestamp || message.timestamp,
             ...otherFields
           };
-          console.log('Message updated:', { from: message, to: updatedMessage });
+          // console.log('Message updated:', { from: message, to: updatedMessage });
           return updatedMessage;
         }
         return message;
       });
       
-      console.log('Messages after update:', updatedMessages.length);
+      // console.log('Messages after update:', updatedMessages.length);
       
       // Update messageIds set if we have a new ID
       let updatedMessageIds = state.messageIds;
@@ -240,7 +240,7 @@ const messageStateReducer = (state, action) => {
         updatedMessageIds = new Set(state.messageIds);
         updatedMessageIds.delete(msgId); // Remove old temp ID
         updatedMessageIds.add(newId); // Add new real ID
-        console.log('Updated messageIds set - removed:', msgId, 'added:', newId);
+        // console.log('Updated messageIds set - removed:', msgId, 'added:', newId);
       }
       
       return {
@@ -250,9 +250,9 @@ const messageStateReducer = (state, action) => {
       };
       
     case 'SET_MESSAGES': {
-      console.log('🚨 SET_MESSAGES: Reducer called!');
+      // console.log('🚨 SET_MESSAGES: Reducer called!');
       const { messages: messagesToSet } = action.payload;
-      console.log('🚨 SET_MESSAGES: Received payload:', messagesToSet);
+      // console.log('🚨 SET_MESSAGES: Received payload:', messagesToSet);
       
       // Preserve any local messages that are currently 'sending', 'sent' with temp IDs, or have temp IDs
       const localSendingMessages = state.messages.filter(msg => 
@@ -261,9 +261,9 @@ const messageStateReducer = (state, action) => {
         (msg.status === 'sent' && msg.id?.startsWith('temp-'))
       );
       
-      console.log('🔄 SET_MESSAGES: Preserving', localSendingMessages.length, 'local sending messages');
-      console.log('Local messages to preserve:', localSendingMessages.map(m => ({ id: m.id, status: m.status, content: m.content?.substring(0, 20) })));
-      console.log('🔄 SET_MESSAGES: Raw messages to process:', messagesToSet?.length || 0);
+      // console.log('🔄 SET_MESSAGES: Preserving', localSendingMessages.length, 'local sending messages');
+      // console.log('Local messages to preserve:', localSendingMessages.map(m => ({ id: m.id, status: m.status, content: m.content?.substring(0, 20) })));
+      // console.log('🔄 SET_MESSAGES: Raw messages to process:', messagesToSet?.length || 0);
       
       const messageIdArray = [];
       const processedMessages = [];
@@ -271,19 +271,19 @@ const messageStateReducer = (state, action) => {
       // Process each message with normalization
       if (messagesToSet && Array.isArray(messagesToSet)) {
         messagesToSet.forEach((msg, index) => {
-          console.log(`🔧 Processing message ${index + 1}:`, { messageId: msg.messageId, id: msg.id, message: msg.message });
+          // console.log(`🔧 Processing message ${index + 1}:`, { messageId: msg.messageId, id: msg.id, message: msg.message });
           
           const normalizedMsg = normalizeMessage(msg);
           const id = normalizedMsg.id;
           
-          console.log(`🔧 Normalized result:`, { id: normalizedMsg.id, content: normalizedMsg.content });
+          // console.log(`🔧 Normalized result:`, { id: normalizedMsg.id, content: normalizedMsg.content });
           
           if (id && !messageIdArray.includes(id)) {
             messageIdArray.push(id);
             processedMessages.push(normalizedMsg);
-            console.log(`✅ Added message ${index + 1} with ID:`, id);
+            // console.log(`✅ Added message ${index + 1} with ID:`, id);
           } else {
-            console.log(`❌ Skipped message ${index + 1} - duplicate or missing ID:`, id);
+            // console.log(`❌ Skipped message ${index + 1} - duplicate or missing ID:`, id);
           }
         });
       }
@@ -301,8 +301,8 @@ const messageStateReducer = (state, action) => {
       // Sort by timestamp
       combinedMessages.sort((a, b) => new Date(a.timestamp) - new Date(b.timestamp));
       
-      console.log('🔄 Final combined messages count:', combinedMessages.length);
-      console.log('🔄 Combined message IDs:', combinedMessages.map(m => m.id));
+      // console.log('🔄 Final combined messages count:', combinedMessages.length);
+      // console.log('🔄 Combined message IDs:', combinedMessages.map(m => m.id));
       
       // Get last message timestamp
       let lastTimestamp = null;
@@ -433,7 +433,7 @@ export const MessageProvider = ({ children }) => {
       status: normalizedMessage.status || 'delivered'
     };
 
-    console.log('🔔 Adding message with deduplication:', messageToAdd);
+    // console.log('🔔 Adding message with deduplication:', messageToAdd);
     
     dispatchMessageState({
       type: 'NEW_MESSAGE_RECEIVED',
@@ -444,7 +444,7 @@ export const MessageProvider = ({ children }) => {
       }
     });
 
-    console.log('🔔 Message state dispatched successfully');
+    // console.log('🔔 Message state dispatched successfully');
     return true;
   }, [currentUserId]);
 
@@ -455,11 +455,16 @@ export const MessageProvider = ({ children }) => {
     }
 
     try {
-      console.log('Polling for messages in chat:', selectedChatId);
+      // console.log('Polling for messages in chat:', selectedChatId);
       // Use the correct API endpoint format that matches the existing working endpoints
       const response = await axios.get(
         `${API_BASE_URL}/api/Chat/conversations/${currentUserId}`,
-        { timeout: 5000 }
+        { 
+          timeout: 5000,
+          headers: {
+            'Authorization': `Bearer ${localStorage.getItem('authToken') || ''}`
+          }
+        }
       );
 
       // The response should be conversations list, find our selected conversation
@@ -478,7 +483,7 @@ export const MessageProvider = ({ children }) => {
           });
 
           if (newMessages.length > 0) {
-            console.log(`Found ${newMessages.length} new messages via polling`);
+            // console.log(`Found ${newMessages.length} new messages via polling`);
             newMessages.forEach(msg => addMessageWithDeduplication(msg));
           }
         }
@@ -488,7 +493,7 @@ export const MessageProvider = ({ children }) => {
       // Don't set error state for polling failures to avoid disrupting UI
       // Disable polling if we get 404s consistently
       if (error.response?.status === 404) {
-        console.log('Disabling polling due to 404 errors');
+        // console.log('Disabling polling due to 404 errors');
         setIsPollingActive(false);
       }
     }
@@ -511,14 +516,14 @@ export const MessageProvider = ({ children }) => {
       isPollingActive;
     
     if (shouldPoll) {
-      console.log('Starting message polling for chat due to poor connection:', selectedChatId);
+      // console.log('Starting message polling for chat due to poor connection:', selectedChatId);
       
       // Poll immediately, then every 10 seconds (increased from 8 to reduce load)
       pollForMessages();
       pollInterval = setInterval(pollForMessages, 10000);
     } else {
       if (selectedChatId && connectionState === 'Connected') {
-        console.log('SignalR connected, disabling polling for chat:', selectedChatId);
+        // console.log('SignalR connected, disabling polling for chat:', selectedChatId);
         setIsPollingActive(false);
       }
     }
@@ -539,14 +544,14 @@ export const MessageProvider = ({ children }) => {
     
     const checkServerRecovery = async () => {
       if (chatService.isServerUnavailable()) {
-        console.log('Server marked as unavailable, checking for recovery...');
+        // console.log('Server marked as unavailable, checking for recovery...');
         const recovered = await chatService.checkServerAvailability();
         
         if (recovered && currentUserId) {
-          console.log('Server recovered, attempting to reconnect...');
+          // console.log('Server recovered, attempting to reconnect...');
           const reconnected = await chatService.forceReconnect();
           if (reconnected) {
-            console.log('Successfully reconnected after server recovery');
+            // console.log('Successfully reconnected after server recovery');
             setConnectionState('Connected');
           }
         }
@@ -598,7 +603,7 @@ export const MessageProvider = ({ children }) => {
   
   // Function to update conversations list with a new message - now debounced
   const updateConversationsListImmediate = useCallback(async (senderId, messagePreview = 'New message') => {
-    console.log('Updating conversations list with senderId:', senderId);
+    // console.log('Updating conversations list with senderId:', senderId);
     
     // Store the last updated senderId for use in the refresh effect
     updateConversationsListImmediate.lastUpdatedSenderId = senderId;
@@ -608,9 +613,13 @@ export const MessageProvider = ({ children }) => {
     
     if (!existingConversation && currentUserId) {
       try {
-        console.log('Fetching user info for new conversation partner:', senderId);
+        // console.log('Fetching user info for new conversation partner:', senderId);
         // Fetch user info
-        const response = await axios.get(`${API_BASE_URL}/api/users/${senderId}`);
+        const response = await axios.get(`${API_BASE_URL}/api/users/${senderId}`, {
+          headers: {
+            'Authorization': `Bearer ${localStorage.getItem('authToken') || ''}`
+          }
+        });
         const userData = response.data;
 
         
@@ -626,7 +635,7 @@ export const MessageProvider = ({ children }) => {
             isOnline: onlineUsers[senderId] || false,
             previewMessage: messagePreview
           };
-          console.log('Adding new conversation to list:', newConversation);
+          // console.log('Adding new conversation to list:', newConversation);
           return [newConversation, ...prev];
         });
       } catch (error) {
@@ -636,7 +645,7 @@ export const MessageProvider = ({ children }) => {
         setConversations(prev => {
           // Only add fallback if the conversation doesn't already exist
           if (!prev.some(c => c.id === senderId)) {
-            console.log('Creating fallback conversation entry for ID:', senderId);
+            // console.log('Creating fallback conversation entry for ID:', senderId);
             return [
               {
                 id: senderId,
@@ -656,7 +665,7 @@ export const MessageProvider = ({ children }) => {
       }
     } else if (existingConversation) {
       // Update existing conversation
-      console.log('Updating existing conversation:', existingConversation);
+      // console.log('Updating existing conversation:', existingConversation);
       setConversations(prev => prev.map(c => {
         if (c.id === senderId) {
           return {
@@ -693,7 +702,7 @@ export const MessageProvider = ({ children }) => {
       
       // Skip if we've recently fetched and already have data
       if (now - lastFetch < minInterval && conversations.length > 0) {
-        console.log('Skipping conversation fetch - too soon since last fetch');
+        // console.log('Skipping conversation fetch - too soon since last fetch');
         return conversations;
       }
       
@@ -703,9 +712,12 @@ export const MessageProvider = ({ children }) => {
       setIsLoading(true);
       
       try {
-        console.log(`Fetching conversations for user ID: ${userId}`);
+        // console.log(`Fetching conversations for user ID: ${userId}`);
         const response = await axios.get(`${API_BASE_URL}/api/Chat/conversations/${userId}`, {
-          timeout: 10000
+          timeout: 10000,
+          headers: {
+            'Authorization': `Bearer ${localStorage.getItem('authToken') || ''}`
+          }
         });
         
         // Log conversations data received from API for debugging
@@ -785,7 +797,7 @@ export const MessageProvider = ({ children }) => {
     try {
       // Check if already connected - if so, start by disconnecting to ensure clean state
       if (chatService.isConnectionReady && chatService.isConnectionReady()) {
-        console.log('Already connected. Disconnecting first to ensure clean state');
+        // console.log('Already connected. Disconnecting first to ensure clean state');
         await chatService.disconnect().catch(e => console.error('Error during disconnect before reconnect:', e));
       }
       
@@ -793,7 +805,7 @@ export const MessageProvider = ({ children }) => {
       const handlersToRemove = [
         // Connection established handler
         chatService.on('onConnected', async () => {
-          console.log('Connected to chat');
+          // console.log('Connected to chat');
           try {
             // When connected, fetch online users
             try {
@@ -807,7 +819,7 @@ export const MessageProvider = ({ children }) => {
                 setOnlineUsers(onlineUsersMap);
               } else {
                 // If no users are online or there's no chat history, that's okay
-                console.log('No online users found or empty chat history');
+                // console.log('No online users found or empty chat history');
                 setOnlineUsers({});
               }
               
@@ -817,7 +829,7 @@ export const MessageProvider = ({ children }) => {
               }
             } catch (e) {
               // This is expected when there's no chat history, so don't treat as an error
-              console.log('No chat history available yet, continuing without online status');
+              // console.log('No chat history available yet, continuing without online status');
               setOnlineUsers({});
             }
           } catch (err) {
@@ -829,13 +841,13 @@ export const MessageProvider = ({ children }) => {
         chatService.on('onMessage', async (messageData) => {
           const { senderId, message, messageId, status } = messageData;
           
-          console.log(`🔔 New message received from ${senderId}:`, message);
-          console.log(`🔔 Message ID: ${messageId}, Status: ${status}`);
-          console.log(`🔔 Current user ID: ${userId}, Selected chat: ${selectedChatId}`);
+          // console.log(`🔔 New message received from ${senderId}:`, message);
+          // console.log(`🔔 Message ID: ${messageId}, Status: ${status}`);
+          // console.log(`🔔 Current user ID: ${userId}, Selected chat: ${selectedChatId}`);
           
           // Disable polling since SignalR is working
           if (isPollingActive) {
-            console.log('SignalR message received, disabling polling');
+            // console.log('SignalR message received, disabling polling');
             setIsPollingActive(false);
           }
           
@@ -866,29 +878,29 @@ export const MessageProvider = ({ children }) => {
             status: status || 'delivered'
           };
           
-          console.log('🔔 Adding new message to state:', {
-            messageId,
-            isActiveChat,
-            currentMessagesCount: messages.length
-          });
+          // console.log('🔔 Adding new message to state:', {
+          //   messageId,
+          //   isActiveChat,
+          //   currentMessagesCount: messages.length
+          // });
           
           // Add to messages - use batched update
           const wasAdded = addMessageWithDeduplication(newMessage, isActiveChat);
           
           if (wasAdded) {
-            console.log('🔔 Message successfully added to state, total messages now:', messages.length + 1);
+            // console.log('🔔 Message successfully added to state, total messages now:', messages.length + 1);
             
             // Mark as read if user is viewing this chat
             if (isActiveChat && senderId !== userId) {
               // Only mark as read if it's from someone else and it's the active chat
-              console.log('Adding message to active chat');
+              // console.log('Adding message to active chat');
               try {
                 await chatService.markMessageRead(messageId);
               } catch (err) {
                 console.error('Error marking message as read:', err);
               }
             } else {
-              console.log('Message from non-active chat, unread count updated via reducer');
+              // console.log('Message from non-active chat, unread count updated via reducer');
             }
             
             // Always mark as delivered for any message we receive (but not our own)
@@ -920,7 +932,7 @@ export const MessageProvider = ({ children }) => {
               updateConversationsList(conversationPartnerId, message?.substring(0, 50) + (message?.length > 50 ? '...' : '') || 'New message');
             }
             
-            console.log('🔔 Message processing completed, UI should update now');
+            // console.log('🔔 Message processing completed, UI should update now');
           }
         }),
 
@@ -939,7 +951,7 @@ export const MessageProvider = ({ children }) => {
             }
           });
           
-          console.log(`Message ${messageId} marked as read at ${timestamp}`);
+          // console.log(`Message ${messageId} marked as read at ${timestamp}`);
         }),
         
         // Message delivered receipt handler
@@ -957,7 +969,7 @@ export const MessageProvider = ({ children }) => {
             }
           });
           
-          console.log(`Message ${messageId} marked as delivered at ${timestamp}`);
+          // console.log(`Message ${messageId} marked as delivered at ${timestamp}`);
         }),
 
         // Message deleted handler
@@ -970,7 +982,7 @@ export const MessageProvider = ({ children }) => {
             payload: { messageId }
           });
           
-          console.log(`Message ${messageId} was deleted`);
+          // console.log(`Message ${messageId} was deleted`);
         }),
         
         // All messages read handler
@@ -991,13 +1003,13 @@ export const MessageProvider = ({ children }) => {
               payload: { messages: updatedMessages }
             });
             
-            console.log(`All messages from ${readByUserId} marked as read at ${timestamp}`);
+            // console.log(`All messages from ${readByUserId} marked as read at ${timestamp}`);
           }
         }),
         
         // User status change handler
         chatService.on('onUserStatusChanged', ({ userId, status }) => {
-          console.log(`User ${userId} status changed to: ${status}`);
+          // console.log(`User ${userId} status changed to: ${status}`);
           setOnlineUsers(prev => ({
             ...prev,
             [userId]: status === 'Online'
@@ -1024,19 +1036,19 @@ export const MessageProvider = ({ children }) => {
         
         // Disconnection handler
         chatService.on('onDisconnected', () => {
-          console.log('Disconnected from chat');
+          // console.log('Disconnected from chat');
           setConnectionState('Disconnected');
         }),
         
         // Reconnecting handler
         chatService.on('onReconnecting', () => {
-          console.log('Reconnecting to chat...');
+          // console.log('Reconnecting to chat...');
           setConnectionState('Reconnecting');
         }),
         
         // Reconnected handler
         chatService.on('onReconnected', () => {
-          console.log('Reconnected to chat');
+          // console.log('Reconnected to chat');
           setConnectionState('Connected');
           
           // Reload conversations when reconnected
@@ -1048,12 +1060,12 @@ export const MessageProvider = ({ children }) => {
       await chatService.connect(userId, token);
       
       // Fetch conversations after successful connection
-      console.log('Initializing chat complete - fetching initial conversations for userId:', userId);
+      // console.log('Initializing chat complete - fetching initial conversations for userId:', userId);
       fetchConversations(userId);
       
       // Schedule a follow-up fetch after a delay to catch any late-arriving data
       setTimeout(() => {
-        console.log('Follow-up conversations fetch after initialization');
+        // console.log('Follow-up conversations fetch after initialization');
         fetchConversations(userId);
       }, 3000);
       
@@ -1112,7 +1124,7 @@ export const MessageProvider = ({ children }) => {
         const effectiveSenderId = currentUserId || refreshCurrentUserId();
         
         if (effectiveSenderId) {
-          console.log('Using user ID from state/localStorage as fallback:', effectiveSenderId);
+          // console.log('Using user ID from state/localStorage as fallback:', effectiveSenderId);
           senderId = effectiveSenderId;
         } else {
           console.error('Failed to get user ID from any source');
@@ -1122,7 +1134,7 @@ export const MessageProvider = ({ children }) => {
       
       // Try to recover receiverId from recipient object as a fallback
       if (!receiverId && recipient?.id) {
-        console.log('Using recipient.id as fallback for receiverId:', recipient.id);
+        // console.log('Using recipient.id as fallback for receiverId:', recipient.id);
         receiverId = recipient.id;
       }
       
@@ -1152,15 +1164,15 @@ export const MessageProvider = ({ children }) => {
       status: 'sending'
     };
     
-    console.log('🚀 SEND MESSAGE FLOW: Step 1 - Adding temp message to UI', newMessage);
-    console.log('🚀 Current messages before add:', messages.length);
+    // console.log('🚀 SEND MESSAGE FLOW: Step 1 - Adding temp message to UI', newMessage);
+    // console.log('🚀 Current messages before add:', messages.length);
     
     dispatchMessageState({
       type: 'ADD_MESSAGE',
       payload: { message: newMessage }
     });
     
-    console.log('🚀 SEND MESSAGE FLOW: Step 2 - Temp message added, starting timeout');
+    // console.log('🚀 SEND MESSAGE FLOW: Step 2 - Temp message added, starting timeout');
     
     // Set a timeout to mark message as failed if it doesn't get updated
     const messageTimeout = setTimeout(() => {
@@ -1173,22 +1185,22 @@ export const MessageProvider = ({ children }) => {
     
     try {
       // Send message through SignalR
-      console.log("🚀 SEND MESSAGE FLOW: Step 3 - About to send message with IDs:", { senderId, receiverId });
-      console.log("🚀 SEND MESSAGE FLOW: Message text:", messageText);
+      // console.log("🚀 SEND MESSAGE FLOW: Step 3 - About to send message with IDs:", { senderId, receiverId });
+      // console.log("🚀 SEND MESSAGE FLOW: Message text:", messageText);
       const messageId = await chatService.sendMessage(senderId, receiverId, messageText);
-      console.log("🚀 SEND MESSAGE FLOW: Step 4 - Message sent successfully, received ID:", messageId);
+      // console.log("🚀 SEND MESSAGE FLOW: Step 4 - Message sent successfully, received ID:", messageId);
       
       // Clear the timeout since message was sent successfully
       clearTimeout(messageTimeout);
       
       // Update message with real ID and status
-      console.log("🚀 SEND MESSAGE FLOW: Step 5 - Updating temp message with ID:", tempId, "to real ID:", messageId);
+      // console.log("🚀 SEND MESSAGE FLOW: Step 5 - Updating temp message with ID:", tempId, "to real ID:", messageId);
       dispatchMessageState({
         type: 'UPDATE_MESSAGE_STATUS',
         payload: { messageId: tempId, status: 'sent', newId: messageId, timestamp: new Date().toISOString() }
       });
       
-      console.log('🚀 SEND MESSAGE FLOW: Step 6 - Message status updated, should be visible now');
+      // console.log('🚀 SEND MESSAGE FLOW: Step 6 - Message status updated, should be visible now');
       
       // Set flag to prevent immediate message reloading
       setJustSentMessage(true);
@@ -1198,7 +1210,7 @@ export const MessageProvider = ({ children }) => {
       // This helps when the user is already viewing the chat they just sent a message to
       setTimeout(() => {
         if (selectedChatId === receiverId) {
-          console.log('🚀 Auto-refreshing current chat to show sent message');
+          // console.log('🚀 Auto-refreshing current chat to show sent message');
           selectChat(receiverId, true); // Force reload
         }
       }, 1000); // 1 second delay to ensure message processing is complete
@@ -1212,7 +1224,7 @@ export const MessageProvider = ({ children }) => {
           // Update existing conversation
           return prev.map(conversation => {
             if (conversation.id === receiverId) {
-              console.log(`Updating conversation with ${receiverId}:`, messageText);
+              // console.log(`Updating conversation with ${receiverId}:`, messageText);
               return {
                 ...conversation,
                 lastMessage: messageText,
@@ -1223,7 +1235,7 @@ export const MessageProvider = ({ children }) => {
           });
         } else {
           // Conversation doesn't exist yet, call updateConversationsList to add it
-          console.log(`Creating new conversation with ${receiverId}`);
+          // console.log(`Creating new conversation with ${receiverId}`);
           updateConversationsList(receiverId);
           return prev;
         }
@@ -1340,7 +1352,7 @@ export const MessageProvider = ({ children }) => {
       return;
     }
 
-    console.log(`Loading messages for chat: ${chatId}`);
+    // console.log(`Loading messages for chat: ${chatId}`);
     setIsLoading(true);
     setError(null);
     
@@ -1352,7 +1364,7 @@ export const MessageProvider = ({ children }) => {
       let messageHistory;
       try {
         messageHistory = await chatService.getMessageHistory(currentUserId, chatId);
-        console.log('Got message history from SignalR:', messageHistory);
+        // console.log('Got message history from SignalR:', messageHistory);
       } catch (signalRError) {
         console.warn('SignalR message fetch failed, trying alternative approaches:', signalRError.message);
         
@@ -1361,7 +1373,12 @@ export const MessageProvider = ({ children }) => {
         try {
           const response = await axios.get(
             `${API_BASE_URL}/api/Chat/conversations/${currentUserId}`,
-            { timeout: 10000 }
+            { 
+              timeout: 10000,
+              headers: {
+                'Authorization': `Bearer ${localStorage.getItem('authToken') || ''}`
+              }
+            }
           );
           
           if (response.data && Array.isArray(response.data)) {
@@ -1379,7 +1396,7 @@ export const MessageProvider = ({ children }) => {
       }
 
       if (messageHistory && Array.isArray(messageHistory)) {
-        console.log(`Loaded ${messageHistory.length} messages for chat ${chatId}`);
+        // console.log(`Loaded ${messageHistory.length} messages for chat ${chatId}`);
         
         // Process messages with deduplication - normalization handled in reducer
         const processedMessages = [];
@@ -1404,9 +1421,9 @@ export const MessageProvider = ({ children }) => {
           payload: { messages: processedMessages }
         });
         
-        console.log('Raw messages sent to reducer for processing:', processedMessages.length);
+        // console.log('Raw messages sent to reducer for processing:', processedMessages.length);
       } else {
-        console.log('No messages found for this chat');
+        // console.log('No messages found for this chat');
         dispatchMessageState({
           type: 'CLEAR_MESSAGES'
         });
@@ -1422,14 +1439,14 @@ export const MessageProvider = ({ children }) => {
 
   // Select chat
   const selectChat = useCallback(async (chatId, forceReload = false) => {
-    console.log("🔄 SELECT_CHAT: selectChat called with chatId:", chatId, "forceReload:", forceReload);
-    console.log("🔄 SELECT_CHAT: Current selectedChatId:", selectedChatId);
-    console.log("🔄 SELECT_CHAT: Current messages count:", messages.length);
-    console.log("🔄 SELECT_CHAT: Current conversations:", conversations);
+    // console.log("🔄 SELECT_CHAT: selectChat called with chatId:", chatId, "forceReload:", forceReload);
+    // console.log("🔄 SELECT_CHAT: Current selectedChatId:", selectedChatId);
+    // console.log("🔄 SELECT_CHAT: Current messages count:", messages.length);
+    // console.log("🔄 SELECT_CHAT: Current conversations:", conversations);
     
     // If we're already on this chat, check if we need to refresh for recent activity
     if (selectedChatId === chatId && !forceReload) {
-      console.log("🔄 SELECT_CHAT: Already on this chat, checking for recent activity...");
+      // console.log("🔄 SELECT_CHAT: Already on this chat, checking for recent activity...");
       
       // Check if there are any very recent messages (within last 10 seconds) that might need display
       const currentTime = Date.now();
@@ -1437,10 +1454,10 @@ export const MessageProvider = ({ children }) => {
       const hasRecentActivity = messageState.lastUpdate && (currentTime - messageState.lastUpdate) < recentThreshold;
       
       if (!hasRecentActivity) {
-        console.log("🔄 SELECT_CHAT: No recent activity, skipping message reload");
+        // console.log("🔄 SELECT_CHAT: No recent activity, skipping message reload");
         return;
       } else {
-        console.log("🔄 SELECT_CHAT: Recent activity detected, proceeding with refresh");
+        // console.log("🔄 SELECT_CHAT: Recent activity detected, proceeding with refresh");
       }
     }
     
@@ -1451,7 +1468,7 @@ export const MessageProvider = ({ children }) => {
       const selectedRecipient = conversations.find(c => 
         c.id === chatId || c.userId === chatId
       );
-      console.log("Found selectedRecipient:", selectedRecipient);
+      // console.log("Found selectedRecipient:", selectedRecipient);
       
       if (selectedRecipient) {
         // Ensure the recipient object has an id field
@@ -1471,12 +1488,12 @@ export const MessageProvider = ({ children }) => {
       });
       
       // Load messages for this chat
-      console.log('🔄 SELECT_CHAT: Starting message loading for chat', chatId);
-      console.log('🔄 SELECT_CHAT: Current user ID:', currentUserId);
-      console.log('🔄 SELECT_CHAT: Target chat ID:', chatId);
+      // console.log('🔄 SELECT_CHAT: Starting message loading for chat', chatId);
+      // console.log('🔄 SELECT_CHAT: Current user ID:', currentUserId);
+      // console.log('🔄 SELECT_CHAT: Target chat ID:', chatId);
       
       // Always try to load messages when selecting a chat
-      console.log('🔄 SELECT_CHAT: Calling getMessageHistory with users:', currentUserId, 'and', chatId);
+      // console.log('🔄 SELECT_CHAT: Calling getMessageHistory with users:', currentUserId, 'and', chatId);
       
       try {
         // Clear existing messages first to show loading state
@@ -1485,13 +1502,13 @@ export const MessageProvider = ({ children }) => {
         });
         
         // Try to get message history from SignalR service (which will try REST API first)
-        console.log('🔄 SELECT_CHAT: Attempting to get message history from service for users:', currentUserId, 'and', chatId);
+        // console.log('🔄 SELECT_CHAT: Attempting to get message history from service for users:', currentUserId, 'and', chatId);
         const messageHistory = await chatService.getMessageHistory(currentUserId, chatId);
-        console.log('🔄 SELECT_CHAT: getMessageHistory response:', messageHistory);
-        console.log('🔄 SELECT_CHAT: Message history type:', typeof messageHistory, 'isArray:', Array.isArray(messageHistory));
+        // console.log('🔄 SELECT_CHAT: getMessageHistory response:', messageHistory);
+        // console.log('🔄 SELECT_CHAT: Message history type:', typeof messageHistory, 'isArray:', Array.isArray(messageHistory));
         
         if (messageHistory && Array.isArray(messageHistory) && messageHistory.length > 0) {
-          console.log(`🔄 SELECT_CHAT: Got ${messageHistory.length} messages from service for chat ${chatId}`);
+          // console.log(`🔄 SELECT_CHAT: Got ${messageHistory.length} messages from service for chat ${chatId}`);
           
           // Process messages with deduplication - normalization handled in reducer
           const processedMessages = [];
@@ -1508,8 +1525,8 @@ export const MessageProvider = ({ children }) => {
             }
           });
           
-          console.log('🔄 SELECT_CHAT: Processed', processedMessages.length, 'unique messages');
-          console.log('🔄 SELECT_CHAT: About to dispatch SET_MESSAGES with:', processedMessages);
+          // console.log('🔄 SELECT_CHAT: Processed', processedMessages.length, 'unique messages');
+          // console.log('🔄 SELECT_CHAT: About to dispatch SET_MESSAGES with:', processedMessages);
           
           // Sort messages by timestamp (use raw timestamp for sorting)
           processedMessages.sort((a, b) => new Date(a.timestamp) - new Date(b.timestamp));
@@ -1519,10 +1536,10 @@ export const MessageProvider = ({ children }) => {
             payload: { messages: processedMessages }
           });
           
-          console.log("🔄 SELECT_CHAT: SET_MESSAGES dispatched with", processedMessages.length, "messages");
+          // console.log("🔄 SELECT_CHAT: SET_MESSAGES dispatched with", processedMessages.length, "messages");
           
         } else {
-          console.log('🔄 SELECT_CHAT: No message history available, this might be a new conversation');
+          // console.log('🔄 SELECT_CHAT: No message history available, this might be a new conversation');
           dispatchMessageState({
             type: 'CLEAR_MESSAGES'
           });
@@ -1533,7 +1550,7 @@ export const MessageProvider = ({ children }) => {
         
         // Fallback: Try to get messages from the conversations endpoint directly
         try {
-          console.log('🔄 SELECT_CHAT: Trying conversations endpoint as direct fallback');
+          // console.log('🔄 SELECT_CHAT: Trying conversations endpoint as direct fallback');
           const response = await axios.get(
             `${API_BASE_URL}/Chat/conversations/${currentUserId}`,
             { 
@@ -1547,7 +1564,7 @@ export const MessageProvider = ({ children }) => {
               conv.id === chatId || conv.userId === chatId
             );
             const fallbackMessages = conversation?.messages || [];
-            console.log('🔄 SELECT_CHAT: Got', fallbackMessages.length, 'messages from direct conversations endpoint');
+            // console.log('🔄 SELECT_CHAT: Got', fallbackMessages.length, 'messages from direct conversations endpoint');
             
             if (fallbackMessages.length > 0) {
               // Process these messages the same way
@@ -1578,15 +1595,15 @@ export const MessageProvider = ({ children }) => {
                 payload: { messages: processedMessages }
               });
               
-              console.log("🔄 SELECT_CHAT: SET_MESSAGES dispatched with", processedMessages.length, "fallback messages");
+              // console.log("🔄 SELECT_CHAT: SET_MESSAGES dispatched with", processedMessages.length, "fallback messages");
             } else {
-              console.log('🔄 SELECT_CHAT: No messages found in conversations endpoint either');
+              // console.log('🔄 SELECT_CHAT: No messages found in conversations endpoint either');
               dispatchMessageState({
                 type: 'CLEAR_MESSAGES'
               });
             }
           } else {
-            console.log('🔄 SELECT_CHAT: Invalid response from conversations endpoint');
+            // console.log('🔄 SELECT_CHAT: Invalid response from conversations endpoint');
             dispatchMessageState({
               type: 'CLEAR_MESSAGES'
             });
@@ -1611,7 +1628,7 @@ export const MessageProvider = ({ children }) => {
   useEffect(() => {
     const handleRefreshConversations = (event) => {
       const userId = event.detail?.userId || currentUserId || refreshCurrentUserId();
-      console.log('MessageContext: Received refresh-conversations event for userId:', userId);
+      // console.log('MessageContext: Received refresh-conversations event for userId:', userId);
       
       // Store this to trigger the refresh effect
       updateConversationsList.lastUpdatedSenderId = event.detail?.senderId || 'event-triggered';
@@ -1631,10 +1648,10 @@ export const MessageProvider = ({ children }) => {
     
     // If we have an updated senderId and a current user, refresh conversations
     if (lastUpdatedSenderId && currentUserId) {
-      console.log(`Refreshing conversations after update for sender: ${lastUpdatedSenderId}`);
+      // console.log(`Refreshing conversations after update for sender: ${lastUpdatedSenderId}`);
       
       const refreshTimer = setTimeout(() => {
-        console.log('Executing delayed conversation refresh');
+        // console.log('Executing delayed conversation refresh');
         fetchConversations(currentUserId);
       }, 1500); // Delay to ensure backend has processed the change
       

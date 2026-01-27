@@ -2,7 +2,7 @@ import { useState, useEffect } from "react";
 import { useNavigate, Link } from "react-router-dom";
 import { useAuth } from "../main-app/context/AuthContext";
 import logo from "../assets/careproLogo.svg";
-import "./MarketingNavBar.scss";
+import "./MarketingNavBar.css";
 
 const MarketingNavBar = () => {
   const navigate = useNavigate();

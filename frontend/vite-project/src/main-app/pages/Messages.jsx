@@ -7,8 +7,8 @@ import ToastContainer from '../components/toast/ToastContainer.jsx';
 import { useMessageContext } from '../context/MessageContext.jsx';
 import connectionManager from '../services/connectionManager.js';
 import useDebounce from '../hooks/useDebounce.js';
-import '../components/messages/messages.scss';
-import '../components/messages/connection-status.scss';
+import '../components/messages/messages.css';
+import '../components/messages/connection-status.css';
 import { useSelector, useDispatch } from 'react-redux';
 import { markNotificationAsRead } from '../Redux/slices/notificationSlice';
 import { toast } from 'react-toastify';
@@ -96,7 +96,7 @@ const Messages = ({ userId: propsUserId, token: propsToken }) => {
   useEffect(() => {
     const handleOnlineStatus = () => {
       setIsOnline(navigator.onLine);
-      console.log(`[MessagesPage] Network status changed. Online: ${navigator.onLine}`);
+      // console.log(`[MessagesPage] Network status changed. Online: ${navigator.onLine}`);
     };
     
     window.addEventListener('online', handleOnlineStatus);
@@ -164,7 +164,7 @@ const Messages = ({ userId: propsUserId, token: propsToken }) => {
     
     // If connection is already initialized, skip
     if (connectionManager.hasInitialized) {
-      console.log("[MessagesPage] Chat connection already initialized, skipping");
+      // console.log("[MessagesPage] Chat connection already initialized, skipping");
       isInitializingRef.current = false;
       setLoadingState(prev => ({ ...prev, hasInitialized: true, isLoading: false }));
       return;
@@ -178,16 +178,16 @@ const Messages = ({ userId: propsUserId, token: propsToken }) => {
     const setupConnection = async () => {
       // Start connection attempt and abort if another is in progress
       if (!connectionManager.startConnectionAttempt()) {
-        console.log('[MessagesPage] Connection attempt already in progress, skipping');
+        // console.log('[MessagesPage] Connection attempt already in progress, skipping');
         isInitializingRef.current = false;
         return;
       }
       
-      console.log(`[MessagesPage] Initializing chat connection`);
+      // console.log(`[MessagesPage] Initializing chat connection`);
       
       // Set a timeout for connection with a longer timeout to account for slow networks
       connectionManager.setConnectionTimeout(() => {
-        console.log('[MessagesPage] Connection attempt timed out after 20 seconds');
+        // console.log('[MessagesPage] Connection attempt timed out after 20 seconds');
         if (isMounted.current) {
           // Force reset the connection manager state to allow retry
           connectionManager.reset();
@@ -208,7 +208,7 @@ const Messages = ({ userId: propsUserId, token: propsToken }) => {
         // Mark connection as successful
         connectionManager.endConnectionAttempt('success');
         
-        console.log('[MessagesPage] Chat connection successfully initialized');
+        // console.log('[MessagesPage] Chat connection successfully initialized');
         isInitializingRef.current = false;
       } catch (err) {
         console.error("[MessagesPage] Error setting up chat connection:", err);
@@ -219,7 +219,7 @@ const Messages = ({ userId: propsUserId, token: propsToken }) => {
         if (isMounted.current) {
           setTimeout(() => {
             if (isMounted.current && !connectionManager.hasInitialized) {
-              console.log('[MessagesPage] Retrying connection...');
+              // console.log('[MessagesPage] Retrying connection...');
               isInitializingRef.current = false;
               setupConnection();
             }
@@ -233,7 +233,7 @@ const Messages = ({ userId: propsUserId, token: propsToken }) => {
     
     // Return cleanup function
     return () => {
-      console.log("[MessagesPage] Cleaning up chat connection");
+      // console.log("[MessagesPage] Cleaning up chat connection");
       isMounted.current = false;
       isInitializingRef.current = false;
       connectionManager.clearConnectionTimeout();
@@ -251,14 +251,14 @@ const Messages = ({ userId: propsUserId, token: propsToken }) => {
       const isNavigatingAway = !document.querySelector('.messages');
       
       if (isNavigatingAway) {
-        console.log("[MessagesPage] Destroying connection manager immediately");
+        // console.log("[MessagesPage] Destroying connection manager immediately");
         connectionManager.destroy();
       } else {
         // Only destroy connection manager when actually navigating away
         setTimeout(() => {
           // Double-check if component is completely gone from DOM
           if (!document.querySelector('.messages')) {
-            console.log("[MessagesPage] Destroying connection manager after delay");
+            // console.log("[MessagesPage] Destroying connection manager after delay");
             connectionManager.destroy();
           }
         }, 500);
@@ -270,7 +270,7 @@ const Messages = ({ userId: propsUserId, token: propsToken }) => {
   useEffect(() => {
     const userIdParam = searchParams.get('user');
     if (userIdParam && !selectedChatId) {
-      console.log(`[MessagesPage] Auto-selecting chat from URL param: ${userIdParam}`);
+      // console.log(`[MessagesPage] Auto-selecting chat from URL param: ${userIdParam}`);
       selectChat(userIdParam);
     }
   }, [searchParams]); // Removed selectChat from dependencies to prevent loops
@@ -374,22 +374,22 @@ const Messages = ({ userId: propsUserId, token: propsToken }) => {
   useEffect(() => {
     // Check for user ID in URL params to auto-select a chat
     const userIdParam = searchParams.get('user');
-    console.log('🌐 URL PARAM CHECK:', { userIdParam, selectedChatId, searchParams: Object.fromEntries(searchParams) });
+    // console.log('🌐 URL PARAM CHECK:', { userIdParam, selectedChatId, searchParams: Object.fromEntries(searchParams) });
     
     if (userIdParam && !selectedChatId) {
-      console.log(`🌐 [MessagesPage] Auto-selecting chat from URL param: ${userIdParam}`);
+      // console.log(`🌐 [MessagesPage] Auto-selecting chat from URL param: ${userIdParam}`);
       selectChat(userIdParam);
     }
   }, [searchParams, selectedChatId, selectChat]);
   
   const handleSelectChat = (chatId, forceReload = false) => {
-    console.log("Messages.jsx: handleSelectChat called with chatId:", chatId, "forceReload:", forceReload);
-    console.log("Before selectChat - Current selectedChatId:", selectedChatId);
-    console.log("Current recipient:", recipient);
+    // console.log("Messages.jsx: handleSelectChat called with chatId:", chatId, "forceReload:", forceReload);
+    // console.log("Before selectChat - Current selectedChatId:", selectedChatId);
+    // console.log("Current recipient:", recipient);
     
     // Only prevent unnecessary selectChat calls if we're not forcing reload
     if (selectedChatId === chatId && !forceReload) {
-      console.log("Messages.jsx: Already on chat", chatId, "- skipping selectChat call");
+      // console.log("Messages.jsx: Already on chat", chatId, "- skipping selectChat call");
       return;
     }
     
@@ -429,7 +429,7 @@ const Messages = ({ userId: propsUserId, token: propsToken }) => {
   // Handle sending a new message
   const handleSendNewMessage = (receiverId, messageText) => {
     // Log parameters to help debug
-    console.log("handleSendNewMessage parameters:", { userId: userDetails.userId, receiverId, messageText });
+    // console.log("handleSendNewMessage parameters:", { userId: userDetails.userId, receiverId, messageText });
     
     // Check and validate message text first
     if (!messageText || typeof messageText !== 'string') {
@@ -614,7 +614,7 @@ const Messages = ({ userId: propsUserId, token: propsToken }) => {
             {isOnline && error && !error.includes('offline') && !error.includes('sample data') && (
               <button 
                 onClick={async () => {
-                  console.log("[MessagesPage] Manual retry requested by user");
+                  // console.log("[MessagesPage] Manual retry requested by user");
                   try {
                     const cleanupFn = await initializeChat(userDetails.userId, token);
                   } catch (err) {
@@ -705,13 +705,13 @@ const Messages = ({ userId: propsUserId, token: propsToken }) => {
           ) : selectedChatId ? (
             <>
               {/* Add debugging for ChatArea props */}
-              {console.log('🎯 Messages.jsx: Rendering ChatArea with:', {
+              {/* console.log('🎯 Messages.jsx: Rendering ChatArea with:', {
                 selectedChatId,
                 messagesCount: messages?.length || 0,
                 recipientId: recipient?.id,
                 recipientFromConversations: conversations.find(c => c.id === selectedChatId)?.id,
                 userId: userDetails.userId
-              })}
+              }) */}
               <ChatArea 
                 messages={messages || []}
                 recipient={recipient || conversations.find(c => c.id === selectedChatId)}

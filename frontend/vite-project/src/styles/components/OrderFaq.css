@@ -1,0 +1,114 @@
+.links {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding-left: 60px;
+  padding-top: 150px;
+  font-size: 1.2rem;
+}
+
+.home-button {
+  width: 30px;
+  height: auto;
+  cursor: pointer;
+}
+
+.profile-link {
+  text-decoration: none;
+  color: #2e4f6b;
+}
+
+.active-page {
+  font-weight: bold;
+  color: #2e4f6b;
+}
+
+.separator {
+  color: #2e4f6b;
+  font-weight: bold;
+}
+
+.faq {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  text-align: center;
+  background-color: #f9f9f9;
+}
+.faq h2 {
+  font-size: 2rem;
+  color: #2e4f6b;
+  margin-bottom: 40px;
+}
+.faq h4 {
+  font-size: 1.2rem;
+  color: #2e4f6b;
+  margin-bottom: 40px;
+}
+.faq .faq-container {
+  background-color: #fff;
+  padding: 30px;
+  padding-bottom: 300px;
+  border-radius: 10px;
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+  text-align: center;
+}
+.faq .order-details {
+  white-space: nowrap;
+  background-color: #fff;
+  padding: 10px;
+  padding-right: 350px;
+  margin-left: 40px;
+  margin-bottom: 50px;
+  border-radius: 10px;
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+  text-align: left;
+}
+.faq .resolution-center {
+  background-color: #fff;
+  padding: 10px;
+  padding-right: 350px;
+  margin-left: 40px;
+  border-radius: 10px;
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+  text-align: left;
+}
+.faq .faq-list {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: space-between;
+}
+.faq .faq-list .faq-item {
+  background-color: #fff;
+  border-radius: 10px;
+  padding: 20px;
+  width: 100%;
+  margin-bottom: 20px;
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+  cursor: pointer;
+  transition: all 0.3s ease;
+}
+.faq .faq-list .faq-item:hover {
+  transform: translateY(-5px);
+}
+.faq .faq-list .faq-item.active {
+  background-color: #e7f0f7;
+}
+.faq .faq-list .faq-item .faq-question {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  font-size: 1.2rem;
+  color: #2e4f6b;
+  font-weight: 600;
+  margin-bottom: 10px;
+}
+.faq .faq-list .faq-item .faq-icon {
+  font-size: 1.5rem;
+  color: #2e4f6b;
+}
+.faq .faq-list .faq-item .faq-answer {
+  font-size: 1rem;
+  color: #777;
+  text-align: left;
+}

@@ -20,10 +20,8 @@ const AdminNavigationBar = () => {
   
   // Handle logout
   const handleAdminLogout = () => {
-    const navInfo = handleLogout();
-    if (navInfo.shouldNavigate) {
-      navigate(navInfo.path, { replace: true });
-    }
+    handleLogout();
+    navigate('/', { replace: true });
   };
 
   // Check if link is active

@@ -1,6 +1,6 @@
 
 
-import './Input.scss';
+import '../../styles/components/atom/input.css';
 
 type InputProps = {
   type?: 'text' | 'email' | 'password' | 'number';

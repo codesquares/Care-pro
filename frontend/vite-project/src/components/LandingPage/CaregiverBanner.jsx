@@ -1,4 +1,4 @@
-import '../../styles/components/caregiver-banner.scss';
+import '../../styles/components/caregiver-banner.css';
 
 const CaregiverBanner = () => {
   return (

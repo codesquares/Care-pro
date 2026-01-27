@@ -1,5 +1,5 @@
 
-import "../../styles/components/detailed-story-view.scss";
+import "../../styles/components/detailed-story-view.css";
 
 const DetailedStoryView = ({ story, goBack }) => {
   return (

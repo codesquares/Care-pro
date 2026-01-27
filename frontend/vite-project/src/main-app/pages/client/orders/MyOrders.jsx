@@ -7,7 +7,7 @@ import ClientReviewService from "../../../services/clientReviewService.js";
 import ContractService from "../../../services/contractService.js";
 import OrderTasksService from "../../../services/orderTasksService.js";
 import config from "../../../config"; // Centralized API configuration
-import "./Orders.scss";
+import "./Orders.css";
 
 const statusColors = {
   "In Progress": "yellow",
@@ -172,8 +172,14 @@ const MyOrders = () => {
     const fetchOrdersAndReviews = async () => {
       try {
         // First fetch all orders
+        const token = localStorage.getItem('authToken');
         const response = await axios.get(
-          `${config.BASE_URL}/ClientOrders/clientUserId?clientUserId=${clientUserId}` // Using centralized API config
+          `${config.BASE_URL}/ClientOrders/clientUserId?clientUserId=${clientUserId}`, // Using centralized API config
+          {
+            headers: {
+              'Authorization': `Bearer ${token}`
+            }
+          }
         );
         const fetchedOrders = response.data;
         setOrders(fetchedOrders);

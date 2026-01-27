@@ -121,10 +121,26 @@ export function CaregiverStatusProvider({ children }) {
     try {
       setStatusData(prev => ({ ...prev, certificatesLoading: true, certificatesError: null }));
       
+      const token = localStorage.getItem('authToken');
+      
+      // Don't make API call if no token
+      if (!token) {
+        setStatusData(prev => ({
+          ...prev,
+          certificates: [],
+          certificatesCount: 0,
+          hasCertificates: false,
+          certificatesLoading: false,
+          certificatesError: null
+        }));
+        return { certificatesCount: 0, hasCertificates: false };
+      }
+      
       const response = await fetch(`${config.BASE_URL}/Certificates?caregiverId=${userId}`, {
         method: 'GET',
         headers: {
           'accept': '*/*',
+          'Authorization': `Bearer ${token}`,
         },
       });
 
@@ -169,13 +185,14 @@ export function CaregiverStatusProvider({ children }) {
     const userDetails = getUserDetails();
     const token = localStorage.getItem('authToken');
     
-    if (!userDetails?.id) {
+    if (!userDetails?.id || !token) {
+      // Don't make API calls without a valid user ID and token
       return;
     }
     
     // Fetch all data in parallel
     const [verificationResult, qualificationResult, certificatesResult] = await Promise.allSettled([
-      token ? fetchVerificationStatus(userDetails.id, token) : Promise.resolve({ isVerified: false }),
+      fetchVerificationStatus(userDetails.id, token),
       fetchQualificationStatus(userDetails.id),
       fetchCertificates(userDetails.id)
     ]);

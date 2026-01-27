@@ -1,0 +1,86 @@
+.story-section {
+  background-color: #fff;
+  padding: 50px 20px;
+  text-align: center;
+  color: #02445F;
+}
+.story-section .main-title {
+  font-family: PoppinsBold;
+}
+.story-section h2 {
+  padding: 4rem 0;
+  font-size: 32px;
+  margin-bottom: 50px;
+}
+.story-section .title {
+  font-family: PoppinsSemiBold;
+  padding: 0;
+  text-align: start;
+  width: 100%;
+}
+.story-section .story-content {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  margin-top: 20px;
+}
+.story-section .story-content .story-text {
+  width: 100%;
+  margin-bottom: 20px;
+}
+.story-section .story-content .story-text p {
+  font-size: 16px;
+  color: #555;
+  line-height: 1.8;
+  text-align: left;
+}
+.story-section .story-content .story-image {
+  width: 100%;
+  margin-bottom: 20px;
+}
+.story-section .story-content .story-image img {
+  width: 100%;
+  height: auto;
+  object-fit: cover;
+  border-radius: 1.5rem;
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+}
+@media (min-width: 768px) {
+  .story-section h2 {
+    font-size: 36px;
+  }
+  .story-section .story-content {
+    flex-direction: row;
+    justify-content: space-between;
+    align-items: flex-start;
+  }
+  .story-section .story-content .story-text {
+    width: 50%;
+    margin-bottom: 0;
+    padding-right: 20px;
+  }
+  .story-section .story-content .story-image {
+    width: 45%;
+    margin: 0;
+  }
+}
+@media (min-width: 1024px) {
+  .story-section {
+    padding: 80px 50px;
+  }
+  .story-section h2 {
+    font-size: 40px;
+    margin-bottom: 40px;
+  }
+  .story-section .story-content {
+    max-width: 1200px;
+    margin: 0 auto;
+  }
+  .story-section .story-content .story-text {
+    width: 55%;
+    padding-right: 50px;
+  }
+  .story-section .story-content .story-image {
+    width: 40%;
+  }
+}

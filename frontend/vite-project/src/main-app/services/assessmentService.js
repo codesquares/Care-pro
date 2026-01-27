@@ -371,12 +371,24 @@ const assessmentService = {
         throw new Error('CareGiver ID is required');
       }
 
+      const token = localStorage.getItem('authToken');
+      if (!token) {
+        // Return default status if not authenticated
+        return {
+          isQualified: false,
+          assessmentCompleted: false,
+          canRetake: true,
+          fetchedFromAPI: false
+        };
+      }
+
       const apiUrl = `${config.BASE_URL}/Assessments/user/${careGiverId}`; // Using centralized API config
 
       const response = await fetch(apiUrl, {
         method: 'GET',
         headers: {
-          'accept': '*/*'
+          'accept': '*/*',
+          'Authorization': `Bearer ${token}`,
         }
       });
 

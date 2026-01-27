@@ -47,8 +47,8 @@ const ProfileCard = () => {
     fetchProfile();
   }, []); // Note: No dependencies here — it's safe!
   
-  console.log("profile===>", profile);
-  console.log("profile is running");
+  // console.log("profile===>", profile);
+  // console.log("profile is running");
   
   // Generate username using centralized utility
   let userName = "";
@@ -61,7 +61,7 @@ const ProfileCard = () => {
   } else {
     userName = "guest000000"; // Fallback handled by utility
   }
-  console.log("userName===>", userName);
+  // console.log("userName===>", userName);
   // save the username to localStorage
   localStorage.setItem("userName", userName);
 

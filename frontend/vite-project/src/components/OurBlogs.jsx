@@ -3,7 +3,7 @@ import story4 from "../assets/story4.png";
 import story5 from "../assets/story5.png";
 import arrow from "../assets/arrow-right.svg"; 
 import expandIcon from "../assets/ExpandIcon .png"
-import "../styles/components/ourBlogs.scss";
+import "../styles/components/ourBlogs.css";
 
 const OurBlogs = () => {
   const [isModalOpen, setIsModalOpen] = useState(false);

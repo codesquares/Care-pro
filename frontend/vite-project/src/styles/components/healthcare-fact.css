@@ -1,0 +1,40 @@
+.healthcare-facts {
+  text-align: center;
+  padding: 100px 20px;
+  background-color: var(--primary-color-white);
+}
+.healthcare-facts .header-container {
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+  margin-bottom: 20px;
+}
+.healthcare-facts .header-container .icon {
+  height: 50px;
+}
+.healthcare-facts .header-container .icon img {
+  height: 100%;
+}
+.healthcare-facts .header-container h2 {
+  font-size: 1.8rem;
+  color: #2E4F6B;
+}
+.healthcare-facts .facts-list {
+  display: flex;
+  justify-content: space-around;
+  flex-wrap: wrap;
+}
+.healthcare-facts .facts-list .fact-item {
+  flex: 1;
+  min-width: 250px;
+  max-width: 300px;
+  padding: 20px;
+  margin: 10px;
+  border-radius: 15px;
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+}
+.healthcare-facts .facts-list .fact-item p {
+  font-size: 1rem;
+  color: #333;
+}

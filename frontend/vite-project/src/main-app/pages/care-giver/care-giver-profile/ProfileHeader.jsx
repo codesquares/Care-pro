@@ -130,6 +130,7 @@ const ProfileHeader = () => {
         method: 'PUT',
         headers: {
           'Content-Type': 'application/json',
+          'Authorization': `Bearer ${localStorage.getItem('authToken') || ''}`,
         },
         body: JSON.stringify({ address: addressToSend }),
       });
@@ -226,6 +227,7 @@ const ProfileHeader = () => {
         method: 'PUT',
         headers: {
           'accept': '*/*',
+          'Authorization': `Bearer ${localStorage.getItem('authToken') || ''}`,
         },
         body: formData,
       });
@@ -279,7 +281,8 @@ const ProfileHeader = () => {
         method: 'PUT',
         headers: {
           'Content-Type': 'application/json',
-          'accept': '*/*'
+          'accept': '*/*',
+          'Authorization': `Bearer ${localStorage.getItem('authToken') || ''}`,
         },
         body: JSON.stringify({ 
           isAvailable: newAvailability 
@@ -358,7 +361,12 @@ const ProfileHeader = () => {
       }
 
       // Use centralized config instead of hardcoded URL for consistent API routing
-      const response = await fetch(`${config.BASE_URL}/CareGivers/${userDetails.id}`);
+      const token = localStorage.getItem('authToken');
+      const response = await fetch(`${config.BASE_URL}/CareGivers/${userDetails.id}`, {
+        headers: {
+          'Authorization': token ? `Bearer ${token}` : '',
+        },
+      });
       
       if (!response.ok) {
         console.error("API response not ok:", response.status, response.statusText);
@@ -370,7 +378,11 @@ const ProfileHeader = () => {
       // Fetch location from Location table (new location system)
       let locationData = null;
       try {
-        const locationResponse = await fetch(`${config.BASE_URL}/Location/user-location?userId=${userDetails.id}&userType=Caregiver`);
+        const locationResponse = await fetch(`${config.BASE_URL}/Location/user-location?userId=${userDetails.id}&userType=Caregiver`, {
+          headers: {
+            'Authorization': token ? `Bearer ${token}` : '',
+          },
+        });
         if (locationResponse.ok) {
           const locationResult = await locationResponse.json();
           locationData = locationResult.data || locationResult;

@@ -1,0 +1,421 @@
+/* Contract Generation Modal Styles */
+
+.contract-modal-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: rgba(0, 0, 0, 0.6);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 1000;
+  padding: 20px;
+}
+
+.contract-modal-content {
+  background: #fff;
+  border-radius: 12px;
+  width: 100%;
+  max-width: 700px;
+  max-height: 90vh;
+  overflow-y: auto;
+  box-shadow: 0 10px 40px rgba(0, 0, 0, 0.2);
+}
+
+.contract-modal-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 20px 24px;
+  border-bottom: 1px solid #e0e0e0;
+  background: linear-gradient(135deg, #1976d2, #1565c0);
+  color: white;
+  border-radius: 12px 12px 0 0;
+}
+
+.contract-modal-header h2 {
+  margin: 0;
+  font-size: 1.4rem;
+  font-weight: 600;
+}
+
+.close-modal-btn {
+  background: transparent;
+  border: none;
+  color: white;
+  font-size: 28px;
+  cursor: pointer;
+  padding: 0;
+  line-height: 1;
+  opacity: 0.8;
+  transition: opacity 0.2s;
+}
+
+.close-modal-btn:hover {
+  opacity: 1;
+}
+
+.contract-form {
+  padding: 24px;
+}
+
+/* Section Styles */
+.order-summary-section,
+.client-feedback-section,
+.schedule-section,
+.service-details-section {
+  margin-bottom: 24px;
+  padding-bottom: 20px;
+  border-bottom: 1px solid #e8e8e8;
+}
+
+.order-summary-section:last-child,
+.service-details-section:last-child {
+  border-bottom: none;
+}
+
+.order-summary-section h3,
+.client-feedback-section h3,
+.schedule-section h3,
+.service-details-section h3 {
+  font-size: 1.1rem;
+  color: #333;
+  margin: 0 0 12px 0;
+  font-weight: 600;
+}
+
+.section-description {
+  color: #666;
+  font-size: 0.9rem;
+  margin-bottom: 16px;
+}
+
+/* Order Summary Grid */
+.order-info-grid {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 10px;
+  background: #f8f9fa;
+  padding: 16px;
+  border-radius: 8px;
+}
+
+.order-info-grid p {
+  margin: 0;
+  font-size: 0.95rem;
+  color: #444;
+}
+
+.order-info-grid strong {
+  color: #333;
+}
+
+/* Client Feedback Box */
+.client-feedback-box {
+  background: #fff3e0;
+  border: 1px solid #ffb74d;
+  border-left: 4px solid #ff9800;
+  padding: 16px;
+  border-radius: 8px;
+}
+
+.client-feedback-box p {
+  margin: 0;
+  color: #e65100;
+  font-style: italic;
+}
+
+/* Schedule Inputs */
+.visit-schedule-row {
+  background: #f5f7fa;
+  border-radius: 8px;
+  padding: 16px;
+  margin-bottom: 12px;
+}
+
+.visit-label {
+  font-weight: 600;
+  color: #1976d2;
+  margin-bottom: 12px;
+  font-size: 0.95rem;
+}
+
+.schedule-inputs {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 12px;
+  align-items: flex-end;
+}
+
+.input-group {
+  flex: 1;
+  min-width: 120px;
+}
+
+.input-group label {
+  display: block;
+  font-size: 0.85rem;
+  color: #555;
+  margin-bottom: 6px;
+  font-weight: 500;
+}
+
+.input-group select {
+  width: 100%;
+  padding: 10px 12px;
+  border: 1px solid #ddd;
+  border-radius: 6px;
+  font-size: 0.95rem;
+  background: white;
+  cursor: pointer;
+  transition: border-color 0.2s, box-shadow 0.2s;
+}
+
+.input-group select:focus {
+  outline: none;
+  border-color: #1976d2;
+  box-shadow: 0 0 0 3px rgba(25, 118, 210, 0.1);
+}
+
+.duration-badge {
+  background: #e3f2fd;
+  color: #1565c0;
+  padding: 10px 14px;
+  border-radius: 6px;
+  font-weight: 600;
+  font-size: 0.9rem;
+  white-space: nowrap;
+}
+
+/* Form Groups */
+.form-group {
+  margin-bottom: 16px;
+}
+
+.form-group label {
+  display: block;
+  font-size: 0.95rem;
+  color: #333;
+  margin-bottom: 8px;
+  font-weight: 500;
+}
+
+.form-group .required {
+  color: #f44336;
+}
+
+.form-group input[type="text"],
+.form-group textarea {
+  width: 100%;
+  padding: 12px;
+  border: 1px solid #ddd;
+  border-radius: 8px;
+  font-size: 0.95rem;
+  font-family: inherit;
+  transition: border-color 0.2s, box-shadow 0.2s;
+  box-sizing: border-box;
+}
+
+.form-group input[type="text"]:focus,
+.form-group textarea:focus {
+  outline: none;
+  border-color: #1976d2;
+  box-shadow: 0 0 0 3px rgba(25, 118, 210, 0.1);
+}
+
+.form-group textarea {
+  resize: vertical;
+  min-height: 60px;
+}
+
+.revision-notes textarea {
+  background: #fff8e1;
+  border-color: #ffb74d;
+}
+
+.revision-notes textarea:focus {
+  border-color: #ff9800;
+  box-shadow: 0 0 0 3px rgba(255, 152, 0, 0.1);
+}
+
+/* Action Buttons */
+.contract-modal-actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 12px;
+  margin-top: 24px;
+  padding-top: 20px;
+  border-top: 1px solid #e8e8e8;
+}
+
+.cancel-btn,
+.submit-btn {
+  padding: 12px 24px;
+  border-radius: 8px;
+  font-size: 1rem;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.cancel-btn {
+  background: #f5f5f5;
+  border: 1px solid #ddd;
+  color: #666;
+}
+
+.cancel-btn:hover:not(:disabled) {
+  background: #e8e8e8;
+}
+
+.submit-btn {
+  background: linear-gradient(135deg, #1976d2, #1565c0);
+  border: none;
+  color: white;
+}
+
+.submit-btn:hover:not(:disabled) {
+  background: linear-gradient(135deg, #1565c0, #0d47a1);
+  transform: translateY(-1px);
+  box-shadow: 0 4px 12px rgba(25, 118, 210, 0.3);
+}
+
+.cancel-btn:disabled,
+.submit-btn:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+/* Responsive */
+@media (max-width: 600px) {
+  .contract-modal-content {
+    max-height: 95vh;
+    margin: 10px;
+  }
+
+  .contract-form {
+    padding: 16px;
+  }
+
+  .schedule-inputs {
+    flex-direction: column;
+  }
+
+  .input-group {
+    width: 100%;
+  }
+
+  .order-info-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .contract-modal-actions {
+    flex-direction: column;
+  }
+
+  .cancel-btn,
+  .submit-btn {
+    width: 100%;
+  }
+}
+
+/* Schedule Display Component Styles */
+.schedule-display {
+  background: #f5f7fa;
+  border-radius: 8px;
+  padding: 12px;
+}
+
+.schedule-visit {
+  display: flex;
+  align-items: center;
+  padding: 8px 12px;
+  background: white;
+  border-radius: 6px;
+  margin-bottom: 8px;
+  border-left: 3px solid #1976d2;
+}
+
+.schedule-visit:last-child {
+  margin-bottom: 0;
+}
+
+.schedule-day {
+  font-weight: 600;
+  color: #333;
+  min-width: 100px;
+}
+
+.schedule-time {
+  color: #666;
+  flex: 1;
+}
+
+.schedule-duration {
+  background: #e3f2fd;
+  color: #1565c0;
+  padding: 4px 8px;
+  border-radius: 4px;
+  font-size: 0.85rem;
+  font-weight: 500;
+}
+
+/* Contract Status Badge */
+.contract-status-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 6px 12px;
+  border-radius: 20px;
+  font-size: 0.85rem;
+  font-weight: 500;
+}
+
+.contract-status-badge.pending {
+  background: #fff3e0;
+  color: #e65100;
+}
+
+.contract-status-badge.approved {
+  background: #e8f5e9;
+  color: #2e7d32;
+}
+
+.contract-status-badge.rejected {
+  background: #ffebee;
+  color: #c62828;
+}
+
+.contract-status-badge.review-requested {
+  background: #e3f2fd;
+  color: #1565c0;
+}
+
+.contract-status-badge.revised {
+  background: #f3e5f5;
+  color: #7b1fa2;
+}
+
+/* Negotiation Round Indicator */
+.negotiation-round {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  font-size: 0.85rem;
+  color: #666;
+}
+
+.negotiation-round .round-number {
+  background: #1976d2;
+  color: white;
+  width: 20px;
+  height: 20px;
+  border-radius: 50%;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 0.75rem;
+  font-weight: 600;
+}

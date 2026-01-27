@@ -23,6 +23,7 @@
   },
   "dependencies": {
     "@microsoft/signalr": "^8.0.7",
+    "@react-oauth/google": "^0.13.4",
     "@reduxjs/toolkit": "^2.8.2",
     "axios": "^1.7.9",
     "contentful": "^11.4.6",
@@ -40,7 +41,6 @@
     "react-router-dom": "^6.26.1",
     "react-scripts": "^0.0.0",
     "react-toastify": "^10.0.6",
-    "sass": "^1.77.8",
     "tree-kill": "^1.2.2",
     "webpack-dev-server": "^5.2.2"
   },

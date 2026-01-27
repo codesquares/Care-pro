@@ -1,4 +1,4 @@
-import './empty-message-state.scss';
+import './empty-message-state.css';
 
 const EmptyMessageState = ({ isConnecting = false }) => {
   // Get user role from local storage

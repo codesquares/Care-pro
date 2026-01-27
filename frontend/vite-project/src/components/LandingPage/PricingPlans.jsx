@@ -1,4 +1,4 @@
-import "../../styles/components/pricing-plans.scss";
+import "../../styles/components/pricing-plans.css";
 import mostPopular from "../../assets/mostPopular.png";
 
 const PricingPlans = () => {

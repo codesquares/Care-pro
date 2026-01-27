@@ -1,5 +1,5 @@
 
-import "../styles/components/footer.scss";
+import "../styles/components/footer.css";
 import logo from '../assets/careproLogoWhite.svg';
 import { Link } from 'react-router-dom';
 

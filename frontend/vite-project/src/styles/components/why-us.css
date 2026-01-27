@@ -1,0 +1,124 @@
+.why-us-section {
+  background-color: #f9f9f9;
+  padding: 3rem 1.5rem;
+  text-align: center;
+  color: #777;
+}
+@media (min-width: 768px) {
+  .why-us-section {
+    padding: 5rem 2rem;
+  }
+}
+@media (min-width: 1024px) {
+  .why-us-section {
+    padding: 6rem 4rem;
+  }
+}
+@media (max-width: 480px) {
+  .why-us-section {
+    padding: 2.5rem 1rem;
+  }
+}
+.why-us-section h2 {
+  font-size: 1.75rem;
+  margin-bottom: 2rem;
+}
+@media (min-width: 768px) {
+  .why-us-section h2 {
+    font-size: 2rem;
+  }
+}
+@media (min-width: 1024px) {
+  .why-us-section h2 {
+    font-size: 2.25rem;
+  }
+}
+@media (max-width: 480px) {
+  .why-us-section h2 {
+    font-size: 1.5rem;
+    margin-bottom: 1.5rem;
+  }
+}
+.why-us-section .features {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 1.5rem;
+}
+@media (min-width: 768px) {
+  .why-us-section .features {
+    flex-direction: row;
+    flex-wrap: wrap;
+    justify-content: center;
+    gap: 2rem;
+  }
+}
+@media (max-width: 480px) {
+  .why-us-section .features {
+    gap: 1.25rem;
+  }
+}
+.why-us-section .features .feature {
+  width: 100%;
+  max-width: 350px;
+  padding: 1.5rem;
+  text-align: center;
+  border: 2px solid #FCCD56;
+  border-radius: 20px;
+  background-color: #fff;
+  transition: transform 0.3s ease, box-shadow 0.3s ease;
+}
+.why-us-section .features .feature:hover {
+  transform: translateY(-4px);
+  box-shadow: 0 10px 20px rgba(0, 0, 0, 0.05);
+}
+.why-us-section .features .feature img {
+  width: 48px;
+  height: 48px;
+  margin-bottom: 1rem;
+  background-color: rgba(255, 220, 127, 0.2);
+  padding: 0.5rem;
+  border-radius: 50%;
+}
+.why-us-section .features .feature h3 {
+  font-size: 1.2rem;
+  margin-bottom: 0.75rem;
+}
+@media (min-width: 768px) {
+  .why-us-section .features .feature h3 {
+    font-size: 1.3rem;
+  }
+}
+.why-us-section .features .feature p {
+  font-size: 0.9rem;
+  color: #777;
+  line-height: 1.6;
+}
+@media (max-width: 480px) {
+  .why-us-section .features .feature {
+    padding: 1.25rem;
+  }
+  .why-us-section .features .feature img {
+    width: 40px;
+    height: 40px;
+  }
+  .why-us-section .features .feature h3 {
+    font-size: 1.1rem;
+    margin-bottom: 0.5rem;
+  }
+  .why-us-section .features .feature p {
+    font-size: 0.85rem;
+    line-height: 1.5;
+  }
+}
+@media (min-width: 768px) and (max-width: 1023px) {
+  .why-us-section .features .feature {
+    width: calc(50% - 1rem);
+    max-width: 300px;
+  }
+}
+@media (min-width: 1024px) {
+  .why-us-section .features .feature {
+    width: calc(33.333% - 1.5rem);
+  }
+}

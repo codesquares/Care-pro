@@ -47,7 +47,11 @@ const WithdrawalModal = ({ onClose, onSubmit, maxAmount }) => {
   const getAdmin = async () => {
     try{
       // Use centralized config instead of hardcoded URL for consistent API routing
-      const response = await fetch(`${config.BASE_URL}/Admins/AllAdminUsers`); // Assuming admin ID is 1
+      const response = await fetch(`${config.BASE_URL}/Admins/AllAdminUsers`, {
+        headers: {
+          'Authorization': `Bearer ${localStorage.getItem('authToken') || ''}`
+        }
+      }); // Assuming admin ID is 1
       if (!response.ok) {
         throw new Error('Failed to fetch admin ID');
       }

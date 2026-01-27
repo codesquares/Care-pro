@@ -1,0 +1,33 @@
+.book-caregiver-topbanner {
+  margin: 0px 0 0 0;
+  width: 100%;
+}
+
+.book-caregiver {
+  margin-top: 100px;
+}
+.book-caregiver .banner:first-child {
+  margin-left: calc(-50vw + 50%);
+  margin-right: calc(-50vw + 50%);
+  width: 100vw;
+  max-width: none;
+  border-radius: 0px;
+  margin-top: 0px;
+  padding: 0px 0 0px max(20px, (100vw - 1200px) / 2);
+}
+.book-caregiver .banner:first-child .text-content {
+  margin-left: -170px;
+}
+.book-caregiver .banner:first-child .image-content {
+  flex: 1;
+  margin: 0;
+  padding: 0;
+  margin-right: -10px;
+  position: relative;
+  right: -10px;
+  min-width: 60% img;
+  min-width-margin: 0;
+  min-width-padding: 0;
+  min-width-width: 100%;
+  min-width-object-fit: cover;
+}

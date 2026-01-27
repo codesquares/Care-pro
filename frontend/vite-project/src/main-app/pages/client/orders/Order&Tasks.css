@@ -1,0 +1,1091 @@
+.my-orders-container {
+  font-family: Arial, sans-serif;
+  margin: auto;
+  padding: 0;
+  background-color: #f5f5f5;
+  width: 90%;
+  align-items: center;
+}
+.my-orders-container .tab-navigation {
+  display: flex;
+  margin-top: 20px;
+  margin-bottom: 20px;
+  border-bottom: 2px solid #e0e0e0;
+  width: 100%;
+}
+.my-orders-container .tab-navigation .tab-button {
+  flex: 1;
+  padding: 10px 15px;
+  border: none;
+  background: none;
+  cursor: pointer;
+  font-size: 16px;
+  color: #666;
+  position: relative;
+  transition: color 0.3s;
+  text-align: center;
+}
+.my-orders-container .tab-navigation .tab-button.active {
+  color: #000;
+  font-weight: bold;
+}
+.my-orders-container .tab-navigation .tab-button.active .underline {
+  display: block;
+  height: 2px;
+  background: #000;
+  width: 100%;
+  position: absolute;
+  bottom: -2px;
+  left: 0;
+}
+.my-orders-container .tab-navigation .tab-button:hover {
+  color: #000;
+}
+.my-orders-container .task {
+  padding: 8px;
+  font-size: 16px;
+  color: #333;
+}
+.my-orders-container .order-tasks-wrapper {
+  max-width: 100%;
+  margin: 0;
+}
+.my-orders-container .content-wrapper {
+  display: flex;
+  gap: 20px;
+  width: 100%;
+}
+.my-orders-container .tasks-section {
+  flex: 0 0 70%;
+  background-color: #fff;
+  border-radius: 8px;
+  padding: 20px;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+  margin-left: 0;
+}
+.my-orders-container .tasks-section h2 {
+  margin-bottom: 15px;
+  color: #333;
+}
+.my-orders-container .tasks-section .task-item {
+  margin-bottom: 10px;
+}
+.my-orders-container .tasks-section .task-item .task-details .task {
+  background-color: #fdcf68;
+  padding: 10px;
+  border-radius: 4px;
+  margin-bottom: 25px;
+  color: Black;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+.my-orders-container .tasks-section .task-item .task-details .task.completed {
+  background-color: #e9ecef;
+  color: #6c757d;
+  text-decoration: line-through;
+}
+.my-orders-container .tasks-section .task-item .task-details .task .task-date {
+  margin-left: auto;
+  color: #666;
+  font-size: 0.9em;
+}
+.my-orders-container .details-section {
+  flex: 0 0 70%;
+  background-color: #fff;
+  border-radius: 8px;
+  padding: 20px;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+  margin-left: 0;
+}
+.my-orders-container .details-section .offer-header {
+  margin-bottom: 20px;
+}
+.my-orders-container .details-section .offer-header .provider-avatar {
+  width: 50px;
+  height: 50px;
+  border-radius: 50%;
+  margin-right: 10px;
+}
+.my-orders-container .details-section .offer-header h2 {
+  margin: 0;
+  color: #333;
+  display: inline;
+  font-weight: bold;
+}
+.my-orders-container .details-section .offer-header .provider-info {
+  color: #666;
+  font-size: 0.9em;
+}
+.my-orders-container .details-section .offer-content {
+  margin-bottom: 20px;
+}
+.my-orders-container .details-section .offer-content .offer-category {
+  width: 100%;
+  padding: 8px;
+  margin-bottom: 10px;
+  border: 1px solid #ddd;
+  border-radius: 4px;
+}
+.my-orders-container .details-section .offer-content .offer-responsibilities {
+  width: 100%;
+  height: 100px;
+  padding: 8px;
+  margin-bottom: 10px;
+  border: 1px solid #ddd;
+  border-radius: 4px;
+  resize: vertical;
+}
+.my-orders-container .details-section .offer-content .offer-tasks {
+  margin-bottom: 10px;
+}
+.my-orders-container .details-section .offer-content .offer-tasks h3 {
+  margin: 10px 0;
+  color: #333;
+}
+.my-orders-container .details-section .offer-content .offer-tasks .task {
+  background: #efb214;
+  padding: 10px;
+  border-radius: 4px;
+  margin-bottom: 5px;
+  color: black;
+}
+.my-orders-container .details-section .offer-content .offer-pricing {
+  /* Sorry for all the importants this refused to work without them */
+  border: 2px solid grey !important; /* Black border */
+  border-radius: 10px !important; /* Rounded corners */
+  padding: 10px !important; /* Inner padding */
+  outline: none !important; /* Removes default focus outline */
+  box-sizing: border-box !important;
+}
+.my-orders-container .right-section {
+  flex: 0 0 30%;
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+  max-width: 30%;
+  overflow-x: hidden;
+}
+.my-orders-container .order-details-section {
+  background-color: #fff;
+  border-radius: 8px;
+  padding: 20px;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+  flex: 1;
+}
+.my-orders-container .order-details-section h2 {
+  margin-bottom: 15px;
+  color: #333;
+}
+.my-orders-container .order-details-section .order-card {
+  border: 1px solid #ddd;
+  padding: 15px;
+  border-radius: 8px;
+  margin-bottom: 20px;
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 10px;
+}
+.my-orders-container .order-details-section .order-card .order-image {
+  width: 100px;
+  height: auto;
+  border-radius: 8px;
+  margin-bottom: 0;
+}
+.my-orders-container .order-details-section .order-card p {
+  margin: 0;
+  color: #666;
+  word-wrap: break-word;
+  max-width: 100%;
+}
+.my-orders-container .order-details-section .order-card .order-status-badge {
+  background-color: #fff3cd;
+  color: #856404;
+  padding: 5px 10px;
+  border-radius: 4px;
+  margin: 0;
+  font-size: 0.9em;
+  word-wrap: break-word;
+  max-width: 100%;
+}
+.my-orders-container .order-details-section .order-card .order-meta {
+  margin: 0;
+  color: #444;
+  width: 100%;
+}
+.my-orders-container .order-details-section .order-card .order-meta p {
+  margin: 5px 0;
+  word-wrap: break-word;
+  max-width: 100%;
+}
+.my-orders-container .order-details-section .order-card .mark-completed-btn {
+  background-color: #333;
+  color: #fff;
+  border: none;
+  padding: 10px 20px;
+  border-radius: 8px;
+  cursor: pointer;
+  width: 100%;
+  margin-bottom: 10px;
+  font-weight: bold;
+  word-wrap: break-word;
+  max-width: 100%;
+}
+.my-orders-container .order-details-section .order-card .mark-completed-btn:hover {
+  background-color: #555;
+}
+.my-orders-container .order-details-section .order-card .report-issue-btn {
+  background-color: #ffebee;
+  color: #c62828;
+  border: 1px solid #ffcdd2;
+  padding: 10px 20px;
+  border-radius: 8px;
+  cursor: pointer;
+  width: 100%;
+  font-weight: bold;
+  word-wrap: break-word;
+  max-width: 100%;
+}
+.my-orders-container .order-details-section .order-card .report-issue-btn:hover {
+  background-color: #ffcdd2;
+}
+.my-orders-container .order-details-section .order-card .submit-review-btn {
+  background-color: #4CAF50;
+  color: white;
+  border: none;
+  padding: 10px 20px;
+  border-radius: 8px;
+  cursor: pointer;
+  width: 100%;
+  font-weight: bold;
+  word-wrap: break-word;
+  max-width: 100%;
+}
+.my-orders-container .order-details-section .order-card .submit-review-btn:hover {
+  background-color: #45a049;
+}
+.my-orders-container .order-details-section .order-card .submit-review-btn.disabled {
+  background-color: #cccccc;
+  color: #666666;
+  cursor: not-allowed;
+  opacity: 0.6;
+}
+.my-orders-container .order-details-section .order-card .submit-review-btn.disabled:hover {
+  background-color: #cccccc;
+}
+.my-orders-container .order-details-section .order-card .contract-section {
+  margin: 15px 0;
+  padding: 15px;
+  background-color: #f8f9fa;
+  border-radius: 8px;
+  border: 1px solid #e9ecef;
+}
+.my-orders-container .order-details-section .order-card .contract-section h4 {
+  margin: 0 0 10px 0;
+  font-size: 16px;
+  color: #333;
+  font-weight: 600;
+}
+.my-orders-container .order-details-section .order-card .contract-section .contract-checking {
+  text-align: center;
+  color: #666;
+  font-style: italic;
+}
+.my-orders-container .order-details-section .order-card .contract-section .contract-exists .contract-details {
+  background: #e8f5e8;
+  padding: 12px;
+  border-radius: 6px;
+  border-left: 4px solid #00CAB6;
+  margin-top: 10px;
+}
+.my-orders-container .order-details-section .order-card .contract-section .contract-exists .contract-details p {
+  margin: 5px 0;
+  font-size: 14px;
+  color: #333;
+}
+.my-orders-container .order-details-section .order-card .contract-section .contract-exists .contract-details p strong {
+  color: #000;
+}
+.my-orders-container .order-details-section .order-card .contract-section .contract-generation p {
+  margin: 8px 0;
+  color: #666;
+  font-size: 14px;
+}
+.my-orders-container .order-details-section .order-card .contract-section .contract-generation .order-tasks-status {
+  margin: 10px 0 15px 0;
+}
+.my-orders-container .order-details-section .order-card .contract-section .contract-generation .contract-error {
+  margin: 10px 0;
+  padding: 8px;
+  background: #ffebee;
+  border-radius: 4px;
+  border-left: 4px solid #f44336;
+}
+.my-orders-container .order-details-section .order-card .contract-section .contract-generation .contract-error p {
+  margin: 0;
+  color: #c62828;
+  font-size: 13px;
+}
+.my-orders-container .order-details-section .order-card .contract-section .contract-unavailable p {
+  margin: 8px 0;
+  color: #999;
+  font-size: 14px;
+  font-style: italic;
+}
+.my-orders-container .order-details-section .order-card .contract-section .order-tasks-status {
+  margin: 10px 0;
+  padding: 8px 12px;
+  background: #e8f5e8;
+  border-radius: 4px;
+  border-left: 4px solid #00CAB6;
+}
+.my-orders-container .order-details-section .order-card .contract-section .order-tasks-status p {
+  margin: 0;
+  color: #2e7d32;
+  font-size: 13px;
+  font-weight: 500;
+}
+.my-orders-container .order-details-section .order-card .contract-section .order-tasks-required {
+  padding: 20px;
+  background: #fff3cd;
+  border: 1px solid #ffeaa7;
+  border-radius: 8px;
+  margin: 15px 0;
+}
+.my-orders-container .order-details-section .order-card .contract-section .order-tasks-required h4 {
+  color: #856404;
+  margin: 0 0 10px 0;
+  font-size: 16px;
+}
+.my-orders-container .order-details-section .order-card .contract-section .order-tasks-required .alert {
+  padding: 10px;
+  margin: 10px 0;
+  border-radius: 4px;
+}
+.my-orders-container .order-details-section .order-card .contract-section .order-tasks-required .alert.alert-info {
+  background: #d4edda;
+  border: 1px solid #c3e6cb;
+  color: #155724;
+}
+.my-orders-container .order-details-section .order-card .contract-section .order-tasks-required .alert p {
+  margin: 0;
+  font-size: 14px;
+}
+.my-orders-container .order-details-section .order-card .contract-section .order-tasks-required .create-tasks-btn {
+  background: #007bff;
+  color: white;
+  border: none;
+  padding: 12px 24px;
+  border-radius: 6px;
+  cursor: pointer;
+  font-weight: 500;
+  font-size: 14px;
+  transition: all 0.3s ease;
+}
+.my-orders-container .order-details-section .order-card .contract-section .order-tasks-required .create-tasks-btn:hover {
+  background: #0056b3;
+  transform: translateY(-1px);
+}
+.my-orders-container .order-details-section .order-card .contract-section .order-tasks-required .tasks-unavailable {
+  color: #856404;
+  font-style: italic;
+  margin-top: 10px;
+}
+.my-orders-container .order-details-section .order-card .contract-section .generate-contract-btn {
+  background-color: #007bff;
+  color: white;
+  border: none;
+  padding: 12px 24px;
+  border-radius: 8px;
+  cursor: pointer;
+  width: 100%;
+  font-weight: bold;
+  font-size: 14px;
+  transition: background-color 0.3s ease;
+}
+.my-orders-container .order-details-section .order-card .contract-section .generate-contract-btn:hover:not(:disabled) {
+  background-color: #0056b3;
+}
+.my-orders-container .order-details-section .order-card .contract-section .generate-contract-btn:disabled {
+  background-color: #ccc;
+  cursor: not-allowed;
+}
+.my-orders-container .order-details-section .order-card .contract-section .generate-contract-btn.loading {
+  background-color: #6c757d;
+  cursor: wait;
+}
+.my-orders-container .order-details-section .order-card .contract-section .generate-contract-btn.loading::after {
+  content: "";
+  display: inline-block;
+  width: 12px;
+  height: 12px;
+  margin-left: 8px;
+  border: 2px solid transparent;
+  border-top-color: #ffffff;
+  border-radius: 50%;
+  animation: spin 1s linear infinite;
+}
+.my-orders-container .order-details-section .order-card .review-submitted {
+  text-align: center;
+  padding: 15px;
+  background-color: #e8f5e9;
+  border-radius: 8px;
+  color: #2e7d32;
+}
+.my-orders-container .order-details-section .order-card .review-submitted p:first-child {
+  font-weight: bold;
+  font-size: 16px;
+  margin-bottom: 5px;
+}
+.my-orders-container .order-details-section .order-card .review-submitted p:last-child {
+  font-size: 14px;
+  margin: 0;
+}
+.my-orders-container .support-section {
+  background-color: #fff;
+  border-radius: 8px;
+  padding: 20px;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+  flex: 1;
+}
+.my-orders-container .support-section h3 {
+  margin-bottom: 15px;
+  color: #333;
+}
+.my-orders-container .support-section .support-item {
+  display: flex;
+  flex-direction: column;
+  margin-bottom: 10px;
+  padding: 10px;
+  border: 1px solid #ddd;
+  border-radius: 4px;
+  word-wrap: break-word;
+  max-width: 100%;
+}
+.my-orders-container .support-section .support-item span:first-child {
+  font-weight: bold;
+  color: #333;
+}
+.my-orders-container .support-section .support-item span:last-child {
+  color: #666;
+  font-size: 0.9em;
+}
+
+.modal-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background-color: rgba(0, 0, 0, 0.5);
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  z-index: 1000;
+}
+
+.modal-content {
+  background-color: white;
+  padding: 30px;
+  border-radius: 12px;
+  max-width: 500px;
+  width: 90%;
+  max-height: 90vh;
+  overflow-y: auto;
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.15);
+}
+
+/* Larger modal for contract details */
+.modal-content.contract-modal-large {
+  max-width: 900px;
+  width: 95%;
+  min-height: 60vh;
+  padding: 24px;
+}
+
+@media (min-width: 769px) {
+  .modal-content.contract-modal-large {
+    width: 90%;
+    max-width: 900px;
+  }
+}
+.modal-content h3 {
+  margin-top: 0;
+  margin-bottom: 20px;
+  color: #333;
+  text-align: center;
+}
+.modal-content .review-form {
+  margin-bottom: 20px;
+}
+.modal-content .review-form .rating-section {
+  margin-bottom: 20px;
+}
+.modal-content .review-form .rating-section label {
+  display: block;
+  margin-bottom: 10px;
+  font-weight: bold;
+  color: #333;
+}
+.modal-content .review-form .rating-section .star-rating {
+  display: flex;
+  justify-content: center;
+  gap: 5px;
+}
+.modal-content .review-form .rating-section .star-rating .star {
+  transition: color 0.2s;
+  user-select: none;
+}
+.modal-content .review-form .rating-section .star-rating .star:hover {
+  color: #ffd700 !important;
+}
+.modal-content .review-form .comment-section label {
+  display: block;
+  margin-bottom: 8px;
+  font-weight: bold;
+  color: #333;
+}
+.modal-content .review-form .comment-section textarea {
+  width: 100%;
+  min-height: 100px;
+  padding: 12px;
+  border: 1px solid #ddd;
+  border-radius: 8px;
+  font-family: inherit;
+  font-size: 14px;
+  resize: vertical;
+  box-sizing: border-box;
+}
+.modal-content .review-form .comment-section textarea:focus {
+  outline: none;
+  border-color: #4CAF50;
+  box-shadow: 0 0 0 2px rgba(76, 175, 80, 0.2);
+}
+.modal-content .modal-actions {
+  display: flex;
+  gap: 10px;
+  justify-content: center;
+}
+.modal-content .modal-actions button {
+  padding: 12px 24px;
+  border: none;
+  border-radius: 8px;
+  cursor: pointer;
+  font-weight: bold;
+  transition: background-color 0.2s;
+}
+.modal-content .modal-actions button:first-child {
+  background-color: #4CAF50;
+  color: white;
+}
+.modal-content .modal-actions button:first-child:hover {
+  background-color: #45a049;
+}
+.modal-content .modal-actions button:last-child {
+  background-color: #f5f5f5;
+  color: #333;
+  border: 1px solid #ddd;
+}
+.modal-content .modal-actions button:last-child:hover {
+  background-color: #e5e5e5;
+}
+.modal-content textarea {
+  width: 100%;
+  min-height: 80px;
+  padding: 12px;
+  border: 1px solid #ddd;
+  border-radius: 8px;
+  font-family: inherit;
+  resize: vertical;
+  margin-bottom: 20px;
+  box-sizing: border-box;
+}
+.modal-content textarea:focus {
+  outline: none;
+  border-color: #4CAF50;
+  box-shadow: 0 0 0 2px rgba(76, 175, 80, 0.2);
+}
+
+/* Mobile responsiveness */
+@media (max-width: 1024px) {
+  .my-orders-container {
+    width: 95%;
+  }
+  .my-orders-container .content-wrapper {
+    flex-direction: column;
+    gap: 15px;
+  }
+  .my-orders-container .tasks-section,
+  .my-orders-container .details-section,
+  .my-orders-container .right-section {
+    flex: 1 1 100%;
+    max-width: 100%;
+  }
+}
+@media (max-width: 768px) {
+  .my-orders-container .tab-navigation {
+    flex-direction: column;
+    align-items: stretch;
+  }
+  .my-orders-container .tab-navigation .tab-button {
+    width: 100%;
+    font-size: 14px;
+    padding: 12px;
+  }
+  .my-orders-container .tasks-section,
+  .my-orders-container .details-section,
+  .my-orders-container .order-details-section,
+  .my-orders-container .support-section {
+    padding: 15px;
+  }
+  .my-orders-container .order-card .order-image {
+    width: 80px;
+  }
+  .my-orders-container .order-card p, .my-orders-container .order-card .order-meta p {
+    font-size: 14px;
+  }
+  .my-orders-container .order-card .mark-completed-btn,
+  .my-orders-container .order-card .report-issue-btn,
+  .my-orders-container .order-card .submit-review-btn {
+    padding: 8px 16px;
+    font-size: 14px;
+  }
+}
+@media (max-width: 480px) {
+  .my-orders-container {
+    width: 100%;
+    padding: 10px;
+  }
+  .my-orders-container .faq-title,
+  .my-orders-container h2, .my-orders-container h3 {
+    font-size: 1.1rem;
+  }
+  .my-orders-container .tab-navigation .tab-button {
+    font-size: 13px;
+    padding: 10px;
+  }
+  .my-orders-container .order-card .order-image {
+    width: 60px;
+  }
+  .my-orders-container .order-card p {
+    font-size: 13px;
+  }
+  .my-orders-container .modal-content {
+    padding: 20px;
+    max-width: 95%;
+  }
+}
+@keyframes spin {
+  0% {
+    transform: rotate(0deg);
+  }
+  100% {
+    transform: rotate(360deg);
+  }
+}
+
+/* ==========================================
+   NEW CONTRACT APPROVAL FLOW STYLES (Client)
+   ========================================== */
+
+/* Contract Status Badge */
+.contract-status-badge {
+  display: inline-block;
+  padding: 4px 10px;
+  border-radius: 12px;
+  font-size: 12px;
+  font-weight: 600;
+}
+
+.contract-status-badge.pendingclientapproval,
+.contract-status-badge.pending-client-approval {
+  background: #fff3e0;
+  color: #e65100;
+}
+
+.contract-status-badge.approved {
+  background: #e8f5e9;
+  color: #2e7d32;
+}
+
+.contract-status-badge.clientrejected,
+.contract-status-badge.client-rejected {
+  background: #ffebee;
+  color: #c62828;
+}
+
+.contract-status-badge.clientreviewrequested,
+.contract-status-badge.client-review-requested {
+  background: #e3f2fd;
+  color: #1565c0;
+}
+
+.contract-status-badge.revised {
+  background: #f3e5f5;
+  color: #7b1fa2;
+}
+
+/* Schedule Display */
+.contract-schedule-section {
+  margin: 12px 0;
+  padding: 12px;
+  background: #f5f7fa;
+  border-radius: 6px;
+}
+
+.schedule-display {
+  margin-top: 8px;
+}
+
+.schedule-visit {
+  display: flex;
+  align-items: center;
+  padding: 8px 10px;
+  background: white;
+  border-radius: 6px;
+  margin-bottom: 6px;
+  border-left: 3px solid #1976d2;
+  gap: 10px;
+}
+
+.schedule-visit:last-child {
+  margin-bottom: 0;
+}
+
+.schedule-day {
+  font-weight: 600;
+  color: #333;
+  min-width: 90px;
+}
+
+.schedule-time {
+  color: #666;
+  flex: 1;
+}
+
+.schedule-duration {
+  background: #e3f2fd;
+  color: #1565c0;
+  padding: 3px 8px;
+  border-radius: 4px;
+  font-size: 12px;
+  font-weight: 500;
+}
+
+/* Contract Action Buttons */
+.contract-action-required {
+  margin-top: 15px;
+}
+
+.contract-action-required .action-prompt {
+  color: #e65100;
+  font-weight: 500;
+  margin-bottom: 12px;
+  padding: 10px;
+  background: #fff3e0;
+  border-radius: 6px;
+  border-left: 3px solid #ff9800;
+}
+
+.contract-action-buttons {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin-bottom: 10px;
+}
+
+.view-contract-btn {
+  background: #f5f5f5;
+  color: #333;
+  border: 1px solid #ddd;
+  padding: 10px 16px;
+  border-radius: 6px;
+  cursor: pointer;
+  font-size: 14px;
+  font-weight: 500;
+  transition: all 0.2s;
+}
+
+.view-contract-btn:hover {
+  background: #e8e8e8;
+}
+
+.approve-contract-btn {
+  background: linear-gradient(135deg, #4caf50, #45a049);
+  color: white;
+  border: none;
+  padding: 10px 20px;
+  border-radius: 6px;
+  cursor: pointer;
+  font-size: 14px;
+  font-weight: 600;
+  transition: all 0.2s;
+}
+
+.approve-contract-btn:hover:not(:disabled) {
+  background: linear-gradient(135deg, #45a049, #388e3c);
+  transform: translateY(-1px);
+  box-shadow: 0 4px 12px rgba(76, 175, 80, 0.3);
+}
+
+.approve-contract-btn:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+.request-changes-btn {
+  background: #ff9800;
+  color: white;
+  border: none;
+  padding: 10px 16px;
+  border-radius: 6px;
+  cursor: pointer;
+  font-size: 14px;
+  font-weight: 500;
+  transition: all 0.2s;
+}
+
+.request-changes-btn:hover {
+  background: #f57c00;
+}
+
+.reject-contract-btn {
+  background: #f44336;
+  color: white;
+  border: none;
+  padding: 10px 16px;
+  border-radius: 6px;
+  cursor: pointer;
+  font-size: 14px;
+  font-weight: 500;
+  transition: all 0.2s;
+}
+
+.reject-contract-btn:hover {
+  background: #d32f2f;
+}
+
+.round-hint {
+  font-size: 12px;
+  color: #666;
+  font-style: italic;
+  margin: 4px 0 0 0;
+}
+
+/* Contract Approved/Rejected Messages */
+.contract-approved-message,
+.contract-rejected-message,
+.contract-review-pending,
+.contract-status-message {
+  margin-top: 12px;
+}
+
+.contract-approved-message p:first-child,
+.contract-rejected-message p:first-child,
+.contract-review-pending p:first-child {
+  font-weight: 500;
+  margin-bottom: 8px;
+}
+
+.approved-date {
+  font-size: 13px;
+  color: #666;
+}
+
+.your-feedback {
+  font-size: 13px;
+  color: #666;
+  font-style: italic;
+  background: #f5f5f5;
+  padding: 8px;
+  border-radius: 4px;
+  margin: 8px 0;
+}
+
+/* Contract Not Available */
+.contract-not-available .contract-info {
+  color: #666;
+  font-size: 13px;
+  margin: 8px 0;
+}
+
+.contract-not-available .tasks-ready {
+  color: #2e7d32;
+  font-weight: 500;
+  font-size: 13px;
+}
+
+/* Contract Modal Styles */
+.contract-details-modal {
+  max-height: none;
+  overflow-y: auto;
+  padding: 15px 10px;
+}
+
+.contract-modal-large .contract-details-modal {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 16px;
+}
+
+@media (min-width: 600px) {
+  .contract-modal-large .contract-details-modal {
+    grid-template-columns: repeat(2, 1fr);
+  }
+  
+  .contract-modal-large .contract-details-modal .contract-header-info,
+  .contract-modal-large .contract-details-modal .contract-terms-section,
+  .contract-modal-large .contract-details-modal .contract-schedule-modal {
+    grid-column: 1 / -1;
+  }
+}
+
+.contract-header-info {
+  padding-bottom: 15px;
+  border-bottom: 1px solid #e0e0e0;
+  margin-bottom: 15px;
+}
+
+.contract-header-info p {
+  margin: 6px 0;
+}
+
+.status-badge {
+  display: inline-block;
+  padding: 3px 8px;
+  border-radius: 10px;
+  font-size: 12px;
+  font-weight: 500;
+}
+
+.status-badge.approved {
+  background: #e8f5e9;
+  color: #2e7d32;
+}
+
+.status-badge.pendingclientapproval {
+  background: #fff3e0;
+  color: #e65100;
+}
+
+.contract-schedule-modal,
+.contract-service-details,
+.contract-package-details,
+.contract-tasks-section,
+.contract-terms-section {
+  margin: 15px 0;
+  padding: 12px;
+  background: #f8f9fa;
+  border-radius: 8px;
+}
+
+.contract-schedule-modal h4,
+.contract-service-details h4,
+.contract-package-details h4,
+.contract-tasks-section h4,
+.contract-terms-section h4 {
+  margin: 0 0 12px 0;
+  font-size: 15px;
+  color: #333;
+}
+
+.contract-tasks-section .task-item {
+  background: white;
+  padding: 12px;
+  border-radius: 6px;
+  margin-bottom: 10px;
+  border-left: 3px solid #1976d2;
+}
+
+.contract-tasks-section .task-item h5 {
+  margin: 0 0 8px 0;
+  color: #333;
+}
+
+.contract-tasks-section .task-item p {
+  margin: 4px 0;
+  font-size: 13px;
+  color: #555;
+}
+
+.terms-content {
+  background: white;
+  padding: 15px;
+  border-radius: 6px;
+  font-size: 13px;
+  line-height: 1.6;
+  white-space: pre-wrap;
+  max-height: 200px;
+  overflow-y: auto;
+}
+
+/* Review Request Form */
+.review-request-form .form-group {
+  margin-bottom: 15px;
+}
+
+.review-request-form label {
+  display: block;
+  font-weight: 500;
+  margin-bottom: 6px;
+  color: #333;
+}
+
+.review-request-form textarea {
+  width: 100%;
+  padding: 12px;
+  border: 1px solid #ddd;
+  border-radius: 6px;
+  font-size: 14px;
+  font-family: inherit;
+  resize: vertical;
+  box-sizing: border-box;
+}
+
+.review-request-form textarea:focus {
+  outline: none;
+  border-color: #1976d2;
+  box-shadow: 0 0 0 2px rgba(25, 118, 210, 0.1);
+}
+
+/* Reject Warning */
+.reject-warning {
+  background: #ffebee;
+  color: #c62828;
+  padding: 12px;
+  border-radius: 6px;
+  margin-bottom: 15px;
+  font-size: 14px;
+  border-left: 3px solid #f44336;
+}
+
+/* Modal Action Buttons */
+.modal-actions .reject-btn {
+  background: #f44336;
+  color: white;
+}
+
+.modal-actions .reject-btn:hover {
+  background: #d32f2f;
+}
+
+/* Responsive adjustments */
+@media (max-width: 600px) {
+  .contract-action-buttons {
+    flex-direction: column;
+  }
+  
+  .contract-action-buttons button {
+    width: 100%;
+  }
+  
+  .schedule-visit {
+    flex-wrap: wrap;
+  }
+  
+  .schedule-day {
+    min-width: 100%;
+    margin-bottom: 4px;
+  }
+}

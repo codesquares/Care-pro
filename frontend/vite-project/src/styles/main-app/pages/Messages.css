@@ -1,0 +1,42 @@
+.messages {
+  width: 100%;
+  margin: 0 auto;
+  display: flex;
+  flex-direction: column;
+}
+@media (min-width: 768px) {
+  .messages {
+    width: 90vw;
+    flex-direction: row;
+  }
+}
+@media (min-width: 1024px) {
+  .messages {
+    width: 80vw;
+  }
+}
+
+.placeholder {
+  background-color: rgb(189, 189, 216);
+  color: white;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  flex: 1;
+  min-height: 300px;
+}
+@media (min-width: 768px) {
+  .placeholder {
+    min-height: auto;
+  }
+}
+.placeholder p {
+  text-align: center;
+  padding: 1rem;
+  font-size: 1rem;
+}
+@media (min-width: 768px) {
+  .placeholder p {
+    font-size: 1.2rem;
+  }
+}

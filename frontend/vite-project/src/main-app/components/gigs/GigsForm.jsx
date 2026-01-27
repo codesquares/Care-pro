@@ -4,9 +4,9 @@ import PageBar from "./PageBar";
 import PricingTable from "./Pricing";
 import GalleryUploads from "./Gallery";
 import GuidelinesCard from "./GuidelinesCard_fixed";
-import "./gigs.scss";
-import "./Pricing.scss";
-import "./galleryUploads.scss";
+import "./gigs.css";
+import "./Pricing.css";
+import "./galleryUploads.css";
 import { useState, useEffect } from "react";
 import PublishGig from "./Publish";
 import config from "../../config"; // Import centralized config for API URLs
@@ -264,8 +264,15 @@ const GigsForm = () => {
         }
 
         // FIXED: Use centralized config instead of hardcoded Azure staging API URL
+        const token = localStorage.getItem('authToken');
         const response = await fetch(
-          `${config.BASE_URL}/Gigs/caregiver/caregiverId?caregiverId=${userDetails.id}`
+          `${config.BASE_URL}/Gigs/caregiver/caregiverId?caregiverId=${userDetails.id}`,
+          {
+            headers: {
+              'Authorization': `Bearer ${token}`,
+              'Content-Type': 'application/json'
+            }
+          }
         );
         
         if (!response.ok) {

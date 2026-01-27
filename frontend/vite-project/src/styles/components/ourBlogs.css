@@ -1,0 +1,152 @@
+.subtitle {
+  font-size: 1.1rem;
+  color: #555;
+  background-color: #f7f7f7;
+  width: 90%;
+  max-width: 800px;
+  margin: 0 auto;
+  padding: 1rem;
+  border-radius: 10px;
+  box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1);
+  text-align: center;
+  margin-bottom: 2rem;
+}
+
+h2 {
+  font-family: PoppinsSemiBold;
+}
+
+.our-blogs {
+  padding: 2rem; /* Add padding to the section */
+  text-align: center;
+  background-color: white;
+}
+
+.blogs-container {
+  display: flex;
+  justify-content: center; /* Center the blog items */
+  flex-wrap: wrap; /* Allow wrapping if necessary */
+  gap: 1rem; /* Space between blog items */
+}
+
+.blog-item {
+  flex: 1 1 25%; /* Allow each blog item to take up to 25% of the width */
+  max-width: 25%; /* Ensure no more than 4 items per row */
+  text-align: left; /* Align text to the left */
+  margin: 0; /* Remove margin to reduce space */
+}
+
+.image-container {
+  position: relative; /* Position relative for absolute positioning of the icon */
+  cursor: pointer; /* Change cursor to pointer on hover */
+}
+
+.blog-image {
+  width: 100%; /* Make image responsive */
+  height: 100%; /* Set a fixed height for the images */
+  object-fit: cover; /* Ensure the image covers the area without distortion */
+  border-radius: 8px; /* Round image corners */
+  margin-bottom: 0.5rem; /* Space between image and text */
+  transition: filter 0.3s ease; /* Smooth transition for greyscale effect */
+}
+
+.overlay {
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  background-color: rgba(0, 0, 0, 0.3); /* Slightly transparent black */
+  opacity: 0; /* Initially hidden */
+  transition: opacity 0.3s ease; /* Smooth transition for overlay */
+}
+
+.image-container:hover .overlay {
+  opacity: 1; /* Show overlay on hover */
+}
+
+.expand-icon {
+  width: 50px; /* Size of the expand icon */
+  height: 50px; /* Size of the expand icon */
+}
+
+h3 {
+  font-size: 1.2rem;
+  margin: 0.5rem 0; /* Space between title and description */
+  color: gray; /* Set title color to gray */
+  font-family: PoppinsSemiBold;
+}
+
+p {
+  font-size: 0.9rem;
+  color: #A9A9A9; /* Gray color for description */
+}
+
+.view-all-container {
+  margin-top: 2rem; /* Space above the button */
+  justify-content: center; /* Center the button */
+}
+
+.view-all-button {
+  padding: 0.75rem 1.5rem; /* Button padding */
+  background-color: white; /* Button background color */
+  color: #A9A9A9; /* Button text color */
+  font-size: 1rem; /* Button font size */
+  border: none; /* Remove border */
+  border: 2px solid grey; /* Add border */
+  border-radius: 5px; /* Round button corners */
+  cursor: pointer; /* Change cursor to pointer on hover */
+  transition: background-color 0.3s ease; /* Smooth transition for background color */
+  width: 15%; /* Set width to 25% */
+}
+
+.view-all-button:hover {
+  background-color: #f0f0f0; /* Light gray shade on hover */
+}
+
+/* Modal styles */
+.modal {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background-color: rgba(0, 0, 0, 0.8); /* Semi-transparent background */
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  z-index: 1000; /* Ensure modal is on top */
+}
+
+.modal-content {
+  background-color: white; /* Modal background color */
+  padding: 2rem; /* Padding inside the modal */
+  border-radius: 8px; /* Round corners */
+  text-align: center; /* Center text in modal */
+  max-width: 600px; /* Max width for modal */
+  width: 90%; /* Responsive width */
+}
+
+.modal-image {
+  width: 100%; /* Make modal image responsive */
+  height: auto; /* Maintain aspect ratio */
+  border-radius: 8px; /* Round image corners */
+  margin-bottom: 1rem; /* Space below image */
+}
+
+.close-button {
+  padding: 0.5rem 1rem; /* Button padding */
+  background-color: #A9A9A9; /* Button background color */
+  color: white; /* Button text color */
+  border: none; /* Remove border */
+  border-radius: 5px; /* Round button corners */
+  cursor: pointer; /* Change cursor to pointer on hover */
+  transition: background-color 0.3s ease; /* Smooth transition for background color */
+}
+
+.close-button:hover {
+  background-color: #888; /* Darker shade on hover */
+}

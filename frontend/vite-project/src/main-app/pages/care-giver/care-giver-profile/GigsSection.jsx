@@ -66,12 +66,14 @@ const GigsSection = () => {
         throw new Error("Caregiver ID not found in local storage.");
       }
 
+      const token = localStorage.getItem('authToken');
       const response = await fetch(
         `${config.BASE_URL}/Gigs/UpdateGigStatusToPause/gigId?gigId=${gig.id}`, // Using centralized API config
         {
           method: 'PUT',
           headers: {
             'Content-Type': 'application/json',
+            'Authorization': `Bearer ${token}`
           },
           body: JSON.stringify({
             status: 'published',
@@ -119,12 +121,14 @@ const GigsSection = () => {
         throw new Error("Caregiver ID not found in local storage.");
       }
 
+      const token = localStorage.getItem('authToken');
       const response = await fetch(
         `${config.BASE_URL}/Gigs/UpdateGigStatusToPause/gigId?gigId=${gig.id}`, // Using centralized API config
         {
           method: 'PUT',
           headers: {
             'Content-Type': 'application/json',
+            'Authorization': `Bearer ${token}`
           },
           body: JSON.stringify({
             status: 'draft',
@@ -176,12 +180,14 @@ const GigsSection = () => {
         throw new Error("Caregiver ID not found in local storage.");
       }
 
+      const token = localStorage.getItem('authToken');
       const response = await fetch(
         `${config.BASE_URL}/Gigs/UpdateGigStatusToPause/gigId?gigId=${gig.id}`, // Using centralized API config
         {
           method: 'PUT',
           headers: {
             'Content-Type': 'application/json',
+            'Authorization': `Bearer ${token}`
           },
           body: JSON.stringify({
             status: '',
@@ -236,8 +242,14 @@ const GigsSection = () => {
         throw new Error("Caregiver ID not found in local storage.");
       }
 
+      const token = localStorage.getItem('authToken');
       const response = await fetch(
-        `${config.BASE_URL}/Gigs/caregiver/caregiverId?caregiverId=${userDetails.id}` // Using centralized API config
+        `${config.BASE_URL}/Gigs/caregiver/caregiverId?caregiverId=${userDetails.id}`, // Using centralized API config
+        {
+          headers: {
+            'Authorization': token ? `Bearer ${token}` : '',
+          },
+        }
       );
       if (!response.ok) {
         throw new Error("Failed to fetch gigs data.");

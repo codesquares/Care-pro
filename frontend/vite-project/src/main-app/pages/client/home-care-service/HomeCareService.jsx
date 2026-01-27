@@ -367,7 +367,7 @@ const HomeCareService = () => {
         }
 
         setService(foundGig);
-        console.log("Enriched service details:", foundGig);
+        // console.log("Enriched service details:", foundGig);
 
       } catch (err) {
         console.error("Error fetching service details:", err);
@@ -450,10 +450,10 @@ const HomeCareService = () => {
   } = service;
 
 
-  console.log("Service details===><===:", service);
-  console.log("caregiverProfileImage value:", caregiverProfileImage);
-  console.log("caregiverProfileImage type:", typeof caregiverProfileImage);
-  console.log("defaultAvatar:", defaultAvatar);
+  // console.log("Service details===><===:", service);
+  // console.log("caregiverProfileImage value:", caregiverProfileImage);
+  // console.log("caregiverProfileImage type:", typeof caregiverProfileImage);
+  // console.log("defaultAvatar:", defaultAvatar);
 
   return (
     <div className="container-service">

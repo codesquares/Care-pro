@@ -23,8 +23,19 @@ class ClientProfileService {
       // API endpoint
       const API_URL = `${config.BASE_URL}/Clients/${clientId}`; // Using centralized API config
       
+      // Get the authentication token
+      const token = localStorage.getItem("authToken");
+      
+      if (!token) {
+        throw new Error("Authentication token not found");
+      }
+      
       // Make API request
-      const response = await fetch(API_URL);
+      const response = await fetch(API_URL, {
+        headers: {
+          'Authorization': `Bearer ${token}`
+        }
+      });
       
       if (!response.ok) {
         throw new Error(`Failed to fetch profile: ${response.status}`);

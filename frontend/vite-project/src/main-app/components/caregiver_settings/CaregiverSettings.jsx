@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import "./CaregiverSettings.scss";
+import "./CaregiverSettings.css";
 import { toast } from "react-toastify";
 import ProfileHeader from "../../pages/care-giver/care-giver-profile/ProfileHeader";
 import config from "../../config";
@@ -23,7 +23,11 @@ const CaregiverSettings = () => {
           return;
         }
 
-        const response = await fetch(`${config.BASE_URL}/CareGivers/${userId}`);
+        const response = await fetch(`${config.BASE_URL}/CareGivers/${userId}`, {
+          headers: {
+            'Authorization': `Bearer ${localStorage.getItem('authToken') || ''}`
+          }
+        });
 
         if (response.ok) {
           const data = await response.json();
@@ -61,6 +65,7 @@ const CaregiverSettings = () => {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
+          "Authorization": `Bearer ${localStorage.getItem('authToken') || ''}`
         },
         body: JSON.stringify({
           email,

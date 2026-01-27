@@ -1,0 +1,337 @@
+.our-plans .container {
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: 0 20px;
+}
+.our-plans .section-header {
+  text-align: center;
+  margin-bottom: 3rem;
+}
+.our-plans .section-header h2 {
+  font-size: 2.5rem;
+  color: #2e4f6b;
+  margin-bottom: 1rem;
+  font-weight: 700;
+}
+.our-plans .section-header p {
+  font-size: 1.1rem;
+  color: #666;
+  max-width: 600px;
+  margin: 0 auto;
+  line-height: 1.6;
+}
+.our-plans .plans-section {
+  padding: 4rem 0;
+  background-color: #f8f9fa;
+}
+.our-plans .plans-section .plans-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+  gap: 2rem;
+  margin-top: 2rem;
+}
+.our-plans .plans-section .plan-card {
+  background: white;
+  border-radius: 12px;
+  padding: 2rem;
+  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+  transition: transform 0.3s ease, box-shadow 0.3s ease;
+  position: relative;
+  border: 2px solid transparent;
+}
+.our-plans .plans-section .plan-card:hover {
+  transform: translateY(-5px);
+  box-shadow: 0 8px 25px rgba(0, 0, 0, 0.15);
+}
+.our-plans .plans-section .plan-card.popular {
+  border-color: #FBB040;
+  transform: translateY(-10px);
+}
+.our-plans .plans-section .plan-card.popular .plan-button {
+  background-color: #FBB040;
+  color: white;
+}
+.our-plans .plans-section .plan-card.popular .plan-button:hover {
+  background-color: rgb(249.9538769231, 155.3390692308, 14.0476230769);
+}
+.our-plans .plans-section .popular-badge {
+  position: absolute;
+  top: -10px;
+  left: 50%;
+  transform: translateX(-50%);
+  background-color: #FBB040;
+  color: white;
+  padding: 5px 20px;
+  border-radius: 20px;
+  font-size: 0.8rem;
+  font-weight: 600;
+}
+.our-plans .plans-section .plan-header {
+  margin-bottom: 1.5rem;
+}
+.our-plans .plans-section .plan-header h3 {
+  font-size: 1.5rem;
+  color: #2e4f6b;
+  margin-bottom: 0.5rem;
+  font-weight: 600;
+}
+.our-plans .plans-section .plan-header .plan-subtitle {
+  color: #666;
+  font-size: 0.9rem;
+}
+.our-plans .plans-section .plan-pricing {
+  margin-bottom: 2rem;
+}
+.our-plans .plans-section .plan-pricing .price-main {
+  font-size: 2.5rem;
+  color: #2e4f6b;
+  font-weight: 700;
+  margin-bottom: 0.5rem;
+}
+.our-plans .plans-section .plan-pricing .price-original {
+  color: #999;
+  text-decoration: line-through;
+  font-size: 1rem;
+  margin-bottom: 0.25rem;
+}
+.our-plans .plans-section .plan-pricing .price-note {
+  color: #666;
+  font-size: 0.9rem;
+  font-style: italic;
+}
+.our-plans .plans-section .plan-features {
+  list-style: none;
+  padding: 0;
+  margin-bottom: 2rem;
+}
+.our-plans .plans-section .plan-features li {
+  display: flex;
+  align-items: flex-start;
+  margin-bottom: 0.75rem;
+  font-size: 0.95rem;
+  line-height: 1.5;
+}
+.our-plans .plans-section .plan-features li .check-icon {
+  color: #28a745;
+  font-weight: bold;
+  margin-right: 0.75rem;
+  margin-top: 2px;
+  flex-shrink: 0;
+}
+.our-plans .plans-section .plan-button {
+  width: 100%;
+  padding: 1rem;
+  border: none;
+  border-radius: 8px;
+  background-color: #2e4f6b;
+  color: white;
+  font-size: 1rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: background-color 0.3s ease;
+}
+.our-plans .plans-section .plan-button:hover {
+  background-color: rgb(30.6682, 52.6693, 71.3369);
+}
+.our-plans .fees-section {
+  padding: 4rem 0;
+}
+.our-plans .fees-section .fees-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+  gap: 2rem;
+}
+.our-plans .fees-section .fee-card {
+  background: white;
+  border: 1px solid #e9ecef;
+  border-radius: 12px;
+  padding: 2rem;
+  text-align: center;
+}
+.our-plans .fees-section .fee-card .fee-header {
+  margin-bottom: 1rem;
+}
+.our-plans .fees-section .fee-card .fee-header h3 {
+  font-size: 1.3rem;
+  color: #2e4f6b;
+  margin-bottom: 0.5rem;
+}
+.our-plans .fees-section .fee-card .fee-header .fee-percentage {
+  font-size: 2rem;
+  color: #FBB040;
+  font-weight: 700;
+}
+.our-plans .fees-section .fee-card .fee-description {
+  color: #666;
+  margin-bottom: 1rem;
+  font-weight: 500;
+}
+.our-plans .fees-section .fee-card .fee-details {
+  color: #888;
+  font-size: 0.9rem;
+  line-height: 1.5;
+}
+.our-plans .fees-section .minimum-service-note {
+  margin-top: 3rem;
+}
+.our-plans .fees-section .minimum-service-note .note-card {
+  background: linear-gradient(135deg, #FBB040, #f8a825);
+  color: white;
+  padding: 2rem;
+  border-radius: 12px;
+  text-align: center;
+}
+.our-plans .fees-section .minimum-service-note .note-card h4 {
+  font-size: 1.5rem;
+  margin-bottom: 1rem;
+}
+.our-plans .fees-section .minimum-service-note .note-card p {
+  font-size: 1.1rem;
+  line-height: 1.6;
+  margin: 0;
+}
+.our-plans .future-plans-section {
+  padding: 4rem 0;
+  background-color: #f8f9fa;
+}
+.our-plans .future-plans-section .future-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+  gap: 2rem;
+}
+.our-plans .future-plans-section .future-card {
+  background: white;
+  padding: 2rem;
+  border-radius: 12px;
+  text-align: center;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+  transition: transform 0.3s ease;
+}
+.our-plans .future-plans-section .future-card:hover {
+  transform: translateY(-3px);
+}
+.our-plans .future-plans-section .future-card .future-icon {
+  font-size: 3rem;
+  margin-bottom: 1rem;
+}
+.our-plans .future-plans-section .future-card h3 {
+  font-size: 1.2rem;
+  color: #2e4f6b;
+  margin-bottom: 1rem;
+}
+.our-plans .future-plans-section .future-card p {
+  color: #666;
+  line-height: 1.6;
+  font-size: 0.95rem;
+}
+.our-plans .cta-section {
+  padding: 4rem 0;
+  background: linear-gradient(135deg, #2e4f6b, #1a3a52);
+  color: white;
+}
+.our-plans .cta-section .cta-content {
+  text-align: center;
+}
+.our-plans .cta-section .cta-content h2 {
+  font-size: 2.5rem;
+  margin-bottom: 1rem;
+}
+.our-plans .cta-section .cta-content p {
+  font-size: 1.2rem;
+  margin-bottom: 2rem;
+  max-width: 600px;
+  margin-left: auto;
+  margin-right: auto;
+}
+.our-plans .cta-section .cta-buttons {
+  display: flex;
+  gap: 1rem;
+  justify-content: center;
+  flex-wrap: wrap;
+}
+.our-plans .cta-section .cta-button {
+  padding: 1rem 2rem;
+  border: none;
+  border-radius: 8px;
+  font-size: 1rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  min-width: 180px;
+}
+.our-plans .cta-section .cta-button.primary {
+  background-color: #FBB040;
+  color: white;
+}
+.our-plans .cta-section .cta-button.primary:hover {
+  background-color: rgb(249.9538769231, 155.3390692308, 14.0476230769);
+  transform: translateY(-2px);
+}
+.our-plans .cta-section .cta-button.secondary {
+  background-color: transparent;
+  color: white;
+  border: 2px solid white;
+}
+.our-plans .cta-section .cta-button.secondary:hover {
+  background-color: white;
+  color: #2e4f6b;
+  transform: translateY(-2px);
+}
+@media (max-width: 768px) {
+  .our-plans .container {
+    padding: 0 15px;
+  }
+  .our-plans .section-header h2 {
+    font-size: 2rem;
+  }
+  .our-plans .section-header p {
+    font-size: 1rem;
+  }
+  .our-plans .plans-grid {
+    grid-template-columns: 1fr;
+    gap: 1.5rem;
+  }
+  .our-plans .plan-card {
+    padding: 1.5rem;
+  }
+  .our-plans .plan-card .plan-pricing .price-main {
+    font-size: 2rem;
+  }
+  .our-plans .fees-grid {
+    grid-template-columns: 1fr;
+  }
+  .our-plans .future-grid {
+    grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+    gap: 1.5rem;
+  }
+  .our-plans .cta-content h2 {
+    font-size: 2rem;
+  }
+  .our-plans .cta-content p {
+    font-size: 1.1rem;
+  }
+  .our-plans .cta-buttons {
+    flex-direction: column;
+    align-items: center;
+  }
+}
+@media (max-width: 480px) {
+  .our-plans .plans-section,
+  .our-plans .fees-section,
+  .our-plans .future-plans-section,
+  .our-plans .cta-section {
+    padding: 2rem 0;
+  }
+  .our-plans .plan-card {
+    padding: 1rem;
+  }
+  .our-plans .section-header {
+    margin-bottom: 2rem;
+  }
+  .our-plans .section-header h2 {
+    font-size: 1.8rem;
+  }
+  .our-plans .cta-content h2 {
+    font-size: 1.8rem;
+  }
+}
