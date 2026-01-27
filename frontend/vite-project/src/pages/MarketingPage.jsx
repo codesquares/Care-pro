@@ -1,6 +1,6 @@
 import { useNavigate } from "react-router-dom";
 import { useState } from "react";
-import "./MarketingPage.scss";
+import "./MarketingPage.css";
 
 // Import assets
 import careproLogo from "../assets/careproLogo.svg";

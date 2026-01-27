@@ -1,4 +1,4 @@
-import '../styles/components/top-banner.scss';
+import '../styles/components/top-banner.css';
 import solarhealth from "../assets/solar_health-broken.svg"
 import star from "../assets/bi_stars.svg"
 

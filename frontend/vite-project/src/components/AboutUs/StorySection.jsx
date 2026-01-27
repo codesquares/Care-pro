@@ -1,5 +1,5 @@
 
-import '../../styles/components/story-section.scss';
+import '../../styles/components/story-section.css';
 import nurseAndWomen from '../../assets/nurseAndWoman.png'
 
 const StorySection = () => {

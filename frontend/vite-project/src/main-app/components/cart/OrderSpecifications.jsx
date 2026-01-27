@@ -7,39 +7,30 @@ import configs from '../../config';
 
 const OrderSpecifications = ({
   service, 
-  selectedFrequency, 
+  selectedFrequency,
+  frequencyPerWeek,
   onFrequencyChange,
   tasks,
   onAddTask,
   onRemoveTask,
   taskValidationError,
   userTasksCount,
-  validateTasks
+  validateTasks,
+  onRatingClick
 }) => {
 
   const userDetails = localStorage.getItem('userDetails');
-  console.log('User details:', userDetails);
   const clientId = userDetails ? JSON.parse(userDetails).id : null;
-  const [frequencyPriceData, setFrequencyPriceData] = useState(null);
+
   useEffect(() => {
     // Fetch or update data based on the selected service
-    //fetch caregiver details or service specifications if needed
   }, []);
   
   if (!service) {
     return <div>Loading...</div>;
   }
-  console.log('Service inside order specifications:', service);
   
-  
-  // Task management is now handled by parent (Cart)
-  const serviceTitle = service? service.title : 'Service Title Not Available';
-
-  // Enhanced frequency change handler - now just passes to parent
-  const handleFrequencyChange = (frequencyId, priceData) => {
-    setFrequencyPriceData(priceData); // Keep local copy for form inputs
-    onFrequencyChange(frequencyId, priceData); // Pass to parent (Cart)
-  };
+  const serviceTitle = service ? service.title : 'Service Title Not Available';
 
   return (
     <div className="order-specifications">
@@ -49,24 +40,14 @@ const OrderSpecifications = ({
         {serviceTitle}
       </div>
 
-      <ServiceProvider service={service} />
+      <ServiceProvider service={service} onRatingClick={onRatingClick} />
 
       <ServiceFrequency
         selectedFrequency={selectedFrequency}
-        onFrequencyChange={handleFrequencyChange}
+        frequencyPerWeek={frequencyPerWeek}
+        onFrequencyChange={onFrequencyChange}
         service={service}
       />
-
-      {/* Frequency Price Data for OrderDetails or other components */}
-      {frequencyPriceData && (
-        <>
-          <input 
-            type="hidden" 
-            name="frequencyPriceData" 
-            value={JSON.stringify(frequencyPriceData)} 
-          />
-        </>
-      )}
 
       {/* Task validation error */}
       {taskValidationError && (

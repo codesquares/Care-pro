@@ -1,0 +1,57 @@
+.quality-healthcare-card {
+  padding: 1.5rem; /* Adjust padding for a more compact card */
+  text-align: left;
+  border-radius: 8px;
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+  flex: 1 1 22%; /* Allow cards to grow and shrink, with a base width of 22% */
+  margin: 1rem; /* Add some margin between cards */
+  transition: transform 0.3s ease;
+}
+
+.quality-healthcare-card__title {
+  font-family: PoppinsSemiBold;
+  font-size: 1.5rem;
+  margin-bottom: 0.5rem; /* Space between title and rating */
+}
+
+.quality-healthcare-card__rating-container {
+  display: flex; /* Use flexbox for alignment */
+  justify-content: space-between; /* Space between rating and caregivers */
+  align-items: center; /* Center items vertically */
+  margin-bottom: 0.5rem; /* Space below the rating container */
+}
+
+.quality-healthcare-card__rating {
+  display: flex; /* Use flexbox for the rating */
+  align-items: center; /* Center items vertically */
+  background-color: #fff8e1; /* Light yellow background for the rating section */
+  border: 1.5px solid #ffc107; /* Yellow border */
+  border-radius: 20px; /* Increased border radius for a more oval shape */
+  color: black; /* Black text color for the rating */
+  padding: 0.3rem 0.5rem; /* Small padding for better appearance */
+}
+
+.quality-healthcare-card__star {
+  width: 1rem; /* Set the width of the star image */
+  height: auto; /* Maintain aspect ratio */
+  margin-right: 0.5rem; /* Space between star and rating */
+}
+
+.quality-healthcare-card__caregivers {
+  color: black; /* Black text color for better contrast */
+}
+
+.quality-healthcare-card__image {
+  width: 100%; /* Make image responsive */
+  height: auto; /* Maintain aspect ratio */
+  border-radius: 8px; /* Round image corners */
+  margin-top: 0.5rem; /* Space between rating and image */
+}
+
+.quality-healthcare-title {
+  text-align: center;
+  font-family: PoppinsSemiBold;
+  font-size: 3rem;
+  margin-bottom: 2rem; /* Space between title and cards */
+  color: black; /* Match the title color with the card background */
+}

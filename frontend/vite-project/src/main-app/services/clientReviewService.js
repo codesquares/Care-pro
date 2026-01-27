@@ -13,11 +13,13 @@ const ClientReviewService = {
   async getCompletedOrders(clientId) {
     try {
       const API_URL = `${config.BASE_URL}/ClientOrders/clientUserId?clientUserId=${clientId}`; // Using centralized API config
+      const token = localStorage.getItem('authToken');
       
       const response = await fetch(API_URL, {
         method: 'GET',
         headers: {
-          'accept': '*/*'
+          'accept': '*/*',
+          'Authorization': `Bearer ${token}`
         }
       });
       
@@ -47,11 +49,13 @@ const ClientReviewService = {
   async getAllOrders(clientId) {
     try {
       const API_URL = `${config.BASE_URL}/ClientOrders/clientUserId?clientUserId=${clientId}`; // Using centralized API config
+      const token = localStorage.getItem('authToken');
       
       const response = await fetch(API_URL, {
         method: 'GET',
         headers: {
-          'accept': '*/*'
+          'accept': '*/*',
+          'Authorization': `Bearer ${token}`
         }
       });
       
@@ -75,11 +79,13 @@ const ClientReviewService = {
   async getReviewsForOrder(gigId) {
     try {
       const API_URL = `${config.BASE_URL}/Reviews?gigId=${gigId}`; // Using centralized API config
+      const token = localStorage.getItem('authToken');
       
       const response = await fetch(API_URL, {
         method: 'GET',
         headers: {
-          'accept': '*/*'
+          'accept': '*/*',
+          'Authorization': `Bearer ${token}`
         }
       });
       

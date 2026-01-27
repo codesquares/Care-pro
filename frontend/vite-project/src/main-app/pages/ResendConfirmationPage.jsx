@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { useNavigate, Link } from "react-router-dom";
-import "../../styles/main-app/pages/ResendConfirmationPage.scss";
+import "../../styles/main-app/pages/ResendConfirmationPage.css";
 import authImage from "../../assets/authImage.png";
 import { toast } from "react-toastify";
 import { resendConfirmationEmail } from "../services/auth";

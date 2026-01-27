@@ -1,5 +1,5 @@
 
-import "./ReusableAuthForm.scss";
+import "./ReusableAuthForm.css";
 
 const ReusableAuthForm = ({
   title,

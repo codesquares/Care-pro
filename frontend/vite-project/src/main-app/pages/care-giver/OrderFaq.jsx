@@ -1,5 +1,5 @@
 import{ useState } from 'react';
-import '../../../styles/components/OrderFaq.scss';
+import '../../../styles/components/OrderFaq.css';
 import NavigationBar from './care-giver-dashboard/NavigationBar';
 import home from '../../../assets/home.png'
 

@@ -1,0 +1,765 @@
+/* Marketing Page Styles */
+/* Mobile-first responsive design */
+
+.marketing-page {
+  font-family: "Poppins", sans-serif;
+  color: #333;
+  background-color: #ffffff;
+  overflow-x: hidden;
+}
+
+.marketing-page .container {
+  max-width: 1400px;
+  width: 90%;
+  margin: 0 auto;
+  padding: 2rem 0;
+}
+
+/* ========== HERO SECTION ========== */
+.marketing-page .hero-section {
+  background: linear-gradient(rgba(128, 128, 128, 0.3), rgba(128, 128, 128, 0.3)),
+    url("https://images.unsplash.com/photo-1576765608535-5f04d1e3f289?ixlib=rb-1.2.1&auto=format&fit=crop&w=1350&q=80");
+  background-size: cover;
+  background-position: center;
+  min-height: 400px;
+  display: flex;
+  align-items: center;
+  justify-content: flex-start;
+  color: #333;
+  padding: 1.5rem;
+}
+
+@media (min-width: 576px) {
+  .marketing-page .hero-section {
+    min-height: 450px;
+    padding: 2rem;
+  }
+}
+
+@media (min-width: 768px) {
+  .marketing-page .hero-section {
+    min-height: 500px;
+    padding: 2rem 3rem;
+  }
+}
+
+@media (min-width: 1024px) {
+  .marketing-page .hero-section {
+    min-height: 600px;
+    padding: 3rem 5%;
+  }
+}
+
+.marketing-page .hero-content {
+  width: 100%;
+  max-width: 100%;
+  text-align: left;
+}
+
+@media (min-width: 768px) {
+  .marketing-page .hero-content {
+    max-width: 600px;
+    margin-left: 5%;
+  }
+}
+
+@media (min-width: 1024px) {
+  .marketing-page .hero-content {
+    margin-left: 10%;
+  }
+}
+
+.marketing-page .hero-content h1 {
+  font-size: 1.75rem;
+  font-weight: 700;
+  line-height: 1.2;
+  margin-bottom: 1rem;
+  color: #ffffff;
+  text-shadow: 0 1px 3px rgba(0, 0, 0, 0.3);
+}
+
+@media (min-width: 576px) {
+  .marketing-page .hero-content h1 {
+    font-size: 2rem;
+  }
+}
+
+@media (min-width: 768px) {
+  .marketing-page .hero-content h1 {
+    font-size: 2.5rem;
+  }
+}
+
+@media (min-width: 1024px) {
+  .marketing-page .hero-content h1 {
+    font-size: 3rem;
+  }
+}
+
+.marketing-page .hero-content h1 .highlight {
+  font-style: italic;
+  font-weight: 500;
+  color: #ffffff;
+}
+
+.marketing-page .hero-content .hero-subtitle {
+  font-size: 0.9rem;
+  opacity: 0.85;
+  margin-bottom: 1.25rem;
+  line-height: 1.5;
+  color: #62646a;
+  display: none;
+}
+
+@media (min-width: 768px) {
+  .marketing-page .hero-content .hero-subtitle {
+    font-size: 1rem;
+    margin-bottom: 1.5rem;
+  }
+}
+
+/* Hero Search Bar */
+.marketing-page .hero-search {
+  display: flex;
+  flex-direction: row;
+  align-items: stretch;
+  background: #ffffff;
+  border-radius: 6px;
+  margin-bottom: 1.25rem;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+  width: 100%;
+  max-width: 550px;
+  overflow: hidden;
+  padding: 0;
+  margin-right: 0;
+}
+
+.marketing-page .hero-search input {
+  flex: 1 1 0%;
+  width: 100%;
+  border: none;
+  padding: 14px 16px;
+  font-size: 14px;
+  outline: none;
+  min-width: 0;
+  background: transparent;
+  margin: 0;
+}
+
+@media (min-width: 576px) {
+  .marketing-page .hero-search input {
+    padding: 16px 20px;
+    font-size: 16px;
+  }
+}
+
+.marketing-page .hero-search input::placeholder {
+  color: #999;
+}
+
+.marketing-page .hero-search button {
+  flex: 0 0 auto;
+  width: auto;
+  background-color: #00a86b;
+  color: #ffffff;
+  border: none;
+  padding: 14px 24px;
+  font-size: 14px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: background-color 0.3s ease;
+  white-space: nowrap;
+  border-radius: 0;
+  margin: 0 !important;
+  margin-right: 0 !important;
+  box-sizing: border-box;
+}
+
+@media (min-width: 576px) {
+  .marketing-page .hero-search button {
+    padding: 16px 28px;
+    font-size: 16px;
+  }
+}
+
+.marketing-page .hero-search button:hover {
+  background-color: #00754b;
+}
+
+/* Popular Tags */
+.marketing-page .hero-popular {
+  display: inline-flex;
+  flex-direction: row;
+  flex-wrap: nowrap;
+  gap: 0.5rem;
+  align-items: center;
+  justify-content: flex-start;
+  font-size: 0.85rem;
+}
+
+.marketing-page .hero-popular > span {
+  font-weight: 700;
+  color: #ffffff;
+  white-space: nowrap;
+}
+
+.marketing-page .hero-popular button {
+  display: inline-block;
+  background: transparent;
+  color: #ffffff;
+  border: 1px solid #ffffff;
+  padding: 0.35rem 0.75rem;
+  border-radius: 25px;
+  font-size: 0.8rem;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  white-space: nowrap;
+  width: auto;
+  min-width: auto;
+  max-width: none;
+  flex: 0 0 auto;
+}
+
+@media (min-width: 576px) {
+  .marketing-page .hero-popular button {
+    padding: 0.4rem 1rem;
+    font-size: 0.85rem;
+  }
+}
+
+.marketing-page .hero-popular button:hover {
+  background: #00a86b;
+  color: #ffffff;
+  border-color: #00a86b;
+}
+
+/* ========== SERVICES SECTION ========== */
+.marketing-page .services-section {
+  padding: 3rem 0;
+  background-color: #f4f7f6;
+}
+
+@media (min-width: 768px) {
+  .marketing-page .services-section {
+    padding: 4rem 0;
+  }
+}
+
+.marketing-page .services-section h2 {
+  font-size: 1.75rem;
+  font-weight: 600;
+  margin-bottom: 2rem;
+  text-align: center;
+}
+
+@media (min-width: 768px) {
+  .marketing-page .services-section h2 {
+    font-size: 2rem;
+    text-align: left;
+  }
+}
+
+.marketing-page .services-grid {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 1.5rem;
+}
+
+@media (min-width: 576px) {
+  .marketing-page .services-grid {
+    grid-template-columns: repeat(2, 1fr);
+  }
+}
+
+@media (min-width: 992px) {
+  .marketing-page .services-grid {
+    grid-template-columns: repeat(3, 1fr);
+  }
+}
+
+.marketing-page .service-card {
+  background: #ffffff;
+  border: 1px solid #e4e5e7;
+  border-radius: 8px;
+  overflow: hidden;
+  cursor: pointer;
+  transition: box-shadow 0.2s ease, transform 0.2s ease;
+}
+
+.marketing-page .service-card:hover {
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+  transform: translateY(-2px);
+}
+
+.marketing-page .service-card .service-icon {
+  height: 120px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 3rem;
+  background: #02445f;
+  color: #ffffff;
+}
+
+@media (min-width: 768px) {
+  .marketing-page .service-card .service-icon {
+    height: 140px;
+    font-size: 3.5rem;
+  }
+}
+
+.marketing-page .service-card .service-body {
+  padding: 1rem;
+}
+
+@media (min-width: 768px) {
+  .marketing-page .service-card .service-body {
+    padding: 1.25rem;
+  }
+}
+
+.marketing-page .service-card .service-body h3 {
+  font-size: 1rem;
+  font-weight: 600;
+  margin: 0 0 0.5rem;
+  color: #333;
+}
+
+.marketing-page .service-card .service-body p {
+  font-size: 0.85rem;
+  color: #62646a;
+  margin: 0 0 0.75rem;
+  line-height: 1.4;
+}
+
+.marketing-page .service-card .service-body .service-price {
+  font-size: 0.9rem;
+  font-weight: 600;
+  color: #02445f;
+}
+
+.marketing-page .browse-all-container {
+  text-align: center;
+  margin-top: 2rem;
+}
+
+.marketing-page .browse-all-container .browse-all-btn {
+  background-color: #02445f;
+  color: #ffffff;
+  border: none;
+  padding: 0.875rem 2rem;
+  font-size: 1rem;
+  font-weight: 600;
+  border-radius: 4px;
+  cursor: pointer;
+  transition: background-color 0.3s ease;
+}
+
+.marketing-page .browse-all-container .browse-all-btn:hover {
+  background-color: #01202d;
+}
+
+/* ========== HOW IT WORKS SECTION ========== */
+.marketing-page .how-it-works-section {
+  padding: 3rem 0;
+  background-color: #ffffff;
+}
+
+@media (min-width: 768px) {
+  .marketing-page .how-it-works-section {
+    padding: 4rem 0;
+  }
+}
+
+.marketing-page .how-it-works-section h2 {
+  font-size: 1.75rem;
+  font-weight: 600;
+  text-align: center;
+  margin-bottom: 2rem;
+}
+
+@media (min-width: 768px) {
+  .marketing-page .how-it-works-section h2 {
+    font-size: 2rem;
+    margin-bottom: 3rem;
+  }
+}
+
+.marketing-page .steps-grid {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 1.5rem;
+}
+
+@media (min-width: 768px) {
+  .marketing-page .steps-grid {
+    grid-template-columns: repeat(3, 1fr);
+    gap: 2rem;
+  }
+}
+
+.marketing-page .step-card {
+  text-align: center;
+  padding: 1.5rem;
+}
+
+.marketing-page .step-card .step-number {
+  width: 50px;
+  height: 50px;
+  background: #00a86b;
+  color: #ffffff;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 1.5rem;
+  font-weight: 700;
+  margin: 0 auto 1rem;
+}
+
+.marketing-page .step-card h3 {
+  font-size: 1.125rem;
+  font-weight: 600;
+  margin-bottom: 0.75rem;
+}
+
+.marketing-page .step-card p {
+  font-size: 0.9rem;
+  color: #62646a;
+  line-height: 1.5;
+}
+
+/* ========== CTA BANNERS SECTION ========== */
+.marketing-page .cta-banners-section {
+  padding: 2rem 0;
+  background-color: #f4f7f6;
+}
+
+@media (min-width: 768px) {
+  .marketing-page .cta-banners-section {
+    padding: 3rem 0;
+  }
+}
+
+.marketing-page .cta-banner {
+  display: flex;
+  flex-direction: column;
+  border-radius: 12px;
+  overflow: hidden;
+  margin-bottom: 1.5rem;
+}
+
+@media (min-width: 768px) {
+  .marketing-page .cta-banner {
+    flex-direction: row;
+    min-height: 280px;
+  }
+}
+
+.marketing-page .cta-banner:last-child {
+  margin-bottom: 0;
+}
+
+.marketing-page .cta-banner.hire-banner {
+  background-color: #373732;
+}
+
+.marketing-page .cta-banner.become-banner {
+  background-color: #02445f;
+}
+
+@media (min-width: 768px) {
+  .marketing-page .cta-banner.become-banner {
+    flex-direction: row-reverse;
+  }
+}
+
+.marketing-page .cta-banner .cta-content {
+  flex: 1;
+  padding: 2rem;
+  color: #ffffff;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+}
+
+@media (min-width: 768px) {
+  .marketing-page .cta-banner .cta-content {
+    padding: 2.5rem;
+  }
+}
+
+.marketing-page .cta-banner .cta-content h3 {
+  font-size: 1.5rem;
+  font-weight: 600;
+  margin-bottom: 1rem;
+}
+
+@media (min-width: 768px) {
+  .marketing-page .cta-banner .cta-content h3 {
+    font-size: 1.75rem;
+  }
+}
+
+.marketing-page .cta-banner .cta-content p {
+  font-size: 0.95rem;
+  line-height: 1.5;
+  opacity: 0.9;
+  margin-bottom: 1.5rem;
+}
+
+.marketing-page .cta-banner .cta-content button {
+  align-self: flex-start;
+  background-color: #f5a623;
+  color: #ffffff;
+  border: none;
+  padding: 0.875rem 1.75rem;
+  font-size: 1rem;
+  font-weight: 600;
+  border-radius: 8px;
+  cursor: pointer;
+  transition: all 0.3s ease;
+}
+
+.marketing-page .cta-banner .cta-content button:hover {
+  background-color: #db8c0a;
+  transform: scale(1.02);
+}
+
+.marketing-page .cta-banner .cta-image {
+  flex: 1;
+  min-height: 200px;
+}
+
+@media (min-width: 768px) {
+  .marketing-page .cta-banner .cta-image {
+    min-height: auto;
+  }
+}
+
+.marketing-page .cta-banner .cta-image img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+/* ========== HEALTHCARE FACTS SECTION ========== */
+.marketing-page .healthcare-facts-section {
+  padding: 3rem 0;
+  background-color: #ffffff;
+}
+
+@media (min-width: 768px) {
+  .marketing-page .healthcare-facts-section {
+    padding: 4rem 0;
+  }
+}
+
+.marketing-page .facts-header {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.75rem;
+  margin-bottom: 2rem;
+}
+
+.marketing-page .facts-header .facts-icon {
+  font-size: 1.5rem;
+}
+
+.marketing-page .facts-header h2 {
+  font-size: 1.5rem;
+  font-weight: 600;
+  margin: 0;
+}
+
+@media (min-width: 768px) {
+  .marketing-page .facts-header h2 {
+    font-size: 1.75rem;
+  }
+}
+
+.marketing-page .facts-grid {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 1rem;
+}
+
+@media (min-width: 576px) {
+  .marketing-page .facts-grid {
+    grid-template-columns: repeat(2, 1fr);
+  }
+}
+
+@media (min-width: 992px) {
+  .marketing-page .facts-grid {
+    grid-template-columns: repeat(4, 1fr);
+  }
+}
+
+.marketing-page .fact-card {
+  padding: 1.25rem;
+  border-radius: 8px;
+}
+
+.marketing-page .fact-card p {
+  font-size: 0.9rem;
+  line-height: 1.5;
+  margin: 0;
+  color: #333;
+}
+
+/* ========== TRUST SECTION ========== */
+.marketing-page .trust-section {
+  padding: 3rem 0;
+  background-color: #f4f7f6;
+}
+
+@media (min-width: 768px) {
+  .marketing-page .trust-section {
+    padding: 4rem 0;
+  }
+}
+
+.marketing-page .trust-section h2 {
+  font-size: 1.75rem;
+  font-weight: 600;
+  text-align: center;
+  margin-bottom: 2rem;
+}
+
+@media (min-width: 768px) {
+  .marketing-page .trust-section h2 {
+    font-size: 2rem;
+    margin-bottom: 3rem;
+  }
+}
+
+.marketing-page .trust-grid {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 1.5rem;
+}
+
+@media (min-width: 576px) {
+  .marketing-page .trust-grid {
+    grid-template-columns: repeat(2, 1fr);
+  }
+}
+
+@media (min-width: 992px) {
+  .marketing-page .trust-grid {
+    grid-template-columns: repeat(4, 1fr);
+  }
+}
+
+.marketing-page .trust-card {
+  background: #ffffff;
+  padding: 1.5rem;
+  border-radius: 8px;
+  text-align: center;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
+}
+
+.marketing-page .trust-card .trust-icon {
+  width: 50px;
+  height: 50px;
+  background: rgba(2, 68, 95, 0.1);
+  color: #02445f;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 1.25rem;
+  margin: 0 auto 1rem;
+}
+
+.marketing-page .trust-card h3 {
+  font-size: 1rem;
+  font-weight: 600;
+  margin-bottom: 0.5rem;
+}
+
+.marketing-page .trust-card p {
+  font-size: 0.85rem;
+  color: #62646a;
+  line-height: 1.4;
+  margin: 0;
+}
+
+/* ========== FINAL CTA SECTION ========== */
+.marketing-page .final-cta-section {
+  padding: 3rem 0;
+  background: linear-gradient(135deg, #02445f, #000e14);
+  color: #ffffff;
+  text-align: center;
+}
+
+@media (min-width: 768px) {
+  .marketing-page .final-cta-section {
+    padding: 4rem 0;
+  }
+}
+
+.marketing-page .final-cta-section h2 {
+  font-size: 1.75rem;
+  font-weight: 600;
+  margin-bottom: 0.75rem;
+}
+
+@media (min-width: 768px) {
+  .marketing-page .final-cta-section h2 {
+    font-size: 2.25rem;
+  }
+}
+
+.marketing-page .final-cta-section p {
+  font-size: 1rem;
+  opacity: 0.9;
+  margin-bottom: 2rem;
+}
+
+.marketing-page .final-cta-buttons {
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+  justify-content: center;
+  align-items: center;
+}
+
+@media (min-width: 576px) {
+  .marketing-page .final-cta-buttons {
+    flex-direction: row;
+  }
+}
+
+.marketing-page .final-cta-buttons button {
+  padding: 0.875rem 2rem;
+  font-size: 1rem;
+  font-weight: 600;
+  border-radius: 4px;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  min-width: 200px;
+}
+
+.marketing-page .final-cta-buttons button.primary-btn {
+  background-color: #00a86b;
+  color: #ffffff;
+  border: none;
+}
+
+.marketing-page .final-cta-buttons button.primary-btn:hover {
+  background-color: #00754b;
+}
+
+.marketing-page .final-cta-buttons button.secondary-btn {
+  background-color: transparent;
+  color: #ffffff;
+  border: 2px solid #ffffff;
+}
+
+.marketing-page .final-cta-buttons button.secondary-btn:hover {
+  background-color: #ffffff;
+  color: #02445f;
+}

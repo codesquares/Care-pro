@@ -1,5 +1,5 @@
 
-import '../styles/components/general-banner.scss';
+import '../styles/components/general-banner.css';
 const GenaralBanner = ({
   title = 'Hire a Caregiver today!',
   description = 'As a Carepro caregiver, you have the opportunity to make an incredible difference the minute you walk through the door, helping your clients live a happier life in their own home.',

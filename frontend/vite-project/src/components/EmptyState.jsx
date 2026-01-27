@@ -1,4 +1,4 @@
-import '../styles/components/emptyState.scss';
+import '../styles/components/emptyState.css';
 
 const EmptyState = ({ logo, title, description, action }) => {
   return (

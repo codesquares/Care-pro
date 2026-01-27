@@ -1,0 +1,303 @@
+/* Unique modal overlay for CreateOrderTasksModal - avoids conflicts with other modal CSS */
+.order-tasks-modal-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: rgba(0, 0, 0, 0.5);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 1000;
+  padding: 20px;
+}
+
+.order-tasks-modal-content {
+  background: white;
+  border-radius: 8px;
+  padding: 24px;
+  width: 90%;
+  max-width: 800px;
+  max-height: 90vh;
+  overflow-y: auto;
+  box-shadow: 0 10px 25px rgba(0, 0, 0, 0.15);
+}
+
+.order-tasks-modal-content .modal-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 20px;
+  border-bottom: 1px solid #eee;
+  padding-bottom: 15px;
+}
+
+.order-tasks-modal-content .modal-header h3 {
+  margin: 0;
+  color: #333;
+  font-size: 20px;
+}
+
+.order-tasks-modal-content .modal-header .close-btn {
+  background: none;
+  border: none;
+  font-size: 24px;
+  cursor: pointer;
+  color: #666;
+  width: 32px;
+  height: 32px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 4px;
+}
+
+.order-tasks-modal-content .modal-header .close-btn:hover {
+  color: #333;
+  background: #f5f5f5;
+}
+
+.order-tasks-modal-content .order-tasks-form .form-section {
+  margin-bottom: 25px;
+}
+
+.order-tasks-modal-content .order-tasks-form .form-section h4 {
+  margin: 0 0 15px 0;
+  color: #333;
+  font-size: 16px;
+  font-weight: 600;
+}
+
+.order-tasks-modal-content .order-tasks-form .form-section .section-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 15px;
+}
+
+.order-tasks-modal-content .order-tasks-form .form-section .section-header .add-btn {
+  background: #00CAB6;
+  color: white;
+  border: none;
+  padding: 8px 16px;
+  border-radius: 4px;
+  cursor: pointer;
+  font-size: 14px;
+  font-weight: 500;
+}
+
+.order-tasks-modal-content .order-tasks-form .form-section .section-header .add-btn:hover {
+  background: #00a89e;
+}
+
+.order-tasks-modal-content .order-tasks-form .form-section .form-row {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 15px;
+  margin-bottom: 15px;
+}
+
+.order-tasks-modal-content .order-tasks-form .form-section .form-group label {
+  display: block;
+  margin-bottom: 5px;
+  font-weight: 500;
+  color: #333;
+  font-size: 14px;
+}
+
+.order-tasks-modal-content .order-tasks-form .form-section .form-group input,
+.order-tasks-modal-content .order-tasks-form .form-section .form-group select,
+.order-tasks-modal-content .order-tasks-form .form-section .form-group textarea {
+  width: 100%;
+  padding: 10px 12px;
+  border: 1px solid #ddd;
+  border-radius: 4px;
+  font-size: 14px;
+  transition: border-color 0.3s ease;
+  box-sizing: border-box;
+}
+
+.order-tasks-modal-content .order-tasks-form .form-section .form-group input:focus,
+.order-tasks-modal-content .order-tasks-form .form-section .form-group select:focus,
+.order-tasks-modal-content .order-tasks-form .form-section .form-group textarea:focus {
+  outline: none;
+  border-color: #00CAB6;
+  box-shadow: 0 0 0 2px rgba(0, 202, 182, 0.1);
+}
+
+.order-tasks-modal-content .order-tasks-form .form-section .form-group textarea {
+  min-height: 80px;
+  resize: vertical;
+  font-family: inherit;
+}
+
+.order-tasks-modal-content .order-tasks-form .form-section .form-group select {
+  cursor: pointer;
+}
+
+.order-tasks-modal-content .order-tasks-form .form-section .care-task-item {
+  border: 1px solid #eee;
+  border-radius: 8px;
+  padding: 20px;
+  margin-bottom: 15px;
+  background: #f9f9f9;
+}
+
+.order-tasks-modal-content .order-tasks-form .form-section .care-task-item .task-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 15px;
+}
+
+.order-tasks-modal-content .order-tasks-form .form-section .care-task-item .task-header h5 {
+  margin: 0;
+  color: #333;
+  font-size: 16px;
+}
+
+.order-tasks-modal-content .order-tasks-form .form-section .care-task-item .task-header .remove-btn {
+  background: #f44336;
+  color: white;
+  border: none;
+  padding: 6px 12px;
+  border-radius: 4px;
+  cursor: pointer;
+  font-size: 12px;
+}
+
+.order-tasks-modal-content .order-tasks-form .form-section .care-task-item .task-header .remove-btn:hover {
+  background: #d32f2f;
+}
+
+.order-tasks-modal-content .order-tasks-form .form-section .time-item,
+.order-tasks-modal-content .order-tasks-form .form-section .contact-item {
+  display: flex;
+  gap: 10px;
+  align-items: center;
+  margin-bottom: 10px;
+}
+
+.order-tasks-modal-content .order-tasks-form .form-section .time-item input,
+.order-tasks-modal-content .order-tasks-form .form-section .contact-item input {
+  flex: 1;
+}
+
+.order-tasks-modal-content .order-tasks-form .form-section .time-item .remove-btn,
+.order-tasks-modal-content .order-tasks-form .form-section .contact-item .remove-btn {
+  background: #f44336;
+  color: white;
+  border: none;
+  padding: 8px 12px;
+  border-radius: 4px;
+  cursor: pointer;
+  font-size: 12px;
+  flex-shrink: 0;
+}
+
+.order-tasks-modal-content .order-tasks-form .form-section .time-item .remove-btn:hover,
+.order-tasks-modal-content .order-tasks-form .form-section .contact-item .remove-btn:hover {
+  background: #d32f2f;
+}
+
+.order-tasks-modal-content .modal-actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 10px;
+  margin-top: 30px;
+  padding-top: 20px;
+  border-top: 1px solid #eee;
+}
+
+.order-tasks-modal-content .modal-actions button {
+  padding: 12px 24px;
+  border: none;
+  border-radius: 6px;
+  cursor: pointer;
+  font-weight: 500;
+  font-size: 14px;
+  transition: all 0.3s ease;
+}
+
+.order-tasks-modal-content .modal-actions button[type=button] {
+  background: #f5f5f5;
+  color: #666;
+}
+
+.order-tasks-modal-content .modal-actions button[type=button]:hover:not(:disabled) {
+  background: #e0e0e0;
+}
+
+.order-tasks-modal-content .modal-actions button[type=button]:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+.order-tasks-modal-content .modal-actions button.submit-btn {
+  background: #00CAB6;
+  color: white;
+}
+
+.order-tasks-modal-content .modal-actions button.submit-btn:hover:not(:disabled) {
+  background: #00a89e;
+  transform: translateY(-1px);
+}
+
+.order-tasks-modal-content .modal-actions button.submit-btn:disabled {
+  background: #ccc;
+  cursor: not-allowed;
+  transform: none;
+}
+
+/* Mobile responsive styles */
+@media (max-width: 768px) {
+  .order-tasks-modal-overlay {
+    padding: 10px;
+  }
+  
+  .order-tasks-modal-content {
+    width: 100%;
+    max-width: 100%;
+    max-height: 95vh;
+    border-radius: 8px 8px 0 0;
+  }
+  
+  .order-tasks-modal-content .modal-header h3 {
+    font-size: 18px;
+  }
+  
+  .order-tasks-modal-content .order-tasks-form .form-section .form-row {
+    grid-template-columns: 1fr;
+  }
+  
+  .order-tasks-modal-content .order-tasks-form .form-section .section-header {
+    flex-direction: column;
+    align-items: stretch;
+    gap: 10px;
+  }
+  
+  .order-tasks-modal-content .order-tasks-form .form-section .section-header .add-btn {
+    align-self: flex-start;
+  }
+  
+  .order-tasks-modal-content .order-tasks-form .form-section .time-item,
+  .order-tasks-modal-content .order-tasks-form .form-section .contact-item {
+    flex-direction: column;
+    gap: 8px;
+  }
+  
+  .order-tasks-modal-content .order-tasks-form .form-section .time-item .remove-btn,
+  .order-tasks-modal-content .order-tasks-form .form-section .contact-item .remove-btn {
+    align-self: flex-start;
+  }
+  
+  .order-tasks-modal-content .modal-actions {
+    flex-direction: column;
+    gap: 8px;
+  }
+  
+  .order-tasks-modal-content .modal-actions button {
+    width: 100%;
+  }
+}

@@ -1,0 +1,121 @@
+.faq {
+  text-align: center;
+  padding: 5rem 60px;
+  background-color: #f9f9f9;
+}
+.faq h2 {
+  font-size: 2rem;
+  color: #2e4f6b;
+  margin-bottom: 40px;
+}
+.faq .faq-list {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: space-between;
+}
+.faq .faq-list .faq-item {
+  background-color: #fff;
+  border-radius: 10px;
+  padding: 20px;
+  width: 45%;
+  margin-bottom: 20px;
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+  cursor: pointer;
+  transition: all 0.3s ease;
+}
+.faq .faq-list .faq-item:hover {
+  transform: translateY(-5px);
+}
+.faq .faq-list .faq-item.active {
+  background-color: white;
+}
+.faq .faq-list .faq-item .faq-question {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  font-size: 1.5rem;
+  color: #2e4f6b;
+  font-weight: 600;
+  margin-bottom: 10px;
+  text-align: left;
+}
+.faq .faq-list .faq-item .faq-icon {
+  font-size: 1.5rem;
+  color: #2e4f6b;
+}
+.faq .faq-list .faq-item .faq-answer {
+  font-size: 1rem;
+  color: #777;
+  text-align: left;
+  display: none;
+}
+.faq .faq-list .faq-item .faq-answer.active {
+  display: block;
+}
+@media (max-width: 1024px) {
+  .faq {
+    padding: 4rem 40px;
+  }
+  .faq h2 {
+    font-size: 1.8rem;
+    margin-bottom: 35px;
+  }
+  .faq .faq-list {
+    gap: 20px;
+  }
+  .faq .faq-list .faq-item {
+    width: 48%;
+    padding: 18px;
+  }
+  .faq .faq-list .faq-item .faq-question {
+    font-size: 1.3rem;
+  }
+}
+@media (max-width: 768px) {
+  .faq {
+    padding: 3rem 25px;
+  }
+  .faq h2 {
+    font-size: 1.6rem;
+    margin-bottom: 30px;
+  }
+  .faq .faq-list {
+    flex-direction: column;
+  }
+  .faq .faq-list .faq-item {
+    width: 100%;
+    margin-bottom: 20px;
+    padding: 20px;
+  }
+  .faq .faq-list .faq-item .faq-question {
+    font-size: 1.2rem;
+  }
+  .faq .faq-list .faq-item .faq-icon {
+    font-size: 1.3rem;
+  }
+  .faq .faq-list .faq-item .faq-answer {
+    font-size: 0.95rem;
+  }
+}
+@media (max-width: 480px) {
+  .faq {
+    padding: 2rem 15px;
+  }
+  .faq h2 {
+    font-size: 1.4rem;
+    margin-bottom: 25px;
+  }
+  .faq .faq-list .faq-item {
+    padding: 15px;
+  }
+  .faq .faq-list .faq-item .faq-question {
+    font-size: 1.1rem;
+  }
+  .faq .faq-list .faq-item .faq-icon {
+    font-size: 1.2rem;
+  }
+  .faq .faq-list .faq-item .faq-answer {
+    font-size: 0.9rem;
+    line-height: 1.5;
+  }
+}

@@ -1,6 +1,6 @@
 
 // import Navbar from "../../../components/Navbar";
-import "./ResolutionCenter.scss";
+import "./ResolutionCenter.css";
 
 const ResolutionCenter = () => {
     return (

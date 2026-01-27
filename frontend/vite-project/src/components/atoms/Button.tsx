@@ -1,7 +1,7 @@
 
 
 
-import '../../styles/components/atom/button.scss';
+import '../../styles/components/atom/button.css';
 
 type ButtonProps = {
   type?: 'button' | 'submit' | 'reset';

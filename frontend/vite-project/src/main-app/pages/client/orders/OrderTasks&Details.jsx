@@ -8,7 +8,7 @@ import ContractService from "../../../services/contractService";
 import OrderTasksService from "../../../services/orderTasksService";
 import CreateOrderTasksModal from "../../../components/modals/CreateOrderTasksModal";
 import config from "../../../config"; // Centralized API configuration
-import "./Order&Tasks.scss";
+import "./Order&Tasks.css";
 import { useNavigate } from "react-router-dom";
 
 const MyOrders = () => {
@@ -25,11 +25,16 @@ const MyOrders = () => {
     const [isReviewSubmitted, setIsReviewSubmitted] = useState(false);
     const [checkingReviewStatus, setCheckingReviewStatus] = useState(false);
     
-    // Contract-related state
+    // Contract-related state (NEW FLOW - Client approves contracts from caregiver)
     const [contract, setContract] = useState(null);
-    const [isGeneratingContract, setIsGeneratingContract] = useState(false);
+    const [contractActionLoading, setContractActionLoading] = useState(false);
     const [contractError, setContractError] = useState(null);
     const [checkingContract, setCheckingContract] = useState(false);
+    
+    // Client contract action state
+    const [reviewRequestComments, setReviewRequestComments] = useState("");
+    const [reviewPreferredScheduleNotes, setReviewPreferredScheduleNotes] = useState("");
+    const [rejectReason, setRejectReason] = useState("");
     
     // OrderTasks-related state
     const [orderTasks, setOrderTasks] = useState(null);
@@ -56,8 +61,14 @@ const MyOrders = () => {
         
         try {
             setCheckingReviewStatus(true);
+            const token = localStorage.getItem('authToken');
             const response = await axios.get(
-                `${config.BASE_URL}/Reviews?gigId=${gigId}` // Using centralized API config
+                `${config.BASE_URL}/Reviews?gigId=${gigId}`, // Using centralized API config
+                {
+                    headers: {
+                        'Authorization': `Bearer ${token}`
+                    }
+                }
             );
             
             if (response.status === 200 && response.data) {
@@ -122,7 +133,7 @@ const MyOrders = () => {
         setOrderTasks(orderTasksData);
         setHasOrderTasks(true);
         setShowCreateOrderTasksModal(false);
-        toast.success("Task requirements created! You can now generate a contract.");
+        toast.success("Task requirements created!");
     };
 
     // Check if order allows task creation
@@ -131,50 +142,90 @@ const MyOrders = () => {
         return order.clientOrderStatus !== 'Completed' && order.clientOrderStatus !== 'Cancelled';
     };
 
-    // Handle contract generation
-    const handleGenerateContract = async () => {
-        if (!orderId) {
-            toast.error("Order ID is missing");
-            return;
-        }
+    // ==========================================
+    // NEW CLIENT CONTRACT ACTIONS
+    // ==========================================
 
-        setIsGeneratingContract(true);
-        setContractError(null);
-
+    // Client approves contract
+    const handleApproveContract = async () => {
+        if (!contract?.id) return;
+        
+        setContractActionLoading(true);
         try {
-            const result = await ContractService.generateContractFromOrder(orderId);
+            const result = await ContractService.clientApproveContract(contract.id);
             
             if (result.success) {
                 setContract(result.data);
-                toast.success("Contract generated and sent to caregiver successfully!");
-                
-                // Optional: Create notification for caregiver if needed
-                if (orders.length > 0 && orders[0].caregiverId) {
-                    try {
-                        await createNotification({
-                            recipientId: orders[0].caregiverId,
-                            senderId: userId,
-                            type: "SystemNotice",
-                            title: "New Contract Generated",
-                            content: `A contract has been generated for order: ${orders[0].gigTitle || 'your service'}`,
-                            relatedEntityId: orderId
-                        });
-                    } catch (notificationError) {
-                        console.error("Failed to send contract notification:", notificationError);
-                        // Don't fail contract generation if notification fails
-                    }
-                }
+                toast.success("Contract approved! Your caregiver has been notified.");
+                setIsModalOpen(false);
             } else {
-                setContractError(result.error);
-                toast.error(result.error || "Failed to generate contract");
+                toast.error(result.error || "Failed to approve contract");
             }
         } catch (error) {
-            const errorMessage = "Failed to generate contract. Please try again.";
-            setContractError(errorMessage);
-            toast.error(errorMessage);
-            console.error("Contract generation error:", error);
+            console.error("Error approving contract:", error);
+            toast.error("Failed to approve contract. Please try again.");
         } finally {
-            setIsGeneratingContract(false);
+            setContractActionLoading(false);
+        }
+    };
+
+    // Client requests review/changes (Round 1 only)
+    const handleRequestReview = async () => {
+        if (!contract?.id) return;
+        if (!reviewRequestComments.trim()) {
+            toast.error("Please provide comments about the changes you'd like");
+            return;
+        }
+        
+        setContractActionLoading(true);
+        try {
+            const result = await ContractService.clientRequestReview(contract.id, {
+                comments: reviewRequestComments,
+                preferredScheduleNotes: reviewPreferredScheduleNotes
+            });
+            
+            if (result.success) {
+                setContract(result.data);
+                toast.success("Your feedback has been sent to the caregiver for revision.");
+                setIsModalOpen(false);
+                setReviewRequestComments("");
+                setReviewPreferredScheduleNotes("");
+            } else {
+                toast.error(result.error || "Failed to request review");
+            }
+        } catch (error) {
+            console.error("Error requesting review:", error);
+            toast.error("Failed to request review. Please try again.");
+        } finally {
+            setContractActionLoading(false);
+        }
+    };
+
+    // Client rejects contract (Round 2+ only)
+    const handleRejectContract = async () => {
+        if (!contract?.id) return;
+        if (!rejectReason.trim()) {
+            toast.error("Please provide a reason for rejection");
+            return;
+        }
+        
+        setContractActionLoading(true);
+        try {
+            const result = await ContractService.clientRejectContract(contract.id, rejectReason);
+            
+            if (result.success) {
+                setContract(result.data);
+                toast.success("Contract rejected. You may request a different caregiver.");
+                setIsModalOpen(false);
+                setRejectReason("");
+            } else {
+                toast.error(result.error || "Failed to reject contract");
+            }
+        } catch (error) {
+            console.error("Error rejecting contract:", error);
+            toast.error("Failed to reject contract. Please try again.");
+        } finally {
+            setContractActionLoading(false);
         }
     };
 
@@ -187,8 +238,14 @@ const MyOrders = () => {
             }
 
             try {
+                const token = localStorage.getItem('authToken');
                 const response = await axios.get(
-                    `${config.BASE_URL}/ClientOrders/orderId?orderId=${orderId}` // Using centralized API config
+                    `${config.BASE_URL}/ClientOrders/orderId?orderId=${orderId}`, // Using centralized API config
+                    {
+                        headers: {
+                            'Authorization': `Bearer ${token}`
+                        }
+                    }
                 );
                 const orderData = response.data;
                 setOrders([orderData]); // API returns a single order, so wrap it in an array
@@ -246,14 +303,24 @@ const MyOrders = () => {
                   };
 
         try {
-            await axios.put(endpoint, payload);
+            const token = localStorage.getItem('authToken');
+            await axios.put(endpoint, payload, {
+                headers: {
+                    'Authorization': `Bearer ${token}`
+                }
+            });
             // Show success toast
             toast.success(`Order has been marked as ${modalType === "complete" ? "Completed" : "Disputed"}!`);
             setIsModalOpen(false);
             
             // Refresh the order data to reflect the new status
             const response = await axios.get(
-                `${config.BASE_URL}/ClientOrders/orderId?orderId=${orderId}` // Using centralized API config
+                `${config.BASE_URL}/ClientOrders/orderId?orderId=${orderId}`, // Using centralized API config
+                {
+                    headers: {
+                        'Authorization': `Bearer ${token}`
+                    }
+                }
             );
             setOrders([response.data]);
         } catch (err) {
@@ -290,13 +357,15 @@ const MyOrders = () => {
 
         try {
             // Submit the review
+            const token = localStorage.getItem('authToken');
             await axios.post(
                 `${config.BASE_URL}/Reviews`, // Using centralized API config
                 reviewPayload,
                 {
                     headers: {
                         'accept': '*/*',
-                        'Content-Type': 'application/json'
+                        'Content-Type': 'application/json',
+                        'Authorization': `Bearer ${token}`
                     }
                 }
             );
@@ -408,78 +477,175 @@ const MyOrders = () => {
                                         <p>Order number: #{orders[0].id}</p>
                                     </div>
                                     
-                                    {/* Contract and OrderTasks Section */}
+                                    {/* Contract Section - NEW CLIENT APPROVAL FLOW */}
                                     <div className="contract-section">
                                         {checkingContract || checkingOrderTasks ? (
                                             <div className="contract-checking">
-                                                <p>Checking contract and task status...</p>
+                                                <p>Checking contract status...</p>
                                             </div>
                                         ) : contract ? (
                                             <div className="contract-exists">
-                                                <h4>✅ Contract Generated</h4>
+                                                <h4>📋 Contract from Caregiver</h4>
                                                 <div className="contract-details">
-                                                    <p><strong>Contract ID:</strong> {contract.id}</p>
-                                                    <p><strong>Status:</strong> {contract.status}</p>
+                                                    <p><strong>Status:</strong> <span className={`contract-status-badge ${contract.status?.toLowerCase().replace(/\s+/g, '-')}`}>
+                                                        {ContractService.getStatusDisplayInfo(contract.status).label}
+                                                    </span></p>
+                                                    <p><strong>Negotiation Round:</strong> {contract.negotiationRound || 1}</p>
                                                     <p><strong>Total Amount:</strong> ₦{contract.totalAmount?.toLocaleString() || 'N/A'}</p>
-                                                    {contract.sentAt && (
-                                                        <p><strong>Sent to caregiver:</strong> {new Date(contract.sentAt).toLocaleString()}</p>
+                                                    {contract.submittedAt && (
+                                                        <p><strong>Submitted:</strong> {new Date(contract.submittedAt).toLocaleString()}</p>
                                                     )}
+                                                    
+                                                    {/* Schedule Display */}
+                                                    {contract.schedule && contract.schedule.length > 0 && (
+                                                        <div className="contract-schedule-section">
+                                                            <p><strong>Proposed Schedule:</strong></p>
+                                                            <div className="schedule-display">
+                                                                {contract.schedule.map((visit, idx) => (
+                                                                    <div key={idx} className="schedule-visit">
+                                                                        <span className="schedule-day">{visit.dayOfWeek}</span>
+                                                                        <span className="schedule-time">
+                                                                            {ContractService.formatTimeForDisplay(visit.startTime)} - {ContractService.formatTimeForDisplay(visit.endTime)}
+                                                                        </span>
+                                                                        <span className="schedule-duration">
+                                                                            {ContractService.calculateVisitDuration(visit.startTime, visit.endTime)}hrs
+                                                                        </span>
+                                                                    </div>
+                                                                ))}
+                                                            </div>
+                                                        </div>
+                                                    )}
+
+                                                    {/* Service Details */}
+                                                    {contract.serviceAddress && (
+                                                        <p><strong>Service Address:</strong> {contract.serviceAddress}</p>
+                                                    )}
+                                                    {contract.specialClientRequirements && (
+                                                        <p><strong>Special Requirements:</strong> {contract.specialClientRequirements}</p>
+                                                    )}
+                                                    
                                                     {contract.contractStartDate && contract.contractEndDate && (
                                                         <p><strong>Duration:</strong> {new Date(contract.contractStartDate).toLocaleDateString()} - {new Date(contract.contractEndDate).toLocaleDateString()}</p>
                                                     )}
                                                 </div>
+                                                
+                                                {/* Contract Action Buttons - Based on Status */}
+                                                {(() => {
+                                                    const actions = ContractService.getClientContractActions(contract);
+                                                    const status = contract.status?.toLowerCase().replace(/\s+/g, '');
+                                                    
+                                                    if (status === 'approved') {
+                                                        return (
+                                                            <div className="contract-approved-message">
+                                                                <p>✅ You have approved this contract</p>
+                                                                {contract.clientApprovedAt && (
+                                                                    <p className="approved-date">Approved on: {new Date(contract.clientApprovedAt).toLocaleString()}</p>
+                                                                )}
+                                                                <button 
+                                                                    className="view-contract-btn"
+                                                                    onClick={() => openModal("viewContract")}
+                                                                >
+                                                                    View Full Contract
+                                                                </button>
+                                                            </div>
+                                                        );
+                                                    } else if (status === 'clientrejected') {
+                                                        return (
+                                                            <div className="contract-rejected-message">
+                                                                <p>❌ You have rejected this contract</p>
+                                                                <button 
+                                                                    className="view-contract-btn"
+                                                                    onClick={() => openModal("viewContract")}
+                                                                >
+                                                                    View Contract Details
+                                                                </button>
+                                                            </div>
+                                                        );
+                                                    } else if (status === 'clientreviewrequested') {
+                                                        return (
+                                                            <div className="contract-review-pending">
+                                                                <p>🔄 Waiting for caregiver to revise the contract</p>
+                                                                {contract.clientReviewComments && (
+                                                                    <p className="your-feedback">Your feedback: "{contract.clientReviewComments}"</p>
+                                                                )}
+                                                                <button 
+                                                                    className="view-contract-btn"
+                                                                    onClick={() => openModal("viewContract")}
+                                                                >
+                                                                    View Contract
+                                                                </button>
+                                                            </div>
+                                                        );
+                                                    } else if (actions.canApprove) {
+                                                        // Contract is pending approval (PendingClientApproval or Revised)
+                                                        const isRevised = status === 'revised';
+                                                        return (
+                                                            <div className="contract-action-required">
+                                                                <p className="action-prompt">
+                                                                    {isRevised 
+                                                                        ? "⚠️ Caregiver has revised the contract. Please review and respond."
+                                                                        : "⏳ Please review and approve this contract"}
+                                                                </p>
+                                                                <div className="contract-action-buttons">
+                                                                    <button 
+                                                                        className="view-contract-btn"
+                                                                        onClick={() => openModal("viewContract")}
+                                                                    >
+                                                                        View Full Contract
+                                                                    </button>
+                                                                    <button 
+                                                                        className="approve-contract-btn"
+                                                                        onClick={handleApproveContract}
+                                                                        disabled={contractActionLoading}
+                                                                    >
+                                                                        {contractActionLoading ? 'Processing...' : '✓ Approve Contract'}
+                                                                    </button>
+                                                                    {actions.canRequestReview && (
+                                                                        <button 
+                                                                            className="request-changes-btn"
+                                                                            onClick={() => openModal("requestReview")}
+                                                                        >
+                                                                            Request Changes
+                                                                        </button>
+                                                                    )}
+                                                                    {actions.canReject && (
+                                                                        <button 
+                                                                            className="reject-contract-btn"
+                                                                            onClick={() => openModal("rejectContract")}
+                                                                        >
+                                                                            Reject Contract
+                                                                        </button>
+                                                                    )}
+                                                                </div>
+                                                                {actions.canRequestReview && (
+                                                                    <p className="round-hint">Round 1: You can request changes to the schedule</p>
+                                                                )}
+                                                                {actions.canReject && (
+                                                                    <p className="round-hint">Round 2: Approve or reject (request new caregiver)</p>
+                                                                )}
+                                                            </div>
+                                                        );
+                                                    } else {
+                                                        return (
+                                                            <div className="contract-status-message">
+                                                                <button 
+                                                                    className="view-contract-btn"
+                                                                    onClick={() => openModal("viewContract")}
+                                                                >
+                                                                    View Contract Details
+                                                                </button>
+                                                            </div>
+                                                        );
+                                                    }
+                                                })()}
                                             </div>
-                                        ) : hasOrderTasks ? (
-                                            ContractService.canGenerateContract(orders[0], contract, hasOrderTasks) ? (
-                                                <div className="contract-generation">
-                                                    <h4>Contract</h4>
-                                                    <div className="order-tasks-status">
-                                                        <p>✅ Task requirements created ({orderTasks?.careTasks?.length || 0} tasks)</p>
-                                                    </div>
-                                                    <p>Generate a formal contract for this order that will be sent to your caregiver.</p>
-                                                    {contractError && (
-                                                        <div className="contract-error">
-                                                            <p>❌ {contractError}</p>
-                                                        </div>
-                                                    )}
-                                                    <button 
-                                                        className={`generate-contract-btn ${isGeneratingContract ? 'loading' : ''}`}
-                                                        onClick={handleGenerateContract}
-                                                        disabled={isGeneratingContract}
-                                                    >
-                                                        {isGeneratingContract ? 'Generating Contract...' : 'Generate Contract'}
-                                                    </button>
-                                                </div>
-                                            ) : (
-                                                <div className="contract-unavailable">
-                                                    <h4>Contract</h4>
-                                                    <div className="order-tasks-status">
-                                                        <p>✅ Task requirements created</p>
-                                                    </div>
-                                                    {!orders[0].transactionId && !orders[0].paymentTransactionId ? (
-                                                        <p>Contract generation requires payment completion.</p>
-                                                    ) : orders[0].clientOrderStatus === 'Cancelled' ? (
-                                                        <p>Contract cannot be generated for cancelled orders.</p>
-                                                    ) : (
-                                                        <p>Contract generation not available for this order.</p>
-                                                    )}
-                                                </div>
-                                            )
                                         ) : (
-                                            <div className="order-tasks-required">
-                                                <h4>Contract Generation Unavailable</h4>
-                                                <div className="alert alert-info">
-                                                    <p>📋 To generate a contract for this order, you must first create detailed task requirements.</p>
-                                                </div>
-                                                {canCreateTasks(orders[0]) ? (
-                                                    <button 
-                                                        className="create-tasks-btn"
-                                                        onClick={() => setShowCreateOrderTasksModal(true)}
-                                                    >
-                                                        Create Task Requirements
-                                                    </button>
-                                                ) : (
-                                                    <p className="tasks-unavailable">Task creation is not available for {orders[0].clientOrderStatus.toLowerCase()} orders.</p>
+                                            <div className="contract-not-available">
+                                                <h4>Contract</h4>
+                                                <p>📝 No contract generated yet.</p>
+                                                <p className="contract-info">Your caregiver will generate a contract after you discuss and agree on a schedule together.</p>
+                                                {hasOrderTasks && (
+                                                    <p className="tasks-ready">✅ Task requirements are ready</p>
                                                 )}
                                             </div>
                                         )}
@@ -541,7 +707,7 @@ const MyOrders = () => {
 
             {isModalOpen && (
                 <div className="modal-overlay">
-                    <div className="modal-content">
+                    <div className={`modal-content ${modalType === 'viewContract' ? 'contract-modal-large' : ''}`}>
                         {modalType === "review" ? (
                             <>
                                 <h3>Submit Review</h3>
@@ -579,6 +745,156 @@ const MyOrders = () => {
                                 </div>
                                 <div className="modal-actions">
                                     <button onClick={handleSubmitReview}>Submit Review</button>
+                                    <button onClick={() => setIsModalOpen(false)}>Cancel</button>
+                                </div>
+                            </>
+                        ) : modalType === "viewContract" && contract ? (
+                            <>
+                                <h3>📋 Contract Details</h3>
+                                <div className="contract-details-modal">
+                                    <div className="contract-header-info">
+                                        <p><strong>Contract ID:</strong> {contract.id}</p>
+                                        <p><strong>Status:</strong> <span className={`status-badge ${contract.status?.toLowerCase().replace(/\s+/g, '-')}`}>
+                                            {ContractService.getStatusDisplayInfo(contract.status).label}
+                                        </span></p>
+                                        <p><strong>Negotiation Round:</strong> {contract.negotiationRound || 1}</p>
+                                    </div>
+                                    
+                                    {/* Schedule Section */}
+                                    {contract.schedule && contract.schedule.length > 0 && (
+                                        <div className="contract-schedule-modal">
+                                            <h4>📅 Service Schedule</h4>
+                                            <div className="schedule-display">
+                                                {contract.schedule.map((visit, idx) => (
+                                                    <div key={idx} className="schedule-visit">
+                                                        <span className="schedule-day">{visit.dayOfWeek}</span>
+                                                        <span className="schedule-time">
+                                                            {ContractService.formatTimeForDisplay(visit.startTime)} - {ContractService.formatTimeForDisplay(visit.endTime)}
+                                                        </span>
+                                                        <span className="schedule-duration">
+                                                            {ContractService.calculateVisitDuration(visit.startTime, visit.endTime)}hrs
+                                                        </span>
+                                                    </div>
+                                                ))}
+                                            </div>
+                                        </div>
+                                    )}
+
+                                    {/* Service Details */}
+                                    <div className="contract-service-details">
+                                        <h4>📍 Service Details</h4>
+                                        <p><strong>Total Amount:</strong> ₦{contract.totalAmount?.toLocaleString()}</p>
+                                        {contract.serviceAddress && (
+                                            <p><strong>Service Address:</strong> {contract.serviceAddress}</p>
+                                        )}
+                                        {contract.specialClientRequirements && (
+                                            <p><strong>Special Requirements:</strong> {contract.specialClientRequirements}</p>
+                                        )}
+                                        {contract.accessInstructions && (
+                                            <p><strong>Access Instructions:</strong> {contract.accessInstructions}</p>
+                                        )}
+                                        {contract.caregiverAdditionalNotes && (
+                                            <p><strong>Caregiver Notes:</strong> {contract.caregiverAdditionalNotes}</p>
+                                        )}
+                                        {contract.contractStartDate && contract.contractEndDate && (
+                                            <p><strong>Contract Period:</strong> {new Date(contract.contractStartDate).toLocaleDateString()} - {new Date(contract.contractEndDate).toLocaleDateString()}</p>
+                                        )}
+                                    </div>
+
+                                    {/* Package Details */}
+                                    {contract.selectedPackage && (
+                                        <div className="contract-package-details">
+                                            <h4>📦 Package Information</h4>
+                                            <p><strong>Type:</strong> {contract.selectedPackage.packageType}</p>
+                                            <p><strong>Visits per Week:</strong> {contract.selectedPackage.visitsPerWeek}</p>
+                                            <p><strong>Price per Visit:</strong> ₦{contract.selectedPackage.pricePerVisit?.toLocaleString()}</p>
+                                            <p><strong>Duration:</strong> {contract.selectedPackage.durationWeeks} weeks</p>
+                                        </div>
+                                    )}
+
+                                    {/* Tasks */}
+                                    {contract.tasks && contract.tasks.length > 0 && (
+                                        <div className="contract-tasks-section">
+                                            <h4>📝 Tasks & Requirements</h4>
+                                            {contract.tasks.map((task, index) => (
+                                                <div key={index} className="task-item">
+                                                    <h5>{task.title}</h5>
+                                                    <p>{task.description}</p>
+                                                    <p><strong>Category:</strong> {task.category} | <strong>Priority:</strong> {task.priority}</p>
+                                                </div>
+                                            ))}
+                                        </div>
+                                    )}
+
+                                    {/* Terms */}
+                                    {contract.generatedTerms && (
+                                        <div className="contract-terms-section">
+                                            <h4>📜 Contract Terms</h4>
+                                            <div className="terms-content">
+                                                {contract.generatedTerms}
+                                            </div>
+                                        </div>
+                                    )}
+                                </div>
+                                <div className="modal-actions">
+                                    <button onClick={() => setIsModalOpen(false)}>Close</button>
+                                </div>
+                            </>
+                        ) : modalType === "requestReview" ? (
+                            <>
+                                <h3>Request Schedule Changes</h3>
+                                <p>Let your caregiver know what changes you'd like to the proposed schedule:</p>
+                                <div className="review-request-form">
+                                    <div className="form-group">
+                                        <label>What changes would you like?</label>
+                                        <textarea
+                                            placeholder="E.g., I prefer morning visits instead of afternoon..."
+                                            value={reviewRequestComments}
+                                            onChange={(e) => setReviewRequestComments(e.target.value)}
+                                            rows="4"
+                                        />
+                                    </div>
+                                    <div className="form-group">
+                                        <label>Preferred Schedule Notes (optional)</label>
+                                        <textarea
+                                            placeholder="E.g., Monday and Wednesday mornings work best..."
+                                            value={reviewPreferredScheduleNotes}
+                                            onChange={(e) => setReviewPreferredScheduleNotes(e.target.value)}
+                                            rows="2"
+                                        />
+                                    </div>
+                                </div>
+                                <div className="modal-actions">
+                                    <button 
+                                        onClick={handleRequestReview}
+                                        disabled={contractActionLoading || !reviewRequestComments.trim()}
+                                    >
+                                        {contractActionLoading ? 'Sending...' : 'Send Feedback to Caregiver'}
+                                    </button>
+                                    <button onClick={() => setIsModalOpen(false)}>Cancel</button>
+                                </div>
+                            </>
+                        ) : modalType === "rejectContract" ? (
+                            <>
+                                <h3>Reject Contract</h3>
+                                <p className="reject-warning">⚠️ By rejecting this contract, you are indicating that you and the caregiver cannot reach an agreement. You may need to request a different caregiver.</p>
+                                <div className="form-group">
+                                    <label>Reason for rejection:</label>
+                                    <textarea
+                                        placeholder="Please explain why you're rejecting this contract..."
+                                        value={rejectReason}
+                                        onChange={(e) => setRejectReason(e.target.value)}
+                                        rows="4"
+                                    />
+                                </div>
+                                <div className="modal-actions">
+                                    <button 
+                                        className="reject-btn"
+                                        onClick={handleRejectContract}
+                                        disabled={contractActionLoading || !rejectReason.trim()}
+                                    >
+                                        {contractActionLoading ? 'Rejecting...' : 'Confirm Rejection'}
+                                    </button>
                                     <button onClick={() => setIsModalOpen(false)}>Cancel</button>
                                 </div>
                             </>

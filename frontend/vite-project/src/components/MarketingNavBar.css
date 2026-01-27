@@ -1,0 +1,189 @@
+/* Marketing Navbar Styles */
+/* Mobile-first responsive design */
+
+.marketing-navbar {
+  position: sticky;
+  top: 0;
+  z-index: 1000;
+  background-color: #ffffff;
+  box-shadow: 0 1px 0 rgba(0, 0, 0, 0.05);
+  transition: box-shadow 0.3s ease;
+}
+
+.marketing-navbar.scrolled {
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+}
+
+.marketing-navbar .navbar-container {
+  max-width: 1400px;
+  width: 90%;
+  margin: 0 auto;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 0.75rem 0;
+}
+
+@media (min-width: 768px) {
+  .marketing-navbar .navbar-container {
+    padding: 1rem 0;
+  }
+}
+
+/* Logo */
+.marketing-navbar .navbar-logo {
+  display: flex;
+  align-items: center;
+  text-decoration: none;
+}
+
+.marketing-navbar .navbar-logo img {
+  height: 35px;
+  width: auto;
+}
+
+@media (min-width: 768px) {
+  .marketing-navbar .navbar-logo img {
+    height: 40px;
+  }
+}
+
+/* Mobile Menu Toggle */
+.marketing-navbar .mobile-menu-toggle {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: none;
+  border: none;
+  font-size: 1.5rem;
+  cursor: pointer;
+  color: #62646a;
+  padding: 0.5rem;
+  transition: color 0.2s ease;
+}
+
+@media (min-width: 1024px) {
+  .marketing-navbar .mobile-menu-toggle {
+    display: none;
+  }
+}
+
+.marketing-navbar .mobile-menu-toggle:hover {
+  color: #02445f;
+}
+
+/* Navigation Links */
+.marketing-navbar .navbar-links {
+  display: none;
+  flex-direction: column;
+  position: absolute;
+  top: 100%;
+  left: 0;
+  right: 0;
+  background-color: #ffffff;
+  padding: 1rem;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+  border-top: 1px solid #eee;
+}
+
+.marketing-navbar .navbar-links.active {
+  display: flex;
+}
+
+@media (min-width: 1024px) {
+  .marketing-navbar .navbar-links {
+    display: flex;
+    flex-direction: row;
+    position: static;
+    background-color: transparent;
+    padding: 0;
+    box-shadow: none;
+    border-top: none;
+    gap: 1.5rem;
+    align-items: center;
+  }
+}
+
+.marketing-navbar .navbar-links a {
+  text-decoration: none;
+  color: #62646a;
+  font-weight: 500;
+  font-size: 0.95rem;
+  padding: 0.75rem 0;
+  border-bottom: 1px solid #eee;
+  transition: color 0.2s ease;
+}
+
+@media (min-width: 1024px) {
+  .marketing-navbar .navbar-links a {
+    padding: 0;
+    border-bottom: none;
+  }
+}
+
+.marketing-navbar .navbar-links a:hover {
+  color: #02445f;
+}
+
+.marketing-navbar .navbar-links a:last-child {
+  border-bottom: none;
+}
+
+/* Join Button (special styling) */
+.marketing-navbar .navbar-links .nav-join-btn {
+  display: inline-block;
+  border: 1px solid #02445f;
+  color: #02445f;
+  padding: 0.5rem 1.25rem;
+  border-radius: 4px;
+  text-align: center;
+  margin-top: 0.5rem;
+  transition: all 0.2s ease;
+}
+
+@media (min-width: 1024px) {
+  .marketing-navbar .navbar-links .nav-join-btn {
+    margin-top: 0;
+  }
+}
+
+.marketing-navbar .navbar-links .nav-join-btn:hover {
+  background-color: #02445f;
+  color: #ffffff;
+}
+
+/* Logout Button */
+.marketing-navbar .navbar-links .nav-logout-btn {
+  background: none;
+  border: 1px solid #dc3545;
+  color: #dc3545;
+  font-weight: 500;
+  font-size: 0.95rem;
+  padding: 0.5rem 1.25rem;
+  border-radius: 4px;
+  cursor: pointer;
+  margin-top: 0.5rem;
+  transition: all 0.2s ease;
+}
+
+@media (min-width: 1024px) {
+  .marketing-navbar .navbar-links .nav-logout-btn {
+    margin-top: 0;
+  }
+}
+
+.marketing-navbar .navbar-links .nav-logout-btn:hover {
+  background-color: #dc3545;
+  color: #ffffff;
+}
+
+/* Prevent body scroll when mobile menu is open */
+body.menu-open {
+  overflow: hidden;
+}
+
+@media (min-width: 1024px) {
+  body.menu-open {
+    overflow: auto;
+  }
+}

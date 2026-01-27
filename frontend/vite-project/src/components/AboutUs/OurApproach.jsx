@@ -1,6 +1,6 @@
 
 import story4 from '../../assets/story4.png';
-import './OurApproach.scss';
+import './OurApproach.css';
 
 
 const OurApproach = () => { 

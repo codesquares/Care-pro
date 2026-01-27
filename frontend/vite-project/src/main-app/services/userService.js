@@ -35,7 +35,11 @@ export const userService = {
       }
 
       console.log("Fetching profile for user ID:", userDetails.id);
-      const response = await fetch(`${config.BASE_URL}/CareGivers/${userDetails.id}`); // Using centralized API config
+      const response = await fetch(`${config.BASE_URL}/CareGivers/${userDetails.id}`, {
+        headers: {
+          'Authorization': `Bearer ${localStorage.getItem('authToken') || ''}`
+        }
+      }); // Using centralized API config
       
       if (!response.ok) {
         console.error("API response not ok:", response.status, response.statusText);
@@ -131,6 +135,7 @@ export const userService = {
         method: 'PUT',
         headers: {
           'Content-Type': 'application/json',
+          'Authorization': `Bearer ${localStorage.getItem('authToken') || ''}`
         },
         body: JSON.stringify({ location }),
       });

@@ -1,0 +1,125 @@
+.resolution-center-container {
+  font-family: Arial, sans-serif;
+  padding: 20px;
+  background-color: #f5f5f5;
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+.resolution-center-container .back-arrow {
+  align-self: flex-start;
+  font-size: 24px;
+  cursor: pointer;
+  color: #333;
+}
+.resolution-center-container .back-arrow:hover {
+  color: #000;
+}
+.resolution-center-container .faq-section {
+  background-color: #fff;
+  border-radius: 8px;
+  padding: 30px;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+  text-align: center;
+  max-width: 600px;
+  width: 100%;
+  margin: 20px 0;
+}
+.resolution-center-container .faq-section h1 {
+  font-size: 24px;
+  font-weight: bold;
+  color: #333;
+  margin-bottom: 10px;
+}
+.resolution-center-container .faq-section .faq-description {
+  font-size: 14px;
+  color: #666;
+  margin-bottom: 20px;
+}
+.resolution-center-container .faq-section .chat-support {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 15px;
+}
+.resolution-center-container .faq-section .chat-support .chat-icon {
+  width: 60px;
+  height: 60px;
+}
+.resolution-center-container .faq-section .chat-support p {
+  font-size: 14px;
+  color: #666;
+  line-height: 1.5;
+  max-width: 400px;
+}
+.resolution-center-container .faq-section .chat-support .chat-support-btn {
+  background-color: #333;
+  color: #fff;
+  border: none;
+  padding: 12px 20px;
+  border-radius: 8px;
+  font-size: 16px;
+  font-weight: bold;
+  cursor: pointer;
+  transition: background-color 0.3s;
+}
+.resolution-center-container .faq-section .chat-support .chat-support-btn:hover {
+  background-color: #555;
+}
+.resolution-center-container .support-section {
+  background-color: #fff;
+  border-radius: 8px;
+  padding: 20px;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+  max-width: 600px;
+  width: 100%;
+}
+.resolution-center-container .support-section h2 {
+  font-size: 18px;
+  font-weight: bold;
+  color: #333;
+  margin-bottom: 15px;
+}
+.resolution-center-container .support-section .support-item {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  border: 1px solid #ddd;
+  border-radius: 8px;
+  background-color: #F4F4F4;
+  padding: 15px;
+  cursor: pointer;
+  transition: background-color 0.3s;
+}
+.resolution-center-container .support-section .support-item:hover {
+  background-color: #f9f9f9;
+}
+.resolution-center-container .support-section .support-item .support-item-content {
+  display: flex;
+  flex-direction: row;
+  gap: 5px;
+}
+.resolution-center-container .support-section .support-item .support-item-content .support-icon {
+  width: 40px;
+  height: 40px;
+  color: #F4F4F4;
+}
+.resolution-center-container .support-section .support-item .support-item-content .support-text-wrapper {
+  display: flex;
+  flex-direction: column;
+  gap: 5px;
+}
+.resolution-center-container .support-section .support-item .support-item-content .support-text {
+  font-size: 16px;
+  font-weight: bold;
+  color: #111;
+}
+.resolution-center-container .support-section .support-item .support-item-content .support-subtext {
+  font-size: 14px;
+  color: #111;
+}
+.resolution-center-container .support-section .support-item .arrow {
+  font-size: 20px;
+  color: #666;
+}

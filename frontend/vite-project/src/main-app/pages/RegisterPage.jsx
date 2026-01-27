@@ -1,6 +1,6 @@
 import { useState, useEffect } from "react";
 import { useNavigate, Link } from "react-router-dom";
-import "../../styles/main-app/pages/RegisterPage.scss";
+import "../../styles/main-app/pages/RegisterPage.css";
 import loginImg from "../../assets/loginImg.png";
 import loginLogo from "../../assets/loginLogo.png";
 import useApi from "../services/useApi";

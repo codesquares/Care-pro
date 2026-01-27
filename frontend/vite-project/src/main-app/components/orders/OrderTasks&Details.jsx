@@ -1,5 +1,5 @@
 import { useState} from "react";
-import "./Order&Tasks.scss";
+import "./Order&Tasks.css";
 
 const MyOrders = () => {
     const [selectedView, setSelectedView] = useState("Tasks");

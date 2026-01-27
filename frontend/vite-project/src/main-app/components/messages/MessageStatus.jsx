@@ -1,5 +1,5 @@
 
-import './messageStatus.scss';
+import './messageStatus.css';
 
 const MessageStatus = ({ status }) => {
   switch (status) {

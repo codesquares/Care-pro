@@ -1,5 +1,5 @@
 
-import "./publishGig.scss";
+import "./publishGig.css";
 
 const PublishGig = ({ 
   onSaveAsDraft, 

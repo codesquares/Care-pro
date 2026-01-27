@@ -1,6 +1,6 @@
 import React from 'react';
 import { Helmet } from 'react-helmet-async';
-import '../styles/pages/privacy-policy.scss';
+import '../styles/pages/privacy-policy.css';
 
 const PrivacyPolicy = () => {
   return (
