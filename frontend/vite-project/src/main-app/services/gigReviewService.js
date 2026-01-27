@@ -19,7 +19,8 @@ const GigReviewService = {
       const response = await fetch(`${config.BASE_URL}/Reviews?gigId=${gigId}`, {
         method: 'GET',
         headers: {
-          'accept': '*/*'
+          'accept': '*/*',
+          'Authorization': `Bearer ${localStorage.getItem('authToken') || ''}`
         }
       });
 

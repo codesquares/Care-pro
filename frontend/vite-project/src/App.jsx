@@ -2,6 +2,7 @@ import { useEffect } from 'react';
 import { useLocation, Navigate } from 'react-router-dom';
 import './App.css';
 import { BrowserRouter as Router, Route, Routes } from 'react-router-dom';
+import { GoogleOAuthProvider } from '@react-oauth/google';
 import Navbar from './components/Navbar';
 import Footer from './components/Footer';
 import MarketingNavBar from './components/MarketingNavBar';
@@ -19,7 +20,8 @@ import RefundPolicy from './pages/RefundPolicy';
 import NotFoundPage from './pages/NotFoundPage';
 import OrderFaq from './main-app/pages/care-giver/OrderFaq';
 import LoginPage from './main-app/pages/LoginPage';
-import RegisterPage from './main-app/pages/RegisterPage';
+import RoleSelectionPage from './main-app/pages/RoleSelectionPage';
+import RegisterFormPage from './main-app/pages/RegisterFormPage';
 import ForgotPasswordPage from './main-app/pages/ForgotPasswordPage';
 import ConfirmEmailPage from './main-app/pages/ConfirmEmailPage';
 import ResendConfirmationPage from './main-app/pages/ResendConfirmationPage';
@@ -58,9 +60,12 @@ function ScrollToTop() {
   return null;
 }
 
+// Google OAuth Client ID
+const GOOGLE_CLIENT_ID = "6881271599-i0v6f3onlaoekapmud8p4agio4891q4j.apps.googleusercontent.com";
+
 function App() {
   return (
-    
+    <GoogleOAuthProvider clientId={GOOGLE_CLIENT_ID}>
       <BlogProvider>
         <NotificationPoller />
         {/* <NotificationProvider> */}
@@ -77,7 +82,7 @@ function App() {
           </MessageProvider>
         {/* </NotificationProvider> */}
       </BlogProvider>
-    
+    </GoogleOAuthProvider>
   );
 }
 
@@ -101,6 +106,7 @@ function AppContent() {
     '/terms-and-conditions',
     '/login',
     '/register',
+    '/register/form',
     '/forgot-password',
     '/confirm-email',
     '/resend-confirmation',
@@ -118,10 +124,10 @@ function AppContent() {
   ];
 
   // Define routes that should not have navbar
-  const routesWithoutNavbar = ['/login', '/register', '/forgot-password', '/confirm-email', '/resend-confirmation'];
+  const routesWithoutNavbar = ['/login', '/register', '/register/form', '/forgot-password', '/confirm-email', '/resend-confirmation'];
   
   // Define routes that should not have footer
-  const routesWithoutFooter = ['/login', '/register', '/forgot-password', '/confirm-email', '/resend-confirmation'];
+  const routesWithoutFooter = ['/login', '/register', '/register/form', '/forgot-password', '/confirm-email', '/resend-confirmation'];
 
   // Check if current path is unprotected
   const isUnprotectedRoute = unprotectedRoutes.includes(location.pathname.toLowerCase());
@@ -182,7 +188,8 @@ function AppContent() {
         <Route path="/terms-and-conditions" element={<TermsAndConditions />} />
         <Route path="/refund-policy" element={<RefundPolicy />} />
         <Route path="/login" element={<LoginPage />} />
-        <Route path="/register" element={<RegisterPage />} />
+        <Route path="/register" element={<RoleSelectionPage />} />
+        <Route path="/register/form" element={<RegisterFormPage />} />
         <Route path="/forgot-password" element={<ForgotPasswordPage />} />
         <Route path="/confirm-email" element={<ConfirmEmailPage />} />
         <Route path="/resend-confirmation" element={<ResendConfirmationPage />} />

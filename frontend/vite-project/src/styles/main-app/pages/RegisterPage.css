@@ -71,7 +71,7 @@
   align-self: stretch;
   padding: 2rem 3rem;
   /* Allow internal scroll if content exceeds viewport height */
-  overflow: visible;
+  overflow-y: auto;
   max-width: 700px;
   margin: 0 auto;
   min-height: 100%;
@@ -809,4 +809,109 @@ input:not([type=radio]):valid:not(:placeholder-shown) {
     border: 1px solid rgba(255, 255, 255, 0.18);
     box-shadow: 0 10px 25px rgba(0, 0, 0, 0.4);
   }
+}
+
+/* Role Badge for Register Form Page */
+.role-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 8px 16px;
+  background: linear-gradient(135deg, #00B4A6 0%, #008B80 100%);
+  color: white;
+  border-radius: 20px;
+  font-size: 0.9rem;
+  font-weight: 500;
+  margin-bottom: 10px;
+}
+
+/* Back Link Button */
+.back-link {
+  background: none;
+  border: none;
+  color: #00B4A6;
+  font-size: 0.95rem;
+  cursor: pointer;
+  padding: 10px 0;
+  margin-top: 15px;
+  transition: color 0.2s;
+}
+
+.back-link:hover {
+  color: #008B80;
+  text-decoration: underline;
+}
+/* Divider with OR text */
+.divider {
+  display: flex;
+  align-items: center;
+  margin: 20px 0;
+  width: 100%;
+  max-width: 460px;
+}
+
+.divider::before,
+.divider::after {
+  content: "";
+  flex: 1;
+  height: 1px;
+  background: #e0e0e0;
+}
+
+.divider span {
+  padding: 0 16px;
+  color: #999;
+  font-size: 0.9rem;
+  font-weight: 500;
+}
+
+/* Google Login Container */
+.google-login-container {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 10px;
+  width: 100%;
+  max-width: 460px;
+}
+
+.google-login-container > div {
+  width: 100%;
+  display: flex;
+  justify-content: center;
+}
+
+.google-loading {
+  color: #666;
+  font-size: 0.9rem;
+}
+
+/* Custom Google Sign Up Button */
+.google-signup-btn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 12px;
+  width: 100%;
+  max-width: 400px;
+  padding: 12px 24px;
+  background: #fff;
+  border: 1px solid #dadce0;
+  border-radius: 4px;
+  font-size: 14px;
+  font-weight: 500;
+  color: #3c4043;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.google-signup-btn:hover:not(:disabled) {
+  background: #f8f9fa;
+  border-color: #c6c6c6;
+  box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+}
+
+.google-signup-btn:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
 }

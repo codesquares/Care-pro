@@ -97,24 +97,40 @@ const DirectMessage = () => {
       if (isCurrentUserCaregiver) {
         console.log(`Caregiver viewing chat - fetching Client details for ID: ${id}`);
         try {
-          response = await axios.get(`${API_BASE_URL}/api/Clients/${id}`);
+          response = await axios.get(`${API_BASE_URL}/api/Clients/${id}`, {
+            headers: {
+              'Authorization': `Bearer ${localStorage.getItem('authToken') || ''}`
+            }
+          });
           expectedRole = 'Client';
         } catch (clientErr) {
           // Fallback: try generic users endpoint
           console.log('Client endpoint failed, trying generic users endpoint');
-          response = await axios.get(`${API_BASE_URL}/api/users/${id}`);
+          response = await axios.get(`${API_BASE_URL}/api/users/${id}`, {
+            headers: {
+              'Authorization': `Bearer ${localStorage.getItem('authToken') || ''}`
+            }
+          });
           expectedRole = response.data?.role || 'Client';
         }
       } else {
         // Client viewing caregiver (default behavior)
         console.log(`Client viewing chat - fetching Caregiver details for ID: ${id}`);
         try {
-          response = await axios.get(`${API_BASE_URL}/api/CareGivers/${id}`);
+          response = await axios.get(`${API_BASE_URL}/api/CareGivers/${id}`, {
+            headers: {
+              'Authorization': `Bearer ${localStorage.getItem('authToken') || ''}`
+            }
+          });
           expectedRole = 'Caregiver';
         } catch (caregiverErr) {
           // Fallback: try generic users endpoint
           console.log('Caregiver endpoint failed, trying generic users endpoint');
-          response = await axios.get(`${API_BASE_URL}/api/users/${id}`);
+          response = await axios.get(`${API_BASE_URL}/api/users/${id}`, {
+            headers: {
+              'Authorization': `Bearer ${localStorage.getItem('authToken') || ''}`
+            }
+          });
           expectedRole = response.data?.role || 'Caregiver';
         }
       }

@@ -1,5 +1,6 @@
 import { useState, useEffect } from "react";
 import { useNavigate, Link, useLocation } from "react-router-dom";
+import { GoogleLogin } from "@react-oauth/google";
 import axios from "axios";
 import loginImg from "../../assets/loginImg.png";
 import loginLogo from "../../assets/loginLogo.png";
@@ -8,6 +9,7 @@ import { toast } from "react-toastify";
 import config from "../config";
 import { useAuth } from "../context/AuthContext";
 import Modal from "../components/modal/Modal";
+import GoogleAuthService from "../services/googleAuthService";
 
 const LoginPage = () => {
   const [email, setEmail] = useState("");
@@ -25,6 +27,9 @@ const LoginPage = () => {
   const [buttonText, setButtonText] = useState("Okay");
   const [buttonBgColor, setButtonBgColor] = useState("#00B4A6");
   const [isError, setIsError] = useState(false);
+  
+  // Google login state
+  const [googleLoading, setGoogleLoading] = useState(false);
   
   const navigate = useNavigate();
   const location = useLocation();
@@ -85,9 +90,11 @@ const LoginPage = () => {
     setLoading(true);
 
     try {
+      // Don't send any auth header for login - it's a public endpoint
       const response = await axios.post(
         `${config.BASE_URL}/Authentications/UserLogin`,
-        { email, password }
+        { email, password },
+        { headers: { 'Content-Type': 'application/json' } }  // Explicitly no Authorization header
       );
 
       const { data } = response;
@@ -125,6 +132,100 @@ const LoginPage = () => {
 
   const togglePasswordVisibility = () => {
     setShowPassword(!showPassword);
+  };
+
+  // Google Sign In success handler
+  const handleGoogleSuccess = async (credentialResponse) => {
+    if (!credentialResponse.credential) {
+      toast.error("Google sign in failed");
+      return;
+    }
+    
+    setGoogleLoading(true);
+    const idToken = credentialResponse.credential;
+    
+    try {
+      const result = await GoogleAuthService.googleSignIn(idToken);
+      
+      // Backend returns 'token' not 'accessToken'
+      const hasToken = !!(result.token || result.accessToken);
+      const accessToken = result.token || result.accessToken;
+
+      if (result.success && !result.requiresLinking && hasToken) {
+        console.log("Google Sign In API Response:", result);
+        
+        // Store auth data in localStorage
+        GoogleAuthService.storeAuthData(result);
+        
+        // Debug: Check what was stored
+        console.log("Stored authToken:", localStorage.getItem("authToken"));
+        console.log("Stored userDetails:", localStorage.getItem("userDetails"));
+        
+        // Prepare user data for AuthContext
+        // Backend returns 'id' not 'userId'
+        const userData = {
+          id: result.id || result.userId,
+          email: result.email,
+          firstName: result.firstName,
+          lastName: result.lastName,
+          role: result.role,
+          profilePicture: result.profilePicture,
+        };
+        
+        console.log("User data for AuthContext:", userData);
+        
+        // Update AuthContext state
+        login(userData, accessToken, result.refreshToken);
+        
+        setModalTitle("Login Successful!");
+        setModalDescription("Welcome back! You will be redirected to your dashboard.");
+        setButtonBgColor("#00B4A6");
+        setButtonText("Continue");
+        setIsError(false);
+        setShowSuccessModal(true);
+        setIsModalOpen(true);
+        
+        // Navigate to dashboard after a short delay - use window.location for full page reload
+        // This ensures AuthContext re-reads from localStorage
+        setTimeout(() => {
+          const dashboardPath = GoogleAuthService.getDashboardPath(result.role);
+          console.log("Redirecting to:", dashboardPath);
+          window.location.href = dashboardPath;
+        }, 1500);
+        
+      } else if (result.requiresLinking) {
+        // User has a local account with this email - prompt to link or sign in with password
+        const conflictEmail = result.conflict?.email || "this email";
+        setModalTitle("Account Already Exists");
+        setModalDescription(`An account with ${conflictEmail} already exists. Please sign in with your password first, then you can link your Google account from settings.`);
+        setButtonText("Sign In with Password");
+        setButtonBgColor("#FF6B6B");
+        setIsError(true);
+        setIsModalOpen(true);
+        toast.info("Please create an account first");
+        navigate("/register");
+        
+      } else if (result.canLinkAccounts) {
+        setModalTitle("Account Already Exists");
+        setModalDescription(`An account with this email (${result.email}) already exists. Please sign in with your password.`);
+        setButtonText("Okay");
+        setButtonBgColor("#FF6B6B");
+        setIsError(true);
+        setIsModalOpen(true);
+        
+      } else {
+        toast.error(result.error || "Google sign in failed");
+      }
+    } catch (error) {
+      console.error("Google auth error:", error);
+      toast.error("Something went wrong. Please try again.");
+    } finally {
+      setGoogleLoading(false);
+    }
+  };
+  
+  const handleGoogleError = () => {
+    toast.error("Google sign in failed. Please try again.");
   };
 
   const handleModalProceed = () => {
@@ -221,12 +322,29 @@ const LoginPage = () => {
             <Link to="/resend-confirmation">Didn't receive confirmation email?</Link>
           </div>
 
-          <button type="submit" className="btn-primary" disabled={loading || authLoading || redirecting}>
+          <button type="submit" className="btn-primary" disabled={loading || authLoading || redirecting || googleLoading}>
             {loading ? "Logging in..." : 
              authLoading ? "Checking authentication..." : 
              redirecting ? "Redirecting..." : "Continue"}
           </button>
         </form>
+
+        {/* Divider */}
+        <div className="login-divider">
+          <span>OR</span>
+        </div>
+
+        {/* Google Sign In */}
+        <div className="google-login-container">
+          <GoogleLogin
+            onSuccess={handleGoogleSuccess}
+            onError={handleGoogleError}
+            text="signin_with"
+            shape="rectangular"
+            width="100%"
+            ux_mode="popup"
+          />
+        </div>
 
         <p className="signup-text">
           Don’t have an account? <Link to="/register">Signup →</Link>

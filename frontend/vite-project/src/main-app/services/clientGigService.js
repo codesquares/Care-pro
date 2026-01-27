@@ -29,10 +29,15 @@ const ClientGigService = {
   
   async getAllGigs() {
   try {
+    const authHeaders = {
+      headers: {
+        'Authorization': `Bearer ${localStorage.getItem('authToken') || ''}`
+      }
+    };
     // Fetch all gigs and all caregivers in parallel for better performance
     const [response, userResponse] = await Promise.all([
-      axios.get(`${BASE_API_URL}/Gigs`),
-      axios.get(`${BASE_API_URL}/CareGivers/AllCaregivers`)
+      axios.get(`${BASE_API_URL}/Gigs`, authHeaders),
+      axios.get(`${BASE_API_URL}/CareGivers/AllCaregivers`, authHeaders)
     ]);
 
     const allGigs = response.data || [];
@@ -99,7 +104,11 @@ const ClientGigService = {
     
     // In case of error, still try to return basic gig data if available
     try {
-      const fallbackResponse = await axios.get(`${BASE_API_URL}/Gigs`);
+      const fallbackResponse = await axios.get(`${BASE_API_URL}/Gigs`, {
+        headers: {
+          'Authorization': `Bearer ${localStorage.getItem('authToken') || ''}`
+        }
+      });
       return fallbackResponse.data || [];
     } catch (fallbackError) {
       console.error('Complete failure to fetch gigs:', fallbackError);

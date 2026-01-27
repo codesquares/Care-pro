@@ -16,7 +16,12 @@ const ClientOrderService = {
       // For now, we'll use mock data
       const API_URL = `${config.BASE_URL}/ClientOrders/clientUserId?clientUserId=${clientId}`; // Using centralized API config
       
-      const response = await fetch(API_URL);
+      const token = localStorage.getItem('authToken');
+      const response = await fetch(API_URL, {
+        headers: {
+          'Authorization': `Bearer ${token}`
+        }
+      });
       
       if (!response.ok) {
         throw new Error(`Error fetching order history: ${response.status}`);
@@ -123,11 +128,13 @@ const ClientOrderService = {
       }
 
       const API_URL = `${config.BASE_URL}/ClientOrders`; // Using centralized API config
+      const token = localStorage.getItem('authToken');
       
       const response = await fetch(API_URL, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
+          'Authorization': `Bearer ${token}`
         },
         body: JSON.stringify(orderData)
       });
@@ -171,11 +178,13 @@ const ClientOrderService = {
       }
 
       const API_URL = `${config.BASE_URL}/ClientOrders/${orderId}/status`; // Using centralized API config
+      const token = localStorage.getItem('authToken');
       
       const response = await fetch(API_URL, {
         method: 'PUT',
         headers: {
           'Content-Type': 'application/json',
+          'Authorization': `Bearer ${token}`
         },
         body: JSON.stringify({ status: newStatus })
       });
@@ -218,11 +227,13 @@ const ClientOrderService = {
       }
 
       const API_URL = `${config.BASE_URL}/ClientOrders/${orderId}/cancel`; // Using centralized API config
+      const token = localStorage.getItem('authToken');
       
       const response = await fetch(API_URL, {
         method: 'PUT',
         headers: {
           'Content-Type': 'application/json',
+          'Authorization': `Bearer ${token}`
         }
       });
       
@@ -265,11 +276,13 @@ const ClientOrderService = {
       }
 
       const API_URL = `${config.BASE_URL}/ClientOrders/${orderId}/status`; // Using centralized API config
+      const token = localStorage.getItem('authToken');
       
       const response = await fetch(API_URL, {
         method: 'PATCH',
         headers: {
           'Content-Type': 'application/json',
+          'Authorization': `Bearer ${token}`
         },
         body: JSON.stringify({ status: newStatus })
       });
@@ -312,11 +325,13 @@ const ClientOrderService = {
       }
 
       const API_URL = `${config.BASE_URL}/ClientOrders/${orderId}/cancel`; // Using centralized API config
+      const token = localStorage.getItem('authToken');
       
       const response = await fetch(API_URL, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
+          'Authorization': `Bearer ${token}`
         }
       });
       

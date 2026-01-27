@@ -264,8 +264,15 @@ const GigsForm = () => {
         }
 
         // FIXED: Use centralized config instead of hardcoded Azure staging API URL
+        const token = localStorage.getItem('authToken');
         const response = await fetch(
-          `${config.BASE_URL}/Gigs/caregiver/caregiverId?caregiverId=${userDetails.id}`
+          `${config.BASE_URL}/Gigs/caregiver/caregiverId?caregiverId=${userDetails.id}`,
+          {
+            headers: {
+              'Authorization': `Bearer ${token}`,
+              'Content-Type': 'application/json'
+            }
+          }
         );
         
         if (!response.ok) {

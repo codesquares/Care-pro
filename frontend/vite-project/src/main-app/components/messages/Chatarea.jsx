@@ -56,14 +56,14 @@ const ChatArea = ({ messages, recipient, userId, onSendMessage, isOfflineMode = 
     };
   }, [recipient]);
   
-  console.log("🎯 ChatArea: Component rendered with props:", {
-    messagesCount: messages?.length || 0,
-    recipientId: recipient?.id,
-    userId,
-    isOfflineMode
-  });
-  console.log("🎯 ChatArea: Messages array:", messages);
-  console.log("🎯 ChatArea: Recipient object:", recipient);
+  // console.log("🎯 ChatArea: Component rendered with props:", {
+  //   messagesCount: messages?.length || 0,
+  //   recipientId: recipient?.id,
+  //   userId,
+  //   isOfflineMode
+  // });
+  // console.log("🎯 ChatArea: Messages array:", messages);
+  // console.log("🎯 ChatArea: Recipient object:", recipient);
 
   // Memoized scroll to bottom function
   const scrollToBottom = useCallback((force = false) => {
@@ -85,12 +85,12 @@ const ChatArea = ({ messages, recipient, userId, onSendMessage, isOfflineMode = 
   // Memoized message processing to prevent unnecessary re-renders
   const visibleMessages = useMemo(() => {
     if (!messages || !Array.isArray(messages)) {
-      console.log('🎯 ChatArea: No messages or invalid messages array');
+      // console.log('🎯 ChatArea: No messages or invalid messages array');
       return [];
     }
     
-    console.log('🎯 ChatArea: Processing', messages.length, 'messages for display');
-    console.log('🎯 ChatArea: Latest message:', messages[messages.length - 1]);
+    // console.log('🎯 ChatArea: Processing', messages.length, 'messages for display');
+    // console.log('🎯 ChatArea: Latest message:', messages[messages.length - 1]);
     
     return messages.map((msg, index) => {
       // Ensure each message has an id
@@ -131,12 +131,12 @@ const ChatArea = ({ messages, recipient, userId, onSendMessage, isOfflineMode = 
   useEffect(() => {
     if (messages && Array.isArray(messages)) {
       const newMessageCount = messages.length;
-      console.log('🎯 ChatArea: useEffect triggered - message count:', newMessageCount, 'previous:', lastMessageCount);
+      // console.log('🎯 ChatArea: useEffect triggered - message count:', newMessageCount, 'previous:', lastMessageCount);
       
       if (newMessageCount > lastMessageCount || lastMessageCount === 0) {
         // New messages arrived or initial load
-        console.log(`🎯 ChatArea: New messages detected: ${newMessageCount - lastMessageCount}`);
-        console.log('🎯 ChatArea: Latest message:', messages[messages.length - 1]);
+        // console.log(`🎯 ChatArea: New messages detected: ${newMessageCount - lastMessageCount}`);
+        // console.log('🎯 ChatArea: Latest message:', messages[messages.length - 1]);
         // Force scroll on initial load
         const isInitialLoad = lastMessageCount === 0;
         setTimeout(() => scrollToBottom(isInitialLoad), 50);
@@ -206,10 +206,10 @@ const ChatArea = ({ messages, recipient, userId, onSendMessage, isOfflineMode = 
   // Only fetch if no serviceId (avoid unnecessary API calls when coming from HomeCareService)
   useEffect(() => {
     if (isClientRoute && recipient?.id && !serviceId) {
-      console.log('Fetching gigs for discovery mode - no direct serviceId available');
+      // console.log('Fetching gigs for discovery mode - no direct serviceId available');
       fetchCaregiverGigs(recipient.id);
     } else if (isClientRoute && recipient?.id && serviceId) {
-      console.log('Direct mode from HomeCareService - skipping gig fetch, using serviceId:', serviceId);
+      // console.log('Direct mode from HomeCareService - skipping gig fetch, using serviceId:', serviceId);
       // Clear any previous gig data since we're in direct mode
       setCaregiverGigs([]);
       setIsLoadingGigs(false);
@@ -254,7 +254,7 @@ const ChatArea = ({ messages, recipient, userId, onSendMessage, isOfflineMode = 
       })));
 
       setCaregiverGigs(caregiverPublishedGigs);
-      console.log(`Found ${caregiverPublishedGigs.length} published gigs for caregiver ${caregiverId}`);
+      // console.log(`Found ${caregiverPublishedGigs.length} published gigs for caregiver ${caregiverId}`);
       
       return caregiverPublishedGigs;
     } catch (error) {
@@ -270,7 +270,7 @@ const ChatArea = ({ messages, recipient, userId, onSendMessage, isOfflineMode = 
   const handleHireMeClick = () => {
     // Priority 1: Use serviceId from navigation state (direct from HomeCareService)
     if (serviceId) {
-      console.log('Direct navigation: Using serviceId from HomeCareService:', serviceId);
+      // console.log('Direct navigation: Using serviceId from HomeCareService:', serviceId);
       
       // Navigate to the specific service page
       // Note: If service becomes unavailable, the service page will handle the error
@@ -280,12 +280,12 @@ const ChatArea = ({ messages, recipient, userId, onSendMessage, isOfflineMode = 
 
     // Priority 2: Use fetched gigs (general messaging context)
     if (isLoadingGigs) {
-      console.log('Still loading caregiver gigs...');
+      // console.log('Still loading caregiver gigs...');
       return; // Don't do anything if still loading
     }
 
     if (caregiverGigs.length === 0) {
-      console.log('No published gigs available for this caregiver');
+      // console.log('No published gigs available for this caregiver');
       // Could show a toast message here: "This caregiver has no available services"
       return;
     }
@@ -293,11 +293,11 @@ const ChatArea = ({ messages, recipient, userId, onSendMessage, isOfflineMode = 
     if (caregiverGigs.length === 1) {
       // Direct navigation if only one service
       const service = caregiverGigs[0];
-      console.log('Single service navigation:', service.title);
+      // console.log('Single service navigation:', service.title);
       window.location.href = `/service/${service.id}`;
     } else {
       // Open modal for multiple services
-      console.log(`Multiple services available: ${caregiverGigs.length} options`);
+      // console.log(`Multiple services available: ${caregiverGigs.length} options`);
       setShowServiceModal(true);
     }
   };
@@ -315,7 +315,7 @@ const ChatArea = ({ messages, recipient, userId, onSendMessage, isOfflineMode = 
       
       // If no ID in safeRecipient, check original recipient
       if (!effectiveRecipientId && recipient) {
-        console.log('No ID in safeRecipient, checking original recipient object');
+        // console.log('No ID in safeRecipient, checking original recipient object');
         
         // Check all possible ID fields in the original recipient object
         const possibleIdFields = ['id', 'caregiverId', 'userId', '_id', 'recipientId'];
@@ -323,7 +323,7 @@ const ChatArea = ({ messages, recipient, userId, onSendMessage, isOfflineMode = 
         for (const field of possibleIdFields) {
           if (recipient[field]) {
             effectiveRecipientId = recipient[field];
-            console.log(`Found ID in original recipient.${field}:`, effectiveRecipientId);
+            // console.log(`Found ID in original recipient.${field}:`, effectiveRecipientId);
             break;
           }
         }
@@ -331,14 +331,14 @@ const ChatArea = ({ messages, recipient, userId, onSendMessage, isOfflineMode = 
       
       // Check URL if no ID found yet
       if (!effectiveRecipientId) {
-        console.log('No ID found in recipient objects, checking URL');
+        // console.log('No ID found in recipient objects, checking URL');
         const pathSegments = window.location.pathname.split('/');
         const lastSegment = pathSegments[pathSegments.length - 1];
         
         // Simple validation that it looks like an ID format
         if (lastSegment && lastSegment.length > 8) {
           effectiveRecipientId = lastSegment;
-          console.log('Using ID from URL path:', effectiveRecipientId);
+          // console.log('Using ID from URL path:', effectiveRecipientId);
         }
       }
       
@@ -350,13 +350,13 @@ const ChatArea = ({ messages, recipient, userId, onSendMessage, isOfflineMode = 
       }
       
       // Log the final decision for debugging
-      console.log('Sending message to recipient:', {
-        recipientId: effectiveRecipientId,
-        recipientName: safeRecipient?.name || 'Unknown',
-        originalRecipientId: safeRecipient?.id,
-        fromUrlParams: effectiveRecipientId !== safeRecipient?.id,
-        senderId: userId
-      });
+      // console.log('Sending message to recipient:', {
+      //   recipientId: effectiveRecipientId,
+      //   recipientName: safeRecipient?.name || 'Unknown',
+      //   originalRecipientId: safeRecipient?.id,
+      //   fromUrlParams: effectiveRecipientId !== safeRecipient?.id,
+      //   senderId: userId
+      // });
 
       // Store message text before clearing
       const messageText = message.trim();
@@ -367,11 +367,11 @@ const ChatArea = ({ messages, recipient, userId, onSendMessage, isOfflineMode = 
       // Send message with our best determined ID - ensure both userId and recipientId are passed correctly
       if (messageText && typeof messageText === 'string' && 
           effectiveRecipientId && typeof effectiveRecipientId === 'string') {
-        console.log("Sending message from ChatArea:", { 
-          userId, 
-          recipientId: effectiveRecipientId, 
-          messagePreview: messageText.length > 20 ? messageText.substring(0, 20) + '...' : messageText 
-        });
+        // console.log("Sending message from ChatArea:", { 
+        //   userId, 
+        //   recipientId: effectiveRecipientId, 
+        //   messagePreview: messageText.length > 20 ? messageText.substring(0, 20) + '...' : messageText 
+        // });
         
         try {
           // Based on the error stack trace, onSendMessage should receive recipientId and message
@@ -393,7 +393,7 @@ const ChatArea = ({ messages, recipient, userId, onSendMessage, isOfflineMode = 
               }
               
               await createNotification(notificationData);
-              console.log("Notification created successfully");
+              // console.log("Notification created successfully");
             } catch (notificationError) {
               console.warn("Failed to create notification, but message was sent successfully:", notificationError);
               // Don't throw here since the message was already sent successfully
@@ -446,14 +446,14 @@ const ChatArea = ({ messages, recipient, userId, onSendMessage, isOfflineMode = 
       return groups;
     }
     
-    console.log("GroupMessagesByDate received messages:", messages.length);
+    // console.log("GroupMessagesByDate received messages:", messages.length);
 
     // Debug all message objects
-    console.log("Message objects:", JSON.stringify(messages.map(m => ({
-      id: m.id, 
-      timestamp: m.timestamp,
-      senderId: m.senderId
-    })), null, 2));
+    // console.log("Message objects:", JSON.stringify(messages.map(m => ({
+    //   id: m.id, 
+    //   timestamp: m.timestamp,
+    //   senderId: m.senderId
+    // })), null, 2));
 
     messages.forEach((msg, index) => {
       // Make sure each message has all required properties
@@ -741,7 +741,7 @@ const ChatArea = ({ messages, recipient, userId, onSendMessage, isOfflineMode = 
                 </div>
                 {messageGroups[dateKey].map((msg, index) => {
                   // Debug the msg object to see what's causing issues
-                  console.log('Message object for key generation:', msg);
+                  // console.log('Message object for key generation:', msg);
                   
                   // Convert all components to strings safely
                   const idStr = msg.id ? String(msg.id) : 'no-id';
@@ -756,7 +756,7 @@ const ChatArea = ({ messages, recipient, userId, onSendMessage, isOfflineMode = 
                   // Create a guaranteed unique key with string values
                   const messageKey = `msg-${idStr}-${index}-${senderIdStr}`;
                   
-                  console.log("Generated message key:", messageKey);
+                  // console.log("Generated message key:", messageKey);
                   
                   return (
                   <div key={messageKey} className={`message ${msg.senderId === userId ? 'sent' : 'received'} ${msg.isDeleted ? 'deleted' : ''} ${msg.isNewlySent ? 'isNewlySent' : ''}`}>

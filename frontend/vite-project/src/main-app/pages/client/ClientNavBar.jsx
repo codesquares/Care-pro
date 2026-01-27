@@ -109,10 +109,8 @@ const ClientNavBar = () => {
   );
 
   const handleSignOut = () => {
-    const navInfo = handleLogout();
-    if (navInfo.shouldNavigate) {
-      navigate(navInfo.path, { replace: true });
-    }
+    handleLogout();
+    navigate('/', { replace: true });
   };
 
   const handleClickOutside = (event) => {

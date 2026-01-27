@@ -1,7 +1,4 @@
-import axios from 'axios';
-import config from '../config';
-
-const API_URL = config.BASE_URL;
+import api from './api';
 
 /**
  * Creates a notification.
@@ -52,16 +49,10 @@ const generateContent = (type, senderId) => {
       return `You have a new notification from user ${senderId}.`;
   }
 };
-const authHeaders = () => ({
-  'Content-Type': 'application/json',
-  'Authorization': `Bearer ${localStorage.getItem('authToken')}`
-});
 
 export const getNotifications = async (id, page = 1, pageSize = 10) => {
   try {
-    const response = await axios.get(`${API_URL}/Notifications?userId=${id}&page=${page}&pageSize=${pageSize}`, {
-      headers: authHeaders()
-    });
+    const response = await api.get(`/Notifications?userId=${id}&page=${page}&pageSize=${pageSize}`);
 
     const data = response.data;
 
@@ -88,9 +79,7 @@ export const getNotifications = async (id, page = 1, pageSize = 10) => {
 
 export const getUnreadCount = async (id) => {
   try {
-    const res = await axios.get(`${API_URL}/Notifications/unread/count?userId=${id}`, {
-      headers: authHeaders()
-    });
+    const res = await api.get(`/Notifications/unread/count?userId=${id}`);
 
     if (typeof res.data === 'number') return { count: res.data };
     return { count: res.data?.count || 0 };
@@ -102,9 +91,7 @@ export const getUnreadCount = async (id) => {
 
 export const markAsRead = async (id) => {
   try {
-    return await axios.put(`${API_URL}/Notifications/${id}/read`, null, {
-      headers: authHeaders()
-    });
+    return await api.put(`/Notifications/${id}/read`, null);
   } catch (err) {
     console.error("Mark as read error:", err);
     throw err;
@@ -121,9 +108,7 @@ export const markAllAsRead = async () => {
       throw new Error("User ID not found in localStorage");
     }
     
-    return await axios.put(`${API_URL}/Notifications/read-all?userId=${userId}`, null, {
-      headers: authHeaders()
-    });
+    return await api.put(`/Notifications/read-all?userId=${userId}`, null);
   } catch (err) {
     console.error("Mark all as read error:", err);
     throw err;
@@ -132,9 +117,7 @@ export const markAllAsRead = async () => {
 
 export const deleteNotification = async (id) => {
   try {
-    return await axios.delete(`${API_URL}/Notifications/${id}`, {
-      headers: authHeaders()
-    });
+    return await api.delete(`/Notifications/${id}`);
   } catch (err) {
     console.error("Delete notification error:", err);
     throw err;
@@ -177,9 +160,7 @@ export const createNotification = async ({
 
     console.log('Creating notification with payload:', notificationPayload);
 
-    const response = await axios.post(`${API_URL}/Notifications`, notificationPayload, {
-      headers: authHeaders()
-    });
+    const response = await api.post(`/Notifications`, notificationPayload);
 
     return response.data;
   } catch (error) {

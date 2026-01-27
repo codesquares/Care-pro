@@ -81,6 +81,15 @@
   gap: 4px;
 }
 
+.service-provider__rating--clickable {
+  cursor: pointer;
+  transition: opacity 0.2s ease;
+}
+
+.service-provider__rating--clickable:hover {
+  opacity: 0.7;
+}
+
 .service-provider__star {
   color: #fbbf24;
   font-size: 14px;
@@ -89,6 +98,12 @@
 .service-provider__rating-text {
   font-size: 12px;
   color: #666;
+}
+
+.service-provider__rating--clickable .service-provider__rating-text {
+  text-decoration: underline;
+  text-decoration-style: dotted;
+  text-underline-offset: 2px;
 }
 
 /* Tablet and up: larger sizing */

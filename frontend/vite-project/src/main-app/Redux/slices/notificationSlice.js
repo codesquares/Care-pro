@@ -10,8 +10,12 @@ export const fetchNotifications = createAsyncThunk(
   'notifications/fetchAll',
   async (_, { rejectWithValue }) => {
     try {
+      const token = localStorage.getItem('authToken');
       const userDetails = JSON.parse(localStorage.getItem('userDetails'));
       const id = userDetails?.id;
+      if (!id || !token) {
+        return []; // Return empty array if no user ID or token
+      }
       const data = await getNotifications(id);
       return data.items || [];
     } catch (err) {
@@ -24,8 +28,12 @@ export const fetchUnreadCount = createAsyncThunk(
   'notifications/fetchUnreadCount',
   async (_, { rejectWithValue }) => {
     try {
+      const token = localStorage.getItem('authToken');
       const userDetails = JSON.parse(localStorage.getItem('userDetails'));
       const id = userDetails?.id;
+      if (!id || !token) {
+        return 0; // Return 0 if no user ID or token
+      }
       const data = await getUnreadCount(id);
       return data.count || 0;
     } catch (err) {

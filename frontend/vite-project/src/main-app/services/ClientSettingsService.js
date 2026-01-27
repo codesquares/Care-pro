@@ -15,7 +15,15 @@ const ClientSettingsService = {
    */
   async changePassword(payload) {
     try {
-      const response = await axios.post(`${BASE_API_URL}/Clients/reset-password`, payload);
+      const token = localStorage.getItem('authToken');
+      if (!token) {
+        throw new Error("Authentication required");
+      }
+      const response = await axios.post(`${BASE_API_URL}/Clients/reset-password`, payload, {
+        headers: {
+          'Authorization': `Bearer ${token}`
+        }
+      });
       return response.data;
     } catch (error) {
       console.error("Error changing password:", error);
@@ -50,7 +58,15 @@ const ClientSettingsService = {
    */
   async getNotificationPreferences(clientId) {
     try {
-      const response = await axios.get(`${BASE_API_URL}/ClientPreferences/notification-preferences/${clientId}`);
+      const token = localStorage.getItem('authToken');
+      if (!token) {
+        throw new Error("Authentication required");
+      }
+      const response = await axios.get(`${BASE_API_URL}/ClientPreferences/notification-preferences/${clientId}`, {
+        headers: {
+          'Authorization': `Bearer ${token}`
+        }
+      });
       return response.data;
     } catch (error) {
       console.error("Error getting notification preferences:", error);
@@ -71,7 +87,15 @@ const ClientSettingsService = {
    */
   async updateNotificationPreferences(clientId, preferences) {
     try {
-      const response = await axios.put(`${BASE_API_URL}/ClientPreferences/notification-preferences/${clientId}`, preferences);
+      const token = localStorage.getItem('authToken');
+      if (!token) {
+        throw new Error("Authentication required");
+      }
+      const response = await axios.put(`${BASE_API_URL}/ClientPreferences/notification-preferences/${clientId}`, preferences, {
+        headers: {
+          'Authorization': `Bearer ${token}`
+        }
+      });
       return response.data;
     } catch (error) {
       console.error("Error updating notification preferences:", error);
