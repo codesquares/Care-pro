@@ -241,10 +241,14 @@ const ChatArea = ({ messages, recipient, userId, onSendMessage, isOfflineMode = 
 
     setIsLoadingGigs(true);
     try {
-      // Get all gigs and filter for this caregiver
+      // Get all gigs and filter for this caregiver's published/active gigs
       const allGigs = await ClientGigService.getAllGigs();
       const caregiverPublishedGigs = allGigs.filter(
-        gig => gig.caregiverId === caregiverId && gig.status === 'Published'
+        gig => {
+          const status = gig.status?.toLowerCase();
+          return gig.caregiverId === caregiverId && 
+                 (status === 'published' || status === 'active');
+        }
       );
 
       // Cache the results

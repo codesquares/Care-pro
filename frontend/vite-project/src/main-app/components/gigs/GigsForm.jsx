@@ -23,6 +23,9 @@ import { useNavigate, useLocation } from "react-router-dom";
 import { createNotification } from "../../services/notificationService";
 import { useGigForm } from "../../contexts/GigEditContext";
 import { useCaregiverStatus } from "../../contexts/CaregiverStatusContext";
+import { useAutoSave } from "../../hooks/useAutoSave";
+import ResumeModal from "./ResumeModal";
+import GigService from "../../services/gigService";
 
 const GigsForm = () => {
   const pages = ["Overview", "Pricing", "Gallery", "Publish"];
@@ -50,6 +53,10 @@ const GigsForm = () => {
   const [showShareOptions, setShowShareOptions] = useState(false);
   const [copySuccess, setCopySuccess] = useState(false);
   const [publishedGigId, setPublishedGigId] = useState(null);
+  const [showResumeModal, setShowResumeModal] = useState(false);
+  const [draftInfo, setDraftInfo] = useState(null);
+  const [isAutoSaveEnabled, setIsAutoSaveEnabled] = useState(false);
+  const [lastAutoSave, setLastAutoSave] = useState(null);
   const navigate = useNavigate();
   
   // Use caregiver status context for eligibility
@@ -73,7 +80,8 @@ const GigsForm = () => {
     isSaving,
     setSaving,
     validationErrors,
-    setValidationErrors
+    setValidationErrors,
+    populateFromGig
   } = useGigForm();
   
   // Check if we're editing a published gig (not a draft)
@@ -199,6 +207,30 @@ const GigsForm = () => {
     }
   };
 
+  const handleResumeDraft = () => {
+    if (draftInfo && draftInfo.data) {
+      // Populate form with draft data using context
+      populateFromGig(draftInfo.data);
+      setIsAutoSaveEnabled(true);
+      toast.success('Draft loaded successfully');
+    }
+  };
+
+  const handleStartFresh = async () => {
+    // Delete the draft and start fresh
+    if (draftInfo?.id) {
+      try {
+        // Optional: Delete the draft from backend
+        // await GigService.deleteDraft(draftInfo.id);
+        console.log('Starting fresh, draft discarded');
+      } catch (error) {
+        console.error('Error deleting draft:', error);
+      }
+    }
+    setDraftInfo(null);
+    setIsAutoSaveEnabled(true);
+  };
+
   const handleSocialShareGig = (platform) => {
     const shareUrl = `https://api.oncarepro.com/api/share/gig/${publishedGigId}`;
     const text = `Check out this care service: ${formData?.title || ''}`;
@@ -230,6 +262,48 @@ const GigsForm = () => {
 
   const caregiverId = localStorage.getItem("userId");
 
+  // Auto-save hook - saves draft every 10 seconds when enabled
+  const { saveImmediately } = useAutoSave(
+    formData,
+    async (data) => {
+      // Only auto-save if there's meaningful content
+      if (!data.title && !data.category && !data.description) {
+        return { success: false, message: 'No data to save' };
+      }
+      
+      try {
+        console.log('🔄 Auto-saving draft...');
+        const result = await GigService.saveDraft(data);
+        
+        // Only update form data with saved draft ID if save was successful
+        if (result.success && result.id && !formData.id) {
+          updateField('id', result.id);
+        }
+        
+        return result;
+      } catch (error) {
+        // Silently fail auto-save - don't disrupt user experience
+        console.error('Auto-save error:', error?.response?.data || error.message);
+        return { success: false, error };
+      }
+    },
+    10000, // Auto-save every 10 seconds
+    {
+      enabled: isAutoSaveEnabled,
+      skipInitial: true,
+      onSaveSuccess: (result) => {
+        if (result?.success !== false) {
+          setLastAutoSave(new Date());
+          console.log('✅ Draft auto-saved successfully');
+        }
+      },
+      onSaveError: (error) => {
+        // Silently log error without showing to user
+        console.warn('⚠️ Auto-save failed (silent):', error?.message || 'Unknown error');
+      }
+    }
+  );
+
   // Image-related state
   const [files, setFiles] = useState([]);
   const [video, setVideo] = useState(null);
@@ -251,6 +325,47 @@ const GigsForm = () => {
     }
   }, [isEditMode, formData.image1]);
 
+  // Effect to check for existing drafts on mount (only if not in edit mode)
+  useEffect(() => {
+    const checkForDrafts = async () => {
+      // Skip if already in edit mode (loading existing gig)
+      if (isEditMode) {
+        setIsAutoSaveEnabled(true); // Enable auto-save for editing
+        return;
+      }
+
+      try {
+        const result = await GigService.getUserDrafts();
+        if (result.success && result.data.length > 0) {
+          // Get the most recent draft (sorted by date)
+          const sortedDrafts = result.data.sort((a, b) => {
+            const dateA = new Date(a.updatedAt || a.createdAt || 0);
+            const dateB = new Date(b.updatedAt || b.createdAt || 0);
+            return dateB - dateA;
+          });
+          
+          const recentDraft = sortedDrafts[0];
+          setDraftInfo({
+            id: recentDraft.id,
+            lastSaved: recentDraft.updatedAt || recentDraft.createdAt,
+            data: recentDraft
+          });
+          setShowResumeModal(true);
+        } else {
+          // No drafts found, enable auto-save for new gig
+          setIsAutoSaveEnabled(true);
+        }
+      } catch (error) {
+        // Handle errors gracefully (404, network issues, etc.)
+        console.warn('Could not check for drafts:', error?.response?.status, error?.message);
+        // Enable auto-save even on error - don't block user
+        setIsAutoSaveEnabled(true);
+      }
+    };
+
+    checkForDrafts();
+  }, []); // Only run on mount
+
   // Effect to fetch existing gigs and count active ones
   useEffect(() => {
     const fetchActiveGigsCount = async () => {
@@ -266,7 +381,7 @@ const GigsForm = () => {
         // FIXED: Use centralized config instead of hardcoded Azure staging API URL
         const token = localStorage.getItem('authToken');
         const response = await fetch(
-          `${config.BASE_URL}/Gigs/caregiver/caregiverId?caregiverId=${userDetails.id}`,
+          `${config.BASE_URL}/Gigs/caregiver/${userDetails.id}`,
           {
             headers: {
               'Authorization': `Bearer ${token}`,
@@ -841,8 +956,22 @@ const GigsForm = () => {
   return (
     <div className="gigs-form">
       <div className="gigs-form-header">
-        <h1>{isEditMode ? 'Edit Gig' : 'Create New Gig'}</h1>
-        {isEditMode && <p>Update your existing gig details</p>}
+        <div>
+          <h1>{isEditMode ? 'Edit Gig' : 'Create New Gig'}</h1>
+          {isEditMode && <p>Update your existing gig details</p>}
+        </div>
+        
+        {/* Auto-save indicator */}
+        {isAutoSaveEnabled && lastAutoSave && (
+          <div className="auto-save-indicator">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+              <path d="M19 21H5a2 2 0 01-2-2V5a2 2 0 012-2h11l5 5v11a2 2 0 01-2 2z"/>
+              <polyline points="17 21 17 13 7 13 7 21"/>
+              <polyline points="7 3 7 8 15 8"/>
+            </svg>
+            <span>Last saved {new Date(lastAutoSave).toLocaleTimeString()}</span>
+          </div>
+        )}
       </div>
 
       <div className="gigs-form-body">
@@ -880,6 +1009,7 @@ const GigsForm = () => {
                 onFieldHover={handleFieldHover}
                 onFieldLeave={handleFieldLeave}
                 validationErrors={validationErrors}
+                category={formData.category}
               />
             )}
             {currentStep === 2 && (
@@ -1063,6 +1193,15 @@ const GigsForm = () => {
           </div>
         </div>
       )}
+
+      {/* Resume Draft Modal */}
+      <ResumeModal
+        isOpen={showResumeModal}
+        onClose={() => setShowResumeModal(false)}
+        onResume={handleResumeDraft}
+        onStartFresh={handleStartFresh}
+        draftInfo={draftInfo}
+      />
 
       {/* Custom Failure Modal for Gig Creation */}
       {showFailureModal && (

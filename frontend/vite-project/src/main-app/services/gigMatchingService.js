@@ -157,7 +157,10 @@ class GigMatchingService {
     }
     
     return gigs
-      .filter(gig => gig.status === 'published') // Only published gigs
+      .filter(gig => {
+        const status = gig.status?.toLowerCase();
+        return status === 'published' || status === 'active'; // Only published/active gigs
+      })
       .map(gig => {
         let matchScore = 0;
         let maxPossibleScore = 0;
