@@ -42,7 +42,7 @@ const PublicClientNavBar = () => {
     };
 
     window.addEventListener('clearSearch', handleClearSearch);
-    
+
     return () => {
       window.removeEventListener('clearSearch', handleClearSearch);
     };
@@ -57,7 +57,7 @@ const PublicClientNavBar = () => {
     };
 
     window.addEventListener('resize', handleResize);
-    
+
     return () => {
       window.removeEventListener('resize', handleResize);
     };
@@ -83,14 +83,14 @@ const PublicClientNavBar = () => {
       // Navigate to marketplace with search query parameter
       navigate(`/marketplace?q=${encodeURIComponent(searchQuery.trim())}`);
       // Dispatch search event with completed search
-      window.dispatchEvent(new CustomEvent('searchChanged', { 
-        detail: { searchQuery: searchQuery.trim(), isSearching: false } 
+      window.dispatchEvent(new CustomEvent('searchChanged', {
+        detail: { searchQuery: searchQuery.trim(), isSearching: false }
       }));
     } else {
       // If empty search, go to marketplace without query
       navigate('/marketplace');
-      window.dispatchEvent(new CustomEvent('searchChanged', { 
-        detail: { searchQuery: '', isSearching: false } 
+      window.dispatchEvent(new CustomEvent('searchChanged', {
+        detail: { searchQuery: '', isSearching: false }
       }));
     }
   };
@@ -98,21 +98,21 @@ const PublicClientNavBar = () => {
   const handleSearchInputChange = (e) => {
     const value = e.target.value;
     setSearchQuery(value);
-    
+
     // Set typing state to true when user starts typing
     if (!isTyping && value.trim()) {
       setIsTyping(true);
       // Immediately notify that searching has started
-      window.dispatchEvent(new CustomEvent('searchChanged', { 
-        detail: { searchQuery: value.trim(), isSearching: true } 
+      window.dispatchEvent(new CustomEvent('searchChanged', {
+        detail: { searchQuery: value.trim(), isSearching: true }
       }));
     }
-    
+
     // If search is cleared, immediately notify and reset typing state
     if (!value.trim()) {
       setIsTyping(false);
-      window.dispatchEvent(new CustomEvent('searchChanged', { 
-        detail: { searchQuery: '', isSearching: false } 
+      window.dispatchEvent(new CustomEvent('searchChanged', {
+        detail: { searchQuery: '', isSearching: false }
       }));
       if (location.pathname === '/') {
         window.history.pushState({}, '', '/');
@@ -133,8 +133,8 @@ const PublicClientNavBar = () => {
           const newUrl = `/?q=${encodeURIComponent(value.trim())}`;
           window.history.pushState({}, '', newUrl);
           // Trigger a custom event to notify dashboard of URL change
-          window.dispatchEvent(new CustomEvent('searchChanged', { 
-            detail: { searchQuery: value.trim(), isSearching: false } 
+          window.dispatchEvent(new CustomEvent('searchChanged', {
+            detail: { searchQuery: value.trim(), isSearching: false }
           }));
         }
       }
@@ -159,7 +159,7 @@ const PublicClientNavBar = () => {
         <div className="client-logo" onClick={() => navigate('/')}>
           <img src={logo} alt="CarePro Logo" />
         </div>
-        <button 
+        <button
           className="client-hamburger-menu"
           onClick={toggleMobileMenu}
           aria-label="Toggle navigation menu"
@@ -190,13 +190,13 @@ const PublicClientNavBar = () => {
         {/* Authentication buttons for mobile */}
         {!isAuthenticated && (
           <div className="mobile-auth-buttons">
-            <button 
+            <button
               className="mobile-signin-btn"
               onClick={() => handleMobileNavClick('/login')}
             >
               Sign In
             </button>
-            <button 
+            <button
               className="mobile-signup-btn"
               onClick={() => handleMobileNavClick('/register')}
             >
@@ -229,7 +229,7 @@ const PublicClientNavBar = () => {
                     </div>
                   </>
                 )}
-                
+
                 {user?.role === 'Caregiver' && (
                   <>
                     <div className="mobile-menu-item" onClick={() => handleMobileNavClick('/app/caregiver/dashboard')}>
@@ -246,7 +246,7 @@ const PublicClientNavBar = () => {
                     </div>
                   </>
                 )}
-                
+
                 {(user?.role === 'Admin' || user?.role === 'SuperAdmin') && (
                   <>
                     <div className="mobile-menu-item" onClick={() => handleMobileNavClick('/app/admin/dashboard')}>
@@ -259,7 +259,7 @@ const PublicClientNavBar = () => {
                     </div>
                   </>
                 )}
-                
+
                 {/* Common logout option */}
                 <div className="mobile-menu-item mobile-menu-logout" onClick={() => { handleLogout(); closeMobileMenu(); }}>
                   <span>Sign Out</span>
@@ -330,7 +330,7 @@ const PublicClientNavBar = () => {
                   </div>
                 </>
               )}
-              
+
               {user?.role === 'Caregiver' && (
                 <>
                   <div className="client-nav-item" onClick={() => navigate('/app/caregiver/dashboard')}>
@@ -347,7 +347,7 @@ const PublicClientNavBar = () => {
                   </div>
                 </>
               )}
-              
+
               {(user?.role === 'Admin' || user?.role === 'SuperAdmin') && (
                 <>
                   <div className="client-nav-item" onClick={() => navigate('/app/admin/dashboard')}>
@@ -360,10 +360,10 @@ const PublicClientNavBar = () => {
                   </div>
                 </>
               )}
-              
+
               {/* Common authenticated navigation - Logout */}
               <div className="auth-buttons">
-                <button 
+                <button
                   className="signout-btn"
                   onClick={handleLogout}
                 >
@@ -375,33 +375,33 @@ const PublicClientNavBar = () => {
             <>
               {/* Public navigation */}
               <div className="public-nav-links">
-                <button 
+                <button
                   className="nav-link-btn"
-                  onClick={() => navigate('/about-us')}
+                  onClick={() => navigate('/book-caregiver')}
                 >
-                  About
+                  Hire a caregiver
                 </button>
                 {(!isAuthenticated || user?.role?.toLowerCase() !== 'caregiver') && (
-                  <button 
-                    className="nav-link-btn-special-link"
+                  <button
+                    className="nav-link-btn"
                     onClick={() => navigate('/become-caregiver')}
                   >
-                    Become a Caregiver
+                    Become a caregiver
                   </button>
                 )}
               </div>
               <div className="auth-buttons">
-                <button 
+                <button
                   className="signin-btn"
                   onClick={() => navigate('/login')}
                 >
-                  Sign In
+                  Login
                 </button>
-                <button 
+                <button
                   className="signup-btn"
                   onClick={() => navigate('/register')}
                 >
-                  Sign Up
+                  Signup
                 </button>
               </div>
             </>
