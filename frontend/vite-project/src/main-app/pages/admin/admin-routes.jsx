@@ -18,7 +18,7 @@ import { useNavigate } from 'react-router-dom';
 import DojahDataViewer from '../../components/admin/DojahDataViewer';
 import DojahAdminDashboard from '../../components/admin/DojahAdminDashboard';
 import WebhookDataAdmin from '../../components/admin/WebhookDataAdmin';
-
+import NotFoundPage from '../../../pages/NotFoundPage';
 function AdminRoutes() {
     const navigate = useNavigate();
     
@@ -51,6 +51,7 @@ function AdminRoutes() {
             <Route path='/dojah-data' element={<DojahDataViewer />} />
             <Route path="dojah-admin" element={<VerificationManagement />} />
             <Route path="webhook-data" element={<WebhookDataAdmin />} />
+            <Route path="*" element={<NotFoundPage />} />
         </Routes>
         </>
     );

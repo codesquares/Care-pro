@@ -1,11 +1,22 @@
-
+import { useState } from "react";
 import "./Pricing.css";
 import PackageDetailsInput from "./PackageDetailsInput";
+import PricingTemplates from "./PricingTemplates";
 
-const PricingTable = ({ pricing, onPricingChange, onFieldFocus, onFieldBlur, onFieldHover, onFieldLeave, validationErrors = {} }) => {
+const PricingTable = ({ pricing, onPricingChange, onFieldFocus, onFieldBlur, onFieldHover, onFieldLeave, validationErrors = {}, category }) => {
+  const [activeTab, setActiveTab] = useState("manual"); // "templates" or "manual"
+  const [selectedTemplate, setSelectedTemplate] = useState(null);
+
   const handleInputChange = (plan, field, value) => {
     const updatedPricing = { ...pricing, [plan]: { ...pricing[plan], [field]: value } };
     onPricingChange(updatedPricing);
+  };
+
+  const handleApplyTemplate = (templatePackages) => {
+    // Apply template to form - update all three pricing tiers
+    onPricingChange(templatePackages);
+    // Switch to manual tab after applying
+    setActiveTab("manual");
   };
 
   const getFieldError = (plan, field) => {
@@ -28,6 +39,36 @@ const PricingTable = ({ pricing, onPricingChange, onFieldFocus, onFieldBlur, onF
         )}
       </div>
 
+      {/* Tab Navigation */}
+      <div className="pricing-tabs">
+        <button
+          type="button"
+          className={`pricing-tab ${activeTab === "templates" ? "active" : ""}`}
+          onClick={() => setActiveTab("templates")}
+        >
+          📋 Templates
+        </button>
+        <button
+          type="button"
+          className={`pricing-tab ${activeTab === "manual" ? "active" : ""}`}
+          onClick={() => setActiveTab("manual")}
+        >
+          ✏️ Manual Entry
+        </button>
+      </div>
+
+      {/* Templates Tab */}
+      {activeTab === "templates" && (
+        <PricingTemplates
+          selectedTemplate={selectedTemplate}
+          onTemplateSelect={setSelectedTemplate}
+          onApplyTemplate={handleApplyTemplate}
+          category={category}
+        />
+      )}
+
+      {/* Manual Entry Tab */}
+      {activeTab === "manual" && (
       <div className="pricing-form-container">
         <div className="pricing-field">
           <label>Package Name</label>
@@ -84,6 +125,7 @@ const PricingTable = ({ pricing, onPricingChange, onFieldFocus, onFieldBlur, onF
           )}
         </div>
       </div>
+      )}
     </div>
   );
 };

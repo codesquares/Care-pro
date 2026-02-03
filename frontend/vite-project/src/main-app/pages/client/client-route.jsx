@@ -18,6 +18,7 @@ import Cart from '../client/cart/Cart';
 import NotificationsPage from '../../components/Notifications/Notifications';
 import ResolutionCenter from './orders/ResolutionCenter';
 import FAQPage from './orders/FAQ';
+import NotFoundPage from '../../../pages/NotFoundPage';
 
 
 function ClientRoutes() {
@@ -41,6 +42,7 @@ function ClientRoutes() {
             <Route path="/notifications" element={<NotificationsPage />} />
             <Route path="/cart/:id" element={<Cart />} />
             <Route path="/faq" element={<FAQPage />} />
+            <Route path="*" element={<NotFoundPage />} />
         </Routes>
         </>
     );

@@ -21,6 +21,7 @@ import CaregiverOrderDetails from './orders/CaregiverOrderDetails';
 import { GigEditProvider } from '../../contexts/GigEditContext';
 import '../../components/ErrorBoundary.css';
 import FAQPage from '../client/orders/FAQ';
+import NotFoundPage from '../../../pages/NotFoundPage';
 
 function CareGiverRoutes() {
     return (
@@ -49,6 +50,7 @@ function CareGiverRoutes() {
                 <Route path="/assessment" element={<AssessmentPage />} />
                 <Route path="/order-details/:orderId" element={<CaregiverOrderDetails />} />
                 <Route path="/faq" element={<FAQPage />} />
+                <Route path="*" element={<NotFoundPage />} />
             </Routes>
         </GigEditProvider>
     );

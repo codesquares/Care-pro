@@ -16,7 +16,7 @@ const CreateAccount = () => {
     lastName: "",
     email: "",
     password: "",
-    phone: "",
+    // phone: "",
     confirmPassword: "",
   });
 
@@ -57,7 +57,7 @@ const CreateAccount = () => {
     if (!formValues.lastName.trim()) newErrors.lastName = "Last name is required.";
     if (!formValues.email.trim() || !/\S+@\S+\.\S+/.test(formValues.email))
       newErrors.email = "Valid email address is required.";
-    if (!formValues.phone.trim() || !/^\+?\d{10,15}$/.test(formValues.phone))
+    // if (!formValues.phone.trim() || !/^\+?\d{10,15}$/.test(formValues.phone))
       newErrors.phone = "Valid phone number is required.";
     if (!formValues.password || formValues.password.length < 8) 
       newErrors.password = "Password must be at least 8 characters long.";
@@ -123,7 +123,7 @@ Please log in to your existing account instead of creating a new one.`);
       firstName: formValues.firstName,
       lastName: formValues.lastName,
       email: formValues.email,
-      phoneNo: formValues.phone,
+      // phoneNo: formValues.phone,
       middleName: "testing",
       password: formValues.password,
       role: userType, // Include selected user type
@@ -228,17 +228,17 @@ You won't be able to log in until your email is verified.`);
               />
               {errors.email && <p className="error-text">{errors.email}</p>}
             </div>
-            <div>
+            {/* <div>
               <input
                 type="tel"
                 name="phone"
                 placeholder="Phone number"
                 value={formValues.phone}
                 onChange={handleChange}
-                required
+                // required
               />
               {errors.phone && <p className="error-text">{errors.phone}</p>}
-            </div>
+            </div> */}
             <div className="password-input">
               <input
                 type={showPassword ? "text" : "password"}
@@ -296,7 +296,7 @@ You won't be able to log in until your email is verified.`);
               {errors.confirmPassword && <p className="error-text">{errors.confirmPassword}</p>}
             </div>
             <div className="radio-group">
-              <label className="radio-label">
+              {/* <label className="radio-label">
                 <input
                   type="radio"
                   name="userType"
@@ -306,8 +306,8 @@ You won't be able to log in until your email is verified.`);
                 />
                 <span className="custom-radio"></span>
                 Caregiver
-              </label>
-              <label className="radio-label">
+              </label> */}
+              {/* <label className="radio-label">
                 <input
                   type="radio"
                   name="userType"
@@ -317,7 +317,7 @@ You won't be able to log in until your email is verified.`);
                 />
                  <span className="custom-radio"></span>
                 Client
-              </label>
+              </label> */}
               {/* <label className="radio-label">
                 <input
                   type="radio"
