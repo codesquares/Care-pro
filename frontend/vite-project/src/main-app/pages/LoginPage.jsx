@@ -99,19 +99,7 @@ const LoginPage = () => {
 
       const { data } = response;
       
-      // Show success modal first, then update authentication state
-      setModalTitle("Login Successful!");
-      setModalDescription("Welcome back! You will be redirected to your dashboard.");
-      setButtonBgColor("#00B4A6");
-      setButtonText("Continue");
-      setIsError(false);
-      setShowSuccessModal(true);
-      setIsModalOpen(true);
-      
-      // Update authentication state after a short delay to allow modal to show
-      setTimeout(() => {
-        login(data, data.token, data.refreshToken);
-      }, 100);
+      login(data, data.token, data.refreshToken);
       
     } catch (err) {
       const errorMessage =
@@ -176,14 +164,6 @@ const LoginPage = () => {
         
         // Update AuthContext state
         login(userData, accessToken, result.refreshToken);
-        
-        setModalTitle("Login Successful!");
-        setModalDescription("Welcome back! You will be redirected to your dashboard.");
-        setButtonBgColor("#00B4A6");
-        setButtonText("Continue");
-        setIsError(false);
-        setShowSuccessModal(true);
-        setIsModalOpen(true);
         
         // Navigate to dashboard after a short delay - use window.location for full page reload
         // This ensures AuthContext re-reads from localStorage

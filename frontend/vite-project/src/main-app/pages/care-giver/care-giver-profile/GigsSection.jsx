@@ -131,7 +131,7 @@ const GigsSection = () => {
             'Authorization': `Bearer ${token}`
           },
           body: JSON.stringify({
-            status: 'draft',
+            status: 'paused',
             caregiverId: userDetails.id
           })
         }
@@ -145,7 +145,7 @@ const GigsSection = () => {
       setGigs(prevGigs => 
         prevGigs.map(g => 
           g.id === gig.id 
-            ? { ...g, status: 'draft' }
+            ? { ...g, status: 'paused' }
             : g
         )
       );
@@ -181,33 +181,39 @@ const GigsSection = () => {
       }
 
       const token = localStorage.getItem('authToken');
+      // Use new soft delete endpoint
       const response = await fetch(
-        `${config.BASE_URL}/Gigs/UpdateGigStatusToPause/gigId?gigId=${gig.id}`, // Using centralized API config
+        `${config.BASE_URL}/Gigs/DeleteGig/gigId?gigId=${gig.id}&caregiverId=${userDetails.id}`,
         {
-          method: 'PUT',
+          method: 'DELETE',
           headers: {
-            'Content-Type': 'application/json',
             'Authorization': `Bearer ${token}`
-          },
-          body: JSON.stringify({
-            status: '',
-            caregiverId: userDetails.id
-          })
+          }
         }
       );
 
       if (!response.ok) {
-        throw new Error('Failed to delete gig');
+        // Handle specific error cases
+        if (response.status === 400) {
+          const errorData = await response.json().catch(() => ({}));
+          throw new Error(errorData.message || 'Gig is already deleted or invalid request');
+        } else if (response.status === 403) {
+          throw new Error('You do not have permission to delete this gig');
+        } else if (response.status === 404) {
+          throw new Error('Gig not found');
+        } else {
+          throw new Error('Failed to delete gig');
+        }
       }
 
-      // Remove the gig from local state
+      // Remove the gig from local state (soft deleted gigs are filtered out)
       setGigs(prevGigs => prevGigs.filter(g => g.id !== gig.id));
 
       showSuccess('Gig deleted successfully!');
       
     } catch (err) {
       console.error('Error deleting gig:', err);
-      showError('Failed to delete gig. Please try again.');
+      showError(err.message || 'Failed to delete gig. Please try again.');
     } finally {
       // Remove gig from deleting set
       setDeletingGigs(prev => {
@@ -220,7 +226,12 @@ const GigsSection = () => {
 
   // Filter gigs based on status
   const activeGigs = useMemo(() => {
-    return gigs.filter(gig => gig.status?.toLowerCase() === 'published');
+    const status = (gig) => gig.status?.toLowerCase();
+    return gigs.filter(gig => status(gig) === 'published' || status(gig) === 'active');
+  }, [gigs]);
+
+  const pausedGigs = useMemo(() => {
+    return gigs.filter(gig => gig.status?.toLowerCase() === 'paused');
   }, [gigs]);
 
   const draftGigs = useMemo(() => {
@@ -244,7 +255,7 @@ const GigsSection = () => {
 
       const token = localStorage.getItem('authToken');
       const response = await fetch(
-        `${config.BASE_URL}/Gigs/caregiver/caregiverId?caregiverId=${userDetails.id}`, // Using centralized API config
+        `${config.BASE_URL}/Gigs/caregiver/${userDetails.id}`, // Using centralized API config
         {
           headers: {
             'Authorization': token ? `Bearer ${token}` : '',
@@ -309,12 +320,18 @@ const GigsSection = () => {
           className={`caregiver-gigs-tab ${activeTab === "paused" ? "active" : ""}`}
           onClick={() => setActiveTab("paused")}
         >
-          Paused Gigs ({draftGigs.length})
+          Paused Gigs ({pausedGigs.length})
+        </button>
+        <button 
+          className={`caregiver-gigs-tab ${activeTab === "draft" ? "active" : ""}`}
+          onClick={() => setActiveTab("draft")}
+        >
+          Draft Gigs ({draftGigs.length})
         </button>
       </div>
 
       {/* No Gigs State */}
-      {activeGigs.length === 0 && draftGigs.length === 0 ? (
+      {activeGigs.length === 0 && pausedGigs.length === 0 && draftGigs.length === 0 ? (
         <div className="caregiver-empty-state">
           <img src={clock} alt="No Gigs" style={{ width: 80, marginBottom: 16 }} />
           <h4>No Gigs Yet</h4>
@@ -333,7 +350,7 @@ const GigsSection = () => {
         </div>
 
         {/* Active Gigs Limit Notice - Only show after eligibility has been checked */}
-        {activeTab === "paused" && !canPublishNewGig && eligibilityChecked && (
+        {(activeTab === "paused" || activeTab === "draft") && !canPublishNewGig && eligibilityChecked && (
           <div className="gig-limit-notice">
             {activeGigs.length >= 2 ? (
               <p>⚠️ You have reached the maximum of 2 active gigs. Pause an active gig to publish more.</p>
@@ -408,7 +425,7 @@ const GigsSection = () => {
           ))}
 
           {/* Paused Tab Content */}
-          {activeTab === "paused" && draftGigs.map((gig) => (
+          {activeTab === "paused" && pausedGigs.map((gig) => (
             <div 
               key={gig.id} 
               className="caregiver-gig-card"
@@ -448,6 +465,73 @@ const GigsSection = () => {
                     }
                   >
                     {publishingGigs.has(gig.id) ? 'Publishing...' : 'Publish'}
+                  </button>
+                  <button 
+                    className="caregiver-gig-action-btn caregiver-delete"
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      handleDeleteGig(gig);
+                    }}
+                    disabled={deletingGigs.has(gig.id)}
+                  >
+                    {deletingGigs.has(gig.id) ? 'Deleting...' : 'Delete'}
+                  </button>
+                </div>
+              </div>
+            </div>
+          ))}
+
+          {/* Draft Tab Content */}
+          {activeTab === "draft" && draftGigs.map((gig) => (
+            <div 
+              key={gig.id} 
+              className="caregiver-gig-card"
+              onClick={() => navigate(`/service/${gig.id}`)}
+              style={{ cursor: 'pointer' }}
+            >
+              <img
+                src={gig.image1 || "https://via.placeholder.com/300x160"}
+                alt={gig.title}
+                className="caregiver-gig-image"
+              />
+              <div className="caregiver-gig-content">
+                <h4 className="caregiver-gig-title">{gig.title}</h4>
+                <p className="caregiver-gig-description">{gig.description}</p>
+                <div className="caregiver-gig-actions">
+                  <button 
+                    className="caregiver-gig-action-btn caregiver-edit"
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      handleEditGig(gig);
+                    }}
+                  >
+                    Continue Editing
+                  </button>
+                  <button 
+                    className={`caregiver-gig-action-btn caregiver-publish ${!canPublishNewGig ? 'disabled' : ''}`}
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      handlePublishGig(gig);
+                    }}
+                    disabled={publishingGigs.has(gig.id) || !canPublishNewGig}
+                    title={!canPublishNewGig ? 
+                      (activeGigs.length >= 2 ? 
+                        'You can only have 2 active gigs. Pause an active gig first.' : 
+                        'Complete verification, assessment, and upload certificates to publish gigs.'
+                      ) : ''
+                    }
+                  >
+                    {publishingGigs.has(gig.id) ? 'Publishing...' : 'Publish'}
+                  </button>
+                  <button 
+                    className="caregiver-gig-action-btn caregiver-delete"
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      handleDeleteGig(gig);
+                    }}
+                    disabled={deletingGigs.has(gig.id)}
+                  >
+                    {deletingGigs.has(gig.id) ? 'Deleting...' : 'Delete'}
                   </button>
                 </div>
               </div>

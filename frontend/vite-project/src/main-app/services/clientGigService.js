@@ -50,15 +50,16 @@ const ClientGigService = {
       caregiverMap.set(caregiver.id, caregiver);
     });
 
-    // Filter gigs to only include those with valid caregivers and published status
+    // Filter gigs to only include those with valid caregivers and published/active status
     // and enrich them with caregiver information
     const validAndEnrichedGigs = allGigs
       .filter(gig => {
         // Exclude gigs that don't have a caregiverId or whose caregiver doesn't exist
-        // Also exclude gigs that are not published
+        // Also exclude gigs that are not published or active
+        const status = gig.status?.toLowerCase();
         return gig.caregiverId && 
                caregiverMap.has(gig.caregiverId) && 
-               gig.status === 'Published';
+               (status === 'published' || status === 'active');
       })
       .map(gig => {
         // Get the corresponding caregiver data

@@ -3,12 +3,10 @@ import { useState, useEffect } from "react";
 import { useLocation } from "react-router-dom";
 import "./clientDashboard.css";
 import "./responsiveFixes.css";
-import Banner from "./Banner";
+import ClientDashboardHero from "./ClientDashboardHero";
 import ServiceCategory from "./ServiceCategory";
 import FilterBarDropdown from "../components/FilterBar";
 import ClientGigService from "../../../services/clientGigService";
-
-import CareMatchBanner from "./CareMatchBanner";
 
 
 
@@ -127,19 +125,16 @@ const ClientDashboard = () => {
     <div className="dashboard client-dashboard-flex">
       <div className="rightbar">
         {!shouldHideComponents() && (
-          <Banner
-            name={`${user.firstName} ${user.lastName}`}
-            careNeedsSet={careNeedsSet}
+          <ClientDashboardHero
+            userName={user.firstName || 'User'}
+            profileCompletion={10}
+            remindersCount={3}
+            filters={filters}
+            onFilterChange={handleFilterChange}
           />
         )}
 
-        {!shouldHideComponents() && (
-          <div className="mid-banner">
-            <CareMatchBanner />
-          </div>
-        )}
-
-        {!shouldHideComponents() && (
+        {shouldHideComponents() && (
           <FilterBarDropdown filters={filters} onFilterChange={handleFilterChange} />
         )}
 

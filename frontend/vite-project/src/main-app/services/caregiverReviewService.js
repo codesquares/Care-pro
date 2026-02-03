@@ -25,7 +25,7 @@ const CaregiverReviewService = {
 
       // Step 1: Fetch caregiver's gigs and caregiver profile in parallel
       const [gigsResponse, caregiverResponse] = await Promise.allSettled([
-        api.get(`/Gigs/caregiver/caregiverId?caregiverId=${caregiverId}`),
+        api.get(`/Gigs/caregiver/${caregiverId}`),
         api.get(`/CareGivers/${caregiverId}`)
       ]);
 

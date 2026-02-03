@@ -5,6 +5,7 @@ import AdminRoutes from './pages/admin/admin-routes';
 import UnauthorizedPage from './pages/UnauthorizedPage';
 import ProtectedRoute from './components/auth/ProtectedRoute';
 import RoleBasedRoute from './components/auth/RoleBasedRoute';
+import NotFoundPage from '../pages/NotFoundPage';
 
 
 function MainAppRoutes() {
@@ -25,6 +26,7 @@ function MainAppRoutes() {
                     <AdminRoutes />
                 </RoleBasedRoute>
             } />
+            <Route path="*" element={<NotFoundPage />} />
             <Route path='unauthorized' element={<UnauthorizedPage />} />
         </Routes>
     );
