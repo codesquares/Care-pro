@@ -123,6 +123,21 @@ Marketing Page Styles
   color: #00B140; /* Green color */
 }
 
+@media (max-width: 480px) {
+  .text-container {
+    line-height: 1.2;
+  }
+  .connect-text {
+    font-size: 34px;
+  }
+  .profession-text {
+    font-size: 26px;
+  }
+  .demand-text {
+    font-size: 24px;
+  }
+}
+
 
 .marketing-page .mk-hero__search {
   display: flex;
