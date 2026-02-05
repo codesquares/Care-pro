@@ -9,6 +9,17 @@ const MarketingNavBar = () => {
   const { user, isAuthenticated, handleLogout: authLogout } = useAuth();
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [scrolled, setScrolled] = useState(false);
+  const [searchQuery, setSearchQuery] = useState("");
+
+  // Handle search
+  const handleSearch = (e) => {
+    e.preventDefault();
+    if (searchQuery.trim()) {
+      navigate(`/marketplace?q=${encodeURIComponent(searchQuery.trim())}`);
+    } else {
+      navigate('/marketplace');
+    }
+  };
 
   // Handle logout
   const handleLogout = () => {
@@ -85,21 +96,21 @@ const MarketingNavBar = () => {
       // Logged out state - promotional nav
       return (
         <>
-          <Link to="/marketplace" onClick={closeMobileMenu}>
-            Browse Services
+          <Link to="/book-caregiver" onClick={closeMobileMenu}>
+            Hire a caregiver
           </Link>
           <Link to="/become-caregiver" onClick={closeMobileMenu}>
-            Become a Caregiver
-          </Link>
-          <Link to="/login" onClick={closeMobileMenu}>
-            Sign In
+            Become a caregiver
           </Link>
           <Link
             to="/register"
             className="nav-join-btn"
             onClick={closeMobileMenu}
           >
-            Join
+            Signup
+          </Link>
+          <Link to="/login" className="nav-login-btn" onClick={closeMobileMenu}>
+            Login
           </Link>
         </>
       );
@@ -113,6 +124,9 @@ const MarketingNavBar = () => {
         <Link to="/" className="navbar-logo" onClick={closeMobileMenu}>
           <img src={logo} alt="CarePro" />
         </Link>
+
+
+
 
         {/* Mobile Menu Toggle */}
         <button

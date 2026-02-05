@@ -5,6 +5,7 @@ import caregiverBg from "../../../../assets/suggested_care_image.png";
 import defaultAvatar from "../../../../assets/profilecard1.png";
 
 // Featured service categories to display (6 cards)
+// Each category has: id, slug, name, description, icon, basePrice
 const featuredCategories = [
   {
     id: 1,
