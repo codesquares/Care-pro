@@ -193,8 +193,17 @@ const LoginPage = () => {
         setIsError(true);
         setIsModalOpen(true);
         
+      } else if (result.needsSignUp) {
+        // User doesn't have an account yet - prompt to sign up first
+        setModalTitle("Account Not Found");
+        setModalDescription("No account found with this Google account. Please sign up first to create your account, then you can use Google to sign in.");
+        setButtonText("Sign Up");
+        setButtonBgColor("#00B4A6");
+        setIsError(false);
+        setIsModalOpen(true);
+        
       } else {
-        toast.error(result.error || "Google sign in failed");
+        toast.error(result.error || result.message || "Google sign in failed");
       }
     } catch (error) {
       console.error("Google auth error:", error);
@@ -209,7 +218,11 @@ const LoginPage = () => {
   };
 
   const handleModalProceed = () => {
-    if (isError) {
+    if (buttonText === "Sign Up") {
+      // Navigate to registration page for users who need to sign up
+      setIsModalOpen(false);
+      navigate("/register");
+    } else if (isError) {
       // For error modal, just close and let user try again
       setIsModalOpen(false);
     } else {

@@ -6,6 +6,7 @@ import "./MarketingPage.css";
 import careproLogo from "../assets/careproLogo.svg";
 import nurseImg from "../assets/nurse.png";
 import nurseAndWomanImg from "../assets/nurseAndWoman.png";
+import afternoonLanding from "../assets/afternoon_landing.png";
 import caregiver1 from "../assets/caregiver1.png";
 import QHCC1 from "../assets/QHCC1.jpg";
 import ifeoluwa from "../assets/ifeoluwa.jpeg";
@@ -201,7 +202,7 @@ const MarketingPage = () => {
       <section
         className="mk-hero"
         style={{
-          backgroundImage: `linear-gradient(90deg, rgba(0, 0, 0, 0.7) 0%, rgba(0, 0, 0, 0.4) 60%, rgba(0, 0, 0, 0.2) 100%), url(${nurseAndWomanImg})`,
+          backgroundImage: `linear-gradient(90deg, rgba(0, 0, 0, 0.7) 0%, rgba(0, 0, 0, 0.4) 60%, rgba(0, 0, 0, 0.2) 100%), url(${afternoonLanding})`,
         }}
       >
         <div className="mk-hero__content">
