@@ -6,6 +6,13 @@ import "./MarketingPage.css";
 import careproLogo from "../assets/careproLogo.svg";
 import nurseImg from "../assets/nurse.png";
 import nurseAndWomanImg from "../assets/nurseAndWoman.png";
+import afternoonLanding from "../assets/afternoon_landing.png";
+import caregiver1 from "../assets/caregiver1.png";
+import QHCC1 from "../assets/QHCC1.jpg";
+import ifeoluwa from "../assets/ifeoluwa.jpeg";
+import caregiver2 from "../assets/caregiver2.png";
+import caregiver3 from "../assets/caregiver3.png";
+import caregiver4 from "../assets/caregiver4.png";
 
 // Service categories for the grid - mapped to backend categories
 const serviceCategories = [
@@ -111,6 +118,49 @@ const healthcareFacts = [
   },
 ];
 
+const featuredCaregivers = [
+  {
+    id: 1,
+    name: "Amina Yusuf",
+    location: "Ikeja, Lagos, Nigeria",
+    title: "Professional Elderly Care & Nursing Assistant",
+    image: caregiver1,
+    avatar: ifeoluwa,
+    verified: true,
+    rating: 4.5,
+  },
+  {
+    id: 2,
+    name: "Taiwo Kamaru",
+    location: "Ajah, Lagos, Nigeria",
+    title: "Daily Home Care Assistant",
+    image: caregiver2,
+    avatar: ifeoluwa,
+    verified: true,
+    rating: 4.5,
+  },
+  {
+    id: 3,
+    name: "Chinedu Eze",
+    location: "Lekki, Lagos, Nigeria",
+    title: "Professional Childcare Provider",
+    image: caregiver3,
+    avatar: ifeoluwa,
+    verified: true,
+    rating: 4.5,
+  },
+  {
+    id: 4,
+    name: "Funke Adeyemi",
+    location: "Ikoyi, Lagos, Nigeria",
+    title: "Adult & Elderly Support Caregiver",
+    image: caregiver4,
+    avatar: ifeoluwa,
+    verified: true,
+    rating: 4.5,
+  },
+];
+
 const MarketingPage = () => {
   const navigate = useNavigate();
   const [searchQuery, setSearchQuery] = useState("");
@@ -149,36 +199,51 @@ const MarketingPage = () => {
   return (
     <div className="marketing-page">
       {/* Hero Section */}
-      <section className="hero-section">
-        <div className="hero-content">
-          <h1>
-            Find the perfect <span className="highlight">care assistant</span>{" "}
-            for your family
-          </h1>
-          <p className="hero-subtitle">
-            Hire caregivers who have been vetted, evaluated and trained to fit
-            your caregiving needs at home.
-          </p>
+      <section
+        className="mk-hero"
+        style={{
+          backgroundImage: `linear-gradient(90deg, rgba(0, 0, 0, 0.7) 0%, rgba(0, 0, 0, 0.4) 60%, rgba(0, 0, 0, 0.2) 100%), url(${afternoonLanding})`,
+        }}
+      >
+        <div className="mk-hero__content">
+          <div className="text-container">
+            <span className="connect-text">Connect with Verified</span>
+            <span className="profession-text">Home Care Professionals</span>
+            <span className="demand-text">on-demand</span>
+          </div>
 
           {/* Search Bar */}
-          <form className="hero-search" onSubmit={handleSearch}>
+          <form className="mk-hero__search" onSubmit={handleSearch}>
             <input
               type="text"
-              placeholder="Try 'elderly care' or 'nanny'"
+              placeholder="What service are you looking for today?"
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
               onKeyUp={handleQuickSearch}
             />
-            <button type="submit">Search</button>
+            <button type="submit">
+              <span className="mk-hero__search-icon" aria-hidden="true">
+                &#128269;
+              </span>
+              Search
+            </button>
           </form>
 
           {/* Popular Tags */}
-          <div className="hero-popular">
+          <div className="mk-hero__popular">
             <span>Popular:</span>
-            <button onClick={() => handleServiceClick('adult-care')}>Adult Care</button>
-            <button onClick={() => handleServiceClick('child-care')}>Child Care</button>
-            <button onClick={() => handleServiceClick('home-care')}>Home Care</button>
-            <button onClick={() => handleServiceClick('post-surgery-care')}>Post-Op</button>
+            <button onClick={() => handleServiceClick("adult-care")}>
+              Adult Care
+            </button>
+            <button onClick={() => handleServiceClick("child-care")}>
+              Nanny
+            </button>
+            <button onClick={() => handleServiceClick("home-care")}>
+              Home Care
+            </button>
+            <button onClick={() => handleServiceClick("pet-care")}>
+              Pet Care
+            </button>
           </div>
         </div>
       </section>
@@ -199,48 +264,95 @@ const MarketingPage = () => {
                   <h3>{service.name}</h3>
                   <p>{service.description}</p>
                   <div className="service-price">
-                    Starting at ₦{service.basePrice.toLocaleString()}
+                    Starting at {"\u20A6"}
+                    {service.basePrice.toLocaleString()}
                   </div>
                 </div>
               </div>
             ))}
+            <div className="services-cta-sec" onClick={handleHireCaregiver}>
+              <div className="services-cta-sec-text">
+                Trusted homecare at your fingertips.
+              </div>
+            <button className="services-cta-btn" type="button">
+              Hire a caregiver <span aria-hidden="true">›</span>
+            </button>
           </div>
-          <div className="browse-all-container">
+          </div>
+          {/* <div className="browse-all-container">
             <button className="browse-all-btn" onClick={handleBrowseAll}>
               Browse All Services
             </button>
-          </div>
+          </div> */}
         </div>
       </section>
 
       {/* How It Works Section */}
       <section className="how-it-works-section">
         <div className="container">
-          <h2>How CarePro Works</h2>
-          <div className="steps-grid">
-            <div className="step-card">
-              <div className="step-number">1</div>
-              <h3>Browse Caregivers</h3>
+          <h2>How it works</h2>
+          <div className="how-grid">
+            <div className="how-card">
+              <div className="how-image">
+                <img src={caregiver1} alt="Browse caregivers" />
+              </div>
+              <h3>Post job request or Browse service categories</h3>
               <p>
-                Search through our marketplace of verified and qualified
-                caregivers based on your specific needs.
+                There are several ways to discover the perfect caregiver or
+                service on carepro. You can either use the search feature or
+                post job request, explore these methods to navigate the
+                platform efficiently and find your perfect match.
               </p>
+              <div className="how-actions split">
+                <button className="how-btn outline">Browse Services</button>
+                <button className="how-btn fill">Post job request</button>
+              </div>
             </div>
-            <div className="step-card">
-              <div className="step-number">2</div>
-              <h3>Choose Your Match</h3>
+
+            <div className="how-card">
+              <div className="how-image">
+                <img src={QHCC1} alt="Verified caregiver visit" />
+              </div>
+              <div className="how-profile">
+                <img className="how-avatar" src={ifeoluwa} alt="Amina Yusuf" />
+                <div className="how-profile-meta">
+                  <div className="how-profile-top">
+                    <div className="how-profile-name">Amina Yusuf</div>
+                    <div className="how-profile-badge">Verified</div>
+                  </div>
+                  <div className="how-profile-location">Lagos, Nigeria</div>
+                </div>
+                <div className="how-profile-rating">
+                  <span>★</span> 4.5
+                </div>
+              </div>
+              <h3>Get to know your Care Professional</h3>
               <p>
-                Review profiles, ratings, and services offered. Select the
-                caregiver that best fits your requirements.
+                Explore verified caregiver profiles with key details like
+                location, ratings and feedback, languages, and response times,
+                explore the “about me” section will also to know more about
+                caregivers, skills, experience, certifications.
               </p>
+              <div className="how-actions">
+                <button className="how-btn fill wide">
+                  Explore Verified Caregivers
+                </button>
+              </div>
             </div>
-            <div className="step-card">
-              <div className="step-number">3</div>
-              <h3>Book & Relax</h3>
+
+            <div className="how-card">
+              <div className="how-image">
+                <img src={nurseAndWomanImg} alt="Care completed" />
+              </div>
+              <h3>Only pay when the job is done.</h3>
               <p>
-                Schedule your care service with confidence. Our caregivers are
-                background-checked and insured.
+                Upon confirming that the job is done, approve task or request
+                completion of job, release payments after approving work,
+                either by task or upon project completion.
               </p>
+              <div className="how-actions">
+                <button className="how-btn fill wide">View Pricing</button>
+              </div>
             </div>
           </div>
         </div>
@@ -302,7 +414,7 @@ const MarketingPage = () => {
       </section> */}
 
       {/* Trust Section */}
-      <section className="trust-section">
+      {/* <section className="trust-section">
         <div className="container">
           <h2>Why Choose CarePro?</h2>
           <div className="trust-grid">
@@ -338,10 +450,66 @@ const MarketingPage = () => {
             </div>
           </div>
         </div>
+      </section> */}
+
+      {/* Featured Caregivers Section */}
+      <section className="featured-caregivers-section">
+        <div className="container">
+          <h2>Featured Caregivers</h2>
+          <div className="featured-grid">
+            {featuredCaregivers.map((caregiver) => (
+              <article key={caregiver.id} className="featured-card">
+                <div className="featured-image">
+                  <img src={caregiver.image} alt={caregiver.title} />
+                </div>
+                <div className="featured-body">
+                  <div className="featured-meta">
+                    <img
+                      className="featured-avatar"
+                      src={caregiver.avatar}
+                      alt={caregiver.name}
+                    />
+                    <div className="featured-info">
+                      <div className="featured-name-row">
+                        <span className="featured-name">{caregiver.name}</span>
+                        {caregiver.verified && (
+                          <span className="featured-verified">Verified</span>
+                        )}
+                      </div>
+                      <div className="featured-location">
+                        {caregiver.location}
+                      </div>
+                    </div>
+                    <div className="featured-rating">
+                      <span>★</span> {caregiver.rating}
+                    </div>
+                  </div>
+                  <h3>{caregiver.title}</h3>
+                  <div className="featured-footer">
+                    <span className="featured-price">
+                      Starting at {"\u20A6"}10,000
+                    </span>
+                    <button
+                      className="featured-cta-btn"
+                      onClick={handleHireCaregiver}
+                    >
+                      Hire Caregiver
+                    </button>
+                  </div>
+                </div>
+              </article>
+            ))}
+          </div>
+          <div className="featured-browse">
+            <button className="featured-browse-btn" onClick={handleBrowseAll}>
+              Browse Caregivers <span aria-hidden="true">›</span>
+            </button>
+          </div>
+        </div>
       </section>
 
       {/* Final CTA Section */}
-      <section className="final-cta-section">
+      {/* <section className="final-cta-section">
         <div className="container">
           <h2>Ready to find the perfect caregiver?</h2>
           <p>Join thousands of families who trust CarePro for quality care.</p>
@@ -354,7 +522,7 @@ const MarketingPage = () => {
             </button>
           </div>
         </div>
-      </section>
+      </section> */}
     </div>
   );
 };

@@ -1,23 +1,25 @@
 /* Client NavBar Specific Styles */
 
 .nav-link-btn-special-link {
-    width: 100%;
-    background-color: #ffff;
-    color: #55595e;
-    border-radius: 6px;
-    font-size: 14px;
-    font-weight: 500;
-    cursor: pointer;
-    transition: all 0.2s ease;
-    white-space: nowrap;   /* <-- prevents text from wrapping */   /* optional: hides overflow */
+  width: 100%;
+  background-color: #ffff;
+  color: #55595e;
+  border-radius: 6px;
+  font-size: 14px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  white-space: nowrap;
+  /* <-- prevents text from wrapping */
+  /* optional: hides overflow */
 }
 
 .nav-link-btn-special-link:hover {
-    background-color: #f0f0f0;
-    color: #3664b9;
+  background-color: #f0f0f0;
+  color: #3664b9;
 }
 
-  
+
 
 /* Hide mobile search on larger screens */
 @media (min-width: 901px) {
@@ -36,7 +38,7 @@
     padding: 12px 0 8px 0;
     background: #fff;
     border-bottom: 1px solid #f0f0f0;
-    box-shadow: 0 2px 8px rgba(0,0,0,0.03);
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.03);
     z-index: 2;
   }
 
@@ -61,7 +63,7 @@
     background: #f5f6fa;
     border-radius: 24px;
     padding: 0;
-    box-shadow: 0 1px 4px rgba(0,0,0,0.04);
+    box-shadow: 0 1px 4px rgba(0, 0, 0, 0.04);
   }
 
   .client-mobile-search-input {
@@ -112,7 +114,7 @@
   z-index: 1000;
   background: #ffffff;
   border-bottom: 1px solid #e9ecef;
-  box-shadow: 0 2px 4px rgba(0,0,0,0.05);
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
 }
 
 /* Mobile navigation - hidden on desktop */
@@ -133,7 +135,7 @@
   .client-mobile-nav {
     display: none !important;
   }
-  
+
   .client-mobile-user-search {
     display: none !important;
   }
@@ -178,8 +180,9 @@
 /* Search container - properly centered */
 .client-search-container {
   flex: 1 !important;
-  max-width: 400px !important;
-  margin: 0 24px !important;
+  max-width: 600px !important;
+  /* Increased width to match design */
+  margin: 0 40px !important;
   position: relative !important;
   display: flex !important;
   align-items: center !important;
@@ -195,63 +198,61 @@
   display: flex !important;
   align-items: center !important;
   justify-content: center !important;
-  height: 100% !important;
+  height: 40px !important;
+  /* Fixed height for the form */
   margin: 0 !important;
   padding: 0 !important;
 }
 
 .client-search-input {
   width: 100% !important;
-  padding: 8px 48px 8px 16px !important;
-  border: 1px solid #ddd !important;
-  border-radius: 50px !important;
+  padding: 8px 50px 8px 16px !important;
+  /* Right padding for button space */
+  border: 1px solid #ccc !important;
+  /* Use a cleaner grey border */
+  border-radius: 4px !important;
+  /* Small radius, not pill */
   font-size: 14px !important;
-  background-color: #f8f9fa !important;
+  background-color: #ffffff !important;
   transition: all 0.2s ease !important;
   outline: none !important;
-  height: 36px !important;
+  height: 100% !important;
   box-sizing: border-box !important;
   margin: 0 !important;
   vertical-align: middle !important;
-}
-
-.client-search-input:focus {
-  border-color: #007bff;
-  background-color: #fff;
-  box-shadow: 0 0 0 3px rgba(0, 123, 255, 0.1);
-}
-
-.client-search-input.has-value {
-  border-color: #007bff;
-  background-color: #fff;
+  color: #888 !important;
 }
 
 .client-search-input::placeholder {
-  color: #6c757d;
+  color: #aaa;
+  font-weight: 400;
 }
+
 
 .client-search-button {
   position: absolute;
-  right: 12px;
-  top: 50%;
-  transform: translateY(-50%);
-  background: none;
-  border: none;
-  padding: 6px;
+  right: 0;
+  top: 0;
+  bottom: 0;
+  background-color: #555 !important;
+  /* Dark grey background */
+  border: 1px solid #555 !important;
+  padding: 0;
   cursor: pointer;
-  color: #6c757d;
-  border-radius: 50%;
+  color: #fff !important;
+  /* White icon */
+  border-top-right-radius: 4px;
+  border-bottom-right-radius: 4px;
   display: flex;
   align-items: center;
   justify-content: center;
   transition: all 0.2s ease;
-  width: 32px;
-  height: 32px;
+  width: 40px;
+  height: 100%;
 }
 
 .client-search-button:hover {
-  background-color: #e9ecef;
-  color: #495057;
+  background-color: #333 !important;
 }
 
 /* Navigation actions container - override with specificity */
@@ -506,7 +507,7 @@
   .client-desktop-nav {
     display: none;
   }
-  
+
   .client-hamburger-menu {
     display: flex;
     flex-direction: column;
@@ -634,11 +635,11 @@
     padding: 12px 32px;
     gap: 32px;
   }
-  
+
   .client-nav-actions {
     gap: 20px;
   }
-  
+
   .client-search-container {
     max-width: 450px;
   }
@@ -650,11 +651,11 @@
     padding-right: 32px;
     gap: 40px;
   }
-  
+
   .client-nav-actions {
     gap: 24px;
   }
-  
+
   .client-search-container {
     max-width: 500px;
   }
@@ -687,40 +688,44 @@
   background: none;
   border: none;
   color: #666;
-  font-size: 0.95rem;
+  /* Grey text */
+  font-size: 0.9rem;
   font-weight: 500;
   cursor: pointer;
   padding: 8px 12px;
   border-radius: 6px;
   transition: all 0.3s ease;
-  height: 36px;
-  display: flex;
+  height: auto;
+  display: inline-flex;
   align-items: center;
   justify-content: center;
   box-sizing: border-box;
 }
 
 .nav-link-btn:hover {
-  color: #1769aa;
-  background: rgba(23, 105, 170, 0.05);
+  color: #333;
+  background: transparent;
 }
 
 .auth-buttons {
   display: flex;
-  gap: 12px;
+  gap: 16px;
+  /* slightly more gap */
   align-items: center;
   height: 100%;
 }
 
-.signin-btn, .signup-btn {
-  padding: 10px 20px;
-  border-radius: 8px;
+.signin-btn,
+.signup-btn {
+  padding: 8px 24px;
+  border-radius: 6px;
+  /* Slightly rounded corners */
   font-weight: 500;
-  font-size: 0.95rem;
+  font-size: 0.9rem;
   cursor: pointer;
   transition: all 0.3s ease;
-  border: none;
-  height: 36px;
+  border: 1px solid transparent;
+  height: 40px;
   display: flex;
   align-items: center;
   justify-content: center;
@@ -729,24 +734,26 @@
 }
 
 .signin-btn {
-  background: transparent;
-  color: #1769aa;
-  border: 1px solid #1769aa;
+  background: #ffffff;
+  color: #444;
+  border: 1px solid #ccc;
 }
 
 .signin-btn:hover {
-  background: #1769aa;
-  color: white;
+  background: #f8f8f8;
+  color: #222;
+  border-color: #bbb;
 }
 
 .signup-btn {
-  background: #1769aa;
+  background: #CFA43C;
+  /* Gold color from design */
   color: white;
 }
 
 .signup-btn:hover {
-  background: #145a8a;
-  transform: translateY(-1px);
+  background: #b89030;
+  transform: none;
 }
 
 .signout-btn {
@@ -818,7 +825,8 @@
   margin-top: 10px;
 }
 
-.mobile-signin-btn, .mobile-signup-btn {
+.mobile-signin-btn,
+.mobile-signup-btn {
   padding: 8px 16px;
   border-radius: 6px;
   font-weight: 500;
@@ -910,17 +918,18 @@
     gap: 15px;
     margin-right: 15px;
   }
-  
+
   .nav-link-btn {
     padding: 6px 10px;
     font-size: 0.9rem;
   }
-  
+
   .auth-buttons {
     gap: 8px;
   }
-  
-  .signin-btn, .signup-btn {
+
+  .signin-btn,
+  .signup-btn {
     padding: 8px 16px;
     font-size: 0.9rem;
   }
@@ -930,31 +939,33 @@
   .public-nav-links {
     display: none;
   }
-  
+
   .client-nav-right {
     gap: 8px;
   }
-  
+
   .auth-buttons {
     gap: 6px;
   }
-  
-  .signin-btn, .signup-btn, .signout-btn {
+
+  .signin-btn,
+  .signup-btn,
+  .signout-btn {
     padding: 6px 12px;
     font-size: 0.85rem;
   }
-  
+
   .client-nav-item {
     padding: 6px 8px;
     font-size: 0.85rem;
     gap: 4px;
   }
-  
+
   .client-nav-item img {
     width: 14px;
     height: 14px;
   }
-  
+
   .client-nav-item span {
     font-size: 0.85rem;
   }
