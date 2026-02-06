@@ -9,6 +9,10 @@ import SuggestedServices from "./SuggestedServices";
 import FilterBarDropdown from "../components/FilterBar";
 import ClientGigService from "../../../services/clientGigService";
 import ClientCareNeedsService from "../../../services/clientCareNeedsService";
+import QualityHealthCareCards from "../../../../components/QualityHealthCareCards";
+import TopBanner from "../../../../components/TopBanner";
+import genralImg from "../../../../assets/nurse.png";
+import CareFacts from "../../../../pages/CareFacts";
 
 // Category slug to backend category name mapping
 const categorySlugMap = {
@@ -184,6 +188,15 @@ const PublicMarketplace = () => {
     navigate('/marketplace', { replace: true });
   };
 
+  // Handle TopBanner button click - smart navigation based on auth status
+  const handleBookCaregiver = () => {
+    if (isAuthenticated && user?.role?.toLowerCase() === 'client') {
+      navigate('/app/client/dashboard');
+    } else {
+      navigate('/register');
+    }
+  };
+
   return (
     <div className="dashboard client-dashboard-flex">
       <div className="rightbar">
@@ -357,7 +370,7 @@ const PublicMarketplace = () => {
                     title="Become a Caregiver"
                     description="As a caregiver, you are provided the opportunity to support your patients while also building a rewarding career in healthcare. Take the first step today!"
                     buttonText="Become a Caregiver"
-                    imageUrl={Nurse}
+                    imageUrl={genralImg}
                     onButtonClick={handleBookCaregiver}
                     backgroundColor="#324CA6"
                   />

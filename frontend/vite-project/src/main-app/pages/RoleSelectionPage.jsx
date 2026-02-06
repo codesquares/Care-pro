@@ -100,7 +100,7 @@ const RoleSelectionPage = () => {
         console.log("🔍 User data being stored:", userData);
         console.log("🔍 Access token for login:", accessToken ? accessToken.substring(0, 20) + "..." : "MISSING");
         
-        login(userData, accessToken, result.refreshToken);
+        login(userData, accessToken, result.refreshToken, result.isFirstLogin);
         
         // Verify localStorage was set correctly
         console.log("🔍 Stored authToken:", localStorage.getItem("authToken"));
@@ -143,7 +143,7 @@ const RoleSelectionPage = () => {
               role: userRole,
               profilePicture: result.conflict?.profilePicture,
             };
-            login(userData, result.conflict.accessToken, result.conflict.refreshToken);
+            login(userData, result.conflict.accessToken, result.conflict.refreshToken, result.conflict?.isFirstLogin);
             
             toast.success("Welcome back!");
             setTimeout(() => {
@@ -215,7 +215,7 @@ const RoleSelectionPage = () => {
           role: result.role || role,
           profilePicture: result.profilePicture,
         };
-        login(userData, result.accessToken, result.refreshToken);
+        login(userData, result.accessToken, result.refreshToken, result.isFirstLogin);
         
         toast.success("Account created successfully!");
         
