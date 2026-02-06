@@ -99,7 +99,7 @@ const LoginPage = () => {
 
       const { data } = response;
       
-      login(data, data.token, data.refreshToken);
+      login(data, data.token, data.refreshToken, data.isFirstLogin);
       
     } catch (err) {
       const errorMessage =
@@ -163,7 +163,7 @@ const LoginPage = () => {
         console.log("User data for AuthContext:", userData);
         
         // Update AuthContext state
-        login(userData, accessToken, result.refreshToken);
+        login(userData, accessToken, result.refreshToken, result.isFirstLogin);
         
         // Navigate to dashboard after a short delay - use window.location for full page reload
         // This ensures AuthContext re-reads from localStorage

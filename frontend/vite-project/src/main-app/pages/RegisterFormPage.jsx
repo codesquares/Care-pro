@@ -226,7 +226,7 @@ You won't be able to log in until your email is verified.`);
           role: signInResult.role,
           profilePicture: signInResult.profilePicture,
         };
-        login(userData, accessToken, signInResult.refreshToken);
+        login(userData, accessToken, signInResult.refreshToken, signInResult.isFirstLogin);
         
         toast.success("Welcome back! You already have an account.");
         setTimeout(() => {
@@ -265,7 +265,7 @@ You won't be able to log in until your email is verified.`);
             role: signUpResult.role || selectedRole,
             profilePicture: signUpResult.profilePicture,
           };
-          login(userData, signUpToken, signUpResult.refreshToken);
+          login(userData, signUpToken, signUpResult.refreshToken, signUpResult.isFirstLogin);
           
           toast.success("Account created successfully!");
           
