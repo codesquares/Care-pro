@@ -60,6 +60,7 @@ const ClientProfileHeader = () => {
         method: 'PUT',
         headers: {
           'Content-Type': 'application/json',
+          'Authorization': `Bearer ${localStorage.getItem('authToken') || ''}`,
         },
         body: JSON.stringify({ address: addressToSend }),
       });
@@ -150,6 +151,7 @@ const ClientProfileHeader = () => {
         method: 'PUT',
         headers: {
           'accept': '*/*',
+          'Authorization': `Bearer ${localStorage.getItem('authToken') || ''}`,
         },
         body: formData,
       });
@@ -219,7 +221,12 @@ const ClientProfileHeader = () => {
       }
 
       console.log("Fetching profile for client ID:", userDetails.id);
-      const response = await fetch(`${config.BASE_URL}/Clients/${userDetails.id}`);
+      const token = localStorage.getItem('authToken');
+      const response = await fetch(`${config.BASE_URL}/Clients/${userDetails.id}`, {
+        headers: {
+          'Authorization': token ? `Bearer ${token}` : '',
+        },
+      });
       
       if (!response.ok) {
         console.error("API response not ok:", response.status, response.statusText);
@@ -232,7 +239,11 @@ const ClientProfileHeader = () => {
       // Fetch location from Location table (new location system)
       let locationData = null;
       try {
-        const locationResponse = await fetch(`${config.BASE_URL}/Location/user-location?userId=${userDetails.id}&userType=Client`);
+        const locationResponse = await fetch(`${config.BASE_URL}/Location/user-location?userId=${userDetails.id}&userType=Client`, {
+          headers: {
+            'Authorization': token ? `Bearer ${token}` : '',
+          },
+        });
         if (locationResponse.ok) {
           const locationResult = await locationResponse.json();
           locationData = locationResult.data || locationResult;

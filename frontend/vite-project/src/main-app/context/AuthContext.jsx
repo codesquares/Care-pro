@@ -9,11 +9,12 @@ export const AuthProvider = ({ children }) => {
     const [isAuthenticated, setIsAuthenticated] = useState(false);
     const [loading, setLoading] = useState(true);
     const [userRole, setUserRole] = useState(null);
+    const [isFirstLogin, setIsFirstLogin] = useState(false);
     const navigate = useNavigate();
 
     // Data cleanup categories
     const DATA_CATEGORIES = {
-        auth: ['authToken', 'refreshToken', 'userDetails', 'userId'],
+        auth: ['authToken', 'refreshToken', 'userDetails', 'userId', 'isFirstLogin'],
         session: ['preservedSession', 'verificationStatus'],
         business: ['orderData', 'gigId', 'amount', 'careNeeds'],
         cache: ['cachedAssessments', 'assessmentQuestions']
@@ -41,6 +42,7 @@ export const AuthProvider = ({ children }) => {
             setUser(null);
             setIsAuthenticated(false);
             setUserRole(null);
+            setIsFirstLogin(false);
             
             // Trigger cross-tab logout communication
             try {
@@ -133,10 +135,12 @@ export const AuthProvider = ({ children }) => {
                 if (token) {
                     // Get user details from localStorage
                     const userDetails = JSON.parse(localStorage.getItem('userDetails') || '{}');
+                    const firstLogin = JSON.parse(localStorage.getItem('isFirstLogin') || 'false');
                     if (userDetails && userDetails.role) {
                         setUser(userDetails);
                         setUserRole(userDetails.role);
                         setIsAuthenticated(true);
+                        setIsFirstLogin(firstLogin);
                     } else {
                         setIsAuthenticated(false);
                     }
@@ -154,14 +158,16 @@ export const AuthProvider = ({ children }) => {
         checkAuth();
     }, [handleLogout]);
 
-    const login = (userData, token, refreshTokenValue) => {
+    const login = (userData, token, refreshTokenValue, firstLogin = false) => {
         try {
             localStorage.setItem('authToken', token);
             localStorage.setItem('refreshToken', refreshTokenValue);
             localStorage.setItem('userDetails', JSON.stringify(userData));
+            localStorage.setItem('isFirstLogin', JSON.stringify(firstLogin));
             setUser(userData);
             setUserRole(userData.role);
             setIsAuthenticated(true);
+            setIsFirstLogin(firstLogin);
             
             // Broadcast user update to other tabs
             try {
@@ -175,6 +181,12 @@ export const AuthProvider = ({ children }) => {
         } catch (error) {
             console.error('Login error:', error);
         }
+    };
+
+    // Clear the first login flag after showing welcome modal
+    const clearFirstLogin = () => {
+        setIsFirstLogin(false);
+        localStorage.setItem('isFirstLogin', 'false');
     };
 
     const updateUser = (updates) => {
@@ -209,7 +221,9 @@ export const AuthProvider = ({ children }) => {
             loading,
             userRole,
             isAdmin: userRole === 'Admin' || userRole === 'SuperAdmin',
-            isSuperAdmin: userRole === 'SuperAdmin'
+            isSuperAdmin: userRole === 'SuperAdmin',
+            isFirstLogin,
+            clearFirstLogin
         }}>
             {children}
         </AuthContext.Provider>

@@ -26,7 +26,7 @@
   margin: 0;
 }
 
-// Role badge styling for recipient
+/* Role badge styling for recipient */
 .recipient-role-badge {
   display: inline-flex;
   align-items: center;

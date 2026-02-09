@@ -30,8 +30,8 @@ const EarningsPage = () => {
         // Load earnings data
         const earningsData = await earningService.getUpdatedEarnings(currentUser.id);
         const orders = await earningService.getCareGiverOrderDetails(currentUser.id);
-        console.log("Earnings Data:", earningsData);
-        console.log("Order Details:", orders);
+        // console.log("Earnings Data:", earningsData);
+        // console.log("Order Details:", orders);
         if (!earningsData || !orders) {
           setEarnings({
             totalEarned: 0,
@@ -56,7 +56,7 @@ const EarningsPage = () => {
         // Load withdrawal history
         try {
           const history = await withdrawalService.getWithdrawalHistory(currentUser.id);
-          console.log("Withdrawal History before filtering:", history);
+          // console.log("Withdrawal History before filtering:", history);
           setWithdrawalHistory(Array.isArray(history) ? history : []);
         } catch (historyError) {
           console.error("Error fetching withdrawal history:", historyError);

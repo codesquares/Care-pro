@@ -338,6 +338,21 @@
   box-shadow: 0 4px 20px rgba(0, 0, 0, 0.15);
 }
 
+/* Larger modal for contract details */
+.modal-content.contract-modal-large {
+  max-width: 900px !important;
+  width: 95% !important;
+  min-height: 60vh;
+  padding: 24px;
+}
+
+@media (min-width: 769px) {
+  .modal-content.contract-modal-large {
+    width: 90% !important;
+    max-width: 900px !important;
+  }
+}
+
 .modal-content h3 {
   margin-top: 0;
   margin-bottom: 20px;
@@ -422,6 +437,15 @@
   .modal-content {
     width: 95%;
     padding: 20px;
+  }
+
+  /* Ensure contract modal stays large on mobile too */
+  .modal-content.contract-modal-large {
+    width: 98% !important;
+    max-width: none !important;
+    min-height: 70vh;
+    max-height: 95vh;
+    padding: 16px;
   }
 
   /* Contract responsive styles */
@@ -632,8 +656,27 @@
 
 /* Contract details modal */
 .contract-details-modal {
-  max-height: 60vh;
+  max-height: none;
   overflow-y: auto;
+  padding: 15px 10px;
+}
+
+.contract-modal-large .contract-details-modal {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 16px;
+}
+
+@media (min-width: 600px) {
+  .contract-modal-large .contract-details-modal {
+    grid-template-columns: repeat(2, 1fr);
+  }
+  
+  .contract-modal-large .contract-details-modal .contract-header,
+  .contract-modal-large .contract-details-modal .contract-terms,
+  .contract-modal-large .contract-details-modal .contract-schedule {
+    grid-column: 1 / -1;
+  }
 }
 
 .contract-header {
@@ -686,4 +729,224 @@
   line-height: 1.5;
   max-height: 200px;
   overflow-y: auto;
+}
+
+/* ==========================================
+   NEW CONTRACT GENERATION FLOW STYLES (Caregiver)
+   ========================================== */
+
+/* Generate Contract Button */
+.generate-contract-btn {
+  background: linear-gradient(135deg, #1976d2, #1565c0);
+  color: white;
+  border: none;
+  padding: 12px 24px;
+  border-radius: 8px;
+  cursor: pointer;
+  font-size: 14px;
+  font-weight: 600;
+  width: 100%;
+  transition: all 0.2s;
+  margin-top: 10px;
+}
+
+.generate-contract-btn:hover {
+  background: linear-gradient(135deg, #1565c0, #0d47a1);
+  transform: translateY(-1px);
+  box-shadow: 0 4px 12px rgba(25, 118, 210, 0.3);
+}
+
+/* Revise Contract Button */
+.revise-contract-btn {
+  background: linear-gradient(135deg, #ff9800, #f57c00);
+  color: white;
+  border: none;
+  padding: 10px 20px;
+  border-radius: 6px;
+  cursor: pointer;
+  font-size: 14px;
+  font-weight: 500;
+  transition: all 0.2s;
+}
+
+.revise-contract-btn:hover {
+  background: linear-gradient(135deg, #f57c00, #ef6c00);
+  transform: translateY(-1px);
+}
+
+/* Contract Hint Text */
+.contract-hint {
+  font-size: 13px;
+  color: #666;
+  margin: 8px 0;
+  line-height: 1.4;
+}
+
+.requirement-note {
+  font-size: 13px;
+  color: #ff9800;
+  margin: 8px 0;
+}
+
+/* Schedule Preview */
+.contract-schedule-preview {
+  margin: 12px 0;
+}
+
+.schedule-display {
+  margin-top: 8px;
+}
+
+.schedule-visit {
+  display: flex;
+  align-items: center;
+  padding: 8px 12px;
+  background: white;
+  border-radius: 6px;
+  margin-bottom: 6px;
+  border-left: 3px solid #1976d2;
+  gap: 10px;
+}
+
+.schedule-visit:last-child {
+  margin-bottom: 0;
+}
+
+.schedule-day {
+  font-weight: 600;
+  color: #333;
+  min-width: 90px;
+}
+
+.schedule-time {
+  color: #666;
+  flex: 1;
+}
+
+.schedule-duration {
+  background: #e3f2fd;
+  color: #1565c0;
+  padding: 3px 8px;
+  border-radius: 4px;
+  font-size: 12px;
+  font-weight: 500;
+}
+
+/* Client Feedback Inline */
+.client-feedback-inline {
+  background: #fff3e0;
+  border: 1px solid #ffb74d;
+  border-left: 3px solid #ff9800;
+  padding: 12px;
+  border-radius: 6px;
+  margin: 10px 0;
+}
+
+.client-feedback-inline p {
+  margin: 4px 0;
+}
+
+.client-feedback-inline .feedback-text {
+  font-style: italic;
+  color: #e65100;
+}
+
+/* Contract Status States */
+.contract-accepted p,
+.contract-pending-approval p {
+  margin: 8px 0;
+  font-size: 14px;
+}
+
+.contract-review-requested p {
+  margin: 8px 0;
+}
+
+/* Status Badge Updates */
+.status-approved {
+  color: #2e7d32;
+  font-weight: 500;
+}
+
+.status-pendingclientapproval,
+.status-pending-client-approval {
+  color: #e65100;
+  font-weight: 500;
+}
+
+.status-clientreviewrequested,
+.status-client-review-requested {
+  color: #1565c0;
+  font-weight: 500;
+}
+
+.status-revised {
+  color: #7b1fa2;
+  font-weight: 500;
+}
+
+.status-clientrejected,
+.status-client-rejected {
+  color: #c62828;
+  font-weight: 500;
+}
+
+/* Contract Schedule in Modal */
+.contract-schedule {
+  margin: 15px 0;
+  padding: 12px;
+  background: #f5f7fa;
+  border-radius: 8px;
+}
+
+.contract-schedule h4 {
+  margin: 0 0 12px 0;
+  font-size: 15px;
+  color: #333;
+}
+
+/* Client Review Section in Modal */
+.client-review-section {
+  margin: 15px 0;
+  padding: 12px;
+  background: #fff3e0;
+  border-radius: 8px;
+  border-left: 3px solid #ff9800;
+}
+
+.client-review-section h4 {
+  margin: 0 0 8px 0;
+  color: #e65100;
+}
+
+.client-feedback-box {
+  background: white;
+  padding: 12px;
+  border-radius: 6px;
+}
+
+.client-feedback-box p {
+  margin: 0;
+  font-style: italic;
+  color: #666;
+}
+
+/* Responsive adjustments for caregiver contract UI */
+@media (max-width: 600px) {
+  .contract-buttons {
+    flex-direction: column;
+  }
+  
+  .contract-buttons button {
+    width: 100%;
+  }
+  
+  .schedule-visit {
+    flex-wrap: wrap;
+  }
+  
+  .schedule-day {
+    min-width: 100%;
+    margin-bottom: 4px;
+  }
 }

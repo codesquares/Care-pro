@@ -371,12 +371,24 @@ const assessmentService = {
         throw new Error('CareGiver ID is required');
       }
 
+      const token = localStorage.getItem('authToken');
+      if (!token) {
+        // Return default status if not authenticated
+        return {
+          isQualified: false,
+          assessmentCompleted: false,
+          canRetake: true,
+          fetchedFromAPI: false
+        };
+      }
+
       const apiUrl = `${config.BASE_URL}/Assessments/user/${careGiverId}`; // Using centralized API config
 
       const response = await fetch(apiUrl, {
         method: 'GET',
         headers: {
-          'accept': '*/*'
+          'accept': '*/*',
+          'Authorization': `Bearer ${token}`,
         }
       });
 
@@ -385,14 +397,6 @@ const assessmentService = {
       }
 
       const assessmentData = await response.json();
-
-      console.log('🔍 getQualificationStatus - Raw API Response:', {
-        isArray: Array.isArray(assessmentData),
-        length: assessmentData?.length,
-        firstItem: assessmentData?.[0],
-        score: assessmentData?.[0]?.score,
-        passed: assessmentData?.[0]?.passed
-      });
 
       // Check if assessment exists, using the assessedDate field, check the last assessment and see if the score is 70 or above
       // check if assessmentData is an array and has at least one entry
@@ -410,7 +414,6 @@ const assessmentService = {
           fetchedFromAPI: true
         };
 
-        console.log('✅ getQualificationStatus - Returning qualified status:', result);
         return result;
       } else {
         // No assessment found or no score available
@@ -423,7 +426,6 @@ const assessmentService = {
           fetchedFromAPI: true
         };
 
-        console.log('❌ getQualificationStatus - No assessment found, returning:', result);
         return result;
       }
     } catch (err) {

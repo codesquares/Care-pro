@@ -4,6 +4,8 @@ import OrderDetails from '../../../components/cart/OrderDetails';
 import ServiceProvider from '../../../components/cart/ServiceProvider';
 import ServiceFrequency from '../../../components/cart/ServiceFrequency';
 import TaskList from '../../../components/cart/TaskList';
+import ReviewsModal from '../../../components/ReviewsModal/ReviewsModal';
+import GigReviewService from '../../../services/gigReviewService';
 import './Cart.css';
 import { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
@@ -21,8 +23,14 @@ const Cart = () => {
     const [isMobile, setIsMobile] = useState(false);
     
     // Frequency and price data state
-    const [selectedFrequency, setSelectedFrequency] = useState('weekly');
-    const [frequencyPriceData, setFrequencyPriceData] = useState(null);
+    const [selectedFrequency, setSelectedFrequency] = useState('one-time');
+    const [frequencyPerWeek, setFrequencyPerWeek] = useState(1);
+    
+    // Reviews modal state
+    const [showReviewsModal, setShowReviewsModal] = useState(false);
+    const [gigReviews, setGigReviews] = useState([]);
+    const [reviewStats, setReviewStats] = useState(null);
+    const [reviewsLoading, setReviewsLoading] = useState(false);
     
     // Task management state
     const [tasks, setTasks] = useState([
@@ -85,9 +93,27 @@ const Cart = () => {
       }
     };  
     // Handle frequency change from ServiceFrequency
-    const handleFrequencyChange = (frequencyId, priceData) => {
-      setSelectedFrequency(frequencyId);
-      setFrequencyPriceData(priceData);
+    const handleFrequencyChange = (serviceType, freqPerWeek) => {
+      setSelectedFrequency(serviceType);
+      setFrequencyPerWeek(freqPerWeek);
+    };
+
+    // Handle opening reviews modal
+    const handleOpenReviews = async () => {
+      setShowReviewsModal(true);
+      setReviewsLoading(true);
+      
+      try {
+        const { reviews, stats } = await GigReviewService.getReviewsWithStats(id);
+        setGigReviews(reviews);
+        setReviewStats(stats);
+      } catch (err) {
+        console.error('Error fetching reviews:', err);
+        setGigReviews([]);
+        setReviewStats(null);
+      } finally {
+        setReviewsLoading(false);
+      }
     };
 
     // Mobile detection effect
@@ -109,67 +135,60 @@ const Cart = () => {
       validateTasks();
       
       const user = JSON.parse(localStorage.getItem("userDetails"));
-      // const id = user?.id;
       
-      // Calculate total amount (order fee + service fee)
-      const orderFee = frequencyPriceData ? frequencyPriceData.calculatedPrice : service.price;
-      const serviceFee = orderFee * 0.05;
-      const totalAmount = orderFee + serviceFee;
-      
-      // Store all order data for payment success page
-      const orderData = {
+      // Store task data for later use (tasks will be saved after order creation)
+      const taskData = {
         gigId: id,
-        serviceId: id,
         providerId: service.caregiverId,
-        selectedFrequency,
-        priceData: frequencyPriceData,
-        tasks: userTasks.map(task => task.text), // Only user tasks, as text array
-        userDetails: user,
-        timestamp: new Date().toISOString(),
-        totalAmount: totalAmount // Store calculated total
+        tasks: userTasks.map(task => task.text),
+        timestamp: new Date().toISOString()
       };
-      
-      localStorage.setItem("orderData", JSON.stringify(orderData));
-      localStorage.setItem("gigId", id);
-      
-      // Store total amount (not just order fee) for payment
-      localStorage.setItem("amount", totalAmount);
-      localStorage.setItem("providerId", service.caregiverId);
-
-      console.log("Order data prepared:", orderData);
-      console.log("Payment amount (total):", totalAmount);
+      localStorage.setItem("pendingTaskData", JSON.stringify(taskData));
     
       try {
+        // NEW SECURE API: Only send identifiers, backend calculates all amounts
         const payload = {
-          amount: totalAmount, // Send total amount (order fee + service fee)
+          gigId: id,
+          serviceType: selectedFrequency, // "one-time", "weekly", or "monthly"
+          frequencyPerWeek: frequencyPerWeek, // 1-7
           email: user?.email,
-          currency: "NIGN",
           redirectUrl: `${window.location.origin}/app/client/payment-success`,
         };
     
-        // FIXED: Use centralized config instead of hardcoded Azure staging API URL for payment initiation
+        const token = localStorage.getItem('authToken');
         const response = await fetch(
           `${config.BASE_URL}/payments/initiate`,
           {
             method: "POST",
             headers: {
               "Content-Type": "application/json",
+              "Authorization": `Bearer ${token}`
             },
             body: JSON.stringify(payload),
           }
         );
     
         if (!response.ok) {
-          throw new Error("Payment initiation failed");
+          const errorData = await response.json().catch(() => ({}));
+          throw new Error(errorData.message || "Payment initiation failed");
         }
     
         const data = await response.json();
         console.log("Payment Response:", data);
     
-        if (data.status === "success" && data.data?.link) {
-          window.location.href = data.data.link; // Redirect to payment gateway
+        if (data.success && data.paymentLink) {
+          // Store transaction reference for status check after redirect
+          localStorage.setItem("transactionReference", data.transactionReference);
+          
+          // Optionally store breakdown for display purposes
+          if (data.breakdown) {
+            localStorage.setItem("paymentBreakdown", JSON.stringify(data.breakdown));
+          }
+          
+          // Redirect to Flutterwave payment gateway
+          window.location.href = data.paymentLink;
         } else {
-          throw new Error("Failed to get payment link");
+          throw new Error(data.message || "Failed to get payment link");
         }
       } catch (error) {
         console.error("Payment error:", error);
@@ -199,18 +218,9 @@ const Cart = () => {
             console.log("Service details:", foundGig);
             setService(foundGig);
             
-            // Calculate default weekly frequency price data
-            const weeklyMultiplier = 4; // Assuming weekly means 4 times per month
-            const defaultWeeklyPrice = foundGig.price * weeklyMultiplier;
-            const defaultPriceData = {
-              frequency: 'weekly',
-              multiplier: weeklyMultiplier,
-              basePrice: foundGig.price,
-              calculatedPrice: defaultWeeklyPrice
-            };
-            
-            // Set default frequency price data
-            setFrequencyPriceData(defaultPriceData);
+            // Default to one-time service with frequency 1
+            setSelectedFrequency('one-time');
+            setFrequencyPerWeek(1);
           } catch (error) {
             console.error("Error fetching service details:", error);
             setError(error.message);
@@ -237,14 +247,14 @@ const Cart = () => {
                 <div className="order-specifications__service-description">
                   {service?.title || 'Service Title Not Available'}
                 </div>
-                <ServiceProvider service={service} />
+                <ServiceProvider service={service} onRatingClick={handleOpenReviews} />
               </div>
               
               {/* Order details */}
               <OrderDetails 
                 service={service} 
                 selectedFrequency={selectedFrequency}
-                priceData={frequencyPriceData}
+                frequencyPerWeek={frequencyPerWeek}
                 onPayment={handleHire}
               />
               
@@ -252,6 +262,7 @@ const Cart = () => {
               <div className="order-specifications">
                 <ServiceFrequency
                   selectedFrequency={selectedFrequency}
+                  frequencyPerWeek={frequencyPerWeek}
                   onFrequencyChange={handleFrequencyChange}
                   service={service}
                 />
@@ -274,6 +285,16 @@ const Cart = () => {
                 />
               </div>
             </div>
+            
+            {/* Reviews Modal */}
+            <ReviewsModal
+              isOpen={showReviewsModal}
+              onClose={() => setShowReviewsModal(false)}
+              reviews={gigReviews}
+              stats={reviewStats}
+              loading={reviewsLoading}
+              gigTitle={service?.title}
+            />
           </div>
         );
       }
@@ -285,6 +306,7 @@ const Cart = () => {
             <OrderSpecifications 
               service={service} 
               selectedFrequency={selectedFrequency}
+              frequencyPerWeek={frequencyPerWeek}
               onFrequencyChange={handleFrequencyChange}
               tasks={tasks}
               onAddTask={handleAddTask}
@@ -292,14 +314,25 @@ const Cart = () => {
               taskValidationError={taskValidationError}
               userTasksCount={userTasks.length}
               validateTasks={validateTasks}
+              onRatingClick={handleOpenReviews}
             />
             <OrderDetails 
               service={service} 
               selectedFrequency={selectedFrequency}
-              priceData={frequencyPriceData}
+              frequencyPerWeek={frequencyPerWeek}
               onPayment={handleHire}
             />
           </div>
+          
+          {/* Reviews Modal */}
+          <ReviewsModal
+            isOpen={showReviewsModal}
+            onClose={() => setShowReviewsModal(false)}
+            reviews={gigReviews}
+            stats={reviewStats}
+            loading={reviewsLoading}
+            gigTitle={service?.title}
+          />
         </div>
       );
 };

@@ -84,21 +84,21 @@ const shouldDebug = import.meta.env.MODE === 'development' ||
                    config.FALLBACK_URL?.match(/\.com\..*\.com/);
 
 if (shouldDebug) {
-    console.log('🔧 CONFIG DEBUG:', {
-        environment: import.meta.env.MODE,
-        hostname: window.location.hostname,
-        href: window.location.href,
-        detected_environment: config.ENV.IS_PRODUCTION ? 'production' : 
-                            config.ENV.IS_STAGING ? 'staging' : 
-                            config.ENV.IS_LOCAL ? 'local' : 'unknown',
-        resolved_api_url: config.BASE_URL,
-        fallback_url: config.FALLBACK_URL,
-        vite_api_url: import.meta.env.VITE_API_URL,
-        vite_websocket_url: import.meta.env.VITE_WEBSOCKET_URL,
-        has_DOJAH_credentials: !!(config.DOJAH.APP_ID && config.DOJAH.WIDGET_ID),
-        has_CONTENTFUL_credentials: !!(config.DOJAH.PUBLIC_KEY),
-        config_valid: !!(config.DOJAH.APP_ID && config.DOJAH.WIDGET_ID && config.BASE_URL)
-    });
+    // console.log('🔧 CONFIG DEBUG:', {
+    //     environment: import.meta.env.MODE,
+    //     hostname: window.location.hostname,
+    //     href: window.location.href,
+    //     detected_environment: config.ENV.IS_PRODUCTION ? 'production' : 
+    //                         config.ENV.IS_STAGING ? 'staging' : 
+    //                         config.ENV.IS_LOCAL ? 'local' : 'unknown',
+    //     resolved_api_url: config.BASE_URL,
+    //     fallback_url: config.FALLBACK_URL,
+    //     vite_api_url: import.meta.env.VITE_API_URL,
+    //     vite_websocket_url: import.meta.env.VITE_WEBSOCKET_URL,
+    //     has_DOJAH_credentials: !!(config.DOJAH.APP_ID && config.DOJAH.WIDGET_ID),
+    //     has_CONTENTFUL_credentials: !!(config.DOJAH.PUBLIC_KEY),
+    //     config_valid: !!(config.DOJAH.APP_ID && config.DOJAH.WIDGET_ID && config.BASE_URL)
+    // });
     
     // Warn about missing required environment variables
     const requiredVars = ['VITE_DOJAH_APP_ID', 'VITE_DOJAH_WIDGET_ID', 'VITE_DOJAH_PUBLIC_KEY'];
@@ -122,8 +122,8 @@ if (shouldDebug) {
     
     // Local backend availability check
     if (config.ENV.IS_LOCAL && config.BASE_URL.includes('localhost')) {
-        console.log('🔍 Local backend detection enabled - will attempt to connect to:', config.BASE_URL);
-        console.log('📡 Fallback URL if local backend unavailable:', config.STAGING_API_URL);
+        // console.log('🔍 Local backend detection enabled - will attempt to connect to:', config.BASE_URL);
+        // console.log('📡 Fallback URL if local backend unavailable:', config.STAGING_API_URL);
     }
 }
 

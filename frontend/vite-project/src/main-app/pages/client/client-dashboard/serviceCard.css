@@ -1,27 +1,30 @@
-/* Mobile-first responsive design */
+/* Mobile-first responsive design - VERTICAL CARD */
 .modern-service-card {
   width: 100%;
   background-color: #ffffff;
-  border-radius: 12px;
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+  border-radius: 14px;
+  box-shadow: 0 10px 22px rgba(15, 23, 42, 0.08);
   overflow: hidden;
   cursor: pointer;
   transition: all 0.3s ease;
-  border: 1px solid #f3f4f6;
+  border: 1px solid #eef0f4;
   position: relative;
+  display: flex;
+  flex-direction: column;
 }
 
 .modern-service-card:hover {
   transform: translateY(-4px);
-  box-shadow: 0 8px 25px rgba(0, 0, 0, 0.15);
+  box-shadow: 0 14px 28px rgba(15, 23, 42, 0.12);
 }
 
-/* Image section */
+/* First Container: Gig Image */
 .card-image-wrapper {
   position: relative;
   width: 100%;
-  height: 200px;
+  height: 190px;
   overflow: hidden;
+  flex-shrink: 0;
 }
 
 .card-image {
@@ -35,30 +38,13 @@
   transform: scale(1.05);
 }
 
-/* Location badge overlay on image */
-.location-badge-overlay {
-  position: absolute;
-  bottom: 12px;
-  left: 12px;
-  background-color: rgba(0, 0, 0, 0.7);
-  color: white;
-  padding: 6px 10px;
-  border-radius: 16px;
-  font-size: 12px;
-  font-weight: 500;
-  display: flex;
-  align-items: center;
-  gap: 4px;
-  backdrop-filter: blur(8px);
-}
-
 /* Premium badge */
 .premium-badge {
   position: absolute;
   top: 12px;
   left: 12px;
-  background: linear-gradient(135deg, #ffd700, #ffed4e);
-  color: #1a202c;
+  background: linear-gradient(135deg, #d9a22b, #f2c057);
+  color: #1f2937;
   padding: 4px 8px;
   border-radius: 12px;
   font-size: 11px;
@@ -74,7 +60,7 @@
   position: absolute;
   top: 12px;
   left: 12px;
-  background: linear-gradient(135deg, #ff4757, #ff6b7a);
+  background: linear-gradient(135deg, #ff7a00, #ffa14d);
   color: white;
   padding: 4px 8px;
   border-radius: 12px;
@@ -86,110 +72,71 @@
   box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
 }
 
-.favorite-btn {
-  position: absolute;
-  top: 12px;
-  right: 12px;
-  width: 36px;
-  height: 36px;
-  background-color: rgba(0, 0, 0, 0.4);
-  border: none;
-  border-radius: 50%;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  cursor: pointer;
-  transition: all 0.3s ease;
-  backdrop-filter: blur(8px);
-}
-
-.favorite-btn:hover {
-  background-color: rgba(255, 71, 87, 0.8);
-  transform: scale(1.1);
-}
-
-.favorite-btn svg {
-  width: 18px;
-  height: 18px;
-}
-
-/* Card content */
+/* Card content area */
 .card-content {
-  padding: 16px;
+  padding: 16px 18px 18px;
   display: flex;
   flex-direction: column;
-  gap: 12px;
+  gap: 10px;
 }
 
-/* Provider row - horizontal layout */
+/* Second Container: Provider info + location */
 .provider-row {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  width: 100%;
+}
+
+.provider-row-top {
   display: flex;
   justify-content: space-between;
   align-items: center;
   width: 100%;
 }
 
-/* Left side of provider row */
-.provider-left {
+/* Provider info - avatar + name */
+.provider-info {
   display: flex;
   align-items: center;
   gap: 8px;
   flex: 1;
-}
-
-.provider-avatar-wrapper {
-  position: relative;
-  flex-shrink: 0;
+  min-width: 0;
 }
 
 .provider-avatar {
-  width: 32px;
-  height: 32px;
+  width: 40px;
+  height: 40px;
   border-radius: 50%;
   object-fit: cover;
-  border: 2px solid #f3f4f6;
+  border: 2px solid #eef0f4;
+  flex-shrink: 0;
 }
 
-.verification-badge {
-  position: absolute;
-  bottom: -2px;
-  right: -2px;
-  width: 12px;
-  height: 12px;
-  border-radius: 50%;
-  background-color: white;
+.verified-badge {
   display: flex;
   align-items: center;
-  justify-content: center;
-  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+  gap: 2px;
+  flex-shrink: 0;
+}
+
+.verified-text {
+  font-size: 12px;
+  font-weight: 500;
+  color: #27ae60;
 }
 
 .provider-name {
   font-size: 14px;
-  font-weight: 600;
-  color: #111827;
+  font-weight: 500;
+  color: #2b3a67;
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
+  flex: 1;
 }
 
-/* Availability dot */
-.availability-dot {
-  width: 8px;
-  height: 8px;
-  border-radius: 50%;
-  flex-shrink: 0;
-}
-
-.availability-dot.available {
-  background-color: #10b981; /* Green */
-}
-
-.availability-dot.unavailable {
-  background-color: #f59e0b; /* Yellow */
-}
-
-/* Right side - Rating section */
+/* Rating section */
 .rating-section {
   display: flex;
   align-items: center;
@@ -197,16 +144,46 @@
   flex-shrink: 0;
 }
 
-.rating-number {
-  font-size: 14px;
-  font-weight: 600;
-  color: #374151;
+.rating-clickable {
+  cursor: pointer;
+  padding: 4px 6px;
+  margin: -4px -6px;
+  border-radius: 6px;
+  transition: all 0.2s ease;
+  display: flex;
+  align-items: center;
+  gap: 4px;
 }
 
-/* Service title */
+.rating-clickable:hover {
+  background: #fff7e6;
+  transform: scale(1.05);
+}
+
+.rating-clickable:focus {
+  outline: 2px solid #d9a22b;
+  outline-offset: 2px;
+}
+
+.rating-number {
+  font-size: 14px;
+  font-weight: 700;
+  color: #1f2937;
+}
+
+/* Location text - under provider info */
+.location-text {
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  font-size: 12px;
+  color: #5c6a8a;
+}
+
+/* Third Container: Service title */
 .service-title {
-  font-size: 16px;
-  font-weight: 600;
+  font-size: 15px;
+  font-weight: 700;
   color: #111827;
   line-height: 1.4;
   margin: 0;
@@ -217,37 +194,96 @@
   display: -webkit-box;
 }
 
+/* Fourth Container: Footer with price and button */
+.card-footer {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-top: 4px;
+  gap: 12px;
+}
+
+.pricing-info {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.price-label {
+  font-size: 11px;
+  color: #5c6a8a;
+  font-weight: 400;
+}
+
+.price-amount {
+  font-size: 15px;
+  font-weight: 700;
+  color: #ff7a00;
+}
+
+.hire-btn {
+  background: #02445f;
+  color: #ffffff;
+  border: none;
+  padding: 8px 16px;
+  border-radius: 8px;
+  font-size: 13px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  white-space: nowrap;
+  box-shadow: 0 8px 16px rgba(2, 68, 95, 0.25);
+}
+
+.hire-btn:hover {
+  background: #01202d;
+  transform: translateY(-1px);
+  box-shadow: 0 12px 20px rgba(2, 68, 95, 0.35);
+}
+
+.hire-btn:active {
+  transform: translateY(0);
+}
+
 /* Tablet styles */
 @media (min-width: 768px) {
   .card-image-wrapper {
-    height: 220px;
+    height: 210px;
   }
   
   .card-content {
-    padding: 18px;
+    padding: 16px 18px 18px 18px;
+    gap: 11px;
   }
   
   .provider-avatar {
-    width: 36px;
-    height: 36px;
+    width: 44px;
+    height: 44px;
   }
   
   .service-title {
-    font-size: 17px;
+    font-size: 16px;
   }
   
   .provider-name {
     font-size: 15px;
   }
 
-  .favorite-btn {
-    width: 38px;
-    height: 38px;
-  }
-  
-  .location-badge-overlay {
-    padding: 8px 12px;
+  .location-text {
     font-size: 13px;
+  }
+
+  .rating-number {
+    font-size: 15px;
+  }
+
+  .price-amount {
+    font-size: 16px;
+  }
+
+  .hire-btn {
+    padding: 9px 18px;
+    font-size: 14px;
   }
 }
 
@@ -258,35 +294,30 @@
   }
   
   .card-image-wrapper {
-    height: 240px;
+    height: 230px;
   }
   
   .card-content {
-    padding: 20px;
-    gap: 14px;
+    padding: 18px 20px 20px 20px;
+    gap: 12px;
   }
   
   .provider-avatar {
-    width: 40px;
-    height: 40px;
+    width: 48px;
+    height: 48px;
   }
   
   .verification-badge {
-    width: 14px;
-    height: 14px;
+    width: 18px;
+    height: 18px;
   }
   
   .service-title {
-    font-size: 18px;
+    font-size: 17px;
   }
   
   .provider-name {
     font-size: 16px;
-  }
-
-  .favorite-btn {
-    width: 40px;
-    height: 40px;
   }
 
   .premium-badge,
@@ -296,6 +327,19 @@
   }
   
   .rating-number {
-    font-size: 15px;
+    font-size: 16px;
+  }
+
+  .location-text {
+    font-size: 13px;
+  }
+
+  .price-amount {
+    font-size: 17px;
+  }
+
+  .hire-btn {
+    padding: 10px 20px;
+    font-size: 14px;
   }
 }

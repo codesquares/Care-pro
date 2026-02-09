@@ -17,7 +17,8 @@ Marketing Page Styles
 
 /* ========== HERO SECTION ========== */
 .marketing-page .mk-hero {
-  background: #111;
+  background: linear-gradient(rgba(128, 128, 128, 0.3), rgba(128, 128, 128, 0.3)),
+    url("../assets/afternoon_landing.png");
   background-size: cover;
   background-position: center;
   min-height: 520px;

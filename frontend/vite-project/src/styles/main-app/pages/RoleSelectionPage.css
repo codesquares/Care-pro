@@ -1,0 +1,259 @@
+/* Role Selection Page Styles */
+
+.role-selection-wrapper {
+  display: flex;
+  min-height: 100vh;
+  background: linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%);
+}
+
+.role-selection-left {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+  background: linear-gradient(135deg, #00B4A6 0%, #008B80 100%);
+  padding: 40px;
+}
+
+.role-selection-logo img {
+  max-width: 180px;
+  margin-bottom: 30px;
+}
+
+.role-selection-image img {
+  max-width: 100%;
+  max-height: 400px;
+  object-fit: contain;
+}
+
+.role-selection-right {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  padding: 60px 80px;
+  background: white;
+}
+
+.role-selection-right h2 {
+  font-size: 2rem;
+  color: #333;
+  margin-bottom: 10px;
+  font-weight: 700;
+}
+
+.role-selection-subtitle {
+  color: #666;
+  font-size: 1rem;
+  margin-bottom: 30px;
+}
+
+/* Role Cards */
+.role-cards-container {
+  display: flex;
+  gap: 20px;
+  margin-bottom: 30px;
+}
+
+.role-card {
+  flex: 1;
+  padding: 24px;
+  border: 2px solid #e0e0e0;
+  border-radius: 16px;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  background: white;
+}
+
+.role-card:hover {
+  border-color: #00B4A6;
+  box-shadow: 0 8px 25px rgba(0, 180, 166, 0.15);
+  transform: translateY(-4px);
+}
+
+.role-card.disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+  pointer-events: none;
+}
+
+.role-card-icon {
+  font-size: 2.5rem;
+  margin-bottom: 12px;
+}
+
+.role-card h3 {
+  font-size: 1.25rem;
+  color: #333;
+  margin-bottom: 8px;
+  font-weight: 600;
+}
+
+.role-card p {
+  color: #666;
+  font-size: 0.9rem;
+  margin-bottom: 16px;
+  line-height: 1.5;
+}
+
+.role-benefits {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+}
+
+.role-benefits li {
+  color: #00B4A6;
+  font-size: 0.85rem;
+  margin-bottom: 6px;
+  font-weight: 500;
+}
+
+/* Divider */
+.divider {
+  display: flex;
+  align-items: center;
+  margin: 20px 0;
+}
+
+.divider::before,
+.divider::after {
+  content: "";
+  flex: 1;
+  height: 1px;
+  background: #e0e0e0;
+}
+
+.divider span {
+  padding: 0 16px;
+  color: #999;
+  font-size: 0.9rem;
+  font-weight: 500;
+}
+
+/* Google Signup */
+.google-signup-container {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 10px;
+}
+
+.google-signup-container > div {
+  width: 100%;
+  display: flex;
+  justify-content: center;
+}
+
+.google-loading {
+  color: #666;
+  font-size: 0.9rem;
+}
+
+/* Back Button */
+.back-button {
+  background: none;
+  border: none;
+  color: #00B4A6;
+  font-size: 0.95rem;
+  cursor: pointer;
+  padding: 10px 0;
+  margin-top: 10px;
+  transition: color 0.2s;
+}
+
+.back-button:hover {
+  color: #008B80;
+  text-decoration: underline;
+}
+
+/* Sign In Text */
+.signin-text {
+  text-align: center;
+  margin-top: 24px;
+  color: #666;
+  font-size: 0.95rem;
+}
+
+.signin-text a {
+  color: #00B4A6;
+  font-weight: 600;
+  text-decoration: none;
+}
+
+.signin-text a:hover {
+  text-decoration: underline;
+}
+
+/* Custom Google Sign Up Button */
+.google-signup-btn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 12px;
+  width: 100%;
+  max-width: 400px;
+  padding: 12px 24px;
+  background: #fff;
+  border: 1px solid #dadce0;
+  border-radius: 4px;
+  font-size: 14px;
+  font-weight: 500;
+  color: #3c4043;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.google-signup-btn:hover:not(:disabled) {
+  background: #f8f9fa;
+  border-color: #c6c6c6;
+  box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+}
+
+.google-signup-btn:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+/* Responsive Design */
+@media (max-width: 1024px) {
+  .role-selection-right {
+    padding: 40px 50px;
+  }
+  
+  .role-cards-container {
+    flex-direction: column;
+  }
+}
+
+@media (max-width: 768px) {
+  .role-selection-wrapper {
+    flex-direction: column;
+  }
+
+  .role-selection-left {
+    display: none;
+  }
+
+  .role-selection-right {
+    padding: 30px 20px;
+    min-height: 100vh;
+  }
+
+  .role-selection-right h2 {
+    font-size: 1.5rem;
+  }
+
+  .role-card {
+    padding: 20px;
+  }
+
+  .role-card-icon {
+    font-size: 2rem;
+  }
+
+  .role-card h3 {
+    font-size: 1.1rem;
+  }
+}

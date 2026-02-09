@@ -23,6 +23,7 @@
   },
   "dependencies": {
     "@microsoft/signalr": "^8.0.7",
+    "@react-oauth/google": "^0.13.4",
     "@reduxjs/toolkit": "^2.8.2",
     "axios": "^1.7.9",
     "contentful": "^11.4.6",

@@ -33,7 +33,13 @@ const CaregiverDashboard = () => {
    useEffect(() => {
      const fetchOrders = async () => {
        try {
-         const response = await fetch(API_URL);
+         const token = localStorage.getItem('authToken');
+         const response = await fetch(API_URL, {
+           headers: {
+             'Authorization': `Bearer ${token}`,
+             'Content-Type': 'application/json'
+           }
+         });
          if (!response.ok) {
            throw new Error(`Failed to fetch orders: ${response.status} ${response.statusText}`);
          }
@@ -54,7 +60,7 @@ const CaregiverDashboard = () => {
      fetchOrders();
    }, []);
 
-  console.log("orders===>",orders) 
+  // console.log("orders===>",orders) 
   const earningsTotal = (orders || []).reduce((acc, order) => {
     if (order.clientOrderStatus === 'Completed') {
       return acc + (order.amount || 0);
@@ -66,7 +72,7 @@ const CaregiverDashboard = () => {
     setTotalEarnings(earningsTotal);
   }, [orders, earningsTotal]);
 
-  console.log("totalEarnings===>", totalEarnings);
+  // console.log("totalEarnings===>", totalEarnings);
 
   // Add loading state for initial render
   if (loading) {

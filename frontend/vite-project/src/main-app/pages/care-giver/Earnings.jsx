@@ -72,7 +72,7 @@ const Earnings = () => {
       
     }
   }, []);
- console.log("earnings", earnings);
+
   const formatCurrency = (amount) => {
     return new Intl.NumberFormat('en-NG', {
       style: 'currency',

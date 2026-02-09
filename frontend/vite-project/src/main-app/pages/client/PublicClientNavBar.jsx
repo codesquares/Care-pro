@@ -15,12 +15,9 @@ const PublicClientNavBar = () => {
   const [searchQuery, setSearchQuery] = useState("");
   const [isTyping, setIsTyping] = useState(false);
 
-  // Handle logout
+  // Handle logout - AuthContext handles navigation internally
   const handleLogout = () => {
-    const result = authLogout();
-    if (result.shouldNavigate) {
-      navigate(result.path);
-    }
+    authLogout();
   };
 
   // Initialize search query from URL on component mount

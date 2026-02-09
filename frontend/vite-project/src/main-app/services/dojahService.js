@@ -38,12 +38,8 @@ export const processDojahResponse = (response) => {
 // Check verification status for a specific user
 export const getDojahStatus = async (userId, userType, token) => {
   try {
-    console.log('getDojahStatus called with:', { userId, userType, tokenLength: token?.length });
-    
     // Backend requires token as query parameter AND in Authorization header
     const url = `${endpoint}/Dojah/status?userId=${userId}&userType=${userType}&token=${token}`;
-    console.log('Making request to:', url.replace(token, '[TOKEN_REDACTED]'));
-    console.log('📝 Note: 404 responses for this endpoint are expected for users without verification data');
     
     const response = await fetch(url, {
       method: 'GET',
@@ -53,15 +49,12 @@ export const getDojahStatus = async (userId, userType, token) => {
         'accept': '*/*'
       }
     });
-
-    console.log('Response status:', response.status);
     
     if (!response.ok) {
       // Handle 404 as a valid "no verification found" response, not an error
       if (response.status === 404) {
         const errorData = await response.json().catch(() => ({ message: 'No verification found for user' }));
         const message = errorData.message || 'No verification found for user';
-        console.log('✅ getDojahStatus - 404 handled gracefully: No verification found for user (this is expected for unverified users)');
         
         // Return structured data instead of throwing error
         return {
@@ -76,7 +69,6 @@ export const getDojahStatus = async (userId, userType, token) => {
       
       // For other errors, get the response body for more details
       const errorText = await response.text();
-      console.log('Error response body:', errorText);
       
       if (response.status === 403) {
         throw new Error('Access denied. Admin role required.');

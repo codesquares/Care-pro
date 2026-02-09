@@ -1,6 +1,6 @@
 import './ServiceProvider.css';
 
-const ServiceProvider = ({service}) => {
+const ServiceProvider = ({service, onRatingClick}) => {
   if (!service) {
     return <div>Loading...</div>;
   }
@@ -27,9 +27,15 @@ const ServiceProvider = ({service}) => {
           <span className="service-provider__badge service-provider__badge--verified">
             carepro-verified
           </span>
-          <div className="service-provider__rating">
+          <div 
+            className="service-provider__rating service-provider__rating--clickable" 
+            onClick={onRatingClick}
+            title="Click to view reviews"
+          >
             <span className="service-provider__star">★</span>
-            <span className="service-provider__rating-text">4.5 (200)</span>
+            <span className="service-provider__rating-text">
+              {service.caregiverRating?.toFixed(1) || '0.0'} ({service.caregiverReviewCount || 0})
+            </span>
           </div>
         </div>
       </div>

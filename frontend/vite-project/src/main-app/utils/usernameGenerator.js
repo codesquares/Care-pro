@@ -43,7 +43,6 @@ export const generateUsername = (firstName, email, joinDate) => {
     // Generate username: firstName + emailPrefix + year + hour
     const username = `${cleanFirstName}${emailPrefix}${dateInfo.year}${dateInfo.hour}`;
     
-    console.log('Generated username:', username, 'from:', { firstName, email, joinDate });
     return username;
 
   } catch (error) {

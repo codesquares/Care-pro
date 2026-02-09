@@ -3,17 +3,16 @@ import { useLocation, useNavigate } from "react-router-dom";
 import { useAuth } from "../../../context/AuthContext";
 import "./clientDashboard.css";
 import "./responsiveFixes.css";
-import Banner from "./Banner";
+import MarketplaceHero from "./MarketplaceHero";
 import ServiceCategory from "./ServiceCategory";
+import SuggestedServices from "./SuggestedServices";
 import FilterBarDropdown from "../components/FilterBar";
 import ClientGigService from "../../../services/clientGigService";
 import ClientCareNeedsService from "../../../services/clientCareNeedsService";
-import CareMatchBanner from "./CareMatchBanner";
 import QualityHealthCareCards from "../../../../components/QualityHealthCareCards";
 import TopBanner from "../../../../components/TopBanner";
-import genralImg from "../../../../assets/nurseAndWoman.png";
-import CareFacts from "../../../../components/LandingPage/HealthcareFacts";
-import Nurse from "../../../../assets/nurse.png";
+import genralImg from "../../../../assets/nurse.png";
+import CareFacts from "../../../../pages/CareFacts";
 
 // Category slug to backend category name mapping
 const categorySlugMap = {
@@ -53,16 +52,6 @@ const PublicMarketplace = () => {
   });
 
   const [careNeedsSet, setCareNeedsSet] = useState(false);
-  // Handle TopBanner button click - smart navigation based on auth status
-  const handleBookCaregiver = () => {
-    if (isAuthenticated && user?.role?.toLowerCase() === 'client') {
-      // Authenticated clients go to dashboard to browse gigs
-      navigate('/app/client/dashboard');
-    } else {
-      // Non-authenticated users go to register
-      navigate('/register');
-    }
-  };
 
   // Extract search query and category from URL parameters
   useEffect(() => {
@@ -199,25 +188,27 @@ const PublicMarketplace = () => {
     navigate('/marketplace', { replace: true });
   };
 
+  // Handle TopBanner button click - smart navigation based on auth status
+  const handleBookCaregiver = () => {
+    if (isAuthenticated && user?.role?.toLowerCase() === 'client') {
+      navigate('/app/client/dashboard');
+    } else {
+      navigate('/register');
+    }
+  };
+
   return (
     <div className="dashboard client-dashboard-flex">
       <div className="rightbar">
-        {/* Only show banner for authenticated users, exactly like ClientDashboard */}
-        {isAuthenticated && !shouldHideComponents() && (
-          <Banner
-            name={user?.firstName || user?.name || 'User'}
-            careNeedsSet={careNeedsSet}
+        {/* Marketplace Hero with categories, banner, and filters */}
+        {!shouldHideComponents() && (
+          <MarketplaceHero
+            filters={filters}
+            onFilterChange={handleFilterChange}
           />
         )}
 
-        {/* Only show CareMatch banner for authenticated users */}
-        {isAuthenticated && !shouldHideComponents() && (
-          <div className="mid-banner">
-            <CareMatchBanner />
-          </div>
-        )}
-
-        {/* Filter bar available to all users */}
+        {/* Filter bar when actively searching */}
         {shouldHideComponents() && (
           <>
             {/* Category Header when viewing a specific category */}
@@ -261,6 +252,9 @@ const PublicMarketplace = () => {
                     isPublic={!isAuthenticated}
                   />
                 )}
+
+                {/* Suggested Services Section */}
+                <SuggestedServices />
 
                 {topRatedGigs.length > 0 && (
                   <ServiceCategory
@@ -376,7 +370,7 @@ const PublicMarketplace = () => {
                     title="Become a Caregiver"
                     description="As a caregiver, you are provided the opportunity to support your patients while also building a rewarding career in healthcare. Take the first step today!"
                     buttonText="Become a Caregiver"
-                    imageUrl={Nurse}
+                    imageUrl={genralImg}
                     onButtonClick={handleBookCaregiver}
                     backgroundColor="#324CA6"
                   />

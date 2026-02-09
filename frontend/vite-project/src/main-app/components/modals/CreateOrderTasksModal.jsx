@@ -185,8 +185,8 @@ const CreateOrderTasksModal = ({
   };
 
   return (
-    <div className="modal-overlay">
-      <div className="modal-content create-order-tasks-modal">
+    <div className="order-tasks-modal-overlay">
+      <div className="order-tasks-modal-content">
         <div className="modal-header">
           <h3>Create Task Requirements</h3>
           <button type="button" className="close-btn" onClick={onClose}>×</button>
@@ -215,7 +215,7 @@ const CreateOrderTasksModal = ({
                   min="1" 
                   max="7"
                   value={formData.packageSelection.visitsPerWeek}
-                  onChange={(e) => handlePackageChange('visitsPerWeek', parseInt(e.target.value))}
+                  onChange={(e) => handlePackageChange('visitsPerWeek', parseInt(e.target.value) || 1)}
                 />
               </div>
             </div>
@@ -227,7 +227,7 @@ const CreateOrderTasksModal = ({
                   min="0"
                   step="0.01"
                   value={formData.packageSelection.pricePerVisit}
-                  onChange={(e) => handlePackageChange('pricePerVisit', parseFloat(e.target.value))}
+                  onChange={(e) => handlePackageChange('pricePerVisit', parseFloat(e.target.value) || 0)}
                 />
               </div>
               <div className="form-group">
@@ -236,7 +236,7 @@ const CreateOrderTasksModal = ({
                   type="number" 
                   min="1"
                   value={formData.packageSelection.durationWeeks}
-                  onChange={(e) => handlePackageChange('durationWeeks', parseInt(e.target.value))}
+                  onChange={(e) => handlePackageChange('durationWeeks', parseInt(e.target.value) || 1)}
                 />
               </div>
             </div>
@@ -321,7 +321,7 @@ const CreateOrderTasksModal = ({
                       min="5"
                       step="5"
                       value={task.estimatedDurationMinutes}
-                      onChange={(e) => updateCareTask(index, 'estimatedDurationMinutes', parseInt(e.target.value))}
+                      onChange={(e) => updateCareTask(index, 'estimatedDurationMinutes', parseInt(e.target.value) || 30)}
                     />
                   </div>
                 </div>

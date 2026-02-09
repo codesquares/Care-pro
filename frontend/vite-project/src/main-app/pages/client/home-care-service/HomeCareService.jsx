@@ -183,8 +183,10 @@ import { useState, useEffect, useRef } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import "./home-care-service.css";
 import ClientGigService from "../../../services/clientGigService";
+import GigReviewService from "../../../services/gigReviewService";
 import defaultAvatar from "../../../../assets/profilecard1.png";
 import VideoModal from "../../../components/VideoModal/VideoModal";
+import ReviewsModal from "../../../components/ReviewsModal/ReviewsModal";
 import { useAuth } from "../../../context/AuthContext";
 
 const HomeCareService = () => {
@@ -197,6 +199,13 @@ const HomeCareService = () => {
   const [isFavorite, setIsFavorite] = useState(false);
   const [showShareModal, setShowShareModal] = useState(false);
   const [copySuccess, setCopySuccess] = useState(false);
+  const [showReviewsModal, setShowReviewsModal] = useState(false);
+  const [gigReviews, setGigReviews] = useState([]);
+  const [reviewStats, setReviewStats] = useState(null);
+  const [reviewsLoading, setReviewsLoading] = useState(false);
+  // Gig-specific review data (fetched on mount)
+  const [gigReviewCount, setGigReviewCount] = useState(0);
+  const [gigRating, setGigRating] = useState(0);
   const navigate = useNavigate();
   const { isAuthenticated, userRole } = useAuth();
   const basePath = "/app/client";
@@ -301,6 +310,46 @@ const HomeCareService = () => {
     setShowShareModal(false);
   };
 
+  // Handle opening reviews modal
+  const handleOpenReviews = async () => {
+    setShowReviewsModal(true);
+    setReviewsLoading(true);
+    
+    try {
+      const { reviews, stats } = await GigReviewService.getReviewsWithStats(id);
+      setGigReviews(reviews);
+      setReviewStats(stats);
+    } catch (err) {
+      console.error('Error fetching reviews:', err);
+      setGigReviews([]);
+      setReviewStats(null);
+    } finally {
+      setReviewsLoading(false);
+    }
+  };
+
+  // Fetch gig-specific reviews on mount
+  useEffect(() => {
+    const fetchGigReviews = async () => {
+      if (!id) return;
+      try {
+        const reviews = await GigReviewService.getReviewsByGigId(id);
+        const count = reviews.length;
+        setGigReviewCount(count);
+        
+        // Calculate average rating if there are reviews
+        if (count > 0) {
+          const totalRating = reviews.reduce((sum, r) => sum + (r.rating || r.Rating || 0), 0);
+          setGigRating(Math.round((totalRating / count) * 10) / 10);
+        }
+      } catch (err) {
+        // Silent fail - will show 0 reviews
+      }
+    };
+    
+    fetchGigReviews();
+  }, [id]);
+
   useEffect(() => {
     const fetchServiceDetails = async () => {
       try {
@@ -318,7 +367,7 @@ const HomeCareService = () => {
         }
 
         setService(foundGig);
-        console.log("Enriched service details:", foundGig);
+        // console.log("Enriched service details:", foundGig);
 
       } catch (err) {
         console.error("Error fetching service details:", err);
@@ -401,10 +450,10 @@ const HomeCareService = () => {
   } = service;
 
 
-  console.log("Service details===><===:", service);
-  console.log("caregiverProfileImage value:", caregiverProfileImage);
-  console.log("caregiverProfileImage type:", typeof caregiverProfileImage);
-  console.log("defaultAvatar:", defaultAvatar);
+  // console.log("Service details===><===:", service);
+  // console.log("caregiverProfileImage value:", caregiverProfileImage);
+  // console.log("caregiverProfileImage type:", typeof caregiverProfileImage);
+  // console.log("defaultAvatar:", defaultAvatar);
 
   return (
     <div className="container-service">
@@ -451,8 +500,15 @@ const HomeCareService = () => {
                 <span className="location-tag">
                   {caregiverLocation || "Location not specified"}
                 </span>
-                <span className="rating-tag">
-                  ⭐ {caregiverRating || 0} ({caregiverReviewCount || 0} reviews)
+                <span 
+                  className="rating-tag rating-tag-clickable"
+                  onClick={handleOpenReviews}
+                  role="button"
+                  tabIndex={0}
+                  onKeyDown={(e) => e.key === 'Enter' && handleOpenReviews()}
+                  title="Click to see reviews"
+                >
+                  ⭐ {gigRating || 0} ({gigReviewCount || 0} reviews)
                 </span>
                 {caregiverExperience > 0 && (
                   <span className="experience-tag">
@@ -621,13 +677,13 @@ const HomeCareService = () => {
       </div>
 
       {/* Reviews */}
-      {caregiverReviewCount > 0 && (
+      {gigReviewCount > 0 && (
         <div className="reviews">
           <h2 className="review-title">Reviews</h2>
           <div className="reviews-summary">
             <div className="rating-overview">
-              <span className="average-rating">⭐ {caregiverRating || 0}</span>
-              <span className="review-count">({caregiverReviewCount || 0} reviews)</span>
+              <span className="average-rating">⭐ {gigRating || 0}</span>
+              <span className="review-count">({gigReviewCount || 0} reviews)</span>
               {caregiverExperience > 0 && (
                 <span className="experience-info">• {caregiverExperience} years experience</span>
               )}
@@ -719,6 +775,16 @@ const HomeCareService = () => {
           </div>
         </div>
       )}
+
+      {/* Reviews Modal */}
+      <ReviewsModal
+        isOpen={showReviewsModal}
+        onClose={() => setShowReviewsModal(false)}
+        reviews={gigReviews}
+        stats={reviewStats}
+        loading={reviewsLoading}
+        gigTitle={title}
+      />
     </div>
   );
 };

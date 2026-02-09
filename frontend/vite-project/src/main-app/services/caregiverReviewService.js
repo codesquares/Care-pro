@@ -2,7 +2,7 @@
  * Caregiver Review Service
  * Handles fetching and processing caregiver gigs with their associated reviews
  */
-import axios from 'axios';
+import api from './api';
 
 import config from '../config';
 
@@ -25,8 +25,8 @@ const CaregiverReviewService = {
 
       // Step 1: Fetch caregiver's gigs and caregiver profile in parallel
       const [gigsResponse, caregiverResponse] = await Promise.allSettled([
-        axios.get(`${BASE_API_URL}/Gigs/caregiver/caregiverId?caregiverId=${caregiverId}`),
-        axios.get(`${BASE_API_URL}/CareGivers/${caregiverId}`)
+        api.get(`/Gigs/caregiver/${caregiverId}`),
+        api.get(`/CareGivers/${caregiverId}`)
       ]);
 
       // Handle potential failures
@@ -43,7 +43,7 @@ const CaregiverReviewService = {
 
       // Step 2: Fetch reviews for all gigs in parallel
       const reviewPromises = gigs.map(gig =>
-        axios.get(`${BASE_API_URL}/Reviews?gigId=${gig.id}`)
+        api.get(`/Reviews?gigId=${gig.id}`)
           .then(response => {
             if (response.status === 200) {
               return {
@@ -170,7 +170,7 @@ const CaregiverReviewService = {
 
     for (const batch of batches) {
       const profilePromises = batch.map(clientId =>
-        axios.get(`${BASE_API_URL}/Clients/${clientId}`)
+        api.get(`/Clients/${clientId}`)
           .then(response => {
             if (response.status === 200) {
               return { clientId, profile: response.data };

@@ -44,6 +44,9 @@ setup-testing-environment.*
 *COMPLETE.md
 *DEBUG*.md
 *MIGRATION*.md
+*/assets/design_specs
+src/assets/design_specs/
+src/assets/design_specs/*
 
 # Editor directories and files
 .vscode/*

@@ -29,10 +29,15 @@ const ClientGigService = {
   
   async getAllGigs() {
   try {
+    const authHeaders = {
+      headers: {
+        'Authorization': `Bearer ${localStorage.getItem('authToken') || ''}`
+      }
+    };
     // Fetch all gigs and all caregivers in parallel for better performance
     const [response, userResponse] = await Promise.all([
-      axios.get(`${BASE_API_URL}/Gigs`),
-      axios.get(`${BASE_API_URL}/CareGivers/AllCaregivers`)
+      axios.get(`${BASE_API_URL}/Gigs`, authHeaders),
+      axios.get(`${BASE_API_URL}/CareGivers/AllCaregivers`, authHeaders)
     ]);
 
     const allGigs = response.data || [];
@@ -45,15 +50,16 @@ const ClientGigService = {
       caregiverMap.set(caregiver.id, caregiver);
     });
 
-    // Filter gigs to only include those with valid caregivers and published status
+    // Filter gigs to only include those with valid caregivers and published/active status
     // and enrich them with caregiver information
     const validAndEnrichedGigs = allGigs
       .filter(gig => {
         // Exclude gigs that don't have a caregiverId or whose caregiver doesn't exist
-        // Also exclude gigs that are not published
+        // Also exclude gigs that are not published or active
+        const status = gig.status?.toLowerCase();
         return gig.caregiverId && 
                caregiverMap.has(gig.caregiverId) && 
-               gig.status === 'Published';
+               (status === 'published' || status === 'active');
       })
       .map(gig => {
         // Get the corresponding caregiver data
@@ -92,9 +98,6 @@ const ClientGigService = {
         };
       });
 
-    console.log(`Filtered ${validAndEnrichedGigs.length} valid gigs out of ${allGigs.length} total gigs`);
-    console.log('Enriched gig data:', validAndEnrichedGigs);
-
     return validAndEnrichedGigs;
     
   } catch (error) {
@@ -102,8 +105,11 @@ const ClientGigService = {
     
     // In case of error, still try to return basic gig data if available
     try {
-      const fallbackResponse = await axios.get(`${BASE_API_URL}/Gigs`);
-      console.warn('Returning basic gig data without caregiver enrichment due to error');
+      const fallbackResponse = await axios.get(`${BASE_API_URL}/Gigs`, {
+        headers: {
+          'Authorization': `Bearer ${localStorage.getItem('authToken') || ''}`
+        }
+      });
       return fallbackResponse.data || [];
     } catch (fallbackError) {
       console.error('Complete failure to fetch gigs:', fallbackError);
