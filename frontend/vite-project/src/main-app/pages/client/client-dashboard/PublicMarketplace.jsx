@@ -3,12 +3,14 @@ import { useLocation, useNavigate } from "react-router-dom";
 import { useAuth } from "../../../context/AuthContext";
 import "./clientDashboard.css";
 import "./responsiveFixes.css";
+import "./matchedServices.css";
 import MarketplaceHero from "./MarketplaceHero";
 import ServiceCategory from "./ServiceCategory";
 import SuggestedServices from "./SuggestedServices";
 import FilterBarDropdown from "../components/FilterBar";
 import ClientGigService from "../../../services/clientGigService";
 import ClientCareNeedsService from "../../../services/clientCareNeedsService";
+import MatchingService from "../../../services/matchingService";
 import QualityHealthCareCards from "../../../../components/QualityHealthCareCards";
 import TopBanner from "../../../../components/TopBanner";
 import genralImg from "../../../../assets/nurse.png";
@@ -40,6 +42,9 @@ const PublicMarketplace = () => {
   const [error, setError] = useState(null);
   const [isActivelySearching, setIsActivelySearching] = useState(false);
   const [activeCategory, setActiveCategory] = useState(null);
+  const [isMatchedMode, setIsMatchedMode] = useState(false);
+  const [matchedServices, setMatchedServices] = useState([]);
+  const [clientCareNeeds, setClientCareNeeds] = useState(null);
 
   const [filters, setFilters] = useState({
     sortBy: '',
@@ -53,15 +58,114 @@ const PublicMarketplace = () => {
 
   const [careNeedsSet, setCareNeedsSet] = useState(false);
 
-  // Extract search query and category from URL parameters
+  /**
+   * Calculate match scores between gigs and client care needs
+   * @param {Array} gigs - Available gigs
+   * @param {Object} careNeeds - Client's care needs
+   * @returns {Array} Gigs with match scores, sorted by score
+   */
+  const calculateMatchScores = (gigs, careNeeds) => {
+    if (!gigs || !careNeeds) return [];
+    
+    return gigs.map(gig => {
+      let score = 0;
+      let maxScore = 0;
+      const matchReasons = [];
+      
+      // 1. Service category match (30 points)
+      maxScore += 30;
+      if (careNeeds.serviceCategories && careNeeds.serviceCategories.length > 0) {
+        const gigCategory = (gig.category || '').toLowerCase();
+        const matchedCategory = careNeeds.serviceCategories.find(cat => 
+          gigCategory.includes(cat.toLowerCase()) || cat.toLowerCase().includes(gigCategory)
+        );
+        if (matchedCategory) {
+          score += 30;
+          matchReasons.push(`${matchedCategory} specialist`);
+        }
+      }
+      
+      // 2. Certification match (20 points)
+      maxScore += 20;
+      if (careNeeds.caregiverRequirements?.certifications && careNeeds.caregiverRequirements.certifications.length > 0) {
+        const gigCerts = gig.caregiverCertifications || [];
+        const matchedCerts = careNeeds.caregiverRequirements.certifications.filter(cert =>
+          gigCerts.some(gc => gc.toLowerCase().includes(cert.toLowerCase()) || cert.toLowerCase().includes(gc.toLowerCase()))
+        );
+        if (matchedCerts.length > 0) {
+          score += Math.min(20, (matchedCerts.length / careNeeds.caregiverRequirements.certifications.length) * 20);
+          matchReasons.push(`${matchedCerts.length} cert${matchedCerts.length > 1 ? 's' : ''} matched`);
+        }
+      }
+      
+      // 3. Language match (15 points)
+      maxScore += 15;
+      if (careNeeds.caregiverRequirements?.languages && careNeeds.caregiverRequirements.languages.length > 0) {
+        const gigLangs = gig.caregiverLanguages || [];
+        const matchedLangs = careNeeds.caregiverRequirements.languages.filter(lang =>
+          gigLangs.some(gl => gl.toLowerCase().includes(lang.toLowerCase()))
+        );
+        if (matchedLangs.length > 0) {
+          score += 15;
+          matchReasons.push(`Speaks ${matchedLangs[0]}`);
+        }
+      }
+      
+      // 4. Experience level match (15 points)
+      maxScore += 15;
+      if (careNeeds.caregiverRequirements?.experienceLevel) {
+        const expMap = {
+          'Entry Level': 0,
+          'Some Experience': 1,
+          'Experienced': 3,
+          'Very Experienced': 5,
+          'Expert': 10
+        };
+        const requiredYears = expMap[careNeeds.caregiverRequirements.experienceLevel.split(' (')[0]] || 0;
+        if ((gig.caregiverExperience || 0) >= requiredYears) {
+          score += 15;
+          matchReasons.push(`${gig.caregiverExperience}+ years exp`);
+        }
+      }
+      
+      // 5. Verified caregiver bonus (10 points)
+      maxScore += 10;
+      if (gig.caregiverIsVerified) {
+        score += 10;
+        matchReasons.push('Verified');
+      }
+      
+      // 6. Rating bonus (10 points)
+      maxScore += 10;
+      if ((gig.caregiverRating || 0) >= 4) {
+        score += 10;
+        matchReasons.push(`★ ${gig.caregiverRating}`);
+      }
+      
+      const matchPercentage = maxScore > 0 ? Math.round((score / maxScore) * 100) : 0;
+      
+      return {
+        ...gig,
+        matchScore: matchPercentage,
+        matchReasons: matchReasons.slice(0, 3) // Top 3 reasons
+      };
+    })
+    .filter(gig => gig.matchScore > 0)
+    .sort((a, b) => b.matchScore - a.matchScore)
+    .slice(0, 10); // Top 10 matches
+  };
+
+  // Extract search query, category, and matched mode from URL parameters
   useEffect(() => {
     const urlParams = new URLSearchParams(location.search);
     const searchQuery = urlParams.get('q');
     const categorySlug = urlParams.get('category');
+    const matchedParam = urlParams.get('matched');
     
     // Map category slug to backend category name
     const categoryName = categorySlug ? categorySlugMap[categorySlug] : null;
     setActiveCategory(categoryName);
+    setIsMatchedMode(matchedParam === 'true');
     
     setFilters(prevFilters => ({
       ...prevFilters,
@@ -111,7 +215,15 @@ const PublicMarketplace = () => {
         if (isAuthenticated && user) {
           try {
             const careNeeds = await ClientCareNeedsService.getCareNeeds();
-            setCareNeedsSet(!!(careNeeds && careNeeds.primaryCondition));
+            setClientCareNeeds(careNeeds);
+            const hasNeeds = !!(careNeeds && careNeeds.serviceCategories && careNeeds.serviceCategories.length > 0);
+            setCareNeedsSet(hasNeeds);
+            
+            // Calculate matched services if we have care needs
+            if (hasNeeds && allGigs.length > 0) {
+              const matched = calculateMatchScores(allGigs, careNeeds);
+              setMatchedServices(matched);
+            }
           } catch (error) {
             console.warn("Could not fetch care needs:", error);
             setCareNeedsSet(false);
@@ -241,6 +353,74 @@ const PublicMarketplace = () => {
 
         {!loading && !error && (
           <div className="service-categories">
+            {/* Matched For You Section - Show when user has care needs */}
+            {isAuthenticated && careNeedsSet && matchedServices.length > 0 && (isMatchedMode || !hasActiveFiltersOrSearch()) && (
+              <div className="matched-services-section">
+                <div className="matched-header">
+                  <div className="matched-title-row">
+                    <span className="matched-icon">🎯</span>
+                    <h2>Matched For You</h2>
+                    <span className="matched-badge">{matchedServices.length} matches</span>
+                  </div>
+                  <p className="matched-subtitle">Caregivers that best match your care preferences</p>
+                </div>
+                <div className="matched-services-grid">
+                  {matchedServices.slice(0, 6).map((service) => (
+                    <div 
+                      key={service.id} 
+                      className="matched-service-card"
+                      onClick={() => navigate(`/marketplace/service/${service.id}`)}
+                    >
+                      <div className="match-score-badge">
+                        <span className="score">{service.matchScore}%</span>
+                        <span className="label">match</span>
+                      </div>
+                      <div className="card-image">
+                        <img 
+                          src={service.gigImage || service.image1 || 'https://via.placeholder.com/300x180?text=Care+Service'} 
+                          alt={service.title} 
+                        />
+                        {service.caregiverIsVerified && (
+                          <span className="verified-badge">✓ Verified</span>
+                        )}
+                      </div>
+                      <div className="card-content">
+                        <h3>{service.title}</h3>
+                        <div className="caregiver-info">
+                          <img 
+                            src={service.caregiverProfileImage || '/avatar.jpg'} 
+                            alt={service.caregiverName}
+                            className="caregiver-avatar"
+                          />
+                          <span className="caregiver-name">{service.caregiverName}</span>
+                          {service.caregiverRating > 0 && (
+                            <span className="rating">★ {service.caregiverRating.toFixed(1)}</span>
+                          )}
+                        </div>
+                        <div className="match-reasons">
+                          {service.matchReasons.map((reason, idx) => (
+                            <span key={idx} className="reason-tag">{reason}</span>
+                          ))}
+                        </div>
+                        <div className="card-footer">
+                          <span className="price">₦{(service.price || 0).toLocaleString()}/{service.priceUnit || 'hr'}</span>
+                          <button className="view-btn">View Details</button>
+                        </div>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+                {matchedServices.length > 6 && (
+                  <button 
+                    className="see-all-matches-btn"
+                    onClick={() => navigate('/marketplace?matched=true')}
+                  >
+                    See All {matchedServices.length} Matches
+                  </button>
+                )}
+              </div>
+            )}
+
             {/* Show categories if no filters or search are active */}
             {!hasActiveFiltersOrSearch() && (
               <>

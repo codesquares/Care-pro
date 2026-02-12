@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import { useNavigate, useSearchParams } from 'react-router-dom';
 import { toast } from 'react-toastify';
 import ClientCareNeedsService from '../../../services/clientCareNeedsService';
 import './CareNeedsWizard.css';
@@ -10,6 +11,9 @@ import CaregiverPreferencesTab from './tabs/CaregiverPreferencesTab';
 import ReviewAndSaveTab from './tabs/ReviewAndSaveTab';
 
 const CareNeedsWizard = () => {
+  const navigate = useNavigate();
+  const [searchParams] = useSearchParams();
+  const returnTo = searchParams.get('returnTo');
   const [currentTab, setCurrentTab] = useState(0);
   const [careNeeds, setCareNeeds] = useState(null);
   const [isLoading, setIsLoading] = useState(true);
@@ -246,6 +250,25 @@ const CareNeedsWizard = () => {
       newCompleted.add(3);
       setCompletedTabs(newCompleted);
       
+      // Navigate back to where the user came from, or default to marketplace
+      setTimeout(() => {
+        if (returnTo) {
+          navigate(returnTo);
+        } else {
+          // Default: redirect to marketplace with care needs filter
+          const filterParams = new URLSearchParams();
+          if (careNeeds.serviceCategories && careNeeds.serviceCategories.length > 0) {
+            const categorySlug = careNeeds.serviceCategories[0]
+              .toLowerCase()
+              .replace(/\s+/g, '-')
+              .replace('&', '');
+            filterParams.set('category', categorySlug);
+          }
+          filterParams.set('matched', 'true');
+          navigate(`/marketplace?${filterParams.toString()}`);
+        }
+      }, 1500);
+      
     } catch (err) {
       console.error('Error saving care needs:', err);
       setError('Failed to save care needs. Please try again.');
@@ -309,6 +332,12 @@ const CareNeedsWizard = () => {
     <div className="care-needs-wizard">
       {/* Header */}
       <div className="wizard-header">
+        <button 
+          className="wizard-back-btn"
+          onClick={() => navigate(returnTo || '/app/client/dashboard')}
+        >
+          ← Back
+        </button>
         <h1>Care Needs Setup</h1>
         <p>Let's set up your care preferences step by step</p>
       </div>

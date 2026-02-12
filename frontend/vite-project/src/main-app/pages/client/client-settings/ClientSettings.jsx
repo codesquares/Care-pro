@@ -22,6 +22,7 @@ const ClientSettings = () => {
   const { updateUser, user } = useAuth();
   const [isLoading, setIsLoading] = useState(false);
   const [message, setMessage] = useState({ type: "", text: "" });
+  const [authProvider, setAuthProvider] = useState("Local"); // Track auth provider
 
   // Modal state
   const [showModal, setShowModal] = useState(false);
@@ -89,6 +90,9 @@ const ClientSettings = () => {
         setIsLoading(true);
         // Get user details from local storage or context
         const userDetails = JSON.parse(localStorage.getItem("userDetails") || "{}");
+
+        // Set auth provider from user details or fetch from profile
+        setAuthProvider(userDetails.authProvider || user?.authProvider || "Local");
 
         setAccountForm({
           firstName: userDetails.firstName || "",
@@ -522,11 +526,10 @@ const ClientSettings = () => {
                 type="text"
                 name="firstName"
                 value={accountForm.firstName}
-                onChange={handleAccountChange}
+                disabled
+                className="disabled-input"
+                title="First name cannot be changed"
               />
-              {!validationStates.firstName.isValid && (
-                <span className="validation-message error">{validationStates.firstName.message}</span>
-              )}
             </div>
             <div className="form-group">
               <label>Last Name</label>
@@ -534,11 +537,10 @@ const ClientSettings = () => {
                 type="text"
                 name="lastName"
                 value={accountForm.lastName}
-                onChange={handleAccountChange}
+                disabled
+                className="disabled-input"
+                title="Last name cannot be changed"
               />
-              {!validationStates.lastName.isValid && (
-                <span className="validation-message error">{validationStates.lastName.message}</span>
-              )}
             </div>
             <div className="form-group">
               <label>Email</label>
@@ -573,74 +575,115 @@ const ClientSettings = () => {
         {/* Update Password Card */}
         <div className="settings-card">
           <h3>Update Password</h3>
-          <form onSubmit={handlePasswordSave}>
-            <div className="form-group">
-              <label>Current Password</label>
-              <input
-                type="password"
-                name="currentPassword"
-                placeholder="Enter current password"
-                value={passwordForm.currentPassword}
-                onChange={handlePasswordChange}
-              />
-              {!validationStates.currentPassword.isValid && (
-                <span className="validation-message error">{validationStates.currentPassword.message}</span>
-              )}
-            </div>
-            <div className="form-group">
-              <label>New Password</label>
-              <input
-                type="password"
-                name="newPassword"
-                placeholder="Enter new password"
-                value={passwordForm.newPassword}
-                onChange={handlePasswordChange}
-              />
-              {passwordForm.newPassword && (
-                <div className="password-strength-indicator">
-                  <div
-                    className="password-strength-bar"
-                    style={{
-                      width: `${(passwordStrength.score / 6) * 100}%`,
-                      backgroundColor: passwordStrength.color
-                    }}
-                  ></div>
-                  <span
-                    className="password-strength-text"
-                    style={{ color: passwordStrength.color }}
-                  >
-                    {passwordStrength.label}
-                  </span>
+          
+          {authProvider === 'Google' ? (
+            <div style={{
+              padding: '16px',
+              backgroundColor: '#e3f2fd',
+              borderRadius: '8px',
+              border: '1px solid #90caf9',
+              marginBottom: '16px'
+            }}>
+              <div style={{ display: 'flex', alignItems: 'center', gap: '12px', marginBottom: '8px' }}>
+                <i className="fab fa-google" style={{ fontSize: '24px', color: '#4285f4' }}></i>
+                <div>
+                  <p style={{ 
+                    margin: 0, 
+                    fontWeight: 600, 
+                    color: '#1565c0',
+                    fontSize: '14px'
+                  }}>
+                    You signed in with Google
+                  </p>
+                  <p style={{ 
+                    margin: '4px 0 0 0', 
+                    color: '#1976d2',
+                    fontSize: '13px',
+                    lineHeight: '1.4'
+                  }}>
+                    Your password is managed by Google. To change it, visit your{' '}
+                    <a 
+                      href="https://myaccount.google.com/security" 
+                      target="_blank" 
+                      rel="noopener noreferrer"
+                      style={{ color: '#1565c0', textDecoration: 'underline', fontWeight: 600 }}
+                    >
+                      Google Account Security settings
+                    </a>.
+                  </p>
                 </div>
-              )}
-              {!validationStates.newPassword.isValid && (
-                <span className="validation-message error">{validationStates.newPassword.message}</span>
-              )}
+              </div>
             </div>
-            <div className="form-group">
-              <label>Confirm New Password</label>
-              <input
-                type="password"
-                name="confirmPassword"
-                placeholder="Confirm new password"
-                value={passwordForm.confirmPassword}
-                onChange={handlePasswordChange}
-              />
-              {!validationStates.confirmPassword.isValid && (
-                <span className="validation-message error">{validationStates.confirmPassword.message}</span>
-              )}
-            </div>
-            <p className="password-hint">
-              * 8 characters or longer. Combine upper and lowercase letters and numbers.
-            </p>
-            <button
-              type="submit"
-              className="save-changes-btn"
-              disabled={isLoading}
-            >
-              {isLoading ? 'Saving...' : 'Save Changes'}
-            </button>
-          </form>
+          ) : (
+            <form onSubmit={handlePasswordSave}>
+              <div className="form-group">
+                <label>Current Password</label>
+                <input
+                  type="password"
+                  name="currentPassword"
+                  placeholder="Enter current password"
+                  value={passwordForm.currentPassword}
+                  onChange={handlePasswordChange}
+                />
+                {!validationStates.currentPassword.isValid && (
+                  <span className="validation-message error">{validationStates.currentPassword.message}</span>
+                )}
+              </div>
+              <div className="form-group">
+                <label>New Password</label>
+                <input
+                  type="password"
+                  name="newPassword"
+                  placeholder="Enter new password"
+                  value={passwordForm.newPassword}
+                  onChange={handlePasswordChange}
+                />
+                {passwordForm.newPassword && (
+                  <div className="password-strength-indicator">
+                    <div
+                      className="password-strength-bar"
+                      style={{
+                        width: `${(passwordStrength.score / 6) * 100}%`,
+                        backgroundColor: passwordStrength.color
+                      }}
+                    ></div>
+                    <span
+                      className="password-strength-text"
+                      style={{ color: passwordStrength.color }}
+                    >
+                      {passwordStrength.label}
+                    </span>
+                  </div>
+                )}
+                {!validationStates.newPassword.isValid && (
+                  <span className="validation-message error">{validationStates.newPassword.message}</span>
+                )}
+              </div>
+              <div className="form-group">
+                <label>Confirm New Password</label>
+                <input
+                  type="password"
+                  name="confirmPassword"
+                  placeholder="Confirm new password"
+                  value={passwordForm.confirmPassword}
+                  onChange={handlePasswordChange}
+                />
+                {!validationStates.confirmPassword.isValid && (
+                  <span className="validation-message error">{validationStates.confirmPassword.message}</span>
+                )}
+              </div>
+              <p className="password-hint">
+                * 8 characters or longer. Combine upper and lowercase letters and numbers.
+              </p>
+              <button
+                type="submit"
+                className="save-changes-btn"
+                disabled={isLoading}
+              >
+                {isLoading ? 'Saving...' : 'Save Changes'}
+              </button>
+            </form>
+          )}
         </div>
 
         {/* Care Preferences Card */}
@@ -652,7 +695,7 @@ const ClientSettings = () => {
           <button
             type="button"
             className="save-changes-btn"
-            onClick={() => navigate('/app/client/preferences')}
+            onClick={() => navigate('/app/client/care-needs?returnTo=/app/client/settings')}
           >
             Manage Care Preferences
           </button>

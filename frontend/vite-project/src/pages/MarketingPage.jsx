@@ -509,20 +509,19 @@ const MarketingPage = () => {
       </section>
 
       {/* Final CTA Section */}
-      {/* <section className="final-cta-section">
+      <section className="mk-final-cta">
         <div className="container">
-          <h2>Ready to find the perfect caregiver?</h2>
-          <p>Join thousands of families who trust CarePro for quality care.</p>
-          <div className="final-cta-buttons">
-            <button className="primary-btn" onClick={handleHireCaregiver}>
-              Find a Caregiver
-            </button>
-            <button className="secondary-btn" onClick={handleBecomeCaregiver}>
-              Become a Caregiver
+          <div className="mk-final-cta__card">
+            <h2>Looking for the perfect care professional?</h2>
+            <p>
+              Join thousands of families who trust CarePro for quality care.
+            </p>
+            <button className="mk-final-cta__btn" onClick={handleHireCaregiver}>
+              Hire a Caregiver
             </button>
           </div>
         </div>
-      </section> */}
+      </section>
     </div>
   );
 };

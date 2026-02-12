@@ -334,8 +334,8 @@
   align-items: center;
   justify-content: center;
   font-size: 2.5rem;
-  background: #02445f;
-  color: #ffffff;
+  background: #f9fafb;
+  color: inherit;
 }
 
 @media (min-width: 768px) {
