@@ -7,6 +7,8 @@ import ClientDashboardHero from "./ClientDashboardHero";
 import ServiceCategory from "./ServiceCategory";
 import FilterBarDropdown from "../components/FilterBar";
 import ClientGigService from "../../../services/clientGigService";
+import ClientProfileService from "../../../services/clientProfileService";
+import ClientCareNeedsService from "../../../services/clientCareNeedsService";
 
 
 
@@ -31,7 +33,46 @@ const ClientDashboard = () => {
   });
 
   const [careNeedsSet, setCareNeedsSet] = useState(false);
+  const [profileCompletion, setProfileCompletion] = useState(10);
   const user = JSON.parse(localStorage.getItem("userDetails") || "{}");
+
+  // Calculate profile completion percentage from real data
+  const calculateProfileCompletion = (profile, hasCareNeeds) => {
+    const fields = [
+      { check: () => !!profile?.firstName, weight: 10 },
+      { check: () => !!profile?.lastName, weight: 10 },
+      { check: () => !!profile?.email, weight: 10 },
+      { check: () => !!profile?.phoneNumber, weight: 15 },
+      { check: () => !!profile?.location, weight: 15 },
+      { check: () => !!profile?.bio, weight: 10 },
+      { check: () => !!profile?.profilePicture && profile.profilePicture !== '', weight: 15 },
+      { check: () => !!profile?.isVerified, weight: 5 },
+      { check: () => hasCareNeeds, weight: 10 },
+    ];
+    return fields.reduce((sum, f) => sum + (f.check() ? f.weight : 0), 0);
+  };
+
+  // Fetch profile and care needs to compute completion
+  useEffect(() => {
+    const fetchProfileData = async () => {
+      try {
+        const clientId = user?.id;
+        if (!clientId) return;
+
+        const [profile, careNeeds] = await Promise.all([
+          ClientProfileService.getProfile(clientId).catch(() => null),
+          ClientCareNeedsService.getCareNeeds().catch(() => null),
+        ]);
+
+        const hasCareNeeds = !!(careNeeds?.serviceCategories && careNeeds.serviceCategories.length > 0);
+        setCareNeedsSet(hasCareNeeds);
+        setProfileCompletion(calculateProfileCompletion(profile, hasCareNeeds));
+      } catch (err) {
+        console.warn('Could not fetch profile completion data:', err);
+      }
+    };
+    fetchProfileData();
+  }, [user?.id]);
 
   // Extract search query from URL parameters
   useEffect(() => {
@@ -127,7 +168,7 @@ const ClientDashboard = () => {
         {!shouldHideComponents() && (
           <ClientDashboardHero
             userName={user.firstName || 'User'}
-            profileCompletion={10}
+            profileCompletion={profileCompletion}
             remindersCount={3}
             filters={filters}
             onFilterChange={handleFilterChange}

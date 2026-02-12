@@ -3,6 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import './ClientProfile.css';
 import defaultAvatar from '../../../../assets/profilecard1.png';
 import ClientProfileService from '../../../services/clientProfileService';
+import ClientCareNeedsService from '../../../services/clientCareNeedsService';
 import OrderMetrics from '../../../components/client/OrderMetrics';
 import AddressInput from '../../../components/AddressInput';
 import { toast } from 'react-toastify';
@@ -32,6 +33,24 @@ const ClientProfile = () => {
 
   // Address validation state
   const [addressValidation, setAddressValidation] = useState(null);
+
+  // Care needs state
+  const [careNeeds, setCareNeeds] = useState(null);
+  const [hasCareNeeds, setHasCareNeeds] = useState(false);
+
+  // Service category icons mapping
+  const categoryIcons = {
+    'Adult Care': '👴',
+    'Child Care': '👶',
+    'Pet Care': '🐕',
+    'Home Care': '🏠',
+    'Post Surgery Care': '🏥',
+    'Special Needs Care': '♿',
+    'Medical Support': '⚕️',
+    'Mobility Support': '🦽',
+    'Therapy & Wellness': '🧘',
+    'Palliative': '🕊️'
+  };
 
   // Get user details from localStorage
   const userDetails = JSON.parse(localStorage.getItem("userDetails") || "{}");
@@ -66,6 +85,21 @@ const ClientProfile = () => {
     
     fetchProfile();
   }, [clientId]);
+
+  // Fetch care needs from the care needs service
+  useEffect(() => {
+    const fetchCareNeeds = async () => {
+      try {
+        const needs = await ClientCareNeedsService.getCareNeeds();
+        setCareNeeds(needs);
+        setHasCareNeeds(!!(needs?.serviceCategories && needs.serviceCategories.length > 0));
+      } catch (err) {
+        console.warn('Could not fetch care needs:', err);
+        setHasCareNeeds(false);
+      }
+    };
+    fetchCareNeeds();
+  }, []);
 
   // Generate username using the centralized utility
   const username = profile && profile.firstName && profile.email && profile.createdAt 
@@ -122,7 +156,7 @@ const ClientProfile = () => {
     });
   };
 
-  // Handle image selection
+  // Handle image selection (used during edit mode - just creates preview)
   const handleImageSelect = (e) => {
     if (e.target.files && e.target.files[0]) {
       const file = e.target.files[0];
@@ -137,6 +171,80 @@ const ClientProfile = () => {
         }));
       };
       fileReader.readAsDataURL(file);
+    }
+  };
+
+  // Handle direct image upload (used when NOT in edit mode - uploads immediately like settings page)
+  const handleDirectImageUpload = async (e) => {
+    if (e.target.files && e.target.files[0]) {
+      const file = e.target.files[0];
+
+      // Validate file type
+      if (!file.type.startsWith('image/')) {
+        toast.error('Please select a valid image file');
+        return;
+      }
+
+      // Validate file size (max 5MB)
+      if (file.size > 5 * 1024 * 1024) {
+        toast.error('Image size must be less than 5MB');
+        return;
+      }
+
+      try {
+        setUploadingImage(true);
+        setUploadProgress(0);
+
+        const progressInterval = setInterval(() => {
+          setUploadProgress(prev => (prev >= 90 ? 90 : prev + 10));
+        }, 100);
+
+        await ClientProfileService.updateProfilePicture(clientId, file);
+
+        clearInterval(progressInterval);
+        setUploadProgress(100);
+
+        toast.success('Profile picture updated successfully!', {
+          position: "top-right",
+          autoClose: 3000,
+        });
+
+        // Refresh profile data from API
+        setTimeout(async () => {
+          try {
+            const refreshedProfile = await ClientProfileService.getProfile(clientId);
+            
+            console.log('Refreshed profile with picture URL:', refreshedProfile.profilePicture);
+            
+            // Add cache-busting timestamp to profile picture URL
+            if (refreshedProfile.profilePicture) {
+              refreshedProfile.profilePicture = `${refreshedProfile.profilePicture}?t=${Date.now()}`;
+            }
+            
+            setProfile(refreshedProfile);
+            setEditedProfile(refreshedProfile);
+
+            // Update localStorage
+            const userDetails = JSON.parse(localStorage.getItem("userDetails") || "{}");
+            localStorage.setItem("userDetails", JSON.stringify({ ...userDetails, ...refreshedProfile }));
+          } catch (err) {
+            console.warn('Failed to refresh profile after image upload:', err);
+          }
+        }, 500);
+
+        setTimeout(() => {
+          setUploadingImage(false);
+          setUploadProgress(0);
+        }, 2000);
+      } catch (err) {
+        console.error('Image upload failed:', err);
+        toast.error('Failed to update profile picture. Please try again.');
+        setUploadingImage(false);
+        setUploadProgress(0);
+      }
+
+      // Reset the input so the same file can be selected again
+      e.target.value = '';
     }
   };
   
@@ -207,6 +315,12 @@ const ClientProfile = () => {
             console.log('Refreshing profile data from API after image upload...');
             const refreshedProfile = await ClientProfileService.getProfile(clientId);
             console.log('Refreshed profile from API:', refreshedProfile);
+            
+            // Add cache-busting timestamp to profile picture URL
+            if (refreshedProfile.profilePicture) {
+              refreshedProfile.profilePicture = `${refreshedProfile.profilePicture}?t=${Date.now()}`;
+            }
+            
             setProfile(refreshedProfile);
             setEditedProfile(refreshedProfile);
           } catch (error) {
@@ -356,54 +470,60 @@ const ClientProfile = () => {
 
       <div className="profile-content">
         <div className="profile-sidebar">
-          <div className="profile-picture-container">
-            <img
+          <div className="profile-picture-container" style={{ background: 'transparent' }}>
+            {console.log('Profile picture URL:', profile?.profilePicture, 'Uploading:', uploadingImage)}
+            <img 
+              key={profile?.profilePicture} // Force re-render when URL changes
               src={isEditing ? editedProfile?.profilePicture || defaultAvatar : profile?.profilePicture || defaultAvatar}
               alt="Profile"
               className="large-profile-picture"
+              onLoad={(e) => console.log('Image loaded successfully. Dimensions:', e.target.naturalWidth, 'x', e.target.naturalHeight, 'URL:', e.target.src)}
+              onError={(e) => {
+                console.error('Failed to load profile picture:', e.target.src);
+                e.target.src = defaultAvatar;
+              }}
+              style={{ 
+                display: 'block',
+                background: 'transparent',
+                position: 'relative',
+                zIndex: 1,
+                opacity: 1
+              }}
             />
-            {isEditing && (
-              <>
-                <input
-                  type="file"
-                  ref={fileInputRef}
-                  style={{ display: 'none' }}
-                  accept="image/*"
-                  onChange={handleImageSelect}
-                />
-                <button 
-                  className="change-photo-btn"
-                  onClick={handleImageUploadClick}
-                  disabled={uploadingImage}
-                >
-                  <i className={uploadingImage ? "fas fa-spinner fa-spin" : "fas fa-camera"}></i>
-                </button>
-                
-                {uploadingImage && (
-                  <div className="upload-progress-container">
-                    <div className="upload-progress">
-                      <div 
-                        className="progress-bar" 
-                        style={{ 
-                          width: `${uploadProgress}%`, 
-                          backgroundColor: uploadProgress < 100 ? 'var(--primary)' : 'var(--accent)' 
-                        }}
-                      ></div>
-                    </div>
-                    <span className="progress-text">{uploadProgress}%</span>
-                  </div>
-                )}
-              </>
+            <input
+              type="file"
+              ref={fileInputRef}
+              style={{ display: 'none' }}
+              accept="image/*"
+              onChange={isEditing ? handleImageSelect : handleDirectImageUpload}
+            />
+            <button 
+              className="change-photo-btn"
+              onClick={handleImageUploadClick}
+              disabled={uploadingImage}
+              style={{ zIndex: 10 }}
+            >
+              <i className={uploadingImage ? "fas fa-spinner fa-spin" : "fas fa-camera"}></i>
+            </button>
+            
+            {uploadingImage && (
+              <div className="upload-progress-container">
+                <div className="upload-progress">
+                  <div 
+                    className="progress-bar" 
+                    style={{ 
+                      width: `${uploadProgress}%`, 
+                      backgroundColor: uploadProgress < 100 ? 'var(--primary)' : 'var(--accent)' 
+                    }}
+                  ></div>
+                </div>
+                <span className="progress-text">{uploadProgress}%</span>
+              </div>
             )}
           </div>
           <div className="profile-status">
             <h3>{profile?.firstName} {profile?.middleName ? `${profile.middleName} ` : ''}{profile?.lastName}</h3>
             <p className="username">@{username}</p>
-            
-            <div className="verification-status">
-              <span className={`status-indicator ${profile?.isVerified ? 'verified' : 'not-verified'}`}></span>
-              <span>{profile?.isVerified ? 'Verified Account' : 'Verification Pending'}</span>
-            </div>
             
             <div className="member-since">
               <p><strong>Member Since:</strong> {formatDate(profile?.createdAt || new Date())}</p>
@@ -423,8 +543,9 @@ const ClientProfile = () => {
                     type="text"
                     name="firstName"
                     value={editedProfile?.firstName || ''}
-                    onChange={handleChange}
-                    placeholder="Enter your first name"
+                    disabled
+                    className="disabled-input"
+                    title="First name cannot be changed"
                   />
                 </div>
                 
@@ -445,8 +566,9 @@ const ClientProfile = () => {
                     type="text"
                     name="lastName"
                     value={editedProfile?.lastName || ''}
-                    onChange={handleChange}
-                    placeholder="Enter your last name"
+                    disabled
+                    className="disabled-input"
+                    title="Last name cannot be changed"
                   />
                 </div>
                 
@@ -456,8 +578,9 @@ const ClientProfile = () => {
                     type="email"
                     name="email"
                     value={editedProfile?.email || ''}
-                    onChange={handleChange}
-                    placeholder="Enter your email"
+                    disabled
+                    className="disabled-input"
+                    title="Email cannot be changed"
                   />
                 </div>
                 
@@ -574,16 +697,60 @@ const ClientProfile = () => {
           
           <div className="profile-section">
             <h2>Care Needs</h2>
+            {hasCareNeeds && careNeeds?.serviceCategories && (
+              <div className="care-needs-details">
+                <div className="care-needs-categories">
+                  <label>Service Categories</label>
+                  <div className="care-needs-tags">
+                    {careNeeds.serviceCategories.map((cat) => (
+                      <span key={cat} className="care-needs-tag">
+                        {categoryIcons[cat] || '📋'} {cat}
+                      </span>
+                    ))}
+                  </div>
+                </div>
+                {careNeeds.caregiverRequirements?.experienceLevel && (
+                  <div className="care-needs-detail-row">
+                    <label>Experience Level</label>
+                    <p>{careNeeds.caregiverRequirements.experienceLevel}</p>
+                  </div>
+                )}
+                {careNeeds.caregiverRequirements?.certifications?.length > 0 && (
+                  <div className="care-needs-detail-row">
+                    <label>Preferred Certifications</label>
+                    <div className="care-needs-tags">
+                      {careNeeds.caregiverRequirements.certifications.map((cert) => (
+                        <span key={cert} className="care-needs-tag cert-tag">{cert}</span>
+                      ))}
+                    </div>
+                  </div>
+                )}
+                {careNeeds.caregiverRequirements?.languages?.length > 0 && (
+                  <div className="care-needs-detail-row">
+                    <label>Languages</label>
+                    <div className="care-needs-tags">
+                      {careNeeds.caregiverRequirements.languages.map((lang) => (
+                        <span key={lang} className="care-needs-tag lang-tag">{lang}</span>
+                      ))}
+                    </div>
+                  </div>
+                )}
+              </div>
+            )}
+            {!hasCareNeeds && (
+              <div className="care-needs-summary">
+                <p className="care-needs-description">
+                  You haven't specified your care needs yet.
+                </p>
+              </div>
+            )}
             <div className="care-needs-summary">
-              <p className="care-needs-description">
-                {profile?.careNeeds ? 'Your care needs are configured.' : 'You haven\'t specified your care needs yet.'}
-              </p>
               <button 
                 className="care-needs-btn"
-                onClick={() => navigate('/app/client/care-needs')}
+                onClick={() => navigate('/app/client/care-needs?returnTo=/app/client/profile')}
               >
-                <i className={profile?.careNeeds ? "fas fa-edit" : "fas fa-plus-circle"}></i>
-                {profile?.careNeeds ? 'Update Care Needs' : 'Set Care Needs'}
+                <i className={hasCareNeeds ? "fas fa-edit" : "fas fa-plus-circle"}></i>
+                {hasCareNeeds ? 'Edit Care Needs' : 'Set Care Needs'}
               </button>
             </div>
           </div>

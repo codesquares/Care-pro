@@ -24,6 +24,10 @@ const RegisterFormPage = () => {
   // Get role from navigation state
   const selectedRole = location.state?.role;
 
+  // Get returnTo from URL parameters or navigation state to preserve through auth flow
+  const urlParams = new URLSearchParams(location.search);
+  const returnTo = urlParams.get('returnTo') || location.state?.returnTo;
+
   const [formValues, setFormValues] = useState({
     firstName: "",
     lastName: "",
@@ -37,7 +41,7 @@ const RegisterFormPage = () => {
   useEffect(() => {
     if (!selectedRole) {
       toast.error("Please select a role first");
-      navigate("/register", { replace: true });
+      navigate(returnTo ? `/register?returnTo=${encodeURIComponent(returnTo)}` : "/register", { replace: true });
     }
   }, [selectedRole, navigate]);
 
@@ -186,7 +190,7 @@ You won't be able to log in until your email is verified.`);
   const handleProceed = () => {
     setIsModalOpen(false);
     if (buttonText === "Go to Login") {
-      navigate("/login");
+      navigate(returnTo ? `/login?returnTo=${encodeURIComponent(returnTo)}` : "/login");
     }
   };
 
@@ -225,6 +229,7 @@ You won't be able to log in until your email is verified.`);
           lastName: signInResult.lastName,
           role: signInResult.role,
           profilePicture: signInResult.profilePicture,
+          authProvider: signInResult.authProvider || 'Google',
         };
         login(userData, accessToken, signInResult.refreshToken, signInResult.isFirstLogin);
         
@@ -264,6 +269,7 @@ You won't be able to log in until your email is verified.`);
             lastName: signUpResult.lastName,
             role: signUpResult.role || selectedRole,
             profilePicture: signUpResult.profilePicture,
+            authProvider: signUpResult.authProvider || 'Google',
           };
           login(userData, signUpToken, signUpResult.refreshToken, signUpResult.isFirstLogin);
           
@@ -455,13 +461,13 @@ You won't be able to log in until your email is verified.`);
         
         <button 
           className="back-link"
-          onClick={() => navigate("/register")}
+          onClick={() => navigate(returnTo ? `/register?returnTo=${encodeURIComponent(returnTo)}` : "/register")}
         >
           ← Back to role selection
         </button>
         
         <p className="signup-text">
-          Already have an account? <Link to="/login">Sign in →</Link>
+          Already have an account? <Link to={returnTo ? `/login?returnTo=${encodeURIComponent(returnTo)}` : "/login"}>Sign in →</Link>
         </p>
         
         {error && <p className="error-text">Error: {error.message}</p>}

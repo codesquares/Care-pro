@@ -1,0 +1,252 @@
+/* Care Needs Card Wrapper */
+.care-needs-card-wrapper {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 0.75rem;
+  padding: 0 1.5rem;
+  margin-bottom: 1rem;
+}
+
+@media (min-width: 768px) {
+  .care-needs-card-wrapper {
+    grid-template-columns: repeat(2, 1fr);
+    padding: 0 3rem;
+  }
+}
+
+/* Base Card Style - Matches action cards */
+.care-needs-card {
+  background: #ffffff;
+  border: 1px solid #e5e7eb;
+  border-radius: 8px;
+  padding: 0.75rem 1rem;
+  display: flex;
+  flex-direction: row;
+  gap: 0.75rem;
+  align-items: center;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.care-needs-card:hover {
+  border-color: #02445f;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
+  transform: translateY(-2px);
+}
+
+/* Loading State */
+.care-needs-card.loading {
+  justify-content: center;
+  min-height: 60px;
+}
+
+.loading-spinner-small {
+  width: 20px;
+  height: 20px;
+  border: 2px solid #e5e7eb;
+  border-top-color: #02445f;
+  border-radius: 50%;
+  animation: spin 0.8s linear infinite;
+}
+
+@keyframes spin {
+  to { transform: rotate(360deg); }
+}
+
+/* Card Icon */
+.cn-card-icon {
+  width: 32px;
+  height: 32px;
+  border-radius: 6px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
+
+.cn-card-icon svg {
+  width: 24px;
+  height: 24px;
+}
+
+/* Setup Card Icon */
+.setup-icon {
+  background: transparent;
+  color: #9ca3af;
+}
+
+.setup-icon svg {
+  stroke-width: 1.5;
+}
+
+/* Active/Has Needs Icon */
+.active-icon {
+  background: #dcfce7;
+  border: 1px solid #22c55e;
+}
+
+.active-icon .check-icon {
+  color: #22c55e;
+  font-size: 1rem;
+  font-weight: 700;
+}
+
+/* Match Card Icon */
+.match-icon {
+  background: #dbeafe;
+  border: 1px solid #3b82f6;
+  color: #3b82f6;
+}
+
+/* Card Content */
+.cn-card-content {
+  display: flex;
+  flex-direction: column;
+  gap: 0;
+  min-width: 0;
+  flex: 1;
+}
+
+.cn-card-label {
+  font-size: 0.55rem;
+  font-weight: 600;
+  color: #6b7280;
+  text-transform: uppercase;
+  letter-spacing: 0.3px;
+  line-height: 1.2;
+  margin-bottom: 0;
+}
+
+.cn-card-label.success {
+  color: #22c55e;
+}
+
+.cn-card-label.match {
+  color: #3b82f6;
+}
+
+.cn-card-title {
+  font-size: 0.75rem;
+  font-weight: 600;
+  color: #1f2937;
+  line-height: 1.3;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  flex-wrap: wrap;
+}
+
+.more-categories {
+  font-size: 0.65rem;
+  font-weight: 500;
+  color: #9ca3af;
+  background: #f3f4f6;
+  padding: 2px 6px;
+  border-radius: 4px;
+}
+
+.cn-card-subtitle {
+  font-size: 0.7rem;
+  color: #6b7280;
+  line-height: 1.2;
+}
+
+/* Card Stats */
+.cn-card-stats {
+  display: flex;
+  gap: 8px;
+  margin-top: 2px;
+  flex-wrap: wrap;
+}
+
+.cn-card-stats .stat {
+  font-size: 0.6rem;
+  color: #6b7280;
+  display: flex;
+  align-items: center;
+  gap: 2px;
+}
+
+/* Card Arrow */
+.cn-card-arrow {
+  flex-shrink: 0;
+  color: #9ca3af;
+  transition: transform 0.2s ease;
+}
+
+.care-needs-card:hover .cn-card-arrow {
+  transform: translateX(3px);
+  color: #02445f;
+}
+
+/* Card Action (Edit icon) */
+.cn-card-action {
+  flex-shrink: 0;
+  color: #9ca3af;
+  padding: 6px;
+  border-radius: 4px;
+  transition: all 0.2s ease;
+}
+
+.care-needs-card:hover .cn-card-action {
+  background: #f3f4f6;
+  color: #02445f;
+}
+
+/* Setup Card Specific */
+.setup-card {
+  border-style: dashed;
+  border-color: #d1d5db;
+}
+
+.setup-card:hover {
+  border-color: #02445f;
+  border-style: solid;
+}
+
+/* Match Card Specific */
+.match-card {
+  background: linear-gradient(135deg, #eff6ff 0%, #dbeafe 100%);
+  border-color: #93c5fd;
+}
+
+.match-card:hover {
+  border-color: #3b82f6;
+  box-shadow: 0 4px 12px rgba(59, 130, 246, 0.15);
+}
+
+.match-card .cn-card-title {
+  color: #1e40af;
+}
+
+/* Has Needs Card */
+.has-needs {
+  border-left: 3px solid #22c55e;
+}
+
+/* Responsive */
+@media (max-width: 768px) {
+  .care-needs-card-wrapper {
+    padding: 0 1rem;
+  }
+  
+  .cn-card-subtitle {
+    display: none;
+  }
+  
+  .cn-card-stats {
+    display: none;
+  }
+}
+
+@media (max-width: 480px) {
+  .cn-card-icon {
+    width: 28px;
+    height: 28px;
+  }
+  
+  .cn-card-icon svg {
+    width: 20px;
+    height: 20px;
+  }
+}

@@ -67,10 +67,23 @@ class GoogleMapsService {
 
     try {
       await this.loadGoogleMapsAPI();
+      
+      // Double-check initialization after loading
+      if (!this.isLoaded || !this.autocompleteService) {
+        console.warn('Google Maps service not fully initialized, retrying...');
+        this.initializeServices();
+        
+        // If still not available, return empty array instead of throwing error
+        if (!this.autocompleteService) {
+          console.error('Autocomplete service unavailable');
+          return [];
+        }
+      }
 
       return new Promise((resolve, reject) => {
         if (!this.autocompleteService) {
-          reject(new Error('Autocomplete service not available'));
+          console.error('Autocomplete service not available');
+          resolve([]);
           return;
         }
 
