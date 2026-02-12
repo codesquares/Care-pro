@@ -97,6 +97,7 @@ const RoleSelectionPage = () => {
           lastName: result.lastName || result.LastName,
           role: userRole,
           profilePicture: result.profilePicture || result.ProfilePicture,
+          authProvider: result.authProvider || result.AuthProvider || 'Google',
         };
         
         const accessToken = result.token || result.accessToken;
@@ -218,6 +219,7 @@ const RoleSelectionPage = () => {
           lastName: result.lastName,
           role: result.role || role,
           profilePicture: result.profilePicture,
+          authProvider: result.authProvider || 'Google',
         };
         login(userData, result.accessToken, result.refreshToken, result.isFirstLogin);
         

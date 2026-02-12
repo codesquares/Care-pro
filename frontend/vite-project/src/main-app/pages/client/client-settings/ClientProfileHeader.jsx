@@ -1,4 +1,5 @@
 import { useEffect, useState, useRef } from "react";
+import { createPortal } from "react-dom";
 import { toast } from "react-toastify";
 import profilecard1 from "../../../../assets/profilecard1.png";
 import { FaMapMarkerAlt, FaCalendarAlt, FaPhone } from "react-icons/fa";
@@ -338,9 +339,10 @@ const ClientProfileHeader = () => {
   }
 
   return (
-    <div className="client-profile-header">
-      <div className="client-profile-header-card">
-        <div className="client-profile-basic-info">
+    <>
+      <div className="client-profile-header">
+        <div className="client-profile-header-card">
+          <div className="client-profile-basic-info">
           <div className="client-profile-img-container">
             {profile.picture && profile.picture !== profilecard1 && !imageLoadError ? (
               <img
@@ -424,139 +426,135 @@ const ClientProfileHeader = () => {
             <span className="client-detail-value">{profile.memberSince}</span>
           </div>
         </div>
-
-        {/* Location Edit Modal */}
-        {showLocationModal && (
-          <div 
-            className="client-location-modal-overlay"
-            onClick={() => setShowLocationModal(false)}
-          >
-            <div 
-              className="client-location-modal"
-              onClick={(e) => e.stopPropagation()}
-            >
-              <h3>Update Your Service Location</h3>
-              <p style={{ 
-                fontSize: '14px', 
-                color: '#6c757d', 
-                marginBottom: '16px',
-                lineHeight: '1.4'
-              }}>
-                Enter your full address to help caregivers find you. We'll use this to show your city in your profile.
-              </p>
-              
-              <AddressInput
-                value={editedLocation}
-                onChange={setEditedLocation}
-                onValidation={setAddressValidation}
-                placeholder="Enter full address (e.g., 123 Main St, Los Angeles, CA 90210)"
-                className="client-location-input"
-                showValidationIcon={true}
-                autoValidate={true}
-                country="ng"
-              />
-              
-              {addressValidation && (
-                <div style={{ 
-                  fontSize: '13px', 
-                  marginTop: '8px',
-                  padding: '8px 12px',
-                  borderRadius: '4px',
-                  backgroundColor: addressValidation.isValid 
-                    ? (addressValidation.isGoogleValidated ? '#d4edda' : '#fff3cd')
-                    : '#f8d7da',
-                  color: addressValidation.isValid 
-                    ? (addressValidation.isGoogleValidated ? '#155724' : '#856404')
-                    : '#721c24',
-                  border: `1px solid ${addressValidation.isValid 
-                    ? (addressValidation.isGoogleValidated ? '#c3e6cb' : '#ffeaa7')
-                    : '#f5c6cb'}`
-                }}>
-                  {addressValidation.isGoogleValidated && addressValidation.isValid && (
-                    <>
-                      <strong>✓ Address verified by Google Maps</strong>
-                      <br />
-                      Your profile will show: <strong>{addressValidation.addressComponents?.city}</strong>
-                    </>
-                  )}
-                  {!addressValidation.isGoogleValidated && addressValidation.isValid && (
-                    <>
-                      <strong>⚠ Basic validation passed</strong>
-                      <br />
-                      For better accuracy, select from the address suggestions above.
-                    </>
-                  )}
-                  {addressValidation.hasError && (
-                    <>
-                      <strong>✗ Address validation failed</strong>
-                      <br />
-                      {addressValidation.errorMessage}
-                    </>
-                  )}
-                </div>
-              )}
-              
-              <div className="client-modal-buttons">
-                <button 
-                  onClick={() => {
-                    setShowLocationModal(false);
-                    setEditedLocation("");
-                    setAddressValidation(null);
-                  }}
-                  className="client-modal-btn client-modal-cancel"
-                >
-                  Cancel
-                </button>
-                <button 
-                  onClick={handleLocationSave}
-                  disabled={locationLoading || !editedLocation.trim() || (addressValidation && !addressValidation.isValid)}
-                  className="client-modal-btn client-modal-save"
-                  style={{
-                    opacity: (locationLoading || !editedLocation.trim() || (addressValidation && !addressValidation.isValid)) ? 0.6 : 1
-                  }}
-                >
-                  {locationLoading ? 'Updating Location...' : 'Update Location'}
-                </button>
-              </div>
-            </div>
-          </div>
-        )}
-
-        {/* Full Address Modal */}
-        {showFullAddressModal && (
-          <div 
-            className="client-location-modal-overlay"
-            onClick={() => setShowFullAddressModal(false)}
-          >
-            <div 
-              className="client-location-modal"
-              onClick={(e) => e.stopPropagation()}
-            >
-              <h3>Full Address</h3>
-              <p style={{ 
-                fontSize: '15px', 
-                color: '#374151', 
-                marginBottom: '20px',
-                lineHeight: '1.6',
-                wordBreak: 'break-word'
-              }}>
-                {profile.location}
-              </p>
-              
-              <div className="client-modal-buttons">
-                <button 
-                  onClick={() => setShowFullAddressModal(false)}
-                  className="client-modal-btn client-modal-save"
-                  style={{ width: '100%' }}
-                >
-                  Close
-                </button>
-              </div>
-            </div>
-          </div>
-        )}
       </div>
     </div>
+
+    {/* Location Edit Modal - rendered via portal to escape parent stacking context */}
+    {showLocationModal && createPortal(
+      <div 
+        className="client-location-modal-overlay"
+        onClick={() => setShowLocationModal(false)}
+      >
+        <div 
+          className="client-location-modal"
+          onClick={(e) => e.stopPropagation()}
+        >
+          <h3>Update Your Service Location</h3>
+          <p style={{ 
+            fontSize: '14px', 
+            color: '#6c757d', 
+            marginBottom: '16px',
+            lineHeight: '1.4'
+          }}>
+            Enter your full address to help caregivers find you. We'll use this to show your city in your profile.
+          </p>
+          
+          <AddressInput
+            value={editedLocation}
+            onChange={setEditedLocation}
+            onValidation={setAddressValidation}
+            placeholder="Enter full address (e.g., 123 Main St, Los Angeles, CA 90210)"
+            className="client-location-input"
+            showValidationIcon={true}
+            autoValidate={true}
+            country="ng"
+          />
+          
+          {addressValidation && (
+            <div style={{ 
+              fontSize: '13px', 
+              marginTop: '8px',
+              padding: '8px 12px',
+              borderRadius: '4px',
+              backgroundColor: addressValidation.isValid 
+                ? (addressValidation.isGoogleValidated ? '#d4edda' : '#fff3cd')
+                : '#f8d7da',
+              color: addressValidation.isValid 
+                ? (addressValidation.isGoogleValidated ? '#155724' : '#856404')
+                : '#721c24',
+              border: `1px solid ${addressValidation.isValid 
+                ? (addressValidation.isGoogleValidated ? '#c3e6cb' : '#ffeaa7')
+                : '#f5c6cb'}`
+            }}>
+              {addressValidation.isGoogleValidated && addressValidation.isValid && (
+                <>
+                  <strong>✓ Address verified by Google Maps</strong>
+                  <br />
+                  Your profile will show: <strong>{addressValidation.addressComponents?.city}</strong>
+                </>
+              )}
+              {!addressValidation.isGoogleValidated && addressValidation.isValid && (
+                <>
+                  <strong>⚠ Basic validation passed</strong>
+                  <br />
+                  For better accuracy, select from the address suggestions above.
+                </>
+              )}
+              {addressValidation.hasError && (
+                <>
+                  <strong>✗ Address validation failed</strong>
+                  <br />
+                  {addressValidation.errorMessage}
+                </>
+              )}
+            </div>
+          )}
+          
+          <div className="client-modal-buttons">
+            <button 
+              onClick={() => {
+                setShowLocationModal(false);
+                setEditedLocation("");
+                setAddressValidation(null);
+              }}
+              className="client-modal-btn client-modal-cancel"
+            >
+              Cancel
+            </button>
+            <button 
+              onClick={handleLocationSave}
+              disabled={locationLoading || !editedLocation.trim() || (addressValidation && !addressValidation.isValid)}
+              className="client-modal-btn client-modal-save"
+              style={{
+                opacity: (locationLoading || !editedLocation.trim() || (addressValidation && !addressValidation.isValid)) ? 0.6 : 1
+              }}
+            >
+              {locationLoading ? 'Updating Location...' : 'Update Location'}
+            </button>
+          </div>
+        </div>
+      </div>,
+      document.body
+    )}
+
+    {/* Full Address Modal - rendered via portal to escape parent stacking context */}
+    {showFullAddressModal && createPortal(
+      <div 
+        className="client-location-modal-overlay"
+        onClick={() => setShowFullAddressModal(false)}
+      >
+        <div 
+          className="client-location-modal client-full-address-modal"
+          onClick={(e) => e.stopPropagation()}
+        >
+          <h3>Your Service Location</h3>
+          <p className="full-address-text">
+            {profile.location}
+          </p>
+          
+          <div className="client-modal-buttons">
+            <button 
+              onClick={() => setShowFullAddressModal(false)}
+              className="client-modal-btn client-modal-save"
+            >
+              Close
+            </button>
+          </div>
+        </div>
+      </div>,
+      document.body
+    )}
+    </>
   );
 };
 

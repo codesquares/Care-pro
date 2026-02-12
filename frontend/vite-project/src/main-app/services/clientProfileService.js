@@ -43,12 +43,23 @@ class ClientProfileService {
       
       const profileData = await response.json();
       
+      // Construct full profile picture URL if it's a relative path
+      let profilePictureUrl = profileData.profileImage;
+      if (profilePictureUrl && !profilePictureUrl.startsWith('http') && !profilePictureUrl.startsWith('data:')) {
+        // Remove leading slash if present
+        const cleanPath = profilePictureUrl.startsWith('/') ? profilePictureUrl.substring(1) : profilePictureUrl;
+        // Construct full URL using base URL without /api suffix
+        const baseUrl = config.BASE_URL.replace(/\/api$/, '');
+        profilePictureUrl = `${baseUrl}/${cleanPath}`;
+        console.log('Constructed profile picture URL:', profilePictureUrl);
+      }
+      
       // Map backend field names to frontend field names
       return {
         ...profileData,
         location: profileData.homeAddress,        // Map homeAddress → location
         phoneNumber: profileData.phoneNo,         // Map phoneNo → phoneNumber  
-        profilePicture: profileData.profileImage  // Map profileImage → profilePicture
+        profilePicture: profilePictureUrl         // Map profileImage → profilePicture with full URL
       };
     } catch (error) {
       console.error("Error fetching client profile:", error);
@@ -150,7 +161,7 @@ class ClientProfileService {
       }
       
       // API endpoint 
-      const API_URL = `${config.BASE_URL}/Clients/${clientId}/profile-picture`; // Using centralized API config
+      const API_URL = `${config.BASE_URL}/Clients/UpdateProfilePicture/${clientId}`; // Using centralized API config
       
       // Get the authentication token
       const token = localStorage.getItem("authToken");
@@ -161,12 +172,13 @@ class ClientProfileService {
       
       // Create form data
       const formData = new FormData();
-      formData.append('profilePicture', imageFile);
+      formData.append('ProfileImage', imageFile);
       
       // Make API request
       const response = await fetch(API_URL, {
-        method: 'POST',
+        method: 'PUT',
         headers: {
+          'accept': '*/*',
           'Authorization': `Bearer ${token}`
         },
         body: formData
@@ -176,7 +188,7 @@ class ClientProfileService {
         throw new Error(`Failed to update profile picture: ${response.status}`);
       }
       
-      return await response.json();
+      return await response.text();
     } catch (error) {
       console.error("Error updating profile picture:", error);
       throw error;

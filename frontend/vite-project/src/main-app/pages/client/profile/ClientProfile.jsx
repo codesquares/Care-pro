@@ -213,6 +213,14 @@ const ClientProfile = () => {
         setTimeout(async () => {
           try {
             const refreshedProfile = await ClientProfileService.getProfile(clientId);
+            
+            console.log('Refreshed profile with picture URL:', refreshedProfile.profilePicture);
+            
+            // Add cache-busting timestamp to profile picture URL
+            if (refreshedProfile.profilePicture) {
+              refreshedProfile.profilePicture = `${refreshedProfile.profilePicture}?t=${Date.now()}`;
+            }
+            
             setProfile(refreshedProfile);
             setEditedProfile(refreshedProfile);
 
@@ -307,6 +315,12 @@ const ClientProfile = () => {
             console.log('Refreshing profile data from API after image upload...');
             const refreshedProfile = await ClientProfileService.getProfile(clientId);
             console.log('Refreshed profile from API:', refreshedProfile);
+            
+            // Add cache-busting timestamp to profile picture URL
+            if (refreshedProfile.profilePicture) {
+              refreshedProfile.profilePicture = `${refreshedProfile.profilePicture}?t=${Date.now()}`;
+            }
+            
             setProfile(refreshedProfile);
             setEditedProfile(refreshedProfile);
           } catch (error) {
@@ -456,11 +470,25 @@ const ClientProfile = () => {
 
       <div className="profile-content">
         <div className="profile-sidebar">
-          <div className="profile-picture-container">
-            <img
+          <div className="profile-picture-container" style={{ background: 'transparent' }}>
+            {console.log('Profile picture URL:', profile?.profilePicture, 'Uploading:', uploadingImage)}
+            <img 
+              key={profile?.profilePicture} // Force re-render when URL changes
               src={isEditing ? editedProfile?.profilePicture || defaultAvatar : profile?.profilePicture || defaultAvatar}
               alt="Profile"
               className="large-profile-picture"
+              onLoad={(e) => console.log('Image loaded successfully. Dimensions:', e.target.naturalWidth, 'x', e.target.naturalHeight, 'URL:', e.target.src)}
+              onError={(e) => {
+                console.error('Failed to load profile picture:', e.target.src);
+                e.target.src = defaultAvatar;
+              }}
+              style={{ 
+                display: 'block',
+                background: 'transparent',
+                position: 'relative',
+                zIndex: 1,
+                opacity: 1
+              }}
             />
             <input
               type="file"
@@ -473,6 +501,7 @@ const ClientProfile = () => {
               className="change-photo-btn"
               onClick={handleImageUploadClick}
               disabled={uploadingImage}
+              style={{ zIndex: 10 }}
             >
               <i className={uploadingImage ? "fas fa-spinner fa-spin" : "fas fa-camera"}></i>
             </button>

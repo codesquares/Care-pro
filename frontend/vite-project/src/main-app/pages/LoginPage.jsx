@@ -99,7 +99,13 @@ const LoginPage = () => {
 
       const { data } = response;
       
-      login(data, data.token, data.refreshToken, data.isFirstLogin);
+      // Ensure authProvider is set (default to Local for email/password login)
+      const userData = {
+        ...data,
+        authProvider: data.authProvider || 'Local'
+      };
+      
+      login(userData, data.token, data.refreshToken, data.isFirstLogin);
       
     } catch (err) {
       const errorMessage =
@@ -158,6 +164,7 @@ const LoginPage = () => {
           lastName: result.lastName,
           role: result.role,
           profilePicture: result.profilePicture,
+          authProvider: result.authProvider || 'Google',
         };
         
         console.log("User data for AuthContext:", userData);

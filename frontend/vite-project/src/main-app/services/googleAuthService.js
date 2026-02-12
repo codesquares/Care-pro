@@ -433,6 +433,7 @@ const GoogleAuthService = {
     const lastName = authData.lastName || authData.LastName;
     const role = authData.role || authData.Role || authData.userRole || authData.UserRole;
     const profilePicture = authData.profilePicture || authData.ProfilePicture;
+    const authProvider = authData.authProvider || authData.AuthProvider || 'Google';
     
     console.log("🔍 Parsed values - token:", !!accessToken, "role:", role, "id:", userId);
     
@@ -453,6 +454,7 @@ const GoogleAuthService = {
       lastName: lastName,
       role: role,
       profilePicture: profilePicture,
+      authProvider: authProvider
     };
     
     console.log("🔍 storeAuthData - userDetails to store:", userDetails);

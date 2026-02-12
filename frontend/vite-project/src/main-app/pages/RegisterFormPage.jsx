@@ -229,6 +229,7 @@ You won't be able to log in until your email is verified.`);
           lastName: signInResult.lastName,
           role: signInResult.role,
           profilePicture: signInResult.profilePicture,
+          authProvider: signInResult.authProvider || 'Google',
         };
         login(userData, accessToken, signInResult.refreshToken, signInResult.isFirstLogin);
         
@@ -268,6 +269,7 @@ You won't be able to log in until your email is verified.`);
             lastName: signUpResult.lastName,
             role: signUpResult.role || selectedRole,
             profilePicture: signUpResult.profilePicture,
+            authProvider: signUpResult.authProvider || 'Google',
           };
           login(userData, signUpToken, signUpResult.refreshToken, signUpResult.isFirstLogin);
           
