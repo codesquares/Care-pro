@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react";
-import { useNavigate, Link } from "react-router-dom";
+import { useNavigate, Link, useLocation } from "react-router-dom";
 import "../../styles/main-app/pages/RegisterPage.css";
 import loginImg from "../../assets/loginImg.png";
 import loginLogo from "../../assets/loginLogo.png";
@@ -10,7 +10,12 @@ import allUserService from "../services/allUserService";
 
 const CreateAccount = () => {
   const { data, error, loading, fetchData } = useApi("", "post");
-  const navigate = useNavigate(); // Hook to navigate
+  const navigate = useNavigate();
+  const location = useLocation();
+
+  // Get returnTo from URL parameters to preserve through auth flow
+  const urlParams = new URLSearchParams(location.search);
+  const returnTo = urlParams.get('returnTo');
   const [formValues, setFormValues] = useState({
     firstName: "",
     lastName: "",
@@ -168,7 +173,7 @@ You won't be able to log in until your email is verified.`);
 
   const handleProceed = () => {
     setIsModalOpen(false);
-    navigate("/login"); // Navigate to success page
+    navigate(returnTo ? `/login?returnTo=${encodeURIComponent(returnTo)}` : "/login");
   };
 
   const handleResendEmail = () => {
@@ -337,7 +342,7 @@ You won't be able to log in until your email is verified.`);
           </form>
           
           <p className="signup-text">
-            Already have an account? <Link to="/login">Sign in →</Link>
+            Already have an account? <Link to={returnTo ? `/login?returnTo=${encodeURIComponent(returnTo)}` : "/login"}>Sign in →</Link>
           </p>
           
           {error && <p className="error-text">Error: {error.message}</p>}

@@ -183,7 +183,7 @@ const LoginPage = () => {
         setIsError(true);
         setIsModalOpen(true);
         toast.info("Please create an account first");
-        navigate("/register");
+        navigate(returnTo ? `/register?returnTo=${encodeURIComponent(returnTo)}` : "/register");
         
       } else if (result.canLinkAccounts) {
         setModalTitle("Account Already Exists");
@@ -221,7 +221,7 @@ const LoginPage = () => {
     if (buttonText === "Sign Up") {
       // Navigate to registration page for users who need to sign up
       setIsModalOpen(false);
-      navigate("/register");
+      navigate(returnTo ? `/register?returnTo=${encodeURIComponent(returnTo)}` : "/register");
     } else if (isError) {
       // For error modal, just close and let user try again
       setIsModalOpen(false);
@@ -340,7 +340,7 @@ const LoginPage = () => {
         </div>
 
         <p className="signup-text">
-          Don’t have an account? <Link to="/register">Signup →</Link>
+          Don't have an account? <Link to={returnTo ? `/register?returnTo=${encodeURIComponent(returnTo)}` : "/register"}>Signup →</Link>
         </p>
 
         <p className="terms">

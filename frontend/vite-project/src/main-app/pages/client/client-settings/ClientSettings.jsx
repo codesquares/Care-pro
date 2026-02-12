@@ -522,11 +522,10 @@ const ClientSettings = () => {
                 type="text"
                 name="firstName"
                 value={accountForm.firstName}
-                onChange={handleAccountChange}
+                disabled
+                className="disabled-input"
+                title="First name cannot be changed"
               />
-              {!validationStates.firstName.isValid && (
-                <span className="validation-message error">{validationStates.firstName.message}</span>
-              )}
             </div>
             <div className="form-group">
               <label>Last Name</label>
@@ -534,11 +533,10 @@ const ClientSettings = () => {
                 type="text"
                 name="lastName"
                 value={accountForm.lastName}
-                onChange={handleAccountChange}
+                disabled
+                className="disabled-input"
+                title="Last name cannot be changed"
               />
-              {!validationStates.lastName.isValid && (
-                <span className="validation-message error">{validationStates.lastName.message}</span>
-              )}
             </div>
             <div className="form-group">
               <label>Email</label>
@@ -652,7 +650,7 @@ const ClientSettings = () => {
           <button
             type="button"
             className="save-changes-btn"
-            onClick={() => navigate('/app/client/preferences')}
+            onClick={() => navigate('/app/client/care-needs?returnTo=/app/client/settings')}
           >
             Manage Care Preferences
           </button>

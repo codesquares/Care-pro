@@ -12,6 +12,30 @@
   text-align: center;
   margin-bottom: 30px;
   padding: 20px 0;
+  position: relative;
+}
+
+.wizard-back-btn {
+  position: absolute;
+  left: 0;
+  top: 20px;
+  background: none;
+  border: 1px solid #e2e8f0;
+  border-radius: 8px;
+  padding: 8px 16px;
+  font-size: 0.95rem;
+  color: #475569;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  display: flex;
+  align-items: center;
+  gap: 4px;
+}
+
+.wizard-back-btn:hover {
+  background: #f1f5f9;
+  color: #1e293b;
+  border-color: #cbd5e1;
 }
 
 .wizard-header h1 {

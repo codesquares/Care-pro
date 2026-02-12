@@ -1,5 +1,6 @@
 import { useNavigate } from "react-router-dom";
 import "./clientDashboardHero.css";
+import CareNeedsSummaryCard from "./CareNeedsSummaryCard";
 
 // Category navigation items
 const categories = [
@@ -8,8 +9,8 @@ const categories = [
   { name: "Child Care", slug: "child-care" },
   { name: "Pet Care", slug: "pet-care" },
   { name: "Post Surgery Care", slug: "post-surgery-care" },
-  { name: "Postpartum Care", slug: "postpartum-care" },
-  { name: "Domestic Support", slug: "domestic-support" },
+  { name: "Special Needs Care", slug: "special-needs-care" },
+  { name: "Mobility Support", slug: "mobility-support" },
   { name: "Home Medical Support", slug: "medical-support" },
 ];
 
@@ -39,7 +40,7 @@ const ClientDashboardHero = ({
   };
 
   const handleSetCarePreferences = () => {
-    navigate("/app/client/care-needs");
+    navigate("/app/client/care-needs?returnTo=/app/client/dashboard");
   };
 
   // Filter handlers
@@ -151,20 +152,12 @@ const ClientDashboardHero = ({
         </div>
       </div>
 
-      {/* Care Preferences Section */}
-      <div className="care-preferences-section">
-        <div className="preferences-left" onClick={handleSetCarePreferences}>
-          <div className="preferences-icon">
-            <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-              <circle cx="12" cy="12" r="3" />
-              <path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z" />
-            </svg>
-          </div>
-          <div className="preferences-text">
-            <span className="preferences-title">Click here to Set your care preferences ,</span>
-            <span className="preferences-subtitle">To get tailored caregiver suggestions</span>
-          </div>
-        </div>
+      {/* Care Needs Summary Card */}
+      <CareNeedsSummaryCard />
+
+      {/* Filter Bar */}
+      <div className="dashboard-filter-bar">
+        <div className="filter-label">Quick Filters:</div>
         <div className="preferences-filters">
           <select 
             className="filter-select"

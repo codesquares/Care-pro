@@ -26,6 +26,7 @@ const ClientProfileHeader = () => {
   const [locationLoading, setLocationLoading] = useState(false);
   const [addressValidation, setAddressValidation] = useState(null);
   const [imageUploadLoading, setImageUploadLoading] = useState(false);
+  const [imageLoadError, setImageLoadError] = useState(false);
   const fileInputRef = useRef(null);
 
   const isMountedRef = useRef(true);
@@ -277,6 +278,8 @@ const ClientProfileHeader = () => {
       console.log("Updated profile location (from Location table):", updatedProfile.location);
       console.log("Profile picture URL:", data.profilePicture, data.profileImage, data.image);
       
+      setImageLoadError(false);
+      
       // Update AuthContext and localStorage with fresh data
       const userUpdates = {};
       if (data.profileImage || data.profilePicture) {
@@ -339,13 +342,14 @@ const ClientProfileHeader = () => {
       <div className="client-profile-header-card">
         <div className="client-profile-basic-info">
           <div className="client-profile-img-container">
-            {profile.picture && profile.picture !== profilecard1 ? (
+            {profile.picture && profile.picture !== profilecard1 && !imageLoadError ? (
               <img
-                src={`${profile.picture}?t=${Date.now()}`}
+                src={profile.picture}
                 alt="Profile"
                 className="client-profile-img"
-                onError={(e) => {
+                onError={() => {
                   console.error("Image failed to load:", profile.picture);
+                  setImageLoadError(true);
                 }}
               />
             ) : (

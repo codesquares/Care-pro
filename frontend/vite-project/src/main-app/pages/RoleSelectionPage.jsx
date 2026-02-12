@@ -17,6 +17,10 @@ const RoleSelectionPage = () => {
   const navigate = useNavigate();
   const location = useLocation();
   const { isAuthenticated, userRole, loading: authLoading, login } = useAuth();
+
+  // Get returnTo from URL parameters to preserve through auth flow
+  const urlParams = new URLSearchParams(location.search);
+  const returnTo = urlParams.get('returnTo');
   
   // Google auth state
   const [googleIdToken, setGoogleIdToken] = useState(null);
@@ -45,7 +49,7 @@ const RoleSelectionPage = () => {
       handleGoogleSignUp(role);
     } else {
       // Manual signup flow - navigate to form
-      navigate("/register/form", { state: { role } });
+      navigate("/register/form", { state: { role, returnTo } });
     }
   };
 
@@ -249,7 +253,7 @@ const RoleSelectionPage = () => {
   const handleModalClose = () => {
     setIsModalOpen(false);
     if (buttonText === "Go to Login") {
-      navigate("/login");
+      navigate(returnTo ? `/login?returnTo=${encodeURIComponent(returnTo)}` : "/login");
     }
   };
 
@@ -339,7 +343,7 @@ const RoleSelectionPage = () => {
         )}
 
         <p className="signin-text">
-          Already have an account? <Link to="/login">Sign in →</Link>
+          Already have an account? <Link to={returnTo ? `/login?returnTo=${encodeURIComponent(returnTo)}` : "/login"}>Sign in →</Link>
         </p>
       </div>
 

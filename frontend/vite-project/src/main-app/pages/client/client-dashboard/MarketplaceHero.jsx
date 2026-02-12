@@ -8,8 +8,8 @@ const categories = [
   { name: "Child Care", slug: "child-care" },
   { name: "Pet Care", slug: "pet-care" },
   { name: "Post Surgery Care", slug: "post-surgery-care" },
-  { name: "Postpartum Care", slug: "postpartum-care" },
-  { name: "Domestic Support", slug: "domestic-support" },
+  { name: "Special Needs Care", slug: "special-needs-care" },
+  { name: "Mobility Support", slug: "mobility-support" },
   { name: "Home Medical Support", slug: "medical-support" },
 ];
 
@@ -24,7 +24,7 @@ const MarketplaceHero = ({
   };
 
   const handlePostRequest = () => {
-    navigate("/register");
+    navigate("/app/client/post-project");
   };
 
   // Filter handlers
