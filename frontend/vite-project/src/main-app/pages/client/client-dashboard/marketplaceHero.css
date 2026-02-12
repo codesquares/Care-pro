@@ -60,12 +60,33 @@
 
 /* Breadcrumb */
 .marketplace-breadcrumb {
-  padding: 0.75rem 1rem;
+  padding: 0.75rem 18px;
   font-size: 0.85rem;
   color: #6b7280;
   display: flex;
   align-items: center;
   gap: 0.5rem;
+}
+
+@media (min-width: 768px) {
+  .marketplace-breadcrumb {
+    padding-left: 2.5rem;
+    padding-right: 2.5rem;
+  }
+}
+
+@media (min-width: 1024px) {
+  .marketplace-breadcrumb {
+    padding-left: 3.5rem;
+    padding-right: 3.5rem;
+  }
+}
+
+@media (min-width: 1280px) {
+  .marketplace-breadcrumb {
+    padding-left: 4.5rem;
+    padding-right: 4.5rem;
+  }
 }
 
 .breadcrumb-link {
