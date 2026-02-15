@@ -7,6 +7,7 @@ import receipt from "../../../assets/main-app/receipt.svg";
 import homeIcon from "../../../assets/home_icon.png";
 import NotificationBell from "../../components/notifications/NotificationBell";
 import { useAuth } from "../../context/AuthContext";
+import { getInitials } from "../../utils/avatarHelpers";
 // import "../care-giver/care-giver-dashboard/NavigationBar.css";
 import "./ClientNavBarCustom.css";
 
@@ -88,15 +89,6 @@ const ClientNavBar = () => {
   if (!user) {
     return null;
   }
-
-  const getInitials = (name) => {
-    if (!name || typeof name !== "string") return "";
-
-    const names = name.trim().split(" ").filter(Boolean); // remove empty parts
-    const initials = names.map((n) => n[0].toUpperCase()).join("");
-
-    return initials.slice(0, 2);
-  };
 
   const IconLink = ({ to, icon, alt, isReactIcon = false }) => (
     <li className="client-nav-link client-icon-link" onClick={() => navigate(to)}>
@@ -362,17 +354,9 @@ const ClientNavBar = () => {
               {`${user?.firstName + " " + user?.lastName || "User"}`}
             </span>
             <div className="client-avatar" onClick={() => setShowDropdown(!showDropdown)}>
-              {user?.profileImage ? (
-                <img 
-                  src={user.profileImage} 
-                  alt="Profile" 
-                  className="client-avatar-image"
-                />
-              ) : (
-                <span className="client-avatar-initials">
-                  {getInitials(userName)}
-                </span>
-              )}
+              <span className="client-avatar-initials">
+                {getInitials(userName)}
+              </span>
             </div>
             <div className="client-dropdown-arrow" onClick={() => setShowDropdown(!showDropdown)}>
               <svg width="16" height="16" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">

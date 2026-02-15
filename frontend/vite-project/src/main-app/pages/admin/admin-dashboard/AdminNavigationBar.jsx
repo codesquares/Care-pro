@@ -2,6 +2,7 @@
 import { useState } from 'react';
 import { Link, useNavigate, useLocation } from 'react-router-dom';
 import { useAuth } from '../../../context/AuthContext';
+import { getInitials } from '../../../utils/avatarHelpers';
 import './admin-navigation-bar.css';
 
 const AdminNavigationBar = () => {
@@ -10,8 +11,8 @@ const AdminNavigationBar = () => {
   const { user, handleLogout } = useAuth();
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
   
-  const userName = user?.firstName || 'Admin';
-  const userInitials = userName.split(' ').map(n => n[0]).join('').toUpperCase();
+  const userName = user?.firstName ? `${user.firstName} ${user.lastName || ''}` : 'Admin';
+  const userInitials = getInitials(userName);
 
   // Early return if no user data - prevents errors during logout
   if (!user) {

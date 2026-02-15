@@ -51,27 +51,37 @@
 
 /* Filters */
 .client-subs__filters {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 8px;
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 12px;
   margin-bottom: 20px;
   border-bottom: 2px solid #e0e0e0;
   padding-bottom: 12px;
 }
 .client-subs__filter-btn {
-  padding: 6px 14px;
-  border: none;
-  background: none;
+  padding: 8px 14px;
+  border: 1px solid #e0e0e0;
+  background: #fff;
   font-size: 13px;
   color: #666;
   cursor: pointer;
   border-radius: 20px;
-  transition: background 0.15s, color 0.15s;
+  transition: all 0.2s ease;
+  font-weight: 500;
 }
-.client-subs__filter-btn:hover { background: #f0f0f0; }
+.client-subs__filter-btn:hover { 
+  background: #f0f0f0;
+  border-color: #ccc;
+}
 .client-subs__filter-btn--active {
-  background: #00B4A6;
-  color: #fff;
+  background: #00B4A6 !important;
+  color: #fff !important;
+  border-color: #00B4A6 !important;
+  font-weight: 600;
+}
+.client-subs__filter-btn--active:hover {
+  background: #009e92 !important;
+  border-color: #009e92 !important;
 }
 
 /* Error */
@@ -109,8 +119,22 @@
   gap: 14px;
 }
 
+@media (max-width: 768px) {
+  .client-subs__filters {
+    grid-template-columns: repeat(2, 1fr);
+  }
+}
+
 @media (max-width: 600px) {
   .client-subs__summary { grid-template-columns: 1fr 1fr; }
   .client-subs__stat-value { font-size: 16px; }
   .client-subs__title { font-size: 20px; }
+  .client-subs__filters {
+    grid-template-columns: repeat(2, 1fr);
+    gap: 8px;
+  }
+  .client-subs__filter-btn {
+    font-size: 12px;
+    padding: 6px 10px;
+  }
 }
