@@ -42,19 +42,20 @@ const ClientProfileCard = () => {
   const userFullName = profile ? `${profile.firstName || ''} ${profile.lastName || ''}` : '';
   
   // Generate username using centralized utility
-  let username = "";
-  if (profile && profile.firstName && profile.email && profile.createdAt) {
-    username = generateUsername(
-      profile.firstName,
-      profile.email,
-      profile.createdAt
-    );
-  } else {
-    username = "guest000000"; // Fallback handled by utility
-  }
+  // TODO: Backend persistence not implemented yet - commenting out username generation
+  // let username = "";
+  // if (profile && profile.firstName && profile.email && profile.createdAt) {
+  //   username = generateUsername(
+  //     profile.firstName,
+  //     profile.email,
+  //     profile.createdAt
+  //   );
+  // } else {
+  //   username = "guest000000"; // Fallback handled by utility
+  // }
   
   // save the username to localStorage
-  localStorage.setItem("userName", username);
+  // localStorage.setItem("userName", username);
   console.log(profile, "profile data");
   
   return (
@@ -66,7 +67,7 @@ const ClientProfileCard = () => {
       />
       <div className="profile-details">
         <h3 className="profile-name">{userFullName.trim() || 'Welcome!'}</h3>
-        <p className="profile-username">@{username || 'guest'}</p>
+        {/* <p className="profile-username">@{username || 'guest'}</p> */} {/* TODO: Backend persistence not implemented yet */}
       </div>
       
       <div className="profile-navigation">

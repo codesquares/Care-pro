@@ -2,7 +2,7 @@ import { useState, useEffect } from "react";
 import { useNavigate, Link, useLocation } from "react-router-dom";
 import { GoogleLogin } from "@react-oauth/google";
 import "../../styles/main-app/pages/RegisterPage.css";
-import loginImg from "../../assets/loginImg.png";
+import loginImg from "../../assets/Group 53599.png";
 import loginLogo from "../../assets/loginLogo.png";
 import useApi from "../services/useApi";
 import { toast } from "react-toastify";
@@ -331,6 +331,14 @@ You won't be able to log in until your email is verified.`);
         </div>
       </div>
       <div className="login-right">
+        <button 
+          className="back-link"
+          onClick={() => navigate(returnTo ? `/register?returnTo=${encodeURIComponent(returnTo)}` : "/register")}
+          style={{ alignSelf: 'center', marginBottom: '1rem', textAlign: 'center', width: '100%' }}
+        >
+          ← Back to role selection
+        </button>
+        
         <div className="role-badge">
           {selectedRole === "Client" ? "👤" : "🏥"} Creating {selectedRole} Account
         </div>
@@ -458,13 +466,6 @@ You won't be able to log in until your email is verified.`);
             ux_mode="popup"
           />
         </div>
-        
-        <button 
-          className="back-link"
-          onClick={() => navigate(returnTo ? `/register?returnTo=${encodeURIComponent(returnTo)}` : "/register")}
-        >
-          ← Back to role selection
-        </button>
         
         <p className="signup-text">
           Already have an account? <Link to={returnTo ? `/login?returnTo=${encodeURIComponent(returnTo)}` : "/login"}>Sign in →</Link>

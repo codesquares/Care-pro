@@ -15,7 +15,7 @@ const categories = [
 ];
 
 const ClientDashboardHero = ({ 
-  userName, 
+  userName, // TODO: Backend persistence not implemented yet - keeping prop for now
   profileCompletion = 10, 
   remindersCount = 3,
   filters = { serviceType: '', priceRange: { min: '', max: '' }, location: '' },
@@ -87,7 +87,7 @@ const ClientDashboardHero = ({
       {/* Welcome Banner */}
       <div className="welcome-banner">
         <div className="welcome-content">
-          <h1 className="welcome-title">Welcome , {userName}</h1>
+          <h1 className="welcome-title">Welcome{userName ? `, ${userName}` : ''}</h1> {/* TODO: Backend persistence not implemented yet */}
           <p className="welcome-subtitle">Let's get you all set up</p>
         </div>
         <div className="profile-completion-card" onClick={handleSetupProfile}>

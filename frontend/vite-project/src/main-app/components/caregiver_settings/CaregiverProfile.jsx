@@ -11,7 +11,7 @@ const ProfilePage = () => {
     
         location: "",
         memberSince: "",
-        username: "",
+        // username: "", // TODO: Backend persistence not implemented yet
         
     });
     const [isLoading, setIsLoading] = useState(true);
@@ -44,7 +44,7 @@ const ProfilePage = () => {
             // Map API response to the state
             setProfile({
               name: `${data.firstName} ${data.lastName}` || "N/A", // Use firstName and lastName if available, otherwise use "N/A"data.firstName || "N/A",
-              username: data.email || "N/A",
+              // username: data.email || "N/A", // TODO: Backend persistence not implemented yet
             //   bio: data.introduction || "“Interested in giving the best healthcare services to your taste?”",
             //   rating: data.rating || 0,
             //   reviews: data.reviews || 0,
@@ -74,7 +74,7 @@ const ProfilePage = () => {
                 <div className="profile-info-section">
                     <img src={profileCardImage} alt="Profile" className="profile-image" />
                     <h2 className="profile-name">{profile.name}</h2>
-                    <p className="profile-email">{profile.username}</p>
+                    {/* <p className="profile-email">{profile.username}</p> */} {/* TODO: Backend persistence not implemented yet */}
                     <div className="profile-rating">★★★★☆ (29 reviews)</div>
                     {/*I know the spaces arent the cleanest solution but they seemed the easiest if you need me to change it please let me know*/}
                     <p className="profile-location">Location                             Lagos, Nigeria</p>

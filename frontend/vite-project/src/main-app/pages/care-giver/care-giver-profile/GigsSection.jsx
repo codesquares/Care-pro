@@ -7,6 +7,7 @@ import Toast from "../../../components/toast/Toast";
 import useToast from "../../../hooks/useToast";
 import { useGigEdit } from "../../../contexts/GigEditContext";
 import { useCaregiverStatus } from "../../../contexts/CaregiverStatusContext";
+import Modal from "../../../components/modal/Modal";
 import "./gigs-section.css";
 
 const GigsSection = () => {
@@ -17,6 +18,8 @@ const GigsSection = () => {
   const [pausingGigs, setPausingGigs] = useState(new Set());
   const [deletingGigs, setDeletingGigs] = useState(new Set());
   const [activeTab, setActiveTab] = useState("active");
+  const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false);
+  const [gigToDelete, setGigToDelete] = useState(null);
   const navigate = useNavigate();
   const location = useLocation();
   const basePath = "/app/caregiver";
@@ -68,7 +71,7 @@ const GigsSection = () => {
 
       const token = localStorage.getItem('authToken');
       const response = await fetch(
-        `${config.BASE_URL}/Gigs/UpdateGigStatusToPause/gigId?gigId=${gig.id}`, // Using centralized API config
+        `${config.BASE_URL}/Gigs/UpdateGigStatusToPause/${gig.id}`,
         {
           method: 'PUT',
           headers: {
@@ -123,7 +126,7 @@ const GigsSection = () => {
 
       const token = localStorage.getItem('authToken');
       const response = await fetch(
-        `${config.BASE_URL}/Gigs/UpdateGigStatusToPause/gigId?gigId=${gig.id}`, // Using centralized API config
+        `${config.BASE_URL}/Gigs/UpdateGigStatusToPause/${gig.id}`,
         {
           method: 'PUT',
           headers: {
@@ -165,15 +168,20 @@ const GigsSection = () => {
     }
   };
 
-  const handleDeleteGig = async (gig) => {
-    // Show confirmation dialog
-    if (!window.confirm(`Are you sure you want to delete "${gig.title}"? This action cannot be undone.`)) {
-      return;
-    }
+  const handleDeleteGig = (gig) => {
+    // Open confirmation modal instead of browser alert
+    setGigToDelete(gig);
+    setIsDeleteModalOpen(true);
+  };
+
+  const confirmDeleteGig = async () => {
+    if (!gigToDelete) return;
 
     try {
+      // Close modal immediately
+      setIsDeleteModalOpen(false);
       // Add gig to deleting set to show loading state
-      setDeletingGigs(prev => new Set(prev).add(gig.id));
+      setDeletingGigs(prev => new Set(prev).add(gigToDelete.id));
 
       const userDetails = JSON.parse(localStorage.getItem("userDetails"));
       if (!userDetails?.id) {
@@ -181,9 +189,9 @@ const GigsSection = () => {
       }
 
       const token = localStorage.getItem('authToken');
-      // Use new soft delete endpoint
+      // Use soft delete endpoint with correct format
       const response = await fetch(
-        `${config.BASE_URL}/Gigs/DeleteGig/gigId?gigId=${gig.id}&caregiverId=${userDetails.id}`,
+        `${config.BASE_URL}/Gigs/SoftDeleteGig/${gigToDelete.id}?caregiverId=${userDetails.id}`,
         {
           method: 'DELETE',
           headers: {
@@ -207,7 +215,7 @@ const GigsSection = () => {
       }
 
       // Remove the gig from local state (soft deleted gigs are filtered out)
-      setGigs(prevGigs => prevGigs.filter(g => g.id !== gig.id));
+      setGigs(prevGigs => prevGigs.filter(g => g.id !== gigToDelete.id));
 
       showSuccess('Gig deleted successfully!');
       
@@ -215,12 +223,15 @@ const GigsSection = () => {
       console.error('Error deleting gig:', err);
       showError(err.message || 'Failed to delete gig. Please try again.');
     } finally {
-      // Remove gig from deleting set
-      setDeletingGigs(prev => {
-        const newSet = new Set(prev);
-        newSet.delete(gig.id);
-        return newSet;
-      });
+      // Remove gig from deleting set and clear gigToDelete
+      if (gigToDelete) {
+        setDeletingGigs(prev => {
+          const newSet = new Set(prev);
+          newSet.delete(gigToDelete.id);
+          return newSet;
+        });
+      }
+      setGigToDelete(null);
     }
   };
 
@@ -390,7 +401,9 @@ const GigsSection = () => {
                 <h4 className="caregiver-gig-title">{gig.title}</h4>
                 <p className="caregiver-gig-description">{gig.description}</p>
                 <div className="caregiver-gig-actions">
-                  <button 
+                  {/* Active/published gigs should not be editable or deletable - only pauseable */}
+                  {/* Clients may be viewing or booking these gigs, so changes should go through pause -> edit -> republish workflow */}
+                  {/* <button 
                     className="caregiver-gig-action-btn caregiver-edit"
                     onClick={(e) => {
                       e.stopPropagation();
@@ -398,7 +411,7 @@ const GigsSection = () => {
                     }}
                   >
                     Edit
-                  </button>
+                  </button> */}
                   <button 
                     className="caregiver-gig-action-btn caregiver-pause"
                     onClick={(e) => {
@@ -409,7 +422,7 @@ const GigsSection = () => {
                   >
                     {pausingGigs.has(gig.id) ? 'Pausing...' : 'Pause'}
                   </button>
-                  <button 
+                  {/* <button 
                     className="caregiver-gig-action-btn caregiver-delete"
                     onClick={(e) => {
                       e.stopPropagation();
@@ -418,7 +431,7 @@ const GigsSection = () => {
                     disabled={deletingGigs.has(gig.id)}
                   >
                     {deletingGigs.has(gig.id) ? 'Deleting...' : 'Delete'}
-                  </button>
+                  </button> */}
                 </div>
               </div>
             </div>
@@ -429,7 +442,7 @@ const GigsSection = () => {
             <div 
               key={gig.id} 
               className="caregiver-gig-card"
-              onClick={() => navigate(`/service/${gig.id}`)}
+              onClick={() => handleEditGig(gig)}
               style={{ cursor: 'pointer' }}
             >
               <img
@@ -486,7 +499,7 @@ const GigsSection = () => {
             <div 
               key={gig.id} 
               className="caregiver-gig-card"
-              onClick={() => navigate(`/service/${gig.id}`)}
+              onClick={() => handleEditGig(gig)}
               style={{ cursor: 'pointer' }}
             >
               <img
@@ -552,6 +565,26 @@ const GigsSection = () => {
           />
         ))}
       </div>
+
+      {/* Delete Confirmation Modal */}
+      <Modal
+        isOpen={isDeleteModalOpen}
+        onClose={() => {
+          setIsDeleteModalOpen(false);
+          setGigToDelete(null);
+        }}
+        onProceed={confirmDeleteGig}
+        title="Delete Gig?"
+        description={`Are you sure you want to delete "${gigToDelete?.title}"? This action cannot be undone and the gig will be permanently removed.`}
+        buttonText="Delete"
+        buttonBgColor="#dc2626"
+        secondaryButtonText="Cancel"
+        onSecondaryAction={() => {
+          setIsDeleteModalOpen(false);
+          setGigToDelete(null);
+        }}
+        isError={true}
+      />
     </div>
   );
 };
