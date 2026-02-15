@@ -3,7 +3,7 @@ import { useNavigate } from "react-router-dom";
 import "./NavigationBar.css";
 import logo from '../../../../assets/careproLogo.svg';
 import hear from "../../../../assets/main-app/heart.svg";
-import { FaBell, FaEnvelope, FaReceipt, FaHome, FaCog } from "react-icons/fa";
+import { FaBell, FaEnvelope, FaReceipt, FaHome, FaCog, FaStore } from "react-icons/fa";
 import NotificationBell from "../../../components/notifications/NotificationBell";
 import { useAuth } from "../../../context/AuthContext";
 import config from "../../../config"; // Import centralized config for API URLs
@@ -201,6 +201,12 @@ const NavigationBar = () => {
                   <span>Settings</span>
                 </div>
               </li>
+              <li onClick={() => { navigate('/marketplace'); setMobileMenuOpen(false); }}>
+                <div className="menu-item-content">
+                  <FaStore className="mobile-menu-icon" />
+                  <span>Browse Marketplace</span>
+                </div>
+              </li>
               <li onClick={() => { navigate(`${basePath}/profile`); setMobileMenuOpen(false); }}>
                 <div className="menu-item-content">
                   <div className="avatar small-avatar">
@@ -250,6 +256,9 @@ const NavigationBar = () => {
           </li> */}
           <li className="nav-link text-link" onClick={() => navigate(`${basePath}/settings`)}>
             Settings
+          </li>
+          <li className="nav-link text-link" onClick={() => navigate('/marketplace')}>
+            Browse Marketplace
           </li>
         </ul>
 

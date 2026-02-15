@@ -1,6 +1,7 @@
 import { useNavigate } from "react-router-dom";
 import { useState } from "react";
 import "./MarketingPage.css";
+import PricingModal from "../components/PricingModal/PricingModal";
 
 // Import assets
 import careproLogo from "../assets/careproLogo.svg";
@@ -13,6 +14,10 @@ import ifeoluwa from "../assets/ifeoluwa.jpeg";
 import caregiver2 from "../assets/caregiver2.png";
 import caregiver3 from "../assets/caregiver3.png";
 import caregiver4 from "../assets/caregiver4.png";
+import avatarFemale1 from "../assets/avatar-female-1.jpg";
+import avatarMale1 from "../assets/avatar-male-1.jpg";
+import avatarMale2 from "../assets/avatar-male-2.jpg";
+import avatarFemale2 from "../assets/avatar-female-2.jpg";
 
 // Service categories for the grid - mapped to backend categories
 const serviceCategories = [
@@ -125,7 +130,7 @@ const featuredCaregivers = [
     location: "Ikeja, Lagos, Nigeria",
     title: "Professional Elderly Care & Nursing Assistant",
     image: caregiver1,
-    avatar: ifeoluwa,
+    avatar: avatarFemale1,
     verified: true,
     rating: 4.5,
   },
@@ -135,7 +140,7 @@ const featuredCaregivers = [
     location: "Ajah, Lagos, Nigeria",
     title: "Daily Home Care Assistant",
     image: caregiver2,
-    avatar: ifeoluwa,
+    avatar: avatarMale1,
     verified: true,
     rating: 4.5,
   },
@@ -145,7 +150,7 @@ const featuredCaregivers = [
     location: "Lekki, Lagos, Nigeria",
     title: "Professional Childcare Provider",
     image: caregiver3,
-    avatar: ifeoluwa,
+    avatar: avatarMale2,
     verified: true,
     rating: 4.5,
   },
@@ -155,7 +160,7 @@ const featuredCaregivers = [
     location: "Ikoyi, Lagos, Nigeria",
     title: "Adult & Elderly Support Caregiver",
     image: caregiver4,
-    avatar: ifeoluwa,
+    avatar: avatarFemale2,
     verified: true,
     rating: 4.5,
   },
@@ -164,6 +169,7 @@ const featuredCaregivers = [
 const MarketingPage = () => {
   const navigate = useNavigate();
   const [searchQuery, setSearchQuery] = useState("");
+  const [isPricingModalOpen, setIsPricingModalOpen] = useState(false);
 
   const handleSearch = (e) => {
     e.preventDefault();
@@ -334,7 +340,7 @@ const MarketingPage = () => {
                 caregivers, skills, experience, certifications.
               </p>
               <div className="how-actions">
-                <button className="how-btn fill wide">
+                <button className="how-btn fill wide" onClick={handleBrowseAll}>
                   Explore Verified Caregivers
                 </button>
               </div>
@@ -351,12 +357,15 @@ const MarketingPage = () => {
                 either by task or upon project completion.
               </p>
               <div className="how-actions">
-                <button className="how-btn fill wide">View Pricing</button>
+                <button className="how-btn fill wide" onClick={() => setIsPricingModalOpen(true)}>View Pricing</button>
               </div>
             </div>
           </div>
         </div>
       </section>
+
+      {/* Pricing Modal */}
+      <PricingModal isOpen={isPricingModalOpen} onClose={() => setIsPricingModalOpen(false)} />
 
       {/* CTA Banners Section */}
       {/* <section className="cta-banners-section">

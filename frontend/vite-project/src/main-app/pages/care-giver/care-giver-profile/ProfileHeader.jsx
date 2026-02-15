@@ -12,7 +12,7 @@ import verificationService from "../../../services/verificationService";
 import { getDojahStatus } from "../../../services/dojahService";
 import { toast } from "react-toastify";
 import config from "../../../config"; // Import centralized config for API URLs
-import { generateUsername } from "../../../utils/usernameGenerator";
+// import { generateUsername } from "../../../utils/usernameGenerator"; // TODO: Backend persistence not implemented yet
 import { useAuth } from "../../../context/AuthContext";
 
 /**
@@ -504,14 +504,15 @@ const ProfileHeader = () => {
       }
       
       // Generate and save username using centralized utility
-      if (data.firstName && data.email && data.createdAt) {
-        const generatedUsername = generateUsername(
-          data.firstName,
-          data.email,
-          data.createdAt
-        );
-        localStorage.setItem("userName", generatedUsername);
-      }
+      // TODO: Backend persistence not implemented yet - commenting out username generation
+      // if (data.firstName && data.email && data.createdAt) {
+      //   const generatedUsername = generateUsername(
+      //     data.firstName,
+      //     data.email,
+      //     data.createdAt
+      //   );
+      //   localStorage.setItem("userName", generatedUsername);
+      // }
       
     } catch (err) {
       console.error("Failed to load profile:", err);
@@ -546,7 +547,7 @@ const ProfileHeader = () => {
   }
 
   const userDetails = JSON.parse(localStorage.getItem("userDetails"));
-  const userName = localStorage.getItem("userName");
+  // const userName = localStorage.getItem("userName"); // TODO: Backend persistence not implemented yet
 
   return (
     <div className="caregiver-profile-header">
@@ -592,7 +593,7 @@ const ProfileHeader = () => {
             />
           </div>
           <h2 className="caregiver-profile-name">{profile.name}</h2>
-          {userName && <p className="caregiver-username">@{userName}</p>}
+          {/* {userName && <p className="caregiver-username">@{userName}</p>} */} {/* TODO: Backend persistence not implemented yet */}
           {/*bio should be limited to 60 characters */}
           <p className="caregiver-bio">{`"${profile.aboutMe.slice(0, 60)}${profile.aboutMe.length > 60 ? '...' : ''}"`}</p>
         </div>

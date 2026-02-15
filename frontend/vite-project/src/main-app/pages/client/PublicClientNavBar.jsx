@@ -231,7 +231,7 @@ const PublicClientNavBar = () => {
                   <>
                     <div className="mobile-menu-item" onClick={() => handleMobileNavClick('/app/caregiver/dashboard')}>
                       <FaHome className="mobile-menu-icon" />
-                      <span>My Dashboard</span>
+                      <span>Back to Dashboard</span>
                     </div>
                     <div className="mobile-menu-item" onClick={() => handleMobileNavClick('/app/caregiver/message')}>
                       <FaEnvelope className="mobile-menu-icon" />
@@ -332,7 +332,7 @@ const PublicClientNavBar = () => {
                 <>
                   <div className="client-nav-item" onClick={() => navigate('/app/caregiver/dashboard')}>
                     <FaHome className="client-nav-icon" />
-                    <span>Dashboard</span>
+                    <span>Back to Dashboard</span>
                   </div>
                   <div className="client-nav-item" onClick={() => navigate('/app/caregiver/message')}>
                     <FaEnvelope className="client-nav-icon" />
