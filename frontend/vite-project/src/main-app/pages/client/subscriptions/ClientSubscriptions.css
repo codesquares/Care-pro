@@ -1,0 +1,116 @@
+/* ===== Client Subscriptions Page ===== */
+.client-subs-page {
+  background: #f9f9f9;
+  min-height: calc(100vh - 70px);
+}
+.client-subs-container {
+  max-width: 900px;
+  margin: 0 auto;
+  padding: 24px 20px;
+}
+.client-subs__title {
+  font-size: 24px;
+  font-weight: 700;
+  color: #333;
+  margin-bottom: 20px;
+}
+.client-subs__loading {
+  text-align: center;
+  padding: 60px 0;
+  color: #888;
+  font-size: 15px;
+}
+
+/* Summary cards */
+.client-subs__summary {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+  gap: 14px;
+  margin-bottom: 24px;
+}
+.client-subs__stat-card {
+  background: #fff;
+  border: 1px solid #e0e0e0;
+  border-radius: 12px;
+  padding: 18px 20px;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+.client-subs__stat-label {
+  font-size: 12px;
+  color: #888;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+.client-subs__stat-value {
+  font-size: 20px;
+  font-weight: 700;
+  color: #333;
+}
+
+/* Filters */
+.client-subs__filters {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin-bottom: 20px;
+  border-bottom: 2px solid #e0e0e0;
+  padding-bottom: 12px;
+}
+.client-subs__filter-btn {
+  padding: 6px 14px;
+  border: none;
+  background: none;
+  font-size: 13px;
+  color: #666;
+  cursor: pointer;
+  border-radius: 20px;
+  transition: background 0.15s, color 0.15s;
+}
+.client-subs__filter-btn:hover { background: #f0f0f0; }
+.client-subs__filter-btn--active {
+  background: #00B4A6;
+  color: #fff;
+}
+
+/* Error */
+.client-subs__error {
+  background: #fdecea;
+  color: #c62828;
+  padding: 12px 16px;
+  border-radius: 8px;
+  font-size: 14px;
+  margin-bottom: 16px;
+}
+
+/* Empty state */
+.client-subs__empty {
+  text-align: center;
+  padding: 60px 20px;
+  color: #888;
+}
+.client-subs__empty p { font-size: 15px; margin-bottom: 16px; }
+.client-subs__browse-btn {
+  background: #00B4A6;
+  color: #fff;
+  border: none;
+  padding: 10px 24px;
+  border-radius: 8px;
+  font-size: 14px;
+  font-weight: 600;
+  cursor: pointer;
+}
+.client-subs__browse-btn:hover { background: #009e92; }
+
+/* List */
+.client-subs__list {
+  display: grid;
+  gap: 14px;
+}
+
+@media (max-width: 600px) {
+  .client-subs__summary { grid-template-columns: 1fr 1fr; }
+  .client-subs__stat-value { font-size: 16px; }
+  .client-subs__title { font-size: 20px; }
+}

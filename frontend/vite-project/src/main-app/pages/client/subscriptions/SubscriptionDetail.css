@@ -1,0 +1,167 @@
+/* ===== Subscription Detail Page ===== */
+.sub-detail-page {
+  background: #f9f9f9;
+  min-height: calc(100vh - 70px);
+}
+.sub-detail-container {
+  max-width: 900px;
+  margin: 0 auto;
+  padding: 24px 20px 60px;
+}
+
+.sub-detail__loading,
+.sub-detail__error {
+  text-align: center;
+  padding: 60px 0;
+  color: #888;
+  font-size: 15px;
+}
+.sub-detail__error { color: #c62828; }
+.sub-detail__back-btn {
+  display: block;
+  margin: 16px auto 0;
+  background: none;
+  border: 1px solid #ddd;
+  padding: 8px 20px;
+  border-radius: 8px;
+  cursor: pointer;
+  font-size: 14px;
+  color: #555;
+}
+
+.sub-detail__back-link {
+  background: none;
+  border: none;
+  font-size: 14px;
+  color: #00B4A6;
+  cursor: pointer;
+  padding: 0;
+  margin-bottom: 16px;
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+}
+.sub-detail__back-link:hover { text-decoration: underline; }
+
+/* Header */
+.sub-detail__header {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  margin-bottom: 20px;
+}
+.sub-detail__title {
+  font-size: 24px;
+  font-weight: 700;
+  color: #333;
+  margin: 0 0 4px;
+}
+.sub-detail__subtitle {
+  font-size: 13px;
+  color: #888;
+  margin: 0;
+}
+
+/* Banners */
+.sub-detail__banner {
+  padding: 14px 20px;
+  border-radius: 10px;
+  font-size: 14px;
+  margin-bottom: 20px;
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 12px;
+}
+.sub-detail__banner--warn   { background: #fff8e1; color: #b8860b; }
+.sub-detail__banner--error  { background: #fdecea; color: #c62828; }
+.sub-detail__banner--orange { background: #fff3e0; color: #e65100; }
+.sub-detail__banner--info   { background: #e3f2fd; color: #1565c0; }
+
+.sub-detail__banner-btn {
+  margin-left: auto;
+  padding: 6px 16px;
+  border-radius: 6px;
+  border: 1px solid currentColor;
+  background: transparent;
+  color: inherit;
+  font-weight: 600;
+  font-size: 13px;
+  cursor: pointer;
+}
+.sub-detail__banner-btn--white {
+  background: #fff;
+  color: #c62828;
+  border-color: #c62828;
+}
+
+/* Detail grid */
+.sub-detail__grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 16px;
+  margin-bottom: 24px;
+}
+.sub-detail__card {
+  background: #fff;
+  border: 1px solid #e0e0e0;
+  border-radius: 12px;
+  padding: 20px;
+}
+.sub-detail__card h3 {
+  font-size: 15px;
+  font-weight: 600;
+  color: #333;
+  margin: 0 0 14px;
+}
+.sub-detail__row {
+  display: flex;
+  justify-content: space-between;
+  padding: 6px 0;
+  font-size: 13px;
+}
+.sub-detail__row span:first-child { color: #888; }
+.sub-detail__row span:last-child { font-weight: 500; color: #333; }
+
+/* Actions */
+.sub-detail__actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+  margin-bottom: 24px;
+}
+.sub-detail__action-btn {
+  padding: 10px 20px;
+  border-radius: 8px;
+  font-size: 14px;
+  font-weight: 600;
+  border: none;
+  cursor: pointer;
+  transition: background 0.15s;
+}
+.sub-detail__action-btn:disabled { opacity: 0.6; cursor: not-allowed; }
+.sub-detail__action-btn--primary { background: #00B4A6; color: #fff; }
+.sub-detail__action-btn--primary:hover:not(:disabled) { background: #009e92; }
+.sub-detail__action-btn--outline {
+  background: #fff;
+  color: #555;
+  border: 1px solid #ddd;
+}
+.sub-detail__action-btn--outline:hover:not(:disabled) { background: #f5f5f5; }
+.sub-detail__action-btn--warn {
+  background: #fff8e1;
+  color: #b8860b;
+  border: 1px solid #ffe082;
+}
+.sub-detail__action-btn--warn:hover:not(:disabled) { background: #fff0c0; }
+.sub-detail__action-btn--danger { background: #c62828; color: #fff; }
+.sub-detail__action-btn--danger:hover:not(:disabled) { background: #b71c1c; }
+
+@media (max-width: 640px) {
+  .sub-detail__grid { grid-template-columns: 1fr; }
+  .sub-detail__header { flex-direction: column; gap: 8px; }
+  .sub-detail__actions { flex-direction: column; }
+  .sub-detail__action-btn { width: 100%; text-align: center; }
+  .sub-detail__banner { flex-direction: column; align-items: flex-start; }
+  .sub-detail__banner-btn { margin-left: 0; width: 100%; text-align: center; }
+}

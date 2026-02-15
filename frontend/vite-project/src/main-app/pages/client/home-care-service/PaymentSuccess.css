@@ -345,3 +345,24 @@
     border: 1px solid #000;
   }
 }
+
+/* Subscription info on payment success page */
+.payment-subscription-info {
+  margin-top: 20px;
+  padding: 16px;
+  background: #f0faf8;
+  border: 1px solid #b2dfdb;
+  border-radius: 10px;
+  text-align: left;
+}
+.payment-subscription-info h3 {
+  font-size: 15px;
+  font-weight: 600;
+  color: #00897b;
+  margin: 0 0 12px;
+}
+.payment-subscription-info .payment-detail-item {
+  border: none;
+  background: transparent;
+  padding: 4px 0;
+}

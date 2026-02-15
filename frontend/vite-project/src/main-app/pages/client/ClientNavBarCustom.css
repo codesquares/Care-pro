@@ -379,6 +379,40 @@
   font-weight: 600 !important;
 }
 
+/* Subscriptions link in desktop nav */
+.client-desktop-nav .client-subscriptions-link {
+  display: flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  gap: 6px !important;
+  font-size: 0.875rem !important;
+  background-color: transparent !important;
+  padding: 6px 8px !important;
+  border-radius: 8px !important;
+  color: #333 !important;
+  cursor: pointer !important;
+  transition: all 0.2s ease !important;
+  border: none !important;
+  height: 32px !important;
+  box-sizing: border-box !important;
+  white-space: nowrap !important;
+  margin: 0 !important;
+}
+
+.client-desktop-nav .client-subscriptions-link:hover {
+  background-color: #ffffff !important;
+}
+
+.client-desktop-nav .client-subscriptions-link .client-subscriptions-icon {
+  font-size: 14px !important;
+  flex-shrink: 0 !important;
+}
+
+.client-desktop-nav .client-subscriptions-link span {
+  color: #333 !important;
+  font-weight: 500 !important;
+}
+
 /* Profile avatar section */
 .client-profile-avatar {
   display: flex !important;

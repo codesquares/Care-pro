@@ -21,6 +21,8 @@ import CaregiverOrderDetails from './orders/CaregiverOrderDetails';
 import { GigEditProvider } from '../../contexts/GigEditContext';
 import '../../components/ErrorBoundary.css';
 import FAQPage from '../client/orders/FAQ';
+import CaregiverSubscriptions from './subscriptions/CaregiverSubscriptions';
+import CaregiverSubscriptionDetail from './subscriptions/CaregiverSubscriptionDetail';
 import NotFoundPage from '../../../pages/NotFoundPage';
 
 function CareGiverRoutes() {
@@ -49,6 +51,8 @@ function CareGiverRoutes() {
                 <Route path="/verification-callback" element={<VerificationCallback />} />
                 <Route path="/assessment" element={<AssessmentPage />} />
                 <Route path="/order-details/:orderId" element={<CaregiverOrderDetails />} />
+                <Route path="/subscriptions" element={<CaregiverSubscriptions />} />
+                <Route path="/subscriptions/:id" element={<CaregiverSubscriptionDetail />} />
                 <Route path="/faq" element={<FAQPage />} />
                 <Route path="*" element={<NotFoundPage />} />
             </Routes>

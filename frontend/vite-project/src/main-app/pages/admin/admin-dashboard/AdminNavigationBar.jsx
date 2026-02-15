@@ -160,6 +160,16 @@ const AdminNavigationBar = () => {
             </li>
             <li>
               <Link 
+                to="/app/admin/subscriptions" 
+                className={`nav-link ${isActive('/app/admin/subscriptions') ? 'active' : ''}`}
+                onClick={closeMobileMenu}
+              >
+                <i className="fas fa-sync-alt"></i>
+                <span>Subscriptions</span>
+              </Link>
+            </li>
+            <li>
+              <Link 
                 to="/app/admin/question-bank" 
                 className={`nav-link ${isActive('/app/admin/question-bank') ? 'active' : ''}`}
                 onClick={closeMobileMenu}

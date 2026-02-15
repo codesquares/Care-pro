@@ -260,6 +260,12 @@ const ClientNavBar = () => {
                   <span>My Orders</span>
                 </div>
               </li>
+              <li onClick={() => { navigate(`${basePath}/subscriptions`); setMobileMenuOpen(false); }}>
+                <div className="client-menu-item-content">
+                  <span className="client-nav-icon" style={{ fontSize: '16px' }}>🔄</span>
+                  <span>Subscriptions</span>
+                </div>
+              </li>
               <li onClick={() => { navigate(`${basePath}/message`); setMobileMenuOpen(false); }}>
                 <div className="client-menu-item-content">
                   <FaEnvelope className="client-nav-icon" />
@@ -346,6 +352,11 @@ const ClientNavBar = () => {
             <span>View Orders</span>
           </div>
 
+          <div className="client-subscriptions-link" onClick={() => navigate(`${basePath}/subscriptions`)}>
+            <span className="client-subscriptions-icon">🔄</span>
+            <span>Subscriptions</span>
+          </div>
+
           <div className="client-profile-avatar" ref={dropdownRef}>
             <span className="client-user-name-text" onClick={() => setShowDropdown(!showDropdown)}>
               {`${user?.firstName + " " + user?.lastName || "User"}`}
@@ -375,6 +386,12 @@ const ClientNavBar = () => {
                   navigate(`${basePath}/profile`);
                 }}>
                   View Profile
+                </div>
+                <div className="client-dropdown-item" onClick={() => {
+                  setShowDropdown(false);
+                  navigate(`${basePath}/subscriptions`);
+                }}>
+                  Subscriptions
                 </div>
                 <div className="client-dropdown-item" onClick={() => {
                   setShowDropdown(false);

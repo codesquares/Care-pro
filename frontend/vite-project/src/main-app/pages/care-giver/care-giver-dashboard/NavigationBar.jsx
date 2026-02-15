@@ -189,6 +189,12 @@ const NavigationBar = () => {
                   <span>Earnings</span>
                 </div>
               </li>
+              <li onClick={() => { navigate(`${basePath}/subscriptions`); setMobileMenuOpen(false); }}>
+                <div className="menu-item-content">
+                  <span className="mobile-menu-icon" style={{ fontSize: '16px' }}>🔄</span>
+                  <span>Subscriptions</span>
+                </div>
+              </li>
               <li onClick={() => { navigate(`${basePath}/message`); setMobileMenuOpen(false); }}>
                 <div className="menu-item-content">
                   <FaEnvelope className="mobile-menu-icon" />
@@ -254,6 +260,9 @@ const NavigationBar = () => {
           <li className="nav-link text-link" onClick={() => navigate(`${basePath}/earnings`)}>
             Earnings
           </li> */}
+          <li className="nav-link text-link" onClick={() => navigate(`${basePath}/subscriptions`)}>
+            Subscriptions
+          </li>
           <li className="nav-link text-link" onClick={() => navigate(`${basePath}/settings`)}>
             Settings
           </li>
@@ -294,6 +303,12 @@ const NavigationBar = () => {
                   navigate(`${basePath}/profile`);
                 }}>
                   View Profile
+                </div>
+                <div className="nav-dropdown-item dropdown-item" onClick={() => {
+                  setShowDropdown(false);
+                  navigate(`${basePath}/subscriptions`);
+                }}>
+                  Subscriptions
                 </div>
                 <div className="nav-dropdown-item dropdown-item" onClick={() => {
                   setShowDropdown(false);
