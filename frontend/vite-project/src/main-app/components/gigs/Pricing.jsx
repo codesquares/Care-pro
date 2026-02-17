@@ -13,8 +13,13 @@ const PricingTable = ({ pricing, onPricingChange, onFieldFocus, onFieldBlur, onF
   };
 
   const handleApplyTemplate = (templatePackages) => {
-    // Apply template to form - update all three pricing tiers
-    onPricingChange(templatePackages);
+    // Apply only the Basic package from the template
+    const basicOnly = {
+      Basic: templatePackages.Basic || Object.values(templatePackages)[0] || { name: "", details: "", deliveryTime: "1 Day Per Week", amount: "" },
+      Standard: { name: "", details: "", deliveryTime: "1 Day Per Week", amount: "" },
+      Premium: { name: "", details: "", deliveryTime: "1 Day Per Week", amount: "" },
+    };
+    onPricingChange(basicOnly);
     // Switch to manual tab after applying
     setActiveTab("manual");
   };
@@ -74,11 +79,11 @@ const PricingTable = ({ pricing, onPricingChange, onFieldFocus, onFieldBlur, onF
           <label>Package Name</label>
           <input
             type="text"
-            value={pricing.Basic.name}
+            value={pricing.Basic?.name || ""}
             onChange={(e) => handleInputChange("Basic", "name", e.target.value)}
             onFocus={() => onFieldFocus && onFieldFocus('basic-name')}
             onBlur={onFieldBlur}
-            placeholder="Basic Package"
+            placeholder="e.g. Weekly Adult Care"
             className={hasFieldError("Basic", "name") ? 'error' : ''}
           />
           {getFieldError("Basic", "name") && (
@@ -91,7 +96,7 @@ const PricingTable = ({ pricing, onPricingChange, onFieldFocus, onFieldBlur, onF
         <div className="pricing-field">
           <label>Package Details</label>
           <PackageDetailsInput
-            value={pricing.Basic.details}
+            value={pricing.Basic?.details || ""}
             onChange={(value) => handleInputChange("Basic", "details", value)}
             onFocus={() => onFieldFocus && onFieldFocus('basic-details')}
             onBlur={onFieldBlur}
@@ -105,13 +110,30 @@ const PricingTable = ({ pricing, onPricingChange, onFieldFocus, onFieldBlur, onF
           )}
         </div>
 
-
+        <div className="pricing-field">
+          <label>Delivery Schedule</label>
+          <select
+            value={pricing.Basic?.deliveryTime || ""}
+            onChange={(e) => handleInputChange("Basic", "deliveryTime", e.target.value)}
+            onFocus={() => onFieldFocus && onFieldFocus('basic-delivery')}
+            onBlur={onFieldBlur}
+          >
+            <option value="">Select frequency</option>
+            <option value="1 Day Per Week">1 Day Per Week</option>
+            <option value="2 Days Per Week">2 Days Per Week</option>
+            <option value="3 Days Per Week">3 Days Per Week</option>
+            <option value="4 Days Per Week">4 Days Per Week</option>
+            <option value="5 Days Per Week">5 Days Per Week</option>
+            <option value="6 Days Per Week">6 Days Per Week</option>
+            <option value="7 Days Per Week">7 Days Per Week</option>
+          </select>
+        </div>
 
         <div className="pricing-field">
           <label>Price (₦)</label>
           <input
             type="number"
-            value={pricing.Basic.amount}
+            value={pricing.Basic?.amount || ""}
             onChange={(e) => handleInputChange("Basic", "amount", e.target.value)}
             onFocus={() => onFieldFocus && onFieldFocus('basic-amount')}
             onBlur={onFieldBlur}

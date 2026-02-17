@@ -425,3 +425,50 @@
   transform: none !important;
   box-shadow: none !important;
 }
+
+/* ─── Specialized Requirements Section ─────────────────────────────────────── */
+
+.specialized-requirements-section {
+  background: #fff8e1;
+  border: 1px solid #ffe082;
+  border-radius: 10px;
+  padding: 1rem 1.25rem;
+  margin-top: 1rem;
+}
+
+.specialized-requirements-header {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  margin-bottom: 0.5rem;
+}
+
+.specialized-requirements-header h4 {
+  margin: 0;
+  font-size: 1rem;
+  color: #5d4037;
+}
+
+.specialized-requirements-header .notice-icon {
+  font-size: 1.15rem;
+}
+
+.specialized-requirements-desc {
+  font-size: 0.9rem;
+  color: #5d4037;
+  margin-bottom: 0.75rem;
+  line-height: 1.45;
+}
+
+.specialized-checklist li {
+  font-size: 0.88rem;
+  color: #5d4037;
+}
+
+.specialized-cta-note {
+  font-size: 0.85rem;
+  color: #888;
+  font-style: italic;
+  margin-top: 0.75rem;
+  margin-bottom: 0;
+}

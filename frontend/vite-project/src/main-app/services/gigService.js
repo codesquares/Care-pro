@@ -32,6 +32,15 @@ class GigService {
         return { success: false, message: 'No data to save' };
       }
 
+      // Don't save if backend-required fields are still empty
+      // Backend returns 400 when Image1, PackageName, or PackageDetails are missing
+      const pkg = gigData.pricing?.Basic || Object.values(gigData.pricing || {})[0];
+      const hasImage = gigData.image1 instanceof File || (typeof gigData.image1 === 'string' && gigData.image1.length > 0);
+      if (!hasImage || !pkg?.name || !pkg?.details) {
+        console.log('Skipping auto-save: required fields (image, package name, package details) not yet filled');
+        return { success: false, message: 'Required fields not yet filled' };
+      }
+
       const formData = new FormData();
 
       // Add basic fields (with defaults for required fields)
@@ -43,9 +52,16 @@ class GigService {
       formData.append('Status', 'Draft');
       formData.append('CaregiverId', caregiverId);
 
-      // Add pricing data as JSON string
+      // Add pricing as flat fields (backend expects PackageType/PackageName/etc.)
       if (gigData.pricing) {
-        formData.append('Pricing', JSON.stringify(gigData.pricing));
+        const pkg = gigData.pricing.Basic || Object.values(gigData.pricing)[0];
+        if (pkg) {
+          formData.append('PackageType', 'Basic');
+          formData.append('PackageName', pkg.name || '');
+          formData.append('PackageDetails', pkg.details || '');
+          formData.append('DeliveryTime', pkg.deliveryTime || '');
+          formData.append('Price', pkg.amount || '0');
+        }
       }
 
       // Add search tags
