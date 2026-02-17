@@ -324,7 +324,9 @@ const AssessmentPage = () => {
       let localStatus = {};
       try {
         localStatus = JSON.parse(localStorage.getItem('qualificationStatus') || '{}');
-      } catch {}
+      } catch {
+        // ignore parse errors
+      }
       setGeneralStatus({
         ...qualData,
         attemptCount: localStatus.attemptCount || qualData.attemptCount || 0,
@@ -335,7 +337,9 @@ const AssessmentPage = () => {
       try {
         const localStatus = JSON.parse(localStorage.getItem('qualificationStatus') || '{}');
         setGeneralStatus(localStatus);
-      } catch {}
+      } catch {
+        // ignore parse errors
+      }
     } finally {
       setGeneralStatusLoading(false);
     }
@@ -544,9 +548,6 @@ const AssessmentPage = () => {
 
   // ─── Hub View ─────────────────────────────────────────────────────────────
   const renderHub = () => {
-    const specializedCount = Object.entries(CATEGORY_TIER_MAP)
-      .filter(([, tier]) => tier === SERVICE_TIERS.SPECIALIZED).length;
-
     return (
       <div className="mobile-assessment-container fade-in">
         <div className="assessment-content">
@@ -692,8 +693,6 @@ const AssessmentPage = () => {
       console.warn('Error parsing qualification status from localStorage:', err);
       qualificationStatus = {};
     }
-    const isRetake = qualificationStatus.assessmentCompleted && qualificationStatus.canRetake;
-    
     return (
       <div className="mobile-assessment-container fade-in">
         {/* User Profile Card */}
