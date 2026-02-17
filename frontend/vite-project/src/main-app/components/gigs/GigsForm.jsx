@@ -26,6 +26,9 @@ import { useCaregiverStatus } from "../../contexts/CaregiverStatusContext";
 import { useAutoSave } from "../../hooks/useAutoSave";
 import ResumeModal from "./ResumeModal";
 import GigService from "../../services/gigService";
+import { isSpecializedCategory, toServiceKey } from "../../constants/serviceClassification";
+import specializedAssessmentService from "../../services/specializedAssessmentService";
+import CertificateUploadModal from "../shared/CertificateUploadModal";
 
 const GigsForm = () => {
   const pages = ["Overview", "Pricing", "Gallery", "Publish"];
@@ -57,6 +60,11 @@ const GigsForm = () => {
   const [draftInfo, setDraftInfo] = useState(null);
   const [isAutoSaveEnabled, setIsAutoSaveEnabled] = useState(false);
   const [lastAutoSave, setLastAutoSave] = useState(null);
+  // Specialized eligibility state
+  const [categoryEligibility, setCategoryEligibility] = useState(null); // full eligibility response
+  const [eligibilityError, setEligibilityError] = useState(null); // 403 error details from publish
+  const [showEligibilityModal, setShowEligibilityModal] = useState(false);
+  const [showCertUpload, setShowCertUpload] = useState(false);
   const navigate = useNavigate();
   
   // Use caregiver status context for eligibility
@@ -106,6 +114,21 @@ const GigsForm = () => {
     formDataStatus: formData.status,
     isLoadingStatus
   });
+
+  // Fetch specialized eligibility when user logs in
+  useEffect(() => {
+    const fetchEligibility = async () => {
+      try {
+        const userDetails = JSON.parse(localStorage.getItem('userDetails') || '{}');
+        if (!userDetails.id) return;
+        const res = await specializedAssessmentService.getEligibility(userDetails.id);
+        if (res.success) setCategoryEligibility(res.data);
+      } catch (err) {
+        console.warn('Could not fetch specialized eligibility:', err);
+      }
+    };
+    fetchEligibility();
+  }, []);
 
   const goToNextPage = () => {
     const currentPageValidation = validateCurrentPage();
@@ -552,17 +575,25 @@ const GigsForm = () => {
 
       // Handle create vs update based on edit mode
       let response;
+      const authToken = localStorage.getItem('authToken');
+      const draftRequestConfig = {
+        headers: {
+          ...(authToken ? { Authorization: `Bearer ${authToken}` } : {})
+        }
+      };
       if (isEditMode && formData?.id) {
         console.log(`🔄 Updating existing draft gig with ID: ${formData.id}`);
         response = await axios.put(
           `${config.BASE_URL}/Gigs/UpdateGig/gigId?gigId=${formData.id}`,
-          formDataPayload
+          formDataPayload,
+          draftRequestConfig
         );
       } else {
         console.log("✨ Creating new draft gig");
         response = await axios.post(
           `${config.BASE_URL}/Gigs`,
-          formDataPayload
+          formDataPayload,
+          draftRequestConfig
         );
       }
 
@@ -765,11 +796,13 @@ const GigsForm = () => {
 
       try {
         let response;
+        const authToken = localStorage.getItem('authToken');
         const requestConfig = {
           timeout: 30000, // 30 seconds
           signal: controller.signal,
           headers: {
             // Let browser set Content-Type for FormData
+            ...(authToken ? { Authorization: `Bearer ${authToken}` } : {})
           }
         };
 
@@ -805,6 +838,11 @@ const GigsForm = () => {
           // Store the published gig ID for sharing
           if (response.data?.id) {
             setPublishedGigId(response.data.id);
+          }
+
+          // Show eligibility warning for specialized category drafts (non-breaking)
+          if (response.data?.eligibilityWarning) {
+            toast.warning(response.data.eligibilityWarning, { autoClose: 8000 });
           }
           
           if (!isEditMode) {
@@ -844,6 +882,17 @@ const GigsForm = () => {
       
       if (err.response) {
         console.error("❌ API Error Response:", err.response.data);
+
+        // Handle 403 — eligibility rejection from backend
+        if (err.response.status === 403) {
+          const eligError = specializedAssessmentService.parsePublishEligibilityError(err.response);
+          if (eligError) {
+            setEligibilityError(eligError);
+            setShowEligibilityModal(true);
+            return; // Don't show generic error
+          }
+        }
+
         const errorMessage = err.response.data?.title || err.response.data?.message || "Submission failed.";
         setServerMessage(`Error: ${errorMessage}`);
         toast.error(`Submission failed: ${errorMessage}`);
@@ -996,6 +1045,7 @@ const GigsForm = () => {
                 onFieldHover={handleFieldHover}
                 onFieldLeave={handleFieldLeave}
                 clearValidationErrors={clearValidationErrors}
+                categoryEligibility={categoryEligibility}
               />
             )}
             {currentStep === 1 && (
@@ -1044,6 +1094,9 @@ const GigsForm = () => {
                   isQualified,
                   hasCertificates
                 }}
+                selectedCategory={formData.category}
+                selectedSubcategories={formData.subcategory}
+                categoryEligibility={categoryEligibility}
                 validationErrors={(() => {
                   const validation = validatePublishPage(formData, selectedFile, imagePreview);
                   return validation.errors;
@@ -1236,6 +1289,75 @@ const GigsForm = () => {
             >
               Try Again
             </button>
+          </div>
+        </div>
+      )}
+
+      {/* Eligibility Error Modal (403 from publish) */}
+      {/* Certificate Upload Modal (inline) */}
+      <CertificateUploadModal
+        isOpen={showCertUpload}
+        onClose={() => setShowCertUpload(false)}
+        onUploadDone={() => setShowCertUpload(false)}
+      />
+
+      {showEligibilityModal && eligibilityError && (
+        <div className="gig-failure-modal-overlay" onClick={() => setShowEligibilityModal(false)}>
+          <div className="gig-failure-modal-content eligibility-error-modal" onClick={(e) => e.stopPropagation()}>
+            <div className="failure-icon-container">
+              <div className="failure-cross">
+                <span style={{ fontSize: '3.5rem' }}>🔒</span>
+              </div>
+            </div>
+            <h2 className="failure-title">Not Eligible to Publish</h2>
+            <p className="failure-description">{eligibilityError.message}</p>
+
+            <div className="eligibility-error-details">
+              {eligibilityError.missing?.includes('assessment') && (
+                <div className="eligibility-error-item">
+                  <span className="eligibility-error-icon">❌</span>
+                  <span>Specialized assessment not passed</span>
+                </div>
+              )}
+              {eligibilityError.missing?.includes('certificate') && (
+                <div className="eligibility-error-item">
+                  <span className="eligibility-error-icon">📄</span>
+                  <span>Required certificates are missing or unverified</span>
+                </div>
+              )}
+            </div>
+
+            <div className="eligibility-error-actions">
+              {eligibilityError.missing?.includes('assessment') && (
+                <button
+                  className="sa-btn sa-btn-primary"
+                  onClick={() => {
+                    setShowEligibilityModal(false);
+                    navigate(`/app/caregiver/specialized-assessment?category=${eligibilityError.category}`);
+                  }}
+                >
+                  Take Assessment
+                </button>
+              )}
+              {eligibilityError.missing?.includes('certificate') && (
+                <button
+                  className="sa-btn sa-btn-secondary"
+                  onClick={() => {
+                    setShowEligibilityModal(false);
+                    setShowCertUpload(true);
+                  }}
+                >
+                  Upload Certificates
+                </button>
+              )}
+              <button
+                className="failure-retry-btn"
+                style={{ marginTop: '0.5rem', background: '#6b7280' }}
+                onClick={() => setShowEligibilityModal(false)}
+              >
+                Close
+              </button>
+            </div>
           </div>
         </div>
       )}

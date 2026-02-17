@@ -1,5 +1,13 @@
 import { useState, useRef } from "react";
+import { useNavigate } from "react-router-dom";
 import { useGigForm } from "../../contexts/GigEditContext";
+import {
+  isSpecializedCategory,
+  isSpecializedSubcategory,
+  getRequiredSpecializationForSubcategory,
+  SERVICE_TIERS,
+  toServiceKey,
+} from "../../constants/serviceClassification";
 import "./gigs.css";
 
 const GigsCard = ({
@@ -13,11 +21,24 @@ const GigsCard = ({
   onFieldHover,
   onFieldLeave,
   clearValidationErrors,
+  categoryEligibility,
 }) => {
+  const navigate = useNavigate();
   const [tagsInput, setTagsInput] = useState("");
   const [showLimitError, setShowLimitError] = useState(false);
   const tagInputRef = useRef(null);
   const { formData, validationErrors, updateField } = useGigForm();
+
+  // Helper: check if caregiver is eligible for a given display-name category
+  const isCategoryEligible = (categoryName) => {
+    if (!categoryEligibility?.categories) return null; // unknown
+    const key = toServiceKey(categoryName);
+    // categories may be an array or object — handle both
+    if (Array.isArray(categoryEligibility.categories)) {
+      return categoryEligibility.categories.find(c => c.serviceCategory === key) || null;
+    }
+    return categoryEligibility.categories[key] || null;
+  };
 
   // Utility function to normalize strings for comparison
   const normalizeString = (str) => {
@@ -189,7 +210,8 @@ const GigsCard = ({
               <option value="">Service Category</option>
               {Object.keys(categories).map((category) => (
                 <option key={category} value={category}>
-                  {category}
+                  {isSpecializedCategory(category) ? "🔒 " : ""}{category}
+                  {isSpecializedCategory(category) ? " (Specialized)" : ""}
                 </option>
               ))}
             </select>
@@ -198,6 +220,34 @@ const GigsCard = ({
                 {validationErrors.category}
               </div>
             )}
+
+            {/* Specialized category notice — data-driven */}
+            {formData.category && isSpecializedCategory(formData.category) && (() => {
+              const elig = isCategoryEligible(formData.category);
+              const isEligible = elig?.isEligible;
+              return (
+                <div className={`specialized-category-notice ${isEligible ? 'eligible' : ''}`}>
+                  <span className="notice-icon">{isEligible ? '✅' : '🔒'}</span>
+                  <span>
+                    <strong>{formData.category}</strong> is a specialized service.
+                    {isEligible ? (
+                      <> You are eligible to publish gigs in this category.</>
+                    ) : (
+                      <>
+                        {' '}You need a specialized assessment &amp; relevant certificates to publish.
+                        <button
+                          type="button"
+                          className="ed-action-link inline-link"
+                          onClick={() => navigate(`/app/caregiver/specialized-assessment?category=${toServiceKey(formData.category)}`)}
+                        >
+                          Take Assessment →
+                        </button>
+                      </>
+                    )}
+                  </span>
+                </div>
+              );
+            })()}
           </div>
 
           {/* Subcategory */}
@@ -219,12 +269,17 @@ const GigsCard = ({
                   const isSelected = isSubcategorySelected(subCategory, formData.subcategory);
                   const isAtLimit = formData.subcategory.length >= 5;
                   const isDisabled = !isSelected && isAtLimit;
-                  
-                  // Debug individual subcategory check
-                  console.log(`🔍 DEBUG - Checking "${subCategory}": selected=${isSelected}, disabled=${isDisabled}`);
+                  const subcatIsSpecialized = isSpecializedSubcategory(formData.category, subCategory);
+                  const specialReq = subcatIsSpecialized
+                    ? getRequiredSpecializationForSubcategory(formData.category, subCategory)
+                    : null;
                   
                   return (
-                    <label key={subCategory} className={`subcategory-checkbox ${isDisabled ? 'disabled' : ''}`}>
+                    <label
+                      key={subCategory}
+                      className={`subcategory-checkbox ${isDisabled ? 'disabled' : ''} ${subcatIsSpecialized ? 'specialized-subcat' : ''}`}
+                      title={subcatIsSpecialized ? `Specialized — requires ${specialReq || 'additional qualifications'}` : ""}
+                    >
                       <input
                         className="checkbox-input"
                         type="checkbox"
@@ -269,7 +324,10 @@ const GigsCard = ({
                           if (onSubCategoryChange) onSubCategoryChange(updatedSubcategories);
                         }}
                       />
-                      <span className="checkbox-label">{subCategory}</span>
+                      <span className="checkbox-label">
+                        {subcatIsSpecialized && <span className="subcat-lock-icon" title="Specialized subcategory">🔒 </span>}
+                        {subCategory}
+                      </span>
                     </label>
                   );
                 })}

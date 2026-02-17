@@ -9,6 +9,7 @@ import FilterBarDropdown from "../components/FilterBar";
 import ClientGigService from "../../../services/clientGigService";
 import ClientProfileService from "../../../services/clientProfileService";
 import ClientCareNeedsService from "../../../services/clientCareNeedsService";
+import SubscriptionWidget from './SubscriptionWidget';
 
 
 
@@ -179,7 +180,7 @@ const ClientDashboard = () => {
           <FilterBarDropdown filters={filters} onFilterChange={handleFilterChange} />
         )}
 
-        
+        {!shouldHideComponents() && <SubscriptionWidget />}
 
         {loading && (
           <div className="spinner-container">

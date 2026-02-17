@@ -7,6 +7,7 @@ import receipt from "../../../assets/main-app/receipt.svg";
 import homeIcon from "../../../assets/home_icon.png";
 import NotificationBell from "../../components/notifications/NotificationBell";
 import { useAuth } from "../../context/AuthContext";
+import { getInitials } from "../../utils/avatarHelpers";
 // import "../care-giver/care-giver-dashboard/NavigationBar.css";
 import "./ClientNavBarCustom.css";
 
@@ -88,15 +89,6 @@ const ClientNavBar = () => {
   if (!user) {
     return null;
   }
-
-  const getInitials = (name) => {
-    if (!name || typeof name !== "string") return "";
-
-    const names = name.trim().split(" ").filter(Boolean); // remove empty parts
-    const initials = names.map((n) => n[0].toUpperCase()).join("");
-
-    return initials.slice(0, 2);
-  };
 
   const IconLink = ({ to, icon, alt, isReactIcon = false }) => (
     <li className="client-nav-link client-icon-link" onClick={() => navigate(to)}>
@@ -260,6 +252,12 @@ const ClientNavBar = () => {
                   <span>My Orders</span>
                 </div>
               </li>
+              <li onClick={() => { navigate(`${basePath}/subscriptions`); setMobileMenuOpen(false); }}>
+                <div className="client-menu-item-content">
+                  <span className="client-nav-icon" style={{ fontSize: '16px' }}>🔄</span>
+                  <span>Subscriptions</span>
+                </div>
+              </li>
               <li onClick={() => { navigate(`${basePath}/message`); setMobileMenuOpen(false); }}>
                 <div className="client-menu-item-content">
                   <FaEnvelope className="client-nav-icon" />
@@ -346,22 +344,19 @@ const ClientNavBar = () => {
             <span>View Orders</span>
           </div>
 
+          <div className="client-subscriptions-link" onClick={() => navigate(`${basePath}/subscriptions`)}>
+            <span className="client-subscriptions-icon">🔄</span>
+            <span>Subscriptions</span>
+          </div>
+
           <div className="client-profile-avatar" ref={dropdownRef}>
             <span className="client-user-name-text" onClick={() => setShowDropdown(!showDropdown)}>
               {`${user?.firstName + " " + user?.lastName || "User"}`}
             </span>
             <div className="client-avatar" onClick={() => setShowDropdown(!showDropdown)}>
-              {user?.profileImage ? (
-                <img 
-                  src={user.profileImage} 
-                  alt="Profile" 
-                  className="client-avatar-image"
-                />
-              ) : (
-                <span className="client-avatar-initials">
-                  {getInitials(userName)}
-                </span>
-              )}
+              <span className="client-avatar-initials">
+                {getInitials(userName)}
+              </span>
             </div>
             <div className="client-dropdown-arrow" onClick={() => setShowDropdown(!showDropdown)}>
               <svg width="16" height="16" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
@@ -375,6 +370,12 @@ const ClientNavBar = () => {
                   navigate(`${basePath}/profile`);
                 }}>
                   View Profile
+                </div>
+                <div className="client-dropdown-item" onClick={() => {
+                  setShowDropdown(false);
+                  navigate(`${basePath}/subscriptions`);
+                }}>
+                  Subscriptions
                 </div>
                 <div className="client-dropdown-item" onClick={() => {
                   setShowDropdown(false);

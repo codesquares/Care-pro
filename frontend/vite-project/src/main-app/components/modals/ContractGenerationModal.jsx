@@ -1,6 +1,7 @@
 import { useState, useEffect } from "react";
 import { toast } from "react-toastify";
 import ContractService from "../../services/contractService";
+import { createNotification } from "../../services/notificationService";
 import "./ContractGenerationModal.css";
 
 /**
@@ -168,6 +169,33 @@ const ContractGenerationModal = ({
       if (result.success) {
         toast.success(isRevision ? "Contract revised and sent to client!" : "Contract generated and sent to client for approval!");
         onContractGenerated?.(result.data);
+
+        // Send notification to the client about the contract
+        try {
+          const userDetails = JSON.parse(localStorage.getItem("userDetails") || "{}");
+          const caregiverId = userDetails?.id;
+          const clientId = orderData?.clientId;
+          const theOrderId = orderData?.id || orderData?.orderId;
+
+          if (caregiverId && clientId && theOrderId) {
+            await createNotification({
+              recipientId: clientId,
+              senderId: caregiverId,
+              type: isRevision ? 'ContractSent' : 'ContractSent',
+              relatedEntityId: theOrderId,
+              title: isRevision
+                ? `📝 Revised contract sent for your review`
+                : `📋 New contract sent for your review`,
+              content: isRevision
+                ? `Your caregiver has revised the contract for "${orderData?.gigTitle || orderData?.serviceName || 'your order'}". Please review and approve or request changes.`
+                : `Your caregiver has sent you a contract for "${orderData?.gigTitle || orderData?.serviceName || 'your order'}". Please review and approve or request changes.`
+            });
+          }
+        } catch (notifError) {
+          console.error("Failed to send contract notification:", notifError);
+          // Don't block the success flow for a notification failure
+        }
+
         onClose();
       } else {
         toast.error(result.error || "Failed to process contract");

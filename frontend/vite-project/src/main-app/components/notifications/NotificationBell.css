@@ -141,12 +141,19 @@
 /* Individual Notification Item */
 .notification-item {
   border-bottom: 1px solid #f0f0f0;
-  cursor: pointer;
   position: relative;
+}
+
+.notification-item.clickable {
+  cursor: pointer;
 }
 
 .notification-item:hover {
   background-color: #f8f9fa;
+}
+
+.notification-item.clickable:hover {
+  background-color: #edf5fd;
 }
 
 .notification-item:last-child {
@@ -157,8 +164,8 @@
   background-color: #f0f8ff;
 }
 
-.notification-item.expanded {
-  background-color: #fafbfc;
+.notification-item.unread.clickable:hover {
+  background-color: #e1f0fc;
 }
 
 /* Notification Main Content */
@@ -212,6 +219,21 @@
   font-weight: 400;
 }
 
+/* Go Arrow for clickable notifications */
+.notification-go-arrow {
+  font-size: 20px;
+  color: #aab8c2;
+  margin-left: 8px;
+  flex-shrink: 0;
+  font-weight: 300;
+  line-height: 1;
+  transition: color 0.15s ease;
+}
+
+.notification-item.clickable:hover .notification-go-arrow {
+  color: #1da1f2;
+}
+
 /* Unread Dot */
 .unread-dot {
   width: 8px;
@@ -220,58 +242,6 @@
   border-radius: 50%;
   flex-shrink: 0;
   margin-top: 4px;
-}
-
-/* Expand Indicator */
-.expand-indicator {
-  font-size: 12px;
-  color: #657786;
-  margin-left: 8px;
-  flex-shrink: 0;
-}
-
-.notification-item.expanded .expand-indicator {
-  transform: rotate(0deg);
-}
-
-/* Notification Details (Expanded) */
-.notification-details {
-  padding: 0 16px 12px 48px;
-  border-top: 1px solid #e1e8ed;
-  background: white;
-}
-
-.notification-full-content {
-  font-size: 13px;
-  color: #333;
-  line-height: 1.5;
-  margin-bottom: 8px;
-  padding: 12px 0;
-  word-wrap: break-word;
-}
-
-.notification-metadata {
-  margin-bottom: 8px;
-}
-
-.notification-metadata small {
-  color: #657786;
-  font-size: 11px;
-}
-
-.notification-action-btn {
-  background: #1da1f2;
-  color: white;
-  border: none;
-  padding: 6px 12px;
-  border-radius: 4px;
-  font-size: 12px;
-  font-weight: 500;
-  cursor: pointer;
-}
-
-.notification-action-btn:hover {
-  background: #0d8bd9;
 }
 
 /* Notification Footer */

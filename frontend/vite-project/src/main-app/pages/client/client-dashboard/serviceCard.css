@@ -189,17 +189,19 @@
 }
 
 /* Third Container: Service title */
-.service-title {
+.modern-service-card .service-title {
   font-size: 14px;
   font-weight: 700;
   color: #111827;
   line-height: 1.4;
   margin: 0;
+  display: -webkit-box;
   -webkit-line-clamp: 2;
   line-clamp: 2;
   -webkit-box-orient: vertical;
   overflow: hidden;
-  display: -webkit-box;
+  text-overflow: ellipsis;
+  word-break: break-word;
 }
 
 /* Fourth Container: Footer with price and button */
@@ -271,7 +273,7 @@
     height: 38px;
   }
   
-  .service-title {
+  .modern-service-card .service-title {
     font-size: 15px;
   }
   
@@ -322,7 +324,7 @@
     height: 18px;
   }
   
-  .service-title {
+  .modern-service-card .service-title {
     font-size: 15px;
   }
   

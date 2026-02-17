@@ -1,0 +1,185 @@
+/* ── Caregiver Subscription Widget ── */
+.cg-sub-widget {
+  background: #ffffff;
+  border: 1px solid #e8ecf1;
+  border-radius: 12px;
+  padding: 20px;
+  margin-bottom: 20px;
+}
+
+.cg-sub-widget__header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 16px;
+}
+
+.cg-sub-widget__title {
+  font-size: 1.05rem;
+  font-weight: 600;
+  color: #1a1a2e;
+  margin: 0;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.cg-sub-widget__icon {
+  font-size: 1.1rem;
+}
+
+.cg-sub-widget__view-all {
+  background: none;
+  border: none;
+  color: #00B4A6;
+  font-size: 0.85rem;
+  font-weight: 500;
+  cursor: pointer;
+  padding: 4px 8px;
+  border-radius: 6px;
+  transition: background-color 0.2s;
+}
+
+.cg-sub-widget__view-all:hover {
+  background-color: #e6f9f7;
+}
+
+/* Stats row */
+.cg-sub-widget__stats {
+  display: flex;
+  gap: 12px;
+  margin-bottom: 14px;
+  flex-wrap: wrap;
+}
+
+.cg-sub-widget__stat {
+  flex: 1;
+  min-width: 80px;
+  background: #f8fafc;
+  border-radius: 8px;
+  padding: 10px;
+  text-align: center;
+}
+
+.cg-sub-widget__stat-value {
+  display: block;
+  font-size: 1.15rem;
+  font-weight: 700;
+  color: #1a1a2e;
+}
+
+.cg-sub-widget__stat-label {
+  display: block;
+  font-size: 0.7rem;
+  color: #64748b;
+  margin-top: 2px;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+/* Subscription items */
+.cg-sub-widget__items {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.cg-sub-widget__item {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 10px 12px;
+  background: #f8fafc;
+  border-radius: 8px;
+  cursor: pointer;
+  transition: background-color 0.2s;
+}
+
+.cg-sub-widget__item:hover {
+  background: #e6f9f7;
+}
+
+.cg-sub-widget__item-info {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.cg-sub-widget__item-name {
+  font-size: 0.875rem;
+  font-weight: 500;
+  color: #1a1a2e;
+}
+
+.cg-sub-widget__item-status {
+  font-size: 0.65rem;
+  font-weight: 600;
+  padding: 2px 8px;
+  border-radius: 10px;
+  text-transform: uppercase;
+  letter-spacing: 0.3px;
+}
+
+.cg-sub-widget__item-status--active {
+  background: #dcfce7;
+  color: #166534;
+}
+
+.cg-sub-widget__item-status--paused {
+  background: #fef3c7;
+  color: #92400e;
+}
+
+.cg-sub-widget__item-status--pendingcancellation {
+  background: #fee2e2;
+  color: #991b1b;
+}
+
+.cg-sub-widget__item-status--pastdue {
+  background: #fef3c7;
+  color: #92400e;
+}
+
+.cg-sub-widget__item-status--suspended {
+  background: #f3e8ff;
+  color: #6b21a8;
+}
+
+.cg-sub-widget__item-status--cancelled,
+.cg-sub-widget__item-status--terminated {
+  background: #f1f5f9;
+  color: #64748b;
+}
+
+.cg-sub-widget__item-amount {
+  font-size: 0.8rem;
+  font-weight: 600;
+  color: #475569;
+  white-space: nowrap;
+}
+
+/* Responsive */
+@media (max-width: 640px) {
+  .cg-sub-widget {
+    padding: 14px;
+  }
+
+  .cg-sub-widget__stats {
+    gap: 8px;
+  }
+
+  .cg-sub-widget__stat {
+    min-width: 70px;
+    padding: 8px 6px;
+  }
+
+  .cg-sub-widget__stat-value {
+    font-size: 0.95rem;
+  }
+
+  .cg-sub-widget__item-info {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 4px;
+  }
+}

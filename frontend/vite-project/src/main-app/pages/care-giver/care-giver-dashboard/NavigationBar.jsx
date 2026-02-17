@@ -6,6 +6,7 @@ import hear from "../../../../assets/main-app/heart.svg";
 import { FaBell, FaEnvelope, FaReceipt, FaHome, FaCog, FaStore } from "react-icons/fa";
 import NotificationBell from "../../../components/notifications/NotificationBell";
 import { useAuth } from "../../../context/AuthContext";
+import { getInitials } from "../../../utils/avatarHelpers";
 import config from "../../../config"; // Import centralized config for API URLs
 
 
@@ -66,37 +67,6 @@ const NavigationBar = () => {
     return null;
   }
 
-  const getInitials = (name) => {
-  if (!name || typeof name !== "string") return "";
-
-  const names = name.trim().split(" ").filter(Boolean); // remove empty parts
-  const initials = names.map((n) => n[0].toUpperCase()).join("");
-
-  return initials.slice(0, 2);
-};
-
-  // Helper function to render avatar content
-  const renderAvatarContent = (className = "") => {
-    const profileImage = user?.profileImage || user?.profilePicture;
-    
-    if (profileImage) {
-      return (
-        <img 
-          src={profileImage} 
-          alt={userName}
-          className={`avatar-image ${className}`}
-          onError={(e) => {
-            // Fallback to initials if image fails to load
-            e.target.style.display = 'none';
-            e.target.nextSibling.style.display = 'flex';
-          }}
-        />
-      );
-    }
-    
-    return null; // Return null when no image, let the initials span handle the display
-  };
-
   const handleSignOut = () => {
     handleLogout();
   };
@@ -142,8 +112,7 @@ const NavigationBar = () => {
             <div className="mobile-menu-header">
               <div className="mobile-menu-user">
                 <div className="avatar">
-                  {renderAvatarContent()}
-                  <span className="avatar-initials" style={{ display: (user?.profileImage || user?.profilePicture) ? 'none' : 'flex' }}>
+                  <span className="avatar-initials">
                     {getInitials(userName)}
                   </span>
                 </div>
@@ -189,6 +158,12 @@ const NavigationBar = () => {
                   <span>Earnings</span>
                 </div>
               </li>
+              <li onClick={() => { navigate(`${basePath}/subscriptions`); setMobileMenuOpen(false); }}>
+                <div className="menu-item-content">
+                  <span className="mobile-menu-icon" style={{ fontSize: '16px' }}>🔄</span>
+                  <span>Subscriptions</span>
+                </div>
+              </li>
               <li onClick={() => { navigate(`${basePath}/message`); setMobileMenuOpen(false); }}>
                 <div className="menu-item-content">
                   <FaEnvelope className="mobile-menu-icon" />
@@ -210,8 +185,7 @@ const NavigationBar = () => {
               <li onClick={() => { navigate(`${basePath}/profile`); setMobileMenuOpen(false); }}>
                 <div className="menu-item-content">
                   <div className="avatar small-avatar">
-                    {renderAvatarContent("small-avatar")}
-                    <span className="avatar-initials" style={{ display: (user?.profileImage || user?.profilePicture) ? 'none' : 'flex' }}>
+                    <span className="avatar-initials">
                       {getInitials(userName)}
                     </span>
                   </div>
@@ -254,6 +228,9 @@ const NavigationBar = () => {
           <li className="nav-link text-link" onClick={() => navigate(`${basePath}/earnings`)}>
             Earnings
           </li> */}
+          <li className="nav-link text-link" onClick={() => navigate(`${basePath}/subscriptions`)}>
+            Subscriptions
+          </li>
           <li className="nav-link text-link" onClick={() => navigate(`${basePath}/settings`)}>
             Settings
           </li>
@@ -277,12 +254,11 @@ const NavigationBar = () => {
           </div>
 
           <div className="profile-avatar" ref={dropdownRef}>
-            {!(user?.profileImage || user?.profilePicture) && (
-              <span onClick={() => setShowDropdown(!showDropdown)}>{userName}</span>
-            )}
+            <span className="nav-user-name" onClick={() => setShowDropdown(!showDropdown)}>
+              {userName.length > 12 ? userName.slice(0, 12) + '…' : userName}
+            </span>
             <div className="avatar" onClick={() => setShowDropdown(!showDropdown)}>
-              {renderAvatarContent()}
-              <span className="avatar-initials" style={{ display: (user?.profileImage || user?.profilePicture) ? 'none' : 'flex' }}>
+              <span className="avatar-initials">
                 {getInitials(userName)}
               </span>
             </div>
@@ -294,6 +270,12 @@ const NavigationBar = () => {
                   navigate(`${basePath}/profile`);
                 }}>
                   View Profile
+                </div>
+                <div className="nav-dropdown-item dropdown-item" onClick={() => {
+                  setShowDropdown(false);
+                  navigate(`${basePath}/subscriptions`);
+                }}>
+                  Subscriptions
                 </div>
                 <div className="nav-dropdown-item dropdown-item" onClick={() => {
                   setShowDropdown(false);

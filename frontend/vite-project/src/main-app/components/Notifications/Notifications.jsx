@@ -3,6 +3,7 @@ import { useSelector, useDispatch } from 'react-redux';
 import { useNavigate } from 'react-router-dom';
 import { fetchNotifications, markNotificationAsRead, markAllNotificationsAsRead } from '../../Redux/slices/notificationSlice';
 import { formatDistanceToNow } from "date-fns";
+import { getNotificationRoute, getNotificationActionLabel, getNotificationTypeIcon } from '../../utils/notificationRoutes';
 import "./Notifications.css";
 
 const NotificationsPage = () => {
@@ -10,43 +11,37 @@ const NotificationsPage = () => {
   const dispatch = useDispatch();
   const { notifications, unreadCount, loading } = useSelector((state) => state.notifications);
   const [userName, setUserName] = useState("User");
+  const [userRole, setUserRole] = useState("");
 
   useEffect(() => {
     const user = JSON.parse(localStorage.getItem("userDetails"));
     if (user?.firstName) {
       setUserName(user.firstName);
     }
+    if (user?.role) {
+      setUserRole(user.role);
+    }
   }, []);
 
   useEffect(() => {
-    // Fetch notifications when component mounts
     dispatch(fetchNotifications());
   }, [dispatch]);
 
   const handleGoBack = () => {
-    navigate(-1); // Go back to previous page
-  };
-  
-  const getNotificationTypeIcon = (type) => {
-    switch (type) {
-      case 'NewMessage':
-      case 'Message':
-        return '💬';
-      case 'Payment':
-        return '💰';
-      case 'SystemNotice':
-        return '📢';
-      case 'NewGig':
-        return '🛠️';
-      case 'Signup':
-        return '👋';
-      default:
-        return '🔔';
-    }
+    navigate(-1);
   };
 
-  const handleMarkAsRead = (notificationId) => {
-    dispatch(markNotificationAsRead(notificationId));
+  const handleNotificationClick = (notification) => {
+    // Mark as read if unread
+    if (!notification.isRead) {
+      dispatch(markNotificationAsRead(notification.id));
+    }
+
+    // Navigate to the relevant page
+    const route = getNotificationRoute(notification, userRole);
+    if (route) {
+      navigate(route);
+    }
   };
 
   const handleMarkAllAsRead = () => {
@@ -136,31 +131,41 @@ const NotificationsPage = () => {
                 <p>You'll see notifications here when you receive messages, payments, or system updates.</p>
               </div>
             ) : (
-              notifications.map(notification => (
-                <div 
-                  key={notification.id} 
-                  className={`notification-entry ${!notification.isRead ? 'unread' : ''}`}
-                  onClick={() => !notification.isRead && handleMarkAsRead(notification.id)}
-                >
-                  <div className="notification-icon">
-                    {getNotificationTypeIcon(notification.type)}
-                  </div>
-                  <div className="notification-content">
-                    <div className="notification-title">
-                      {notification.title || 'Notification'}
+              notifications.map(notification => {
+                const route = getNotificationRoute(notification, userRole);
+                const isClickable = !!route;
+
+                return (
+                  <div 
+                    key={notification.id} 
+                    className={`notification-entry ${!notification.isRead ? 'unread' : ''} ${isClickable ? 'clickable' : ''}`}
+                    onClick={() => handleNotificationClick(notification)}
+                    role={isClickable ? 'link' : undefined}
+                    title={isClickable ? getNotificationActionLabel(notification.type) : undefined}
+                  >
+                    <div className="notification-icon">
+                      {getNotificationTypeIcon(notification.type)}
                     </div>
-                    <p className="notification-message">
-                      {notification.content || notification.message || 'New notification'}
-                    </p>
-                    <span className="notification-time">
-                      {formatNotificationTime(notification.createdAt)}
-                    </span>
+                    <div className="notification-content">
+                      <div className="notification-title">
+                        {notification.title || 'Notification'}
+                      </div>
+                      <p className="notification-message">
+                        {notification.content || notification.message || 'New notification'}
+                      </p>
+                      <span className="notification-time">
+                        {formatNotificationTime(notification.createdAt)}
+                      </span>
+                    </div>
+                    {!notification.isRead && (
+                      <div className="unread-dot"></div>
+                    )}
+                    {isClickable && (
+                      <div className="notification-go-arrow" aria-hidden="true">›</div>
+                    )}
                   </div>
-                  {!notification.isRead && (
-                    <div className="unread-dot"></div>
-                  )}
-                </div>
-              ))
+                );
+              })
             )}
           </div>
           

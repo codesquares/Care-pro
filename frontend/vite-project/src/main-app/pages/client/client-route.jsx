@@ -19,6 +19,8 @@ import Cart from '../client/cart/Cart';
 import NotificationsPage from '../../components/Notifications/Notifications';
 import ResolutionCenter from './orders/ResolutionCenter';
 import FAQPage from './orders/FAQ';
+import ClientSubscriptions from './subscriptions/ClientSubscriptions';
+import SubscriptionDetail from './subscriptions/SubscriptionDetail';
 import NotFoundPage from '../../../pages/NotFoundPage';
 
 
@@ -43,6 +45,8 @@ function ClientRoutes() {
             <Route path="/profile" element={<ClientProfile />} />
             <Route path="/notifications" element={<NotificationsPage />} />
             <Route path="/cart/:id" element={<Cart />} />
+            <Route path="/subscriptions" element={<ClientSubscriptions />} />
+            <Route path="/subscriptions/:id" element={<SubscriptionDetail />} />
             <Route path="/faq" element={<FAQPage />} />
             <Route path="*" element={<NotFoundPage />} />
         </Routes>

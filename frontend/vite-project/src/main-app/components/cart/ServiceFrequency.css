@@ -231,6 +231,153 @@
   box-shadow: 0 1px 2px rgba(59, 130, 246, 0.15);
 }
 
+/* Frequency Selector - Neutral Elevated Style */
+.service-frequency__frequency-selector {
+  margin-top: 20px;
+  background: #fafafa;
+  border: 1px solid #e0e0e0;
+  border-radius: 12px;
+  padding: 20px;
+  box-shadow: 0 1px 4px rgba(0, 0, 0, 0.04);
+}
+
+.service-frequency__frequency-selector h4 {
+  font-size: 14px;
+  font-weight: 600;
+  color: #3a3a3a;
+  margin: 0 0 14px 0;
+  letter-spacing: 0.01em;
+}
+
+.service-frequency__frequency-options {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.service-frequency__frequency-btn {
+  width: 44px;
+  height: 44px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  border: 1.5px solid #d4d4d4;
+  border-radius: 10px;
+  background: #ffffff;
+  color: #525252;
+  font-size: 14px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.18s ease;
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.04);
+  user-select: none;
+}
+
+.service-frequency__frequency-btn:hover {
+  border-color: #a3a3a3;
+  background: #f5f5f5;
+  transform: translateY(-1px);
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.08);
+}
+
+.service-frequency__frequency-btn:active {
+  transform: translateY(0);
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.06);
+}
+
+.service-frequency__frequency-btn--selected {
+  background: #404040;
+  color: #ffffff;
+  border-color: #404040;
+  font-weight: 600;
+  box-shadow: 0 2px 8px rgba(64, 64, 64, 0.25);
+}
+
+.service-frequency__frequency-btn--selected:hover {
+  background: #333333;
+  border-color: #333333;
+  box-shadow: 0 3px 10px rgba(51, 51, 51, 0.3);
+}
+
+.service-frequency__frequency-info {
+  margin: 14px 0 0 0;
+  font-size: 13px;
+  color: #737373;
+  line-height: 1.5;
+  padding: 10px 14px;
+  background: #f0f0f0;
+  border-radius: 8px;
+  border: 1px solid #e5e5e5;
+}
+
+.service-frequency__price-note {
+  margin-top: 16px;
+  font-size: 12px;
+  color: #737373;
+  line-height: 1.5;
+  padding: 10px 14px;
+  background: #f9f9f9;
+  border-radius: 8px;
+  border: 1px solid #eaeaea;
+}
+
+.service-frequency__price-note p {
+  margin: 0;
+}
+
+.service-frequency__note {
+  font-size: 11px;
+  color: #999;
+  font-weight: 400;
+}
+
+.service-frequency__option-price {
+  margin-top: 6px;
+  font-size: 12px;
+  font-weight: 600;
+  color: #4a4a4a;
+}
+
+/* Responsive: Frequency Selector */
+@media (min-width: 768px) {
+  .service-frequency__frequency-selector {
+    padding: 22px;
+  }
+
+  .service-frequency__frequency-btn {
+    width: 48px;
+    height: 48px;
+    font-size: 15px;
+  }
+
+  .service-frequency__frequency-info {
+    font-size: 13px;
+  }
+}
+
+@media (max-width: 767px) {
+  .service-frequency__frequency-selector {
+    padding: 14px;
+    margin-top: 14px;
+  }
+
+  .service-frequency__frequency-btn {
+    width: 40px;
+    height: 40px;
+    font-size: 13px;
+    border-radius: 8px;
+  }
+
+  .service-frequency__frequency-options {
+    gap: 6px;
+  }
+
+  .service-frequency__frequency-info {
+    font-size: 12px;
+    padding: 8px 10px;
+  }
+}
+
 /* Error styling */
 .service-frequency__error {
   background: linear-gradient(135deg, #fef2f2 0%, #fee2e2 100%);

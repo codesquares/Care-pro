@@ -1,0 +1,166 @@
+/* ═══════════════════════════════════════════════════════════════════════════
+   Certificate Upload Modal — Shared Component
+   ═══════════════════════════════════════════════════════════════════════════ */
+
+.cert-modal-overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 9999;
+  background: rgba(0, 0, 0, 0.5);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 16px;
+  animation: certFadeIn 0.2s ease;
+}
+
+@keyframes certFadeIn {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+
+.cert-modal-content {
+  position: relative;
+  background: #fff;
+  border-radius: 14px;
+  width: 100%;
+  max-width: 480px;
+  max-height: 90vh;
+  overflow-y: auto;
+  padding: 28px 24px;
+  box-shadow: 0 20px 60px rgba(0, 0, 0, 0.18);
+  animation: certSlideUp 0.25s ease;
+}
+
+@keyframes certSlideUp {
+  from { transform: translateY(24px); opacity: 0; }
+  to { transform: translateY(0); opacity: 1; }
+}
+
+.cert-modal-close {
+  position: absolute;
+  top: 12px;
+  right: 16px;
+  background: none;
+  border: none;
+  font-size: 1.6rem;
+  color: #94a3b8;
+  cursor: pointer;
+  line-height: 1;
+  transition: color 0.15s;
+}
+
+.cert-modal-close:hover {
+  color: #334155;
+}
+
+.cert-modal-title {
+  margin: 0 0 20px;
+  font-size: 1.2rem;
+  font-weight: 700;
+  color: #1e293b;
+}
+
+/* ── Fields ─── */
+.cert-modal-field {
+  margin-bottom: 16px;
+}
+
+.cert-modal-field label {
+  display: block;
+  margin-bottom: 6px;
+  font-size: 0.88rem;
+  font-weight: 600;
+  color: #334155;
+}
+
+.cert-required {
+  color: #ef4444;
+}
+
+.cert-optional {
+  color: #94a3b8;
+  font-weight: 400;
+  font-size: 0.8rem;
+}
+
+.cert-modal-field select,
+.cert-modal-field input[type='number'],
+.cert-modal-field input[type='date'] {
+  width: 100%;
+  padding: 10px 12px;
+  font-size: 0.9rem;
+  border: 1px solid #e2e8f0;
+  border-radius: 8px;
+  background: #fff;
+  color: #1e293b;
+  transition: border-color 0.15s;
+}
+
+.cert-modal-field select:focus,
+.cert-modal-field input:focus {
+  outline: none;
+  border-color: #0ea5e9;
+  box-shadow: 0 0 0 3px rgba(14, 165, 233, 0.1);
+}
+
+.cert-modal-field input[type='file'] {
+  width: 100%;
+  font-size: 0.88rem;
+  color: #475569;
+}
+
+.cert-modal-hint {
+  margin: 4px 0 0;
+  font-size: 0.78rem;
+  color: #94a3b8;
+  font-style: italic;
+}
+
+/* ── Actions ─── */
+.cert-modal-actions {
+  display: flex;
+  gap: 10px;
+  margin-top: 24px;
+}
+
+.cert-modal-btn {
+  flex: 1;
+  padding: 11px 0;
+  font-size: 0.92rem;
+  font-weight: 600;
+  border-radius: 10px;
+  border: none;
+  cursor: pointer;
+  transition: all 0.15s;
+}
+
+.cert-btn-cancel {
+  background: #f1f5f9;
+  color: #475569;
+}
+
+.cert-btn-cancel:hover {
+  background: #e2e8f0;
+}
+
+.cert-btn-upload {
+  background: #0ea5e9;
+  color: #fff;
+}
+
+.cert-btn-upload:hover {
+  background: #0284c7;
+}
+
+.cert-btn-upload:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+/* ── Responsive ─── */
+@media (max-width: 480px) {
+  .cert-modal-content {
+    padding: 20px 16px;
+  }
+}

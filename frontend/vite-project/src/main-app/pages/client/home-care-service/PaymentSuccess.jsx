@@ -1,6 +1,7 @@
 import { useEffect, useRef, useState } from "react";
 import { useSearchParams, useNavigate } from "react-router-dom";
 import configs from '../../../config';
+import SubscriptionService from '../../../services/subscriptionService';
 import './PaymentSuccess.css';
 
 const PaymentSuccess = () => {
@@ -10,6 +11,7 @@ const PaymentSuccess = () => {
   const [orderStatus, setOrderStatus] = useState('Verifying payment...');
   const [paymentData, setPaymentData] = useState(null);
   const [error, setError] = useState(null);
+  const [subscriptionInfo, setSubscriptionInfo] = useState(null);
 
   // Get transaction reference from URL or localStorage
   const txRef = searchParams.get("tx_ref") || localStorage.getItem("transactionReference");
@@ -69,6 +71,18 @@ const PaymentSuccess = () => {
           
           // Clean up localStorage
           cleanupLocalStorage();
+          
+          // Check if a subscription was created for this order
+          if (data.clientOrderId) {
+            try {
+              const subResult = await SubscriptionService.getSubscriptionByOrderId(data.clientOrderId);
+              if (subResult.success && subResult.data) {
+                setSubscriptionInfo(subResult.data);
+              }
+            } catch (subErr) {
+              console.log('No subscription for this order (one-time payment)');
+            }
+          }
           
           // User will manually click "View My Orders" button to navigate
           
@@ -235,7 +249,40 @@ const PaymentSuccess = () => {
                 >
                   View My Orders
                 </button>
+                {subscriptionInfo && (
+                  <button
+                    className="payment-btn payment-btn--secondary"
+                    onClick={() => navigate(`/app/client/subscriptions/${subscriptionInfo.id}`)}
+                  >
+                    View Subscription
+                  </button>
+                )}
               </div>
+
+              {/* Subscription Info */}
+              {subscriptionInfo && (
+                <div className="payment-subscription-info">
+                  <h3>Subscription Created</h3>
+                  <div className="payment-detail-item">
+                    <span className="payment-detail-label">Billing Cycle</span>
+                    <span className="payment-detail-value">{subscriptionInfo.billingCycle}</span>
+                  </div>
+                  <div className="payment-detail-item">
+                    <span className="payment-detail-label">Next Charge</span>
+                    <span className="payment-detail-value">
+                      {subscriptionInfo.nextChargeDate
+                        ? new Date(subscriptionInfo.nextChargeDate).toLocaleDateString()
+                        : '—'}
+                    </span>
+                  </div>
+                  <div className="payment-detail-item">
+                    <span className="payment-detail-label">Payment Method</span>
+                    <span className="payment-detail-value">
+                      {SubscriptionService.formatCardDisplay(subscriptionInfo.cardBrand, subscriptionInfo.cardLastFour)}
+                    </span>
+                  </div>
+                </div>
+              )}
             </>
           ) : paymentData?.status === "pending" ? (
             <>
