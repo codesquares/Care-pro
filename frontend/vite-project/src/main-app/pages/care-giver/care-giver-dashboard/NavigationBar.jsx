@@ -254,7 +254,9 @@ const NavigationBar = () => {
           </div>
 
           <div className="profile-avatar" ref={dropdownRef}>
-            <span onClick={() => setShowDropdown(!showDropdown)}>{userName}</span>
+            <span className="nav-user-name" onClick={() => setShowDropdown(!showDropdown)}>
+              {userName.length > 12 ? userName.slice(0, 12) + '…' : userName}
+            </span>
             <div className="avatar" onClick={() => setShowDropdown(!showDropdown)}>
               <span className="avatar-initials">
                 {getInitials(userName)}

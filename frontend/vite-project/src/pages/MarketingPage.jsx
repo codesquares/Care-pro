@@ -10,7 +10,6 @@ import nurseAndWomanImg from "../assets/nurseAndWoman.png";
 import afternoonLanding from "../assets/afternoon_landing.png";
 import caregiver1 from "../assets/caregiver1.png";
 import QHCC1 from "../assets/QHCC1.jpg";
-import ifeoluwa from "../assets/ifeoluwa.jpeg";
 import caregiver2 from "../assets/caregiver2.png";
 import caregiver3 from "../assets/caregiver3.png";
 import caregiver4 from "../assets/caregiver4.png";
@@ -320,7 +319,7 @@ const MarketingPage = () => {
                 <img src={QHCC1} alt="Verified caregiver visit" />
               </div>
               <div className="how-profile">
-                <img className="how-avatar" src={ifeoluwa} alt="Amina Yusuf" />
+                <img className="how-avatar" src={avatarFemale1} alt="Amina Yusuf" />
                 <div className="how-profile-meta">
                   <div className="how-profile-top">
                     <div className="how-profile-name">Amina Yusuf</div>

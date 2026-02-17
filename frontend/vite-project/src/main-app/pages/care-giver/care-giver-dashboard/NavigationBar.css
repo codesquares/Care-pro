@@ -105,6 +105,7 @@
 .avatar {
   width: 36px;
   height: 36px;
+  min-width: 36px;
   border-radius: 50%;
   background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
   color: #fff;
@@ -117,6 +118,7 @@
   transition: all 0.2s ease;
   position: relative;
   overflow: hidden;
+  flex-shrink: 0;
 }
 
 .avatar:hover {
@@ -654,6 +656,19 @@
     font-weight: 500 !important;
     white-space: nowrap !important;
     flex-shrink: 0 !important;
+  }
+
+  .nav-user-name {
+    font-size: 0.9rem;
+    color: #2c3e50;
+    font-weight: 500;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    max-width: 120px;
+    display: inline-block;
+    vertical-align: middle;
+    cursor: pointer;
   }
   
   .dropdown-arrow {
