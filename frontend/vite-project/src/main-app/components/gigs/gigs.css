@@ -815,3 +815,337 @@ button:disabled {
     padding: 0 10px;
   }
 }
+
+/* ─── Service-Tier Gating ──────────────────────────────────────────────────── */
+
+.specialized-category-notice {
+  display: flex;
+  align-items: flex-start;
+  gap: 0.6rem;
+  background: #fff8e1;
+  border: 1px solid #ffe082;
+  border-radius: 8px;
+  padding: 0.75rem 1rem;
+  margin-top: 0.75rem;
+  font-size: 0.88rem;
+  color: #5d4037;
+  line-height: 1.45;
+}
+
+.specialized-category-notice .notice-icon {
+  font-size: 1.15rem;
+  flex-shrink: 0;
+  margin-top: 0.05rem;
+}
+
+.specialized-subcat {
+  border-left: 2px solid #ff9800 !important;
+  padding-left: 0.5rem;
+}
+
+.subcat-lock-icon {
+  font-size: 0.85rem;
+}
+
+/* ===== Gig Success Modal ===== */
+.gig-success-modal-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background: rgba(0, 0, 0, 0.55);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 10000;
+  animation: fadeInOverlay 0.25s ease;
+}
+
+.gig-success-modal-content {
+  background: #fff;
+  border-radius: 16px;
+  padding: 2.5rem 2rem 2rem;
+  max-width: 440px;
+  width: 90%;
+  text-align: center;
+  box-shadow: 0 20px 60px rgba(0, 0, 0, 0.25);
+  animation: slideUpModal 0.35s ease;
+  max-height: 90vh;
+  overflow-y: auto;
+}
+
+.success-icon-container {
+  margin-bottom: 1.25rem;
+}
+
+.success-checkmark {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 80px;
+  height: 80px;
+  border-radius: 50%;
+  background: linear-gradient(135deg, #ecfdf5, #d1fae5);
+}
+
+.success-title {
+  font-size: 1.35rem;
+  font-weight: 700;
+  color: #111827;
+  margin: 0 0 0.5rem;
+}
+
+.success-description {
+  font-size: 0.95rem;
+  color: #6b7280;
+  margin: 0 0 1.75rem;
+}
+
+.success-modal-actions {
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+}
+
+.success-share-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+  padding: 0.75rem 1.5rem;
+  border: none;
+  border-radius: 10px;
+  background: linear-gradient(135deg, #06b6d4, #0891b2);
+  color: #fff;
+  font-size: 0.95rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: transform 0.15s ease, box-shadow 0.15s ease;
+}
+
+.success-share-btn:hover {
+  transform: translateY(-1px);
+  box-shadow: 0 4px 14px rgba(6, 182, 212, 0.35);
+}
+
+.success-continue-btn-secondary {
+  padding: 0.65rem 1.5rem;
+  border: 1.5px solid #d1d5db;
+  border-radius: 10px;
+  background: transparent;
+  color: #374151;
+  font-size: 0.95rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: background 0.15s ease, border-color 0.15s ease;
+}
+
+.success-continue-btn-secondary:hover {
+  background: #f9fafb;
+  border-color: #9ca3af;
+}
+
+/* Share Options Panel */
+.share-options-panel {
+  margin-top: 1.25rem;
+  padding-top: 1.25rem;
+  border-top: 1px solid #e5e7eb;
+  text-align: left;
+}
+
+.share-link-section {
+  display: flex;
+  gap: 0.5rem;
+  margin-bottom: 1rem;
+}
+
+.share-link-input-gig {
+  flex: 1;
+  padding: 0.5rem 0.75rem;
+  border: 1px solid #d1d5db;
+  border-radius: 8px;
+  font-size: 0.85rem;
+  color: #374151;
+  background: #f9fafb;
+  outline: none;
+  min-width: 0;
+}
+
+.copy-link-btn-gig {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35rem;
+  padding: 0.5rem 0.85rem;
+  border: 1px solid #d1d5db;
+  border-radius: 8px;
+  background: #fff;
+  color: #374151;
+  font-size: 0.85rem;
+  font-weight: 500;
+  cursor: pointer;
+  white-space: nowrap;
+  transition: background 0.15s ease;
+}
+
+.copy-link-btn-gig:hover {
+  background: #f3f4f6;
+}
+
+.social-share-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 0.5rem;
+}
+
+.social-share-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+  padding: 0.6rem 0.75rem;
+  border: 1px solid #e5e7eb;
+  border-radius: 8px;
+  background: #fff;
+  font-size: 0.85rem;
+  font-weight: 500;
+  cursor: pointer;
+  transition: background 0.15s ease, transform 0.1s ease;
+}
+
+.social-share-btn:hover {
+  transform: translateY(-1px);
+}
+
+.social-share-btn.facebook {
+  color: #1877f2;
+}
+.social-share-btn.facebook:hover {
+  background: #eef4ff;
+}
+
+.social-share-btn.twitter {
+  color: #1da1f2;
+}
+.social-share-btn.twitter:hover {
+  background: #eef8ff;
+}
+
+.social-share-btn.whatsapp {
+  color: #25d366;
+}
+.social-share-btn.whatsapp:hover {
+  background: #eefff4;
+}
+
+.social-share-btn.linkedin {
+  color: #0a66c2;
+}
+.social-share-btn.linkedin:hover {
+  background: #eef3ff;
+}
+
+/* ===== Gig Failure Modal ===== */
+.gig-failure-modal-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background: rgba(0, 0, 0, 0.55);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 10000;
+  animation: fadeInOverlay 0.25s ease;
+}
+
+.gig-failure-modal-content {
+  background: #fff;
+  border-radius: 16px;
+  padding: 2.5rem 2rem 2rem;
+  max-width: 440px;
+  width: 90%;
+  text-align: center;
+  box-shadow: 0 20px 60px rgba(0, 0, 0, 0.25);
+  animation: slideUpModal 0.35s ease;
+}
+
+.failure-icon-container {
+  margin-bottom: 1.25rem;
+}
+
+.failure-cross {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 80px;
+  height: 80px;
+  border-radius: 50%;
+  background: linear-gradient(135deg, #fef2f2, #fecaca);
+}
+
+.failure-title {
+  font-size: 1.35rem;
+  font-weight: 700;
+  color: #111827;
+  margin: 0 0 0.5rem;
+}
+
+.failure-description {
+  font-size: 0.95rem;
+  color: #6b7280;
+  margin: 0 0 1.75rem;
+  line-height: 1.5;
+}
+
+.failure-retry-btn {
+  padding: 0.75rem 2rem;
+  border: none;
+  border-radius: 10px;
+  background: linear-gradient(135deg, #ef4444, #dc2626);
+  color: #fff;
+  font-size: 0.95rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: transform 0.15s ease, box-shadow 0.15s ease;
+}
+
+.failure-retry-btn:hover {
+  transform: translateY(-1px);
+  box-shadow: 0 4px 14px rgba(239, 68, 68, 0.35);
+}
+
+/* ===== Modal Animations ===== */
+@keyframes fadeInOverlay {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+
+@keyframes slideUpModal {
+  from {
+    opacity: 0;
+    transform: translateY(30px) scale(0.96);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+}
+
+/* ===== Modal Mobile Responsive ===== */
+@media (max-width: 480px) {
+  .gig-success-modal-content,
+  .gig-failure-modal-content {
+    padding: 2rem 1.25rem 1.5rem;
+    border-radius: 12px;
+  }
+
+  .social-share-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .share-link-section {
+    flex-direction: column;
+  }
+}

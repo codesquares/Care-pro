@@ -1,0 +1,58 @@
+/* ===== Subscription Card ===== */
+.subscription-card {
+  background: #fff;
+  border: 1px solid #e0e0e0;
+  border-radius: 12px;
+  padding: 20px;
+  cursor: pointer;
+  transition: box-shadow 0.2s, transform 0.15s;
+}
+.subscription-card:hover {
+  box-shadow: 0 4px 16px rgba(0,0,0,0.08);
+  transform: translateY(-2px);
+}
+
+.subscription-card__header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 16px;
+}
+.subscription-card__title {
+  font-size: 16px;
+  font-weight: 600;
+  color: #333;
+  margin: 0;
+}
+
+.subscription-card__body {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+.subscription-card__row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+.subscription-card__label {
+  font-size: 13px;
+  color: #888;
+}
+.subscription-card__value {
+  font-size: 13px;
+  font-weight: 500;
+  color: #333;
+}
+
+.subscription-card__banner {
+  margin-top: 8px;
+  padding: 8px 12px;
+  border-radius: 8px;
+  font-size: 12px;
+  font-weight: 500;
+}
+.subscription-card__banner--warn   { background: #fff8e1; color: #b8860b; }
+.subscription-card__banner--error  { background: #fdecea; color: #c62828; }
+.subscription-card__banner--orange { background: #fff3e0; color: #e65100; }
+.subscription-card__banner--gray   { background: #f5f5f5; color: #616161; }

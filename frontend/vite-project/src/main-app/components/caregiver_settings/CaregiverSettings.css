@@ -66,6 +66,8 @@
   flex-direction: column;
   gap: 0;
   order: 1;
+  box-sizing: border-box;
+  min-width: 0;
   /* Tablet and up */
   /* Desktop and up */
   /* Large desktop - maintain 30% */
@@ -74,6 +76,7 @@
   .caregiver-settings-profile-section {
     width: 30%;
     flex: 0 0 30%;
+    min-width: 280px;
     order: 1;
   }
 }
@@ -81,12 +84,14 @@
   .caregiver-settings-profile-section {
     width: 30%;
     flex: 0 0 30%;
+    min-width: 300px;
   }
 }
 @media (min-width: 1200px) {
   .caregiver-settings-profile-section {
     width: 30%;
     flex: 0 0 30%;
+    min-width: 320px;
   }
 }
 
@@ -96,6 +101,8 @@
   flex-direction: column;
   gap: 1rem;
   order: 2;
+  box-sizing: border-box;
+  min-width: 0;
   /* Small mobile landscape and up */
   /* Tablet and up */
   /* Desktop and up */
@@ -110,6 +117,7 @@
   .settings-panel {
     width: 70%;
     flex: 0 0 70%;
+    min-width: 500px;
     gap: 1.5rem;
     order: 2;
   }
@@ -118,6 +126,7 @@
   .settings-panel {
     width: 70%;
     flex: 0 0 70%;
+    min-width: 600px;
     gap: 1.75rem;
   }
 }
@@ -125,6 +134,7 @@
   .settings-panel {
     width: 70%;
     flex: 0 0 70%;
+    min-width: 700px;
     gap: 2rem;
   }
 }
@@ -400,6 +410,9 @@
   margin-bottom: 20px;
   display: flex;
   flex-direction: column;
+  box-sizing: border-box;
+  width: 100%;
+  min-width: 0;
 }
 .settings-card h3 {
   font-size: 18px;

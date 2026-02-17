@@ -1,44 +1,19 @@
 import './profile-information.css'
 import { useEffect, useState } from "react";
+import { useSearchParams } from "react-router-dom";
 import axios from "axios";
 import { toast } from "react-toastify";
 import config from "../../../config";
 import { useCaregiverStatus } from "../../../contexts/CaregiverStatusContext";
-
-// Approved certificate types for caregivers
-const APPROVED_CERTIFICATES = [
-  { 
-    name: 'West African Senior School Certificate Examination (WASSCE)', 
-    issuer: 'West African Examinations Council (WAEC)',
-    shortName: 'WASSCE'
-  },
-  { 
-    name: 'National Examination Council (NECO) Senior School Certificate Examination (SSCE)', 
-    issuer: 'National Examination Council (NECO)',
-    shortName: 'NECO SSCE'
-  },
-  { 
-    name: 'National Business and Technical Examinations Board (NABTEB)', 
-    issuer: 'National Business and Technical Examinations Board (NABTEB)',
-    shortName: 'NABTEB'
-  },
-  { 
-    name: 'National Youth Service Corps (NYSC) Certificate', 
-    issuer: 'National Youth Service Corps (NYSC)',
-    shortName: 'NYSC Certificate'
-  }
-];
+import CertificateUploadModal from "../../../components/shared/CertificateUploadModal";
 
 const ProfileInformation = ({ aboutMe, onUpdate, services = [] }) => {
+  const [searchParams, setSearchParams] = useSearchParams();
   const [showModal, setShowModal] = useState(false);
   const [editedAboutMe, setEditedAboutMe] = useState(aboutMe || '');
   const [loading, setLoading] = useState(false);
 
   const [showCertModal, setShowCertModal] = useState(false);
-  const [certificateFile, setCertificateFile] = useState(null);
-  const [selectedCertificateType, setSelectedCertificateType] = useState('');
-  const [certificateYear, setCertificateYear] = useState('');
-  const [uploadLoading, setUploadLoading] = useState(false);
   
   // State for certificate viewing modal
   const [showViewModal, setShowViewModal] = useState(false);
@@ -55,6 +30,16 @@ const ProfileInformation = ({ aboutMe, onUpdate, services = [] }) => {
   
   // Get the caregiver status context to refresh certificate status
   const { updateCertificates } = useCaregiverStatus();
+
+  // Auto-open certificate upload modal when navigated with ?uploadCert=true
+  useEffect(() => {
+    if (searchParams.get('uploadCert') === 'true') {
+      setShowCertModal(true);
+      // Remove the param so refreshing doesn't re-trigger
+      searchParams.delete('uploadCert');
+      setSearchParams(searchParams, { replace: true });
+    }
+  }, [searchParams, setSearchParams]);
 
   // Fetch certificates for the user
   const fetchCertificates = async () => {
@@ -103,19 +88,7 @@ const ProfileInformation = ({ aboutMe, onUpdate, services = [] }) => {
     }
   }, [userDetails?.id]);
 
-  // Helper function to convert file to Base64
-  const convertFileToBase64 = (file) => {
-    return new Promise((resolve, reject) => {
-      const reader = new FileReader();
-      reader.readAsDataURL(file);
-      reader.onload = () => {
-        // Remove the data:image/jpeg;base64, prefix to get just the Base64 string
-        const base64String = reader.result.split(',')[1];
-        resolve(base64String);
-      };
-      reader.onerror = error => reject(error);
-    });
-  };
+
 
   const handleSave = async () => {
     try {
@@ -138,90 +111,11 @@ const ProfileInformation = ({ aboutMe, onUpdate, services = [] }) => {
     }
   };
 
-  const handleUploadCertificate = async () => {
-    if (!certificateFile || !selectedCertificateType || !certificateYear) {
-      toast.error("Please select certificate type, year, and upload file");
-      return;
-    }
-
-    // Get the selected certificate details
-    const selectedCert = APPROVED_CERTIFICATES.find(cert => cert.name === selectedCertificateType);
-    if (!selectedCert) {
-      toast.error("Invalid certificate type selected");
-      return;
-    }
-
-    try {
-      setUploadLoading(true);
-      
-      // Convert file to Base64
-      const base64Certificate = await convertFileToBase64(certificateFile);
-      
-      // Create the request payload matching the API specification
-      const requestPayload = {
-        certificateName: selectedCert.name,
-        caregiverId: userDetails.id,
-        certificateIssuer: selectedCert.issuer,
-        certificate: base64Certificate,
-        yearObtained: new Date(certificateYear, 0, 1).toISOString() // Convert year to ISO DateTime
-      };
-
-      const response = await axios.post(`${config.BASE_URL}/Certificates`, requestPayload, { // Using centralized API config
-        headers: { 
-          "Content-Type": "application/json",
-          "Accept": "*/*",
-          "Authorization": `Bearer ${localStorage.getItem('authToken') || ''}`
-        }
-      });
-      
-      setShowCertModal(false);
-      // Reset fields
-      setCertificateFile(null);
-      setSelectedCertificateType('');
-      setCertificateYear('');
-      
-      // Handle response based on verification status
-      const verification = response.data?.verification;
-      if (verification) {
-        const status = verification.status;
-        const confidence = verification.confidence ? (verification.confidence * 100).toFixed(0) : null;
-        
-        if (status === 'Verified') {
-          toast.success(`Certificate verified successfully! ${confidence ? `Confidence: ${confidence}%` : ''}`);
-        } else if (status === 'ManualReviewRequired') {
-          toast.warning('Your certificate is under review. You will be notified within 24-48 hours.');
-        } else if (status === 'Invalid' || status === 'Rejected') {
-          const errors = parseErrorMessages(verification.errorMessage);
-          toast.error(`Certificate validation failed: ${errors[0] || 'Please check your certificate and try again'}`);
-        } else if (status === 'VerificationFailed') {
-          toast.error('Verification failed due to a technical error. Please try again.');
-        } else {
-          toast.info('Certificate uploaded. Verification in progress...');
-        }
-      } else {
-        // Fallback for old API response format
-        setShowSuccessModal(true);
-      }
-      
-      // Refresh the certificates list
-      await fetchCertificates();
-      // IMPORTANT: Update the global caregiver status context
-      await updateCertificates();
-    } catch (err) {
-      console.error("Upload failed", err);
-      toast.error(`Upload failed: ${err.response?.data?.message || err.message || 'Unknown error'}`);
-    } finally {
-      setUploadLoading(false);
-    }
-  };
-
-  const handleCancel = () => {
-    // Reset all form fields
-    setCertificateFile(null);
-    setSelectedCertificateType('');
-    setCertificateYear('');
-    // Close modal
+  // Called when the shared CertificateUploadModal finishes uploading
+  const handleCertUploadDone = async () => {
     setShowCertModal(false);
+    await fetchCertificates();
+    await updateCertificates();
   };
 
   // Function to get certificate view URL
@@ -561,79 +455,13 @@ const ProfileInformation = ({ aboutMe, onUpdate, services = [] }) => {
         </div>
       )}
 
-      {/* Certificate Upload Modal */}
-      {showCertModal && (
-        <div className="modal-overlay" onClick={() => setShowCertModal(false)}>
-          <div className="modal-content" onClick={(e) => e.stopPropagation()}>
-            <h3>Upload Certificate</h3>
-            <div style={{ marginBottom: '15px' }}>
-              <label style={{ display: 'block', marginBottom: '8px', fontWeight: '500', fontSize: '14px', color: '#333' }}>
-                Select Certificate Type <span style={{ color: '#dc3545' }}>*</span>
-              </label>
-              <select
-                value={selectedCertificateType}
-                onChange={(e) => setSelectedCertificateType(e.target.value)}
-                style={{
-                  width: '100%',
-                  padding: '10px',
-                  fontSize: '14px',
-                  border: '1px solid #ddd',
-                  borderRadius: '4px',
-                  backgroundColor: 'white',
-                  cursor: 'pointer'
-                }}
-                required
-              >
-                <option value="">-- Select a certificate type --</option>
-                {APPROVED_CERTIFICATES.map((cert, index) => (
-                  <option key={index} value={cert.name}>
-                    {cert.shortName}
-                  </option>
-                ))}
-              </select>
-              {selectedCertificateType && (
-                <p style={{ 
-                  marginTop: '8px', 
-                  fontSize: '12px', 
-                  color: '#666',
-                  fontStyle: 'italic'
-                }}>
-                  Issuer: {APPROVED_CERTIFICATES.find(c => c.name === selectedCertificateType)?.issuer}
-                </p>
-              )}
-            </div>
-            <input
-              type="number"
-              placeholder="Year Obtained (e.g. 2020)"
-              value={certificateYear}
-              onChange={(e) => setCertificateYear(e.target.value)}
-              min="1950"
-              max={new Date().getFullYear()}
-              step="1"
-            />
-            <input
-              type="file"
-              onChange={(e) => setCertificateFile(e.target.files[0])}
-              accept=".pdf,.jpg,.jpeg,.png"
-            />
-            <div className="modal-actions">
-              <button 
-                onClick={handleCancel}
-                className="modal-btn cancel"
-              >
-                Cancel
-              </button>
-              <button 
-                onClick={handleUploadCertificate}
-                disabled={uploadLoading}
-                className="modal-btn save"
-              >
-                {uploadLoading ? 'Uploading...' : 'Upload'}
-              </button>
-            </div>
-          </div>
-        </div>
-      )}
+      {/* Certificate Upload Modal (shared component) */}
+      <CertificateUploadModal
+        isOpen={showCertModal}
+        onClose={() => setShowCertModal(false)}
+        caregiverId={userDetails?.id}
+        onUploadDone={handleCertUploadDone}
+      />
 
       {/* Certificate View Modal */}
       {showViewModal && selectedCertificate && (

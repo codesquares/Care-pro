@@ -102,16 +102,17 @@ const ClientProfile = () => {
   }, []);
 
   // Generate username using the centralized utility
-  const username = profile && profile.firstName && profile.email && profile.createdAt 
-    ? generateUsername(profile.firstName, profile.email, profile.createdAt)
-    : "guest000000";
+  // TODO: Backend persistence not implemented yet - commenting out username generation
+  // const username = profile && profile.firstName && profile.email && profile.createdAt 
+  //   ? generateUsername(profile.firstName, profile.email, profile.createdAt)
+  //   : "guest000000";
   
   // Save username to localStorage
-  useEffect(() => {
-    if (username && username !== "guest000000") {
-      localStorage.setItem("userName", username);
-    }
-  }, [username]);
+  // useEffect(() => {
+  //   if (username && username !== "guest000000") {
+  //     localStorage.setItem("userName", username);
+  //   }
+  // }, [username]);
 
   // Handle input changes
   const handleChange = (e) => {
@@ -523,7 +524,7 @@ const ClientProfile = () => {
           </div>
           <div className="profile-status">
             <h3>{profile?.firstName} {profile?.middleName ? `${profile.middleName} ` : ''}{profile?.lastName}</h3>
-            <p className="username">@{username}</p>
+            {/* <p className="username">@{username}</p> */} {/* TODO: Backend persistence not implemented yet */}
             
             <div className="member-since">
               <p><strong>Member Since:</strong> {formatDate(profile?.createdAt || new Date())}</p>

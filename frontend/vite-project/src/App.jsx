@@ -46,6 +46,8 @@ import { CaregiverStatusProvider } from './main-app/contexts/CaregiverStatusCont
 import SplashScreen from './main-app/components/SplashScreen/SplashScreen';
 import PublicMarketplace from './main-app/pages/client/client-dashboard/PublicMarketplace';
 import PublicClientNavBar from './main-app/pages/client/PublicClientNavBar';
+import ClientNavBar from './main-app/pages/client/ClientNavBar';
+import CaregiverNavigationBar from './main-app/pages/care-giver/care-giver-dashboard/NavigationBar';
 // import ConnectionStatusIndicator from './main-app/components/notification/ConnectionStatusIndicator';
 //Added for viewing Order Pages
 import Order from './main-app/pages/client/orders/MyOrders';
@@ -133,12 +135,15 @@ function AppContent() {
   const isUnprotectedRoute = unprotectedRoutes.includes(location.pathname.toLowerCase());
   const isRootRoute = location.pathname === '/';
   const isMarketplaceRoute = location.pathname === '/marketplace';
+  const isServiceRoute = location.pathname.startsWith('/service/');
   
   // Check if current route should show navbar and footer
   // Marketing navbar for root and marketing-related pages
   const shouldShowMarketingNavbar = isRootRoute;
   // Client navbar (with search) for marketplace
   const shouldShowClientNavbar = isMarketplaceRoute;
+  // Service page: show role-appropriate navbar
+  const shouldShowServiceNavbar = isServiceRoute;
   // Basic navbar for other public pages
   const shouldShowBasicNavbar = isUnprotectedRoute && 
                                 !routesWithoutNavbar.includes(location.pathname) && 
@@ -153,6 +158,17 @@ function AppContent() {
       {shouldShowBasicNavbar && <Navbar />}
       {shouldShowMarketingNavbar && <MarketingNavBar />}
       {shouldShowClientNavbar && <PublicClientNavBar />}
+      {shouldShowServiceNavbar && (
+        isAuthenticated && user ? (
+          user.role?.toLowerCase() === 'caregiver' ? (
+            <CaregiverNavigationBar />
+          ) : (
+            <ClientNavBar />
+          )
+        ) : (
+          <PublicClientNavBar />
+        )
+      )}
       <ScrollToTop />
       {/* Remove duplicate ToastContainer to prevent conflicts - main one is at bottom */}
       {/* <ConnectionStatusIndicator /> */}

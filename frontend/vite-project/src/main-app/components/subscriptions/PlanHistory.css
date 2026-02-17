@@ -1,0 +1,34 @@
+.plan-history { margin-top: 20px; }
+.plan-history__title {
+  font-size: 15px;
+  font-weight: 600;
+  color: #333;
+  margin-bottom: 8px;
+}
+.plan-history__loading { color: #888; font-size: 13px; }
+.plan-history__list {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+}
+.plan-history__item {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  align-items: center;
+  padding: 8px 0;
+  border-bottom: 1px solid #f0f0f0;
+  font-size: 13px;
+}
+.plan-history__date {
+  color: #888;
+  min-width: 90px;
+}
+.plan-history__detail {
+  flex: 1;
+  color: #333;
+}
+.plan-history__amounts {
+  font-weight: 600;
+  color: #555;
+}

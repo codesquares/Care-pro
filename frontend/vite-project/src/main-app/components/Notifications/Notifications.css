@@ -206,16 +206,24 @@
   background-color: #ffffff;
   border-radius: 12px;
   padding: 16px;
-  cursor: pointer;
   transition: all 0.2s ease;
   border: 1px solid #e1e8ed;
   position: relative;
+}
+
+.notification-entry.clickable {
+  cursor: pointer;
 }
 
 .notification-entry:hover {
   background-color: #f8f9fa;
   transform: translateY(-1px);
   box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+}
+
+.notification-entry.clickable:hover {
+  background-color: #edf5fd;
+  border-color: #1da1f2;
 }
 
 .notification-entry:last-child {
@@ -225,6 +233,26 @@
 .notification-entry.unread {
   background: #f0f8ff;
   border-left: 4px solid #1da1f2;
+}
+
+.notification-entry.unread.clickable:hover {
+  background-color: #e1f0fc;
+}
+
+/* Go Arrow for clickable notifications */
+.notification-entry .notification-go-arrow {
+  font-size: 24px;
+  color: #aab8c2;
+  flex-shrink: 0;
+  font-weight: 300;
+  line-height: 1;
+  transition: color 0.15s ease;
+  align-self: center;
+  margin-left: 12px;
+}
+
+.notification-entry.clickable:hover .notification-go-arrow {
+  color: #1da1f2;
 }
 
 .notification-icon {

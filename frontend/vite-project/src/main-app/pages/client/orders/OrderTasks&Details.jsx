@@ -157,6 +157,24 @@ const MyOrders = () => {
             if (result.success) {
                 setContract(result.data);
                 toast.success("Contract approved! Your caregiver has been notified.");
+
+                // Notify caregiver about approval
+                try {
+                    const order = orders[0];
+                    if (order?.caregiverId && userId && orderId) {
+                        await createNotification({
+                            recipientId: order.caregiverId,
+                            senderId: userId,
+                            type: 'ContractApproved',
+                            relatedEntityId: orderId,
+                            title: '✅ Your contract has been approved',
+                            content: `The client has approved your contract for "${order.gigTitle || 'the order'}". You can now begin providing services.`
+                        });
+                    }
+                } catch (notifError) {
+                    console.error("Failed to send contract approval notification:", notifError);
+                }
+
                 setIsModalOpen(false);
             } else {
                 toast.error(result.error || "Failed to approve contract");
@@ -187,6 +205,24 @@ const MyOrders = () => {
             if (result.success) {
                 setContract(result.data);
                 toast.success("Your feedback has been sent to the caregiver for revision.");
+
+                // Notify caregiver about revision request
+                try {
+                    const order = orders[0];
+                    if (order?.caregiverId && userId && orderId) {
+                        await createNotification({
+                            recipientId: order.caregiverId,
+                            senderId: userId,
+                            type: 'ContractRevisionRequested',
+                            relatedEntityId: orderId,
+                            title: '📝 Contract revision requested',
+                            content: `The client has requested changes to your contract for "${order.gigTitle || 'the order'}". Please review and revise.`
+                        });
+                    }
+                } catch (notifError) {
+                    console.error("Failed to send revision request notification:", notifError);
+                }
+
                 setIsModalOpen(false);
                 setReviewRequestComments("");
                 setReviewPreferredScheduleNotes("");
@@ -216,6 +252,24 @@ const MyOrders = () => {
             if (result.success) {
                 setContract(result.data);
                 toast.success("Contract rejected. You may request a different caregiver.");
+
+                // Notify caregiver about rejection
+                try {
+                    const order = orders[0];
+                    if (order?.caregiverId && userId && orderId) {
+                        await createNotification({
+                            recipientId: order.caregiverId,
+                            senderId: userId,
+                            type: 'ContractRejected',
+                            relatedEntityId: orderId,
+                            title: '❌ Your contract has been rejected',
+                            content: `The client has rejected your contract for "${order.gigTitle || 'the order'}". Reason: ${rejectReason}`
+                        });
+                    }
+                } catch (notifError) {
+                    console.error("Failed to send contract rejection notification:", notifError);
+                }
+
                 setIsModalOpen(false);
                 setRejectReason("");
             } else {

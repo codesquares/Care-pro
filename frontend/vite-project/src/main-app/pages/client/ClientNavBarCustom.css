@@ -379,6 +379,40 @@
   font-weight: 600 !important;
 }
 
+/* Subscriptions link in desktop nav */
+.client-desktop-nav .client-subscriptions-link {
+  display: flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  gap: 6px !important;
+  font-size: 0.875rem !important;
+  background-color: transparent !important;
+  padding: 6px 8px !important;
+  border-radius: 8px !important;
+  color: #333 !important;
+  cursor: pointer !important;
+  transition: all 0.2s ease !important;
+  border: none !important;
+  height: 32px !important;
+  box-sizing: border-box !important;
+  white-space: nowrap !important;
+  margin: 0 !important;
+}
+
+.client-desktop-nav .client-subscriptions-link:hover {
+  background-color: #ffffff !important;
+}
+
+.client-desktop-nav .client-subscriptions-link .client-subscriptions-icon {
+  font-size: 14px !important;
+  flex-shrink: 0 !important;
+}
+
+.client-desktop-nav .client-subscriptions-link span {
+  color: #333 !important;
+  font-weight: 500 !important;
+}
+
 /* Profile avatar section */
 .client-profile-avatar {
   display: flex !important;
@@ -424,28 +458,27 @@
   justify-content: center;
   background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
   color: white;
-  font-weight: 500;
+  font-weight: 600;
   cursor: pointer;
-  transition: transform 0.2s ease;
+  transition: all 0.2s ease;
+  overflow: hidden;
 }
 
-/* Avatar image styling */
-.client-avatar-image {
-  width: 100%;
-  height: 100%;
-  object-fit: cover;
-  border-radius: 50%;
+.client-avatar:hover {
+  transform: scale(1.05);
+  box-shadow: 0 2px 8px rgba(102, 126, 234, 0.3);
 }
 
 /* Avatar initials styling */
 .client-avatar-initials {
   font-size: 0.8rem;
-  font-weight: 500;
+  font-weight: 600;
   display: flex;
   align-items: center;
   justify-content: center;
   width: 100%;
   height: 100%;
+  text-transform: uppercase;
 }
 
 /* Dropdown arrow */

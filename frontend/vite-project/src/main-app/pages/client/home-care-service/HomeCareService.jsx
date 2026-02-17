@@ -333,14 +333,15 @@ const HomeCareService = () => {
     const fetchGigReviews = async () => {
       if (!id) return;
       try {
-        const reviews = await GigReviewService.getReviewsByGigId(id);
-        const count = reviews.length;
-        setGigReviewCount(count);
+        const { reviews, stats } = await GigReviewService.getReviewsWithStats(id);
+        setGigReviews(reviews);
+        setReviewStats(stats);
+        setGigReviewCount(reviews.length);
         
         // Calculate average rating if there are reviews
-        if (count > 0) {
+        if (reviews.length > 0) {
           const totalRating = reviews.reduce((sum, r) => sum + (r.rating || r.Rating || 0), 0);
-          setGigRating(Math.round((totalRating / count) * 10) / 10);
+          setGigRating(Math.round((totalRating / reviews.length) * 10) / 10);
         }
       } catch (err) {
         // Silent fail - will show 0 reviews
@@ -455,128 +456,173 @@ const HomeCareService = () => {
   // console.log("caregiverProfileImage type:", typeof caregiverProfileImage);
   // console.log("defaultAvatar:", defaultAvatar);
 
+  // Helper: generate a consistent color from a name string
+  const getNameColor = (name) => {
+    const colors = ['#f59e0b', '#10b981', '#3b82f6', '#ef4444', '#8b5cf6', '#ec4899', '#14b8a6', '#f97316'];
+    if (!name) return colors[0];
+    let hash = 0;
+    for (let i = 0; i < name.length; i++) hash = name.charCodeAt(i) + ((hash << 5) - hash);
+    return colors[Math.abs(hash) % colors.length];
+  };
+
+  // Helper: render star icons for a rating
+  const renderStars = (rating) => {
+    const stars = [];
+    const fullStars = Math.floor(rating);
+    for (let i = 0; i < 5; i++) {
+      stars.push(
+        <span key={i} className={`star ${i < fullStars ? 'star-filled' : 'star-empty'}`}>★</span>
+      );
+    }
+    return stars;
+  };
+
   return (
     <div className="container-service">
-      {/* Back Button */}
-      <button className="back-btn" onClick={() => navigate('/marketplace')}>← Back to Marketplace</button>
-
-      {/* Top Section */}
-      <div className="service-top-header">
-        <div
-          ref={serviceCardRef}
-          className="service-card-section"
-        // style={{
-        //   backgroundImage: image1 ? `url(${image1})` : 'none'
-        // }}
-        >
-          <h2 className="gig-title">{title}</h2>
-          <div className="provider-info-card">
-            {/* Show image if available, otherwise blue background with initials */}
-            {caregiverProfileImage && (caregiverProfileImage.startsWith('http') || caregiverProfileImage.startsWith('/')) ? (
-              <img 
-                src={caregiverProfileImage} 
-                alt={caregiverName} 
-                className="provider-avatar"
-                onError={(e) => {
-                  // On error, replace with initials
-                  e.target.style.display = 'none';
-                  e.target.nextElementSibling.style.display = 'flex';
-                }}
-              />
-            ) : (
-              <div className="provider-avatar provider-avatar-initials">
-                <span>{getInitials(caregiverName)}</span>
-              </div>
-            )}
-            <div className="provider-details">
-              <p className="provider-name">{caregiverName}</p>
-              <div className="provider-tags">
-                <span className={`status-tag ${caregiverIsAvailable ? 'available' : 'unavailable'}`}>
-                  {caregiverIsAvailable ? "Available" : "Unavailable"}
-                </span>
-                {caregiverIsVerified && (
-                  <span className="verification-tag">✓ Verified</span>
-                )}
-                <span className="location-tag">
-                  {caregiverLocation || "Location not specified"}
-                </span>
-                <span 
-                  className="rating-tag rating-tag-clickable"
-                  onClick={handleOpenReviews}
-                  role="button"
-                  tabIndex={0}
-                  onKeyDown={(e) => e.key === 'Enter' && handleOpenReviews()}
-                  title="Click to see reviews"
-                >
-                  ⭐ {gigRating || 0} ({gigReviewCount || 0} reviews)
-                </span>
-                {caregiverExperience > 0 && (
-                  <span className="experience-tag">
-                    {caregiverExperience} years experience
-                  </span>
-                )}
-              </div>
-            </div>
-          </div>
-        </div>
-        {/** Plan Section **/}
-        <div className="plan-box">
-          {/* Favorite and Share buttons */}
-          <div className="plan-actions">
-            <button 
-              className={`action-btn favorite-btn-plan ${isFavorite ? 'active' : ''}`}
-              onClick={handleFavorite}
-              aria-label="Add to favorites"
-            >
-              <svg width="20" height="20" viewBox="0 0 24 24" fill={isFavorite ? "#ff4757" : "none"} stroke="currentColor" strokeWidth="2">
-                <path d="M12 21.35l-1.45-1.32C5.4 15.36 2 12.28 2 8.5 2 5.42 4.42 3 7.5 3c1.74 0 3.41.81 4.5 2.09C13.09 3.81 14.76 3 16.5 3 19.58 3 22 5.42 22 8.5c0 3.78-3.4 6.86-8.55 11.54L12 21.35z"/>
-              </svg>
-              <span>{isFavorite ? '201' : '200'}</span>
-            </button>
-            <button 
-              className="action-btn share-btn-plan"
-              onClick={handleShare}
-              aria-label="Share service"
-            >
-              <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-                <circle cx="18" cy="5" r="3"/>
-                <circle cx="6" cy="12" r="3"/>
-                <circle cx="18" cy="19" r="3"/>
-                <line x1="8.59" y1="13.51" x2="15.42" y2="17.49"/>
-                <line x1="15.41" y1="6.51" x2="8.59" y2="10.49"/>
-              </svg>
-              <span>share</span>
-            </button>
-          </div>
-          <div className="plan-tabs">
-            <span className="tab-basic">{packageName || "Basic"}</span>
-            <span className="delivery-time">Delivery: {deliveryTime || "1-2 days"}</span>
-          </div>
-          <div className="plan-price">₦{Number(price).toLocaleString()}</div>
-          <ul className="plan-features">
-            {(packageDetails || []).map((feature, i) => (
-              <li key={i} className="enabled">
-                ✓ {feature}
-              </li>
-            ))}
-            {caregiverSpecializations.length > 0 && (
-              <li className="specializations">
-                <strong>Specializations:</strong> {caregiverSpecializations.join(', ')}
-              </li>
-            )}
-          </ul>
-          {(!isAuthenticated || userRole === 'Client') && (
-            <button className="accept-offer-btn" onClick={handleHire}>
-              {!isAuthenticated ? 'Hire Me →' : 'Accept offer →'}
-            </button>
-          )}
+      {/* Title + Actions Row */}
+      <div className="hcs-title-row">
+        <h1 className="hcs-title">{title}</h1>
+        <div className="hcs-title-actions">
+          <button
+            className={`hcs-action-btn ${isFavorite ? 'active' : ''}`}
+            onClick={handleFavorite}
+            aria-label="Add to favorites"
+          >
+            <svg width="18" height="18" viewBox="0 0 24 24" fill={isFavorite ? "#ff4757" : "none"} stroke="currentColor" strokeWidth="2">
+              <path d="M12 21.35l-1.45-1.32C5.4 15.36 2 12.28 2 8.5 2 5.42 4.42 3 7.5 3c1.74 0 3.41.81 4.5 2.09C13.09 3.81 14.76 3 16.5 3 19.58 3 22 5.42 22 8.5c0 3.78-3.4 6.86-8.55 11.54L12 21.35z"/>
+            </svg>
+            <span>{isFavorite ? '201' : '200'}</span>
+          </button>
+          <button className="hcs-action-btn" onClick={handleShare} aria-label="Share service">
+            <span>share</span>
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+              <path d="M4 12v8a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-8"/>
+              <polyline points="16 6 12 2 8 6"/>
+              <line x1="12" y1="2" x2="12" y2="15"/>
+            </svg>
+          </button>
         </div>
       </div>
 
-      {/** Video Section - Now under service-top-header on large screens **/}
-      {(introVideo) && (
-        <div className="video-section">
-          <h3>Introduction video</h3>
+      {/* Provider Info Bar */}
+      <div className="hcs-provider-bar">
+        {caregiverProfileImage && (caregiverProfileImage.startsWith('http') || caregiverProfileImage.startsWith('/')) ? (
+          <img
+            src={caregiverProfileImage}
+            alt={caregiverName}
+            className="hcs-provider-avatar"
+            onError={(e) => { e.target.style.display = 'none'; e.target.nextElementSibling.style.display = 'flex'; }}
+          />
+        ) : null}
+        <div
+          className="hcs-provider-avatar hcs-provider-avatar-initials"
+          style={{ display: caregiverProfileImage && (caregiverProfileImage.startsWith('http') || caregiverProfileImage.startsWith('/')) ? 'none' : 'flex' }}
+        >
+          <span>{getInitials(caregiverName)}</span>
+        </div>
+        <span className="hcs-provider-name">{caregiverName}</span>
+        {caregiverIsVerified && <span className="hcs-verified-badge">verified</span>}
+        <span className="hcs-bar-separator">|</span>
+        <span className="hcs-bar-item">
+          <span className="hcs-bar-stars">{renderStars(gigRating || 0)}</span>
+          <span className="hcs-bar-rating-num">{gigRating || 0}</span>
+        </span>
+        <span className="hcs-bar-separator">|</span>
+        <span className="hcs-bar-item hcs-orders-queue">3 orders in queue</span>
+        <span className="hcs-bar-separator">|</span>
+        <span className="hcs-bar-item">📍 {caregiverLocation || "Location not specified"}</span>
+        <span className="hcs-bar-separator">|</span>
+        <span className="hcs-bar-item">last deliver: {lastDeliveryDate || "N/A"}</span>
+        <span className="hcs-bar-separator">|</span>
+        <span
+          className="hcs-bar-item hcs-reviews-link"
+          onClick={handleOpenReviews}
+          role="button"
+          tabIndex={0}
+          onKeyDown={(e) => e.key === 'Enter' && handleOpenReviews()}
+        >
+          ({gigReviewCount || 0} reviews)
+        </span>
+      </div>
+
+      {/* Main Content: Image + Pricing Card */}
+      <div className="hcs-main-content" ref={serviceCardRef}>
+        {/* Left: Hero Image */}
+        <div className="hcs-image-section">
+          {(image1 || gigImage) ? (
+            <img
+              src={image1 || gigImage}
+              alt={title}
+              className="hcs-hero-image"
+              onError={(e) => { e.target.src = defaultAvatar; }}
+            />
+          ) : (
+            <div className="hcs-hero-placeholder">
+              <span>No image available</span>
+            </div>
+          )}
+
+          {/* Floating Message Bubble - overlaid on image */}
+          {isAuthenticated && userRole === 'Client' && (
+            <div className="hcs-floating-message" onClick={handleMessage}>
+              <img
+                src={caregiverProfileImage && (caregiverProfileImage.startsWith('http') || caregiverProfileImage.startsWith('/')) ? caregiverProfileImage : defaultAvatar}
+                className="hcs-floating-avatar"
+                alt={caregiverName}
+                onError={(e) => { e.target.src = defaultAvatar; }}
+              />
+              <div className="hcs-floating-info">
+                <p className="hcs-floating-name">Message: {caregiverFirstName || caregiverName}</p>
+                <span className="hcs-floating-status">
+                  {caregiverIsAvailable ? "Available" : "Away"} · for {lastDeliveryDate || "Unknown days"}
+                </span>
+              </div>
+            </div>
+          )}
+        </div>
+
+        {/* Right: Pricing Card */}
+        <div className="hcs-pricing-card">
+          <div className="hcs-pricing-header">
+            <span className="hcs-package-name">{packageName || "Basic Package"}</span>
+          </div>
+          <div className="hcs-pricing-price">₦{Number(price).toLocaleString()}</div>
+          <div className="hcs-pricing-delivery">Delivery: {deliveryTime || "Per Day"}</div>
+          <p className="hcs-pricing-bestfor">
+            Best for: routine monitoring, follow-ups, & light medical supervision
+          </p>
+
+          <div className="hcs-pricing-includes">
+            <span className="hcs-includes-label">Includes:</span>
+            <ul className="hcs-includes-list">
+              {(packageDetails || []).map((feature, i) => (
+                <li key={i}><span className="hcs-check">✓</span> {feature}</li>
+              ))}
+              {caregiverSpecializations && caregiverSpecializations.length > 0 && (
+                <li><span className="hcs-check">✓</span> Specializations: {caregiverSpecializations.join(', ')}</li>
+              )}
+            </ul>
+          </div>
+
+          <div className="hcs-pricing-buttons">
+            {(!isAuthenticated || userRole === 'Client') && (
+              <button className="hcs-hire-btn" onClick={handleHire}>
+                Hire {caregiverFirstName || caregiverName} <span className="hcs-arrow">→</span>
+              </button>
+            )}
+            {(!isAuthenticated || userRole === 'Client') && (
+              <button className="hcs-message-btn" onClick={isAuthenticated ? handleMessage : () => navigate(`/login?returnTo=/service/${id}`)}>
+                Send Message
+              </button>
+            )}
+          </div>
+        </div>
+      </div>
+
+      {/* Video Section */}
+      {introVideo && (
+        <div className="hcs-video-section">
+          <h3>Introduction Video</h3>
           <div className="video-thumbnail-container" onClick={() => setShowVideoModal(true)}>
             <video className="video-thumbnail" muted>
               <source src={introVideo} type="video/mp4" />
@@ -589,131 +635,97 @@ const HomeCareService = () => {
         </div>
       )}
 
-      {/* Floating Message Button - Only show for authenticated clients */}
-      {isAuthenticated && userRole === 'Client' && (
-        <div className="floating-message">
-          <img
-            src={caregiverProfileImage && (caregiverProfileImage.startsWith('http') || caregiverProfileImage.startsWith('/')) ? caregiverProfileImage : defaultAvatar}
-            className="floating-avatar"
-            alt={caregiverName}
-            onError={(e) => {
-              e.target.src = defaultAvatar;
-            }}
-          />
-          <div className="floating-info">
-            <p className="message-provider-btn" onClick={handleMessage}>
-              Message: {caregiverFirstName || caregiverName}
-            </p>
-            <span className="status-text">
-              {caregiverIsAvailable ? "Available" : "Away"} ·
-              <span> for {lastDeliveryDate || "Unknown days"}</span>
-            </span>
-          </div>
-        </div>
-      )}
-
-      {/* Caregiver Bio Section */}
+      {/* About the Gig */}
       {caregiverBio && (
-        <div className="caregiver-bio">
-          <h3>About {caregiverFirstName || caregiverName}</h3>
+        <div className="hcs-about-gig">
+          <h2>About the Gig</h2>
           <p>{caregiverBio}</p>
         </div>
       )}
 
-      {/* Package Details */}
-      <div className="package-details">
-        <h2 className="section-title">What this package includes:</h2>
-
-        {/* Service Details and Categories - Side by Side */}
-        <div className="service-details-container">
-          {/* Package Details List */}
-          {packageDetails && packageDetails.length > 0 && (
-            <div className="package-section">
-              <h4>Service Details:</h4>
-              <ul className="package-list">
-                {packageDetails.map((item, index) => (
-                  <li key={index} className="package-item">✓ {item}</li>
-                ))}
-              </ul>
-            </div>
-          )}
-
-          {/* SubCategory Services */}
-          {subCategory && subCategory.length > 0 && (
-            <div className="package-section">
-              <h4>Service Categories:</h4>
-              <ul className="package-list">
-                {subCategory.map((item, index) => (
-                  <li key={index} className="package-item">✓ {item}</li>
-                ))}
-              </ul>
-            </div>
-          )}
-        </div>
-
-        {/* Caregiver Languages */}
-        {caregiverLanguages && caregiverLanguages.length > 0 && (
-          <div className="package-section">
-            <h4>Languages Spoken:</h4>
-            <div className="languages-list">
-              {caregiverLanguages.map((language, index) => (
-                <span key={index} className="language-tag">{language}</span>
-              ))}
-            </div>
-          </div>
-        )}
-
-        {/* Caregiver Certifications */}
-        {caregiverCertifications && caregiverCertifications.length > 0 && (
-          <div className="package-section">
-            <h4>Certifications:</h4>
-            <ul className="certifications-list">
-              {caregiverCertifications.map((cert, index) => (
-                <li key={index} className="certification-item">🏆 {cert}</li>
-              ))}
-            </ul>
-          </div>
-        )}
-      </div>
-
-      {/* Reviews */}
-      {gigReviewCount > 0 && (
-        <div className="reviews">
-          <h2 className="review-title">Reviews</h2>
-          <div className="reviews-summary">
-            <div className="rating-overview">
-              <span className="average-rating">⭐ {gigRating || 0}</span>
-              <span className="review-count">({gigReviewCount || 0} reviews)</span>
-              {caregiverExperience > 0 && (
-                <span className="experience-info">• {caregiverExperience} years experience</span>
-              )}
-              {caregiverIsVerified && (
-                <span className="verified-badge">✓ Verified Caregiver</span>
-              )}
-            </div>
-          </div>
-
-          {/* Sample Review - In a real app, you'd fetch actual reviews */}
-          <div className="review-card">
-            <div className="review-header">
-              <img src="/avatar.jpg" alt="User" className="review-avatar" />
-              <div>
-                <p className="reviewer-name">Josiah Ruben</p>
-                <div className="stars">⭐⭐⭐⭐⭐</div>
-              </div>
-            </div>
-            <p className="review-text">
-              "I can't thank {caregiverFirstName || caregiverName} enough for the care and kindness provided to my father.
-              Their attention to detail and concern for his well-being went above and beyond expectations..."
-            </p>
-          </div>
-
-          {/* Note about reviews */}
-          <div className="reviews-note">
-            <p><em>Reviews are based on the caregiver's overall performance across all services.</em></p>
-          </div>
+      {/* Services Offered */}
+      {((packageDetails && packageDetails.length > 0) || (subCategory && subCategory.length > 0)) && (
+        <div className="hcs-services-offered">
+          <h2>Services Offered</h2>
+          <ul className="hcs-services-list">
+            {(packageDetails || []).map((item, i) => (
+              <li key={`pd-${i}`}>{item}</li>
+            ))}
+            {(subCategory || []).map((item, i) => (
+              <li key={`sc-${i}`}>{item}</li>
+            ))}
+          </ul>
         </div>
       )}
+
+      {/* Reviews Section */}
+      {gigReviewCount > 0 && (
+        <div className="hcs-reviews-section">
+          <h2>Reviews</h2>
+          <div className="hcs-reviews-list">
+            {gigReviews.slice(0, 5).map((review) => (
+              <div key={review.id || review.reviewId} className="hcs-review-card">
+                <div className="hcs-review-header">
+                  <span
+                    className="hcs-review-dot"
+                    style={{ backgroundColor: getNameColor(review.clientName) }}
+                  ></span>
+                  <span className="hcs-review-name">{review.clientName || 'Anonymous'}</span>
+                  <span className="hcs-review-stars">{renderStars(review.rating || 0)}</span>
+                  <span className="hcs-review-rating-num">{review.rating || 0}</span>
+                  <span className="hcs-review-date">{GigReviewService.formatDate(review.reviewedOn)}</span>
+                </div>
+                <p className="hcs-review-text">{review.message}</p>
+              </div>
+            ))}
+          </div>
+          {gigReviewCount > 5 && (
+            <button className="hcs-see-all-reviews" onClick={handleOpenReviews}>
+              See all {gigReviewCount} reviews
+            </button>
+          )}
+        </div>
+      )}
+
+      {/* About Me Section */}
+      <div className="hcs-about-me">
+        <h2>About Me</h2>
+        <div className="hcs-about-me-card">
+          <div className="hcs-about-me-top">
+            {caregiverProfileImage && (caregiverProfileImage.startsWith('http') || caregiverProfileImage.startsWith('/')) ? (
+              <img
+                src={caregiverProfileImage}
+                alt={caregiverName}
+                className="hcs-aboutme-avatar"
+                onError={(e) => { e.target.style.display = 'none'; e.target.nextElementSibling.style.display = 'flex'; }}
+              />
+            ) : null}
+            <div
+              className="hcs-aboutme-avatar hcs-aboutme-avatar-initials"
+              style={{ display: caregiverProfileImage && (caregiverProfileImage.startsWith('http') || caregiverProfileImage.startsWith('/')) ? 'none' : 'flex' }}
+            >
+              <span>{getInitials(caregiverName)}</span>
+            </div>
+            <div className="hcs-aboutme-info">
+              <div className="hcs-aboutme-name-row">
+                <span className="hcs-aboutme-name">{caregiverName}</span>
+                {caregiverIsVerified && <span className="hcs-verified-badge">verified</span>}
+                <span className="hcs-aboutme-rating">
+                  <span className="hcs-bar-stars">{renderStars(gigRating || 0)}</span>
+                  <span>{gigRating || 0}</span>
+                </span>
+              </div>
+              <div className="hcs-aboutme-meta">
+                <span>last deliver: {lastDeliveryDate || "N/A"}</span>
+                {caregiverLanguages && caregiverLanguages.length > 0 && (
+                  <span className="hcs-aboutme-languages">Language: {caregiverLanguages.join(', ')}</span>
+                )}
+              </div>
+            </div>
+          </div>
+          <p className="hcs-aboutme-bio">{caregiverBio || "No bio available."}</p>
+        </div>
+      </div>
 
       {/* Video Modal */}
       <VideoModal
@@ -735,10 +747,10 @@ const HomeCareService = () => {
             </div>
             <div className="share-modal-content">
               <div className="copy-link-section">
-                <input 
-                  type="text" 
-                  value={`${window.location.origin}/service/${id}`} 
-                  readOnly 
+                <input
+                  type="text"
+                  value={`${window.location.origin}/service/${id}`}
+                  readOnly
                   className="share-link-input"
                 />
                 <button className="copy-link-btn" onClick={handleCopyLink}>

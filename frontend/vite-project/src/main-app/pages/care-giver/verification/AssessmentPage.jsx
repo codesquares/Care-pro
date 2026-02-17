@@ -7,18 +7,24 @@ import assessmentService from "../../../services/assessmentService";
 import trainingMaterialsService from "../../../services/trainingMaterialsService";
 import { Helmet } from "react-helmet-async";
 import { useCaregiverStatus } from "../../../contexts/CaregiverStatusContext";
+import EligibilityDashboard from "../../../components/gigs/EligibilityDashboard";
+import CertificateUploadModal from "../../../components/shared/CertificateUploadModal";
+import { CATEGORY_TIER_MAP, SERVICE_TIERS } from "../../../constants/serviceClassification";
 
 const AssessmentPage = () => {
   const navigate = useNavigate();
   const { refreshStatusData } = useCaregiverStatus();
-  const [currentStep, setCurrentStep] = useState("welcome"); // welcome, instructions, questions, thank-you
+  const [currentStep, setCurrentStep] = useState("hub"); // hub, welcome, instructions, questions, thank-you
+  const [generalStatus, setGeneralStatus] = useState(null);
+  const [generalStatusLoading, setGeneralStatusLoading] = useState(true);
+  const [showCertUpload, setShowCertUpload] = useState(false);
   const [currentQuestion, setCurrentQuestion] = useState(0);
   const [answers, setAnswers] = useState({});
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [error, setError] = useState("");
   const [success, setSuccess] = useState("");
   const [questions, setQuestions] = useState([]);
-  const [isLoading, setIsLoading] = useState(true);
+  const [isLoading, setIsLoading] = useState(false);
   const [assessmentResult, setAssessmentResult] = useState(null);
   const [questionsWithAnswers, setQuestionsWithAnswers] = useState([]);
   const [trainingMaterials, setTrainingMaterials] = useState([]);
@@ -215,78 +221,49 @@ const AssessmentPage = () => {
     
     let isMounted = true;
     
-    // Check qualification status from API (not just localStorage) to prevent stale data issues
-    const checkQualificationAndLoad = async () => {
+    // Load general assessment status for the hub (no redirects — hub shows status inline)
+    const loadHubStatus = async () => {
       try {
-        // Fetch qualification status from API - this is the source of truth
+        setGeneralStatusLoading(true);
         const qualificationData = await assessmentService.getQualificationStatus(userDetails.id);
         
         if (!isMounted) return;
         
-        // If user is already qualified (verified from API), show message and redirect
-        if (qualificationData.isQualified) {
-          alert("You are already qualified as a caregiver! No need to retake the assessment.");
-          navigate("/app/caregiver/profile");
-          return;
-        }
-        
-        // If user has completed assessment but cannot retake yet
-        // Check localStorage for retake timing (API doesn't track this)
+        // Merge with localStorage for additional info (attempt counts, retake timing)
         let localStatus = {};
         try {
           localStatus = JSON.parse(localStorage.getItem('qualificationStatus') || '{}');
         } catch (err) {
-          console.warn('Error parsing qualification status from localStorage:', err);
+          console.warn('Error parsing qualificationStatus from localStorage:', err);
         }
         
-        // Only check retake restriction if assessment is completed but not qualified
-        if (qualificationData.assessmentCompleted && !qualificationData.isQualified) {
-          if (localStatus.canRetakeAfter) {
-            const retakeDate = new Date(localStatus.canRetakeAfter);
-            if (retakeDate > new Date()) {
-              const formattedDate = retakeDate.toLocaleDateString();
-              alert(`You can retake the assessment after ${formattedDate}. Please try again later.`);
-              navigate("/app/caregiver/profile");
-              return;
-            }
-          }
-        }
-        
-        // User is eligible to take/retake assessment - load questions
-        fetchQuestions();
-        
-        // Fetch training materials (optional - if endpoint doesn't exist, it will fail gracefully)
-        fetchTrainingMaterials();
-        
+        setGeneralStatus({
+          ...qualificationData,
+          attemptCount: localStatus.attemptCount || qualificationData.attemptCount || 0,
+          canRetakeAfter: localStatus.canRetakeAfter || qualificationData.canRetakeAfter || null,
+          score: qualificationData.score || localStatus.score || null,
+        });
       } catch (err) {
         console.error('Error checking qualification status:', err);
         
         if (!isMounted) return;
         
-        // On API error, fall back to localStorage (but be permissive - let user attempt assessment)
-        console.warn('Falling back to localStorage for qualification check');
-        let localStatus = {};
+        // Fall back to localStorage
         try {
-          localStatus = JSON.parse(localStorage.getItem('qualificationStatus') || '{}');
+          const localStatus = JSON.parse(localStorage.getItem('qualificationStatus') || '{}');
+          setGeneralStatus(localStatus);
         } catch (parseErr) {
           console.warn('Error parsing localStorage:', parseErr);
+          setGeneralStatus({});
         }
-        
-        // Only block if we're confident from localStorage that user is qualified
-        // In case of doubt, let them proceed
-        if (localStatus.isQualified && localStatus.fetchedFromAPI) {
-          alert("You are already qualified as a caregiver! No need to retake the assessment.");
-          navigate("/app/caregiver/profile");
-          return;
+      } finally {
+        if (isMounted) {
+          setGeneralStatusLoading(false);
         }
-        
-        // Proceed with loading questions even if qualification check failed
-        fetchQuestions();
-        fetchTrainingMaterials();
       }
     };
     
-    checkQualificationAndLoad();
+    loadHubStatus();
     
     // Cleanup function to abort any ongoing requests when unmounting
     return () => {
@@ -301,6 +278,70 @@ const AssessmentPage = () => {
   useEffect(() => {
     window.scrollTo(0, 0);
   }, [currentStep, currentQuestion]);
+
+  // Handler to start or retake the general assessment from the hub
+  const handleStartGeneralAssessment = async () => {
+    if (generalStatus?.isQualified) return; // Already qualified
+
+    // Check retake cooldown
+    if (generalStatus?.canRetakeAfter) {
+      const retakeDate = new Date(generalStatus.canRetakeAfter);
+      if (retakeDate > new Date()) {
+        setError(`You can retake the assessment after ${retakeDate.toLocaleDateString()}.`);
+        return;
+      }
+    }
+
+    setIsLoading(true);
+    setError('');
+
+    // Fetch questions if not loaded yet
+    if (questions.length === 0) {
+      await fetchQuestions();
+    }
+
+    // Fetch training materials
+    fetchTrainingMaterials();
+
+    setIsLoading(false);
+    setCurrentStep('welcome');
+  };
+
+  // Navigate back to the assessment hub
+  const backToHub = async () => {
+    // Reset assessment state
+    setCurrentQuestion(0);
+    setAnswers({});
+    setAssessmentResult(null);
+    setQuestionsWithAnswers([]);
+    setError('');
+    setSuccess('');
+
+    // Refresh general status
+    try {
+      setGeneralStatusLoading(true);
+      const qualData = await assessmentService.getQualificationStatus(userDetails.id);
+      let localStatus = {};
+      try {
+        localStatus = JSON.parse(localStorage.getItem('qualificationStatus') || '{}');
+      } catch {}
+      setGeneralStatus({
+        ...qualData,
+        attemptCount: localStatus.attemptCount || qualData.attemptCount || 0,
+        canRetakeAfter: localStatus.canRetakeAfter || qualData.canRetakeAfter || null,
+        score: qualData.score || localStatus.score || null,
+      });
+    } catch {
+      try {
+        const localStatus = JSON.parse(localStorage.getItem('qualificationStatus') || '{}');
+        setGeneralStatus(localStatus);
+      } catch {}
+    } finally {
+      setGeneralStatusLoading(false);
+    }
+
+    setCurrentStep('hub');
+  };
 
   const handleAnswerChange = (questionId, value) => {
     // For multiple-choice answers (radio buttons)
@@ -501,6 +542,146 @@ const AssessmentPage = () => {
     }
   };
 
+  // ─── Hub View ─────────────────────────────────────────────────────────────
+  const renderHub = () => {
+    const specializedCount = Object.entries(CATEGORY_TIER_MAP)
+      .filter(([, tier]) => tier === SERVICE_TIERS.SPECIALIZED).length;
+
+    return (
+      <div className="mobile-assessment-container fade-in">
+        <div className="assessment-content">
+          {/* Hub Header */}
+          <div className="account-verification-header">
+            <h1>Caregiver Assessments</h1>
+            <p className="hub-subtitle">
+              Complete assessments and certifications to unlock service categories
+            </p>
+          </div>
+
+          {/* ── General Assessment Card ─────────────────────────────────── */}
+          <div className="hub-section">
+            <div className="hub-section-header">
+              <h2><i className="fas fa-clipboard-check"></i> General Assessment</h2>
+              <span className="hub-badge hub-badge-required">Required</span>
+            </div>
+
+            <div className={`hub-card ${generalStatus?.isQualified ? 'hub-card-passed' : generalStatus?.assessmentCompleted ? 'hub-card-failed' : 'hub-card-new'}`}>
+              {generalStatusLoading ? (
+                <div className="hub-card-loading">
+                  <div className="spinner"></div>
+                  <p>Checking status...</p>
+                </div>
+              ) : generalStatus?.isQualified ? (
+                /* ── Passed ──────────────────────────────────── */
+                <div className="hub-card-body">
+                  <div className="hub-status-row">
+                    <div className="hub-status-icon hub-icon-passed">✅</div>
+                    <div className="hub-status-info">
+                      <h3>Assessment Passed</h3>
+                      <p>You've successfully completed the general caregiver assessment.</p>
+                    </div>
+                  </div>
+                  {generalStatus?.score != null && (
+                    <div className="hub-score-bar">
+                      <div className="hub-score-fill passing" style={{ width: `${generalStatus.score}%` }}></div>
+                      <span className="hub-score-label">{generalStatus.score}%</span>
+                    </div>
+                  )}
+                </div>
+              ) : generalStatus?.assessmentCompleted ? (
+                /* ── Failed / needs retake ────────────────────── */
+                <div className="hub-card-body">
+                  <div className="hub-status-row">
+                    <div className="hub-status-icon hub-icon-failed">⚠️</div>
+                    <div className="hub-status-info">
+                      <h3>Assessment Not Passed</h3>
+                      <p>You need a score of 70% or higher to qualify.</p>
+                    </div>
+                  </div>
+                  {generalStatus?.score != null && (
+                    <div className="hub-score-bar">
+                      <div className="hub-score-fill failing" style={{ width: `${generalStatus.score}%` }}></div>
+                      <span className="hub-score-label">{generalStatus.score}%</span>
+                    </div>
+                  )}
+                  {(() => {
+                    const canRetakeAfter = generalStatus?.canRetakeAfter;
+                    const retakeBlocked = canRetakeAfter && new Date(canRetakeAfter) > new Date();
+                    return retakeBlocked ? (
+                      <div className="hub-cooldown">
+                        <i className="fas fa-hourglass-half"></i>
+                        You can retake after {new Date(canRetakeAfter).toLocaleDateString()}
+                      </div>
+                    ) : (
+                      <button className="hub-action-btn" onClick={handleStartGeneralAssessment}>
+                        <i className="fas fa-redo"></i> Retake Assessment
+                      </button>
+                    );
+                  })()}
+                </div>
+              ) : (
+                /* ── Not yet taken ───────────────────────────── */
+                <div className="hub-card-body">
+                  <div className="hub-status-row">
+                    <div className="hub-status-icon hub-icon-new">📝</div>
+                    <div className="hub-status-info">
+                      <h3>Not Yet Taken</h3>
+                      <p>
+                        Complete this assessment to qualify as a caregiver. It covers
+                        caregiving principles, safety, and best practices.
+                      </p>
+                    </div>
+                  </div>
+
+                  <div className="hub-detail-chips">
+                    <span className="hub-chip">
+                      <i className="fas fa-clock"></i> ~15 min
+                    </span>
+                    <span className="hub-chip">
+                      <i className="fas fa-list-ol"></i> 30 questions
+                    </span>
+                    <span className="hub-chip">
+                      <i className="fas fa-trophy"></i> 70% to pass
+                    </span>
+                  </div>
+
+                  <button
+                    className="hub-action-btn hub-action-primary"
+                    onClick={handleStartGeneralAssessment}
+                    disabled={isLoading}
+                  >
+                    {isLoading ? (
+                      <><i className="fas fa-spinner fa-spin"></i> Loading...</>
+                    ) : (
+                      <>Take Assessment <i className="fas fa-arrow-right"></i></>
+                    )}
+                  </button>
+                </div>
+              )}
+            </div>
+          </div>
+
+          {/* ── Specialized Assessments ──────────────────────────────── */}
+          <div className="hub-section">
+            <div className="hub-section-header">
+              <h2><i className="fas fa-star"></i> Specialized Assessments</h2>
+              <span className="hub-badge hub-badge-advanced">Advanced</span>
+            </div>
+            <p className="hub-section-desc">
+              Unlock specialized care categories by passing category-specific assessments
+              and uploading required certifications.
+            </p>
+            <EligibilityDashboard
+              caregiverId={userDetails.id}
+              compact={false}
+              onUploadCert={() => setShowCertUpload(true)}
+            />
+          </div>
+        </div>
+      </div>
+    );
+  };
+
   const renderWelcomeScreen = () => {
     // Check if this is a retake
     // First check localStorage for cached qualification status
@@ -522,6 +703,11 @@ const AssessmentPage = () => {
 
         {/* Assessment Content */}
         <div className="assessment-content">
+          {/* Back to Hub */}
+          <button className="hub-back-btn" onClick={backToHub}>
+            <i className="fas fa-arrow-left"></i> All Assessments
+          </button>
+
           {/* Account Verification Header */}
           <div className="account-verification-header">
             <h1>Account Verification</h1>
@@ -742,6 +928,11 @@ const AssessmentPage = () => {
       <div className="mobile-assessment-container fade-in">
         {/* Assessment Content */}
         <div className="assessment-content">
+          {/* Back to Hub */}
+          <button className="hub-back-btn" onClick={backToHub}>
+            <i className="fas fa-arrow-left"></i> All Assessments
+          </button>
+
           {/* Account Verification Header */}
           <div className="account-verification-header">
             <h1>Account Verification</h1>
@@ -807,6 +998,11 @@ const AssessmentPage = () => {
       <div className="mobile-assessment-container fade-in">
         {/* Assessment Content */}
         <div className="assessment-content">
+          {/* Back to Hub */}
+          <button className="hub-back-btn" onClick={backToHub}>
+            <i className="fas fa-arrow-left"></i> All Assessments
+          </button>
+
           {/* Account Verification Header */}
           <div className="account-verification-header">
             <h1>Account Verification</h1>
@@ -907,6 +1103,11 @@ const AssessmentPage = () => {
       <div className="mobile-assessment-container fade-in">
         {/* Assessment Content */}
         <div className="assessment-content">
+          {/* Back to Hub */}
+          <button className="hub-back-btn" onClick={backToHub}>
+            <i className="fas fa-arrow-left"></i> All Assessments
+          </button>
+
           {/* Account Verification Header */}
           <div className="account-verification-header">
             <h1>Account Verification</h1>
@@ -1110,20 +1311,28 @@ const AssessmentPage = () => {
               {/* Action Buttons */}
               <div className="result-actions">
                 {isPassing ? (
-                  <button 
-                    className="proceed-btn success"
-                    onClick={() => navigate('/app/caregiver/profile')}
-                  >
-                    Proceed to Dashboard
-                    <i className="fas fa-arrow-right"></i>
-                  </button>
-                ) : (
                   <>
+                    <button 
+                      className="proceed-btn success"
+                      onClick={backToHub}
+                    >
+                      View All Assessments
+                      <i className="fas fa-arrow-right"></i>
+                    </button>
                     <button 
                       className="proceed-btn outline"
                       onClick={() => navigate('/app/caregiver/profile')}
                     >
-                      Proceed to Dashboard
+                      Go to Profile
+                    </button>
+                  </>
+                ) : (
+                  <>
+                    <button 
+                      className="proceed-btn outline"
+                      onClick={backToHub}
+                    >
+                      View All Assessments
                     </button>
                     {assessmentResult?.attemptNumber < 3 && (
                       <button 
@@ -1240,11 +1449,24 @@ const AssessmentPage = () => {
       </Helmet>
       
       <div className="mobile-assessment-page">
+        {currentStep === 'hub' && renderHub()}
         {currentStep === 'welcome' && renderWelcomeScreen()}
         {currentStep === 'instructions' && renderInstructionsScreen()}
         {currentStep === 'questions' && renderQuestionsScreen()}
         {currentStep === 'thank-you' && renderThankYouScreen()}
       </div>
+
+      {/* Certificate upload modal — stays in the assessment flow */}
+      <CertificateUploadModal
+        isOpen={showCertUpload}
+        onClose={() => setShowCertUpload(false)}
+        caregiverId={userDetails.id}
+        onUploadDone={() => {
+          // Force EligibilityDashboard to re-fetch by re-mounting
+          // (the dashboard fetches on mount via its own useEffect)
+          setShowCertUpload(false);
+        }}
+      />
     </>
   );
 };

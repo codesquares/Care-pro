@@ -7,6 +7,7 @@ import OrderList from './OrderList';
 import './CaregiverDashboard.css';
 import setting from '../../../../assets/setting.png';
 import config from '../../../config'; // Import centralized config for API URLs
+import CaregiverSubscriptionWidget from './CaregiverSubscriptionWidget';
 
 const CaregiverDashboard = () => {
   const [filter, setFilter] = useState('All Orders'); // Default filter is 'All Orders'
@@ -132,6 +133,8 @@ const CaregiverDashboard = () => {
         </div>
 
         <div className="rightbar">
+          <CaregiverSubscriptionWidget />
+
           <div className="select-dropdown-container">
             <label htmlFor="order-filter" className="sr-only">Filter orders</label>
             <select

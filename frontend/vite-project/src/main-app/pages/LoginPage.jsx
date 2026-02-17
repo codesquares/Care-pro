@@ -2,7 +2,7 @@ import { useState, useEffect } from "react";
 import { useNavigate, Link, useLocation } from "react-router-dom";
 import { GoogleLogin } from "@react-oauth/google";
 import axios from "axios";
-import loginImg from "../../assets/loginImg.png";
+import loginImg from "../../assets/Group 53599.png";
 import loginLogo from "../../assets/loginLogo.png";
 import "../../styles/main-app/pages/LoginPage.css";
 import { toast } from "react-toastify";

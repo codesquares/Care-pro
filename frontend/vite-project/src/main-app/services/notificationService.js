@@ -25,6 +25,22 @@ const generateTitle = (type, senderId) => {
       return `Identity Verification Update`;
     case 'NewGig':
       return `🛠️ New gig created by you`;
+    case 'ContractSent':
+      return `📋 New contract sent for your review`;
+    case 'ContractApproved':
+      return `✅ Your contract has been approved`;
+    case 'ContractRejected':
+      return `❌ Your contract has been rejected`;
+    case 'ContractRevisionRequested':
+      return `📝 Contract revision requested`;
+    case 'OrderCompleted':
+      return `🎉 Order has been completed`;
+    case 'OrderDisputed':
+      return `⚠️ Order has been disputed`;
+    case 'NewReview':
+      return `⭐ New review received`;
+    case 'BookingConfirmed':
+      return `🛒 New booking confirmed`;
     default:
       return `New notification`;
   }
@@ -45,6 +61,22 @@ const generateContent = (type, senderId) => {
       return `Your identity verification status has been updated.`;
     case 'NewGig':
       return `You have successfully posted a new gig.`;
+    case 'ContractSent':
+      return `A contract has been sent to you for review. Tap to view and approve or request changes.`;
+    case 'ContractApproved':
+      return `The client has approved your contract. You can now begin providing services.`;
+    case 'ContractRejected':
+      return `The client has rejected your contract. Please review the feedback.`;
+    case 'ContractRevisionRequested':
+      return `The client has requested changes to your contract. Please review and revise.`;
+    case 'OrderCompleted':
+      return `An order has been marked as completed.`;
+    case 'OrderDisputed':
+      return `An order has been disputed. Please review the details.`;
+    case 'NewReview':
+      return `You have received a new review. Tap to view it.`;
+    case 'BookingConfirmed':
+      return `A new booking has been confirmed. Tap to see the order details.`;
     default:
       return `You have a new notification from user ${senderId}.`;
   }

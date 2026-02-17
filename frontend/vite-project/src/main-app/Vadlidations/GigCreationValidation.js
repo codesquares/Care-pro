@@ -43,91 +43,49 @@ export const validateOverviewPage = (formData) => {
 
 export const validatePricingPage = (pricing) => {
   const errors = {};
-  const packages = ['Basic', 'Standard', 'Premium'];
-  
-  // Check if at least one package is filled (deliveryTime is auto-set)
-  const hasValidPackage = packages.some(pkg => 
-    pricing[pkg].name && pricing[pkg].details && pricing[pkg].amount
-  );
-  
-  if (!hasValidPackage) {
-    errors.general = "Please complete at least one pricing package";
-    return { isValid: false, errors };
+  const packageData = pricing.Basic || {};
+  const packageErrors = {};
+
+  // All fields are required for the single package
+  if (!packageData.name || packageData.name.trim().length === 0) {
+    packageErrors.name = "Package name is required";
+  } else if (packageData.name.length < 3) {
+    packageErrors.name = "Package name must be at least 3 characters";
+  } else if (packageData.name.length > 50) {
+    packageErrors.name = "Package name must not exceed 50 characters";
   }
-  
-  packages.forEach(pkg => {
-    const packageData = pricing[pkg];
-    const packageErrors = {};
-    
-    // If any field is filled, all fields must be filled for that package (deliveryTime is auto-set)
-    const hasAnyField = packageData.name || packageData.details || packageData.amount;
-    
-    if (hasAnyField) {
-      if (!packageData.name || packageData.name.trim().length === 0) {
-        packageErrors.name = "Package name is required";
-      } else if (packageData.name.length < 3) {
-        packageErrors.name = "Package name must be at least 3 characters";
-      } else if (packageData.name.length > 50) {
-        packageErrors.name = "Package name must not exceed 50 characters";
-      }
-      
-      if (!packageData.details || packageData.details.trim().length === 0) {
-        packageErrors.details = "Package details are required";
-      } else {
-        // Validate task-based details
-        const tasks = packageData.details.split(';').filter(task => task.trim());
-        
-        if (tasks.length === 0) {
-          packageErrors.details = "At least 1 task is required";
-        } else if (tasks.length > 8) {
-          packageErrors.details = "Maximum 8 tasks allowed";
-        } else {
-          // Check each task for word count
-          const invalidTasks = tasks.filter(task => {
-            const words = task.trim().split(/\s+/).filter(word => word.length > 0);
-            return words.length > 50;
-          });
-          
-          if (invalidTasks.length > 0) {
-            packageErrors.details = "Each task cannot exceed 50 words";
-          }
-        }
-      }
-      
-      // Delivery time is auto-set to "1 Day Per Week", no validation needed
-      // if (!packageData.deliveryTime) {
-      //   packageErrors.deliveryTime = "Delivery time is required";
-      // }
-      
-      if (!packageData.amount || packageData.amount <= 0) {
-        packageErrors.amount = "Package amount must be greater than 0";
-      } else if (packageData.amount < 10000) {
-        packageErrors.amount = "Minimum amount is ₦10,000";
-      } else if (packageData.amount > 1000000) {
-        packageErrors.amount = "Maximum amount is ₦1,000,000";
-      }
-      
-      if (Object.keys(packageErrors).length > 0) {
-        errors[pkg.toLowerCase()] = packageErrors;
+
+  if (!packageData.details || packageData.details.trim().length === 0) {
+    packageErrors.details = "Package details are required";
+  } else {
+    const tasks = packageData.details.split(';').filter(task => task.trim());
+    if (tasks.length === 0) {
+      packageErrors.details = "At least 1 task is required";
+    } else if (tasks.length > 8) {
+      packageErrors.details = "Maximum 8 tasks allowed";
+    } else {
+      const invalidTasks = tasks.filter(task => {
+        const words = task.trim().split(/\s+/).filter(word => word.length > 0);
+        return words.length > 50;
+      });
+      if (invalidTasks.length > 0) {
+        packageErrors.details = "Each task cannot exceed 50 words";
       }
     }
-  });
-  
-  // Validate pricing progression (Basic <= Standard <= Premium)
-  const basicAmount = parseFloat(pricing.Basic.amount) || 0;
-  const standardAmount = parseFloat(pricing.Standard.amount) || 0;
-  const premiumAmount = parseFloat(pricing.Premium.amount) || 0;
-  
-  if (basicAmount > 0 && standardAmount > 0 && basicAmount >= standardAmount) {
-    errors.progression = "Standard package must cost more than Basic package";
   }
-  if (standardAmount > 0 && premiumAmount > 0 && standardAmount >= premiumAmount) {
-    errors.progression = "Premium package must cost more than Standard package";
+
+  if (!packageData.amount || packageData.amount <= 0) {
+    packageErrors.amount = "Package amount must be greater than 0";
+  } else if (packageData.amount < 10000) {
+    packageErrors.amount = "Minimum amount is ₦10,000";
+  } else if (packageData.amount > 1000000) {
+    packageErrors.amount = "Maximum amount is ₦1,000,000";
   }
-  if (basicAmount > 0 && premiumAmount > 0 && basicAmount >= premiumAmount) {
-    errors.progression = "Premium package must cost more than Basic package";
+
+  if (Object.keys(packageErrors).length > 0) {
+    errors.basic = packageErrors;
   }
-  
+
   return { isValid: Object.keys(errors).length === 0, errors };
 };
 

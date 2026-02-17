@@ -124,6 +124,30 @@ Marketing Page Styles
   color: #00B140; /* Green color */
 }
 
+@media (max-width: 768px) {
+  .connect-text {
+    font-size: 42px;
+  }
+  .profession-text {
+    font-size: 32px;
+  }
+  .demand-text {
+    font-size: 30px;
+  }
+}
+
+@media (max-width: 576px) {
+  .connect-text {
+    font-size: 38px;
+  }
+  .profession-text {
+    font-size: 28px;
+  }
+  .demand-text {
+    font-size: 26px;
+  }
+}
+
 @media (max-width: 480px) {
   .text-container {
     line-height: 1.2;
@@ -136,6 +160,18 @@ Marketing Page Styles
   }
   .demand-text {
     font-size: 24px;
+  }
+}
+
+@media (max-width: 360px) {
+  .connect-text {
+    font-size: 28px;
+  }
+  .profession-text {
+    font-size: 22px;
+  }
+  .demand-text {
+    font-size: 20px;
   }
 }
 
@@ -231,6 +267,19 @@ Marketing Page Styles
   border-color: #ffffff;
 }
 
+/* Hero small-screen overrides */
+@media (max-width: 480px) {
+  .marketing-page .mk-hero__popular {
+    flex-wrap: wrap;
+  }
+  .marketing-page .mk-hero__search button {
+    flex: 0 0 auto;
+    min-width: 90px;
+    padding: 0 12px;
+    font-size: 13px;
+  }
+}
+
 /* ========== SERVICES SECTION ========== */
 .marketing-page .services-section {
   padding: 3rem 0;
@@ -251,19 +300,26 @@ Marketing Page Styles
   color: #2b3a67;
 }
 
+@media (max-width: 576px) {
+  .marketing-page .services-section h2 {
+    font-size: 1.5rem;
+    margin-bottom: 1.5rem;
+  }
+}
+
 .marketing-page .services-grid {
   display: grid;
   grid-template-columns: repeat(2, 1fr);
   gap: 1.25rem;
 }
 
-@media (min-width: 640px) {
+@media (max-width: 480px) {
   .marketing-page .services-grid {
-    grid-template-columns: repeat(3, 1fr);
+    grid-template-columns: 1fr;
   }
 }
 
-@media (min-width: 992px) {
+@media (min-width: 768px) {
   .marketing-page .services-grid {
     grid-template-columns: repeat(3, 1fr);
   }
@@ -428,6 +484,13 @@ Marketing Page Styles
   color: #2b3a67;
 }
 
+@media (max-width: 576px) {
+  .marketing-page .how-it-works-section h2 {
+    font-size: 1.5rem;
+    margin-bottom: 1.5rem;
+  }
+}
+
 @media (min-width: 768px) {
   .marketing-page .how-it-works-section h2 {
     font-size: 2.2rem;
@@ -496,6 +559,12 @@ Marketing Page Styles
 .marketing-page .how-actions.split {
   justify-content: space-between;
   flex-wrap: nowrap;
+}
+
+@media (max-width: 480px) {
+  .marketing-page .how-actions.split {
+    flex-wrap: wrap;
+  }
 }
 
 .marketing-page .how-btn {
@@ -852,6 +921,13 @@ Marketing Page Styles
   margin-bottom: 2rem;
 }
 
+@media (max-width: 576px) {
+  .marketing-page .featured-caregivers-section h2 {
+    font-size: 1.5rem;
+    margin-bottom: 1.5rem;
+  }
+}
+
 .marketing-page .featured-grid {
   display: grid;
   grid-template-columns: 1fr;
@@ -1056,6 +1132,31 @@ Marketing Page Styles
   font-size: 0.85rem;
   cursor: pointer;
   width: 20%;
+}
+
+@media (max-width: 480px) {
+  .marketing-page .mk-final-cta__card {
+    padding: 2rem 1.25rem;
+  }
+  .marketing-page .mk-final-cta__card h2 {
+    font-size: 1.5rem;
+  }
+  .marketing-page .mk-final-cta__card p {
+    font-size: 0.85rem;
+  }
+  .marketing-page .mk-final-cta__btn {
+    width: auto;
+    min-width: 140px;
+    padding: 0.45rem 1.5rem;
+  }
+}
+
+@media (max-width: 768px) {
+  .marketing-page .mk-final-cta__btn {
+    width: auto;
+    min-width: 140px;
+    padding: 0.45rem 1.5rem;
+  }
 }
 
 @media (min-width: 768px) {
