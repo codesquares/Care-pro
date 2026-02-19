@@ -1,7 +1,7 @@
 .caregiver-process {
-  background-color: whit;
+  background-color: white;
   color: #2e4f6b;
-  padding: 8rem 5rem;
+  padding: clamp(2rem, 5vw, 8rem) clamp(1.5rem, 4vw, 5rem);
   background-size: cover;
   background-position: center;
   background-repeat: no-repeat;
@@ -49,7 +49,7 @@
   justify-content: space-between;
   align-items: stretch;
   gap: 2rem;
-  margin-top: 8rem;
+  margin-top: clamp(2rem, 5vw, 8rem);
   height: auto;
 }
 @media (max-width: 768px) {

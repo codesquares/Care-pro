@@ -10,43 +10,46 @@
   box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
   margin-bottom: 12px;
   transition: box-shadow 0.3s ease;
+  overflow: hidden;
 }
 
 .order-card:hover {
   box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
 }
 
-.image-wrapper {
+.order-card .image-wrapper {
   width: 100%;
-  height: 150px;
+  height: 180px;
   flex-shrink: 0;
   border-radius: 8px;
   overflow: hidden;
   background-color: #f0f0f0;
 }
 
-.order-image {
-  width: 100% !important;
-  height: 100% !important;
-  object-fit: cover !important;
-  display: block !important;
+.order-card .order-image {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  display: block;
+  max-width: none;
 }
 
-.order-content {
+.order-card .order-content {
   display: flex;
   flex-direction: column;
   justify-content: space-between;
   flex: 1;
-  gap: 12px;
+  gap: 8px;
+  min-width: 0;
 }
 
-.order-main {
+.order-card .order-main {
   display: flex;
   flex-direction: column;
-  gap: 6px;
+  gap: 4px;
 }
 
-.order-title {
+.order-card .order-title {
   font-size: 15px;
   font-weight: 600;
   color: #2c2c2c;
@@ -55,20 +58,22 @@
   word-break: break-word;
 }
 
-.order-user {
+.order-card .order-user {
   font-size: 13px;
   color: #4f4f4f;
   margin: 0;
 }
 
-.order-footer {
+.order-card .order-footer {
   display: flex;
-  flex-direction: column;
+  flex-direction: row;
+  justify-content: space-between;
+  align-items: center;
   gap: 8px;
-  align-items: flex-start;
+  flex-wrap: wrap;
 }
 
-.status {
+.order-card .status {
   background-color: #fff3cd;
   color: #f4b400;
   font-size: 12px;
@@ -78,10 +83,11 @@
   white-space: nowrap;
 }
 
-.order-price {
-  font-size: 16px;
+.order-card .order-price {
+  font-size: 15px;
   font-weight: 600;
   color: #1a1a1a;
+  white-space: nowrap;
 }
 
 /* Responsive design for OrderCard */
@@ -91,46 +97,40 @@
     gap: 16px;
     align-items: flex-start;
   }
-  
-  .image-wrapper {
+
+  .order-card .image-wrapper {
     width: 140px;
     height: 100px;
     border-radius: 10px;
   }
-  
-  .order-title {
+
+  .order-card .order-title {
     font-size: 16px;
   }
-  
-  .order-user {
+
+  .order-card .order-user {
     font-size: 14px;
   }
-  
-  .order-footer {
-    flex-direction: row;
-    justify-content: space-between;
-    align-items: center;
-  }
-  
-  .status {
+
+  .order-card .status {
     font-size: 13px;
     padding: 4px 10px;
   }
-  
-  .order-price {
+
+  .order-card .order-price {
     font-size: 15px;
   }
 }
 
 @media (min-width: 768px) {
-  .image-wrapper {
+  .order-card .image-wrapper {
     width: 180px;
     height: 110px;
   }
 }
 
 @media (min-width: 992px) {
-  .image-wrapper {
+  .order-card .image-wrapper {
     width: 200px;
     height: 100px;
   }

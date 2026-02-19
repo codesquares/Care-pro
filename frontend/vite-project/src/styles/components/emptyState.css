@@ -35,3 +35,39 @@
 .empty-state-action {
   margin-top: 1.2rem;
 }
+
+/* Responsive: Mobile */
+@media (max-width: 768px) {
+  .empty-state {
+    min-height: 200px;
+    padding: 1.5rem;
+  }
+
+  .empty-state-content {
+    padding: 1.5rem;
+    max-width: 100%;
+  }
+
+  .empty-state-title {
+    font-size: 1.3rem;
+  }
+
+  .empty-state-description {
+    font-size: 0.9rem;
+  }
+}
+
+@media (max-width: 480px) {
+  .empty-state {
+    min-height: 150px;
+    padding: 1rem;
+  }
+
+  .empty-state-content {
+    padding: 1rem;
+  }
+
+  .empty-state-title {
+    font-size: 1.1rem;
+  }
+}

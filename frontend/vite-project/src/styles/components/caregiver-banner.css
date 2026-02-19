@@ -1,5 +1,5 @@
 .container {
-  padding: 10rem;
+  padding: clamp(2rem, 5vw, 10rem);
   background-color: #ffffff;
 }
 
@@ -46,7 +46,7 @@
 
 @media (max-width: 768px) {
   .container {
-    padding: 5rem; /* Reduced padding for tablets */
+    padding: 3rem 1.5rem;
   }
   .caregiver-banner {
     padding: 30px;
