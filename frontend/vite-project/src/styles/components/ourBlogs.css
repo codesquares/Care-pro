@@ -150,3 +150,57 @@ p {
 .close-button:hover {
   background-color: #888; /* Darker shade on hover */
 }
+
+/* Responsive: Tablet */
+@media (max-width: 1024px) {
+  .blog-item {
+    flex: 1 1 45%;
+    max-width: 45%;
+  }
+
+  .view-all-button {
+    width: 30%;
+  }
+}
+
+/* Responsive: Mobile */
+@media (max-width: 768px) {
+  .our-blogs {
+    padding: 1.5rem 1rem;
+  }
+
+  .blogs-container {
+    flex-direction: column;
+    align-items: center;
+  }
+
+  .blog-item {
+    flex: 1 1 100%;
+    max-width: 100%;
+  }
+
+  .view-all-button {
+    width: 50%;
+  }
+
+  .modal-content {
+    width: 95%;
+    padding: 1rem;
+  }
+}
+
+@media (max-width: 480px) {
+  .our-blogs {
+    padding: 1rem 0.5rem;
+  }
+
+  .view-all-button {
+    width: 70%;
+    font-size: 0.9rem;
+  }
+
+  .expand-icon {
+    width: 35px;
+    height: 35px;
+  }
+}

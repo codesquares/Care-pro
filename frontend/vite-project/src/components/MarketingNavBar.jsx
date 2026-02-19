@@ -125,8 +125,10 @@ const MarketingNavBar = () => {
           <img src={logo} alt="CarePro" />
         </Link>
 
-
-
+        {/* Navigation Links */}
+        <nav className={`navbar-links ${mobileMenuOpen ? "active" : ""}`}>
+          {renderNavLinks()}
+        </nav>
 
         {/* Mobile Menu Toggle */}
         <button
@@ -136,11 +138,6 @@ const MarketingNavBar = () => {
         >
           {mobileMenuOpen ? "✕" : "☰"}
         </button>
-
-        {/* Navigation Links */}
-        <nav className={`navbar-links ${mobileMenuOpen ? "active" : ""}`}>
-          {renderNavLinks()}
-        </nav>
       </div>
     </header>
   );

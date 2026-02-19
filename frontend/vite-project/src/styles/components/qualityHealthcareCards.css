@@ -52,6 +52,50 @@
   text-align: center;
   font-family: PoppinsSemiBold;
   font-size: 3rem;
-  margin-bottom: 2rem; /* Space between title and cards */
-  color: black; /* Match the title color with the card background */
+  margin-bottom: 2rem;
+  color: black;
+}
+
+/* Responsive: Tablet */
+@media (max-width: 1024px) {
+  .quality-healthcare-card {
+    flex: 1 1 45%;
+    margin: 0.5rem;
+  }
+
+  .quality-healthcare-title {
+    font-size: 2.2rem;
+  }
+}
+
+/* Responsive: Mobile */
+@media (max-width: 768px) {
+  .quality-healthcare-card {
+    flex: 1 1 100%;
+    margin: 0.5rem 0;
+  }
+
+  .quality-healthcare-title {
+    font-size: 1.8rem;
+    margin-bottom: 1.5rem;
+  }
+
+  .quality-healthcare-card__title {
+    font-size: 1.3rem;
+  }
+}
+
+@media (max-width: 480px) {
+  .quality-healthcare-title {
+    font-size: 1.5rem;
+    margin-bottom: 1rem;
+  }
+
+  .quality-healthcare-card {
+    padding: 1rem;
+  }
+
+  .quality-healthcare-card__title {
+    font-size: 1.2rem;
+  }
 }
