@@ -1,7 +1,10 @@
 import { useNavigate } from "react-router-dom";
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import "./MarketingPage.css";
 import PricingModal from "../components/PricingModal/PricingModal";
+import ClientGigService from "../main-app/services/clientGigService";
+import ServiceCard from "../main-app/pages/client/client-dashboard/ServiceCard";
+import "../main-app/pages/client/client-dashboard/serviceCard.css";
 
 // Import assets
 import careproLogo from "../assets/careproLogo.svg";
@@ -10,13 +13,7 @@ import nurseAndWomanImg from "../assets/nurseAndWoman.png";
 import afternoonLanding from "../assets/afternoon_landing.png";
 import caregiver1 from "../assets/caregiver1.png";
 import QHCC1 from "../assets/QHCC1.jpg";
-import caregiver2 from "../assets/caregiver2.png";
-import caregiver3 from "../assets/caregiver3.png";
-import caregiver4 from "../assets/caregiver4.png";
 import avatarFemale1 from "../assets/avatar-female-1.jpg";
-import avatarMale1 from "../assets/avatar-male-1.jpg";
-import avatarMale2 from "../assets/avatar-male-2.jpg";
-import avatarFemale2 from "../assets/avatar-female-2.jpg";
 
 // Service categories for the grid - mapped to backend categories
 const serviceCategories = [
@@ -122,53 +119,28 @@ const healthcareFacts = [
   },
 ];
 
-const featuredCaregivers = [
-  {
-    id: 1,
-    name: "Amina Yusuf",
-    location: "Ikeja, Lagos, Nigeria",
-    title: "Professional Elderly Care & Nursing Assistant",
-    image: caregiver1,
-    avatar: avatarFemale1,
-    verified: true,
-    rating: 4.5,
-  },
-  {
-    id: 2,
-    name: "Taiwo Kamaru",
-    location: "Ajah, Lagos, Nigeria",
-    title: "Daily Home Care Assistant",
-    image: caregiver2,
-    avatar: avatarMale1,
-    verified: true,
-    rating: 4.5,
-  },
-  {
-    id: 3,
-    name: "Chinedu Eze",
-    location: "Lekki, Lagos, Nigeria",
-    title: "Professional Childcare Provider",
-    image: caregiver3,
-    avatar: avatarMale2,
-    verified: true,
-    rating: 4.5,
-  },
-  {
-    id: 4,
-    name: "Funke Adeyemi",
-    location: "Ikoyi, Lagos, Nigeria",
-    title: "Adult & Elderly Support Caregiver",
-    image: caregiver4,
-    avatar: avatarFemale2,
-    verified: true,
-    rating: 4.5,
-  },
-];
+
 
 const MarketingPage = () => {
   const navigate = useNavigate();
   const [searchQuery, setSearchQuery] = useState("");
   const [isPricingModalOpen, setIsPricingModalOpen] = useState(false);
+  const [featuredGigs, setFeaturedGigs] = useState([]);
+  const [gigsLoading, setGigsLoading] = useState(true);
+
+  useEffect(() => {
+    const fetchFeaturedGigs = async () => {
+      try {
+        const allGigs = await ClientGigService.getAllGigs();
+        setFeaturedGigs(allGigs.slice(0, 4));
+      } catch (err) {
+        console.error("Error fetching featured gigs:", err);
+      } finally {
+        setGigsLoading(false);
+      }
+    };
+    fetchFeaturedGigs();
+  }, []);
 
   const handleSearch = (e) => {
     e.preventDefault();
@@ -464,50 +436,17 @@ const MarketingPage = () => {
       <section className="featured-caregivers-section">
         <div className="container">
           <h2>Featured Caregivers</h2>
-          <div className="featured-grid">
-            {featuredCaregivers.map((caregiver) => (
-              <article key={caregiver.id} className="featured-card">
-                <div className="featured-image">
-                  <img src={caregiver.image} alt={caregiver.title} />
-                </div>
-                <div className="featured-body">
-                  <div className="featured-meta">
-                    <img
-                      className="featured-avatar"
-                      src={caregiver.avatar}
-                      alt={caregiver.name}
-                    />
-                    <div className="featured-info">
-                      <div className="featured-name-row">
-                        <span className="featured-name">{caregiver.name}</span>
-                        {caregiver.verified && (
-                          <span className="featured-verified">Verified</span>
-                        )}
-                      </div>
-                      <div className="featured-location">
-                        {caregiver.location}
-                      </div>
-                    </div>
-                    <div className="featured-rating">
-                      <span>★</span> {caregiver.rating}
-                    </div>
-                  </div>
-                  <h3>{caregiver.title}</h3>
-                  <div className="featured-footer">
-                    <span className="featured-price">
-                      Starting at {"\u20A6"}10,000
-                    </span>
-                    <button
-                      className="featured-cta-btn"
-                      onClick={handleHireCaregiver}
-                    >
-                      Hire Caregiver
-                    </button>
-                  </div>
-                </div>
-              </article>
-            ))}
-          </div>
+          {gigsLoading ? (
+            <div className="featured-loading">Loading caregivers...</div>
+          ) : featuredGigs.length > 0 ? (
+            <div className="featured-grid">
+              {featuredGigs.map((gig) => (
+                <ServiceCard key={gig.id} {...gig} isPublic={true} />
+              ))}
+            </div>
+          ) : (
+            <div className="featured-empty">No caregivers available at the moment.</div>
+          )}
           <div className="featured-browse">
             <button className="featured-browse-btn" onClick={handleBrowseAll}>
               Browse Caregivers <span aria-hidden="true">›</span>

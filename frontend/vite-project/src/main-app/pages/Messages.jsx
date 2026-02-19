@@ -42,9 +42,9 @@ const Messages = ({ userId: propsUserId, token: propsToken }) => {
   // Track whether we're online for better error handling
   const [isOnline, setIsOnline] = useState(navigator.onLine);
 
-  // Mobile view management - calculate initial state properly
+  // Mobile view management - always show sidebar first on mobile so users can select a chat
   const [isMobile, setIsMobile] = useState(() => window.innerWidth < 768);
-  const [showSidebar, setShowSidebar] = useState(() => window.innerWidth >= 768);
+  const [showSidebar, setShowSidebar] = useState(true);
 
   // Notification permission state
   const [permissionGranted, setPermissionGranted] = useState(Notification.permission === 'granted');
@@ -655,8 +655,8 @@ const Messages = ({ userId: propsUserId, token: propsToken }) => {
       )}
       
       <div className="messages-container">
-        {/* Mobile back button - only show when chat is selected on mobile */}
-        {isMobile && selectedChatId && !showSidebar && (
+        {/* Mobile back button - show when chat is selected and sidebar is hidden on mobile */}
+        {isMobile && !showSidebar && (
           <div className="mobile-back-header">
             <button 
               ref={backButtonRef}
@@ -723,12 +723,12 @@ const Messages = ({ userId: propsUserId, token: propsToken }) => {
             <div className="placeholder">
               <div className="placeholder-content">
                 <div className="placeholder-icon" role="img" aria-label="Message icon">
-                  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+                  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
                     <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"></path>
                   </svg>
                 </div>
-                <h3>No conversation selected</h3>
-                <p>Choose a conversation from the sidebar to start messaging or continue an existing conversation.</p>
+                <h3>Select a conversation</h3>
+                <p>Choose a conversation from the list to start messaging. Your chat history will appear here.</p>
               </div>
             </div>
           )}

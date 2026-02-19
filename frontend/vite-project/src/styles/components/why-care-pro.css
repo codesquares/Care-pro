@@ -67,12 +67,14 @@
     flex: 1 1 0;
     max-width: none;
     width: calc(33.333% - 2rem);
-    height: 280px;
+    min-height: 280px;
+    height: auto;
   }
 }
 @media (min-width: 1024px) {
   .why-carepro__card {
-    height: 300px;
+    min-height: 300px;
+    height: auto;
   }
 }
 .why-carepro__card:hover {

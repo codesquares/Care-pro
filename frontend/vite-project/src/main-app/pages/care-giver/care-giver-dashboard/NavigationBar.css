@@ -461,7 +461,7 @@
     gap: 12px !important;
     list-style: none !important;
     margin: 0 !important;
-    padding: 6px 12px !important;
+    padding: 4px 12px !important;
     background-color: #f8f9fa !important;
     border-radius: 12px !important;
     border: 1px solid #e9ecef !important;
@@ -520,6 +520,12 @@
     cursor: default !important;
     transition: none !important;
     background-color: transparent !important;
+    display: flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+    list-style: none !important;
+    position: relative !important;
+    box-sizing: border-box !important;
   }
   
   .desktop-nav .nav-icons .caregiver-icon-link .notification-bell-container {

@@ -128,4 +128,58 @@
     color: #444;
     font-size: 14px;
   }
+
+  /* Responsive: Tablet */
+  @media (max-width: 768px) {
+    .payment-container {
+      flex-direction: column;
+      padding: 15px;
+    }
+
+    .payment-form {
+      padding: 15px;
+    }
+
+    .order-summary {
+      max-width: 100%;
+      margin-top: 20px;
+    }
+
+    .card-details {
+      flex-direction: column;
+      gap: 0;
+    }
+
+    .payment-methods {
+      flex-wrap: wrap;
+    }
+  }
+
+  /* Responsive: Mobile */
+  @media (max-width: 480px) {
+    .payment-container {
+      padding: 10px;
+    }
+
+    .payment-form {
+      padding: 12px;
+    }
+
+    .payment-form h2 {
+      font-size: 18px;
+    }
+
+    .payment-form p {
+      font-size: 16px;
+    }
+
+    .pay-button {
+      font-size: 14px;
+      padding: 10px;
+    }
+
+    .order-summary {
+      padding: 12px;
+    }
+  }
   

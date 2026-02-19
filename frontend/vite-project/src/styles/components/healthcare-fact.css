@@ -38,3 +38,55 @@
   font-size: 1rem;
   color: #333;
 }
+
+/* Responsive: Tablet */
+@media (max-width: 1024px) {
+  .healthcare-facts {
+    padding: 60px 20px;
+  }
+
+  .healthcare-facts .facts-list .fact-item {
+    min-width: 200px;
+  }
+}
+
+/* Responsive: Mobile */
+@media (max-width: 768px) {
+  .healthcare-facts {
+    padding: 40px 15px;
+  }
+
+  .healthcare-facts .header-container h2 {
+    font-size: 1.5rem;
+  }
+
+  .healthcare-facts .facts-list {
+    flex-direction: column;
+    align-items: center;
+  }
+
+  .healthcare-facts .facts-list .fact-item {
+    min-width: unset;
+    max-width: 100%;
+    width: 100%;
+  }
+}
+
+@media (max-width: 480px) {
+  .healthcare-facts {
+    padding: 30px 10px;
+  }
+
+  .healthcare-facts .header-container h2 {
+    font-size: 1.3rem;
+  }
+
+  .healthcare-facts .facts-list .fact-item {
+    padding: 15px;
+    margin: 5px 0;
+  }
+
+  .healthcare-facts .facts-list .fact-item p {
+    font-size: 0.9rem;
+  }
+}

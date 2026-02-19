@@ -123,36 +123,3 @@
     padding: 12px 15px;
   }
 }
-
-@media (max-width: 768px) {
-  .contact-form-container {
-    padding: 30px;
-  }
-  form .form-group {
-    flex-direction: column;
-    gap: 10px;
-  }
-  form input, form textarea {
-    width: 100%;
-  }
-}
-@media (max-width: 480px) {
-  .contact-form-container {
-    padding: 20px;
-  }
-  h2 {
-    font-size: 1.5rem;
-    margin-bottom: 20px;
-  }
-  form .form-group {
-    gap: 5px;
-  }
-  form input, form textarea {
-    padding: 8px;
-    font-size: 13px;
-  }
-  form .btn-submit {
-    padding: 10px 15px;
-    font-size: 14px;
-  }
-}

@@ -124,13 +124,13 @@
 .messages .messages-container .mobile-back-header {
   display: flex;
   align-items: center;
-  padding: 0.75rem 1rem;
+  padding: 0.625rem 1rem;
   background-color: #fff;
-  border-bottom: 1px solid #e5e7eb;
+  border-bottom: 1px solid #f3f4f6;
   position: sticky;
   top: 0;
   z-index: 15;
-  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.04);
 }
 @media (min-width: 768px) {
   .messages .messages-container .mobile-back-header {
@@ -145,23 +145,30 @@
   border: none;
   color: #4f46e5;
   font-size: 0.875rem;
-  font-weight: 500;
+  font-weight: 600;
   cursor: pointer;
-  padding: 0.5rem;
-  border-radius: 6px;
+  padding: 0.5rem 0.75rem;
+  border-radius: 8px;
   transition: all 0.2s ease;
 }
 .messages .messages-container .mobile-back-header .back-button:hover {
-  background-color: #f3f4f6;
+  background-color: #eef2ff;
+}
+.messages .messages-container .mobile-back-header .back-button:active {
+  transform: scale(0.97);
 }
 .messages .messages-container .mobile-back-header .back-button svg {
-  width: 16px;
-  height: 16px;
+  width: 18px;
+  height: 18px;
+  transition: transform 0.2s ease;
+}
+.messages .messages-container .mobile-back-header .back-button:hover svg {
+  transform: translateX(-2px);
 }
 .messages .messages-container .sidebar-container {
   flex: none;
   opacity: 1;
-  transition: opacity 0.2s ease-out, transform 0.3s ease;
+  transition: opacity 0.2s ease-out, transform 0.3s cubic-bezier(0.4, 0, 0.2, 1);
 }
 @media (max-width: 767px) {
   .messages .messages-container .sidebar-container {
@@ -175,6 +182,7 @@
   }
   .messages .messages-container .sidebar-container.mobile-hidden {
     transform: translateX(-100%);
+    pointer-events: none;
   }
 }
 @media (min-width: 768px) {
@@ -196,19 +204,19 @@
 }
 .messages .messages-container .chat-container {
   flex: 1;
-  min-height: 0; /* Critical for flex children to allow scrolling */
-  height: 100%; /* Ensure full height usage */
+  min-height: 0;
+  height: 100%;
   opacity: 1;
-  transition: opacity 0.2s ease-out, transform 0.3s ease;
+  transition: opacity 0.2s ease-out, transform 0.3s cubic-bezier(0.4, 0, 0.2, 1);
   display: flex;
   flex-direction: column;
-  overflow: hidden; /* Prevent container from scrolling, let child handle it */
+  overflow: hidden;
 }
 @media (max-width: 767px) {
   .messages .messages-container .chat-container {
     width: 100%;
     height: 100vh;
-    height: 100dvh; /* Use dynamic viewport height */
+    height: 100dvh;
     position: absolute;
     top: 0;
     left: 0;
@@ -216,6 +224,7 @@
   }
   .messages .messages-container .chat-container.mobile-hidden {
     transform: translateX(100%);
+    pointer-events: none;
   }
 }
 @media (min-width: 768px) {
@@ -472,32 +481,32 @@
   flex: 1;
   min-height: 200px;
   border-radius: 8px;
-  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
   margin-top: 0.5rem;
+  background-image: radial-gradient(circle at 50% 50%, rgba(79, 70, 229, 0.03) 0%, transparent 60%);
 }
 @media (min-width: 768px) {
   .placeholder {
     min-height: 300px;
     border-radius: 16px;
-    box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
     margin-top: 0;
   }
 }
 .placeholder .placeholder-content {
   text-align: center;
-  max-width: 300px;
-  padding: 1rem;
+  max-width: 340px;
+  padding: 1.5rem;
+  animation: fadeInUp 0.5s ease-out;
 }
 @media (min-width: 768px) {
   .placeholder .placeholder-content {
     max-width: 400px;
-    padding: 1.5rem;
+    padding: 2rem;
   }
 }
 .placeholder .placeholder-content .placeholder-icon {
   display: flex;
   justify-content: center;
-  margin-bottom: 1rem;
+  margin-bottom: 1.25rem;
 }
 @media (min-width: 768px) {
   .placeholder .placeholder-content .placeholder-icon {
@@ -505,43 +514,44 @@
   }
 }
 .placeholder .placeholder-content .placeholder-icon svg {
-  width: 48px;
-  height: 48px;
-  color: #d1d5db;
+  width: 56px;
+  height: 56px;
+  color: #c7d2fe;
+  filter: drop-shadow(0 2px 4px rgba(79, 70, 229, 0.15));
 }
 @media (min-width: 768px) {
   .placeholder .placeholder-content .placeholder-icon svg {
-    width: 64px;
-    height: 64px;
+    width: 72px;
+    height: 72px;
   }
 }
 .placeholder .placeholder-content h3 {
-  font-size: 1rem;
+  font-size: 1.125rem;
   font-weight: 600;
   color: #1f2937;
   margin: 0 0 0.5rem;
 }
 @media (min-width: 768px) {
   .placeholder .placeholder-content h3 {
-    font-size: 1.25rem;
+    font-size: 1.375rem;
     margin-bottom: 0.75rem;
   }
 }
 .placeholder .placeholder-content p {
-  color: #6b7280;
+  color: #9ca3af;
   margin: 0;
-  line-height: 1.5;
+  line-height: 1.6;
   text-align: center;
   font-size: 0.875rem;
 }
 @media (min-width: 768px) {
   .placeholder .placeholder-content p {
-    font-size: 1rem;
+    font-size: 0.9375rem;
   }
 }
 @media (min-width: 1024px) {
   .placeholder .placeholder-content p {
-    font-size: 1.1rem;
+    font-size: 1rem;
   }
 }
 

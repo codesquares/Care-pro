@@ -89,3 +89,70 @@
 .social-links a:hover {
   color: #007bff; /* Change color on hover */
 }
+
+/* Responsive: Tablet */
+@media (max-width: 1024px) {
+  .team-grid {
+    grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+    gap: 15px;
+  }
+
+  .heading-section h2 {
+    font-size: 1.7rem;
+  }
+}
+
+/* Responsive: Mobile */
+@media (max-width: 768px) {
+  .expert-team {
+    padding: 15px;
+  }
+
+  .team-grid {
+    grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
+    gap: 10px;
+  }
+
+  .team-card {
+    height: 250px;
+    margin: 5px;
+  }
+
+  .heading-section h2 {
+    font-size: 1.5rem;
+  }
+
+  .name-box {
+    padding: 10px;
+  }
+
+  .name-box h3 {
+    font-size: 1rem;
+  }
+
+  /* Touch device support: show overlay on tap */
+  .team-card:active .overlay,
+  .team-card:focus-within .overlay {
+    opacity: 1;
+  }
+}
+
+@media (max-width: 480px) {
+  .team-grid {
+    grid-template-columns: 1fr;
+    gap: 15px;
+  }
+
+  .team-card {
+    height: 280px;
+    margin: 0;
+  }
+
+  .heading-section h2 {
+    font-size: 1.3rem;
+  }
+
+  .philosophy {
+    font-size: 0.9rem;
+  }
+}

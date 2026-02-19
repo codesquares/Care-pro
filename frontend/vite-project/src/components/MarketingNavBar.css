@@ -5,6 +5,7 @@
   position: sticky;
   top: 0;
   z-index: 1000;
+  width: 100%;
   background-color: #ffffff;
   box-shadow: 0 1px 0 rgba(0, 0, 0, 0.05);
   transition: box-shadow 0.3s ease;
@@ -16,12 +17,13 @@
 
 .marketing-navbar .navbar-container {
   max-width: 1400px;
-  width: 90%;
+  width: 100%;
   margin: 0 auto;
   display: flex;
   justify-content: space-between;
   align-items: center;
-  padding: 0.75rem 0;
+  padding: 0.75rem 1rem;
+  position: relative;
 }
 
 @media (min-width: 768px) {
@@ -35,6 +37,8 @@
   display: flex;
   align-items: center;
   text-decoration: none;
+  flex: 1;
+  padding-left: 0;
 }
 
 .marketing-navbar .navbar-logo img {
@@ -128,9 +132,14 @@
 
 /* Mobile Menu Toggle */
 .marketing-navbar .mobile-menu-toggle {
+  position: absolute;
+  right: 1rem;
+  top: 50%;
+  transform: translateY(-50%);
   display: flex;
   align-items: center;
   justify-content: center;
+  width: auto;
   background: none;
   border: none;
   font-size: 1.5rem;
@@ -138,6 +147,7 @@
   color: #62646a;
   padding: 0.5rem;
   transition: color 0.2s ease;
+  z-index: 10;
 }
 
 @media (min-width: 1024px) {
@@ -152,7 +162,7 @@
 
 /* Navigation Links */
 .marketing-navbar .navbar-links {
-  display: none;
+  display: none !important;
   flex-direction: column;
   position: absolute;
   top: 100%;
@@ -165,12 +175,12 @@
 }
 
 .marketing-navbar .navbar-links.active {
-  display: flex;
+  display: flex !important;
 }
 
 @media (min-width: 1024px) {
   .marketing-navbar .navbar-links {
-    display: flex;
+    display: flex !important;
     flex-direction: row;
     position: static;
     background-color: transparent;

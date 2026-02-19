@@ -57,3 +57,14 @@
     transform: translateY(-20px);
   }
 }
+
+/* Responsive: Mobile */
+@media (max-width: 480px) {
+  .toast {
+    right: 10px;
+    left: 10px;
+    max-width: none;
+    font-size: 13px;
+    padding: 8px 14px;
+  }
+}
