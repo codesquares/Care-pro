@@ -68,7 +68,7 @@
 }
 
 /* Mobile Menu Toggle */
-.mobile-menu-toggle {
+.admin-nav .mobile-menu-toggle {
   display: none;
   background: rgba(255, 255, 255, 0.2);
   border: none;
@@ -80,7 +80,7 @@
   transition: all 0.3s ease;
 }
 
-.mobile-menu-toggle:hover {
+.admin-nav .mobile-menu-toggle:hover {
   background: rgba(255, 255, 255, 0.3);
 }
 
@@ -261,7 +261,7 @@
     padding: 0 1.5rem;
   }
 
-  .mobile-menu-toggle {
+  .admin-nav .mobile-menu-toggle {
     display: block;
   }
 
@@ -404,7 +404,7 @@
 /* Focus styles for accessibility */
 .nav-link:focus,
 .logout-button:focus,
-.mobile-menu-toggle:focus {
+.admin-nav .mobile-menu-toggle:focus {
   outline: 2px solid rgba(255, 255, 255, 0.5);
   outline-offset: 2px;
 }
