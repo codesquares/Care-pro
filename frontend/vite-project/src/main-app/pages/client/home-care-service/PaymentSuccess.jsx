@@ -7,7 +7,7 @@ import './PaymentSuccess.css';
 const PaymentSuccess = () => {
   const [searchParams] = useSearchParams();
   const navigate = useNavigate();
-  const statusChecked = useRef(false);
+  const intervalRef = useRef(null);
   const [orderStatus, setOrderStatus] = useState('Verifying payment...');
   const [paymentData, setPaymentData] = useState(null);
   const [error, setError] = useState(null);
@@ -22,20 +22,23 @@ const PaymentSuccess = () => {
   const user = JSON.parse(localStorage.getItem("userDetails") || "{}");
 
   useEffect(() => {
-    const verifyPaymentAndCreateOrder = async () => {
-      if (statusChecked.current || !txRef) {
-        if (!txRef) {
-          setError("No transaction reference found");
-          setOrderStatus('Payment verification failed');
-        }
-        return;
-      }
-      
-      statusChecked.current = true;
+    if (!txRef) {
+      setError("No transaction reference found");
+      setOrderStatus('Payment verification failed');
+      return;
+    }
 
+    const stopPolling = () => {
+      if (intervalRef.current) {
+        clearInterval(intervalRef.current);
+        intervalRef.current = null;
+      }
+    };
+
+    const checkPaymentStatus = async () => {
       try {
         setOrderStatus('Verifying payment with server...');
-        
+
         const token = localStorage.getItem('authToken');
         const response = await fetch(
           `${configs.BASE_URL}/payments/status/${txRef}`,
@@ -54,11 +57,12 @@ const PaymentSuccess = () => {
 
         const data = await response.json();
         console.log("Payment Status Response:", data);
-        setPaymentData(data);
 
         if (data.success && data.status === "completed") {
+          stopPolling();
+          setPaymentData(data);
           setOrderStatus('Payment verified! Order created successfully.');
-          
+
           // Save any pending tasks if available
           const pendingTaskData = localStorage.getItem("pendingTaskData");
           if (pendingTaskData && data.clientOrderId) {
@@ -68,10 +72,9 @@ const PaymentSuccess = () => {
               console.error("Failed to save tasks:", taskError);
             }
           }
-          
-          // Clean up localStorage
+
           cleanupLocalStorage();
-          
+
           // Check if a subscription was created for this order
           if (data.clientOrderId) {
             try {
@@ -83,35 +86,37 @@ const PaymentSuccess = () => {
               console.log('No subscription for this order (one-time payment)');
             }
           }
-          
-          // User will manually click "View My Orders" button to navigate
-          
+
         } else if (data.status === "pending") {
+          // Still pending — keep polling, update message only
           setOrderStatus('Payment is still being processed. Please wait...');
-          
-          // Retry status check after a delay
-          setTimeout(() => {
-            statusChecked.current = false;
-          }, 5000);
-          
+
         } else if (data.status === "failed" || data.status === "amountmismatch") {
+          stopPolling();
+          setPaymentData(data);
           setError(data.errorMessage || "Payment verification failed");
           setOrderStatus('Payment failed');
           cleanupLocalStorage();
-          
+
         } else {
+          stopPolling();
+          setPaymentData(data);
           setError("Unknown payment status");
           setOrderStatus('Payment verification failed');
         }
-        
-      } catch (error) {
-        console.error("Payment verification error:", error);
-        setError(error.message);
-        setOrderStatus('Error verifying payment');
+
+      } catch (err) {
+        console.error("Payment verification error:", err);
+        // Don't stop polling on network errors — retry on next tick
+        setOrderStatus('Retrying payment verification...');
       }
     };
 
-    verifyPaymentAndCreateOrder();
+    // Run immediately, then every 6 seconds
+    checkPaymentStatus();
+    intervalRef.current = setInterval(checkPaymentStatus, 6000);
+
+    return () => stopPolling();
   }, [txRef, navigate]);
 
   // Function to save pending tasks
