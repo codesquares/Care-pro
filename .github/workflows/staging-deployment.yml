@@ -124,7 +124,7 @@ jobs:
           VITE_CONTENTFUL_ACCESS_TOKEN_DRAFT: ${{ secrets.VITE_CONTENTFUL_ACCESS_TOKEN_DRAFT }}
           VITE_CONTENTFUL_ENVIRONMENT: master
           VITE_PRODUCTION_API_URL: https://api.oncarepro.com/api
-          VITE_STAGING_API_URL: https://carepro-api20241118153443.azurewebsites.net/api
+          VITE_STAGING_API_URL: https://staging.api.oncarepro.com/api
           VITE_LOCAL_API_URL: http://localhost:5005/api
           VITE_DOJAH_WIDGET_ID: ${{ secrets.VITE_DOJAH_WIDGET_ID_STAGING }}
           VITE_DOJAH_APP_ID: ${{ secrets.VITE_DOJAH_APP_ID_STAGING }}
@@ -184,7 +184,7 @@ jobs:
             --build-arg VITE_CONTENTFUL_ACCESS_TOKEN_DRAFT=${{ secrets.VITE_CONTENTFUL_ACCESS_TOKEN_DRAFT }} \
             --build-arg VITE_CONTENTFUL_ENVIRONMENT=master \
             --build-arg VITE_PRODUCTION_API_URL=https://api.oncarepro.com/api \
-            --build-arg VITE_STAGING_API_URL=https://carepro-api20241118153443.azurewebsites.net/api \
+            --build-arg VITE_STAGING_API_URL=https://staging.api.oncarepro.com/api \
             --build-arg VITE_LOCAL_API_URL=http://localhost:5005/api \
             --build-arg VITE_DOJAH_WIDGET_ID=${{ secrets.VITE_DOJAH_WIDGET_ID_STAGING }} \
             --build-arg VITE_DOJAH_APP_ID=${{ secrets.VITE_DOJAH_APP_ID_STAGING }} \
