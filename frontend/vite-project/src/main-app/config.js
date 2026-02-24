@@ -16,7 +16,7 @@ const resolveApiUrl = () => {
     
     // Staging environment (S3 static hosting)
     if (hostname.includes('carepro-frontend-staging') || hostname.includes('s3-website')) {
-        return import.meta.env.VITE_STAGING_API_URL || 'https://carepro-api20241118153443.azurewebsites.net/api';
+        return import.meta.env.VITE_STAGING_API_URL || 'https://staging.api.oncarepro.com/api';
     }
     
     // Local development - try local backend first, fallback to staging
@@ -24,14 +24,14 @@ const resolveApiUrl = () => {
         // For local development, we'll check if local backend is available
         // If VITE_LOCAL_API_URL is set, prefer local backend
         const localApiUrl = import.meta.env.VITE_LOCAL_API_URL || 'http://localhost:5005/api';
-        const stagingApiUrl = import.meta.env.VITE_STAGING_API_URL || 'https://carepro-api20241118153443.azurewebsites.net/api';
+        const stagingApiUrl = import.meta.env.VITE_STAGING_API_URL || 'https://staging.api.oncarepro.com/api';
         
         // Return local URL - the app will handle fallback at runtime
         return localApiUrl;
     }
     
     // Default fallback to staging
-    return import.meta.env.VITE_STAGING_API_URL || 'https://carepro-api20241118153443.azurewebsites.net/api';
+    return import.meta.env.VITE_STAGING_API_URL || 'https://staging.api.oncarepro.com/api';
 };
 
 const config = {
@@ -51,7 +51,7 @@ const config = {
 
     // Environment-specific URLs
     LOCAL_API_URL: import.meta.env.VITE_LOCAL_API_URL || 'http://localhost:5005/api',
-    STAGING_API_URL: import.meta.env.VITE_STAGING_API_URL || 'https://carepro-api20241118153443.azurewebsites.net/api',
+    STAGING_API_URL: import.meta.env.VITE_STAGING_API_URL || 'https://staging.api.oncarepro.com/api',
     PRODUCTION_API_URL: import.meta.env.VITE_PRODUCTION_API_URL || 'https://api.oncarepro.com/api',
     
     // Dojah Configuration
