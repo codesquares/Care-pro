@@ -295,11 +295,13 @@ const GigsForm = () => {
       }
       
       try {
-        console.log('🔄 Auto-saving draft...');
+        console.log('🔄 Auto-saving draft...', 'data.id:', data.id);
         const result = await GigService.saveDraft(data);
         
-        // Only update form data with saved draft ID if save was successful
-        if (result.success && result.id && !formData.id) {
+        // Store the draft ID if this was a new creation (POST)
+        // Use data.id (the parameter) instead of formData (closure) to avoid stale reference
+        if (result.success && result.id && !data.id) {
+          console.log('📌 Auto-save captured new draft ID:', result.id);
           updateField('id', result.id);
         }
         
@@ -574,7 +576,7 @@ const GigsForm = () => {
         formDataPayload.append("Description", formData.description);
       }
 
-      // Handle create vs update based on edit mode
+      // Handle create vs update — use formData.id to decide (covers both edit mode and auto-saved drafts)
       let response;
       const authToken = localStorage.getItem('authToken');
       const draftRequestConfig = {
@@ -582,10 +584,10 @@ const GigsForm = () => {
           ...(authToken ? { Authorization: `Bearer ${authToken}` } : {})
         }
       };
-      if (isEditMode && formData?.id) {
+      if (formData?.id) {
         console.log(`🔄 Updating existing draft gig with ID: ${formData.id}`);
         response = await axios.put(
-          `${config.BASE_URL}/Gigs/UpdateGig/gigId?gigId=${formData.id}`,
+          `${config.BASE_URL}/Gigs/UpdateGig/${formData.id}`,
           formDataPayload,
           draftRequestConfig
         );
@@ -599,6 +601,12 @@ const GigsForm = () => {
       }
 
       if (response.status === 200) {
+        // Store the returned gig ID to prevent duplicate drafts
+        const returnedId = response.data?.id || response.data?.Id;
+        if (returnedId && !formData.id) {
+          console.log('📌 Draft save captured new gig ID:', returnedId);
+          updateField('id', String(returnedId));
+        }
         setServerMessage("Gig saved as draft successfully!");
         setModalTitle("Success!");
         setModalDescription("Your Gig has been successfully saved as draft.");
@@ -809,11 +817,11 @@ const GigsForm = () => {
           }
         };
 
-        if (isEditMode && formData?.id) {
-          console.log(`🔄 Updating existing gig with ID: ${formData.id}`);
+        if (formData?.id) {
+          console.log(`🔄 Updating existing gig with ID: ${formData.id} (isEditMode: ${isEditMode})`);
           // Use centralized config for gig operations
           response = await axios.put(
-            `${config.BASE_URL}/Gigs/UpdateGig/gigId?gigId=${formData.id}`,
+            `${config.BASE_URL}/Gigs/UpdateGig/${formData.id}`,
             formDataPayload,
             requestConfig
           );

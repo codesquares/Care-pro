@@ -1,6 +1,9 @@
 import api from './api';
 import config from '../config';
 
+// Validate MongoDB ObjectId format (24 hex characters)
+const isValidObjectId = (id) => /^[a-fA-F0-9]{24}$/.test(id);
+
 class GigService {
   // Helper method to get authenticated user ID
   static getAuthenticatedUserId() {
@@ -94,25 +97,36 @@ class GigService {
 
       let response;
       if (gigData.id) {
-        // Update existing draft - use the correct backend endpoint
-        response = await api.put(`/Gigs/UpdateGig/gigId?gigId=${gigData.id}`, formData, {
+        const gigId = String(gigData.id).trim();
+        if (!isValidObjectId(gigId)) {
+          console.error('❌ saveDraft: Invalid gig ID format:', JSON.stringify(gigData.id), '→ trimmed:', JSON.stringify(gigId));
+          throw new Error(`Invalid Gig ID format on frontend: "${gigId}" (length: ${gigId.length})`);
+        }
+        // Update existing draft
+        console.log('📝 saveDraft PUT - gigId:', gigId);
+        response = await api.put(`/Gigs/UpdateGig/${gigId}`, formData, {
           headers: {
-            'Content-Type': 'multipart/form-data',
+            // Let browser set Content-Type with correct multipart boundary
+            'Content-Type': undefined,
           },
         });
       } else {
         // Create new draft
         response = await api.post('/Gigs', formData, {
           headers: {
-            'Content-Type': 'multipart/form-data',
+            'Content-Type': undefined,
           },
         });
       }
 
+      // Extract the gig ID from the response — backend returns camelCase 'id'
+      const returnedId = response.data?.id || response.data?.Id || gigData.id;
+      console.log('📝 saveDraft response - returnedId:', returnedId, 'response.data:', response.data);
+
       return {
         success: true,
         data: response.data,
-        id: response.data.id || gigData.id
+        id: returnedId ? String(returnedId) : null
       };
     } catch (error) {
       console.error('Error saving gig draft:', error);
@@ -211,24 +225,33 @@ class GigService {
 
       let response;
       if (gigData.id) {
-        // Update existing gig - use the correct backend endpoint
-        response = await api.put(`/Gigs/UpdateGig/gigId?gigId=${gigData.id}`, formData, {
+        const gigId = String(gigData.id).trim();
+        if (!isValidObjectId(gigId)) {
+          console.error('❌ publishGig: Invalid gig ID format:', JSON.stringify(gigData.id), '→ trimmed:', JSON.stringify(gigId));
+          throw new Error(`Invalid Gig ID format on frontend: "${gigId}" (length: ${gigId.length})`);
+        }
+        // Update existing gig
+        console.log('📝 publishGig PUT - gigId:', gigId);
+        response = await api.put(`/Gigs/UpdateGig/${gigId}`, formData, {
           headers: {
-            'Content-Type': 'multipart/form-data',
+            'Content-Type': undefined,
           },
         });
       } else {
         // Create new gig
         response = await api.post('/Gigs', formData, {
           headers: {
-            'Content-Type': 'multipart/form-data',
+            'Content-Type': undefined,
           },
         });
       }
 
+      const returnedId = response.data?.id || response.data?.Id || gigData.id;
+
       return {
         success: true,
-        data: response.data
+        data: response.data,
+        id: returnedId ? String(returnedId) : null
       };
     } catch (error) {
       console.error('Error publishing gig:', error);
