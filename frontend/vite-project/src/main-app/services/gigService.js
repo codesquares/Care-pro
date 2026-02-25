@@ -94,8 +94,8 @@ class GigService {
 
       let response;
       if (gigData.id) {
-        // Update existing draft
-        response = await api.put(`/Gigs/${gigData.id}`, formData, {
+        // Update existing draft - use the correct backend endpoint
+        response = await api.put(`/Gigs/UpdateGig/gigId?gigId=${gigData.id}`, formData, {
           headers: {
             'Content-Type': 'multipart/form-data',
           },
@@ -211,8 +211,8 @@ class GigService {
 
       let response;
       if (gigData.id) {
-        // Update existing gig
-        response = await api.put(`/Gigs/${gigData.id}`, formData, {
+        // Update existing gig - use the correct backend endpoint
+        response = await api.put(`/Gigs/UpdateGig/gigId?gigId=${gigData.id}`, formData, {
           headers: {
             'Content-Type': 'multipart/form-data',
           },

@@ -225,8 +225,14 @@ export function CaregiverStatusProvider({ children }) {
     const initializeStatus = async () => {
       const userDetails = getUserDetails();
       if (!userDetails?.id) {
-        // Reset state when no user
+        // Reset state when no user - also reset loading states to prevent UI from being stuck
         setCurrentUserId(null);
+        setStatusData(prev => ({
+          ...prev,
+          verificationLoading: false,
+          qualificationLoading: false,
+          certificatesLoading: false,
+        }));
         return;
       }
 

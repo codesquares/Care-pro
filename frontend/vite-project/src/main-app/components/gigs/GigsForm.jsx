@@ -507,6 +507,7 @@ const GigsForm = () => {
       return;
     }
 
+    setSaving(true);
     try {
       const formDataPayload = new FormData();
 
@@ -610,6 +611,8 @@ const GigsForm = () => {
       console.error("Error saving draft:", err);
       setServerMessage("Failed to save draft.");
       toast.error("Failed to save draft. Please try again.");
+    } finally {
+      setSaving(false);
     }
   };
 
