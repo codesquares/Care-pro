@@ -14,4 +14,37 @@
 .cg-sub-detail__row { display: flex; justify-content: space-between; padding: 6px 0; font-size: 13px; }
 .cg-sub-detail__row span:first-child { color: #888; }
 .cg-sub-detail__row span:last-child { font-weight: 500; color: #333; }
+.cg-sub-detail__row--total {
+  border-top: 2px solid #e0e0e0;
+  margin-top: 6px;
+  padding-top: 10px;
+  font-weight: 700;
+}
+.cg-sub-detail__row--total span:first-child { color: #333; font-weight: 700; }
+.cg-sub-detail__row--total span:last-child { font-weight: 700; font-size: 15px; }
+.cg-sub-detail__card--full {
+  grid-column: 1 / -1;
+  margin-bottom: 24px;
+}
 @media (max-width: 640px) { .cg-sub-detail__grid { grid-template-columns: 1fr; } .cg-sub-detail__header { flex-direction: column; gap: 8px; } }
+
+/* F13 — Contract section */
+.cg-sub-detail__contract-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 12px;
+}
+.cg-sub-detail__view-contract-btn {
+  background: none;
+  border: 1px solid #00B4A6;
+  color: #00B4A6;
+  padding: 6px 14px;
+  border-radius: 6px;
+  font-size: 13px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+.cg-sub-detail__view-contract-btn:hover { background: #00B4A6; color: #fff; }
+.cg-sub-detail__view-contract-btn:disabled { opacity: 0.6; cursor: not-allowed; }

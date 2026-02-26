@@ -5,6 +5,7 @@ import SubscriptionService from '../../../services/subscriptionService';
 import SubscriptionBadge from '../../../components/subscriptions/SubscriptionBadge';
 import BillingHistory from '../../../components/subscriptions/BillingHistory';
 import PlanHistory from '../../../components/subscriptions/PlanHistory';
+import api from '../../../services/api';
 import {
   CancelSubscriptionModal,
   TerminateSubscriptionModal,
@@ -21,6 +22,9 @@ const SubscriptionDetail = () => {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   const [actionLoading, setActionLoading] = useState(false);
+  const [contract, setContract] = useState(null);
+  const [contractLoading, setContractLoading] = useState(false);
+  const [contractExpanded, setContractExpanded] = useState(false);
 
   // Modal visibility
   const [showCancel, setShowCancel] = useState(false);
@@ -81,6 +85,21 @@ const SubscriptionDetail = () => {
   const onModalSuccess = (updatedData) => {
     setSub((prev) => ({ ...prev, ...updatedData }));
     fetchSubscription(); // re-fetch for full data
+  };
+
+  const loadContract = async () => {
+    if (contractExpanded) { setContractExpanded(false); return; }
+    if (contract) { setContractExpanded(true); return; }
+    setContractLoading(true);
+    try {
+      const res = await api.get(`/contracts/${sub.contractId}`);
+      setContract(res.data?.data ?? res.data);
+      setContractExpanded(true);
+    } catch (err) {
+      console.error('Failed to load contract:', err);
+    } finally {
+      setContractLoading(false);
+    }
   };
 
   if (loading) {
@@ -164,6 +183,18 @@ const SubscriptionDetail = () => {
           </div>
         )}
 
+        {sub.status === 'Expired' && (
+          <div className="sub-detail__banner sub-detail__banner--gray">
+            This subscription has expired. All billing cycles are complete.
+          </div>
+        )}
+
+        {sub.status === 'Charging' && (
+          <div className="sub-detail__banner sub-detail__banner--info">
+            A payment is currently being processed for this subscription. Actions are temporarily disabled.
+          </div>
+        )}
+
         {/* Details Grid */}
         <div className="sub-detail__grid">
           <div className="sub-detail__card">
@@ -172,11 +203,17 @@ const SubscriptionDetail = () => {
             <div className="sub-detail__row"><span>Frequency</span><span>{sub.frequencyPerWeek || 1}x per week</span></div>
             <div className="sub-detail__row"><span>Recurring Amount</span><span>₦{(sub.recurringAmount || 0).toLocaleString()}</span></div>
             <div className="sub-detail__row"><span>Service Active</span><span>{sub.isServiceActive ? 'Yes ✓' : 'No'}</span></div>
+            {sub.billingCyclesCompleted != null && (
+              <div className="sub-detail__row"><span>Cycles Completed</span><span>{sub.billingCyclesCompleted}</span></div>
+            )}
           </div>
 
           <div className="sub-detail__card">
             <h3>Billing Info</h3>
             <div className="sub-detail__row"><span>Payment Method</span><span>{cardDisplay}</span></div>
+            {sub.cardExpiry && (
+              <div className="sub-detail__row"><span>Card Expiry</span><span>{sub.cardExpiry}</span></div>
+            )}
             <div className="sub-detail__row"><span>Next Charge</span><span>{nextCharge}</span></div>
             <div className="sub-detail__row"><span>Period End</span><span>{periodEnd}</span></div>
             {sub.remainingDaysInPeriod != null && (
@@ -184,6 +221,37 @@ const SubscriptionDetail = () => {
             )}
           </div>
         </div>
+
+        {/* Price Breakdown */}
+        {sub.priceBreakdown && (
+          <div className="sub-detail__card sub-detail__card--full">
+            <h3>Price Breakdown</h3>
+            <div className="sub-detail__row">
+              <span>Base Price</span>
+              <span>₦{(sub.priceBreakdown.basePrice || 0).toLocaleString()}</span>
+            </div>
+            <div className="sub-detail__row">
+              <span>Frequency</span>
+              <span>{sub.priceBreakdown.frequencyPerWeek || 1}x per week</span>
+            </div>
+            <div className="sub-detail__row">
+              <span>Order Fee</span>
+              <span>₦{(sub.priceBreakdown.orderFee || 0).toLocaleString()}</span>
+            </div>
+            <div className="sub-detail__row">
+              <span>Service Charge</span>
+              <span>₦{(sub.priceBreakdown.serviceCharge || 0).toLocaleString()}</span>
+            </div>
+            <div className="sub-detail__row">
+              <span>Gateway Fees</span>
+              <span>₦{(sub.priceBreakdown.gatewayFees || 0).toLocaleString()}</span>
+            </div>
+            <div className="sub-detail__row sub-detail__row--total">
+              <span>Total Amount</span>
+              <span>₦{(sub.priceBreakdown.totalAmount || 0).toLocaleString()}</span>
+            </div>
+          </div>
+        )}
 
         {/* Actions */}
         <div className="sub-detail__actions">
@@ -236,6 +304,40 @@ const SubscriptionDetail = () => {
 
         {/* Billing History */}
         <BillingHistory subscriptionId={id} />
+
+        {/* Contract */}
+        {sub.contractId && (
+          <div className="sub-detail__card sub-detail__card--full">
+            <div className="sub-detail__contract-header">
+              <h3>Service Contract</h3>
+              <button
+                className="sub-detail__view-contract-btn"
+                onClick={loadContract}
+                disabled={contractLoading}
+              >
+                {contractLoading ? 'Loading…' : contractExpanded ? 'Hide Contract ▲' : 'View Contract ▼'}
+              </button>
+            </div>
+            {contractExpanded && contract && (
+              <>
+                <div className="sub-detail__row"><span>Status</span><span>{contract.status || '—'}</span></div>
+                <div className="sub-detail__row"><span>Service Address</span><span>{contract.serviceAddress || '—'}</span></div>
+                {contract.contractStartDate && (
+                  <div className="sub-detail__row"><span>Start Date</span><span>{new Date(contract.contractStartDate).toLocaleDateString()}</span></div>
+                )}
+                {contract.contractEndDate && (
+                  <div className="sub-detail__row"><span>End Date</span><span>{new Date(contract.contractEndDate).toLocaleDateString()}</span></div>
+                )}
+                {contract.schedule?.length > 0 && (
+                  <div className="sub-detail__row"><span>Scheduled Visits</span><span>{contract.schedule.length} visit(s) per week</span></div>
+                )}
+                {contract.specialClientRequirements && (
+                  <div className="sub-detail__row"><span>Special Requirements</span><span>{contract.specialClientRequirements}</span></div>
+                )}
+              </>
+            )}
+          </div>
+        )}
 
         {/* Modals */}
         <CancelSubscriptionModal isOpen={showCancel} onClose={() => setShowCancel(false)} subscription={sub} onSuccess={onModalSuccess} />

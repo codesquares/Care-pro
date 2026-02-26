@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react';
 import './WithdrawalModal.css';
 import { createNotification } from '../../../services/notificationService';
-import config from '../../../config'; // Import centralized config for API URLs
+import caregiverBankAccountService from '../../../services/caregiverBankAccountService';
 import Modal from '../../../components/modal/Modal';
 
 
@@ -11,20 +11,30 @@ const WithdrawalModal = ({ onClose, onSubmit, maxAmount }) => {
     accountNumber: '',
     bankName: '',
     accountName: '',
-    token: '' // Assuming token is passed as a prop or set elsewhere
   });
-  const userId = JSON.parse(localStorage.getItem('userDetails'))?.id || ''; // Get user ID from local storage
+  const userId = JSON.parse(localStorage.getItem('userDetails'))?.id || '';
+
+  // Pre-fill bank details from saved bank account
+  useEffect(() => {
+    const loadBankDetails = async () => {
+      if (!userId) return;
+      try {
+        const result = await caregiverBankAccountService.getBankAccount(userId);
+        if (result.success && result.data) {
+          setFormData((prev) => ({
+            ...prev,
+            bankName: prev.bankName || result.data.bankName || '',
+            accountNumber: prev.accountNumber || result.data.accountNumber || '',
+            accountName: prev.accountName || result.data.accountName || '',
+          }));
+        }
+      } catch (err) {
+        console.error('Error loading saved bank details:', err);
+      }
+    };
+    loadBankDetails();
+  }, [userId]);
   const [errors, setErrors] = useState({});
-  const [serviceCharge, setServiceCharge] = useState(0);
-  const [finalAmount, setFinalAmount] = useState(0);
-  const [adminData, setAdminData] = useState({});
-  const [admin, setAdmin] = useState({
-    id: "",
-    firstName: '',
-    lastName: '',
-    email: '',
-    phoneNumber: ''
-  });
 
   // Modal state management
   const [isModalOpen, setIsModalOpen] = useState(false);
@@ -34,64 +44,9 @@ const WithdrawalModal = ({ onClose, onSubmit, maxAmount }) => {
   const [buttonBgColor, setButtonBgColor] = useState('');
   const [isError, setIsError] = useState(false);
   
- useEffect(() => {
-   const token = localStorage.getItem('authToken'); // Get token from local storage
-   setFormData((prevData) => ({
-     ...prevData,
-     token: token || ''
-   }));
- }, []);
-
- useEffect(() => {
-  //load admin id to send notification
-  const getAdmin = async () => {
-    try{
-      // Use centralized config instead of hardcoded URL for consistent API routing
-      const response = await fetch(`${config.BASE_URL}/Admins/AllAdminUsers`, {
-        headers: {
-          'Authorization': `Bearer ${localStorage.getItem('authToken') || ''}`
-        }
-      }); // Assuming admin ID is 1
-      if (!response.ok) {
-        throw new Error('Failed to fetch admin ID');
-      }
-      const data = await response.json();
-      setAdminData(data)
-      return data; // Assuming the admin ID is in the 'id' field
-    }
-    catch (error) {
-      console.error('Error fetching admin ID:', error);
-      return null; // Return null or handle the error as needed
-  }
-  };
-  getAdmin().then((data) => {
-    if (data && data.length > 0) {
-      const admin = data[0]; // Assuming the first admin is the one we want
-      setAdmin({
-        id: admin.id,
-        firstName: admin.firstName,
-        lastName: admin.lastName,
-        email: admin.email,
-        phoneNumber: admin.phoneNumber
-      });
-    }
-  });
- }, []);
-
   const handleInputChange = (e) => {
     const { name, value } = e.target;
     setFormData({ ...formData, [name]: value });
-
-    // Calculate service charge and final amount when amount changes
-    if (name === 'amountRequested' && !isNaN(value) && value > 0) {
-      const amount = parseFloat(value);
-      const charge = amount * 0.2; // 20% service charge
-      setServiceCharge(charge);
-      setFinalAmount(amount - charge);
-    } else if (name === 'amountRequested') {
-      setServiceCharge(0);
-      setFinalAmount(0);
-    }
   };
 
   const validateForm = () => {
@@ -123,9 +78,6 @@ const WithdrawalModal = ({ onClose, onSubmit, maxAmount }) => {
       newErrors.accountName = 'Account name is required';
     }
 
-    if (!formData.token) {
-      newErrors.token = 'Token is required';
-    }
     setErrors(newErrors);
     return Object.keys(newErrors).length === 0;
   };
@@ -141,18 +93,7 @@ const WithdrawalModal = ({ onClose, onSubmit, maxAmount }) => {
           amountRequested: parseFloat(formData.amountRequested)
         });
 
-        // Create notifications
-        createNotification({
-          recipientId: adminData?.id ? admin.id : null,
-          senderId: userId,
-          type: "withdrawal",
-          relatedEntityId: userId,
-        }).then(() => {
-          console.log("Admin notification created successfully"); 
-        }).catch((error) => {
-          console.error("Error creating admin notification:", error);
-        });
-
+        // Create notification for the caregiver
         createNotification({
           recipientId: userId,
           senderId: userId,
@@ -166,7 +107,7 @@ const WithdrawalModal = ({ onClose, onSubmit, maxAmount }) => {
 
         // Show success modal
         setModalTitle('Withdrawal Request Submitted!');
-        setModalDescription(`Your withdrawal request for ${formatCurrency(parseFloat(formData.amountRequested))} has been submitted successfully. You will receive ${formatCurrency(finalAmount)} after processing fees.`);
+        setModalDescription(`Your withdrawal request for ${formatCurrency(parseFloat(formData.amountRequested))} has been submitted successfully. Service charge will be calculated and deducted by the system.`);
         setButtonText('Close');
         setButtonBgColor('#00B4A6');
         setIsError(false);
@@ -228,23 +169,6 @@ const WithdrawalModal = ({ onClose, onSubmit, maxAmount }) => {
               Available: {formatCurrency(maxAmount)}
             </div>
           </div>
-          
-          {formData.amountRequested && !isNaN(formData.amountRequested) && formData.amountRequested > 0 && (
-            <div className="fee-breakdown">
-              <div className="breakdown-row">
-                <span>Amount Requested:</span>
-                <span>{formatCurrency(parseFloat(formData.amountRequested))}</span>
-              </div>
-              <div className="breakdown-row">
-                <span>Service Charge (10%):</span>
-                <span>-{formatCurrency(serviceCharge)}</span>
-              </div>
-              <div className="breakdown-row total">
-                <span>Final Amount:</span>
-                <span>{formatCurrency(finalAmount)}</span>
-              </div>
-            </div>
-          )}
           
           <div className="form-group">
             <label htmlFor="bankName">Bank Name</label>

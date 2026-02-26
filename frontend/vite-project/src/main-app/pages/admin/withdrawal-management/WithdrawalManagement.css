@@ -2,6 +2,8 @@
   padding: 20px;
   max-width: 1200px;
   margin: 0 auto;
+  width: 100%;
+  box-sizing: border-box;
 }
 
 .page-title {
@@ -57,6 +59,9 @@
 
 .withdrawals-table-container {
   overflow-x: auto;
+  -webkit-overflow-scrolling: touch;
+  width: 100%;
+  max-width: 100%;
 }
 
 .withdrawals-table {
@@ -147,4 +152,75 @@
   font-size: 13px;
   font-style: italic;
   color: #888;
+}
+.processed-at {
+  font-size: 13px;
+  color: #555;
+  white-space: nowrap;
+}
+
+.not-processed {
+  color: #ccc;
+}
+
+/* ── Tablet / small desktop responsive ── */
+@media (max-width: 1100px) {
+  .withdrawal-management {
+    padding: 16px 12px;
+  }
+
+  .withdrawals-table th,
+  .withdrawals-table td {
+    padding: 10px 8px;
+    font-size: 13px;
+  }
+
+  .bank-info {
+    font-size: 12px;
+    min-width: 110px;
+  }
+
+  .token {
+    font-size: 12px;
+  }
+
+  .status-badge {
+    font-size: 11px;
+    padding: 4px 8px;
+  }
+
+  .processed-at {
+    font-size: 12px;
+  }
+
+  .action-btn {
+    padding: 6px 10px;
+    font-size: 12px;
+  }
+}
+
+@media (max-width: 768px) {
+  .withdrawal-management {
+    padding: 12px 8px;
+  }
+
+  .page-title {
+    font-size: 20px;
+  }
+
+  .filter-container {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 6px;
+  }
+
+  .withdrawals-table th,
+  .withdrawals-table td {
+    padding: 8px 6px;
+    font-size: 12px;
+  }
+
+  .withdrawals-table {
+    min-width: 900px;
+  }
 }

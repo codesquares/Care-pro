@@ -72,6 +72,18 @@ const SubscriptionCard = ({ subscription, basePath = '/app/client' }) => {
             Subscription paused
           </div>
         )}
+
+        {s.status === 'Expired' && (
+          <div className="subscription-card__banner subscription-card__banner--gray">
+            This subscription has ended
+          </div>
+        )}
+
+        {s.status === 'Charging' && (
+          <div className="subscription-card__banner subscription-card__banner--info">
+            Payment is being processed…
+          </div>
+        )}
       </div>
     </div>
   );

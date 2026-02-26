@@ -5,44 +5,49 @@ import { useAuth } from '../../../context/AuthContext';
 import { getInitials } from '../../../utils/avatarHelpers';
 import './admin-navigation-bar.css';
 
+const navItems = [
+  { to: '/app/admin/dashboard',          icon: 'fa-chart-line',     label: 'Dashboard' },
+  { to: '/app/admin/caregivers',         icon: 'fa-user-nurse',     label: 'Caregivers' },
+  { to: '/app/admin/clients',            icon: 'fa-user-friends',   label: 'Clients' },
+  { to: '/app/admin/notifications',      icon: 'fa-bell',           label: 'Notifications' },
+  { to: '/app/admin/training-materials', icon: 'fa-graduation-cap', label: 'Training' },
+  { to: '/app/admin/gigs',               icon: 'fa-briefcase',      label: 'Gigs' },
+  { to: '/app/admin/orders',             icon: 'fa-shopping-cart',  label: 'Orders' },
+  { to: '/app/admin/emails',             icon: 'fa-envelope',       label: 'Emails' },
+  { to: '/app/admin/certificates',       icon: 'fa-certificate',    label: 'Certificates' },
+  { to: '/app/admin/withdrawals',        icon: 'fa-wallet',         label: 'Withdrawals' },
+  { to: '/app/admin/subscriptions',      icon: 'fa-sync-alt',       label: 'Subscriptions' },
+  { to: '/app/admin/question-bank',      icon: 'fa-clipboard-list', label: 'Question Bank' },
+  { to: '/app/admin/dojah-admin',        icon: 'fa-id-badge',       label: 'Verifications' },
+];
+
 const AdminNavigationBar = () => {
   const navigate = useNavigate();
   const location = useLocation();
   const { user, handleLogout } = useAuth();
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
-  
+
   const userName = user?.firstName ? `${user.firstName} ${user.lastName || ''}` : 'Admin';
   const userInitials = getInitials(userName);
 
-  // Early return if no user data - prevents errors during logout
-  if (!user) {
-    return null;
-  }
-  
-  // Handle logout
+  if (!user) return null;
+
   const handleAdminLogout = () => {
     handleLogout();
     navigate('/', { replace: true });
   };
 
-  // Check if link is active
-  const isActive = (path) => {
-    return location.pathname === path;
-  };
+  const isActive = (path) => location.pathname === path;
 
-  const toggleMobileMenu = () => {
-    setIsMobileMenuOpen(!isMobileMenuOpen);
-  };
-
-  const closeMobileMenu = () => {
-    setIsMobileMenuOpen(false);
-  };
+  const toggleMobileMenu = () => setIsMobileMenuOpen((prev) => !prev);
+  const closeMobileMenu = () => setIsMobileMenuOpen(false);
 
   return (
-    <nav className="admin-nav">
-      <div className="admin-nav-container">
-        <div className="admin-nav-logo">
-          <Link to="/app/admin/dashboard" onClick={closeMobileMenu}>
+    <header className="admin-header">
+      {/* ── Top bar: logo · user info · logout · hamburger ── */}
+      <div className="admin-topbar">
+        <div className="admin-topbar-inner">
+          <Link to="/app/admin/dashboard" className="admin-topbar-logo" onClick={closeMobileMenu}>
             <div className="logo-icon">
               <i className="fas fa-shield-alt"></i>
             </div>
@@ -51,162 +56,72 @@ const AdminNavigationBar = () => {
               <span className="logo-subtitle">Admin Portal</span>
             </div>
           </Link>
-        </div>
-        
-        <button className="mobile-menu-toggle" onClick={toggleMobileMenu}>
-          <i className={`fas ${isMobileMenuOpen ? 'fa-times' : 'fa-bars'}`}></i>
-        </button>
 
-        <div className={`admin-nav-menu ${isMobileMenuOpen ? 'mobile-open' : ''}`}>
-          <ul className="admin-nav-links">
-            <li>
-              <Link 
-                to="/app/admin/dashboard" 
-                className={`nav-link ${isActive('/app/admin/dashboard') ? 'active' : ''}`}
-                onClick={closeMobileMenu}
-              >
-                <i className="fas fa-chart-line"></i>
-                <span>Dashboard</span>
-              </Link>
-            </li>
-            <li>
-              <Link 
-                to="/app/admin/caregivers" 
-                className={`nav-link ${isActive('/app/admin/caregivers') ? 'active' : ''}`}
-                onClick={closeMobileMenu}
-              >
-                <i className="fas fa-user-nurse"></i>
-                <span>Caregivers</span>
-              </Link>
-            </li>
-            <li>
-              <Link 
-                to="/app/admin/clients" 
-                className={`nav-link ${isActive('/app/admin/clients') ? 'active' : ''}`}
-                onClick={closeMobileMenu}
-              >
-                <i className="fas fa-user-friends"></i>
-                <span>Clients</span>
-              </Link>
-            </li>
-            <li>
-              <Link 
-                to="/app/admin/notifications" 
-                className={`nav-link ${isActive('/app/admin/notifications') ? 'active' : ''}`}
-                onClick={closeMobileMenu}
-              >
-                <i className="fas fa-bell"></i>
-                <span>Notifications</span>
-              </Link>
-            </li>
-            <li>
-              <Link 
-                to="/app/admin/training-materials" 
-                className={`nav-link ${isActive('/app/admin/training-materials') ? 'active' : ''}`}
-                onClick={closeMobileMenu}
-              >
-                <i className="fas fa-graduation-cap"></i>
-                <span>Training</span>
-              </Link>
-            </li>
-            <li>
-              <Link 
-                to="/app/admin/gigs" 
-                className={`nav-link ${isActive('/app/admin/gigs') ? 'active' : ''}`}
-                onClick={closeMobileMenu}
-              >
-                <i className="fas fa-briefcase"></i>
-                <span>Gigs</span>
-              </Link>
-            </li>
-            <li>
-              <Link 
-                to="/app/admin/orders" 
-                className={`nav-link ${isActive('/app/admin/orders') ? 'active' : ''}`}
-                onClick={closeMobileMenu}
-              >
-                <i className="fas fa-shopping-cart"></i>
-                <span>Orders</span>
-              </Link>
-            </li>
-            <li>
-              <Link 
-                to="/app/admin/emails" 
-                className={`nav-link ${isActive('/app/admin/emails') ? 'active' : ''}`}
-                onClick={closeMobileMenu}
-              >
-                <i className="fas fa-envelope"></i>
-                <span>Emails</span>
-              </Link>
-            </li>
-            <li>
-              <Link 
-                to="/app/admin/certificates" 
-                className={`nav-link ${isActive('/app/admin/certificates') ? 'active' : ''}`}
-                onClick={closeMobileMenu}
-              >
-                <i className="fas fa-certificate"></i>
-                <span>Certificates</span>
-              </Link>
-            </li>
-            <li>
-              <Link 
-                to="/app/admin/withdrawals" 
-                className={`nav-link ${isActive('/app/admin/withdrawals') ? 'active' : ''}`}
-                onClick={closeMobileMenu}
-              >
-                <i className="fas fa-wallet"></i>
-                <span>Withdrawals</span>
-              </Link>
-            </li>
-            <li>
-              <Link 
-                to="/app/admin/subscriptions" 
-                className={`nav-link ${isActive('/app/admin/subscriptions') ? 'active' : ''}`}
-                onClick={closeMobileMenu}
-              >
-                <i className="fas fa-sync-alt"></i>
-                <span>Subscriptions</span>
-              </Link>
-            </li>
-            <li>
-              <Link 
-                to="/app/admin/question-bank" 
-                className={`nav-link ${isActive('/app/admin/question-bank') ? 'active' : ''}`}
-                onClick={closeMobileMenu}
-              >
-                <i className="fas fa-clipboard-list"></i>
-                <span>Question Bank</span>
-              </Link>
-            </li>
-            <li>
-              <Link 
-                to="/app/admin/dojah-admin" 
-                className={`nav-link ${isActive('/app/admin/dojah-admin') ? 'active' : ''}`}
-                onClick={closeMobileMenu}
-              >
-                <i className="fas fa-id-badge"></i>
-                <span>Verifications</span>
-              </Link>
-            </li>
-          </ul>
-          
-          <div className="admin-nav-user">
-            <div className="user-avatar">
-              <span>{userInitials}</span>
+          <div className="admin-topbar-right">
+            <div className="admin-nav-user">
+              <div className="user-avatar">
+                <span>{userInitials}</span>
+              </div>
+              <div className="user-info">
+                <span className="user-name">{userName}</span>
+                <span className="user-role">Administrator</span>
+              </div>
+              <button className="logout-button" onClick={handleAdminLogout} title="Logout">
+                <i className="fas fa-sign-out-alt"></i>
+                <span>Logout</span>
+              </button>
             </div>
-            <div className="user-info">
-              <span className="user-name">{userName}</span>
-              <span className="user-role">Administrator</span>
-            </div>
-            <button className="logout-button" onClick={handleAdminLogout} title="Logout">
-              <i className="fas fa-sign-out-alt"></i>
-              <span>Logout</span>
+
+            <button
+              className="mobile-menu-toggle"
+              onClick={toggleMobileMenu}
+              aria-label="Toggle navigation menu"
+              aria-expanded={isMobileMenuOpen}
+            >
+              <i className={`fas ${isMobileMenuOpen ? 'fa-times' : 'fa-bars'}`}></i>
             </button>
           </div>
         </div>
       </div>
-    </nav>
+
+      {/* ── Tab nav strip (desktop / tablet) ── */}
+      <nav className="admin-tab-nav" aria-label="Admin navigation">
+        <div className="admin-tab-nav-inner">
+          <ul className="admin-tab-links">
+            {navItems.map(({ to, icon, label }) => (
+              <li key={to}>
+                <Link
+                  to={to}
+                  className={`tab-link ${isActive(to) ? 'active' : ''}`}
+                  onClick={closeMobileMenu}
+                >
+                  <i className={`fas ${icon}`}></i>
+                  <span>{label}</span>
+                </Link>
+              </li>
+            ))}
+          </ul>
+        </div>
+      </nav>
+
+      {/* ── Mobile drawer (hamburger controlled) ── */}
+      <div className={`admin-mobile-drawer ${isMobileMenuOpen ? 'open' : ''}`} aria-hidden={!isMobileMenuOpen}>
+        <ul className="mobile-nav-links">
+          {navItems.map(({ to, icon, label }) => (
+            <li key={to}>
+              <Link
+                to={to}
+                className={`mobile-nav-link ${isActive(to) ? 'active' : ''}`}
+                onClick={closeMobileMenu}
+              >
+                <i className={`fas ${icon}`}></i>
+                <span>{label}</span>
+              </Link>
+            </li>
+          ))}
+        </ul>
+      </div>
+    </header>
   );
 };
 

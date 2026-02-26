@@ -45,12 +45,12 @@
 /* Stats Grid */
 .earnings-stats-grid {
   display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
-  gap: 24px;
+  grid-template-columns: 1fr;
+  gap: 16px;
   margin-bottom: 48px;
 }
 
-.stat-card {
+.earnings-stat-card {
   background: white;
   padding: 28px;
   border-radius: 16px;
@@ -62,31 +62,31 @@
   border: 1px solid #f0f0f0;
 }
 
-.stat-card:hover {
+.earnings-stat-card:hover {
   transform: translateY(-4px);
   box-shadow: 0 8px 24px rgba(0, 0, 0, 0.12);
   border-color: #e0e0e0;
 }
 
-.stat-icon {
-  font-size: 14px;
-  width: 28px;
-  height: 28px;
+.earnings-icon-wrap {
+  font-size: 20px;
+  width: 48px;
+  height: 48px;
   display: flex;
   align-items: center;
   justify-content: center;
-  border-radius: 12px;
+  border-radius: 14px;
   background: #f8f9fa;
   flex-shrink: 0;
 }
 
 .earnings-stat-icon {
-  font-size: 16px;
-  width: 16px;
-  height: 16px;
+  font-size: 22px;
+  width: 22px;
+  height: 22px;
 }
 
-.balance-card .stat-icon {
+.balance-card .earnings-icon-wrap {
   background: linear-gradient(135deg, #e8f5e8, #d4f4d4);
 }
 
@@ -94,7 +94,7 @@
   color: #28a745;
 }
 
-.orders-card .stat-icon {
+.orders-card .earnings-icon-wrap {
   background: linear-gradient(135deg, #e3f2fd, #bbdefb);
 }
 
@@ -102,7 +102,7 @@
   color: #007bff;
 }
 
-.earnings-card .stat-icon {
+.earnings-card .earnings-icon-wrap {
   background: linear-gradient(135deg, #fff3e0, #ffe0b2);
 }
 
@@ -110,7 +110,7 @@
   color: #fd7e14;
 }
 
-.payout-card .stat-icon {
+.payout-card .earnings-icon-wrap {
   background: linear-gradient(135deg, #fce4ec, #f8bbd9);
 }
 
@@ -118,12 +118,12 @@
   color: #e83e8c;
 }
 
-.stat-content {
+.earnings-stat-content {
   flex: 1;
   min-width: 0;
 }
 
-.stat-label {
+.earnings-stat-label {
   color: #6c757d;
   font-size: 14px;
   margin: 0 0 8px 0;
@@ -132,7 +132,7 @@
   letter-spacing: 0.5px;
 }
 
-.stat-value {
+.earnings-stat-value {
   color: #2c3e50;
   font-size: 28px;
   font-weight: 700;
@@ -441,24 +441,39 @@
 }
 
 /* Responsive Design */
-@media (max-width: 1024px) {
+/* Small tablet: 2 columns */
+@media (min-width: 576px) {
   .earnings-stats-grid {
     grid-template-columns: repeat(2, 1fr);
     gap: 20px;
   }
-  
-  .stat-card {
+}
+
+/* Desktop: 3 columns */
+@media (min-width: 1025px) {
+  .earnings-stats-grid {
+    grid-template-columns: repeat(3, 1fr);
+    gap: 24px;
+  }
+
+  .earnings-stat-card {
     padding: 24px;
   }
-  
-  .stat-icon {
-    width: 32px;
-    height: 32px;
-    font-size: 18px;
+
+  .earnings-icon-wrap {
+    width: 44px;
+    height: 44px;
+    font-size: 20px;
   }
-  
-  .stat-value {
-    font-size: 24px;
+
+  .earnings-stat-icon {
+    font-size: 20px;
+    width: 20px;
+    height: 20px;
+  }
+
+  .earnings-stat-value {
+    font-size: 26px;
   }
 }
 
@@ -485,23 +500,28 @@
   }
 
   .earnings-stats-grid {
-    grid-template-columns: 1fr;
     gap: 16px;
     margin-bottom: 32px;
   }
 
-  .stat-card {
+  .earnings-stat-card {
     padding: 20px;
     gap: 16px;
   }
 
-  .stat-icon {
-    width: 28px;
-    height: 28px;
+  .earnings-icon-wrap {
+    width: 38px;
+    height: 38px;
     font-size: 16px;
   }
 
-  .stat-value {
+  .earnings-stat-icon {
+    font-size: 16px;
+    width: 16px;
+    height: 16px;
+  }
+
+  .earnings-stat-value {
     font-size: 22px;
   }
 
@@ -574,20 +594,26 @@
     font-size: 15px;
   }
 
-  .stat-card {
+  .earnings-stat-card {
     padding: 18px;
     flex-direction: column;
     text-align: center;
     gap: 12px;
   }
 
-  .stat-icon {
-    width: 24px;
-    height: 24px;
+  .earnings-icon-wrap {
+    width: 36px;
+    height: 36px;
     font-size: 14px;
   }
 
-  .stat-value {
+  .earnings-stat-icon {
+    font-size: 14px;
+    width: 14px;
+    height: 14px;
+  }
+
+  .earnings-stat-value {
     font-size: 20px;
   }
 
@@ -631,22 +657,30 @@
   }
   
   .earnings-stats-grid {
+    grid-template-columns: repeat(5, 1fr);
     gap: 32px;
     margin-bottom: 56px;
   }
   
-  .stat-card {
+  .earnings-stat-card {
     padding: 32px;
     gap: 24px;
   }
   
-  .stat-icon {
-    width: 40px;
-    height: 40px;
-    font-size: 22px;
+  .earnings-icon-wrap {
+    width: 56px;
+    height: 56px;
+    font-size: 24px;
+    border-radius: 16px;
   }
   
-  .stat-value {
+  .earnings-stat-icon {
+    font-size: 26px;
+    width: 26px;
+    height: 26px;
+  }
+  
+  .earnings-stat-value {
     font-size: 32px;
   }
   
@@ -658,140 +692,5 @@
   .chart-bars {
     height: 180px;
     gap: 16px;
-  }
-}
-
-/* Mobile Responsive Design */
-@media (max-width: 768px) {
-  .earnings-page-container {
-    padding: 16px;
-  }
-
-  .earnings-header {
-    flex-direction: column;
-    gap: 16px;
-    align-items: stretch;
-  }
-
-  .earnings-title {
-    font-size: 24px;
-    text-align: center;
-  }
-
-  .withdraw-earnings-btn {
-    text-align: center;
-    padding: 14px 20px;
-  }
-
-  .earnings-stats-grid {
-    grid-template-columns: 1fr;
-    gap: 16px;
-  }
-
-  .stat-card {
-    padding: 20px;
-  }
-
-  .stat-icon {
-    font-size: 14px;
-    width: 25px;
-    height: 25px;
-  }
-
-  .stat-value {
-    font-size: 20px;
-  }
-
-  .earnings-chart-section,
-  .transactions-section {
-    padding: 20px;
-  }
-
-  .chart-header {
-    flex-direction: column;
-    gap: 12px;
-    align-items: stretch;
-  }
-
-  .chart-header h3 {
-    text-align: center;
-  }
-
-  .amount-value {
-    font-size: 28px;
-    text-align: center;
-  }
-
-  .chart-bars {
-    height: 100px;
-    gap: 4px;
-  }
-
-  .chart-labels {
-    font-size: 10px;
-    padding: 0 8px;
-  }
-
-  .transactions-table-container {
-    margin: 0 -20px;
-    padding: 0 20px;
-  }
-
-  .transactions-table th,
-  .transactions-table td {
-    padding: 12px 8px;
-    font-size: 13px;
-  }
-
-  .activity-cell {
-    flex-direction: column;
-    gap: 4px;
-    text-align: center;
-  }
-}
-
-@media (max-width: 480px) {
-  .earnings-page-container {
-    padding: 12px;
-  }
-
-  .earnings-title {
-    font-size: 20px;
-  }
-
-  .stat-card {
-    padding: 16px;
-    flex-direction: column;
-    text-align: center;
-  }
-
-  .stat-icon {
-    font-size: 12px;
-    width: 20px;
-    height: 20px;
-  }
-
-  .stat-value {
-    font-size: 18px;
-  }
-
-  .earnings-chart-section,
-  .transactions-section {
-    padding: 16px;
-  }
-
-  .amount-value {
-    font-size: 24px;
-  }
-
-  .chart-bars {
-    height: 80px;
-    gap: 2px;
-  }
-
-  .transactions-table th,
-  .transactions-table td {
-    padding: 8px 4px;
-    font-size: 12px;
   }
 }
