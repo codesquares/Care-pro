@@ -1,11 +1,35 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import './TokenVerificationModal.css';
 import Modal from '../../../components/modal/Modal';
+import caregiverBankAccountService from '../../../services/caregiverBankAccountService';
 
 const TokenVerificationModal = ({ withdrawal, onClose, onSubmit }) => {
   const [notes, setNotes] = useState('');
   const [error, setError] = useState('');
   const [activeAction, setActiveAction] = useState(null);
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const [financialSummary, setFinancialSummary] = useState(null);
+  const [summaryLoading, setSummaryLoading] = useState(false);
+
+  // Fetch financial summary when modal opens
+  useEffect(() => {
+    const fetchSummary = async () => {
+      const caregiverId = withdrawal?.caregiverId;
+      if (!caregiverId) return;
+      try {
+        setSummaryLoading(true);
+        const result = await caregiverBankAccountService.getFinancialSummary(caregiverId);
+        if (result.success && result.data) {
+          setFinancialSummary(result.data);
+        }
+      } catch (err) {
+        console.error('Error fetching financial summary:', err);
+      } finally {
+        setSummaryLoading(false);
+      }
+    };
+    fetchSummary();
+  }, [withdrawal?.caregiverId]);
   
   // Modal state management
   const [isModalOpen, setIsModalOpen] = useState(false);
@@ -34,12 +58,13 @@ const TokenVerificationModal = ({ withdrawal, onClose, onSubmit }) => {
     }).format(amount);
   };
   
-  const handleAction = (action) => {
+  const handleAction = async (action) => {
     setActiveAction(action);
     
     if (action === 'complete' && withdrawal.status === 'Verified') {
+      setIsSubmitting(true);
       try {
-        onSubmit('complete', {});
+        await onSubmit('complete', {});
         
         // Show success modal for completion
         setModalTitle('Withdrawal Completed!');
@@ -50,20 +75,29 @@ const TokenVerificationModal = ({ withdrawal, onClose, onSubmit }) => {
         setIsModalOpen(true);
         
       } catch (error) {
-        console.error('Completion error:', error);
+        console.error('Completion error:', error?.response?.status, error?.response?.data);
+        
+        const data = error?.response?.data;
+        let msg = data?.errorMessage || data?.title || 'Failed to complete the withdrawal request. Please try again.';
+        if (data?.errors) {
+          const fieldErrors = Object.values(data.errors).flat().join(' | ');
+          if (fieldErrors) msg = fieldErrors;
+        }
         
         // Show error modal
         setModalTitle('Completion Failed');
-        setModalDescription('Failed to complete the withdrawal request. Please try again.');
+        setModalDescription(msg);
         setButtonText('Try Again');
         setButtonBgColor('#FF4B4B');
         setIsError(true);
         setIsModalOpen(true);
+      } finally {
+        setIsSubmitting(false);
       }
     }
   };
   
-  const handleSubmit = (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault();
     
     if (activeAction === 'reject' && !notes.trim()) {
@@ -71,10 +105,11 @@ const TokenVerificationModal = ({ withdrawal, onClose, onSubmit }) => {
       return;
     }
     
+    setIsSubmitting(true);
     try {
-      onSubmit(activeAction, { notes });
+      await onSubmit(activeAction, { notes });
       
-      // Show success modal based on action type
+      // Show success modal based on action type — only reached if API call succeeded
       if (activeAction === 'verify') {
         setModalTitle('Request Verified!');
         setModalDescription(`Withdrawal request for ${withdrawal.caregiverName} has been successfully verified. The request is now ready for completion.`);
@@ -93,15 +128,28 @@ const TokenVerificationModal = ({ withdrawal, onClose, onSubmit }) => {
       }
       
     } catch (error) {
-      console.error('Submit error:', error);
+      console.error('Submit error:', error?.response?.status, error?.response?.data);
       
-      // Show error modal
+      // Extract the most useful error message from .NET or custom backend responses
+      const data = error?.response?.data;
+      let msg = data?.errorMessage
+        || data?.title
+        || `Failed to ${activeAction} the withdrawal request. Please try again.`;
+      // Append field-level .NET validation errors if present
+      if (data?.errors) {
+        const fieldErrors = Object.values(data.errors).flat().join(' | ');
+        if (fieldErrors) msg = fieldErrors;
+      }
+      
+      // Show error modal with backend message if available
       setModalTitle('Action Failed');
-      setModalDescription(`Failed to ${activeAction} the withdrawal request. Please try again.`);
+      setModalDescription(msg);
       setButtonText('Try Again');
       setButtonBgColor('#FF4B4B');
       setIsError(true);
       setIsModalOpen(true);
+    } finally {
+      setIsSubmitting(false);
     }
   };
 
@@ -162,6 +210,50 @@ const TokenVerificationModal = ({ withdrawal, onClose, onSubmit }) => {
             <span className={`value status status-${withdrawal.status.toLowerCase()}`}>{withdrawal.status}</span>
           </div>
         </div>
+
+        {/* Financial Summary Section */}
+        {summaryLoading ? (
+          <div className="financial-summary-section" style={{ padding: '12px', fontSize: '0.9em', color: '#666' }}>Loading financial summary...</div>
+        ) : financialSummary ? (
+          <div className="financial-summary-section" style={{ margin: '16px 0', padding: '14px', background: '#f0f7ff', borderRadius: '8px', border: '1px solid #d0e3f7' }}>
+            <h4 style={{ margin: '0 0 10px', fontSize: '0.95em', color: '#1a3d5c' }}>Caregiver Financial Summary</h4>
+            <div className="detail-row">
+              <span className="label">Total Earned:</span>
+              <span className="value">{formatCurrency(financialSummary.totalEarned ?? 0)}</span>
+            </div>
+            <div className="detail-row">
+              <span className="label">Withdrawable Balance:</span>
+              <span className="value" style={{ fontWeight: 600, color: '#27ae60' }}>{formatCurrency(financialSummary.withdrawableBalance ?? 0)}</span>
+            </div>
+            <div className="detail-row">
+              <span className="label">Pending Balance:</span>
+              <span className="value">{formatCurrency(financialSummary.pendingBalance ?? 0)}</span>
+            </div>
+            <div className="detail-row">
+              <span className="label">Total Withdrawn:</span>
+              <span className="value">{formatCurrency(financialSummary.totalWithdrawn ?? 0)}</span>
+            </div>
+            {financialSummary.bankAccount ? (
+              <>
+                <h4 style={{ margin: '10px 0 6px', fontSize: '0.9em', color: '#1a3d5c' }}>Saved Bank Account</h4>
+                <div className="detail-row">
+                  <span className="label">Bank:</span>
+                  <span className="value">{financialSummary.bankAccount.bankName}</span>
+                </div>
+                <div className="detail-row">
+                  <span className="label">Account No:</span>
+                  <span className="value">{financialSummary.bankAccount.accountNumber}</span>
+                </div>
+                <div className="detail-row">
+                  <span className="label">Account Name:</span>
+                  <span className="value">{financialSummary.bankAccount.accountName}</span>
+                </div>
+              </>
+            ) : (
+              <p style={{ margin: '8px 0 0', fontSize: '0.85em', color: '#999' }}>No saved bank account on file.</p>
+            )}
+          </div>
+        ) : null}
         
         {withdrawal.status === 'Pending' && (
           <div className="action-section">
@@ -207,8 +299,11 @@ const TokenVerificationModal = ({ withdrawal, onClose, onSubmit }) => {
                   <button
                     type="submit"
                     className={`btn ${activeAction === 'verify' ? 'confirm-verify-btn' : 'confirm-reject-btn'}`}
+                    disabled={isSubmitting}
                   >
-                    {activeAction === 'verify' ? 'Confirm Verification' : 'Confirm Rejection'}
+                    {isSubmitting
+                      ? (activeAction === 'verify' ? 'Verifying...' : 'Rejecting...')
+                      : (activeAction === 'verify' ? 'Confirm Verification' : 'Confirm Rejection')}
                   </button>
                 </div>
               </form>

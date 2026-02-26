@@ -1,6 +1,7 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import './WithdrawalModal.css';
 import { createNotification } from '../../../services/notificationService';
+import caregiverBankAccountService from '../../../services/caregiverBankAccountService';
 import Modal from '../../../components/modal/Modal';
 
 
@@ -12,6 +13,27 @@ const WithdrawalModal = ({ onClose, onSubmit, maxAmount }) => {
     accountName: '',
   });
   const userId = JSON.parse(localStorage.getItem('userDetails'))?.id || '';
+
+  // Pre-fill bank details from saved bank account
+  useEffect(() => {
+    const loadBankDetails = async () => {
+      if (!userId) return;
+      try {
+        const result = await caregiverBankAccountService.getBankAccount(userId);
+        if (result.success && result.data) {
+          setFormData((prev) => ({
+            ...prev,
+            bankName: prev.bankName || result.data.bankName || '',
+            accountNumber: prev.accountNumber || result.data.accountNumber || '',
+            accountName: prev.accountName || result.data.accountName || '',
+          }));
+        }
+      } catch (err) {
+        console.error('Error loading saved bank details:', err);
+      }
+    };
+    loadBankDetails();
+  }, [userId]);
   const [errors, setErrors] = useState({});
 
   // Modal state management

@@ -19,6 +19,10 @@ const Cart = () => {
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState(null);
     
+    // Payment-specific error/state (separate from page-level error)
+    const [paymentError, setPaymentError] = useState(null);
+    const [paymentDisabled, setPaymentDisabled] = useState(false);
+    
     // Responsive state for mobile detection
     const [isMobile, setIsMobile] = useState(false);
     
@@ -170,7 +174,27 @@ const Cart = () => {
     
         if (!response.ok) {
           const errorData = await response.json().catch(() => ({}));
-          throw new Error(errorData.message || "Payment initiation failed");
+          const msg = errorData.message || "Payment initiation failed";
+
+          // Detect duplicate-payment guard responses from the backend
+          if (response.status === 400) {
+            const isActiveOrder = msg.toLowerCase().includes('active order');
+            const isRecurring = msg.toLowerCase().includes('recurring');
+
+            if (isRecurring) {
+              // Recurring plan already purchased — disable the pay button
+              setPaymentError(msg);
+              setPaymentDisabled(true);
+              return;
+            }
+            if (isActiveOrder) {
+              // Active order exists — show error with link to orders
+              setPaymentError(msg);
+              return;
+            }
+          }
+
+          throw new Error(msg);
         }
     
         const data = await response.json();
@@ -184,6 +208,11 @@ const Cart = () => {
           if (data.breakdown) {
             localStorage.setItem("paymentBreakdown", JSON.stringify(data.breakdown));
           }
+
+          // Show info toast if this is a reused pending payment
+          if (data.message && data.message.toLowerCase().includes('already in progress')) {
+            console.info('Resuming existing payment session');
+          }
           
           // Redirect to Flutterwave payment gateway
           window.location.href = data.paymentLink;
@@ -192,7 +221,7 @@ const Cart = () => {
         }
       } catch (error) {
         console.error("Payment error:", error);
-        setError(error.message);
+        setPaymentError(error.message);
       }
     };
 
@@ -256,6 +285,8 @@ const Cart = () => {
                 selectedFrequency={selectedFrequency}
                 frequencyPerWeek={frequencyPerWeek}
                 onPayment={handleHire}
+                paymentError={paymentError}
+                paymentDisabled={paymentDisabled}
               />
               
               {/* Service frequency */}
@@ -321,6 +352,8 @@ const Cart = () => {
               selectedFrequency={selectedFrequency}
               frequencyPerWeek={frequencyPerWeek}
               onPayment={handleHire}
+              paymentError={paymentError}
+              paymentDisabled={paymentDisabled}
             />
           </div>
           

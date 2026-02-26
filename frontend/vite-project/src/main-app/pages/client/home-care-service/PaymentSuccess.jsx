@@ -28,6 +28,14 @@ const PaymentSuccess = () => {
       return;
     }
 
+    // Handle cancelled payments immediately — no need to poll
+    if (status === "cancelled") {
+      setError("Payment was cancelled. No charges were made.");
+      setOrderStatus('Payment cancelled');
+      cleanupLocalStorage();
+      return;
+    }
+
     const stopPolling = () => {
       if (intervalRef.current) {
         clearInterval(intervalRef.current);

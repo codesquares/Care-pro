@@ -21,7 +21,7 @@ const getServiceTypeDisplayName = (serviceType, frequencyPerWeek) => {
   }
 };
 
-const OrderDetails = ({ service, selectedFrequency, frequencyPerWeek = 1, onPayment }) => {
+const OrderDetails = ({ service, selectedFrequency, frequencyPerWeek = 1, onPayment, paymentError, paymentDisabled }) => {
   // Extract service details
   const { title, caregiverName, rating, packageDetails, image1, plan, price, features, videoURL, caregiverProfileImage } = service;
   
@@ -163,11 +163,28 @@ const OrderDetails = ({ service, selectedFrequency, frequencyPerWeek = 1, onPaym
         </div>
       </div>
 
+      {paymentError && (
+        <div className="order-details__payment-error" style={{
+          padding: '10px 14px',
+          marginBottom: '12px',
+          borderRadius: '6px',
+          background: '#fff3f3',
+          border: '1px solid #ffcdd2',
+          color: '#c62828',
+          fontSize: '0.9em',
+          lineHeight: '1.4',
+        }}>
+          {paymentError}
+        </div>
+      )}
+
       <button 
         className="order-details__payment-btn"
         onClick={onPayment}
+        disabled={paymentDisabled}
+        style={paymentDisabled ? { opacity: 0.5, cursor: 'not-allowed' } : {}}
       >
-        Proceed to payment → {formatPrice(orderData.totalAmount)}
+        {paymentDisabled ? 'Payment unavailable' : `Proceed to payment → ${formatPrice(orderData.totalAmount)}`}
       </button>
     </div>
   );

@@ -127,7 +127,7 @@ export const adminWithdrawalService = {
       const response = await api.get('/WithdrawalRequests');
       return Array.isArray(response.data) ? response.data : [];
     } catch (error) {
-      console.error('Error fetching withdrawal requests:', error);
+      console.error('Error fetching all withdrawal requests:', error);
       throw error;
     }
   },
@@ -165,15 +165,18 @@ export const adminWithdrawalService = {
   /**
    * Verify a withdrawal request (Admin).
    * AdminId is overridden by JWT on the server.
-   * @param {{ Token: string, AdminNotes?: string }} verificationData
+   * Sends withdrawalId (MongoDB _id string) — backend also accepts token if present.
+   * @param {{ withdrawalId: string, adminNotes?: string }} verificationData
    * @returns {Promise<Object>}
    */
   async verifyWithdrawalRequest(verificationData) {
+    const payload = {
+      WithdrawalId: verificationData.withdrawalId,
+      Token: verificationData.token || null,
+      AdminNotes: verificationData.adminNotes || verificationData.AdminNotes || null,
+    };
     try {
-      const response = await api.post('/WithdrawalRequests/verify', {
-        Token: verificationData.Token || verificationData.token,
-        AdminNotes: verificationData.AdminNotes || verificationData.adminNotes || null,
-      });
+      const response = await api.post('/WithdrawalRequests/verify', payload);
       return response.data;
     } catch (error) {
       console.error('Error verifying withdrawal request:', error);
@@ -199,15 +202,18 @@ export const adminWithdrawalService = {
   /**
    * Reject a withdrawal request (Admin).
    * AdminId is overridden by JWT on the server.
-   * @param {{ Token: string, AdminNotes?: string }} rejectionData
+   * Sends withdrawalId (MongoDB _id string) — backend also accepts token if present.
+   * @param {{ withdrawalId: string, adminNotes?: string }} rejectionData
    * @returns {Promise<Object>}
    */
   async rejectWithdrawalRequest(rejectionData) {
+    const payload = {
+      WithdrawalId: rejectionData.withdrawalId,
+      Token: rejectionData.token || null,
+      AdminNotes: rejectionData.adminNotes || rejectionData.AdminNotes || null,
+    };
     try {
-      const response = await api.post('/WithdrawalRequests/reject', {
-        Token: rejectionData.Token || rejectionData.token,
-        AdminNotes: rejectionData.AdminNotes || rejectionData.adminNotes || null,
-      });
+      const response = await api.post('/WithdrawalRequests/reject', payload);
       return response.data;
     } catch (error) {
       console.error('Error rejecting withdrawal request:', error);

@@ -11,32 +11,32 @@ const WithdrawalManagement = () => {
   const [error, setError] = useState(null);
   const [selectedWithdrawal, setSelectedWithdrawal] = useState(null);
   const [showVerificationModal, setShowVerificationModal] = useState(false);
+
+  const fetchWithdrawals = async () => {
+    try {
+      setIsLoading(true);
+      setError(null);
+      
+      const data = await adminWithdrawalService.getAllWithdrawalRequests();
+      if (!data || !Array.isArray(data) || data.length === 0) {
+        setWithdrawals([]);
+        setFilteredWithdrawals([]);
+        return;
+      }
+      setWithdrawals(data);
+      setFilteredWithdrawals(data);
+    } catch (err) {
+      console.error('Error fetching withdrawal requests:', err);
+      setError('Failed to load withdrawal requests. Please try again later.');
+    } finally {
+      setIsLoading(false);
+    }
+  };
   
   useEffect(() => {
-    const fetchWithdrawals = async () => {
-      try {
-        setIsLoading(true);
-        setError(null);
-        
-        const data = await adminWithdrawalService.getAllWithdrawalRequests();
-        if (!data || !Array.isArray(data) || data.length === 0) {
-          setWithdrawals([]);
-          setFilteredWithdrawals([]);
-          return;
-        }
-        setWithdrawals(data);
-        setFilteredWithdrawals(data);
-      } catch (err) {
-        console.error('Error fetching withdrawal requests:', err);
-        setError('Failed to load withdrawal requests. Please try again later.');
-      } finally {
-        setIsLoading(false);
-      }
-    };
-    
     fetchWithdrawals();
   }, []);
-  console.log("withdrawal requests===>", withdrawals);
+
   useEffect(() => {
     if (!Array.isArray(withdrawals)) {
       setFilteredWithdrawals([]);
@@ -74,21 +74,25 @@ const WithdrawalManagement = () => {
   
   const handleVerificationSubmit = async (action, data) => {
     try {
-      let updatedWithdrawal;
-      
+      // Use id or _id — whichever is populated by the backend
+      const withdrawalId = selectedWithdrawal.id || selectedWithdrawal._id;
+      const token = selectedWithdrawal.token;
+
       switch (action) {
         case 'verify':
-          updatedWithdrawal = await adminWithdrawalService.verifyWithdrawalRequest({
-            token: selectedWithdrawal.token,
+          await adminWithdrawalService.verifyWithdrawalRequest({
+            withdrawalId,
+            token,
             adminNotes: data.notes
           });
           break;
         case 'complete':
-          updatedWithdrawal = await adminWithdrawalService.completeWithdrawalRequest(selectedWithdrawal.token);
+          await adminWithdrawalService.completeWithdrawalRequest(selectedWithdrawal.token);
           break;
         case 'reject':
-          updatedWithdrawal = await adminWithdrawalService.rejectWithdrawalRequest({
-            token: selectedWithdrawal.token,
+          await adminWithdrawalService.rejectWithdrawalRequest({
+            withdrawalId,
+            token,
             adminNotes: data.notes
           });
           break;
@@ -96,16 +100,14 @@ const WithdrawalManagement = () => {
           throw new Error('Invalid action');
       }
       
-      // Update the withdrawal list with the updated item
-      const updatedWithdrawals = withdrawals.map(w => 
-        w.id === updatedWithdrawal.id ? updatedWithdrawal : w
-      );
-      setWithdrawals(updatedWithdrawals);
+      // Refetch the full withdrawal list to get fresh data
+      await fetchWithdrawals();
       setShowVerificationModal(false);
       
     } catch (err) {
       console.error(`Error ${action}ing withdrawal:`, err);
-      alert(err.response?.data?.errorMessage || `Failed to ${action} withdrawal. Please try again.`);
+      // Re-throw so TokenVerificationModal can display the error in its feedback modal
+      throw err;
     }
   };
   
@@ -199,6 +201,7 @@ const WithdrawalManagement = () => {
                 <th>Bank Info</th>
                 <th>Token</th>
                 <th>Status</th>
+                <th>Processed At</th>
                 <th>Action</th>
               </tr>
             </thead>
@@ -224,6 +227,15 @@ const WithdrawalManagement = () => {
                     <span className={getStatusBadgeClass(withdrawal.status)}>
                       {withdrawal.status}
                     </span>
+                  </td>
+                  <td className="processed-at">
+                    {withdrawal.rejectedAt
+                      ? <span title="Rejected at">{formatDateTime(withdrawal.rejectedAt)}</span>
+                      : withdrawal.completedAt
+                      ? <span title="Completed at">{formatDateTime(withdrawal.completedAt)}</span>
+                      : withdrawal.verifiedAt
+                      ? <span title="Verified at">{formatDateTime(withdrawal.verifiedAt)}</span>
+                      : <span className="not-processed">—</span>}
                   </td>
                   <td>
                     {renderActionButton(withdrawal)}

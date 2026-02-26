@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { withdrawalService } from '../../services/withdrawalService';
 import walletService from '../../services/walletService';
+import caregiverBankAccountService from '../../services/caregiverBankAccountService';
 import { createNotification } from '../../services/notificationService';
 import './withdraw-page.css';
 
@@ -27,35 +28,50 @@ const WithdrawPage = () => {
   const navigate = useNavigate();
   const currentUser = JSON.parse(localStorage.getItem('userDetails')) || {};
 
-  useEffect(() => {
-    const fetchData = async () => {
-      try {
-        setIsLoading(true);
-        
-        // Load wallet summary from the Wallet API (single source of truth)
-        const walletResult = await walletService.getWalletSummary(currentUser.id);
-        if (walletResult.success && walletResult.data) {
-          setWallet({
-            withdrawableBalance: walletResult.data.withdrawableBalance ?? 0,
-            pendingBalance: walletResult.data.pendingBalance ?? 0,
-            totalEarned: walletResult.data.totalEarned ?? 0,
-            totalWithdrawn: walletResult.data.totalWithdrawn ?? 0,
-          });
-        }
-
-        // Check for pending withdrawals via dedicated endpoint
-        const hasPending = await withdrawalService.hasPendingWithdrawal(currentUser.id);
-        setHasPendingWithdrawal(hasPending);
-        
-      } catch (err) {
-        console.error("Error fetching data:", err);
-      } finally {
-        setIsLoading(false);
+  const fetchWalletData = async () => {
+    try {
+      setIsLoading(true);
+      
+      // Load wallet summary from the Wallet API (single source of truth)
+      const walletResult = await walletService.getWalletSummary(currentUser.id);
+      if (walletResult.success && walletResult.data) {
+        setWallet({
+          withdrawableBalance: walletResult.data.withdrawableBalance ?? 0,
+          pendingBalance: walletResult.data.pendingBalance ?? 0,
+          totalEarned: walletResult.data.totalEarned ?? 0,
+          totalWithdrawn: walletResult.data.totalWithdrawn ?? 0,
+        });
       }
-    };
 
+      // Check for pending withdrawals via dedicated endpoint
+      const hasPending = await withdrawalService.hasPendingWithdrawal(currentUser.id);
+      setHasPendingWithdrawal(hasPending);
+
+      // Pre-fill bank details from saved bank account
+      try {
+        const bankResult = await caregiverBankAccountService.getBankAccount(currentUser.id);
+        if (bankResult.success && bankResult.data) {
+          setFormData((prev) => ({
+            ...prev,
+            bankName: prev.bankName || bankResult.data.bankName || '',
+            accountNumber: prev.accountNumber || bankResult.data.accountNumber || '',
+            accountName: prev.accountName || bankResult.data.accountName || '',
+          }));
+        }
+      } catch (bankErr) {
+        console.error('Error fetching saved bank account:', bankErr);
+      }
+      
+    } catch (err) {
+      console.error("Error fetching data:", err);
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  useEffect(() => {
     if (currentUser?.id) {
-      fetchData();
+      fetchWalletData();
     }
   }, [currentUser.id]);
 
@@ -126,6 +142,9 @@ const WithdrawPage = () => {
       };
       
       await withdrawalService.createWithdrawalRequest(withdrawalRequestData);
+
+      // Refetch wallet data so balances update immediately
+      await fetchWalletData();
 
       // Create notification for admin
       try {
