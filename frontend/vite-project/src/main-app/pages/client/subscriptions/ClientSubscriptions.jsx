@@ -5,7 +5,7 @@ import SubscriptionService from '../../../services/subscriptionService';
 import SubscriptionCard from '../../../components/subscriptions/SubscriptionCard';
 import './ClientSubscriptions.css';
 
-const STATUS_FILTERS = ['All', 'Active', 'PendingCancellation', 'PastDue', 'Suspended', 'Paused', 'Cancelled', 'Terminated'];
+const STATUS_FILTERS = ['All', 'Active', 'PendingCancellation', 'PastDue', 'Suspended', 'Paused', 'Cancelled', 'Terminated', 'Expired', 'Charging'];
 
 const ClientSubscriptions = () => {
   const navigate = useNavigate();

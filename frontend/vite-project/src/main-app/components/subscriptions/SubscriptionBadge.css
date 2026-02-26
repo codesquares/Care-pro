@@ -19,4 +19,15 @@
 .sub-badge--paused       { background: #f0f0f0; color: #616161; }
 .sub-badge--cancelled    { background: #f0f0f0; color: #9e9e9e; }
 .sub-badge--terminated   { background: #f0f0f0; color: #9e9e9e; }
+.sub-badge--expired      { background: #efebe9; color: #795548; }
+.sub-badge--charging     { background: #e3f2fd; color: #1565c0; }
 .sub-badge--default      { background: #f0f0f0; color: #616161; }
+
+/* Charging pulse animation */
+@keyframes sub-badge-pulse {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.6; }
+}
+.sub-badge--charging {
+  animation: sub-badge-pulse 1.5s ease-in-out infinite;
+}

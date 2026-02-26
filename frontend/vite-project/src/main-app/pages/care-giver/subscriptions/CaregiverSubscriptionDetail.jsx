@@ -77,6 +77,9 @@ const CaregiverSubscriptionDetail = () => {
             <div className="cg-sub-detail__row"><span>Frequency</span><span>{sub.frequencyPerWeek || 1}x/week</span></div>
             <div className="cg-sub-detail__row"><span>Amount</span><span>₦{(sub.recurringAmount || 0).toLocaleString()}</span></div>
             <div className="cg-sub-detail__row"><span>Service Active</span><span>{sub.isServiceActive ? 'Yes ✓' : 'No'}</span></div>
+            {sub.billingCyclesCompleted != null && (
+              <div className="cg-sub-detail__row"><span>Cycles Completed</span><span>{sub.billingCyclesCompleted}</span></div>
+            )}
           </div>
           <div className="cg-sub-detail__card">
             <h3>Schedule</h3>
@@ -84,6 +87,37 @@ const CaregiverSubscriptionDetail = () => {
             <div className="cg-sub-detail__row"><span>Period End</span><span>{periodEnd}</span></div>
           </div>
         </div>
+
+        {/* Price Breakdown */}
+        {sub.priceBreakdown && (
+          <div className="cg-sub-detail__card cg-sub-detail__card--full">
+            <h3>Price Breakdown</h3>
+            <div className="cg-sub-detail__row">
+              <span>Base Price</span>
+              <span>₦{(sub.priceBreakdown.basePrice || 0).toLocaleString()}</span>
+            </div>
+            <div className="cg-sub-detail__row">
+              <span>Frequency</span>
+              <span>{sub.priceBreakdown.frequencyPerWeek || 1}x per week</span>
+            </div>
+            <div className="cg-sub-detail__row">
+              <span>Order Fee</span>
+              <span>₦{(sub.priceBreakdown.orderFee || 0).toLocaleString()}</span>
+            </div>
+            <div className="cg-sub-detail__row">
+              <span>Service Charge</span>
+              <span>₦{(sub.priceBreakdown.serviceCharge || 0).toLocaleString()}</span>
+            </div>
+            <div className="cg-sub-detail__row">
+              <span>Gateway Fees</span>
+              <span>₦{(sub.priceBreakdown.gatewayFees || 0).toLocaleString()}</span>
+            </div>
+            <div className="cg-sub-detail__row cg-sub-detail__row--total">
+              <span>Total Amount</span>
+              <span>₦{(sub.priceBreakdown.totalAmount || 0).toLocaleString()}</span>
+            </div>
+          </div>
+        )}
 
         <BillingHistory subscriptionId={id} />
       </div>

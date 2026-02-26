@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { transactionService } from '../../../services/transactionService';
+import walletService from '../../../services/walletService';
 import './TransactionHistory.css';
 import { useAuth } from '../../../hooks/useAuth';
 
@@ -7,34 +7,28 @@ const TransactionHistory = () => {
   const [transactions, setTransactions] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
-  const [currentPage, setCurrentPage] = useState(1);
-  const [totalPages, setTotalPages] = useState(1);
-  const [pageSize] = useState(10);
+  const [displayCount, setDisplayCount] = useState(20);
   const { user } = useAuth();
   
   useEffect(() => {
     fetchTransactions();
-  }, [currentPage]);
+  }, []);
   
   const fetchTransactions = async () => {
     try {
       setLoading(true);
       setError(null);
       
-      const data = await transactionService.getCaregiverTransactions(user.id, currentPage, pageSize);
-      setTransactions(data);
-      
-      // Assuming backend returns total count or pages information
-      // This would need to be adjusted based on actual API response
-      if (data.length < pageSize && currentPage === 1) {
-        setTotalPages(1);
-      } else if (data.length === 0 && currentPage > 1) {
-        setCurrentPage(currentPage - 1);
-      } else if (data.length === pageSize) {
-        // This is a simple approach - in a real app, get total count from API
-        setTotalPages(currentPage + 1);
+      // Use wallet ledger as single source of truth
+      const result = await walletService.getLedgerHistory(user.id, 200);
+      if (result.success && Array.isArray(result.data)) {
+        setTransactions(result.data);
+      } else {
+        setTransactions([]);
+        if (!result.success) {
+          setError(result.error || 'Failed to load transaction history.');
+        }
       }
-      
     } catch (err) {
       console.error('Error fetching transactions:', err);
       setError('Failed to load transaction history. Please try again.');
@@ -48,7 +42,7 @@ const TransactionHistory = () => {
       style: 'currency',
       currency: 'NGN',
       minimumFractionDigits: 2
-    }).format(amount);
+    }).format(Math.abs(amount));
   };
   
   const formatDateTime = (dateTimeString) => {
@@ -56,30 +50,16 @@ const TransactionHistory = () => {
     return date.toLocaleDateString() + ' ' + date.toLocaleTimeString();
   };
   
-  const getTransactionTypeClass = (type) => {
-    switch (type.toLowerCase()) {
-      case 'earning':
-        return 'transaction-type earning';
-      case 'withdrawal':
-        return 'transaction-type withdrawal';
-      case 'fee':
-        return 'transaction-type fee';
-      default:
-        return 'transaction-type';
-    }
+  const getTypeInfo = (type) => {
+    return walletService.getLedgerEntryTypeInfo(type);
   };
-  
-  const handlePrevPage = () => {
-    if (currentPage > 1) {
-      setCurrentPage(currentPage - 1);
-    }
+
+  const handleLoadMore = () => {
+    setDisplayCount(prev => prev + 20);
   };
-  
-  const handleNextPage = () => {
-    if (currentPage < totalPages) {
-      setCurrentPage(currentPage + 1);
-    }
-  };
+
+  const visibleTransactions = transactions.slice(0, displayCount);
+  const hasMore = displayCount < transactions.length;
   
   if (loading && transactions.length === 0) {
     return (
@@ -110,46 +90,48 @@ const TransactionHistory = () => {
                   <th>Type</th>
                   <th>Description</th>
                   <th>Amount</th>
-                  <th>Reference</th>
+                  <th>Balance After</th>
                 </tr>
               </thead>
               <tbody>
-                {transactions.map(transaction => (
-                  <tr key={transaction.id}>
-                    <td>{formatDateTime(transaction.createdAt)}</td>
-                    <td>
-                      <span className={getTransactionTypeClass(transaction.transactionType)}>
-                        {transaction.transactionType}
-                      </span>
-                    </td>
-                    <td className="description">{transaction.description}</td>
-                    <td className={`amount ${transaction.transactionType.toLowerCase() === 'earning' ? 'positive' : 'negative'}`}>
-                      {transaction.transactionType.toLowerCase() === 'earning' ? '+' : '-'} 
-                      {formatCurrency(Math.abs(transaction.amount))}
-                    </td>
-                    <td className="reference">{transaction.referenceId}</td>
-                  </tr>
-                ))}
+                {visibleTransactions.map(entry => {
+                  const typeInfo = getTypeInfo(entry.type);
+                  const isCredit = entry.amount > 0;
+                  return (
+                    <tr key={entry.id}>
+                      <td>{formatDateTime(entry.createdAt)}</td>
+                      <td>
+                        <span 
+                          className="transaction-type-badge"
+                          style={{ backgroundColor: typeInfo.color, color: '#fff' }}
+                        >
+                          {typeInfo.icon} {typeInfo.label}
+                        </span>
+                      </td>
+                      <td className="description">
+                        {entry.description}
+                        {entry.serviceType && (
+                          <span className="service-type-tag"> ({entry.serviceType})</span>
+                        )}
+                        {entry.billingCycleNumber && (
+                          <span className="cycle-tag"> Cycle #{entry.billingCycleNumber}</span>
+                        )}
+                      </td>
+                      <td className={`amount ${isCredit ? 'positive' : 'negative'}`}>
+                        {isCredit ? '+' : '-'}{formatCurrency(entry.amount)}
+                      </td>
+                      <td className="balance-after">{formatCurrency(entry.balanceAfter)}</td>
+                    </tr>
+                  );
+                })}
               </tbody>
             </table>
           </div>
           
-          {(totalPages > 1) && (
-            <div className="pagination">
-              <button 
-                className="pagination-btn prev" 
-                onClick={handlePrevPage} 
-                disabled={currentPage === 1}
-              >
-                Previous
-              </button>
-              <span className="page-info">Page {currentPage} of {totalPages}</span>
-              <button 
-                className="pagination-btn next" 
-                onClick={handleNextPage} 
-                disabled={currentPage === totalPages}
-              >
-                Next
+          {hasMore && (
+            <div className="load-more-container">
+              <button className="load-more-btn" onClick={handleLoadMore}>
+                Load More ({transactions.length - displayCount} remaining)
               </button>
             </div>
           )}

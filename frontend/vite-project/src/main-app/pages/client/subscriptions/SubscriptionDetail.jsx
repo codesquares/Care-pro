@@ -164,6 +164,18 @@ const SubscriptionDetail = () => {
           </div>
         )}
 
+        {sub.status === 'Expired' && (
+          <div className="sub-detail__banner sub-detail__banner--gray">
+            This subscription has expired. All billing cycles are complete.
+          </div>
+        )}
+
+        {sub.status === 'Charging' && (
+          <div className="sub-detail__banner sub-detail__banner--info">
+            A payment is currently being processed for this subscription. Actions are temporarily disabled.
+          </div>
+        )}
+
         {/* Details Grid */}
         <div className="sub-detail__grid">
           <div className="sub-detail__card">
@@ -172,11 +184,17 @@ const SubscriptionDetail = () => {
             <div className="sub-detail__row"><span>Frequency</span><span>{sub.frequencyPerWeek || 1}x per week</span></div>
             <div className="sub-detail__row"><span>Recurring Amount</span><span>₦{(sub.recurringAmount || 0).toLocaleString()}</span></div>
             <div className="sub-detail__row"><span>Service Active</span><span>{sub.isServiceActive ? 'Yes ✓' : 'No'}</span></div>
+            {sub.billingCyclesCompleted != null && (
+              <div className="sub-detail__row"><span>Cycles Completed</span><span>{sub.billingCyclesCompleted}</span></div>
+            )}
           </div>
 
           <div className="sub-detail__card">
             <h3>Billing Info</h3>
             <div className="sub-detail__row"><span>Payment Method</span><span>{cardDisplay}</span></div>
+            {sub.cardExpiry && (
+              <div className="sub-detail__row"><span>Card Expiry</span><span>{sub.cardExpiry}</span></div>
+            )}
             <div className="sub-detail__row"><span>Next Charge</span><span>{nextCharge}</span></div>
             <div className="sub-detail__row"><span>Period End</span><span>{periodEnd}</span></div>
             {sub.remainingDaysInPeriod != null && (
@@ -184,6 +202,37 @@ const SubscriptionDetail = () => {
             )}
           </div>
         </div>
+
+        {/* Price Breakdown */}
+        {sub.priceBreakdown && (
+          <div className="sub-detail__card sub-detail__card--full">
+            <h3>Price Breakdown</h3>
+            <div className="sub-detail__row">
+              <span>Base Price</span>
+              <span>₦{(sub.priceBreakdown.basePrice || 0).toLocaleString()}</span>
+            </div>
+            <div className="sub-detail__row">
+              <span>Frequency</span>
+              <span>{sub.priceBreakdown.frequencyPerWeek || 1}x per week</span>
+            </div>
+            <div className="sub-detail__row">
+              <span>Order Fee</span>
+              <span>₦{(sub.priceBreakdown.orderFee || 0).toLocaleString()}</span>
+            </div>
+            <div className="sub-detail__row">
+              <span>Service Charge</span>
+              <span>₦{(sub.priceBreakdown.serviceCharge || 0).toLocaleString()}</span>
+            </div>
+            <div className="sub-detail__row">
+              <span>Gateway Fees</span>
+              <span>₦{(sub.priceBreakdown.gatewayFees || 0).toLocaleString()}</span>
+            </div>
+            <div className="sub-detail__row sub-detail__row--total">
+              <span>Total Amount</span>
+              <span>₦{(sub.priceBreakdown.totalAmount || 0).toLocaleString()}</span>
+            </div>
+          </div>
+        )}
 
         {/* Actions */}
         <div className="sub-detail__actions">

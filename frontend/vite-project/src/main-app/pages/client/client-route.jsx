@@ -21,6 +21,8 @@ import ResolutionCenter from './orders/ResolutionCenter';
 import FAQPage from './orders/FAQ';
 import ClientSubscriptions from './subscriptions/ClientSubscriptions';
 import SubscriptionDetail from './subscriptions/SubscriptionDetail';
+import ClientBilling from './billing/ClientBilling';
+import InvoiceDetail from './billing/InvoiceDetail';
 import NotFoundPage from '../../../pages/NotFoundPage';
 
 
@@ -47,6 +49,8 @@ function ClientRoutes() {
             <Route path="/cart/:id" element={<Cart />} />
             <Route path="/subscriptions" element={<ClientSubscriptions />} />
             <Route path="/subscriptions/:id" element={<SubscriptionDetail />} />
+            <Route path="/billing" element={<ClientBilling />} />
+            <Route path="/billing/:id" element={<InvoiceDetail />} />
             <Route path="/faq" element={<FAQPage />} />
             <Route path="*" element={<NotFoundPage />} />
         </Routes>

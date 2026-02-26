@@ -77,6 +77,7 @@
 .sub-detail__banner--error  { background: #fdecea; color: #c62828; }
 .sub-detail__banner--orange { background: #fff3e0; color: #e65100; }
 .sub-detail__banner--info   { background: #e3f2fd; color: #1565c0; }
+.sub-detail__banner--gray   { background: #f5f5f5; color: #616161; }
 
 .sub-detail__banner-btn {
   margin-left: auto;
@@ -122,6 +123,18 @@
 }
 .sub-detail__row span:first-child { color: #888; }
 .sub-detail__row span:last-child { font-weight: 500; color: #333; }
+.sub-detail__row--total {
+  border-top: 2px solid #e0e0e0;
+  margin-top: 6px;
+  padding-top: 10px;
+  font-weight: 700;
+}
+.sub-detail__row--total span:first-child { color: #333; font-weight: 700; }
+.sub-detail__row--total span:last-child { font-weight: 700; font-size: 15px; }
+.sub-detail__card--full {
+  grid-column: 1 / -1;
+  margin-bottom: 24px;
+}
 
 /* Actions */
 .sub-detail__actions {

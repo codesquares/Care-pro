@@ -1,231 +1,217 @@
-// import api from './api';
-import { use } from 'react';
-import config from '../config'; // Import the config file for API URLs
-
-const BASE_API_URL = config.BASE_URL;
-const userDetails = JSON.parse(localStorage.getItem('userDetails') || '{}');
+/**
+ * Withdrawal Service (Caregiver)
+ * Handles withdrawal request operations for caregivers.
+ * Consumes the /api/WithdrawalRequests endpoints.
+ */
+import api from './api';
 
 export const withdrawalService = {
-  // Get earnings for the current caregiver
-  getCaregiverEarnings: async (caregiverId) => {
+  /**
+   * Get withdrawal history for a caregiver.
+   * @param {string} caregiverId
+   * @returns {Promise<Array>} Array of WithdrawalRequestResponse
+   */
+  async getWithdrawalHistory(caregiverId) {
     try {
-      const response = await fetch(`${BASE_API_URL}/Earnings/caregiver/${caregiverId}`,{
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': `Bearer ${localStorage.getItem('authToken')}`
-        }
-      });
-      // return response.data;
-      return 0;
+      const response = await api.get(`/WithdrawalRequests/caregiver/${caregiverId}`);
+      return Array.isArray(response.data) ? response.data : [];
     } catch (error) {
+      console.error('Error fetching withdrawal history:', error);
       throw error;
     }
   },
 
-  // Get withdrawal history for the caregiver
-  getWithdrawalHistory: async (caregiverId) => {
-    // const api_to_use = config.BASE_URL;
-    // const api_to_use = `http://localhost:3000/api/withdrawal`;
-    const authToken = localStorage.getItem('authToken');
-
-    
+  /**
+   * Get caregiver-friendly withdrawal history (with Description/Activity fields).
+   * @param {string} caregiverId
+   * @returns {Promise<Array>} Array of CaregiverWithdrawalHistoryResponse
+   */
+  async getCaregiverWithdrawalHistory(caregiverId) {
     try {
-      const response = await fetch(`${BASE_API_URL}/Earnings/transaction-history/${caregiverId}`, {
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': `Bearer ${localStorage.getItem('authToken')}`
-        }
-      });
-      
-      if (!response.ok) {
-        throw new Error(`HTTP error! status: ${response.status}`);
-      }
-      
-      const responseData = await response.json();
-      
-      // Ensure responseData is an array before filtering
-      if (!Array.isArray(responseData)) {
-        console.warn('Withdrawal history response is not an array:', responseData);
-        return [];
-      }
-
-      const userSpecificdata = responseData.filter(request => request.caregiverId === caregiverId);
-      return userSpecificdata;
+      const response = await api.get(
+        `/WithdrawalRequests/caregiver-withdrawal-history/${caregiverId}`
+      );
+      return Array.isArray(response.data) ? response.data : [];
     } catch (error) {
-      console.error('Error in getWithdrawalHistory:', error);
+      console.error('Error fetching caregiver withdrawal history:', error);
       throw error;
     }
   },
 
-  // Check if caregiver has pending withdrawal request
-  // hasPendingWithdrawal: async (caregiverId) => {
-  //   try {
-  //     const response = await fetch(`${BASE_API_URL}/WithdrawalRequests/has-pending/${caregiverId}`, {
-  //       headers: {
-  //         'Content-Type': 'application/json',
-  //         'Authorization': `Bearer ${localStorage.getItem('authToken')}`
-  //       }
-  //     });
-  //     return response.data;
-  //   } catch (error) {
-  //     throw error;
-  //   }
-  // },
-
-  // Create a new withdrawal request
-  createWithdrawalRequest: async (withdrawalData) => {
-
-    console.log("All fields present?", {
-      amountRequested: !!withdrawalData.amountRequested,
-      caregiverId: !!withdrawalData.caregiverId,
-      accountNumber: !!withdrawalData.accountNumber,
-      bankName: !!withdrawalData.bankName,
-      accountName: !!withdrawalData.accountName
-    });
-    
-    const local_api = `${config.BASE_URL}/withdrawal?userId=${withdrawalData.caregiverId}`;
-    // const authToken = localStorage.getItem('authToken');
-    // console.log("Auth Token:", authToken);
-    if (!withdrawalData || !withdrawalData.amountRequested || !withdrawalData.caregiverId) {
-      throw new Error('Invalid withdrawal data');
-    }
-    
+  /**
+   * Check if caregiver has a pending withdrawal request.
+   * @param {string} caregiverId
+   * @returns {Promise<boolean>}
+   */
+  async hasPendingWithdrawal(caregiverId) {
     try {
-      const response = await fetch(`${local_api}`, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': `Bearer ${localStorage.getItem('authToken')}`
-        },
-        body: JSON.stringify(withdrawalData)
-      });
-      const responseData = await response.json();
-      if (!response.ok) {
-        throw new Error(responseData.errorMessage || 'Failed to create withdrawal request');
-      }
-      return responseData;
+      const response = await api.get(`/WithdrawalRequests/has-pending/${caregiverId}`);
+      return response.data?.hasPendingRequest ?? false;
     } catch (error) {
+      console.error('Error checking pending withdrawal:', error);
+      return false;
+    }
+  },
+
+  /**
+   * Create a new withdrawal request.
+   * Service charge is calculated server-side — do NOT send it from the client.
+   * @param {{ caregiverId: string, amountRequested: number, accountNumber?: string, bankName?: string, accountName?: string }} withdrawalData
+   * @returns {Promise<Object>} Created withdrawal request
+   */
+  async createWithdrawalRequest(withdrawalData) {
+    if (!withdrawalData?.amountRequested || !withdrawalData?.caregiverId) {
+      throw new Error('Invalid withdrawal data: caregiverId and amountRequested are required');
+    }
+
+    try {
+      const response = await api.post('/WithdrawalRequests', {
+        CaregiverId: withdrawalData.caregiverId,
+        AmountRequested: withdrawalData.amountRequested,
+        AccountNumber: withdrawalData.accountNumber || null,
+        BankName: withdrawalData.bankName || null,
+        AccountName: withdrawalData.accountName || null,
+      });
+      return response.data;
+    } catch (error) {
+      console.error('Error creating withdrawal request:', error);
       throw error;
     }
-  }
+  },
+
+  /**
+   * Get a single withdrawal request by ID.
+   * @param {string} withdrawalRequestId
+   * @returns {Promise<Object>} WithdrawalRequestDTO
+   */
+  async getWithdrawalById(withdrawalRequestId) {
+    try {
+      const response = await api.get(`/WithdrawalRequests/${withdrawalRequestId}`);
+      return response.data;
+    } catch (error) {
+      console.error('Error fetching withdrawal request:', error);
+      throw error;
+    }
+  },
+
+  /**
+   * Get total amount earned and withdrawn summary.
+   * @param {string} caregiverId
+   * @returns {Promise<Object>} { TotalAmountEarned, TotalAmountWithdrawn, WithdrawableAmount }
+   */
+  async getTotalAmountEarnedAndWithdrawn(caregiverId) {
+    try {
+      const response = await api.get(
+        `/WithdrawalRequests/TotalAmountEarnedAndWithdrawn/${caregiverId}`
+      );
+      return response.data;
+    } catch (error) {
+      console.error('Error fetching earnings/withdrawal summary:', error);
+      throw error;
+    }
+  },
 };
 
+/**
+ * Admin Withdrawal Service
+ * Handles admin-side withdrawal request operations.
+ * Consumes the /api/WithdrawalRequests admin endpoints.
+ */
 export const adminWithdrawalService = {
-  // Get all withdrawal requests
-  getAllWithdrawalRequests: async () => {
+  /**
+   * Get all withdrawal requests.
+   * @returns {Promise<Array>}
+   */
+  async getAllWithdrawalRequests() {
     try {
-      const response = await fetch(`${BASE_API_URL}/WithdrawalRequests`, {
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': `Bearer ${localStorage.getItem('authToken')}`
-        }
-      });
-      
-      if (!response.ok) {
-        throw new Error(`HTTP error! status: ${response.status}`);
-      }
-      
-      const data = await response.json();
-      
-      // Ensure data is an array
-      if (!Array.isArray(data)) {
-        console.warn('Withdrawal requests response is not an array:', data);
-        return [];
-      }
-      
-      return data;
+      const response = await api.get('/WithdrawalRequests');
+      return Array.isArray(response.data) ? response.data : [];
     } catch (error) {
       console.error('Error fetching withdrawal requests:', error);
       throw error;
     }
   },
 
-  // Get withdrawal requests by status
-  getWithdrawalRequestsByStatus: async (status) => {
+  /**
+   * Get withdrawal requests filtered by status.
+   * @param {string} status - "Pending", "Verified", "Completed", "Rejected"
+   * @returns {Promise<Array>}
+   */
+  async getWithdrawalRequestsByStatus(status) {
     try {
-      const response = await fetch(`${BASE_API_URL}/WithdrawalRequests/status/${status}`, {
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': `Bearer ${localStorage.getItem('authToken')}`
-        }
+      const response = await api.get(`/WithdrawalRequests/status/${status}`);
+      return Array.isArray(response.data) ? response.data : [];
+    } catch (error) {
+      console.error('Error fetching withdrawal requests by status:', error);
+      throw error;
+    }
+  },
+
+  /**
+   * Get withdrawal request by token.
+   * @param {string} token
+   * @returns {Promise<Object>}
+   */
+  async getWithdrawalRequestByToken(token) {
+    try {
+      const response = await api.get(`/WithdrawalRequests/token/${token}`);
+      return response.data;
+    } catch (error) {
+      console.error('Error fetching withdrawal request by token:', error);
+      throw error;
+    }
+  },
+
+  /**
+   * Verify a withdrawal request (Admin).
+   * AdminId is overridden by JWT on the server.
+   * @param {{ Token: string, AdminNotes?: string }} verificationData
+   * @returns {Promise<Object>}
+   */
+  async verifyWithdrawalRequest(verificationData) {
+    try {
+      const response = await api.post('/WithdrawalRequests/verify', {
+        Token: verificationData.Token || verificationData.token,
+        AdminNotes: verificationData.AdminNotes || verificationData.adminNotes || null,
       });
       return response.data;
     } catch (error) {
+      console.error('Error verifying withdrawal request:', error);
       throw error;
     }
   },
 
-  // Get withdrawal request by token
-  getWithdrawalRequestByToken: async (token) => {
+  /**
+   * Complete a withdrawal request (Admin).
+   * @param {string} token
+   * @returns {Promise<Object>}
+   */
+  async completeWithdrawalRequest(token) {
     try {
-      const response = await fetch(`${BASE_API_URL}/WithdrawalRequests/token/${token}`, {
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': `Bearer ${localStorage.getItem('authToken')}`
-        }
-      });
-      const data = await response.json();
-      return data;
+      const response = await api.post(`/WithdrawalRequests/complete/${token}`);
+      return response.data;
     } catch (error) {
+      console.error('Error completing withdrawal request:', error);
       throw error;
     }
   },
 
-  // Verify a withdrawal request
-  verifyWithdrawalRequest: async (verificationData) => {
-    
-    console.log("Verification Data:=====>", verificationData);
-    console.log("userDetails:=====>", userDetails);
-    verificationData.adminId = userDetails.id; // Add admin ID to verification data
+  /**
+   * Reject a withdrawal request (Admin).
+   * AdminId is overridden by JWT on the server.
+   * @param {{ Token: string, AdminNotes?: string }} rejectionData
+   * @returns {Promise<Object>}
+   */
+  async rejectWithdrawalRequest(rejectionData) {
     try {
-      const response = await fetch(`${BASE_API_URL}/WithdrawalRequests/verify`, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': `Bearer ${localStorage.getItem('authToken')}`
-        },
-        
-        body: JSON.stringify(verificationData)
+      const response = await api.post('/WithdrawalRequests/reject', {
+        Token: rejectionData.Token || rejectionData.token,
+        AdminNotes: rejectionData.AdminNotes || rejectionData.adminNotes || null,
       });
-      const data = await response.json();
-      return  data;
+      return response.data;
     } catch (error) {
+      console.error('Error rejecting withdrawal request:', error);
       throw error;
     }
   },
-
-  // Complete a withdrawal request
-  completeWithdrawalRequest: async (token) => {
-    try {
-      const response = await fetch(`${BASE_API_URL}/WithdrawalRequests/complete/${token}`, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': `Bearer ${localStorage.getItem('authToken')}`
-        }
-      });
-      const data = await response.json();
-      return data;
-    } catch (error) {
-      throw error;
-    }
-  },
-
-  // Reject a withdrawal request
-  rejectWithdrawalRequest: async (rejectionData) => {
-    try {
-      const response = await fetch(`${BASE_API_URL}/WithdrawalRequests/reject`, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': `Bearer ${localStorage.getItem('authToken')}`
-        },
-        body: JSON.stringify(rejectionData)
-      });
-      const data = await response.json();
-      return data;
-    } catch (error) {
-      throw error;
-    }
-  }
 };

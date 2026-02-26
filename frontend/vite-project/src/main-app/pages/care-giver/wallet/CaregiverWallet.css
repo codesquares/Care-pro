@@ -1,0 +1,305 @@
+/* ===== Caregiver Wallet Page ===== */
+.cg-wallet-page {
+  background: #f9f9f9;
+  min-height: calc(100vh - 70px);
+}
+.cg-wallet-container {
+  max-width: 960px;
+  margin: 0 auto;
+  padding: 24px 20px 60px;
+}
+.cg-wallet__title {
+  font-size: 24px;
+  font-weight: 700;
+  color: #333;
+  margin: 0 0 20px;
+}
+.cg-wallet__loading,
+.cg-wallet__error {
+  text-align: center;
+  padding: 60px 0;
+  color: #888;
+  font-size: 15px;
+}
+.cg-wallet__error {
+  color: #c62828;
+  background: #fdecea;
+  border-radius: 8px;
+  padding: 20px;
+}
+
+/* Total Earned Banner */
+.cg-wallet__total-banner {
+  background: linear-gradient(135deg, #00B4A6 0%, #009688 100%);
+  border-radius: 14px;
+  padding: 24px 28px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 20px;
+  color: #fff;
+}
+.cg-wallet__total-label {
+  font-size: 14px;
+  font-weight: 500;
+  opacity: 0.9;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+.cg-wallet__total-value {
+  font-size: 28px;
+  font-weight: 700;
+}
+
+/* Balance Cards */
+.cg-wallet__balances {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 14px;
+  margin-bottom: 28px;
+}
+.cg-wallet__balance-card {
+  background: #fff;
+  border: 1px solid #e0e0e0;
+  border-radius: 12px;
+  padding: 20px;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  position: relative;
+}
+.cg-wallet__balance-card--available {
+  border-left: 4px solid #1a7f4b;
+}
+.cg-wallet__balance-card--pending {
+  border-left: 4px solid #f0a500;
+}
+.cg-wallet__balance-card--withdrawn {
+  border-left: 4px solid #3498db;
+}
+.cg-wallet__balance-icon {
+  font-size: 20px;
+  color: #888;
+}
+.cg-wallet__balance-card--available .cg-wallet__balance-icon { color: #1a7f4b; }
+.cg-wallet__balance-card--pending .cg-wallet__balance-icon { color: #f0a500; }
+.cg-wallet__balance-card--withdrawn .cg-wallet__balance-icon { color: #3498db; }
+.cg-wallet__balance-info {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  position: relative;
+}
+.cg-wallet__balance-label {
+  font-size: 12px;
+  color: #888;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+.cg-wallet__balance-value {
+  font-size: 22px;
+  font-weight: 700;
+  color: #333;
+}
+.cg-wallet__info-btn {
+  background: none;
+  border: none;
+  color: #888;
+  cursor: pointer;
+  font-size: 13px;
+  padding: 0;
+  display: inline-flex;
+  align-items: center;
+}
+.cg-wallet__info-btn:hover {
+  color: #555;
+}
+.cg-wallet__tooltip {
+  position: absolute;
+  top: 100%;
+  left: 0;
+  background: #333;
+  color: #fff;
+  font-size: 12px;
+  padding: 10px 14px;
+  border-radius: 8px;
+  z-index: 10;
+  max-width: 260px;
+  line-height: 1.5;
+  margin-top: 6px;
+  box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+}
+.cg-wallet__withdraw-btn {
+  display: inline-block;
+  background: #1a7f4b;
+  color: #fff;
+  padding: 8px 18px;
+  border-radius: 8px;
+  text-decoration: none;
+  font-size: 13px;
+  font-weight: 600;
+  text-align: center;
+  transition: background 0.2s;
+  margin-top: auto;
+}
+.cg-wallet__withdraw-btn:hover {
+  background: #156b3e;
+}
+
+/* Ledger Section */
+.cg-wallet__ledger-section {
+  background: #fff;
+  border: 1px solid #e0e0e0;
+  border-radius: 12px;
+  padding: 20px;
+}
+.cg-wallet__ledger-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 16px;
+  flex-wrap: wrap;
+  gap: 10px;
+}
+.cg-wallet__ledger-title {
+  font-size: 16px;
+  font-weight: 600;
+  color: #333;
+  margin: 0;
+}
+.cg-wallet__ledger-filters {
+  display: flex;
+  gap: 6px;
+}
+.cg-wallet__ledger-filter {
+  padding: 6px 14px;
+  border: 1px solid #e0e0e0;
+  background: #fff;
+  font-size: 12px;
+  color: #666;
+  cursor: pointer;
+  border-radius: 20px;
+  font-weight: 500;
+  transition: all 0.2s;
+}
+.cg-wallet__ledger-filter:hover {
+  background: #f0f0f0;
+}
+.cg-wallet__ledger-filter--active {
+  background: #00B4A6;
+  color: #fff;
+  border-color: #00B4A6;
+  font-weight: 600;
+}
+.cg-wallet__ledger-empty {
+  text-align: center;
+  padding: 40px 0;
+  color: #888;
+  font-size: 14px;
+}
+.cg-wallet__ledger-table-wrap {
+  overflow-x: auto;
+}
+.cg-wallet__ledger-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 13px;
+}
+.cg-wallet__ledger-table th {
+  text-align: left;
+  padding: 10px 12px;
+  border-bottom: 2px solid #e0e0e0;
+  font-size: 11px;
+  color: #888;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  font-weight: 600;
+}
+.cg-wallet__ledger-table td {
+  padding: 12px;
+  border-bottom: 1px solid #f0f0f0;
+  vertical-align: middle;
+}
+.cg-wallet__ledger-table tbody tr:hover {
+  background: #fafafa;
+}
+.cg-wallet__ledger-date {
+  white-space: nowrap;
+  color: #666;
+}
+.cg-wallet__type-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  font-size: 11px;
+  font-weight: 600;
+  padding: 3px 10px;
+  border-radius: 12px;
+  white-space: nowrap;
+}
+.cg-wallet__ledger-desc {
+  max-width: 280px;
+  color: #555;
+  line-height: 1.4;
+}
+.cg-wallet__service-tag,
+.cg-wallet__cycle-tag {
+  font-size: 11px;
+  color: #999;
+}
+.cg-wallet__ledger-amount {
+  font-weight: 600;
+  white-space: nowrap;
+}
+.cg-wallet__ledger-amount--credit {
+  color: #1a7f4b;
+}
+.cg-wallet__ledger-amount--debit {
+  color: #c62828;
+}
+.cg-wallet__ledger-balance {
+  color: #333;
+  font-weight: 500;
+  white-space: nowrap;
+}
+.cg-wallet__load-more {
+  text-align: center;
+  padding-top: 16px;
+}
+.cg-wallet__load-more-btn {
+  background: none;
+  border: 1px solid #00B4A6;
+  color: #00B4A6;
+  padding: 8px 24px;
+  border-radius: 8px;
+  font-size: 13px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+.cg-wallet__load-more-btn:hover {
+  background: #00B4A6;
+  color: #fff;
+}
+
+/* Responsive */
+@media (max-width: 768px) {
+  .cg-wallet__balances {
+    grid-template-columns: 1fr;
+  }
+  .cg-wallet__total-banner {
+    flex-direction: column;
+    gap: 8px;
+    align-items: flex-start;
+  }
+  .cg-wallet__total-value {
+    font-size: 24px;
+  }
+  .cg-wallet__ledger-header {
+    flex-direction: column;
+    align-items: flex-start;
+  }
+}
