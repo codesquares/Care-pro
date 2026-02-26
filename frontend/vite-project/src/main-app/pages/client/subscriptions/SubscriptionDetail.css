@@ -178,3 +178,45 @@
   .sub-detail__banner { flex-direction: column; align-items: flex-start; }
   .sub-detail__banner-btn { margin-left: 0; width: 100%; text-align: center; }
 }
+
+/* F13 — Contract section */
+.sub-detail__contract-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 12px;
+}
+.sub-detail__view-contract-btn {
+  background: none;
+  border: 1px solid #00B4A6;
+  color: #00B4A6;
+  padding: 6px 14px;
+  border-radius: 6px;
+  font-size: 13px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+.sub-detail__view-contract-btn:hover { background: #00B4A6; color: #fff; }
+.sub-detail__view-contract-btn:disabled { opacity: 0.6; cursor: not-allowed; }
+
+/* F13 — Contract section */
+.sub-detail__contract-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 12px;
+}
+.sub-detail__view-contract-btn {
+  background: none;
+  border: 1px solid #00B4A6;
+  color: #00B4A6;
+  padding: 6px 14px;
+  border-radius: 6px;
+  font-size: 13px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+.sub-detail__view-contract-btn:hover { background: #00B4A6; color: #fff; }
+.sub-detail__view-contract-btn:disabled { opacity: 0.6; cursor: not-allowed; }

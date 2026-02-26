@@ -3,6 +3,7 @@ import { useParams, useNavigate } from 'react-router-dom';
 import SubscriptionService from '../../../services/subscriptionService';
 import SubscriptionBadge from '../../../components/subscriptions/SubscriptionBadge';
 import BillingHistory from '../../../components/subscriptions/BillingHistory';
+import api from '../../../services/api';
 import './CaregiverSubscriptionDetail.css';
 
 /**
@@ -14,6 +15,9 @@ const CaregiverSubscriptionDetail = () => {
   const [sub, setSub] = useState(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
+  const [contract, setContract] = useState(null);
+  const [contractLoading, setContractLoading] = useState(false);
+  const [contractExpanded, setContractExpanded] = useState(false);
 
   useEffect(() => {
     const fetchData = async () => {
@@ -52,6 +56,21 @@ const CaregiverSubscriptionDetail = () => {
 
   const nextCharge = sub.nextChargeDate ? new Date(sub.nextChargeDate).toLocaleDateString() : '—';
   const periodEnd = sub.currentPeriodEnd ? new Date(sub.currentPeriodEnd).toLocaleDateString() : '—';
+
+  const loadContract = async () => {
+    if (contractExpanded) { setContractExpanded(false); return; }
+    if (contract) { setContractExpanded(true); return; }
+    setContractLoading(true);
+    try {
+      const res = await api.get(`/contracts/${sub.contractId}`);
+      setContract(res.data?.data ?? res.data);
+      setContractExpanded(true);
+    } catch (err) {
+      console.error('Failed to load contract:', err);
+    } finally {
+      setContractLoading(false);
+    }
+  };
 
   return (
     <div className="cg-sub-detail-page">
@@ -120,6 +139,40 @@ const CaregiverSubscriptionDetail = () => {
         )}
 
         <BillingHistory subscriptionId={id} />
+
+        {/* Contract */}
+        {sub.contractId && (
+          <div className="cg-sub-detail__card cg-sub-detail__card--full">
+            <div className="cg-sub-detail__contract-header">
+              <h3>Service Contract</h3>
+              <button
+                className="cg-sub-detail__view-contract-btn"
+                onClick={loadContract}
+                disabled={contractLoading}
+              >
+                {contractLoading ? 'Loading…' : contractExpanded ? 'Hide Contract ▲' : 'View Contract ▼'}
+              </button>
+            </div>
+            {contractExpanded && contract && (
+              <>
+                <div className="cg-sub-detail__row"><span>Status</span><span>{contract.status || '—'}</span></div>
+                <div className="cg-sub-detail__row"><span>Service Address</span><span>{contract.serviceAddress || '—'}</span></div>
+                {contract.contractStartDate && (
+                  <div className="cg-sub-detail__row"><span>Start Date</span><span>{new Date(contract.contractStartDate).toLocaleDateString()}</span></div>
+                )}
+                {contract.contractEndDate && (
+                  <div className="cg-sub-detail__row"><span>End Date</span><span>{new Date(contract.contractEndDate).toLocaleDateString()}</span></div>
+                )}
+                {contract.schedule?.length > 0 && (
+                  <div className="cg-sub-detail__row"><span>Scheduled Visits</span><span>{contract.schedule.length} visit(s) per week</span></div>
+                )}
+                {contract.specialClientRequirements && (
+                  <div className="cg-sub-detail__row"><span>Special Requirements</span><span>{contract.specialClientRequirements}</span></div>
+                )}
+              </>
+            )}
+          </div>
+        )}
       </div>
     </div>
   );

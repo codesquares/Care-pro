@@ -5,6 +5,7 @@ import SubscriptionService from '../../../services/subscriptionService';
 import SubscriptionBadge from '../../../components/subscriptions/SubscriptionBadge';
 import BillingHistory from '../../../components/subscriptions/BillingHistory';
 import PlanHistory from '../../../components/subscriptions/PlanHistory';
+import api from '../../../services/api';
 import {
   CancelSubscriptionModal,
   TerminateSubscriptionModal,
@@ -21,6 +22,9 @@ const SubscriptionDetail = () => {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   const [actionLoading, setActionLoading] = useState(false);
+  const [contract, setContract] = useState(null);
+  const [contractLoading, setContractLoading] = useState(false);
+  const [contractExpanded, setContractExpanded] = useState(false);
 
   // Modal visibility
   const [showCancel, setShowCancel] = useState(false);
@@ -81,6 +85,21 @@ const SubscriptionDetail = () => {
   const onModalSuccess = (updatedData) => {
     setSub((prev) => ({ ...prev, ...updatedData }));
     fetchSubscription(); // re-fetch for full data
+  };
+
+  const loadContract = async () => {
+    if (contractExpanded) { setContractExpanded(false); return; }
+    if (contract) { setContractExpanded(true); return; }
+    setContractLoading(true);
+    try {
+      const res = await api.get(`/contracts/${sub.contractId}`);
+      setContract(res.data?.data ?? res.data);
+      setContractExpanded(true);
+    } catch (err) {
+      console.error('Failed to load contract:', err);
+    } finally {
+      setContractLoading(false);
+    }
   };
 
   if (loading) {
@@ -285,6 +304,40 @@ const SubscriptionDetail = () => {
 
         {/* Billing History */}
         <BillingHistory subscriptionId={id} />
+
+        {/* Contract */}
+        {sub.contractId && (
+          <div className="sub-detail__card sub-detail__card--full">
+            <div className="sub-detail__contract-header">
+              <h3>Service Contract</h3>
+              <button
+                className="sub-detail__view-contract-btn"
+                onClick={loadContract}
+                disabled={contractLoading}
+              >
+                {contractLoading ? 'Loading…' : contractExpanded ? 'Hide Contract ▲' : 'View Contract ▼'}
+              </button>
+            </div>
+            {contractExpanded && contract && (
+              <>
+                <div className="sub-detail__row"><span>Status</span><span>{contract.status || '—'}</span></div>
+                <div className="sub-detail__row"><span>Service Address</span><span>{contract.serviceAddress || '—'}</span></div>
+                {contract.contractStartDate && (
+                  <div className="sub-detail__row"><span>Start Date</span><span>{new Date(contract.contractStartDate).toLocaleDateString()}</span></div>
+                )}
+                {contract.contractEndDate && (
+                  <div className="sub-detail__row"><span>End Date</span><span>{new Date(contract.contractEndDate).toLocaleDateString()}</span></div>
+                )}
+                {contract.schedule?.length > 0 && (
+                  <div className="sub-detail__row"><span>Scheduled Visits</span><span>{contract.schedule.length} visit(s) per week</span></div>
+                )}
+                {contract.specialClientRequirements && (
+                  <div className="sub-detail__row"><span>Special Requirements</span><span>{contract.specialClientRequirements}</span></div>
+                )}
+              </>
+            )}
+          </div>
+        )}
 
         {/* Modals */}
         <CancelSubscriptionModal isOpen={showCancel} onClose={() => setShowCancel(false)} subscription={sub} onSuccess={onModalSuccess} />
