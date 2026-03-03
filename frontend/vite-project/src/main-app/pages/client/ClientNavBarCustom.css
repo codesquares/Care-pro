@@ -159,6 +159,7 @@
     height: 64px !important;
     min-height: 64px !important;
     margin: 0 !important;
+    font-size: 0.85rem !important;
   }
 }
 
@@ -722,7 +723,7 @@
   border: none;
   color: #666;
   /* Grey text */
-  font-size: 0.9rem;
+  font-size: 0.85rem;
   font-weight: 500;
   cursor: pointer;
   padding: 8px 12px;
@@ -733,6 +734,7 @@
   align-items: center;
   justify-content: center;
   box-sizing: border-box;
+  white-space: nowrap;
 }
 
 .nav-link-btn:hover {
