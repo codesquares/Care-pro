@@ -82,25 +82,55 @@ const generateContent = (type, senderId) => {
   }
 };
 
-export const getNotifications = async (id, page = 1, pageSize = 10) => {
+/**
+ * Normalizes a single notification object from the API to ensure
+ * consistent field names across all code paths.
+ * - Ensures relatedEntityId is populated (falls back to orderId)
+ */
+const normalizeNotification = (n) => {
+  if (!n) return n;
+  return {
+    ...n,
+    // Ensure relatedEntityId is always set if orderId is available
+    relatedEntityId: n.relatedEntityId || n.orderId || null,
+  };
+};
+
+export const getNotifications = async (id, page = 1, pageSize = 50) => {
   try {
     const response = await api.get(`/Notifications?userId=${id}&page=${page}&pageSize=${pageSize}`);
 
     const data = response.data;
 
+    // Backend now returns { items, totalCount, page, pageSize, hasMore }
+    // Keep backward compat with old flat-array shape just in case
     if (Array.isArray(data)) {
       return {
-        items: data,
+        items: data.map(normalizeNotification),
         totalCount: data.length,
         currentPage: page,
         pageSize
       };
     }
 
+    const items = (data.items || []).map(normalizeNotification);
+
+    // Debug: log first notification to verify field names
+    if (items.length > 0) {
+      console.log('[NotificationService] Sample notification from API:', {
+        id: items[0].id,
+        type: items[0].type,
+        relatedEntityId: items[0].relatedEntityId,
+        orderId: items[0].orderId,
+        senderId: items[0].senderId,
+        isRead: items[0].isRead,
+      });
+    }
+
     return {
-      items: data.items || [],
-      totalCount: data.totalCount || 0,
-      currentPage: data.currentPage || page,
+      items,
+      totalCount: data.totalCount || items.length,
+      currentPage: data.page || page,
       pageSize: data.pageSize || pageSize
     };
   } catch (err) {

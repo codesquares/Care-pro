@@ -6,6 +6,8 @@ import PaymentPage from './payment/PaymentPage';
 import Messages from '../Messages';
 import DirectMessage from '../../components/messages/DirectMessage';
 import PaymentSuccess from './home-care-service/PaymentSuccess';
+import CommitmentSuccess from './home-care-service/CommitmentSuccess';
+import CommitmentPayment from './home-care-service/CommitmentPayment';
 import MyOrders from './orders/MyOrders';
 import OrderDetails from './orders/OrderTasks&Details';
 import OrderHistory from './orders/OrderHistory';
@@ -47,6 +49,8 @@ function ClientRoutes() {
             <Route path="/profile" element={<ClientProfile />} />
             <Route path="/notifications" element={<NotificationsPage />} />
             <Route path="/cart/:id" element={<Cart />} />
+            <Route path="/commitment-success" element={<CommitmentSuccess />} />
+            <Route path="/commitment-payment/:id" element={<CommitmentPayment />} />
             <Route path="/subscriptions" element={<ClientSubscriptions />} />
             <Route path="/subscriptions/:id" element={<SubscriptionDetail />} />
             <Route path="/billing" element={<ClientBilling />} />

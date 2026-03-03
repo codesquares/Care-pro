@@ -1,30 +1,25 @@
 
-import OrderSpecifications from '../../../components/cart/OrderSpecifications';
-import OrderDetails from '../../../components/cart/OrderDetails';
-import ServiceProvider from '../../../components/cart/ServiceProvider';
-import ServiceFrequency from '../../../components/cart/ServiceFrequency';
-import TaskList from '../../../components/cart/TaskList';
 import ReviewsModal from '../../../components/ReviewsModal/ReviewsModal';
 import GigReviewService from '../../../services/gigReviewService';
+import bookingCommitmentService from '../../../services/bookingCommitmentService';
 import './Cart.css';
 import { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import ClientGigService from '../../../services/clientGigService';
 import config from '../../../config'; // Import centralized config for API URLs
 
+// Helper to format price
+const formatPrice = (amount) => `₦${(amount || 0).toLocaleString()}`;
+
 const Cart = () => {
    const { id } = useParams();
     const [service, setService] = useState(null);
-    const [videoPreviewUrl, setVideoPreviewUrl] = useState("");
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState(null);
     
-    // Payment-specific error/state (separate from page-level error)
+    // Payment-specific error/state
     const [paymentError, setPaymentError] = useState(null);
     const [paymentDisabled, setPaymentDisabled] = useState(false);
-    
-    // Responsive state for mobile detection
-    const [isMobile, setIsMobile] = useState(false);
     
     // Frequency and price data state
     const [selectedFrequency, setSelectedFrequency] = useState('one-time');
@@ -36,77 +31,22 @@ const Cart = () => {
     const [reviewStats, setReviewStats] = useState(null);
     const [reviewsLoading, setReviewsLoading] = useState(false);
     
-    // Task management state
-    const [tasks, setTasks] = useState([
-      {
-        id: 1,
-        text: 'Help with physical therapy exercises or encourage light exercise like walking',
-        isExplanatory: true,
-        deletable: false
-      },
-      {
-        id: 2,
-        text: 'Walk my dogs and feed my cat for a month',
-        isExplanatory: true,
-        deletable: false
-      },
-      {
-        id: 3,
-        text: 'Catering and cooking international dishes for a month',
-        isExplanatory: true,
-        deletable: false
-      }
-    ]);
-    const [taskValidationError, setTaskValidationError] = useState('');
-    
+    // Commitment fee state
+    const [commitmentAccess, setCommitmentAccess] = useState(null);
+
     const navigate = useNavigate();
-    const basePath = "/app/client"; // Base path for your routes
-    
-    // Get user tasks (non-explanatory)
-    const userTasks = tasks.filter(task => !task.isExplanatory);
+    const basePath = "/app/client";
 
-    // Task validation - now optional but informational
-    const validateTasks = () => {
-      if (userTasks.length === 0) {
-        setTaskValidationError('💡 Tip: Adding specific tasks helps caregivers provide better personalized service');
-        return true; // Allow payment to proceed
-      }
-      setTaskValidationError('');
-      return true;
-    };
-
-    // Handle task management
-    const handleAddTask = (newTaskText) => {
-      if (!newTaskText.trim()) return;
-      
-      const newTask = {
-        id: Date.now(),
-        text: newTaskText.trim(),
-        isExplanatory: false,
-        deletable: true
-      };
-      
-      setTasks([...tasks, newTask]);
-      setTaskValidationError('');
-    };
-
-    const handleRemoveTask = (taskId) => {
-      const taskToRemove = tasks.find(task => task.id === taskId);
-      if (taskToRemove && taskToRemove.deletable) {
-        setTasks(tasks.filter(task => task.id !== taskId));
-      }
-    };  
-    // Handle frequency change from ServiceFrequency
-    const handleFrequencyChange = (serviceType, freqPerWeek) => {
-      setSelectedFrequency(serviceType);
-      setFrequencyPerWeek(freqPerWeek);
+    // Handle frequency change
+    const handleFrequencyChange = (type) => {
+      setSelectedFrequency(type);
+      if (type === 'one-time') setFrequencyPerWeek(1);
     };
 
     // Handle opening reviews modal
     const handleOpenReviews = async () => {
       setShowReviewsModal(true);
       setReviewsLoading(true);
-      
       try {
         const { reviews, stats } = await GigReviewService.getReviewsWithStats(id);
         setGigReviews(reviews);
@@ -120,41 +60,45 @@ const Cart = () => {
       }
     };
 
-    // Mobile detection effect
+    // Check commitment access when gig loads (used for fee deduction display in OrderDetails)
     useEffect(() => {
-      const checkIsMobile = () => {
-        setIsMobile(window.innerWidth < 768);
+      if (!id) return;
+      const checkCommitment = async () => {
+        const result = await bookingCommitmentService.checkAccess(id);
+        if (result.success) {
+          setCommitmentAccess(result.data);
+        } else {
+          setCommitmentAccess({ hasAccess: false });
+        }
       };
-      
-      checkIsMobile();
-      window.addEventListener('resize', checkIsMobile);
-      
-      return () => window.removeEventListener('resize', checkIsMobile);
-    }, []);
+      checkCommitment();
+    }, [id]);
+
+    // Calculate estimated price
+    const calculateEstimatedPrice = () => {
+      const basePrice = service?.price || 0;
+      let orderFee;
+      switch (selectedFrequency) {
+        case 'one-time': orderFee = basePrice; break;
+        case 'monthly': orderFee = basePrice * frequencyPerWeek * 4; break;
+        default: orderFee = basePrice;
+      }
+      const serviceFee = orderFee * 0.10;
+      const commitmentCredit = (commitmentAccess?.hasAccess && !commitmentAccess?.isAppliedToOrder) ? 5000 : 0;
+      const totalAmount = orderFee + serviceFee - commitmentCredit;
+      return { orderFee, serviceFee, commitmentCredit, totalAmount };
+    };
 
     const handleHire = async () => {
       if (!service) return;
       
-      // Show informational message about tasks (non-blocking)
-      validateTasks();
-      
       const user = JSON.parse(localStorage.getItem("userDetails"));
-      
-      // Store task data for later use (tasks will be saved after order creation)
-      const taskData = {
-        gigId: id,
-        providerId: service.caregiverId,
-        tasks: userTasks.map(task => task.text),
-        timestamp: new Date().toISOString()
-      };
-      localStorage.setItem("pendingTaskData", JSON.stringify(taskData));
     
       try {
-        // NEW SECURE API: Only send identifiers, backend calculates all amounts
         const payload = {
           gigId: id,
-          serviceType: selectedFrequency, // "one-time", "weekly", or "monthly"
-          frequencyPerWeek: frequencyPerWeek, // 1-7
+          serviceType: selectedFrequency,
+          frequencyPerWeek: frequencyPerWeek,
           email: user?.email,
           redirectUrl: `${window.location.origin}/app/client/payment-success`,
         };
@@ -176,19 +120,23 @@ const Cart = () => {
           const errorData = await response.json().catch(() => ({}));
           const msg = errorData.message || "Payment initiation failed";
 
-          // Detect duplicate-payment guard responses from the backend
+          if (msg.toLowerCase().includes('commitmentfeededucted') || msg.toLowerCase().includes('commitment fee')) {
+            setPaymentError(
+              'You need to pay the ₦5,000 commitment fee before placing an order. ' +
+              'Please use the "Unlock Chat" button above to pay the commitment fee first.'
+            );
+            return;
+          }
+
           if (response.status === 400) {
             const isActiveOrder = msg.toLowerCase().includes('active order');
             const isRecurring = msg.toLowerCase().includes('recurring');
-
             if (isRecurring) {
-              // Recurring plan already purchased — disable the pay button
               setPaymentError(msg);
               setPaymentDisabled(true);
               return;
             }
             if (isActiveOrder) {
-              // Active order exists — show error with link to orders
               setPaymentError(msg);
               return;
             }
@@ -198,23 +146,12 @@ const Cart = () => {
         }
     
         const data = await response.json();
-        console.log("Payment Response:", data);
     
         if (data.success && data.paymentLink) {
-          // Store transaction reference for status check after redirect
           localStorage.setItem("transactionReference", data.transactionReference);
-          
-          // Optionally store breakdown for display purposes
           if (data.breakdown) {
             localStorage.setItem("paymentBreakdown", JSON.stringify(data.breakdown));
           }
-
-          // Show info toast if this is a reused pending payment
-          if (data.message && data.message.toLowerCase().includes('already in progress')) {
-            console.info('Resuming existing payment session');
-          }
-          
-          // Redirect to Flutterwave payment gateway
           window.location.href = data.paymentLink;
         } else {
           throw new Error(data.message || "Failed to get payment link");
@@ -226,28 +163,16 @@ const Cart = () => {
     };
 
     useEffect(() => {
-    
-        //get user details from local storage
-     
         const fetchServiceDetails = async () => {
           try {
             setLoading(true);
             setError(null);
-            
-            // Use the enhanced ClientGigService to get all enriched gigs
             const allGigs = await ClientGigService.getAllGigs();
-            
-            // Find the specific gig by ID
             const foundGig = allGigs.find(gig => gig.id === id);
-            
             if (!foundGig) {
               throw new Error("Service not found or no longer available");
             }
-            
-            console.log("Service details:", foundGig);
             setService(foundGig);
-            
-            // Default to one-time service with frequency 1
             setSelectedFrequency('one-time');
             setFrequencyPerWeek(1);
           } catch (error) {
@@ -257,106 +182,143 @@ const Cart = () => {
             setLoading(false);
           }
         };
-    
         fetchServiceDetails();
       }, [id]);
     
-      if (loading) return <p>Loading...</p>;
-      if (error) return <p className="error">{error}</p>;
-    
-      // Mobile layout: Order specifications header -> Order details -> Service frequency -> Task list
-      // Desktop layout: Order specifications (all components) -> Order details
-      if (isMobile) {
-        return (
-          <div className="cart-page">
-            <div className="cart-container">
-              {/* Order specifications header and service info */}
-              <div className="order-specifications">
-                <h2 className="order-specifications__title">Order Specifications</h2>
-                <div className="order-specifications__service-description">
-                  {service?.title || 'Service Title Not Available'}
-                </div>
-                <ServiceProvider service={service} onRatingClick={handleOpenReviews} />
+      if (loading) return (
+        <div className="sd-overlay">
+          <div className="sd-card"><p style={{ textAlign: 'center', padding: 40 }}>Loading...</p></div>
+        </div>
+      );
+
+      if (error) return (
+        <div className="sd-overlay">
+          <div className="sd-card"><p className="sd-error">{error}</p></div>
+        </div>
+      );
+
+      const prices = calculateEstimatedPrice();
+      const deliveryLabel = service?.packageDetails?.deliveryTime || 'Per Day';
+
+      return (
+        <div className="sd-overlay">
+          <div className="sd-card">
+            {/* Header */}
+            <div className="sd-header">
+              <h2 className="sd-header__title">Service Details</h2>
+              <button className="sd-header__close" onClick={() => navigate(-1)} aria-label="Close">
+                &times;
+              </button>
+            </div>
+
+            {/* Detail rows */}
+            <div className="sd-details">
+              <div className="sd-row">
+                <span className="sd-row__label">Service Type:</span>
+                <span className="sd-row__value">{service?.serviceType || service?.category || 'Care Service'}</span>
               </div>
-              
-              {/* Order details */}
-              <OrderDetails 
-                service={service} 
-                selectedFrequency={selectedFrequency}
-                frequencyPerWeek={frequencyPerWeek}
-                onPayment={handleHire}
-                paymentError={paymentError}
-                paymentDisabled={paymentDisabled}
-              />
-              
-              {/* Service frequency */}
-              <div className="order-specifications">
-                <ServiceFrequency
-                  selectedFrequency={selectedFrequency}
-                  frequencyPerWeek={frequencyPerWeek}
-                  onFrequencyChange={handleFrequencyChange}
-                  service={service}
-                />
-                
-                {/* Task validation error */}
-                {taskValidationError && (
-                  <div className="order-specifications__error">
-                    {taskValidationError}
-                  </div>
-                )}
-                
-                {/* Task list */}
-                <TaskList 
-                  tasks={tasks}
-                  onAddTask={handleAddTask}
-                  onRemoveTask={handleRemoveTask}
-                  service={service}
-                  userTasksCount={userTasks.length}
-                  validateTasks={validateTasks}
-                />
+              <div className="sd-row">
+                <span className="sd-row__label">Gig:</span>
+                <span className="sd-row__value">{service?.title || 'Service'}</span>
+              </div>
+              <div className="sd-row">
+                <span className="sd-row__label">Basic Package:</span>
+                <span className="sd-row__value sd-row__value--price">
+                  <strong>{formatPrice(service?.price)}</strong>
+                  <span className="sd-row__delivery">Delivery: {deliveryLabel}</span>
+                </span>
               </div>
             </div>
-            
-            {/* Reviews Modal */}
-            <ReviewsModal
-              isOpen={showReviewsModal}
-              onClose={() => setShowReviewsModal(false)}
-              reviews={gigReviews}
-              stats={reviewStats}
-              loading={reviewsLoading}
-              gigTitle={service?.title}
-            />
+
+            {/* Schedule section */}
+            <div className="sd-schedule">
+              <p className="sd-schedule__label">Schedule how often do you need this service</p>
+              <div className="sd-schedule__options">
+                <label className="sd-radio">
+                  <input
+                    type="radio"
+                    name="frequency"
+                    checked={selectedFrequency === 'one-time'}
+                    onChange={() => handleFrequencyChange('one-time')}
+                  />
+                  <span className="sd-radio__custom" />
+                  <span className="sd-radio__text">One-time</span>
+                </label>
+                <label className="sd-radio">
+                  <input
+                    type="radio"
+                    name="frequency"
+                    checked={selectedFrequency === 'monthly'}
+                    onChange={() => handleFrequencyChange('monthly')}
+                  />
+                  <span className="sd-radio__custom" />
+                  <span className="sd-radio__text">Recurrent</span>
+                </label>
+              </div>
+
+              {/* Recurrent sub-options */}
+              {selectedFrequency === 'monthly' && (
+                <div className="sd-recurrent">
+                  <p className="sd-recurrent__freq-label">How many times per week?</p>
+                  <div className="sd-recurrent__freq-btns">
+                    {[1, 2, 3, 4, 5, 6, 7].map(n => (
+                      <button
+                        key={n}
+                        type="button"
+                        className={`sd-freq-btn ${frequencyPerWeek === n ? 'sd-freq-btn--active' : ''}`}
+                        onClick={() => setFrequencyPerWeek(n)}
+                      >
+                        {n}x
+                      </button>
+                    ))}
+                  </div>
+                  <p className="sd-recurrent__summary">
+                    {`${frequencyPerWeek} visit${frequencyPerWeek > 1 ? 's' : ''}/week × 4 weeks = ${frequencyPerWeek * 4} visits/month`}
+                  </p>
+                </div>
+              )}
+            </div>
+
+            {/* Price summary (only show expanded if recurrent or commitment credit) */}
+            {(selectedFrequency !== 'one-time' || prices.commitmentCredit > 0) && (
+              <div className="sd-price-summary">
+                <div className="sd-price-row">
+                  <span>Order fee</span>
+                  <span>{formatPrice(prices.orderFee)}</span>
+                </div>
+                <div className="sd-price-row">
+                  <span>Service fee (10%)</span>
+                  <span>{formatPrice(prices.serviceFee)}</span>
+                </div>
+                {prices.commitmentCredit > 0 && (
+                  <div className="sd-price-row sd-price-row--credit">
+                    <span>Commitment fee credit</span>
+                    <span>−₦5,000</span>
+                  </div>
+                )}
+                <div className="sd-price-row sd-price-row--total">
+                  <span>Estimated total</span>
+                  <span>{formatPrice(prices.totalAmount)}</span>
+                </div>
+              </div>
+            )}
+
+            {/* Payment error */}
+            {paymentError && (
+              <div className="sd-error">{paymentError}</div>
+            )}
+
+            {/* CTA */}
+            <button
+              className="sd-cta"
+              onClick={handleHire}
+              disabled={paymentDisabled}
+            >
+              <span>{paymentDisabled ? 'Payment unavailable' : 'Proceed to Payment'}</span>
+              {!paymentDisabled && <span className="sd-cta__arrow">&rarr;</span>}
+            </button>
           </div>
-        );
-      }
-      
-      // Desktop layout (original)
-      return (
-        <div className="cart-page">
-          <div className="cart-container">
-            <OrderSpecifications 
-              service={service} 
-              selectedFrequency={selectedFrequency}
-              frequencyPerWeek={frequencyPerWeek}
-              onFrequencyChange={handleFrequencyChange}
-              tasks={tasks}
-              onAddTask={handleAddTask}
-              onRemoveTask={handleRemoveTask}
-              taskValidationError={taskValidationError}
-              userTasksCount={userTasks.length}
-              validateTasks={validateTasks}
-              onRatingClick={handleOpenReviews}
-            />
-            <OrderDetails 
-              service={service} 
-              selectedFrequency={selectedFrequency}
-              frequencyPerWeek={frequencyPerWeek}
-              onPayment={handleHire}
-              paymentError={paymentError}
-              paymentDisabled={paymentDisabled}
-            />
-          </div>
-          
+
           {/* Reviews Modal */}
           <ReviewsModal
             isOpen={showReviewsModal}

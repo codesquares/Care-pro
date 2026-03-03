@@ -97,7 +97,7 @@ const WithdrawalModal = ({ onClose, onSubmit, maxAmount }) => {
         createNotification({
           recipientId: userId,
           senderId: userId,
-          type: "withdrawal",
+          type: "WithdrawalRequest",
           relatedEntityId: userId,
         }).then(() => {
           console.log("User notification created successfully"); 

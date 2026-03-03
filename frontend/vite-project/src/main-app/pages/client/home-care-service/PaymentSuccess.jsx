@@ -196,6 +196,12 @@ const PaymentSuccess = () => {
           <span>Order Fee:</span>
           <span>₦{breakdown.orderFee?.toLocaleString()}</span>
         </div>
+        {breakdown.commitmentFeeDeducted > 0 && (
+          <div className="breakdown-row" style={{ color: '#059669' }}>
+            <span>Commitment Fee Deducted:</span>
+            <span style={{ color: '#059669' }}>−₦{breakdown.commitmentFeeDeducted?.toLocaleString()}</span>
+          </div>
+        )}
         <div className="breakdown-row">
           <span>Service Charge (10%):</span>
           <span>₦{breakdown.serviceCharge?.toLocaleString()}</span>

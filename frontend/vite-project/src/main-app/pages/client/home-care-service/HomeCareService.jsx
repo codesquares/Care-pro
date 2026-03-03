@@ -184,6 +184,7 @@ import { useParams, useNavigate } from "react-router-dom";
 import "./home-care-service.css";
 import ClientGigService from "../../../services/clientGigService";
 import GigReviewService from "../../../services/gigReviewService";
+import bookingCommitmentService from "../../../services/bookingCommitmentService";
 import defaultAvatar from "../../../../assets/profilecard1.png";
 import VideoModal from "../../../components/VideoModal/VideoModal";
 import ReviewsModal from "../../../components/ReviewsModal/ReviewsModal";
@@ -206,6 +207,8 @@ const HomeCareService = () => {
   // Gig-specific review data (fetched on mount)
   const [gigReviewCount, setGigReviewCount] = useState(0);
   const [gigRating, setGigRating] = useState(0);
+  // Commitment fee access state
+  const [commitmentAccess, setCommitmentAccess] = useState(null);
   const navigate = useNavigate();
   const { isAuthenticated, userRole } = useAuth();
   const basePath = "/app/client";
@@ -219,6 +222,14 @@ const HomeCareService = () => {
     return initials.slice(0, 2) || "?";
   };
 
+  // Initiate commitment fee payment directly from gig page
+  const handleUnlockChat = async () => {
+    if (!service) return;
+
+    // Navigate to the explainer page that describes what the commitment fee is
+    navigate(`${basePath}/commitment-payment/${id}`);
+  };
+
   const handleHire = async () => {
     if (!service) return;
 
@@ -228,10 +239,37 @@ const HomeCareService = () => {
       return;
     }
 
+    // If commitment fee not paid, initiate payment first
+    if (commitmentAccess && !commitmentAccess.hasAccess) {
+      handleUnlockChat();
+      return;
+    }
+
     navigate(`${basePath}/cart/${id}`);
   };
 
+  // Check commitment fee access when authenticated client views a gig
+  useEffect(() => {
+    const checkCommitment = async () => {
+      if (!isAuthenticated || userRole !== 'Client' || !id) return;
+      try {
+        const result = await bookingCommitmentService.checkAccess(id);
+        if (result.success) {
+          setCommitmentAccess(result.data);
+        }
+      } catch (err) {
+        console.error('Failed to check commitment access:', err);
+      }
+    };
+    checkCommitment();
+  }, [id, isAuthenticated, userRole]);
+
   const handleMessage = () => {
+    // If commitment fee not paid, initiate payment directly
+    if (commitmentAccess && !commitmentAccess.hasAccess) {
+      handleUnlockChat();
+      return;
+    }
     navigate(`${basePath}/message/${service.caregiverId}`, {
       state: { recipientName: service.caregiverName, serviceId: id },
     });
@@ -564,7 +602,13 @@ const HomeCareService = () => {
 
           {/* Floating Message Bubble - overlaid on image */}
           {isAuthenticated && userRole === 'Client' && (
-            <div className="hcs-floating-message" onClick={handleMessage}>
+            <div
+              className={`hcs-floating-message${commitmentAccess && !commitmentAccess.hasAccess ? ' hcs-floating-locked' : ''}`}
+              onClick={commitmentAccess && !commitmentAccess.hasAccess ? handleUnlockChat : handleMessage}
+            >
+              {commitmentAccess && !commitmentAccess.hasAccess && (
+                <span className="hcs-floating-lock">🔓</span>
+              )}
               <img
                 src={caregiverProfileImage && (caregiverProfileImage.startsWith('http') || caregiverProfileImage.startsWith('/')) ? caregiverProfileImage : defaultAvatar}
                 className="hcs-floating-avatar"
@@ -572,9 +616,15 @@ const HomeCareService = () => {
                 onError={(e) => { e.target.src = defaultAvatar; }}
               />
               <div className="hcs-floating-info">
-                <p className="hcs-floating-name">Message: {caregiverFirstName || caregiverName}</p>
+                <p className="hcs-floating-name">
+                  {commitmentAccess && !commitmentAccess.hasAccess
+                    ? `Pay ₦5,000 to Unlock Chat`
+                    : `Message: ${caregiverFirstName || caregiverName}`}
+                </p>
                 <span className="hcs-floating-status">
-                  {caregiverIsAvailable ? "Available" : "Away"} · for {lastDeliveryDate || "Unknown days"}
+                  {commitmentAccess && !commitmentAccess.hasAccess
+                    ? 'Required before hiring or messaging'
+                    : `${caregiverIsAvailable ? "Available" : "Away"} · for ${lastDeliveryDate || "Unknown days"}`}
                 </span>
               </div>
             </div>
@@ -606,14 +656,26 @@ const HomeCareService = () => {
 
           <div className="hcs-pricing-buttons">
             {(!isAuthenticated || userRole === 'Client') && (
-              <button className="hcs-hire-btn" onClick={handleHire}>
-                Hire {caregiverFirstName || caregiverName} <span className="hcs-arrow">→</span>
-              </button>
-            )}
-            {(!isAuthenticated || userRole === 'Client') && (
-              <button className="hcs-message-btn" onClick={isAuthenticated ? handleMessage : () => navigate(`/login?returnTo=/service/${id}`)}>
-                Send Message
-              </button>
+              commitmentAccess && !commitmentAccess.hasAccess ? (
+                <button
+                  className="hcs-hire-btn hcs-hire-btn-locked"
+                  onClick={isAuthenticated ? handleUnlockChat : () => navigate(`/login?returnTo=/service/${id}`)}
+                >
+                  🔓 Pay ₦5,000 to Unlock <span className="hcs-arrow">→</span>
+                </button>
+              ) : (
+                <>
+                  <button className="hcs-hire-btn" onClick={handleHire}>
+                    Hire {caregiverFirstName || caregiverName} <span className="hcs-arrow">→</span>
+                  </button>
+                  <button
+                    className="hcs-message-btn"
+                    onClick={isAuthenticated ? handleMessage : () => navigate(`/login?returnTo=/service/${id}`)}
+                  >
+                    Send Message
+                  </button>
+                </>
+              )
             )}
           </div>
         </div>

@@ -1,0 +1,348 @@
+/* Mobile-first Commitment Success Page — mirrors PaymentSuccess.css */
+.commitment-success-page {
+  min-height: 100vh;
+  background: linear-gradient(135deg, #f8fafc 0%, #e2e8f0 100%);
+  padding: 16px;
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', sans-serif;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.commitment-success-container {
+  width: 100%;
+  max-width: 480px;
+  margin: 0 auto;
+}
+
+.commitment-success-card {
+  background: white;
+  border-radius: 12px;
+  padding: 24px 20px;
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.1);
+  text-align: center;
+  margin-bottom: 16px;
+}
+
+/* Titles */
+.commitment-success-title {
+  font-size: 22px;
+  font-weight: 700;
+  margin: 0 0 12px 0;
+  line-height: 1.3;
+}
+.commitment-success-title--success { color: #059669; }
+.commitment-success-title--pending { color: #d97706; }
+.commitment-success-title--failed  { color: #dc2626; }
+
+.commitment-success-subtitle {
+  color: #475569;
+  font-size: 14px;
+  line-height: 1.5;
+  margin: 0 0 20px;
+}
+
+.commitment-success-hint {
+  font-size: 13px;
+  color: #94a3b8;
+  margin-top: 4px;
+}
+
+.commitment-success-ref {
+  font-size: 12px;
+  color: #94a3b8;
+  word-break: break-all;
+  margin-bottom: 16px;
+}
+
+/* Status icons */
+.commitment-status-icon {
+  width: 60px;
+  height: 60px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 28px;
+  font-weight: 700;
+  margin: 0 auto 16px;
+}
+.commitment-status-icon--success {
+  background: #d1fae5;
+  color: #059669;
+}
+.commitment-status-icon--pending {
+  background: #fef3c7;
+  color: #d97706;
+}
+.commitment-status-icon--failed {
+  background: #fee2e2;
+  color: #dc2626;
+}
+
+/* Spinner */
+.commitment-spinner {
+  width: 28px;
+  height: 28px;
+  border: 3px solid #fde68a;
+  border-top-color: #d97706;
+  border-radius: 50%;
+  animation: commitment-spin 0.8s linear infinite;
+}
+.commitment-spinner-small {
+  width: 16px;
+  height: 16px;
+  border: 2px solid #e2e8f0;
+  border-top-color: #059669;
+  border-radius: 50%;
+  animation: commitment-spin 0.8s linear infinite;
+  display: inline-block;
+  margin-right: 8px;
+  vertical-align: middle;
+}
+@keyframes commitment-spin {
+  to { transform: rotate(360deg); }
+}
+
+/* Auto-message banner */
+.commitment-auto-message {
+  font-size: 13px;
+  padding: 8px 14px;
+  border-radius: 8px;
+  margin-bottom: 16px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+}
+.commitment-auto-message--sending {
+  background: #f0fdf4;
+  color: #166534;
+}
+.commitment-auto-message--sent {
+  background: #d1fae5;
+  color: #059669;
+}
+.commitment-auto-message--failed {
+  background: #fef3c7;
+  color: #92400e;
+}
+
+/* Details table */
+.commitment-details {
+  text-align: left;
+  border: 1px solid #e2e8f0;
+  border-radius: 8px;
+  overflow: hidden;
+  margin-bottom: 20px;
+}
+.commitment-detail-row {
+  display: flex;
+  justify-content: space-between;
+  padding: 10px 14px;
+  font-size: 13px;
+  border-bottom: 1px solid #f1f5f9;
+}
+.commitment-detail-row:last-child {
+  border-bottom: none;
+}
+.commitment-detail-row span:first-child {
+  color: #64748b;
+}
+.commitment-detail-row span:last-child {
+  font-weight: 600;
+  color: #1e293b;
+}
+.commitment-detail-ref {
+  font-size: 11px !important;
+  word-break: break-all;
+}
+
+/* Action buttons */
+.commitment-actions {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+.commitment-btn {
+  padding: 12px 20px;
+  border-radius: 8px;
+  font-size: 15px;
+  font-weight: 600;
+  cursor: pointer;
+  border: none;
+  transition: opacity 0.2s;
+}
+.commitment-btn:hover { opacity: 0.9; }
+.commitment-btn--primary {
+  background: #059669;
+  color: white;
+}
+.commitment-btn--secondary {
+  background: #f1f5f9;
+  color: #334155;
+}
+
+/* ——— Commitment gate banner (used in Cart page) ——— */
+.commitment-gate-banner {
+  background: linear-gradient(135deg, #fffbeb 0%, #fef3c7 100%);
+  border: 1px solid #fcd34d;
+  border-radius: 10px;
+  padding: 16px;
+  margin-bottom: 16px;
+  text-align: center;
+}
+.commitment-gate-banner__icon {
+  font-size: 28px;
+  margin-bottom: 6px;
+}
+.commitment-gate-banner__title {
+  font-size: 15px;
+  font-weight: 700;
+  color: #92400e;
+  margin: 0 0 4px;
+}
+.commitment-gate-banner__desc {
+  font-size: 13px;
+  color: #78350f;
+  line-height: 1.45;
+  margin: 0 0 12px;
+}
+.commitment-gate-banner__btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  background: #d97706;
+  color: white;
+  border: none;
+  border-radius: 8px;
+  padding: 10px 20px;
+  font-size: 14px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: background 0.2s;
+}
+.commitment-gate-banner__btn:hover {
+  background: #b45309;
+}
+.commitment-gate-banner__btn:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+.commitment-gate-banner__error {
+  color: #dc2626;
+  font-size: 12px;
+  margin-top: 8px;
+}
+
+/* Chat unlocked banner (used in Cart page) */
+.commitment-unlocked-banner {
+  background: linear-gradient(135deg, #f0fdf4 0%, #d1fae5 100%);
+  border: 1px solid #6ee7b7;
+  border-radius: 10px;
+  padding: 16px;
+  margin-bottom: 16px;
+  text-align: center;
+}
+.commitment-unlocked-banner__title {
+  font-size: 14px;
+  font-weight: 600;
+  color: #065f46;
+  margin: 0 0 4px;
+}
+.commitment-unlocked-banner__desc {
+  font-size: 12px;
+  color: #047857;
+  margin: 0 0 10px;
+}
+.commitment-unlocked-banner__btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  background: #059669;
+  color: white;
+  border: none;
+  border-radius: 8px;
+  padding: 10px 20px;
+  font-size: 14px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: background 0.2s;
+}
+.commitment-unlocked-banner__btn:hover {
+  background: #047857;
+}
+
+/* ——— Chat commitment gate modal (used in ChatArea) ——— */
+.commitment-gate-overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.45);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 9999;
+  padding: 16px;
+}
+.commitment-gate-modal {
+  background: white;
+  border-radius: 12px;
+  padding: 24px 20px;
+  max-width: 400px;
+  width: 100%;
+  text-align: center;
+  box-shadow: 0 8px 30px rgba(0, 0, 0, 0.15);
+}
+.commitment-gate-modal__icon {
+  font-size: 40px;
+  margin-bottom: 10px;
+}
+.commitment-gate-modal__title {
+  font-size: 18px;
+  font-weight: 700;
+  color: #1e293b;
+  margin: 0 0 8px;
+}
+.commitment-gate-modal__desc {
+  font-size: 14px;
+  color: #64748b;
+  line-height: 1.5;
+  margin: 0 0 20px;
+}
+.commitment-gate-modal__actions {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+.commitment-gate-modal__btn-primary {
+  background: #d97706;
+  color: white;
+  border: none;
+  border-radius: 8px;
+  padding: 11px 18px;
+  font-size: 14px;
+  font-weight: 600;
+  cursor: pointer;
+}
+.commitment-gate-modal__btn-primary:hover { background: #b45309; }
+.commitment-gate-modal__btn-secondary {
+  background: transparent;
+  color: #64748b;
+  border: none;
+  padding: 8px;
+  font-size: 13px;
+  cursor: pointer;
+}
+
+@media (min-width: 768px) {
+  .commitment-success-card {
+    padding: 32px 28px;
+  }
+  .commitment-success-title {
+    font-size: 26px;
+  }
+  .commitment-actions {
+    flex-direction: row;
+    justify-content: center;
+  }
+}

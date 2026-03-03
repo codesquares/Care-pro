@@ -53,9 +53,19 @@ const NotificationBell = ({ navigateTo, bellIcon: BellIcon }) => {
     const userRole = getUserRole();
     const route = getNotificationRoute(notification, userRole);
 
+    console.log('[NotificationBell] Click:', {
+      rawType: notification.type,
+      relatedEntityId: notification.relatedEntityId,
+      orderId: notification.orderId,
+      senderId: notification.senderId,
+      userRole,
+      resolvedRoute: route,
+      hasNavigateTo: !!navigateTo,
+    });
+
     if (route && navigateTo) {
-      navigateTo(route);
       setIsOpen(false);
+      navigateTo(route);
     }
   };
 

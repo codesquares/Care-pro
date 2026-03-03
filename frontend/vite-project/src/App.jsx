@@ -39,6 +39,7 @@ import ContentBlog from './components/ContentfulBlog/Blog';
 import ContentBlogPost from './components/ContentfulBlog/BlogPost';
 import { BlogProvider } from './main-app/context/BlogContext';
 import PaymentSuccess from './main-app/pages/client/home-care-service/PaymentSuccess';
+import CommitmentSuccess from './main-app/pages/client/home-care-service/CommitmentSuccess';
 import HomeCareService from './main-app/pages/client/home-care-service/HomeCareService';
 import { MessageProvider } from './main-app/context/MessageContext';
 import { CaregiverStatusProvider } from './main-app/contexts/CaregiverStatusContext';
@@ -72,7 +73,7 @@ function App() {
         <NotificationPoller />
         {/* <NotificationProvider> */}
           <MessageProvider>
-            <Router>
+            <Router future={{ v7_startTransition: true, v7_relativeSplatPath: true }}>
               <AuthProvider>
                 <CaregiverStatusProvider>
                   <ErrorBoundary>
@@ -223,6 +224,7 @@ function AppContent() {
         {/* <Route path="/Caregiver-Dashboard" element={<CaregiverDashboard />} /> */}
 
         <Route path="/app/client/payment-success" element={<PaymentSuccess />} />
+        <Route path="/app/client/commitment-success" element={<CommitmentSuccess />} />
         <Route path="/unauthorized" element={<UnauthorizedPage />} />
         <Route
           path="/app/*"

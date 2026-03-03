@@ -39,6 +39,16 @@ const NotificationsPage = () => {
 
     // Navigate to the relevant page
     const route = getNotificationRoute(notification, userRole);
+
+    console.log('[NotificationsPage] Click:', {
+      rawType: notification.type,
+      relatedEntityId: notification.relatedEntityId,
+      orderId: notification.orderId,
+      senderId: notification.senderId,
+      userRole,
+      resolvedRoute: route,
+    });
+
     if (route) {
       navigate(route);
     }

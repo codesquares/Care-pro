@@ -1,7 +1,7 @@
 // This file demonstrates how to use our messaging features in other parts of the application
 
 import { useEffect, useCallback } from 'react';
-import { useMessageContext } from '../context/MessageContext.jsx';
+import { useMessageContext } from '../context/MessageContext';
 import { useNotificationContext } from '../context/NotificationsContext.jsx';
 
 // A custom hook that provides messaging features to any component

@@ -225,6 +225,22 @@
   background: #111827;
 }
 
+/* Locked floating message (commitment fee not paid) */
+.hcs-floating-message.hcs-floating-locked {
+  background: linear-gradient(135deg, #1f2937 0%, #374151 100%);
+  border: 1.5px solid #f59e0b;
+}
+
+.hcs-floating-message.hcs-floating-locked:hover {
+  background: linear-gradient(135deg, #374151 0%, #4b5563 100%);
+}
+
+.hcs-floating-lock {
+  font-size: 16px;
+  margin-right: 6px;
+  flex-shrink: 0;
+}
+
 .hcs-floating-avatar {
   width: 32px;
   height: 32px;
@@ -354,6 +370,50 @@
   background: #d97706;
 }
 
+/* Locked hire button (commitment fee not paid) */
+.hcs-hire-btn.hcs-hire-btn-locked {
+  background: linear-gradient(135deg, #f59e0b 0%, #d97706 100%);
+  font-size: 14px;
+  width: 100%;
+}
+
+.hcs-hire-btn.hcs-hire-btn-locked:hover {
+  background: linear-gradient(135deg, #d97706 0%, #b45309 100%);
+}
+
+.hcs-hire-btn.hcs-hire-btn-locked:disabled {
+  opacity: 0.7;
+  cursor: wait;
+}
+
+/* Commitment error on gig page */
+.hcs-commitment-error {
+  width: 100%;
+  padding: 8px 12px;
+  margin-top: 6px;
+  border-radius: 6px;
+  background: #fff3f3;
+  border: 1px solid #ffcdd2;
+  color: #c62828;
+  font-size: 0.85em;
+  line-height: 1.4;
+  text-align: center;
+}
+
+/* Redirect hint on CommitmentSuccess */
+.commitment-success-redirect-hint {
+  color: #059669;
+  font-size: 0.9em;
+  font-weight: 500;
+  margin-top: 4px;
+  animation: pulse-text 1.5s ease-in-out infinite;
+}
+
+@keyframes pulse-text {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.5; }
+}
+
 .hcs-arrow {
   font-size: 16px;
 }
@@ -374,6 +434,18 @@
 .hcs-message-btn:hover {
   border-color: #9ca3af;
   background: #f9fafb;
+}
+
+/* Locked message button (commitment fee not paid) */
+.hcs-message-btn.hcs-message-btn-locked {
+  background: #fffbeb;
+  border-color: #f59e0b;
+  color: #92400e;
+}
+
+.hcs-message-btn.hcs-message-btn-locked:hover {
+  background: #fef3c7;
+  border-color: #d97706;
 }
 
 /* ---- Video Section ---- */

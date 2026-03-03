@@ -1095,3 +1095,218 @@
 }
 
 /* Keyframes were moved to a global location earlier in the file */
+
+/* ---- 3-dot More Menu Dropdown ---- */
+.more-menu-wrapper {
+  position: relative;
+}
+
+.more-menu-dropdown {
+  position: absolute;
+  top: calc(100% + 6px);
+  right: 0;
+  background: #ffffff;
+  border: 1px solid #e5e7eb;
+  border-radius: 10px;
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.12);
+  min-width: 200px;
+  z-index: 50;
+  padding: 6px;
+  animation: fadeIn 0.15s ease;
+}
+
+.more-menu-item {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  width: 100%;
+  padding: 10px 14px;
+  border: none;
+  background: none;
+  font-size: 14px;
+  font-weight: 500;
+  color: #374151;
+  cursor: pointer;
+  border-radius: 8px;
+  transition: background 0.15s, color 0.15s;
+  text-align: left;
+}
+
+.more-menu-item:hover {
+  background: #f3f4f6;
+}
+
+.more-menu-item--hire {
+  color: #059669;
+}
+.more-menu-item--hire:hover {
+  background: #ecfdf5;
+  color: #047857;
+}
+
+.more-menu-item--terminate {
+  color: #dc2626;
+}
+.more-menu-item--terminate:hover {
+  background: #fef2f2;
+  color: #b91c1c;
+}
+
+.more-menu-item--report {
+  color: #d97706;
+}
+.more-menu-item--report:hover {
+  background: #fffbeb;
+  color: #b45309;
+}
+
+/* ---- Report Caregiver Modal ---- */
+.report-modal-overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.5);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 1000;
+  padding: 16px;
+}
+
+.report-modal {
+  background: #fff;
+  border-radius: 14px;
+  padding: 28px 24px;
+  max-width: 440px;
+  width: 100%;
+  box-shadow: 0 12px 40px rgba(0, 0, 0, 0.15);
+  text-align: center;
+}
+
+.report-modal__icon {
+  font-size: 36px;
+  margin-bottom: 12px;
+}
+
+.report-modal__icon--success {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 52px;
+  height: 52px;
+  border-radius: 50%;
+  background: #ecfdf5;
+  color: #059669;
+  font-size: 24px;
+  font-weight: 700;
+  margin: 0 auto 12px;
+}
+
+.report-modal__title {
+  font-size: 18px;
+  font-weight: 700;
+  color: #111827;
+  margin: 0 0 8px;
+}
+
+.report-modal__desc {
+  font-size: 14px;
+  color: #6b7280;
+  line-height: 1.5;
+  margin: 0 0 18px;
+}
+
+.report-modal__reasons {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  margin-bottom: 14px;
+  text-align: left;
+}
+
+.report-reason-option {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 10px 14px;
+  border: 1.5px solid #e5e7eb;
+  border-radius: 8px;
+  cursor: pointer;
+  font-size: 14px;
+  color: #374151;
+  transition: border-color 0.15s, background 0.15s;
+}
+
+.report-reason-option:hover {
+  border-color: #d1d5db;
+  background: #f9fafb;
+}
+
+.report-reason-option.selected {
+  border-color: #f59e0b;
+  background: #fffbeb;
+  color: #92400e;
+}
+
+.report-reason-option input[type="radio"] {
+  accent-color: #f59e0b;
+  margin: 0;
+}
+
+.report-modal__details {
+  width: 100%;
+  padding: 10px 14px;
+  border: 1.5px solid #e5e7eb;
+  border-radius: 8px;
+  font-size: 14px;
+  font-family: inherit;
+  resize: vertical;
+  margin-bottom: 18px;
+  transition: border-color 0.15s;
+}
+
+.report-modal__details:focus {
+  outline: none;
+  border-color: #f59e0b;
+}
+
+.report-modal__actions {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.report-modal__btn {
+  width: 100%;
+  padding: 12px 16px;
+  border-radius: 8px;
+  font-size: 14px;
+  font-weight: 600;
+  cursor: pointer;
+  border: none;
+  transition: all 0.2s;
+}
+
+.report-modal__btn--primary {
+  background: #f59e0b;
+  color: #fff;
+}
+
+.report-modal__btn--primary:hover:not(:disabled) {
+  background: #d97706;
+}
+
+.report-modal__btn--primary:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.report-modal__btn--secondary {
+  background: transparent;
+  color: #6b7280;
+  border: 1.5px solid #e5e7eb;
+}
+
+.report-modal__btn--secondary:hover {
+  background: #f9fafb;
+  border-color: #d1d5db;
+}

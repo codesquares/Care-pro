@@ -1,15 +1,18 @@
 import { useState, useEffect, useRef, useCallback, useMemo } from 'react';
-import { useLocation } from 'react-router-dom';
+import { useLocation, useNavigate } from 'react-router-dom';
 import './chatarea.css';
+import '../../pages/client/home-care-service/CommitmentSuccess.css';
 import MessageInput from './MessageInput';
 import MessageStatus from './MessageStatus';
 import ServiceSelectionModal from './ServiceSelectionModal';
 import { useMessageContext } from '../../context/MessageContext';
 import { createNotification } from '../../services/notificationService';
 import ClientGigService from '../../services/clientGigService';
+import ClientOrderService from '../../services/clientOrderService';
 
 const ChatArea = ({ messages, recipient, userId, onSendMessage, isOfflineMode = false }) => {
   const location = useLocation();
+  const navigate = useNavigate();
   const [message, setMessage] = useState('');
   const messagesEndRef = useRef(null);
   const { handleDeleteMessage } = useMessageContext();
@@ -30,6 +33,24 @@ const ChatArea = ({ messages, recipient, userId, onSendMessage, isOfflineMode = 
   const [isLoadingGigs, setIsLoadingGigs] = useState(false);
   const [showServiceModal, setShowServiceModal] = useState(false);
   const [gigCache, setGigCache] = useState(new Map()); // Cache gigs by caregiver ID
+
+  // Commitment gate modal state
+  const [showCommitmentModal, setShowCommitmentModal] = useState(false);
+
+  // 3-dot menu state
+  const [showMoreMenu, setShowMoreMenu] = useState(false);
+  const moreMenuRef = useRef(null);
+
+  // Active order state for this caregiver
+  const [activeOrder, setActiveOrder] = useState(null); // null = no active order, object = active order
+  const [isCheckingOrder, setIsCheckingOrder] = useState(false);
+
+  // Report caregiver state
+  const [showReportModal, setShowReportModal] = useState(false);
+  const [reportReason, setReportReason] = useState('');
+  const [reportDetails, setReportDetails] = useState('');
+  const [reportSubmitting, setReportSubmitting] = useState(false);
+  const [reportSubmitted, setReportSubmitted] = useState(false);
   
   // Memoized function to get initials from name
   const getInitials = useCallback((name) => {
@@ -64,6 +85,99 @@ const ChatArea = ({ messages, recipient, userId, onSendMessage, isOfflineMode = 
   // });
   // console.log("🎯 ChatArea: Messages array:", messages);
   // console.log("🎯 ChatArea: Recipient object:", recipient);
+
+  // Listen for commitment-fee-required events from MessageContext
+  useEffect(() => {
+    const handleCommitmentRequired = (e) => {
+      setShowCommitmentModal(true);
+    };
+    window.addEventListener('commitment-fee-required', handleCommitmentRequired);
+    return () => window.removeEventListener('commitment-fee-required', handleCommitmentRequired);
+  }, []);
+
+  // Close 3-dot menu when clicking outside
+  useEffect(() => {
+    const handleClickOutside = (e) => {
+      if (moreMenuRef.current && !moreMenuRef.current.contains(e.target)) {
+        setShowMoreMenu(false);
+      }
+    };
+    if (showMoreMenu) {
+      document.addEventListener('mousedown', handleClickOutside);
+    }
+    return () => document.removeEventListener('mousedown', handleClickOutside);
+  }, [showMoreMenu]);
+
+  // Check if there is an active order for this caregiver
+  useEffect(() => {
+    const checkActiveOrder = async () => {
+      if (!isClientRoute || !safeRecipient?.id || !userId) return;
+      setIsCheckingOrder(true);
+      try {
+        const orders = await ClientOrderService.getOrderHistory(userId);
+        if (Array.isArray(orders)) {
+          const active = orders.find(
+            (o) =>
+              o.caregiverId === safeRecipient.id &&
+              o.clientOrderStatus !== 'Completed' &&
+              o.clientOrderStatus !== 'Cancelled'
+          );
+          setActiveOrder(active || null);
+        }
+      } catch (err) {
+        console.error('Error checking active order:', err);
+      } finally {
+        setIsCheckingOrder(false);
+      }
+    };
+    checkActiveOrder();
+  }, [isClientRoute, safeRecipient?.id, userId]);
+
+  // Handle terminate order
+  const handleTerminateOrder = async () => {
+    if (!activeOrder) return;
+    if (!window.confirm('Are you sure you want to terminate this order? This action cannot be undone.')) return;
+    try {
+      const result = await ClientOrderService.cancelOrder(activeOrder.id || activeOrder.orderId);
+      if (result.success) {
+        setActiveOrder(null);
+        setShowMoreMenu(false);
+        alert('Order has been terminated successfully.');
+      } else {
+        alert(result.error || 'Failed to terminate order. Please try again.');
+      }
+    } catch (err) {
+      console.error('Error terminating order:', err);
+      alert('Something went wrong. Please try again.');
+    }
+  };
+
+  // Handle report caregiver submission
+  const handleSubmitReport = async () => {
+    if (!reportReason) return;
+    setReportSubmitting(true);
+    try {
+      // Submit report via notification to admin
+      await createNotification({
+        recipientId: 'admin',
+        type: 'caregiver_report',
+        title: `Caregiver Reported: ${safeRecipient?.name || 'Unknown'}`,
+        message: `Reason: ${reportReason}${reportDetails ? '. Details: ' + reportDetails : ''}`,
+        metadata: {
+          reportedCaregiverId: safeRecipient?.id,
+          reportedBy: userId,
+          reason: reportReason,
+          details: reportDetails,
+        },
+      });
+      setReportSubmitted(true);
+    } catch (err) {
+      console.error('Error submitting report:', err);
+      alert('Failed to submit report. Please try again.');
+    } finally {
+      setReportSubmitting(false);
+    }
+  };
 
   // Memoized scroll to bottom function
   const scrollToBottom = useCallback((force = false) => {
@@ -274,41 +388,33 @@ const ChatArea = ({ messages, recipient, userId, onSendMessage, isOfflineMode = 
   const handleHireMeClick = () => {
     // Priority 1: Use serviceId from navigation state (direct from HomeCareService)
     if (serviceId) {
-      // console.log('Direct navigation: Using serviceId from HomeCareService:', serviceId);
-      
-      // Navigate to the specific service page
-      // Note: If service becomes unavailable, the service page will handle the error
-      window.location.href = `/service/${serviceId}`;
+      // Navigate to the cart page for this service
+      navigate(`/app/client/cart/${serviceId}`);
       return;
     }
 
     // Priority 2: Use fetched gigs (general messaging context)
     if (isLoadingGigs) {
-      // console.log('Still loading caregiver gigs...');
       return; // Don't do anything if still loading
     }
 
     if (caregiverGigs.length === 0) {
-      // console.log('No published gigs available for this caregiver');
-      // Could show a toast message here: "This caregiver has no available services"
       return;
     }
 
     if (caregiverGigs.length === 1) {
-      // Direct navigation if only one service
+      // Direct navigation to cart if only one service
       const service = caregiverGigs[0];
-      // console.log('Single service navigation:', service.title);
-      window.location.href = `/service/${service.id}`;
+      navigate(`/app/client/cart/${service.id}`);
     } else {
       // Open modal for multiple services
-      // console.log(`Multiple services available: ${caregiverGigs.length} options`);
       setShowServiceModal(true);
     }
   };
 
   // Handle service selection from modal
   const handleSelectService = (service) => {
-    window.location.href = `/service/${service.id}`;
+    navigate(`/app/client/cart/${service.id}`);
   };
 
   const handleSendMessage = async () => {
@@ -407,7 +513,11 @@ const ChatArea = ({ messages, recipient, userId, onSendMessage, isOfflineMode = 
           console.error("Failed to send message:", sendError);
           // Restore message in input if sending failed
           setMessage(messageText);
-          alert('Failed to send message. Please try again.');
+          // Commitment gate is handled via the 'commitment-fee-required' event from MessageContext
+          // Only show generic alert for non-commitment errors
+          if (!sendError?.isCommitmentRequired) {
+            alert('Failed to send message. Please try again.');
+          }
         }
         
       } else {
@@ -560,10 +670,10 @@ const ChatArea = ({ messages, recipient, userId, onSendMessage, isOfflineMode = 
   // Add this function before the return statement
   const formatLastActive = (lastActiveDate) => {
     try {
-      if (!lastActiveDate) return 'Last seen unavailable';
+      if (!lastActiveDate) return 'Offline';
       
       const lastActive = new Date(lastActiveDate);
-      if (isNaN(lastActive.getTime())) return 'Last seen unavailable';
+      if (isNaN(lastActive.getTime())) return 'Offline';
       
       const now = new Date();
       const diffInSeconds = Math.floor((now - lastActive) / 1000);
@@ -601,7 +711,7 @@ const ChatArea = ({ messages, recipient, userId, onSendMessage, isOfflineMode = 
       return `Active on ${lastActive.toLocaleDateString()} at ${lastActive.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}`;
     } catch (error) {
       console.error('Error formatting last active time:', error);
-      return 'Last seen status unavailable';
+      return 'Offline';
     }
   };
 
@@ -631,7 +741,7 @@ const ChatArea = ({ messages, recipient, userId, onSendMessage, isOfflineMode = 
                       day: 'numeric',
                       hour: '2-digit',
                       minute: '2-digit'
-                    }) : 'Last seen unavailable'
+                    }) : 'Offline'
                   }
                 >
                   {formatLastActive(safeRecipient.lastActive)}
@@ -685,13 +795,46 @@ const ChatArea = ({ messages, recipient, userId, onSendMessage, isOfflineMode = 
               <path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6 19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72 12.84 12.84 0 0 0 .7 2.81 2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45 12.84 12.84 0 0 0 2.81.7A2 2 0 0 1 22 16.92z"></path>
             </svg>
           </button> */}
-          <button className="action-button" title="More options">
-            <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-              <circle cx="12" cy="12" r="1"></circle>
-              <circle cx="19" cy="12" r="1"></circle>
-              <circle cx="5" cy="12" r="1"></circle>
-            </svg>
-          </button>
+          <div className="more-menu-wrapper" ref={moreMenuRef}>
+            <button className="action-button" title="More options" onClick={() => setShowMoreMenu(!showMoreMenu)}>
+              <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                <circle cx="12" cy="12" r="1"></circle>
+                <circle cx="19" cy="12" r="1"></circle>
+                <circle cx="5" cy="12" r="1"></circle>
+              </svg>
+            </button>
+            {showMoreMenu && isClientRoute && (
+              <div className="more-menu-dropdown">
+                {activeOrder ? (
+                  <button className="more-menu-item more-menu-item--terminate" onClick={handleTerminateOrder}>
+                    <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                      <circle cx="12" cy="12" r="10"/>
+                      <line x1="15" y1="9" x2="9" y2="15"/>
+                      <line x1="9" y1="9" x2="15" y2="15"/>
+                    </svg>
+                    Terminate Order
+                  </button>
+                ) : (
+                  <button className="more-menu-item more-menu-item--hire" onClick={() => { setShowMoreMenu(false); handleHireMeClick(); }}>
+                    <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                      <path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/>
+                      <circle cx="9" cy="7" r="4"/>
+                      <path d="m22 2-5 10-4-4Z"/>
+                    </svg>
+                    Hire Now
+                  </button>
+                )}
+                <button className="more-menu-item more-menu-item--report" onClick={() => { setShowMoreMenu(false); setShowReportModal(true); setReportSubmitted(false); setReportReason(''); setReportDetails(''); }}>
+                  <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                    <path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/>
+                    <line x1="12" y1="9" x2="12" y2="13"/>
+                    <line x1="12" y1="17" x2="12.01" y2="17"/>
+                  </svg>
+                  Report Caregiver
+                </button>
+              </div>
+            )}
+          </div>
         </div>
       </header>
 
@@ -847,6 +990,107 @@ const ChatArea = ({ messages, recipient, userId, onSendMessage, isOfflineMode = 
           onSelectService={handleSelectService}
           isLoading={isLoadingGigs}
         />
+      )}
+
+      {/* Commitment Gate Modal — shown when backend blocks a message */}
+      {showCommitmentModal && (
+        <div className="commitment-gate-overlay" onClick={() => setShowCommitmentModal(false)}>
+          <div className="commitment-gate-modal" onClick={(e) => e.stopPropagation()}>
+            <div className="commitment-gate-modal__icon">🔒</div>
+            <h2 className="commitment-gate-modal__title">Chat Access Required</h2>
+            <p className="commitment-gate-modal__desc">
+              You need to pay a non-refundable ₦5,000 commitment fee before messaging this caregiver.
+              If you hire them, this fee is deducted from your order total.
+            </p>
+            <div className="commitment-gate-modal__actions">
+              <button
+                className="commitment-gate-modal__btn-primary"
+                onClick={() => {
+                  setShowCommitmentModal(false);
+                  navigate('/app/client/dashboard');
+                }}
+              >
+                🔓 Go to Marketplace to Unlock
+              </button>
+              <button
+                className="commitment-gate-modal__btn-secondary"
+                onClick={() => setShowCommitmentModal(false)}
+              >
+                Dismiss
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Report Caregiver Modal */}
+      {showReportModal && (
+        <div className="report-modal-overlay" onClick={() => setShowReportModal(false)}>
+          <div className="report-modal" onClick={(e) => e.stopPropagation()}>
+            {reportSubmitted ? (
+              <>
+                <div className="report-modal__icon report-modal__icon--success">✓</div>
+                <h2 className="report-modal__title">Report Submitted</h2>
+                <p className="report-modal__desc">
+                  Thank you for your report. Our support team will review it and take appropriate action.
+                </p>
+                <button className="report-modal__btn report-modal__btn--primary" onClick={() => setShowReportModal(false)}>
+                  Close
+                </button>
+              </>
+            ) : (
+              <>
+                <div className="report-modal__icon">⚠️</div>
+                <h2 className="report-modal__title">Report {safeRecipient?.name || 'Caregiver'}</h2>
+                <p className="report-modal__desc">
+                  Please select a reason for reporting this caregiver. Our team will review your report.
+                </p>
+                <div className="report-modal__reasons">
+                  {[
+                    'Unresponsive or not replying',
+                    'Could not reach an agreement',
+                    'Unprofessional behaviour',
+                    'Suspicious or fraudulent activity',
+                    'Other'
+                  ].map((reason) => (
+                    <label key={reason} className={`report-reason-option${reportReason === reason ? ' selected' : ''}`}>
+                      <input
+                        type="radio"
+                        name="reportReason"
+                        value={reason}
+                        checked={reportReason === reason}
+                        onChange={(e) => setReportReason(e.target.value)}
+                      />
+                      {reason}
+                    </label>
+                  ))}
+                </div>
+                <textarea
+                  className="report-modal__details"
+                  placeholder="Add more details (optional)..."
+                  value={reportDetails}
+                  onChange={(e) => setReportDetails(e.target.value)}
+                  rows={3}
+                />
+                <div className="report-modal__actions">
+                  <button
+                    className="report-modal__btn report-modal__btn--primary"
+                    onClick={handleSubmitReport}
+                    disabled={!reportReason || reportSubmitting}
+                  >
+                    {reportSubmitting ? 'Submitting...' : 'Submit Report'}
+                  </button>
+                  <button
+                    className="report-modal__btn report-modal__btn--secondary"
+                    onClick={() => setShowReportModal(false)}
+                  >
+                    Cancel
+                  </button>
+                </div>
+              </>
+            )}
+          </div>
+        </div>
       )}
     </div>
   );
