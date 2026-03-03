@@ -184,12 +184,14 @@ const CertificateUploadModal = ({
   return (
     <div className="cert-modal-overlay" onClick={handleCancel}>
       <div className="cert-modal-content" onClick={(e) => e.stopPropagation()}>
-        <button className="cert-modal-close" onClick={handleCancel} title="Close">
-          &times;
-        </button>
+        <div className="cert-modal-header">
+          <h3 className="cert-modal-title">Upload Certificate</h3>
+          <button className="cert-modal-close" onClick={handleCancel} title="Close">
+            &times;
+          </button>
+        </div>
 
-        <h3 className="cert-modal-title">Upload Certificate</h3>
-
+        <div className="cert-modal-body">
         {/* Certificate type select */}
         <div className="cert-modal-field">
           <label>
@@ -268,6 +270,7 @@ const CertificateUploadModal = ({
           >
             {uploadLoading ? 'Uploading…' : 'Upload'}
           </button>
+        </div>
         </div>
       </div>
     </div>

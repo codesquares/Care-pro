@@ -5,6 +5,7 @@ import SubscriptionService from '../../../services/subscriptionService';
 import SubscriptionBadge from '../../../components/subscriptions/SubscriptionBadge';
 import BillingHistory from '../../../components/subscriptions/BillingHistory';
 import PlanHistory from '../../../components/subscriptions/PlanHistory';
+import ClientOrderService from '../../../services/clientOrderService';
 import api from '../../../services/api';
 import {
   CancelSubscriptionModal,
@@ -26,6 +27,11 @@ const SubscriptionDetail = () => {
   const [contractLoading, setContractLoading] = useState(false);
   const [contractExpanded, setContractExpanded] = useState(false);
 
+  // Linked orders for this subscription
+  const [linkedOrders, setLinkedOrders] = useState([]);
+  const [ordersLoading, setOrdersLoading] = useState(false);
+  const [ordersExpanded, setOrdersExpanded] = useState(false);
+
   // Modal visibility
   const [showCancel, setShowCancel] = useState(false);
   const [showTerminate, setShowTerminate] = useState(false);
@@ -44,6 +50,25 @@ const SubscriptionDetail = () => {
   };
 
   useEffect(() => { fetchSubscription(); }, [id]);
+
+  // Fetch orders linked to this subscription
+  const loadLinkedOrders = async () => {
+    if (ordersExpanded) { setOrdersExpanded(false); return; }
+    if (linkedOrders.length > 0) { setOrdersExpanded(true); return; }
+    setOrdersLoading(true);
+    try {
+      const userDetails = JSON.parse(localStorage.getItem('userDetails') || '{}');
+      const allOrders = await ClientOrderService.getOrderHistory(userDetails.id);
+      const subOrders = (allOrders || []).filter(o => o.subscriptionId === id);
+      subOrders.sort((a, b) => (a.billingCycleNumber || 0) - (b.billingCycleNumber || 0));
+      setLinkedOrders(subOrders);
+      setOrdersExpanded(true);
+    } catch (err) {
+      console.error('Failed to load linked orders:', err);
+    } finally {
+      setOrdersLoading(false);
+    }
+  };
 
   // ---- Actions ----
   const handleReactivate = async () => {
@@ -304,6 +329,52 @@ const SubscriptionDetail = () => {
 
         {/* Billing History */}
         <BillingHistory subscriptionId={id} />
+
+        {/* Linked Orders by Cycle */}
+        <div className="sub-detail__card sub-detail__card--full">
+          <div className="sub-detail__contract-header">
+            <h3>Order Cycles</h3>
+            <button
+              className="sub-detail__view-contract-btn"
+              onClick={loadLinkedOrders}
+              disabled={ordersLoading}
+            >
+              {ordersLoading ? 'Loading…' : ordersExpanded ? 'Hide Orders ▲' : 'View Orders ▼'}
+            </button>
+          </div>
+          {ordersExpanded && linkedOrders.length > 0 && (
+            <div style={{ marginTop: '8px' }}>
+              {linkedOrders.map((order) => {
+                const fundInfo = ClientOrderService.getFundStatusInfo(order);
+                const colorMap = {
+                  'fund-status--released': '#2e7d32',
+                  'fund-status--auto-released': '#1565c0',
+                  'fund-status--pending': '#e65100',
+                  'fund-status--disputed': '#c62828',
+                };
+                return (
+                  <div key={order.id} className="sub-detail__row" style={{ alignItems: 'center' }}>
+                    <span>Cycle {order.billingCycleNumber || '—'}</span>
+                    <span style={{ display: 'flex', gap: '12px', alignItems: 'center' }}>
+                      <span>₦{(order.amount || 0).toLocaleString()}</span>
+                      <span style={{ fontWeight: 600, fontSize: '12px', color: order.clientOrderStatus === 'Completed' ? '#2e7d32' : '#e67e22' }}>
+                        {order.clientOrderStatus}
+                      </span>
+                      {fundInfo.label && (
+                        <span style={{ fontWeight: 600, fontSize: '11px', color: colorMap[fundInfo.className] || '#888' }}>
+                          {fundInfo.label}
+                        </span>
+                      )}
+                    </span>
+                  </div>
+                );
+              })}
+            </div>
+          )}
+          {ordersExpanded && linkedOrders.length === 0 && (
+            <p style={{ color: '#888', fontSize: '13px', marginTop: '8px' }}>No orders found for this subscription.</p>
+          )}
+        </div>
 
         {/* Contract */}
         {sub.contractId && (

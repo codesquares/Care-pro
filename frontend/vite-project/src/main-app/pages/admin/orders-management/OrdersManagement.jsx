@@ -519,6 +519,34 @@ const OrdersManagement = () => {
                     <label>Payment Option:</label>
                     <span>{selectedOrder.paymentOption}</span>
                   </div>
+                  <div className="detail-item">
+                    <label>Service Type:</label>
+                    <span>{selectedOrder.serviceType || selectedOrder.paymentOption || '—'}</span>
+                  </div>
+                  <div className="detail-item">
+                    <label>Funds Released:</label>
+                    <span style={{ color: selectedOrder.isOrderStatusApproved ? '#27ae60' : '#e67e22', fontWeight: 600 }}>
+                      {selectedOrder.isOrderStatusApproved ? 'Yes ✔' : 'No — Pending'}
+                    </span>
+                  </div>
+                  {selectedOrder.hasDispute && (
+                    <div className="detail-item">
+                      <label>Dispute:</label>
+                      <span style={{ color: '#e74c3c', fontWeight: 600 }}>Active Dispute</span>
+                    </div>
+                  )}
+                  {selectedOrder.subscriptionId && (
+                    <div className="detail-item">
+                      <label>Subscription ID:</label>
+                      <span className="mono">{selectedOrder.subscriptionId}</span>
+                    </div>
+                  )}
+                  {selectedOrder.billingCycleNumber > 0 && (
+                    <div className="detail-item">
+                      <label>Billing Cycle:</label>
+                      <span>Cycle {selectedOrder.billingCycleNumber}</span>
+                    </div>
+                  )}
                   {selectedOrder.transactionId && (
                     <div className="detail-item">
                       <label>Transaction ID:</label>

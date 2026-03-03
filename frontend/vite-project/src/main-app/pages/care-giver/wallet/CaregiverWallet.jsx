@@ -151,8 +151,10 @@ const CaregiverWallet = () => {
               </span>
               {showPendingTooltip && (
                 <div className="cg-wallet__tooltip">
-                  These are funds from orders that are waiting for client approval
-                  or the 7-day automatic release period.
+                  These are funds from completed orders waiting for client approval
+                  or the 7-day automatic release period. For recurring subscriptions,
+                  only the first month requires client approval — subsequent months
+                  are released automatically.
                 </div>
               )}
             </div>

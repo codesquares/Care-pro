@@ -6,6 +6,7 @@ import { toast } from "react-toastify";
 import ClientReviewService from "../../../services/clientReviewService.js";
 import ContractService from "../../../services/contractService.js";
 import OrderTasksService from "../../../services/orderTasksService.js";
+import ClientOrderService from "../../../services/clientOrderService.js";
 import config from "../../../config"; // Centralized API configuration
 import "./Orders.css";
 
@@ -19,6 +20,7 @@ const MyOrders = () => {
   const [orders, setOrders] = useState([]);
   const [ordersWithReviews, setOrdersWithReviews] = useState([]);
   const [filter, setFilter] = useState("All orders");
+  const [viewMode, setViewMode] = useState("flat"); // "flat" or "grouped"
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   
@@ -367,6 +369,58 @@ const MyOrders = () => {
     );
   };
 
+  // Render fund status badge for an order
+  const renderFundStatus = (order) => {
+    const info = ClientOrderService.getFundStatusInfo(order);
+    if (!info.label) return null;
+    const colorMap = {
+      'fund-status--released': { bg: '#e8f5e9', color: '#2e7d32' },
+      'fund-status--auto-released': { bg: '#e3f2fd', color: '#1565c0' },
+      'fund-status--pending': { bg: '#fff3e0', color: '#e65100' },
+      'fund-status--disputed': { bg: '#fce4ec', color: '#c62828' },
+    };
+    const style = colorMap[info.className] || { bg: '#f5f5f5', color: '#666' };
+    return (
+      <span style={{
+        display: 'inline-block', fontSize: '11px', fontWeight: 600,
+        padding: '2px 8px', borderRadius: '10px', marginTop: '4px',
+        backgroundColor: style.bg, color: style.color
+      }}>
+        {info.label}
+      </span>
+    );
+  };
+
+  // Render a single order card (reusable for flat & grouped views)
+  const renderOrderCard = (order, index) => (
+    <div key={order.id || index} className="client-order-card"
+      onClick={() => handleOrderClick(order.id)}
+      style={{ cursor: "pointer" }}
+    >
+      <img src={order.gigImage || "default-image.png"} alt="Order-info" className="client-order-image" />
+      <div className="client-order-details">
+        <h3>{order.gigTitle}</h3>
+        <p>{order.caregiverName || "Unknown Client"}</p>
+        <div className="client-order-meta">
+          <span className={`status ${statusColors[order.status] || ""}`}>
+            {order.clientOrderStatus}
+          </span>
+          {renderStarRating(order.calculatedRating, order.reviewCount)}
+        </div>
+        {renderFundStatus(order)}
+        {order.billingCycleNumber > 0 && (
+          <span style={{ display: 'inline-block', fontSize: '11px', color: '#888', marginTop: '2px', marginLeft: '6px' }}>
+            Cycle {order.billingCycleNumber}
+          </span>
+        )}
+        {renderContractStatus(order)}
+      </div>
+    </div>
+  );
+
+  // Get grouped data for display
+  const { oneTime: oneTimeOrders, subscriptions: subscriptionGroups } = ClientOrderService.groupOrdersBySubscription(filteredOrders);
+  const hasSubscriptions = Object.keys(subscriptionGroups).length > 0;
 
   return (
     <div className="client-orders-page">
@@ -385,33 +439,54 @@ const MyOrders = () => {
           ))}
         </div>
 
+        {/* View toggle — only show if there are subscription orders */}
+        {hasSubscriptions && (
+          <div style={{ display: 'flex', gap: '8px', margin: '10px 0' }}>
+            <button
+              style={{ padding: '6px 14px', borderRadius: '16px', border: '1px solid #ccc', fontSize: '12px', fontWeight: 600, cursor: 'pointer', background: viewMode === 'flat' ? '#333' : '#fff', color: viewMode === 'flat' ? '#fff' : '#333' }}
+              onClick={() => setViewMode('flat')}
+            >
+              All Orders
+            </button>
+            <button
+              style={{ padding: '6px 14px', borderRadius: '16px', border: '1px solid #ccc', fontSize: '12px', fontWeight: 600, cursor: 'pointer', background: viewMode === 'grouped' ? '#333' : '#fff', color: viewMode === 'grouped' ? '#fff' : '#333' }}
+              onClick={() => setViewMode('grouped')}
+            >
+              Group by Subscription
+            </button>
+          </div>
+        )}
+
         {loading ? (
           <p>Loading orders...</p>
         ) : error ? (
           <p className="error">{error}</p>
         ) : filteredOrders.length === 0 ? (
           <p>No orders found.</p>
-        ) : (
+        ) : viewMode === 'grouped' && hasSubscriptions ? (
           <div className="orders-list">
-            {filteredOrders.map((order, index) => (
-              <div key={index} className="client-order-card"
-              onClick={() => handleOrderClick(order.id)}
-              style={{ cursor: "pointer" }}
-              >
-                <img src={order.gigImage || "default-image.png"} alt="Order-info" className="client-order-image" />
-                <div className="client-order-details">
-                  <h3>{order.gigTitle}</h3>
-                  <p>{order.caregiverName || "Unknown Client"}</p>
-                  <div className="client-order-meta">
-                    <span className={`status ${statusColors[order.status] || ""}`}>
-                      {order.clientOrderStatus}
-                    </span>
-                    {renderStarRating(order.calculatedRating, order.reviewCount)}
-                  </div>
-                  {renderContractStatus(order)}
-                </div>
+            {/* One-Time Orders */}
+            {oneTimeOrders.length > 0 && (
+              <>
+                <h3 style={{ fontSize: '15px', fontWeight: 700, margin: '16px 0 8px', color: '#333' }}>One-Time Orders</h3>
+                {oneTimeOrders.map((order, index) => renderOrderCard(order, index))}
+              </>
+            )}
+
+            {/* Subscription Groups */}
+            {Object.entries(subscriptionGroups).map(([subId, subOrders]) => (
+              <div key={subId} style={{ marginTop: '16px' }}>
+                <h3 style={{ fontSize: '15px', fontWeight: 700, margin: '8px 0', color: '#333' }}>
+                  📋 {subOrders[0]?.gigTitle || 'Subscription'}
+                  <span style={{ fontSize: '11px', fontWeight: 400, color: '#888', marginLeft: '8px' }}>({subOrders.length} cycle{subOrders.length !== 1 ? 's' : ''})</span>
+                </h3>
+                {subOrders.map((order, index) => renderOrderCard(order, index))}
               </div>
             ))}
+          </div>
+        ) : (
+          <div className="orders-list">
+            {filteredOrders.map((order, index) => renderOrderCard(order, index))}
           </div>
         )}
       </div>

@@ -5,6 +5,7 @@ import defaultAvatar from '../../../../assets/profilecard1.png';
 import ClientProfileService from '../../../services/clientProfileService';
 import ClientCareNeedsService from '../../../services/clientCareNeedsService';
 import OrderMetrics from '../../../components/client/OrderMetrics';
+import ClientOrderService from '../../../services/clientOrderService';
 import AddressInput from '../../../components/AddressInput';
 import { toast } from 'react-toastify';
 import { generateUsername } from '../../../utils/usernameGenerator';
@@ -38,6 +39,9 @@ const ClientProfile = () => {
   const [careNeeds, setCareNeeds] = useState(null);
   const [hasCareNeeds, setHasCareNeeds] = useState(false);
 
+  // Service history counts
+  const [serviceHistoryCounts, setServiceHistoryCounts] = useState({ active: 0, completed: 0 });
+
   // Service category icons mapping
   const categoryIcons = {
     'Adult Care': '👴',
@@ -55,6 +59,24 @@ const ClientProfile = () => {
   // Get user details from localStorage
   const userDetails = JSON.parse(localStorage.getItem("userDetails") || "{}");
   const clientId = userDetails?.id;
+
+  // Fetch service history counts
+  useEffect(() => {
+    const fetchServiceCounts = async () => {
+      if (!clientId) return;
+      try {
+        const orders = await ClientOrderService.getOrderHistory(clientId);
+        const completed = orders.filter(o => o.clientOrderStatus === 'Completed').length;
+        const active = orders.filter(o =>
+          o.clientOrderStatus === 'In Progress' || o.clientOrderStatus === 'Pending'
+        ).length;
+        setServiceHistoryCounts({ active, completed });
+      } catch (err) {
+        console.error('Error fetching service history counts:', err);
+      }
+    };
+    fetchServiceCounts();
+  }, [clientId]);
 
   // Fetch profile data
   useEffect(() => {
@@ -674,18 +696,13 @@ const ClientProfile = () => {
             <h2>Services History</h2>
             <div className="services-summary">
               <div className="summary-item">
-                <span className="count">0</span>
+                <span className="count">{serviceHistoryCounts.active}</span>
                 <span className="label">Active Services</span>
               </div>
               
               <div className="summary-item">
-                <span className="count">0</span>
+                <span className="count">{serviceHistoryCounts.completed}</span>
                 <span className="label">Completed Services</span>
-              </div>
-              
-              <div className="summary-item">
-                <span className="count">0</span>
-                <span className="label">Favorites</span>
               </div>
             </div>
           </div>

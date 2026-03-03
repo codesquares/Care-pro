@@ -20,7 +20,9 @@
   width: 100%;
   max-width: 700px;
   max-height: 90vh;
-  overflow-y: auto;
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
   box-shadow: 0 10px 40px rgba(0, 0, 0, 0.2);
 }
 
@@ -33,6 +35,10 @@
   background: linear-gradient(135deg, #1976d2, #1565c0);
   color: white;
   border-radius: 12px 12px 0 0;
+  flex-shrink: 0;
+  position: sticky;
+  top: 0;
+  z-index: 1;
 }
 
 .contract-modal-header h2 {
@@ -59,6 +65,28 @@
 
 .contract-form {
   padding: 24px;
+  flex: 1;
+  overflow-y: auto;
+  scrollbar-width: thin;
+  scrollbar-color: #c1c1c1 #f1f1f1;
+}
+
+.contract-form::-webkit-scrollbar {
+  width: 8px;
+}
+
+.contract-form::-webkit-scrollbar-track {
+  background: #f1f1f1;
+  border-radius: 4px;
+}
+
+.contract-form::-webkit-scrollbar-thumb {
+  background-color: #c1c1c1;
+  border-radius: 4px;
+}
+
+.contract-form::-webkit-scrollbar-thumb:hover {
+  background-color: #a1a1a1;
 }
 
 /* Section Styles */
@@ -293,6 +321,7 @@
   .contract-modal-content {
     max-height: 95vh;
     margin: 10px;
+    overflow: hidden;
   }
 
   .contract-form {

@@ -6,6 +6,7 @@ import "react-toastify/dist/ReactToastify.css";
 import { createNotification } from "../../../services/notificationService";
 import ContractService from "../../../services/contractService";
 import OrderTasksService from "../../../services/orderTasksService";
+import ClientOrderService from "../../../services/clientOrderService";
 import CreateOrderTasksModal from "../../../components/modals/CreateOrderTasksModal";
 import config from "../../../config"; // Centralized API configuration
 import "./Order&Tasks.css";
@@ -41,6 +42,11 @@ const MyOrders = () => {
     const [hasOrderTasks, setHasOrderTasks] = useState(false);
     const [checkingOrderTasks, setCheckingOrderTasks] = useState(false);
     const [showCreateOrderTasksModal, setShowCreateOrderTasksModal] = useState(false);
+    const [isSubmitting, setIsSubmitting] = useState(false);
+
+    // Fund release state
+    const [releasingFunds, setReleasingFunds] = useState(false);
+    const [fundsReleased, setFundsReleased] = useState(false);
     
     const userDetails = JSON.parse(localStorage.getItem("userDetails"));
     const userId = userDetails?.id;
@@ -51,6 +57,37 @@ const MyOrders = () => {
     const handlingFaq = () => {
         navigate("/app/client/faq");
     }
+
+    // Handle releasing funds for a completed order
+    const handleReleaseFunds = async () => {
+        if (!orderId) return;
+        setReleasingFunds(true);
+        try {
+            const result = await ClientOrderService.releaseFunds(orderId);
+            if (result.success) {
+                setFundsReleased(true);
+                toast.success(result.data?.message || "Funds released successfully!");
+                // Refresh the order data to reflect updated status
+                try {
+                    const token = localStorage.getItem('authToken');
+                    const response = await axios.get(
+                        `${config.BASE_URL}/ClientOrders/orderId?orderId=${orderId}`,
+                        { headers: { 'Authorization': `Bearer ${token}` } }
+                    );
+                    setOrders([response.data]);
+                } catch (refreshErr) {
+                    console.error("Failed to refresh order data:", refreshErr);
+                }
+            } else {
+                toast.error(result.error || "Failed to release funds.");
+            }
+        } catch (error) {
+            console.error("Error releasing funds:", error);
+            toast.error("Failed to release funds. Please try again.");
+        } finally {
+            setReleasingFunds(false);
+        }
+    };
 
 
 
@@ -336,7 +373,16 @@ const MyOrders = () => {
     };
 
     const handleSubmitStatus = async () => {
-        if (!orderId || !userId || (modalType === "dispute" && !reason)) return;
+        if (!orderId || !userId) {
+            toast.error("Unable to update order: missing order or user information. Please refresh and try again.");
+            return;
+        }
+        if (modalType === "dispute" && !reason) {
+            toast.error("Please provide a reason for the dispute.");
+            return;
+        }
+
+        setIsSubmitting(true);
 
         const baseUrl = `${config.BASE_URL}/ClientOrders`; // Using centralized API config
         const endpoint =
@@ -368,19 +414,25 @@ const MyOrders = () => {
             setIsModalOpen(false);
             
             // Refresh the order data to reflect the new status
-            const response = await axios.get(
-                `${config.BASE_URL}/ClientOrders/orderId?orderId=${orderId}`, // Using centralized API config
-                {
-                    headers: {
-                        'Authorization': `Bearer ${token}`
+            try {
+                const response = await axios.get(
+                    `${config.BASE_URL}/ClientOrders/orderId?orderId=${orderId}`, // Using centralized API config
+                    {
+                        headers: {
+                            'Authorization': `Bearer ${token}`
+                        }
                     }
-                }
-            );
-            setOrders([response.data]);
+                );
+                setOrders([response.data]);
+            } catch (refreshErr) {
+                console.error("Failed to refresh order data:", refreshErr);
+            }
         } catch (err) {
-            console.error(err);
-            // Show error toast
-            toast.error("Failed to update the order status.");
+            console.error("Failed to update order status:", err);
+            const errorMessage = err.response?.data?.message || err.response?.data || "Failed to update the order status. Please try again.";
+            toast.error(typeof errorMessage === 'string' ? errorMessage : "Failed to update the order status. Please try again.");
+        } finally {
+            setIsSubmitting(false);
         }
     };
 
@@ -704,6 +756,55 @@ const MyOrders = () => {
                                             </div>
                                         )}
                                     </div>
+
+                                    {/* Fund Release Section */}
+                                    {orders[0].clientOrderStatus === "Completed" && (() => {
+                                        const order = orders[0];
+                                        const showRelease = ClientOrderService.shouldShowReleaseFunds(order, userId) && !fundsReleased;
+                                        const fundInfo = ClientOrderService.getFundStatusInfo(order);
+                                        const isAutoReleased = order.paymentOption === 'monthly' && order.billingCycleNumber > 1;
+                                        const alreadyReleased = order.isOrderStatusApproved || fundsReleased;
+
+                                        return (
+                                            <div className="fund-release-section" style={{ margin: '12px 0', padding: '10px', borderRadius: '8px', background: '#f8f9fa' }}>
+                                                {alreadyReleased ? (
+                                                    <div style={{ color: '#27ae60', fontWeight: 600 }}>
+                                                        ✅ Funds Released
+                                                    </div>
+                                                ) : isAutoReleased ? (
+                                                    <div style={{ color: '#2980b9', fontWeight: 600 }}>
+                                                        ✅ Funds Auto-Released (Cycle {order.billingCycleNumber})
+                                                    </div>
+                                                ) : showRelease ? (
+                                                    <>
+                                                        <p style={{ fontSize: '13px', color: '#555', marginBottom: '8px' }}>
+                                                            💰 Funds are pending release. Confirm service delivery to release payment to your caregiver.
+                                                            {' '}Funds auto-release after 7 days.
+                                                        </p>
+                                                        <button
+                                                            className="mark-completed-btn"
+                                                            style={{ background: '#27ae60', color: '#fff', border: 'none', padding: '10px 20px', borderRadius: '6px', cursor: 'pointer', fontWeight: 600 }}
+                                                            onClick={handleReleaseFunds}
+                                                            disabled={releasingFunds}
+                                                        >
+                                                            {releasingFunds ? 'Releasing...' : '💸 Release Funds'}
+                                                        </button>
+                                                    </>
+                                                ) : order.hasDispute ? (
+                                                    <div style={{ color: '#e74c3c', fontWeight: 600 }}>
+                                                        ⚠️ Order has an active dispute — funds are on hold
+                                                    </div>
+                                                ) : null}
+
+                                                {order.billingCycleNumber > 0 && (
+                                                    <p style={{ fontSize: '12px', color: '#888', marginTop: '6px' }}>
+                                                        {order.paymentOption === 'monthly' ? `Monthly Subscription — Cycle ${order.billingCycleNumber}` : 'One-Time Order'}
+                                                    </p>
+                                                )}
+                                            </div>
+                                        );
+                                    })()}
+
                                     {orders[0].clientOrderStatus === "Completed" ? (
                                         isReviewSubmitted ? (
                                             <div className="review-submitted">
@@ -804,7 +905,11 @@ const MyOrders = () => {
                             </>
                         ) : modalType === "viewContract" && contract ? (
                             <>
-                                <h3>📋 Contract Details</h3>
+                                <div className="contract-modal-header">
+                                    <h3>📋 Contract Details</h3>
+                                    <button className="contract-modal-close-btn" onClick={() => setIsModalOpen(false)}>✕</button>
+                                </div>
+                                <div className="contract-modal-body">
                                 <div className="contract-details-modal">
                                     <div className="contract-header-info">
                                         <p><strong>Contract ID:</strong> {contract.id}</p>
@@ -890,8 +995,6 @@ const MyOrders = () => {
                                         </div>
                                     )}
                                 </div>
-                                <div className="modal-actions">
-                                    <button onClick={() => setIsModalOpen(false)}>Close</button>
                                 </div>
                             </>
                         ) : modalType === "requestReview" ? (
@@ -963,8 +1066,10 @@ const MyOrders = () => {
                                     />
                                 )}
                                 <div className="modal-actions">
-                                    <button onClick={handleSubmitStatus}>Submit</button>
-                                    <button onClick={() => setIsModalOpen(false)}>Cancel</button>
+                                    <button onClick={handleSubmitStatus} disabled={isSubmitting}>
+                                        {isSubmitting ? 'Submitting...' : 'Submit'}
+                                    </button>
+                                    <button onClick={() => setIsModalOpen(false)} disabled={isSubmitting}>Cancel</button>
                                 </div>
                             </>
                         )}
@@ -982,8 +1087,7 @@ const MyOrders = () => {
                 />
             )}
 
-            {/* Remove duplicate ToastContainer - main app already has one */}
-            {/* <ToastContainer position="top-right" autoClose={5000} hideProgressBar={false} /> */}
+            <ToastContainer position="top-right" autoClose={5000} hideProgressBar={false} />
         </div>
     );
 };

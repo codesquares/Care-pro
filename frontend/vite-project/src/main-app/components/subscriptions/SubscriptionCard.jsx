@@ -10,6 +10,7 @@ import './SubscriptionCard.css';
 const SubscriptionCard = ({ subscription, basePath = '/app/client' }) => {
   const navigate = useNavigate();
   const s = subscription;
+  const isCaregiver = basePath.includes('caregiver');
 
   const cardDisplay = SubscriptionService.formatCardDisplay(s.cardBrand, s.cardLastFour);
   const nextDate = s.nextChargeDate ? new Date(s.nextChargeDate).toLocaleDateString() : '—';
@@ -37,10 +38,12 @@ const SubscriptionCard = ({ subscription, basePath = '/app/client' }) => {
           <span className="subscription-card__label">Amount</span>
           <span className="subscription-card__value">₦{(s.recurringAmount || 0).toLocaleString()}</span>
         </div>
-        <div className="subscription-card__row">
-          <span className="subscription-card__label">Payment Method</span>
-          <span className="subscription-card__value">{cardDisplay}</span>
-        </div>
+        {!isCaregiver && (
+          <div className="subscription-card__row">
+            <span className="subscription-card__label">Payment Method</span>
+            <span className="subscription-card__value">{cardDisplay}</span>
+          </div>
+        )}
 
         {s.status === 'Active' && (
           <div className="subscription-card__row">
