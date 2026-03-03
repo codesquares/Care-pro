@@ -60,19 +60,30 @@ const CaregiverDashboard = () => {
      fetchOrders();
    }, []);
 
-  // console.log("orders===>",orders) 
-  const earningsTotal = (orders || []).reduce((acc, order) => {
-    if (order.clientOrderStatus === 'Completed') {
-      return acc + (order.amount || 0);
-    }
-    return acc;
-  }, 0);
-
+  // Fetch total earnings from the same endpoint used by the NavigationBar
   useEffect(() => {
-    setTotalEarnings(earningsTotal);
-  }, [orders, earningsTotal]);
+    const fetchEarnings = async () => {
+      if (!caregiverId) return;
+      try {
+        const token = localStorage.getItem('authToken');
+        const response = await fetch(
+          `${vite_API_URL}/WithdrawalRequests/TotalAmountEarnedAndWithdrawn/${caregiverId}`,
+          {
+            headers: {
+              'Content-Type': 'application/json',
+              'Authorization': `Bearer ${token}`,
+            },
+          }
+        );
+        const data = await response.json();
+        setTotalEarnings(data.totalAmountEarned ?? 0);
+      } catch (error) {
+        console.error('Failed to fetch earnings:', error);
+      }
+    };
 
-  // console.log("totalEarnings===>", totalEarnings);
+    fetchEarnings();
+  }, [caregiverId, vite_API_URL]);
 
   // Add loading state for initial render
   if (loading) {

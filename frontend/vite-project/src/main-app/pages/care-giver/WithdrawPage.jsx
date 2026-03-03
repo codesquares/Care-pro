@@ -149,9 +149,11 @@ const WithdrawPage = () => {
       // Create notification for admin
       try {
         await createNotification({
-          userId: currentUser.id, // Admin will be set on backend
-          message: `New withdrawal request from ${currentUser.firstName} ${currentUser.lastName} for ${formatCurrency(formData.amountRequested)}`,
-          type: 'withdrawal_request'
+          recipientId: 'admin',
+          senderId: currentUser.id,
+          type: 'WithdrawalRequest',
+          title: 'New Withdrawal Request',
+          content: `New withdrawal request from ${currentUser.firstName} ${currentUser.lastName} for ${formatCurrency(formData.amountRequested)}`,
         });
       } catch (notifError) {
         console.error("Error creating notification:", notifError);

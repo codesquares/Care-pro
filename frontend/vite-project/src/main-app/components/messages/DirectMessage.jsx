@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useState, useRef } from 'react';
 import { useParams, useLocation } from 'react-router-dom';
 import { useMessageContext } from '../../context/MessageContext';
 import { useAuth } from '../../context/AuthContext';
@@ -199,6 +199,8 @@ const DirectMessage = () => {
     recipient,
     isLoading,
     error,
+    connectionState,
+    currentUserId,
     selectChat,
     handleSendMessage,
     initializeChat,
@@ -209,19 +211,59 @@ const DirectMessage = () => {
   const userId = user?.id;
   const token = localStorage.getItem('authToken') || "mock-token";
   
-  // We no longer initialize chat here - that's handled in the parent Messages component only
-  
-  // Separate effect for selecting chat to avoid connection cycling
+  // Track whether we've already kicked off initialization to prevent loops.
+  // initializeChat's identity changes on every render (its useCallback deps include
+  // fetchConversations which changes whenever conversations state updates), so we must
+  // NOT include it in the dependency array.
+  const initStartedRef = useRef(false);
+  const cleanupRef = useRef(null);
+
   useEffect(() => {
+    if (!userId || !token) return;
+
+    // Only attempt initialization once per mount
+    if (initStartedRef.current) return;
+    initStartedRef.current = true;
+
+    console.log('[DirectMessage] Initializing chat connection...', { userId });
+
+    const init = async () => {
+      try {
+        cleanupRef.current = await initializeChat(userId, token);
+      } catch (err) {
+        console.error('[DirectMessage] Failed to initialize chat:', err);
+      }
+    };
+    init();
+
+    return () => {
+      if (typeof cleanupRef.current === 'function') {
+        cleanupRef.current();
+      }
+    };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [userId, token]);
+  
+  // Select the chat once connection is ready
+  useEffect(() => {
+    // Wait until the SignalR connection is established before selecting a chat
+    if (connectionState !== 'Connected') {
+      console.log('[DirectMessage] Waiting for connection before selecting chat...', { connectionState });
+      return;
+    }
+    if (!currentUserId) {
+      console.log('[DirectMessage] Waiting for currentUserId to be set before selecting chat...');
+      return;
+    }
     if (recipientId && recipientId !== selectedChatId && !isLoading) {
-      console.log(`[DirectMessage] Selecting chat with recipient: ${recipientId}`);
-      // Add a small delay to avoid race conditions with other initializations
+      console.log(`[DirectMessage] Connection ready, selecting chat with recipient: ${recipientId}`);
+      // Add a small delay to allow conversations to start loading
       const timer = setTimeout(() => {
         selectChat(recipientId);
       }, 300);
       return () => clearTimeout(timer);
     }
-  }, [recipientId, selectedChatId, selectChat, isLoading]);
+  }, [recipientId, selectedChatId, selectChat, isLoading, connectionState, currentUserId]);
 
   // Handle sending a new message
   const handleSendNewMessage = (receiverId, messageText) => {
@@ -374,8 +416,8 @@ const DirectMessage = () => {
     name: recipientName,
     role: recipientRole, // Include role for display purposes
     // Add default values for properties used in ChatArea
-    isOnline: Math.random() > 0.5, 
-    lastActive: new Date().toISOString(), 
+    isOnline: false, 
+    lastActive: null, 
     avatar: "/avatar.jpg",  
     previewMessage: "Start a conversation..."
   };

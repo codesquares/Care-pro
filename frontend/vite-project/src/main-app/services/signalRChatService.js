@@ -664,6 +664,13 @@ class SignalRChatService {
           
           return messageId;
         } catch (signalRError) {
+          // Check if this is a commitment-fee gate error — do NOT fall through to REST
+          const errMsg = signalRError?.message || '';
+          if (errMsg.toLowerCase().includes('booking commitment fee')) {
+            const commitmentError = new Error(errMsg);
+            commitmentError.isCommitmentRequired = true;
+            throw commitmentError;
+          }
           console.warn('🚨 SIGNALR SERVICE: SignalR message send failed, falling back to REST API:', signalRError);
           // Continue to REST API fallback
         }
@@ -797,6 +804,13 @@ class SignalRChatService {
           return response.data.messageId || response.data.id || `fallback-${Date.now()}`;
         } catch (finalError) {
           console.error('🚨 SIGNALR SERVICE: All message sending attempts failed:', finalError);
+          // Check for commitment-fee gate error in REST responses
+          const restErrMsg = finalError.response?.data?.message || finalError.message || '';
+          if (restErrMsg.toLowerCase().includes('booking commitment fee')) {
+            const commitmentError = new Error(restErrMsg);
+            commitmentError.isCommitmentRequired = true;
+            throw commitmentError;
+          }
           // Log the specific error details for better debugging
           if (finalError.response) {
             console.error('🚨 SIGNALR SERVICE: Server response:', {
@@ -809,6 +823,11 @@ class SignalRChatService {
         }
       }
     } catch (error) {
+      // Preserve commitment-gate errors — propagate them directly
+      if (error.isCommitmentRequired) {
+        throw error;
+      }
+
       // Add more detailed error information for debugging
       console.error('🚨 SIGNALR SERVICE: Error sending message:', error);
       

@@ -21,7 +21,7 @@ const getServiceTypeDisplayName = (serviceType, frequencyPerWeek) => {
   }
 };
 
-const OrderDetails = ({ service, selectedFrequency, frequencyPerWeek = 1, onPayment, paymentError, paymentDisabled }) => {
+const OrderDetails = ({ service, selectedFrequency, frequencyPerWeek = 1, onPayment, paymentError, paymentDisabled, commitmentFeeApplied }) => {
   // Extract service details
   const { title, caregiverName, rating, packageDetails, image1, plan, price, features, videoURL, caregiverProfileImage } = service;
   
@@ -145,6 +145,15 @@ const OrderDetails = ({ service, selectedFrequency, frequencyPerWeek = 1, onPaym
             {formatPrice(orderData.serviceFee)}
           </span>
         </div>
+
+        {commitmentFeeApplied && (
+          <div className="order-details__row" style={{ color: '#059669' }}>
+            <span className="order-details__label">Commitment fee credit:</span>
+            <span className="order-details__value" style={{ color: '#059669' }}>
+              −₦5,000
+            </span>
+          </div>
+        )}
 
         <div className="order-details__row order-details__row--total">
           <span className="order-details__label">Estimated total:</span>

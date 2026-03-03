@@ -347,7 +347,36 @@ const CaregiverOrderDetails = () => {
                                         {orders[0].orderCreatedOn && (
                                             <p>Order date: {new Date(orders[0].orderCreatedOn).toLocaleDateString()}</p>
                                         )}
+                                        {orders[0].billingCycleNumber > 0 && (
+                                            <p>Billing cycle: Cycle {orders[0].billingCycleNumber} {orders[0].paymentOption === 'monthly' ? '(Monthly Subscription)' : ''}</p>
+                                        )}
+                                        {orders[0].subscriptionId && (
+                                            <p>Subscription ID: {orders[0].subscriptionId}</p>
+                                        )}
                                     </div>
+
+                                    {/* Fund Status Section */}
+                                    {orders[0].clientOrderStatus === 'Completed' && (() => {
+                                        const order = orders[0];
+                                        const isAutoReleased = order.paymentOption === 'monthly' && order.billingCycleNumber > 1;
+                                        const isReleased = order.isOrderStatusApproved;
+                                        const isDisputed = order.hasDispute;
+                                        return (
+                                            <div style={{ margin: '10px 0', padding: '8px 12px', borderRadius: '6px', background: '#f8f9fa' }}>
+                                                <p style={{ fontWeight: 600, fontSize: '13px', margin: 0 }}>
+                                                    {isDisputed ? (
+                                                        <span style={{ color: '#e74c3c' }}>⚠️ Funds on hold — active dispute</span>
+                                                    ) : isReleased ? (
+                                                        <span style={{ color: '#27ae60' }}>✅ Funds Released to your wallet</span>
+                                                    ) : isAutoReleased ? (
+                                                        <span style={{ color: '#2980b9' }}>✅ Funds Auto-Released (Cycle {order.billingCycleNumber})</span>
+                                                    ) : (
+                                                        <span style={{ color: '#e67e22' }}>⏳ Funds pending — waiting for client approval or 7-day auto-release</span>
+                                                    )}
+                                                </p>
+                                            </div>
+                                        );
+                                    })()}
                                     
                                     {/* Contract Section - NEW CAREGIVER-INITIATED FLOW */}
                                     <div className="contract-section">
@@ -494,15 +523,7 @@ const CaregiverOrderDetails = () => {
                                             </div>
                                         )}
                                     </div>
-                                    {/* Only show Mark as Completed button if status is not already Completed */}
-                                    {orders[0].clientOrderStatus && orders[0].clientOrderStatus.toLowerCase() !== "completed" && (
-                                        <button 
-                                            className="update-status-btn" 
-                                            onClick={() => openModal("update")}
-                                        >
-                                            Mark Order as Completed
-                                        </button>
-                                    )}
+                                    {/* Mark as Completed button removed */}
                                     {/* <button 
                                         className="contact-client-btn" 
                                         onClick={() => openModal("contact")}
@@ -560,7 +581,11 @@ const CaregiverOrderDetails = () => {
 
                         {modalType === "contract" && contract && (
                             <>
-                                <h3>Contract Details</h3>
+                                <div className="contract-modal-header">
+                                    <h3>Contract Details</h3>
+                                    <button className="contract-modal-close-btn" onClick={closeModal}>✕</button>
+                                </div>
+                                <div className="contract-modal-body">
                                 <div className="contract-details-modal">
                                     <div className="contract-header">
                                         <p><strong>Contract ID:</strong> {contract.id}</p>
@@ -652,8 +677,6 @@ const CaregiverOrderDetails = () => {
                                         </div>
                                     )}
                                 </div>
-                                <div className="modal-actions">
-                                    <button onClick={closeModal}>Close</button>
                                 </div>
                             </>
                         )}

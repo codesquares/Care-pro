@@ -1,7 +1,6 @@
 import { useEffect, useState } from 'react';
 import ServiceProvider from './ServiceProvider';
 import ServiceFrequency from './ServiceFrequency';
-import TaskList from './TaskList';
 import './OrderSpecifications.css';
 import configs from '../../config';
 
@@ -10,12 +9,6 @@ const OrderSpecifications = ({
   selectedFrequency,
   frequencyPerWeek,
   onFrequencyChange,
-  tasks,
-  onAddTask,
-  onRemoveTask,
-  taskValidationError,
-  userTasksCount,
-  validateTasks,
   onRatingClick
 }) => {
 
@@ -49,33 +42,6 @@ const OrderSpecifications = ({
         service={service}
       />
 
-      {/* Task validation error */}
-      {taskValidationError && (
-        <div className="order-specifications__error">
-          {taskValidationError}
-        </div>
-      )}
-
-      {/* Hidden form inputs for task data */}
-      <input 
-        type="hidden" 
-        name="userTasks" 
-        value={JSON.stringify(tasks.filter(task => !task.isExplanatory).map(task => task.text))} 
-      />
-      <input 
-        type="hidden" 
-        name="taskCount" 
-        value={userTasksCount} 
-      />
-
-      <TaskList 
-        tasks={tasks}
-        onAddTask={onAddTask}
-        onRemoveTask={onRemoveTask}
-        service={service}
-        userTasksCount={userTasksCount}
-        validateTasks={validateTasks}
-      />
     </div>
   );
 };

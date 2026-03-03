@@ -1,4 +1,4 @@
-import { createContext, useContext, useState, useEffect, useCallback, useMemo, useReducer} from 'react';
+import { createContext, useContext, useState, useEffect, useCallback, useMemo, useReducer, useRef} from 'react';
 import chatService from '../services/signalRChatService';
 import axios from 'axios';
 import config from '../config'; // Centralized API configuration
@@ -55,6 +55,15 @@ const objectIdToString = (id) => {
     // Manual conversion for ObjectId with timestamp/machine/pid/increment
     if (id.timestamp !== undefined && id.machine !== undefined && id.pid !== undefined && id.increment !== undefined) {
       return `${id.timestamp.toString(16).padStart(8, '0')}${id.machine.toString(16).padStart(6, '0')}${(id.pid & 0xFFFF).toString(16).padStart(4, '0')}${id.increment.toString(16).padStart(6, '0')}`;
+    }
+    
+    // Handle partial ObjectId format with only timestamp + creationTime (from some .NET serializations)
+    // Generate a deterministic ID from the timestamp so the same object always maps to the same string
+    if (id.timestamp !== undefined && id.creationTime !== undefined) {
+      const ts = typeof id.timestamp === 'number' ? id.timestamp : parseInt(id.timestamp, 10);
+      if (!isNaN(ts)) {
+        return `${ts.toString(16).padStart(8, '0')}${'0'.repeat(16)}`;
+      }
     }
     
     // If all else fails and we have an object, return null to avoid [object Object]
@@ -753,6 +762,16 @@ export const MessageProvider = ({ children }) => {
             isOnline = onlineUsers[conversationId] || false;
           }
           
+          // Derive lastActive from the most recent message timestamp or API fields
+          const lastActive = conversation.lastActive
+            || conversation.lastSeen
+            || conversation.lastSeenAt
+            || (typeof conversation.lastMessage === 'object' && conversation.lastMessage?.timestamp)
+            || conversation.lastMessageTimestamp
+            || conversation.lastMessageTime
+            || conversation.updatedAt
+            || null;
+
           conversationsWithStatus.push({
             ...conversation,
             // Ensure id field exists
@@ -762,6 +781,7 @@ export const MessageProvider = ({ children }) => {
             // Include role information for the conversation partner
             role: conversation.role || conversation.userRole || conversation.partnerRole,
             isOnline,
+            lastActive,
             unreadCount: unreadMessages[conversationId] || 0,
             // Ensure preview message exists
             previewMessage: conversation.previewMessage || conversation.lastMessage || 'No messages yet'
@@ -783,12 +803,22 @@ export const MessageProvider = ({ children }) => {
     });
   }, [selectedChatId, unreadMessages, onlineUsers, safeDeduplicate]); // Added deduplicate to dependencies
 
+  // Guard ref to prevent concurrent / re-entrant initializeChat calls
+  const isInitializingRef = useRef(false);
+
   // Initialize chat connection
   const initializeChat = useCallback(async (userId, token) => {
     if (!userId || !token) {
       console.error('User ID and token are required');
       return () => {};
     }
+
+    // Prevent re-entrant calls (avoids 429 storms)
+    if (isInitializingRef.current) {
+      console.log('[initializeChat] Already initializing, skipping duplicate call');
+      return () => {};
+    }
+    isInitializingRef.current = true;
     
     setIsLoading(true);
     setError(null);
@@ -806,6 +836,7 @@ export const MessageProvider = ({ children }) => {
         // Connection established handler
         chatService.on('onConnected', async () => {
           // console.log('Connected to chat');
+          setConnectionState('Connected');
           try {
             // When connected, fetch online users
             try {
@@ -1059,6 +1090,9 @@ export const MessageProvider = ({ children }) => {
       // Connect to hub
       await chatService.connect(userId, token);
       
+      // Mark connection as ready so dependent effects (e.g. selectChat) can fire
+      setConnectionState('Connected');
+      
       // Fetch conversations after successful connection
       // console.log('Initializing chat complete - fetching initial conversations for userId:', userId);
       fetchConversations(userId);
@@ -1073,6 +1107,7 @@ export const MessageProvider = ({ children }) => {
       
       // Return cleanup function
       return () => {
+        isInitializingRef.current = false;
         // Remove all event handlers by using chatService.off
         // Instead of trying to call the returned values which might not be functions
         if (chatService) {
@@ -1102,6 +1137,7 @@ export const MessageProvider = ({ children }) => {
       console.error('Failed to initialize chat:', error);
       setError('Failed to connect: ' + (error.message || 'Unknown error'));
       setIsLoading(false);
+      isInitializingRef.current = false;
       return () => {}; // Return empty cleanup if initialization fails
     }
   }, [fetchConversations, recipient, selectedChatId, updateConversationsList]);
@@ -1252,6 +1288,26 @@ export const MessageProvider = ({ children }) => {
       // Clear the timeout since we're handling the error
       clearTimeout(messageTimeout);
       
+      // Check if this is a commitment-fee gate error
+      if (error.isCommitmentRequired) {
+        // Remove the temp message — it shouldn't appear in the chat
+        dispatchMessageState({
+          type: 'UPDATE_MESSAGE_STATUS',
+          payload: { messageId: tempId, status: 'failed', errorDetails: 'Commitment fee required' }
+        });
+
+        // Dispatch a specific event so the ChatArea can show the commitment gate modal
+        const commitmentEvent = new CustomEvent('commitment-fee-required', {
+          detail: {
+            receiverId,
+            message: error.message || 'You must pay the booking commitment fee before messaging this caregiver.',
+          }
+        });
+        window.dispatchEvent(commitmentEvent);
+
+        return null;
+      }
+
       // Extract user-friendly error message
       let userFriendlyError = 'Message sending failed';
       
@@ -1535,6 +1591,15 @@ export const MessageProvider = ({ children }) => {
             type: 'SET_MESSAGES',
             payload: { messages: processedMessages }
           });
+          
+          // Derive lastActive from the most recent message timestamp
+          if (processedMessages.length > 0) {
+            const lastMsg = processedMessages[processedMessages.length - 1];
+            const lastMsgTime = lastMsg.timestamp || lastMsg.createdAt;
+            if (lastMsgTime) {
+              setRecipient(prev => prev ? { ...prev, lastActive: lastMsgTime } : prev);
+            }
+          }
           
           // console.log("🔄 SELECT_CHAT: SET_MESSAGES dispatched with", processedMessages.length, "messages");
           

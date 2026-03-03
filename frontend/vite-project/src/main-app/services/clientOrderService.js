@@ -67,7 +67,8 @@ const ClientOrderService = {
     
     orders.forEach(order => {
       // Handle both orderDate and createdAt
-      const orderDate = new Date(order.orderDate || order.createdAt);
+      const parsedDate = new Date(order.orderDate || order.createdAt);
+      const orderDate = isNaN(parsedDate.getTime()) ? null : parsedDate;
       // Handle both amount and amount
       const amount = parseFloat(order.amount) || 0;
       
@@ -75,17 +76,17 @@ const ClientOrderService = {
       metrics.total += amount;
       
       // This month spending
-      if (orderDate >= thisMonthStart && orderDate <= now) {
+      if (orderDate && orderDate >= thisMonthStart && orderDate <= now) {
         metrics.thisMonth += amount;
       }
       
       // Last month spending
-      if (orderDate >= lastMonthStart && orderDate <= lastMonthEnd) {
+      if (orderDate && orderDate >= lastMonthStart && orderDate <= lastMonthEnd) {
         metrics.lastMonth += amount;
       }
       
-      // Categories spending - handle both serviceType and category
-      const category = order.serviceType || order.category;
+      // Categories spending - use serviceType, category, gigTitle, or paymentOption as fallback
+      const category = order.serviceType || order.category || order.gigTitle || order.paymentOption || 'Other';
       if (category) {
         if (!metrics.categories[category]) {
           metrics.categories[category] = 0;
@@ -96,15 +97,23 @@ const ClientOrderService = {
     
     // Calculate average monthly spending over the span of orders
     if (orders.length > 0) {
-      const dates = orders.map(o => new Date(o.orderDate || o.createdAt)).sort();
-      const firstOrderDate = dates[0];
-      const lastOrderDate = dates[dates.length - 1];
+      const dates = orders
+        .map(o => new Date(o.orderDate || o.createdAt))
+        .filter(d => !isNaN(d.getTime()))
+        .sort((a, b) => a - b);
       
-      // Calculate months between first and last order
-      const monthsDiff = (lastOrderDate.getFullYear() - firstOrderDate.getFullYear()) * 12 + 
-                        (lastOrderDate.getMonth() - firstOrderDate.getMonth()) + 1;
+      if (dates.length > 0) {
+        const firstOrderDate = dates[0];
+        const lastOrderDate = dates[dates.length - 1];
       
-      metrics.average = parseFloat((metrics.total / Math.max(1, monthsDiff)).toFixed(2));
+        // Calculate months between first and last order
+        const monthsDiff = (lastOrderDate.getFullYear() - firstOrderDate.getFullYear()) * 12 + 
+                          (lastOrderDate.getMonth() - firstOrderDate.getMonth()) + 1;
+      
+        metrics.average = parseFloat((metrics.total / Math.max(1, monthsDiff)).toFixed(2));
+      } else {
+        metrics.average = 0;
+      }
     } else {
       metrics.average = 0;
     }
@@ -355,6 +364,108 @@ const ClientOrderService = {
         error: error.message
       };
     }
+  },
+
+  /**
+   * Release funds for a completed order
+   * POST /api/ClientOrders/ReleaseFunds/{orderId}
+   * @param {string} orderId - The order ID
+   * @returns {Promise<Object>} - Result object with success status
+   */
+  async releaseFunds(orderId) {
+    try {
+      if (!orderId) {
+        return { success: false, error: 'Order ID is required' };
+      }
+
+      const API_URL = `${config.BASE_URL}/ClientOrders/ReleaseFunds/${orderId}`;
+      const token = localStorage.getItem('authToken');
+
+      const response = await fetch(API_URL, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${token}`
+        }
+      });
+
+      const data = await response.json();
+
+      if (response.ok) {
+        return { success: true, data };
+      }
+
+      // Map specific error codes
+      return {
+        success: false,
+        error: data.message || `Failed to release funds: ${response.status}`,
+        status: response.status
+      };
+    } catch (error) {
+      console.error('Error in releaseFunds:', error);
+      return { success: false, error: error.message };
+    }
+  },
+
+  /**
+   * Check if an order requires fund release action from the client.
+   * Returns true when the "Release Funds" button should be shown.
+   * @param {Object} order - The order object
+   * @param {string} currentUserId - The logged-in user's ID
+   * @returns {boolean}
+   */
+  shouldShowReleaseFunds(order, currentUserId) {
+    if (!order) return false;
+    // Must be the owning client
+    if (order.clientId !== currentUserId) return false;
+    // Must be completed
+    if (order.clientOrderStatus !== 'Completed') return false;
+    // Must NOT already be approved / released
+    if (order.isOrderStatusApproved) return false;
+    // Must NOT have an active dispute
+    if (order.hasDispute) return false;
+    // Recurring cycle 2+ auto-releases — no button needed
+    if (order.paymentOption === 'monthly' && order.billingCycleNumber > 1) return false;
+    return true;
+  },
+
+  /**
+   * Get a human-readable fund status label for an order.
+   * @param {Object} order - The order object
+   * @returns {{ label: string, className: string }}
+   */
+  getFundStatusInfo(order) {
+    if (!order) return { label: '', className: '' };
+    if (order.hasDispute) return { label: 'Disputed', className: 'fund-status--disputed' };
+    if (order.isOrderStatusApproved) return { label: 'Funds Released', className: 'fund-status--released' };
+    if (order.paymentOption === 'monthly' && order.billingCycleNumber > 1 && order.clientOrderStatus === 'Completed') {
+      return { label: 'Funds Auto-Released', className: 'fund-status--auto-released' };
+    }
+    if (order.clientOrderStatus === 'Completed') return { label: 'Funds Pending Release', className: 'fund-status--pending' };
+    return { label: '', className: '' };
+  },
+
+  /**
+   * Group an array of orders into one-time and subscription groups.
+   * @param {Array} orders
+   * @returns {{ oneTime: Array, subscriptions: Object<string, Array> }}
+   */
+  groupOrdersBySubscription(orders) {
+    const oneTime = [];
+    const subscriptions = {};
+    (orders || []).forEach(order => {
+      if (!order.subscriptionId) {
+        oneTime.push(order);
+      } else {
+        if (!subscriptions[order.subscriptionId]) subscriptions[order.subscriptionId] = [];
+        subscriptions[order.subscriptionId].push(order);
+      }
+    });
+    // Sort each subscription group by billingCycleNumber ascending
+    Object.keys(subscriptions).forEach(subId => {
+      subscriptions[subId].sort((a, b) => (a.billingCycleNumber || 0) - (b.billingCycleNumber || 0));
+    });
+    return { oneTime, subscriptions };
   },
 
   /**

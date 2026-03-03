@@ -188,22 +188,42 @@ const OrderHistory = () => {
                       <th>Provider</th>
                       <th>Amount</th>
                       <th>Status</th>
+                      <th>Fund Status</th>
                       <th>Rating</th>
                       <th>Actions</th>
                     </tr>
                   </thead>
                   <tbody>
-                    {orders.map(order => (
+                    {orders.map(order => {
+                      // Determine fund status label
+                      let fundLabel = '—';
+                      let fundColor = '#888';
+                      if (order.hasDispute) { fundLabel = 'Disputed'; fundColor = '#c62828'; }
+                      else if (order.isOrderStatusApproved) { fundLabel = 'Released'; fundColor = '#2e7d32'; }
+                      else if (order.paymentOption === 'monthly' && order.billingCycleNumber > 1 && (order.status === 'Completed' || order.clientOrderStatus === 'Completed')) {
+                        fundLabel = 'Auto-Released'; fundColor = '#1565c0';
+                      } else if (order.status === 'Completed' || order.clientOrderStatus === 'Completed') {
+                        fundLabel = 'Pending'; fundColor = '#e65100';
+                      }
+                      return (
                       <tr key={order.id}>
                         <td>{order.orderNumber}</td>
                         <td>{formatDate(order.orderDate)}</td>
-                        <td>{order.serviceType}</td>
+                        <td>
+                          {order.serviceType}
+                          {order.billingCycleNumber > 0 && (
+                            <span style={{ display: 'block', fontSize: '11px', color: '#888' }}>Cycle {order.billingCycleNumber}</span>
+                          )}
+                        </td>
                         <td>{order.providerName}</td>
                         <td className="amount-cell">{formatCurrency(order.amount)}</td>
                         <td>
                           <span className={`status-badge ${getStatusClass(order.status)}`}>
                             {order.status}
                           </span>
+                        </td>
+                        <td>
+                          <span style={{ fontWeight: 600, fontSize: '12px', color: fundColor }}>{fundLabel}</span>
                         </td>
                         <td>{renderRating(order.rating)}</td>
                         <td>
@@ -215,7 +235,8 @@ const OrderHistory = () => {
                           </button>
                         </td>
                       </tr>
-                    ))}
+                      );
+                    })}
                   </tbody>
                 </table>
               </div>
