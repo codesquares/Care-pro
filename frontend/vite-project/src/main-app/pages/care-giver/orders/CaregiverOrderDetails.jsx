@@ -5,6 +5,7 @@ import { toast, ToastContainer } from "react-toastify";
 import config from "../../../config"; // Import centralized config for API URLs
 import ContractService from "../../../services/contractService";
 import ContractGenerationModal from "../../../components/modals/ContractGenerationModal";
+import TaskSheetTabs from "../../../components/task-sheets/TaskSheetTabs";
 
 import "react-toastify/dist/ReactToastify.css";
 import "./CaregiverOrderDetails.css";
@@ -277,12 +278,8 @@ const CaregiverOrderDetails = () => {
                     {selectedView === "Tasks" ? (
                         <div className="tasks-section">
                             <h2>Tasks</h2>
-                            {orders.length > 0 && orders[0].gigPackageDetails ? (
-                                orders[0].gigPackageDetails.map((taskText, index) => (
-                                    <div key={index} className="task">
-                                        ☐ {taskText}
-                                    </div>
-                                ))
+                            {orders.length > 0 ? (
+                                <TaskSheetTabs order={orders[0]} />
                             ) : (
                                 <p>No tasks available.</p>
                             )}

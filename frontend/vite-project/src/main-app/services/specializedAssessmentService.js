@@ -130,10 +130,22 @@ const specializedAssessmentService = {
         };
       }
       if (err.response?.status === 400) {
+        // Extract validation errors if present (ASP.NET returns them in errors object)
+        const respData = err.response.data;
+        let errorMsg = 'Assessment submission failed.';
+        if (respData?.message) {
+          errorMsg = respData.message;
+        } else if (respData?.errors) {
+          // ASP.NET ValidationProblemDetails format
+          const validationErrors = Object.values(respData.errors).flat();
+          errorMsg = validationErrors.join('; ') || respData.title || errorMsg;
+        } else if (respData?.title) {
+          errorMsg = respData.title;
+        }
         return {
           success: false,
-          error: err.response.data?.message || 'Submitted questions do not match the session.',
-          data: null,
+          error: errorMsg,
+          data: respData,
         };
       }
       console.error('Error submitting assessment:', err);

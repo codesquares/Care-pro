@@ -1,0 +1,407 @@
+/* ===================================================
+   Task Sheets — visit-session task tracking styles
+   =================================================== */
+
+/* ---------- Loading / Error ---------- */
+.task-sheets-loading,
+.task-sheets-error {
+  padding: 20px;
+  text-align: center;
+  color: #666;
+}
+
+.task-sheets-error p {
+  color: #d32f2f;
+  margin-bottom: 10px;
+}
+
+.ts-retry-btn {
+  padding: 6px 16px;
+  border: 1px solid #d32f2f;
+  border-radius: 4px;
+  background: #fff;
+  color: #d32f2f;
+  cursor: pointer;
+  font-size: 14px;
+}
+
+.ts-retry-btn:hover {
+  background: #fce4ec;
+}
+
+/* ---------- Container ---------- */
+.task-sheets-container {
+  width: 100%;
+}
+
+/* ---------- Tab bar ---------- */
+.ts-tab-bar {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  margin-bottom: 8px;
+  padding-bottom: 8px;
+  border-bottom: 1px solid #e0e0e0;
+}
+
+.ts-tab {
+  padding: 6px 14px;
+  border: 1px solid #ccc;
+  border-radius: 20px;
+  background: #fff;
+  cursor: pointer;
+  font-size: 13px;
+  color: #555;
+  transition: all 0.2s;
+  display: flex;
+  align-items: center;
+  gap: 4px;
+}
+
+.ts-tab:hover {
+  background: #f5f5f5;
+  border-color: #999;
+}
+
+.ts-tab--active {
+  background: #fdcf68;
+  border-color: #f0b429;
+  color: #000;
+  font-weight: 600;
+}
+
+.ts-tab--submitted {
+  border-color: #27ae60;
+}
+
+.ts-tab--submitted.ts-tab--active {
+  background: #d4edda;
+  border-color: #27ae60;
+}
+
+.ts-tab-badge {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 16px;
+  height: 16px;
+  background: #27ae60;
+  color: #fff;
+  border-radius: 50%;
+  font-size: 10px;
+  font-weight: 700;
+}
+
+.ts-tab--add {
+  border-style: dashed;
+  border-color: #999;
+  color: #999;
+  font-size: 18px;
+  font-weight: 700;
+  padding: 4px 14px;
+  line-height: 1;
+}
+
+.ts-tab--add:hover {
+  border-color: #fdcf68;
+  color: #f0b429;
+  background: #fffbf0;
+}
+
+.ts-tab--add:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+/* ---------- Sheet info ---------- */
+.ts-sheet-info {
+  font-size: 12px;
+  color: #888;
+  margin-bottom: 12px;
+  display: flex;
+  gap: 6px;
+  align-items: center;
+}
+
+.ts-sheet-info-detail {
+  color: #aaa;
+}
+
+/* ---------- Page ---------- */
+.ts-page {
+  background: #fff;
+  border-radius: 8px;
+  padding: 16px;
+  border: 1px solid #e8e8e8;
+}
+
+.ts-page--submitted {
+  background: #fafffe;
+  border-color: #c3e6cb;
+}
+
+.ts-page-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 12px;
+}
+
+.ts-page-header h3 {
+  margin: 0;
+  font-size: 16px;
+  color: #333;
+}
+
+.ts-submitted-badge {
+  display: inline-block;
+  padding: 3px 10px;
+  background: #d4edda;
+  color: #155724;
+  border-radius: 12px;
+  font-size: 12px;
+  font-weight: 600;
+}
+
+.ts-saving-indicator {
+  font-size: 12px;
+  color: #f0b429;
+  font-style: italic;
+}
+
+/* ---------- Progress ---------- */
+.ts-progress {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin-bottom: 14px;
+}
+
+.ts-progress-bar {
+  flex: 1;
+  height: 6px;
+  background: #e9ecef;
+  border-radius: 3px;
+  overflow: hidden;
+}
+
+.ts-progress-fill {
+  height: 100%;
+  background: #27ae60;
+  border-radius: 3px;
+  transition: width 0.3s ease;
+}
+
+.ts-progress-text {
+  font-size: 12px;
+  color: #666;
+  white-space: nowrap;
+}
+
+/* ---------- Task list ---------- */
+.ts-task-list {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  margin-bottom: 14px;
+}
+
+.ts-no-tasks {
+  color: #999;
+  font-size: 14px;
+  text-align: center;
+  padding: 16px 0;
+}
+
+/* ---------- Task item ---------- */
+.ts-task-item {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 10px 12px;
+  background: #fdcf68;
+  border-radius: 6px;
+  cursor: pointer;
+  transition: background 0.15s;
+  user-select: none;
+}
+
+.ts-task-item:hover {
+  background: #fbc740;
+}
+
+.ts-task-item--done {
+  background: #d4edda;
+}
+
+.ts-task-item--done:hover {
+  background: #c3e6cb;
+}
+
+.ts-task-item--disabled {
+  cursor: default;
+  opacity: 0.85;
+}
+
+.ts-task-item--disabled:hover {
+  background: #fdcf68;
+}
+
+.ts-task-item--disabled.ts-task-item--done:hover {
+  background: #d4edda;
+}
+
+.ts-task-checkbox {
+  font-size: 18px;
+  line-height: 1;
+  flex-shrink: 0;
+}
+
+.ts-task-text {
+  font-size: 14px;
+  color: #333;
+  flex: 1;
+}
+
+.ts-task-text--done {
+  text-decoration: line-through;
+  color: #666;
+}
+
+.ts-task-custom-badge {
+  font-size: 10px;
+  padding: 1px 6px;
+  background: #e8e8e8;
+  color: #666;
+  border-radius: 8px;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  font-weight: 600;
+}
+
+/* ---------- Add task ---------- */
+.ts-add-task-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  padding: 8px 14px;
+  border: 1px dashed #ccc;
+  border-radius: 6px;
+  background: #fff;
+  color: #666;
+  cursor: pointer;
+  font-size: 13px;
+  transition: all 0.15s;
+  margin-bottom: 14px;
+}
+
+.ts-add-task-btn:hover {
+  border-color: #f0b429;
+  color: #333;
+  background: #fffbf0;
+}
+
+.ts-add-task-btn:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.ts-add-task-form {
+  margin-bottom: 14px;
+}
+
+.ts-add-task-input {
+  width: 100%;
+  padding: 8px 12px;
+  border: 1px solid #ccc;
+  border-radius: 6px;
+  font-size: 14px;
+  outline: none;
+  box-sizing: border-box;
+  margin-bottom: 6px;
+}
+
+.ts-add-task-input:focus {
+  border-color: #f0b429;
+  box-shadow: 0 0 0 2px rgba(240, 180, 41, 0.2);
+}
+
+.ts-add-task-actions {
+  display: flex;
+  gap: 8px;
+}
+
+.ts-add-task-confirm {
+  padding: 6px 16px;
+  border: none;
+  border-radius: 4px;
+  background: #fdcf68;
+  color: #333;
+  cursor: pointer;
+  font-size: 13px;
+  font-weight: 600;
+}
+
+.ts-add-task-confirm:hover {
+  background: #f0b429;
+}
+
+.ts-add-task-confirm:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.ts-add-task-cancel {
+  padding: 6px 16px;
+  border: 1px solid #ccc;
+  border-radius: 4px;
+  background: #fff;
+  color: #666;
+  cursor: pointer;
+  font-size: 13px;
+}
+
+.ts-add-task-cancel:hover {
+  background: #f5f5f5;
+}
+
+/* ---------- Submit section ---------- */
+.ts-submit-section {
+  border-top: 1px solid #e8e8e8;
+  padding-top: 14px;
+  text-align: center;
+}
+
+.ts-submit-btn {
+  padding: 10px 28px;
+  border: none;
+  border-radius: 6px;
+  background: #27ae60;
+  color: #fff;
+  cursor: pointer;
+  font-size: 14px;
+  font-weight: 600;
+  transition: background 0.15s;
+}
+
+.ts-submit-btn:hover {
+  background: #219a52;
+}
+
+.ts-submit-btn:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.ts-submit-hint {
+  font-size: 11px;
+  color: #999;
+  margin-top: 6px;
+}
+
+/* ---------- Empty state ---------- */
+.ts-empty {
+  text-align: center;
+  padding: 24px;
+  color: #999;
+}
