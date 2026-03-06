@@ -140,6 +140,16 @@
   border-color: #c3e6cb;
 }
 
+.ts-order-completed-banner {
+  background: #fff3cd;
+  color: #856404;
+  border: 1px solid #ffc107;
+  border-radius: 6px;
+  padding: 10px 14px;
+  margin-bottom: 12px;
+  font-size: 0.9rem;
+}
+
 .ts-page-header {
   display: flex;
   justify-content: space-between;

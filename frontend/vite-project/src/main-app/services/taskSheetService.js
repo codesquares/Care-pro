@@ -5,6 +5,10 @@
  */
 import config from "../config";
 
+/** Check if a backend error indicates a completed order */
+const isCompletedOrderError = (errorMsg) =>
+  typeof errorMsg === "string" && errorMsg.toLowerCase().includes("completed");
+
 const TaskSheetService = {
   /**
    * Get all task sheets for an order.
@@ -42,10 +46,12 @@ const TaskSheetService = {
 
       if (!response.ok) {
         const errorData = await response.json().catch(() => ({}));
+        const errorMsg = errorData.error || `Failed to fetch task sheets: ${response.status}`;
         return {
           success: false,
-          error: errorData.error || `Failed to fetch task sheets: ${response.status}`,
+          error: errorMsg,
           statusCode: response.status,
+          orderCompleted: response.status === 400 && isCompletedOrderError(errorMsg),
         };
       }
 
@@ -89,10 +95,12 @@ const TaskSheetService = {
 
       if (!response.ok) {
         const errorData = await response.json().catch(() => ({}));
+        const errorMsg = errorData.error || `Failed to create task sheet: ${response.status}`;
         return {
           success: false,
-          error: errorData.error || `Failed to create task sheet: ${response.status}`,
+          error: errorMsg,
           statusCode: response.status,
+          orderCompleted: response.status === 400 && isCompletedOrderError(errorMsg),
         };
       }
 
@@ -132,10 +140,12 @@ const TaskSheetService = {
 
       if (!response.ok) {
         const errorData = await response.json().catch(() => ({}));
+        const errorMsg = errorData.error || `Failed to update task sheet: ${response.status}`;
         return {
           success: false,
-          error: errorData.error || `Failed to update task sheet: ${response.status}`,
+          error: errorMsg,
           statusCode: response.status,
+          orderCompleted: response.status === 400 && isCompletedOrderError(errorMsg),
         };
       }
 
@@ -174,10 +184,12 @@ const TaskSheetService = {
 
       if (!response.ok) {
         const errorData = await response.json().catch(() => ({}));
+        const errorMsg = errorData.error || `Failed to submit task sheet: ${response.status}`;
         return {
           success: false,
-          error: errorData.error || `Failed to submit task sheet: ${response.status}`,
+          error: errorMsg,
           statusCode: response.status,
+          orderCompleted: response.status === 400 && isCompletedOrderError(errorMsg),
         };
       }
 

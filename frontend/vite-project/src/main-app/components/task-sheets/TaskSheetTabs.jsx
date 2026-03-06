@@ -1,6 +1,6 @@
 import { useState, useEffect, useCallback, useRef } from "react";
 import { toast } from "react-toastify";
-import TaskSheetService from "../../../services/taskSheetService";
+import TaskSheetService from "../../services/taskSheetService";
 import TaskSheetPage from "./TaskSheetPage";
 import "./TaskSheets.css";
 
@@ -18,6 +18,9 @@ const TaskSheetTabs = ({ order }) => {
   const [loading, setLoading] = useState(true);
   const [creating, setCreating] = useState(false);
   const [error, setError] = useState(null);
+  const [orderCompleted, setOrderCompleted] = useState(
+    order?.clientOrderStatus === "Completed"
+  );
   const initialised = useRef(false);
 
   const orderId = order?.id;
@@ -37,6 +40,9 @@ const TaskSheetTabs = ({ order }) => {
       setSheets(sorted);
       setMaxSheets(result.maxSheets ?? TaskSheetService.computeMaxSheets(order));
     } else {
+      if (result.orderCompleted) {
+        setOrderCompleted(true);
+      }
       setError(result.error);
     }
     setLoading(false);
@@ -55,16 +61,16 @@ const TaskSheetTabs = ({ order }) => {
 
   // After sheets are loaded, auto-create the first one if empty
   useEffect(() => {
-    if (loading || creating) return;
+    if (loading || creating || orderCompleted) return;
     if (sheets.length === 0 && orderId && !error) {
       handleCreateSheet(true);
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [loading, sheets.length, orderId, error]);
+  }, [loading, sheets.length, orderId, error, orderCompleted]);
 
   // ------ Create a new sheet ------
   const handleCreateSheet = async (isAutoFirst = false) => {
-    if (creating) return;
+    if (creating || orderCompleted) return;
     if (!isAutoFirst && sheets.length >= maxSheets) {
       toast.info("All visit sheets have been created for this order.");
       return;
@@ -110,7 +116,15 @@ const TaskSheetTabs = ({ order }) => {
     );
   }
 
-  if (error && sheets.length === 0) {
+  if (orderCompleted && sheets.length === 0) {
+    return (
+      <div className="task-sheets-error">
+        <p>This order has been completed. Task sheets are no longer available.</p>
+      </div>
+    );
+  }
+
+  if (error && sheets.length === 0 && !orderCompleted) {
     return (
       <div className="task-sheets-error">
         <p>Failed to load task sheets: {error}</p>
@@ -121,7 +135,7 @@ const TaskSheetTabs = ({ order }) => {
     );
   }
 
-  const canAddMore = sheets.length < maxSheets;
+  const canAddMore = sheets.length < maxSheets && !orderCompleted;
   const activeSheet = sheets[activeIndex] || null;
 
   return (
@@ -171,6 +185,7 @@ const TaskSheetTabs = ({ order }) => {
           key={activeSheet.id}
           sheet={activeSheet}
           onSheetUpdated={handleSheetUpdated}
+          orderCompleted={orderCompleted}
         />
       ) : (
         <div className="ts-empty">

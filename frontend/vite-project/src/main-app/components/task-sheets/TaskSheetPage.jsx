@@ -1,6 +1,6 @@
 import { useState, useCallback, useRef } from "react";
 import { toast } from "react-toastify";
-import TaskSheetService from "../../../services/taskSheetService";
+import TaskSheetService from "../../services/taskSheetService";
 import TaskItem from "./TaskItem";
 import AddTaskInput from "./AddTaskInput";
 import "./TaskSheets.css";
@@ -12,11 +12,13 @@ import "./TaskSheets.css";
  *  - sheet: the TaskSheet object
  *  - onSheetUpdated: callback(updatedSheet) after a save/submit
  */
-const TaskSheetPage = ({ sheet, onSheetUpdated }) => {
+const TaskSheetPage = ({ sheet, onSheetUpdated, orderCompleted: orderCompletedProp }) => {
   const [tasks, setTasks] = useState(sheet.tasks || []);
   const [saving, setSaving] = useState(false);
   const [submitting, setSubmitting] = useState(false);
+  const [orderCompleted, setOrderCompleted] = useState(orderCompletedProp || false);
   const isSubmitted = sheet.status === "submitted";
+  const isReadOnly = isSubmitted || orderCompleted;
   const debounceTimer = useRef(null);
 
   // ------ Debounced save after checkbox toggles ------
@@ -29,6 +31,7 @@ const TaskSheetPage = ({ sheet, onSheetUpdated }) => {
         if (result.success) {
           onSheetUpdated(result.data);
         } else {
+          if (result.orderCompleted) setOrderCompleted(true);
           toast.error(result.error || "Failed to save changes.");
         }
         setSaving(false);
@@ -39,7 +42,7 @@ const TaskSheetPage = ({ sheet, onSheetUpdated }) => {
 
   // ------ Toggle a task ------
   const handleToggle = (taskId) => {
-    if (isSubmitted) return;
+    if (isReadOnly) return;
     setTasks((prev) => {
       const updated = prev.map((t) =>
         t.id === taskId ? { ...t, completed: !t.completed } : t
@@ -51,7 +54,7 @@ const TaskSheetPage = ({ sheet, onSheetUpdated }) => {
 
   // ------ Add a custom task ------
   const handleAddTask = async (text) => {
-    if (isSubmitted) return;
+    if (isReadOnly) return;
     const newTask = {
       id: null, // backend generates
       text: text.trim(),
@@ -68,6 +71,7 @@ const TaskSheetPage = ({ sheet, onSheetUpdated }) => {
       setTasks(result.data.tasks || updatedTasks);
       onSheetUpdated(result.data);
     } else {
+      if (result.orderCompleted) setOrderCompleted(true);
       toast.error(result.error || "Failed to add task.");
       // revert
       setTasks(tasks);
@@ -77,7 +81,7 @@ const TaskSheetPage = ({ sheet, onSheetUpdated }) => {
 
   // ------ Submit the sheet ------
   const handleSubmit = async () => {
-    if (isSubmitted || submitting) return;
+    if (isReadOnly || submitting) return;
 
     // flush any pending debounced save
     if (debounceTimer.current) {
@@ -93,6 +97,7 @@ const TaskSheetPage = ({ sheet, onSheetUpdated }) => {
       onSheetUpdated(result.data);
       toast.success(`Visit ${sheet.sheetNumber} submitted!`);
     } else {
+      if (result.orderCompleted) setOrderCompleted(true);
       toast.error(result.error || "Failed to submit.");
     }
     setSubmitting(false);
@@ -101,7 +106,12 @@ const TaskSheetPage = ({ sheet, onSheetUpdated }) => {
   const completedCount = tasks.filter((t) => t.completed).length;
 
   return (
-    <div className={`ts-page ${isSubmitted ? "ts-page--submitted" : ""}`}>
+    <div className={`ts-page ${isReadOnly ? "ts-page--submitted" : ""}`}>
+      {orderCompleted && (
+        <div className="ts-order-completed-banner">
+          This order has been completed. Task sheets can no longer be modified.
+        </div>
+      )}
       <div className="ts-page-header">
         <h3>Visit {sheet.sheetNumber} Tasks</h3>
         {isSubmitted && (
@@ -138,7 +148,7 @@ const TaskSheetPage = ({ sheet, onSheetUpdated }) => {
           <TaskItem
             key={task.id || `temp-${index}`}
             task={task}
-            disabled={isSubmitted}
+            disabled={isReadOnly}
             onToggle={() => handleToggle(task.id)}
           />
         ))}
@@ -149,10 +159,10 @@ const TaskSheetPage = ({ sheet, onSheetUpdated }) => {
       </div>
 
       {/* Add task input (only if not submitted) */}
-      {!isSubmitted && <AddTaskInput onAdd={handleAddTask} disabled={saving} />}
+      {!isReadOnly && <AddTaskInput onAdd={handleAddTask} disabled={saving} />}
 
       {/* Submit button */}
-      {!isSubmitted && (
+      {!isReadOnly && (
         <div className="ts-submit-section">
           <button
             className="ts-submit-btn"
