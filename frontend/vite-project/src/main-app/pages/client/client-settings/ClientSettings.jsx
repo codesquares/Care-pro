@@ -405,8 +405,12 @@ const ClientSettings = () => {
       // Use the formatted address if available from Google validation
       const addressToSend = addressValidation?.formattedAddress || addressForm.address;
 
-      // Update address via API
-      const response = await ClientSettingsService.updateClientAddress(userDetails.id, addressToSend);
+      // Update address via API — include GPS coordinates if available from validation
+      const response = await ClientSettingsService.updateClientAddress(
+        userDetails.id,
+        addressToSend,
+        addressValidation?.coordinates
+      );
 
       if (response.success) {
         // Extract location data from response

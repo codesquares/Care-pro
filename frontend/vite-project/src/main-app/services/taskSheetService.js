@@ -162,7 +162,7 @@ const TaskSheetService = {
    * @param {string} taskSheetId
    * @returns {Promise<Object>} { success, data, error }
    */
-  async submitSheet(taskSheetId) {
+  async submitSheet(taskSheetId, { clientSignature, signedAt } = {}) {
     try {
       if (!taskSheetId) {
         return { success: false, error: "Task sheet ID is required" };
@@ -173,13 +173,19 @@ const TaskSheetService = {
         return { success: false, error: "Authentication required" };
       }
 
+      const body = {};
+      if (clientSignature) {
+        body.clientSignature = clientSignature;
+        body.signedAt = signedAt || new Date().toISOString();
+      }
+
       const response = await fetch(`${config.BASE_URL}/TaskSheets/${taskSheetId}/submit`, {
         method: "PUT",
         headers: {
           "Content-Type": "application/json",
           Authorization: `Bearer ${authToken}`,
         },
-        body: JSON.stringify({}),
+        body: JSON.stringify(body),
       });
 
       if (!response.ok) {

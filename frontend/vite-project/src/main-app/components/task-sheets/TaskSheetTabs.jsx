@@ -152,6 +152,9 @@ const TaskSheetTabs = ({ order }) => {
           >
             Visit {sheet.sheetNumber}
             {sheet.status === "submitted" && <span className="ts-tab-badge">✓</span>}
+            {(sheet.observationReportCount > 0 || sheet.incidentReportCount > 0) && (
+              <span className="ts-tab-report-dot" title={`${sheet.observationReportCount || 0} observations, ${sheet.incidentReportCount || 0} incidents`} />
+            )}
           </button>
         ))}
 
@@ -184,6 +187,7 @@ const TaskSheetTabs = ({ order }) => {
         <TaskSheetPage
           key={activeSheet.id}
           sheet={activeSheet}
+          orderId={orderId}
           onSheetUpdated={handleSheetUpdated}
           orderCompleted={orderCompleted}
         />
