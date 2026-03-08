@@ -4,7 +4,7 @@ import TopBanner from "../components/TopBanner";
 import genralImg from "../assets/nurseAndWoman.png";
 import HealthcareFacts from "../components/LandingPage/HealthcareFacts";
 import FAQ from "../components/LandingPage/FAQ";
-import CaregiverProcess from "../components/LandingPage/CaregiverProcess";
+import ClientHiringProcess from "../components/LandingPage/ClientHiringProcess";
 import WhyCarepro from "../components/WhyCare-Pro";
 import WaitlistModal from "../components/WaitListModal";
 import { useAuth } from "../main-app/context/AuthContext";
@@ -43,7 +43,7 @@ const BookCaregiver = () => {
         backgroundColor="#373732"
       />
       <WhyCarepro />
-      <CaregiverProcess />
+      <ClientHiringProcess />
       <HealthcareFacts/>
       <FAQ/>
       <WaitlistModal isOpen={isModalOpen} onClose={() => setIsModalOpen(false)} 

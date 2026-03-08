@@ -1,87 +1,37 @@
+import { useState } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { Helmet } from 'react-helmet';
 import GeneralBanner from '../components/GeneralBanner';
+import '../components/PricingModal/PricingModal.css';
 import '../styles/components/our-plans.css';
 
+const pricingCategories = [
+  { slug: "adult-care", name: "Adult Care", icon: "👴", minPriceNGN: 10000, minPriceUSD: 7 },
+  { slug: "post-surgery-care", name: "Post Surgery Care", icon: "🏥", minPriceNGN: 10000, minPriceUSD: 7 },
+  { slug: "child-care", name: "Child Care", icon: "👶", minPriceNGN: 10000, minPriceUSD: 7 },
+  { slug: "pet-care", name: "Pet Care", icon: "🐕", minPriceNGN: 10000, minPriceUSD: 7 },
+  { slug: "home-care", name: "Home Care", icon: "🏠", minPriceNGN: 10000, minPriceUSD: 7 },
+  { slug: "special-needs-care", name: "Special Needs Care", icon: "💙", minPriceNGN: 10000, minPriceUSD: 7 },
+  { slug: "medical-support", name: "Medical Support", icon: "💊", minPriceNGN: 10000, minPriceUSD: 7 },
+  { slug: "mobility-support", name: "Mobility Support", icon: "🦽", minPriceNGN: 10000, minPriceUSD: 7 },
+  { slug: "therapy-wellness", name: "Therapy & Wellness", icon: "🧘", minPriceNGN: 10000, minPriceUSD: 7 },
+  { slug: "palliative", name: "Palliative", icon: "🤲", minPriceNGN: 10000, minPriceUSD: 7 },
+];
+
 const Plans = () => {
-  const servicePlans = [
-    {
-      id: 'weekly-1',
-      title: '1 Service Weekly',
-      subtitle: '4 visits per month',
-      price: '₦40,000',
-      priceNote: 'Starting from ₦10,000 per service',
-      features: [
-        'One scheduled visit per week',
-        'Basic care assistance',
-        'Medication reminders',
-        'Light housekeeping',
-        'Companionship services'
-      ],
-      popular: false,
-      buttonText: 'Choose Plan'
-    },
-    {
-      id: 'weekly-3',
-      title: '3 Services Weekly',
-      subtitle: '12 visits per month',
-      price: '₦108,000',
-      priceNote: '10% discount applied',
-      originalPrice: '₦120,000',
-      features: [
-        'Three scheduled visits per week',
-        'Comprehensive personal care',
-        'Medication management',
-        'Meal preparation assistance',
-        'Light housekeeping',
-        'Health monitoring',
-        'Transportation assistance'
-      ],
-      popular: true,
-      buttonText: 'Most Popular'
-    },
-    {
-      id: 'weekly-5plus',
-      title: 'Minimum 5 Weekly Services',
-      subtitle: '20+ visits per month',
-      price: '₦160,000',
-      priceNote: '20% discount applied',
-      originalPrice: '₦200,000',
-      features: [
-        'Five or more visits per week',
-        'Intensive personal care',
-        'Advanced medication management',
-        'Daily meal preparation',
-        'Complete housekeeping',
-        'Health monitoring & reporting',
-        'Emergency response',
-        'Transportation services',
-        'Specialized care routines'
-      ],
-      popular: false,
-      buttonText: 'Premium Care'
-    },
-    {
-      id: 'live-in',
-      title: 'Live-in Service',
-      subtitle: '24/7 comprehensive care',
-      price: '₦400,000',
-      priceNote: 'Monthly rate',
-      features: [
-        '24/7 live-in caregiver',
-        'Round-the-clock supervision',
-        'All personal care services',
-        'Medication management',
-        'Meal preparation & nutrition',
-        'Housekeeping & maintenance',
-        'Emergency medical response',
-        'Companionship & activities',
-        'Family communication & updates',
-        'Specialized medical care coordination'
-      ],
-      popular: false,
-      buttonText: 'Premium Live-in'
-    }
-  ];
+  const navigate = useNavigate();
+  const [selectedCategory, setSelectedCategory] = useState(null);
+  const [currency, setCurrency] = useState("NGN");
+
+  const handleCategoryClick = (category) => {
+    setSelectedCategory(category);
+  };
+
+  const handleGetStarted = () => {
+    if (!selectedCategory) return;
+    const returnTo = `/marketplace?category=${selectedCategory.slug}`;
+    navigate(`/register?returnTo=${encodeURIComponent(returnTo)}`);
+  };
 
   const platformFees = [
     {
@@ -98,82 +48,116 @@ const Plans = () => {
     }
   ];
 
-  const futurePlans = [
-    {
-      icon: '🤖',
-      title: 'AI-Powered Care Coordination',
-      description: 'Advanced AI algorithms to optimize care schedules and predict health needs'
-    },
-    {
-      icon: '🏥',
-      title: 'Robotic Assistance Integration',
-      description: 'Partnership with robotic care assistants for enhanced patient monitoring'
-    },
-    {
-      icon: '💬',
-      title: 'LLM Health Assistant',
-      description: 'Large Language Model integration for personalized health recommendations and family communication'
-    },
-    {
-      icon: '📱',
-      title: 'Smart Health Monitoring',
-      description: 'IoT devices and wearables for real-time health tracking and alerts'
-    }
-  ];
-
   return (
     <div className="our-plans">
       <Helmet>
-        <title>Our Plans - CarePro</title>
-        <meta name="description" content="Explore CarePro's comprehensive care plans designed to meet your specific healthcare needs with flexible scheduling and professional caregivers." />
-        <meta name="keywords" content="care plans, pricing, healthcare services, caregiver services, home care, nursing plans, eldercare packages" />
+        <title>Service Pricing - CarePro</title>
+        <meta name="description" content="Explore CarePro's service pricing across care categories. Affordable rates starting from ₦10,000/day for home care, child care, elderly care and more." />
+        <meta name="keywords" content="care pricing, service rates, healthcare services, caregiver services, home care, eldercare, child care pricing" />
       </Helmet>
 
       <GeneralBanner 
-        title="Our Plans"
-        subtitle="Choose the perfect care plan that fits your needs and budget. From weekly visits to live-in care, we have options for every situation."
+        title="Service Pricing"
+        subtitle="Select a category to view pricing and get started with the care you need."
         showButton={false}
       />
 
       <section className="plans-section">
         <div className="container">
           <div className="section-header">
-            <h2>Service Plans</h2>
-            <p>All plans include professional caregiver screening, insurance coverage, and 24/7 customer support.</p>
+            <h2>Service Pricing</h2>
+            <p>Select a category to view pricing and get started</p>
           </div>
 
-          <div className="plans-grid">
-            {servicePlans.map((plan) => (
-              <div key={plan.id} className={`plan-card ${plan.popular ? 'popular' : ''}`}>
-                {plan.popular && <div className="popular-badge">Most Popular</div>}
-                
-                <div className="plan-header">
-                  <h3>{plan.title}</h3>
-                  <p className="plan-subtitle">{plan.subtitle}</p>
-                </div>
+          {/* Currency Toggle */}
+          <div className="pricing-modal__currency-toggle">
+            <button
+              className={`currency-btn ${currency === "NGN" ? "active" : ""}`}
+              onClick={() => setCurrency("NGN")}
+            >
+              ₦ NGN
+            </button>
+            <button
+              className={`currency-btn ${currency === "USD" ? "active" : ""}`}
+              onClick={() => setCurrency("USD")}
+            >
+              $ USD
+            </button>
+          </div>
 
-                <div className="plan-pricing">
-                  <div className="price-main">{plan.price}</div>
-                  {plan.originalPrice && (
-                    <div className="price-original">Was {plan.originalPrice}</div>
+          {/* Categories Grid */}
+          <div className="pricing-modal__grid">
+            {pricingCategories.map((cat) => (
+              <div
+                key={cat.slug}
+                className={`pricing-category-card ${selectedCategory?.slug === cat.slug ? "selected" : ""}`}
+                onClick={() => handleCategoryClick(cat)}
+              >
+                <div className="pricing-category-card__icon">{cat.icon}</div>
+                <div className="pricing-category-card__info">
+                  <h4 className="pricing-category-card__name">{cat.name}</h4>
+                  <div className="pricing-category-card__price">
+                    {currency === "NGN" ? (
+                      <>
+                        From <strong>₦{cat.minPriceNGN.toLocaleString()}</strong>
+                      </>
+                    ) : (
+                      <>
+                        From <strong>${cat.minPriceUSD}</strong>
+                      </>
+                    )}
+                    <span className="pricing-category-card__per-day"> / day</span>
+                  </div>
+                </div>
+                <div className="pricing-category-card__check">
+                  {selectedCategory?.slug === cat.slug && (
+                    <svg width="22" height="22" viewBox="0 0 22 22" fill="none">
+                      <circle cx="11" cy="11" r="11" fill="#10b981" />
+                      <path d="M6 11.5L9.5 15L16 7" stroke="#fff" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round" />
+                    </svg>
                   )}
-                  <div className="price-note">{plan.priceNote}</div>
                 </div>
-
-                <ul className="plan-features">
-                  {plan.features.map((feature, index) => (
-                    <li key={index}>
-                      <span className="check-icon">✓</span>
-                      {feature}
-                    </li>
-                  ))}
-                </ul>
-
-                <button className={`plan-button ${plan.popular ? 'popular-button' : ''}`}>
-                  {plan.buttonText}
-                </button>
               </div>
             ))}
+          </div>
+
+          {/* Selected Category Detail */}
+          {selectedCategory && (
+            <div className="pricing-modal__detail">
+              <div className="pricing-modal__detail-icon">{selectedCategory.icon}</div>
+              <div className="pricing-modal__detail-info">
+                <h3>{selectedCategory.name}</h3>
+                <p>
+                  Starting at{" "}
+                  <strong>
+                    {currency === "NGN"
+                      ? `₦${selectedCategory.minPriceNGN.toLocaleString()}`
+                      : `$${selectedCategory.minPriceUSD}`}
+                    /day
+                  </strong>
+                </p>
+                <span className="pricing-modal__detail-note">
+                  Prices may vary as more caregivers join the platform
+                </span>
+              </div>
+              <button className="pricing-modal__cta" onClick={handleGetStarted}>
+                Get Started
+                <svg width="18" height="18" viewBox="0 0 20 20" fill="none">
+                  <path d="M4 10h12M12 5l5 5-5 5" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
+                </svg>
+              </button>
+            </div>
+          )}
+
+          {/* Footer Note */}
+          <div className="pricing-modal__footer">
+            <p>
+              <svg width="16" height="16" viewBox="0 0 16 16" fill="none" style={{ verticalAlign: "middle", marginRight: 6 }}>
+                <circle cx="8" cy="8" r="7" stroke="#6b7280" strokeWidth="1.5" />
+                <path d="M8 5v3M8 10.5h.01" stroke="#6b7280" strokeWidth="1.5" strokeLinecap="round" />
+              </svg>
+              All prices shown are minimum starting rates per day. Actual pricing depends on the caregiver&apos;s experience, qualifications, and service scope.
+            </p>
           </div>
         </div>
       </section>
@@ -202,38 +186,6 @@ const Plans = () => {
             <div className="note-card">
               <h4>Minimum Service Fee</h4>
               <p>All individual services have a minimum fee of <strong>₦10,000</strong> to ensure quality care and fair compensation for our professional caregivers.</p>
-            </div>
-          </div>
-        </div>
-      </section>
-
-      <section className="future-plans-section">
-        <div className="container">
-          <div className="section-header">
-            <h2>Future Innovations</h2>
-            <p>CarePro is continuously evolving to integrate cutting-edge technology for enhanced care delivery.</p>
-          </div>
-
-          <div className="future-grid">
-            {futurePlans.map((plan, index) => (
-              <div key={index} className="future-card">
-                <div className="future-icon">{plan.icon}</div>
-                <h3>{plan.title}</h3>
-                <p>{plan.description}</p>
-              </div>
-            ))}
-          </div>
-        </div>
-      </section>
-
-      <section className="cta-section">
-        <div className="container">
-          <div className="cta-content">
-            <h2>Ready to Get Started?</h2>
-            <p>Contact us today to discuss your care needs and find the perfect plan for you or your loved ones.</p>
-            <div className="cta-buttons">
-              <button className="cta-button primary">Book a Consultation</button>
-              <button className="cta-button secondary">Contact Us</button>
             </div>
           </div>
         </div>
