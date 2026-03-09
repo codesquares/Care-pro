@@ -20,6 +20,11 @@ api.interceptors.request.use(
             const token = localStorage.getItem('authToken');
             if (token) {
                 config.headers.Authorization = `Bearer ${token}`;
+            } else {
+                // Cancel the request if no token — avoids futile 401s
+                const controller = new AbortController();
+                controller.abort();
+                config.signal = controller.signal;
             }
         } catch (error) {
             console.warn('Failed to attach token:', error);

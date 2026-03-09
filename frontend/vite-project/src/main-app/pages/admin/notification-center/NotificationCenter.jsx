@@ -7,7 +7,7 @@ const NotificationCenter = () => {
   const [sendingTo, setSendingTo] = useState('individual'); // 'individual', 'caregivers', 'clients', 'all'
   const [notificationData, setNotificationData] = useState({
     recipientId: '',
-    type: 'SystemAlert',
+    type: 'system_alert',
     title: '',
     content: ''
   });
@@ -98,14 +98,14 @@ const NotificationCenter = () => {
           success: true,
           message: sendingTo === 'individual'
             ? 'Notification sent successfully!'
-            : `Notification sent to ${response.successCount || response.totalSuccessCount} users`,
+            : `Notification broadcast to ${response.successCount || response.totalSuccessCount || 0} recipients`,
           details: response
         });
 
         // Reset form
         setNotificationData({
           recipientId: '',
-          type: 'SystemAlert',
+          type: 'system_alert',
           title: '',
           content: ''
         });
@@ -308,7 +308,7 @@ const NotificationCenter = () => {
               onClick={() => {
                 setNotificationData({
                   recipientId: '',
-                  type: 'SystemAlert',
+                  type: 'system_alert',
                   title: '',
                   content: ''
                 });
@@ -342,6 +342,10 @@ const NotificationCenter = () => {
       <div className="notification-info">
         <h3>Available Notification Types</h3>
         <div className="info-grid">
+          <div className="info-card">
+            <h4>Broadcast</h4>
+            <p>Broadcast notifications to all users or specific groups</p>
+          </div>
           <div className="info-card">
             <h4>SystemAlert</h4>
             <p>System-wide alerts and announcements</p>

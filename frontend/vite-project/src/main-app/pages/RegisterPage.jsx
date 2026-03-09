@@ -42,6 +42,7 @@ const CreateAccount = () => {
   //please generate a unique username, add middlename ensure middle name is not null so that a random middlename is not added
 
   const [userType, setUserType] = useState(""); // New state for user type
+  const [department, setDepartment] = useState(""); // Admin department
   const [errors, setErrors] = useState({});
   const [isSubmitted, setIsSubmitted] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
@@ -69,6 +70,7 @@ const CreateAccount = () => {
     if (formValues.password !== formValues.confirmPassword)
       newErrors.confirmPassword = "Passwords do not match.";
     if (!userType) newErrors.userType = "Please select a role."; // Validate user type
+    if (userType === "Admin" && !department) newErrors.department = "Please select a department.";
     return newErrors;
   };
 
@@ -132,6 +134,7 @@ Please log in to your existing account instead of creating a new one.`);
       middleName: "testing",
       password: formValues.password,
       role: userType, // Include selected user type
+      ...(userType === "Admin" && department ? { department } : {})
     };
 
     try {
@@ -139,7 +142,7 @@ Please log in to your existing account instead of creating a new one.`);
         ? "/CareGivers/AddCaregiverUser"
         : userType === "Client"
         ? "/Clients/AddClientUser"
-        : "/Admins/AddAdminUser";
+        : "/Admins";
 
       await fetchData(payload, endpoint);
 
@@ -336,6 +339,24 @@ You won't be able to log in until your email is verified.`);
               </label> */}
             </div>
             {errors.userType && <p className="error-text">{errors.userType}</p>}
+            {userType === "Admin" && (
+              <div className="form-group">
+                <select
+                  name="department"
+                  value={department}
+                  onChange={(e) => setDepartment(e.target.value)}
+                  required
+                >
+                  <option value="">-- Select Department --</option>
+                  <option value="Finance">Finance</option>
+                  <option value="HR">HR</option>
+                  <option value="ComplianceAndLegal">Compliance & Legal</option>
+                  <option value="CareLeads">Care Leads</option>
+                  <option value="MarketingAndSales">Marketing & Sales</option>
+                </select>
+                {errors.department && <p className="error-text">{errors.department}</p>}
+              </div>
+            )}
             <button type="submit" className="btn-primary" disabled={loading}>
               {loading ? "Creating Account..." : "Create Account"}
             </button>

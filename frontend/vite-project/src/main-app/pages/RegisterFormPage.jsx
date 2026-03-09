@@ -77,6 +77,7 @@ const RegisterFormPage = () => {
 
   // Google auth state
   const [googleLoading, setGoogleLoading] = useState(false);
+  const [department, setDepartment] = useState(""); // Admin department
 
   const validate = () => {
     const newErrors = {};
@@ -88,6 +89,7 @@ const RegisterFormPage = () => {
       newErrors.password = "Password must be at least 8 characters long.";
     if (formValues.password !== formValues.confirmPassword)
       newErrors.confirmPassword = "Passwords do not match.";
+    if (selectedRole === "Admin" && !department) newErrors.department = "Please select a department.";
     return newErrors;
   };
 
@@ -148,6 +150,7 @@ Please log in to your existing account instead of creating a new one.`);
       middleName: "testing",
       password: formValues.password,
       role: selectedRole,
+      ...(selectedRole === "Admin" && department ? { department } : {})
     };
 
     try {
@@ -155,7 +158,7 @@ Please log in to your existing account instead of creating a new one.`);
         ? "/CareGivers/AddCaregiverUser"
         : selectedRole === "Client"
           ? "/Clients/AddClientUser"
-          : "/Admins/AddAdminUser";
+          : "/Admins";
 
       await fetchData(payload, endpoint);
 
@@ -502,6 +505,28 @@ You won't be able to log in until your email is verified.`);
               </div>
               {errors.confirmPassword && <p className="regform-error">{errors.confirmPassword}</p>}
             </div>
+
+            {/* Department (Admin only) */}
+            {selectedRole === "Admin" && (
+              <div className="regform-field">
+                <label htmlFor="department">Department</label>
+                <select
+                  id="department"
+                  name="department"
+                  value={department}
+                  onChange={(e) => setDepartment(e.target.value)}
+                  required
+                >
+                  <option value="">-- Select Department --</option>
+                  <option value="Finance">Finance</option>
+                  <option value="HR">HR</option>
+                  <option value="ComplianceAndLegal">Compliance & Legal</option>
+                  <option value="CareLeads">Care Leads</option>
+                  <option value="MarketingAndSales">Marketing & Sales</option>
+                </select>
+                {errors.department && <p className="regform-error">{errors.department}</p>}
+              </div>
+            )}
 
             {/* Submit */}
             <button type="submit" className="regform-submit" disabled={loading || googleLoading}>

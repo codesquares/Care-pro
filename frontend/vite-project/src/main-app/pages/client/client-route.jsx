@@ -17,6 +17,7 @@ import ClientPreferences from './preferences/ClientPreferences';
 import CareNeedsSettings from './care-needs/CareNeedsSettings';
 import ClientProfile from './profile/ClientProfile';
 import RequestCaregiver from './request-caregiver/RequestCaregiver';
+import CareRequestMatches from './care-request-matches/CareRequestMatches';
 import Cart from '../client/cart/Cart';
 import NotificationsPage from '../../components/Notifications/Notifications';
 import ResolutionCenter from './orders/ResolutionCenter';
@@ -46,6 +47,7 @@ function ClientRoutes() {
             {/* <Route path="/verification" element={<ClientVerificationPage />} /> */}
             <Route path="/care-needs" element={<CareNeedsSettings />} />
             <Route path="/post-project" element={<RequestCaregiver />} />
+            <Route path="/care-requests/:requestId/matches" element={<CareRequestMatches />} />
             <Route path="/profile" element={<ClientProfile />} />
             <Route path="/notifications" element={<NotificationsPage />} />
             <Route path="/cart/:id" element={<Cart />} />

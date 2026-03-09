@@ -13,6 +13,7 @@ import OrdersManagement from './orders-management/OrdersManagement';
 import EmailComposer from './email-composer/EmailComposer';
 import CertificateManagement from './certificate-management/CertificateManagement';
 import VerificationManagement from './verification-management/VerificationManagement';
+import AdminCareRequestDetail from './care-requests/AdminCareRequestDetail';
 import SubscriptionAdmin from './subscriptions/SubscriptionAdmin';
 import { useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
@@ -53,6 +54,7 @@ function AdminRoutes() {
             <Route path="dojah-admin" element={<VerificationManagement />} />
             <Route path="webhook-data" element={<WebhookDataAdmin />} />
             <Route path="subscriptions" element={<SubscriptionAdmin />} />
+            <Route path="care-requests/:requestId" element={<AdminCareRequestDetail />} />
             <Route path="*" element={<NotFoundPage />} />
         </Routes>
         </>

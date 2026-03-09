@@ -15,25 +15,35 @@ const OrdersManagement = () => {
   const [selectedOrder, setSelectedOrder] = useState(null);
   const [showOrderModal, setShowOrderModal] = useState(false);
   const [statistics, setStatistics] = useState(null);
+  const [currentPage, setCurrentPage] = useState(1);
+  const [pageSize] = useState(20);
+  const [totalCount, setTotalCount] = useState(0);
+  const [hasMore, setHasMore] = useState(false);
 
   useEffect(() => {
     loadOrders();
-  }, []);
+  }, [currentPage, statusFilter, searchTerm]);
 
   useEffect(() => {
     filterOrders();
-  }, [orders, searchTerm, statusFilter, dateFilter, startDate, endDate]);
+  }, [orders, dateFilter, startDate, endDate]);
 
   const loadOrders = async () => {
     try {
       setLoading(true);
       setError(null);
       
-      const result = await adminService.getAllOrders();
+      const params = { page: currentPage, pageSize };
+      if (statusFilter !== 'All') params.status = statusFilter;
+      if (searchTerm) params.search = searchTerm;
+
+      const result = await adminService.getAllOrders(params);
       
       if (result.success) {
         const sortedOrders = adminService.sortOrdersByDate(result.data, 'desc');
         setOrders(sortedOrders);
+        setTotalCount(result.totalCount || result.count || sortedOrders.length);
+        setHasMore(result.hasMore || false);
         const stats = adminService.getOrderStatistics(sortedOrders);
         setStatistics(stats);
       } else {
@@ -50,12 +60,7 @@ const OrdersManagement = () => {
   const filterOrders = () => {
     let filtered = [...orders];
 
-    // Filter by status
-    if (statusFilter !== 'All') {
-      filtered = adminService.filterOrdersByStatus(filtered, statusFilter);
-    }
-
-    // Filter by date
+    // Date filtering remains client-side for custom ranges
     if (dateFilter === 'custom' && (startDate || endDate)) {
       filtered = adminService.filterOrdersByDateRange(filtered, startDate, endDate);
     } else if (dateFilter === 'today') {
@@ -66,11 +71,6 @@ const OrdersManagement = () => {
       filtered = adminService.getRecentOrders(filtered, 7);
     } else if (dateFilter === 'month') {
       filtered = adminService.getRecentOrders(filtered, 30);
-    }
-
-    // Search filter
-    if (searchTerm) {
-      filtered = adminService.searchOrders(filtered, searchTerm);
     }
 
     setFilteredOrders(filtered);
@@ -313,6 +313,7 @@ const OrdersManagement = () => {
               setDateFilter('all');
               setStartDate('');
               setEndDate('');
+              setCurrentPage(1);
             }}
           >
             <i className="fas fa-redo"></i> Reset Filters
@@ -323,7 +324,8 @@ const OrdersManagement = () => {
       {/* Results Count */}
       <div className="results-info">
         <p>
-          Showing <strong>{filteredOrders.length}</strong> of <strong>{orders.length}</strong> orders
+          Showing <strong>{filteredOrders.length}</strong> of <strong>{totalCount}</strong> orders
+          {totalCount > pageSize && <span> (Page {currentPage})</span>}
         </p>
       </div>
 
@@ -403,6 +405,27 @@ const OrdersManagement = () => {
           </table>
         )}
       </div>
+
+      {/* Pagination Controls */}
+      {totalCount > pageSize && (
+        <div className="pagination-controls">
+          <button
+            className="btn-secondary"
+            disabled={currentPage <= 1}
+            onClick={() => setCurrentPage(prev => prev - 1)}
+          >
+            <i className="fas fa-chevron-left"></i> Previous
+          </button>
+          <span className="page-info">Page {currentPage} of {Math.ceil(totalCount / pageSize)}</span>
+          <button
+            className="btn-secondary"
+            disabled={!hasMore && currentPage >= Math.ceil(totalCount / pageSize)}
+            onClick={() => setCurrentPage(prev => prev + 1)}
+          >
+            Next <i className="fas fa-chevron-right"></i>
+          </button>
+        </div>
+      )}
 
       {/* Order Details Modal */}
       {showOrderModal && selectedOrder && (
