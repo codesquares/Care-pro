@@ -2,7 +2,7 @@
  * Care Request Service
  * Handles submitting and managing client care requests.
  */
-import config from '../config';
+import api from './api';
 
 class CareRequestService {
   /**
@@ -13,7 +13,6 @@ class CareRequestService {
   static async submitCareRequest(requestData) {
     const userDetails = JSON.parse(localStorage.getItem('userDetails') || '{}');
     const clientId = userDetails.id;
-    const token = localStorage.getItem('authToken');
 
     if (!clientId) {
       throw new Error('User not logged in');
@@ -33,21 +32,8 @@ class CareRequestService {
       specialRequirements: requestData.specialRequirements || null,
     };
 
-    const response = await fetch(`${config.BASE_URL}/CareRequests`, {
-      method: 'POST',
-      headers: {
-        'Authorization': `Bearer ${token}`,
-        'Content-Type': 'application/json',
-      },
-      body: JSON.stringify(payload),
-    });
-
-    if (!response.ok) {
-      const errorText = await response.text().catch(() => '');
-      throw new Error(`Failed to submit care request: ${response.status} ${errorText}`);
-    }
-
-    return await response.json();
+    const response = await api.post('/CareRequests', payload);
+    return response.data;
   }
 
   /**
@@ -57,24 +43,13 @@ class CareRequestService {
   static async getCareRequests() {
     const userDetails = JSON.parse(localStorage.getItem('userDetails') || '{}');
     const clientId = userDetails.id;
-    const token = localStorage.getItem('authToken');
 
     if (!clientId) {
       throw new Error('User not logged in');
     }
 
-    const response = await fetch(`${config.BASE_URL}/CareRequests/client/${clientId}`, {
-      headers: {
-        'Authorization': `Bearer ${token}`,
-        'Content-Type': 'application/json',
-      },
-    });
-
-    if (!response.ok) {
-      throw new Error(`Failed to fetch care requests: ${response.status}`);
-    }
-
-    return await response.json();
+    const response = await api.get(`/CareRequests/client/${clientId}`);
+    return response.data;
   }
 
   /**
@@ -83,20 +58,8 @@ class CareRequestService {
    * @returns {Promise<Object>} The care request
    */
   static async getCareRequest(requestId) {
-    const token = localStorage.getItem('authToken');
-
-    const response = await fetch(`${config.BASE_URL}/CareRequests/${requestId}`, {
-      headers: {
-        'Authorization': `Bearer ${token}`,
-        'Content-Type': 'application/json',
-      },
-    });
-
-    if (!response.ok) {
-      throw new Error(`Failed to fetch care request: ${response.status}`);
-    }
-
-    return await response.json();
+    const response = await api.get(`/CareRequests/${requestId}`);
+    return response.data;
   }
 
   /**
@@ -105,19 +68,34 @@ class CareRequestService {
    * @returns {Promise<void>}
    */
   static async cancelCareRequest(requestId) {
-    const token = localStorage.getItem('authToken');
+    await api.put(`/CareRequests/${requestId}/cancel`);
+  }
 
-    const response = await fetch(`${config.BASE_URL}/CareRequests/${requestId}/cancel`, {
-      method: 'PUT',
-      headers: {
-        'Authorization': `Bearer ${token}`,
-        'Content-Type': 'application/json',
-      },
-    });
-
-    if (!response.ok) {
-      throw new Error(`Failed to cancel care request: ${response.status}`);
+  /**
+   * Get ranked caregiver matches for a care request
+   * @param {string} requestId - The care request ID
+   * @returns {Promise<Object>} Match results with ranked caregivers
+   */
+  static async getMatches(requestId) {
+    try {
+      const response = await api.get(`/CareRequests/${requestId}/matches`);
+      return response.data;
+    } catch (error) {
+      if (error.response?.status === 403) {
+        throw new Error('You are not authorized to view these matches.');
+      }
+      throw error;
     }
+  }
+
+  /**
+   * Admin: manually trigger matching for a care request
+   * @param {string} requestId - The care request ID
+   * @returns {Promise<Object>} Match results
+   */
+  static async triggerMatch(requestId) {
+    const response = await api.post(`/CareRequests/${requestId}/match`);
+    return response.data;
   }
 }
 

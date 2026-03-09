@@ -1,0 +1,501 @@
+/* ===================================================
+   Client Visit View — read-only visit history styles
+   =================================================== */
+
+/* ---------- Loading / Error / Empty ---------- */
+.cv-loading,
+.cv-error,
+.cv-empty {
+  padding: 20px;
+  text-align: center;
+  color: #666;
+  font-size: 14px;
+}
+
+.cv-error p {
+  color: #d32f2f;
+  margin-bottom: 10px;
+}
+
+.cv-retry-btn {
+  padding: 6px 16px;
+  border: 1px solid #d32f2f;
+  border-radius: 4px;
+  background: #fff;
+  color: #d32f2f;
+  cursor: pointer;
+  font-size: 14px;
+}
+
+.cv-retry-btn:hover {
+  background: #fce4ec;
+}
+
+/* ---------- Container ---------- */
+.cv-container {
+  width: 100%;
+}
+
+/* ---------- Tab bar ---------- */
+.cv-tab-bar {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  margin-bottom: 8px;
+  padding-bottom: 8px;
+  border-bottom: 1px solid #e0e0e0;
+}
+
+.cv-tab {
+  padding: 6px 14px;
+  border: 1px solid #ccc;
+  border-radius: 20px;
+  background: #fff;
+  cursor: pointer;
+  font-size: 13px;
+  color: #555;
+  transition: all 0.2s;
+  display: flex;
+  align-items: center;
+  gap: 4px;
+}
+
+.cv-tab:hover {
+  background: #f5f5f5;
+  border-color: #999;
+}
+
+.cv-tab--active {
+  background: #fdcf68;
+  border-color: #f0b429;
+  color: #000;
+  font-weight: 600;
+}
+
+.cv-tab--submitted {
+  border-color: #27ae60;
+}
+
+.cv-tab--submitted.cv-tab--active {
+  background: #d4edda;
+  border-color: #27ae60;
+}
+
+.cv-tab-badge {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 16px;
+  height: 16px;
+  background: #27ae60;
+  color: #fff;
+  border-radius: 50%;
+  font-size: 10px;
+  font-weight: 700;
+}
+
+.cv-tab-report-dot {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: #e74c3c;
+  margin-left: 2px;
+}
+
+/* ---------- Info ---------- */
+.cv-info {
+  font-size: 12px;
+  color: #888;
+  margin-bottom: 12px;
+}
+
+/* ---------- Visit page ---------- */
+.cv-page {
+  padding: 4px 0;
+}
+
+/* ---------- Status row ---------- */
+.cv-status-row {
+  margin-bottom: 12px;
+}
+
+.cv-status-badge {
+  display: inline-block;
+  padding: 4px 12px;
+  border-radius: 12px;
+  font-size: 13px;
+  font-weight: 600;
+}
+
+.cv-status-badge--submitted {
+  background: #d4edda;
+  color: #1e7e34;
+}
+
+.cv-status-badge--pending {
+  background: #fff3cd;
+  color: #856404;
+}
+
+/* ---------- Check-in ---------- */
+.cv-checkin {
+  display: flex;
+  align-items: flex-start;
+  gap: 10px;
+  padding: 10px 12px;
+  background: #f0f9ff;
+  border: 1px solid #bce0fd;
+  border-radius: 8px;
+  margin-bottom: 14px;
+}
+
+.cv-checkin-icon {
+  font-size: 20px;
+  line-height: 1;
+}
+
+.cv-checkin-details {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.cv-checkin-label {
+  font-size: 13px;
+  font-weight: 600;
+  color: #333;
+}
+
+.cv-checkin-time {
+  font-size: 12px;
+  color: #555;
+}
+
+.cv-checkin-distance {
+  font-size: 12px;
+  color: #888;
+}
+
+/* ---------- Progress ---------- */
+.cv-progress {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin-bottom: 12px;
+}
+
+.cv-progress-bar {
+  flex: 1;
+  height: 8px;
+  background: #e9ecef;
+  border-radius: 4px;
+  overflow: hidden;
+}
+
+.cv-progress-fill {
+  height: 100%;
+  background: linear-gradient(90deg, #27ae60, #2ecc71);
+  border-radius: 4px;
+  transition: width 0.3s;
+}
+
+.cv-progress-text {
+  font-size: 12px;
+  color: #666;
+  white-space: nowrap;
+}
+
+/* ---------- Task list ---------- */
+.cv-task-list {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  margin-bottom: 16px;
+}
+
+.cv-task {
+  display: flex;
+  align-items: flex-start;
+  gap: 8px;
+  padding: 8px 10px;
+  border-radius: 6px;
+  background: #fafafa;
+  border: 1px solid #eee;
+  font-size: 14px;
+  color: #444;
+}
+
+.cv-task--done {
+  background: #f0faf0;
+  border-color: #c3e6cb;
+}
+
+.cv-task-check {
+  flex-shrink: 0;
+  width: 20px;
+  height: 20px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 50%;
+  font-size: 12px;
+  font-weight: 700;
+}
+
+.cv-task--done .cv-task-check {
+  background: #27ae60;
+  color: #fff;
+}
+
+.cv-task:not(.cv-task--done) .cv-task-check {
+  background: #e9ecef;
+  color: #999;
+}
+
+.cv-task-text {
+  flex: 1;
+  line-height: 1.4;
+}
+
+.cv-task--done .cv-task-text {
+  text-decoration: line-through;
+  color: #888;
+}
+
+.cv-task-custom-badge {
+  flex-shrink: 0;
+  font-size: 10px;
+  padding: 2px 6px;
+  border-radius: 4px;
+  background: #e8f4fd;
+  color: #2980b9;
+  white-space: nowrap;
+}
+
+.cv-no-tasks {
+  text-align: center;
+  color: #999;
+  font-size: 13px;
+  padding: 12px 0;
+}
+
+/* ---------- Signature ---------- */
+.cv-signature {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 6px;
+  padding: 12px;
+  background: #fafafa;
+  border: 1px solid #eee;
+  border-radius: 8px;
+  margin-bottom: 16px;
+}
+
+.cv-signature-label {
+  font-size: 12px;
+  font-weight: 600;
+  color: #666;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+.cv-signature-image {
+  max-width: 220px;
+  max-height: 80px;
+  border: 1px solid #ddd;
+  border-radius: 4px;
+}
+
+.cv-signature-date {
+  font-size: 11px;
+  color: #999;
+}
+
+/* ---------- Reports ---------- */
+.cv-reports {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.cv-report-group {
+  border: 1px solid #eee;
+  border-radius: 8px;
+  overflow: hidden;
+}
+
+.cv-report-toggle {
+  width: 100%;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 10px 12px;
+  border: none;
+  background: #fafafa;
+  cursor: pointer;
+  font-size: 14px;
+  color: #333;
+  text-align: left;
+  font-weight: 500;
+}
+
+.cv-report-toggle:hover {
+  background: #f0f0f0;
+}
+
+.cv-report-toggle--incident {
+  background: #fef8f8;
+}
+
+.cv-report-toggle--incident:hover {
+  background: #fdf0f0;
+}
+
+.cv-report-count {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 20px;
+  height: 20px;
+  padding: 0 6px;
+  border-radius: 10px;
+  background: #2980b9;
+  color: #fff;
+  font-size: 11px;
+  font-weight: 700;
+}
+
+.cv-report-count--incident {
+  background: #e74c3c;
+}
+
+.cv-chevron {
+  margin-left: auto;
+  font-size: 18px;
+  color: #999;
+  transition: transform 0.2s;
+}
+
+.cv-chevron--open {
+  transform: rotate(90deg);
+}
+
+.cv-report-list {
+  padding: 8px 12px 12px;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.cv-report-loading {
+  font-size: 13px;
+  color: #999;
+  text-align: center;
+  padding: 8px 0;
+}
+
+.cv-report-card {
+  padding: 10px 12px;
+  border: 1px solid #e0e7ef;
+  border-radius: 6px;
+  background: #fff;
+}
+
+.cv-report-card--incident {
+  border-color: #f5c6cb;
+  background: #fff9f9;
+}
+
+.cv-report-card-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 6px;
+}
+
+.cv-report-category {
+  font-size: 13px;
+  font-weight: 600;
+  color: #333;
+}
+
+.cv-severity {
+  font-size: 11px;
+  padding: 2px 8px;
+  border-radius: 10px;
+  font-weight: 600;
+}
+
+.cv-severity--low,
+.cv-severity--minor {
+  background: #d4edda;
+  color: #155724;
+}
+
+.cv-severity--medium,
+.cv-severity--moderate {
+  background: #fff3cd;
+  color: #856404;
+}
+
+.cv-severity--high,
+.cv-severity--serious {
+  background: #f8d7da;
+  color: #721c24;
+}
+
+.cv-severity--critical {
+  background: #d32f2f;
+  color: #fff;
+}
+
+.cv-report-description {
+  font-size: 13px;
+  color: #555;
+  line-height: 1.5;
+  margin: 0 0 4px;
+}
+
+.cv-report-actions-taken {
+  font-size: 13px;
+  color: #555;
+  line-height: 1.5;
+  margin: 4px 0;
+}
+
+.cv-report-date {
+  font-size: 11px;
+  color: #999;
+}
+
+/* ---------- Service tasks (booking-time list) ---------- */
+.cv-service-tasks {
+  margin-top: 20px;
+  padding-top: 16px;
+  border-top: 1px solid #e0e0e0;
+}
+
+.cv-service-tasks-heading {
+  font-size: 14px;
+  font-weight: 600;
+  color: #888;
+  margin-bottom: 8px;
+}
+
+/* ---------- Responsive ---------- */
+@media (max-width: 480px) {
+  .cv-tab-bar {
+    gap: 4px;
+  }
+
+  .cv-tab {
+    padding: 5px 10px;
+    font-size: 12px;
+  }
+
+  .cv-task {
+    padding: 6px 8px;
+    font-size: 13px;
+  }
+}

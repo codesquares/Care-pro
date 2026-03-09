@@ -97,6 +97,12 @@ class ClientProfileService {
         homeAddress: profileData.location || '', // Map location to homeAddress
         phoneNo: profileData.phoneNumber || '' // Map phoneNumber to phoneNo
       };
+
+      // Include GPS coordinates if available (from AddressInput validation)
+      if (profileData.coordinates?.latitude != null && profileData.coordinates?.longitude != null) {
+        payload.latitude = profileData.coordinates.latitude;
+        payload.longitude = profileData.coordinates.longitude;
+      }
       
       console.log('Updating client profile with payload:', payload); // Debug log
       

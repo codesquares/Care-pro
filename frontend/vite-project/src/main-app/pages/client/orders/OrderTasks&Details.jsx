@@ -5,9 +5,11 @@ import { ToastContainer, toast } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
 import { createNotification } from "../../../services/notificationService";
 import ContractService from "../../../services/contractService";
+import VisitCheckinService from "../../../services/visitCheckinService";
 import OrderTasksService from "../../../services/orderTasksService";
 import ClientOrderService from "../../../services/clientOrderService";
 import CreateOrderTasksModal from "../../../components/modals/CreateOrderTasksModal";
+import ClientVisitTabs from "../../../components/task-sheets/ClientVisitTabs";
 import config from "../../../config"; // Centralized API configuration
 import "./Order&Tasks.css";
 import { useNavigate } from "react-router-dom";
@@ -36,6 +38,8 @@ const MyOrders = () => {
     const [reviewRequestComments, setReviewRequestComments] = useState("");
     const [reviewPreferredScheduleNotes, setReviewPreferredScheduleNotes] = useState("");
     const [rejectReason, setRejectReason] = useState("");
+    const [showGpsPrompt, setShowGpsPrompt] = useState(false);
+    const [capturingGps, setCapturingGps] = useState(false);
     
     // OrderTasks-related state
     const [orderTasks, setOrderTasks] = useState(null);
@@ -184,12 +188,16 @@ const MyOrders = () => {
     // ==========================================
 
     // Client approves contract
-    const handleApproveContract = async () => {
+    const handleApproveContract = async (coords) => {
         if (!contract?.id) return;
         
         setContractActionLoading(true);
         try {
-            const result = await ContractService.clientApproveContract(contract.id);
+            const approveOptions = coords?.latitude != null
+                ? { serviceLatitude: coords.latitude, serviceLongitude: coords.longitude }
+                : {};
+
+            const result = await ContractService.clientApproveContract(contract.id, approveOptions);
             
             if (result.success) {
                 setContract(result.data);
@@ -213,6 +221,7 @@ const MyOrders = () => {
                 }
 
                 setIsModalOpen(false);
+                setShowGpsPrompt(false);
             } else {
                 toast.error(result.error || "Failed to approve contract");
             }
@@ -222,6 +231,22 @@ const MyOrders = () => {
         } finally {
             setContractActionLoading(false);
         }
+    };
+
+    // GPS prompt helpers
+    const handleApproveWithGps = async () => {
+        setCapturingGps(true);
+        const gps = await VisitCheckinService.getCurrentPosition();
+        setCapturingGps(false);
+        if (gps.success) {
+            await handleApproveContract(gps.coords);
+        } else {
+            toast.error(gps.error);
+        }
+    };
+
+    const handleApproveWithoutGps = async () => {
+        await handleApproveContract();
     };
 
     // Client requests review/changes (Round 1 only)
@@ -341,6 +366,11 @@ const MyOrders = () => {
                 const orderData = response.data;
                 setOrders([orderData]); // API returns a single order, so wrap it in an array
                 
+                // Sync fund-release state with server
+                if (orderData.isOrderStatusApproved) {
+                    setFundsReleased(true);
+                }
+
                 // Check if user has already submitted a review for this order
                 if (orderData.gigId && userId) {
                     const hasExistingReview = await checkExistingReview(orderData.gigId, userId);
@@ -524,14 +554,20 @@ const MyOrders = () => {
                     {selectedView === "Tasks" ? (
                         <div className="tasks-section">
                             <h2>Tasks</h2>
-                            {orders.length > 0 && orders[0].gigPackageDetails ? (
-                                orders[0].gigPackageDetails.map((taskText, index) => (
-                                    <div key={index} className="task">
-                                        ☐ {taskText}
-                                    </div>
-                                ))
-                            ) : (
-                                <p>No tasks available.</p>
+                            {orders.length > 0 && (
+                                <ClientVisitTabs order={orders[0]} />
+                            )}
+
+                            {/* Original service task list */}
+                            {orders.length > 0 && orders[0].gigPackageDetails && (
+                                <div className="cv-service-tasks">
+                                    <h3 className="cv-service-tasks-heading">Service Tasks (Agreed at Booking)</h3>
+                                    {orders[0].gigPackageDetails.map((taskText, index) => (
+                                        <div key={index} className="task">
+                                            ☐ {taskText}
+                                        </div>
+                                    ))}
+                                </div>
                             )}
                         </div>
                     ) : (
@@ -701,7 +737,7 @@ const MyOrders = () => {
                                                                     </button>
                                                                     <button 
                                                                         className="approve-contract-btn"
-                                                                        onClick={handleApproveContract}
+                                                                        onClick={() => setShowGpsPrompt(true)}
                                                                         disabled={contractActionLoading}
                                                                     >
                                                                         {contractActionLoading ? 'Processing...' : '✓ Approve Contract'}
@@ -1085,6 +1121,32 @@ const MyOrders = () => {
                     orderData={orders[0]}
                     onOrderTasksCreated={handleOrderTasksCreated}
                 />
+            )}
+
+            {/* GPS Prompt Modal for Contract Approval */}
+            {showGpsPrompt && (
+                <div className="modal-overlay gps-prompt-overlay" onClick={() => !capturingGps && !contractActionLoading && setShowGpsPrompt(false)}>
+                    <div className="gps-prompt-modal" onClick={(e) => e.stopPropagation()}>
+                        <h3>📍 Confirm Your Location</h3>
+                        <p>Are you currently at the service address? Sharing your location helps ensure accurate check-in verification for your caregiver.</p>
+                        <div className="gps-prompt-actions">
+                            <button
+                                className="gps-prompt-yes"
+                                onClick={handleApproveWithGps}
+                                disabled={capturingGps || contractActionLoading}
+                            >
+                                {capturingGps ? 'Capturing location...' : contractActionLoading ? 'Approving...' : "Yes, I'm here"}
+                            </button>
+                            <button
+                                className="gps-prompt-skip"
+                                onClick={handleApproveWithoutGps}
+                                disabled={capturingGps || contractActionLoading}
+                            >
+                                {contractActionLoading ? 'Approving...' : 'No / Skip'}
+                            </button>
+                        </div>
+                    </div>
+                </div>
             )}
 
             <ToastContainer position="top-right" autoClose={5000} hideProgressBar={false} />

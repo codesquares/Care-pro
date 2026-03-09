@@ -1,7 +1,7 @@
 import { createContext, useContext, useState, useEffect } from 'react';
 import { getDojahStatus } from '../services/dojahService';
 import assessmentService from '../services/assessmentService';
-import config from '../config';
+import api from '../services/api';
 
 // Create context
 const CaregiverStatusContext = createContext();
@@ -121,34 +121,11 @@ export function CaregiverStatusProvider({ children }) {
     try {
       setStatusData(prev => ({ ...prev, certificatesLoading: true, certificatesError: null }));
       
-      const token = localStorage.getItem('authToken');
-      
-      // Don't make API call if no token
-      if (!token) {
-        setStatusData(prev => ({
-          ...prev,
-          certificates: [],
-          certificatesCount: 0,
-          hasCertificates: false,
-          certificatesLoading: false,
-          certificatesError: null
-        }));
-        return { certificatesCount: 0, hasCertificates: false };
-      }
-      
-      const response = await fetch(`${config.BASE_URL}/Certificates?caregiverId=${userId}`, {
-        method: 'GET',
-        headers: {
-          'accept': '*/*',
-          'Authorization': `Bearer ${token}`,
-        },
+      const response = await api.get(`/Certificates`, {
+        params: { caregiverId: userId },
       });
 
-      if (!response.ok) {
-        throw new Error(`Failed to fetch certificates: ${response.status}`);
-      }
-
-      const response_data = await response.json();
+      const response_data = response.data;
       
       // Handle the API response structure: { success: true, data: [...] }
       const certificatesArray = response_data?.success ? response_data.data : (Array.isArray(response_data) ? response_data : []);
@@ -187,6 +164,18 @@ export function CaregiverStatusProvider({ children }) {
     
     if (!userDetails?.id || !token) {
       // Don't make API calls without a valid user ID and token
+      return;
+    }
+
+    // Only fetch caregiver-specific data for caregiver users
+    if (userDetails.role?.toLowerCase() !== 'caregiver') {
+      setStatusData(prev => ({
+        ...prev,
+        verificationLoading: false,
+        qualificationLoading: false,
+        certificatesLoading: false,
+        eligibilityChecked: true,
+      }));
       return;
     }
     

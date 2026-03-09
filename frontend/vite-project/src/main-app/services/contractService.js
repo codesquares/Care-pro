@@ -72,6 +72,10 @@ const ContractService = {
           orderId: contractData.orderId,
           schedule: contractData.schedule,
           serviceAddress: contractData.serviceAddress.trim(),
+          ...(contractData.serviceLatitude != null && contractData.serviceLongitude != null && {
+            serviceLatitude: contractData.serviceLatitude,
+            serviceLongitude: contractData.serviceLongitude
+          }),
           specialClientRequirements: contractData.specialClientRequirements?.trim() || '',
           accessInstructions: contractData.accessInstructions?.trim() || '',
           additionalNotes: contractData.additionalNotes?.trim() || ''
@@ -148,6 +152,10 @@ const ContractService = {
           contractId: revisionData.contractId,
           revisedSchedule: revisionData.revisedSchedule,
           serviceAddress: revisionData.serviceAddress?.trim() || '',
+          ...(revisionData.serviceLatitude != null && revisionData.serviceLongitude != null && {
+            serviceLatitude: revisionData.serviceLatitude,
+            serviceLongitude: revisionData.serviceLongitude
+          }),
           specialClientRequirements: revisionData.specialClientRequirements?.trim() || '',
           accessInstructions: revisionData.accessInstructions?.trim() || '',
           additionalNotes: revisionData.additionalNotes?.trim() || '',
@@ -246,7 +254,7 @@ const ContractService = {
    * @param {string} contractId - The contract ID to approve
    * @returns {Promise<Object>} - Approval result
    */
-  async clientApproveContract(contractId) {
+  async clientApproveContract(contractId, { serviceLatitude, serviceLongitude } = {}) {
     try {
       if (!contractId) {
         return { success: false, error: 'Contract ID is required' };
@@ -258,13 +266,20 @@ const ContractService = {
       }
 
       const API_URL = `${config.BASE_URL}/contracts/${contractId}/client-approve`;
-      
+
+      const body = {};
+      if (serviceLatitude != null && serviceLongitude != null) {
+        body.serviceLatitude = serviceLatitude;
+        body.serviceLongitude = serviceLongitude;
+      }
+
       const response = await fetch(API_URL, {
         method: 'PUT',
         headers: {
           'Content-Type': 'application/json',
           'Authorization': `Bearer ${authToken}`
-        }
+        },
+        body: JSON.stringify(body)
       });
 
       if (!response.ok) {

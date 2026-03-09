@@ -8,24 +8,24 @@ const footerSections = [
   {
     title: "Service Categories",
     links: [
-      { to: "/services/home-care", label: "Home Care" },
-      { to: "/services/adult-elderly-care", label: "Adult & Elderly Care" },
-      { to: "/services/child-care", label: "Child Care" },
-      { to: "/services/pet-care", label: "Pet Care" },
-      { to: "/services/home-medical-support", label: "Home Medical Support" },
-      { to: "/services/post-surgery-care", label: "Post Surgery Care" },
-      { to: "/services/mobility-support", label: "Mobility Support" },
-      { to: "/services/special-needs-care", label: "Special Needs Care" },
-      { to: "/services/therapy-wellness", label: "Therapy & Wellness" },
-      { to: "/services/palliative", label: "Palliative" },
+      { to: "/marketplace?category=home-care", label: "Home Care" },
+      { to: "/marketplace?category=adult-care", label: "Adult & Elderly Care" },
+      { to: "/marketplace?category=child-care", label: "Child Care" },
+      { to: "/marketplace?category=pet-care", label: "Pet Care" },
+      { to: "/marketplace?category=medical-support", label: "Home Medical Support" },
+      { to: "/marketplace?category=post-surgery-care", label: "Post Surgery Care" },
+      { to: "/marketplace?category=mobility-support", label: "Mobility Support" },
+      { to: "/marketplace?category=special-needs-care", label: "Special Needs Care" },
+      { to: "/marketplace", label: "Therapy & Wellness" },
+      { to: "/marketplace", label: "Palliative" },
     ],
   },
   {
     title: "For Clients",
     links: [
-      { to: "/post-requests", label: "Post Requests" },
-      { to: "/hire-care-professionals", label: "Hire Care Professionals" },
-      { to: "/how-carepro-works", label: "How Carepro works" },
+      { to: "/app/client/post-project", label: "Post Requests" },
+      { to: "/book-caregiver", label: "Hire Care Professionals" },
+      { to: "/book-caregiver", label: "How Carepro works" },
       { to: "/plans", label: "Pricing" },
       { to: "/carepro-guides", label: "Carepro Guides" },
     ],
@@ -33,8 +33,8 @@ const footerSections = [
   {
     title: "For Care Professionals",
     links: [
-      { to: "/become-care-professional", label: "Become a Care Professional" },
-      { to: "/how-it-works", label: "How it Works" },
+      { to: "/become-caregiver", label: "Become a Care Professional" },
+      { to: "/become-caregiver", label: "How it Works" },
       { to: "/view-clients-requests", label: "View Clients' Requests" },
       { to: "/carepro-guides", label: "Carepro Guides" },
     ],
@@ -42,12 +42,12 @@ const footerSections = [
   {
     title: "Product",
     links: [
-      { to: "/about", label: "About Carepro" },
-      { to: "/team", label: "Team" },
+      { to: "/about-us", label: "About Carepro" },
+      { to: "/about-us#team", label: "Team" },
       { to: "/trust-safety", label: "Trust & Safety" },
       { to: "/partnerships", label: "Partnerships" },
-      { to: "/invest", label: "Invest" },
-      { to: "/press-news", label: "Press & News" },
+      { to: "https://investor.oncarepro.com/", label: "Invest", external: true },
+      { to: "https://blog.oncarepro.com/", label: "Press & News", external: true },
     ],
   },
   {
@@ -100,7 +100,11 @@ const Footer = () => {
             <ul className="footer-links-list">
               {section.links.map((link, linkIndex) => (
                 <li key={linkIndex}>
-                  <Link to={link.to}>{link.label}</Link>
+                  {link.external ? (
+                    <a href={link.to} target="_blank" rel="noopener noreferrer">{link.label}</a>
+                  ) : (
+                    <Link to={link.to}>{link.label}</Link>
+                  )}
                 </li>
               ))}
             </ul>

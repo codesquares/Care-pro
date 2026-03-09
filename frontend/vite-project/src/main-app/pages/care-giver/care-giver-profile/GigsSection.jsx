@@ -1,6 +1,6 @@
 import { useEffect, useState, useMemo } from "react";
 import { useNavigate, useLocation } from "react-router-dom";
-import config from "../../../config"; // Import centralized config for API URLs
+import api from "../../../services/api";
 
 import clock from "../../../../assets/main-app/clock.png"; // Ensure you have an empty gigs image in your assets
 import Toast from "../../../components/toast/Toast";
@@ -25,7 +25,7 @@ const GigsSection = () => {
   const basePath = "/app/caregiver";
   const { toasts, showSuccess, showError, removeToast } = useToast();
   const { populateFromGig, resetForm } = useGigEdit();
-  const { canPublishGigs, isVerified, isQualified, hasCertificates, isLoading: statusLoading, eligibilityChecked } = useCaregiverStatus();
+  const { canPublishGigs, isVerified, isQualified, hasCertificates, isLoading: statusLoading, eligibilityChecked, hasErrors: statusHasErrors, refreshStatusData } = useCaregiverStatus();
 
   const handleNavigateToCreateGig = () => {
     // Reset form when creating new gig
@@ -69,25 +69,10 @@ const GigsSection = () => {
         throw new Error("Caregiver ID not found in local storage.");
       }
 
-      const token = localStorage.getItem('authToken');
-      const response = await fetch(
-        `${config.BASE_URL}/Gigs/UpdateGigStatusToPause/${gig.id}`,
-        {
-          method: 'PUT',
-          headers: {
-            'Content-Type': 'application/json',
-            'Authorization': `Bearer ${token}`
-          },
-          body: JSON.stringify({
-            status: 'published',
-            caregiverId: userDetails.id
-          })
-        }
-      );
-
-      if (!response.ok) {
-        throw new Error('Failed to publish gig');
-      }
+      await api.put(`/Gigs/UpdateGigStatusToPause/${gig.id}`, {
+        status: 'published',
+        caregiverId: userDetails.id
+      });
 
       // Update the gig status in local state
       setGigs(prevGigs => 
@@ -124,25 +109,10 @@ const GigsSection = () => {
         throw new Error("Caregiver ID not found in local storage.");
       }
 
-      const token = localStorage.getItem('authToken');
-      const response = await fetch(
-        `${config.BASE_URL}/Gigs/UpdateGigStatusToPause/${gig.id}`,
-        {
-          method: 'PUT',
-          headers: {
-            'Content-Type': 'application/json',
-            'Authorization': `Bearer ${token}`
-          },
-          body: JSON.stringify({
-            status: 'paused',
-            caregiverId: userDetails.id
-          })
-        }
-      );
-
-      if (!response.ok) {
-        throw new Error('Failed to pause gig');
-      }
+      await api.put(`/Gigs/UpdateGigStatusToPause/${gig.id}`, {
+        status: 'paused',
+        caregiverId: userDetails.id
+      });
 
       // Update the gig status in local state
       setGigs(prevGigs => 
@@ -264,21 +234,8 @@ const GigsSection = () => {
         throw new Error("Caregiver ID not found in local storage.");
       }
 
-      const token = localStorage.getItem('authToken');
-      const response = await fetch(
-        `${config.BASE_URL}/Gigs/caregiver/${userDetails.id}`, // Using centralized API config
-        {
-          headers: {
-            'Authorization': token ? `Bearer ${token}` : '',
-          },
-        }
-      );
-      if (!response.ok) {
-        throw new Error("Failed to fetch gigs data.");
-      }
-
-      const data = await response.json();
-      setGigs(data);
+      const response = await api.get(`/Gigs/caregiver/${userDetails.id}`);
+      setGigs(response.data);
       setIsLoading(false);
     } catch (err) {
       setError(err.message);
@@ -295,6 +252,13 @@ const GigsSection = () => {
       window.history.replaceState({}, document.title);
     }
   }, [location.state?.refreshGigs]);
+
+  // Retry loading caregiver status if it failed (e.g., due to transient auth issues)
+  useEffect(() => {
+    if (eligibilityChecked && statusHasErrors && refreshStatusData) {
+      refreshStatusData();
+    }
+  }, [eligibilityChecked, statusHasErrors]);
 
   if (isLoading) {
     return (
@@ -361,7 +325,7 @@ const GigsSection = () => {
         </div>
 
         {/* Active Gigs Limit Notice - Only show after eligibility has been checked */}
-        {(activeTab === "paused" || activeTab === "draft") && !canPublishNewGig && eligibilityChecked && (
+        {(activeTab === "paused" || activeTab === "draft") && !canPublishNewGig && eligibilityChecked && !statusHasErrors && (
           <div className="gig-limit-notice">
             {activeGigs.length >= 2 ? (
               <p>⚠️ You have reached the maximum of 2 active gigs. Pause an active gig to publish more.</p>

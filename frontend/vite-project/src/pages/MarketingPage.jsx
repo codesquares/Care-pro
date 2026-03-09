@@ -282,7 +282,7 @@ const MarketingPage = () => {
               </p>
               <div className="how-actions split">
                 <button className="how-btn outline">Browse Services</button>
-                <button className="how-btn fill">Post job request</button>
+                <button className="how-btn fill" onClick={() => navigate("/app/client/post-project")}>Post job request</button>
               </div>
             </div>
 

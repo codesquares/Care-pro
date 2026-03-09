@@ -4,6 +4,7 @@ import axios from 'axios';
 import { toast } from 'react-toastify';
 import './users-management.css';
 import config from '../../../config';
+import api from '../../../services/api';
 
 const UsersManagement = () => {
   const [users, setUsers] = useState([]);
@@ -19,28 +20,21 @@ const UsersManagement = () => {
   
   const pageSize = 10;
   
-  // Fetch users from API
+  // Fetch users from admin caregiver + client endpoints
   useEffect(() => {
     const fetchUsers = async () => {
       try {
         setLoading(true);
-        const token = localStorage.getItem('authToken');
         
-        if (!token) {
-          throw new Error('Authentication token not found');
-        }
+        const [caregiversRes, clientsRes] = await Promise.all([
+          api.get('/CareGivers/AllCaregiversAdmin'),
+          api.get('/Clients/AllClientUsers')
+        ]);
         
-        const response = await axios.get(`${config.BASE_URL}/Auths/ApplicantUsers`, {
-          headers: {
-            Authorization: `Bearer ${token}`
-          },
-          params: {
-            pageNumber: currentPage,
-            pageSize
-          }
-        });
+        const caregivers = (caregiversRes.data || []).map(u => ({ ...u, role: u.role || 'Caregiver' }));
+        const clients = (clientsRes.data || []).map(u => ({ ...u, role: u.role || 'Client' }));
         
-        setUsers(response.data);
+        setUsers([...caregivers, ...clients]);
         setError(null);
       } catch (err) {
         console.error('Error fetching users:', err);
@@ -73,17 +67,13 @@ const UsersManagement = () => {
         return;
       }
       
-      const token = localStorage.getItem('authToken');
-      
-      await axios.post(`${config.BASE_URL}/Notifications/SendNotification`, {
-        userId: selectedUser.id,
-        message: notificationText,
+      const userDetails = JSON.parse(localStorage.getItem('userDetails') || '{}');
+      await api.post('/Notifications', {
+        recipientId: selectedUser.id,
+        senderId: userDetails.id,
+        content: notificationText,
         title: 'Admin Notification',
-        type: 'Admin'
-      }, {
-        headers: {
-          Authorization: `Bearer ${token}`
-        }
+        type: 'system_alert'
       });
       
       toast.success(`Notification sent to ${selectedUser.firstName} ${selectedUser.lastName}`);

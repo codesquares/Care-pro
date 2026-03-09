@@ -92,7 +92,7 @@ const SubscriptionAdmin = () => {
             </div>
             <div className="sub-admin__metric">
               <span className="sub-admin__metric-label">MRR</span>
-              <span className="sub-admin__metric-value">₦{(analytics.mrr || 0).toLocaleString()}</span>
+              <span className="sub-admin__metric-value">₦{(analytics.monthlyRecurringRevenue || 0).toLocaleString()}</span>
             </div>
             <div className="sub-admin__metric">
               <span className="sub-admin__metric-label">Churn Rate</span>
@@ -100,7 +100,7 @@ const SubscriptionAdmin = () => {
             </div>
             <div className="sub-admin__metric">
               <span className="sub-admin__metric-label">New This Month</span>
-              <span className="sub-admin__metric-value">{analytics.newThisMonth || 0}</span>
+              <span className="sub-admin__metric-value">{analytics.newSubscriptionsThisMonth || 0}</span>
             </div>
           </div>
         )}

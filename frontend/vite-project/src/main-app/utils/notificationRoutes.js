@@ -119,8 +119,21 @@ const TYPE_MAP = {
   'new_signup':                  'Signup',
   'user_signup':                 'Signup',
 
+  // Care Request Matching
+  'care_request_matched':              'CareRequestMatched',
+  'carerequestmatched':                'CareRequestMatched',
+  'care_request_no_match':             'CareRequestNoMatch',
+  'carerequestnomatch':                'CareRequestNoMatch',
+  'care_request_admin_match_update':   'CareRequestAdminMatchUpdate',
+  'carerequestadminmatchupdate':       'CareRequestAdminMatchUpdate',
+  'care_request_admin_no_match':       'CareRequestAdminNoMatch',
+  'carerequestadminnomatch':           'CareRequestAdminNoMatch',
+
   // Misc
   'caregiver_report':            'SystemNotice',
+
+  // Broadcast
+  'broadcast':                   'Broadcast',
 };
 
 // Set of all canonical types for fast exact-match check
@@ -132,6 +145,9 @@ const KNOWN_CANONICAL = new Set([
   'OrderCompleted', 'OrderDisputed',
   'NewReview', 'NewGig', 'WithdrawalRequest', 'VerificationUpdate',
   'SystemNotice', 'SystemAlert', 'Signup',
+  'CareRequestMatched', 'CareRequestNoMatch',
+  'CareRequestAdminMatchUpdate', 'CareRequestAdminNoMatch',
+  'Broadcast',
 ]);
 
 /**
@@ -301,7 +317,19 @@ export const getNotificationRoute = (notification, userRole) => {
         if (isCaregiver) return `/app/caregiver/order-details/${relatedEntityId}`;
       }
       return null;
+    // ── Care Request Matching ─────────────────────────
+    case 'CareRequestMatched':
+      if (isClient && relatedEntityId) return `/app/client/care-requests/${relatedEntityId}/matches`;
+      return null;
 
+    case 'CareRequestNoMatch':
+      if (isClient && relatedEntityId) return `/app/client/care-requests/${relatedEntityId}/matches`;
+      return null;
+
+    case 'CareRequestAdminMatchUpdate':
+    case 'CareRequestAdminNoMatch':
+      if (isAdmin && relatedEntityId) return `/app/admin/care-requests/${relatedEntityId}`;
+      return null;
     // ── Signup (admin only) ──────────────────────────────
     case 'Signup':
       if (isAdmin) return `/app/admin/users`;
@@ -349,6 +377,13 @@ export const getNotificationActionLabel = (rawType) => {
       return 'View Withdrawal';
     case 'VerificationUpdate':
       return 'View Verification';
+    case 'CareRequestMatched':
+      return 'View Matches';
+    case 'CareRequestNoMatch':
+      return 'View Request';
+    case 'CareRequestAdminMatchUpdate':
+    case 'CareRequestAdminNoMatch':
+      return 'Review Request';
     default:
       return 'View Details';
   }
@@ -403,6 +438,14 @@ export const getNotificationTypeIcon = (rawType) => {
       return '💸';
     case 'VerificationUpdate':
       return '🔒';
+    case 'CareRequestMatched':
+      return '🤝';
+    case 'CareRequestNoMatch':
+      return '🔍';
+    case 'CareRequestAdminMatchUpdate':
+      return '📋';
+    case 'CareRequestAdminNoMatch':
+      return '⚠️';
     default:
       return '🔔';
   }

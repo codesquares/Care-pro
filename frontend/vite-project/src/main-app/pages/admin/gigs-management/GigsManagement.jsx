@@ -13,24 +13,35 @@ const GigsManagement = () => {
   const [selectedGig, setSelectedGig] = useState(null);
   const [showGigModal, setShowGigModal] = useState(false);
   const [statistics, setStatistics] = useState(null);
+  const [currentPage, setCurrentPage] = useState(1);
+  const [pageSize] = useState(20);
+  const [totalCount, setTotalCount] = useState(0);
+  const [hasMore, setHasMore] = useState(false);
 
   useEffect(() => {
     loadGigs();
-  }, []);
+  }, [currentPage, statusFilter, searchTerm, categoryFilter]);
 
   useEffect(() => {
-    filterGigs();
-  }, [gigs, searchTerm, statusFilter, categoryFilter]);
+    setFilteredGigs(gigs);
+  }, [gigs]);
 
   const loadGigs = async () => {
     try {
       setLoading(true);
       setError(null);
+
+      const params = { page: currentPage, pageSize };
+      if (statusFilter !== 'All') params.status = statusFilter;
+      if (searchTerm) params.search = searchTerm;
+      if (categoryFilter !== 'All') params.category = categoryFilter;
       
-      const result = await adminService.getAllGigs();
+      const result = await adminService.getAllGigs(params);
       
       if (result.success) {
         setGigs(result.data);
+        setTotalCount(result.totalCount || result.count || result.data.length);
+        setHasMore(result.hasMore || false);
         const stats = adminService.getGigStatistics(result.data);
         setStatistics(stats);
       } else {
@@ -42,33 +53,6 @@ const GigsManagement = () => {
     } finally {
       setLoading(false);
     }
-  };
-
-  const filterGigs = () => {
-    let filtered = [...gigs];
-
-    // Filter by status
-    if (statusFilter !== 'All') {
-      filtered = adminService.filterGigsByStatus(filtered, statusFilter);
-    }
-
-    // Filter by category
-    if (categoryFilter !== 'All') {
-      filtered = filtered.filter(gig => gig.category === categoryFilter);
-    }
-
-    // Search filter
-    if (searchTerm) {
-      const term = searchTerm.toLowerCase();
-      filtered = filtered.filter(gig =>
-        gig.title?.toLowerCase().includes(term) ||
-        gig.caregiverName?.toLowerCase().includes(term) ||
-        gig.category?.toLowerCase().includes(term) ||
-        gig.tags?.toLowerCase().includes(term)
-      );
-    }
-
-    setFilteredGigs(filtered);
   };
 
   const handleViewGig = async (gigId) => {
@@ -261,6 +245,7 @@ const GigsManagement = () => {
               setSearchTerm('');
               setStatusFilter('All');
               setCategoryFilter('All');
+              setCurrentPage(1);
             }}
           >
             <i className="fas fa-redo"></i> Reset Filters
@@ -271,7 +256,8 @@ const GigsManagement = () => {
       {/* Results Count */}
       <div className="results-info">
         <p>
-          Showing <strong>{filteredGigs.length}</strong> of <strong>{gigs.length}</strong> gigs
+          Showing <strong>{filteredGigs.length}</strong> of <strong>{totalCount}</strong> gigs
+          {totalCount > pageSize && <span> (Page {currentPage})</span>}
         </p>
       </div>
 
@@ -352,6 +338,27 @@ const GigsManagement = () => {
           </table>
         )}
       </div>
+
+      {/* Pagination Controls */}
+      {totalCount > pageSize && (
+        <div className="pagination-controls">
+          <button
+            className="btn-secondary"
+            disabled={currentPage <= 1}
+            onClick={() => setCurrentPage(prev => prev - 1)}
+          >
+            <i className="fas fa-chevron-left"></i> Previous
+          </button>
+          <span className="page-info">Page {currentPage} of {Math.ceil(totalCount / pageSize)}</span>
+          <button
+            className="btn-secondary"
+            disabled={!hasMore && currentPage >= Math.ceil(totalCount / pageSize)}
+            onClick={() => setCurrentPage(prev => prev + 1)}
+          >
+            Next <i className="fas fa-chevron-right"></i>
+          </button>
+        </div>
+      )}
 
       {/* Gig Details Modal */}
       {showGigModal && selectedGig && (

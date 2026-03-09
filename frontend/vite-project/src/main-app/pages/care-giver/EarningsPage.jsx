@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
-import { FaDollarSign, FaClipboardList, FaChartLine, FaCreditCard, FaInfoCircle, FaMoneyBillWave, FaClock } from 'react-icons/fa';
+import { FaDollarSign, FaClipboardList, FaChartLine, FaCreditCard, FaInfoCircle, FaClock } from 'react-icons/fa';
 import walletService from '../../services/walletService';
 import { withdrawalService } from '../../services/withdrawalService';
 import './earnings-page.css';
@@ -111,10 +111,59 @@ const EarningsPage = () => {
   const hasData = monthlyData.some(value => value > 0);
   const maxValue = Math.max(...monthlyData);
 
+  // Build a unified list of all transactions from ledger entries + withdrawal history
+  const allTransactions = (() => {
+    const transactions = [];
+
+    // Add ledger entries (orders received, funds released, refunds, adjustments, etc.)
+    if (Array.isArray(ledgerEntries)) {
+      ledgerEntries.forEach(entry => {
+        const typeInfo = walletService.getLedgerEntryTypeInfo(entry.type);
+        transactions.push({
+          id: entry.id || `ledger-${entry.createdAt}`,
+          date: entry.createdAt,
+          activity: typeInfo.label,
+          icon: typeInfo.icon,
+          description: entry.description || typeInfo.label,
+          order: entry.orderId || null,
+          amount: entry.amount || 0,
+          isCredit: typeInfo.isCredit,
+          source: 'ledger',
+        });
+      });
+    }
+
+    // Add withdrawal history entries (only if not already represented in ledger as WithdrawalCompleted)
+    if (Array.isArray(withdrawalHistory)) {
+      withdrawalHistory.forEach(withdrawal => {
+        // Avoid duplicates: skip if there's a matching ledger WithdrawalCompleted entry
+        const alreadyInLedger = ledgerEntries.some(
+          e => e.type === 'WithdrawalCompleted' && e.withdrawalRequestId === withdrawal.id
+        );
+        if (!alreadyInLedger) {
+          transactions.push({
+            id: withdrawal.id || `wd-${withdrawal.createdAt}`,
+            date: withdrawal.withdrawalRequestDate || withdrawal.createdAt,
+            activity: withdrawal.activity || 'Withdrawal',
+            icon: '🏦',
+            description: withdrawal.description || 'Withdrawal request',
+            order: withdrawal.completedAt ? new Date(withdrawal.completedAt).toLocaleDateString() : 'Pending',
+            amount: -(withdrawal.amountRequested || 0),
+            isCredit: false,
+            source: 'withdrawal',
+          });
+        }
+      });
+    }
+
+    // Sort by date descending (most recent first)
+    transactions.sort((a, b) => new Date(b.date) - new Date(a.date));
+    return transactions;
+  })();
+
   // Filter transactions for current year
-  const currentYearTransactions = withdrawalHistory.filter(withdrawal => {
-    const dateField = withdrawal.withdrawalRequestDate || withdrawal.createdAt;
-    const date = new Date(dateField);
+  const currentYearTransactions = allTransactions.filter(tx => {
+    const date = new Date(tx.date);
     return date.getFullYear() === currentYear;
   });
 
@@ -262,20 +311,20 @@ const EarningsPage = () => {
                 </tr>
               </thead>
               <tbody>
-                {currentYearTransactions.map((withdrawal) => (
-                  <tr key={withdrawal.id}>
-                    <td className="date-cell">{new Date(withdrawal.withdrawalRequestDate || withdrawal.createdAt).toLocaleDateString()}</td>
+                {currentYearTransactions.map((tx) => (
+                  <tr key={tx.id}>
+                    <td className="date-cell">{new Date(tx.date).toLocaleDateString()}</td>
                     <td className="activity-cell-container">
                       <div className="activity-cell">
-                        <span className="activity-icon withdrawal">
-                          <FaMoneyBillWave className="withdrawal-icon" />
-                        </span>
-                        <span>{withdrawal.activity || 'Withdrawal'}</span>
+                        <span className="activity-icon-emoji">{tx.icon}</span>
+                        <span>{tx.activity}</span>
                       </div>
                     </td>
-                    <td className="description-cell">{withdrawal.description || 'N/A'}</td>
-                    <td className="order-cell">{withdrawal.completedAt ? new Date(withdrawal.completedAt).toLocaleDateString() : 'Pending'}</td>
-                    <td className="amount-cell amount negative">-{formatCurrency(withdrawal.amountRequested || 0)}</td>
+                    <td className="description-cell">{tx.description || 'N/A'}</td>
+                    <td className="order-cell">{tx.order || '—'}</td>
+                    <td className={`amount-cell amount ${tx.isCredit ? 'positive' : 'negative'}`}>
+                      {tx.isCredit ? '+' : '-'}{formatCurrency(Math.abs(tx.amount))}
+                    </td>
                   </tr>
                 ))}
               </tbody>

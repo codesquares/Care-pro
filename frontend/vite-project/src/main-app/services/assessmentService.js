@@ -371,32 +371,9 @@ const assessmentService = {
         throw new Error('CareGiver ID is required');
       }
 
-      const token = localStorage.getItem('authToken');
-      if (!token) {
-        // Return default status if not authenticated
-        return {
-          isQualified: false,
-          assessmentCompleted: false,
-          canRetake: true,
-          fetchedFromAPI: false
-        };
-      }
+      const response = await api.get(`/Assessments/user/${careGiverId}`);
 
-      const apiUrl = `${config.BASE_URL}/Assessments/user/${careGiverId}`; // Using centralized API config
-
-      const response = await fetch(apiUrl, {
-        method: 'GET',
-        headers: {
-          'accept': '*/*',
-          'Authorization': `Bearer ${token}`,
-        }
-      });
-
-      if (!response.ok) {
-        throw new Error(`API request failed: ${response.status} ${response.statusText}`);
-      }
-
-      const assessmentData = await response.json();
+      const assessmentData = response.data;
 
       // Check if assessment exists, using the assessedDate field, check the last assessment and see if the score is 70 or above
       // check if assessmentData is an array and has at least one entry

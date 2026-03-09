@@ -15,7 +15,7 @@ export const allUserService = {
       
       // Define the endpoints and their corresponding roles
       const endpoints = [
-        { url: '/CareGivers/AllCaregivers', role: 'caregiver' },
+        { url: '/CareGivers/AllCaregiversAdmin', role: 'caregiver' },
         { url: '/Clients/AllClientUsers', role: 'client' },
         { url: '/Admins/AllAdminUsers', role: 'admin' }
       ];

@@ -9,6 +9,7 @@ import { useMessageContext } from '../../context/MessageContext';
 import { createNotification } from '../../services/notificationService';
 import ClientGigService from '../../services/clientGigService';
 import ClientOrderService from '../../services/clientOrderService';
+import bookingCommitmentService from '../../services/bookingCommitmentService';
 
 const ChatArea = ({ messages, recipient, userId, onSendMessage, isOfflineMode = false }) => {
   const location = useLocation();
@@ -384,12 +385,28 @@ const ChatArea = ({ messages, recipient, userId, onSendMessage, isOfflineMode = 
     }
   };
 
+  // Helper: navigate to cart or commitment payment based on fee status
+  const navigateWithCommitmentCheck = async (gigId) => {
+    try {
+      const result = await bookingCommitmentService.checkAccess(gigId);
+      if (result.success && result.data && !result.data.hasAccess) {
+        // Commitment fee not paid — go to commitment payment page
+        navigate(`/app/client/commitment-payment/${gigId}`);
+      } else {
+        // Commitment fee paid (or check failed — fall back to cart)
+        navigate(`/app/client/cart/${gigId}`);
+      }
+    } catch {
+      // On error, fall back to cart
+      navigate(`/app/client/cart/${gigId}`);
+    }
+  };
+
   // Handle Hire Me button click with priority logic
-  const handleHireMeClick = () => {
+  const handleHireMeClick = async () => {
     // Priority 1: Use serviceId from navigation state (direct from HomeCareService)
     if (serviceId) {
-      // Navigate to the cart page for this service
-      navigate(`/app/client/cart/${serviceId}`);
+      await navigateWithCommitmentCheck(serviceId);
       return;
     }
 
@@ -403,9 +420,9 @@ const ChatArea = ({ messages, recipient, userId, onSendMessage, isOfflineMode = 
     }
 
     if (caregiverGigs.length === 1) {
-      // Direct navigation to cart if only one service
+      // Direct navigation with commitment check if only one service
       const service = caregiverGigs[0];
-      navigate(`/app/client/cart/${service.id}`);
+      await navigateWithCommitmentCheck(service.id);
     } else {
       // Open modal for multiple services
       setShowServiceModal(true);
@@ -414,7 +431,7 @@ const ChatArea = ({ messages, recipient, userId, onSendMessage, isOfflineMode = 
 
   // Handle service selection from modal
   const handleSelectService = (service) => {
-    navigate(`/app/client/cart/${service.id}`);
+    navigateWithCommitmentCheck(service.id);
   };
 
   const handleSendMessage = async () => {

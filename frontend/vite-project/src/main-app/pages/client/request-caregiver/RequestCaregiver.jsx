@@ -47,6 +47,7 @@ const RequestCaregiver = () => {
   const [step, setStep] = useState(1);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [submitted, setSubmitted] = useState(false);
+  const [submittedRequestId, setSubmittedRequestId] = useState(null);
 
   const [form, setForm] = useState({
     serviceCategory: '',
@@ -129,7 +130,8 @@ const RequestCaregiver = () => {
 
     try {
       setIsSubmitting(true);
-      await CareRequestService.submitCareRequest(form);
+      const result = await CareRequestService.submitCareRequest(form);
+      setSubmittedRequestId(result?.id || result?.careRequestId || null);
       setSubmitted(true);
       toast.success('Care request submitted successfully!');
     } catch (err) {
@@ -147,15 +149,24 @@ const RequestCaregiver = () => {
           <div className="success-icon">✅</div>
           <h2>Request Submitted!</h2>
           <p>
-            We've received your care request. Our team will review it and match you with
-            available caregivers. You'll receive notifications when caregivers respond.
+            We've received your care request and our matching engine is now finding
+            the best caregivers for you. You'll be notified when matches are ready.
           </p>
+          <div className="matching-status-hint">
+            <div className="matching-pulse" />
+            <span>Finding caregivers...</span>
+          </div>
           <div className="success-actions">
-            <button className="btn-primary" onClick={() => navigate('/app/client/dashboard')}>
+            {submittedRequestId && (
+              <button
+                className="btn-primary"
+                onClick={() => navigate(`/app/client/care-requests/${submittedRequestId}/matches`)}
+              >
+                View Matches
+              </button>
+            )}
+            <button className="btn-secondary" onClick={() => navigate('/app/client/dashboard')}>
               Back to Dashboard
-            </button>
-            <button className="btn-secondary" onClick={() => navigate('/marketplace')}>
-              Browse Marketplace
             </button>
           </div>
         </div>

@@ -2,6 +2,7 @@ import { useState, useEffect } from "react";
 import { toast } from "react-toastify";
 import ContractService from "../../services/contractService";
 import { createNotification } from "../../services/notificationService";
+import AddressInput from "../AddressInput";
 import "./ContractGenerationModal.css";
 
 /**
@@ -30,6 +31,7 @@ const ContractGenerationModal = ({
     additionalNotes: "",
     revisionNotes: ""
   });
+  const [addressCoordinates, setAddressCoordinates] = useState(null);
 
   /**
    * Get visits per week from order data
@@ -80,6 +82,7 @@ const ContractGenerationModal = ({
           additionalNotes: existingContract.caregiverAdditionalNotes || "",
           revisionNotes: ""
         });
+        setAddressCoordinates(null);
       } else {
         // Initialize empty schedule entries
         const initialSchedule = Array(visitsPerWeek).fill(null).map(() => ({
@@ -95,6 +98,7 @@ const ContractGenerationModal = ({
           additionalNotes: "",
           revisionNotes: ""
         });
+        setAddressCoordinates(null);
       }
     }
   }, [isOpen, visitsPerWeek, isRevision, existingContract]);
@@ -106,6 +110,19 @@ const ContractGenerationModal = ({
     setSchedule(prev => prev.map((visit, i) => 
       i === index ? { ...visit, [field]: value } : visit
     ));
+  };
+
+  const handleAddressChange = (address) => {
+    setFormData(prev => ({ ...prev, serviceAddress: address }));
+  };
+
+  const handleAddressValidation = (validation) => {
+    if (validation?.isValid && validation?.coordinates?.latitude != null) {
+      setAddressCoordinates(validation.coordinates);
+    }
+    if (validation?.isValid && validation?.formattedAddress) {
+      setFormData(prev => ({ ...prev, serviceAddress: validation.formattedAddress }));
+    }
   };
 
   const handleFormChange = (field, value) => {
@@ -149,6 +166,10 @@ const ContractGenerationModal = ({
           contractId: existingContract.id,
           revisedSchedule: schedule,
           serviceAddress: formData.serviceAddress,
+          ...(addressCoordinates && {
+            serviceLatitude: addressCoordinates.latitude,
+            serviceLongitude: addressCoordinates.longitude
+          }),
           specialClientRequirements: formData.specialClientRequirements,
           accessInstructions: formData.accessInstructions,
           additionalNotes: formData.additionalNotes,
@@ -160,6 +181,10 @@ const ContractGenerationModal = ({
           orderId: orderData?.id || orderData?.orderId,
           schedule: schedule,
           serviceAddress: formData.serviceAddress,
+          ...(addressCoordinates && {
+            serviceLatitude: addressCoordinates.latitude,
+            serviceLongitude: addressCoordinates.longitude
+          }),
           specialClientRequirements: formData.specialClientRequirements,
           accessInstructions: formData.accessInstructions,
           additionalNotes: formData.additionalNotes
@@ -313,10 +338,10 @@ const ContractGenerationModal = ({
             
             <div className="form-group">
               <label>Service Address <span className="required">*</span></label>
-              <input
-                type="text"
+              <AddressInput
                 value={formData.serviceAddress}
-                onChange={(e) => handleFormChange('serviceAddress', e.target.value)}
+                onChange={handleAddressChange}
+                onValidation={handleAddressValidation}
                 placeholder="Enter the full service address"
                 required
               />
