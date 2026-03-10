@@ -511,6 +511,74 @@
   margin-top: 6px;
 }
 
+/* Check-in permission guide overlay */
+.checkin-permission-overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.5);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 1000;
+  padding: 16px;
+}
+
+.checkin-permission-guide {
+  background: #fff;
+  border-radius: 12px;
+  padding: 24px;
+  max-width: 420px;
+  width: 100%;
+  max-height: 80vh;
+  overflow-y: auto;
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.2);
+}
+
+.checkin-permission-guide h3 {
+  margin: 0 0 12px;
+  font-size: 18px;
+  color: #333;
+}
+
+.checkin-permission-guide p {
+  margin: 0 0 10px;
+  font-size: 14px;
+  color: #555;
+  line-height: 1.5;
+}
+
+.checkin-permission-steps ol {
+  padding-left: 20px;
+  margin: 8px 0 16px;
+}
+
+.checkin-permission-steps li {
+  font-size: 13px;
+  color: #444;
+  margin-bottom: 6px;
+  line-height: 1.5;
+}
+
+.checkin-permission-actions {
+  display: flex;
+  gap: 10px;
+  margin-top: 18px;
+}
+
+.checkin-permission-dismiss {
+  padding: 10px 18px;
+  border: 1px solid #ddd;
+  border-radius: 8px;
+  background: #fff;
+  color: #666;
+  font-size: 14px;
+  cursor: pointer;
+}
+
+.checkin-permission-dismiss:hover {
+  background: #f5f5f5;
+}
+
 /* ===================================================
    Report Action Buttons
    =================================================== */
@@ -1032,4 +1100,136 @@
     padding: 5px 10px;
     font-size: 11px;
   }
+}
+
+/* ===================================================
+   Task Proposal Styles (within task sheets)
+   =================================================== */
+
+/* Pending banner */
+.ts-pending-banner {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 10px 12px;
+  margin-bottom: 8px;
+  background: #fff3e0;
+  border: 1px solid #ffcc80;
+  border-radius: 6px;
+  font-size: 13px;
+  color: #e65100;
+  font-weight: 500;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.ts-pending-banner-actions {
+  display: flex;
+  gap: 6px;
+}
+
+.ts-pending-accept-all,
+.ts-pending-reject-all {
+  padding: 4px 12px;
+  border: none;
+  border-radius: 4px;
+  font-size: 12px;
+  cursor: pointer;
+  font-weight: 500;
+}
+
+.ts-pending-accept-all {
+  background: #4caf50;
+  color: white;
+}
+
+.ts-pending-reject-all {
+  background: #f44336;
+  color: white;
+}
+
+.ts-pending-accept-all:disabled,
+.ts-pending-reject-all:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+/* Task item states */
+.ts-task-item--pending {
+  border-left: 3px solid #ff9800;
+  background: #fffde7;
+}
+
+.ts-task-item--rejected {
+  border-left: 3px solid #f44336;
+  opacity: 0.65;
+}
+
+.ts-task-text--rejected {
+  text-decoration: line-through;
+  color: #999;
+}
+
+/* Task badges */
+.ts-task-client-badge {
+  font-size: 10px;
+  padding: 1px 6px;
+  border-radius: 10px;
+  background: #e3f2fd;
+  color: #1565c0;
+  margin-left: 4px;
+}
+
+.ts-task-pending-badge {
+  font-size: 10px;
+  padding: 1px 6px;
+  border-radius: 10px;
+  background: #fff3e0;
+  color: #e65100;
+  margin-left: 4px;
+}
+
+.ts-task-rejected-badge {
+  font-size: 10px;
+  padding: 1px 6px;
+  border-radius: 10px;
+  background: #ffebee;
+  color: #c62828;
+  margin-left: 4px;
+}
+
+/* Inline accept/reject buttons */
+.ts-task-proposal-actions {
+  display: flex;
+  gap: 4px;
+  margin-left: auto;
+}
+
+.ts-task-accept-btn,
+.ts-task-reject-btn {
+  padding: 2px 8px;
+  border: none;
+  border-radius: 3px;
+  font-size: 12px;
+  cursor: pointer;
+  font-weight: 600;
+  line-height: 1.2;
+}
+
+.ts-task-accept-btn {
+  background: #4caf50;
+  color: white;
+}
+
+.ts-task-reject-btn {
+  background: #f44336;
+  color: white;
+}
+
+.ts-task-accept-btn:hover {
+  opacity: 0.85;
+}
+
+.ts-task-reject-btn:hover {
+  opacity: 0.85;
 }

@@ -369,7 +369,7 @@ const PublicMarketplace = () => {
                     <div 
                       key={service.id} 
                       className="matched-service-card"
-                      onClick={() => navigate(`/marketplace/service/${service.id}`)}
+                      onClick={() => navigate(`/service/${service.id}`)}
                     >
                       <div className="match-score-badge">
                         <span className="score">{service.matchScore}%</span>

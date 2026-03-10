@@ -6,9 +6,24 @@ import config from "../config";
 
 const VisitCheckinService = {
   /**
+   * Check the current geolocation permission state.
+   * @returns {Promise<string>} "granted" | "denied" | "prompt" | "unsupported"
+   */
+  async checkPermission() {
+    if (!navigator.geolocation) return "unsupported";
+    if (!navigator.permissions?.query) return "prompt"; // Permissions API not available, let geolocation prompt naturally
+    try {
+      const status = await navigator.permissions.query({ name: "geolocation" });
+      return status.state; // "granted" | "denied" | "prompt"
+    } catch {
+      return "prompt";
+    }
+  },
+
+  /**
    * Get the caregiver's current GPS position from the browser.
    * @param {Object} [options] - Geolocation options
-   * @returns {Promise<Object>} { success, coords: { latitude, longitude, accuracy }, error }
+   * @returns {Promise<Object>} { success, coords: { latitude, longitude, accuracy }, error, permissionDenied }
    */
   getCurrentPosition(options = {}) {
     return new Promise((resolve) => {
@@ -33,8 +48,10 @@ const VisitCheckinService = {
         },
         (err) => {
           let message;
+          let permissionDenied = false;
           switch (err.code) {
             case err.PERMISSION_DENIED:
+              permissionDenied = true;
               message =
                 "Location access denied. Please enable location permissions in your browser settings to check in.";
               break;
@@ -49,7 +66,7 @@ const VisitCheckinService = {
             default:
               message = "An unknown error occurred while getting your location.";
           }
-          resolve({ success: false, error: message });
+          resolve({ success: false, error: message, permissionDenied });
         },
         {
           enableHighAccuracy: true,

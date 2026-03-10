@@ -62,13 +62,7 @@ const ContractService = {
 
       const API_URL = `${config.BASE_URL}/contracts/caregiver/generate`;
       
-      const response = await fetch(API_URL, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': `Bearer ${authToken}`
-        },
-        body: JSON.stringify({
+      const requestBody = {
           orderId: contractData.orderId,
           schedule: contractData.schedule,
           serviceAddress: contractData.serviceAddress.trim(),
@@ -79,7 +73,20 @@ const ContractService = {
           specialClientRequirements: contractData.specialClientRequirements?.trim() || '',
           accessInstructions: contractData.accessInstructions?.trim() || '',
           additionalNotes: contractData.additionalNotes?.trim() || ''
-        })
+      };
+
+      // NEW — optional additional tasks caregiver wants to add
+      if (contractData.additionalTasks && Array.isArray(contractData.additionalTasks) && contractData.additionalTasks.length > 0) {
+        requestBody.additionalTasks = contractData.additionalTasks;
+      }
+
+      const response = await fetch(API_URL, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${authToken}`
+        },
+        body: JSON.stringify(requestBody)
       });
 
       if (!response.ok) {
@@ -142,13 +149,7 @@ const ContractService = {
 
       const API_URL = `${config.BASE_URL}/contracts/caregiver/revise`;
       
-      const response = await fetch(API_URL, {
-        method: 'PUT',
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': `Bearer ${authToken}`
-        },
-        body: JSON.stringify({
+      const requestBody = {
           contractId: revisionData.contractId,
           revisedSchedule: revisionData.revisedSchedule,
           serviceAddress: revisionData.serviceAddress?.trim() || '',
@@ -160,7 +161,25 @@ const ContractService = {
           accessInstructions: revisionData.accessInstructions?.trim() || '',
           additionalNotes: revisionData.additionalNotes?.trim() || '',
           revisionNotes: revisionData.revisionNotes?.trim() || ''
-        })
+      };
+
+      // NEW — responses to client-proposed tasks
+      if (revisionData.proposedTaskResponses && Array.isArray(revisionData.proposedTaskResponses) && revisionData.proposedTaskResponses.length > 0) {
+        requestBody.proposedTaskResponses = revisionData.proposedTaskResponses;
+      }
+
+      // NEW — additional tasks caregiver wants to add during revision
+      if (revisionData.additionalTasks && Array.isArray(revisionData.additionalTasks) && revisionData.additionalTasks.length > 0) {
+        requestBody.additionalTasks = revisionData.additionalTasks;
+      }
+
+      const response = await fetch(API_URL, {
+        method: 'PUT',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${authToken}`
+        },
+        body: JSON.stringify(requestBody)
       });
 
       if (!response.ok) {
@@ -252,9 +271,14 @@ const ContractService = {
   /**
    * Client approves a contract
    * @param {string} contractId - The contract ID to approve
+   * @param {Object} options - Approval options
+   * @param {number} [options.serviceLatitude] - GPS latitude
+   * @param {number} [options.serviceLongitude] - GPS longitude
+   * @param {string} [options.serviceAddress] - Confirmed/edited service address
+   * @param {boolean} [options.confirmAtServiceAddress] - Whether client confirmed they are at the address
    * @returns {Promise<Object>} - Approval result
    */
-  async clientApproveContract(contractId, { serviceLatitude, serviceLongitude } = {}) {
+  async clientApproveContract(contractId, { serviceLatitude, serviceLongitude, serviceAddress, confirmAtServiceAddress } = {}) {
     try {
       if (!contractId) {
         return { success: false, error: 'Contract ID is required' };
@@ -271,6 +295,12 @@ const ContractService = {
       if (serviceLatitude != null && serviceLongitude != null) {
         body.serviceLatitude = serviceLatitude;
         body.serviceLongitude = serviceLongitude;
+      }
+      if (serviceAddress != null) {
+        body.serviceAddress = serviceAddress;
+      }
+      if (confirmAtServiceAddress != null) {
+        body.confirmAtServiceAddress = confirmAtServiceAddress;
       }
 
       const response = await fetch(API_URL, {
@@ -327,16 +357,23 @@ const ContractService = {
 
       const API_URL = `${config.BASE_URL}/contracts/${contractId}/client-request-review`;
       
+      const requestBody = {
+          comments: reviewData.comments.trim(),
+          preferredScheduleNotes: reviewData.preferredScheduleNotes?.trim() || ''
+      };
+
+      // NEW — optional array of tasks client wants to propose
+      if (reviewData.proposedTasks && Array.isArray(reviewData.proposedTasks) && reviewData.proposedTasks.length > 0) {
+        requestBody.proposedTasks = reviewData.proposedTasks;
+      }
+
       const response = await fetch(API_URL, {
         method: 'PUT',
         headers: {
           'Content-Type': 'application/json',
           'Authorization': `Bearer ${authToken}`
         },
-        body: JSON.stringify({
-          comments: reviewData.comments.trim(),
-          preferredScheduleNotes: reviewData.preferredScheduleNotes?.trim() || ''
-        })
+        body: JSON.stringify(requestBody)
       });
 
       if (!response.ok) {
@@ -1179,6 +1216,43 @@ const ContractService = {
     const period = hour >= 12 ? 'PM' : 'AM';
     const hour12 = hour === 0 ? 12 : hour > 12 ? hour - 12 : hour;
     return `${hour12}:${min.toString().padStart(2, '0')} ${period}`;
+  },
+
+  // ==========================================
+  // TASK PROPOSAL CONSTANTS & HELPERS
+  // ==========================================
+
+  TASK_CATEGORIES: [
+    { value: 'PersonalCare', label: 'Personal Care' },
+    { value: 'MedicalCare', label: 'Medical Care' },
+    { value: 'Companionship', label: 'Companionship' },
+    { value: 'HouseholdTasks', label: 'Household Tasks' },
+    { value: 'Mobility', label: 'Mobility' },
+    { value: 'Medication', label: 'Medication' },
+    { value: 'Meals', label: 'Meals' },
+    { value: 'Transportation', label: 'Transportation' },
+    { value: 'Other', label: 'Other' }
+  ],
+
+  TASK_PRIORITIES: [
+    { value: 'Low', label: 'Low' },
+    { value: 'Medium', label: 'Medium' },
+    { value: 'High', label: 'High' },
+    { value: 'Critical', label: 'Critical' }
+  ],
+
+  /**
+   * Get proposed tasks from a contract, grouped by status
+   * @param {Object} contract - Contract object with proposedTasks array
+   * @returns {Object} - { pending, accepted, rejected }
+   */
+  getProposedTasksByStatus(contract) {
+    const proposedTasks = contract?.proposedTasks || [];
+    return {
+      pending: proposedTasks.filter(t => t.status === 'Proposed'),
+      accepted: proposedTasks.filter(t => t.status === 'Accepted'),
+      rejected: proposedTasks.filter(t => t.status === 'Rejected')
+    };
   }
 };
 

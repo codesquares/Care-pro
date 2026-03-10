@@ -28,11 +28,15 @@ const TaskSheetPage = ({ sheet, orderId, onSheetUpdated, orderCompleted: orderCo
   const [showIncident, setShowIncident] = useState(false);
   const [observationCount, setObservationCount] = useState(sheet.observationReportCount || 0);
   const [incidentCount, setIncidentCount] = useState(sheet.incidentReportCount || 0);
+  const [respondingToProposals, setRespondingToProposals] = useState(false);
 
   const isSubmitted = sheet.status === "submitted";
   const isReadOnly = isSubmitted || orderCompleted;
   const isCheckedIn = !!checkin;
   const debounceTimer = useRef(null);
+
+  // Check for pending proposed tasks
+  const { hasPending, pendingCount } = TaskSheetService.getPendingProposedTasks({ tasks });
 
   // ------ Debounced save after checkbox toggles ------
   const debouncedSave = useCallback(
@@ -145,6 +149,41 @@ const TaskSheetPage = ({ sheet, orderId, onSheetUpdated, orderCompleted: orderCo
     setIncidentCount((c) => c + 1);
   };
 
+  // ------ Accept/reject proposed tasks ------
+  const handleAcceptProposedTask = async (taskId) => {
+    await handleRespondToProposal([{ taskId, accepted: true }]);
+  };
+
+  const handleRejectProposedTask = async (taskId) => {
+    await handleRespondToProposal([{ taskId, accepted: false }]);
+  };
+
+  const handleRespondToAllPending = async (accepted) => {
+    const pendingTasks = tasks.filter(
+      (t) => t.addedByClient && t.proposalStatus === "Pending"
+    );
+    if (pendingTasks.length === 0) return;
+    const responses = pendingTasks.map((t) => ({ taskId: t.id, accepted }));
+    await handleRespondToProposal(responses);
+  };
+
+  const handleRespondToProposal = async (responses) => {
+    setRespondingToProposals(true);
+    const result = await TaskSheetService.respondToProposedTasks(sheet.id, responses);
+    if (result.success) {
+      setTasks(result.data.tasks || tasks);
+      onSheetUpdated(result.data);
+      const acceptCount = responses.filter((r) => r.accepted).length;
+      const rejectCount = responses.filter((r) => !r.accepted).length;
+      if (acceptCount > 0) toast.success(`${acceptCount} task(s) accepted`);
+      if (rejectCount > 0) toast.info(`${rejectCount} task(s) rejected`);
+    } else {
+      if (result.orderCompleted) setOrderCompleted(true);
+      toast.error(result.error || "Failed to respond to proposed tasks.");
+    }
+    setRespondingToProposals(false);
+  };
+
   const completedCount = tasks.filter((t) => t.completed).length;
 
   return (
@@ -195,12 +234,38 @@ const TaskSheetPage = ({ sheet, orderId, onSheetUpdated, orderCompleted: orderCo
 
       {/* Task list */}
       <div className="ts-task-list">
+        {/* Pending proposals banner */}
+        {hasPending && !isReadOnly && (
+          <div className="ts-pending-banner">
+            <span>⚠️ {pendingCount} client-proposed task(s) need your review</span>
+            <div className="ts-pending-banner-actions">
+              <button
+                className="ts-pending-accept-all"
+                onClick={() => handleRespondToAllPending(true)}
+                disabled={respondingToProposals}
+              >
+                Accept All
+              </button>
+              <button
+                className="ts-pending-reject-all"
+                onClick={() => handleRespondToAllPending(false)}
+                disabled={respondingToProposals}
+              >
+                Reject All
+              </button>
+            </div>
+          </div>
+        )}
+
         {tasks.map((task, index) => (
           <TaskItem
             key={task.id || `temp-${index}`}
             task={task}
             disabled={isReadOnly}
             onToggle={() => handleToggle(task.id)}
+            showProposalActions={!isReadOnly && task.addedByClient && task.proposalStatus === "Pending"}
+            onAccept={handleAcceptProposedTask}
+            onReject={handleRejectProposedTask}
           />
         ))}
 
@@ -259,12 +324,14 @@ const TaskSheetPage = ({ sheet, orderId, onSheetUpdated, orderCompleted: orderCo
           <button
             className="ts-submit-btn"
             onClick={handleSubmitClick}
-            disabled={submitting || tasks.length === 0}
+            disabled={submitting || tasks.length === 0 || hasPending}
           >
             {submitting ? "Submitting..." : `Submit Visit ${sheet.sheetNumber}`}
           </button>
           <p className="ts-submit-hint">
-            {!isCheckedIn
+            {hasPending
+              ? `⚠️ You must accept or reject all ${pendingCount} pending task proposal(s) before submitting.`
+              : !isCheckedIn
               ? "You must check in before submitting."
               : "Client will sign off, then the sheet becomes read-only."}
           </p>

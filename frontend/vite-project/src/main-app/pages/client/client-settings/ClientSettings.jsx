@@ -3,6 +3,7 @@ import { useNavigate } from "react-router-dom";
 import { toast } from "react-toastify";
 import AddressInput from "../../../components/AddressInput";
 import { useAuth } from "../../../context/AuthContext";
+import config from "../../../config";
 import ClientSettingsService from "../../../services/ClientSettingsService";
 import ClientProfileHeader from "./ClientProfileHeader";
 import "./ClientSettings.css";
@@ -108,6 +109,41 @@ const ClientSettings = () => {
           country: userDetails.country || "",
           postalCode: userDetails.postalCode || ""
         });
+
+        // Fetch the persisted address from the Location table to ensure we show the latest saved value
+        if (userDetails.id) {
+          try {
+            const token = localStorage.getItem('authToken');
+            const locResponse = await fetch(
+              `${config.BASE_URL}/Location/user-location?userId=${userDetails.id}&userType=Client`,
+              { headers: { 'Authorization': token ? `Bearer ${token}` : '' } }
+            );
+            if (locResponse.ok) {
+              const locResult = await locResponse.json();
+              const locData = locResult.data || locResult;
+              if (locData?.address) {
+                setAddressForm(prev => ({
+                  ...prev,
+                  address: locData.address,
+                  city: locData.city || prev.city,
+                  state: locData.state || prev.state,
+                  country: locData.country || prev.country,
+                  postalCode: locData.postalCode || prev.postalCode
+                }));
+                // Keep localStorage in sync with the persisted address
+                updateUser({
+                  homeAddress: locData.address,
+                  address: locData.address,
+                  ...(locData.city && { serviceCity: locData.city }),
+                  ...(locData.state && { serviceState: locData.state }),
+                  location: locData.address
+                });
+              }
+            }
+          } catch (locErr) {
+            console.warn("Could not fetch location from Location table", locErr);
+          }
+        }
 
         if (userDetails.id) {
           try {

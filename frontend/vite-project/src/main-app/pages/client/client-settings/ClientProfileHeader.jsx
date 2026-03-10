@@ -57,6 +57,13 @@ const ClientProfileHeader = () => {
       // Use formatted address if available from Google validation, otherwise use input
       const addressToSend = addressValidation?.formattedAddress || editedLocation;
       
+      // Build payload — include GPS coordinates if available from Google validation
+      const payload = { address: addressToSend };
+      if (addressValidation?.coordinates?.latitude != null && addressValidation?.coordinates?.longitude != null) {
+        payload.latitude = addressValidation.coordinates.latitude;
+        payload.longitude = addressValidation.coordinates.longitude;
+      }
+
       // API call to update location using the new dedicated endpoint
       const response = await fetch(`${config.BASE_URL}/Clients/UpdateClientLocation/${userDetails.id}`, {
         method: 'PUT',
@@ -64,7 +71,7 @@ const ClientProfileHeader = () => {
           'Content-Type': 'application/json',
           'Authorization': `Bearer ${localStorage.getItem('authToken') || ''}`,
         },
-        body: JSON.stringify({ address: addressToSend }),
+        body: JSON.stringify(payload),
       });
 
       if (!response.ok) {
@@ -92,19 +99,26 @@ const ClientProfileHeader = () => {
       const result = await response.json();
       console.log('Location update response:', result);
 
+      // Extract location fields from backend response
+      const locData = result.data || {};
+      const cityName = locData.city || addressValidation?.addressComponents?.city || 'location';
+      const savedAddress = locData.address || addressToSend;
+
       // Update AuthContext with new location data
       updateUser({
-        homeAddress: addressToSend,
-        serviceCity: result?.data?.city || addressValidation?.addressComponents?.city,
-        serviceState: result?.data?.state || addressValidation?.addressComponents?.state,
-        location: addressToSend
+        homeAddress: savedAddress,
+        address: savedAddress,
+        serviceCity: cityName,
+        serviceState: locData.state || addressValidation?.addressComponents?.state,
+        city: cityName,
+        state: locData.state || addressValidation?.addressComponents?.state,
+        location: savedAddress
       });
 
       // Update the profile display with the new location
-      // Do this AFTER fetchProfile would overwrite it, or skip fetchProfile entirely
       setProfile(prev => ({
         ...prev,
-        location: addressToSend
+        location: savedAddress
       }));
 
       setShowLocationModal(false);
@@ -112,8 +126,10 @@ const ClientProfileHeader = () => {
       setAddressValidation(null);
       
       // Show success message with city if available
-      const cityName = result.data?.city || addressValidation?.addressComponents?.city || 'location';
       toast.success(`Location updated successfully! Now serving in ${cityName}.`);
+
+      // Refresh full profile from API to ensure UI is fully in sync
+      fetchProfile(true);
       
     } catch (err) {
       console.error('Error updating location:', err);
@@ -296,8 +312,11 @@ const ClientProfileHeader = () => {
       else if (data.homeAddress) userUpdates.homeAddress = data.homeAddress;
       if (locationData?.address) userUpdates.address = locationData.address;
       else if (data.address) userUpdates.address = data.address;
+      if (locationData?.address) userUpdates.location = locationData.address;
       if (locationData?.city) userUpdates.serviceCity = locationData.city;
       if (locationData?.state) userUpdates.serviceState = locationData.state;
+      if (locationData?.city) userUpdates.city = locationData.city;
+      if (locationData?.state) userUpdates.state = locationData.state;
       if (data.bio) userUpdates.bio = data.bio;
       
       if (Object.keys(userUpdates).length > 0) {

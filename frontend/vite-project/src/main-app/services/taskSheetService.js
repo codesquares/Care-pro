@@ -220,6 +220,131 @@ const TaskSheetService = {
     }
     return 1;
   },
+
+  // ==========================================
+  // TASK PROPOSAL ENDPOINTS (NEW)
+  // ==========================================
+
+  /**
+   * Client proposes tasks on an in-progress task sheet.
+   * @param {string} taskSheetId
+   * @param {Array<{text: string}>} tasks - Array of task objects with text field
+   * @returns {Promise<Object>} { success, data, error }
+   */
+  async clientProposeTasks(taskSheetId, tasks) {
+    try {
+      if (!taskSheetId) {
+        return { success: false, error: "Task sheet ID is required" };
+      }
+      if (!tasks || !Array.isArray(tasks) || tasks.length === 0) {
+        return { success: false, error: "At least one task is required" };
+      }
+
+      const authToken = localStorage.getItem("authToken");
+      if (!authToken) {
+        return { success: false, error: "Authentication required" };
+      }
+
+      const response = await fetch(
+        `${config.BASE_URL}/tasksheets/${taskSheetId}/client-propose-tasks`,
+        {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+            Authorization: `Bearer ${authToken}`,
+          },
+          body: JSON.stringify({ tasks }),
+        }
+      );
+
+      if (!response.ok) {
+        const errorData = await response.json().catch(() => ({}));
+        const errorMsg =
+          errorData.error || `Failed to propose tasks: ${response.status}`;
+        return {
+          success: false,
+          error: errorMsg,
+          statusCode: response.status,
+          orderCompleted: response.status === 400 && isCompletedOrderError(errorMsg),
+        };
+      }
+
+      const data = await response.json();
+      return { success: true, data };
+    } catch (error) {
+      console.error("Error in clientProposeTasks:", error);
+      return { success: false, error: error.message || "Network error" };
+    }
+  },
+
+  /**
+   * Caregiver responds to client-proposed tasks (accept/reject).
+   * @param {string} taskSheetId
+   * @param {Array<{taskId: string, accepted: boolean}>} responses
+   * @returns {Promise<Object>} { success, data, error }
+   */
+  async respondToProposedTasks(taskSheetId, responses) {
+    try {
+      if (!taskSheetId) {
+        return { success: false, error: "Task sheet ID is required" };
+      }
+      if (!responses || !Array.isArray(responses) || responses.length === 0) {
+        return { success: false, error: "At least one response is required" };
+      }
+
+      const authToken = localStorage.getItem("authToken");
+      if (!authToken) {
+        return { success: false, error: "Authentication required" };
+      }
+
+      const response = await fetch(
+        `${config.BASE_URL}/tasksheets/${taskSheetId}/respond-to-proposed-tasks`,
+        {
+          method: "PUT",
+          headers: {
+            "Content-Type": "application/json",
+            Authorization: `Bearer ${authToken}`,
+          },
+          body: JSON.stringify({ responses }),
+        }
+      );
+
+      if (!response.ok) {
+        const errorData = await response.json().catch(() => ({}));
+        const errorMsg =
+          errorData.error || `Failed to respond to proposed tasks: ${response.status}`;
+        return {
+          success: false,
+          error: errorMsg,
+          statusCode: response.status,
+          orderCompleted: response.status === 400 && isCompletedOrderError(errorMsg),
+        };
+      }
+
+      const data = await response.json();
+      return { success: true, data };
+    } catch (error) {
+      console.error("Error in respondToProposedTasks:", error);
+      return { success: false, error: error.message || "Network error" };
+    }
+  },
+
+  /**
+   * Check if a task sheet has pending proposed tasks that block submission.
+   * @param {Object} sheet - Task sheet object
+   * @returns {{ hasPending: boolean, pendingCount: number, pendingTasks: Array }}
+   */
+  getPendingProposedTasks(sheet) {
+    const tasks = sheet?.tasks || [];
+    const pendingTasks = tasks.filter(
+      (t) => t.addedByClient && t.proposalStatus === "Pending"
+    );
+    return {
+      hasPending: pendingTasks.length > 0,
+      pendingCount: pendingTasks.length,
+      pendingTasks,
+    };
+  },
 };
 
 export default TaskSheetService;
