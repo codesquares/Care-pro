@@ -34,6 +34,16 @@ const CaregiverOrderDetails = () => {
     const [showContractGenerationModal, setShowContractGenerationModal] = useState(false);
     const [isRevisionMode, setIsRevisionMode] = useState(false);
 
+    // Lock body scroll when any modal is open
+    useEffect(() => {
+        if (isModalOpen || showContractGenerationModal) {
+            document.body.style.overflow = 'hidden';
+        } else {
+            document.body.style.overflow = '';
+        }
+        return () => { document.body.style.overflow = ''; };
+    }, [isModalOpen, showContractGenerationModal]);
+
     // Get user details from localStorage
     const userDetails = JSON.parse(localStorage.getItem("userDetails"));
     const userId = userDetails?.id;

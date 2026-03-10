@@ -1,13 +1,3 @@
-* {
-  margin: 0;
-  padding: 0;
-  box-sizing: border-box;
-}
-
-*::-webkit-scrollbar {
-  display: none; /* For Chrome, Safari, and Edge, hide scrollbar */
-}
-
 .blog-view {
   display: flex;
   flex-wrap: wrap;

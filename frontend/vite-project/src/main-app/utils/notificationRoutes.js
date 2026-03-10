@@ -230,9 +230,13 @@ export const getNotificationRoute = (notification, userRole) => {
     case 'ContractApproved':
     case 'ContractRejected':
     case 'ContractRevisionRequested':
-      if (!relatedEntityId) return null;
-      if (isClient) return `/app/client/my-order/${relatedEntityId}`;
-      if (isCaregiver) return `/app/caregiver/order-details/${relatedEntityId}`;
+      if (relatedEntityId) {
+        if (isClient) return `/app/client/my-order/${relatedEntityId}`;
+        if (isCaregiver) return `/app/caregiver/order-details/${relatedEntityId}`;
+      }
+      // Fallback to orders list when relatedEntityId is missing
+      if (isClient) return `/app/client/my-orders`;
+      if (isCaregiver) return `/app/caregiver/orders`;
       if (isAdmin) return `/app/admin/orders`;
       return null;
 
@@ -272,23 +276,27 @@ export const getNotificationRoute = (notification, userRole) => {
     case 'OrderCompleted':
     case 'OrderDisputed':
     case 'OrderCancelled':
-      if (!relatedEntityId) {
-        // Even without a specific order, route to the orders list
-        if (isClient) return `/app/client/my-orders`;
-        if (isCaregiver) return `/app/caregiver/orders`;
+      if (relatedEntityId) {
+        if (isClient) return `/app/client/my-order/${relatedEntityId}`;
+        if (isCaregiver) return `/app/caregiver/order-details/${relatedEntityId}`;
         if (isAdmin) return `/app/admin/orders`;
         return null;
       }
-      if (isClient) return `/app/client/my-order/${relatedEntityId}`;
-      if (isCaregiver) return `/app/caregiver/order-details/${relatedEntityId}`;
+      // Even without a specific order, route to the orders list
+      if (isClient) return `/app/client/my-orders`;
+      if (isCaregiver) return `/app/caregiver/orders`;
       if (isAdmin) return `/app/admin/orders`;
       return null;
 
     // ── Review notifications ─────────────────────────────
     case 'NewReview':
-      if (!relatedEntityId) return null;
-      if (isClient) return `/app/client/my-order/${relatedEntityId}`;
-      if (isCaregiver) return `/app/caregiver/order-details/${relatedEntityId}`;
+      if (relatedEntityId) {
+        if (isClient) return `/app/client/my-order/${relatedEntityId}`;
+        if (isCaregiver) return `/app/caregiver/order-details/${relatedEntityId}`;
+      }
+      // Fallback to orders list
+      if (isClient) return `/app/client/my-orders`;
+      if (isCaregiver) return `/app/caregiver/orders`;
       return null;
 
     // ── Gig notifications ────────────────────────────────
@@ -316,20 +324,35 @@ export const getNotificationRoute = (notification, userRole) => {
         if (isClient) return `/app/client/my-order/${relatedEntityId}`;
         if (isCaregiver) return `/app/caregiver/order-details/${relatedEntityId}`;
       }
+      // Fallback to notifications page
+      if (isClient) return `/app/client/notifications`;
+      if (isCaregiver) return `/app/caregiver/notifications`;
       return null;
+
+    // ── Broadcast ────────────────────────────────────────
+    case 'Broadcast':
+      if (isClient) return `/app/client/notifications`;
+      if (isCaregiver) return `/app/caregiver/notifications`;
+      if (isAdmin) return `/app/admin/notifications`;
+      return null;
+
     // ── Care Request Matching ─────────────────────────
     case 'CareRequestMatched':
       if (isClient && relatedEntityId) return `/app/client/care-requests/${relatedEntityId}/matches`;
+      if (isClient) return `/app/client/care-requests`;
       return null;
 
     case 'CareRequestNoMatch':
       if (isClient && relatedEntityId) return `/app/client/care-requests/${relatedEntityId}/matches`;
+      if (isClient) return `/app/client/care-requests`;
       return null;
 
     case 'CareRequestAdminMatchUpdate':
     case 'CareRequestAdminNoMatch':
       if (isAdmin && relatedEntityId) return `/app/admin/care-requests/${relatedEntityId}`;
+      if (isAdmin) return `/app/admin/care-requests`;
       return null;
+
     // ── Signup (admin only) ──────────────────────────────
     case 'Signup':
       if (isAdmin) return `/app/admin/users`;
@@ -384,6 +407,11 @@ export const getNotificationActionLabel = (rawType) => {
     case 'CareRequestAdminMatchUpdate':
     case 'CareRequestAdminNoMatch':
       return 'Review Request';
+    case 'Broadcast':
+      return 'View';
+    case 'SystemNotice':
+    case 'SystemAlert':
+      return 'View';
     default:
       return 'View Details';
   }

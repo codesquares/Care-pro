@@ -75,6 +75,7 @@ const ContractGenerationModal = ({
   // Initialize schedule with correct number of visits
   useEffect(() => {
     if (isOpen) {
+      document.body.style.overflow = 'hidden';
       if (isRevision && existingContract?.schedule) {
         // Pre-fill with existing schedule for revision
         setSchedule(existingContract.schedule.map(visit => ({
@@ -111,7 +112,10 @@ const ContractGenerationModal = ({
         setAdditionalTasks([]);
         setProposedTaskResponses([]);
       }
+    } else {
+      document.body.style.overflow = '';
     }
+    return () => { document.body.style.overflow = ''; };
   }, [isOpen, visitsPerWeek, isRevision, existingContract]);
 
   const daysOfWeek = ContractService.getDaysOfWeek();
