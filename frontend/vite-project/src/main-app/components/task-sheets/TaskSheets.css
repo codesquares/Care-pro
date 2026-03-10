@@ -52,7 +52,7 @@
   cursor: pointer;
   font-size: 13px;
   color: #555;
-  transition: all 0.2s;
+  transition: background-color 0.2s, border-color 0.2s, color 0.2s;
   display: flex;
   align-items: center;
   gap: 4px;
@@ -301,7 +301,7 @@
   color: #666;
   cursor: pointer;
   font-size: 13px;
-  transition: all 0.15s;
+  transition: background-color 0.15s, border-color 0.15s, color 0.15s;
   margin-bottom: 14px;
 }
 
@@ -433,6 +433,23 @@
   border: 1px solid #c3e6cb;
   border-style: solid;
   text-align: left;
+}
+
+.checkin-section--missed {
+  background: #f8f9fa;
+  border: 1px solid #dee2e6;
+  border-style: solid;
+  text-align: left;
+}
+
+.checkin-section--missed .checkin-label {
+  color: #6c757d;
+}
+
+.checkin-section--missed .checkin-hint {
+  color: #868e96;
+  font-size: 12px;
+  margin: 0;
 }
 
 .checkin-status {
@@ -600,7 +617,7 @@
   font-size: 13px;
   font-weight: 500;
   cursor: pointer;
-  transition: all 0.15s;
+  transition: background-color 0.15s, color 0.15s;
   position: relative;
 }
 
@@ -884,7 +901,7 @@
   font-size: 12px;
   font-weight: 600;
   cursor: pointer;
-  transition: all 0.15s;
+  transition: background-color 0.15s, border-color 0.15s, color 0.15s, transform 0.15s;
   border: 2px solid transparent;
   background: #f0f0f0;
   color: #555;
@@ -989,7 +1006,7 @@
   cursor: pointer;
   font-size: 11px;
   text-align: center;
-  transition: all 0.15s;
+  transition: background-color 0.15s, border-color 0.15s, color 0.15s;
 }
 
 .photo-add-btn:hover {

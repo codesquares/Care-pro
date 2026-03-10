@@ -21,9 +21,38 @@
 /* Responsive base font size to ensure better scaling */
 html {
   font-size: 16px; /* Base font size */
+  scroll-padding-top: var(--navbar-height-mobile, 70px);
+  scrollbar-width: thin;
+  scrollbar-color: #c1c1c1 #f1f1f1;
+}
+
+/* Global visible scrollbar for all pages */
+*::-webkit-scrollbar {
+  width: 8px;
+  height: 8px;
+}
+
+*::-webkit-scrollbar-track {
+  background: #f1f1f1;
+  border-radius: 4px;
+}
+
+*::-webkit-scrollbar-thumb {
+  background: #c1c1c1;
+  border-radius: 4px;
+}
+
+*::-webkit-scrollbar-thumb:hover {
+  background: #a8a8a8;
 }
 
 /* Media queries for responsive typography */
+@media (min-width: 768px) {
+  html {
+    scroll-padding-top: var(--navbar-height-desktop, 100px);
+  }
+}
+
 @media (max-width: 768px) {
   html {
     font-size: 14px; /* Slightly smaller on tablets */

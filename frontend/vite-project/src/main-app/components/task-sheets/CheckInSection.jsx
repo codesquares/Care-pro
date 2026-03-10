@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { toast } from "react-toastify";
 import VisitCheckinService from "../../services/visitCheckinService";
 
@@ -16,6 +16,36 @@ const CheckInSection = ({ sheet, orderId, onCheckedIn, disabled = false }) => {
   const [showPermissionGuide, setShowPermissionGuide] = useState(false);
   const checkin = sheet?.checkin || null;
   const isCheckedIn = !!checkin;
+
+  // Proactively request location permission when the component mounts
+  // so the browser prompt appears immediately for the caregiver
+  useEffect(() => {
+    if (isCheckedIn || disabled) return;
+
+    let cancelled = false;
+
+    (async () => {
+      const permState = await VisitCheckinService.checkPermission();
+      if (cancelled || permState === "unsupported" || permState === "denied") return;
+
+      if (permState === "prompt") {
+        // Trigger the browser permission prompt by requesting position
+        // We discard the result — this is only to surface the prompt early
+        navigator.geolocation.getCurrentPosition(
+          () => {},
+          (err) => {
+            // If user denies, show the permission guide
+            if (!cancelled && err.code === err.PERMISSION_DENIED) {
+              setShowPermissionGuide(true);
+            }
+          },
+          { enableHighAccuracy: true, timeout: 15000, maximumAge: 0 }
+        );
+      }
+    })();
+
+    return () => { cancelled = true; };
+  }, [isCheckedIn, disabled]);
 
   const isMobile = /iPhone|iPad|iPod|Android/i.test(navigator.userAgent);
 
@@ -94,12 +124,27 @@ const CheckInSection = ({ sheet, orderId, onCheckedIn, disabled = false }) => {
     );
   }
 
+  // Sheet was submitted without a check-in — show an informative state, not a disabled button
+  if (disabled) {
+    return (
+      <div className="checkin-section checkin-section--missed">
+        <div className="checkin-status">
+          <span className="checkin-icon">📍</span>
+          <div className="checkin-info">
+            <span className="checkin-label">Not Checked In</span>
+            <span className="checkin-hint">Check-in was not recorded for this visit.</span>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
   return (
     <div className="checkin-section">
       <button
         className="checkin-btn"
         onClick={handleCheckin}
-        disabled={loading || disabled}
+        disabled={loading}
       >
         {loading ? (
           <>

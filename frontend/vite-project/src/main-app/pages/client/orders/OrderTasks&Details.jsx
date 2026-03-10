@@ -38,6 +38,16 @@ const MyOrders = () => {
     const [contract, setContract] = useState(null);
     const [contractActionLoading, setContractActionLoading] = useState(false);
     const [contractError, setContractError] = useState(null);
+
+    // Lock body scroll when modal is open
+    useEffect(() => {
+        if (isModalOpen) {
+            document.body.style.overflow = 'hidden';
+        } else {
+            document.body.style.overflow = '';
+        }
+        return () => { document.body.style.overflow = ''; };
+    }, [isModalOpen]);
     const [checkingContract, setCheckingContract] = useState(false);
     
     // Client contract action state
