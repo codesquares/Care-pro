@@ -13,6 +13,7 @@ const navItems = [
   { to: '/app/admin/training-materials', icon: 'fa-graduation-cap', label: 'Training' },
   { to: '/app/admin/gigs',               icon: 'fa-briefcase',      label: 'Gigs' },
   { to: '/app/admin/orders',             icon: 'fa-shopping-cart',  label: 'Orders' },
+  { to: '/app/admin/disputes',            icon: 'fa-gavel',          label: 'Disputes' },
   { to: '/app/admin/emails',             icon: 'fa-envelope',       label: 'Emails' },
   { to: '/app/admin/certificates',       icon: 'fa-certificate',    label: 'Certificates' },
   { to: '/app/admin/withdrawals',        icon: 'fa-wallet',         label: 'Withdrawals' },

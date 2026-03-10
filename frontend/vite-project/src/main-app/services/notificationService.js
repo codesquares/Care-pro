@@ -41,6 +41,18 @@ const generateTitle = (type, senderId) => {
       return `⭐ New review received`;
     case 'BookingConfirmed':
       return `🛒 New booking confirmed`;
+    case 'task_proposed_by_client':
+      return `📝 New task(s) proposed on visit`;
+    case 'task_proposal_accepted':
+      return `✅ Task proposal(s) accepted`;
+    case 'task_proposal_rejected':
+      return `❌ Task proposal(s) rejected`;
+    case 'contract_task_proposed_by_client':
+      return `📝 New task(s) proposed on contract`;
+    case 'contract_task_proposal_accepted':
+      return `✅ Contract task proposal(s) accepted`;
+    case 'contract_task_proposal_rejected':
+      return `❌ Contract task proposal(s) rejected`;
     default:
       return `New notification`;
   }
@@ -77,6 +89,18 @@ const generateContent = (type, senderId) => {
       return `You have received a new review. Tap to view it.`;
     case 'BookingConfirmed':
       return `A new booking has been confirmed. Tap to see the order details.`;
+    case 'task_proposed_by_client':
+      return `The client has proposed new task(s) on a visit. Please review and accept or reject.`;
+    case 'task_proposal_accepted':
+      return `Your caregiver accepted your proposed task(s).`;
+    case 'task_proposal_rejected':
+      return `Your caregiver rejected your proposed task(s).`;
+    case 'contract_task_proposed_by_client':
+      return `The client has proposed new task(s) on the contract. Please review during revision.`;
+    case 'contract_task_proposal_accepted':
+      return `Your proposed contract task(s) were accepted.`;
+    case 'contract_task_proposal_rejected':
+      return `Your proposed contract task(s) were rejected.`;
     default:
       return `You have a new notification from user ${senderId}.`;
   }

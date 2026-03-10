@@ -10,7 +10,7 @@ import "./ClientVisitView.css";
  * Props:
  *  - order: the full order object (needs id, paymentOption, frequencyPerWeek)
  */
-const ClientVisitTabs = ({ order }) => {
+const ClientVisitTabs = ({ order, onVisitReviewed }) => {
   const [sheets, setSheets] = useState([]);
   const [activeIndex, setActiveIndex] = useState(0);
   const [loading, setLoading] = useState(true);
@@ -121,6 +121,22 @@ const ClientVisitTabs = ({ order }) => {
           key={activeSheet.id}
           sheet={activeSheet}
           orderId={orderId}
+          onVisitReviewed={(updatedSheet) => {
+            // Update the local sheet with new review status
+            if (updatedSheet) {
+              setSheets((prev) =>
+                prev.map((s) => (s.id === updatedSheet.id ? { ...s, ...updatedSheet } : s))
+              );
+            }
+            if (onVisitReviewed) onVisitReviewed();
+          }}
+          onSheetUpdated={(updatedSheet) => {
+            if (updatedSheet) {
+              setSheets((prev) =>
+                prev.map((s) => (s.id === updatedSheet.id ? { ...s, ...updatedSheet } : s))
+              );
+            }
+          }}
         />
       )}
     </div>

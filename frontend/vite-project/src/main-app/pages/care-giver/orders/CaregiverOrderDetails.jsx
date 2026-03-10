@@ -6,6 +6,7 @@ import config from "../../../config"; // Import centralized config for API URLs
 import ContractService from "../../../services/contractService";
 import ContractGenerationModal from "../../../components/modals/ContractGenerationModal";
 import TaskSheetTabs from "../../../components/task-sheets/TaskSheetTabs";
+import ProposedTasksList from "../../../components/task-proposals/ProposedTasksList";
 
 import "react-toastify/dist/ReactToastify.css";
 import "./CaregiverOrderDetails.css";
@@ -453,6 +454,12 @@ const CaregiverOrderDetails = () => {
                                                                         <p className="feedback-text">"{contract.clientReviewComments}"</p>
                                                                     </div>
                                                                 )}
+                                                                {/* NEW — Show proposed task count */}
+                                                                {contract.proposedTasks && contract.proposedTasks.filter(t => t.status === 'Proposed').length > 0 && (
+                                                                    <p style={{ fontSize: '13px', color: '#e65100', margin: '6px 0' }}>
+                                                                        📝 Client proposed {contract.proposedTasks.filter(t => t.status === 'Proposed').length} new task(s) — review in revision
+                                                                    </p>
+                                                                )}
                                                                 <div className="contract-buttons">
                                                                     <button 
                                                                         className="view-contract-btn"
@@ -663,6 +670,15 @@ const CaregiverOrderDetails = () => {
                                                 </div>
                                             ))}
                                         </div>
+                                    )}
+
+                                    {/* NEW — Proposed Tasks in contract modal */}
+                                    {contract.proposedTasks && contract.proposedTasks.length > 0 && (
+                                        <ProposedTasksList
+                                            proposedTasks={contract.proposedTasks}
+                                            userRole="Caregiver"
+                                            showActions={false}
+                                        />
                                     )}
 
                                     {contract.generatedTerms && (

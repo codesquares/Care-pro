@@ -1,6 +1,9 @@
 import { useState, useEffect } from "react";
+import { toast } from "react-toastify";
 import ObservationReportService from "../../services/observationReportService";
 import IncidentReportService from "../../services/incidentReportService";
+import DisputeService from "../../services/disputeService";
+import ClientProposeTasksSection from "./ClientProposeTasksSection";
 import "./ClientVisitView.css";
 
 /**
@@ -9,18 +12,67 @@ import "./ClientVisitView.css";
  * Props:
  *  - sheet: the TaskSheet object
  *  - orderId: the order ID
+ *  - onVisitReviewed: callback after approve/dispute
  */
-const ClientVisitView = ({ sheet, orderId }) => {
+const ClientVisitView = ({ sheet, orderId, onVisitReviewed, onSheetUpdated }) => {
   const [observations, setObservations] = useState([]);
   const [incidents, setIncidents] = useState([]);
   const [showObservations, setShowObservations] = useState(false);
   const [showIncidents, setShowIncidents] = useState(false);
   const [loadingReports, setLoadingReports] = useState(false);
 
+  // Visit review state
+  const [reviewAction, setReviewAction] = useState(null); // null | 'dispute'
+  const [visitDisputeCategory, setVisitDisputeCategory] = useState("");
+  const [visitDisputeReason, setVisitDisputeReason] = useState("");
+  const [reviewLoading, setReviewLoading] = useState(false);
+
   const tasks = sheet.tasks || [];
   const completedCount = tasks.filter((t) => t.completed).length;
   const isSubmitted = sheet.status === "submitted";
   const checkin = sheet.checkin || null;
+  const clientReviewStatus = sheet.clientReviewStatus || "Pending";
+
+  const handleApproveVisit = async () => {
+    setReviewLoading(true);
+    const result = await DisputeService.reviewVisit(sheet.id, { reviewStatus: "Approved" });
+    if (result.success) {
+      toast.success("Visit approved!");
+      if (onVisitReviewed) onVisitReviewed({ ...sheet, clientReviewStatus: "Approved" });
+    } else {
+      toast.error(result.error || "Failed to approve visit.");
+    }
+    setReviewLoading(false);
+  };
+
+  const handleDisputeVisit = async () => {
+    if (!visitDisputeReason.trim()) {
+      toast.error("Please describe the issue.");
+      return;
+    }
+    if (!visitDisputeCategory) {
+      toast.error("Please select a category.");
+      return;
+    }
+    setReviewLoading(true);
+    const result = await DisputeService.reviewVisit(sheet.id, {
+      reviewStatus: "Disputed",
+      disputeReason: visitDisputeReason,
+      disputeCategory: visitDisputeCategory,
+    });
+    if (result.success) {
+      toast.success("Visit dispute submitted. Our team will review it.");
+      setReviewAction(null);
+      setVisitDisputeReason("");
+      setVisitDisputeCategory("");
+      if (onVisitReviewed) onVisitReviewed({ ...sheet, clientReviewStatus: "Disputed" });
+    } else if (result.conflict) {
+      toast.warn(result.error);
+    } else {
+      toast.error(result.error || "Failed to submit dispute.");
+    }
+    setReviewLoading(false);
+  };
 
   // Fetch reports when expanded
   useEffect(() => {
@@ -110,14 +162,36 @@ const ClientVisitView = ({ sheet, orderId }) => {
         {tasks.map((task, index) => (
           <div
             key={task.id || `t-${index}`}
-            className={`cv-task ${task.completed ? "cv-task--done" : ""}`}
+            className={`cv-task ${task.completed ? "cv-task--done" : ""} ${
+              task.addedByClient && task.proposalStatus === "Pending" ? "cv-task--pending" : ""
+            } ${task.addedByClient && task.proposalStatus === "Rejected" ? "cv-task--rejected" : ""}`}
           >
             <span className="cv-task-check">
-              {task.completed ? "✓" : "○"}
+              {task.addedByClient && task.proposalStatus === "Rejected"
+                ? "✕"
+                : task.completed
+                ? "✓"
+                : "○"}
             </span>
-            <span className="cv-task-text">{task.text}</span>
+            <span className={`cv-task-text ${
+              task.addedByClient && task.proposalStatus === "Rejected" ? "cv-task-text--rejected" : ""
+            }`}>
+              {task.text}
+            </span>
             {task.addedByCaregiver && (
               <span className="cv-task-custom-badge">Added by caregiver</span>
+            )}
+            {task.addedByClient && (
+              <span className="cv-task-client-badge">Your proposal</span>
+            )}
+            {task.addedByClient && task.proposalStatus === "Pending" && (
+              <span className="cv-task-pending-badge">⏳ Pending</span>
+            )}
+            {task.addedByClient && task.proposalStatus === "Rejected" && (
+              <span className="cv-task-rejected-badge">❌ Rejected</span>
+            )}
+            {task.addedByClient && task.proposalStatus === "Accepted" && (
+              <span className="cv-task-accepted-badge">✅ Accepted</span>
             )}
           </div>
         ))}
@@ -125,6 +199,16 @@ const ClientVisitView = ({ sheet, orderId }) => {
           <p className="cv-no-tasks">No tasks recorded for this visit.</p>
         )}
       </div>
+
+      {/* Client can propose tasks on in-progress sheets */}
+      {!isSubmitted && (
+        <ClientProposeTasksSection
+          sheet={sheet}
+          onSheetUpdated={(updatedSheet) => {
+            if (onSheetUpdated) onSheetUpdated(updatedSheet);
+          }}
+        />
+      )}
 
       {/* Client Signature */}
       {isSubmitted && sheet.clientSignature?.signatureUrl && (
@@ -242,6 +326,91 @@ const ClientVisitView = ({ sheet, orderId }) => {
           </div>
         )}
       </div>
+
+      {/* Visit Review Actions — only for submitted visits */}
+      {isSubmitted && (
+        <div className="cv-review-section">
+          {clientReviewStatus === "Approved" ? (
+            <div className="cv-review-badge cv-review-badge--approved">
+              ✅ You approved this visit
+              {sheet.clientReviewedAt && (
+                <span className="cv-review-date"> — {new Date(sheet.clientReviewedAt).toLocaleDateString()}</span>
+              )}
+            </div>
+          ) : clientReviewStatus === "Disputed" ? (
+            <div className="cv-review-badge cv-review-badge--disputed">
+              ⚠️ You disputed this visit
+              {sheet.clientReviewedAt && (
+                <span className="cv-review-date"> — {new Date(sheet.clientReviewedAt).toLocaleDateString()}</span>
+              )}
+              {sheet.clientDisputeReason && (
+                <p className="cv-review-reason">{sheet.clientDisputeReason}</p>
+              )}
+            </div>
+          ) : (
+            <>
+              {reviewAction !== 'dispute' ? (
+                <div className="cv-review-actions">
+                  <p className="cv-review-prompt">How was this visit?</p>
+                  <div className="cv-review-buttons">
+                    <button
+                      className="cv-review-approve-btn"
+                      onClick={handleApproveVisit}
+                      disabled={reviewLoading}
+                    >
+                      {reviewLoading ? 'Processing...' : '✓ Approve Visit'}
+                    </button>
+                    <button
+                      className="cv-review-dispute-btn"
+                      onClick={() => setReviewAction('dispute')}
+                      disabled={reviewLoading}
+                    >
+                      ⚠️ Report Issue
+                    </button>
+                  </div>
+                </div>
+              ) : (
+                <div className="cv-review-dispute-form">
+                  <p className="cv-review-prompt">What went wrong with this visit?</p>
+                  <select
+                    className="cv-dispute-category-select"
+                    value={visitDisputeCategory}
+                    onChange={(e) => setVisitDisputeCategory(e.target.value)}
+                  >
+                    <option value="">Select a category...</option>
+                    {Object.entries(DisputeService.VISIT_CATEGORIES).map(([key, label]) => (
+                      <option key={key} value={key}>{label}</option>
+                    ))}
+                  </select>
+                  <textarea
+                    className="cv-dispute-reason-input"
+                    placeholder="Describe what happened..."
+                    value={visitDisputeReason}
+                    onChange={(e) => setVisitDisputeReason(e.target.value)}
+                    rows="3"
+                  />
+                  <div className="cv-review-buttons">
+                    <button
+                      className="cv-review-dispute-btn"
+                      onClick={handleDisputeVisit}
+                      disabled={reviewLoading || !visitDisputeReason.trim() || !visitDisputeCategory}
+                    >
+                      {reviewLoading ? 'Submitting...' : 'Submit Dispute'}
+                    </button>
+                    <button
+                      className="cv-review-cancel-btn"
+                      onClick={() => { setReviewAction(null); setVisitDisputeReason(""); setVisitDisputeCategory(""); }}
+                      disabled={reviewLoading}
+                    >
+                      Cancel
+                    </button>
+                  </div>
+                </div>
+              )}
+            </>
+          )}
+        </div>
+      )}
     </div>
   );
 };

@@ -8,8 +8,12 @@ import ContractService from "../../../services/contractService";
 import VisitCheckinService from "../../../services/visitCheckinService";
 import OrderTasksService from "../../../services/orderTasksService";
 import ClientOrderService from "../../../services/clientOrderService";
+import DisputeService from "../../../services/disputeService";
 import CreateOrderTasksModal from "../../../components/modals/CreateOrderTasksModal";
 import ClientVisitTabs from "../../../components/task-sheets/ClientVisitTabs";
+import AddressInput from "../../../components/AddressInput";
+import ProposedTasksList from "../../../components/task-proposals/ProposedTasksList";
+import TaskProposalForm from "../../../components/task-proposals/TaskProposalForm";
 import config from "../../../config"; // Centralized API configuration
 import "./Order&Tasks.css";
 import { useNavigate } from "react-router-dom";
@@ -23,6 +27,8 @@ const MyOrders = () => {
     const [isModalOpen, setIsModalOpen] = useState(false);
     const [modalType, setModalType] = useState("");
     const [reason, setReason] = useState(""); 
+    const [disputeCategory, setDisputeCategory] = useState("");
+    const [orderDisputes, setOrderDisputes] = useState([]);
     const [rating, setRating] = useState(0);
     const [reviewComment, setReviewComment] = useState("");
     const [isReviewSubmitted, setIsReviewSubmitted] = useState(false);
@@ -40,6 +46,15 @@ const MyOrders = () => {
     const [rejectReason, setRejectReason] = useState("");
     const [showGpsPrompt, setShowGpsPrompt] = useState(false);
     const [capturingGps, setCapturingGps] = useState(false);
+    
+    // NEW — proposed tasks for contract review request
+    const [reviewProposedTasks, setReviewProposedTasks] = useState([]);
+    
+    // Service address confirmation state (approval flow)
+    const [approvalStep, setApprovalStep] = useState('address'); // 'address' | 'location'
+    const [editedServiceAddress, setEditedServiceAddress] = useState('');
+    const [isEditingAddress, setIsEditingAddress] = useState(false);
+    const [addressValidation, setAddressValidation] = useState(null);
     
     // OrderTasks-related state
     const [orderTasks, setOrderTasks] = useState(null);
@@ -188,37 +203,31 @@ const MyOrders = () => {
     // ==========================================
 
     // Client approves contract
-    const handleApproveContract = async (coords) => {
+    const handleApproveContract = async (coords, confirmedAtAddress = false) => {
         if (!contract?.id) return;
         
         setContractActionLoading(true);
         try {
-            const approveOptions = coords?.latitude != null
-                ? { serviceLatitude: coords.latitude, serviceLongitude: coords.longitude }
-                : {};
+            const approveOptions = {};
+            if (coords?.latitude != null) {
+                approveOptions.serviceLatitude = coords.latitude;
+                approveOptions.serviceLongitude = coords.longitude;
+            }
+            // Send the (possibly edited) service address
+            const finalAddress = editedServiceAddress || contract.serviceAddress;
+            if (finalAddress) {
+                approveOptions.serviceAddress = finalAddress;
+            }
+            if (confirmedAtAddress) {
+                approveOptions.confirmAtServiceAddress = true;
+            }
 
             const result = await ContractService.clientApproveContract(contract.id, approveOptions);
             
             if (result.success) {
                 setContract(result.data);
                 toast.success("Contract approved! Your caregiver has been notified.");
-
-                // Notify caregiver about approval
-                try {
-                    const order = orders[0];
-                    if (order?.caregiverId && userId && orderId) {
-                        await createNotification({
-                            recipientId: order.caregiverId,
-                            senderId: userId,
-                            type: 'ContractApproved',
-                            relatedEntityId: orderId,
-                            title: '✅ Your contract has been approved',
-                            content: `The client has approved your contract for "${order.gigTitle || 'the order'}". You can now begin providing services.`
-                        });
-                    }
-                } catch (notifError) {
-                    console.error("Failed to send contract approval notification:", notifError);
-                }
+                // Backend sends the caregiver notification internally on approval
 
                 setIsModalOpen(false);
                 setShowGpsPrompt(false);
@@ -239,14 +248,22 @@ const MyOrders = () => {
         const gps = await VisitCheckinService.getCurrentPosition();
         setCapturingGps(false);
         if (gps.success) {
-            await handleApproveContract(gps.coords);
+            await handleApproveContract(gps.coords, true);
         } else {
             toast.error(gps.error);
         }
     };
 
     const handleApproveWithoutGps = async () => {
-        await handleApproveContract();
+        await handleApproveContract(null, false);
+    };
+
+    // Start the approval flow — initialize address state and show prompt
+    const startApprovalFlow = () => {
+        setEditedServiceAddress(contract?.serviceAddress || '');
+        setIsEditingAddress(false);
+        setApprovalStep('address');
+        setShowGpsPrompt(true);
     };
 
     // Client requests review/changes (Round 1 only)
@@ -261,7 +278,11 @@ const MyOrders = () => {
         try {
             const result = await ContractService.clientRequestReview(contract.id, {
                 comments: reviewRequestComments,
-                preferredScheduleNotes: reviewPreferredScheduleNotes
+                preferredScheduleNotes: reviewPreferredScheduleNotes,
+                // NEW — include proposed tasks if any
+                ...(reviewProposedTasks.length > 0 && {
+                    proposedTasks: reviewProposedTasks
+                })
             });
             
             if (result.success) {
@@ -288,6 +309,7 @@ const MyOrders = () => {
                 setIsModalOpen(false);
                 setReviewRequestComments("");
                 setReviewPreferredScheduleNotes("");
+                setReviewProposedTasks([]);
             } else {
                 toast.error(result.error || "Failed to request review");
             }
@@ -382,6 +404,9 @@ const MyOrders = () => {
                 
                 // Check if OrderTasks exist for this order
                 await checkExistingOrderTasks(orderId);
+
+                // Fetch disputes for this order
+                await fetchOrderDisputes(orderId);
             } catch (err) {
                 setError("Failed to fetch order details.");
             } finally {
@@ -407,63 +432,94 @@ const MyOrders = () => {
             toast.error("Unable to update order: missing order or user information. Please refresh and try again.");
             return;
         }
-        if (modalType === "dispute" && !reason) {
+
+        if (modalType === "complete") {
+            // Mark as completed — keep using old endpoint
+            setIsSubmitting(true);
+            try {
+                const token = localStorage.getItem('authToken');
+                await axios.put(
+                    `${config.BASE_URL}/ClientOrders/UpdateClientOrderStatus/orderId?orderId=${orderId}`,
+                    { clientOrderStatus: "Completed", userId },
+                    { headers: { 'Authorization': `Bearer ${token}` } }
+                );
+                toast.success("Order has been marked as Completed!");
+                setIsModalOpen(false);
+                try {
+                    const response = await axios.get(
+                        `${config.BASE_URL}/ClientOrders/orderId?orderId=${orderId}`,
+                        { headers: { 'Authorization': `Bearer ${token}` } }
+                    );
+                    setOrders([response.data]);
+                } catch (refreshErr) {
+                    console.error("Failed to refresh order data:", refreshErr);
+                }
+            } catch (err) {
+                console.error("Failed to update order status:", err);
+                const errorMessage = err.response?.data?.message || err.response?.data || "Failed to update the order status. Please try again.";
+                toast.error(typeof errorMessage === 'string' ? errorMessage : "Failed to update the order status. Please try again.");
+            } finally {
+                setIsSubmitting(false);
+            }
+            return;
+        }
+
+        // Dispute — use new typed dispute API
+        if (!reason?.trim()) {
             toast.error("Please provide a reason for the dispute.");
+            return;
+        }
+        if (!disputeCategory) {
+            toast.error("Please select a dispute category.");
             return;
         }
 
         setIsSubmitting(true);
+        const result = await DisputeService.raiseDispute({
+            orderId,
+            taskSheetId: null,
+            disputeType: "Order",
+            category: disputeCategory,
+            reason,
+        });
 
-        const baseUrl = `${config.BASE_URL}/ClientOrders`; // Using centralized API config
-        const endpoint =
-            modalType === "complete"
-                ? `${baseUrl}/UpdateClientOrderStatus/orderId?orderId=${orderId}`
-                : `${baseUrl}/UpdateClientOrderStatusHasDispute/orderId?orderId=${orderId}`;
-
-        const payload =
-            modalType === "complete"
-                ? {
-                      clientOrderStatus: "Completed",
-                      userId: userId,
-                  }
-                : {
-                      clientOrderStatus: "Disputed",
-                      disputeReason: reason,
-                      userId: userId,
-                  };
-
-        try {
-            const token = localStorage.getItem('authToken');
-            await axios.put(endpoint, payload, {
-                headers: {
-                    'Authorization': `Bearer ${token}`
-                }
-            });
-            // Show success toast
-            toast.success(`Order has been marked as ${modalType === "complete" ? "Completed" : "Disputed"}!`);
+        if (result.success) {
+            toast.success("Dispute submitted! Our team will review it shortly.");
             setIsModalOpen(false);
-            
-            // Refresh the order data to reflect the new status
+            setReason("");
+            setDisputeCategory("");
+            // Refresh disputes and order data
+            fetchOrderDisputes(orderId);
             try {
+                const token = localStorage.getItem('authToken');
                 const response = await axios.get(
-                    `${config.BASE_URL}/ClientOrders/orderId?orderId=${orderId}`, // Using centralized API config
-                    {
-                        headers: {
-                            'Authorization': `Bearer ${token}`
-                        }
-                    }
+                    `${config.BASE_URL}/ClientOrders/orderId?orderId=${orderId}`,
+                    { headers: { 'Authorization': `Bearer ${token}` } }
                 );
                 setOrders([response.data]);
             } catch (refreshErr) {
                 console.error("Failed to refresh order data:", refreshErr);
             }
-        } catch (err) {
-            console.error("Failed to update order status:", err);
-            const errorMessage = err.response?.data?.message || err.response?.data || "Failed to update the order status. Please try again.";
-            toast.error(typeof errorMessage === 'string' ? errorMessage : "Failed to update the order status. Please try again.");
-        } finally {
-            setIsSubmitting(false);
+        } else if (result.conflict) {
+            toast.warn(result.error);
+        } else {
+            toast.error(result.error || "Failed to submit dispute.");
         }
+        setIsSubmitting(false);
+    };
+
+    // Fetch disputes for this order
+    const fetchOrderDisputes = async (oid) => {
+        if (!oid) return;
+        const result = await DisputeService.getByOrder(oid);
+        if (result.success && Array.isArray(result.data)) {
+            setOrderDisputes(result.data);
+        }
+    };
+
+    // Callback for visit-level dispute/approve coming from ClientVisitTabs
+    const handleVisitReviewed = () => {
+        fetchOrderDisputes(orderId);
     };
 
     const handleSubmitReview = async () => {
@@ -555,7 +611,7 @@ const MyOrders = () => {
                         <div className="tasks-section">
                             <h2>Tasks</h2>
                             {orders.length > 0 && (
-                                <ClientVisitTabs order={orders[0]} />
+                                <ClientVisitTabs order={orders[0]} onVisitReviewed={handleVisitReviewed} />
                             )}
 
                             {/* Original service task list */}
@@ -669,6 +725,15 @@ const MyOrders = () => {
                                                     {contract.contractStartDate && contract.contractEndDate && (
                                                         <p><strong>Duration:</strong> {new Date(contract.contractStartDate).toLocaleDateString()} - {new Date(contract.contractEndDate).toLocaleDateString()}</p>
                                                     )}
+
+                                                    {/* NEW — Show proposed tasks summary */}
+                                                    {contract.proposedTasks && contract.proposedTasks.length > 0 && (
+                                                        <ProposedTasksList
+                                                            proposedTasks={contract.proposedTasks}
+                                                            userRole="Client"
+                                                            showActions={false}
+                                                        />
+                                                    )}
                                                 </div>
                                                 
                                                 {/* Contract Action Buttons - Based on Status */}
@@ -737,7 +802,7 @@ const MyOrders = () => {
                                                                     </button>
                                                                     <button 
                                                                         className="approve-contract-btn"
-                                                                        onClick={() => setShowGpsPrompt(true)}
+                                                                        onClick={startApprovalFlow}
                                                                         disabled={contractActionLoading}
                                                                     >
                                                                         {contractActionLoading ? 'Processing...' : '✓ Approve Contract'}
@@ -840,6 +905,27 @@ const MyOrders = () => {
                                             </div>
                                         );
                                     })()}
+
+                                    {/* Dispute History */}
+                                    {orderDisputes.length > 0 && (
+                                        <div className="dispute-history-section">
+                                            <h4>⚠️ Disputes ({orderDisputes.length})</h4>
+                                            {orderDisputes.map((d) => (
+                                                <div key={d.id} className="dispute-history-item">
+                                                    <div className="dispute-history-header">
+                                                        <span className="dispute-type-badge" data-type={d.disputeType}>{d.disputeType}</span>
+                                                        <span className="dispute-status-badge" style={{ color: DisputeService.STATUS_COLORS[d.status] || '#666' }}>{d.status}</span>
+                                                    </div>
+                                                    <p className="dispute-category">{DisputeService.ORDER_CATEGORIES[d.category] || DisputeService.VISIT_CATEGORIES[d.category] || d.category}</p>
+                                                    <p className="dispute-reason">{d.reason}</p>
+                                                    {d.resolutionSummary && (
+                                                        <p className="dispute-resolution">📋 {d.resolutionSummary}</p>
+                                                    )}
+                                                    <span className="dispute-date">{new Date(d.createdAt).toLocaleDateString()}</span>
+                                                </div>
+                                            ))}
+                                        </div>
+                                    )}
 
                                     {orders[0].clientOrderStatus === "Completed" ? (
                                         isReviewSubmitted ? (
@@ -1021,6 +1107,15 @@ const MyOrders = () => {
                                         </div>
                                     )}
 
+                                    {/* NEW — Proposed Tasks in contract modal */}
+                                    {contract.proposedTasks && contract.proposedTasks.length > 0 && (
+                                        <ProposedTasksList
+                                            proposedTasks={contract.proposedTasks}
+                                            userRole="Client"
+                                            showActions={false}
+                                        />
+                                    )}
+
                                     {/* Terms */}
                                     {contract.generatedTerms && (
                                         <div className="contract-terms-section">
@@ -1056,6 +1151,16 @@ const MyOrders = () => {
                                             rows="2"
                                         />
                                     </div>
+
+                                    {/* NEW — Propose tasks along with review request */}
+                                    <TaskProposalForm
+                                        tasks={reviewProposedTasks}
+                                        onTasksChange={setReviewProposedTasks}
+                                        label="Propose Tasks (Optional)"
+                                        placeholder="E.g., Light meal preparation..."
+                                        showCategoryAndPriority={true}
+                                        maxTasks={5}
+                                    />
                                 </div>
                                 <div className="modal-actions">
                                     <button 
@@ -1091,19 +1196,51 @@ const MyOrders = () => {
                                     <button onClick={() => setIsModalOpen(false)}>Cancel</button>
                                 </div>
                             </>
-                        ) : (
+                        ) : modalType === "dispute" ? (
                             <>
-                                <h3>{modalType === "complete" ? "Mark as Completed" : "Dispute Order"}</h3>
-                                {modalType === "dispute" && (
+                                <h3>⚠️ Dispute Order</h3>
+                                <p style={{ fontSize: '0.9rem', color: '#666', marginBottom: '12px' }}>
+                                    Select a category and describe the issue. Our support team will review your dispute.
+                                </p>
+                                <div className="form-group">
+                                    <label>Category <span style={{ color: '#e74c3c' }}>*</span></label>
+                                    <select
+                                        value={disputeCategory}
+                                        onChange={(e) => setDisputeCategory(e.target.value)}
+                                        className="dispute-category-select"
+                                    >
+                                        <option value="">Select a category...</option>
+                                        {Object.entries(DisputeService.ORDER_CATEGORIES).map(([key, label]) => (
+                                            <option key={key} value={key}>{label}</option>
+                                        ))}
+                                    </select>
+                                </div>
+                                <div className="form-group">
+                                    <label>Reason <span style={{ color: '#e74c3c' }}>*</span></label>
                                     <textarea
-                                        placeholder="Enter reason..."
+                                        placeholder="Describe what happened in detail..."
                                         value={reason}
                                         onChange={(e) => setReason(e.target.value)}
+                                        rows="4"
                                     />
-                                )}
+                                </div>
+                                <div className="modal-actions">
+                                    <button
+                                        className="reject-btn"
+                                        onClick={handleSubmitStatus}
+                                        disabled={isSubmitting || !reason.trim() || !disputeCategory}
+                                    >
+                                        {isSubmitting ? 'Submitting...' : 'Submit Dispute'}
+                                    </button>
+                                    <button onClick={() => setIsModalOpen(false)} disabled={isSubmitting}>Cancel</button>
+                                </div>
+                            </>
+                        ) : (
+                            <>
+                                <h3>Mark as Completed</h3>
                                 <div className="modal-actions">
                                     <button onClick={handleSubmitStatus} disabled={isSubmitting}>
-                                        {isSubmitting ? 'Submitting...' : 'Submit'}
+                                        {isSubmitting ? 'Submitting...' : 'Confirm'}
                                     </button>
                                     <button onClick={() => setIsModalOpen(false)} disabled={isSubmitting}>Cancel</button>
                                 </div>
@@ -1123,28 +1260,91 @@ const MyOrders = () => {
                 />
             )}
 
-            {/* GPS Prompt Modal for Contract Approval */}
+            {/* Service Address Confirmation & GPS Prompt Modal for Contract Approval */}
             {showGpsPrompt && (
                 <div className="modal-overlay gps-prompt-overlay" onClick={() => !capturingGps && !contractActionLoading && setShowGpsPrompt(false)}>
                     <div className="gps-prompt-modal" onClick={(e) => e.stopPropagation()}>
-                        <h3>📍 Confirm Your Location</h3>
-                        <p>Are you currently at the service address? Sharing your location helps ensure accurate check-in verification for your caregiver.</p>
-                        <div className="gps-prompt-actions">
-                            <button
-                                className="gps-prompt-yes"
-                                onClick={handleApproveWithGps}
-                                disabled={capturingGps || contractActionLoading}
-                            >
-                                {capturingGps ? 'Capturing location...' : contractActionLoading ? 'Approving...' : "Yes, I'm here"}
-                            </button>
-                            <button
-                                className="gps-prompt-skip"
-                                onClick={handleApproveWithoutGps}
-                                disabled={capturingGps || contractActionLoading}
-                            >
-                                {contractActionLoading ? 'Approving...' : 'No / Skip'}
-                            </button>
-                        </div>
+                        {approvalStep === 'address' ? (
+                            <>
+                                <h3>📍 Confirm Service Address</h3>
+                                <p className="address-confirm-label">Is this the correct service address?</p>
+                                
+                                {!isEditingAddress ? (
+                                    <div className="address-display-box">
+                                        <p className="current-address">{editedServiceAddress || 'No address provided'}</p>
+                                        <button 
+                                            className="edit-address-btn"
+                                            onClick={() => setIsEditingAddress(true)}
+                                        >
+                                            ✏️ Edit Address
+                                        </button>
+                                    </div>
+                                ) : (
+                                    <div className="address-edit-box">
+                                        <AddressInput
+                                            value={editedServiceAddress}
+                                            onChange={(addr) => setEditedServiceAddress(addr)}
+                                            onValidation={(result) => setAddressValidation(result)}
+                                            placeholder="Enter the correct service address"
+                                            required
+                                        />
+                                        <button 
+                                            className="done-editing-btn"
+                                            onClick={() => setIsEditingAddress(false)}
+                                            disabled={!editedServiceAddress.trim()}
+                                        >
+                                            Done
+                                        </button>
+                                    </div>
+                                )}
+
+                                <div className="gps-prompt-actions">
+                                    <button
+                                        className="gps-prompt-yes"
+                                        onClick={() => setApprovalStep('location')}
+                                        disabled={!editedServiceAddress?.trim()}
+                                    >
+                                        Yes, this is correct
+                                    </button>
+                                    <button
+                                        className="gps-prompt-skip"
+                                        onClick={() => !capturingGps && !contractActionLoading && setShowGpsPrompt(false)}
+                                    >
+                                        Cancel
+                                    </button>
+                                </div>
+                            </>
+                        ) : (
+                            <>
+                                <h3>📍 Confirm Your Location</h3>
+                                <p>Are you currently at this service address?</p>
+                                <p className="confirmed-address-preview">{editedServiceAddress}</p>
+                                <p className="gps-explanation">Sharing your location helps ensure accurate check-in verification for your caregiver.</p>
+                                <div className="gps-prompt-actions">
+                                    <button
+                                        className="gps-prompt-yes"
+                                        onClick={handleApproveWithGps}
+                                        disabled={capturingGps || contractActionLoading}
+                                    >
+                                        {capturingGps ? 'Capturing location...' : contractActionLoading ? 'Approving...' : "Yes, I'm here — Approve"}
+                                    </button>
+                                    <button
+                                        className="gps-prompt-skip"
+                                        onClick={handleApproveWithoutGps}
+                                        disabled={capturingGps || contractActionLoading}
+                                    >
+                                        {contractActionLoading ? 'Approving...' : "No, I'm not there — Approve anyway"}
+                                    </button>
+                                    <button
+                                        className="gps-prompt-back"
+                                        onClick={() => setApprovalStep('address')}
+                                        disabled={capturingGps || contractActionLoading}
+                                    >
+                                        ← Back
+                                    </button>
+                                </div>
+                            </>
+                        )}
                     </div>
                 </div>
             )}

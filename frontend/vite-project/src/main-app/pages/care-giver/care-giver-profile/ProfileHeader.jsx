@@ -125,6 +125,13 @@ const ProfileHeader = () => {
       // Use formatted address if available from Google validation, otherwise use input
       const addressToSend = addressValidation?.formattedAddress || editedLocation;
       
+      // Build payload — include GPS coordinates if available from Google validation
+      const payload = { address: addressToSend };
+      if (addressValidation?.coordinates?.latitude != null && addressValidation?.coordinates?.longitude != null) {
+        payload.latitude = addressValidation.coordinates.latitude;
+        payload.longitude = addressValidation.coordinates.longitude;
+      }
+
       // API call to update location using the new dedicated endpoint
       const response = await fetch(`${config.BASE_URL}/CareGivers/UpdateCaregiverLocation/${userDetails.id}`, {
         method: 'PUT',
@@ -132,7 +139,7 @@ const ProfileHeader = () => {
           'Content-Type': 'application/json',
           'Authorization': `Bearer ${localStorage.getItem('authToken') || ''}`,
         },
-        body: JSON.stringify({ address: addressToSend }),
+        body: JSON.stringify(payload),
       });
 
       if (!response.ok) {
@@ -159,25 +166,28 @@ const ProfileHeader = () => {
       // API returns JSON response with geocoded data
       const result = await response.json();
 
-      // Extract city from response
-      const cityName = result.data?.city || addressValidation?.addressComponents?.city || 'location';
+      // Extract location fields from backend response
+      const locData = result.data || {};
+      const cityName = locData.city || addressValidation?.addressComponents?.city || 'location';
+      const savedAddress = locData.address || addressToSend;
 
       // Update AuthContext with new location
       updateUser({
-        serviceAddress: addressToSend,
+        homeAddress: savedAddress,
+        address: savedAddress,
+        serviceAddress: savedAddress,
         serviceCity: cityName,
-        serviceState: result?.data?.state || addressValidation?.addressComponents?.state,
-        location: addressToSend
+        serviceState: locData.state || addressValidation?.addressComponents?.state,
+        city: cityName,
+        state: locData.state || addressValidation?.addressComponents?.state,
+        location: savedAddress
       });
 
       // Update the profile display with the new location (city only)
-      setProfile(prev => {
-        const updatedProfile = {
-          ...prev,
-          location: cityName
-        };
-        return updatedProfile;
-      });
+      setProfile(prev => ({
+        ...prev,
+        location: cityName
+      }));
 
       setShowLocationModal(false);
       setEditedLocation("");
@@ -185,6 +195,9 @@ const ProfileHeader = () => {
       
       // Show success message with city if available
       toast.success(`Location updated successfully! Now serving in ${cityName}.`);
+
+      // Refresh full profile from API to ensure UI is fully in sync
+      fetchProfile(true);
       
     } catch (err) {
       console.error('Error updating location:', err);
@@ -497,6 +510,12 @@ const ProfileHeader = () => {
       else if (data.serviceAddress) userUpdates.serviceAddress = data.serviceAddress;
       if (locationData?.address) userUpdates.location = locationData.address;
       else if (data.location) userUpdates.location = data.location;
+      if (locationData?.address) userUpdates.homeAddress = locationData.address;
+      else if (data.homeAddress) userUpdates.homeAddress = data.homeAddress;
+      if (locationData?.address) userUpdates.address = locationData.address;
+      else if (data.address) userUpdates.address = data.address;
+      if (locationData?.city) userUpdates.city = locationData.city;
+      if (locationData?.state) userUpdates.state = locationData.state;
       if (data.aboutMe) userUpdates.aboutMe = data.aboutMe;
       
       if (Object.keys(userUpdates).length > 0) {

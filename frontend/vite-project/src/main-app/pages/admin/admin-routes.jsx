@@ -15,6 +15,7 @@ import CertificateManagement from './certificate-management/CertificateManagemen
 import VerificationManagement from './verification-management/VerificationManagement';
 import AdminCareRequestDetail from './care-requests/AdminCareRequestDetail';
 import SubscriptionAdmin from './subscriptions/SubscriptionAdmin';
+import DisputesManagement from './disputes-management/DisputesManagement';
 import { useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import DojahDataViewer from '../../components/admin/DojahDataViewer';
@@ -54,6 +55,7 @@ function AdminRoutes() {
             <Route path="dojah-admin" element={<VerificationManagement />} />
             <Route path="webhook-data" element={<WebhookDataAdmin />} />
             <Route path="subscriptions" element={<SubscriptionAdmin />} />
+            <Route path="disputes" element={<DisputesManagement />} />
             <Route path="care-requests/:requestId" element={<AdminCareRequestDetail />} />
             <Route path="*" element={<NotFoundPage />} />
         </Routes>
