@@ -139,6 +139,18 @@ const ClientVisitView = ({ sheet, orderId, onVisitReviewed, onSheetUpdated }) =>
         </div>
       )}
 
+      {/* Visit duration */}
+      {isSubmitted && sheet.visitDurationMinutes != null && (
+        <div className="cv-duration">
+          <span className="cv-duration-icon">⏱️</span>
+          <span className="cv-duration-text">
+            Visit duration: {sheet.visitDurationMinutes >= 60
+              ? `${Math.floor(sheet.visitDurationMinutes / 60)}h ${Math.round(sheet.visitDurationMinutes % 60)}m`
+              : `${Math.round(sheet.visitDurationMinutes)} min`}
+          </span>
+        </div>
+      )}
+
       {/* Progress bar */}
       <div className="cv-progress">
         <div className="cv-progress-bar">

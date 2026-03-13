@@ -68,11 +68,32 @@ const TaskSheetTabs = ({ order }) => {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [loading, sheets.length, orderId, error, orderCompleted]);
 
+  // ------ Check if previous sheet is approved (for approval gate) ------
+  const isPreviousSheetApproved = () => {
+    if (sheets.length === 0) return true; // first sheet always allowed
+    const lastSheet = sheets[sheets.length - 1];
+    // Must be submitted AND client-approved before next visit can be created
+    if (lastSheet.status !== 'submitted') return false;
+    if (lastSheet.clientReviewStatus !== 'Approved') return false;
+    return true;
+  };
+
   // ------ Create a new sheet ------
   const handleCreateSheet = async (isAutoFirst = false) => {
     if (creating || orderCompleted) return;
     if (!isAutoFirst && sheets.length >= maxSheets) {
       toast.info("All visit sheets have been created for this order.");
+      return;
+    }
+
+    // Frontend approval gate — warn before the backend rejects
+    if (!isAutoFirst && !isPreviousSheetApproved()) {
+      const lastSheet = sheets[sheets.length - 1];
+      if (lastSheet.status !== 'submitted') {
+        toast.warn(`Visit ${lastSheet.sheetNumber} must be submitted before creating the next visit.`);
+      } else {
+        toast.warn(`Visit ${lastSheet.sheetNumber} must be approved by the client before creating the next visit.`);
+      }
       return;
     }
 
@@ -136,6 +157,7 @@ const TaskSheetTabs = ({ order }) => {
   }
 
   const canAddMore = sheets.length < maxSheets && !orderCompleted;
+  const prevApproved = isPreviousSheetApproved();
   const activeSheet = sheets[activeIndex] || null;
 
   return (
@@ -160,10 +182,10 @@ const TaskSheetTabs = ({ order }) => {
 
         {canAddMore && (
           <button
-            className="ts-tab ts-tab--add"
+            className={`ts-tab ts-tab--add ${!prevApproved ? 'ts-tab--locked' : ''}`}
             onClick={() => handleCreateSheet(false)}
             disabled={creating}
-            title="Add another visit sheet"
+            title={!prevApproved ? 'Previous visit must be submitted and approved by client first' : 'Add another visit sheet'}
           >
             {creating ? "..." : "+"}
           </button>

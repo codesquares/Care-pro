@@ -217,6 +217,18 @@ const TaskSheetPage = ({ sheet, orderId, onSheetUpdated, orderCompleted: orderCo
         )}
       </div>
 
+      {/* Visit duration (shown after submission) */}
+      {isSubmitted && sheet.visitDurationMinutes != null && (
+        <div className="ts-duration">
+          <span className="ts-duration-icon">⏱️</span>
+          <span className="ts-duration-text">
+            Visit duration: {sheet.visitDurationMinutes >= 60
+              ? `${Math.floor(sheet.visitDurationMinutes / 60)}h ${Math.round(sheet.visitDurationMinutes % 60)}m`
+              : `${Math.round(sheet.visitDurationMinutes)} min`}
+          </span>
+        </div>
+      )}
+
       {/* Progress bar */}
       <div className="ts-progress">
         <div className="ts-progress-bar">

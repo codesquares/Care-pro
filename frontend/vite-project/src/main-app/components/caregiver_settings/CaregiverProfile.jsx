@@ -77,8 +77,8 @@ const ProfilePage = () => {
                     {/* <p className="profile-email">{profile.username}</p> */} {/* TODO: Backend persistence not implemented yet */}
                     <div className="profile-rating">★★★★☆ (29 reviews)</div>
                     {/*I know the spaces arent the cleanest solution but they seemed the easiest if you need me to change it please let me know*/}
-                    <p className="profile-location">Location                             Lagos, Nigeria</p>
-                    <p className="profile-membership">Member since               20th June, 2024</p>
+                    <p className="profile-location">Location                             {profile.location}</p>
+                    <p className="profile-membership">Member since               {profile.memberSince ? new Date(profile.memberSince).toLocaleDateString('en-GB', { day: 'numeric', month: 'long', year: 'numeric' }) : 'N/A'}</p>
                 </div>
 
                 <div className="profile-stats-section">

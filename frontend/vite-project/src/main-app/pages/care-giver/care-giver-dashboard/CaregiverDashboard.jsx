@@ -46,6 +46,12 @@ const CaregiverDashboard = () => {
          const data = await response.json();
  
          const ordersArray = Array.isArray(data) ? data : data.clientOrders || [];
+         // Sort orders by most recent first
+         ordersArray.sort((a, b) => {
+           const dateA = new Date(a.orderCreatedOn || a.orderDate || a.createdAt || 0);
+           const dateB = new Date(b.orderCreatedOn || b.orderDate || b.createdAt || 0);
+           return dateB - dateA;
+         });
          setOrders(ordersArray);
          setTotalOrders(ordersArray.length);
           // setTotalEarnings(data.totalEarning);
