@@ -8,7 +8,7 @@ import ClientSettingsService from "../../../services/ClientSettingsService";
 import config from "../../../config";
 import { useAuth } from "../../../context/AuthContext";
 
-const ClientProfileHeader = () => {
+const ClientProfileHeader = ({ refreshTrigger, onLocationSaved }) => {
   const { updateUser } = useAuth();
   const [profile, setProfile] = useState({
     name: "",
@@ -127,6 +127,17 @@ const ClientProfileHeader = () => {
       
       // Show success message with city if available
       toast.success(`Location updated successfully! Now serving in ${cityName}.`);
+
+      // Notify parent so the Service Address card also refreshes
+      if (onLocationSaved) {
+        onLocationSaved({
+          address: savedAddress,
+          city: cityName,
+          state: locData.state || addressValidation?.addressComponents?.state,
+          country: locData.country || addressValidation?.addressComponents?.country,
+          postalCode: locData.postalCode || addressValidation?.addressComponents?.postalCode
+        });
+      }
 
       // Refresh full profile from API to ensure UI is fully in sync
       fetchProfile(true);
@@ -340,6 +351,13 @@ const ClientProfileHeader = () => {
   useEffect(() => {
     fetchProfile();
   }, []);
+
+  // Re-fetch when parent signals an address update (e.g. from Service Address card)
+  useEffect(() => {
+    if (refreshTrigger) {
+      fetchProfile(true);
+    }
+  }, [refreshTrigger]);
 
   if (isLoading) {
     return (

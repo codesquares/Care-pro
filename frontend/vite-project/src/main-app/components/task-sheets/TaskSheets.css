@@ -179,6 +179,34 @@
   font-style: italic;
 }
 
+/* ---------- Visit Duration ---------- */
+.ts-duration {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 8px 12px;
+  margin-bottom: 12px;
+  background: #f0f7ff;
+  border-radius: 6px;
+  border: 1px solid #d0e3f7;
+}
+
+.ts-duration-icon {
+  font-size: 16px;
+}
+
+.ts-duration-text {
+  font-size: 13px;
+  color: #2c5282;
+  font-weight: 500;
+}
+
+/* ---------- Locked tab (approval gate) ---------- */
+.ts-tab--locked {
+  opacity: 0.5;
+  cursor: help;
+}
+
 /* ---------- Progress ---------- */
 .ts-progress {
   display: flex;

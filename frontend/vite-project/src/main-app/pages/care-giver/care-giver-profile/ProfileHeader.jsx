@@ -470,7 +470,7 @@ const ProfileHeader = () => {
                  data.serviceCity || 
                  (data.location && data.location.includes(',') ? data.location.split(',')[0].trim() : data.location) || 
                  (data.serviceAddress && data.serviceAddress.includes(',') ? data.serviceAddress.split(',')[1]?.trim() : null) ||
-                 "New York",
+                 "Not set",
         memberSince: data.createdAt ? new Date(data.createdAt).toLocaleDateString('en-US', { 
           month: 'short', 
           day: 'numeric', 
@@ -516,6 +516,11 @@ const ProfileHeader = () => {
       else if (data.address) userUpdates.address = data.address;
       if (locationData?.city) userUpdates.city = locationData.city;
       if (locationData?.state) userUpdates.state = locationData.state;
+      // Store coordinates from API response for proximity matching
+      if (locationData?.latitude != null) userUpdates.latitude = locationData.latitude;
+      else if (data.latitude != null) userUpdates.latitude = data.latitude;
+      if (locationData?.longitude != null) userUpdates.longitude = locationData.longitude;
+      else if (data.longitude != null) userUpdates.longitude = data.longitude;
       if (data.aboutMe) userUpdates.aboutMe = data.aboutMe;
       
       if (Object.keys(userUpdates).length > 0) {

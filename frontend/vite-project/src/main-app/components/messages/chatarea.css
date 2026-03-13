@@ -1310,3 +1310,39 @@
   background: #f9fafb;
   border-color: #d1d5db;
 }
+
+/* Send error banner */
+.send-error-banner {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 10px 16px;
+  background-color: #fee2e2;
+  border-top: 1px solid #f87171;
+  color: #991b1b;
+  font-size: 13px;
+  line-height: 1.4;
+}
+
+.send-error-icon {
+  flex-shrink: 0;
+}
+
+.send-error-text {
+  flex: 1;
+}
+
+.send-error-close {
+  flex-shrink: 0;
+  background: none;
+  border: none;
+  color: #991b1b;
+  font-size: 18px;
+  cursor: pointer;
+  padding: 0 4px;
+  line-height: 1;
+}
+
+.send-error-close:hover {
+  color: #7f1d1d;
+}

@@ -176,6 +176,28 @@
   color: #888;
 }
 
+/* ---------- Visit Duration ---------- */
+.cv-duration {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 8px 12px;
+  margin-bottom: 12px;
+  background: #f0f7ff;
+  border-radius: 6px;
+  border: 1px solid #d0e3f7;
+}
+
+.cv-duration-icon {
+  font-size: 16px;
+}
+
+.cv-duration-text {
+  font-size: 13px;
+  color: #2c5282;
+  font-weight: 500;
+}
+
 /* ---------- Progress ---------- */
 .cv-progress {
   display: flex;

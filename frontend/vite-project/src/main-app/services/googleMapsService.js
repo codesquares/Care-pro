@@ -1,5 +1,5 @@
 // Google Maps API service for address validation and autocomplete
-const GOOGLE_MAPS_API_KEY = 'AIzaSyAFOXMsHlKjKy1KfvGycISmst0hqQpxMho';
+const GOOGLE_MAPS_API_KEY = import.meta.env.VITE_GOOGLE_MAPS_API_KEY || '';
 
 class GoogleMapsService {
   constructor() {
@@ -13,14 +13,33 @@ class GoogleMapsService {
    * Load Google Maps API if not already loaded
    */
   async loadGoogleMapsAPI() {
-    if (this.isLoaded && window.google) {
+    if (this.isLoaded && window.google?.maps?.places) {
       return Promise.resolve();
     }
 
+    if (!GOOGLE_MAPS_API_KEY) {
+      console.error('Google Maps API key is not configured. Set VITE_GOOGLE_MAPS_API_KEY in your .env file.');
+      return Promise.reject(new Error('Google Maps API key not configured'));
+    }
+
     return new Promise((resolve, reject) => {
-      if (window.google) {
+      if (window.google?.maps?.places) {
         this.initializeServices();
         resolve();
+        return;
+      }
+
+      // Avoid loading the script multiple times
+      const existingScript = document.querySelector('script[src*="maps.googleapis.com/maps/api/js"]');
+      if (existingScript) {
+        // Script tag exists but API not ready yet — wait for it
+        existingScript.addEventListener('load', () => {
+          this.initializeServices();
+          resolve();
+        });
+        existingScript.addEventListener('error', () => {
+          reject(new Error('Failed to load Google Maps API'));
+        });
         return;
       }
 
@@ -46,11 +65,13 @@ class GoogleMapsService {
    * Initialize Google Maps services
    */
   initializeServices() {
-    if (window.google && window.google.maps) {
+    if (window.google?.maps?.places) {
       this.autocompleteService = new window.google.maps.places.AutocompleteService();
       this.geocoder = new window.google.maps.Geocoder();
       this.isLoaded = true;
       console.log('Google Maps services initialized');
+    } else {
+      console.error('Google Maps Places library not available. Check that the API key is valid and has Places API enabled.');
     }
   }
 

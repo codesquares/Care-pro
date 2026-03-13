@@ -9,6 +9,7 @@ import VisitCheckinService from "../../../services/visitCheckinService";
 import OrderTasksService from "../../../services/orderTasksService";
 import ClientOrderService from "../../../services/clientOrderService";
 import DisputeService from "../../../services/disputeService";
+import TaskSheetService from "../../../services/taskSheetService";
 import CreateOrderTasksModal from "../../../components/modals/CreateOrderTasksModal";
 import ClientVisitTabs from "../../../components/task-sheets/ClientVisitTabs";
 import AddressInput from "../../../components/AddressInput";
@@ -76,6 +77,10 @@ const MyOrders = () => {
     // Fund release state
     const [releasingFunds, setReleasingFunds] = useState(false);
     const [fundsReleased, setFundsReleased] = useState(false);
+
+    // Task sheet completion tracking
+    const [allTaskSheetsApproved, setAllTaskSheetsApproved] = useState(false);
+    const [checkingTaskSheets, setCheckingTaskSheets] = useState(false);
     
     const userDetails = JSON.parse(localStorage.getItem("userDetails"));
     const userId = userDetails?.id;
@@ -171,6 +176,30 @@ const MyOrders = () => {
         }
     };
 
+    // Check if all task sheets are generated and approved
+    const checkAllTaskSheetsApproved = async (orderData) => {
+        if (!orderData?.id) return;
+        setCheckingTaskSheets(true);
+        try {
+            const result = await TaskSheetService.getSheetsByOrderId(orderData.id);
+            if (result.success) {
+                const sheets = result.sheets || [];
+                const maxSheets = result.maxSheets ?? TaskSheetService.computeMaxSheets(orderData);
+                const allApproved = sheets.length >= maxSheets
+                    && maxSheets > 0
+                    && sheets.every(s => s.clientReviewStatus === 'Approved');
+                setAllTaskSheetsApproved(allApproved);
+            } else {
+                setAllTaskSheetsApproved(false);
+            }
+        } catch (err) {
+            console.error('Error checking task sheet approval status:', err);
+            setAllTaskSheetsApproved(false);
+        } finally {
+            setCheckingTaskSheets(false);
+        }
+    };
+
     // Check if OrderTasks exist for this order
     const checkExistingOrderTasks = async (orderId) => {
         if (!orderId) return;
@@ -241,6 +270,30 @@ const MyOrders = () => {
 
                 setIsModalOpen(false);
                 setShowGpsPrompt(false);
+
+                // Re-fetch order data to reflect any backend state changes after approval
+                // This ensures the UI shows the correct order status
+                try {
+                    const token = localStorage.getItem('authToken');
+                    const orderResponse = await axios.get(
+                        `${config.BASE_URL}/ClientOrders/orderId?orderId=${orderId}`,
+                        { headers: { 'Authorization': `Bearer ${token}` } }
+                    );
+                    const refreshedOrder = orderResponse.data;
+                    setOrders([refreshedOrder]);
+
+                    // Warn if the backend unexpectedly set the order to Completed
+                    if (refreshedOrder.clientOrderStatus === 'Completed') {
+                        console.warn(
+                            '[BUG TRACE] Order status became "Completed" immediately after contract approval.',
+                            'Contract ID:', contract.id,
+                            'Order ID:', orderId,
+                            'Order data:', refreshedOrder
+                        );
+                    }
+                } catch (refreshErr) {
+                    console.error("Failed to refresh order data after contract approval:", refreshErr);
+                }
             } else {
                 toast.error(result.error || "Failed to approve contract");
             }
@@ -415,6 +468,9 @@ const MyOrders = () => {
                 // Check if OrderTasks exist for this order
                 await checkExistingOrderTasks(orderId);
 
+                // Check if all task sheets are approved
+                await checkAllTaskSheetsApproved(orderData);
+
                 // Fetch disputes for this order
                 await fetchOrderDisputes(orderId);
             } catch (err) {
@@ -530,6 +586,10 @@ const MyOrders = () => {
     // Callback for visit-level dispute/approve coming from ClientVisitTabs
     const handleVisitReviewed = () => {
         fetchOrderDisputes(orderId);
+        // Re-check task sheet approval status (client may have just approved the last visit)
+        if (orders[0]) {
+            checkAllTaskSheetsApproved(orders[0]);
+        }
     };
 
     const handleSubmitReview = async () => {
@@ -957,9 +1017,20 @@ const MyOrders = () => {
                                         )
                                     ) : (
                                         <>
-                                            <button className="mark-completed-btn" onClick={() => openModal("complete")}>
-                                                Mark as Completed
-                                            </button>
+                                            {contract?.status?.toLowerCase().replace(/\s+/g, '') === 'approved' && allTaskSheetsApproved ? (
+                                                <button className="mark-completed-btn" onClick={() => openModal("complete")}>
+                                                    Mark as Completed
+                                                </button>
+                                            ) : (
+                                                <p className="order-status-info" style={{ fontSize: '0.85rem', color: '#888', fontStyle: 'italic', margin: '8px 0' }}>
+                                                    {contract?.status?.toLowerCase().replace(/\s+/g, '') !== 'approved'
+                                                        ? 'Order can be marked as completed after the contract is approved and services are delivered.'
+                                                        : checkingTaskSheets
+                                                            ? 'Checking visit completion status...'
+                                                            : 'All scheduled visits must be recorded and approved before marking the order as completed.'
+                                                    }
+                                                </p>
+                                            )}
                                             <button className="report-issue-btn" onClick={() => openModal("dispute")}>
                                                 Dispute Order
                                             </button>
@@ -1248,9 +1319,12 @@ const MyOrders = () => {
                         ) : (
                             <>
                                 <h3>Mark as Completed</h3>
+                                <p style={{ fontSize: '0.9rem', color: '#666', marginBottom: '12px' }}>
+                                    Please confirm that all care services for this order have been fully delivered before marking it as completed. This will release funds to the caregiver.
+                                </p>
                                 <div className="modal-actions">
                                     <button onClick={handleSubmitStatus} disabled={isSubmitting}>
-                                        {isSubmitting ? 'Submitting...' : 'Confirm'}
+                                        {isSubmitting ? 'Submitting...' : 'Confirm Completion'}
                                     </button>
                                     <button onClick={() => setIsModalOpen(false)} disabled={isSubmitting}>Cancel</button>
                                 </div>

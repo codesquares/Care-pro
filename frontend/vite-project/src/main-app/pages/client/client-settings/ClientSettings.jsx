@@ -74,6 +74,7 @@ const ClientSettings = () => {
     postalCode: ""
   });
   const [addressValidation, setAddressValidation] = useState(null);
+  const [profileHeaderRefresh, setProfileHeaderRefresh] = useState(0);
 
   // Notification Preferences State
   const [notificationPreferences, setNotificationPreferences] = useState({
@@ -487,6 +488,9 @@ const ClientSettings = () => {
           country: newDetails.country || "",
           postalCode: newDetails.postalCode || ""
         });
+
+        // Tell ClientProfileHeader to re-fetch so the "show" link updates
+        setProfileHeaderRefresh(prev => prev + 1);
       } else {
         setMessage({
           type: "error",
@@ -540,6 +544,18 @@ const ClientSettings = () => {
     }
   };
 
+  // Called when ClientProfileHeader saves a location via its own modal
+  const handleProfileHeaderLocationSaved = (locationData) => {
+    setAddressForm({
+      address: locationData.address || "",
+      city: locationData.city || "",
+      state: locationData.state || "",
+      country: locationData.country || "",
+      postalCode: locationData.postalCode || ""
+    });
+    setAddressValidation(null);
+  };
+
   return (
     <div className="settings-content">
       {/* Message display */}
@@ -551,7 +567,10 @@ const ClientSettings = () => {
 
       {/* Left Section - Profile Header */}
       <div className="client-settings-profile-section">
-        <ClientProfileHeader />
+        <ClientProfileHeader
+          refreshTrigger={profileHeaderRefresh}
+          onLocationSaved={handleProfileHeaderLocationSaved}
+        />
       </div>
 
       {/* Right Section - Settings Cards */}

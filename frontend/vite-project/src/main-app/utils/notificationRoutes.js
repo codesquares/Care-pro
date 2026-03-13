@@ -129,6 +129,12 @@ const TYPE_MAP = {
   'care_request_admin_no_match':       'CareRequestAdminNoMatch',
   'carerequestadminnomatch':           'CareRequestAdminNoMatch',
 
+  // Visit / Task Sheet
+  'visit_submitted':             'VisitSubmitted',
+  'visitsubmitted':              'VisitSubmitted',
+  'visit submitted':             'VisitSubmitted',
+  'visit_completed':             'VisitSubmitted',
+
   // Misc
   'caregiver_report':            'SystemNotice',
 
@@ -147,6 +153,7 @@ const KNOWN_CANONICAL = new Set([
   'SystemNotice', 'SystemAlert', 'Signup',
   'CareRequestMatched', 'CareRequestNoMatch',
   'CareRequestAdminMatchUpdate', 'CareRequestAdminNoMatch',
+  'VisitSubmitted',
   'Broadcast',
 ]);
 
@@ -226,19 +233,23 @@ export const getNotificationRoute = (notification, userRole) => {
 
   switch (type) {
     // ── Contract notifications ───────────────────────────
+    // relatedEntityId may be a contract ID (backend-generated notifications),
+    // so prefer notification.orderId when available for routing to the order page
     case 'ContractSent':
     case 'ContractApproved':
     case 'ContractRejected':
-    case 'ContractRevisionRequested':
-      if (relatedEntityId) {
-        if (isClient) return `/app/client/my-order/${relatedEntityId}`;
-        if (isCaregiver) return `/app/caregiver/order-details/${relatedEntityId}`;
+    case 'ContractRevisionRequested': {
+      const contractOrderId = notification.orderId || relatedEntityId;
+      if (contractOrderId) {
+        if (isClient) return `/app/client/my-order/${contractOrderId}`;
+        if (isCaregiver) return `/app/caregiver/order-details/${contractOrderId}`;
       }
-      // Fallback to orders list when relatedEntityId is missing
+      // Fallback to orders list when no ID is available
       if (isClient) return `/app/client/my-orders`;
       if (isCaregiver) return `/app/caregiver/orders`;
       if (isAdmin) return `/app/admin/orders`;
       return null;
+    }
 
     // ── Message notifications ────────────────────────────
     case 'NewMessage':
@@ -353,6 +364,18 @@ export const getNotificationRoute = (notification, userRole) => {
       if (isAdmin) return `/app/admin/care-requests`;
       return null;
 
+    // ── Visit / Task Sheet notifications ─────────────────
+    case 'VisitSubmitted': {
+      const visitOrderId = notification.orderId || relatedEntityId;
+      if (visitOrderId) {
+        if (isClient) return `/app/client/my-order/${visitOrderId}`;
+        if (isCaregiver) return `/app/caregiver/order-details/${visitOrderId}`;
+      }
+      if (isClient) return `/app/client/my-orders`;
+      if (isCaregiver) return `/app/caregiver/orders`;
+      return null;
+    }
+
     // ── Signup (admin only) ──────────────────────────────
     case 'Signup':
       if (isAdmin) return `/app/admin/users`;
@@ -407,6 +430,8 @@ export const getNotificationActionLabel = (rawType) => {
     case 'CareRequestAdminMatchUpdate':
     case 'CareRequestAdminNoMatch':
       return 'Review Request';
+    case 'VisitSubmitted':
+      return 'View Visit';
     case 'Broadcast':
       return 'View';
     case 'SystemNotice':
@@ -474,6 +499,8 @@ export const getNotificationTypeIcon = (rawType) => {
       return '📋';
     case 'CareRequestAdminNoMatch':
       return '⚠️';
+    case 'VisitSubmitted':
+      return '📋';
     default:
       return '🔔';
   }

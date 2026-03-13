@@ -53,6 +53,8 @@ const generateTitle = (type, senderId) => {
       return `✅ Contract task proposal(s) accepted`;
     case 'contract_task_proposal_rejected':
       return `❌ Contract task proposal(s) rejected`;
+    case 'visit_submitted':
+      return `📋 Visit submitted for review`;
     default:
       return `New notification`;
   }
@@ -101,6 +103,8 @@ const generateContent = (type, senderId) => {
       return `Your proposed contract task(s) were accepted.`;
     case 'contract_task_proposal_rejected':
       return `Your proposed contract task(s) were rejected.`;
+    case 'visit_submitted':
+      return `A care visit has been submitted. Please review and approve.`;
     default:
       return `You have a new notification from user ${senderId}.`;
   }
