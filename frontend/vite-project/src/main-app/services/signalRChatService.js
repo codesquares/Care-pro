@@ -671,6 +671,12 @@ class SignalRChatService {
             commitmentError.isCommitmentRequired = true;
             throw commitmentError;
           }
+          // Check if this is a contact-info-blocked error — do NOT fall through to REST
+          if (errMsg.toLowerCase().includes('contact information') || errMsg.toLowerCase().includes('sharing personal contact')) {
+            const blockedError = new Error(errMsg);
+            blockedError.isComplianceBlocked = true;
+            throw blockedError;
+          }
           console.warn('🚨 SIGNALR SERVICE: SignalR message send failed, falling back to REST API:', signalRError);
           // Continue to REST API fallback
         }
@@ -805,11 +811,17 @@ class SignalRChatService {
         } catch (finalError) {
           console.error('🚨 SIGNALR SERVICE: All message sending attempts failed:', finalError);
           // Check for commitment-fee gate error in REST responses
-          const restErrMsg = finalError.response?.data?.message || finalError.message || '';
+          const restErrMsg = finalError.response?.data?.message || finalError.response?.data?.error || finalError.message || '';
           if (restErrMsg.toLowerCase().includes('booking commitment fee')) {
             const commitmentError = new Error(restErrMsg);
             commitmentError.isCommitmentRequired = true;
             throw commitmentError;
+          }
+          // Check for contact-info-blocked error in REST responses
+          if (restErrMsg.toLowerCase().includes('contact information') || restErrMsg.toLowerCase().includes('sharing personal contact')) {
+            const blockedError = new Error(restErrMsg);
+            blockedError.isComplianceBlocked = true;
+            throw blockedError;
           }
           // Log the specific error details for better debugging
           if (finalError.response) {
@@ -825,6 +837,11 @@ class SignalRChatService {
     } catch (error) {
       // Preserve commitment-gate errors — propagate them directly
       if (error.isCommitmentRequired) {
+        throw error;
+      }
+
+      // Preserve compliance-blocked errors — propagate them directly
+      if (error.isComplianceBlocked) {
         throw error;
       }
 

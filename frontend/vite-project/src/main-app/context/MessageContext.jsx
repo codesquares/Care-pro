@@ -1308,6 +1308,24 @@ export const MessageProvider = ({ children }) => {
         return null;
       }
 
+      // Check if this is a compliance-blocked error (contact info sharing)
+      if (error.isComplianceBlocked) {
+        // Remove the temp message — blocked messages should not appear
+        dispatchMessageState({
+          type: 'UPDATE_MESSAGE_STATUS',
+          payload: { messageId: tempId, status: 'failed', errorDetails: 'Message blocked by compliance' }
+        });
+
+        window.dispatchEvent(new CustomEvent('message-error', {
+          detail: {
+            error: error.message || 'Your message was not sent because it appears to contain contact information. All communication must stay on CarePro.',
+            messageId: tempId
+          }
+        }));
+
+        return null;
+      }
+
       // Extract user-friendly error message
       let userFriendlyError = 'Message sending failed';
       
@@ -1316,13 +1334,19 @@ export const MessageProvider = ({ children }) => {
         console.error('Error response status:', error.response.status);
         console.error('Error status text:', error.response.statusText);
         
-        // Extract validation errors if available
-        if (error.response.data?.errors) {
+        // Extract error message from response (backend uses { "error": "..." } format)
+        if (error.response.data?.error) {
+          userFriendlyError = error.response.data.error;
+        } else if (error.response.data?.message) {
+          userFriendlyError = error.response.data.message;
+        } else if (error.response.data?.errors) {
           const errorFields = Object.keys(error.response.data.errors);
           if (errorFields.length > 0) {
             userFriendlyError = `Validation failed: ${errorFields.join(', ')}`;
           }
         }
+      } else if (error.message) {
+        userFriendlyError = error.message;
       }
       
       // Update message status to failed with detailed error information

@@ -52,6 +52,9 @@ const ChatArea = ({ messages, recipient, userId, onSendMessage, isOfflineMode = 
   const [reportDetails, setReportDetails] = useState('');
   const [reportSubmitting, setReportSubmitting] = useState(false);
   const [reportSubmitted, setReportSubmitted] = useState(false);
+
+  // Send error message state (shown as banner above input)
+  const [sendErrorMessage, setSendErrorMessage] = useState(null);
   
   // Memoized function to get initials from name
   const getInitials = useCallback((name) => {
@@ -94,6 +97,17 @@ const ChatArea = ({ messages, recipient, userId, onSendMessage, isOfflineMode = 
     };
     window.addEventListener('commitment-fee-required', handleCommitmentRequired);
     return () => window.removeEventListener('commitment-fee-required', handleCommitmentRequired);
+  }, []);
+
+  // Listen for message send errors from MessageContext
+  useEffect(() => {
+    const handleMessageError = (e) => {
+      setSendErrorMessage(e.detail?.error);
+      // Auto-dismiss after 8 seconds
+      setTimeout(() => setSendErrorMessage(null), 8000);
+    };
+    window.addEventListener('message-error', handleMessageError);
+    return () => window.removeEventListener('message-error', handleMessageError);
   }, []);
 
   // Close 3-dot menu when clicking outside
@@ -531,9 +545,9 @@ const ChatArea = ({ messages, recipient, userId, onSendMessage, isOfflineMode = 
           // Restore message in input if sending failed
           setMessage(messageText);
           // Commitment gate is handled via the 'commitment-fee-required' event from MessageContext
-          // Only show generic alert for non-commitment errors
+          // Other send errors (including compliance) are handled via the 'message-error' event
           if (!sendError?.isCommitmentRequired) {
-            alert('Failed to send message. Please try again.');
+            // Only show generic alert if no specific error event was dispatched
           }
         }
         
@@ -986,6 +1000,15 @@ const ChatArea = ({ messages, recipient, userId, onSendMessage, isOfflineMode = 
           </div>
         )}
       </div>
+
+      {/* Send error banner */}
+      {sendErrorMessage && (
+        <div className="send-error-banner">
+          <span className="send-error-icon">⚠️</span>
+          <span className="send-error-text">{sendErrorMessage}</span>
+          <button className="send-error-close" onClick={() => setSendErrorMessage(null)}>×</button>
+        </div>
+      )}
 
       <div className="chat-input-area">
         <MessageInput
