@@ -39,7 +39,7 @@ const NavigationBar = () => {
       });
       const data = await earnings.json();
       setEarnings({
-        totalEarned: data.totalAmountEarned,
+        totalEarned: data.totalAmountEarned ?? 0,
       });
     } catch (error) {
       console.error('Failed to fetch earnings:', error);

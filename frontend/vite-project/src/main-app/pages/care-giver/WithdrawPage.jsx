@@ -321,8 +321,12 @@ const WithdrawPage = () => {
                 <span>Amount Requested:</span>
                 <span>{formatCurrency(parseFloat(formData.amountRequested))}</span>
               </div>
+              <div className="calculation-row">
+                <span>You will receive:</span>
+                <span>{formatCurrency(parseFloat(formData.amountRequested))}</span>
+              </div>
               <p className="charge-note">
-                Service charge will be calculated and deducted by the system.
+                No service charge — the full amount will be paid to your account.
               </p>
             </div>
           )}

@@ -94,8 +94,8 @@ const EarningsPage = () => {
     const monthlyEarnings = Array(12).fill(0);
     
     ledgerEntries.forEach(entry => {
-      // Only count OrderReceived and FundsReleased as positive earnings on chart
-      if (entry.type === 'OrderReceived' || entry.type === 'FundsReleased') {
+      // Count OrderReceived, FundsReleased, and VisitApproved as positive earnings on chart
+      if (entry.type === 'OrderReceived' || entry.type === 'FundsReleased' || entry.type === 'VisitApproved') {
         const date = new Date(entry.createdAt);
         if (date.getFullYear() === currentYear) {
           const month = date.getMonth();

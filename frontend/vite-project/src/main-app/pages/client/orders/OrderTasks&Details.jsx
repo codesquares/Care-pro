@@ -933,24 +933,19 @@ const MyOrders = () => {
                                         const order = orders[0];
                                         const showRelease = ClientOrderService.shouldShowReleaseFunds(order, userId) && !fundsReleased;
                                         const fundInfo = ClientOrderService.getFundStatusInfo(order);
-                                        const isAutoReleased = order.paymentOption === 'monthly' && order.billingCycleNumber > 1;
                                         const alreadyReleased = order.isOrderStatusApproved || fundsReleased;
 
                                         return (
                                             <div className="fund-release-section" style={{ margin: '12px 0', padding: '10px', borderRadius: '8px', background: '#f8f9fa' }}>
                                                 {alreadyReleased ? (
                                                     <div style={{ color: '#27ae60', fontWeight: 600 }}>
-                                                        ✅ Funds Released
-                                                    </div>
-                                                ) : isAutoReleased ? (
-                                                    <div style={{ color: '#2980b9', fontWeight: 600 }}>
-                                                        ✅ Funds Auto-Released (Cycle {order.billingCycleNumber})
+                                                        ✅ Order Approved
                                                     </div>
                                                 ) : showRelease ? (
                                                     <>
                                                         <p style={{ fontSize: '13px', color: '#555', marginBottom: '8px' }}>
-                                                            💰 Funds are pending release. Confirm service delivery to release payment to your caregiver.
-                                                            {' '}Funds auto-release after 7 days.
+                                                            💰 Confirm service delivery to approve this order. Individual visits are credited to the caregiver as you review them.
+                                                            {' '}Unreviewed visits auto-release after 7 days.
                                                         </p>
                                                         <button
                                                             className="mark-completed-btn"
@@ -958,7 +953,7 @@ const MyOrders = () => {
                                                             onClick={handleReleaseFunds}
                                                             disabled={releasingFunds}
                                                         >
-                                                            {releasingFunds ? 'Releasing...' : '💸 Release Funds'}
+                                                            {releasingFunds ? 'Processing...' : '✅ Approve Order'}
                                                         </button>
                                                     </>
                                                 ) : order.hasDispute ? (
@@ -1027,7 +1022,7 @@ const MyOrders = () => {
                                                         ? 'Order can be marked as completed after the contract is approved and services are delivered.'
                                                         : checkingTaskSheets
                                                             ? 'Checking visit completion status...'
-                                                            : 'All scheduled visits must be recorded and approved before marking the order as completed.'
+                                                            : 'All scheduled visits must be recorded and reviewed before the order can be completed.'
                                                     }
                                                 </p>
                                             )}
@@ -1320,7 +1315,7 @@ const MyOrders = () => {
                             <>
                                 <h3>Mark as Completed</h3>
                                 <p style={{ fontSize: '0.9rem', color: '#666', marginBottom: '12px' }}>
-                                    Please confirm that all care services for this order have been fully delivered before marking it as completed. This will release funds to the caregiver.
+                                    Please confirm that all care services for this order have been fully delivered. The order will be marked as completed.
                                 </p>
                                 <div className="modal-actions">
                                     <button onClick={handleSubmitStatus} disabled={isSubmitting}>

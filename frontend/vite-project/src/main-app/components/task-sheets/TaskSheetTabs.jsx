@@ -68,13 +68,14 @@ const TaskSheetTabs = ({ order }) => {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [loading, sheets.length, orderId, error, orderCompleted]);
 
-  // ------ Check if previous sheet is approved (for approval gate) ------
-  const isPreviousSheetApproved = () => {
+  // ------ Check if previous sheet is reviewed (for review gate) ------
+  const isPreviousSheetReviewed = () => {
     if (sheets.length === 0) return true; // first sheet always allowed
     const lastSheet = sheets[sheets.length - 1];
-    // Must be submitted AND client-approved before next visit can be created
+    // Must be submitted AND client-reviewed (Approved or Disputed) before next visit can be created
+    // Only "Pending" (un-reviewed) visits block new ones
     if (lastSheet.status !== 'submitted') return false;
-    if (lastSheet.clientReviewStatus !== 'Approved') return false;
+    if (lastSheet.clientReviewStatus !== 'Approved' && lastSheet.clientReviewStatus !== 'Disputed') return false;
     return true;
   };
 
@@ -86,13 +87,13 @@ const TaskSheetTabs = ({ order }) => {
       return;
     }
 
-    // Frontend approval gate — warn before the backend rejects
-    if (!isAutoFirst && !isPreviousSheetApproved()) {
+    // Frontend review gate — warn before the backend rejects
+    if (!isAutoFirst && !isPreviousSheetReviewed()) {
       const lastSheet = sheets[sheets.length - 1];
       if (lastSheet.status !== 'submitted') {
         toast.warn(`Visit ${lastSheet.sheetNumber} must be submitted before creating the next visit.`);
       } else {
-        toast.warn(`Visit ${lastSheet.sheetNumber} must be approved by the client before creating the next visit.`);
+        toast.warn(`Visit ${lastSheet.sheetNumber} must be reviewed by the client before creating the next visit.`);
       }
       return;
     }
@@ -157,7 +158,7 @@ const TaskSheetTabs = ({ order }) => {
   }
 
   const canAddMore = sheets.length < maxSheets && !orderCompleted;
-  const prevApproved = isPreviousSheetApproved();
+  const prevApproved = isPreviousSheetReviewed();
   const activeSheet = sheets[activeIndex] || null;
 
   return (
@@ -185,7 +186,7 @@ const TaskSheetTabs = ({ order }) => {
             className={`ts-tab ts-tab--add ${!prevApproved ? 'ts-tab--locked' : ''}`}
             onClick={() => handleCreateSheet(false)}
             disabled={creating}
-            title={!prevApproved ? 'Previous visit must be submitted and approved by client first' : 'Add another visit sheet'}
+            title={!prevApproved ? 'Previous visit must be submitted and reviewed by client first' : 'Add another visit sheet'}
           >
             {creating ? "..." : "+"}
           </button>

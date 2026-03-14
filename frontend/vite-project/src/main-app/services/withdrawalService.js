@@ -55,7 +55,8 @@ export const withdrawalService = {
 
   /**
    * Create a new withdrawal request.
-   * Service charge is calculated server-side — do NOT send it from the client.
+   * No service charge is deducted — platform commission is already taken at credit time.
+   * The amount requested equals the amount the caregiver will receive.
    * @param {{ caregiverId: string, amountRequested: number, accountNumber?: string, bankName?: string, accountName?: string }} withdrawalData
    * @returns {Promise<Object>} Created withdrawal request
    */

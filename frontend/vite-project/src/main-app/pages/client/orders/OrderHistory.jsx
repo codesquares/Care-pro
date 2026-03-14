@@ -199,11 +199,9 @@ const OrderHistory = () => {
                       let fundLabel = '—';
                       let fundColor = '#888';
                       if (order.hasDispute) { fundLabel = 'Disputed'; fundColor = '#c62828'; }
-                      else if (order.isOrderStatusApproved) { fundLabel = 'Released'; fundColor = '#2e7d32'; }
-                      else if (order.paymentOption === 'monthly' && order.billingCycleNumber > 1 && (order.status === 'Completed' || order.clientOrderStatus === 'Completed')) {
-                        fundLabel = 'Auto-Released'; fundColor = '#1565c0';
-                      } else if (order.status === 'Completed' || order.clientOrderStatus === 'Completed') {
-                        fundLabel = 'Pending'; fundColor = '#e65100';
+                      else if (order.isOrderStatusApproved) { fundLabel = 'Approved'; fundColor = '#2e7d32'; }
+                      else if (order.status === 'Completed' || order.clientOrderStatus === 'Completed') {
+                        fundLabel = 'Per-Visit'; fundColor = '#e65100';
                       }
                       return (
                       <tr key={order.id}>
