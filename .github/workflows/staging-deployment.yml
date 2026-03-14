@@ -179,6 +179,7 @@ jobs:
           echo "🏗️ Building frontend Docker image..."
           cd frontend/vite-project
           docker build \
+            --build-arg VITE_GOOGLE_MAPS_API_KEY=${{ secrets.VITE_GOOGLE_MAPS_API_KEY }} \
             --build-arg VITE_CONTENTFUL_SPACE_ID=${{ secrets.VITE_CONTENTFUL_SPACE_ID }} \
             --build-arg VITE_CONTENTFUL_ACCESS_TOKEN_PUBLISHED=${{ secrets.VITE_CONTENTFUL_ACCESS_TOKEN_PUBLISHED }} \
             --build-arg VITE_CONTENTFUL_ACCESS_TOKEN_DRAFT=${{ secrets.VITE_CONTENTFUL_ACCESS_TOKEN_DRAFT }} \
