@@ -22,7 +22,7 @@ const ClientVisitView = ({ sheet, orderId, onVisitReviewed, onSheetUpdated }) =>
   const [loadingReports, setLoadingReports] = useState(false);
 
   // Visit review state
-  const [reviewAction, setReviewAction] = useState(null); // null | 'dispute'
+  const [reviewAction, setReviewAction] = useState(null); // null | 'confirm-approve' | 'dispute'
   const [visitDisputeCategory, setVisitDisputeCategory] = useState("");
   const [visitDisputeReason, setVisitDisputeReason] = useState("");
   const [reviewLoading, setReviewLoading] = useState(false);
@@ -361,16 +361,16 @@ const ClientVisitView = ({ sheet, orderId, onVisitReviewed, onSheetUpdated }) =>
             </div>
           ) : (
             <>
-              {reviewAction !== 'dispute' ? (
+              {reviewAction === null ? (
                 <div className="cv-review-actions">
                   <p className="cv-review-prompt">How was this visit?</p>
                   <div className="cv-review-buttons">
                     <button
                       className="cv-review-approve-btn"
-                      onClick={handleApproveVisit}
+                      onClick={() => setReviewAction('confirm-approve')}
                       disabled={reviewLoading}
                     >
-                      {reviewLoading ? 'Processing...' : '✓ Approve Visit'}
+                      ✓ Approve Visit
                     </button>
                     <button
                       className="cv-review-dispute-btn"
@@ -378,6 +378,29 @@ const ClientVisitView = ({ sheet, orderId, onVisitReviewed, onSheetUpdated }) =>
                       disabled={reviewLoading}
                     >
                       ⚠️ Report Issue
+                    </button>
+                  </div>
+                </div>
+              ) : reviewAction === 'confirm-approve' ? (
+                <div className="cv-review-actions" style={{ background: '#f0fdf4', border: '1px solid #bbf7d0', borderRadius: '8px', padding: '16px' }}>
+                  <p className="cv-review-prompt" style={{ fontWeight: 600, marginBottom: '8px' }}>Confirm Visit Approval</p>
+                  <p style={{ fontSize: '0.9rem', color: '#555', marginBottom: '12px' }}>
+                    By approving this visit, you are authorizing CarePro to release payment for this visit to the caregiver. This action cannot be undone.
+                  </p>
+                  <div className="cv-review-buttons">
+                    <button
+                      className="cv-review-approve-btn"
+                      onClick={handleApproveVisit}
+                      disabled={reviewLoading}
+                    >
+                      {reviewLoading ? 'Processing...' : '✓ Yes, Approve & Pay'}
+                    </button>
+                    <button
+                      className="cv-review-cancel-btn"
+                      onClick={() => setReviewAction(null)}
+                      disabled={reviewLoading}
+                    >
+                      Cancel
                     </button>
                   </div>
                 </div>

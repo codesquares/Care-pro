@@ -197,7 +197,7 @@ const WithdrawalManagement = () => {
                 <th>Caregiver</th>
                 <th>Amount</th>
                 <th>Service Fee</th>
-                <th>Final Amount</th>
+                <th>Payout Amount</th>
                 <th>Bank Info</th>
                 <th>Token</th>
                 <th>Status</th>

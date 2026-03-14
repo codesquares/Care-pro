@@ -107,7 +107,7 @@ const WithdrawalModal = ({ onClose, onSubmit, maxAmount }) => {
 
         // Show success modal
         setModalTitle('Withdrawal Request Submitted!');
-        setModalDescription(`Your withdrawal request for ${formatCurrency(parseFloat(formData.amountRequested))} has been submitted successfully. Service charge will be calculated and deducted by the system.`);
+        setModalDescription(`Your withdrawal request for ${formatCurrency(parseFloat(formData.amountRequested))} has been submitted successfully. The full amount will be paid to your account.`);
         setButtonText('Close');
         setButtonBgColor('#00B4A6');
         setIsError(false);

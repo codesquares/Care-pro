@@ -424,8 +424,6 @@ const ClientOrderService = {
     if (order.isOrderStatusApproved) return false;
     // Must NOT have an active dispute
     if (order.hasDispute) return false;
-    // Recurring cycle 2+ auto-releases — no button needed
-    if (order.paymentOption === 'monthly' && order.billingCycleNumber > 1) return false;
     return true;
   },
 
@@ -437,11 +435,8 @@ const ClientOrderService = {
   getFundStatusInfo(order) {
     if (!order) return { label: '', className: '' };
     if (order.hasDispute) return { label: 'Disputed', className: 'fund-status--disputed' };
-    if (order.isOrderStatusApproved) return { label: 'Funds Released', className: 'fund-status--released' };
-    if (order.paymentOption === 'monthly' && order.billingCycleNumber > 1 && order.clientOrderStatus === 'Completed') {
-      return { label: 'Funds Auto-Released', className: 'fund-status--auto-released' };
-    }
-    if (order.clientOrderStatus === 'Completed') return { label: 'Funds Pending Release', className: 'fund-status--pending' };
+    if (order.isOrderStatusApproved) return { label: 'Order Approved', className: 'fund-status--released' };
+    if (order.clientOrderStatus === 'Completed') return { label: 'Per-Visit Release', className: 'fund-status--pending' };
     return { label: '', className: '' };
   },
 

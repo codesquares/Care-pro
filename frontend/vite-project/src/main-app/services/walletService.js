@@ -49,6 +49,12 @@ const LEDGER_ENTRY_TYPES = {
     icon: '🔧',
     isCredit: true, // Can be either — amount sign determines credit/debit
   },
+  VisitApproved: {
+    label: 'Visit Approved',
+    color: '#16a085',
+    icon: '✅',
+    isCredit: true,
+  },
 };
 
 /**

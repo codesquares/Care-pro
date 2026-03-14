@@ -116,6 +116,9 @@ const TransactionHistory = () => {
                         {entry.billingCycleNumber && (
                           <span className="cycle-tag"> Cycle #{entry.billingCycleNumber}</span>
                         )}
+                        {entry.type === 'VisitApproved' && entry.taskSheetId && (
+                          <span className="cycle-tag"> Visit #{entry.taskSheetId.slice(-6)}</span>
+                        )}
                       </td>
                       <td className={`amount ${isCredit ? 'positive' : 'negative'}`}>
                         {isCredit ? '+' : '-'}{formatCurrency(entry.amount)}

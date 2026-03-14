@@ -366,7 +366,6 @@ const CaregiverOrderDetails = () => {
                                     {/* Fund Status Section */}
                                     {orders[0].clientOrderStatus === 'Completed' && (() => {
                                         const order = orders[0];
-                                        const isAutoReleased = order.paymentOption === 'monthly' && order.billingCycleNumber > 1;
                                         const isReleased = order.isOrderStatusApproved;
                                         const isDisputed = order.hasDispute;
                                         return (
@@ -375,11 +374,9 @@ const CaregiverOrderDetails = () => {
                                                     {isDisputed ? (
                                                         <span style={{ color: '#e74c3c' }}>⚠️ Funds on hold — active dispute</span>
                                                     ) : isReleased ? (
-                                                        <span style={{ color: '#27ae60' }}>✅ Funds Released to your wallet</span>
-                                                    ) : isAutoReleased ? (
-                                                        <span style={{ color: '#2980b9' }}>✅ Funds Auto-Released (Cycle {order.billingCycleNumber})</span>
+                                                        <span style={{ color: '#27ae60' }}>✅ Order Approved</span>
                                                     ) : (
-                                                        <span style={{ color: '#e67e22' }}>⏳ Funds pending — waiting for client approval or 7-day auto-release</span>
+                                                        <span style={{ color: '#e67e22' }}>⏳ Funds release per visit — each approved visit credits your wallet. Unreviewed visits auto-release after 7 days.</span>
                                                     )}
                                                 </p>
                                             </div>
