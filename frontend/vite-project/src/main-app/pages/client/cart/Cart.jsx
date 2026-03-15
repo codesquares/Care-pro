@@ -308,14 +308,27 @@ const Cart = () => {
               <div className="sd-error">{paymentError}</div>
             )}
 
+            {/* Commitment gate — block payment if no commitment */}
+            {commitmentAccess && !commitmentAccess.hasAccess && (
+              <div className="sd-commitment-gate">
+                <p>🔒 You must pay the ₦5,000 commitment fee before placing an order. This fee is deducted from your total when you hire.</p>
+                <button
+                  className="sd-commitment-gate__btn"
+                  onClick={() => navigate(`/app/client/commitment-payment/${id}`)}
+                >
+                  🔓 Unlock Access — ₦5,000
+                </button>
+              </div>
+            )}
+
             {/* CTA */}
             <button
               className="sd-cta"
               onClick={handleHire}
-              disabled={paymentDisabled}
+              disabled={paymentDisabled || !commitmentAccess?.hasAccess}
             >
-              <span>{paymentDisabled ? 'Payment unavailable' : 'Proceed to Payment'}</span>
-              {!paymentDisabled && <span className="sd-cta__arrow">&rarr;</span>}
+              <span>{paymentDisabled ? 'Payment unavailable' : !commitmentAccess?.hasAccess ? 'Pay commitment fee first' : 'Proceed to Payment'}</span>
+              {!paymentDisabled && commitmentAccess?.hasAccess && <span className="sd-cta__arrow">&rarr;</span>}
             </button>
           </div>
 

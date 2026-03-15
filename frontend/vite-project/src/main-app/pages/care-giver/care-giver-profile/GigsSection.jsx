@@ -1,8 +1,9 @@
-import { useEffect, useState, useMemo } from "react";
-import { useNavigate, useLocation } from "react-router-dom";
+import { useEffect, useState, useMemo, useCallback } from "react";
+import { useNavigate, useLocation, useSearchParams } from "react-router-dom";
 import api from "../../../services/api";
+import GigService from "../../../services/gigService";
 
-import clock from "../../../../assets/main-app/clock.png"; // Ensure you have an empty gigs image in your assets
+import clock from "../../../../assets/main-app/clock.png";
 import Toast from "../../../components/toast/Toast";
 import useToast from "../../../hooks/useToast";
 import { useGigEdit } from "../../../contexts/GigEditContext";
@@ -12,16 +13,20 @@ import "./gigs-section.css";
 
 const GigsSection = () => {
   const [gigs, setGigs] = useState([]);
+  const [deletedGigs, setDeletedGigs] = useState([]);
   const [isLoading, setIsLoading] = useState(true);
+  const [deletedLoading, setDeletedLoading] = useState(false);
   const [error, setError] = useState("");
   const [publishingGigs, setPublishingGigs] = useState(new Set());
   const [pausingGigs, setPausingGigs] = useState(new Set());
   const [deletingGigs, setDeletingGigs] = useState(new Set());
+  const [restoringGigs, setRestoringGigs] = useState(new Set());
   const [activeTab, setActiveTab] = useState("active");
   const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false);
   const [gigToDelete, setGigToDelete] = useState(null);
   const navigate = useNavigate();
   const location = useLocation();
+  const [searchParams, setSearchParams] = useSearchParams();
   const basePath = "/app/caregiver";
   const { toasts, showSuccess, showError, removeToast } = useToast();
   const { populateFromGig, resetForm } = useGigEdit();
@@ -139,7 +144,6 @@ const GigsSection = () => {
   };
 
   const handleDeleteGig = (gig) => {
-    // Open confirmation modal instead of browser alert
     setGigToDelete(gig);
     setIsDeleteModalOpen(true);
   };
@@ -148,9 +152,7 @@ const GigsSection = () => {
     if (!gigToDelete) return;
 
     try {
-      // Close modal immediately
       setIsDeleteModalOpen(false);
-      // Add gig to deleting set to show loading state
       setDeletingGigs(prev => new Set(prev).add(gigToDelete.id));
 
       const userDetails = JSON.parse(localStorage.getItem("userDetails"));
@@ -158,42 +160,26 @@ const GigsSection = () => {
         throw new Error("Caregiver ID not found in local storage.");
       }
 
-      const token = localStorage.getItem('authToken');
-      // Use soft delete endpoint with correct format
-      const response = await fetch(
-        `${config.BASE_URL}/Gigs/SoftDeleteGig/${gigToDelete.id}?caregiverId=${userDetails.id}`,
-        {
-          method: 'DELETE',
-          headers: {
-            'Authorization': `Bearer ${token}`
-          }
-        }
-      );
+      const result = await GigService.softDeleteGig(gigToDelete.id, userDetails.id);
 
-      if (!response.ok) {
-        // Handle specific error cases
-        if (response.status === 400) {
-          const errorData = await response.json().catch(() => ({}));
-          throw new Error(errorData.message || 'Gig is already deleted or invalid request');
-        } else if (response.status === 403) {
-          throw new Error('You do not have permission to delete this gig');
-        } else if (response.status === 404) {
-          throw new Error('Gig not found');
-        } else {
-          throw new Error('Failed to delete gig');
-        }
+      if (!result.success) {
+        // Backend returns user-friendly obligation error messages — show directly
+        showError(result.message);
+        return;
       }
 
-      // Remove the gig from local state (soft deleted gigs are filtered out)
+      // Remove the gig from active list
       setGigs(prevGigs => prevGigs.filter(g => g.id !== gigToDelete.id));
+      showSuccess('Gig deleted. You can restore it within 30 days.');
 
-      showSuccess('Gig deleted successfully!');
-      
+      // Refresh deleted gigs list if on that tab
+      if (activeTab === 'deleted') {
+        fetchDeletedGigs();
+      }
     } catch (err) {
       console.error('Error deleting gig:', err);
       showError(err.message || 'Failed to delete gig. Please try again.');
     } finally {
-      // Remove gig from deleting set and clear gigToDelete
       if (gigToDelete) {
         setDeletingGigs(prev => {
           const newSet = new Set(prev);
@@ -202,6 +188,41 @@ const GigsSection = () => {
         });
       }
       setGigToDelete(null);
+    }
+  };
+
+  const handleRestoreGig = async (gig) => {
+    try {
+      console.log('Restore gig — id:', gig.id, 'length:', gig.id?.length, 'canRestore:', gig.canRestore);
+      setRestoringGigs(prev => new Set(prev).add(gig.id));
+
+      const userDetails = JSON.parse(localStorage.getItem("userDetails"));
+      if (!userDetails?.id) {
+        throw new Error("Caregiver ID not found in local storage.");
+      }
+
+      const result = await GigService.restoreGig(gig.id, userDetails.id);
+
+      if (!result.success) {
+        showError(result.message);
+        return;
+      }
+
+      // Remove from deleted list
+      setDeletedGigs(prev => prev.filter(g => g.id !== gig.id));
+      showSuccess('Your gig has been restored as a Draft. Please review your details and republish when ready.');
+
+      // Refresh the main gigs list to show the restored draft
+      fetchGigs();
+    } catch (err) {
+      console.error('Error restoring gig:', err);
+      showError(err.message || 'Failed to restore gig. Please try again.');
+    } finally {
+      setRestoringGigs(prev => {
+        const newSet = new Set(prev);
+        newSet.delete(gig.id);
+        return newSet;
+      });
     }
   };
 
@@ -242,6 +263,42 @@ const GigsSection = () => {
       setIsLoading(false);
     }
   };
+
+  // Fetch deleted gigs for the "Deleted Gigs" tab
+  const fetchDeletedGigs = useCallback(async () => {
+    try {
+      setDeletedLoading(true);
+      const userDetails = JSON.parse(localStorage.getItem("userDetails"));
+      if (!userDetails?.id) return;
+
+      const result = await GigService.getDeletedGigs(userDetails.id);
+      if (result.success) {
+        setDeletedGigs(result.data);
+      }
+    } catch (err) {
+      console.error('Error fetching deleted gigs:', err);
+    } finally {
+      setDeletedLoading(false);
+    }
+  }, []);
+
+  // Support deep-link via ?tab=deleted (e.g., from deletion reminder notifications)
+  useEffect(() => {
+    const tabParam = searchParams.get('tab');
+    if (tabParam === 'deleted') {
+      setActiveTab('deleted');
+      // Clean up the query param so it doesn't persist on refresh
+      searchParams.delete('tab');
+      setSearchParams(searchParams, { replace: true });
+    }
+  }, []);
+
+  // Fetch deleted gigs when the tab is selected
+  useEffect(() => {
+    if (activeTab === 'deleted') {
+      fetchDeletedGigs();
+    }
+  }, [activeTab, fetchDeletedGigs]);
 
   // Fetch gigs on mount and when returning from edit page
   useEffect(() => {
@@ -302,6 +359,12 @@ const GigsSection = () => {
           onClick={() => setActiveTab("draft")}
         >
           Draft Gigs ({draftGigs.length})
+        </button>
+        <button 
+          className={`caregiver-gigs-tab ${activeTab === "deleted" ? "active" : ""}`}
+          onClick={() => setActiveTab("deleted")}
+        >
+          Deleted Gigs
         </button>
       </div>
 
@@ -514,6 +577,69 @@ const GigsSection = () => {
               </div>
             </div>
           ))}
+
+          {/* Deleted Tab Content */}
+          {activeTab === "deleted" && (
+            deletedLoading ? (
+              <div className="caregiver-spinner-container">
+                <div className="caregiver-spinner" />
+                <p>Loading deleted gigs...</p>
+              </div>
+            ) : deletedGigs.length === 0 ? (
+              <div className="caregiver-empty-state">
+                <h4>No Deleted Gigs</h4>
+                <p>You don't have any recently deleted gigs.</p>
+              </div>
+            ) : (
+              deletedGigs.map((gig) => {
+                const daysLeft = gig.daysRemaining ?? 0;
+                const isExpired = !gig.canRestore;
+                const progressPct = Math.min(100, Math.round((daysLeft / 30) * 100));
+                return (
+                  <div
+                    key={gig.id}
+                    className={`caregiver-gig-card deleted-gig-card ${isExpired ? 'expired' : ''}`}
+                  >
+                    <img
+                      src={gig.image1 || "https://via.placeholder.com/300x160"}
+                      alt={gig.title}
+                      className="caregiver-gig-image"
+                    />
+                    <div className="caregiver-gig-content">
+                      <h4 className="caregiver-gig-title">{gig.title}</h4>
+                      <p className="deleted-gig-category">{gig.category}</p>
+                      {isExpired ? (
+                        <p className="deleted-gig-status expired-text">Permanently deleted</p>
+                      ) : (
+                        <>
+                          <p className="deleted-gig-status">
+                            Deleted on {new Date(gig.deletedOn).toLocaleDateString()} &middot; {daysLeft} day{daysLeft !== 1 ? 's' : ''} remaining
+                          </p>
+                          <div className="deleted-gig-progress">
+                            <div
+                              className={`deleted-gig-progress-bar ${daysLeft <= 5 ? 'critical' : daysLeft <= 10 ? 'warning' : ''}`}
+                              style={{ width: `${progressPct}%` }}
+                            />
+                          </div>
+                        </>
+                      )}
+                      <div className="caregiver-gig-actions">
+                        {!isExpired && (
+                          <button
+                            className="caregiver-gig-action-btn caregiver-restore"
+                            onClick={() => handleRestoreGig(gig)}
+                            disabled={restoringGigs.has(gig.id)}
+                          >
+                            {restoringGigs.has(gig.id) ? 'Restoring...' : 'Restore'}
+                          </button>
+                        )}
+                      </div>
+                    </div>
+                  </div>
+                );
+              })
+            )
+          )}
         </div>
       )}
       
@@ -539,7 +665,7 @@ const GigsSection = () => {
         }}
         onProceed={confirmDeleteGig}
         title="Delete Gig?"
-        description={`Are you sure you want to delete "${gigToDelete?.title}"? This action cannot be undone and the gig will be permanently removed.`}
+        description={`Are you sure you want to delete "${gigToDelete?.title}"? It will be hidden immediately. You have **30 days** to restore it before it is permanently deleted.`}
         buttonText="Delete"
         buttonBgColor="#dc2626"
         secondaryButtonText="Cancel"

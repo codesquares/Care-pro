@@ -1346,3 +1346,25 @@
 .send-error-close:hover {
   color: #7f1d1d;
 }
+
+/* Redaction warning banner — amber instead of red */
+.redaction-warning-banner {
+  background-color: #fef3cd;
+  border-top-color: #fbbf24;
+  color: #92400e;
+}
+.redaction-warning-banner .send-error-close {
+  color: #92400e;
+}
+.redaction-warning-banner .send-error-close:hover {
+  color: #78350f;
+}
+
+/* Redacted message label */
+.redacted-label {
+  display: block;
+  font-size: 11px;
+  color: #b45309;
+  margin-top: 2px;
+  font-style: italic;
+}

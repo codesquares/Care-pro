@@ -110,6 +110,17 @@ const ChatArea = ({ messages, recipient, userId, onSendMessage, isOfflineMode = 
     return () => window.removeEventListener('message-error', handleMessageError);
   }, []);
 
+  // Listen for message redaction warnings from MessageContext
+  const [redactionWarning, setRedactionWarning] = useState(null);
+  useEffect(() => {
+    const handleRedacted = (e) => {
+      setRedactionWarning(e.detail?.warning || 'Some contact information was removed from your message.');
+      setTimeout(() => setRedactionWarning(null), 8000);
+    };
+    window.addEventListener('message-redacted', handleRedacted);
+    return () => window.removeEventListener('message-redacted', handleRedacted);
+  }, []);
+
   // Close 3-dot menu when clicking outside
   useEffect(() => {
     const handleClickOutside = (e) => {
@@ -151,13 +162,13 @@ const ChatArea = ({ messages, recipient, userId, onSendMessage, isOfflineMode = 
   // Handle terminate order
   const handleTerminateOrder = async () => {
     if (!activeOrder) return;
-    if (!window.confirm('Are you sure you want to terminate this order? This action cannot be undone.')) return;
+    if (!window.confirm('Are you sure you want to terminate this order? This will revoke chat access and require a new ₦5,000 commitment fee to re-engage with this caregiver.')) return;
     try {
       const result = await ClientOrderService.cancelOrder(activeOrder.id || activeOrder.orderId);
       if (result.success) {
         setActiveOrder(null);
         setShowMoreMenu(false);
-        alert('Order has been terminated successfully.');
+        setShowCommitmentModal(true);
       } else {
         alert(result.error || 'Failed to terminate order. Please try again.');
       }
@@ -942,9 +953,14 @@ const ChatArea = ({ messages, recipient, userId, onSendMessage, isOfflineMode = 
                       {msg.isDeleted ? (
                         <p className="deleted-message-text">This message was deleted</p>
                       ) : (
-                        <p className={`message-text ${detectMessageType(msg.text || msg.content)}`}>
-                          {msg.text || msg.content}
-                        </p>
+                        <>
+                          <p className={`message-text ${detectMessageType(msg.text || msg.content)}`}>
+                            {msg.text || msg.content}
+                          </p>
+                          {msg.isRedacted && msg.senderId === userId && (
+                            <span className="redacted-label">Contact info removed</span>
+                          )}
+                        </>
                       )}
                       <div className="message-meta">
                         <span className="message-time">
@@ -1007,6 +1023,15 @@ const ChatArea = ({ messages, recipient, userId, onSendMessage, isOfflineMode = 
           <span className="send-error-icon">⚠️</span>
           <span className="send-error-text">{sendErrorMessage}</span>
           <button className="send-error-close" onClick={() => setSendErrorMessage(null)}>×</button>
+        </div>
+      )}
+
+      {/* Redaction warning banner */}
+      {redactionWarning && (
+        <div className="send-error-banner redaction-warning-banner">
+          <span className="send-error-icon">✂️</span>
+          <span className="send-error-text">{redactionWarning}</span>
+          <button className="send-error-close" onClick={() => setRedactionWarning(null)}>×</button>
         </div>
       )}
 
