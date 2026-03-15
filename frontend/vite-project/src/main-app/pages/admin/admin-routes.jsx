@@ -30,7 +30,7 @@ function AdminRoutes() {
         const userDetails = JSON.parse(localStorage.getItem('userDetails') || '{}');
         const userRole = userDetails?.role;
 
-        if (userRole !== "Admin") {
+        if (userRole !== "Admin" && userRole !== "SuperAdmin") {
             navigate('/unauthorized', { replace: true });
         }
     }, [navigate]);

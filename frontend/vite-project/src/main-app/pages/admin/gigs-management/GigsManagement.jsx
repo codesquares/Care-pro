@@ -18,9 +18,46 @@ const GigsManagement = () => {
   const [totalCount, setTotalCount] = useState(0);
   const [hasMore, setHasMore] = useState(false);
 
+  // Bulk delete state
+  const [selectedGigIds, setSelectedGigIds] = useState(new Set());
+  const [bulkDeleting, setBulkDeleting] = useState(false);
+  const [bulkDeleteResult, setBulkDeleteResult] = useState(null);
+  const [showDeleteAllConfirm, setShowDeleteAllConfirm] = useState(false);
+  const [deleteAllInput, setDeleteAllInput] = useState('');
+
+  // Deleted gigs view state
+  const [viewMode, setViewMode] = useState('active'); // 'active' | 'deleted'
+  const [deletedGigs, setDeletedGigs] = useState([]);
+  const [deletedLoading, setDeletedLoading] = useState(false);
+  const [deletedPage, setDeletedPage] = useState(1);
+  const [deletedTotalCount, setDeletedTotalCount] = useState(0);
+  const [deletedHasMore, setDeletedHasMore] = useState(false);
+  const [deletedCaregiverFilter, setDeletedCaregiverFilter] = useState('');
+
+  // Check if current user is SuperAdmin
+  const isSuperAdmin = (() => {
+    try {
+      const userDetails = JSON.parse(localStorage.getItem('userDetails') || '{}');
+      return userDetails?.role === 'SuperAdmin';
+    } catch { return false; }
+  })();
+
+  const getAdminUserId = () => {
+    try {
+      const userDetails = JSON.parse(localStorage.getItem('userDetails') || '{}');
+      return userDetails?.id || '';
+    } catch { return ''; }
+  };
+
   useEffect(() => {
     loadGigs();
   }, [currentPage, statusFilter, searchTerm, categoryFilter]);
+
+  useEffect(() => {
+    if (viewMode === 'deleted') {
+      loadDeletedGigs();
+    }
+  }, [viewMode, deletedPage, deletedCaregiverFilter]);
 
   useEffect(() => {
     setFilteredGigs(gigs);
@@ -73,6 +110,103 @@ const GigsManagement = () => {
   const closeGigModal = () => {
     setShowGigModal(false);
     setSelectedGig(null);
+  };
+
+  const loadDeletedGigs = async () => {
+    try {
+      setDeletedLoading(true);
+      const params = { page: deletedPage, pageSize };
+      if (deletedCaregiverFilter.trim()) params.caregiverId = deletedCaregiverFilter.trim();
+      const result = await adminService.getDeletedGigs(params);
+      if (result.success) {
+        setDeletedGigs(result.data);
+        setDeletedTotalCount(result.totalCount || 0);
+        setDeletedHasMore(result.hasMore || false);
+      } else {
+        setError(result.error || 'Failed to load deleted gigs');
+      }
+    } catch (err) {
+      console.error('Error loading deleted gigs:', err);
+      setError('An unexpected error occurred');
+    } finally {
+      setDeletedLoading(false);
+    }
+  };
+
+  // Bulk delete handlers
+  const toggleGigSelection = (gigId) => {
+    setSelectedGigIds(prev => {
+      const next = new Set(prev);
+      if (next.has(gigId)) next.delete(gigId);
+      else next.add(gigId);
+      return next;
+    });
+  };
+
+  const toggleSelectAll = () => {
+    if (selectedGigIds.size === filteredGigs.length) {
+      setSelectedGigIds(new Set());
+    } else {
+      setSelectedGigIds(new Set(filteredGigs.map(g => g.id)));
+    }
+  };
+
+  const handleBulkDelete = async () => {
+    if (selectedGigIds.size === 0) return;
+    const adminUserId = getAdminUserId();
+    if (!adminUserId) { setError('Admin user ID not found.'); return; }
+
+    try {
+      setBulkDeleting(true);
+      setBulkDeleteResult(null);
+      const result = await adminService.bulkSoftDeleteGigs({
+        gigIds: Array.from(selectedGigIds),
+        deleteAll: false,
+        adminUserId
+      });
+      if (result.success) {
+        setBulkDeleteResult(result.data);
+        setSelectedGigIds(new Set());
+        loadGigs();
+      } else {
+        setError(result.error);
+      }
+    } catch (err) {
+      console.error('Bulk delete error:', err);
+      setError('An error occurred during bulk delete.');
+    } finally {
+      setBulkDeleting(false);
+    }
+  };
+
+  const handleDeleteAll = async () => {
+    if (deleteAllInput !== 'DELETE ALL') return;
+    const adminUserId = getAdminUserId();
+    if (!adminUserId) { setError('Admin user ID not found.'); return; }
+
+    try {
+      setBulkDeleting(true);
+      setBulkDeleteResult(null);
+      setShowDeleteAllConfirm(false);
+      setDeleteAllInput('');
+      const result = await adminService.bulkSoftDeleteGigs({
+        gigIds: [],
+        deleteAll: true,
+        adminUserId
+      });
+      if (result.success) {
+        setBulkDeleteResult(result.data);
+        setSelectedGigIds(new Set());
+        loadGigs();
+      } else {
+        setError(result.error);
+      }
+    } catch (err) {
+      console.error('Delete all error:', err);
+      setError('An error occurred during delete all.');
+    } finally {
+      setBulkDeleting(false);
+    }
   };
 
   const getStatusBadgeClass = (status) => {
@@ -133,6 +267,22 @@ const GigsManagement = () => {
         </div>
       </div>
 
+      {/* View Mode Toggle */}
+      <div className="admin-gigs-view-toggle">
+        <button
+          className={`admin-gigs-view-btn ${viewMode === 'active' ? 'active' : ''}`}
+          onClick={() => setViewMode('active')}
+        >
+          <i className="fas fa-briefcase"></i> Active Gigs
+        </button>
+        <button
+          className={`admin-gigs-view-btn ${viewMode === 'deleted' ? 'active' : ''}`}
+          onClick={() => setViewMode('deleted')}
+        >
+          <i className="fas fa-trash-alt"></i> Deleted Gigs
+        </button>
+      </div>
+
       {error && (
         <div className="alert alert-error">
           <i className="fas fa-exclamation-circle"></i>
@@ -185,6 +335,53 @@ const GigsManagement = () => {
               <p>Draft Gigs</p>
             </div>
           </div>
+        </div>
+      )}
+
+      {viewMode === 'active' && (
+      <>
+      {/* Bulk Delete Result Banner */}
+      {bulkDeleteResult && (
+        <div className="alert alert-bulk-result">
+          <div className="bulk-result-summary">
+            <strong>{bulkDeleteResult.message}</strong>
+            <span>Deleted: {bulkDeleteResult.deletedCount} | Skipped: {bulkDeleteResult.skippedCount} | Failed: {bulkDeleteResult.failedCount}</span>
+          </div>
+          {bulkDeleteResult.skippedReasons && bulkDeleteResult.skippedReasons.length > 0 && (
+            <ul className="bulk-skipped-list">
+              {bulkDeleteResult.skippedReasons.map((reason, idx) => (
+                <li key={idx}>{reason}</li>
+              ))}
+            </ul>
+          )}
+          <button className="close-btn" onClick={() => setBulkDeleteResult(null)}>×</button>
+        </div>
+      )}
+
+      {/* SuperAdmin Bulk Actions */}
+      {isSuperAdmin && (
+        <div className="bulk-actions-bar">
+          <div className="bulk-actions-left">
+            {selectedGigIds.size > 0 && (
+              <>
+                <span className="selected-count">{selectedGigIds.size} gig{selectedGigIds.size !== 1 ? 's' : ''} selected</span>
+                <button
+                  className="btn-bulk-delete"
+                  onClick={handleBulkDelete}
+                  disabled={bulkDeleting}
+                >
+                  {bulkDeleting ? 'Deleting...' : `Delete Selected (${selectedGigIds.size})`}
+                </button>
+              </>
+            )}
+          </div>
+          <button
+            className="btn-delete-all"
+            onClick={() => setShowDeleteAllConfirm(true)}
+            disabled={bulkDeleting}
+          >
+            Delete All Gigs
+          </button>
         </div>
       )}
 
@@ -272,6 +469,15 @@ const GigsManagement = () => {
           <table className="gigs-table">
             <thead>
               <tr>
+                {isSuperAdmin && (
+                  <th className="checkbox-col">
+                    <input
+                      type="checkbox"
+                      checked={selectedGigIds.size === filteredGigs.length && filteredGigs.length > 0}
+                      onChange={toggleSelectAll}
+                    />
+                  </th>
+                )}
                 <th>Image</th>
                 <th>Title</th>
                 <th>Caregiver</th>
@@ -285,7 +491,16 @@ const GigsManagement = () => {
             </thead>
             <tbody>
               {filteredGigs.map((gig) => (
-                <tr key={gig.id}>
+                <tr key={gig.id} className={selectedGigIds.has(gig.id) ? 'row-selected' : ''}>
+                  {isSuperAdmin && (
+                    <td className="checkbox-col">
+                      <input
+                        type="checkbox"
+                        checked={selectedGigIds.has(gig.id)}
+                        onChange={() => toggleGigSelection(gig.id)}
+                      />
+                    </td>
+                  )}
                   <td data-label="Image">
                     <div className="gig-image">
                       {gig.image1 ? (
@@ -357,6 +572,105 @@ const GigsManagement = () => {
           >
             Next <i className="fas fa-chevron-right"></i>
           </button>
+        </div>
+      )}
+
+      {/* Gig Details Modal */}
+      </>
+      )}
+
+      {viewMode === 'deleted' && (
+        <div className="deleted-gigs-section">
+          {/* Caregiver Filter */}
+          <div className="deleted-gigs-filter">
+            <div className="search-box">
+              <i className="fas fa-search"></i>
+              <input
+                type="text"
+                placeholder="Filter by Caregiver ID..."
+                value={deletedCaregiverFilter}
+                onChange={(e) => { setDeletedCaregiverFilter(e.target.value); setDeletedPage(1); }}
+              />
+              {deletedCaregiverFilter && (
+                <button className="clear-search" onClick={() => { setDeletedCaregiverFilter(''); setDeletedPage(1); }}>
+                  <i className="fas fa-times"></i>
+                </button>
+              )}
+            </div>
+          </div>
+
+          {/* Deleted Gigs Table */}
+          <div className="table-container">
+            {deletedLoading ? (
+              <div className="loading-container">
+                <div className="spinner"></div>
+                <p>Loading deleted gigs...</p>
+              </div>
+            ) : deletedGigs.length === 0 ? (
+              <div className="no-data">
+                <i className="fas fa-trash-alt"></i>
+                <p>No deleted gigs found</p>
+              </div>
+            ) : (
+              <table className="gigs-table">
+                <thead>
+                  <tr>
+                    <th>Title</th>
+                    <th>Caregiver</th>
+                    <th>Category</th>
+                    <th>Price</th>
+                    <th>Deleted On</th>
+                    <th>Days Remaining</th>
+                    <th>Status</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {deletedGigs.map((gig) => (
+                    <tr key={gig.id}>
+                      <td data-label="Title"><strong>{gig.title}</strong></td>
+                      <td data-label="Caregiver">{gig.caregiverName || 'N/A'}</td>
+                      <td data-label="Category"><span className="category-tag">{gig.category}</span></td>
+                      <td data-label="Price"><strong className="price">{formatCurrency(gig.price)}</strong></td>
+                      <td data-label="Deleted On">{formatDate(gig.deletedOn)}</td>
+                      <td data-label="Days Remaining">
+                        <span className={`days-remaining ${gig.daysRemaining <= 5 ? 'critical' : gig.daysRemaining <= 10 ? 'warning' : ''}`}>
+                          {gig.daysRemaining} day{gig.daysRemaining !== 1 ? 's' : ''}
+                        </span>
+                      </td>
+                      <td data-label="Status">
+                        {gig.canRestore ? (
+                          <span className="status-badge status-restorable">Restorable</span>
+                        ) : (
+                          <span className="status-badge status-expired">Expired</span>
+                        )}
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            )}
+          </div>
+
+          {/* Deleted Gigs Pagination */}
+          {deletedTotalCount > pageSize && (
+            <div className="pagination-controls">
+              <button
+                className="btn-secondary"
+                disabled={deletedPage <= 1}
+                onClick={() => setDeletedPage(prev => prev - 1)}
+              >
+                <i className="fas fa-chevron-left"></i> Previous
+              </button>
+              <span className="page-info">Page {deletedPage} of {Math.ceil(deletedTotalCount / pageSize)}</span>
+              <button
+                className="btn-secondary"
+                disabled={!deletedHasMore && deletedPage >= Math.ceil(deletedTotalCount / pageSize)}
+                onClick={() => setDeletedPage(prev => prev + 1)}
+              >
+                Next <i className="fas fa-chevron-right"></i>
+              </button>
+            </div>
+          )}
         </div>
       )}
 
@@ -504,6 +818,45 @@ const GigsManagement = () => {
             <div className="modal-footer">
               <button className="btn-close" onClick={closeGigModal}>
                 Close
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Delete All Confirmation Modal */}
+      {showDeleteAllConfirm && (
+        <div className="modal-overlay" onClick={() => { setShowDeleteAllConfirm(false); setDeleteAllInput(''); }}>
+          <div className="modal-content delete-all-modal" onClick={(e) => e.stopPropagation()}>
+            <div className="modal-header">
+              <h2>Delete All Gigs</h2>
+              <button className="close-btn" onClick={() => { setShowDeleteAllConfirm(false); setDeleteAllInput(''); }}>
+                <i className="fas fa-times"></i>
+              </button>
+            </div>
+            <div className="modal-body">
+              <p className="delete-all-warning">
+                This will soft-delete <strong>ALL gigs</strong> in the system. Gigs with active contracts, subscriptions, or orders will be skipped.
+              </p>
+              <p>Type <strong>DELETE ALL</strong> to confirm:</p>
+              <input
+                type="text"
+                className="delete-all-input"
+                value={deleteAllInput}
+                onChange={(e) => setDeleteAllInput(e.target.value)}
+                placeholder="Type DELETE ALL"
+              />
+            </div>
+            <div className="modal-footer">
+              <button className="btn-close" onClick={() => { setShowDeleteAllConfirm(false); setDeleteAllInput(''); }}>
+                Cancel
+              </button>
+              <button
+                className="btn-confirm-delete-all"
+                disabled={deleteAllInput !== 'DELETE ALL' || bulkDeleting}
+                onClick={handleDeleteAll}
+              >
+                {bulkDeleting ? 'Deleting...' : 'Confirm Delete All'}
               </button>
             </div>
           </div>

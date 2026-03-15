@@ -933,6 +933,82 @@ const adminService = {
     };
   },
 
+  /**
+   * Bulk soft-delete gigs (SuperAdmin only)
+   * @param {Object} params - { gigIds?: string[], deleteAll?: boolean, adminUserId: string }
+   * @returns {Promise<{success: boolean, data?: Object, error?: string}>}
+   */
+  bulkSoftDeleteGigs: async ({ gigIds, deleteAll = false, adminUserId }) => {
+    try {
+      if (!adminUserId) {
+        return { success: false, error: 'Admin user ID is required for audit purposes.' };
+      }
+      if (!deleteAll && (!gigIds || gigIds.length === 0)) {
+        return { success: false, error: 'Either provide a list of gig IDs or set deleteAll to true.' };
+      }
+
+      const response = await api.delete('/Gigs/admin/BulkSoftDelete', {
+        data: { gigIds: gigIds || [], deleteAll, adminUserId }
+      });
+
+      return {
+        success: true,
+        data: response.data
+      };
+    } catch (error) {
+      console.error('Error bulk deleting gigs:', error);
+      return {
+        success: false,
+        error: error.response?.data?.message || error.message || 'Failed to bulk delete gigs'
+      };
+    }
+  },
+
+  /**
+   * Get all soft-deleted gigs (Admin/SuperAdmin)
+   * @param {Object} params - { page, pageSize, caregiverId }
+   * @returns {Promise<{success: boolean, data?: Array, totalCount?: number, hasMore?: boolean, error?: string}>}
+   */
+  getDeletedGigs: async (params = {}) => {
+    try {
+      const queryParams = {};
+      if (params.page) queryParams.page = params.page;
+      if (params.pageSize) queryParams.pageSize = params.pageSize;
+      if (params.caregiverId) queryParams.caregiverId = params.caregiverId;
+
+      const response = await api.get('/Gigs/admin/deleted', { params: queryParams });
+
+      if (response.data && response.data.success !== undefined) {
+        return {
+          success: response.data.success,
+          data: response.data.data || [],
+          totalCount: response.data.totalCount || 0,
+          page: response.data.page,
+          pageSize: response.data.pageSize,
+          hasMore: response.data.hasMore || false
+        };
+      }
+
+      // Fallback for array response
+      if (Array.isArray(response.data)) {
+        return {
+          success: true,
+          data: response.data,
+          totalCount: response.data.length,
+          hasMore: false
+        };
+      }
+
+      return { success: false, error: 'Invalid response format' };
+    } catch (error) {
+      console.error('Error fetching deleted gigs:', error);
+      return {
+        success: false,
+        error: error.response?.data?.message || error.message || 'Failed to fetch deleted gigs'
+      };
+    }
+  },
+
   // ============================================
   // ORDERS MANAGEMENT
   // ============================================

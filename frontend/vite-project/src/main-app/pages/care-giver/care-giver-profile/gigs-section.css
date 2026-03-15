@@ -519,3 +519,73 @@
   text-decoration: none;
   background-color: #f3f4f6;
 }
+
+/* Deleted Gigs Tab Styles */
+.deleted-gig-card {
+  opacity: 0.85;
+  border-left: 3px solid #f59e0b;
+}
+
+.deleted-gig-card.expired {
+  opacity: 0.5;
+  border-left-color: #9ca3af;
+  pointer-events: none;
+}
+
+.deleted-gig-status {
+  font-size: 13px;
+  color: #f59e0b;
+  margin: 0 0 8px 0;
+  font-weight: 500;
+}
+
+.deleted-gig-status.expired-text {
+  color: #9ca3af;
+}
+
+.caregiver-gig-action-btn.caregiver-restore {
+  background: transparent;
+  color: #059669;
+  border-color: #059669;
+}
+
+.caregiver-gig-action-btn.caregiver-restore:hover {
+  background: #059669;
+  color: #ffffff;
+}
+
+.caregiver-gig-action-btn.caregiver-restore:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.deleted-gig-category {
+  font-size: 12px;
+  color: #9ca3af;
+  margin: 0 0 6px 0;
+}
+
+/* Progress bar for deletion countdown */
+.deleted-gig-progress {
+  width: 100%;
+  height: 6px;
+  background: #e5e7eb;
+  border-radius: 3px;
+  overflow: hidden;
+  margin: 6px 0 10px 0;
+}
+
+.deleted-gig-progress-bar {
+  height: 100%;
+  border-radius: 3px;
+  background: #10b981;
+  transition: width 0.3s ease;
+}
+
+.deleted-gig-progress-bar.warning {
+  background: #f59e0b;
+}
+
+.deleted-gig-progress-bar.critical {
+  background: #ef4444;
+}

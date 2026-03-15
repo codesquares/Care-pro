@@ -178,6 +178,18 @@ const messageStateReducer = (state, action) => {
         )
       };
       
+    case 'MESSAGE_REDACTED': {
+      const { messageId: redactedId, deliveredMessage } = action.payload;
+      return {
+        ...state,
+        messages: state.messages.map(msg =>
+          msg.id === redactedId
+            ? { ...msg, content: deliveredMessage, isRedacted: true }
+            : msg
+        )
+      };
+    }
+      
     case 'CLEAR_CHAT_MESSAGES':
       return {
         ...state,
@@ -806,6 +818,9 @@ export const MessageProvider = ({ children }) => {
   // Guard ref to prevent concurrent / re-entrant initializeChat calls
   const isInitializingRef = useRef(false);
 
+  // Store redaction events that arrive before the message ID is updated from temp→real
+  const pendingRedactionsRef = useRef(new Map());
+
   // Initialize chat connection
   const initializeChat = useCallback(async (userId, token) => {
     if (!userId || !token) {
@@ -1015,6 +1030,26 @@ export const MessageProvider = ({ children }) => {
           
           // console.log(`Message ${messageId} was deleted`);
         }),
+
+        // Message redacted handler — backend stripped contact info from the message
+        chatService.on('onMessageRedacted', (data) => {
+          const { messageId, deliveredMessage, warning } = data;
+
+          // Update the sender's message bubble to show what was actually delivered
+          dispatchMessageState({
+            type: 'MESSAGE_REDACTED',
+            payload: { messageId, deliveredMessage }
+          });
+
+          // Also store in pending map in case UPDATE_MESSAGE_STATUS hasn't run yet
+          // (race: MessageRedacted fires before invoke returns the real messageId)
+          pendingRedactionsRef.current.set(messageId, { deliveredMessage, warning });
+
+          // Notify the ChatArea to show a warning banner
+          window.dispatchEvent(new CustomEvent('message-redacted', {
+            detail: { messageId, deliveredMessage, warning }
+          }));
+        }),
         
         // All messages read handler
         chatService.on('onAllMessagesRead', (data) => {
@@ -1223,8 +1258,11 @@ export const MessageProvider = ({ children }) => {
       // Send message through SignalR
       // console.log("🚀 SEND MESSAGE FLOW: Step 3 - About to send message with IDs:", { senderId, receiverId });
       // console.log("🚀 SEND MESSAGE FLOW: Message text:", messageText);
-      const messageId = await chatService.sendMessage(senderId, receiverId, messageText);
-      // console.log("🚀 SEND MESSAGE FLOW: Step 4 - Message sent successfully, received ID:", messageId);
+      const sendResult = await chatService.sendMessage(senderId, receiverId, messageText);
+      // console.log("🚀 SEND MESSAGE FLOW: Step 4 - Message sent successfully, received:", sendResult);
+      
+      // sendResult can be a string (SignalR path) or object (REST path with redaction metadata)
+      const messageId = typeof sendResult === 'object' ? sendResult.messageId : sendResult;
       
       // Clear the timeout since message was sent successfully
       clearTimeout(messageTimeout);
@@ -1235,6 +1273,31 @@ export const MessageProvider = ({ children }) => {
         type: 'UPDATE_MESSAGE_STATUS',
         payload: { messageId: tempId, status: 'sent', newId: messageId, timestamp: new Date().toISOString() }
       });
+
+      // Handle REST-path redaction: update message content + show warning
+      if (typeof sendResult === 'object' && sendResult.wasRedacted) {
+        dispatchMessageState({
+          type: 'MESSAGE_REDACTED',
+          payload: { messageId, deliveredMessage: sendResult.deliveredMessage }
+        });
+        window.dispatchEvent(new CustomEvent('message-redacted', {
+          detail: {
+            messageId,
+            deliveredMessage: sendResult.deliveredMessage,
+            warning: sendResult.redactionWarning
+          }
+        }));
+      } else {
+        // SignalR path: check if a MessageRedacted event arrived before invoke returned
+        const pending = pendingRedactionsRef.current.get(messageId);
+        if (pending) {
+          pendingRedactionsRef.current.delete(messageId);
+          dispatchMessageState({
+            type: 'MESSAGE_REDACTED',
+            payload: { messageId, deliveredMessage: pending.deliveredMessage }
+          });
+        }
+      }
       
       // console.log('🚀 SEND MESSAGE FLOW: Step 6 - Message status updated, should be visible now');
       

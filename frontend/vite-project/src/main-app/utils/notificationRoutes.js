@@ -140,6 +140,40 @@ const TYPE_MAP = {
 
   // Broadcast
   'broadcast':                   'Broadcast',
+
+  // Gig Deletion (GDPR)
+  'gig_deletion_reminder':       'GigDeletionReminder',
+  'gigdeletionreminder':         'GigDeletionReminder',
+  'gig deletion reminder':       'GigDeletionReminder',
+  'gig_permanently_deleted':     'GigPermanentlyDeleted',
+  'gigpermanentlydeleted':       'GigPermanentlyDeleted',
+  'gig permanently deleted':     'GigPermanentlyDeleted',
+
+  // Disputes
+  'dispute_raised':              'DisputeRaised',
+  'disputeraised':               'DisputeRaised',
+  'dispute raised':              'DisputeRaised',
+
+  // Subscriptions
+  'subscription_terminated':     'SubscriptionTerminated',
+  'subscriptionterminated':      'SubscriptionTerminated',
+  'subscription terminated':     'SubscriptionTerminated',
+  'subscription_created':        'SubscriptionCreated',
+  'subscriptioncreated':         'SubscriptionCreated',
+  'subscription created':        'SubscriptionCreated',
+
+  // Payment failures
+  'payment_failed':              'PaymentFailed',
+  'paymentfailed':               'PaymentFailed',
+  'payment failed':              'PaymentFailed',
+
+  // Contract extras
+  'contract_pending_client_approval': 'ContractPendingClientApproval',
+  'contractpendingclientapproval':    'ContractPendingClientApproval',
+  'contract pending client approval': 'ContractPendingClientApproval',
+  'contract_revised':            'ContractRevised',
+  'contractrevised':             'ContractRevised',
+  'contract revised':            'ContractRevised',
 };
 
 // Set of all canonical types for fast exact-match check
@@ -155,6 +189,11 @@ const KNOWN_CANONICAL = new Set([
   'CareRequestAdminMatchUpdate', 'CareRequestAdminNoMatch',
   'VisitSubmitted',
   'Broadcast',
+  'GigDeletionReminder', 'GigPermanentlyDeleted',
+  'DisputeRaised',
+  'SubscriptionTerminated', 'SubscriptionCreated',
+  'PaymentFailed',
+  'ContractPendingClientApproval', 'ContractRevised',
 ]);
 
 /**
@@ -381,6 +420,65 @@ export const getNotificationRoute = (notification, userRole) => {
       if (isAdmin) return `/app/admin/users`;
       return null;
 
+    // ── Gig Deletion (GDPR) ──────────────────────────────
+    case 'GigDeletionReminder':
+      // Deep-link caregivers to deleted gigs tab to restore
+      if (isCaregiver) return `/app/caregiver/profile?tab=deleted`;
+      return null;
+
+    case 'GigPermanentlyDeleted':
+      // Informational only — link to profile gigs section
+      if (isCaregiver) return `/app/caregiver/profile`;
+      return null;
+
+    // ── Disputes ─────────────────────────────────────────
+    case 'DisputeRaised': {
+      const disputeOrderId = notification.orderId || relatedEntityId;
+      if (disputeOrderId) {
+        if (isClient) return `/app/client/my-order/${disputeOrderId}`;
+        if (isCaregiver) return `/app/caregiver/order-details/${disputeOrderId}`;
+        if (isAdmin) return `/app/admin/orders/${disputeOrderId}`;
+      }
+      if (isClient) return `/app/client/my-orders`;
+      if (isCaregiver) return `/app/caregiver/orders`;
+      if (isAdmin) return `/app/admin/orders`;
+      return null;
+    }
+
+    // ── Subscriptions ────────────────────────────────────
+    case 'SubscriptionTerminated':
+    case 'SubscriptionCreated':
+      if (isClient) return `/app/client/subscriptions`;
+      if (isAdmin) return `/app/admin/subscriptions`;
+      return null;
+
+    // ── Payment failures ─────────────────────────────────
+    case 'PaymentFailed': {
+      const failedOrderId = notification.orderId || relatedEntityId;
+      if (failedOrderId) {
+        if (isClient) return `/app/client/my-order/${failedOrderId}`;
+        if (isAdmin) return `/app/admin/orders/${failedOrderId}`;
+      }
+      if (isClient) return `/app/client/my-orders`;
+      if (isAdmin) return `/app/admin/orders`;
+      return null;
+    }
+
+    // ── Contract extras ──────────────────────────────────
+    case 'ContractPendingClientApproval':
+    case 'ContractRevised': {
+      const contractOrderId = notification.orderId || relatedEntityId;
+      if (contractOrderId) {
+        if (isClient) return `/app/client/my-order/${contractOrderId}`;
+        if (isCaregiver) return `/app/caregiver/order-details/${contractOrderId}`;
+        if (isAdmin) return `/app/admin/orders/${contractOrderId}`;
+      }
+      if (isClient) return `/app/client/my-orders`;
+      if (isCaregiver) return `/app/caregiver/orders`;
+      if (isAdmin) return `/app/admin/orders`;
+      return null;
+    }
+
     default:
       console.warn(`[NotificationRoutes] No route for type: "${type}" (raw: "${notification.type}")`, notification);
       return null;
@@ -432,6 +530,20 @@ export const getNotificationActionLabel = (rawType) => {
       return 'Review Request';
     case 'VisitSubmitted':
       return 'View Visit';
+    case 'GigDeletionReminder':
+      return 'Restore Gig';
+    case 'GigPermanentlyDeleted':
+      return 'View Details';
+    case 'DisputeRaised':
+      return 'View Dispute';
+    case 'SubscriptionTerminated':
+    case 'SubscriptionCreated':
+      return 'View Subscription';
+    case 'PaymentFailed':
+      return 'View Payment';
+    case 'ContractPendingClientApproval':
+    case 'ContractRevised':
+      return 'View Contract';
     case 'Broadcast':
       return 'View';
     case 'SystemNotice':
@@ -501,6 +613,22 @@ export const getNotificationTypeIcon = (rawType) => {
       return '⚠️';
     case 'VisitSubmitted':
       return '📋';
+    case 'GigDeletionReminder':
+      return '⚠️';
+    case 'GigPermanentlyDeleted':
+      return 'ℹ️';
+    case 'DisputeRaised':
+      return '⚖️';
+    case 'SubscriptionTerminated':
+      return '🚫';
+    case 'SubscriptionCreated':
+      return '🎉';
+    case 'PaymentFailed':
+      return '❗';
+    case 'ContractPendingClientApproval':
+      return '📋';
+    case 'ContractRevised':
+      return '📝';
     default:
       return '🔔';
   }

@@ -303,6 +303,38 @@
 }
 
 /* CTA Button */
+.sd-commitment-gate {
+  background: #fef3cd;
+  border: 1px solid #ffc107;
+  border-radius: 10px;
+  padding: 14px 16px;
+  margin-bottom: 12px;
+  text-align: center;
+}
+.sd-commitment-gate p {
+  margin: 0 0 10px;
+  font-size: 13px;
+  color: #856404;
+  line-height: 1.5;
+}
+.sd-commitment-gate__btn {
+  display: inline-block;
+  padding: 10px 20px;
+  border: none;
+  border-radius: 20px;
+  background: linear-gradient(135deg, #c8a850 0%, #b8942d 100%);
+  color: #fff;
+  font-size: 14px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+.sd-commitment-gate__btn:hover {
+  background: linear-gradient(135deg, #b8942d 0%, #a07e20 100%);
+  transform: translateY(-1px);
+  box-shadow: 0 4px 12px rgba(200, 168, 80, 0.3);
+}
+
 .sd-cta {
   width: 100%;
   display: flex;
