@@ -414,16 +414,16 @@ const ChatArea = ({ messages, recipient, userId, onSendMessage, isOfflineMode = 
   const navigateWithCommitmentCheck = async (gigId) => {
     try {
       const result = await bookingCommitmentService.checkAccess(gigId);
-      if (result.success && result.data && !result.data.hasAccess) {
+      if (result.success && result.data && result.data.hasAccess) {
+        // Commitment fee confirmed paid — proceed to cart
+        navigate(`/app/client/cart/${gigId}`);
+      } else {
         // Commitment fee not paid — go to commitment payment page
         navigate(`/app/client/commitment-payment/${gigId}`);
-      } else {
-        // Commitment fee paid (or check failed — fall back to cart)
-        navigate(`/app/client/cart/${gigId}`);
       }
     } catch {
-      // On error, fall back to cart
-      navigate(`/app/client/cart/${gigId}`);
+      // On error, send to commitment payment to be safe
+      navigate(`/app/client/commitment-payment/${gigId}`);
     }
   };
 
