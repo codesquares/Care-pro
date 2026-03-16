@@ -174,6 +174,11 @@ const TYPE_MAP = {
   'contract_revised':            'ContractRevised',
   'contractrevised':             'ContractRevised',
   'contract revised':            'ContractRevised',
+
+  // Commitment fee
+  'commitment_confirmed':        'CommitmentConfirmed',
+  'commitmentconfirmed':         'CommitmentConfirmed',
+  'commitment confirmed':        'CommitmentConfirmed',
 };
 
 // Set of all canonical types for fast exact-match check
@@ -194,6 +199,7 @@ const KNOWN_CANONICAL = new Set([
   'SubscriptionTerminated', 'SubscriptionCreated',
   'PaymentFailed',
   'ContractPendingClientApproval', 'ContractRevised',
+  'CommitmentConfirmed',
 ]);
 
 /**
@@ -317,6 +323,13 @@ export const getNotificationRoute = (notification, userRole) => {
     case 'EarningsAdded':
       if (isCaregiver) return `/app/caregiver/earnings`;
       if (isAdmin) return `/app/admin/orders`;
+      return null;
+
+    // ── Commitment fee confirmed (relatedEntityId = gigId) ─
+    case 'CommitmentConfirmed':
+      if (relatedEntityId) return `/service/${relatedEntityId}`;
+      if (isClient) return `/app/client/dashboard`;
+      if (isCaregiver) return `/app/caregiver/dashboard`;
       return null;
 
     // ── Order / Booking notifications ────────────────────
@@ -541,6 +554,8 @@ export const getNotificationActionLabel = (rawType) => {
       return 'View Subscription';
     case 'PaymentFailed':
       return 'View Payment';
+    case 'CommitmentConfirmed':
+      return 'View Service';
     case 'ContractPendingClientApproval':
     case 'ContractRevised':
       return 'View Contract';
@@ -625,6 +640,8 @@ export const getNotificationTypeIcon = (rawType) => {
       return '🎉';
     case 'PaymentFailed':
       return '❗';
+    case 'CommitmentConfirmed':
+      return '🔓';
     case 'ContractPendingClientApproval':
       return '📋';
     case 'ContractRevised':
