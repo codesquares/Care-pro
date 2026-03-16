@@ -20,6 +20,7 @@ import RefundPolicy from './pages/RefundPolicy';
 import NotFoundPage from './pages/NotFoundPage';
 import OrderFaq from './main-app/pages/care-giver/OrderFaq';
 import LoginPage from './main-app/pages/LoginPage';
+import Team from './pages/Team';
 import RoleSelectionPage from './main-app/pages/RoleSelectionPage';
 import RegisterFormPage from './main-app/pages/RegisterFormPage';
 import ForgotPasswordPage from './main-app/pages/ForgotPasswordPage';
@@ -114,6 +115,7 @@ function AppContent() {
     '/become-caregiver',
     '/privacy-policy',
     '/terms-and-conditions',
+    '/team',
     '/login',
     '/register',
     '/register/form',
@@ -210,6 +212,7 @@ function AppContent() {
         <Route path="/become-caregiver" element={<BecomeCaregiver />} />
         <Route path="/privacy-policy" element={<PrivacyPolicy />} />
         <Route path="/terms-and-conditions" element={<TermsAndConditions />} />
+        <Route path="/team" element={<Team />} />
         <Route path="/refund-policy" element={<RefundPolicy />} />
         <Route path="/login" element={<LoginPage />} />
         <Route path="/register" element={<RoleSelectionPage />} />

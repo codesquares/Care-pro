@@ -43,7 +43,7 @@ const footerSections = [
     title: "Product",
     links: [
       { to: "/about-us", label: "About Carepro" },
-      { to: "/about-us#team", label: "Team" },
+      { to: "/team", label: "Team" },
       { to: "/trust-safety", label: "Trust & Safety" },
       { to: "/partnerships", label: "Partnerships" },
       { to: "https://investor.oncarepro.com/", label: "Invest", external: true },
