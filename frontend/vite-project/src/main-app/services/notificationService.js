@@ -41,6 +41,8 @@ const generateTitle = (type, senderId) => {
       return `⭐ New review received`;
     case 'BookingConfirmed':
       return `🛒 New booking confirmed`;
+    case 'CommitmentConfirmed':
+      return `🔓 Chat access unlocked`;
     case 'task_proposed_by_client':
       return `📝 New task(s) proposed on visit`;
     case 'task_proposal_accepted':
@@ -91,6 +93,8 @@ const generateContent = (type, senderId) => {
       return `You have received a new review. Tap to view it.`;
     case 'BookingConfirmed':
       return `A new booking has been confirmed. Tap to see the order details.`;
+    case 'CommitmentConfirmed':
+      return `Commitment fee paid — chat is now unlocked. Tap to view the service.`;
     case 'task_proposed_by_client':
       return `The client has proposed new task(s) on a visit. Please review and accept or reject.`;
     case 'task_proposal_accepted':
