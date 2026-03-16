@@ -73,7 +73,8 @@ const GigsForm = () => {
     isLoading: isLoadingStatus,
     isVerified,
     isQualified,
-    hasCertificates
+    hasCertificates,
+    refreshStatusData
   } = useCaregiverStatus();
   
   // Use context for form state and current step
@@ -439,6 +440,8 @@ const GigsForm = () => {
     };
 
     fetchActiveGigsCount();
+    // Refresh caregiver eligibility status to ensure fresh data
+    refreshStatusData();
   }, []);
 
   // Cleanup blob URLs on component unmount

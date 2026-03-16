@@ -49,19 +49,25 @@ const GigsSection = () => {
   };
 
   const handlePublishGig = async (gig) => {
+    // If status is still loading, refresh and wait before checking
+    if (statusLoading) {
+      showError('Checking your eligibility, please try again in a moment.');
+      return;
+    }
+
     // Check if we can publish (less than 2 active gigs AND caregiver eligibility)
-    if (!canPublishNewGig) {
-      if (activeGigs.length >= 2) {
-        showError('You can only have 2 active gigs at a time. Please pause one of your active gigs first to publish this one.');
-      } else if (!canPublishGigs) {
-        // Build specific eligibility error message
-        const missingRequirements = [];
-        if (!isVerified) missingRequirements.push('Complete identity verification');
-        if (!isQualified) missingRequirements.push('Pass qualification assessment');
-        if (!hasCertificates) missingRequirements.push('Upload at least one certificate');
-        
-        showError(`To publish gigs, you need to: ${missingRequirements.join(', ')}`);
-      }
+    if (activeGigs.length >= 2) {
+      showError('You can only have 2 active gigs at a time. Please pause one of your active gigs first to publish this one.');
+      return;
+    }
+    if (!canPublishGigs) {
+      // Build specific eligibility error message
+      const missingRequirements = [];
+      if (!isVerified) missingRequirements.push('Complete identity verification');
+      if (!isQualified) missingRequirements.push('Pass qualification assessment');
+      if (!hasCertificates) missingRequirements.push('Upload at least one certificate');
+      
+      showError(`To publish gigs, you need to: ${missingRequirements.join(', ')}`);
       return;
     }
 
@@ -241,9 +247,10 @@ const GigsSection = () => {
   }, [gigs]);
 
   // Check if user can publish new gigs (max 2 active gigs allowed)
+  // While status is still loading, allow publish attempts (the handler will re-check)
   const canPublishNewGig = useMemo(() => 
-    activeGigs.length < 2 && canPublishGigs, 
-    [activeGigs, canPublishGigs]
+    activeGigs.length < 2 && (statusLoading || canPublishGigs), 
+    [activeGigs, canPublishGigs, statusLoading]
   );
 
   // Extract fetchGigs as a reusable function
@@ -303,6 +310,8 @@ const GigsSection = () => {
   // Fetch gigs on mount and when returning from edit page
   useEffect(() => {
     fetchGigs();
+    // Refresh caregiver eligibility status to ensure fresh data
+    refreshStatusData();
     
     // Clear the navigation state after using it
     if (location.state?.refreshGigs) {
@@ -387,8 +396,8 @@ const GigsSection = () => {
           <p className="caregiver-create-subtext">Add a new service offering</p>
         </div>
 
-        {/* Active Gigs Limit Notice - Only show after eligibility has been checked */}
-        {(activeTab === "paused" || activeTab === "draft") && !canPublishNewGig && eligibilityChecked && !statusHasErrors && (
+        {/* Active Gigs Limit Notice - Only show after eligibility has been checked and not while loading */}
+        {(activeTab === "paused" || activeTab === "draft") && !canPublishNewGig && eligibilityChecked && !statusLoading && !statusHasErrors && (
           <div className="gig-limit-notice">
             {activeGigs.length >= 2 ? (
               <p>⚠️ You have reached the maximum of 2 active gigs. Pause an active gig to publish more.</p>

@@ -239,8 +239,8 @@ const HomeCareService = () => {
       return;
     }
 
-    // If commitment fee not paid, initiate payment first
-    if (commitmentAccess && !commitmentAccess.hasAccess) {
+    // Block if commitment check hasn't completed yet or fee not paid
+    if (!commitmentAccess || !commitmentAccess.hasAccess) {
       handleUnlockChat();
       return;
     }
@@ -256,17 +256,20 @@ const HomeCareService = () => {
         const result = await bookingCommitmentService.checkAccess(id);
         if (result.success) {
           setCommitmentAccess(result.data);
+        } else {
+          setCommitmentAccess({ hasAccess: false });
         }
       } catch (err) {
         console.error('Failed to check commitment access:', err);
+        setCommitmentAccess({ hasAccess: false });
       }
     };
     checkCommitment();
   }, [id, isAuthenticated, userRole]);
 
   const handleMessage = () => {
-    // If commitment fee not paid, initiate payment directly
-    if (commitmentAccess && !commitmentAccess.hasAccess) {
+    // Block if commitment check hasn't completed yet or fee not paid
+    if (!commitmentAccess || !commitmentAccess.hasAccess) {
       handleUnlockChat();
       return;
     }

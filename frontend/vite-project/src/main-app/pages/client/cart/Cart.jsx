@@ -21,9 +21,11 @@ const Cart = () => {
     const [paymentError, setPaymentError] = useState(null);
     const [paymentDisabled, setPaymentDisabled] = useState(false);
     
-    // Frequency and price data state
-    const [selectedFrequency, setSelectedFrequency] = useState('one-time');
-    const [frequencyPerWeek, setFrequencyPerWeek] = useState(1);
+    // Frequency and price data state — restore from sessionStorage if available
+    const savedFreq = id ? sessionStorage.getItem(`cart_freq_${id}`) : null;
+    const savedPerWeek = id ? sessionStorage.getItem(`cart_perweek_${id}`) : null;
+    const [selectedFrequency, setSelectedFrequency] = useState(savedFreq || 'one-time');
+    const [frequencyPerWeek, setFrequencyPerWeek] = useState(savedPerWeek ? Number(savedPerWeek) : 1);
     
     // Reviews modal state
     const [showReviewsModal, setShowReviewsModal] = useState(false);
@@ -41,6 +43,8 @@ const Cart = () => {
     const handleFrequencyChange = (type) => {
       setSelectedFrequency(type);
       if (type === 'one-time') setFrequencyPerWeek(1);
+      if (id) sessionStorage.setItem(`cart_freq_${id}`, type);
+      if (type === 'one-time' && id) sessionStorage.setItem(`cart_perweek_${id}`, '1');
     };
 
     // Handle opening reviews modal
@@ -64,10 +68,14 @@ const Cart = () => {
     useEffect(() => {
       if (!id) return;
       const checkCommitment = async () => {
-        const result = await bookingCommitmentService.checkAccess(id);
-        if (result.success) {
-          setCommitmentAccess(result.data);
-        } else {
+        try {
+          const result = await bookingCommitmentService.checkAccess(id);
+          if (result.success) {
+            setCommitmentAccess(result.data);
+          } else {
+            setCommitmentAccess({ hasAccess: false });
+          }
+        } catch {
           setCommitmentAccess({ hasAccess: false });
         }
       };
@@ -152,6 +160,9 @@ const Cart = () => {
           if (data.breakdown) {
             localStorage.setItem("paymentBreakdown", JSON.stringify(data.breakdown));
           }
+          // Clean up persisted frequency selection
+          sessionStorage.removeItem(`cart_freq_${id}`);
+          sessionStorage.removeItem(`cart_perweek_${id}`);
           window.location.href = data.paymentLink;
         } else {
           throw new Error(data.message || "Failed to get payment link");
@@ -173,8 +184,7 @@ const Cart = () => {
               throw new Error("Service not found or no longer available");
             }
             setService(foundGig);
-            setSelectedFrequency('one-time');
-            setFrequencyPerWeek(1);
+            // Don't reset frequency — preserve user's previous selection from sessionStorage
           } catch (error) {
             console.error("Error fetching service details:", error);
             setError(error.message);
@@ -266,7 +276,7 @@ const Cart = () => {
                         key={n}
                         type="button"
                         className={`sd-freq-btn ${frequencyPerWeek === n ? 'sd-freq-btn--active' : ''}`}
-                        onClick={() => setFrequencyPerWeek(n)}
+                        onClick={() => { setFrequencyPerWeek(n); if (id) sessionStorage.setItem(`cart_perweek_${id}`, String(n)); }}
                       >
                         {n}x
                       </button>
@@ -309,7 +319,7 @@ const Cart = () => {
             )}
 
             {/* Commitment gate — block payment if no commitment */}
-            {commitmentAccess && !commitmentAccess.hasAccess && (
+            {(!commitmentAccess || !commitmentAccess.hasAccess) && (
               <div className="sd-commitment-gate">
                 <p>🔒 You must pay the ₦5,000 commitment fee before placing an order. This fee is deducted from your total when you hire.</p>
                 <button

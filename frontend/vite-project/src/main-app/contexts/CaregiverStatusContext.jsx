@@ -75,12 +75,11 @@ export function CaregiverStatusProvider({ children }) {
       console.error('Error fetching verification status:', error);
       setStatusData(prev => ({
         ...prev,
-        verificationStatus: null,
-        isVerified: false,
+        // Keep previous verificationStatus and isVerified on error
         verificationLoading: false,
         verificationError: error.message
       }));
-      return { isVerified: false, error: error.message };
+      return { isVerified: undefined, error: error.message };
     }
   };
 
@@ -107,12 +106,11 @@ export function CaregiverStatusProvider({ children }) {
       console.error('Error fetching qualification status:', error);
       setStatusData(prev => ({
         ...prev,
-        qualificationStatus: null,
-        isQualified: false,
+        // Keep previous qualificationStatus and isQualified on error
         qualificationLoading: false,
         qualificationError: error.message
       }));
-      return { isQualified: false, error: error.message };
+      return { isQualified: undefined, error: error.message };
     }
   };
 
@@ -147,13 +145,11 @@ export function CaregiverStatusProvider({ children }) {
       console.error('Error fetching certificates:', error);
       setStatusData(prev => ({
         ...prev,
-        certificates: [],
-        certificatesCount: 0,
-        hasCertificates: false,
+        // Keep previous certificates and hasCertificates on error
         certificatesLoading: false,
         certificatesError: error.message
       }));
-      return { certificatesCount: 0, hasCertificates: false, error: error.message };
+      return { hasCertificates: undefined, error: error.message };
     }
   };
 
@@ -186,10 +182,16 @@ export function CaregiverStatusProvider({ children }) {
       fetchCertificates(userDetails.id)
     ]);
 
-    // Extract results
-    const isVerified = verificationResult.status === 'fulfilled' ? verificationResult.value.isVerified : false;
-    const isQualified = qualificationResult.status === 'fulfilled' ? qualificationResult.value.isQualified : false;
-    const hasCertificates = certificatesResult.status === 'fulfilled' ? certificatesResult.value.hasCertificates : false;
+    // Extract results — fall back to previous state values when a fetch errored
+    const isVerified = verificationResult.status === 'fulfilled' && verificationResult.value.isVerified !== undefined
+      ? verificationResult.value.isVerified
+      : statusData.isVerified;
+    const isQualified = qualificationResult.status === 'fulfilled' && qualificationResult.value.isQualified !== undefined
+      ? qualificationResult.value.isQualified
+      : statusData.isQualified;
+    const hasCertificates = certificatesResult.status === 'fulfilled' && certificatesResult.value.hasCertificates !== undefined
+      ? certificatesResult.value.hasCertificates
+      : statusData.hasCertificates;
 
     // Calculate overall publishing eligibility
     const canPublishGigs = isVerified && isQualified && hasCertificates;
