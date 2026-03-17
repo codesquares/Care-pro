@@ -14,7 +14,7 @@
 
 /* HERO SECTION */
 .team-hero {
-  background: linear-gradient(135deg, #013750 0%, #015476 100%);
+  background: #0a2a3f url('/src/assets/main-app/review-assets/bannerteam.jpg') center / cover no-repeat;
   color: #ffffff;
   padding: 100px 10%;
   min-height: 400px;
@@ -24,20 +24,9 @@
   overflow: hidden;
 }
 
-/* Star Background (Simplified using radial gradients or absolute elements) */
+/* Remove old pseudo-element star background */
 .team-hero::before {
-    content: "";
-    position: absolute;
-    top: 0;
-    left: 0;
-    right: 0;
-    bottom: 0;
-    background-image: 
-        radial-gradient(circle at 20% 30%, rgba(255, 255, 255, 0.05) 0%, transparent 20%),
-        radial-gradient(circle at 80% 20%, rgba(255, 255, 255, 0.08) 0%, transparent 25%),
-        radial-gradient(circle at 50% 80%, rgba(255, 255, 255, 0.05) 0%, transparent 30%),
-        radial-gradient(circle at 10% 90%, rgba(255, 255, 255, 0.03) 0%, transparent 15%);
-    z-index: 1;
+    display: none;
 }
 
 .hero-content {

@@ -1,12 +1,12 @@
 import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { useAuth } from "../main-app/context/AuthContext";
-import heroImg from "../assets/become-caregiver/hero.png";
+import heroSectionImg from "../assets/become-caregiver/herosectionimg.jpg";
 import connectImg from "../assets/suggested_care_image.png"; 
 import manageImg from "../assets/story1.png";
 import earnImg from "../assets/story2.png";
-import workerImg from "../assets/nurse.png"; 
-import opportunityImg from "../assets/story3.png"; 
+import worksLeftImg from "../assets/become-caregiver/works_left.png";
+import aminaCaregiverImg from "../assets/become-caregiver/aminacaregiver.png";
 import { FiUser, FiCheckCircle, FiBriefcase, FiDollarSign } from 'react-icons/fi';
 import "./BecomeCaregiver.css";
 
@@ -40,16 +40,11 @@ const BecomeCaregiver = () => {
     return (
         <div className="become-caregiver-page">
             {/* Hero Section */}
-            <section className="become-hero">
+            <section className="become-hero" style={{ backgroundImage: `url(${heroSectionImg})` }}>
                 <div className="hero-content">
                     <h1>Turn your care experience <br /><span>into </span><span className="highlight">impact & income.</span></h1>
                     <p>Connect with clients who need your expertise</p>
                     <button className="primary-btn" onClick={handleAction}>Become a Verified Caregiver</button>
-                </div>
-                <div className="hero-img-container">
-                    <img src={heroImg} alt="Caregivers" className="hero-main-img" />
-                    <div className="star-decoration s1">✦</div>
-                    <div className="star-decoration s2">✦</div>
                 </div>
             </section>
 
@@ -90,20 +85,7 @@ const BecomeCaregiver = () => {
                 
                 <div className="works-content">
                     <div className="works-left">
-                        <div className="image-stack">
-                            <img src={workerImg} alt="Caregiver sitting" className="base-worker" />
-                            <div className="app-mockup">
-                                {/* Simulated App View */}
-                                <div className="mockup-header">
-                                    <img src={workerImg} alt="Profile" />
-                                    <div>
-                                        <p className="name">Arinze Yusuf</p>
-                                        <p className="role">Professional Elderly Care...</p>
-                                    </div>
-                                </div>
-                                <button className="mockup-btn">Hire Arinze</button>
-                            </div>
-                        </div>
+                        <img src={worksLeftImg} alt="Caregiver with profile card" className="works-left-img" />
                     </div>
                     
                     <div className="works-right">
@@ -178,7 +160,7 @@ const BecomeCaregiver = () => {
                         <button className="gold-btn" onClick={handleAction}>Become a Verified Caregiver</button>
                     </div>
                     <div className="opp-img">
-                        <img src={opportunityImg} alt="Next opportunity" />
+                        <img src={aminaCaregiverImg} alt="Amina Caregiver" />
                     </div>
                 </div>
             </section>

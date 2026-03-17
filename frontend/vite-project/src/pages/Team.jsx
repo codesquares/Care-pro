@@ -4,12 +4,12 @@ import { Link } from 'react-router-dom';
 import '../styles/pages/team.css';
 
 // Importing team member images
-import segun from '../assets/segun_ceo.png';
+import segun from '../assets/main-app/review-assets/segunidowu.png';
 import lola from '../assets/lolaidowu2.jpg';
 import victor from '../assets/victor.jpeg';
 import james from '../assets/faniyi.jpeg'; // Using faniyi.jpeg as James as per previous design logic
 import ifeoluwa from '../assets/ifeoluwa.jpeg';
-import enoch from '../assets/enoch_ops.png';
+import enoch from '../assets/main-app/review-assets/enochaina.png';
 
 const teamMembers = [
     {
@@ -28,8 +28,8 @@ const teamMembers = [
         image: victor
     },
     {
-        name: "James Fadeyi",
-        role: "Co-Founder, Backend Developer",
+        name: "Micheal Faniyi",
+        role: "Co-Founder, R&D",
         image: james
     },
     {
