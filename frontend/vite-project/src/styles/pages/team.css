@@ -14,7 +14,10 @@
 
 /* HERO SECTION */
 .team-hero {
-  background: #0a2a3f url('/src/assets/main-app/review-assets/bannerteam.jpg') center / cover no-repeat;
+  background-color: #0a2a3f;
+  background-size: cover;
+  background-position: center;
+  background-repeat: no-repeat;
   color: #ffffff;
   padding: 100px 10%;
   min-height: 400px;

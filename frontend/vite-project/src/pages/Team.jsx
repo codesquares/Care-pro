@@ -2,14 +2,15 @@ import React from 'react';
 import { Helmet } from 'react-helmet-async';
 import { Link } from 'react-router-dom';
 import '../styles/pages/team.css';
+import bannerTeamImg from '../assets/bannerteam.jpg';
 
 // Importing team member images
-import segun from '../assets/main-app/review-assets/segunidowu.png';
+import segun from '../assets/segunidowu.png';
 import lola from '../assets/lolaidowu2.jpg';
 import victor from '../assets/victor.jpeg';
 import james from '../assets/faniyi.jpeg'; // Using faniyi.jpeg as James as per previous design logic
 import ifeoluwa from '../assets/ifeoluwa.jpeg';
-import enoch from '../assets/main-app/review-assets/enochaina.png';
+import enoch from '../assets/enochaina.png';
 
 const teamMembers = [
     {
@@ -55,7 +56,7 @@ const Team = () => {
 
             <div className="team-page">
                 {/* HERO SECTION */}
-                <header className="team-hero">
+                <header className="team-hero" style={{ backgroundImage: `url(${bannerTeamImg})` }}>
                     <div className="hero-content">
                         <p className="subtitle">Our Team</p>
                         <h1>

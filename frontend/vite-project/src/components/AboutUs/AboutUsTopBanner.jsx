@@ -1,6 +1,6 @@
 import React from 'react';
 import './AboutUs-Banner.css';
-import heroImg from '../../assets/main-app/review-assets/imagescene.png';
+import heroImg from '../../assets/imagescene.png';
 
 const AboutUsTopBanner = () => {
   return (
