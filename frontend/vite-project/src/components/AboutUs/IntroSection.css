@@ -1,0 +1,53 @@
+.about-intro {
+  background-color: #e1f5f9;
+  padding: 100px 10%;
+  text-align: center;
+  position: relative;
+  overflow: hidden;
+}
+
+.intro-container {
+  max-width: 1000px;
+  margin: 0 auto;
+}
+
+.about-intro h2 {
+  font-size: 32px;
+  font-weight: 600;
+  line-height: 1.4;
+  color: #333;
+  margin-bottom: 40px;
+}
+
+.about-intro .highlight {
+  color: #f3b14e; /* Golden brown color from design */
+}
+
+.about-intro p {
+  font-size: 18px;
+  line-height: 1.6;
+  color: #555;
+  max-width: 800px;
+  margin: 0 auto;
+}
+
+.decorative-star {
+  position: absolute;
+  top: 20px;
+  right: 5%;
+  font-size: 60px;
+  color: rgba(255, 255, 255, 0.5);
+  pointer-events: none;
+}
+
+@media (max-width: 768px) {
+  .about-intro {
+    padding: 60px 20px;
+  }
+  .about-intro h2 {
+    font-size: 24px;
+  }
+  .about-intro p {
+    font-size: 16px;
+  }
+}
