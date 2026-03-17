@@ -1,22 +1,19 @@
-
-import storyImage from "../../assets/storyImage.svg"
+import React from 'react';
 import './AboutUs-Banner.css';
-
+import heroImg from '../../assets/imagescene.png';
 
 const AboutUsTopBanner = () => {
-  const title = "Our Mission To Care";
-
   return (
-    <div className="full-width-banner">
-      <div className="banner-image-container">
-        <img src={storyImage} alt="Elderly man and caregiver" className="banner-image" />
+    <div className="about-hero">
+      <div className="hero-image-overlay">
+        <img src={heroImg} alt="CarePro Hero" className="hero-img" />
       </div>
-      <div className="banner-content">
-        <h1 className="banner-title" >{title}</h1>
+      <div className="hero-content">
+        <p className="subtitle">Our Vision</p>
+        <h1>A world where trusted home care<br />is easier to find.</h1>
       </div>
     </div>
   );
 };
 
 export default AboutUsTopBanner;
-
