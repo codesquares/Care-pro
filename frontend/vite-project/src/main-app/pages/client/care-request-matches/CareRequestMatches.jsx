@@ -2,6 +2,7 @@ import { useState, useEffect, useCallback, useRef } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { toast } from 'react-toastify';
 import CareRequestService from '../../../services/careRequestService';
+import '../client-dashboard/marketplaceHero.css';
 import './CareRequestMatches.css';
 
 const POLL_INTERVAL = 30000; // 30s fallback polling
@@ -229,116 +230,116 @@ const CareRequestMatches = () => {
     navigate(`/service/${caregiverId}`);
   };
 
-  if (loading) {
-    return (
-      <div className="care-matches-page">
-        <div className="matches-loading">
-          <div className="loading-spinner" />
-          <p>Loading matches...</p>
-        </div>
-      </div>
-    );
-  }
-
-  if (error) {
-    return (
-      <div className="care-matches-page">
-        <div className="matches-error">
-          <span className="error-icon">⚠️</span>
-          <h2>Something went wrong</h2>
-          <p>{error}</p>
-          <button className="btn-primary" onClick={() => fetchMatches(true)}>
-            Try Again
-          </button>
-        </div>
-      </div>
-    );
-  }
-
   const isPending = data?.status === 'pending';
   const hasMatches = data?.matches?.length > 0;
 
   return (
     <div className="care-matches-page">
-      {/* Header */}
-      <div className="matches-header">
-        <button className="back-btn" onClick={() => navigate('/app/client/dashboard')}>
-          ← Back
-        </button>
-        <div>
-          <h1>
-            {isPending
+      {/* Banner */}
+      <div className="marketplace-banner matches-banner">
+        <div className="marketplace-banner-content">
+          <button className="back-btn" onClick={() => navigate(-1)}>← Back</button>
+          <h1 className="marketplace-banner-title">
+            {loading
+              ? 'Caregiver Matches'
+              : error
+              ? 'Caregiver Matches'
+              : isPending
               ? 'Finding Caregivers...'
               : hasMatches
-              ? `We found ${data.totalMatches} caregiver${data.totalMatches !== 1 ? 's' : ''} for you`
+              ? `${data.totalMatches} Match${data.totalMatches !== 1 ? 'es' : ''} Found`
               : 'No Matches Yet'}
           </h1>
-          {data?.message && <p className="matches-subtitle">{data.message}</p>}
+          {!loading && !error && data?.message && (
+            <p className="marketplace-banner-subtitle">{data.message}</p>
+          )}
         </div>
       </div>
 
-      {/* Pending State */}
-      {isPending && (
-        <div className="matches-pending">
-          <div className="pending-animation">
-            <div className="pulse-ring" />
-            <span className="pending-icon">🔍</span>
+      <div className="matches-content">
+        {/* Loading */}
+        {loading && (
+          <div className="matches-loading">
+            <div className="loading-spinner" />
+            <p>Loading matches...</p>
           </div>
-          <h2>We're matching you with caregivers</h2>
-          <p>
-            Our matching engine is analyzing available caregivers based on your requirements,
-            location, budget, and preferences. This usually takes a couple of minutes.
-          </p>
-          <p className="pending-hint">
-            We'll notify you as soon as results are ready. You can also stay on this page — it updates automatically.
-          </p>
-        </div>
-      )}
+        )}
 
-      {/* No Matches State */}
-      {!isPending && !hasMatches && (
-        <div className="matches-empty">
-          <span className="empty-icon">😔</span>
-          <h2>No matches found yet</h2>
-          <p>
-            We couldn't find caregivers that closely match your requirements right now.
-            Our team has been notified and is working to find options for you.
-          </p>
-          {data?.hasAlternatives && (
-            <p className="alternatives-note">
-              We've expanded the search and included some alternative caregivers below
-              that might work for you.
+        {/* Error */}
+        {!loading && error && (
+          <div className="matches-error">
+            <span className="error-icon">⚠️</span>
+            <h2>Something went wrong</h2>
+            <p>{error}</p>
+            <button className="btn-primary" onClick={() => fetchMatches(true)}>
+              Try Again
+            </button>
+          </div>
+        )}
+
+        {/* Pending State */}
+        {!loading && !error && isPending && (
+          <div className="matches-pending">
+            <div className="pending-animation">
+              <div className="pulse-ring" />
+              <span className="pending-icon">🔍</span>
+            </div>
+            <h2>We're matching you with caregivers</h2>
+            <p>
+              Our matching engine is analyzing available caregivers based on your requirements,
+              location, budget, and preferences. This usually takes a couple of minutes.
             </p>
-          )}
-          <div className="empty-actions">
-            <button
-              className="btn-secondary"
-              onClick={() => navigate('/app/client/post-project')}
-            >
-              Adjust Requirements
-            </button>
-            <button
-              className="btn-primary"
-              onClick={() => navigate('/app/client/dashboard')}
-            >
-              Browse Marketplace
-            </button>
+            <p className="pending-hint">
+              We'll notify you as soon as results are ready. You can also stay on this page — it updates automatically.
+            </p>
           </div>
-        </div>
-      )}
+        )}
 
-      {/* Match Results */}
-      {hasMatches && (
-        <div className="matches-list">
-          {data.matches.map((match) => (
-            <MatchCard
-              key={match.caregiverId}
-              match={match}
-              onViewProfile={handleViewProfile}
-            />
-          ))}
-        </div>
-      )}
+        {/* No Matches State */}
+        {!loading && !error && !isPending && !hasMatches && (
+          <div className="matches-empty">
+            <span className="empty-icon">😔</span>
+            <h2>No matches found yet</h2>
+            <p>
+              We couldn't find caregivers that closely match your requirements right now.
+              Our team has been notified and is working to find options for you.
+            </p>
+            {data?.hasAlternatives && (
+              <p className="alternatives-note">
+                We've expanded the search and included some alternative caregivers below
+                that might work for you.
+              </p>
+            )}
+            <div className="empty-actions">
+              <button
+                className="btn-secondary"
+                onClick={() => navigate('/app/client/post-project')}
+              >
+                Adjust Requirements
+              </button>
+              <button
+                className="btn-primary"
+                onClick={() => navigate('/app/client/dashboard')}
+              >
+                Browse Marketplace
+              </button>
+            </div>
+          </div>
+        )}
+
+        {/* Match Results */}
+        {!loading && !error && hasMatches && (
+          <div className="matches-list">
+            {data.matches.map((match) => (
+              <MatchCard
+                key={match.caregiverId}
+                match={match}
+                onViewProfile={handleViewProfile}
+              />
+            ))}
+          </div>
+        )}
+      </div>
     </div>
   );
 };

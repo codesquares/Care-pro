@@ -197,9 +197,9 @@ const PaymentSuccess = () => {
           <span>₦{breakdown.orderFee?.toLocaleString()}</span>
         </div>
         {breakdown.commitmentFeeDeducted > 0 && (
-          <div className="breakdown-row" style={{ color: '#059669' }}>
+          <div className="breakdown-row breakdown-row--credit">
             <span>Commitment Fee Deducted:</span>
-            <span style={{ color: '#059669' }}>−₦{breakdown.commitmentFeeDeducted?.toLocaleString()}</span>
+            <span>−₦{breakdown.commitmentFeeDeducted?.toLocaleString()}</span>
           </div>
         )}
         <div className="breakdown-row">
@@ -221,6 +221,12 @@ const PaymentSuccess = () => {
   return (
     <div className="payment-success-page">
       <div className="payment-success-container">
+        {/* Branded top bar */}
+        <div className="payment-brand-bar">
+          <span className="payment-brand-bar__logo">CarePro</span>
+          <span className="payment-brand-bar__tag">Secure Payment</span>
+        </div>
+
         <div className="payment-success-card">
           {paymentData?.status === "completed" ? (
             <>

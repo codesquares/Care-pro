@@ -20,9 +20,14 @@ class CareRequestService {
 
     const payload = {
       clientId,
+      serviceGroup: requestData.serviceGroup,
       serviceCategory: requestData.serviceCategory,
       title: requestData.title,
-      description: requestData.description,
+      tasks: requestData.tasks || [],
+      notes: requestData.notes || null,
+      experiencePreference: requestData.experiencePreference || null,
+      certificationPreference: requestData.certificationPreference || null,
+      languagePreference: requestData.languagePreference || null,
       urgency: requestData.urgency,
       schedule: requestData.schedule,
       frequency: requestData.frequency,
@@ -49,7 +54,7 @@ class CareRequestService {
     }
 
     const response = await api.get(`/CareRequests/client/${clientId}`);
-    return response.data;
+    return response.data?.data || [];
   }
 
   /**

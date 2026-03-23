@@ -9,7 +9,6 @@ import setting from '../../../../assets/setting.png';
 import config from '../../../config'; // Import centralized config for API URLs
 
 const CaregiverDashboard = () => {
-  const [filter, setFilter] = useState('All Orders'); // Default filter is 'All Orders'
   const [orders, setOrders] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
@@ -17,10 +16,6 @@ const CaregiverDashboard = () => {
   const [totalEarnings, setTotalEarnings] = useState(0);
       const navigate = useNavigate();
       const basePath = "/app/caregiver";
-
-  const handleFilterChange = (e) => {
-    setFilter(e.target.value); // Update the filter state based on the selected option
-  };
 
    // Retrieve user details from localStorage
    const userDetails = JSON.parse(localStorage.getItem("userDetails") || "{}");
@@ -149,21 +144,16 @@ const CaregiverDashboard = () => {
         </div>
 
         <div className="rightbar">
-          <div className="select-dropdown-container">
-            <label htmlFor="order-filter" className="sr-only">Filter orders</label>
-            <select
-              id="order-filter"
-              className="custom-select"
-              value={filter} // Set the selected option based on filter state
-              onChange={handleFilterChange} // Update state on change
+          <div className="rightbar-header">
+            <h3 className="rightbar-title">Recent Orders</h3>
+            <button
+              className="view-all-orders-btn"
+              onClick={() => navigate(`${basePath}/orders`)}
             >
-              <option value="All Orders">All Orders</option>
-              <option value="In Progress">In Progress</option>
-              <option value="Completed">Completed</option>
-              <option value="Cancelled">Cancelled</option>
-            </select>
+              View All Orders →
+            </button>
           </div>
-          <OrderList filter={filter} orders={orders} loading={loading} error={error} /> {/* Pass the selected filter to OrderList */}
+          <OrderList filter="All Orders" orders={orders.slice(0, 5)} loading={loading} error={error} />
         </div>
       </div>
     </>
