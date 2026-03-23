@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import SubscriptionService from '../../../services/subscriptionService';
 import SubscriptionCard from '../../../components/subscriptions/SubscriptionCard';
+import '../../client/client-dashboard/marketplaceHero.css';
 import './CaregiverSubscriptions.css';
 
 const STATUS_FILTERS = ['All', 'Active', 'PendingCancellation', 'PastDue', 'Suspended', 'Paused', 'Cancelled', 'Terminated', 'Expired', 'Charging'];
@@ -41,6 +42,12 @@ const CaregiverSubscriptions = () => {
   if (loading) {
     return (
       <div className="cg-subs-page">
+        <div className="marketplace-banner cg-subs__banner">
+          <div className="marketplace-banner-content">
+            <h1 className="marketplace-banner-title">Client Subscriptions</h1>
+          </div>
+          <p className="cg-subs__banner-sub">Recurring subscriptions linked to your services</p>
+        </div>
         <div className="cg-subs-container">
           <div className="cg-subs__loading">Loading subscriptions…</div>
         </div>
@@ -50,9 +57,13 @@ const CaregiverSubscriptions = () => {
 
   return (
     <div className="cg-subs-page">
+      <div className="marketplace-banner cg-subs__banner">
+        <div className="marketplace-banner-content">
+          <h1 className="marketplace-banner-title">Client Subscriptions</h1>
+        </div>
+        <p className="cg-subs__banner-sub">Recurring subscriptions linked to your services</p>
+      </div>
       <div className="cg-subs-container">
-        <h1 className="cg-subs__title">Client Subscriptions</h1>
-        <p className="cg-subs__subtitle">Recurring subscriptions linked to your services</p>
 
         {/* Summary Cards */}
         {subscriptions.length > 0 && (

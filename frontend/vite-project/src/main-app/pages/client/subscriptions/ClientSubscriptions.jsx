@@ -3,6 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import { toast } from 'react-toastify';
 import SubscriptionService from '../../../services/subscriptionService';
 import SubscriptionCard from '../../../components/subscriptions/SubscriptionCard';
+import '../client-dashboard/marketplaceHero.css';
 import './ClientSubscriptions.css';
 
 const STATUS_FILTERS = ['All', 'Active', 'PendingCancellation', 'PastDue', 'Suspended', 'Paused', 'Cancelled', 'Terminated', 'Expired', 'Charging'];
@@ -44,6 +45,12 @@ const ClientSubscriptions = () => {
   if (loading) {
     return (
       <div className="client-subs-page">
+        <div className="marketplace-banner client-subs__banner">
+          <div className="marketplace-banner-content">
+            <h1 className="marketplace-banner-title">My Subscriptions</h1>
+          </div>
+          <p className="client-subs__banner-sub">Manage your recurring care services</p>
+        </div>
         <div className="client-subs-container">
           <div className="client-subs__loading">Loading subscriptions…</div>
         </div>
@@ -53,8 +60,13 @@ const ClientSubscriptions = () => {
 
   return (
     <div className="client-subs-page">
+      <div className="marketplace-banner client-subs__banner">
+        <div className="marketplace-banner-content">
+          <h1 className="marketplace-banner-title">My Subscriptions</h1>
+        </div>
+        <p className="client-subs__banner-sub">Manage your recurring care services</p>
+      </div>
       <div className="client-subs-container">
-        <h1 className="client-subs__title">My Subscriptions</h1>
 
         {/* Summary Cards */}
         {summary && (
