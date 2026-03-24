@@ -13,11 +13,12 @@ import SignatureCanvas from "./SignatureCanvas";
  */
 const SignOffModal = ({ isOpen, onClose, onConfirm, sheetNumber, submitting = false }) => {
   const [signature, setSignature] = useState(null);
+  const [consentChecked, setConsentChecked] = useState(false);
 
   if (!isOpen) return null;
 
   const handleConfirm = () => {
-    if (submitting) return;
+    if (submitting || !consentChecked) return;
     onConfirm(signature);
   };
 
@@ -25,7 +26,7 @@ const SignOffModal = ({ isOpen, onClose, onConfirm, sheetNumber, submitting = fa
     <div className="visit-modal-overlay" onClick={onClose}>
       <div className="visit-modal" onClick={(e) => e.stopPropagation()}>
         <div className="visit-modal-header">
-          <h3>✍️ Client Sign-Off — Visit {sheetNumber}</h3>
+          <h3>✍️ Check Out — Visit {sheetNumber}</h3>
           <button className="visit-modal-close" onClick={onClose}>✕</button>
         </div>
 
@@ -35,13 +36,25 @@ const SignOffModal = ({ isOpen, onClose, onConfirm, sheetNumber, submitting = fa
           </p>
 
           <div className="signoff-canvas-area">
-            <label className="signoff-label">Client Signature</label>
+            <label className="signoff-label">Client Signature (Optional)</label>
             <SignatureCanvas onChange={setSignature} />
           </div>
 
           <p className="signoff-note">
             Signature is optional but recommended. You can submit without it.
           </p>
+
+          {/* Consent checkbox */}
+          <label className="signoff-consent">
+            <input
+              type="checkbox"
+              checked={consentChecked}
+              onChange={(e) => setConsentChecked(e.target.checked)}
+            />
+            <span>
+              I confirm that all information entered for this visit is accurate and complete.
+            </span>
+          </label>
         </div>
 
         <div className="visit-modal-footer">
@@ -51,7 +64,7 @@ const SignOffModal = ({ isOpen, onClose, onConfirm, sheetNumber, submitting = fa
           <button
             className="visit-btn-submit"
             onClick={handleConfirm}
-            disabled={submitting}
+            disabled={submitting || !consentChecked}
           >
             {submitting ? "Submitting..." : "Submit Visit"}
           </button>

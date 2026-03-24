@@ -4,11 +4,15 @@ import axios from "axios";
 import { toast, ToastContainer } from "react-toastify";
 import config from "../../../config"; // Import centralized config for API URLs
 import ContractService from "../../../services/contractService";
+import NegotiationService from "../../../services/negotiationService";
 import ContractGenerationModal from "../../../components/modals/ContractGenerationModal";
 import TaskSheetTabs from "../../../components/task-sheets/TaskSheetTabs";
 import ProposedTasksList from "../../../components/task-proposals/ProposedTasksList";
+import NegotiationPanel from "../../../components/negotiations/NegotiationPanel";
+import "../../../components/negotiations/NegotiationPanel.css";
 
 import "react-toastify/dist/ReactToastify.css";
+import "../../client/client-dashboard/marketplaceHero.css";
 import "./CaregiverOrderDetails.css";
 
 
@@ -34,15 +38,31 @@ const CaregiverOrderDetails = () => {
     const [showContractGenerationModal, setShowContractGenerationModal] = useState(false);
     const [isRevisionMode, setIsRevisionMode] = useState(false);
 
+    // Negotiation state
+    const [negotiation, setNegotiation] = useState(null);
+    const [negotiationLoading, setNegotiationLoading] = useState(false);
+
+    // Start-negotiation modal state
+    const [showStartNegModal, setShowStartNegModal] = useState(false);
+    const [negInitTasks, setNegInitTasks] = useState([]);
+    const [negInitSchedule, setNegInitSchedule] = useState([]);
+    const [negInitNotes, setNegInitNotes] = useState("");
+    const [negInitNote, setNegInitNote] = useState("");
+    const [negInitNewTask, setNegInitNewTask] = useState("");
+    const [negInitSlotDay, setNegInitSlotDay] = useState("Monday");
+    const [negInitSlotStart, setNegInitSlotStart] = useState("09:00");
+    const [negInitSlotEnd, setNegInitSlotEnd] = useState("13:00");
+    const [startNegLoading, setStartNegLoading] = useState(false);
+
     // Lock body scroll when any modal is open
     useEffect(() => {
-        if (isModalOpen || showContractGenerationModal) {
+        if (isModalOpen || showContractGenerationModal || showStartNegModal) {
             document.body.style.overflow = 'hidden';
         } else {
             document.body.style.overflow = '';
         }
         return () => { document.body.style.overflow = ''; };
-    }, [isModalOpen, showContractGenerationModal]);
+    }, [isModalOpen, showContractGenerationModal, showStartNegModal]);
 
     // Get user details from localStorage
     const userDetails = JSON.parse(localStorage.getItem("userDetails"));
@@ -75,8 +95,9 @@ const CaregiverOrderDetails = () => {
                 );
                 setOrders([response.data]); // API returns a single order, so wrap it in an array
                 
-                // Fetch contract for this order
+                // Fetch contract and negotiation for this order
                 await fetchContractForOrder(orderId);
+                await fetchNegotiationForOrder(orderId);
                 
             } catch (err) {
                 setError("Failed to fetch order details.");
@@ -111,6 +132,46 @@ const CaregiverOrderDetails = () => {
         }
     };
 
+    // Fetch negotiation for the order
+    const fetchNegotiationForOrder = async (orderId) => {
+        try {
+            setNegotiationLoading(true);
+            const result = await NegotiationService.getByOrderId(orderId);
+            if (result.success) {
+                setNegotiation(result.hasNegotiation ? result.data : null);
+            }
+        } catch (err) {
+            console.error("Error fetching negotiation:", err);
+        } finally {
+            setNegotiationLoading(false);
+        }
+    };
+
+    // Start a new negotiation
+    const handleStartNegotiation = async () => {
+        const order = orders[0];
+        if (!order) return;
+        setStartNegLoading(true);
+        const result = await NegotiationService.startNegotiation({
+            orderId: order.id,
+            caregiverId: userId,
+            gigId: order.gigId || undefined,
+            createdByRole: 'Caregiver',
+            caregiverProposedTasks: negInitTasks,
+            caregiverProposedSchedule: negInitSchedule,
+            additionalNotes: negInitNotes || undefined,
+            openingNote: negInitNote || undefined,
+        });
+        if (result.success) {
+            setNegotiation(result.data);
+            setShowStartNegModal(false);
+            toast.success("Negotiation started! The client has been notified.");
+        } else {
+            toast.error(result.error || "Failed to start negotiation.");
+        }
+        setStartNegLoading(false);
+    };
+
     // Contract action handlers - NEW FLOW
     // Caregiver now GENERATES contracts, not accepts/rejects them
     
@@ -127,6 +188,67 @@ const CaregiverOrderDetails = () => {
     const handleContractGenerated = (contractData) => {
         setContract(contractData);
         setShowContractGenerationModal(false);
+    };
+
+    // ---- Flow B: Caregiver actions on client-initiated contracts ----
+    const [caregiverReviewComments, setCaregiverReviewComments] = useState("");
+    const [caregiverRejectReason, setCaregiverRejectReason] = useState("");
+
+    const handleCaregiverApprove = async () => {
+        if (!contract?.id) return;
+        // Use existing schedule from contract or require caregiver to confirm it
+        const schedule = contract.schedule || [];
+        if (schedule.length === 0) {
+            toast.error("Schedule is required. Please request changes if no schedule was provided.");
+            return;
+        }
+        setContractActionLoading(true);
+        const result = await ContractService.caregiverApproveContract(contract.id, { schedule });
+        if (result.success) {
+            setContract(result.data);
+            toast.success("Contract approved! It is now active.");
+        } else {
+            toast.error(result.error || "Failed to approve contract.");
+        }
+        setContractActionLoading(false);
+    };
+
+    const handleCaregiverRequestReview = async () => {
+        if (!contract?.id) return;
+        if (!caregiverReviewComments.trim()) {
+            toast.error("Please provide comments about what needs changing.");
+            return;
+        }
+        setContractActionLoading(true);
+        const result = await ContractService.caregiverRequestReview(contract.id, {
+            reviewComments: caregiverReviewComments
+        });
+        if (result.success) {
+            setContract(result.data);
+            setCaregiverReviewComments("");
+            setIsModalOpen(false);
+            setModalType("");
+            toast.success("Review request sent to client.");
+        } else {
+            toast.error(result.error || "Failed to request review.");
+        }
+        setContractActionLoading(false);
+    };
+
+    const handleCaregiverReject = async () => {
+        if (!contract?.id) return;
+        setContractActionLoading(true);
+        const result = await ContractService.caregiverRejectContract(contract.id, caregiverRejectReason);
+        if (result.success) {
+            setContract(result.data);
+            setCaregiverRejectReason("");
+            setIsModalOpen(false);
+            setModalType("");
+            toast.success("Contract rejected.");
+        } else {
+            toast.error(result.error || "Failed to reject contract.");
+        }
+        setContractActionLoading(false);
     };
 
     // Function to check if conversation exists between caregiver and client
@@ -266,306 +388,409 @@ const CaregiverOrderDetails = () => {
         }
     };
 
-    if (loading) return <div className="loading-container"><p>Loading order details...</p></div>;
-    if (error) return <div className="error-container"><p className="error">{error}</p></div>;
+    const order = orders.length > 0 ? orders[0] : null;
+    const cStatus = contract?.status?.toLowerCase().replace(/\s+/g, '') || '';
+    const isTasksReady = cStatus === 'approved' || cStatus === 'active' || cStatus === 'completed';
+
+    const bannerTitle = (() => {
+        if (isTasksReady) return 'Task Tracker';
+        if (!contract && !negotiation) return 'Generate Contract';
+        if (!contract && negotiation) return 'Negotiation In Progress';
+        if (cStatus === 'pendingcaregiverapproval') return 'Generate Contract';
+        if (cStatus === 'pendingclientapproval' || cStatus === 'revised') return 'Awaiting Client Approval';
+        if (cStatus === 'clientreviewrequested') return 'Revision Requested';
+        if (cStatus === 'caregiverreviewrequested') return 'Revision Pending';
+        if (cStatus === 'clientrejected' || cStatus === 'caregiverrejected') return 'Contract Rejected';
+        if (cStatus === 'terminated') return 'Contract Terminated';
+        return 'Generate Contract';
+    })();
+
+    const bannerSubtitle = (() => {
+        if (isTasksReady) return 'Track your progress and give your client real time updates.';
+        if (!contract) return 'Provide all the necessary information that the caregiver needs';
+        if (cStatus === 'pendingcaregiverapproval') return 'Provide all the necessary information that the caregiver needs';
+        if (cStatus === 'pendingclientapproval' || cStatus === 'revised') return 'Your contract has been sent to the client for approval';
+        if (cStatus === 'clientreviewrequested') return 'The client has requested changes to the contract';
+        if (cStatus === 'caregiverreviewrequested') return 'Waiting for client to revise the contract';
+        if (cStatus === 'clientrejected' || cStatus === 'caregiverrejected') return 'This contract has been rejected';
+        if (cStatus === 'terminated') return 'This contract has been terminated';
+        if (cStatus === 'completed') return 'This order has been completed';
+        return 'Provide all the necessary information that the caregiver needs';
+    })();
+
+    if (loading) return <div className="cod-loading"><div className="cod-spinner" /><p>Loading order details...</p></div>;
+    if (error) return <div className="cod-error-page"><p>{error}</p><button className="cod-retry-btn" onClick={() => window.location.reload()}>Retry</button></div>;
 
     return (
-        <div className="caregiver-orders-container">
-            <div className="tab-navigation">
-                {["Tasks", "Details"].map((tab) => (
-                    <button
-                        key={tab}
-                        className={`tab-button ${selectedView === tab ? "active" : ""}`}
-                        onClick={() => setSelectedView(tab)}
-                    >
-                        {tab}
-                        {selectedView === tab && <span className="underline"></span>}
-                    </button>
-                ))}
+        <div className="cod-page">
+            {/* ── Banner ── */}
+            <div className="marketplace-banner cod-banner">
+                <div className="marketplace-banner-content">
+                    <button className="cod-back-btn" onClick={() => navigate(-1)}>Back</button>
+                    <h1 className="marketplace-banner-title">{bannerTitle}</h1>
+                </div>
+                <p className="cod-banner-subtitle">{bannerSubtitle}</p>
             </div>
 
-            <div className="order-tasks-wrapper">
-                <div className="content-wrapper">
-                    {selectedView === "Tasks" ? (
-                        <div className="tasks-section">
-                            <h2>Tasks</h2>
-                            {orders.length > 0 ? (
-                                <TaskSheetTabs order={orders[0]} />
-                            ) : (
-                                <p>No tasks available.</p>
-                            )}
+            <div className="cod-body">
+                {/* ── Left column ── */}
+                <div className="cod-left">
+                    {isTasksReady ? (
+                        /* Tasks view */
+                        <div className="cod-tasks-panel">
+                            {order ? <TaskSheetTabs order={order} /> : <p>No tasks available.</p>}
                         </div>
                     ) : (
-                        <div className="details-section">
-                            {orders.length > 0 && (
-                                <>
-                                    <div className="offer-header">
-                                        <img
-                                            src={orders[0].gigImage || "https://via.placeholder.com/100"}
-                                            alt={orders[0].clientName}
-                                            className="provider-avatar"
+                        /* Contract flow view */
+                        <div className="cod-contract-panel">
+                            {contractLoading ? (
+                                <div className="cod-contract-state">
+                                    <div className="cod-spinner" />
+                                    <p>Loading contract information...</p>
+                                </div>
+                            ) : contract ? (() => {
+                                const isClientInitiated = ContractService.isClientInitiated(contract);
+
+                                if (cStatus === 'pendingcaregiverapproval') {
+                                    const actions = ContractService.getCaregiverClientInitiatedActions(contract);
+                                    return (
+                                        <div className="cod-contract-state">
+                                            <div className="cod-contract-icon">📩</div>
+                                            <h2>Contract Received</h2>
+                                            <p className="cod-contract-note">
+                                                Review this contract and give your feedback.
+                                            </p>
+                                            <p className="cod-contract-disclaimer">
+                                                Note: Approving this contract means you have gone through this contract and are satisfied with the details
+                                                provided by the client. You are only allowed to make changes to the "Task List" and you can only Review
+                                                this contract once, therefore if anything feels unclear in this contract, kindly message {order?.clientName || 'the client'} to clarify
+                                                things further.
+                                            </p>
+                                            <div className="cod-contract-actions">
+                                                <button className="cod-btn cod-btn--review" onClick={() => openModal("contract")}>
+                                                    Review Contract
+                                                </button>
+                                                <button className="cod-btn cod-btn--approve" onClick={handleCaregiverApprove} disabled={contractActionLoading}>
+                                                    {contractActionLoading ? 'Processing...' : 'Approve Contract'}
+                                                </button>
+                                            </div>
+                                            {actions.canRequestReview && (
+                                                <button className="cod-btn cod-btn--outline cod-btn--full" onClick={() => { setModalType("caregiverReview"); setIsModalOpen(true); }}>
+                                                    Request Changes
+                                                </button>
+                                            )}
+                                            {actions.canReject && (
+                                                <button className="cod-btn cod-btn--danger cod-btn--full" onClick={() => { setModalType("caregiverReject"); setIsModalOpen(true); }}>
+                                                    Reject Contract
+                                                </button>
+                                            )}
+                                        </div>
+                                    );
+                                }
+
+                                if (cStatus === 'pendingclientapproval' || cStatus === 'revised') {
+                                    return (
+                                        <div className="cod-contract-state">
+                                            <div className="cod-contract-icon">⏳</div>
+                                            <h2>Awaiting Client Approval</h2>
+                                            <p className="cod-contract-note">Your contract has been sent. Waiting for the client to review and approve it.</p>
+                                            <div className="cod-contract-actions">
+                                                <button className="cod-btn cod-btn--outline" onClick={() => openModal("contract")}>View Contract Details</button>
+                                            </div>
+                                        </div>
+                                    );
+                                }
+
+                                if (cStatus === 'clientreviewrequested') {
+                                    return (
+                                        <div className="cod-contract-state">
+                                            <div className="cod-contract-icon">🔄</div>
+                                            <h2>Client Requested Changes</h2>
+                                            <p className="cod-contract-note">The client has requested revisions to the contract.</p>
+                                            {contract.clientReviewComments && (
+                                                <div className="cod-feedback-box">
+                                                    <strong>Client&apos;s feedback:</strong>
+                                                    <p>&ldquo;{contract.clientReviewComments}&rdquo;</p>
+                                                </div>
+                                            )}
+                                            <div className="cod-contract-actions">
+                                                <button className="cod-btn cod-btn--outline" onClick={() => openModal("contract")}>View Details</button>
+                                                <button className="cod-btn cod-btn--review" onClick={() => openModal("revise")}>Revise Contract</button>
+                                            </div>
+                                        </div>
+                                    );
+                                }
+
+                                if (cStatus === 'caregiverreviewrequested') {
+                                    return (
+                                        <div className="cod-contract-state">
+                                            <div className="cod-contract-icon">🔄</div>
+                                            <h2>Waiting for Client Revision</h2>
+                                            <p className="cod-contract-note">You requested changes. The client is revising the contract.</p>
+                                            <div className="cod-contract-actions">
+                                                <button className="cod-btn cod-btn--outline" onClick={() => openModal("contract")}>View Contract</button>
+                                            </div>
+                                        </div>
+                                    );
+                                }
+
+                                if (cStatus === 'clientrejected') {
+                                    return (
+                                        <div className="cod-contract-state">
+                                            <div className="cod-contract-icon">❌</div>
+                                            <h2>Contract Rejected</h2>
+                                            <p className="cod-contract-note">The client has rejected this contract.</p>
+                                            <div className="cod-contract-actions">
+                                                <button className="cod-btn cod-btn--outline" onClick={() => openModal("contract")}>View Contract Details</button>
+                                            </div>
+                                        </div>
+                                    );
+                                }
+
+                                if (cStatus === 'caregiverrejected') {
+                                    return (
+                                        <div className="cod-contract-state">
+                                            <div className="cod-contract-icon">❌</div>
+                                            <h2>Contract Rejected</h2>
+                                            <p className="cod-contract-note">You rejected this contract.</p>
+                                            <div className="cod-contract-actions">
+                                                <button className="cod-btn cod-btn--outline" onClick={() => openModal("contract")}>View Contract Details</button>
+                                            </div>
+                                        </div>
+                                    );
+                                }
+
+                                if (cStatus === 'terminated') {
+                                    return (
+                                        <div className="cod-contract-state">
+                                            <div className="cod-contract-icon">🚫</div>
+                                            <h2>Contract Terminated</h2>
+                                            <p className="cod-contract-note">This contract has been terminated.</p>
+                                            <div className="cod-contract-actions">
+                                                <button className="cod-btn cod-btn--outline" onClick={() => openModal("contract")}>View Contract Details</button>
+                                            </div>
+                                        </div>
+                                    );
+                                }
+
+                                // Fallback – any other contract state
+                                return (
+                                    <div className="cod-contract-state">
+                                        <div className="cod-contract-icon">📋</div>
+                                        <h2>Contract: {ContractService.getStatusDisplayInfo(contract.status).label}</h2>
+                                        <p className="cod-contract-note">Contract is being processed.</p>
+                                        <div className="cod-contract-actions">
+                                            <button className="cod-btn cod-btn--outline" onClick={() => openModal("contract")}>View Contract Details</button>
+                                        </div>
+                                    </div>
+                                );
+                            })() : (
+                                /* No contract yet – negotiation or start */
+                                <div className="cod-contract-state">
+                                    {negotiationLoading ? (
+                                        <>
+                                            <div className="cod-spinner" />
+                                            <p>Loading negotiation...</p>
+                                        </>
+                                    ) : negotiation ? (
+                                        <NegotiationPanel
+                                            negotiation={negotiation}
+                                            role="caregiver"
+                                            order={order}
+                                            onNegotiationUpdate={(updated) => setNegotiation(updated)}
+                                            onContractCreated={() => {
+                                                fetchContractForOrder(orderId);
+                                                setNegotiation(null);
+                                            }}
                                         />
-                                        <h2>Order from {orders[0].clientName}</h2>
-                                        <div className="provider-info">
-                                            Status: {orders[0].clientOrderStatus} • Amount: ₦{orders[0].amount}
-                                        </div>
-                                    </div>
-                                    <div className="offer-content">
-                                        <p><strong>Service:</strong> {orders[0].gigTitle}</p>
-                                        <p><strong>Tasks:</strong></p>
-                                        {orders[0].gigPackageDetails && orders[0].gigPackageDetails.length > 0 ? (
-                                            orders[0].gigPackageDetails.map((taskText, index) => (
-                                                <div key={index} className="task">
-                                                    ☐ {taskText}
-                                                </div>
-                                            ))
-                                        ) : (
-                                            <p>No tasks available.</p>
-                                        )}
-
-                                        <p><strong>Payment:</strong></p>
-                                        <div className="pricing-info">
-                                            <span>Total Amount: ₦{orders[0].amount}</span>
-                                        </div>
-                                    </div>
-                                </>
-                            )}
-                        </div>
-                    )}
-
-                    <div className="right-section">
-                        <div className="order-details-section">
-                            <h2>Order Details</h2>
-                            {orders.length > 0 && (
-                                <div className="order-card">
-                                    <img 
-                                        src={orders[0].gigImage || "https://via.placeholder.com/100"} 
-                                        alt="Order activity" 
-                                        className="order-image" 
-                                    />
-                                    <p><strong>{orders[0].gigTitle}</strong></p>
-                                    <div className="order-status-badge">
-                                        Status: {orders[0].clientOrderStatus}
-                                    </div>
-                                    <div className="order-meta">
-                                        <p>Client: {orders[0].clientName}</p>
-                                        <p>Total price: ₦{orders[0].amount}</p>
-                                        <p>Order number: #{orders[0].id}</p>
-                                        <p>Payment method: {orders[0].paymentOption}</p>
-                                        {orders[0].orderCreatedOn && (
-                                            <p>Order date: {new Date(orders[0].orderCreatedOn).toLocaleDateString()}</p>
-                                        )}
-                                        {orders[0].billingCycleNumber > 0 && (
-                                            <p>Billing cycle: Cycle {orders[0].billingCycleNumber} {orders[0].paymentOption === 'monthly' ? '(Monthly Subscription)' : ''}</p>
-                                        )}
-                                        {orders[0].subscriptionId && (
-                                            <p>Subscription ID: {orders[0].subscriptionId}</p>
-                                        )}
-                                    </div>
-
-                                    {/* Fund Status Section */}
-                                    {orders[0].clientOrderStatus === 'Completed' && (() => {
-                                        const order = orders[0];
-                                        const isReleased = order.isOrderStatusApproved;
-                                        const isDisputed = order.hasDispute;
-                                        return (
-                                            <div style={{ margin: '10px 0', padding: '8px 12px', borderRadius: '6px', background: '#f8f9fa' }}>
-                                                <p style={{ fontWeight: 600, fontSize: '13px', margin: 0 }}>
-                                                    {isDisputed ? (
-                                                        <span style={{ color: '#e74c3c' }}>⚠️ Funds on hold — active dispute</span>
-                                                    ) : isReleased ? (
-                                                        <span style={{ color: '#27ae60' }}>✅ Order Approved</span>
-                                                    ) : (
-                                                        <span style={{ color: '#e67e22' }}>⏳ Funds release per visit — each approved visit credits your wallet. Unreviewed visits auto-release after 7 days.</span>
-                                                    )}
-                                                </p>
+                                    ) : (order?.transactionId || order?.paymentTransactionId) ? (
+                                        <>
+                                            <div className="cod-contract-icon">📋</div>
+                                            <h2>No Contract Yet</h2>
+                                            <p className="cod-contract-note">
+                                                Agree on tasks, schedule, and service details with your client before generating the contract.
+                                                Both parties must confirm agreement first.
+                                            </p>
+                                            <div className="cod-contract-actions">
+                                                <button className="cod-btn cod-btn--review" onClick={() => setShowStartNegModal(true)}>
+                                                    🤝 Start Negotiation
+                                                </button>
                                             </div>
-                                        );
-                                    })()}
-                                    
-                                    {/* Contract Section - NEW CAREGIVER-INITIATED FLOW */}
-                                    <div className="contract-section">
-                                        {contractLoading ? (
-                                            <div className="contract-loading">
-                                                <p>Loading contract information...</p>
-                                            </div>
-                                        ) : contractError ? (
-                                            <div className="contract-error">
-                                                <h4>Contract</h4>
-                                                <p>⚠️ {contractError}</p>
-                                            </div>
-                                        ) : contract ? (
-                                            <div className="contract-available">
-                                                <h4>📋 Contract</h4>
-                                                <div className="contract-status">
-                                                    <p><strong>Status:</strong> <span className={`status-${contract.status?.toLowerCase().replace(/\s+/g, '-')}`}>
-                                                        {ContractService.getStatusDisplayInfo(contract.status).label}
-                                                    </span></p>
-                                                    <p><strong>Round:</strong> {contract.negotiationRound || 1}</p>
-                                                    <p><strong>Total Amount:</strong> ₦{contract.totalAmount?.toLocaleString()}</p>
-                                                    {contract.submittedAt && (
-                                                        <p><strong>Submitted:</strong> {new Date(contract.submittedAt).toLocaleString()}</p>
-                                                    )}
-                                                </div>
-                                                
-                                                {/* Schedule Display */}
-                                                {contract.schedule && contract.schedule.length > 0 && (
-                                                    <div className="contract-schedule-preview">
-                                                        <p><strong>Schedule:</strong></p>
-                                                        <div className="schedule-display">
-                                                            {contract.schedule.map((visit, idx) => (
-                                                                <div key={idx} className="schedule-visit">
-                                                                    <span className="schedule-day">{visit.dayOfWeek}</span>
-                                                                    <span className="schedule-time">{ContractService.formatTimeForDisplay(visit.startTime)} - {ContractService.formatTimeForDisplay(visit.endTime)}</span>
-                                                                    <span className="schedule-duration">{ContractService.calculateVisitDuration(visit.startTime, visit.endTime)}hrs</span>
-                                                                </div>
-                                                            ))}
-                                                        </div>
-                                                    </div>
-                                                )}
-                                                
-                                                {(() => {
-                                                    const status = contract.status?.toLowerCase().replace(/\s+/g, '');
-                                                    
-                                                    if (status === 'approved') {
-                                                        return (
-                                                            <div className="contract-accepted">
-                                                                <p>✅ Client has approved this contract</p>
-                                                                <button 
-                                                                    className="view-contract-btn"
-                                                                    onClick={() => openModal("contract")}
-                                                                >
-                                                                    View Contract Details
-                                                                </button>
-                                                            </div>
-                                                        );
-                                                    } else if (status === 'clientrejected') {
-                                                        return (
-                                                            <div className="contract-rejected">
-                                                                <p>❌ Client has rejected this contract</p>
-                                                                <button 
-                                                                    className="view-contract-btn"
-                                                                    onClick={() => openModal("contract")}
-                                                                >
-                                                                    View Contract Details
-                                                                </button>
-                                                            </div>
-                                                        );
-                                                    } else if (status === 'clientreviewrequested') {
-                                                        return (
-                                                            <div className="contract-review-requested">
-                                                                <p>🔄 Client requested changes</p>
-                                                                {contract.clientReviewComments && (
-                                                                    <div className="client-feedback-inline">
-                                                                        <p><strong>Client's feedback:</strong></p>
-                                                                        <p className="feedback-text">"{contract.clientReviewComments}"</p>
-                                                                    </div>
-                                                                )}
-                                                                {/* NEW — Show proposed task count */}
-                                                                {contract.proposedTasks && contract.proposedTasks.filter(t => t.status === 'Proposed').length > 0 && (
-                                                                    <p style={{ fontSize: '13px', color: '#e65100', margin: '6px 0' }}>
-                                                                        📝 Client proposed {contract.proposedTasks.filter(t => t.status === 'Proposed').length} new task(s) — review in revision
-                                                                    </p>
-                                                                )}
-                                                                <div className="contract-buttons">
-                                                                    <button 
-                                                                        className="view-contract-btn"
-                                                                        onClick={() => openModal("contract")}
-                                                                    >
-                                                                        View Details
-                                                                    </button>
-                                                                    <button 
-                                                                        className="revise-contract-btn"
-                                                                        onClick={() => openModal("revise")}
-                                                                    >
-                                                                        Revise Contract
-                                                                    </button>
-                                                                </div>
-                                                            </div>
-                                                        );
-                                                    } else if (status === 'pendingclientapproval' || status === 'revised') {
-                                                        return (
-                                                            <div className="contract-pending-approval">
-                                                                <p>⏳ Waiting for client approval</p>
-                                                                <button 
-                                                                    className="view-contract-btn"
-                                                                    onClick={() => openModal("contract")}
-                                                                >
-                                                                    View Contract Details
-                                                                </button>
-                                                            </div>
-                                                        );
-                                                    } else {
-                                                        return (
-                                                            <div className="contract-no-action">
-                                                                <button 
-                                                                    className="view-contract-btn"
-                                                                    onClick={() => openModal("contract")}
-                                                                >
-                                                                    View Contract Details
-                                                                </button>
-                                                            </div>
-                                                        );
-                                                    }
-                                                })()}
-                                            </div>
-                                        ) : (
-                                            <div className="contract-not-available">
-                                                <h4>Contract</h4>
-                                                {ContractService.canCaregiverGenerateContract(orders[0], contract) ? (
-                                                    <>
-                                                        <p>📝 Ready to create a contract for this order.</p>
-                                                        <p className="contract-hint">After discussing the schedule with your client, generate a contract for their approval.</p>
-                                                        <button 
-                                                            className="generate-contract-btn"
-                                                            onClick={() => openModal("generate")}
-                                                        >
-                                                            Generate Contract
-                                                        </button>
-                                                    </>
-                                                ) : (
-                                                    <>
-                                                        <p>Contract cannot be generated yet.</p>
-                                                        {!orders[0].transactionId && !orders[0].paymentTransactionId && (
-                                                            <p className="requirement-note">⏳ Waiting for client payment</p>
-                                                        )}
-                                                    </>
-                                                )}
-                                            </div>
-                                        )}
-                                    </div>
-                                    {/* Mark as Completed button removed */}
-                                    {/* <button 
-                                        className="contact-client-btn" 
-                                        onClick={() => openModal("contact")}
-                                        disabled={isContactLoading}
-                                    >
-                                        {isContactLoading ? "Setting up..." : "Contact Client"}
-                                    </button> */}
+                                        </>
+                                    ) : (
+                                        <>
+                                            <div className="cod-contract-icon">⏳</div>
+                                            <h2>Waiting for Payment</h2>
+                                            <p className="cod-contract-note">Waiting for client payment before negotiation can begin.</p>
+                                        </>
+                                    )}
                                 </div>
                             )}
                         </div>
+                    )}
+                </div>
 
-                        <div className="support-section">
-                            <h3>Support</h3>
-                            <div className="support-item" onClick={handlingFaq}>
-                                <span>📋 FAQs</span>
-                                <span>Find needed answers</span>
+                {/* ── Right column: Order Details ── */}
+                <div className="cod-right">
+                    {order && (
+                        <div className="cod-order-sidebar">
+                            <h3 className="cod-sidebar-heading">Order Details</h3>
+                            <div className="cod-sidebar-img-wrap">
+                                <img src={order.gigImage || 'https://via.placeholder.com/300x180?text=No+Image'} alt={order.gigTitle} className="cod-sidebar-img" />
                             </div>
-                            <div className="support-item">
-                                <a
-                                    href="https://wa.me/2348131952778"
-                                    target="_blank"
-                                    rel="noopener noreferrer"
-                                    className="support-link"
-                                >
-                                <span>📞 Resolution Center</span>
-                                <span>Resolve order issues</span>
+                            <h4 className="cod-sidebar-title">{order.gigTitle}</h4>
+
+                            {/* Order Detail */}
+                            <div className="cod-detail-section">
+                                <h5 className="cod-detail-label">Order Detail</h5>
+                                <div className="cod-detail-row">
+                                    <span>Ordered from:</span>
+                                    <span className="cod-detail-value">
+                                        <span className="cod-client-avatar-sm">{order.clientName?.split(' ').map(n => n[0]).join('').slice(0,2)}</span>
+                                        {order.clientName}
+                                    </span>
+                                </div>
+                                <div className="cod-detail-row">
+                                    <span>Order amount:</span>
+                                    <span className="cod-detail-value"><strong>₦{Number(order.amount || 0).toLocaleString()}</strong></span>
+                                </div>
+                                <div className="cod-detail-row">
+                                    <span>Order number:</span>
+                                    <span className="cod-detail-value">#{order.id?.slice(-8)}</span>
+                                </div>
+                                {order.orderCreatedOn && (
+                                    <>
+                                        <div className="cod-detail-row">
+                                            <span>Order Date:</span>
+                                            <span className="cod-detail-value">{new Date(order.orderCreatedOn).toLocaleDateString('en-GB', { day: 'numeric', month: 'short', year: 'numeric' })}</span>
+                                        </div>
+                                        <div className="cod-detail-row">
+                                            <span>Order Time:</span>
+                                            <span className="cod-detail-value">{new Date(order.orderCreatedOn).toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit' })}</span>
+                                        </div>
+                                    </>
+                                )}
+                            </div>
+
+                            {/* Service Detail */}
+                            <div className="cod-detail-section">
+                                <h5 className="cod-detail-label">Service Detail</h5>
+                                {order.serviceGroup && (
+                                    <div className="cod-detail-row">
+                                        <span>Service Group:</span>
+                                        <span className="cod-detail-value">{order.serviceGroup}</span>
+                                    </div>
+                                )}
+                                {order.serviceType && (
+                                    <div className="cod-detail-row">
+                                        <span>Service Type:</span>
+                                        <span className="cod-detail-value">{order.serviceType}</span>
+                                    </div>
+                                )}
+                                <div className="cod-detail-row">
+                                    <span>Service Package Type:</span>
+                                    <span className="cod-detail-value">{order.gigPackageType || 'Basic'}</span>
+                                </div>
+                                <div className="cod-detail-row">
+                                    <span>Service Mode:</span>
+                                    <span className="cod-detail-value">{order.paymentOption === 'monthly' ? 'Monthly' : 'One-time'}</span>
+                                </div>
+                                {order.billingCycleNumber > 0 && (
+                                    <div className="cod-detail-row">
+                                        <span>Billing Cycle:</span>
+                                        <span className="cod-detail-value">Cycle {order.billingCycleNumber}</span>
+                                    </div>
+                                )}
+                            </div>
+
+                            {/* Schedule Details — from contract data when available */}
+                            {contract && (cStatus === 'approved' || cStatus === 'active' || cStatus === 'completed') && (
+                                <div className="cod-detail-section">
+                                    <h5 className="cod-detail-label">Schedule Details</h5>
+                                    {contract.selectedPackage?.priorityLevel && (
+                                        <div className="cod-detail-row">
+                                            <span>Priority:</span>
+                                            <span className="cod-detail-value">{contract.selectedPackage.priorityLevel}</span>
+                                        </div>
+                                    )}
+                                    {contract.contractStartDate && (
+                                        <div className="cod-detail-row">
+                                            <span>Delivery Date:</span>
+                                            <span className="cod-detail-value">{new Date(contract.contractStartDate).toLocaleDateString('en-GB', { day: 'numeric', month: 'short', year: 'numeric' })}</span>
+                                        </div>
+                                    )}
+                                    {contract.schedule && contract.schedule.length > 0 && (
+                                        <div className="cod-detail-row">
+                                            <span>Delivery Time:</span>
+                                            <span className="cod-detail-value">
+                                                {ContractService.formatTimeForDisplay(contract.schedule[0].startTime)} – {ContractService.formatTimeForDisplay(contract.schedule[0].endTime)}
+                                            </span>
+                                        </div>
+                                    )}
+                                    {contract.serviceAddress && (
+                                        <div className="cod-detail-row">
+                                            <span>Service Address:</span>
+                                            <span className="cod-detail-value">{contract.serviceAddress}</span>
+                                        </div>
+                                    )}
+                                </div>
+                            )}
+
+                            {/* Fund status for completed orders */}
+                            {order.clientOrderStatus === 'Completed' && (() => {
+                                const isReleased = order.isOrderStatusApproved;
+                                const isDisputed = order.hasDispute;
+                                return (
+                                    <div className="cod-fund-status">
+                                        {isDisputed ? (
+                                            <span className="cod-fund-disputed">⚠️ Funds on hold — active dispute</span>
+                                        ) : isReleased ? (
+                                            <span className="cod-fund-released">✅ Order Approved</span>
+                                        ) : (
+                                            <span className="cod-fund-pending">⏳ Funds release per visit — approved visits credit your wallet</span>
+                                        )}
+                                    </div>
+                                );
+                            })()}
+
+                            {/* Action buttons — hidden when order is completed and approved */}
+                            {!(order.clientOrderStatus === 'Completed' && order.isOrderStatusApproved) && (
+                                <div className="cod-sidebar-actions">
+                                    <button className="cod-btn cod-btn--cancel" onClick={() => openModal("contact")}>
+                                        Cancel Order
+                                    </button>
+                                    <button className="cod-btn cod-btn--report" onClick={() => {
+                                        if (order.clientId) {
+                                            toast.info("Report functionality coming soon.");
+                                        }
+                                    }}>
+                                        ⚠ Report {order.clientName?.split(' ')[0] || 'Client'}
+                                    </button>
+                                </div>
+                            )}
+
+                            {/* Support */}
+                            <div className="cod-support">
+                                <h5 className="cod-detail-label">Support</h5>
+                                <a href="https://wa.me/2348131952778" target="_blank" rel="noopener noreferrer" className="cod-support-item">
+                                    <div className="cod-support-icon">📞</div>
+                                    <div>
+                                        <strong>Resolution Center</strong>
+                                        <span>Resolve order issues</span>
+                                    </div>
+                                    <span className="cod-support-arrow">›</span>
                                 </a>
+                                <div className="cod-support-item" onClick={handlingFaq} role="button" tabIndex={0} onKeyDown={e => { if (e.key === 'Enter') handlingFaq(); }}>
+                                    <div className="cod-support-icon">❓</div>
+                                    <div>
+                                        <strong>FAQs</strong>
+                                        <span>Find needed answers</span>
+                                    </div>
+                                    <span className="cod-support-arrow">›</span>
+                                </div>
                             </div>
-                           
                         </div>
-                    </div>
+                    )}
                 </div>
             </div>
 
@@ -600,6 +825,7 @@ const CaregiverOrderDetails = () => {
                                 <div className="contract-details-modal">
                                     <div className="contract-header">
                                         <p><strong>Contract ID:</strong> {contract.id}</p>
+                                        <p><strong>Initiated By:</strong> {contract.initiatedByRole || 'Caregiver'}</p>
                                         <p><strong>Status:</strong> <span className={`status-${contract.status?.toLowerCase().replace(/\s+/g, '-')}`}>
                                             {ContractService.getStatusDisplayInfo(contract.status).label}
                                         </span></p>
@@ -700,6 +926,164 @@ const CaregiverOrderDetails = () => {
                                 </div>
                             </>
                         )}
+
+                        {modalType === "caregiverReview" && (
+                            <>
+                                <div className="contract-modal-header">
+                                    <h3>Request Changes</h3>
+                                    <button className="contract-modal-close-btn" onClick={closeModal}>✕</button>
+                                </div>
+                                <div className="contract-modal-body">
+                                    <p style={{ marginBottom: '12px', color: '#555' }}>
+                                        Let the client know what needs to change. They will revise and resubmit the contract.
+                                    </p>
+                                    <textarea
+                                        placeholder="Describe what changes you'd like (e.g., schedule adjustments, task modifications)..."
+                                        value={caregiverReviewComments}
+                                        onChange={(e) => setCaregiverReviewComments(e.target.value)}
+                                        rows="5"
+                                        style={{ width: '100%', padding: '10px', borderRadius: '6px', border: '1px solid #ddd', fontSize: '14px', resize: 'vertical' }}
+                                    />
+                                    <div className="modal-actions" style={{ marginTop: '16px', display: 'flex', gap: '10px' }}>
+                                        <button
+                                            className="request-changes-btn"
+                                            onClick={handleCaregiverRequestReview}
+                                            disabled={contractActionLoading || !caregiverReviewComments.trim()}
+                                        >
+                                            {contractActionLoading ? 'Sending...' : 'Send Review Request'}
+                                        </button>
+                                        <button onClick={closeModal}>Cancel</button>
+                                    </div>
+                                </div>
+                            </>
+                        )}
+
+                        {modalType === "caregiverReject" && (
+                            <>
+                                <div className="contract-modal-header">
+                                    <h3>Reject Contract</h3>
+                                    <button className="contract-modal-close-btn" onClick={closeModal}>✕</button>
+                                </div>
+                                <div className="contract-modal-body">
+                                    <p style={{ marginBottom: '12px', color: '#d32f2f' }}>
+                                        Are you sure you want to reject this contract? This action cannot be undone.
+                                    </p>
+                                    <textarea
+                                        placeholder="Reason for rejection (optional)..."
+                                        value={caregiverRejectReason}
+                                        onChange={(e) => setCaregiverRejectReason(e.target.value)}
+                                        rows="4"
+                                        style={{ width: '100%', padding: '10px', borderRadius: '6px', border: '1px solid #ddd', fontSize: '14px', resize: 'vertical' }}
+                                    />
+                                    <div className="modal-actions" style={{ marginTop: '16px', display: 'flex', gap: '10px' }}>
+                                        <button
+                                            className="reject-contract-btn"
+                                            onClick={handleCaregiverReject}
+                                            disabled={contractActionLoading}
+                                            style={{ background: '#d32f2f', color: '#fff', border: 'none', padding: '10px 20px', borderRadius: '6px', cursor: 'pointer' }}
+                                        >
+                                            {contractActionLoading ? 'Rejecting...' : 'Reject Contract'}
+                                        </button>
+                                        <button onClick={closeModal}>Cancel</button>
+                                    </div>
+                                </div>
+                            </>
+                        )}
+                    </div>
+                </div>
+            )}
+
+            {/* Start Negotiation Modal */}
+            {showStartNegModal && (
+                <div className="neg-start-modal-overlay">
+                    <div className="neg-start-modal">
+                        <div className="neg-start-modal-header">
+                            <h3>🤝 Start Negotiation</h3>
+                            <button className="neg-start-modal-close" onClick={() => setShowStartNegModal(false)}>✕</button>
+                        </div>
+                        <div className="neg-start-modal-body">
+                            <p className="neg-instructions">
+                                Propose your schedule and tasks for this service. The client will review, add their own proposals, and both of you will agree before the contract is generated.
+                            </p>
+
+                            {/* Initial tasks */}
+                            <div className="neg-section">
+                                <div className="neg-section-label">Proposed Tasks</div>
+                                <ul className="neg-task-list">
+                                    {negInitTasks.map((t, i) => (
+                                        <li key={i} className="neg-task-item">
+                                            <span>• {t}</span>
+                                            <button className="neg-remove-btn" onClick={() => setNegInitTasks(prev => prev.filter((_,idx) => idx !== i))}>✕</button>
+                                        </li>
+                                    ))}
+                                </ul>
+                                <div className="neg-add-row">
+                                    <input
+                                        className="neg-input"
+                                        type="text"
+                                        placeholder="Add a task and press Enter…"
+                                        value={negInitNewTask}
+                                        onChange={e => setNegInitNewTask(e.target.value)}
+                                        onKeyDown={e => {
+                                            if (e.key === 'Enter' && negInitNewTask.trim()) {
+                                                setNegInitTasks(prev => [...prev, negInitNewTask.trim()]);
+                                                setNegInitNewTask('');
+                                            }
+                                        }}
+                                    />
+                                    <button className="neg-btn neg-btn--sm" onClick={() => {
+                                        if (negInitNewTask.trim()) {
+                                            setNegInitTasks(prev => [...prev, negInitNewTask.trim()]);
+                                            setNegInitNewTask('');
+                                        }
+                                    }}>Add</button>
+                                </div>
+                            </div>
+
+                            {/* Initial schedule */}
+                            <div className="neg-section">
+                                <div className="neg-section-label">Proposed Schedule</div>
+                                <div className="neg-schedule-list">
+                                    {negInitSchedule.map((s, i) => (
+                                        <div key={i} className="neg-schedule-slot">
+                                            <span className="neg-slot-day">{s.dayOfWeek}</span>
+                                            <span className="neg-slot-time">{s.startTime} – {s.endTime}</span>
+                                            <button className="neg-remove-btn" onClick={() => setNegInitSchedule(prev => prev.filter((_,idx) => idx !== i))}>✕</button>
+                                        </div>
+                                    ))}
+                                </div>
+                                <div className="neg-add-slot-form" style={{ marginTop: '8px' }}>
+                                    <select className="neg-select" value={negInitSlotDay} onChange={e => setNegInitSlotDay(e.target.value)}>
+                                        {["Monday","Tuesday","Wednesday","Thursday","Friday","Saturday","Sunday"].map(d => <option key={d}>{d}</option>)}
+                                    </select>
+                                    <input className="neg-input neg-input--time" type="time" value={negInitSlotStart} onChange={e => setNegInitSlotStart(e.target.value)} />
+                                    <span className="neg-time-sep">to</span>
+                                    <input className="neg-input neg-input--time" type="time" value={negInitSlotEnd} onChange={e => setNegInitSlotEnd(e.target.value)} />
+                                    <button className="neg-btn neg-btn--sm" onClick={() => {
+                                        if (negInitSlotStart >= negInitSlotEnd) { toast.error('End time must be after start time.'); return; }
+                                        setNegInitSchedule(prev => [...prev, { dayOfWeek: negInitSlotDay, startTime: negInitSlotStart, endTime: negInitSlotEnd }]);
+                                    }}>Add</button>
+                                </div>
+                            </div>
+
+                            {/* Note about service address */}
+                            <div className="neg-section">
+                                <p style={{ fontSize: '13px', color: '#888', fontStyle: 'italic', margin: '0 0 8px' }}>
+                                    📍 The client will provide the service address and access instructions.
+                                </p>
+                                <label className="neg-label">Additional Notes</label>
+                                <textarea className="neg-textarea" rows="2" value={negInitNotes} onChange={e => setNegInitNotes(e.target.value)} placeholder="Any other details for the client…" />
+                                <label className="neg-label">Opening Message to Client (Optional)</label>
+                                <textarea className="neg-textarea" rows="2" value={negInitNote} onChange={e => setNegInitNote(e.target.value)} placeholder={`e.g. "I'm available on these days and can cover all tasks in the gig package…"`} />
+                            </div>
+
+                            <div style={{ display: 'flex', gap: '10px', marginTop: '4px' }}>
+                                <button className="neg-btn neg-btn--submit" onClick={handleStartNegotiation} disabled={startNegLoading} style={{ flex: 1 }}>
+                                    {startNegLoading ? 'Starting…' : '🤝 Start Negotiation'}
+                                </button>
+                                <button className="neg-btn neg-btn--ghost" onClick={() => setShowStartNegModal(false)}>Cancel</button>
+                            </div>
+                        </div>
                     </div>
                 </div>
             )}

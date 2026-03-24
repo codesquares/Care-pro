@@ -1039,7 +1039,7 @@ const GigsForm = () => {
 
       <div className="gigs-form-body">
         <div className="gigs-form-content">
-          <div className="main-content">
+          <div className="gigs-form-main">
             <PageBar 
               pages={pages} 
               currentPage={currentStep}

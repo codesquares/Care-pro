@@ -603,6 +603,16 @@ const HomeCareService = () => {
             </div>
           )}
 
+          {/* Video play CTA - centered overlay on image */}
+          {introVideo && (
+            <div className="hcs-video-cta" onClick={() => setShowVideoModal(true)}>
+              <div className="hcs-video-cta-btn">
+                <span className="hcs-video-cta-icon">▶</span>
+                <span className="hcs-video-cta-label">Play Video</span>
+              </div>
+            </div>
+          )}
+
           {/* Floating Message Bubble - overlaid on image */}
           {isAuthenticated && userRole === 'Client' && (
             <div
@@ -683,22 +693,6 @@ const HomeCareService = () => {
           </div>
         </div>
       </div>
-
-      {/* Video Section */}
-      {introVideo && (
-        <div className="hcs-video-section">
-          <h3>Introduction Video</h3>
-          <div className="video-thumbnail-container" onClick={() => setShowVideoModal(true)}>
-            <video className="video-thumbnail" muted>
-              <source src={introVideo} type="video/mp4" />
-            </video>
-            <div className="play-overlay">
-              <div className="play-icon">▶</div>
-              <div className="play-text">Click to play video</div>
-            </div>
-          </div>
-        </div>
-      )}
 
       {/* About the Gig */}
       {caregiverBio && (

@@ -24,7 +24,7 @@ const MarketplaceHero = ({
   };
 
   const handlePostRequest = () => {
-    navigate("/app/client/post-project");
+    navigate("/app/client/your-requests");
   };
 
   // Filter handlers

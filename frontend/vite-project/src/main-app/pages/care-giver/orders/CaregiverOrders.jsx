@@ -1,14 +1,10 @@
-import { useState, useEffect, useMemo } from "react";
-import axios from "axios";
-import { useNavigate } from "react-router-dom";
-import { toast } from "react-toastify";
-import ClientReviewService from "../../../services/clientReviewService.js";
-import ContractService from "../../../services/contractService.js";
-import OrderTasksService from "../../../services/orderTasksService.js";
-import ClientOrderService from "../../../services/clientOrderService.js";
-import config from "../../../config";
-import "../client-dashboard/marketplaceHero.css";
-import "../../care-giver/orders/CaregiverOrders.css";
+import { useState, useEffect, useMemo } from 'react';
+import { useNavigate } from 'react-router-dom';
+import { toast } from 'react-toastify';
+import config from '../../../config';
+import ContractService from '../../../services/contractService';
+import '../../client/client-dashboard/marketplaceHero.css';
+import './CaregiverOrders.css';
 
 const ORDERS_PER_PAGE = 6;
 
@@ -64,7 +60,7 @@ const getServiceMode = (order) => {
   return 'One-off';
 };
 
-const MyOrders = () => {
+const CaregiverOrders = () => {
   const navigate = useNavigate();
   const [orders, setOrders] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -74,57 +70,46 @@ const MyOrders = () => {
   const [currentPage, setCurrentPage] = useState(1);
   const [contractStates, setContractStates] = useState({});
 
-  const userDetails = JSON.parse(localStorage.getItem("userDetails") || '{}');
-  const clientUserId = userDetails?.id;
+  const userDetails = JSON.parse(localStorage.getItem('userDetails') || '{}');
+  const caregiverId = userDetails?.id;
 
   useEffect(() => {
     const fetchOrders = async () => {
-      if (!clientUserId) {
+      if (!caregiverId) {
         setError('User not logged in');
         setLoading(false);
         return;
       }
       try {
         const token = localStorage.getItem('authToken');
-        const response = await axios.get(
-          `${config.BASE_URL}/ClientOrders/clientUserId?clientUserId=${clientUserId}`,
-          { headers: { 'Authorization': `Bearer ${token}` } }
+        const response = await fetch(
+          `${config.BASE_URL}/ClientOrders/CaregiverOrders/caregiverId?caregiverId=${caregiverId}`,
+          {
+            headers: {
+              'Authorization': `Bearer ${token}`,
+              'Content-Type': 'application/json',
+            },
+          }
         );
-        const fetchedOrders = Array.isArray(response.data) ? response.data : [];
-        fetchedOrders.sort((a, b) => {
+        if (!response.ok) throw new Error(`Failed to fetch orders: ${response.status}`);
+        const data = await response.json();
+        const arr = Array.isArray(data) ? data : data.clientOrders || [];
+        arr.sort((a, b) => {
           const dA = new Date(a.orderCreatedOn || a.orderDate || a.createdAt || 0);
           const dB = new Date(b.orderCreatedOn || b.orderDate || b.createdAt || 0);
           return dB - dA;
         });
-
-        // Enrich with review ratings
-        const enriched = await Promise.all(
-          fetchedOrders.map(async (order) => {
-            try {
-              const reviews = await ClientReviewService.getReviewsForOrder(order.gigId);
-              let avg = 0, count = 0;
-              if (reviews?.length > 0) {
-                const total = reviews.reduce((sum, r) => {
-                  const v = parseFloat(r.rating || r.Rating || r.score || r.Score || 0);
-                  if (!isNaN(v) && v >= 1 && v <= 5) { count++; return sum + v; }
-                  return sum;
-                }, 0);
-                avg = count > 0 ? total / count : 0;
-              }
-              return { ...order, calculatedRating: avg, reviewCount: count };
-            } catch {
-              return { ...order, calculatedRating: 0, reviewCount: 0 };
-            }
-          })
-        );
-
-        setOrders(enriched);
+        setOrders(arr);
 
         // Fetch contract status for each order
-        const contractChecks = enriched.map(async (order) => {
+        const contractChecks = arr.map(async (order) => {
           try {
             const result = await ContractService.checkExistingContract(order.id);
-            return { orderId: order.id, hasContract: result.success && result.hasContract, contract: result.data };
+            return {
+              orderId: order.id,
+              hasContract: result.success && result.hasContract,
+              contract: result.data,
+            };
           } catch {
             return { orderId: order.id, hasContract: false, contract: null };
           }
@@ -142,23 +127,40 @@ const MyOrders = () => {
       }
     };
     fetchOrders();
-  }, [clientUserId]);
+  }, [caregiverId]);
 
-  // Effective status combining order + contract status
+  // Derive an effective status that factors in contract state and disputes
+  // Priority: Disputed > Terminated/Rejected > order status > contract-only Approved
   const getEffectiveStatus = (order) => {
     const orderStatus = (order.clientOrderStatus || '').toLowerCase();
     const cs = contractStates[order.id];
     const contractStatus = cs?.hasContract
       ? (cs.contract?.status || '').toLowerCase().replace(/\s+/g, '')
       : '';
+
+    // 1. Disputed always wins
     if (order.hasDispute || orderStatus === 'disputed') return 'Disputed';
+
+    // 2. Contract terminated or rejected → Cancelled bucket
     if (contractStatus === 'terminated') return 'Terminated';
     if (contractStatus === 'clientrejected' || contractStatus === 'caregiverrejected') return 'Contract Rejected';
+
+    // 3. Order is In Progress or Active → Active (work is happening)
     if (orderStatus === 'in progress' || orderStatus === 'active') return 'Active';
+
+    // 4. Order is Completed/Done → Done
     if (orderStatus === 'completed' || orderStatus === 'done') return 'Done';
+
+    // 5. Order is Cancelled → Cancelled
     if (orderStatus === 'cancelled') return 'Cancelled';
+
+    // 6. Order still Inactive/Pending but contract is approved → Approved
     if ((orderStatus === 'inactive' || orderStatus === 'pending') &&
-        (contractStatus === 'approved' || contractStatus === 'active')) return 'Approved';
+        (contractStatus === 'approved' || contractStatus === 'active')) {
+      return 'Approved';
+    }
+
+    // 7. Fallback to raw order status
     return order.clientOrderStatus || '';
   };
 
@@ -166,8 +168,13 @@ const MyOrders = () => {
   const tabCounts = useMemo(() => {
     const c = {};
     TABS.forEach(t => {
-      if (!t.match) { c[t.key] = orders.length; }
-      else { c[t.key] = orders.filter(o => t.match.some(s => s.toLowerCase() === getEffectiveStatus(o).toLowerCase())).length; }
+      if (!t.match) {
+        c[t.key] = orders.length;
+      } else {
+        c[t.key] = orders.filter(o =>
+          t.match.some(s => s.toLowerCase() === getEffectiveStatus(o).toLowerCase())
+        ).length;
+      }
     });
     return c;
   }, [orders, contractStates]);
@@ -177,7 +184,9 @@ const MyOrders = () => {
     let list = orders;
     const tab = TABS.find(t => t.key === activeTab);
     if (tab?.match) {
-      list = list.filter(o => tab.match.some(s => s.toLowerCase() === getEffectiveStatus(o).toLowerCase()));
+      list = list.filter(o =>
+        tab.match.some(s => s.toLowerCase() === getEffectiveStatus(o).toLowerCase())
+      );
     }
     if (serviceMode) {
       list = list.filter(o => getServiceMode(o) === serviceMode);
@@ -195,7 +204,7 @@ const MyOrders = () => {
   useEffect(() => { setCurrentPage(1); }, [activeTab, serviceMode]);
 
   const handleOrderClick = (orderId) => {
-    navigate(`/app/client/my-order/${orderId}`);
+    navigate(`/app/caregiver/order-details/${orderId}`);
   };
 
   const getPageNumbers = () => {
@@ -214,6 +223,14 @@ const MyOrders = () => {
       <div className="marketplace-banner cg-orders-banner">
         <div className="marketplace-banner-content">
           <h1 className="marketplace-banner-title">Manage Orders</h1>
+        </div>
+        <div className="cg-orders-banner-right">
+          <button
+            className="cg-orders-earnings-btn"
+            onClick={() => navigate('/app/caregiver/earnings')}
+          >
+            💰 View Earnings
+          </button>
         </div>
       </div>
 
@@ -268,7 +285,7 @@ const MyOrders = () => {
             <p>
               {activeTab !== 'All Orders'
                 ? `You don't have any ${activeTab.toLowerCase()} orders.`
-                : "You haven't placed any orders yet."}
+                : "You haven't received any orders yet."}
             </p>
           </div>
         ) : (
@@ -293,16 +310,15 @@ const MyOrders = () => {
                   <div className="cg-order-info">
                     <div className="cg-order-client-row">
                       <div className="cg-order-avatar">
-                        {order.caregiverName?.split(' ').map(n => n[0]).join('').slice(0, 2) || '??'}
+                        {order.clientName?.split(' ').map(n => n[0]).join('').slice(0, 2) || '??'}
                       </div>
-                      <span className="cg-order-client-name">{order.caregiverName || 'Unknown Caregiver'}</span>
+                      <span className="cg-order-client-name">{order.clientName || 'Unknown Client'}</span>
                       <span className="cg-verified-badge">verified ✓</span>
-                      <span className="cg-order-rating">
-                        {order.calculatedRating > 0
-                          ? `★ ${order.calculatedRating.toFixed(1)}`
-                          : '★ —'}
-                      </span>
+                      <span className="cg-order-rating">★ 4.5</span>
                     </div>
+                    {order.clientLocation && (
+                      <span className="cg-order-location">📍 {order.clientLocation}</span>
+                    )}
 
                     <h3 className="cg-order-title">{order.gigTitle}</h3>
 
@@ -311,9 +327,6 @@ const MyOrders = () => {
                         Basic Package <strong>₦{Number(order.amount || 0).toLocaleString()}</strong>
                       </span>
                       <span className="cg-order-svc-mode">Service Mode: {getServiceMode(order)}</span>
-                      {order.billingCycleNumber > 0 && (
-                        <span className="cg-order-svc-mode">Cycle {order.billingCycleNumber}</span>
-                      )}
                     </div>
 
                     <div className="cg-order-status-row">
@@ -323,7 +336,7 @@ const MyOrders = () => {
                       <span className="cg-status-desc">{getStatusDesc(order.clientOrderStatus)}</span>
                     </div>
 
-                    {/* Contract status badge */}
+                    {/* Contract status */}
                     {contractStates[order.id] && (
                       <div className="cg-contract-status-row">
                         {contractStates[order.id].hasContract ? (() => {
@@ -332,8 +345,8 @@ const MyOrders = () => {
                           const s = cs.toLowerCase().replace(/\s+/g, '');
                           let icon = '📋';
                           if (s === 'approved' || s === 'active' || s === 'completed') icon = '✅';
-                          else if (s === 'pendingclientapproval' || s === 'revised') icon = '📩';
-                          else if (s === 'pendingcaregiverapproval') icon = '⏳';
+                          else if (s === 'pendingcaregiverapproval') icon = '📩';
+                          else if (s === 'pendingclientapproval' || s === 'revised') icon = '⏳';
                           else if (s === 'clientreviewrequested' || s === 'caregiverreviewrequested') icon = '🔄';
                           else if (s === 'clientrejected' || s === 'caregiverrejected') icon = '❌';
                           else if (s === 'terminated') icon = '🚫';
@@ -348,28 +361,6 @@ const MyOrders = () => {
                         )}
                       </div>
                     )}
-
-                    {/* Fund status */}
-                    {(() => {
-                      const info = ClientOrderService.getFundStatusInfo(order);
-                      if (!info.label) return null;
-                      const colorMap = {
-                        'fund-status--released': { bg: '#e8f5e9', color: '#2e7d32' },
-                        'fund-status--auto-released': { bg: '#e3f2fd', color: '#1565c0' },
-                        'fund-status--pending': { bg: '#fff3e0', color: '#e65100' },
-                        'fund-status--disputed': { bg: '#fce4ec', color: '#c62828' },
-                      };
-                      const style = colorMap[info.className] || { bg: '#f5f5f5', color: '#666' };
-                      return (
-                        <span style={{
-                          display: 'inline-block', fontSize: '0.72rem', fontWeight: 600,
-                          padding: '3px 10px', borderRadius: '6px', marginTop: '4px',
-                          backgroundColor: style.bg, color: style.color
-                        }}>
-                          {info.label}
-                        </span>
-                      );
-                    })()}
                   </div>
 
                   {/* Action */}
@@ -420,4 +411,4 @@ const MyOrders = () => {
   );
 };
 
-export default MyOrders;
+export default CaregiverOrders;

@@ -227,44 +227,37 @@ const ClientOrderService = {
    */
   async cancelOrder(orderId) {
     try {
-      // Validate parameter
       if (!orderId) {
-        return {
-          success: false,
-          error: 'Order ID is required'
-        };
+        return { success: false, error: 'Order ID is required' };
       }
 
-      const API_URL = `${config.BASE_URL}/ClientOrders/${orderId}/cancel`; // Using centralized API config
+      const userDetails = JSON.parse(localStorage.getItem('userDetails') || '{}');
+      const userId = userDetails?.id;
+      const API_URL = `${config.BASE_URL}/ClientOrders/UpdateClientOrderStatus/orderId?orderId=${orderId}`;
       const token = localStorage.getItem('authToken');
-      
+
       const response = await fetch(API_URL, {
         method: 'PUT',
         headers: {
           'Content-Type': 'application/json',
           'Authorization': `Bearer ${token}`
-        }
+        },
+        body: JSON.stringify({ clientOrderStatus: 'Cancelled', userId })
       });
-      
+
+      const text = await response.text();
+      let data;
+      try { data = JSON.parse(text); } catch { data = text; }
+
       if (!response.ok) {
-        return {
-          success: false,
-          error: `Failed to cancel order: ${response.status}`
-        };
+        const errorMsg = typeof data === 'string' ? data : (data?.message || `Failed to cancel order: ${response.status}`);
+        return { success: false, error: errorMsg };
       }
-      
-      const data = await response.json();
-      return {
-        success: true,
-        data: data
-      };
-      
+
+      return { success: true, data };
     } catch (error) {
-      console.error("Error in cancelOrder:", error);
-      return {
-        success: false,
-        error: error.message
-      };
+      console.error('Error in cancelOrder:', error);
+      return { success: false, error: error.message };
     }
   },
 
@@ -318,53 +311,7 @@ const ClientOrderService = {
     }
   },
 
-  /**
-   * Cancel an order
-   * @param {string} orderId - Order ID
-   * @returns {Promise<Object>} - Result object with success status
-   */
-  async cancelOrder(orderId) {
-    try {
-      // Validate parameter
-      if (!orderId) {
-        return {
-          success: false,
-          error: 'Order ID is required'
-        };
-      }
-
-      const API_URL = `${config.BASE_URL}/ClientOrders/${orderId}/cancel`; // Using centralized API config
-      const token = localStorage.getItem('authToken');
-      
-      const response = await fetch(API_URL, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': `Bearer ${token}`
-        }
-      });
-      
-      if (!response.ok) {
-        return {
-          success: false,
-          error: `Failed to cancel order: ${response.status}`
-        };
-      }
-      
-      const data = await response.json();
-      return {
-        success: true,
-        data: data
-      };
-      
-    } catch (error) {
-      console.error("Error in cancelOrder:", error);
-      return {
-        success: false,
-        error: error.message
-      };
-    }
-  },
+  // (cancelOrder defined above — single implementation)
 
   /**
    * Release funds for a completed order

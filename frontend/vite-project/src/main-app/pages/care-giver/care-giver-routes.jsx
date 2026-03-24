@@ -7,7 +7,7 @@ import CaregiverProfile from '../../components/caregiver_settings/CaregiverProfi
 import Earnings from './Earnings';
 import EarningsPage from './EarningsPage';
 import WithdrawPage from './WithdrawPage';
-import Order from './Order';
+import CaregiverOrders from './orders/CaregiverOrders';
 import CreateGig from './CreateGig';
 import CreateOffer from '../CreateOffer';
 import Messages from '../Messages';
@@ -42,7 +42,7 @@ function CareGiverRoutes() {
                 <Route path='/earnings' element={<EarningsPage />} />
                 <Route path='/withdraw' element={<WithdrawPage />} />
                 <Route path='/earnings-old' element={<Earnings />} />
-                <Route path='/orders' element={<Order />} />
+                <Route path='/orders' element={<CaregiverOrders />} />
                 <Route path='/create-gigs' element={<CreateGig/>} />
                 <Route path='/create-offer' element={<CreateOffer/>} />
                 <Route path='/settings' element={<CaregiverSettings />} />
