@@ -22,19 +22,25 @@ const CaregiverDashboard = () => {
    const caregiverId = userDetails?.id;
    // FIXED: Use centralized config instead of hardcoded Azure staging API URL fallback
    const vite_API_URL = config.BASE_URL; // Use centralized config for consistent API routing
-   // Ensure this is set in your .env file
-   const API_URL = `${vite_API_URL}/ClientOrders/CaregiverOrders/caregiverId?caregiverId=${caregiverId}`;
 
    useEffect(() => {
      const fetchOrders = async () => {
+       if (!caregiverId) {
+         setError('User not logged in');
+         setLoading(false);
+         return;
+       }
        try {
          const token = localStorage.getItem('authToken');
-         const response = await fetch(API_URL, {
-           headers: {
-             'Authorization': `Bearer ${token}`,
-             'Content-Type': 'application/json'
+         const response = await fetch(
+           `${vite_API_URL}/ClientOrders/CaregiverOrders/caregiverId?caregiverId=${caregiverId}`,
+           {
+             headers: {
+               'Authorization': `Bearer ${token}`,
+               'Content-Type': 'application/json'
+             }
            }
-         });
+         );
          if (!response.ok) {
            throw new Error(`Failed to fetch orders: ${response.status} ${response.statusText}`);
          }
@@ -59,7 +65,7 @@ const CaregiverDashboard = () => {
      };
  
      fetchOrders();
-   }, []);
+   }, [caregiverId]);
 
   // Fetch total earnings from the same endpoint used by the NavigationBar
   useEffect(() => {
