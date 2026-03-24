@@ -3,12 +3,12 @@ import { useNavigate, useLocation, useSearchParams } from "react-router-dom";
 import api from "../../../services/api";
 import GigService from "../../../services/gigService";
 
-import clock from "../../../../assets/main-app/clock.png";
 import Toast from "../../../components/toast/Toast";
 import useToast from "../../../hooks/useToast";
 import { useGigEdit } from "../../../contexts/GigEditContext";
 import { useCaregiverStatus } from "../../../contexts/CaregiverStatusContext";
 import Modal from "../../../components/modal/Modal";
+import "../../../pages/client/client-dashboard/marketplaceHero.css";
 import "./gigs-section.css";
 
 const GigsSection = () => {
@@ -253,6 +253,23 @@ const GigsSection = () => {
     [activeGigs, canPublishGigs, statusLoading]
   );
 
+  const handleShareGig = async (gig) => {
+    const url = `${window.location.origin}/service/${gig.id}`;
+    if (navigator.share) {
+      try {
+        await navigator.share({ title: gig.title, url });
+      } catch (err) {
+        if (err.name !== 'AbortError') {
+          await navigator.clipboard.writeText(url);
+          showSuccess('Link copied to clipboard!');
+        }
+      }
+    } else {
+      await navigator.clipboard.writeText(url);
+      showSuccess('Link copied to clipboard!');
+    }
+  };
+
   // Extract fetchGigs as a reusable function
   const fetchGigs = async () => {
     try {
@@ -328,9 +345,9 @@ const GigsSection = () => {
 
   if (isLoading) {
     return (
-      <div className="caregiver-gigs-section">
-        <div className="caregiver-spinner-container">
-          <div className="caregiver-spinner" />
+      <div className="gigs-page">
+        <div className="gigs-spinner-container">
+          <div className="gigs-spinner" />
           <p>Loading gigs...</p>
         </div>
       </div>
@@ -339,321 +356,185 @@ const GigsSection = () => {
 
   if (error) {
     return (
-      <div className="caregiver-gigs-section">
+      <div className="gigs-page">
         <p>Error: {error}</p>
       </div>
     );
   }
 
-  return (
-    <div className="caregiver-gigs-section">
-      <h3>Active Gigs</h3>
-      
-      {/* Tab Navigation */}
-      <div className="caregiver-gigs-tabs">
-        <button 
-          className={`caregiver-gigs-tab ${activeTab === "active" ? "active" : ""}`}
-          onClick={() => setActiveTab("active")}
-        >
-          Active Gigs ({activeGigs.length})
-        </button>
-        <button 
-          className={`caregiver-gigs-tab ${activeTab === "paused" ? "active" : ""}`}
-          onClick={() => setActiveTab("paused")}
-        >
-          Paused Gigs ({pausedGigs.length})
-        </button>
-        <button 
-          className={`caregiver-gigs-tab ${activeTab === "draft" ? "active" : ""}`}
-          onClick={() => setActiveTab("draft")}
-        >
-          Draft Gigs ({draftGigs.length})
-        </button>
-        <button 
-          className={`caregiver-gigs-tab ${activeTab === "deleted" ? "active" : ""}`}
-          onClick={() => setActiveTab("deleted")}
-        >
-          Deleted Gigs
-        </button>
-      </div>
+  const currentGigs = activeTab === 'active' ? activeGigs
+    : activeTab === 'paused' ? pausedGigs
+    : activeTab === 'draft' ? draftGigs
+    : [];
 
-      {/* No Gigs State */}
-      {activeGigs.length === 0 && pausedGigs.length === 0 && draftGigs.length === 0 ? (
-        <div className="caregiver-empty-state">
-          <img src={clock} alt="No Gigs" style={{ width: 80, marginBottom: 16 }} />
-          <h4>No Gigs Yet</h4>
-          <p>You haven't created any gigs. Get started by creating one.</p>
-          <button className="caregiver-create-gig-btn" onClick={handleNavigateToCreateGig}>
-            Create Your First Gig
+  const hasAnyGigs = activeGigs.length > 0 || pausedGigs.length > 0 || draftGigs.length > 0;
+
+  return (
+    <div className="gigs-page">
+      {/* ── Banner ── */}
+      <div className="marketplace-banner gigs-banner">
+        <div className="marketplace-banner-content">
+          <h1 className="marketplace-banner-title">Manage your Gig</h1>
+          <p className="marketplace-banner-subtitle">Offer your services to clients all over the world.</p>
+        </div>
+        <div className="gigs-banner-right">
+          <button className="gigs-create-btn" onClick={handleNavigateToCreateGig}>
+            ✏️ Create gig
           </button>
         </div>
-      ) : (
-      <div className="caregiver-gigs-grid">
-        {/* Create New Gig Card - Always first */}
-        <div className="caregiver-create-new-gig" onClick={handleNavigateToCreateGig}>
-          <span className="caregiver-create-icon">+</span>
-          <p className="caregiver-create-text">Create a new Gig</p>
-          <p className="caregiver-create-subtext">Add a new service offering</p>
+      </div>
+
+      <div className="gigs-content">
+        {/* ── Tabs ── */}
+        <div className="gigs-tabs">
+          <button className={`gigs-tab ${activeTab === 'active' ? 'active' : ''}`} onClick={() => setActiveTab('active')}>Active</button>
+          <button className={`gigs-tab ${activeTab === 'paused' ? 'active' : ''}`} onClick={() => setActiveTab('paused')}>Paused</button>
+          <button className={`gigs-tab ${activeTab === 'draft' ? 'active' : ''}`} onClick={() => setActiveTab('draft')}>Draft</button>
+          <button className={`gigs-tab ${activeTab === 'deleted' ? 'active' : ''}`} onClick={() => setActiveTab('deleted')}>Deleted</button>
         </div>
 
-        {/* Active Gigs Limit Notice - Only show after eligibility has been checked and not while loading */}
+        {/* ── Eligibility notice ── */}
         {(activeTab === "paused" || activeTab === "draft") && !canPublishNewGig && eligibilityChecked && !statusLoading && !statusHasErrors && (
-          <div className="gig-limit-notice">
+          <div className="gigs-eligibility-notice">
             {activeGigs.length >= 2 ? (
               <p>⚠️ You have reached the maximum of 2 active gigs. Pause an active gig to publish more.</p>
             ) : (
               <div>
                 <p>⚠️ To publish gigs, you need to complete the following requirements:</p>
-                <ul className="eligibility-requirements">
-                  <li className={isVerified ? 'completed' : 'pending'}>
-                    {isVerified ? '✅' : '❌'} Complete identity verification
-                  </li>
-                  <li className={isQualified ? 'completed' : 'pending'}>
-                    {isQualified ? '✅' : '❌'} Pass qualification assessment
-                  </li>
-                  <li className={hasCertificates ? 'completed' : 'pending'}>
-                    {hasCertificates ? '✅' : '❌'} Upload at least one certificate
-                  </li>
+                <ul className="gigs-eligibility-list">
+                  <li className={isVerified ? 'completed' : 'pending'}>{isVerified ? '✅' : '❌'} Complete identity verification</li>
+                  <li className={isQualified ? 'completed' : 'pending'}>{isQualified ? '✅' : '❌'} Pass qualification assessment</li>
+                  <li className={hasCertificates ? 'completed' : 'pending'}>{hasCertificates ? '✅' : '❌'} Upload at least one certificate</li>
                 </ul>
               </div>
             )}
           </div>
         )}
 
-        {/* Active Tab Content */}
-          {activeTab === "active" && activeGigs.map((gig) => (
-            <div 
-              key={gig.id} 
-              className="caregiver-gig-card"
-              onClick={() => navigate(`/service/${gig.id}`)}
-              style={{ cursor: 'pointer' }}
-            >
-              <img
-                src={gig.image1 || "https://via.placeholder.com/300x160"}
-                alt={gig.title}
-                className="caregiver-gig-image"
-              />
-              <div className="caregiver-gig-content">
-                <h4 className="caregiver-gig-title">{gig.title}</h4>
-                <p className="caregiver-gig-description">{gig.description}</p>
-                <div className="caregiver-gig-actions">
-                  {/* Active/published gigs should not be editable or deletable - only pauseable */}
-                  {/* Clients may be viewing or booking these gigs, so changes should go through pause -> edit -> republish workflow */}
-                  {/* <button 
-                    className="caregiver-gig-action-btn caregiver-edit"
-                    onClick={(e) => {
-                      e.stopPropagation();
-                      handleEditGig(gig);
-                    }}
-                  >
-                    Edit
-                  </button> */}
-                  <button 
-                    className="caregiver-gig-action-btn caregiver-pause"
-                    onClick={(e) => {
-                      e.stopPropagation();
-                      handlePauseGig(gig);
-                    }}
-                    disabled={pausingGigs.has(gig.id)}
-                  >
-                    {pausingGigs.has(gig.id) ? 'Pausing...' : 'Pause'}
-                  </button>
-                  {/* <button 
-                    className="caregiver-gig-action-btn caregiver-delete"
-                    onClick={(e) => {
-                      e.stopPropagation();
-                      handleDeleteGig(gig);
-                    }}
-                    disabled={deletingGigs.has(gig.id)}
-                  >
-                    {deletingGigs.has(gig.id) ? 'Deleting...' : 'Delete'}
-                  </button> */}
-                </div>
-              </div>
-            </div>
-          ))}
+        {/* ── Table header ── */}
+        <div className="gigs-table-header">
+          <span className="gigs-th gigs-th--gig">Gig</span>
+          <span className="gigs-th gigs-th--orders">Orders</span>
+          <span className="gigs-th gigs-th--action">Action</span>
+        </div>
 
-          {/* Paused Tab Content */}
-          {activeTab === "paused" && pausedGigs.map((gig) => (
-            <div 
-              key={gig.id} 
-              className="caregiver-gig-card"
-              onClick={() => handleEditGig(gig)}
-              style={{ cursor: 'pointer' }}
-            >
-              <img
-                src={gig.image1 || "https://via.placeholder.com/300x160"}
-                alt={gig.title}
-                className="caregiver-gig-image"
-              />
-              <div className="caregiver-gig-content">
-                <h4 className="caregiver-gig-title">{gig.title}</h4>
-                <p className="caregiver-gig-description">{gig.description}</p>
-                <div className="caregiver-gig-actions">
-                  <button 
-                    className="caregiver-gig-action-btn caregiver-edit"
-                    onClick={(e) => {
-                      e.stopPropagation();
-                      handleEditGig(gig);
-                    }}
-                  >
-                    Edit
-                  </button>
-                  <button 
-                    className={`caregiver-gig-action-btn caregiver-publish ${!canPublishNewGig ? 'disabled' : ''}`}
-                    onClick={(e) => {
-                      e.stopPropagation();
-                      handlePublishGig(gig);
-                    }}
-                    disabled={publishingGigs.has(gig.id) || !canPublishNewGig}
-                    title={!canPublishNewGig ? 
-                      (activeGigs.length >= 2 ? 
-                        'You can only have 2 active gigs. Pause an active gig first.' : 
-                        'Complete verification, assessment, and upload certificates to publish gigs.'
-                      ) : ''
-                    }
-                  >
-                    {publishingGigs.has(gig.id) ? 'Publishing...' : 'Publish'}
-                  </button>
-                  <button 
-                    className="caregiver-gig-action-btn caregiver-delete"
-                    onClick={(e) => {
-                      e.stopPropagation();
-                      handleDeleteGig(gig);
-                    }}
-                    disabled={deletingGigs.has(gig.id)}
-                  >
-                    {deletingGigs.has(gig.id) ? 'Deleting...' : 'Delete'}
-                  </button>
-                </div>
-              </div>
+        {/* ── Deleted tab ── */}
+        {activeTab === 'deleted' ? (
+          deletedLoading ? (
+            <div className="gigs-spinner-container">
+              <div className="gigs-spinner" />
+              <p>Loading deleted gigs...</p>
             </div>
-          ))}
-
-          {/* Draft Tab Content */}
-          {activeTab === "draft" && draftGigs.map((gig) => (
-            <div 
-              key={gig.id} 
-              className="caregiver-gig-card"
-              onClick={() => handleEditGig(gig)}
-              style={{ cursor: 'pointer' }}
-            >
-              <img
-                src={gig.image1 || "https://via.placeholder.com/300x160"}
-                alt={gig.title}
-                className="caregiver-gig-image"
-              />
-              <div className="caregiver-gig-content">
-                <h4 className="caregiver-gig-title">{gig.title}</h4>
-                <p className="caregiver-gig-description">{gig.description}</p>
-                <div className="caregiver-gig-actions">
-                  <button 
-                    className="caregiver-gig-action-btn caregiver-edit"
-                    onClick={(e) => {
-                      e.stopPropagation();
-                      handleEditGig(gig);
-                    }}
-                  >
-                    Continue Editing
-                  </button>
-                  <button 
-                    className={`caregiver-gig-action-btn caregiver-publish ${!canPublishNewGig ? 'disabled' : ''}`}
-                    onClick={(e) => {
-                      e.stopPropagation();
-                      handlePublishGig(gig);
-                    }}
-                    disabled={publishingGigs.has(gig.id) || !canPublishNewGig}
-                    title={!canPublishNewGig ? 
-                      (activeGigs.length >= 2 ? 
-                        'You can only have 2 active gigs. Pause an active gig first.' : 
-                        'Complete verification, assessment, and upload certificates to publish gigs.'
-                      ) : ''
-                    }
-                  >
-                    {publishingGigs.has(gig.id) ? 'Publishing...' : 'Publish'}
-                  </button>
-                  <button 
-                    className="caregiver-gig-action-btn caregiver-delete"
-                    onClick={(e) => {
-                      e.stopPropagation();
-                      handleDeleteGig(gig);
-                    }}
-                    disabled={deletingGigs.has(gig.id)}
-                  >
-                    {deletingGigs.has(gig.id) ? 'Deleting...' : 'Delete'}
-                  </button>
-                </div>
-              </div>
+          ) : deletedGigs.length === 0 ? (
+            <div className="gigs-empty">
+              <h4>No Deleted Gigs</h4>
+              <p>You don't have any recently deleted gigs.</p>
             </div>
-          ))}
-
-          {/* Deleted Tab Content */}
-          {activeTab === "deleted" && (
-            deletedLoading ? (
-              <div className="caregiver-spinner-container">
-                <div className="caregiver-spinner" />
-                <p>Loading deleted gigs...</p>
-              </div>
-            ) : deletedGigs.length === 0 ? (
-              <div className="caregiver-empty-state">
-                <h4>No Deleted Gigs</h4>
-                <p>You don't have any recently deleted gigs.</p>
-              </div>
-            ) : (
-              deletedGigs.map((gig) => {
+          ) : (
+            <div className="gigs-table-body">
+              {deletedGigs.map((gig) => {
                 const daysLeft = gig.daysRemaining ?? 0;
                 const isExpired = !gig.canRestore;
-                const progressPct = Math.min(100, Math.round((daysLeft / 30) * 100));
                 return (
-                  <div
-                    key={gig.id}
-                    className={`caregiver-gig-card deleted-gig-card ${isExpired ? 'expired' : ''}`}
-                  >
-                    <img
-                      src={gig.image1 || "https://via.placeholder.com/300x160"}
-                      alt={gig.title}
-                      className="caregiver-gig-image"
-                    />
-                    <div className="caregiver-gig-content">
-                      <h4 className="caregiver-gig-title">{gig.title}</h4>
-                      <p className="deleted-gig-category">{gig.category}</p>
-                      {isExpired ? (
-                        <p className="deleted-gig-status expired-text">Permanently deleted</p>
-                      ) : (
-                        <>
-                          <p className="deleted-gig-status">
-                            Deleted on {new Date(gig.deletedOn).toLocaleDateString()} &middot; {daysLeft} day{daysLeft !== 1 ? 's' : ''} remaining
-                          </p>
-                          <div className="deleted-gig-progress">
-                            <div
-                              className={`deleted-gig-progress-bar ${daysLeft <= 5 ? 'critical' : daysLeft <= 10 ? 'warning' : ''}`}
-                              style={{ width: `${progressPct}%` }}
-                            />
-                          </div>
-                        </>
-                      )}
-                      <div className="caregiver-gig-actions">
-                        {!isExpired && (
-                          <button
-                            className="caregiver-gig-action-btn caregiver-restore"
-                            onClick={() => handleRestoreGig(gig)}
-                            disabled={restoringGigs.has(gig.id)}
-                          >
-                            {restoringGigs.has(gig.id) ? 'Restoring...' : 'Restore'}
-                          </button>
-                        )}
+                  <div key={gig.id} className={`gigs-row ${isExpired ? 'gigs-row--expired' : ''}`}>
+                    <div className="gigs-cell gigs-cell--gig">
+                      <img src={gig.image1 || "https://via.placeholder.com/60x40"} alt={gig.title} className="gigs-thumb" />
+                      <div className="gigs-cell-info">
+                        <span className="gigs-cell-title">{gig.title}</span>
+                        <span className="gigs-cell-meta">
+                          {isExpired ? 'Permanently deleted' : `${daysLeft} day${daysLeft !== 1 ? 's' : ''} to restore`}
+                        </span>
                       </div>
+                    </div>
+                    <div className="gigs-cell gigs-cell--orders">
+                      <span className="gigs-order-count">{gig.orderCount ?? 0}</span>
+                    </div>
+                    <div className="gigs-cell gigs-cell--action">
+                      {!isExpired && (
+                        <button className="gigs-link" onClick={() => handleRestoreGig(gig)} disabled={restoringGigs.has(gig.id)}>
+                          {restoringGigs.has(gig.id) ? 'Restoring...' : 'Restore'}
+                        </button>
+                      )}
                     </div>
                   </div>
                 );
-              })
-            )
-          )}
-        </div>
-      )}
-      
+              })}
+            </div>
+          )
+        ) : !hasAnyGigs ? (
+          /* ── No gigs at all ── */
+          <div className="gigs-empty">
+            <h4>Create and publish your first Gig</h4>
+            <button className="gigs-empty-btn" onClick={handleNavigateToCreateGig}>Create Gig</button>
+          </div>
+        ) : currentGigs.length === 0 ? (
+          <div className="gigs-empty">
+            <h4>No {activeTab} gigs</h4>
+            <p>You don't have any {activeTab} gigs right now.</p>
+          </div>
+        ) : (
+          /* ── Gig rows ── */
+          <div className="gigs-table-body">
+            {currentGigs.map((gig) => (
+              <div key={gig.id} className="gigs-row">
+                <div className="gigs-cell gigs-cell--gig">
+                  <img src={gig.image1 || "https://via.placeholder.com/60x40"} alt={gig.title} className="gigs-thumb" />
+                  <span className="gigs-cell-title">{gig.title}</span>
+                </div>
+                <div className="gigs-cell gigs-cell--orders">
+                  <span className="gigs-order-count">{gig.orderCount ?? 0}</span>
+                </div>
+                <div className="gigs-cell gigs-cell--action">
+                  {activeTab === 'active' && (
+                    <>
+                      <button className="gigs-link" onClick={() => navigate(`/service/${gig.id}`)}>Preview</button>
+                      <button className="gigs-link" onClick={() => handleShareGig(gig)}>Share</button>
+                      <button className="gigs-link" onClick={() => handlePauseGig(gig)} disabled={pausingGigs.has(gig.id)}>
+                        {pausingGigs.has(gig.id) ? 'Pausing...' : 'Pause'}
+                      </button>
+                    </>
+                  )}
+                  {activeTab === 'paused' && (
+                    <>
+                      <button className="gigs-link" onClick={() => handleEditGig(gig)}>Edit</button>
+                      <button
+                        className="gigs-link"
+                        onClick={() => handlePublishGig(gig)}
+                        disabled={publishingGigs.has(gig.id) || !canPublishNewGig}
+                        title={!canPublishNewGig ? (activeGigs.length >= 2 ? 'Max 2 active gigs. Pause one first.' : 'Complete verification to publish.') : ''}
+                      >
+                        {publishingGigs.has(gig.id) ? 'Publishing...' : 'Publish'}
+                      </button>
+                      <button className="gigs-link gigs-link--danger" onClick={() => handleDeleteGig(gig)} disabled={deletingGigs.has(gig.id)}>
+                        {deletingGigs.has(gig.id) ? 'Deleting...' : 'Delete'}
+                      </button>
+                    </>
+                  )}
+                  {activeTab === 'draft' && (
+                    <>
+                      <button className="gigs-link" onClick={() => handleEditGig(gig)}>Edit</button>
+                      <button
+                        className="gigs-link"
+                        onClick={() => handlePublishGig(gig)}
+                        disabled={publishingGigs.has(gig.id) || !canPublishNewGig}
+                        title={!canPublishNewGig ? (activeGigs.length >= 2 ? 'Max 2 active gigs. Pause one first.' : 'Complete verification to publish.') : ''}
+                      >
+                        {publishingGigs.has(gig.id) ? 'Publishing...' : 'Publish'}
+                      </button>
+                      <button className="gigs-link gigs-link--danger" onClick={() => handleDeleteGig(gig)} disabled={deletingGigs.has(gig.id)}>
+                        {deletingGigs.has(gig.id) ? 'Deleting...' : 'Delete'}
+                      </button>
+                    </>
+                  )}
+                </div>
+              </div>
+            ))}
+          </div>
+        )}
+      </div>
+
       {/* Toast Container */}
-      <div className="caregiver-toast-container">
+      <div className="gigs-toast-container">
         {toasts.map((toast) => (
           <Toast
             key={toast.id}
