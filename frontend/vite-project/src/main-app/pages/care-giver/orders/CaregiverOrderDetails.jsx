@@ -46,8 +46,6 @@ const CaregiverOrderDetails = () => {
     const [showStartNegModal, setShowStartNegModal] = useState(false);
     const [negInitTasks, setNegInitTasks] = useState([]);
     const [negInitSchedule, setNegInitSchedule] = useState([]);
-    const [negInitAddress, setNegInitAddress] = useState("");
-    const [negInitAccess, setNegInitAccess] = useState("");
     const [negInitNotes, setNegInitNotes] = useState("");
     const [negInitNote, setNegInitNote] = useState("");
     const [negInitNewTask, setNegInitNewTask] = useState("");
@@ -156,12 +154,13 @@ const CaregiverOrderDetails = () => {
         setStartNegLoading(true);
         const result = await NegotiationService.startNegotiation({
             orderId: order.id,
-            proposedTasks: negInitTasks,
-            proposedSchedule: negInitSchedule,
-            serviceAddress: negInitAddress,
-            accessInstructions: negInitAccess,
-            additionalNotes: negInitNotes,
-            note: negInitNote || undefined,
+            caregiverId: userId,
+            gigId: order.gigId || undefined,
+            createdByRole: 'Caregiver',
+            caregiverProposedTasks: negInitTasks,
+            caregiverProposedSchedule: negInitSchedule,
+            additionalNotes: negInitNotes || undefined,
+            openingNote: negInitNote || undefined,
         });
         if (result.success) {
             setNegotiation(result.data);
@@ -1067,12 +1066,11 @@ const CaregiverOrderDetails = () => {
                                 </div>
                             </div>
 
-                            {/* Service address */}
+                            {/* Note about service address */}
                             <div className="neg-section">
-                                <label className="neg-label">Service Address</label>
-                                <input className="neg-input" type="text" value={negInitAddress} onChange={e => setNegInitAddress(e.target.value)} placeholder="e.g. 12 Adeola Odeku, Victoria Island, Lagos" />
-                                <label className="neg-label">Access Instructions</label>
-                                <textarea className="neg-textarea" rows="2" value={negInitAccess} onChange={e => setNegInitAccess(e.target.value)} placeholder="e.g. Ring buzzer 4B, use side gate" />
+                                <p style={{ fontSize: '13px', color: '#888', fontStyle: 'italic', margin: '0 0 8px' }}>
+                                    📍 The client will provide the service address and access instructions.
+                                </p>
                                 <label className="neg-label">Additional Notes</label>
                                 <textarea className="neg-textarea" rows="2" value={negInitNotes} onChange={e => setNegInitNotes(e.target.value)} placeholder="Any other details for the client…" />
                                 <label className="neg-label">Opening Message to Client (Optional)</label>

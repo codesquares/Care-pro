@@ -66,6 +66,10 @@ const MyOrders = () => {
     const [negInitTasks, setNegInitTasks] = useState([]);
     const [negInitSchedule, setNegInitSchedule] = useState([]);
     const [negInitAddress, setNegInitAddress] = useState("");
+    const [negInitAccessInstructions, setNegInitAccessInstructions] = useState("");
+    const [negInitConfirmAtAddress, setNegInitConfirmAtAddress] = useState(false);
+    const [negInitGpsCoords, setNegInitGpsCoords] = useState(null);
+    const [negInitCapturingGps, setNegInitCapturingGps] = useState(false);
     const [negInitRequirements, setNegInitRequirements] = useState("");
     const [negInitNotes, setNegInitNotes] = useState("");
     const [negInitNote, setNegInitNote] = useState("");
@@ -332,15 +336,27 @@ const MyOrders = () => {
         const order = orders[0];
         if (!order) return;
         setStartNegLoading(true);
-        const result = await NegotiationService.startNegotiation({
+        const payload = {
             orderId: order.id,
-            proposedTasks: negInitTasks,
-            proposedSchedule: negInitSchedule,
+            caregiverId: order.caregiverId,
+            gigId: order.gigId || undefined,
+            createdByRole: 'Client',
+            clientProposedTasks: negInitTasks,
+            clientProposedSchedule: negInitSchedule,
             serviceAddress: negInitAddress,
-            specialRequirements: negInitRequirements,
-            additionalNotes: negInitNotes,
-            note: negInitNote || undefined,
-        });
+            accessInstructions: negInitAccessInstructions || undefined,
+            specialClientRequirements: negInitRequirements || undefined,
+            additionalNotes: negInitNotes || undefined,
+            openingNote: negInitNote || undefined,
+        };
+        if (negInitConfirmAtAddress && negInitGpsCoords) {
+            payload.confirmAtServiceAddress = true;
+            payload.serviceLatitude = negInitGpsCoords.lat;
+            payload.serviceLongitude = negInitGpsCoords.lng;
+        } else {
+            payload.confirmAtServiceAddress = false;
+        }
+        const result = await NegotiationService.startNegotiation(payload);
         if (result.success) {
             setNegotiation(result.data);
             setShowStartNegModal(false);
@@ -840,7 +856,10 @@ const MyOrders = () => {
     const cStatus = contract?.status?.toLowerCase().replace(/\s+/g, '') || '';
     const isTasksReady = cStatus === 'approved' || cStatus === 'active' || cStatus === 'completed';
 
+    const isOrderCancelled = order?.clientOrderStatus === 'Cancelled';
+
     const bannerTitle = (() => {
+        if (isOrderCancelled) return 'Order Cancelled';
         if (isTasksReady) return 'Task Tracker';
         if (!contract && !negotiation) return 'Generate Contract';
         if (!contract && negotiation) return 'Negotiation In Progress';
@@ -854,6 +873,7 @@ const MyOrders = () => {
     })();
 
     const bannerSubtitle = (() => {
+        if (isOrderCancelled) return 'This order has been cancelled and is no longer active.';
         if (isTasksReady) return 'Track your progress and give your client real time updates.';
         if (!contract) return 'Provide all the necessary information that the caregiver needs';
         if (cStatus === 'pendingclientapproval' || cStatus === 'revised') return 'Provide all the necessary information that the caregiver needs';
@@ -879,7 +899,18 @@ const MyOrders = () => {
             <div className="cod-body">
                 {/* ── Left column ── */}
                 <div className="cod-left">
-                    {isTasksReady ? (
+                    {isOrderCancelled ? (
+                        <div className="cod-contract-panel">
+                            <div className="cod-contract-state">
+                                <div className="cod-contract-icon">🚫</div>
+                                <h2>Order Cancelled</h2>
+                                <p className="cod-contract-note">This order has been cancelled. No further actions can be taken.</p>
+                                <div className="cod-contract-actions">
+                                    <button className="cod-btn cod-btn--outline" onClick={() => navigate(-1)}>Go Back</button>
+                                </div>
+                            </div>
+                        </div>
+                    ) : isTasksReady ? (
                         <div className="cod-tasks-panel">
                             {order ? <ClientVisitTabs order={order} onVisitReviewed={handleVisitReviewed} /> : <p>No tasks available.</p>}
                         </div>
@@ -1248,8 +1279,10 @@ const MyOrders = () => {
                                 </div>
                             )}
 
-                            {/* Review / Completion actions */}
-                            {order.clientOrderStatus === 'Completed' ? (
+                            {/* Review / Completion actions — hidden for cancelled orders */}
+                            {isOrderCancelled ? (
+                                <div style={{padding:'10px 0',color:'#e74c3c',fontWeight:600,fontSize:'0.85rem'}}>🚫 This order has been cancelled</div>
+                            ) : order.clientOrderStatus === 'Completed' ? (
                                 isReviewSubmitted ? (
                                     <div style={{padding:'10px 0',color:'#27ae60',fontWeight:600,fontSize:'0.85rem'}}>✓ Review Submitted — Thank you!</div>
                                 ) : checkingReviewStatus ? (
@@ -1277,8 +1310,8 @@ const MyOrders = () => {
                                 </>
                             )}
 
-                            {/* Action buttons — hidden when order is completed and approved */}
-                            {!(order.clientOrderStatus === 'Completed' && order.isOrderStatusApproved) && (
+                            {/* Action buttons — hidden when order is completed/approved or cancelled */}
+                            {!(order.clientOrderStatus === 'Completed' && order.isOrderStatusApproved) && !isOrderCancelled && (
                                 <div className="cod-sidebar-actions">
                                     <button className="cod-btn cod-btn--cancel" onClick={() => openModal("cancel")}>
                                         Cancel Order
@@ -1566,6 +1599,51 @@ const MyOrders = () => {
                                         {isSubmitting ? 'Submitting...' : 'Submit Dispute'}
                                     </button>
                                     <button onClick={() => setIsModalOpen(false)} disabled={isSubmitting}>Cancel</button>
+                                </div>
+                            </>
+                        ) : modalType === "cancel" ? (
+                            <>
+                                <h3>Cancel Order</h3>
+                                <p style={{ fontSize: '0.9rem', color: '#d32f2f', marginBottom: '12px' }}>
+                                    Are you sure you want to cancel this order? This action cannot be undone.
+                                </p>
+                                <div className="modal-actions">
+                                    <button
+                                        className="reject-btn"
+                                        onClick={async () => {
+                                            setIsSubmitting(true);
+                                            try {
+                                                const token = localStorage.getItem('authToken');
+                                                await axios.put(
+                                                    `${config.BASE_URL}/ClientOrders/UpdateClientOrderStatus/orderId?orderId=${orderId}`,
+                                                    { clientOrderStatus: "Cancelled", userId },
+                                                    { headers: { 'Authorization': `Bearer ${token}` } }
+                                                );
+                                                toast.success("Order cancelled successfully.");
+                                                setIsModalOpen(false);
+                                                // Refresh order data
+                                                try {
+                                                    const response = await axios.get(
+                                                        `${config.BASE_URL}/ClientOrders/orderId?orderId=${orderId}`,
+                                                        { headers: { 'Authorization': `Bearer ${token}` } }
+                                                    );
+                                                    setOrders([response.data]);
+                                                } catch (refreshErr) {
+                                                    console.error("Failed to refresh order data:", refreshErr);
+                                                }
+                                            } catch (err) {
+                                                console.error("Failed to cancel order:", err);
+                                                const errorMessage = err.response?.data?.message || err.response?.data || "Failed to cancel order. Please try again.";
+                                                toast.error(typeof errorMessage === 'string' ? errorMessage : "Failed to cancel order. Please try again.");
+                                            } finally {
+                                                setIsSubmitting(false);
+                                            }
+                                        }}
+                                        disabled={isSubmitting}
+                                    >
+                                        {isSubmitting ? 'Cancelling...' : 'Confirm Cancellation'}
+                                    </button>
+                                    <button onClick={() => setIsModalOpen(false)} disabled={isSubmitting}>Go Back</button>
                                 </div>
                             </>
                         ) : (
@@ -1877,7 +1955,6 @@ const MyOrders = () => {
                         <label className="neg-start-label">Proposed Schedule</label>
                         <div className="neg-slot-row">
                             <select value={negInitSlotDay} onChange={(e) => setNegInitSlotDay(e.target.value)}>
-                                <option value="">Day</option>
                                 {['Monday','Tuesday','Wednesday','Thursday','Friday','Saturday','Sunday'].map(d => (
                                     <option key={d} value={d}>{d}</option>
                                 ))}
@@ -1885,19 +1962,20 @@ const MyOrders = () => {
                             <input type="time" value={negInitSlotStart} onChange={(e) => setNegInitSlotStart(e.target.value)} />
                             <input type="time" value={negInitSlotEnd} onChange={(e) => setNegInitSlotEnd(e.target.value)} />
                             <button onClick={() => {
-                                if (negInitSlotDay) {
-                                    const slot = `${negInitSlotDay} ${negInitSlotStart}–${negInitSlotEnd}`.trim();
-                                    setNegInitSchedule(prev => [...prev, slot]);
-                                    setNegInitSlotDay(''); setNegInitSlotStart(''); setNegInitSlotEnd('');
+                                if (negInitSlotStart >= negInitSlotEnd) {
+                                    toast.error('End time must be after start time.');
+                                    return;
                                 }
+                                setNegInitSchedule(prev => [...prev, { dayOfWeek: negInitSlotDay, startTime: negInitSlotStart, endTime: negInitSlotEnd }]);
                             }}>Add</button>
                         </div>
                         {negInitSchedule.length > 0 && (
-                            <div className="neg-task-list" style={{ marginBottom: '10px' }}>
+                            <div className="neg-schedule-list" style={{ marginBottom: '10px' }}>
                                 {negInitSchedule.map((slot, i) => (
-                                    <div key={i} className="neg-task-row">
-                                        <span>{slot}</span>
-                                        <button onClick={() => setNegInitSchedule(prev => prev.filter((_, idx) => idx !== i))}>✕</button>
+                                    <div key={i} className="neg-schedule-slot">
+                                        <span className="neg-slot-day">{slot.dayOfWeek}</span>
+                                        <span className="neg-slot-time">{slot.startTime} – {slot.endTime}</span>
+                                        <button className="neg-remove-btn" onClick={() => setNegInitSchedule(prev => prev.filter((_, idx) => idx !== i))}>✕</button>
                                     </div>
                                 ))}
                             </div>
@@ -1907,9 +1985,54 @@ const MyOrders = () => {
                         <input
                             className="neg-start-input"
                             type="text"
-                            placeholder="Service address (optional)"
+                            placeholder="Service address"
                             value={negInitAddress}
                             onChange={(e) => setNegInitAddress(e.target.value)}
+                        />
+                        {/* GPS toggle */}
+                        <div style={{ display: 'flex', alignItems: 'center', gap: '8px', margin: '6px 0 10px' }}>
+                            <input
+                                type="checkbox"
+                                id="neg-init-gps"
+                                checked={negInitConfirmAtAddress}
+                                onChange={(e) => {
+                                    const checked = e.target.checked;
+                                    setNegInitConfirmAtAddress(checked);
+                                    if (checked && navigator.geolocation) {
+                                        setNegInitCapturingGps(true);
+                                        navigator.geolocation.getCurrentPosition(
+                                            (pos) => {
+                                                setNegInitGpsCoords({ lat: pos.coords.latitude, lng: pos.coords.longitude });
+                                                setNegInitCapturingGps(false);
+                                            },
+                                            () => {
+                                                toast.error("Unable to capture GPS. Please allow location access.");
+                                                setNegInitConfirmAtAddress(false);
+                                                setNegInitCapturingGps(false);
+                                            }
+                                        );
+                                    } else if (!checked) {
+                                        setNegInitGpsCoords(null);
+                                    }
+                                }}
+                            />
+                            <label htmlFor="neg-init-gps" style={{ fontSize: '13px', color: '#555', cursor: 'pointer' }}>
+                                {negInitCapturingGps ? 'Capturing GPS…' : 'I am currently at this address'}
+                            </label>
+                        </div>
+                        {negInitGpsCoords && (
+                            <p style={{ fontSize: '12px', color: '#888', margin: '0 0 8px' }}>
+                                📍 GPS captured ({negInitGpsCoords.lat.toFixed(4)}, {negInitGpsCoords.lng.toFixed(4)})
+                            </p>
+                        )}
+
+                        <label className="neg-start-label">Access Instructions</label>
+                        <input
+                            className="neg-start-input"
+                            type="text"
+                            placeholder="e.g. Ring bell at Gate B, floor 3 (optional)"
+                            value={negInitAccessInstructions}
+                            onChange={(e) => setNegInitAccessInstructions(e.target.value)}
                         />
 
                         <label className="neg-start-label">Special Requirements</label>

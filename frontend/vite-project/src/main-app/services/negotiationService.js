@@ -11,7 +11,17 @@
  */
 import config from '../config';
 
+const VALID_DAYS = ['Monday','Tuesday','Wednesday','Thursday','Friday','Saturday','Sunday'];
+
 const NegotiationService = {
+
+  /** Valid day-of-week values accepted by the API */
+  VALID_DAYS,
+
+  /** Check whether a day string is valid (case-insensitive) */
+  isValidDay(day) {
+    return VALID_DAYS.some(d => d.toLowerCase() === String(day).toLowerCase());
+  },
   // ─────────────────────────────────────────────
   // Internal helper — shared fetch wrapper
   // ─────────────────────────────────────────────
@@ -30,14 +40,17 @@ const NegotiationService = {
       if (body !== null) opts.body = JSON.stringify(body);
 
       const response = await fetch(`${config.BASE_URL}${path}`, opts);
-      const data = await response.json().catch(() => ({}));
+
+      // Parse response — backend may return JSON object or plain string
+      const text = await response.text();
+      let data;
+      try { data = JSON.parse(text); } catch { data = text; }
 
       if (!response.ok) {
-        return {
-          success: false,
-          error: data.message || data.error || `Request failed (${response.status})`,
-          statusCode: response.status,
-        };
+        const errorMsg = typeof data === 'string'
+          ? data
+          : (data?.message || data?.error || `Request failed (${response.status})`);
+        return { success: false, error: errorMsg, statusCode: response.status };
       }
       return { success: true, data };
     } catch (err) {
@@ -50,14 +63,22 @@ const NegotiationService = {
   // ─────────────────────────────────────────────
   /**
    * @param {Object} payload
-   * @param {string} payload.orderId
-   * @param {string[]} payload.proposedTasks
-   * @param {Array<{dayOfWeek,startTime,endTime}>} payload.proposedSchedule
-   * @param {string} [payload.serviceAddress]
-   * @param {string} [payload.accessInstructions]
-   * @param {string} [payload.specialRequirements]
-   * @param {string} [payload.additionalNotes]
-   * @param {string} [payload.note]
+   * @param {string}   payload.orderId
+   * @param {string}   payload.caregiverId
+   * @param {string}   [payload.gigId]
+   * @param {'Client'|'Caregiver'} payload.createdByRole
+   * @param {string[]} [payload.clientProposedTasks]
+   * @param {string[]} [payload.caregiverProposedTasks]
+   * @param {Array<{dayOfWeek,startTime,endTime}>} [payload.clientProposedSchedule]
+   * @param {Array<{dayOfWeek,startTime,endTime}>} [payload.caregiverProposedSchedule]
+   * @param {string}  [payload.serviceAddress]
+   * @param {string}  [payload.accessInstructions]
+   * @param {boolean} [payload.confirmAtServiceAddress]
+   * @param {number}  [payload.serviceLatitude]
+   * @param {number}  [payload.serviceLongitude]
+   * @param {string}  [payload.specialClientRequirements]
+   * @param {string}  [payload.additionalNotes]
+   * @param {string}  [payload.openingNote]
    */
   async startNegotiation(payload) {
     return this._request('POST', '/negotiations', payload);
@@ -89,13 +110,16 @@ const NegotiationService = {
   /**
    * @param {string} id
    * @param {Object} payload
-   * @param {string[]} [payload.proposedTasks]
-   * @param {Array}    [payload.proposedSchedule]
+   * @param {string[]} [payload.clientProposedTasks]
+   * @param {Array<{dayOfWeek,startTime,endTime}>} [payload.clientProposedSchedule]
    * @param {string}   [payload.serviceAddress]
-   * @param {string}   [payload.specialRequirements]
-   * @param {string}   [payload.additionalNotes]
+   * @param {string}   [payload.accessInstructions]
+   * @param {boolean}  [payload.confirmAtServiceAddress]
+   * @param {number}   [payload.serviceLatitude]
+   * @param {number}   [payload.serviceLongitude]
+   * @param {string}   [payload.specialClientRequirements]
    * @param {string}   [payload.note]
-   * @param {boolean}  [payload.submitForReview]
+   * @param {boolean}  [payload.submitForCaregiverReview]
    */
   async clientUpdate(id, payload) {
     return this._request('PUT', `/negotiations/${id}/client-update`, payload);
@@ -111,13 +135,11 @@ const NegotiationService = {
   /**
    * @param {string} id
    * @param {Object} payload
-   * @param {string[]} [payload.proposedTasks]
-   * @param {Array}    [payload.proposedSchedule]
-   * @param {string}   [payload.serviceAddress]
-   * @param {string}   [payload.accessInstructions]
+   * @param {string[]} [payload.caregiverProposedTasks]
+   * @param {Array<{dayOfWeek,startTime,endTime}>} [payload.caregiverProposedSchedule]
    * @param {string}   [payload.additionalNotes]
    * @param {string}   [payload.note]
-   * @param {boolean}  [payload.submitForReview]
+   * @param {boolean}  [payload.submitForClientReview]
    */
   async caregiverUpdate(id, payload) {
     return this._request('PUT', `/negotiations/${id}/caregiver-update`, payload);

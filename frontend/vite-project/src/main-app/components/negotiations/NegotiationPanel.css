@@ -448,17 +448,17 @@
 }
 
 .neg-btn--generate {
-  background: linear-gradient(135deg, #3EDDCD 0%, #05668D 100%);
+  background: linear-gradient(135deg, #05668D 0%, #02445F 100%);
   color: #fff;
-  box-shadow: 0 4px 14px rgba(62, 221, 205, 0.3);
+  box-shadow: 0 4px 14px rgba(5, 102, 141, 0.3);
   width: 100%;
   padding: 12px 20px;
   font-size: 15px;
 }
 
 .neg-btn--generate:hover:not(:disabled) {
-  background: linear-gradient(135deg, #05668D 0%, #02445F 100%);
-  box-shadow: 0 6px 18px rgba(5, 102, 141, 0.3);
+  background: linear-gradient(135deg, #02445F 0%, #011f2e 100%);
+  box-shadow: 0 6px 18px rgba(5, 102, 141, 0.4);
 }
 
 .neg-btn--submit {

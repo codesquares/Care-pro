@@ -61,8 +61,12 @@ const NegotiationPanel = ({ negotiation: initial, role, order, onNegotiationUpda
   const [mySchedule, setMySchedule] = useState(
     role === "client" ? (initial?.clientProposedSchedule || []) : (initial?.caregiverProposedSchedule || [])
   );
+  // Client-owned address fields
   const [serviceAddress, setServiceAddress] = useState(initial?.serviceAddress || "");
   const [accessInstructions, setAccessInstructions] = useState(initial?.accessInstructions || "");
+  const [confirmAtServiceAddress, setConfirmAtServiceAddress] = useState(false);
+  const [gpsCoords, setGpsCoords] = useState(null);
+  const [capturingGps, setCapturingGps] = useState(false);
   const [specialRequirements, setSpecialRequirements] = useState(initial?.specialClientRequirements || "");
   const [additionalNotes, setAdditionalNotes] = useState(initial?.additionalNotes || "");
   const [note, setNote] = useState("");
@@ -107,18 +111,33 @@ const NegotiationPanel = ({ negotiation: initial, role, order, onNegotiationUpda
 
   const handleSave = async (submitForReview = false) => {
     setSaving(true);
-    const payload = {
-      proposedTasks: myTasks,
-      proposedSchedule: mySchedule,
-      serviceAddress,
-      additionalNotes,
-      note: note || undefined,
-      submitForReview,
-    };
+    let payload;
     if (role === "client") {
-      payload.specialRequirements = specialRequirements;
+      payload = {
+        clientProposedTasks: myTasks,
+        clientProposedSchedule: mySchedule,
+        specialClientRequirements: specialRequirements,
+        serviceAddress,
+        accessInstructions,
+        note: note || undefined,
+        submitForCaregiverReview: submitForReview,
+      };
+      if (confirmAtServiceAddress && gpsCoords) {
+        payload.confirmAtServiceAddress = true;
+        payload.serviceLatitude = gpsCoords.lat;
+        payload.serviceLongitude = gpsCoords.lng;
+      } else {
+        payload.confirmAtServiceAddress = false;
+      }
     } else {
-      payload.accessInstructions = accessInstructions;
+      // Caregiver — cannot send serviceAddress, accessInstructions, or GPS fields
+      payload = {
+        caregiverProposedTasks: myTasks,
+        caregiverProposedSchedule: mySchedule,
+        additionalNotes,
+        note: note || undefined,
+        submitForClientReview: submitForReview,
+      };
     }
 
     const fn = role === "client" ? NegotiationService.clientUpdate : NegotiationService.caregiverUpdate;
@@ -128,6 +147,8 @@ const NegotiationPanel = ({ negotiation: initial, role, order, onNegotiationUpda
       // Sync my editable fields from response
       setMyTasks(role === "client" ? result.data.clientProposedTasks || [] : result.data.caregiverProposedTasks || []);
       setMySchedule(role === "client" ? result.data.clientProposedSchedule || [] : result.data.caregiverProposedSchedule || []);
+      setServiceAddress(result.data.serviceAddress || "");
+      setAccessInstructions(result.data.accessInstructions || "");
       setNote("");
       setEditMode(false);
       toast.success(submitForReview ? "Submitted for review!" : "Draft saved.");
@@ -151,6 +172,11 @@ const NegotiationPanel = ({ negotiation: initial, role, order, onNegotiationUpda
   };
 
   const handleConvert = async () => {
+    // Frontend guard — backend also enforces this
+    if (!neg?.serviceAddress) {
+      toast.error("Service address is missing. The client must provide it before generating the contract.");
+      return;
+    }
     setConverting(true);
     const result = await NegotiationService.convertToContract(neg.id);
     if (result.success) {
@@ -252,9 +278,42 @@ const NegotiationPanel = ({ negotiation: initial, role, order, onNegotiationUpda
           <div className="neg-both-agreed-icon">🎉</div>
           <h3>Both parties agreed!</h3>
           <p>The formal contract can now be generated. It will be immediately active — no further approval needed.</p>
-          <button className="neg-btn neg-btn--generate" onClick={handleConvert} disabled={converting}>
+
+          {/* Agreed summary */}
+          {neg?.agreedTasks?.length > 0 && (
+            <div className="neg-section" style={{ textAlign: 'left', marginBottom: '12px' }}>
+              <div className="neg-section-label">Agreed Tasks</div>
+              <TaskList tasks={neg.agreedTasks} editable={false} onRemove={null} />
+            </div>
+          )}
+          {neg?.agreedSchedule?.length > 0 && (
+            <div className="neg-section" style={{ textAlign: 'left', marginBottom: '12px' }}>
+              <div className="neg-section-label">Agreed Schedule</div>
+              <ScheduleList slots={neg.agreedSchedule} editable={false} onRemove={null} />
+            </div>
+          )}
+
+          {/* Service address summary + warning */}
+          <div className="neg-section" style={{ textAlign: 'left', marginBottom: '12px' }}>
+            <div className="neg-section-label">Service Address</div>
+            {neg?.serviceAddress ? (
+              <p className="neg-detail-row">{neg.serviceAddress}</p>
+            ) : (
+              <p className="neg-detail-row" style={{ color: '#d32f2f', fontWeight: 500 }}>
+                ⚠️ Service address is missing. The client must provide it before generating the contract.
+              </p>
+            )}
+            {neg?.accessInstructions && (
+              <p className="neg-detail-row"><strong>Access:</strong> {neg.accessInstructions}</p>
+            )}
+          </div>
+
+          <button className="neg-btn neg-btn--generate" onClick={handleConvert} disabled={converting || !neg?.serviceAddress}>
             {converting ? "Generating…" : "📄 Generate Contract"}
           </button>
+          {!neg?.serviceAddress && role === 'client' && (
+            <p className="neg-hint" style={{ marginTop: '8px' }}>Click "Edit My Proposals" below to add the service address.</p>
+          )}
         </div>
       )}
 
@@ -317,20 +376,58 @@ const NegotiationPanel = ({ negotiation: initial, role, order, onNegotiationUpda
             )}
           </div>
 
-          {/* Service details */}
+          {/* Service details — EDIT MODE */}
           {editMode && (
             <div className="neg-section">
               <div className="neg-section-label">Service Details</div>
-              <label className="neg-label">Service Address</label>
-              <input
-                className="neg-input"
-                type="text"
-                value={serviceAddress}
-                onChange={(e) => setServiceAddress(e.target.value)}
-                placeholder="e.g. 12 Adeola Odeku, Victoria Island, Lagos"
-              />
-              {role === "caregiver" && (
+
+              {role === "client" ? (
                 <>
+                  <label className="neg-label">Service Address</label>
+                  <input
+                    className="neg-input"
+                    type="text"
+                    value={serviceAddress}
+                    onChange={(e) => setServiceAddress(e.target.value)}
+                    placeholder="e.g. 12 Adeola Odeku, Victoria Island, Lagos"
+                  />
+                  {/* GPS toggle — client can confirm they are at the service address */}
+                  <div className="neg-gps-toggle" style={{ display: 'flex', alignItems: 'center', gap: '8px', margin: '8px 0' }}>
+                    <input
+                      type="checkbox"
+                      id="neg-gps-toggle"
+                      checked={confirmAtServiceAddress}
+                      onChange={(e) => {
+                        const checked = e.target.checked;
+                        setConfirmAtServiceAddress(checked);
+                        if (checked && navigator.geolocation) {
+                          setCapturingGps(true);
+                          navigator.geolocation.getCurrentPosition(
+                            (pos) => {
+                              setGpsCoords({ lat: pos.coords.latitude, lng: pos.coords.longitude });
+                              setCapturingGps(false);
+                            },
+                            () => {
+                              toast.error("Unable to capture GPS location. Please allow location access.");
+                              setConfirmAtServiceAddress(false);
+                              setCapturingGps(false);
+                            }
+                          );
+                        } else if (!checked) {
+                          setGpsCoords(null);
+                        }
+                      }}
+                    />
+                    <label htmlFor="neg-gps-toggle" style={{ fontSize: '13px', color: '#555', cursor: 'pointer' }}>
+                      {capturingGps ? 'Capturing GPS…' : 'I am currently at this address'}
+                    </label>
+                  </div>
+                  {gpsCoords && (
+                    <p style={{ fontSize: '12px', color: '#888', margin: '0 0 8px' }}>
+                      📍 GPS captured ({gpsCoords.lat.toFixed(4)}, {gpsCoords.lng.toFixed(4)})
+                    </p>
+                  )}
+
                   <label className="neg-label">Access Instructions</label>
                   <textarea
                     className="neg-textarea"
@@ -339,10 +436,6 @@ const NegotiationPanel = ({ negotiation: initial, role, order, onNegotiationUpda
                     onChange={(e) => setAccessInstructions(e.target.value)}
                     placeholder="e.g. Ring buzzer 4B, use side gate"
                   />
-                </>
-              )}
-              {role === "client" && (
-                <>
                   <label className="neg-label">Special Requirements</label>
                   <textarea
                     className="neg-textarea"
@@ -352,7 +445,22 @@ const NegotiationPanel = ({ negotiation: initial, role, order, onNegotiationUpda
                     placeholder="e.g. Patient has mobility issues, prefers morning sessions"
                   />
                 </>
+              ) : (
+                /* Caregiver — address is read-only */
+                <>
+                  {neg?.serviceAddress ? (
+                    <p className="neg-detail-row"><strong>Address (set by client):</strong> {neg.serviceAddress}</p>
+                  ) : (
+                    <p className="neg-detail-row" style={{ color: '#888', fontStyle: 'italic' }}>
+                      The client will provide the service address.
+                    </p>
+                  )}
+                  {neg?.accessInstructions && (
+                    <p className="neg-detail-row"><strong>Access:</strong> {neg.accessInstructions}</p>
+                  )}
+                </>
               )}
+
               <label className="neg-label">Additional Notes</label>
               <textarea
                 className="neg-textarea"
@@ -373,12 +481,21 @@ const NegotiationPanel = ({ negotiation: initial, role, order, onNegotiationUpda
           )}
 
           {/* Static service detail display when not editing */}
-          {!editMode && (neg?.serviceAddress || neg?.accessInstructions || neg?.specialClientRequirements) && (
+          {!editMode && (neg?.serviceAddress || neg?.accessInstructions || neg?.specialClientRequirements || neg?.additionalNotes) && (
             <div className="neg-section">
               <div className="neg-section-label">Service Details</div>
               {neg.serviceAddress && <p className="neg-detail-row"><strong>Address:</strong> {neg.serviceAddress}</p>}
               {neg.accessInstructions && <p className="neg-detail-row"><strong>Access:</strong> {neg.accessInstructions}</p>}
               {neg.specialClientRequirements && <p className="neg-detail-row"><strong>Requirements:</strong> {neg.specialClientRequirements}</p>}
+              {neg.additionalNotes && <p className="neg-detail-row"><strong>Notes:</strong> {neg.additionalNotes}</p>}
+            </div>
+          )}
+          {/* Prompt client to add address if missing */}
+          {!editMode && !neg?.serviceAddress && role === "client" && !isTerminal && (
+            <div className="neg-section">
+              <p className="neg-detail-row" style={{ color: '#d32f2f', fontWeight: 500, fontSize: '13px' }}>
+                ⚠️ You must provide the service address before the contract can be generated.
+              </p>
             </div>
           )}
 
