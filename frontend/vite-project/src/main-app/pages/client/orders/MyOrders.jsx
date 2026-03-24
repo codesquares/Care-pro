@@ -134,9 +134,15 @@ const MyOrders = () => {
         results.forEach(r => { states[r.orderId] = r; });
         setContractStates(states);
       } catch (err) {
-        console.error('Error fetching orders:', err);
-        setError(err.message);
-        toast.error('Failed to load orders.');
+        // Treat 404 as empty orders (endpoint may not exist yet or user has no orders)
+        if (err.response && err.response.status === 404) {
+          console.warn('Orders endpoint returned 404 — treating as empty orders list');
+          setOrders([]);
+        } else {
+          console.error('Error fetching orders:', err);
+          setError(err.message);
+          toast.error('Failed to load orders.');
+        }
       } finally {
         setLoading(false);
       }
