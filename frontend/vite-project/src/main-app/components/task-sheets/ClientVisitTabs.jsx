@@ -74,6 +74,13 @@ const ClientVisitTabs = ({ order, onVisitReviewed }) => {
   }
 
   const activeSheet = sheets[activeIndex] || null;
+  const cancelledCount = sheets.filter((s) => s.status === "cancelled").length;
+
+  const formatScheduledDate = (dateStr) => {
+    if (!dateStr) return "";
+    const d = new Date(dateStr);
+    return d.toLocaleDateString(undefined, { month: "short", day: "numeric" });
+  };
 
   return (
     <div className="cv-container">
@@ -85,12 +92,23 @@ const ClientVisitTabs = ({ order, onVisitReviewed }) => {
               key={sheet.id}
               className={`cv-tab ${idx === activeIndex ? "cv-tab--active" : ""} ${
                 sheet.status === "submitted" ? "cv-tab--submitted" : ""
+              } ${sheet.status === "cancelled" ? "cv-tab--cancelled" : ""} ${
+                sheet.status === "scheduled" ? "cv-tab--scheduled" : ""
               }`}
               onClick={() => setActiveIndex(idx)}
             >
-              Visit {sheet.sheetNumber}
+              <span className="cv-tab-label">Visit {sheet.sheetNumber}</span>
+              {sheet.scheduledDate && (
+                <span className="cv-tab-date">{formatScheduledDate(sheet.scheduledDate)}</span>
+              )}
               {sheet.status === "submitted" && (
                 <span className="cv-tab-badge">✓</span>
+              )}
+              {sheet.status === "cancelled" && (
+                <span className="cv-tab-badge cv-tab-badge--cancelled">✕</span>
+              )}
+              {sheet.status === "scheduled" && (
+                <span className="cv-tab-badge cv-tab-badge--scheduled">○</span>
               )}
               {(sheet.observationReportCount > 0 ||
                 sheet.incidentReportCount > 0) && (
@@ -109,9 +127,12 @@ const ClientVisitTabs = ({ order, onVisitReviewed }) => {
       {/* Visit count info */}
       <div className="cv-info">
         <span>
-          {sheets.length} visit{sheets.length !== 1 ? "s" : ""} recorded
+          {sheets.length} visit{sheets.length !== 1 ? "s" : ""}
           {sheets.filter((s) => s.status === "submitted").length > 0 &&
             ` · ${sheets.filter((s) => s.status === "submitted").length} completed`}
+          {cancelledCount > 0 && ` · ${cancelledCount} cancelled`}
+          {sheets.filter((s) => s.status === "scheduled").length > 0 &&
+            ` · ${sheets.filter((s) => s.status === "scheduled").length} upcoming`}
         </span>
       </div>
 

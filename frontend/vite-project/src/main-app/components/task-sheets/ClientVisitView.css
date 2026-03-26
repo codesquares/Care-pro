@@ -81,6 +81,16 @@
   border-color: #27ae60;
 }
 
+.cv-tab--cancelled {
+  border-color: #e53935;
+  opacity: 0.7;
+}
+
+.cv-tab--cancelled.cv-tab--active {
+  background: #ffebee;
+  border-color: #e53935;
+}
+
 .cv-tab-badge {
   display: inline-flex;
   align-items: center;
@@ -92,6 +102,10 @@
   border-radius: 50%;
   font-size: 10px;
   font-weight: 700;
+}
+
+.cv-tab-badge--cancelled {
+  background: #e53935;
 }
 
 .cv-tab-report-dot {
@@ -708,4 +722,129 @@
   color: #2e7d32;
   margin-left: 4px;
   display: inline-block;
+}
+
+/* ---------- Cancel Visit Section ---------- */
+.cv-cancel-section {
+  margin-top: 16px;
+  padding-top: 16px;
+  border-top: 1px solid #eee;
+}
+
+.cv-cancel-visit-btn {
+  width: 100%;
+  padding: 10px 16px;
+  background: #fff;
+  color: #e53935;
+  border: 1px solid #e53935;
+  border-radius: 8px;
+  font-size: 14px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: background 0.2s, color 0.2s;
+}
+
+.cv-cancel-visit-btn:hover {
+  background: #ffebee;
+}
+
+.cv-cancel-confirm {
+  background: #fff8e1;
+  border: 1px solid #ffe082;
+  border-radius: 8px;
+  padding: 16px;
+}
+
+.cv-cancel-prompt {
+  font-size: 0.9rem;
+  color: #555;
+  margin-bottom: 12px;
+  font-weight: 500;
+}
+
+.cv-cancel-reason-input {
+  width: 100%;
+  padding: 8px 12px;
+  border: 1px solid #ddd;
+  border-radius: 6px;
+  font-size: 14px;
+  resize: vertical;
+  margin-bottom: 12px;
+  font-family: inherit;
+  box-sizing: border-box;
+}
+
+/* ---------- Scheduled status ---------- */
+.cv-tab--scheduled {
+  border-color: #0288d1;
+  opacity: 0.8;
+}
+
+.cv-tab--scheduled.cv-tab--active {
+  background: #e1f5fe;
+  border-color: #0288d1;
+  opacity: 1;
+}
+
+.cv-tab-label {
+  display: block;
+  line-height: 1.2;
+}
+
+.cv-tab-date {
+  display: block;
+  font-size: 10px;
+  color: #888;
+  font-weight: 400;
+  margin-top: 2px;
+}
+
+.cv-tab-badge--scheduled {
+  background: #0288d1;
+}
+
+.cv-status-badge--scheduled {
+  background: #e1f5fe;
+  color: #01579b;
+}
+
+.cv-scheduled-info {
+  padding: 12px 16px;
+  background: #e1f5fe;
+  border: 1px solid #b3e5fc;
+  border-radius: 8px;
+  margin-bottom: 16px;
+  font-size: 13px;
+  color: #01579b;
+  line-height: 1.5;
+}
+
+.cv-scheduled-info p {
+  margin: 0 0 4px;
+}
+
+.cv-scheduled-info p:last-child {
+  margin-bottom: 0;
+}
+
+.cv-cancel-late-warning {
+  padding: 10px 14px;
+  background: #fff3e0;
+  border: 1px solid #ffcc02;
+  border-radius: 6px;
+  font-size: 13px;
+  color: #e65100;
+  margin-bottom: 10px;
+  line-height: 1.4;
+}
+
+.cv-cancel-full-credit {
+  padding: 10px 14px;
+  background: #e8f5e9;
+  border: 1px solid #a5d6a7;
+  border-radius: 6px;
+  font-size: 13px;
+  color: #2e7d32;
+  margin-bottom: 10px;
+  line-height: 1.4;
 }

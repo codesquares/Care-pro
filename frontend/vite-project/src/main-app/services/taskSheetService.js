@@ -208,6 +208,49 @@ const TaskSheetService = {
   },
 
   /**
+   * Activate a scheduled task sheet (changes status from "scheduled" to "in-progress").
+   * @param {string} taskSheetId
+   * @returns {Promise<Object>} { success, data, error }
+   */
+  async activateSheet(taskSheetId) {
+    try {
+      if (!taskSheetId) {
+        return { success: false, error: "Task sheet ID is required" };
+      }
+
+      const authToken = localStorage.getItem("authToken");
+      if (!authToken) {
+        return { success: false, error: "Authentication required" };
+      }
+
+      const response = await fetch(`${config.BASE_URL}/TaskSheets/${taskSheetId}/activate`, {
+        method: "PUT",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${authToken}`,
+        },
+      });
+
+      if (!response.ok) {
+        const errorData = await response.json().catch(() => ({}));
+        const errorMsg = errorData.error || `Failed to activate task sheet: ${response.status}`;
+        return {
+          success: false,
+          error: errorMsg,
+          statusCode: response.status,
+          orderCompleted: response.status === 400 && isCompletedOrderError(errorMsg),
+        };
+      }
+
+      const data = await response.json();
+      return { success: true, data };
+    } catch (error) {
+      console.error("Error in activateSheet:", error);
+      return { success: false, error: error.message || "Network error" };
+    }
+  },
+
+  /**
    * Compute maxSheets locally from order data (fallback if backend doesn't return it).
    * @param {Object} order
    * @returns {number}

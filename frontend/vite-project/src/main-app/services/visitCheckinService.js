@@ -115,7 +115,15 @@ const VisitCheckinService = {
         return {
           success: false,
           error: errorData.error || `Check-in failed (${response.status})`,
+          errorCode: errorData.errorCode || null,
           statusCode: response.status,
+          // Structured fields from schedule guard / proximity check
+          distanceMeters: errorData.distanceMeters ?? null,
+          maxDistanceMeters: errorData.maxDistanceMeters ?? null,
+          scheduledDay: errorData.scheduledDay ?? null,
+          scheduledStartTime: errorData.scheduledStartTime ?? null,
+          scheduledEndTime: errorData.scheduledEndTime ?? null,
+          currentTimeNigeria: errorData.currentTimeNigeria ?? null,
         };
       }
 

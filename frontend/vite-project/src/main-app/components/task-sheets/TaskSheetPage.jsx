@@ -17,7 +17,7 @@ import "./TaskSheets.css";
  *  - orderId: the order ID (needed for check-in and reports)
  *  - onSheetUpdated: callback(updatedSheet) after a save/submit
  */
-const TaskSheetPage = ({ sheet, orderId, onSheetUpdated, orderCompleted: orderCompletedProp }) => {
+const TaskSheetPage = ({ sheet, orderId, onSheetUpdated, onActivateSheet, activating, orderCompleted: orderCompletedProp }) => {
   const [tasks, setTasks] = useState(sheet.tasks || []);
   const [saving, setSaving] = useState(false);
   const [submitting, setSubmitting] = useState(false);
@@ -31,7 +31,9 @@ const TaskSheetPage = ({ sheet, orderId, onSheetUpdated, orderCompleted: orderCo
   const [respondingToProposals, setRespondingToProposals] = useState(false);
 
   const isSubmitted = sheet.status === "submitted";
-  const isReadOnly = isSubmitted || orderCompleted;
+  const isCancelled = sheet.status === "cancelled";
+  const isScheduled = sheet.status === "scheduled";
+  const isReadOnly = isSubmitted || isCancelled || isScheduled || orderCompleted;
   const isCheckedIn = !!checkin;
   const debounceTimer = useRef(null);
 
@@ -194,13 +196,45 @@ const TaskSheetPage = ({ sheet, orderId, onSheetUpdated, orderCompleted: orderCo
         </div>
       )}
 
-      {/* Check-in section */}
-      <CheckInSection
-        sheet={{ ...sheet, checkin }}
-        orderId={orderId}
-        onCheckedIn={handleCheckedIn}
-        disabled={isReadOnly}
-      />
+      {isCancelled && (
+        <div className="ts-order-completed-banner" style={{ background: '#fff3e0', color: '#e65100' }}>
+          🚫 This visit has been cancelled by the client.
+        </div>
+      )}
+
+      {isScheduled && (
+        <div className="ts-scheduled-banner">
+          <div className="ts-scheduled-banner-content">
+            <span className="ts-scheduled-icon">📅</span>
+            <div>
+              <strong>Scheduled Visit</strong>
+              {sheet.scheduledDate && (
+                <span className="ts-scheduled-date">
+                  {" — "}{new Date(sheet.scheduledDate).toLocaleDateString(undefined, { weekday: "long", month: "long", day: "numeric" })}
+                </span>
+              )}
+              <p className="ts-scheduled-hint">Activate this visit when you are ready to begin.</p>
+            </div>
+          </div>
+          <button
+            className="ts-activate-btn"
+            onClick={() => onActivateSheet && onActivateSheet(sheet.id)}
+            disabled={activating}
+          >
+            {activating ? "Activating…" : "▶ Activate Visit"}
+          </button>
+        </div>
+      )}
+
+      {/* Check-in section — hidden for scheduled sheets */}
+      {!isScheduled && (
+        <CheckInSection
+          sheet={{ ...sheet, checkin }}
+          orderId={orderId}
+          onCheckedIn={handleCheckedIn}
+          disabled={isReadOnly}
+        />
+      )}
 
       <div className="ts-page-header">
         <h3>Visit {sheet.sheetNumber} Tasks</h3>

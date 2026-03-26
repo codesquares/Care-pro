@@ -1,0 +1,99 @@
+.cl-wallet-page {
+  padding: 20px;
+  max-width: 600px;
+  margin: 0 auto;
+}
+
+.cl-wallet-container {
+  background: #fff;
+  border-radius: 12px;
+  padding: 24px;
+  box-shadow: 0 1px 4px rgba(0, 0, 0, 0.08);
+}
+
+.cl-wallet__title {
+  font-size: 1.4rem;
+  font-weight: 700;
+  color: #333;
+  margin-bottom: 20px;
+  display: flex;
+  align-items: center;
+}
+
+.cl-wallet__loading,
+.cl-wallet__error {
+  text-align: center;
+  padding: 40px 20px;
+  color: #888;
+  font-size: 0.95rem;
+}
+
+.cl-wallet__error {
+  color: #e53935;
+}
+
+/* Balance card */
+.cl-wallet__balance-card {
+  background: linear-gradient(135deg, #1a73e8 0%, #1565c0 100%);
+  color: #fff;
+  border-radius: 12px;
+  padding: 24px;
+  text-align: center;
+  margin-bottom: 20px;
+}
+
+.cl-wallet__balance-label {
+  display: block;
+  font-size: 0.85rem;
+  opacity: 0.85;
+  margin-bottom: 4px;
+}
+
+.cl-wallet__balance-value {
+  display: block;
+  font-size: 2rem;
+  font-weight: 700;
+  margin-bottom: 8px;
+}
+
+.cl-wallet__balance-hint {
+  font-size: 0.8rem;
+  opacity: 0.75;
+  margin: 0;
+}
+
+/* Stats row */
+.cl-wallet__stats {
+  display: flex;
+  gap: 12px;
+}
+
+.cl-wallet__stat {
+  flex: 1;
+  background: #f5f7fa;
+  border-radius: 8px;
+  padding: 16px;
+  text-align: center;
+}
+
+.cl-wallet__stat-label {
+  display: block;
+  font-size: 0.8rem;
+  color: #888;
+  margin-bottom: 4px;
+}
+
+.cl-wallet__stat-value {
+  display: block;
+  font-size: 1.2rem;
+  font-weight: 600;
+  color: #333;
+}
+
+.cl-wallet__updated {
+  text-align: center;
+  font-size: 0.75rem;
+  color: #aaa;
+  margin-top: 16px;
+  margin-bottom: 0;
+}

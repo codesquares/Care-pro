@@ -79,6 +79,16 @@
   border-color: #27ae60;
 }
 
+.ts-tab--cancelled {
+  border-color: #e53935;
+  opacity: 0.7;
+}
+
+.ts-tab--cancelled.ts-tab--active {
+  background: #ffebee;
+  border-color: #e53935;
+}
+
 .ts-tab-badge {
   display: inline-flex;
   align-items: center;
@@ -1302,4 +1312,87 @@
 
 .ts-task-reject-btn:hover {
   opacity: 0.85;
+}
+
+/* ---------- Scheduled status ---------- */
+.ts-tab--scheduled {
+  border-color: #0288d1;
+  opacity: 0.8;
+}
+
+.ts-tab--scheduled.ts-tab--active {
+  background: #e1f5fe;
+  border-color: #0288d1;
+  opacity: 1;
+}
+
+.ts-tab-label {
+  display: block;
+  line-height: 1.2;
+}
+
+.ts-tab-date {
+  display: block;
+  font-size: 10px;
+  color: #888;
+  font-weight: 400;
+  margin-top: 2px;
+}
+
+.ts-tab-badge--scheduled {
+  background: #0288d1;
+}
+
+.ts-scheduled-banner {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 12px 16px;
+  background: #e1f5fe;
+  border: 1px solid #b3e5fc;
+  border-radius: 8px;
+  margin-bottom: 16px;
+}
+
+.ts-scheduled-banner-content {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.ts-scheduled-icon {
+  font-size: 18px;
+}
+
+.ts-scheduled-date {
+  font-size: 14px;
+  font-weight: 600;
+  color: #01579b;
+}
+
+.ts-scheduled-hint {
+  font-size: 12px;
+  color: #555;
+}
+
+.ts-activate-btn {
+  padding: 8px 20px;
+  background: #2e7d32;
+  color: #fff;
+  border: none;
+  border-radius: 6px;
+  font-size: 14px;
+  font-weight: 600;
+  cursor: pointer;
+  white-space: nowrap;
+}
+
+.ts-activate-btn:hover {
+  background: #1b5e20;
+}
+
+.ts-activate-btn:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
 }

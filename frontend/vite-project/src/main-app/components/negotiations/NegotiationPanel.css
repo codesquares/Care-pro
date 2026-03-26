@@ -633,3 +633,48 @@
   margin-bottom: 18px;
   line-height: 1.5;
 }
+
+/* ---------- Agreed Start Date ---------- */
+.neg-start-date-row {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin-bottom: 12px;
+}
+
+.neg-start-date-row label {
+  font-size: 13px;
+  font-weight: 600;
+  color: #333;
+  white-space: nowrap;
+}
+
+.neg-start-date-row input[type="date"] {
+  padding: 6px 10px;
+  border: 1px solid #ccc;
+  border-radius: 6px;
+  font-size: 13px;
+  font-family: inherit;
+}
+
+.neg-start-date-row .neg-required-hint {
+  font-size: 11px;
+  color: #e65100;
+  font-weight: 500;
+}
+
+.neg-start-date-display {
+  font-size: 13px;
+  color: #333;
+  margin-bottom: 8px;
+}
+
+.neg-start-date-display strong {
+  font-weight: 600;
+}
+
+.neg-start-date-warning {
+  font-size: 12px;
+  color: #e65100;
+  font-weight: 500;
+}

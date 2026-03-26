@@ -27,6 +27,7 @@ import ClientSubscriptions from './subscriptions/ClientSubscriptions';
 import SubscriptionDetail from './subscriptions/SubscriptionDetail';
 import ClientBilling from './billing/ClientBilling';
 import InvoiceDetail from './billing/InvoiceDetail';
+import ClientWallet from './wallet/ClientWallet';
 import NotFoundPage from '../../../pages/NotFoundPage';
 
 
@@ -59,6 +60,7 @@ function ClientRoutes() {
             <Route path="/subscriptions/:id" element={<SubscriptionDetail />} />
             <Route path="/billing" element={<ClientBilling />} />
             <Route path="/billing/:id" element={<InvoiceDetail />} />
+            <Route path="/wallet" element={<ClientWallet />} />
             <Route path="/faq" element={<FAQPage />} />
             <Route path="*" element={<NotFoundPage />} />
         </Routes>
