@@ -276,7 +276,11 @@ const CommitmentSuccess = () => {
               <p className="commitment-success-subtitle">
                 {statusMessage}
               </p>
-              <p className="commitment-success-hint">Please wait while we confirm your ₦5,000 commitment payment...</p>
+              <p className="commitment-success-hint">
+                {status !== 'cancelled'
+                  ? 'Complete your payment in the Flutterwave tab, then wait here — we\'ll confirm it automatically.'
+                  : 'Please wait while we confirm your ₦5,000 commitment payment...'}
+              </p>
             </>
           ) : (
             <>

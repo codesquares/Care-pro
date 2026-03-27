@@ -118,6 +118,7 @@ const NegotiationService = {
    * @param {number}   [payload.serviceLatitude]
    * @param {number}   [payload.serviceLongitude]
    * @param {string}   [payload.specialClientRequirements]
+   * @param {string}   [payload.agreedStartDate] - ISO date for contract start
    * @param {string}   [payload.note]
    * @param {boolean}  [payload.submitForCaregiverReview]
    */
@@ -138,6 +139,7 @@ const NegotiationService = {
    * @param {string[]} [payload.caregiverProposedTasks]
    * @param {Array<{dayOfWeek,startTime,endTime}>} [payload.caregiverProposedSchedule]
    * @param {string}   [payload.additionalNotes]
+   * @param {string}   [payload.agreedStartDate] - ISO date for contract start
    * @param {string}   [payload.note]
    * @param {boolean}  [payload.submitForClientReview]
    */

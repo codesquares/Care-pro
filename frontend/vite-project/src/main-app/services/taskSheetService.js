@@ -208,6 +208,95 @@ const TaskSheetService = {
   },
 
   /**
+   * Activate a scheduled task sheet (changes status from "scheduled" to "in-progress").
+   * @param {string} taskSheetId
+   * @returns {Promise<Object>} { success, data, error }
+   */
+  async activateSheet(taskSheetId) {
+    try {
+      if (!taskSheetId) {
+        return { success: false, error: "Task sheet ID is required" };
+      }
+
+      const authToken = localStorage.getItem("authToken");
+      if (!authToken) {
+        return { success: false, error: "Authentication required" };
+      }
+
+      const response = await fetch(`${config.BASE_URL}/TaskSheets/${taskSheetId}/activate`, {
+        method: "PUT",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${authToken}`,
+        },
+      });
+
+      if (!response.ok) {
+        const errorData = await response.json().catch(() => ({}));
+        const errorMsg = errorData.error || `Failed to activate task sheet: ${response.status}`;
+        return {
+          success: false,
+          error: errorMsg,
+          statusCode: response.status,
+          orderCompleted: response.status === 400 && isCompletedOrderError(errorMsg),
+        };
+      }
+
+      const data = await response.json();
+      return { success: true, data };
+    } catch (error) {
+      console.error("Error in activateSheet:", error);
+      return { success: false, error: error.message || "Network error" };
+    }
+  },
+
+  /**
+   * Reschedule a scheduled visit to a new date (client only).
+   * @param {string} taskSheetId
+   * @param {string} newDate - ISO date string e.g. "2025-07-10T00:00:00Z"
+   * @param {string} [reason]
+   * @returns {Promise<Object>} { success, data, error }
+   */
+  async rescheduleSheet(taskSheetId, newDate, reason) {
+    try {
+      if (!taskSheetId) {
+        return { success: false, error: "Task sheet ID is required" };
+      }
+      if (!newDate) {
+        return { success: false, error: "New date is required" };
+      }
+
+      const authToken = localStorage.getItem("authToken");
+      if (!authToken) {
+        return { success: false, error: "Authentication required" };
+      }
+
+      const body = { newDate, reason: reason || undefined };
+
+      const response = await fetch(`${config.BASE_URL}/TaskSheets/${taskSheetId}/reschedule`, {
+        method: "PUT",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${authToken}`,
+        },
+        body: JSON.stringify(body),
+      });
+
+      if (!response.ok) {
+        const errorData = await response.json().catch(() => ({}));
+        const errorMsg = errorData.error || errorData.message || `Failed to reschedule: ${response.status}`;
+        return { success: false, error: errorMsg, statusCode: response.status };
+      }
+
+      const data = await response.json();
+      return { success: true, data };
+    } catch (error) {
+      console.error("Error in rescheduleSheet:", error);
+      return { success: false, error: error.message || "Network error" };
+    }
+  },
+
+  /**
    * Compute maxSheets locally from order data (fallback if backend doesn't return it).
    * @param {Object} order
    * @returns {number}

@@ -31,6 +31,10 @@ const ClientDashboardHero = ({
     navigate("/app/client/profile");
   };
 
+  const handleYourRequests = () => {
+    navigate("/app/client/your-requests");
+  };
+
   const handleResolveIssues = () => {
     navigate("/app/client/notifications");
   };
@@ -90,17 +94,19 @@ const ClientDashboardHero = ({
           <h1 className="welcome-title">Welcome{userName ? `, ${userName}` : ''}</h1> {/* TODO: Backend persistence not implemented yet */}
           <p className="welcome-subtitle">Let's get you all set up</p>
         </div>
-        <div className="profile-completion-card" onClick={handleSetupProfile}>
+        <div className="profile-completion-card" onClick={handleYourRequests}>
           <div className="profile-icon">
             <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-              <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2" />
-              <circle cx="12" cy="7" r="4" />
+              <path d="M9 5H7a2 2 0 0 0-2 2v12a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2V7a2 2 0 0 0-2-2h-2" />
+              <rect x="9" y="3" width="6" height="4" rx="1" />
+              <line x1="9" y1="12" x2="15" y2="12" />
+              <line x1="9" y1="16" x2="13" y2="16" />
             </svg>
           </div>
           <div className="profile-info">
-            <span className="profile-label">SET UP YOUR PROFILE</span>
-            <span className="profile-percentage">You've added {profileCompletion}% of your profile</span>
-            <span className="profile-cta">Complete it to get tailored suggestions.</span>
+            <span className="profile-label">YOUR REQUESTS</span>
+            <span className="profile-percentage">View and manage your care requests</span>
+            <span className="profile-cta">Click here to see your requests.</span>
           </div>
         </div>
       </div>

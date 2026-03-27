@@ -69,6 +69,7 @@ const NegotiationPanel = ({ negotiation: initial, role, order, onNegotiationUpda
   const [capturingGps, setCapturingGps] = useState(false);
   const [specialRequirements, setSpecialRequirements] = useState(initial?.specialClientRequirements || "");
   const [additionalNotes, setAdditionalNotes] = useState(initial?.additionalNotes || "");
+  const [agreedStartDate, setAgreedStartDate] = useState(initial?.agreedStartDate ? initial.agreedStartDate.split("T")[0] : "");
   const [note, setNote] = useState("");
 
   // Add-task form
@@ -119,6 +120,7 @@ const NegotiationPanel = ({ negotiation: initial, role, order, onNegotiationUpda
         specialClientRequirements: specialRequirements,
         serviceAddress,
         accessInstructions,
+        agreedStartDate: agreedStartDate ? `${agreedStartDate}T00:00:00Z` : undefined,
         note: note || undefined,
         submitForCaregiverReview: submitForReview,
       };
@@ -135,6 +137,7 @@ const NegotiationPanel = ({ negotiation: initial, role, order, onNegotiationUpda
         caregiverProposedTasks: myTasks,
         caregiverProposedSchedule: mySchedule,
         additionalNotes,
+        agreedStartDate: agreedStartDate ? `${agreedStartDate}T00:00:00Z` : undefined,
         note: note || undefined,
         submitForClientReview: submitForReview,
       };
@@ -149,6 +152,7 @@ const NegotiationPanel = ({ negotiation: initial, role, order, onNegotiationUpda
       setMySchedule(role === "client" ? result.data.clientProposedSchedule || [] : result.data.caregiverProposedSchedule || []);
       setServiceAddress(result.data.serviceAddress || "");
       setAccessInstructions(result.data.accessInstructions || "");
+      setAgreedStartDate(result.data.agreedStartDate ? result.data.agreedStartDate.split("T")[0] : "");
       setNote("");
       setEditMode(false);
       toast.success(submitForReview ? "Submitted for review!" : "Draft saved.");
@@ -175,6 +179,10 @@ const NegotiationPanel = ({ negotiation: initial, role, order, onNegotiationUpda
     // Frontend guard — backend also enforces this
     if (!neg?.serviceAddress) {
       toast.error("Service address is missing. The client must provide it before generating the contract.");
+      return;
+    }
+    if (!neg?.agreedStartDate) {
+      toast.error("Contract start date is required. Either party must set it before generating the contract.");
       return;
     }
     setConverting(true);
@@ -308,11 +316,26 @@ const NegotiationPanel = ({ negotiation: initial, role, order, onNegotiationUpda
             )}
           </div>
 
-          <button className="neg-btn neg-btn--generate" onClick={handleConvert} disabled={converting || !neg?.serviceAddress}>
+          {/* Contract start date summary */}
+          <div className="neg-section" style={{ textAlign: 'left', marginBottom: '12px' }}>
+            <div className="neg-section-label">Contract Start Date</div>
+            {neg?.agreedStartDate ? (
+              <p className="neg-detail-row">{new Date(neg.agreedStartDate).toLocaleDateString()}</p>
+            ) : (
+              <p className="neg-detail-row" style={{ color: '#d32f2f', fontWeight: 500 }}>
+                ⚠️ Contract start date is not set. Either party must set it before generating the contract.
+              </p>
+            )}
+          </div>
+
+          <button className="neg-btn neg-btn--generate" onClick={handleConvert} disabled={converting || !neg?.serviceAddress || !neg?.agreedStartDate}>
             {converting ? "Generating…" : "📄 Generate Contract"}
           </button>
           {!neg?.serviceAddress && role === 'client' && (
             <p className="neg-hint" style={{ marginTop: '8px' }}>Click "Edit My Proposals" below to add the service address.</p>
+          )}
+          {!neg?.agreedStartDate && (
+            <p className="neg-hint" style={{ marginTop: '4px' }}>Click "Edit My Proposals" below to set the contract start date.</p>
           )}
         </div>
       )}
@@ -370,9 +393,31 @@ const NegotiationPanel = ({ negotiation: initial, role, order, onNegotiationUpda
                   <input className="neg-input neg-input--time" type="time" value={slotEnd} onChange={(e) => setSlotEnd(e.target.value)} />
                   <button className="neg-btn neg-btn--sm" onClick={addSlot}>Add</button>
                 </div>
+                <div className="neg-start-date-row" style={{ marginTop: '12px' }}>
+                  <label className="neg-label">Contract Start Date</label>
+                  <input
+                    className="neg-input"
+                    type="date"
+                    value={agreedStartDate}
+                    onChange={(e) => setAgreedStartDate(e.target.value)}
+                    min={new Date().toISOString().split("T")[0]}
+                  />
+                  {!agreedStartDate && (
+                    <p className="neg-hint" style={{ margin: '4px 0 0', fontSize: '12px' }}>
+                      Required — the date when the first visit will begin.
+                    </p>
+                  )}
+                </div>
               </>
             ) : (
-              <ScheduleList slots={mySchedule} editable={false} onRemove={null} />
+              <>
+                <ScheduleList slots={mySchedule} editable={false} onRemove={null} />
+                {agreedStartDate && (
+                  <p className="neg-detail-row" style={{ marginTop: '8px' }}>
+                    <strong>Start date:</strong> {new Date(agreedStartDate + "T00:00:00").toLocaleDateString()}
+                  </p>
+                )}
+              </>
             )}
           </div>
 

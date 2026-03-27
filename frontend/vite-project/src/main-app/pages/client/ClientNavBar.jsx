@@ -1,6 +1,6 @@
 import { useState, useRef, useEffect } from "react";
 import { useNavigate, useLocation } from "react-router-dom";
-import { FaBell, FaEnvelope, FaCog } from "react-icons/fa";
+import { FaBell, FaEnvelope, FaCog, FaHome, FaShoppingBag, FaClipboardList, FaChevronDown } from "react-icons/fa";
 import logo from '../../../assets/careproLogo.svg';
 
 import receipt from "../../../assets/main-app/receipt.svg";
@@ -328,41 +328,40 @@ const ClientNavBar = () => {
         </div>
 
         <div className="client-nav-actions">
-          <ul className="client-nav-icons">
-            <li className="client-nav-link client-icon-link" onClick={() => navigate(`${basePath}/settings`)}>
-              <FaCog className="client-nav-icon" />
-            </li>
-            <li className="client-nav-link client-icon-link">
+          <div className="client-standalone-icons">
+            <div className="client-standalone-icon" onClick={() => navigate(`${basePath}/notifications`)}>
               <NotificationBell navigateTo={(path) => navigate(path)} bellIcon={FaBell} />
+            </div>
+            <div className="client-standalone-icon" onClick={() => navigate(`${basePath}/message`)}>
+              <FaEnvelope size={18} />
+            </div>
+          </div>
+
+          <ul className="client-nav-links">
+            <li className="client-nav-text-link" onClick={() => navigate(`${basePath}/dashboard`)}>
+              <FaHome className="client-nav-link-icon" />
+              Dashboard
             </li>
-            <IconLink to={`${basePath}/message`} icon={FaEnvelope} alt="Messages" isReactIcon={true} />
-            {/* <IconLink to={`${basePath}/favorites`} icon={hear} alt="Favorites" /> */}
+            <li className="client-nav-text-link" onClick={() => navigate(`${basePath}/my-order`)}>
+              <FaShoppingBag className="client-nav-link-icon" />
+              Orders
+            </li>
+            <li className="client-nav-text-link" onClick={() => navigate(`${basePath}/your-requests`)}>
+              <FaClipboardList className="client-nav-link-icon" />
+              Request
+            </li>
           </ul>
-
-          <div className="client-earnings" onClick={() => navigate(`${basePath}/my-order`)}>
-            <img src={receipt} alt="Orders Icon" />
-            <span>View Orders</span>
-          </div>
-
-          <div className="client-subscriptions-link" onClick={() => navigate(`${basePath}/subscriptions`)}>
-            <span className="client-subscriptions-icon">🔄</span>
-            <span>Subscriptions</span>
-          </div>
 
           <div className="client-profile-avatar" ref={dropdownRef}>
             <span className="client-user-name-text" onClick={() => setShowDropdown(!showDropdown)}>
-              {`${user?.firstName + " " + user?.lastName || "User"}`}
+              {user?.firstName ? `${user.firstName}_${user.lastName?.charAt(0)?.toLowerCase() || ''}` : 'User'}
             </span>
             <div className="client-avatar" onClick={() => setShowDropdown(!showDropdown)}>
               <span className="client-avatar-initials">
                 {getInitials(userName)}
               </span>
             </div>
-            <div className="client-dropdown-arrow" onClick={() => setShowDropdown(!showDropdown)}>
-              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-                <path d="M6 9L12 15L18 9" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
-              </svg>
-            </div>
+            <FaChevronDown className="client-dropdown-chevron" onClick={() => setShowDropdown(!showDropdown)} />
             {showDropdown && (
               <div className="client-dropdown-menu">
                 <div className="client-dropdown-item" onClick={() => {

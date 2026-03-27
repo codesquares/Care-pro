@@ -623,6 +623,172 @@
   font-size: 14px;
 }
 
+/* ── Start modal form labels ── */
+.neg-start-label {
+  display: block;
+  font-size: 13px;
+  font-weight: 600;
+  color: #333;
+  margin: 12px 0 5px;
+}
+
+/* ── Start modal form inputs ── */
+.neg-start-input {
+  width: 100%;
+  padding: 9px 12px;
+  border: 1px solid #c8e6e3;
+  border-radius: 8px;
+  font-size: 13px;
+  color: #2c3e50;
+  background: #fff;
+  outline: none;
+  transition: border-color 0.2s;
+  box-sizing: border-box;
+}
+
+.neg-start-input:focus {
+  border-color: #3EDDCD;
+  box-shadow: 0 0 0 3px rgba(62, 221, 205, 0.15);
+}
+
+textarea.neg-start-input {
+  resize: vertical;
+  font-family: inherit;
+}
+
+/* ── Task row in modal ── */
+.neg-task-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 7px 10px;
+  background: #f0fbfa;
+  border-radius: 6px;
+  margin-bottom: 4px;
+  font-size: 13px;
+}
+
+.neg-task-row button {
+  background: none;
+  border: none;
+  cursor: pointer;
+  color: #aaa;
+  font-size: 14px;
+  padding: 2px 6px;
+  border-radius: 4px;
+  transition: color 0.15s, background 0.15s;
+}
+
+.neg-task-row button:hover {
+  color: #e74c3c;
+  background: #fee2e2;
+}
+
+/* ── Add task input row ── */
+.neg-add-task-row {
+  display: flex;
+  gap: 6px;
+  margin-top: 6px;
+}
+
+.neg-add-task-row input {
+  flex: 1;
+  min-width: 0;
+  padding: 8px 10px;
+  border: 1px solid #c8e6e3;
+  border-radius: 6px;
+  font-size: 13px;
+  outline: none;
+}
+
+.neg-add-task-row input:focus {
+  border-color: #3EDDCD;
+}
+
+.neg-add-task-row button {
+  padding: 8px 14px;
+  border: none;
+  border-radius: 6px;
+  background: #05668D;
+  color: #fff;
+  font-size: 13px;
+  font-weight: 600;
+  cursor: pointer;
+  white-space: nowrap;
+}
+
+.neg-add-task-row button:hover {
+  background: #02445F;
+}
+
+/* ── Schedule slot input row ── */
+.neg-slot-row {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  flex-wrap: wrap;
+  margin-bottom: 8px;
+}
+
+.neg-slot-row select,
+.neg-slot-row input[type="time"] {
+  padding: 7px 10px;
+  border: 1px solid #c8e6e3;
+  border-radius: 6px;
+  font-size: 13px;
+  color: #2c3e50;
+  background: #fff;
+  outline: none;
+}
+
+.neg-slot-row select:focus,
+.neg-slot-row input[type="time"]:focus {
+  border-color: #3EDDCD;
+}
+
+.neg-slot-row button {
+  padding: 7px 14px;
+  border: none;
+  border-radius: 6px;
+  background: #05668D;
+  color: #fff;
+  font-size: 13px;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.neg-slot-row button:hover {
+  background: #02445F;
+}
+
+/* ── Modal action buttons ── */
+.neg-start-modal-actions {
+  display: flex;
+  gap: 10px;
+  margin-top: 18px;
+}
+
+.neg-start-modal-actions .neg-btn--submit {
+  flex: 1;
+}
+
+.neg-start-modal-cancel {
+  padding: 10px 20px;
+  border-radius: 8px;
+  border: 1px solid #ddd;
+  background: #fff;
+  color: #555;
+  font-size: 13px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: background 0.2s, border-color 0.2s;
+}
+
+.neg-start-modal-cancel:hover {
+  background: #f5f5f5;
+  border-color: #bbb;
+}
+
 .neg-instructions {
   font-size: 13px;
   color: #555;
@@ -632,4 +798,49 @@
   padding: 10px 14px;
   margin-bottom: 18px;
   line-height: 1.5;
+}
+
+/* ---------- Agreed Start Date ---------- */
+.neg-start-date-row {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin-bottom: 12px;
+}
+
+.neg-start-date-row label {
+  font-size: 13px;
+  font-weight: 600;
+  color: #333;
+  white-space: nowrap;
+}
+
+.neg-start-date-row input[type="date"] {
+  padding: 6px 10px;
+  border: 1px solid #ccc;
+  border-radius: 6px;
+  font-size: 13px;
+  font-family: inherit;
+}
+
+.neg-start-date-row .neg-required-hint {
+  font-size: 11px;
+  color: #e65100;
+  font-weight: 500;
+}
+
+.neg-start-date-display {
+  font-size: 13px;
+  color: #333;
+  margin-bottom: 8px;
+}
+
+.neg-start-date-display strong {
+  font-weight: 600;
+}
+
+.neg-start-date-warning {
+  font-size: 12px;
+  color: #e65100;
+  font-weight: 500;
 }

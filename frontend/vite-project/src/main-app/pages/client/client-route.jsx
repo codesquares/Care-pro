@@ -18,6 +18,7 @@ import CareNeedsSettings from './care-needs/CareNeedsSettings';
 import ClientProfile from './profile/ClientProfile';
 import RequestCaregiver from './request-caregiver/RequestCaregiver';
 import CareRequestMatches from './care-request-matches/CareRequestMatches';
+import CareRequestDetail from './care-request-detail/CareRequestDetail';
 import YourRequests from './your-requests/YourRequests';
 import Cart from '../client/cart/Cart';
 import NotificationsPage from '../../components/Notifications/Notifications';
@@ -27,6 +28,7 @@ import ClientSubscriptions from './subscriptions/ClientSubscriptions';
 import SubscriptionDetail from './subscriptions/SubscriptionDetail';
 import ClientBilling from './billing/ClientBilling';
 import InvoiceDetail from './billing/InvoiceDetail';
+import ClientWallet from './wallet/ClientWallet';
 import NotFoundPage from '../../../pages/NotFoundPage';
 
 
@@ -49,6 +51,7 @@ function ClientRoutes() {
             <Route path="/care-needs" element={<CareNeedsSettings />} />
             <Route path="/post-project" element={<RequestCaregiver />} />
             <Route path="/care-requests/:requestId/matches" element={<CareRequestMatches />} />
+            <Route path="/care-requests/:requestId/detail" element={<CareRequestDetail />} />
             <Route path="/your-requests" element={<YourRequests />} />
             <Route path="/profile" element={<ClientProfile />} />
             <Route path="/notifications" element={<NotificationsPage />} />
@@ -59,6 +62,7 @@ function ClientRoutes() {
             <Route path="/subscriptions/:id" element={<SubscriptionDetail />} />
             <Route path="/billing" element={<ClientBilling />} />
             <Route path="/billing/:id" element={<InvoiceDetail />} />
+            <Route path="/wallet" element={<ClientWallet />} />
             <Route path="/faq" element={<FAQPage />} />
             <Route path="*" element={<NotFoundPage />} />
         </Routes>

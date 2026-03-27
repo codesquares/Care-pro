@@ -95,7 +95,40 @@ const CheckInSection = ({ sheet, orderId, onCheckedIn, disabled = false }) => {
       toast.success(msg);
       if (onCheckedIn) onCheckedIn(result.data);
     } else {
-      toast.error(result.error);
+      // Show contextual messages for structured check-in error codes
+      switch (result.errorCode) {
+        case "PROXIMITY_TOO_FAR":
+          toast.error(
+            `You are ${Math.round(result.distanceMeters)}m away from the service address. ` +
+            `You need to be within ${result.maxDistanceMeters}m to check in.`
+          );
+          break;
+        case "OUTSIDE_SCHEDULE":
+          toast.error(
+            `Check-in is only allowed between ${result.scheduledStartTime} and ${result.scheduledEndTime} ` +
+            `on ${result.scheduledDay}s. Current time in Nigeria: ${result.currentTimeNigeria}.`
+          );
+          break;
+        case "NOT_SCHEDULED_TODAY":
+          toast.error(
+            `No visit is scheduled for today. Your next scheduled day is ${result.scheduledDay}.`
+          );
+          break;
+        case "NO_APPROVED_CONTRACT":
+          toast.error("No approved contract found for this order. Please contact the client.");
+          break;
+        case "NO_GEOCODED_ADDRESS":
+          toast.error("The service address has not been set up yet. Please ask the client to update their address.");
+          break;
+        case "TASKSHEET_CANCELLED":
+          toast.error("This visit has been cancelled by the client.");
+          break;
+        case "TASKSHEET_SCHEDULED":
+          toast.error("This visit has not been activated yet. Please activate it first.");
+          break;
+        default:
+          toast.error(result.error);
+      }
     }
 
     setLoading(false);

@@ -57,6 +57,18 @@ const generateTitle = (type, senderId) => {
       return `❌ Contract task proposal(s) rejected`;
     case 'visit_submitted':
       return `📋 Visit submitted for review`;
+    case 'visit_cancelled_by_client':
+      return `🚫 Visit Cancelled`;
+    case 'negotiation_started':
+      return `🤝 Negotiation started`;
+    case 'negotiation_counter':
+      return `🔄 New counter-offer received`;
+    case 'negotiation_agreed':
+      return `✅ Negotiation agreed`;
+    case 'negotiation_converted':
+      return `📋 Negotiation converted to contract`;
+    case 'negotiation_abandoned':
+      return `🚫 Negotiation abandoned`;
     default:
       return `New notification`;
   }
@@ -109,6 +121,18 @@ const generateContent = (type, senderId) => {
       return `Your proposed contract task(s) were rejected.`;
     case 'visit_submitted':
       return `A care visit has been submitted. Please review and approve.`;
+    case 'visit_cancelled_by_client':
+      return `The client has cancelled an upcoming visit.`;
+    case 'negotiation_started':
+      return `A negotiation has been started on your order. Tap to review the terms.`;
+    case 'negotiation_counter':
+      return `A counter-offer has been submitted. Tap to review the updated terms.`;
+    case 'negotiation_agreed':
+      return `Both parties have agreed on the terms. The negotiation is ready to be converted to a contract.`;
+    case 'negotiation_converted':
+      return `The negotiation has been converted to a contract. Tap to view the contract details.`;
+    case 'negotiation_abandoned':
+      return `The negotiation has been abandoned.`;
     default:
       return `You have a new notification from user ${senderId}.`;
   }

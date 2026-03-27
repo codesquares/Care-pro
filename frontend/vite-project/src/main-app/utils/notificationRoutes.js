@@ -129,11 +129,33 @@ const TYPE_MAP = {
   'care_request_admin_no_match':       'CareRequestAdminNoMatch',
   'carerequestadminnomatch':           'CareRequestAdminNoMatch',
 
+  // Negotiation
+  'negotiation_started':          'NegotiationStarted',
+  'negotiationstarted':           'NegotiationStarted',
+  'negotiation started':          'NegotiationStarted',
+  'negotiation_counter':          'NegotiationCounter',
+  'negotiationcounter':           'NegotiationCounter',
+  'negotiation counter':          'NegotiationCounter',
+  'negotiation_agreed':           'NegotiationAgreed',
+  'negotiationagreed':            'NegotiationAgreed',
+  'negotiation agreed':           'NegotiationAgreed',
+  'negotiation_converted':        'NegotiationConverted',
+  'negotiationconverted':         'NegotiationConverted',
+  'negotiation converted':        'NegotiationConverted',
+  'negotiation_abandoned':        'NegotiationAbandoned',
+  'negotiationabandoned':         'NegotiationAbandoned',
+  'negotiation abandoned':        'NegotiationAbandoned',
+
   // Visit / Task Sheet
   'visit_submitted':             'VisitSubmitted',
   'visitsubmitted':              'VisitSubmitted',
   'visit submitted':             'VisitSubmitted',
   'visit_completed':             'VisitSubmitted',
+
+  // Visit cancellation
+  'visit_cancelled_by_client':   'VisitCancelledByClient',
+  'visitcancelledbyclient':      'VisitCancelledByClient',
+  'visit cancelled by client':   'VisitCancelledByClient',
 
   // Misc
   'caregiver_report':            'SystemNotice',
@@ -192,7 +214,10 @@ const KNOWN_CANONICAL = new Set([
   'SystemNotice', 'SystemAlert', 'Signup',
   'CareRequestMatched', 'CareRequestNoMatch',
   'CareRequestAdminMatchUpdate', 'CareRequestAdminNoMatch',
+  'NegotiationStarted', 'NegotiationCounter', 'NegotiationAgreed',
+  'NegotiationConverted', 'NegotiationAbandoned',
   'VisitSubmitted',
+  'VisitCancelledByClient',
   'Broadcast',
   'GigDeletionReminder', 'GigPermanentlyDeleted',
   'DisputeRaised',
@@ -416,8 +441,25 @@ export const getNotificationRoute = (notification, userRole) => {
       if (isAdmin) return `/app/admin/care-requests`;
       return null;
 
+    // ── Negotiation notifications ─────────────────────────
+    case 'NegotiationStarted':
+    case 'NegotiationCounter':
+    case 'NegotiationAgreed':
+    case 'NegotiationConverted':
+    case 'NegotiationAbandoned': {
+      const negOrderId = notification.orderId || relatedEntityId;
+      if (negOrderId) {
+        if (isClient) return `/app/client/my-order/${negOrderId}`;
+        if (isCaregiver) return `/app/caregiver/order-details/${negOrderId}`;
+      }
+      if (isClient) return `/app/client/my-orders`;
+      if (isCaregiver) return `/app/caregiver/orders`;
+      return null;
+    }
+
     // ── Visit / Task Sheet notifications ─────────────────
-    case 'VisitSubmitted': {
+    case 'VisitSubmitted':
+    case 'VisitCancelledByClient': {
       const visitOrderId = notification.orderId || relatedEntityId;
       if (visitOrderId) {
         if (isClient) return `/app/client/my-order/${visitOrderId}`;
@@ -541,7 +583,14 @@ export const getNotificationActionLabel = (rawType) => {
     case 'CareRequestAdminMatchUpdate':
     case 'CareRequestAdminNoMatch':
       return 'Review Request';
+    case 'NegotiationStarted':
+    case 'NegotiationCounter':
+    case 'NegotiationAgreed':
+    case 'NegotiationConverted':
+    case 'NegotiationAbandoned':
+      return 'View Order';
     case 'VisitSubmitted':
+    case 'VisitCancelledByClient':
       return 'View Visit';
     case 'GigDeletionReminder':
       return 'Restore Gig';
@@ -626,8 +675,20 @@ export const getNotificationTypeIcon = (rawType) => {
       return '📋';
     case 'CareRequestAdminNoMatch':
       return '⚠️';
+    case 'NegotiationStarted':
+      return '🤝';
+    case 'NegotiationCounter':
+      return '🔄';
+    case 'NegotiationAgreed':
+      return '✅';
+    case 'NegotiationConverted':
+      return '📋';
+    case 'NegotiationAbandoned':
+      return '🚫';
     case 'VisitSubmitted':
       return '📋';
+    case 'VisitCancelledByClient':
+      return '🚫';
     case 'GigDeletionReminder':
       return '⚠️';
     case 'GigPermanentlyDeleted':

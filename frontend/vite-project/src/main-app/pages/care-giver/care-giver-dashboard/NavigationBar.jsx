@@ -3,7 +3,7 @@ import { useNavigate } from "react-router-dom";
 import "./NavigationBar.css";
 import logo from '../../../../assets/careproLogo.svg';
 import hear from "../../../../assets/main-app/heart.svg";
-import { FaBell, FaEnvelope, FaReceipt, FaHome, FaCog, FaStore } from "react-icons/fa";
+import { FaBell, FaEnvelope, FaReceipt, FaHome, FaCog, FaStore, FaClipboardList, FaBriefcase, FaChevronDown, FaMoneyBillWave, FaShoppingBag } from "react-icons/fa";
 import NotificationBell from "../../../components/notifications/NotificationBell";
 import { useAuth } from "../../../context/AuthContext";
 import { getInitials } from "../../../utils/avatarHelpers";
@@ -146,12 +146,18 @@ const NavigationBar = () => {
                   <span>Create Gig</span>
                 </div>
               </li>
-              {/* <li onClick={() => { navigate(`${basePath}/orders`); setMobileMenuOpen(false); }}>
+              <li onClick={() => { navigate(`${basePath}/orders`); setMobileMenuOpen(false); }}>
                 <div className="menu-item-content">
-                  <img src={receipt} alt="Orders" />
-                  <span>Orders</span>
+                  <FaReceipt className="mobile-menu-icon" />
+                  <span>All Orders</span>
                 </div>
-              </li> */}
+              </li>
+              <li onClick={() => { navigate(`${basePath}/client-requests`); setMobileMenuOpen(false); }}>
+                <div className="menu-item-content">
+                  <span className="mobile-menu-icon" style={{ fontSize: '16px' }}>📋</span>
+                  <span>Client Requests</span>
+                </div>
+              </li>
               <li onClick={() => { navigate(`${basePath}/earnings`); setMobileMenuOpen(false); }}>
                 <div className="menu-item-content">
                   <FaReceipt className="mobile-menu-icon" />
@@ -217,51 +223,45 @@ const NavigationBar = () => {
 
         <ul className="nav-links">
           <li className="nav-link text-link" onClick={() => navigate(`${basePath}/dashboard`)}>
+            <FaHome className="nav-link-icon" />
             Dashboard
           </li>
-          <li className="nav-link text-link" onClick={() => navigate(`${basePath}/create-gigs`)}>
-            Create Gig
-          </li>
-          {/* <li className="nav-link text-link" onClick={() => navigate(`${basePath}/orders`)}>
+          <li className="nav-link text-link" onClick={() => navigate(`${basePath}/orders`)}>
+            <FaShoppingBag className="nav-link-icon" />
             Orders
           </li>
+          <li className="nav-link text-link" onClick={() => navigate(`${basePath}/client-requests`)}>
+            <FaClipboardList className="nav-link-icon" />
+            Request
+          </li>
+          <li className="nav-link text-link" onClick={() => navigate(`${basePath}/create-gigs`)}>
+            <FaBriefcase className="nav-link-icon" />
+            Gigs
+          </li>
           <li className="nav-link text-link" onClick={() => navigate(`${basePath}/earnings`)}>
+            <FaMoneyBillWave className="nav-link-icon" />
             Earnings
-          </li> */}
-          <li className="nav-link text-link" onClick={() => navigate(`${basePath}/subscriptions`)}>
-            Subscriptions
-          </li>
-          <li className="nav-link text-link" onClick={() => navigate(`${basePath}/settings`)}>
-            Settings
-          </li>
-          <li className="nav-link text-link" onClick={() => navigate('/marketplace')}>
-            Browse Marketplace
           </li>
         </ul>
 
         <div className="nav-actions">
-          <ul className="nav-icons">
-            <li className="caregiver-icon-link">
-              <NotificationBell navigateTo={(path) => navigate(path)} bellIcon={FaBell} />
-            </li>
-            <IconLink to={`${basePath}/message`} icon={FaEnvelope} alt="Messages" isReactIcon={true} />
-          </ul>
-
-          <div className="earnings" onClick={() => navigate(`${basePath}/earnings`)}>
-            <FaReceipt className="earnings-icon" size={20} />
-            <span>Earned:</span>
-            <strong>₦{earnings.totalEarned.toFixed(2)}</strong>
+          <li className="caregiver-icon-link">
+            <NotificationBell navigateTo={(path) => navigate(path)} bellIcon={FaBell} />
+          </li>
+          <div className="nav-action-icon" onClick={() => navigate(`${basePath}/message`)}>
+            <FaEnvelope size={18} />
           </div>
 
           <div className="profile-avatar" ref={dropdownRef}>
             <span className="nav-user-name" onClick={() => setShowDropdown(!showDropdown)}>
-              {userName.length > 12 ? userName.slice(0, 12) + '…' : userName}
+              {user?.firstName ? `${user.firstName}_${user.lastName?.charAt(0) || ''}` : ''}
             </span>
             <div className="avatar" onClick={() => setShowDropdown(!showDropdown)}>
               <span className="avatar-initials">
                 {getInitials(userName)}
               </span>
             </div>
+            <FaChevronDown className="dropdown-chevron" onClick={() => setShowDropdown(!showDropdown)} />
 
             {showDropdown && (
               <div className="nav-dropdown-menu dropdown-menu">

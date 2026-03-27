@@ -73,6 +73,7 @@ const MyOrders = () => {
     const [negInitRequirements, setNegInitRequirements] = useState("");
     const [negInitNotes, setNegInitNotes] = useState("");
     const [negInitNote, setNegInitNote] = useState("");
+    const [negInitStartDate, setNegInitStartDate] = useState("");
     const [negInitNewTask, setNegInitNewTask] = useState("");
     const [negInitSlotDay, setNegInitSlotDay] = useState("Monday");
     const [negInitSlotStart, setNegInitSlotStart] = useState("09:00");
@@ -348,6 +349,7 @@ const MyOrders = () => {
             specialClientRequirements: negInitRequirements || undefined,
             additionalNotes: negInitNotes || undefined,
             openingNote: negInitNote || undefined,
+            agreedStartDate: negInitStartDate ? `${negInitStartDate}T00:00:00Z` : undefined,
         };
         if (negInitConfirmAtAddress && negInitGpsCoords) {
             payload.confirmAtServiceAddress = true;
@@ -1918,6 +1920,7 @@ const MyOrders = () => {
                             <h3>Start Negotiation</h3>
                             <button className="neg-start-modal-close" onClick={() => setShowStartNegModal(false)}>✕</button>
                         </div>
+                        <div className="neg-start-modal-body">
                         <p style={{ fontSize: '13px', color: '#555', marginBottom: '14px' }}>
                             Share your initial task and schedule proposals. Your caregiver will review and respond.
                         </p>
@@ -2044,6 +2047,15 @@ const MyOrders = () => {
                             onChange={(e) => setNegInitRequirements(e.target.value)}
                         />
 
+                        <label className="neg-start-label">Proposed Start Date</label>
+                        <input
+                            className="neg-start-input"
+                            type="date"
+                            value={negInitStartDate}
+                            min={new Date().toISOString().split('T')[0]}
+                            onChange={(e) => setNegInitStartDate(e.target.value)}
+                        />
+
                         <label className="neg-start-label">Note to Caregiver</label>
                         <textarea
                             className="neg-start-input"
@@ -2058,6 +2070,7 @@ const MyOrders = () => {
                                 {startNegLoading ? 'Starting…' : '🤝 Start Negotiation'}
                             </button>
                             <button className="neg-start-modal-cancel" onClick={() => setShowStartNegModal(false)}>Cancel</button>
+                        </div>
                         </div>
                     </div>
                 </div>

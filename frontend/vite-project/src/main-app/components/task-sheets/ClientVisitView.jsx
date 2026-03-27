@@ -3,6 +3,8 @@ import { toast } from "react-toastify";
 import ObservationReportService from "../../services/observationReportService";
 import IncidentReportService from "../../services/incidentReportService";
 import DisputeService from "../../services/disputeService";
+import VisitCancellationService from "../../services/visitCancellationService";
+import TaskSheetService from "../../services/taskSheetService";
 import ClientProposeTasksSection from "./ClientProposeTasksSection";
 import "./ClientVisitView.css";
 
@@ -27,11 +29,85 @@ const ClientVisitView = ({ sheet, orderId, onVisitReviewed, onSheetUpdated }) =>
   const [visitDisputeReason, setVisitDisputeReason] = useState("");
   const [reviewLoading, setReviewLoading] = useState(false);
 
+  // Visit cancellation state
+  const [showCancelConfirm, setShowCancelConfirm] = useState(false);
+  const [cancelReason, setCancelReason] = useState("");
+  const [cancelLoading, setCancelLoading] = useState(false);
+
+  // Reschedule state
+  const [showReschedule, setShowReschedule] = useState(false);
+  const [rescheduleDate, setRescheduleDate] = useState("");
+  const [rescheduleReason, setRescheduleReason] = useState("");
+  const [rescheduleLoading, setRescheduleLoading] = useState(false);
+
   const tasks = sheet.tasks || [];
   const completedCount = tasks.filter((t) => t.completed).length;
   const isSubmitted = sheet.status === "submitted";
+  const isScheduled = sheet.status === "scheduled";
   const checkin = sheet.checkin || null;
   const clientReviewStatus = sheet.clientReviewStatus || "Pending";
+  const isCancelled = sheet.status === "cancelled";
+
+  // Determine if cancellation will be a late cancellation (< 12h before scheduled start)
+  const isLateCancellation = (() => {
+    if (!sheet.scheduledDate) return false;
+    const scheduledTime = new Date(sheet.scheduledDate).getTime();
+    const now = Date.now();
+    const hoursUntilVisit = (scheduledTime - now) / (1000 * 60 * 60);
+    return hoursUntilVisit < 12;
+  })();
+
+  const handleCancelVisit = async () => {
+    setCancelLoading(true);
+    const result = await VisitCancellationService.cancelVisit(
+      orderId,
+      sheet.id,
+      cancelReason.trim() || undefined
+    );
+    if (result.success) {
+      const creditMsg = result.data.creditAmount
+        ? ` ₦${result.data.creditAmount.toLocaleString()} has been credited to your wallet.`
+        : "";
+      toast.success(`Visit cancelled.${creditMsg}`);
+      setShowCancelConfirm(false);
+      setCancelReason("");
+      // Update local state to reflect cancelled status
+      if (onSheetUpdated) onSheetUpdated({ ...sheet, status: "cancelled" });
+    } else {
+      toast.error(result.error || "Failed to cancel visit.");
+    }
+    setCancelLoading(false);
+  };
+
+  const handleRescheduleVisit = async () => {
+    if (!rescheduleDate) {
+      toast.error("Please select a new date.");
+      return;
+    }
+    setRescheduleLoading(true);
+    const result = await TaskSheetService.rescheduleSheet(
+      sheet.id,
+      `${rescheduleDate}T00:00:00Z`,
+      rescheduleReason.trim() || undefined
+    );
+    if (result.success) {
+      const msg = result.data.message || "Visit rescheduled successfully.";
+      toast.success(msg);
+      setShowReschedule(false);
+      setRescheduleDate("");
+      setRescheduleReason("");
+      // Update local state with new date
+      if (onSheetUpdated) {
+        onSheetUpdated({
+          ...sheet,
+          scheduledDate: result.data.newDate || `${rescheduleDate}T00:00:00`,
+        });
+      }
+    } else {
+      toast.error(result.error || "Failed to reschedule visit.");
+    }
+    setRescheduleLoading(false);
+  };
 
   const handleApproveVisit = async () => {
     setReviewLoading(true);
@@ -106,7 +182,13 @@ const ClientVisitView = ({ sheet, orderId, onVisitReviewed, onSheetUpdated }) =>
     <div className="cv-page">
       {/* Status banner */}
       <div className="cv-status-row">
-        {isSubmitted ? (
+        {isScheduled ? (
+          <span className="cv-status-badge cv-status-badge--scheduled">
+            📅 Scheduled
+            {sheet.scheduledDate &&
+              ` — ${new Date(sheet.scheduledDate).toLocaleDateString(undefined, { weekday: "long", month: "long", day: "numeric" })}`}
+          </span>
+        ) : isSubmitted ? (
           <span className="cv-status-badge cv-status-badge--submitted">
             ✓ Completed
             {sheet.submittedAt &&
@@ -119,8 +201,8 @@ const ClientVisitView = ({ sheet, orderId, onVisitReviewed, onSheetUpdated }) =>
         )}
       </div>
 
-      {/* Check-in info */}
-      {checkin && (
+      {/* Check-in info — not shown for scheduled sheets */}
+      {!isScheduled && checkin && (
         <div className="cv-checkin">
           <span className="cv-checkin-icon">📍</span>
           <div className="cv-checkin-details">
@@ -151,25 +233,79 @@ const ClientVisitView = ({ sheet, orderId, onVisitReviewed, onSheetUpdated }) =>
         </div>
       )}
 
-      {/* Progress bar */}
-      <div className="cv-progress">
-        <div className="cv-progress-bar">
-          <div
-            className="cv-progress-fill"
-            style={{
-              width:
-                tasks.length > 0
-                  ? `${(completedCount / tasks.length) * 100}%`
-                  : "0%",
-            }}
-          />
+      {/* Progress bar — hidden for scheduled sheets */}
+      {!isScheduled && (
+        <div className="cv-progress">
+          <div className="cv-progress-bar">
+            <div
+              className="cv-progress-fill"
+              style={{
+                width:
+                  tasks.length > 0
+                    ? `${(completedCount / tasks.length) * 100}%`
+                    : "0%",
+              }}
+            />
+          </div>
+          <span className="cv-progress-text">
+            {completedCount}/{tasks.length} tasks completed
+          </span>
         </div>
-        <span className="cv-progress-text">
-          {completedCount}/{tasks.length} tasks completed
-        </span>
-      </div>
+      )}
 
-      {/* Task list (read-only) */}
+      {/* Scheduled sheet info + reschedule */}
+      {isScheduled && (
+        <div className="cv-scheduled-info">
+          <p>This visit has not started yet. The caregiver will activate it when ready.</p>
+          <p>You can cancel or reschedule this visit below.</p>
+
+          {!showReschedule ? (
+            <button
+              className="cv-reschedule-btn"
+              onClick={() => setShowReschedule(true)}
+            >
+              📅 Reschedule Visit
+            </button>
+          ) : (
+            <div className="cv-reschedule-form">
+              <label className="cv-reschedule-label">New date</label>
+              <input
+                type="date"
+                className="cv-reschedule-date-input"
+                value={rescheduleDate}
+                onChange={(e) => setRescheduleDate(e.target.value)}
+                min={new Date().toISOString().split("T")[0]}
+              />
+              <textarea
+                className="cv-reschedule-reason-input"
+                placeholder="Reason for rescheduling (optional)"
+                value={rescheduleReason}
+                onChange={(e) => setRescheduleReason(e.target.value)}
+                rows="2"
+              />
+              <div className="cv-review-buttons">
+                <button
+                  className="cv-reschedule-confirm-btn"
+                  onClick={handleRescheduleVisit}
+                  disabled={rescheduleLoading || !rescheduleDate}
+                >
+                  {rescheduleLoading ? "Rescheduling..." : "Confirm Reschedule"}
+                </button>
+                <button
+                  className="cv-review-cancel-btn"
+                  onClick={() => { setShowReschedule(false); setRescheduleDate(""); setRescheduleReason(""); }}
+                  disabled={rescheduleLoading}
+                >
+                  Cancel
+                </button>
+              </div>
+            </div>
+          )}
+        </div>
+      )}
+
+      {/* Task list (read-only) — hidden for scheduled sheets */}
+      {!isScheduled && (
       <div className="cv-task-list">
         {tasks.map((task, index) => (
           <div
@@ -211,15 +347,76 @@ const ClientVisitView = ({ sheet, orderId, onVisitReviewed, onSheetUpdated }) =>
           <p className="cv-no-tasks">No tasks recorded for this visit.</p>
         )}
       </div>
+      )}
 
-      {/* Client can propose tasks on in-progress sheets */}
-      {!isSubmitted && (
+      {/* Cancelled banner */}
+      {isCancelled && (
+        <div className="cv-review-badge cv-review-badge--disputed">
+          🚫 This visit has been cancelled
+        </div>
+      )}
+
+      {/* Client can propose tasks on in-progress sheets (not scheduled or cancelled) */}
+      {!isSubmitted && !isCancelled && !isScheduled && (
         <ClientProposeTasksSection
           sheet={sheet}
           onSheetUpdated={(updatedSheet) => {
             if (onSheetUpdated) onSheetUpdated(updatedSheet);
           }}
         />
+      )}
+
+      {/* Cancel Visit — allowed for scheduled and in-progress sheets */}
+      {!isSubmitted && !isCancelled && (
+        <div className="cv-cancel-section">
+          {!showCancelConfirm ? (
+            <button
+              className="cv-cancel-visit-btn"
+              onClick={() => setShowCancelConfirm(true)}
+            >
+              Cancel This Visit
+            </button>
+          ) : (
+            <div className="cv-cancel-confirm">
+              <p className="cv-cancel-prompt">
+                Are you sure you want to cancel this visit?
+              </p>
+              {isLateCancellation && (
+                <p className="cv-cancel-late-warning">
+                  ⚠️ This visit is less than 12 hours away. Late cancellations receive only 50% credit — the other 50% goes to the caregiver.
+                </p>
+              )}
+              {!isLateCancellation && sheet.scheduledDate && (
+                <p className="cv-cancel-full-credit">
+                  ✓ This visit is more than 12 hours away. You will receive a full credit refund.
+                </p>
+              )}
+              <textarea
+                className="cv-cancel-reason-input"
+                placeholder="Reason for cancellation (optional)"
+                value={cancelReason}
+                onChange={(e) => setCancelReason(e.target.value)}
+                rows="2"
+              />
+              <div className="cv-review-buttons">
+                <button
+                  className="cv-review-dispute-btn"
+                  onClick={handleCancelVisit}
+                  disabled={cancelLoading}
+                >
+                  {cancelLoading ? "Cancelling..." : "Yes, Cancel Visit"}
+                </button>
+                <button
+                  className="cv-review-cancel-btn"
+                  onClick={() => { setShowCancelConfirm(false); setCancelReason(""); }}
+                  disabled={cancelLoading}
+                >
+                  Keep Visit
+                </button>
+              </div>
+            </div>
+          )}
+        </div>
       )}
 
       {/* Client Signature */}
