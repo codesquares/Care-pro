@@ -26,6 +26,7 @@ import FAQPage from '../client/orders/FAQ';
 import CaregiverSubscriptions from './subscriptions/CaregiverSubscriptions';
 import CaregiverSubscriptionDetail from './subscriptions/CaregiverSubscriptionDetail';
 import CaregiverWallet from './wallet/CaregiverWallet';
+import ClientsRequests from './client-requests/ClientsRequests';
 import NotFoundPage from '../../../pages/NotFoundPage';
 
 function CareGiverRoutes() {
@@ -59,6 +60,7 @@ function CareGiverRoutes() {
                 <Route path="/subscriptions" element={<CaregiverSubscriptions />} />
                 <Route path="/subscriptions/:id" element={<CaregiverSubscriptionDetail />} />
                 <Route path="/wallet" element={<CaregiverWallet />} />
+                <Route path="/client-requests" element={<ClientsRequests />} />
                 <Route path="/faq" element={<FAQPage />} />
                 <Route path="*" element={<NotFoundPage />} />
             </Routes>

@@ -8,13 +8,14 @@ import './YourRequests.css';
 const normalizeStatus = (status) => {
   const s = (status || '').toLowerCase().trim();
   if (s === 'pending' || s === 'matched') return 'Active';
-  if (s === 'accepted') return 'In Progress';
+  if (s === 'paused') return 'Paused';
+  if (s === 'accepted' || s === 'closed') return 'Closed';
   if (s === 'completed') return 'Closed';
   if (s === 'cancelled' || s === 'canceled') return 'Cancelled';
   return 'Active';
 };
 
-const tabKeys = ['All Requests', 'Active', 'In Progress', 'Closed', 'Cancelled'];
+const tabKeys = ['All Requests', 'Active', 'Paused', 'Closed', 'Cancelled'];
 
 const YourRequests = () => {
   const navigate = useNavigate();
@@ -85,7 +86,7 @@ const YourRequests = () => {
   }, [requests]);
 
   const handleViewRequest = (requestId) => {
-    navigate(`/app/client/care-requests/${requestId}/matches`);
+    navigate(`/app/client/care-requests/${requestId}/detail`);
   };
 
   return (
@@ -202,7 +203,7 @@ const YourRequests = () => {
               ) : (
                 filteredRequests.map((req) => {
                   const id = req.id || req.careRequestId;
-                  const responders = req.matchCount ?? req.responders ?? 0;
+                  const responders = req.respondersCount ?? req.matchCount ?? req.responders ?? 0;
                   return (
                     <div key={id} className="yr-row">
                       <span
