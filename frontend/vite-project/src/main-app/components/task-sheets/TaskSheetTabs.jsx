@@ -74,13 +74,37 @@ const TaskSheetTabs = ({ order }) => {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [loading, sheets.length, orderId, error, orderCompleted]);
 
+  // ------ Auto-advance: if the active sheet is cancelled, jump to the next non-cancelled sheet ------
+  useEffect(() => {
+    if (loading || sheets.length === 0) return;
+    const current = sheets[activeIndex];
+    if (current && current.status === 'cancelled') {
+      const nextIdx = sheets.findIndex(
+        (s, i) => i > activeIndex && s.status !== 'cancelled'
+      );
+      if (nextIdx !== -1) {
+        setActiveIndex(nextIdx);
+      }
+    }
+  }, [sheets, activeIndex, loading]);
+
   // ------ Check if previous sheet is reviewed (for legacy create gate) ------
+  // Cancelled sheets are transparent — skip them and check the last active sheet.
   const isPreviousSheetReviewed = () => {
     if (sheets.length === 0) return true;
-    const lastSheet = sheets[sheets.length - 1];
-    if (lastSheet.status !== 'submitted') return false;
-    if (lastSheet.clientReviewStatus !== 'Approved' && lastSheet.clientReviewStatus !== 'Disputed') return false;
+    // Find the last non-cancelled sheet
+    const activeSheets = sheets.filter((s) => s.status !== 'cancelled');
+    if (activeSheets.length === 0) return true; // all cancelled
+    const lastActive = activeSheets[activeSheets.length - 1];
+    if (lastActive.status !== 'submitted') return false;
+    if (lastActive.clientReviewStatus !== 'Approved' && lastActive.clientReviewStatus !== 'Disputed') return false;
     return true;
+  };
+
+  // Helper: get the last non-cancelled sheet (for toast messages)
+  const getLastActiveSheet = () => {
+    const activeSheets = sheets.filter((s) => s.status !== 'cancelled');
+    return activeSheets.length > 0 ? activeSheets[activeSheets.length - 1] : sheets[sheets.length - 1];
   };
 
   // ------ Legacy: create a new sheet (only for orders without pre-generated sheets) ------
@@ -92,11 +116,11 @@ const TaskSheetTabs = ({ order }) => {
     }
 
     if (!isAutoFirst && !isPreviousSheetReviewed()) {
-      const lastSheet = sheets[sheets.length - 1];
-      if (lastSheet.status !== 'submitted') {
-        toast.warn(`Visit ${lastSheet.sheetNumber} must be submitted before creating the next visit.`);
+      const blockingSheet = getLastActiveSheet();
+      if (blockingSheet.status !== 'submitted') {
+        toast.warn(`Visit ${blockingSheet.sheetNumber} must be submitted before creating the next visit.`);
       } else {
-        toast.warn(`Visit ${lastSheet.sheetNumber} must be reviewed by the client before creating the next visit.`);
+        toast.warn(`Visit ${blockingSheet.sheetNumber} must be reviewed by the client before creating the next visit.`);
       }
       return;
     }

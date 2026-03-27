@@ -146,12 +146,12 @@ const NavigationBar = () => {
                   <span>Create Gig</span>
                 </div>
               </li>
-              {/* <li onClick={() => { navigate(`${basePath}/orders`); setMobileMenuOpen(false); }}>
+              <li onClick={() => { navigate(`${basePath}/orders`); setMobileMenuOpen(false); }}>
                 <div className="menu-item-content">
-                  <img src={receipt} alt="Orders" />
-                  <span>Orders</span>
+                  <FaReceipt className="mobile-menu-icon" />
+                  <span>All Orders</span>
                 </div>
-              </li> */}
+              </li>
               <li onClick={() => { navigate(`${basePath}/earnings`); setMobileMenuOpen(false); }}>
                 <div className="menu-item-content">
                   <FaReceipt className="mobile-menu-icon" />
@@ -222,10 +222,10 @@ const NavigationBar = () => {
           <li className="nav-link text-link" onClick={() => navigate(`${basePath}/create-gigs`)}>
             Create Gig
           </li>
-          {/* <li className="nav-link text-link" onClick={() => navigate(`${basePath}/orders`)}>
-            Orders
+          <li className="nav-link text-link" onClick={() => navigate(`${basePath}/orders`)}>
+            All Orders
           </li>
-          <li className="nav-link text-link" onClick={() => navigate(`${basePath}/earnings`)}>
+          {/* <li className="nav-link text-link" onClick={() => navigate(`${basePath}/earnings`)}>
             Earnings
           </li> */}
           <li className="nav-link text-link" onClick={() => navigate(`${basePath}/subscriptions`)}>

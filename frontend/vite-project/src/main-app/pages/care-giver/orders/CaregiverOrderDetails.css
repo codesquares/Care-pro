@@ -655,11 +655,6 @@
 .neg-slot-day { font-weight: 600; min-width: 80px; }
 .neg-slot-time { color: #555; }
 .neg-add-slot-form { display: flex; gap: 6px; flex-wrap: wrap; align-items: center; }
-.neg-btn { padding: 8px 16px; border: 1px solid #d1d5db; border-radius: 8px; background: #fff; font-size: 0.85rem; font-weight: 500; cursor: pointer; font-family: inherit; }
-.neg-btn--sm { padding: 7px 14px; font-size: 0.82rem; }
-.neg-btn--submit { background: #1f2e5a; color: #fff; border-color: #1f2e5a; font-weight: 600; }
-.neg-btn--submit:disabled { opacity: 0.5; cursor: not-allowed; }
-.neg-btn--ghost { background: transparent; color: #64748b; border-color: #e5e7eb; }
 
 
 /* ═══════════════════════════════════════════════

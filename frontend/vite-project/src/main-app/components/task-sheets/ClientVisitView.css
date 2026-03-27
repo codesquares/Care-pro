@@ -36,7 +36,209 @@
   width: 100%;
 }
 
-/* ---------- Tab bar ---------- */
+/* ---------- Summary bar ---------- */
+.cv-summary-bar {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px;
+  margin-bottom: 16px;
+  padding: 10px 14px;
+  background: #f8f9fa;
+  border-radius: 8px;
+}
+
+.cv-summary-total {
+  font-size: 15px;
+  font-weight: 700;
+  color: #333;
+  margin-right: 4px;
+}
+
+.cv-summary-tag {
+  padding: 3px 10px;
+  border-radius: 12px;
+  font-size: 12px;
+  font-weight: 600;
+}
+
+.cv-summary-tag--scheduled {
+  background: #e1f5fe;
+  color: #01579b;
+}
+
+.cv-summary-tag--active {
+  background: #fff3e0;
+  color: #e65100;
+}
+
+.cv-summary-tag--completed {
+  background: #e8f5e9;
+  color: #2e7d32;
+}
+
+.cv-summary-tag--cancelled {
+  background: #fce4ec;
+  color: #c62828;
+}
+
+/* ---------- Visit list ---------- */
+.cv-visit-list {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.cv-visit-card {
+  border: 1px solid #e0e0e0;
+  border-radius: 10px;
+  overflow: hidden;
+  background: #fff;
+  transition: border-color 0.15s;
+}
+
+.cv-visit-card--scheduled {
+  border-color: #b3e5fc;
+}
+
+.cv-visit-card--in-progress {
+  border-color: #ffe0b2;
+}
+
+.cv-visit-card--submitted {
+  border-color: #c8e6c9;
+}
+
+.cv-visit-card--cancelled {
+  border-color: #e0e0e0;
+  opacity: 0.65;
+}
+
+/* Card header */
+.cv-visit-card-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 12px 16px;
+  background: #fafafa;
+  user-select: none;
+}
+
+.cv-visit-card-header--clickable {
+  cursor: pointer;
+}
+
+.cv-visit-card-header--clickable:hover {
+  background: #f0f0f0;
+}
+
+.cv-visit-card-left {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.cv-visit-icon {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 28px;
+  height: 28px;
+  border-radius: 50%;
+  font-size: 14px;
+  font-weight: 700;
+  flex-shrink: 0;
+}
+
+.cv-visit-icon--scheduled {
+  background: #e1f5fe;
+  color: #0288d1;
+}
+
+.cv-visit-icon--in-progress {
+  background: #fff3e0;
+  color: #e65100;
+}
+
+.cv-visit-icon--submitted {
+  background: #e8f5e9;
+  color: #2e7d32;
+}
+
+.cv-visit-icon--cancelled {
+  background: #fce4ec;
+  color: #c62828;
+}
+
+.cv-visit-card-info {
+  display: flex;
+  flex-direction: column;
+}
+
+.cv-visit-card-title {
+  font-size: 14px;
+  font-weight: 600;
+  color: #333;
+  line-height: 1.2;
+}
+
+.cv-visit-card-date {
+  font-size: 12px;
+  color: #777;
+  margin-top: 1px;
+}
+
+.cv-visit-card-right {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.cv-visit-card-status {
+  font-size: 12px;
+  font-weight: 600;
+  padding: 3px 10px;
+  border-radius: 12px;
+}
+
+.cv-visit-card-status--scheduled {
+  background: #e1f5fe;
+  color: #01579b;
+}
+
+.cv-visit-card-status--in-progress {
+  background: #fff3e0;
+  color: #e65100;
+}
+
+.cv-visit-card-status--submitted {
+  background: #e8f5e9;
+  color: #2e7d32;
+}
+
+.cv-visit-card-status--cancelled {
+  background: #fce4ec;
+  color: #c62828;
+}
+
+.cv-visit-chevron {
+  font-size: 18px;
+  color: #999;
+  transition: transform 0.2s;
+  display: inline-block;
+}
+
+.cv-visit-chevron--open {
+  transform: rotate(90deg);
+}
+
+/* Card body (expanded content) */
+.cv-visit-card-body {
+  padding: 0 16px 16px;
+  border-top: 1px solid #f0f0f0;
+}
+
+/* ---------- Tab bar (legacy, kept for backward compat) ---------- */
 .cv-tab-bar {
   display: flex;
   flex-wrap: wrap;
@@ -847,4 +1049,82 @@
   color: #2e7d32;
   margin-bottom: 10px;
   line-height: 1.4;
+}
+
+/* ---------- Reschedule ---------- */
+.cv-reschedule-btn {
+  display: inline-block;
+  margin-top: 10px;
+  padding: 8px 16px;
+  background: #0288d1;
+  color: #fff;
+  border: none;
+  border-radius: 6px;
+  font-size: 13px;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.cv-reschedule-btn:hover {
+  background: #0277bd;
+}
+
+.cv-reschedule-form {
+  margin-top: 12px;
+  padding: 14px;
+  background: #f5faff;
+  border: 1px solid #b3e5fc;
+  border-radius: 8px;
+}
+
+.cv-reschedule-label {
+  display: block;
+  font-size: 13px;
+  font-weight: 600;
+  color: #333;
+  margin-bottom: 6px;
+}
+
+.cv-reschedule-date-input {
+  display: block;
+  width: 100%;
+  padding: 8px 10px;
+  border: 1px solid #ccc;
+  border-radius: 6px;
+  font-size: 14px;
+  font-family: inherit;
+  margin-bottom: 10px;
+  box-sizing: border-box;
+}
+
+.cv-reschedule-reason-input {
+  width: 100%;
+  padding: 8px 12px;
+  border: 1px solid #ddd;
+  border-radius: 6px;
+  font-size: 14px;
+  resize: vertical;
+  margin-bottom: 12px;
+  font-family: inherit;
+  box-sizing: border-box;
+}
+
+.cv-reschedule-confirm-btn {
+  padding: 8px 18px;
+  background: #0288d1;
+  color: #fff;
+  border: none;
+  border-radius: 6px;
+  font-size: 14px;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.cv-reschedule-confirm-btn:hover {
+  background: #0277bd;
+}
+
+.cv-reschedule-confirm-btn:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
 }

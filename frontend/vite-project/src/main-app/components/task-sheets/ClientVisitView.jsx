@@ -4,6 +4,7 @@ import ObservationReportService from "../../services/observationReportService";
 import IncidentReportService from "../../services/incidentReportService";
 import DisputeService from "../../services/disputeService";
 import VisitCancellationService from "../../services/visitCancellationService";
+import TaskSheetService from "../../services/taskSheetService";
 import ClientProposeTasksSection from "./ClientProposeTasksSection";
 import "./ClientVisitView.css";
 
@@ -32,6 +33,12 @@ const ClientVisitView = ({ sheet, orderId, onVisitReviewed, onSheetUpdated }) =>
   const [showCancelConfirm, setShowCancelConfirm] = useState(false);
   const [cancelReason, setCancelReason] = useState("");
   const [cancelLoading, setCancelLoading] = useState(false);
+
+  // Reschedule state
+  const [showReschedule, setShowReschedule] = useState(false);
+  const [rescheduleDate, setRescheduleDate] = useState("");
+  const [rescheduleReason, setRescheduleReason] = useState("");
+  const [rescheduleLoading, setRescheduleLoading] = useState(false);
 
   const tasks = sheet.tasks || [];
   const completedCount = tasks.filter((t) => t.completed).length;
@@ -70,6 +77,36 @@ const ClientVisitView = ({ sheet, orderId, onVisitReviewed, onSheetUpdated }) =>
       toast.error(result.error || "Failed to cancel visit.");
     }
     setCancelLoading(false);
+  };
+
+  const handleRescheduleVisit = async () => {
+    if (!rescheduleDate) {
+      toast.error("Please select a new date.");
+      return;
+    }
+    setRescheduleLoading(true);
+    const result = await TaskSheetService.rescheduleSheet(
+      sheet.id,
+      `${rescheduleDate}T00:00:00Z`,
+      rescheduleReason.trim() || undefined
+    );
+    if (result.success) {
+      const msg = result.data.message || "Visit rescheduled successfully.";
+      toast.success(msg);
+      setShowReschedule(false);
+      setRescheduleDate("");
+      setRescheduleReason("");
+      // Update local state with new date
+      if (onSheetUpdated) {
+        onSheetUpdated({
+          ...sheet,
+          scheduledDate: result.data.newDate || `${rescheduleDate}T00:00:00`,
+        });
+      }
+    } else {
+      toast.error(result.error || "Failed to reschedule visit.");
+    }
+    setRescheduleLoading(false);
   };
 
   const handleApproveVisit = async () => {
@@ -216,11 +253,54 @@ const ClientVisitView = ({ sheet, orderId, onVisitReviewed, onSheetUpdated }) =>
         </div>
       )}
 
-      {/* Scheduled sheet info */}
+      {/* Scheduled sheet info + reschedule */}
       {isScheduled && (
         <div className="cv-scheduled-info">
           <p>This visit has not started yet. The caregiver will activate it when ready.</p>
-          <p>You may cancel this visit using the button below.</p>
+          <p>You can cancel or reschedule this visit below.</p>
+
+          {!showReschedule ? (
+            <button
+              className="cv-reschedule-btn"
+              onClick={() => setShowReschedule(true)}
+            >
+              📅 Reschedule Visit
+            </button>
+          ) : (
+            <div className="cv-reschedule-form">
+              <label className="cv-reschedule-label">New date</label>
+              <input
+                type="date"
+                className="cv-reschedule-date-input"
+                value={rescheduleDate}
+                onChange={(e) => setRescheduleDate(e.target.value)}
+                min={new Date().toISOString().split("T")[0]}
+              />
+              <textarea
+                className="cv-reschedule-reason-input"
+                placeholder="Reason for rescheduling (optional)"
+                value={rescheduleReason}
+                onChange={(e) => setRescheduleReason(e.target.value)}
+                rows="2"
+              />
+              <div className="cv-review-buttons">
+                <button
+                  className="cv-reschedule-confirm-btn"
+                  onClick={handleRescheduleVisit}
+                  disabled={rescheduleLoading || !rescheduleDate}
+                >
+                  {rescheduleLoading ? "Rescheduling..." : "Confirm Reschedule"}
+                </button>
+                <button
+                  className="cv-review-cancel-btn"
+                  onClick={() => { setShowReschedule(false); setRescheduleDate(""); setRescheduleReason(""); }}
+                  disabled={rescheduleLoading}
+                >
+                  Cancel
+                </button>
+              </div>
+            </div>
+          )}
         </div>
       )}
 

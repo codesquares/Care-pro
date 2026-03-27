@@ -199,6 +199,9 @@ const TaskSheetPage = ({ sheet, orderId, onSheetUpdated, onActivateSheet, activa
       {isCancelled && (
         <div className="ts-order-completed-banner" style={{ background: '#fff3e0', color: '#e65100' }}>
           🚫 This visit has been cancelled by the client.
+          <p style={{ fontSize: '13px', marginTop: '6px', fontWeight: 400 }}>
+            No further action is needed. You can move on to the next scheduled visit.
+          </p>
         </div>
       )}
 

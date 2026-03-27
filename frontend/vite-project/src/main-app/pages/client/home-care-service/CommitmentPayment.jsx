@@ -69,7 +69,17 @@ const CommitmentPayment = () => {
       localStorage.setItem('commitmentTxRef', data.transactionReference);
       localStorage.setItem('commitmentGigId', id);
       localStorage.setItem('commitmentCaregiverName', service.caregiverName || '');
-      window.location.href = data.paymentLink;
+
+      // Open Flutterwave in a new tab and navigate to the verification page.
+      // This avoids relying on Flutterwave's auto-redirect which can leave
+      // the user stuck on Flutterwave's site after paying.
+      const paymentWindow = window.open(data.paymentLink, '_blank');
+      if (!paymentWindow) {
+        // Popup blocked — fall back to same-tab redirect
+        window.location.href = data.paymentLink;
+        return;
+      }
+      navigate('/app/client/commitment-success');
     } else {
       setError('No payment link returned. Please try again.');
     }

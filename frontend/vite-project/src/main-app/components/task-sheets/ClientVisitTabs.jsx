@@ -4,15 +4,16 @@ import ClientVisitView from "./ClientVisitView";
 import "./ClientVisitView.css";
 
 /**
- * ClientVisitTabs — read-only visit tab navigation for the client side.
- * Fetches all task sheets for the order and presents them in tabs.
+ * ClientVisitTabs — displays ALL visits for a client order in a scrollable list.
+ * Scheduled visits show as compact cards with cancel/reschedule actions.
+ * Active/submitted visits expand to show the full ClientVisitView.
  *
  * Props:
  *  - order: the full order object (needs id, paymentOption, frequencyPerWeek)
  */
 const ClientVisitTabs = ({ order, onVisitReviewed }) => {
   const [sheets, setSheets] = useState([]);
-  const [activeIndex, setActiveIndex] = useState(0);
+  const [expandedId, setExpandedId] = useState(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   const fetched = useRef(false);
@@ -31,8 +32,6 @@ const ClientVisitTabs = ({ order, onVisitReviewed }) => {
       );
       setSheets(sorted);
     } else if (result.orderCompleted) {
-      // Backend blocks writes for completed orders but we just need to read —
-      // treat as empty until backend allows GET for completed orders
       setSheets([]);
     } else {
       setError(result.error);
@@ -45,6 +44,32 @@ const ClientVisitTabs = ({ order, onVisitReviewed }) => {
     fetched.current = true;
     fetchSheets();
   }, [fetchSheets]);
+
+  const handleSheetUpdated = (updatedSheet) => {
+    if (updatedSheet) {
+      setSheets((prev) =>
+        prev.map((s) => (s.id === updatedSheet.id ? { ...s, ...updatedSheet } : s))
+      );
+    }
+  };
+
+  const handleVisitReviewed = (updatedSheet) => {
+    handleSheetUpdated(updatedSheet);
+    if (onVisitReviewed) onVisitReviewed();
+  };
+
+  const toggleExpand = (sheetId) => {
+    setExpandedId((prev) => (prev === sheetId ? null : sheetId));
+  };
+
+  const formatDate = (dateStr) => {
+    if (!dateStr) return "—";
+    return new Date(dateStr).toLocaleDateString(undefined, {
+      weekday: "short",
+      month: "short",
+      day: "numeric",
+    });
+  };
 
   if (loading) {
     return (
@@ -73,93 +98,110 @@ const ClientVisitTabs = ({ order, onVisitReviewed }) => {
     );
   }
 
-  const activeSheet = sheets[activeIndex] || null;
+  const scheduledCount = sheets.filter((s) => s.status === "scheduled").length;
+  const completedCount = sheets.filter((s) => s.status === "submitted").length;
   const cancelledCount = sheets.filter((s) => s.status === "cancelled").length;
+  const inProgressCount = sheets.filter((s) => s.status === "in-progress").length;
 
-  const formatScheduledDate = (dateStr) => {
-    if (!dateStr) return "";
-    const d = new Date(dateStr);
-    return d.toLocaleDateString(undefined, { month: "short", day: "numeric" });
+  const statusIcon = (status) => {
+    switch (status) {
+      case "scheduled": return "○";
+      case "in-progress": return "◌";
+      case "submitted": return "✓";
+      case "cancelled": return "✕";
+      default: return "·";
+    }
+  };
+
+  const statusLabel = (status) => {
+    switch (status) {
+      case "scheduled": return "Scheduled";
+      case "in-progress": return "In Progress";
+      case "submitted": return "Completed";
+      case "cancelled": return "Cancelled";
+      default: return status;
+    }
   };
 
   return (
     <div className="cv-container">
-      {/* Visit tab bar */}
-      {sheets.length > 1 && (
-        <div className="cv-tab-bar">
-          {sheets.map((sheet, idx) => (
-            <button
-              key={sheet.id}
-              className={`cv-tab ${idx === activeIndex ? "cv-tab--active" : ""} ${
-                sheet.status === "submitted" ? "cv-tab--submitted" : ""
-              } ${sheet.status === "cancelled" ? "cv-tab--cancelled" : ""} ${
-                sheet.status === "scheduled" ? "cv-tab--scheduled" : ""
-              }`}
-              onClick={() => setActiveIndex(idx)}
-            >
-              <span className="cv-tab-label">Visit {sheet.sheetNumber}</span>
-              {sheet.scheduledDate && (
-                <span className="cv-tab-date">{formatScheduledDate(sheet.scheduledDate)}</span>
-              )}
-              {sheet.status === "submitted" && (
-                <span className="cv-tab-badge">✓</span>
-              )}
-              {sheet.status === "cancelled" && (
-                <span className="cv-tab-badge cv-tab-badge--cancelled">✕</span>
-              )}
-              {sheet.status === "scheduled" && (
-                <span className="cv-tab-badge cv-tab-badge--scheduled">○</span>
-              )}
-              {(sheet.observationReportCount > 0 ||
-                sheet.incidentReportCount > 0) && (
-                <span
-                  className="cv-tab-report-dot"
-                  title={`${sheet.observationReportCount || 0} observations, ${
-                    sheet.incidentReportCount || 0
-                  } incidents`}
-                />
-              )}
-            </button>
-          ))}
-        </div>
-      )}
-
-      {/* Visit count info */}
-      <div className="cv-info">
-        <span>
-          {sheets.length} visit{sheets.length !== 1 ? "s" : ""}
-          {sheets.filter((s) => s.status === "submitted").length > 0 &&
-            ` · ${sheets.filter((s) => s.status === "submitted").length} completed`}
-          {cancelledCount > 0 && ` · ${cancelledCount} cancelled`}
-          {sheets.filter((s) => s.status === "scheduled").length > 0 &&
-            ` · ${sheets.filter((s) => s.status === "scheduled").length} upcoming`}
-        </span>
+      {/* Summary bar */}
+      <div className="cv-summary-bar">
+        <span className="cv-summary-total">{sheets.length} visit{sheets.length !== 1 ? "s" : ""}</span>
+        {scheduledCount > 0 && <span className="cv-summary-tag cv-summary-tag--scheduled">{scheduledCount} upcoming</span>}
+        {inProgressCount > 0 && <span className="cv-summary-tag cv-summary-tag--active">{inProgressCount} active</span>}
+        {completedCount > 0 && <span className="cv-summary-tag cv-summary-tag--completed">{completedCount} completed</span>}
+        {cancelledCount > 0 && <span className="cv-summary-tag cv-summary-tag--cancelled">{cancelledCount} cancelled</span>}
       </div>
 
-      {/* Active visit content */}
-      {activeSheet && (
-        <ClientVisitView
-          key={activeSheet.id}
-          sheet={activeSheet}
-          orderId={orderId}
-          onVisitReviewed={(updatedSheet) => {
-            // Update the local sheet with new review status
-            if (updatedSheet) {
-              setSheets((prev) =>
-                prev.map((s) => (s.id === updatedSheet.id ? { ...s, ...updatedSheet } : s))
-              );
-            }
-            if (onVisitReviewed) onVisitReviewed();
-          }}
-          onSheetUpdated={(updatedSheet) => {
-            if (updatedSheet) {
-              setSheets((prev) =>
-                prev.map((s) => (s.id === updatedSheet.id ? { ...s, ...updatedSheet } : s))
-              );
-            }
-          }}
-        />
-      )}
+      {/* All visits list */}
+      <div className="cv-visit-list">
+        {sheets.map((sheet) => {
+          const isExpanded = expandedId === sheet.id;
+          const isScheduled = sheet.status === "scheduled";
+          const isCancelled = sheet.status === "cancelled";
+          const needsDetail = !isScheduled; // in-progress, submitted, cancelled have detail views
+
+          return (
+            <div
+              key={sheet.id}
+              className={`cv-visit-card cv-visit-card--${sheet.status}`}
+            >
+              {/* Card header — always visible */}
+              <div
+                className={`cv-visit-card-header ${needsDetail ? "cv-visit-card-header--clickable" : ""}`}
+                onClick={needsDetail ? () => toggleExpand(sheet.id) : undefined}
+              >
+                <div className="cv-visit-card-left">
+                  <span className={`cv-visit-icon cv-visit-icon--${sheet.status}`}>
+                    {statusIcon(sheet.status)}
+                  </span>
+                  <div className="cv-visit-card-info">
+                    <span className="cv-visit-card-title">Visit {sheet.sheetNumber}</span>
+                    <span className="cv-visit-card-date">{formatDate(sheet.scheduledDate)}</span>
+                  </div>
+                </div>
+                <div className="cv-visit-card-right">
+                  <span className={`cv-visit-card-status cv-visit-card-status--${sheet.status}`}>
+                    {statusLabel(sheet.status)}
+                  </span>
+                  {needsDetail && (
+                    <span className={`cv-visit-chevron ${isExpanded ? "cv-visit-chevron--open" : ""}`}>
+                      ›
+                    </span>
+                  )}
+                </div>
+              </div>
+
+              {/* Scheduled visits: inline actions (always visible, no expand needed) */}
+              {isScheduled && !isCancelled && (
+                <div className="cv-visit-card-body">
+                  <ClientVisitView
+                    key={sheet.id}
+                    sheet={sheet}
+                    orderId={orderId}
+                    onVisitReviewed={handleVisitReviewed}
+                    onSheetUpdated={handleSheetUpdated}
+                  />
+                </div>
+              )}
+
+              {/* Non-scheduled visits: expandable detail */}
+              {needsDetail && isExpanded && (
+                <div className="cv-visit-card-body">
+                  <ClientVisitView
+                    key={sheet.id}
+                    sheet={sheet}
+                    orderId={orderId}
+                    onVisitReviewed={handleVisitReviewed}
+                    onSheetUpdated={handleSheetUpdated}
+                  />
+                </div>
+              )}
+            </div>
+          );
+        })}
+      </div>
     </div>
   );
 };
