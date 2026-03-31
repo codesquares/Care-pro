@@ -1606,37 +1606,52 @@ const MyOrders = () => {
                         ) : modalType === "cancel" ? (
                             <>
                                 <h3>Cancel Order</h3>
-                                <p style={{ fontSize: '0.9rem', color: '#d32f2f', marginBottom: '12px' }}>
+                                <p style={{ fontSize: '0.9rem', color: '#d32f2f', marginBottom: '8px' }}>
                                     Are you sure you want to cancel this order? This action cannot be undone.
                                 </p>
+                                <p style={{ fontSize: '0.82rem', color: '#666', marginBottom: '12px' }}>
+                                    Your booking commitment fee will be invalidated and you'll need to pay it again to re-engage this caregiver. Any undelivered visit amount will be credited to your wallet.
+                                </p>
+                                <div style={{ marginBottom: '12px' }}>
+                                    <label style={{ fontSize: '0.85rem', fontWeight: 600, display: 'block', marginBottom: '6px' }}>
+                                        Reason for cancellation (optional):
+                                    </label>
+                                    <textarea
+                                        placeholder="Tell us why you're cancelling this order..."
+                                        value={reason}
+                                        onChange={(e) => setReason(e.target.value)}
+                                        rows="3"
+                                        style={{ width: '100%', padding: '8px', borderRadius: '6px', border: '1px solid #ddd', fontSize: '0.85rem' }}
+                                    />
+                                </div>
                                 <div className="modal-actions">
                                     <button
                                         className="reject-btn"
                                         onClick={async () => {
                                             setIsSubmitting(true);
                                             try {
-                                                const token = localStorage.getItem('authToken');
-                                                await axios.put(
-                                                    `${config.BASE_URL}/ClientOrders/UpdateClientOrderStatus/orderId?orderId=${orderId}`,
-                                                    { clientOrderStatus: "Cancelled", userId },
-                                                    { headers: { 'Authorization': `Bearer ${token}` } }
-                                                );
-                                                toast.success("Order cancelled successfully.");
-                                                setIsModalOpen(false);
-                                                // Refresh order data
-                                                try {
-                                                    const response = await axios.get(
-                                                        `${config.BASE_URL}/ClientOrders/orderId?orderId=${orderId}`,
-                                                        { headers: { 'Authorization': `Bearer ${token}` } }
-                                                    );
-                                                    setOrders([response.data]);
-                                                } catch (refreshErr) {
-                                                    console.error("Failed to refresh order data:", refreshErr);
+                                                const result = await ClientOrderService.cancelOrder(orderId, reason.trim() || undefined);
+                                                if (result.success) {
+                                                    toast.success(result.message || "Order cancelled successfully.");
+                                                    setIsModalOpen(false);
+                                                    setReason("");
+                                                    // Refresh order data
+                                                    try {
+                                                        const token = localStorage.getItem('authToken');
+                                                        const response = await axios.get(
+                                                            `${config.BASE_URL}/ClientOrders/orderId?orderId=${orderId}`,
+                                                            { headers: { 'Authorization': `Bearer ${token}` } }
+                                                        );
+                                                        setOrders([response.data]);
+                                                    } catch (refreshErr) {
+                                                        console.error("Failed to refresh order data:", refreshErr);
+                                                    }
+                                                } else {
+                                                    toast.error(result.error || "Failed to cancel order. Please try again.");
                                                 }
                                             } catch (err) {
                                                 console.error("Failed to cancel order:", err);
-                                                const errorMessage = err.response?.data?.message || err.response?.data || "Failed to cancel order. Please try again.";
-                                                toast.error(typeof errorMessage === 'string' ? errorMessage : "Failed to cancel order. Please try again.");
+                                                toast.error("Failed to cancel order. Please try again.");
                                             } finally {
                                                 setIsSubmitting(false);
                                             }
@@ -1956,6 +1971,25 @@ const MyOrders = () => {
                         </div>
 
                         <label className="neg-start-label">Proposed Schedule</label>
+                        {/* Schedule guide banner */}
+                        {(() => {
+                            const payOpt = (order?.paymentOption || order?.serviceType || '').toLowerCase();
+                            const reqDays = payOpt === 'one-time' ? 1
+                                : (order?.frequencyPerWeek || order?.visitsPerWeek || order?.selectedPackage?.visitsPerWeek || order?.packageDetails?.visitsPerWeek || 1);
+                            const uniqueDays = new Set(negInitSchedule.map(s => s.dayOfWeek)).size;
+                            const done = uniqueDays >= reqDays;
+                            return reqDays > 0 ? (
+                                <div className={`neg-schedule-guide ${done ? 'neg-schedule-guide--done' : ''}`}>
+                                    <div className="neg-schedule-guide-text">
+                                        <strong>\uD83D\uDCC5 {reqDays} {reqDays === 1 ? 'day' : 'days'} per week required</strong>
+                                        <span>Your contract is for {reqDays} visit{reqDays > 1 ? 's' : ''}/week. Add a time slot for each day.</span>
+                                    </div>
+                                    <span className={`neg-schedule-counter ${done ? 'neg-schedule-counter--done' : 'neg-schedule-counter--pending'}`}>
+                                        {uniqueDays} / {reqDays}
+                                    </span>
+                                </div>
+                            ) : null;
+                        })()}
                         <div className="neg-slot-row">
                             <select value={negInitSlotDay} onChange={(e) => setNegInitSlotDay(e.target.value)}>
                                 {['Monday','Tuesday','Wednesday','Thursday','Friday','Saturday','Sunday'].map(d => (
@@ -1967,6 +2001,10 @@ const MyOrders = () => {
                             <button onClick={() => {
                                 if (negInitSlotStart >= negInitSlotEnd) {
                                     toast.error('End time must be after start time.');
+                                    return;
+                                }
+                                if (negInitSchedule.some(s => s.dayOfWeek === negInitSlotDay)) {
+                                    toast.error(`You already have a slot for ${negInitSlotDay}. Remove it first to change the time.`);
                                     return;
                                 }
                                 setNegInitSchedule(prev => [...prev, { dayOfWeek: negInitSlotDay, startTime: negInitSlotStart, endTime: negInitSlotEnd }]);
@@ -2066,7 +2104,21 @@ const MyOrders = () => {
                         />
 
                         <div className="neg-start-modal-actions">
-                            <button className="neg-btn--submit" onClick={handleStartNegotiation} disabled={startNegLoading}>
+                            <button
+                                className="neg-btn--submit"
+                                onClick={() => {
+                                    const payOpt = (order?.paymentOption || order?.serviceType || '').toLowerCase();
+                                    const reqDays = payOpt === 'one-time' ? 1
+                                        : (order?.frequencyPerWeek || order?.visitsPerWeek || order?.selectedPackage?.visitsPerWeek || order?.packageDetails?.visitsPerWeek || 1);
+                                    const uniqueDays = new Set(negInitSchedule.map(s => s.dayOfWeek)).size;
+                                    if (uniqueDays < reqDays) {
+                                        toast.error(`Please add schedule slots for ${reqDays} day${reqDays > 1 ? 's' : ''} before starting. You have ${uniqueDays} of ${reqDays}.`);
+                                        return;
+                                    }
+                                    handleStartNegotiation();
+                                }}
+                                disabled={startNegLoading}
+                            >
                                 {startNegLoading ? 'Starting…' : '🤝 Start Negotiation'}
                             </button>
                             <button className="neg-start-modal-cancel" onClick={() => setShowStartNegModal(false)}>Cancel</button>

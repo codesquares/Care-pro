@@ -723,7 +723,7 @@ const ProfileHeader = () => {
                 value={editedLocation}
                 onChange={setEditedLocation}
                 onValidation={setAddressValidation}
-                placeholder="Enter full address (e.g., 123 Main St, Los Angeles, CA 90210)"
+                placeholder="Enter area or address (e.g., Lekki Phase 1, Lagos)"
                 className="caregiver-location-input"
                 showValidationIcon={true}
                 autoValidate={true}

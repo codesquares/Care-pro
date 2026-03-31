@@ -57,6 +57,12 @@ const TYPE_MAP = {
   'orderpayment':                'OrderPayment',
   'refund_processed':            'RefundProcessed',
   'refundprocessed':             'RefundProcessed',
+  'refund_requested':            'RefundRequested',
+  'refundrequested':             'RefundRequested',
+  'refund_approved':             'RefundApproved',
+  'refundapproved':              'RefundApproved',
+  'refund_rejected':             'RefundRejected',
+  'refundrejected':              'RefundRejected',
   'earnings_added':              'EarningsAdded',
   'earningsadded':               'EarningsAdded',
 
@@ -208,6 +214,7 @@ const KNOWN_CANONICAL = new Set([
   'ContractSent', 'ContractApproved', 'ContractRejected', 'ContractRevisionRequested',
   'NewMessage', 'Payment', 'PaymentReceived', 'PaymentConfirmed', 'OrderPayment',
   'RefundProcessed', 'EarningsAdded',
+  'RefundRequested', 'RefundApproved', 'RefundRejected',
   'OrderNotification', 'OrderConfirmation', 'OrderCancelled', 'BookingConfirmed',
   'OrderCompleted', 'OrderDisputed',
   'NewReview', 'NewGig', 'WithdrawalRequest', 'VerificationUpdate',
@@ -338,10 +345,17 @@ export const getNotificationRoute = (notification, userRole) => {
     case 'PaymentReceived':
     case 'PaymentConfirmed':
     case 'OrderPayment':
-    case 'RefundProcessed':
       if (isClient) return `/app/client/payment`;
       if (isCaregiver) return `/app/caregiver/earnings`;
       if (isAdmin) return `/app/admin/orders`;
+      return null;
+
+    case 'RefundProcessed':
+    case 'RefundRequested':
+    case 'RefundApproved':
+    case 'RefundRejected':
+      if (isClient) return `/app/client/wallet`;
+      if (isAdmin) return `/app/admin/refunds`;
       return null;
 
     // ── Earnings notifications (caregiver) ───────────────
@@ -558,9 +572,13 @@ export const getNotificationActionLabel = (rawType) => {
     case 'PaymentReceived':
     case 'PaymentConfirmed':
     case 'OrderPayment':
-    case 'RefundProcessed':
     case 'EarningsAdded':
       return 'View Payment';
+    case 'RefundRequested':
+    case 'RefundApproved':
+    case 'RefundRejected':
+    case 'RefundProcessed':
+      return 'View Refund';
     case 'OrderNotification':
     case 'OrderConfirmation':
     case 'BookingConfirmed':
@@ -703,6 +721,12 @@ export const getNotificationTypeIcon = (rawType) => {
       return '❗';
     case 'CommitmentConfirmed':
       return '🔓';
+    case 'RefundRequested':
+      return '💰';
+    case 'RefundApproved':
+      return '✅';
+    case 'RefundRejected':
+      return '❌';
     case 'ContractPendingClientApproval':
       return '📋';
     case 'ContractRevised':

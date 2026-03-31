@@ -1,23 +1,63 @@
 .cl-wallet-page {
-  padding: 20px;
-  max-width: 600px;
+  padding: 20px 24px;
+  max-width: 100%;
   margin: 0 auto;
+  background-color: #f5f5f5;
+  min-height: 100vh;
+  font-family: Arial, sans-serif;
 }
 
+/* ── Hero Banner ── */
+.cl-wallet__hero {
+  background: linear-gradient(135deg, #014d64 0%, #02445f 40%, #1a6b5a 100%);
+  border: 2px dashed rgba(255, 255, 255, 0.35);
+  border-radius: 16px;
+  padding: 32px 48px 28px;
+  margin: 0 0 28px;
+  width: 100%;
+  box-sizing: border-box;
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 24px;
+  position: relative;
+}
+
+.cl-wallet__hero-left h1 {
+  color: #fff;
+  font-size: 1.75rem;
+  font-weight: 800;
+  margin: 0;
+  line-height: 1.2;
+}
+
+.cl-wallet__hero-left .cl-wallet__hero-icon {
+  font-size: 1.5rem;
+  margin-right: 8px;
+}
+
+.cl-wallet__hero-right {
+  color: rgba(255, 255, 255, 0.8);
+  font-size: 0.88rem;
+  text-align: right;
+  max-width: 280px;
+  line-height: 1.5;
+}
+
+/* ── Main content wrapper ── */
 .cl-wallet-container {
   background: #fff;
   border-radius: 12px;
-  padding: 24px;
-  box-shadow: 0 1px 4px rgba(0, 0, 0, 0.08);
+  padding: 28px 24px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.07);
+  max-width: 1100px;
+  width: 100%;
+  box-sizing: border-box;
+  margin: 0 auto 32px;
 }
 
 .cl-wallet__title {
-  font-size: 1.4rem;
-  font-weight: 700;
-  color: #333;
-  margin-bottom: 20px;
-  display: flex;
-  align-items: center;
+  display: none; /* hidden — title is now in hero */
 }
 
 .cl-wallet__loading,
@@ -32,68 +72,342 @@
   color: #e53935;
 }
 
-/* Balance card */
+/* ── Balance card ── */
 .cl-wallet__balance-card {
-  background: linear-gradient(135deg, #1a73e8 0%, #1565c0 100%);
+  background: linear-gradient(135deg, #014d64 0%, #02445f 50%, #1a6b5a 100%);
   color: #fff;
-  border-radius: 12px;
-  padding: 24px;
+  border-radius: 14px;
+  padding: 28px 24px;
   text-align: center;
-  margin-bottom: 20px;
+  margin-bottom: 24px;
+  position: relative;
+  overflow: hidden;
+}
+
+.cl-wallet__balance-card::before {
+  content: '';
+  position: absolute;
+  top: -40px;
+  right: -40px;
+  width: 120px;
+  height: 120px;
+  border-radius: 50%;
+  background: rgba(255, 255, 255, 0.06);
 }
 
 .cl-wallet__balance-label {
   display: block;
   font-size: 0.85rem;
-  opacity: 0.85;
-  margin-bottom: 4px;
+  opacity: 0.8;
+  margin-bottom: 6px;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  font-weight: 600;
 }
 
 .cl-wallet__balance-value {
   display: block;
-  font-size: 2rem;
-  font-weight: 700;
-  margin-bottom: 8px;
+  font-size: 2.2rem;
+  font-weight: 800;
+  margin-bottom: 10px;
 }
 
 .cl-wallet__balance-hint {
   font-size: 0.8rem;
-  opacity: 0.75;
+  opacity: 0.7;
   margin: 0;
+  line-height: 1.4;
 }
 
-/* Stats row */
+/* ── Stats row ── */
 .cl-wallet__stats {
   display: flex;
-  gap: 12px;
+  gap: 16px;
+  margin-bottom: 4px;
 }
 
 .cl-wallet__stat {
   flex: 1;
-  background: #f5f7fa;
-  border-radius: 8px;
-  padding: 16px;
+  background: #f8fafb;
+  border-radius: 10px;
+  padding: 18px 16px;
   text-align: center;
+  border: 1px solid #e8ecef;
+  transition: box-shadow 0.2s;
+}
+
+.cl-wallet__stat:hover {
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.06);
 }
 
 .cl-wallet__stat-label {
   display: block;
-  font-size: 0.8rem;
-  color: #888;
-  margin-bottom: 4px;
+  font-size: 0.78rem;
+  color: #777;
+  margin-bottom: 6px;
+  text-transform: uppercase;
+  letter-spacing: 0.3px;
+  font-weight: 600;
 }
 
 .cl-wallet__stat-value {
   display: block;
-  font-size: 1.2rem;
-  font-weight: 600;
-  color: #333;
+  font-size: 1.25rem;
+  font-weight: 700;
+  color: #1f2e5a;
 }
 
 .cl-wallet__updated {
   text-align: center;
   font-size: 0.75rem;
-  color: #aaa;
-  margin-top: 16px;
+  color: #999;
+  margin-top: 18px;
   margin-bottom: 0;
+}
+
+/* ── Refund request section ── */
+.cl-wallet__refund-section {
+  margin-top: 28px;
+  padding-top: 24px;
+  border-top: 1.5px solid #eef0f3;
+}
+
+.cl-wallet__refund-btn {
+  width: 100%;
+  padding: 14px;
+  background: linear-gradient(135deg, #014d64 0%, #1a6b5a 100%);
+  color: #fff;
+  border: none;
+  border-radius: 10px;
+  font-size: 0.95rem;
+  font-weight: 700;
+  cursor: pointer;
+  transition: opacity 0.2s, transform 0.15s;
+  letter-spacing: 0.2px;
+}
+
+.cl-wallet__refund-btn:hover:not(:disabled) {
+  opacity: 0.92;
+  transform: translateY(-1px);
+}
+
+.cl-wallet__refund-btn:disabled {
+  background: #94a3b8;
+  cursor: not-allowed;
+  transform: none;
+}
+
+.cl-wallet__refund-success {
+  background: #ecfdf5;
+  color: #059669;
+  padding: 10px 14px;
+  border-radius: 8px;
+  font-size: 0.85rem;
+  margin-bottom: 12px;
+}
+
+.cl-wallet__refund-error {
+  color: #e53935;
+  font-size: 0.82rem;
+  margin-bottom: 8px;
+}
+
+/* Refund form */
+.cl-wallet__refund-form {
+  background: #f8fafb;
+  border-radius: 12px;
+  padding: 22px;
+  border: 1px solid #e8ecef;
+}
+
+.cl-wallet__refund-form-title {
+  font-size: 1.05rem;
+  font-weight: 700;
+  margin: 0 0 16px;
+  color: #1f2e5a;
+}
+
+.cl-wallet__refund-field {
+  margin-bottom: 12px;
+}
+
+.cl-wallet__refund-field label {
+  display: block;
+  font-size: 0.82rem;
+  font-weight: 600;
+  color: #555;
+  margin-bottom: 4px;
+}
+
+.cl-wallet__refund-field input,
+.cl-wallet__refund-field textarea {
+  width: 100%;
+  padding: 11px 12px;
+  border: 1.5px solid #d4d8de;
+  border-radius: 8px;
+  font-size: 0.9rem;
+  box-sizing: border-box;
+  transition: border-color 0.2s;
+  background: #fff;
+}
+
+.cl-wallet__refund-field input:focus,
+.cl-wallet__refund-field textarea:focus {
+  outline: none;
+  border-color: #02445f;
+}
+
+.cl-wallet__refund-field textarea {
+  resize: vertical;
+}
+
+.cl-wallet__refund-actions {
+  display: flex;
+  gap: 10px;
+  margin-top: 8px;
+}
+
+.cl-wallet__refund-submit {
+  flex: 1;
+  padding: 12px;
+  background: linear-gradient(135deg, #014d64 0%, #1a6b5a 100%);
+  color: #fff;
+  border: none;
+  border-radius: 8px;
+  font-weight: 700;
+  cursor: pointer;
+  transition: opacity 0.2s;
+}
+
+.cl-wallet__refund-submit:hover:not(:disabled) {
+  opacity: 0.9;
+}
+
+.cl-wallet__refund-submit:disabled {
+  background: #94a3b8;
+  cursor: not-allowed;
+}
+
+.cl-wallet__refund-cancel {
+  flex: 1;
+  padding: 12px;
+  background: #fff;
+  color: #d32f2f;
+  border: 1.5px solid #d32f2f;
+  border-radius: 8px;
+  font-weight: 700;
+  cursor: pointer;
+  transition: background 0.2s;
+}
+
+.cl-wallet__refund-cancel:hover {
+  background: #fef2f2;
+}
+
+/* ── Refund history ── */
+.cl-wallet__refund-history {
+  margin-top: 28px;
+  padding-top: 24px;
+  border-top: 1.5px solid #eef0f3;
+}
+
+.cl-wallet__refund-history-title {
+  font-size: 1.05rem;
+  font-weight: 700;
+  margin: 0 0 14px;
+  color: #1f2e5a;
+}
+
+.cl-wallet__refund-list {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.cl-wallet__refund-item {
+  background: #f8fafb;
+  border-radius: 10px;
+  padding: 16px;
+  border: 1px solid #e8ecef;
+  transition: box-shadow 0.2s;
+}
+
+.cl-wallet__refund-item:hover {
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.06);
+}
+
+.cl-wallet__refund-item-top {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 6px;
+}
+
+.cl-wallet__refund-item-amount {
+  font-weight: 700;
+  font-size: 1.05rem;
+  color: #1f2e5a;
+}
+
+.cl-wallet__refund-status-badge {
+  color: #fff;
+  font-size: 0.7rem;
+  font-weight: 700;
+  padding: 4px 12px;
+  border-radius: 20px;
+  text-transform: uppercase;
+  letter-spacing: 0.4px;
+}
+
+.cl-wallet__refund-item-reason {
+  font-size: 0.82rem;
+  color: #555;
+  margin: 0 0 4px;
+  line-height: 1.4;
+}
+
+.cl-wallet__refund-item-note {
+  font-size: 0.8rem;
+  color: #6b7280;
+  margin: 0 0 4px;
+  font-style: italic;
+}
+
+.cl-wallet__refund-item-date {
+  font-size: 0.72rem;
+  color: #999;
+}
+
+/* ── Responsive ── */
+@media (max-width: 640px) {
+  .cl-wallet__hero {
+    flex-direction: column;
+    padding: 20px 18px;
+    margin: 12px auto 16px;
+    width: 92%;
+  }
+
+  .cl-wallet__hero-right {
+    text-align: left;
+    max-width: 100%;
+  }
+
+  .cl-wallet-container {
+    width: 92%;
+    padding: 20px 16px;
+    margin-bottom: 24px;
+  }
+
+  .cl-wallet__balance-value {
+    font-size: 1.75rem;
+  }
+
+  .cl-wallet__stats {
+    flex-direction: column;
+    gap: 10px;
+  }
+
+  .cl-wallet__refund-actions {
+    flex-direction: column;
+  }
 }

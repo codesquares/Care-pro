@@ -16,6 +16,7 @@ import VerificationManagement from './verification-management/VerificationManage
 import AdminCareRequestDetail from './care-requests/AdminCareRequestDetail';
 import SubscriptionAdmin from './subscriptions/SubscriptionAdmin';
 import DisputesManagement from './disputes-management/DisputesManagement';
+import RefundManagement from './refund-management/RefundManagement';
 import { useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import DojahDataViewer from '../../components/admin/DojahDataViewer';
@@ -56,6 +57,7 @@ function AdminRoutes() {
             <Route path="webhook-data" element={<WebhookDataAdmin />} />
             <Route path="subscriptions" element={<SubscriptionAdmin />} />
             <Route path="disputes" element={<DisputesManagement />} />
+            <Route path="refunds" element={<RefundManagement />} />
             <Route path="care-requests/:requestId" element={<AdminCareRequestDetail />} />
             <Route path="*" element={<NotFoundPage />} />
         </Routes>

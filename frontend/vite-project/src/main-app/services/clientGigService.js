@@ -117,6 +117,56 @@ const ClientGigService = {
     }
   }
 },
+
+  /**
+   * Get a single gig by ID (direct lookup, works for special gigs too)
+   */
+  async getGigById(gigId) {
+    try {
+      const authHeaders = {
+        headers: { 'Authorization': `Bearer ${localStorage.getItem('authToken') || ''}` }
+      };
+      const [gigRes, userRes] = await Promise.all([
+        axios.get(`${BASE_API_URL}/Gigs/${gigId}`, authHeaders),
+        axios.get(`${BASE_API_URL}/CareGivers/AllCaregivers`, authHeaders)
+      ]);
+      const gig = gigRes.data;
+      if (!gig) return null;
+      const caregiverMap = new Map();
+      (userRes.data || []).forEach(c => caregiverMap.set(c.id, c));
+      const caregiver = caregiverMap.get(gig.caregiverId);
+      if (!caregiver) return gig;
+      return {
+        ...gig,
+        caregiverName: caregiver.firstName && caregiver.lastName
+          ? `${caregiver.firstName} ${caregiver.lastName}`
+          : caregiver.fullName || 'Unknown Caregiver',
+        caregiverFirstName: caregiver.firstName || '',
+        caregiverLastName: caregiver.lastName || '',
+        caregiverEmail: caregiver.email || '',
+        caregiverPhone: caregiver.phoneNumber || '',
+        gigImage: gig.image1 || '',
+        caregiverRating: caregiver.rating || 0,
+        caregiverReviewCount: caregiver.reviewCount || 0,
+        caregiverLocation: caregiver.location || caregiver.address || '',
+        caregiverBio: caregiver.aboutMe || caregiver.description || '',
+        caregiverExperience: caregiver.yearsOfExperience || caregiver.experience || 0,
+        caregiverSpecializations: caregiver.specializations || caregiver.skills || [],
+        caregiverIsVerified: caregiver.isVerified || false,
+        caregiverIsAvailable: caregiver.isAvailable !== false,
+        caregiverJoinDate: caregiver.createdAt || caregiver.joinDate || '',
+        caregiverLanguages: caregiver.languages || [],
+        caregiverCertifications: caregiver.certifications || [],
+        originalCaregiverId: gig.caregiverId,
+        caregiverProfileImage: caregiver.profileImage || './avatar.jpg',
+        introVideo: caregiver.introVideo || ''
+      };
+    } catch (err) {
+      console.error('Error fetching gig by ID:', err);
+      return null;
+    }
+  },
+
   /**
    * Get most popular gig services
    * @param {number} limit - Maximum number of gigs to return

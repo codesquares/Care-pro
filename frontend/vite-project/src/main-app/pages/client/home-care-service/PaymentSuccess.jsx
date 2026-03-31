@@ -289,6 +289,12 @@ const PaymentSuccess = () => {
               <div className="payment-actions">
                 <button 
                   className="payment-btn payment-btn--primary"
+                  onClick={() => navigate(`/app/client/my-order/${paymentData?.clientOrderId}`)}
+                >
+                  Go to Negotiations
+                </button>
+                <button 
+                  className="payment-btn payment-btn--secondary"
                   onClick={() => navigate("/app/client/my-order")}
                 >
                   View My Orders

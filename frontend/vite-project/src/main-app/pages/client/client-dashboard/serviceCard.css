@@ -33,6 +33,15 @@
   transition: transform 0.3s ease;
 }
 
+.modern-service-card .card-image--placeholder {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: #f3f4f6;
+  font-size: 2.5rem;
+  object-fit: unset;
+}
+
 .modern-service-card:hover .card-image {
   transform: scale(1.05);
 }

@@ -1,4 +1,5 @@
 import api from './api';
+import config from '../config';
 
 /**
  * Service for fetching all users from the database
@@ -94,23 +95,26 @@ export const allUserService = {
 
       const normalizedEmail = email.toLowerCase().trim();
       console.log(`Checking if email exists: ${normalizedEmail}`);
-      
-      const result = await allUserService.getAllUsers();
-      
-      if (!result.success) {
-        return {
-          exists: false,
-          error: result.error
-        };
+
+      const response = await fetch(
+        `${config.BASE_URL}/Authentications/CheckEmailExists?email=${encodeURIComponent(normalizedEmail)}`,
+        {
+          method: 'GET',
+          headers: { 'Content-Type': 'application/json' },
+        }
+      );
+
+      if (!response.ok) {
+        throw new Error(`Email check failed with status ${response.status}`);
       }
 
-      const existingUser = result.data.find(user => user.email === normalizedEmail);
-      
-      if (existingUser) {
-        console.log(`Email ${normalizedEmail} already exists with role: ${existingUser.role}`);
+      const data = await response.json();
+
+      if (data.exists) {
+        console.log(`Email ${normalizedEmail} already exists with role: ${data.role}`);
         return {
           exists: true,
-          role: existingUser.role
+          role: data.role
         };
       }
 

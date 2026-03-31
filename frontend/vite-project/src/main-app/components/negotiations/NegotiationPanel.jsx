@@ -70,7 +70,6 @@ const NegotiationPanel = ({ negotiation: initial, role, order, onNegotiationUpda
   const [specialRequirements, setSpecialRequirements] = useState(initial?.specialClientRequirements || "");
   const [additionalNotes, setAdditionalNotes] = useState(initial?.additionalNotes || "");
   const [agreedStartDate, setAgreedStartDate] = useState(initial?.agreedStartDate ? initial.agreedStartDate.split("T")[0] : "");
-  const [note, setNote] = useState("");
 
   // Add-task form
   const [newTask, setNewTask] = useState("");
@@ -102,6 +101,20 @@ const NegotiationPanel = ({ negotiation: initial, role, order, onNegotiationUpda
   const theirLabel = role === "client" ? "Caregiver" : "Client";
   const myLabel = role === "client" ? "You (Client)" : "You (Caregiver)";
 
+  // Schedule validation — require the correct number of unique days
+  // Use multiple fallback fields (same pattern as ContractGenerationModal)
+  const requiredDays = (() => {
+    const payOpt = (order?.paymentOption || order?.serviceType || '').toLowerCase();
+    if (payOpt === 'one-time') return 1;
+    return order?.frequencyPerWeek
+      || order?.visitsPerWeek
+      || order?.selectedPackage?.visitsPerWeek
+      || order?.packageDetails?.visitsPerWeek
+      || 1;
+  })();
+  const uniqueScheduledDays = new Set(mySchedule.map((s) => s.dayOfWeek)).size;
+  const scheduleComplete = uniqueScheduledDays >= requiredDays;
+
   // Sync state when prop changes (parent re-fetches)
   // (simple: parent can unmount/remount if negotiation id changes)
 
@@ -121,7 +134,6 @@ const NegotiationPanel = ({ negotiation: initial, role, order, onNegotiationUpda
         serviceAddress,
         accessInstructions,
         agreedStartDate: agreedStartDate ? `${agreedStartDate}T00:00:00Z` : undefined,
-        note: note || undefined,
         submitForCaregiverReview: submitForReview,
       };
       if (confirmAtServiceAddress && gpsCoords) {
@@ -138,7 +150,6 @@ const NegotiationPanel = ({ negotiation: initial, role, order, onNegotiationUpda
         caregiverProposedSchedule: mySchedule,
         additionalNotes,
         agreedStartDate: agreedStartDate ? `${agreedStartDate}T00:00:00Z` : undefined,
-        note: note || undefined,
         submitForClientReview: submitForReview,
       };
     }
@@ -153,7 +164,6 @@ const NegotiationPanel = ({ negotiation: initial, role, order, onNegotiationUpda
       setServiceAddress(result.data.serviceAddress || "");
       setAccessInstructions(result.data.accessInstructions || "");
       setAgreedStartDate(result.data.agreedStartDate ? result.data.agreedStartDate.split("T")[0] : "");
-      setNote("");
       setEditMode(false);
       toast.success(submitForReview ? "Submitted for review!" : "Draft saved.");
     } else {
@@ -163,6 +173,16 @@ const NegotiationPanel = ({ negotiation: initial, role, order, onNegotiationUpda
   };
 
   const handleAgree = async () => {
+    if (role === 'client') {
+      if (!neg?.agreedStartDate) {
+        toast.error("Please set a contract start date before agreeing.");
+        return;
+      }
+      if (!neg?.serviceAddress) {
+        toast.error("Please set the service address before agreeing.");
+        return;
+      }
+    }
     setAgreeing(true);
     const fn = role === "client" ? NegotiationService.clientAgree : NegotiationService.caregiverAgree;
     const result = await fn.call(NegotiationService, neg.id);
@@ -221,6 +241,11 @@ const NegotiationPanel = ({ negotiation: initial, role, order, onNegotiationUpda
 
   const addSlot = () => {
     if (slotStart >= slotEnd) { toast.error("End time must be after start time."); return; }
+    // Prevent duplicate days
+    if (mySchedule.some((s) => s.dayOfWeek === slotDay)) {
+      toast.error(`You already have a slot for ${slotDay}. Remove it first if you want to change the time.`);
+      return;
+    }
     setMySchedule((prev) => [...prev, { dayOfWeek: slotDay, startTime: slotStart, endTime: slotEnd }]);
   };
   const removeSlot = (i) => setMySchedule((prev) => prev.filter((_, idx) => idx !== i));
@@ -378,6 +403,25 @@ const NegotiationPanel = ({ negotiation: initial, role, order, onNegotiationUpda
           {/* Schedule */}
           <div className="neg-section">
             <div className="neg-section-label">Schedule</div>
+
+            {/* Guide banner — always visible when schedule is incomplete */}
+            {(editMode || !scheduleComplete) && !isTerminal && (
+              <div className={`neg-schedule-guide ${scheduleComplete ? 'neg-schedule-guide--done' : ''}`}>
+                <div className="neg-schedule-guide-text">
+                  <strong>📅 {requiredDays} {requiredDays === 1 ? 'day' : 'days'} per week required</strong>
+                  <span>
+                    {!scheduleComplete
+                      ? `Your contract is for ${requiredDays} visit${requiredDays > 1 ? 's' : ''}/week. ${editMode ? 'Add a time slot for each day.' : 'Click "Edit My Proposals" to add schedule days.'}`
+                      : `All ${requiredDays} days added — you're all set!`
+                    }
+                  </span>
+                </div>
+                <span className={`neg-schedule-counter ${scheduleComplete ? 'neg-schedule-counter--done' : 'neg-schedule-counter--pending'}`}>
+                  {uniqueScheduledDays} / {requiredDays}
+                </span>
+              </div>
+            )}
+
             {mySchedule.length === 0 && !editMode && (
               <p className="neg-empty">No schedule proposed yet.</p>
             )}
@@ -393,21 +437,23 @@ const NegotiationPanel = ({ negotiation: initial, role, order, onNegotiationUpda
                   <input className="neg-input neg-input--time" type="time" value={slotEnd} onChange={(e) => setSlotEnd(e.target.value)} />
                   <button className="neg-btn neg-btn--sm" onClick={addSlot}>Add</button>
                 </div>
-                <div className="neg-start-date-row" style={{ marginTop: '12px' }}>
-                  <label className="neg-label">Contract Start Date</label>
-                  <input
-                    className="neg-input"
-                    type="date"
-                    value={agreedStartDate}
-                    onChange={(e) => setAgreedStartDate(e.target.value)}
-                    min={new Date().toISOString().split("T")[0]}
-                  />
-                  {!agreedStartDate && (
-                    <p className="neg-hint" style={{ margin: '4px 0 0', fontSize: '12px' }}>
-                      Required — the date when the first visit will begin.
-                    </p>
-                  )}
-                </div>
+                {role === "client" && (
+                  <div className="neg-start-date-row" style={{ marginTop: '12px' }}>
+                    <label className="neg-label">Contract Start Date</label>
+                    <input
+                      className="neg-input"
+                      type="date"
+                      value={agreedStartDate}
+                      onChange={(e) => setAgreedStartDate(e.target.value)}
+                      min={new Date().toISOString().split("T")[0]}
+                    />
+                    {!agreedStartDate && (
+                      <p className="neg-hint" style={{ margin: '4px 0 0', fontSize: '12px' }}>
+                        Required — the date when the first visit will begin.
+                      </p>
+                    )}
+                  </div>
+                )}
               </>
             ) : (
               <>
@@ -421,12 +467,12 @@ const NegotiationPanel = ({ negotiation: initial, role, order, onNegotiationUpda
             )}
           </div>
 
-          {/* Service details — EDIT MODE */}
+          {/* Service details — EDIT MODE (client only for address fields) */}
           {editMode && (
             <div className="neg-section">
               <div className="neg-section-label">Service Details</div>
 
-              {role === "client" ? (
+              {role === "client" && (
                 <>
                   <label className="neg-label">Service Address</label>
                   <input
@@ -436,7 +482,6 @@ const NegotiationPanel = ({ negotiation: initial, role, order, onNegotiationUpda
                     onChange={(e) => setServiceAddress(e.target.value)}
                     placeholder="e.g. 12 Adeola Odeku, Victoria Island, Lagos"
                   />
-                  {/* GPS toggle — client can confirm they are at the service address */}
                   <div className="neg-gps-toggle" style={{ display: 'flex', alignItems: 'center', gap: '8px', margin: '8px 0' }}>
                     <input
                       type="checkbox"
@@ -490,20 +535,6 @@ const NegotiationPanel = ({ negotiation: initial, role, order, onNegotiationUpda
                     placeholder="e.g. Patient has mobility issues, prefers morning sessions"
                   />
                 </>
-              ) : (
-                /* Caregiver — address is read-only */
-                <>
-                  {neg?.serviceAddress ? (
-                    <p className="neg-detail-row"><strong>Address (set by client):</strong> {neg.serviceAddress}</p>
-                  ) : (
-                    <p className="neg-detail-row" style={{ color: '#888', fontStyle: 'italic' }}>
-                      The client will provide the service address.
-                    </p>
-                  )}
-                  {neg?.accessInstructions && (
-                    <p className="neg-detail-row"><strong>Access:</strong> {neg.accessInstructions}</p>
-                  )}
-                </>
               )}
 
               <label className="neg-label">Additional Notes</label>
@@ -512,25 +543,20 @@ const NegotiationPanel = ({ negotiation: initial, role, order, onNegotiationUpda
                 rows="2"
                 value={additionalNotes}
                 onChange={(e) => setAdditionalNotes(e.target.value)}
-                placeholder="Any other information…"
-              />
-              <label className="neg-label">Message to {theirLabel}</label>
-              <textarea
-                className="neg-textarea"
-                rows="2"
-                value={note}
-                onChange={(e) => setNote(e.target.value)}
-                placeholder="Optional note explaining your changes…"
+                placeholder="Any other information or notes…"
               />
             </div>
           )}
 
-          {/* Static service detail display when not editing */}
-          {!editMode && (neg?.serviceAddress || neg?.accessInstructions || neg?.specialClientRequirements || neg?.additionalNotes) && (
+          {/* Static service detail display when not editing — only show address/access for client */}
+          {!editMode && (
+            (role === "client" && (neg?.serviceAddress || neg?.accessInstructions || neg?.specialClientRequirements || neg?.additionalNotes)) ||
+            (role !== "client" && (neg?.specialClientRequirements || neg?.additionalNotes))
+          ) && (
             <div className="neg-section">
               <div className="neg-section-label">Service Details</div>
-              {neg.serviceAddress && <p className="neg-detail-row"><strong>Address:</strong> {neg.serviceAddress}</p>}
-              {neg.accessInstructions && <p className="neg-detail-row"><strong>Access:</strong> {neg.accessInstructions}</p>}
+              {role === "client" && neg.serviceAddress && <p className="neg-detail-row"><strong>Address:</strong> {neg.serviceAddress}</p>}
+              {role === "client" && neg.accessInstructions && <p className="neg-detail-row"><strong>Access:</strong> {neg.accessInstructions}</p>}
               {neg.specialClientRequirements && <p className="neg-detail-row"><strong>Requirements:</strong> {neg.specialClientRequirements}</p>}
               {neg.additionalNotes && <p className="neg-detail-row"><strong>Notes:</strong> {neg.additionalNotes}</p>}
             </div>
@@ -564,16 +590,43 @@ const NegotiationPanel = ({ negotiation: initial, role, order, onNegotiationUpda
                 <button className="neg-btn neg-btn--save" onClick={() => handleSave(false)} disabled={saving}>
                   {saving ? "Saving…" : "Save Draft"}
                 </button>
-                <button className="neg-btn neg-btn--submit" onClick={() => handleSave(true)} disabled={saving}>
+                <button
+                  className="neg-btn neg-btn--submit"
+                  onClick={() => {
+                    if (!scheduleComplete) {
+                      toast.error(`Please add ${requiredDays} schedule day${requiredDays > 1 ? 's' : ''} before submitting. You have ${uniqueScheduledDays} of ${requiredDays}.`);
+                      return;
+                    }
+                    handleSave(true);
+                  }}
+                  disabled={saving}
+                  title={!scheduleComplete ? `Add ${requiredDays - uniqueScheduledDays} more day${requiredDays - uniqueScheduledDays > 1 ? 's' : ''} to your schedule` : ''}
+                >
                   {saving ? "Submitting…" : `Submit for ${theirLabel} Review`}
                 </button>
                 <button className="neg-btn neg-btn--ghost" onClick={() => setEditMode(false)}>Cancel</button>
               </>
             )}
-            {!editMode && !isTerminal && !iAgreed && (
-              <button className="neg-btn neg-btn--agree" onClick={handleAgree} disabled={agreeing}>
-                {agreeing ? "Processing…" : "✅ I Agree to These Terms"}
-              </button>
+            {!editMode && !isTerminal && !iAgreed &&
+              mySchedule.length > 0 && myTasks.length > 0 &&
+              theirTasks?.length > 0 && theirSchedule?.length > 0 && (
+              <>
+                {role === 'client' && (!neg?.agreedStartDate || !neg?.serviceAddress) && (
+                  <p className="neg-hint" style={{ color: '#d32f2f', marginBottom: '8px' }}>
+                    ⚠️ Before agreeing, please edit your proposals to set:
+                    {!neg?.agreedStartDate && ' contract start date'}
+                    {!neg?.agreedStartDate && !neg?.serviceAddress && ' and'}
+                    {!neg?.serviceAddress && ' service address'}
+                  </p>
+                )}
+                <button
+                  className="neg-btn neg-btn--agree"
+                  onClick={handleAgree}
+                  disabled={agreeing || (role === 'client' && (!neg?.agreedStartDate || !neg?.serviceAddress))}
+                >
+                  {agreeing ? "Processing…" : "✅ I Agree to These Terms"}
+                </button>
+              </>
             )}
             {!editMode && iAgreed && status !== "BothAgreed" && (
               <p className="neg-agreed-waiting">✅ You agreed — waiting for {theirLabel} to agree</p>

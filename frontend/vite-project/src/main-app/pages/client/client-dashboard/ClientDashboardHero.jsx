@@ -39,6 +39,10 @@ const ClientDashboardHero = ({
     navigate("/app/client/notifications");
   };
 
+  const handleWallet = () => {
+    navigate("/app/client/wallet");
+  };
+
   const handlePostBrief = () => {
     navigate("/app/client/post-project");
   };
@@ -94,19 +98,35 @@ const ClientDashboardHero = ({
           <h1 className="welcome-title">Welcome{userName ? `, ${userName}` : ''}</h1> {/* TODO: Backend persistence not implemented yet */}
           <p className="welcome-subtitle">Let's get you all set up</p>
         </div>
-        <div className="profile-completion-card" onClick={handleYourRequests}>
-          <div className="profile-icon">
-            <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-              <path d="M9 5H7a2 2 0 0 0-2 2v12a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2V7a2 2 0 0 0-2-2h-2" />
-              <rect x="9" y="3" width="6" height="4" rx="1" />
-              <line x1="9" y1="12" x2="15" y2="12" />
-              <line x1="9" y1="16" x2="13" y2="16" />
-            </svg>
+        <div className="banner-cards">
+          <div className="profile-completion-card" onClick={handleYourRequests}>
+            <div className="profile-icon">
+              <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                <path d="M9 5H7a2 2 0 0 0-2 2v12a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2V7a2 2 0 0 0-2-2h-2" />
+                <rect x="9" y="3" width="6" height="4" rx="1" />
+                <line x1="9" y1="12" x2="15" y2="12" />
+                <line x1="9" y1="16" x2="13" y2="16" />
+              </svg>
+            </div>
+            <div className="profile-info">
+              <span className="profile-label">YOUR REQUESTS</span>
+              <span className="profile-percentage">View and manage your care requests</span>
+              <span className="profile-cta">Click here to see your requests.</span>
+            </div>
           </div>
-          <div className="profile-info">
-            <span className="profile-label">YOUR REQUESTS</span>
-            <span className="profile-percentage">View and manage your care requests</span>
-            <span className="profile-cta">Click here to see your requests.</span>
+          <div className="profile-completion-card" onClick={handleWallet}>
+            <div className="profile-icon">
+              <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                <rect x="2" y="5" width="20" height="14" rx="2" />
+                <path d="M16 14a2 2 0 1 0 0-4 2 2 0 0 0 0 4z" />
+                <path d="M2 10h20" />
+              </svg>
+            </div>
+            <div className="profile-info">
+              <span className="profile-label">WALLET</span>
+              <span className="profile-percentage">Check your balance</span>
+              <span className="profile-cta">Click here to view your wallet.</span>
+            </div>
           </div>
         </div>
       </div>

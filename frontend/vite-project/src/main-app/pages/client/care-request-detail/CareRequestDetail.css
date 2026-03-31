@@ -451,3 +451,68 @@
     grid-template-columns: repeat(auto-fill, minmax(160px, 1fr));
   }
 }
+
+/* ─── Hire Confirmation Modal ─── */
+.crd-modal-overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.45);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 1000;
+}
+
+.crd-modal {
+  background: #fff;
+  border-radius: 12px;
+  padding: 28px 32px 24px;
+  max-width: 420px;
+  width: 90%;
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.18);
+}
+
+.crd-modal-title {
+  margin: 0 0 12px;
+  font-size: 1.15rem;
+  font-weight: 600;
+  color: #1f2e5a;
+}
+
+.crd-modal-text {
+  margin: 0 0 24px;
+  font-size: 0.95rem;
+  color: #555;
+  line-height: 1.5;
+}
+
+.crd-modal-actions {
+  display: flex;
+  gap: 12px;
+  justify-content: flex-end;
+}
+
+.crd-modal-btn {
+  padding: 8px 20px;
+  border-radius: 8px;
+  font-size: 0.9rem;
+  font-weight: 500;
+  border: none;
+  cursor: pointer;
+  transition: opacity 0.15s;
+}
+
+.crd-modal-btn:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+.crd-modal-btn--cancel {
+  background: #f0f0f0;
+  color: #333;
+}
+
+.crd-modal-btn--confirm {
+  background: #1f2e5a;
+  color: #fff;
+}

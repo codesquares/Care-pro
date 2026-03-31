@@ -69,6 +69,16 @@ const generateTitle = (type, senderId) => {
       return `📋 Negotiation converted to contract`;
     case 'negotiation_abandoned':
       return `🚫 Negotiation abandoned`;
+    case 'order_cancelled':
+      return `🚫 Order Cancelled`;
+    case 'refund_requested':
+      return `💰 Refund Request Submitted`;
+    case 'refund_approved':
+      return `✅ Refund Request Approved`;
+    case 'refund_rejected':
+      return `❌ Refund Request Rejected`;
+    case 'refund_processed':
+      return `💸 Refund Processed`;
     default:
       return `New notification`;
   }
@@ -133,6 +143,16 @@ const generateContent = (type, senderId) => {
       return `The negotiation has been converted to a contract. Tap to view the contract details.`;
     case 'negotiation_abandoned':
       return `The negotiation has been abandoned.`;
+    case 'order_cancelled':
+      return `An order has been cancelled. Any undelivered visit amount has been credited to the client's wallet.`;
+    case 'refund_requested':
+      return `Your refund request has been submitted and is pending admin review.`;
+    case 'refund_approved':
+      return `Your refund request has been approved. The bank transfer will be processed shortly.`;
+    case 'refund_rejected':
+      return `Your refund request has been rejected. Please contact support for more details.`;
+    case 'refund_processed':
+      return `Your refund has been processed and the bank transfer is complete.`;
     default:
       return `You have a new notification from user ${senderId}.`;
   }
