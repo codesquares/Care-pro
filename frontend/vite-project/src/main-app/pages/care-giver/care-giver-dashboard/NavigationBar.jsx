@@ -3,7 +3,7 @@ import { useNavigate } from "react-router-dom";
 import "./NavigationBar.css";
 import logo from '../../../../assets/careproLogo.svg';
 import hear from "../../../../assets/main-app/heart.svg";
-import { FaBell, FaEnvelope, FaReceipt, FaHome, FaCog, FaStore, FaClipboardList, FaBriefcase, FaChevronDown, FaMoneyBillWave, FaShoppingBag } from "react-icons/fa";
+import { FaBell, FaEnvelope, FaReceipt, FaHome, FaCog, FaStore, FaClipboardList, FaBriefcase, FaChevronDown, FaMoneyBillWave, FaShoppingBag, FaWallet } from "react-icons/fa";
 import NotificationBell from "../../../components/notifications/NotificationBell";
 import { useAuth } from "../../../context/AuthContext";
 import { getInitials } from "../../../utils/avatarHelpers";
@@ -164,6 +164,12 @@ const NavigationBar = () => {
                   <span>Earnings</span>
                 </div>
               </li>
+              <li onClick={() => { navigate(`${basePath}/wallet`); setMobileMenuOpen(false); }}>
+                <div className="menu-item-content">
+                  <FaWallet className="mobile-menu-icon" />
+                  <span>Wallet</span>
+                </div>
+              </li>
               <li onClick={() => { navigate(`${basePath}/subscriptions`); setMobileMenuOpen(false); }}>
                 <div className="menu-item-content">
                   <span className="mobile-menu-icon" style={{ fontSize: '16px' }}>🔄</span>
@@ -241,6 +247,10 @@ const NavigationBar = () => {
           <li className="nav-link text-link" onClick={() => navigate(`${basePath}/earnings`)}>
             <FaMoneyBillWave className="nav-link-icon" />
             Earnings
+          </li>
+          <li className="nav-link text-link" onClick={() => navigate(`${basePath}/wallet`)}>
+            <FaWallet className="nav-link-icon" />
+            Wallet
           </li>
         </ul>
 

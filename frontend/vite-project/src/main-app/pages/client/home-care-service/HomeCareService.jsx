@@ -401,8 +401,16 @@ const HomeCareService = () => {
         // Use the enhanced ClientGigService to get all enriched gigs
         const allGigs = await ClientGigService.getAllGigs();
 
-        // Find the specific gig by ID
-        const foundGig = allGigs.find(gig => gig.id === id);
+        // Find the specific gig by ID, or fall back to matching by caregiverId
+        // (care-request pages navigate here with the caregiver's user ID)
+        let foundGig = allGigs.find(gig => gig.id === id)
+                    || allGigs.find(gig => gig.caregiverId === id || gig.originalCaregiverId === id);
+
+        // Special gigs are excluded from the marketplace list —
+        // fall back to a direct lookup by gig ID
+        if (!foundGig) {
+          foundGig = await ClientGigService.getGigById(id);
+        }
 
         if (!foundGig) {
           throw new Error("Service not found or no longer available");

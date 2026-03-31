@@ -1043,6 +1043,25 @@ const CaregiverOrderDetails = () => {
                             {/* Initial schedule */}
                             <div className="neg-section">
                                 <div className="neg-section-label">Proposed Schedule</div>
+                                {/* Schedule guide banner */}
+                                {(() => {
+                                    const payOpt = (order?.paymentOption || order?.serviceType || '').toLowerCase();
+                                    const reqDays = payOpt === 'one-time' ? 1
+                                        : (order?.frequencyPerWeek || order?.visitsPerWeek || order?.selectedPackage?.visitsPerWeek || order?.packageDetails?.visitsPerWeek || 1);
+                                    const uniqueDays = new Set(negInitSchedule.map(s => s.dayOfWeek)).size;
+                                    const done = uniqueDays >= reqDays;
+                                    return reqDays > 0 ? (
+                                        <div className={`neg-schedule-guide ${done ? 'neg-schedule-guide--done' : ''}`}>
+                                            <div className="neg-schedule-guide-text">
+                                                <strong>\uD83D\uDCC5 {reqDays} {reqDays === 1 ? 'day' : 'days'} per week required</strong>
+                                                <span>This contract is for {reqDays} visit{reqDays > 1 ? 's' : ''}/week. Add a time slot for each day.</span>
+                                            </div>
+                                            <span className={`neg-schedule-counter ${done ? 'neg-schedule-counter--done' : 'neg-schedule-counter--pending'}`}>
+                                                {uniqueDays} / {reqDays}
+                                            </span>
+                                        </div>
+                                    ) : null;
+                                })()}
                                 <div className="neg-schedule-list">
                                     {negInitSchedule.map((s, i) => (
                                         <div key={i} className="neg-schedule-slot">
@@ -1061,6 +1080,10 @@ const CaregiverOrderDetails = () => {
                                     <input className="neg-input neg-input--time" type="time" value={negInitSlotEnd} onChange={e => setNegInitSlotEnd(e.target.value)} />
                                     <button className="neg-btn neg-btn--sm" onClick={() => {
                                         if (negInitSlotStart >= negInitSlotEnd) { toast.error('End time must be after start time.'); return; }
+                                        if (negInitSchedule.some(s => s.dayOfWeek === negInitSlotDay)) {
+                                            toast.error(`You already have a slot for ${negInitSlotDay}. Remove it first to change the time.`);
+                                            return;
+                                        }
                                         setNegInitSchedule(prev => [...prev, { dayOfWeek: negInitSlotDay, startTime: negInitSlotStart, endTime: negInitSlotEnd }]);
                                     }}>Add</button>
                                 </div>
@@ -1078,7 +1101,17 @@ const CaregiverOrderDetails = () => {
                             </div>
 
                             <div style={{ display: 'flex', gap: '10px', marginTop: '4px' }}>
-                                <button className="neg-btn neg-btn--submit" onClick={handleStartNegotiation} disabled={startNegLoading} style={{ flex: 1 }}>
+                                <button className="neg-btn neg-btn--submit" onClick={() => {
+                                    const payOpt = (order?.paymentOption || order?.serviceType || '').toLowerCase();
+                                    const reqDays = payOpt === 'one-time' ? 1
+                                        : (order?.frequencyPerWeek || order?.visitsPerWeek || order?.selectedPackage?.visitsPerWeek || order?.packageDetails?.visitsPerWeek || 1);
+                                    const uniqueDays = new Set(negInitSchedule.map(s => s.dayOfWeek)).size;
+                                    if (uniqueDays < reqDays) {
+                                        toast.error(`Please add schedule slots for ${reqDays} day${reqDays > 1 ? 's' : ''} before starting. You have ${uniqueDays} of ${reqDays}.`);
+                                        return;
+                                    }
+                                    handleStartNegotiation();
+                                }} disabled={startNegLoading} style={{ flex: 1 }}>
                                     {startNegLoading ? 'Starting…' : '🤝 Start Negotiation'}
                                 </button>
                                 <button className="neg-btn neg-btn--ghost" onClick={() => setShowStartNegModal(false)}>Cancel</button>

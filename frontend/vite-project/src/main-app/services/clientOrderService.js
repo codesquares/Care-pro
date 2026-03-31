@@ -225,24 +225,32 @@ const ClientOrderService = {
    * @param {string} orderId - Order ID
    * @returns {Promise<Object>} - Result object with success status
    */
-  async cancelOrder(orderId) {
+  /**
+   * Cancel an order using the new dedicated cancel endpoint.
+   * Handles: order cancellation, booking fee invalidation, wallet credit,
+   * caregiver debit, and future task-sheet cancellation on the backend.
+   * @param {string} orderId - Order ID
+   * @param {string} [reason] - Optional cancellation reason
+   * @returns {Promise<Object>} - { success, data/message, error }
+   */
+  async cancelOrder(orderId, reason) {
     try {
       if (!orderId) {
         return { success: false, error: 'Order ID is required' };
       }
 
-      const userDetails = JSON.parse(localStorage.getItem('userDetails') || '{}');
-      const userId = userDetails?.id;
-      const API_URL = `${config.BASE_URL}/ClientOrders/UpdateClientOrderStatus/orderId?orderId=${orderId}`;
+      const API_URL = `${config.BASE_URL}/ClientOrders/${encodeURIComponent(orderId)}/cancel`;
       const token = localStorage.getItem('authToken');
 
+      const body = reason ? JSON.stringify({ reason }) : undefined;
+
       const response = await fetch(API_URL, {
-        method: 'PUT',
+        method: 'POST',
         headers: {
           'Content-Type': 'application/json',
           'Authorization': `Bearer ${token}`
         },
-        body: JSON.stringify({ clientOrderStatus: 'Cancelled', userId })
+        ...(body ? { body } : {})
       });
 
       const text = await response.text();
@@ -250,11 +258,14 @@ const ClientOrderService = {
       try { data = JSON.parse(text); } catch { data = text; }
 
       if (!response.ok) {
-        const errorMsg = typeof data === 'string' ? data : (data?.message || `Failed to cancel order: ${response.status}`);
+        const errors = data?.errors;
+        const errorMsg = Array.isArray(errors)
+          ? errors[0]
+          : (typeof data === 'string' ? data : (data?.message || `Failed to cancel order: ${response.status}`));
         return { success: false, error: errorMsg };
       }
 
-      return { success: true, data };
+      return { success: true, data, message: data?.message };
     } catch (error) {
       console.error('Error in cancelOrder:', error);
       return { success: false, error: error.message };

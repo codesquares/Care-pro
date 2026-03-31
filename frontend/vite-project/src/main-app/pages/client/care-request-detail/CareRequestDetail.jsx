@@ -35,8 +35,8 @@ const CareRequestDetail = () => {
   const [data, setData] = useState(null);
   const [loading, setLoading] = useState(true);
   const [activeTab, setActiveTab] = useState('responders');
-  const [actionLoading, setActionLoading] = useState(null);
-
+  const [actionLoading, setActionLoading] = useState(null);  const [hireTarget, setHireTarget] = useState(null);
+  const [hiring, setHiring] = useState(false);
   const fetchDetail = useCallback(async () => {
     try {
       const result = await CareRequestService.getRequestDetail(requestId);
@@ -110,11 +110,16 @@ const CareRequestDetail = () => {
   // ─── Hire ───
 
   const handleHire = async (responseId) => {
-    if (!window.confirm('Hire this caregiver? A special gig will be created for booking.')) return;
+    setHireTarget(responseId);
+  };
 
+  const confirmHire = async () => {
+    if (!hireTarget) return;
+    setHiring(true);
     try {
-      const result = await CareRequestService.hireCaregiver(requestId, responseId);
+      const result = await CareRequestService.hireCaregiver(requestId, hireTarget);
       toast.success('Caregiver hired! Redirecting to booking...');
+      setHireTarget(null);
       if (result.specialGigId) {
         navigate(`/app/client/commitment-payment/${result.specialGigId}`);
       } else {
@@ -122,6 +127,8 @@ const CareRequestDetail = () => {
       }
     } catch (err) {
       toast.error(err.response?.data?.message || 'Failed to hire caregiver.');
+    } finally {
+      setHiring(false);
     }
   };
 
@@ -273,7 +280,7 @@ const CareRequestDetail = () => {
                   key={cg.responseId}
                   caregiver={cg}
                   activeTab={activeTab}
-                  onViewProfile={() => navigate(`/service/${cg.caregiverId}`)}
+                  onViewProfile={() => navigate(`/service/${cg.specialGigId || cg.caregiverId}`)}
                   onShortlist={() => handleShortlist(cg.responseId)}
                   onRemoveShortlist={() => handleRemoveShortlist(cg.responseId)}
                   onHire={() => handleHire(cg.responseId)}
@@ -283,6 +290,26 @@ const CareRequestDetail = () => {
           </div>
         </div>
       </div>
+
+      {/* Hire Confirmation Modal */}
+      {hireTarget && (
+        <div className="crd-modal-overlay" onClick={() => !hiring && setHireTarget(null)}>
+          <div className="crd-modal" onClick={(e) => e.stopPropagation()}>
+            <h3 className="crd-modal-title">Confirm Hire</h3>
+            <p className="crd-modal-text">
+              A dedicated service listing will be created for this caregiver so you can proceed to booking. Continue?
+            </p>
+            <div className="crd-modal-actions">
+              <button className="crd-modal-btn crd-modal-btn--cancel" onClick={() => setHireTarget(null)} disabled={hiring}>
+                Cancel
+              </button>
+              <button className="crd-modal-btn crd-modal-btn--confirm" onClick={confirmHire} disabled={hiring}>
+                {hiring ? 'Processing…' : 'Yes, Hire'}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 };

@@ -17,11 +17,26 @@ const api = axios.create({
 api.interceptors.request.use(
     (config) => {
         try {
+            // Public endpoints that don't require authentication
+            const publicEndpoints = [
+                '/CareGivers/AddCaregiverUser',
+                '/Clients/AddClientUser',
+                '/Admins',
+                '/Authentications/CheckEmailExists',
+                '/Authentications/Login',
+                '/Authentications/GoogleLogin',
+                '/Authentications/ForgotPassword',
+                '/Authentications/ResetPassword',
+                '/Authentications/VerifyEmail',
+            ];
+
+            const isPublic = publicEndpoints.some(ep => config.url?.includes(ep));
+
             const token = localStorage.getItem('authToken');
             if (token) {
                 config.headers.Authorization = `Bearer ${token}`;
-            } else {
-                // Cancel the request if no token — avoids futile 401s
+            } else if (!isPublic) {
+                // Cancel non-public requests if no token — avoids futile 401s
                 const controller = new AbortController();
                 controller.abort();
                 config.signal = controller.signal;

@@ -280,7 +280,14 @@ const GigsSection = () => {
       }
 
       const response = await api.get(`/Gigs/caregiver/${userDetails.id}`);
-      setGigs(response.data);
+      // Normalize PascalCase fields from backend
+      const normalized = (response.data || []).map(g => ({
+        ...g,
+        isSpecialGig: g.isSpecialGig || g.IsSpecialGig || false,
+        careRequestId: g.careRequestId || g.CareRequestId || null,
+        scopedClientId: g.scopedClientId || g.ScopedClientId || null,
+      }));
+      setGigs(normalized);
       setIsLoading(false);
     } catch (err) {
       setError(err.message);
@@ -438,7 +445,11 @@ const GigsSection = () => {
                 return (
                   <div key={gig.id} className={`gigs-row ${isExpired ? 'gigs-row--expired' : ''}`}>
                     <div className="gigs-cell gigs-cell--gig">
-                      <img src={gig.image1 || "https://via.placeholder.com/60x40"} alt={gig.title} className="gigs-thumb" />
+                      {gig.image1 ? (
+                        <img src={gig.image1} alt={gig.title} className="gigs-thumb" />
+                      ) : (
+                        <div className="gigs-thumb gigs-thumb--placeholder">🩺</div>
+                      )}
                       <div className="gigs-cell-info">
                         <span className="gigs-cell-title">{gig.title}</span>
                         <span className="gigs-cell-meta">
@@ -478,23 +489,34 @@ const GigsSection = () => {
             {currentGigs.map((gig) => (
               <div key={gig.id} className="gigs-row">
                 <div className="gigs-cell gigs-cell--gig">
-                  <img src={gig.image1 || "https://via.placeholder.com/60x40"} alt={gig.title} className="gigs-thumb" />
-                  <span className="gigs-cell-title">{gig.title}</span>
+                  {gig.image1 ? (
+                    <img src={gig.image1} alt={gig.title} className="gigs-thumb" />
+                  ) : (
+                    <div className="gigs-thumb gigs-thumb--placeholder">🩺</div>
+                  )}
+                  <div className="gigs-cell-info">
+                    <span className="gigs-cell-title">{gig.title}</span>
+                    {gig.isSpecialGig && <span className="gigs-badge gigs-badge--care-request">Care Request</span>}
+                  </div>
                 </div>
                 <div className="gigs-cell gigs-cell--orders">
                   <span className="gigs-order-count">{gig.orderCount ?? 0}</span>
                 </div>
                 <div className="gigs-cell gigs-cell--action">
-                  {activeTab === 'active' && (
+                  {gig.isSpecialGig ? (
+                    <button className="gigs-link" onClick={() => navigate(`/service/${gig.id}`)}>Preview</button>
+                  ) : (
                     <>
-                      <button className="gigs-link" onClick={() => navigate(`/service/${gig.id}`)}>Preview</button>
-                      <button className="gigs-link" onClick={() => handleShareGig(gig)}>Share</button>
-                      <button className="gigs-link" onClick={() => handlePauseGig(gig)} disabled={pausingGigs.has(gig.id)}>
-                        {pausingGigs.has(gig.id) ? 'Pausing...' : 'Pause'}
-                      </button>
-                    </>
-                  )}
-                  {activeTab === 'paused' && (
+                      {activeTab === 'active' && (
+                        <>
+                          <button className="gigs-link" onClick={() => navigate(`/service/${gig.id}`)}>Preview</button>
+                          <button className="gigs-link" onClick={() => handleShareGig(gig)}>Share</button>
+                          <button className="gigs-link" onClick={() => handlePauseGig(gig)} disabled={pausingGigs.has(gig.id)}>
+                            {pausingGigs.has(gig.id) ? 'Pausing...' : 'Pause'}
+                          </button>
+                        </>
+                      )}
+                      {activeTab === 'paused' && (
                     <>
                       <button className="gigs-link" onClick={() => handleEditGig(gig)}>Edit</button>
                       <button
@@ -524,6 +546,8 @@ const GigsSection = () => {
                       <button className="gigs-link gigs-link--danger" onClick={() => handleDeleteGig(gig)} disabled={deletingGigs.has(gig.id)}>
                         {deletingGigs.has(gig.id) ? 'Deleting...' : 'Delete'}
                       </button>
+                    </>
+                  )}
                     </>
                   )}
                 </div>

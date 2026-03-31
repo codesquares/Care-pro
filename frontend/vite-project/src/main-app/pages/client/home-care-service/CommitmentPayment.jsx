@@ -18,7 +18,11 @@ const CommitmentPayment = () => {
     const fetchGig = async () => {
       try {
         const allGigs = await ClientGigService.getAllGigs();
-        const gig = allGigs.find((g) => g.id === id);
+        let gig = allGigs.find((g) => g.id === id);
+        // Special gigs are excluded from the marketplace list — direct lookup fallback
+        if (!gig) {
+          gig = await ClientGigService.getGigById(id);
+        }
         if (!gig) throw new Error('Service not found');
         setService(gig);
       } catch (err) {

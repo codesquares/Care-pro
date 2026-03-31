@@ -88,7 +88,7 @@ const ServiceCard = ({
   const displayLocation = caregiverLocation || "Lagos, Nigeria";
   const formattedRating = gigRating > 0 ? gigRating.toFixed(1) : "0.0";
   const displayReviewCount = gigReviewCount;
-  const imgSrc = image1 || "https://via.placeholder.com/380x200?text=Care+Service&bgcolor=f3f4f6&color=6b7280";
+  const imgSrc = image1 || null;
   const displayPrice = price ? `₦${price.toLocaleString()}` : "Contact for pricing";
 
   const handleCardClick = (e) => {
@@ -107,7 +107,11 @@ const ServiceCard = ({
     <div className="modern-service-card" onClick={handleCardClick}>
       {/* First Container: Gig Image */}
       <div className="card-image-wrapper">
-        <img src={imgSrc} alt={title} className="card-image" />
+        {imgSrc ? (
+          <img src={imgSrc} alt={title} className="card-image" />
+        ) : (
+          <div className="card-image card-image--placeholder">🩺</div>
+        )}
 
         {isPremium && (
           <div className="premium-badge">
