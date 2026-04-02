@@ -123,9 +123,6 @@ const CheckInSection = ({ sheet, orderId, onCheckedIn, disabled = false }) => {
         case "TASKSHEET_CANCELLED":
           toast.error("This visit has been cancelled by the client.");
           break;
-        case "TASKSHEET_SCHEDULED":
-          toast.error("This visit has not been activated yet. Please activate it first.");
-          break;
         default:
           toast.error(result.error);
       }

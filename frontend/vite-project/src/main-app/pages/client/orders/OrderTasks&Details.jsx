@@ -44,6 +44,7 @@ const MyOrders = () => {
     const [contract, setContract] = useState(null);
     const [contractActionLoading, setContractActionLoading] = useState(false);
     const [contractError, setContractError] = useState(null);
+    const [pdfDownloading, setPdfDownloading] = useState(false);
 
     const [checkingContract, setCheckingContract] = useState(false);
 
@@ -67,9 +68,7 @@ const MyOrders = () => {
     const [negInitSchedule, setNegInitSchedule] = useState([]);
     const [negInitAddress, setNegInitAddress] = useState("");
     const [negInitAccessInstructions, setNegInitAccessInstructions] = useState("");
-    const [negInitConfirmAtAddress, setNegInitConfirmAtAddress] = useState(false);
-    const [negInitGpsCoords, setNegInitGpsCoords] = useState(null);
-    const [negInitCapturingGps, setNegInitCapturingGps] = useState(false);
+    const [negInitGeoCoords, setNegInitGeoCoords] = useState(null);
     const [negInitRequirements, setNegInitRequirements] = useState("");
     const [negInitNotes, setNegInitNotes] = useState("");
     const [negInitNote, setNegInitNote] = useState("");
@@ -130,6 +129,7 @@ const MyOrders = () => {
     // Flow B: Client revision state
     const [showClientReviseModal, setShowClientReviseModal] = useState(false);
     const [clientReviseAddress, setClientReviseAddress] = useState('');
+    const [clientReviseGeoCoords, setClientReviseGeoCoords] = useState(null);
     const [clientReviseSchedule, setClientReviseSchedule] = useState([]);
     const [clientReviseTasks, setClientReviseTasks] = useState([]);
     const [clientReviseRequirements, setClientReviseRequirements] = useState('');
@@ -200,6 +200,10 @@ const MyOrders = () => {
         const revisionData = {
             contractId: contract.id,
             ...(clientReviseAddress.trim() && { serviceAddress: clientReviseAddress }),
+            ...(clientReviseGeoCoords && {
+                serviceLatitude: clientReviseGeoCoords.lat,
+                serviceLongitude: clientReviseGeoCoords.lng,
+            }),
             ...(clientReviseSchedule.length > 0 && { schedule: clientReviseSchedule }),
             ...(clientReviseTasks.length > 0 && { tasks: clientReviseTasks }),
             specialClientRequirements: clientReviseRequirements,
@@ -350,14 +354,12 @@ const MyOrders = () => {
             additionalNotes: negInitNotes || undefined,
             openingNote: negInitNote || undefined,
             agreedStartDate: negInitStartDate ? `${negInitStartDate}T00:00:00Z` : undefined,
+            // Geocoded coordinates from Google Maps — used for caregiver check-in validation
+            ...(negInitGeoCoords && {
+                serviceLatitude: negInitGeoCoords.lat,
+                serviceLongitude: negInitGeoCoords.lng,
+            }),
         };
-        if (negInitConfirmAtAddress && negInitGpsCoords) {
-            payload.confirmAtServiceAddress = true;
-            payload.serviceLatitude = negInitGpsCoords.lat;
-            payload.serviceLongitude = negInitGpsCoords.lng;
-        } else {
-            payload.confirmAtServiceAddress = false;
-        }
         const result = await NegotiationService.startNegotiation(payload);
         if (result.success) {
             setNegotiation(result.data);
@@ -433,6 +435,31 @@ const MyOrders = () => {
     // ==========================================
     // NEW CLIENT CONTRACT ACTIONS
     // ==========================================
+
+    // Download contract as PDF
+    const handleDownloadContractPdf = async () => {
+        if (!contract?.id) return;
+        setPdfDownloading(true);
+        try {
+            const authToken = localStorage.getItem("authToken");
+            const response = await fetch(`${config.BASE_URL}/contracts/${contract.id}/pdf`, {
+                headers: { Authorization: `Bearer ${authToken}` },
+            });
+            if (!response.ok) throw new Error("Failed to download PDF");
+            const blob = await response.blob();
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement("a");
+            a.href = url;
+            a.download = `contract-${contract.id}.pdf`;
+            document.body.appendChild(a);
+            a.click();
+            document.body.removeChild(a);
+            URL.revokeObjectURL(url);
+        } catch {
+            toast.error("Failed to download contract PDF.");
+        }
+        setPdfDownloading(false);
+    };
 
     // Client approves contract
     const handleApproveContract = async (coords, confirmedAtAddress = false) => {
@@ -894,6 +921,15 @@ const MyOrders = () => {
                 <div className="marketplace-banner-content">
                     <button className="cod-back-btn" onClick={() => navigate(-1)}>Back</button>
                     <h1 className="marketplace-banner-title">{bannerTitle}</h1>
+                    {contract && (
+                        <button
+                            className="cod-btn"
+                            style={{ marginLeft: 'auto', whiteSpace: 'nowrap', background: '#fff', color: '#0066cc', border: '2px solid #fff', fontWeight: 600, padding: '8px 18px', borderRadius: '8px' }}
+                            onClick={() => openModal("viewContract")}
+                        >
+                            📋 View Contract
+                        </button>
+                    )}
                 </div>
                 <p className="cod-banner-subtitle">{bannerSubtitle}</p>
             </div>
@@ -1392,12 +1428,17 @@ const MyOrders = () => {
                                     <button onClick={() => setIsModalOpen(false)}>Cancel</button>
                                 </div>
                             </>
-                        ) : modalType === "viewContract" && contract ? (
+                        ) : modalType === "viewContract" ? (
                             <>
                                 <div className="contract-modal-header">
                                     <h3>📋 Contract Details</h3>
                                     <button className="contract-modal-close-btn" onClick={() => setIsModalOpen(false)}>✕</button>
                                 </div>
+                                {!contract ? (
+                                    <div className="contract-modal-body" style={{ padding: '24px', textAlign: 'center', color: '#666' }}>
+                                        {checkingContract ? "Loading contract…" : "No contract is available for this order yet."}
+                                    </div>
+                                ) : (
                                 <div className="contract-modal-body">
                                 <div className="contract-details-modal">
                                     <div className="contract-header-info">
@@ -1487,14 +1528,28 @@ const MyOrders = () => {
                                     {/* Terms */}
                                     {contract.generatedTerms && (
                                         <div className="contract-terms-section">
-                                            <h4>📜 Contract Terms</h4>
-                                            <div className="terms-content">
-                                                {contract.generatedTerms}
-                                            </div>
+                                            <iframe
+                                                srcDoc={contract.generatedTerms}
+                                                sandbox="allow-same-origin"
+                                                style={{ width: '100%', minHeight: '600px', border: 'none', borderRadius: '6px' }}
+                                                title="Contract Document"
+                                            />
                                         </div>
                                     )}
+
+                                    {/* PDF Download */}
+                                    <div className="contract-pdf-download">
+                                        <button
+                                            className="contract-pdf-btn"
+                                            onClick={handleDownloadContractPdf}
+                                            disabled={pdfDownloading}
+                                        >
+                                            {pdfDownloading ? "Downloading..." : "⬇ Download Contract PDF"}
+                                        </button>
+                                    </div>
                                 </div>
                                 </div>
+                                )}
                             </>
                         ) : modalType === "requestReview" ? (
                             <>
@@ -1876,13 +1931,26 @@ const MyOrders = () => {
 
                             <div style={{ marginBottom: '14px' }}>
                                 <label style={{ fontWeight: 600, display: 'block', marginBottom: '4px' }}>Service Address</label>
-                                <input
-                                    type="text"
+                                <p style={{ fontSize: '12px', color: '#666', margin: '0 0 6px' }}>
+                                    The address where care will take place. Only Nigerian addresses are supported.
+                                </p>
+                                <AddressInput
                                     value={clientReviseAddress}
-                                    onChange={(e) => setClientReviseAddress(e.target.value)}
+                                    onChange={(addr) => setClientReviseAddress(addr)}
+                                    onValidation={(result) => {
+                                        if (result?.coordinates?.latitude && result?.coordinates?.longitude) {
+                                            setClientReviseGeoCoords({ lat: result.coordinates.latitude, lng: result.coordinates.longitude });
+                                        }
+                                    }}
                                     placeholder="Update service address if needed"
-                                    style={{ width: '100%', padding: '8px', borderRadius: '6px', border: '1px solid #ddd', fontSize: '14px' }}
+                                    country="ng"
+                                    autoValidate={false}
                                 />
+                                {clientReviseGeoCoords && (
+                                    <p style={{ fontSize: '12px', color: '#4caf50', margin: '4px 0 8px' }}>
+                                        📍 Location pinned — caregivers must be at this address to check in.
+                                    </p>
+                                )}
                             </div>
 
                             <div style={{ marginBottom: '14px' }}>
@@ -1981,7 +2049,7 @@ const MyOrders = () => {
                             return reqDays > 0 ? (
                                 <div className={`neg-schedule-guide ${done ? 'neg-schedule-guide--done' : ''}`}>
                                     <div className="neg-schedule-guide-text">
-                                        <strong>\uD83D\uDCC5 {reqDays} {reqDays === 1 ? 'day' : 'days'} per week required</strong>
+                                        <strong>📅 {reqDays} {reqDays === 1 ? 'day' : 'days'} per week required</strong>
                                         <span>Your contract is for {reqDays} visit{reqDays > 1 ? 's' : ''}/week. Add a time slot for each day.</span>
                                     </div>
                                     <span className={`neg-schedule-counter ${done ? 'neg-schedule-counter--done' : 'neg-schedule-counter--pending'}`}>
@@ -2001,6 +2069,13 @@ const MyOrders = () => {
                             <button onClick={() => {
                                 if (negInitSlotStart >= negInitSlotEnd) {
                                     toast.error('End time must be after start time.');
+                                    return;
+                                }
+                                const payOpt = (order?.paymentOption || order?.serviceType || '').toLowerCase();
+                                const reqDays = payOpt === 'one-time' ? 1
+                                    : (order?.frequencyPerWeek || order?.visitsPerWeek || order?.selectedPackage?.visitsPerWeek || order?.packageDetails?.visitsPerWeek || 1);
+                                if (negInitSchedule.length >= reqDays) {
+                                    toast.error(`You can only add ${reqDays} day${reqDays > 1 ? 's' : ''} for this contract. Remove a slot first to change it.`);
                                     return;
                                 }
                                 if (negInitSchedule.some(s => s.dayOfWeek === negInitSlotDay)) {
@@ -2023,47 +2098,24 @@ const MyOrders = () => {
                         )}
 
                         <label className="neg-start-label">Service Address</label>
-                        <input
-                            className="neg-start-input"
-                            type="text"
-                            placeholder="Service address"
+                        <p style={{ fontSize: '12px', color: '#666', margin: '0 0 6px' }}>
+                            The address where care will take place (e.g. your home). Only Nigerian addresses are supported.
+                        </p>
+                        <AddressInput
                             value={negInitAddress}
-                            onChange={(e) => setNegInitAddress(e.target.value)}
+                            onChange={(addr) => setNegInitAddress(addr)}
+                            onValidation={(result) => {
+                                if (result?.coordinates?.latitude && result?.coordinates?.longitude) {
+                                    setNegInitGeoCoords({ lat: result.coordinates.latitude, lng: result.coordinates.longitude });
+                                }
+                            }}
+                            placeholder="e.g. 12 Adeola Odeku, Victoria Island, Lagos"
+                            country="ng"
+                            autoValidate={false}
                         />
-                        {/* GPS toggle */}
-                        <div style={{ display: 'flex', alignItems: 'center', gap: '8px', margin: '6px 0 10px' }}>
-                            <input
-                                type="checkbox"
-                                id="neg-init-gps"
-                                checked={negInitConfirmAtAddress}
-                                onChange={(e) => {
-                                    const checked = e.target.checked;
-                                    setNegInitConfirmAtAddress(checked);
-                                    if (checked && navigator.geolocation) {
-                                        setNegInitCapturingGps(true);
-                                        navigator.geolocation.getCurrentPosition(
-                                            (pos) => {
-                                                setNegInitGpsCoords({ lat: pos.coords.latitude, lng: pos.coords.longitude });
-                                                setNegInitCapturingGps(false);
-                                            },
-                                            () => {
-                                                toast.error("Unable to capture GPS. Please allow location access.");
-                                                setNegInitConfirmAtAddress(false);
-                                                setNegInitCapturingGps(false);
-                                            }
-                                        );
-                                    } else if (!checked) {
-                                        setNegInitGpsCoords(null);
-                                    }
-                                }}
-                            />
-                            <label htmlFor="neg-init-gps" style={{ fontSize: '13px', color: '#555', cursor: 'pointer' }}>
-                                {negInitCapturingGps ? 'Capturing GPS…' : 'I am currently at this address'}
-                            </label>
-                        </div>
-                        {negInitGpsCoords && (
-                            <p style={{ fontSize: '12px', color: '#888', margin: '0 0 8px' }}>
-                                📍 GPS captured ({negInitGpsCoords.lat.toFixed(4)}, {negInitGpsCoords.lng.toFixed(4)})
+                        {negInitGeoCoords && (
+                            <p style={{ fontSize: '12px', color: '#4caf50', margin: '4px 0 8px' }}>
+                                📍 Location pinned — caregivers must be at this address to check in.
                             </p>
                         )}
 

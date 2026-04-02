@@ -48,13 +48,16 @@ const ClientVisitView = ({ sheet, orderId, onVisitReviewed, onSheetUpdated }) =>
   const clientReviewStatus = sheet.clientReviewStatus || "Pending";
   const isCancelled = sheet.status === "cancelled";
 
-  // Determine if cancellation will be a late cancellation (< 12h before scheduled start)
-  const isLateCancellation = (() => {
-    if (!sheet.scheduledDate) return false;
-    const scheduledTime = new Date(sheet.scheduledDate).getTime();
-    const now = Date.now();
-    const hoursUntilVisit = (scheduledTime - now) / (1000 * 60 * 60);
-    return hoursUntilVisit < 12;
+  // Determine cancellation tier based on hours until visit
+  // Early:  ≥ 24 h → full credit (100%)
+  // Mid:   12–24 h → 50% credit
+  // Late:   < 12 h → no credit (0%)
+  const cancellationTier = (() => {
+    if (!sheet.scheduledDate) return "early";
+    const hoursUntilVisit = (new Date(sheet.scheduledDate).getTime() - Date.now()) / (1000 * 60 * 60);
+    if (hoursUntilVisit < 12) return "late";
+    if (hoursUntilVisit < 24) return "mid";
+    return "early";
   })();
 
   const handleCancelVisit = async () => {
@@ -65,9 +68,15 @@ const ClientVisitView = ({ sheet, orderId, onVisitReviewed, onSheetUpdated }) =>
       cancelReason.trim() || undefined
     );
     if (result.success) {
-      const creditMsg = result.data.creditAmount
-        ? ` ₦${result.data.creditAmount.toLocaleString()} has been credited to your wallet.`
-        : "";
+      let creditMsg = "";
+      if (result.data.creditAmount != null && result.data.creditAmount > 0) {
+        creditMsg = ` ₦${result.data.creditAmount.toLocaleString()} has been credited to your wallet.`;
+        if (result.data.newCreditBalance != null) {
+          creditMsg += ` New balance: ₦${result.data.newCreditBalance.toLocaleString()}.`;
+        }
+      } else if (result.data.creditAmount === 0) {
+        creditMsg = " No credit was issued (late cancellation).";
+      }
       toast.success(`Visit cancelled.${creditMsg}`);
       setShowCancelConfirm(false);
       setCancelReason("");
@@ -256,7 +265,7 @@ const ClientVisitView = ({ sheet, orderId, onVisitReviewed, onSheetUpdated }) =>
       {/* Scheduled sheet info + reschedule */}
       {isScheduled && (
         <div className="cv-scheduled-info">
-          <p>This visit has not started yet. The caregiver will activate it when ready.</p>
+          <p>This visit has not started yet. The caregiver will check in when they arrive.</p>
           <p>You can cancel or reschedule this visit below.</p>
 
           {!showReschedule ? (
@@ -381,14 +390,19 @@ const ClientVisitView = ({ sheet, orderId, onVisitReviewed, onSheetUpdated }) =>
               <p className="cv-cancel-prompt">
                 Are you sure you want to cancel this visit?
               </p>
-              {isLateCancellation && (
+              {cancellationTier === "late" && (
                 <p className="cv-cancel-late-warning">
-                  ⚠️ This visit is less than 12 hours away. Late cancellations receive only 50% credit — the other 50% goes to the caregiver.
+                  ⚠️ This visit is less than 12 hours away. Late cancellations receive <strong>no credit</strong> — the full visit amount is forfeited to the caregiver.
                 </p>
               )}
-              {!isLateCancellation && sheet.scheduledDate && (
+              {cancellationTier === "mid" && (
+                <p className="cv-cancel-mid-warning">
+                  ⚠️ This visit is 12–24 hours away. You will receive a <strong>50% credit</strong> refund — the other 50% goes to the caregiver.
+                </p>
+              )}
+              {cancellationTier === "early" && sheet.scheduledDate && (
                 <p className="cv-cancel-full-credit">
-                  ✓ This visit is more than 12 hours away. You will receive a full credit refund.
+                  ✓ This visit is more than 24 hours away. You will receive a <strong>full credit refund</strong>.
                 </p>
               )}
               <textarea

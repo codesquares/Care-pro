@@ -9,9 +9,10 @@
  *   onNegotiationUpdate {fn}     — called with new DTO after any mutation
  *   onContractCreated   {fn}     — called with (contractId, negotiationDTO) when converted
  */
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { toast } from "react-toastify";
 import NegotiationService from "../../services/negotiationService";
+import AddressInput from "../AddressInput";
 import "./NegotiationPanel.css";
 
 const DAYS = ["Monday","Tuesday","Wednesday","Thursday","Friday","Saturday","Sunday"];
@@ -58,15 +59,24 @@ const NegotiationPanel = ({ negotiation: initial, role, order, onNegotiationUpda
   const [myTasks, setMyTasks] = useState(
     role === "client" ? (initial?.clientProposedTasks || []) : (initial?.caregiverProposedTasks || [])
   );
+  // For caregivers: pre-fill their schedule from the client's proposal when they haven't set one yet
+  const caregiverInitialSchedule = (initial?.caregiverProposedSchedule?.length > 0)
+    ? initial.caregiverProposedSchedule
+    : (initial?.clientProposedSchedule || []);
   const [mySchedule, setMySchedule] = useState(
-    role === "client" ? (initial?.clientProposedSchedule || []) : (initial?.caregiverProposedSchedule || [])
+    role === "client" ? (initial?.clientProposedSchedule || []) : caregiverInitialSchedule
+  );
+  // Track if the caregiver's schedule was pre-filled from the client's proposal
+  const [schedulePreFilled] = useState(
+    role === "caregiver" &&
+    !(initial?.caregiverProposedSchedule?.length > 0) &&
+    (initial?.clientProposedSchedule?.length > 0)
   );
   // Client-owned address fields
   const [serviceAddress, setServiceAddress] = useState(initial?.serviceAddress || "");
   const [accessInstructions, setAccessInstructions] = useState(initial?.accessInstructions || "");
-  const [confirmAtServiceAddress, setConfirmAtServiceAddress] = useState(false);
-  const [gpsCoords, setGpsCoords] = useState(null);
-  const [capturingGps, setCapturingGps] = useState(false);
+  // Geocoded coordinates from Google Maps autocomplete — used for caregiver check-in validation
+  const [addressGeoCoords, setAddressGeoCoords] = useState(null);
   const [specialRequirements, setSpecialRequirements] = useState(initial?.specialClientRequirements || "");
   const [additionalNotes, setAdditionalNotes] = useState(initial?.additionalNotes || "");
   const [agreedStartDate, setAgreedStartDate] = useState(initial?.agreedStartDate ? initial.agreedStartDate.split("T")[0] : "");
@@ -135,14 +145,12 @@ const NegotiationPanel = ({ negotiation: initial, role, order, onNegotiationUpda
         accessInstructions,
         agreedStartDate: agreedStartDate ? `${agreedStartDate}T00:00:00Z` : undefined,
         submitForCaregiverReview: submitForReview,
+        // Geocoded coordinates from Google Maps — used for caregiver check-in validation
+        ...(addressGeoCoords && {
+          serviceLatitude: addressGeoCoords.lat,
+          serviceLongitude: addressGeoCoords.lng,
+        }),
       };
-      if (confirmAtServiceAddress && gpsCoords) {
-        payload.confirmAtServiceAddress = true;
-        payload.serviceLatitude = gpsCoords.lat;
-        payload.serviceLongitude = gpsCoords.lng;
-      } else {
-        payload.confirmAtServiceAddress = false;
-      }
     } else {
       // Caregiver — cannot send serviceAddress, accessInstructions, or GPS fields
       payload = {
@@ -157,13 +165,23 @@ const NegotiationPanel = ({ negotiation: initial, role, order, onNegotiationUpda
     const fn = role === "client" ? NegotiationService.clientUpdate : NegotiationService.caregiverUpdate;
     const result = await fn.call(NegotiationService, neg.id, payload);
     if (result.success) {
-      update(result.data);
+      // Merge the response defensively: preserve existing fields the backend may not echo back
+      // (e.g. agreedStartDate is often omitted from partial PUT responses)
+      const merged = { ...neg, ...result.data };
+      update(merged);
       // Sync my editable fields from response
-      setMyTasks(role === "client" ? result.data.clientProposedTasks || [] : result.data.caregiverProposedTasks || []);
-      setMySchedule(role === "client" ? result.data.clientProposedSchedule || [] : result.data.caregiverProposedSchedule || []);
-      setServiceAddress(result.data.serviceAddress || "");
-      setAccessInstructions(result.data.accessInstructions || "");
-      setAgreedStartDate(result.data.agreedStartDate ? result.data.agreedStartDate.split("T")[0] : "");
+      setMyTasks(role === "client" ? merged.clientProposedTasks || [] : merged.caregiverProposedTasks || []);
+      setMySchedule(role === "client"
+        ? merged.clientProposedSchedule || []
+        : (merged.caregiverProposedSchedule?.length > 0
+            ? merged.caregiverProposedSchedule
+            : merged.clientProposedSchedule || []));
+      setServiceAddress(merged.serviceAddress || "");
+      setAccessInstructions(merged.accessInstructions || "");
+      // Only update agreedStartDate if we have a value — never wipe a date the user just set
+      if (merged.agreedStartDate) {
+        setAgreedStartDate(merged.agreedStartDate.split("T")[0]);
+      }
       setEditMode(false);
       toast.success(submitForReview ? "Submitted for review!" : "Draft saved.");
     } else {
@@ -230,6 +248,14 @@ const NegotiationPanel = ({ negotiation: initial, role, order, onNegotiationUpda
     setAbandoning(false);
   };
 
+  // When the user opens edit mode, re-sync agreedStartDate from the persisted DTO
+  // so any drift between local state and backend value is corrected before they see the field
+  useEffect(() => {
+    if (editMode && neg?.agreedStartDate) {
+      setAgreedStartDate(neg.agreedStartDate.split("T")[0]);
+    }
+  }, [editMode]); // eslint-disable-line react-hooks/exhaustive-deps
+
   const addTask = () => {
     const t = newTask.trim();
     if (!t) return;
@@ -241,6 +267,11 @@ const NegotiationPanel = ({ negotiation: initial, role, order, onNegotiationUpda
 
   const addSlot = () => {
     if (slotStart >= slotEnd) { toast.error("End time must be after start time."); return; }
+    // Enforce the exact number of required days — no more
+    if (mySchedule.length >= requiredDays) {
+      toast.error(`You can only add ${requiredDays} day${requiredDays > 1 ? 's' : ''} for this contract. Remove a slot first to change it.`);
+      return;
+    }
     // Prevent duplicate days
     if (mySchedule.some((s) => s.dayOfWeek === slotDay)) {
       toast.error(`You already have a slot for ${slotDay}. Remove it first if you want to change the time.`);
@@ -427,6 +458,11 @@ const NegotiationPanel = ({ negotiation: initial, role, order, onNegotiationUpda
             )}
             {editMode ? (
               <>
+                {role === "caregiver" && schedulePreFilled && (
+                  <p className="neg-hint" style={{ marginBottom: '8px', color: '#555', fontSize: '13px' }}>
+                    📋 Pre-filled from the client's proposed schedule — adjust as needed.
+                  </p>
+                )}
                 <ScheduleList slots={mySchedule} editable onRemove={removeSlot} />
                 <div className="neg-add-slot-form">
                   <select className="neg-select" value={slotDay} onChange={(e) => setSlotDay(e.target.value)}>
@@ -475,46 +511,24 @@ const NegotiationPanel = ({ negotiation: initial, role, order, onNegotiationUpda
               {role === "client" && (
                 <>
                   <label className="neg-label">Service Address</label>
-                  <input
-                    className="neg-input"
-                    type="text"
+                  <p className="neg-hint" style={{ margin: '0 0 6px', fontSize: '12px', color: '#666' }}>
+                    This is the address where care will take place (e.g. the client's home or another location in Nigeria). Only Nigerian addresses are supported.
+                  </p>
+                  <AddressInput
                     value={serviceAddress}
-                    onChange={(e) => setServiceAddress(e.target.value)}
+                    onChange={setServiceAddress}
+                    onValidation={(result) => {
+                      if (result?.coordinates?.latitude && result?.coordinates?.longitude) {
+                        setAddressGeoCoords({ lat: result.coordinates.latitude, lng: result.coordinates.longitude });
+                      }
+                    }}
                     placeholder="e.g. 12 Adeola Odeku, Victoria Island, Lagos"
+                    country="ng"
+                    autoValidate={false}
                   />
-                  <div className="neg-gps-toggle" style={{ display: 'flex', alignItems: 'center', gap: '8px', margin: '8px 0' }}>
-                    <input
-                      type="checkbox"
-                      id="neg-gps-toggle"
-                      checked={confirmAtServiceAddress}
-                      onChange={(e) => {
-                        const checked = e.target.checked;
-                        setConfirmAtServiceAddress(checked);
-                        if (checked && navigator.geolocation) {
-                          setCapturingGps(true);
-                          navigator.geolocation.getCurrentPosition(
-                            (pos) => {
-                              setGpsCoords({ lat: pos.coords.latitude, lng: pos.coords.longitude });
-                              setCapturingGps(false);
-                            },
-                            () => {
-                              toast.error("Unable to capture GPS location. Please allow location access.");
-                              setConfirmAtServiceAddress(false);
-                              setCapturingGps(false);
-                            }
-                          );
-                        } else if (!checked) {
-                          setGpsCoords(null);
-                        }
-                      }}
-                    />
-                    <label htmlFor="neg-gps-toggle" style={{ fontSize: '13px', color: '#555', cursor: 'pointer' }}>
-                      {capturingGps ? 'Capturing GPS…' : 'I am currently at this address'}
-                    </label>
-                  </div>
-                  {gpsCoords && (
-                    <p style={{ fontSize: '12px', color: '#888', margin: '0 0 8px' }}>
-                      📍 GPS captured ({gpsCoords.lat.toFixed(4)}, {gpsCoords.lng.toFixed(4)})
+                  {addressGeoCoords && (
+                    <p style={{ fontSize: '12px', color: '#4caf50', margin: '4px 0 8px' }}>
+                      📍 Location pinned — caregivers must be at this address to check in.
                     </p>
                   )}
 

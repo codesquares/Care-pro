@@ -1,6 +1,7 @@
 import { useState, useCallback, useRef } from "react";
 import { toast } from "react-toastify";
 import TaskSheetService from "../../services/taskSheetService";
+import VisitCancellationService from "../../services/visitCancellationService";
 import TaskItem from "./TaskItem";
 import AddTaskInput from "./AddTaskInput";
 import CheckInSection from "./CheckInSection";
@@ -29,6 +30,11 @@ const TaskSheetPage = ({ sheet, orderId, onSheetUpdated, onActivateSheet, activa
   const [observationCount, setObservationCount] = useState(sheet.observationReportCount || 0);
   const [incidentCount, setIncidentCount] = useState(sheet.incidentReportCount || 0);
   const [respondingToProposals, setRespondingToProposals] = useState(false);
+
+  // Caregiver cancel-request state
+  const [showCancelRequest, setShowCancelRequest] = useState(false);
+  const [cancelRequestReason, setCancelRequestReason] = useState("");
+  const [cancelRequestLoading, setCancelRequestLoading] = useState(false);
 
   const isSubmitted = sheet.status === "submitted";
   const isCancelled = sheet.status === "cancelled";
@@ -188,6 +194,27 @@ const TaskSheetPage = ({ sheet, orderId, onSheetUpdated, onActivateSheet, activa
 
   const completedCount = tasks.filter((t) => t.completed).length;
 
+  const handleRequestCancellation = async () => {
+    if (!cancelRequestReason.trim()) {
+      toast.error("Please provide a reason for the cancellation request.");
+      return;
+    }
+    setCancelRequestLoading(true);
+    const result = await VisitCancellationService.requestCaregiverCancellation(
+      orderId,
+      sheet.id,
+      cancelRequestReason
+    );
+    if (result.success) {
+      toast.success(result.data.message || "Cancellation request submitted. The client will be notified.");
+      setShowCancelRequest(false);
+      setCancelRequestReason("");
+    } else {
+      toast.error(result.error || "Failed to submit cancellation request.");
+    }
+    setCancelRequestLoading(false);
+  };
+
   return (
     <div className={`ts-page ${isReadOnly ? "ts-page--submitted" : ""}`}>
       {orderCompleted && (
@@ -216,21 +243,14 @@ const TaskSheetPage = ({ sheet, orderId, onSheetUpdated, onActivateSheet, activa
                   {" — "}{new Date(sheet.scheduledDate).toLocaleDateString(undefined, { weekday: "long", month: "long", day: "numeric" })}
                 </span>
               )}
-              <p className="ts-scheduled-hint">Activate this visit when you are ready to begin.</p>
+              <p className="ts-scheduled-hint">Check in at the service location when you are ready to begin.</p>
             </div>
           </div>
-          <button
-            className="ts-activate-btn"
-            onClick={() => onActivateSheet && onActivateSheet(sheet.id)}
-            disabled={activating}
-          >
-            {activating ? "Activating…" : "▶ Activate Visit"}
-          </button>
         </div>
       )}
 
-      {/* Check-in section — hidden for scheduled sheets */}
-      {!isScheduled && (
+      {/* Check-in section */}
+      {!isSubmitted && !isCancelled && (
         <CheckInSection
           sheet={{ ...sheet, checkin }}
           orderId={orderId}
@@ -395,6 +415,52 @@ const TaskSheetPage = ({ sheet, orderId, onSheetUpdated, onActivateSheet, activa
         sheetNumber={sheet.sheetNumber}
         submitting={submitting}
       />
+
+      {/* Caregiver cancel-request section */}
+      {!isCancelled && !isSubmitted && (
+        <div className="ts-caregiver-cancel-section">
+          {!showCancelRequest ? (
+            <button
+              className="ts-caregiver-cancel-btn"
+              onClick={() => setShowCancelRequest(true)}
+            >
+              ✕ Request Visit Cancellation
+            </button>
+          ) : (
+            <div className="ts-caregiver-cancel-form">
+              <p className="ts-caregiver-cancel-prompt">
+                ⚠️ Request Visit Cancellation
+              </p>
+              <p className="ts-caregiver-cancel-info">
+                The client will be notified and must confirm the cancellation. Please provide a clear reason.
+              </p>
+              <textarea
+                className="ts-caregiver-cancel-reason"
+                placeholder="Reason for cancellation request (required)"
+                value={cancelRequestReason}
+                onChange={(e) => setCancelRequestReason(e.target.value)}
+                rows="3"
+              />
+              <div className="ts-caregiver-cancel-actions">
+                <button
+                  className="ts-caregiver-cancel-dismiss-btn"
+                  onClick={() => { setShowCancelRequest(false); setCancelRequestReason(""); }}
+                  disabled={cancelRequestLoading}
+                >
+                  Go Back
+                </button>
+                <button
+                  className="ts-caregiver-cancel-submit-btn"
+                  onClick={handleRequestCancellation}
+                  disabled={cancelRequestLoading || !cancelRequestReason.trim()}
+                >
+                  {cancelRequestLoading ? "Submitting..." : "Submit Request"}
+                </button>
+              </div>
+            </div>
+          )}
+        </div>
+      )}
 
       {/* Observation report modal */}
       <ObservationReportModal
