@@ -33,6 +33,7 @@ const CaregiverOrderDetails = () => {
     const [contractLoading, setContractLoading] = useState(false);
     const [contractError, setContractError] = useState(null);
     const [contractActionLoading, setContractActionLoading] = useState(false);
+    const [pdfDownloading, setPdfDownloading] = useState(false);
     
     // Contract generation modal state
     const [showContractGenerationModal, setShowContractGenerationModal] = useState(false);
@@ -368,6 +369,30 @@ const CaregiverOrderDetails = () => {
         setIsModalOpen(false);
         setModalType("");
         setNotes("");
+    };
+
+    const handleDownloadContractPdf = async () => {
+        if (!contract?.id) return;
+        setPdfDownloading(true);
+        try {
+            const authToken = localStorage.getItem("authToken");
+            const response = await fetch(`${config.BASE_URL}/contracts/${contract.id}/pdf`, {
+                headers: { Authorization: `Bearer ${authToken}` },
+            });
+            if (!response.ok) throw new Error("Failed to download PDF");
+            const blob = await response.blob();
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement("a");
+            a.href = url;
+            a.download = `contract-${contract.id}.pdf`;
+            document.body.appendChild(a);
+            a.click();
+            document.body.removeChild(a);
+            URL.revokeObjectURL(url);
+        } catch {
+            toast.error("Failed to download contract PDF.");
+        }
+        setPdfDownloading(false);
     };
 
     const handleSubmitAction = async () => {
@@ -916,12 +941,25 @@ const CaregiverOrderDetails = () => {
 
                                     {contract.generatedTerms && (
                                         <div className="contract-terms">
-                                            <h4>Contract Terms</h4>
-                                            <div className="terms-content">
-                                                {contract.generatedTerms}
-                                            </div>
+                                            <iframe
+                                                srcDoc={contract.generatedTerms}
+                                                sandbox="allow-same-origin"
+                                                style={{ width: '100%', minHeight: '600px', border: 'none', borderRadius: '6px' }}
+                                                title="Contract Document"
+                                            />
                                         </div>
                                     )}
+
+                                    {/* PDF Download */}
+                                    <div className="contract-pdf-download">
+                                        <button
+                                            className="contract-pdf-btn"
+                                            onClick={handleDownloadContractPdf}
+                                            disabled={pdfDownloading}
+                                        >
+                                            {pdfDownloading ? "Downloading..." : "⬇ Download Contract PDF"}
+                                        </button>
+                                    </div>
                                 </div>
                                 </div>
                             </>

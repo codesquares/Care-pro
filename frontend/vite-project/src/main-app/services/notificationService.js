@@ -59,6 +59,8 @@ const generateTitle = (type, senderId) => {
       return `📋 Visit submitted for review`;
     case 'visit_cancelled_by_client':
       return `🚫 Visit Cancelled`;
+    case 'visit_cancellation_requested':
+      return `⚠️ Caregiver Cancellation Request`;
     case 'negotiation_started':
       return `🤝 Negotiation started`;
     case 'negotiation_counter':
@@ -133,6 +135,8 @@ const generateContent = (type, senderId) => {
       return `A care visit has been submitted. Please review and approve.`;
     case 'visit_cancelled_by_client':
       return `The client has cancelled an upcoming visit.`;
+    case 'visit_cancellation_requested':
+      return `Your caregiver has requested to cancel an upcoming visit. Please review and confirm or deny the cancellation.`;
     case 'negotiation_started':
       return `A negotiation has been started on your order. Tap to review the terms.`;
     case 'negotiation_counter':

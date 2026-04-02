@@ -159,9 +159,12 @@ const TYPE_MAP = {
   'visit_completed':             'VisitSubmitted',
 
   // Visit cancellation
-  'visit_cancelled_by_client':   'VisitCancelledByClient',
-  'visitcancelledbyclient':      'VisitCancelledByClient',
-  'visit cancelled by client':   'VisitCancelledByClient',
+  'visit_cancelled_by_client':      'VisitCancelledByClient',
+  'visitcancelledbyclient':         'VisitCancelledByClient',
+  'visit cancelled by client':      'VisitCancelledByClient',
+  'visit_cancellation_requested':   'VisitCancellationRequested',
+  'visitcancellationrequested':     'VisitCancellationRequested',
+  'visit cancellation requested':   'VisitCancellationRequested',
 
   // Misc
   'caregiver_report':            'SystemNotice',
@@ -225,6 +228,7 @@ const KNOWN_CANONICAL = new Set([
   'NegotiationConverted', 'NegotiationAbandoned',
   'VisitSubmitted',
   'VisitCancelledByClient',
+  'VisitCancellationRequested',
   'Broadcast',
   'GigDeletionReminder', 'GigPermanentlyDeleted',
   'DisputeRaised',
@@ -473,7 +477,8 @@ export const getNotificationRoute = (notification, userRole) => {
 
     // ── Visit / Task Sheet notifications ─────────────────
     case 'VisitSubmitted':
-    case 'VisitCancelledByClient': {
+    case 'VisitCancelledByClient':
+    case 'VisitCancellationRequested': {
       const visitOrderId = notification.orderId || relatedEntityId;
       if (visitOrderId) {
         if (isClient) return `/app/client/my-order/${visitOrderId}`;
@@ -609,6 +614,7 @@ export const getNotificationActionLabel = (rawType) => {
       return 'View Order';
     case 'VisitSubmitted':
     case 'VisitCancelledByClient':
+    case 'VisitCancellationRequested':
       return 'View Visit';
     case 'GigDeletionReminder':
       return 'Restore Gig';
@@ -707,6 +713,8 @@ export const getNotificationTypeIcon = (rawType) => {
       return '📋';
     case 'VisitCancelledByClient':
       return '🚫';
+    case 'VisitCancellationRequested':
+      return '⚠️';
     case 'GigDeletionReminder':
       return '⚠️';
     case 'GigPermanentlyDeleted':

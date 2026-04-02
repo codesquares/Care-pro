@@ -54,8 +54,9 @@ const CommitmentSuccess = () => {
 
       // Auto-navigate to chat after a brief delay so the user sees the success state
       setTimeout(() => {
+        const gigId = localStorage.getItem('commitmentGigId');
         navigate(`/app/client/message/${caregiverId}`, {
-          state: { recipientName: caregiverName, autoUnlocked: true },
+          state: { recipientName: caregiverName, autoUnlocked: true, serviceId: gigId || undefined },
         });
       }, 2500);
     } catch (err) {
@@ -164,8 +165,11 @@ const CommitmentSuccess = () => {
 
   const handleGoToChat = () => {
     const caregiverId = paymentData?.caregiverId;
+    const gigId = paymentData?.gigId || localStorage.getItem('commitmentGigId');
     if (caregiverId) {
-      navigate(`/app/client/message/${caregiverId}`);
+      navigate(`/app/client/message/${caregiverId}`, {
+        state: { serviceId: gigId || undefined },
+      });
     } else {
       navigate('/app/client/message');
     }
