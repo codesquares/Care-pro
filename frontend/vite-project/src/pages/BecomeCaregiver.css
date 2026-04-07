@@ -10,10 +10,10 @@
   background-size: cover;
   background-position: center right;
   background-repeat: no-repeat;
-  min-height: 520px;
+  min-height: 800px;
   display: flex;
   align-items: center;
-  padding: 100px 10% 60px;
+  padding: 150px 10% 80px;
   position: relative;
   color: #fff;
 }
@@ -49,7 +49,8 @@
   opacity: 0.9;
 }
 
-.become-caregiver-page .primary-btn {
+.become-caregiver-page .primary-btn,
+.book-caregiver .primary-btn {
   background: #d4a43a;
   color: #fff;
   border: none;
@@ -61,7 +62,8 @@
   transition: all 0.3s ease;
 }
 
-.become-caregiver-page .primary-btn:hover {
+.become-caregiver-page .primary-btn:hover,
+.book-caregiver .primary-btn:hover {
   background: #c49530;
   transform: translateY(-2px);
 }
@@ -93,7 +95,7 @@
   height: 500px;
   border-radius: 20px;
   overflow: hidden;
-  box-shadow: 0 20px 40px rgba(0,0,0,0.1);
+  box-shadow: 0 20px 40px rgba(0, 0, 0, 0.1);
 }
 
 .smart-card img {
@@ -112,9 +114,17 @@
   color: #fff;
 }
 
-.connect-grad { background: linear-gradient(to top, #002b44 0%, rgba(0,43,68,0) 100%); }
-.manage-grad { background: linear-gradient(to top, #00c6ba 0%, rgba(0,198,186,0) 100%); }
-.earn-grad { background: linear-gradient(to top, #f3b14e 0%, rgba(243,177,78,0) 100%); }
+.connect-grad {
+  background: linear-gradient(to top, #002b44 0%, rgba(0, 43, 68, 0) 100%);
+}
+
+.manage-grad {
+  background: linear-gradient(to top, #00c6ba 0%, rgba(0, 198, 186, 0) 100%);
+}
+
+.earn-grad {
+  background: linear-gradient(to top, #f3b14e 0%, rgba(243, 177, 78, 0) 100%);
+}
 
 .card-content h3 {
   font-size: 28px;
@@ -173,7 +183,7 @@
   background: #fff;
   padding: 28px 28px;
   border-radius: 16px;
-  box-shadow: 0 2px 16px rgba(0,0,0,0.06);
+  box-shadow: 0 2px 16px rgba(0, 0, 0, 0.06);
   align-items: flex-start;
 }
 
@@ -237,7 +247,7 @@
   background: #fff;
   border: 1px solid #f0f0f0;
   border-radius: 12px;
-  box-shadow: 0 4px 20px rgba(0,0,0,0.03);
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.03);
 }
 
 .p-icon {
@@ -305,7 +315,7 @@
   border-radius: 20px;
   overflow: hidden;
   border: 1px solid #e8e8e8;
-  box-shadow: 0 4px 24px rgba(0,0,0,0.06);
+  box-shadow: 0 4px 24px rgba(0, 0, 0, 0.06);
   padding: 50px;
   gap: 50px;
 }
@@ -360,17 +370,42 @@
 
 /* Responsive */
 @media (max-width: 1024px) {
-  .become-hero { text-align: center; background-position: center center; }
-  .become-hero .hero-content { max-width: 100%; }
-  
-  .smart-grid { grid-template-columns: 1fr; }
-  .smart-card { height: 400px; }
-  
-  .works-content { flex-direction: column; }
-  .works-left-img { max-width: 400px; }
-  
-  .prof-services-grid { grid-template-columns: 1fr; }
-  .get-started-banner { flex-direction: column; gap: 20px; text-align: center; }
-  
-  .opp-card { flex-direction: column; }
+  .become-hero {
+    text-align: center;
+    background-position: center center;
+  }
+
+  .become-hero .hero-content {
+    max-width: 100%;
+  }
+
+  .smart-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .smart-card {
+    height: 400px;
+  }
+
+  .works-content {
+    flex-direction: column;
+  }
+
+  .works-left-img {
+    max-width: 400px;
+  }
+
+  .prof-services-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .get-started-banner {
+    flex-direction: column;
+    gap: 20px;
+    text-align: center;
+  }
+
+  .opp-card {
+    flex-direction: column;
+  }
 }

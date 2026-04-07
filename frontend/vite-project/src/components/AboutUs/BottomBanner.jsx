@@ -1,13 +1,14 @@
 import React from 'react';
 import { useNavigate } from "react-router-dom";
 import "./BottomBanner.css";
+import ctabannerImg from '../../assets/ctabanner.png';
 
 const BottomBanner = () => {
     const navigate = useNavigate();
     
     return (
       <div className='about-cta-container'> 
-        <div className='about-cta-banner'>
+        <div className='about-cta-banner' style={{ backgroundImage: `url(${ctabannerImg})`, backgroundSize: 'cover', backgroundPosition: 'center' }}>
           <div className='cta-content'>
             <h2>Looking for the perfect care professional or are you a care professional looking for work?</h2>
             <p>Join thousands of families who trust CarePro for quality care.</p>

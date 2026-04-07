@@ -11,6 +11,7 @@ import victor from '../assets/victor.jpeg';
 import james from '../assets/faniyi.jpeg'; // Using faniyi.jpeg as James as per previous design logic
 import ifeoluwa from '../assets/ifeoluwa.jpeg';
 import enoch from '../assets/enochaina.png';
+import ctabannerImg from '../assets/ctabanner.png';
 
 const teamMembers = [
     {
@@ -87,7 +88,7 @@ const Team = () => {
 
                 {/* CTA SECTION */}
                 <section className="team-cta">
-                    <div className="cta-banner">
+                    <div className="cta-banner" style={{ backgroundImage: `url(${ctabannerImg})`, backgroundSize: 'cover', backgroundPosition: 'center' }}>
                         <div className="cta-content">
                             <h2>Start your journey on Carepro</h2>
                             <p>Join thousands of families who trust CarePro for quality care.</p>
