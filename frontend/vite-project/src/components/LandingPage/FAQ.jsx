@@ -1,10 +1,10 @@
 import { useState } from 'react';
 import '../../styles/components/FAQ.css';
 
-const FAQ = () => {
+const FAQ = ({ questions: customQuestions }) => {
   const [activeIndex, setActiveIndex] = useState(null);
 
-  const questions = [
+  const defaultQuestions = [
     {
       question: 'What types of healthcare professionals can join the platform?',
       answer:
@@ -37,6 +37,8 @@ const FAQ = () => {
     },
     // Add more questions as needed
   ];
+
+  const questions = customQuestions || defaultQuestions;
 
   const toggleQuestion = (index) => {
     // Set the active index to the currently clicked item, or null if the same item is clicked again

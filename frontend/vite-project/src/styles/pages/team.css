@@ -19,8 +19,8 @@
   background-position: center;
   background-repeat: no-repeat;
   color: #ffffff;
-  padding: 100px 10%;
-  min-height: 400px;
+  padding: 120px 10%;
+  min-height: 600px;
   display: flex;
   align-items: center;
   position: relative;
@@ -38,14 +38,14 @@
 }
 
 .hero-content .subtitle {
-  font-size: 18px;
+  font-size: 22px;
   font-weight: 500;
   margin-bottom: 20px;
   opacity: 0.9;
 }
 
 .hero-content h1 {
-  font-size: 48px;
+  font-size: 64px;
   font-weight: 700;
   line-height: 1.2;
   margin: 0;
@@ -53,11 +53,14 @@
 
 @media (max-width: 768px) {
   .team-hero {
-    padding: 60px 5%;
-    min-height: 300px;
+    padding: 80px 5%;
+    min-height: 450px;
+  }
+  .hero-content .subtitle {
+    font-size: 18px;
   }
   .hero-content h1 {
-    font-size: 32px;
+    font-size: 40px;
   }
 }
 
@@ -159,18 +162,7 @@
 }
 
 /* Decorative arc in CTA */
-.cta-banner::before {
-    content: "";
-    position: absolute;
-    bottom: -100px;
-    left: 50%;
-    transform: translateX(-50%);
-    width: 600px;
-    height: 300px;
-    background: radial-gradient(ellipse at center, rgba(255, 184, 0, 0.1) 0%, transparent 70%);
-    border-top: 4px solid rgba(255, 184, 0, 0.2);
-    border-radius: 50%;
-}
+
 
 .cta-content {
   position: relative;
