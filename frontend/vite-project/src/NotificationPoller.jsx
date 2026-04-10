@@ -1,6 +1,8 @@
 import { useEffect, useRef } from 'react';
 import { useDispatch, useSelector } from 'react-redux';
-import { fetchNotifications, fetchUnreadCount } from './main-app/Redux/slices/notificationSlice';
+import { fetchNotifications, fetchUnreadCount, notificationReceived, unreadCountUpdated, clearNotifications } from './main-app/Redux/slices/notificationSlice';
+import { useAuth } from './main-app/context/AuthContext';
+import signalRNotificationService from './main-app/services/signalRNotificationService';
 
 const CARE_REQUEST_TYPES = [
   'care_request_matched',
@@ -11,10 +13,49 @@ const CARE_REQUEST_TYPES = [
 
 const NotificationPoller = () => {
   const dispatch = useDispatch();
+  const { isAuthenticated, user } = useAuth();
   const { notifications } = useSelector((state) => state.notifications);
   const seenIdsRef = useRef(new Set());
+  const connectedRef = useRef(false);
 
-  // Emit CustomEvents for new care-request notifications so open pages can react
+  // ── SignalR connection: connect on login, disconnect on logout ──
+  useEffect(() => {
+    if (!isAuthenticated || !user?.id) {
+      // Not logged in → disconnect if we were connected, clear state
+      if (connectedRef.current) {
+        signalRNotificationService.disconnect();
+        connectedRef.current = false;
+        dispatch(clearNotifications());
+      }
+      return;
+    }
+
+    const token = localStorage.getItem('authToken');
+    if (!token) return;
+
+    // Immediately fetch existing notifications via REST on login
+    dispatch(fetchNotifications());
+    dispatch(fetchUnreadCount());
+
+    // Wire up SignalR push handlers before connecting
+    signalRNotificationService.onNotification((notification) => {
+      dispatch(notificationReceived(notification));
+    });
+    signalRNotificationService.onUnreadCountChanged((count) => {
+      dispatch(unreadCountUpdated(count));
+    });
+
+    signalRNotificationService.connect(token, user.id).then(() => {
+      connectedRef.current = true;
+    });
+
+    return () => {
+      signalRNotificationService.disconnect();
+      connectedRef.current = false;
+    };
+  }, [isAuthenticated, user?.id, dispatch]);
+
+  // ── Emit CustomEvents for care-request notifications (unchanged) ──
   useEffect(() => {
     if (!notifications?.length) return;
 
@@ -32,28 +73,6 @@ const NotificationPoller = () => {
       seenIdsRef.current.add(n.id);
     }
   }, [notifications]);
-
-  useEffect(() => {
-    // Check for auth token before making API calls
-    const token = localStorage.getItem('authToken');
-    if (!token) {
-      return; // Don't poll notifications if not logged in
-    }
-
-    dispatch(fetchNotifications());
-    dispatch(fetchUnreadCount());
-
-    const interval = setInterval(() => {
-      // Re-check token on each poll in case user logs out
-      const currentToken = localStorage.getItem('authToken');
-      if (currentToken) {
-        dispatch(fetchNotifications());
-        dispatch(fetchUnreadCount());
-      }
-    }, 30000); // 30 seconds
-
-    return () => clearInterval(interval);
-  }, [dispatch]);
 
   return null;
 };

@@ -78,11 +78,11 @@ function App() {
   return (
     <GoogleOAuthProvider clientId={GOOGLE_CLIENT_ID}>
       <BlogProvider>
-        <NotificationPoller />
         {/* <NotificationProvider> */}
           <MessageProvider>
             <Router future={{ v7_startTransition: true, v7_relativeSplatPath: true }}>
               <AuthProvider>
+                <NotificationPoller />
                 <CaregiverStatusProvider>
                   <ErrorBoundary>
                     <AppContent />

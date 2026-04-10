@@ -58,7 +58,8 @@ export function CaregiverStatusProvider({ children }) {
       
       const verificationData = await getDojahStatus(userId, 'Caregiver', token);
       
-      const isVerified = verificationData?.verificationStatus === "completed" || 
+      const status = verificationData?.verificationStatus?.toLowerCase?.() || '';
+      const isVerified = status === "completed" || status === "success" ||
                         verificationData?.isVerified === true;
       
       setStatusData(prev => ({
@@ -298,6 +299,24 @@ export function CaregiverStatusProvider({ children }) {
     return result;
   };
 
+  // Optimistically mark verification as pending without an API call.
+  // Used immediately after user completes the Dojah widget, before the backend webhook arrives.
+  const setVerificationPending = () => {
+    setStatusData(prev => ({
+      ...prev,
+      verificationStatus: {
+        ...prev.verificationStatus,
+        verificationStatus: 'Pending',
+        verified: false,
+        isVerified: false,
+      },
+      isVerified: false,
+      verificationLoading: false,
+      verificationError: null,
+      lastUpdated: new Date().toISOString()
+    }));
+  };
+
   // Context value
   const value = {
     // Status data
@@ -308,6 +327,7 @@ export function CaregiverStatusProvider({ children }) {
     updateVerificationStatus,
     updateQualificationStatus,
     updateCertificates,
+    setVerificationPending,
     
     // Helper methods
     getPublishingEligibility: () => ({

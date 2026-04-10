@@ -14,6 +14,7 @@ import { toast } from "react-toastify";
 import config from "../../../config"; // Import centralized config for API URLs
 // import { generateUsername } from "../../../utils/usernameGenerator"; // TODO: Backend persistence not implemented yet
 import { useAuth } from "../../../context/AuthContext";
+import { useCaregiverStatus } from "../../../contexts/CaregiverStatusContext";
 
 /**
  * Normalize verification status from API response
@@ -65,6 +66,7 @@ const normalizeVerificationStatus = (status) => {
 
 const ProfileHeader = () => {
   const { updateUser } = useAuth();
+  const { verificationStatus: contextVerificationStatus, isVerified: contextIsVerified } = useCaregiverStatus();
   const [profile, setProfile] = useState({
     name: "",
     username: "",
@@ -100,6 +102,28 @@ const ProfileHeader = () => {
       isMountedRef.current = false;
     };
   }, []);
+
+  // Sync verification status from global context when it updates
+  // This ensures ProfileHeader reflects changes made on the VerificationPage
+  useEffect(() => {
+    if (contextIsVerified) {
+      setStatusFromApi(prev => ({
+        ...prev,
+        verified: true,
+        isVerified: true,
+        verificationStatus: 'completed',
+        hasVerification: true
+      }));
+    } else if (contextVerificationStatus?.verificationStatus?.toLowerCase?.() === 'pending') {
+      setStatusFromApi(prev => ({
+        ...prev,
+        verified: false,
+        isVerified: false,
+        verificationStatus: 'pending',
+        hasVerification: true
+      }));
+    }
+  }, [contextIsVerified, contextVerificationStatus]);
 
   useEffect(() => {
     return () => {};
@@ -438,7 +462,11 @@ const ProfileHeader = () => {
           // Normalize verification status to handle different formats
           const normalizedStatus = normalizeVerificationStatus(verificationStatus);
           
-          setStatusFromApi(normalizedStatus);
+          // Only apply API result if context doesn't already have a fresher pending/verified state
+          const ctxStatus = contextVerificationStatus?.verificationStatus?.toLowerCase?.();
+          if (ctxStatus !== 'pending' && !contextIsVerified) {
+            setStatusFromApi(normalizedStatus);
+          }
         }
       } catch (verErr) {
         
@@ -457,6 +485,25 @@ const ProfileHeader = () => {
           message: 'Could not fetch verification status',
           hasVerification: false
         });
+      }
+
+      // Also sync from context if it has fresher data (e.g. after verification submission)
+      if (contextIsVerified) {
+        setStatusFromApi(prev => ({
+          ...prev,
+          verified: true,
+          isVerified: true,
+          verificationStatus: 'completed',
+          hasVerification: true
+        }));
+      } else if (contextVerificationStatus?.verificationStatus?.toLowerCase?.() === 'pending') {
+        setStatusFromApi(prev => ({
+          ...prev,
+          verified: false,
+          isVerified: false,
+          verificationStatus: 'pending',
+          hasVerification: true
+        }));
       }
 
       const updatedProfile = {

@@ -72,7 +72,12 @@ const CaregiverRecommendations = ({ careNeeds, visible }) => {
                 <span className="score-value">{caregiver.matchScore}%</span>
                 <span className="score-label">Match</span>
               </div>
-              <h3>{caregiver.name}</h3>
+              <h3>
+                {caregiver.name}
+                {(caregiver.isIdentityVerified || caregiver.isVerified) && (
+                  <span className="verified-badge" title="Identity Verified">✓</span>
+                )}
+              </h3>
               <div className="rating">
                 <span className="stars">{'★'.repeat(Math.floor(caregiver.rating))}</span>
                 <span className="rating-value">{caregiver.rating}</span>

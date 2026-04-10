@@ -328,7 +328,7 @@ const CaregiverCard = ({ caregiver, activeTab, onViewProfile, onShortlist, onRem
         ) : (
           <div className="crd-cg-initials">{initials}</div>
         )}
-        {cg.isVerified && <span className="crd-cg-verified" title="Verified">✓</span>}
+        {(cg.isVerified || cg.isIdentityVerified) && <span className="crd-cg-verified" title="Verified">✓</span>}
       </div>
 
       <h4 className="crd-cg-name">{cg.caregiverName}</h4>
