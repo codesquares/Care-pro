@@ -380,7 +380,7 @@ const PublicMarketplace = () => {
                           src={service.gigImage || service.image1 || 'https://via.placeholder.com/300x180?text=Care+Service'} 
                           alt={service.title} 
                         />
-                        {service.caregiverIsVerified && (
+                        {(service.caregiverIsVerified || service.caregiverIsIdentityVerified) && (
                           <span className="verified-badge">✓ Verified</span>
                         )}
                       </div>

@@ -17,6 +17,7 @@ class SignalRNotificationService {
     this._userId = null;
     this._onNotification = null;
     this._onUnreadCountChanged = null;
+    this._onVerificationStatusChanged = null;
   }
 
   /**
@@ -31,6 +32,14 @@ class SignalRNotificationService {
    */
   onUnreadCountChanged(callback) {
     this._onUnreadCountChanged = callback;
+  }
+
+  /**
+   * Register a callback for verification status changes (Dojah webhook results).
+   * Payload: { userId, verificationStatus, isVerified, verificationMethod, timestamp }
+   */
+  onVerificationStatusChanged(callback) {
+    this._onVerificationStatusChanged = callback;
   }
 
   /**
@@ -87,6 +96,11 @@ class SignalRNotificationService {
     // The hub pushes an updated unread count
     conn.on('UnreadCountChanged', (count) => {
       this._onUnreadCountChanged?.(count);
+    });
+
+    // The hub pushes a verification status update (from Dojah webhook)
+    conn.on('VerificationStatusChanged', (data) => {
+      this._onVerificationStatusChanged?.(data);
     });
 
     conn.onreconnected(() => {

@@ -36,10 +36,11 @@ export const processDojahResponse = (response) => {
 // NEW METHODS - .NET Backend Endpoints
 
 // Check verification status for a specific user
+// Updated: endpoint now only requires userId (userType/token query params removed)
 export const getDojahStatus = async (userId, userType, token) => {
   try {
-    // Backend requires token as query parameter AND in Authorization header
-    const url = `${endpoint}/Dojah/status?userId=${userId}&userType=${userType}&token=${token}`;
+    token = token || localStorage.getItem('authToken');
+    const url = `${endpoint}/dojah/status?userId=${encodeURIComponent(userId)}`;
     
     const response = await fetch(url, {
       method: 'GET',

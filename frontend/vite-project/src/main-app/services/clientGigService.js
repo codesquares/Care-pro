@@ -85,7 +85,7 @@ const ClientGigService = {
           caregiverBio: caregiver.aboutMe || caregiver.description || '',
           caregiverExperience: caregiver.yearsOfExperience || caregiver.experience || 0,
           caregiverSpecializations: caregiver.specializations || caregiver.skills || [],
-          caregiverIsVerified: caregiver.isVerified || false,
+          caregiverIsVerified: caregiver.isIdentityVerified || caregiver.isVerified || false,
           caregiverIsAvailable: caregiver.isAvailable !== false, // Default to true if not specified
           caregiverJoinDate: caregiver.createdAt || caregiver.joinDate || '',
           caregiverLanguages: caregiver.languages || [],
@@ -152,7 +152,7 @@ const ClientGigService = {
         caregiverBio: caregiver.aboutMe || caregiver.description || '',
         caregiverExperience: caregiver.yearsOfExperience || caregiver.experience || 0,
         caregiverSpecializations: caregiver.specializations || caregiver.skills || [],
-        caregiverIsVerified: caregiver.isVerified || false,
+        caregiverIsVerified: caregiver.isIdentityVerified || caregiver.isVerified || false,
         caregiverIsAvailable: caregiver.isAvailable !== false,
         caregiverJoinDate: caregiver.createdAt || caregiver.joinDate || '',
         caregiverLanguages: caregiver.languages || [],
