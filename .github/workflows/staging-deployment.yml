@@ -287,7 +287,14 @@ jobs:
       # - name: 🔥 Update App Runner Service
       # - name: ⏳ Wait for App Runner Deployment  
       # All AppRunner deployment logic has been removed
-
+      - name: 🔄 Invalidate CloudFront Cache
+        run: |
+          echo "🔄 Invalidating CloudFront cache..."
+          aws cloudfront create-invalidation \
+            --distribution-id ${{ secrets.CLOUDFRONT_DISTRIBUTION_ID }} \
+            --paths "/*"
+          echo "✅ CloudFront cache invalidated"
+          
       - name: 🩺 Health Check
         run: |
           echo "🩺 Performing health checks..."
