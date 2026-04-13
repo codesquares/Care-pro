@@ -2,7 +2,7 @@ import { getTemplateOptions, getPricingFromTemplate, getCategoryTemplateTier, ge
 import { SERVICE_TIERS } from "../../constants/serviceClassification";
 import "./Pricing.css";
 
-const PricingTemplates = ({ selectedTemplate, onTemplateSelect, onApplyTemplate, category }) => {
+const PricingTemplates = ({ selectedTemplate, onTemplateSelect, onApplyTemplate, category, sampleTasks = [] }) => {
   const templateOptions = getTemplateOptions(category);
   const categoryTier = getCategoryTemplateTier(category);
   const icon = getCategoryIcon(category);
@@ -24,8 +24,21 @@ const PricingTemplates = ({ selectedTemplate, onTemplateSelect, onApplyTemplate,
   return (
     <div className="pricing-templates">
       <div className="template-selector">
-        <h4>{icon} Choose a Pricing Template {category ? `for ${category}` : ""}</h4>
-        <p>Select a template to quickly set up your pricing packages</p>
+        <h4>{icon} Pricing Templates {category ? `for ${category}` : ""}</h4>
+        <p>Select a template to quickly set up your pricing, or use suggested tasks below in manual entry.</p>
+
+        {sampleTasks.length > 0 && (
+          <div className="api-suggested-tasks">
+            <span className="sample-tasks-label">Suggested tasks for your subcategories:</span>
+            <div className="sample-tasks-list">
+              {sampleTasks.slice(0, 10).map((st) => (
+                <span key={st.id} className="sample-task-chip" style={{ cursor: 'default', borderStyle: 'solid' }}>
+                  {st.text}
+                </span>
+              ))}
+            </div>
+          </div>
+        )}
 
         {isSpecialized && (
           <div className="specialized-template-notice">

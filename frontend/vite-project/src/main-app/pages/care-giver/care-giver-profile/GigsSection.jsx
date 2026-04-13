@@ -523,7 +523,7 @@ const GigsSection = () => {
                         className="gigs-link"
                         onClick={() => handlePublishGig(gig)}
                         disabled={publishingGigs.has(gig.id) || !canPublishNewGig}
-                        title={!canPublishNewGig ? (activeGigs.length >= 2 ? 'Max 2 active gigs. Pause one first.' : 'Complete verification to publish.') : ''}
+                        title={!canPublishNewGig ? (activeGigs.length >= 2 ? 'Max 2 active gigs. Pause one first.' : 'Complete all eligibility requirements to publish.') : ''}
                       >
                         {publishingGigs.has(gig.id) ? 'Publishing...' : 'Publish'}
                       </button>
@@ -539,7 +539,7 @@ const GigsSection = () => {
                         className="gigs-link"
                         onClick={() => handlePublishGig(gig)}
                         disabled={publishingGigs.has(gig.id) || !canPublishNewGig}
-                        title={!canPublishNewGig ? (activeGigs.length >= 2 ? 'Max 2 active gigs. Pause one first.' : 'Complete verification to publish.') : ''}
+                        title={!canPublishNewGig ? (activeGigs.length >= 2 ? 'Max 2 active gigs. Pause one first.' : 'Complete all eligibility requirements to publish.') : ''}
                       >
                         {publishingGigs.has(gig.id) ? 'Publishing...' : 'Publish'}
                       </button>

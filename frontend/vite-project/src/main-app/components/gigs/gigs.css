@@ -614,6 +614,89 @@ button:disabled {
   }
 }
 
+/* Suggested tags from API templates */
+.suggested-tags {
+  margin-top: 0.5rem;
+  display: flex;
+  align-items: flex-start;
+  gap: 0.5rem;
+  flex-wrap: wrap;
+}
+
+.suggested-tags-label {
+  font-size: 0.75rem;
+  color: #666;
+  font-weight: 500;
+  padding-top: 0.25rem;
+  white-space: nowrap;
+}
+
+.suggested-tags-list {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.375rem;
+}
+
+.suggested-tag-chip {
+  background: #f0f7ff;
+  border: 1px dashed #4a90e2;
+  color: #4a90e2;
+  font-size: 0.75rem;
+  padding: 0.2rem 0.6rem;
+  border-radius: 12px;
+  cursor: pointer;
+  transition: all 0.15s ease;
+  white-space: nowrap;
+}
+
+.suggested-tag-chip:hover {
+  background: #4a90e2;
+  color: #fff;
+  border-style: solid;
+}
+
+/* Sample tasks suggestion chips */
+.sample-tasks-section {
+  margin-top: 0.75rem;
+}
+
+.sample-tasks-label {
+  font-size: 0.75rem;
+  color: #666;
+  font-weight: 500;
+  margin-bottom: 0.375rem;
+  display: block;
+}
+
+.sample-tasks-list {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.375rem;
+}
+
+.sample-task-chip {
+  background: #f0faf4;
+  border: 1px dashed #34a853;
+  color: #2d8a47;
+  font-size: 0.75rem;
+  padding: 0.2rem 0.6rem;
+  border-radius: 12px;
+  cursor: pointer;
+  transition: all 0.15s ease;
+  white-space: nowrap;
+}
+
+.sample-task-chip:hover {
+  background: #34a853;
+  color: #fff;
+  border-style: solid;
+}
+
+.sample-task-chip:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
 .tag-preview {
   display: flex;
   flex-wrap: wrap;

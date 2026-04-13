@@ -14,15 +14,8 @@ const VerifyButton = ({ verificationStatus }) => {
     navigate("/app/caregiver/verification");
   };
 
-  // Navigate to assessments when verification is complete
-  const handleAssessmentClick = () => {
-    navigate("/app/caregiver/assessment");
-  };
-
   // Normalize status to lowercase for comparison
   const normalizedStatus = verificationStatus?.toLowerCase?.() || verificationStatus || '';
-  
-  console.log('VerifyButton - received status:', verificationStatus, 'normalized:', normalizedStatus);
 
   // Show the button with text processing verification if verification is pending
   if (normalizedStatus === "pending") {
@@ -33,9 +26,9 @@ const VerifyButton = ({ verificationStatus }) => {
     );
   }
 
-  // Handle different verification statuses with enhanced logic
+  // Handle different verification statuses
   const getButtonContent = () => {
-    // Handle the main statuses: "successful", "completed", "success", "verified"
+    // Verified — show completed badge
     if (
       normalizedStatus === "successful" || 
       normalizedStatus === "completed" || 
@@ -43,11 +36,10 @@ const VerifyButton = ({ verificationStatus }) => {
       normalizedStatus === "verified"
     ) {
       return {
-        text: "Start Assessment",
+        text: "Verified",
         className: "verify-button verify-button-success",
-        onClick: handleAssessmentClick,
         showCheckmark: true,
-        disabled: false,
+        disabled: true,
       };
     }
     

@@ -22,6 +22,7 @@ const GigsCard = ({
   onFieldLeave,
   clearValidationErrors,
   categoryEligibility,
+  suggestedTags = [],
 }) => {
   const navigate = useNavigate();
   const [tagsInput, setTagsInput] = useState("");
@@ -91,7 +92,7 @@ const GigsCard = ({
     
     // Handle comma-separated input
     if (value.includes(',')) {
-      const newTags = value.split(',').map(tag => tag.trim()).filter(tag => tag.length > 0 && tag.length <= 20);
+      const newTags = value.split(',').map(tag => tag.trim()).filter(tag => tag.length > 0 && tag.length <= 50);
       const lastTag = newTags[newTags.length - 1];
       
       if (newTags.length > 1) {
@@ -115,7 +116,7 @@ const GigsCard = ({
       const trimmedTag = tagsInput.trim();
       if (trimmedTag && 
           trimmedTag.length >= 2 && 
-          trimmedTag.length <= 20 && 
+          trimmedTag.length <= 50 && 
           !currentTags.includes(trimmedTag) && 
           currentTags.length < 5) {
         const updatedTags = [...currentTags, trimmedTag];
@@ -144,7 +145,7 @@ const GigsCard = ({
     const trimmedInput = tagsInput.trim();
     if (trimmedInput && 
         trimmedInput.length >= 2 && 
-        trimmedInput.length <= 20 && 
+        trimmedInput.length <= 50 && 
         !currentTags.includes(trimmedInput) && 
         currentTags.length < 5) {
       const updatedTags = [...currentTags, trimmedInput];
@@ -153,6 +154,14 @@ const GigsCard = ({
       setTagsInput("");
     }
     if (onFieldBlur) onFieldBlur();
+  };
+
+  const addSuggestedTag = (tag) => {
+    const currentTags = formData.searchTags || [];
+    if (currentTags.length >= 5 || currentTags.includes(tag)) return;
+    const updatedTags = [...currentTags, tag];
+    updateField('searchTags', updatedTags);
+    if (onSearchTagChange) onSearchTagChange(updatedTags);
   };
 
   return (
@@ -380,7 +389,7 @@ const GigsCard = ({
                   onBlur={handleTagInputBlur}
                   placeholder={(formData.searchTags || []).length === 0 ? "Add tags (press Enter or use comma to separate)" : (formData.searchTags || []).length >= 5 ? "Tag limit reached" : ""}
                   className="tag-input-field"
-                  maxLength={20}
+                  maxLength={50}
                   disabled={(formData.searchTags || []).length >= 5}
                 />
               </div>
@@ -389,8 +398,28 @@ const GigsCard = ({
               <span className={`tag-counter ${(formData.searchTags || []).length >= 5 ? 'tag-limit-reached' : ''}`}>
                 {(formData.searchTags || []).length} of 5 tags used
               </span>
-              <span className="tag-instruction">Press Enter or use comma to add tags. Max 20 characters per tag.</span>
+              <span className="tag-instruction">Press Enter or use comma to add tags. Max 50 characters per tag.</span>
             </div>
+            {suggestedTags.length > 0 && (formData.searchTags || []).length < 5 && (
+              <div className="suggested-tags">
+                <span className="suggested-tags-label">Suggested:</span>
+                <div className="suggested-tags-list">
+                  {suggestedTags
+                    .filter(tag => !(formData.searchTags || []).includes(tag))
+                    .slice(0, 15)
+                    .map((tag) => (
+                      <button
+                        key={tag}
+                        type="button"
+                        className="suggested-tag-chip"
+                        onClick={() => addSuggestedTag(tag)}
+                      >
+                        + {tag}
+                      </button>
+                    ))}
+                </div>
+              </div>
+            )}
             {validationErrors.searchTags && (
               <div className="validation-error">
                 {validationErrors.searchTags}

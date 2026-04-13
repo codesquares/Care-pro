@@ -1,4 +1,5 @@
 import { useEffect, useState, useRef } from "react";
+import { useLocation, useNavigate } from "react-router-dom";
 import "./profile-header.css";
 import { FaMapMarkerAlt, FaCalendarAlt, FaTruck } from "react-icons/fa";
 import profilecard1 from "../../../../assets/profilecard1.png";
@@ -66,7 +67,11 @@ const normalizeVerificationStatus = (status) => {
 
 const ProfileHeader = () => {
   const { updateUser } = useAuth();
-  const { verificationStatus: contextVerificationStatus, isVerified: contextIsVerified } = useCaregiverStatus();
+  const { verificationStatus: contextVerificationStatus, isVerified: contextIsVerified, isQualified } = useCaregiverStatus();
+  const location = useLocation();
+  const navigate = useNavigate();
+  const [showVerificationLandingModal, setShowVerificationLandingModal] = useState(false);
+  const [verificationLandingStatus, setVerificationLandingStatus] = useState(null);
   const [profile, setProfile] = useState({
     name: "",
     username: "",
@@ -102,6 +107,16 @@ const ProfileHeader = () => {
       isMountedRef.current = false;
     };
   }, []);
+
+  // Show modal when arriving from verification page with status
+  useEffect(() => {
+    if (location.state?.verificationStatus) {
+      setVerificationLandingStatus(location.state.verificationStatus);
+      setShowVerificationLandingModal(true);
+      // Clear the state so modal doesn't reappear on refresh
+      window.history.replaceState({}, document.title);
+    }
+  }, [location.state]);
 
   // Sync verification status from global context when it updates
   // This ensures ProfileHeader reflects changes made on the VerificationPage
@@ -730,17 +745,12 @@ const ProfileHeader = () => {
           
         </div>
        <div className="caregiver-profile-actions">
-          {statusFromApi?.verified === true || statusFromApi?.isVerified === true ? (
-            <AssessmentButton 
-              verificationStatus={statusFromApi} 
-              userId={userDetails?.id} 
-            />
-          ) : (
-            <VerifyButton 
-              verificationStatus={statusFromApi?.verificationStatus || 'not_verified'} 
-              userId={userDetails?.id}
-            />
-          )}
+          <VerifyButton 
+            verificationStatus={statusFromApi?.verificationStatus || 'not_verified'} 
+          />
+          <AssessmentButton 
+            userId={userDetails?.id} 
+          />
         </div>
          
         {/* Development Tool for Testing - Remove in Production */}
@@ -844,6 +854,109 @@ const ProfileHeader = () => {
           </div>
         )}
       </div>
+
+      {/* Verification Landing Modal */}
+      {showVerificationLandingModal && (
+        <div 
+          className="caregiver-location-modal-overlay"
+          onClick={() => setShowVerificationLandingModal(false)}
+        >
+          <div 
+            className="caregiver-location-modal"
+            onClick={(e) => e.stopPropagation()}
+            style={{ maxWidth: '480px' }}
+          >
+            {verificationLandingStatus === 'pending' && (
+              <>
+                <h3>⏳ Verification In Progress</h3>
+                <p style={{ fontSize: '14px', color: '#6c757d', lineHeight: '1.5', marginBottom: '12px' }}>
+                  Your identity verification has been submitted and is being processed. This usually takes 24-48 hours.
+                </p>
+                <p style={{ fontSize: '14px', color: '#333', lineHeight: '1.5', marginBottom: '16px' }}>
+                  <strong>While you wait, you can:</strong>
+                </p>
+                <ul style={{ fontSize: '14px', color: '#333', lineHeight: '1.8', paddingLeft: '20px', marginBottom: '20px' }}>
+                  <li>📝 Create and save draft gigs</li>
+                  <li>📋 Take your qualification assessment</li>
+                  <li>📄 Upload your certificates</li>
+                </ul>
+                <p style={{ fontSize: '13px', color: '#888', marginBottom: '16px' }}>
+                  Once verified, you&apos;ll be able to publish your gigs.
+                </p>
+                <div style={{ display: 'flex', gap: '10px', justifyContent: 'flex-end' }}>
+                  <button
+                    onClick={() => setShowVerificationLandingModal(false)}
+                    className="caregiver-modal-btn caregiver-modal-cancel"
+                  >
+                    Stay on Profile
+                  </button>
+                  <button
+                    onClick={() => { setShowVerificationLandingModal(false); navigate('/app/caregiver/create-gigs'); }}
+                    className="caregiver-modal-btn caregiver-modal-save"
+                  >
+                    Create a Gig
+                  </button>
+                </div>
+              </>
+            )}
+            {verificationLandingStatus === 'failed' && (
+              <>
+                <h3>❌ Verification Failed</h3>
+                <p style={{ fontSize: '14px', color: '#6c757d', lineHeight: '1.5', marginBottom: '16px' }}>
+                  Your identity verification could not be completed. You can retry the verification process.
+                </p>
+                <div style={{ display: 'flex', gap: '10px', justifyContent: 'flex-end' }}>
+                  <button
+                    onClick={() => setShowVerificationLandingModal(false)}
+                    className="caregiver-modal-btn caregiver-modal-cancel"
+                  >
+                    Close
+                  </button>
+                  <button
+                    onClick={() => { setShowVerificationLandingModal(false); navigate('/app/caregiver/verification'); }}
+                    className="caregiver-modal-btn caregiver-modal-save"
+                  >
+                    Retry Verification
+                  </button>
+                </div>
+              </>
+            )}
+            {verificationLandingStatus === 'success' && (
+              <>
+                <h3>✅ Verification Complete!</h3>
+                <p style={{ fontSize: '14px', color: '#6c757d', lineHeight: '1.5', marginBottom: '16px' }}>
+                  Your identity has been verified. {!isQualified 
+                    ? 'Take your qualification assessment next to unlock gig publishing.'
+                    : 'You can now publish your gigs!'}
+                </p>
+                <div style={{ display: 'flex', gap: '10px', justifyContent: 'flex-end' }}>
+                  <button
+                    onClick={() => setShowVerificationLandingModal(false)}
+                    className="caregiver-modal-btn caregiver-modal-cancel"
+                  >
+                    Stay on Profile
+                  </button>
+                  {!isQualified ? (
+                    <button
+                      onClick={() => { setShowVerificationLandingModal(false); navigate('/app/caregiver/assessment'); }}
+                      className="caregiver-modal-btn caregiver-modal-save"
+                    >
+                      Take Assessment
+                    </button>
+                  ) : (
+                    <button
+                      onClick={() => { setShowVerificationLandingModal(false); navigate('/app/caregiver/create-gigs'); }}
+                      className="caregiver-modal-btn caregiver-modal-save"
+                    >
+                      Create a Gig
+                    </button>
+                  )}
+                </div>
+              </>
+            )}
+          </div>
+        </div>
+      )}
 
       <IntroVideo 
         profileIntrovideo={profile.introVideo} 

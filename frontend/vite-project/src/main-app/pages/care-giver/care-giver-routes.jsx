@@ -1,4 +1,4 @@
-import { Routes, Route } from 'react-router-dom';
+import { Routes, Route, Navigate } from 'react-router-dom';
 import CaregiverDashboard from './care-giver-dashboard/CaregiverDashboard';
 import UserProfile from './care-giver-profile/UserProfile';
 import NavigationBar from './care-giver-dashboard/NavigationBar';
@@ -54,8 +54,9 @@ function CareGiverRoutes() {
                 <Route path="/verification" element={<VerificationPage />} />
                 <Route path="/verification-callback" element={<VerificationCallback />} />
                 <Route path="/assessment" element={<AssessmentPage />} />
-                <Route path="/specialized-assessment" element={<SpecializedAssessmentPage />} />
-                <Route path="/specialized-assessments" element={<SpecializedAssessmentsPage />} />
+                {/* Specialized assessments temporarily disabled */}
+                <Route path="/specialized-assessment" element={<Navigate to="/app/caregiver/assessment" replace />} />
+                <Route path="/specialized-assessments" element={<Navigate to="/app/caregiver/assessment" replace />} />
                 <Route path="/order-details/:orderId" element={<CaregiverOrderDetails />} />
                 <Route path="/subscriptions" element={<CaregiverSubscriptions />} />
                 <Route path="/subscriptions/:id" element={<CaregiverSubscriptionDetail />} />
