@@ -2,13 +2,12 @@ import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import "./assessment-button.css";
 import assessmentService from "../../../services/assessmentService";
-import ProfileCard from "../care-giver-dashboard/ProfileCard";
 
 /**
  * A button component that redirects caregivers to the assessment page or shows qualification status
- * This button should be shown once the caregiver is verified
+ * Renders independently of verification status — assessments are not gated behind verification
  */
-const AssessmentButton = ({ verificationStatus, userId }) => {
+const AssessmentButton = ({ userId }) => {
   const navigate = useNavigate();
   const [qualificationStatus, setQualificationStatus] = useState(null);
 
@@ -27,16 +26,6 @@ const AssessmentButton = ({ verificationStatus, userId }) => {
   const handleAssessmentClick = () => {
     navigate("/app/caregiver/assessment");
   };
-
-  // Only show the button if user is verified/completed
-  // Handle both string format and object format for verification status
-  const isVerified = typeof verificationStatus === 'object' 
-    ? (verificationStatus?.verificationStatus === "completed" || verificationStatus?.isVerified === true)
-    : (verificationStatus === "verified" || verificationStatus === "completed");
-    
-  if (!isVerified) {
-    return null;
-  }
 
   // If we haven't loaded the qualification status yet
   if (!qualificationStatus) {
@@ -78,7 +67,7 @@ const AssessmentButton = ({ verificationStatus, userId }) => {
   if (qualificationStatus.assessmentCompleted === false) {
     return (
       <button className="assessment-button" onClick={handleAssessmentClick}>
-        Take Caregiver Assessment
+        Take Assessment
       </button>
     );
   }

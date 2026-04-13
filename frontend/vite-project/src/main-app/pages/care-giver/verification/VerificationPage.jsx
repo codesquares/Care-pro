@@ -154,8 +154,8 @@ const CaregiverVerificationPage = () => {
     if (pollingRef.current) return; // Already polling
     pollCountRef.current = 0;
 
-    const maxPolls = 18; // 18 × 10s = ~3 minutes
-    const pollInterval = 10000;
+    const maxPolls = 6; // 6 × 5s = ~30 seconds
+    const pollInterval = 5000;
 
     const poll = async () => {
       pollCountRef.current += 1;
@@ -199,8 +199,8 @@ const CaregiverVerificationPage = () => {
           setVerificationPending();
 
           setModalTitle('Verification Processing');
-          setModalDescription('Your verification has been submitted and is being processed. This may take a few minutes. You can check back shortly.');
-          setButtonText('Go to Dashboard');
+          setModalDescription('Your verification has been submitted and is being processed. You can start creating draft gigs while you wait!');
+          setButtonText('Go to Profile');
           setButtonBgColor('#00B4A6');
           setIsError(false);
           setIsModalOpen(true);
@@ -242,12 +242,12 @@ const CaregiverVerificationPage = () => {
       });
     }
 
-    // 3. After 15 seconds without a final SignalR event, start fallback polling
+    // 3. After 10 seconds without a final SignalR event, start fallback polling
     signalRFallbackTimerRef.current = setTimeout(() => {
       if (isMountedRef.current && signalRListenerActiveRef.current) {
         startFallbackPolling();
       }
-    }, 15000);
+    }, 10000);
   }, [userDetails.id, token, handleVerificationResult, startFallbackPolling]);
 
   // Load Dojah Connect script and open the overlay widget
@@ -423,8 +423,8 @@ const CaregiverVerificationPage = () => {
             setIsModalOpen(true);
           } else if (status.hasPending) {
             setModalTitle('Verification In Progress');
-            setModalDescription('Your verification is being processed. You will be notified when complete. Estimated processing time: 24-48 hours.');
-            setButtonText('OK');
+            setModalDescription('Your verification is being processed. You can start creating draft gigs while you wait!');
+            setButtonText('Go to Profile');
             setButtonBgColor('#00B4A6');
             setIsError(false);
             setIsModalOpen(true);
@@ -489,7 +489,7 @@ const CaregiverVerificationPage = () => {
     if (modalTitle === 'Account Already Verified!' || modalTitle === 'Verification Successful!') {
       navigate("/app/caregiver/assessments");
     } else if (modalTitle === 'Verification Processing' || modalTitle === 'Verification In Progress') {
-      navigate("/app/caregiver/dashboard");
+      navigate("/app/caregiver/profile", { state: { verificationStatus: 'pending' } });
     } else if (modalTitle === 'Verification Error' || modalTitle === 'Verification Failed') {
       setWidgetCompleted(false);
     }
@@ -533,7 +533,7 @@ const CaregiverVerificationPage = () => {
                     <p className="progress-message">{progressMessage}</p>
                   )}
                   {widgetCompleted && (
-                    <p className="progress-sub-message">Please wait while we confirm your verification. Do not leave this page.</p>
+                    <p className="progress-sub-message">Confirming your verification — this should only take a moment.</p>
                   )}
                 </div>
               </div>
@@ -607,16 +607,16 @@ const CaregiverVerificationPage = () => {
                 {verificationStatus?.hasPending && !verificationStatus?.hasSuccess && (
                   <div className="verification-status pending">
                     <h3>⏳ Verification Pending</h3>
-                    <p>Your verification is being processed. You will be notified when complete.</p>
+                    <p>Your verification is being processed. You can start creating draft gigs while you wait!</p>
                     <div className="pending-info">
                       <p>Estimated processing time: 24-48 hours</p>
                     </div>
                     <button
                       type="button"
-                      onClick={() => navigate("/app/caregiver/dashboard")}
+                      onClick={() => navigate("/app/caregiver/profile", { state: { verificationStatus: 'pending' } })}
                       className="proceed-btn"
                     >
-                      Go to Dashboard
+                      Go to Profile
                       <i className="fas fa-arrow-right"></i>
                     </button>
                   </div>

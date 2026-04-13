@@ -52,14 +52,13 @@ const GalleryUploads = ({
       <div className="galleryUploads">
         <div className="uploads-card-section">
           <div className="uploads-card-details">
-            <h3>Images (up to 3)</h3>
+            <h3>Cover Image</h3>
             <p className="gigs-card-gallery-instructions">
-              Upload an image to showcase your service. Drag & drop or click to browse.
+              Upload one image to showcase your service. Drag & drop or click to browse.
             </p>
             <ul className="gallery-requirements">
-              <li>Use high-res images only</li>
+              <li>Use a high-res image that represents your service</li>
               <li>Show your professionalism</li>
-              <li>Include relevant certifications</li>
               <li>Supported formats: JPG, PNG, GIF, WebP. Max size: 5MB</li>
             </ul>
             {selectedFile && (

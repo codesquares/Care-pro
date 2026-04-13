@@ -29,6 +29,7 @@ import GigService from "../../services/gigService";
 import { isSpecializedCategory, toServiceKey } from "../../constants/serviceClassification";
 import specializedAssessmentService from "../../services/specializedAssessmentService";
 import CertificateUploadModal from "../shared/CertificateUploadModal";
+import { fetchGigTemplates, buildCategoriesMap, getTagsForSubcategories, getSampleTasks } from "../../services/gigTemplateService";
 
 const GigsForm = () => {
   const pages = ["Overview", "Pricing", "Gallery", "Publish"];
@@ -65,6 +66,9 @@ const GigsForm = () => {
   const [eligibilityError, setEligibilityError] = useState(null); // 403 error details from publish
   const [showEligibilityModal, setShowEligibilityModal] = useState(false);
   const [showCertUpload, setShowCertUpload] = useState(false);
+  // Gig template data from API
+  const [gigTemplates, setGigTemplates] = useState(null);
+  const [categories, setCategories] = useState({});
   const navigate = useNavigate();
   
   // Use caregiver status context for eligibility
@@ -130,6 +134,29 @@ const GigsForm = () => {
     };
     fetchEligibility();
   }, []);
+
+  // Fetch gig templates from API (categories, subcategories, tags, sample tasks)
+  useEffect(() => {
+    const loadTemplates = async () => {
+      try {
+        const data = await fetchGigTemplates();
+        setGigTemplates(data);
+        setCategories(buildCategoriesMap(data));
+      } catch (err) {
+        console.warn('Could not fetch gig templates, using empty categories:', err);
+      }
+    };
+    loadTemplates();
+  }, []);
+
+  // Derive suggested tags and sample tasks based on current category + subcategory selection
+  const suggestedTags = gigTemplates && formData.category
+    ? getTagsForSubcategories(gigTemplates, formData.category, formData.subcategory || [])
+    : [];
+
+  const sampleTasks = gigTemplates && formData.category
+    ? getSampleTasks(gigTemplates, formData.category, formData.subcategory || [])
+    : [];
 
   const goToNextPage = () => {
     const currentPageValidation = validateCurrentPage();
@@ -457,48 +484,7 @@ const GigsForm = () => {
     ? formData.searchTags.join(", ")
     : null;
 
-  const categories = {
-    "Adult Care": [
-      "Companionship", "Meal preparation", "Mobility assistance", "Medication reminders",
-      "Bathing and grooming", "Dressing assistance", "Toileting and hygiene support",
-      "Incontinence care", "Overnight supervision", "Chronic illness management"
-    ],
-    "Post Surgery Care": [
-      "Wound care", "Medication management", "Post-surgery care",
-      "Mobility assistance", "Home safety assessment", "Feeding assistance"
-    ],
-    "Child Care": [
-      "Respite", "Babysitting", "Meal preparation", "Recreational activities assistance",
-      "Emotional support and check-ins"
-    ],
-    "Pet Care": [
-      "Pet minding", "Dog walking", "Feeding assistance", "Companionship"
-    ],
-    "Home Care": [
-      "Light housekeeping", "Cleaning", "Cooking", "Home safety assessment",
-      "Errands and shopping", "Transportation to appointments"
-    ],
-    "Special Needs Care": [
-      "Dementia care", "Autism support", "Behavioral support", "Disability support services",
-      "Assistive device training", "Language or communication support"
-    ],
-    "Medical Support": [
-      "Nursing care", "Medication reminders", "Medical appointment coordination",
-      "Palliative care support", "Chronic illness management"
-    ],
-    "Mobility Support": [
-      "Mobility assistance", "Fall prevention monitoring", "Exercise and fitness support",
-      "Assistive device training", "Transportation to appointments"
-    ],
-    "Therapy & Wellness": [
-      "Physical therapy support", "Cognitive stimulation activities", "Emotional support and check-ins",
-      "Recreational activities assistance", "Acupuncture", "Massage therapy"
-    ],
-    "Palliative": [
-      "Palliative care support", "Overnight supervision", "Emotional support and check-ins",
-      "Home safety assessment"
-    ],
-  };
+  // categories is now loaded from API via gigTemplateService (state initialized above)
 
   console.log("services:", formData.subcategory);
 
@@ -1060,6 +1046,7 @@ const GigsForm = () => {
                 onFieldLeave={handleFieldLeave}
                 clearValidationErrors={clearValidationErrors}
                 categoryEligibility={categoryEligibility}
+                suggestedTags={suggestedTags}
               />
             )}
             {currentStep === 1 && (
@@ -1074,6 +1061,7 @@ const GigsForm = () => {
                 onFieldLeave={handleFieldLeave}
                 validationErrors={validationErrors}
                 category={formData.category}
+                sampleTasks={sampleTasks}
               />
             )}
             {currentStep === 2 && (

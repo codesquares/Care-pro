@@ -3,7 +3,7 @@ import { useNavigate } from "react-router-dom";
 import "./NavigationBar.css";
 import logo from '../../../../assets/careproLogo.svg';
 import hear from "../../../../assets/main-app/heart.svg";
-import { FaBell, FaEnvelope, FaReceipt, FaHome, FaCog, FaStore, FaClipboardList, FaBriefcase, FaChevronDown, FaMoneyBillWave, FaShoppingBag, FaWallet } from "react-icons/fa";
+import { FaBell, FaEnvelope, FaReceipt, FaHome, FaCog, FaStore, FaClipboardList, FaBriefcase, FaChevronDown, FaShoppingBag, FaWallet } from "react-icons/fa";
 import NotificationBell from "../../../components/notifications/NotificationBell";
 import { useAuth } from "../../../context/AuthContext";
 import { getInitials } from "../../../utils/avatarHelpers";
@@ -18,37 +18,10 @@ const NavigationBar = () => {
 
   const [showDropdown, setShowDropdown] = useState(false);
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
-  const [earnings, setEarnings] = useState({
-    totalEarned: 0,
-  });
 
   const userName = user?.firstName ? `${user.firstName} ${user.lastName}` : "";
 
   // ✅ Move useEffect hooks before any conditional returns
-  useEffect(() => {
-    if (!user) return; // Handle no user case inside the effect
-    
-    const fetchEarnings = async () => {
-      try{
-      // Use centralized config instead of hardcoded URL for consistent API routing
-      const earnings = await fetch (`${config.BASE_URL}/WithdrawalRequests/TotalAmountEarnedAndWithdrawn/${user.id}`, {
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': `Bearer ${localStorage.getItem('authToken')}`
-        }
-      });
-      const data = await earnings.json();
-      setEarnings({
-        totalEarned: data.totalAmountEarned ?? 0,
-      });
-    } catch (error) {
-      console.error('Failed to fetch earnings:', error);
-    }
-    };
-    
-    fetchEarnings();
-  }, [user]);
-
   useEffect(() => {
     const handleClickOutside = (event) => {
       if (dropdownRef.current && !dropdownRef.current.contains(event.target)) {
@@ -118,10 +91,6 @@ const NavigationBar = () => {
                 </div>
                 <div className="user-info">
                   <span className="user-name">{userName}</span>
-                  <div className="earnings-mobile">
-                    <FaReceipt className="mobile-menu-icon" size={20} />
-                    <span>Earned: ₦{earnings.totalEarned.toFixed(2)}</span>
-                  </div>
                 </div>
               </div>
               <button 
@@ -156,12 +125,6 @@ const NavigationBar = () => {
                 <div className="menu-item-content">
                   <span className="mobile-menu-icon" style={{ fontSize: '16px' }}>📋</span>
                   <span>Client Requests</span>
-                </div>
-              </li>
-              <li onClick={() => { navigate(`${basePath}/earnings`); setMobileMenuOpen(false); }}>
-                <div className="menu-item-content">
-                  <FaReceipt className="mobile-menu-icon" />
-                  <span>Earnings</span>
                 </div>
               </li>
               <li onClick={() => { navigate(`${basePath}/wallet`); setMobileMenuOpen(false); }}>
@@ -243,10 +206,6 @@ const NavigationBar = () => {
           <li className="nav-link text-link" onClick={() => navigate(`${basePath}/create-gigs`)}>
             <FaBriefcase className="nav-link-icon" />
             Gigs
-          </li>
-          <li className="nav-link text-link" onClick={() => navigate(`${basePath}/earnings`)}>
-            <FaMoneyBillWave className="nav-link-icon" />
-            Earnings
           </li>
           <li className="nav-link text-link" onClick={() => navigate(`${basePath}/wallet`)}>
             <FaWallet className="nav-link-icon" />

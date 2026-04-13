@@ -31,10 +31,10 @@ export const validateOverviewPage = (formData) => {
   } else {
     // Check individual tag length
     const invalidTags = formData.searchTags.filter(tag => 
-      !tag.trim() || tag.trim().length < 2 || tag.trim().length > 20
+      !tag.trim() || tag.trim().length < 2 || tag.trim().length > 50
     );
     if (invalidTags.length > 0) {
-      errors.searchTags = "Each tag must be between 2-20 characters";
+      errors.searchTags = "Each tag must be between 2-50 characters";
     }
   }
   
