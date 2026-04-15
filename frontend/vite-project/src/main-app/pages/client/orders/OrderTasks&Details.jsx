@@ -726,7 +726,7 @@ const MyOrders = () => {
             try {
                 const token = localStorage.getItem('authToken');
                 await axios.put(
-                    `${config.BASE_URL}/ClientOrders/UpdateClientOrderStatus/orderId?orderId=${orderId}`,
+                    `${config.BASE_URL}/ClientOrders/UpdateClientOrderStatus/${orderId}`,
                     { clientOrderStatus: "Completed", userId },
                     { headers: { 'Authorization': `Bearer ${token}` } }
                 );
