@@ -2,9 +2,7 @@
  * Client Gig Service
  * Handles all API calls and data processing for client gig services
  */
-import axios from 'axios';
-
-// import api from './api';
+import api from './api';
 import config from '../config';
 
 const BASE_API_URL = config.BASE_URL;
@@ -29,15 +27,10 @@ const ClientGigService = {
   
   async getAllGigs() {
   try {
-    const authHeaders = {
-      headers: {
-        'Authorization': `Bearer ${localStorage.getItem('authToken') || ''}`
-      }
-    };
     // Fetch all gigs and all caregivers in parallel for better performance
     const [response, userResponse] = await Promise.all([
-      axios.get(`${BASE_API_URL}/Gigs`, authHeaders),
-      axios.get(`${BASE_API_URL}/CareGivers/AllCaregivers`, authHeaders)
+      api.get(`${BASE_API_URL}/Gigs`),
+      api.get(`${BASE_API_URL}/CareGivers/AllCaregivers`)
     ]);
 
     const allGigs = response.data || [];
@@ -105,11 +98,7 @@ const ClientGigService = {
     
     // In case of error, still try to return basic gig data if available
     try {
-      const fallbackResponse = await axios.get(`${BASE_API_URL}/Gigs`, {
-        headers: {
-          'Authorization': `Bearer ${localStorage.getItem('authToken') || ''}`
-        }
-      });
+      const fallbackResponse = await api.get(`${BASE_API_URL}/Gigs`);
       return fallbackResponse.data || [];
     } catch (fallbackError) {
       console.error('Complete failure to fetch gigs:', fallbackError);
@@ -123,12 +112,9 @@ const ClientGigService = {
    */
   async getGigById(gigId) {
     try {
-      const authHeaders = {
-        headers: { 'Authorization': `Bearer ${localStorage.getItem('authToken') || ''}` }
-      };
       const [gigRes, userRes] = await Promise.all([
-        axios.get(`${BASE_API_URL}/Gigs/${gigId}`, authHeaders),
-        axios.get(`${BASE_API_URL}/CareGivers/AllCaregivers`, authHeaders)
+        api.get(`${BASE_API_URL}/Gigs/${gigId}`),
+        api.get(`${BASE_API_URL}/CareGivers/AllCaregivers`)
       ]);
       const gig = gigRes.data;
       if (!gig) return null;

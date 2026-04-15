@@ -4,6 +4,30 @@ import { refreshToken, logout as authServiceLogout } from '../services/auth';
 
 const AuthContext = createContext();
 
+/**
+ * Decode a JWT payload and return the parsed JSON.
+ * Returns null if the token is malformed.
+ */
+function decodeJwtPayload(token) {
+    try {
+        const base64 = token.split('.')[1];
+        if (!base64) return null;
+        const json = atob(base64.replace(/-/g, '+').replace(/_/g, '/'));
+        return JSON.parse(json);
+    } catch {
+        return null;
+    }
+}
+
+/**
+ * Returns true if the JWT's `exp` claim is in the past (or within a 60-second buffer).
+ */
+function isTokenExpired(token) {
+    const payload = decodeJwtPayload(token);
+    if (!payload || !payload.exp) return true; // treat missing exp as expired
+    return payload.exp * 1000 <= Date.now() + 60_000; // 60s buffer
+}
+
 export const AuthProvider = ({ children }) => {
     const [user, setUser] = useState(null);
     const [isAuthenticated, setIsAuthenticated] = useState(false);
@@ -122,17 +146,38 @@ export const AuthProvider = ({ children }) => {
         window.addEventListener('storage', handleStorageChange);
         window.addEventListener('message', handleMessage);
         
+        // Listen for interceptor-driven logouts (dispatched from api.js)
+        const handleAuthLogout = () => {
+            setIsAuthenticated(false);
+            setUser(null);
+            setUserRole(null);
+            navigate('/login', { replace: true });
+        };
+        window.addEventListener('auth-logout', handleAuthLogout);
+
         return () => {
             window.removeEventListener('storage', handleStorageChange);
             window.removeEventListener('message', handleMessage);
+            window.removeEventListener('auth-logout', handleAuthLogout);
         };
     }, [navigate, handleLogout]);
 
     useEffect(() => {
         const checkAuth = async () => {
             try {
-                const token = localStorage.getItem('authToken');
+                let token = localStorage.getItem('authToken');
                 if (token) {
+                    // Proactively refresh if the JWT is expired or about to expire
+                    if (isTokenExpired(token)) {
+                        try {
+                            token = await refreshToken();
+                        } catch {
+                            // Refresh failed — treat as logged out
+                            handleLogout();
+                            return;
+                        }
+                    }
+
                     // Get user details from localStorage
                     const userDetails = JSON.parse(localStorage.getItem('userDetails') || '{}');
                     const firstLogin = JSON.parse(localStorage.getItem('isFirstLogin') || 'false');

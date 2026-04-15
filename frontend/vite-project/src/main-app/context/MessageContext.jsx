@@ -1,6 +1,6 @@
 import { createContext, useContext, useState, useEffect, useCallback, useMemo, useReducer, useRef} from 'react';
 import chatService from '../services/signalRChatService';
-import axios from 'axios';
+import api from '../services/api';
 import config from '../config'; // Centralized API configuration
 
 
@@ -478,13 +478,10 @@ export const MessageProvider = ({ children }) => {
     try {
       // console.log('Polling for messages in chat:', selectedChatId);
       // Use the correct API endpoint format that matches the existing working endpoints
-      const response = await axios.get(
+      const response = await api.get(
         `${API_BASE_URL}/api/Chat/conversations/${currentUserId}`,
         { 
-          timeout: 5000,
-          headers: {
-            'Authorization': `Bearer ${localStorage.getItem('authToken') || ''}`
-          }
+          timeout: 5000
         }
       );
 
@@ -636,11 +633,7 @@ export const MessageProvider = ({ children }) => {
       try {
         // console.log('Fetching user info for new conversation partner:', senderId);
         // Fetch user info
-        const response = await axios.get(`${API_BASE_URL}/api/users/${senderId}`, {
-          headers: {
-            'Authorization': `Bearer ${localStorage.getItem('authToken') || ''}`
-          }
-        });
+        const response = await api.get(`${API_BASE_URL}/api/users/${senderId}`);
         const userData = response.data;
 
         
@@ -734,11 +727,8 @@ export const MessageProvider = ({ children }) => {
       
       try {
         // console.log(`Fetching conversations for user ID: ${userId}`);
-        const response = await axios.get(`${API_BASE_URL}/api/Chat/conversations/${userId}`, {
-          timeout: 10000,
-          headers: {
-            'Authorization': `Bearer ${localStorage.getItem('authToken') || ''}`
-          }
+        const response = await api.get(`${API_BASE_URL}/api/Chat/conversations/${userId}`, {
+          timeout: 10000
         });
         
         // Log conversations data received from API for debugging
@@ -1514,13 +1504,10 @@ export const MessageProvider = ({ children }) => {
         // Don't try the problematic API endpoint that's causing 404s
         // Instead, use the conversations endpoint and extract messages
         try {
-          const response = await axios.get(
+          const response = await api.get(
             `${API_BASE_URL}/api/Chat/conversations/${currentUserId}`,
             { 
-              timeout: 10000,
-              headers: {
-                'Authorization': `Bearer ${localStorage.getItem('authToken') || ''}`
-              }
+              timeout: 10000
             }
           );
           
@@ -1703,13 +1690,10 @@ export const MessageProvider = ({ children }) => {
         // Fallback: Try to get messages from the conversations endpoint directly
         try {
           // console.log('🔄 SELECT_CHAT: Trying conversations endpoint as direct fallback');
-          const response = await axios.get(
+          const response = await api.get(
             `${API_BASE_URL}/Chat/conversations/${currentUserId}`,
             { 
-              timeout: 10000,
-              headers: {
-                'Authorization': `Bearer ${localStorage.getItem('authToken') || 'NO_TOKEN'}`
-              }
+              timeout: 10000
             }
           );        if (response.data && Array.isArray(response.data)) {
             const conversation = response.data.find(conv => 

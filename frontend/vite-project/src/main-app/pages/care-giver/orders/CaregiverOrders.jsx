@@ -227,7 +227,7 @@ const CaregiverOrders = () => {
         <div className="cg-orders-banner-right">
           <button
             className="cg-orders-earnings-btn"
-            onClick={() => navigate('/app/caregiver/earnings')}
+            onClick={() => navigate('/app/caregiver/wallet')}
           >
             💰 View Earnings
           </button>
