@@ -3,7 +3,7 @@ import { useNavigate } from "react-router-dom";
 import "./NavigationBar.css";
 import logo from '../../../../assets/careproLogo.svg';
 import hear from "../../../../assets/main-app/heart.svg";
-import { FaBell, FaEnvelope, FaReceipt, FaHome, FaCog, FaStore, FaClipboardList, FaBriefcase, FaChevronDown, FaShoppingBag, FaWallet } from "react-icons/fa";
+import { FaBell, FaEnvelope, FaReceipt, FaHome, FaCog, FaStore, FaClipboardList, FaBriefcase, FaChevronDown, FaShoppingBag, FaWallet, FaPlusCircle } from "react-icons/fa";
 import NotificationBell from "../../../components/notifications/NotificationBell";
 import { useAuth } from "../../../context/AuthContext";
 import { getInitials } from "../../../utils/avatarHelpers";
@@ -204,8 +204,8 @@ const NavigationBar = () => {
             Request
           </li>
           <li className="nav-link text-link" onClick={() => navigate(`${basePath}/create-gigs`)}>
-            <FaBriefcase className="nav-link-icon" />
-            Gigs
+            <FaPlusCircle className="nav-link-icon" />
+            + Gigs
           </li>
           <li className="nav-link text-link" onClick={() => navigate(`${basePath}/wallet`)}>
             <FaWallet className="nav-link-icon" />

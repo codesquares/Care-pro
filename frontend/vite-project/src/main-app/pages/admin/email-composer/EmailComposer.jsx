@@ -27,6 +27,7 @@ const EmailComposer = () => {
   const [userSearchTerm, setUserSearchTerm] = useState('');
   const [attachments, setAttachments] = useState([]);
   const [attachmentErrors, setAttachmentErrors] = useState([]);
+  const [uploadingInlineImage, setUploadingInlineImage] = useState(false);
 
   useEffect(() => {
     loadUsers();
@@ -66,15 +67,27 @@ const EmailComposer = () => {
     const allowedTypes = {
       'image/jpeg': ['.jpg', '.jpeg'],
       'image/jpg': ['.jpg', '.jpeg'],
+      'image/png': ['.png'],
+      'image/gif': ['.gif'],
+      'image/webp': ['.webp'],
+      'image/svg+xml': ['.svg'],
       'video/mp4': ['.mp4'],
-      'application/pdf': ['.pdf']
+      'video/quicktime': ['.mov'],
+      'video/webm': ['.webm'],
+      'video/x-msvideo': ['.avi'],
+      'application/pdf': ['.pdf'],
+      'application/msword': ['.doc'],
+      'application/vnd.openxmlformats-officedocument.wordprocessingml.document': ['.docx'],
+      'application/vnd.ms-excel': ['.xls'],
+      'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet': ['.xlsx'],
+      'text/csv': ['.csv']
     };
     const maxFileSize = 50 * 1024 * 1024; // 50MB
-    const maxTotalSize = 100 * 1024 * 1024; // 100MB
+    const maxTotalSize = 150 * 1024 * 1024; // 150MB
     
     // Check count
-    if (files.length > 5) {
-      errors.push('Maximum 5 files allowed');
+    if (files.length > 10) {
+      errors.push('Maximum 10 files allowed');
       return { isValid: false, errors };
     }
     
@@ -93,13 +106,13 @@ const EmailComposer = () => {
       const mimeType = file.type;
       
       if (!allowedTypes[mimeType] || !allowedTypes[mimeType].includes(extension)) {
-        errors.push(`${file.name}: Invalid file type (only JPG, JPEG, MP4, PDF allowed)`);
+        errors.push(`${file.name}: File type not allowed. Accepted types: jpg, jpeg, png, gif, webp, svg, mp4, mov, webm, avi, pdf, doc, docx, xls, xlsx, csv`);
       }
     });
     
     // Check total size
     if (totalSize > maxTotalSize) {
-      errors.push(`Total size (${(totalSize / 1024 / 1024).toFixed(1)}MB) exceeds 100MB limit`);
+      errors.push(`Total size (${(totalSize / 1024 / 1024).toFixed(1)}MB) exceeds 150MB limit`);
     }
     
     return { isValid: errors.length === 0, errors };
@@ -108,10 +121,10 @@ const EmailComposer = () => {
   const handleFileSelect = (e) => {
     const files = Array.from(e.target.files);
     const currentFileCount = attachments.length;
-    const newFiles = files.slice(0, 5 - currentFileCount);
+    const newFiles = files.slice(0, 10 - currentFileCount);
     
     if (newFiles.length === 0) {
-      setAttachmentErrors(['Maximum 5 files allowed']);
+      setAttachmentErrors(['Maximum 10 files allowed']);
       return;
     }
     
@@ -146,12 +159,64 @@ const EmailComposer = () => {
         return '📄';
       case '.jpg':
       case '.jpeg':
+      case '.png':
+      case '.gif':
+      case '.webp':
+      case '.svg':
         return '🖼️';
       case '.mp4':
+      case '.mov':
+      case '.webm':
+      case '.avi':
         return '🎬';
+      case '.doc':
+      case '.docx':
+        return '📝';
+      case '.xls':
+      case '.xlsx':
+      case '.csv':
+        return '📊';
       default:
         return '📎';
     }
+  };
+
+  const handleInlineImageUpload = async () => {
+    const input = document.createElement('input');
+    input.type = 'file';
+    input.accept = '.jpg,.jpeg,.png,.gif,.webp';
+    input.onchange = async (e) => {
+      const file = e.target.files[0];
+      if (!file) return;
+
+      // Validate: images only, max 10MB
+      const allowedImageTypes = ['image/jpeg', 'image/png', 'image/gif', 'image/webp'];
+      if (!allowedImageTypes.includes(file.type)) {
+        setResult({ success: false, error: 'Only image files are allowed (jpg, jpeg, png, gif, webp)' });
+        return;
+      }
+      if (file.size > 10 * 1024 * 1024) {
+        setResult({ success: false, error: 'Inline image must be under 10MB' });
+        return;
+      }
+
+      try {
+        setUploadingInlineImage(true);
+        const uploadResult = await adminService.uploadEmailAsset(file);
+        if (uploadResult.success) {
+          const imgTag = `<img src="${uploadResult.url}" alt="${uploadResult.fileName}" style="max-width: 100%; height: auto;" />`;
+          setMessage(prev => prev + '\n' + imgTag);
+        } else {
+          setResult({ success: false, error: uploadResult.error || 'Failed to upload image' });
+        }
+      } catch (err) {
+        console.error('Error uploading inline image:', err);
+        setResult({ success: false, error: 'Failed to upload inline image' });
+      } finally {
+        setUploadingInlineImage(false);
+      }
+    };
+    input.click();
   };
 
   const generateTemplateMessage = () => {
@@ -328,6 +393,24 @@ const EmailComposer = () => {
                 <i className="fas fa-paperclip"></i>
                 {result.attachmentCount} file(s) attached
               </p>
+            )}
+            {result.attachments && result.attachments.length > 0 && (
+              <div className="result-attachments-list">
+                {result.attachments.map((att, idx) => (
+                  <span key={idx} className="result-attachment-chip">
+                    {getFileIcon(att.fileName)} {att.fileName} ({formatFileSize(att.fileSize)})
+                  </span>
+                ))}
+              </div>
+            )}
+            {result.validationErrors && result.validationErrors.length > 0 && (
+              <div className="validation-errors-list">
+                {result.validationErrors.map((err, idx) => (
+                  <div key={idx} className="validation-error-item">
+                    <strong>{err.fileName}:</strong> {err.reason}
+                  </div>
+                ))}
+              </div>
             )}
             {result.stats && (
               <div className="email-stats">
@@ -530,6 +613,10 @@ const EmailComposer = () => {
             <button onClick={() => insertTemplate('infobox')} title="Insert Info Box">
               <i className="fas fa-info-circle"></i>
             </button>
+            <span className="toolbar-divider"></span>
+            <button onClick={handleInlineImageUpload} title="Insert Inline Image" disabled={uploadingInlineImage}>
+              {uploadingInlineImage ? <i className="fas fa-spinner fa-spin"></i> : <i className="fas fa-image"></i>}
+            </button>
           </div>
 
           {/* Message */}
@@ -552,21 +639,21 @@ const EmailComposer = () => {
             <label>Attachments (Optional)</label>
             <div className="attachment-info">
               <i className="fas fa-info-circle"></i>
-              <span>Max 5 files • JPG, JPEG, MP4, PDF only • 50MB per file • 100MB total{emailMode === 'bulk' ? ' • Same files sent to all recipients' : ''}</span>
+              <span>Max 10 files • Images, Videos, PDFs, Docs, Spreadsheets • 50MB per file • 150MB total{emailMode === 'bulk' ? ' • Same files sent to all recipients' : ''}</span>
             </div>
               
               <input
                 type="file"
-                accept=".jpg,.jpeg,.mp4,.pdf"
+                accept=".jpg,.jpeg,.png,.gif,.webp,.svg,.mp4,.mov,.webm,.avi,.pdf,.doc,.docx,.xls,.xlsx,.csv"
                 multiple
                 onChange={handleFileSelect}
-                disabled={attachments.length >= 5}
+                disabled={attachments.length >= 10}
                 className="file-input"
                 id="file-upload"
               />
               <label htmlFor="file-upload" className="file-upload-label">
                 <i className="fas fa-paperclip"></i>
-                {attachments.length >= 5 ? 'Maximum files reached' : 'Choose Files'}
+                {attachments.length >= 10 ? 'Maximum files reached' : 'Choose Files'}
               </label>
 
               {/* Attachment Errors */}

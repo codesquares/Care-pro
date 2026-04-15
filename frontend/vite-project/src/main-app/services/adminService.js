@@ -1369,8 +1369,8 @@ const adminService = {
    * @param {string} emailData.recipientName - Recipient name
    * @param {string} emailData.subject - Email subject
    * @param {string} emailData.message - Email message (HTML)
-   * @param {File[]} emailData.attachments - Optional file attachments (max 5 files, 100MB total)
-   * @returns {Promise<{success: boolean, message?: string, attachmentCount?: number, error?: string}>}
+   * @param {File[]} emailData.attachments - Optional file attachments (max 10 files, 150MB total)
+   * @returns {Promise<{success: boolean, message?: string, attachmentCount?: number, attachments?: Array, error?: string, validationErrors?: Array}>}
    */
   sendEmail: async (emailData) => {
     try {
@@ -1411,19 +1411,30 @@ const adminService = {
         return {
           success: true,
           message: response.data.message || `Email sent successfully to ${emailData.recipientEmail}`,
-          attachmentCount: response.data.attachmentCount || 0
+          attachmentCount: response.data.attachmentCount || 0,
+          attachments: response.data.attachments || []
         };
       }
 
       return {
         success: false,
-        error: response.data?.message || 'Failed to send email'
+        error: response.data?.message || 'Failed to send email',
+        validationErrors: response.data?.errors || []
       };
     } catch (error) {
       console.error('Error sending email:', error);
+      // Handle structured validation errors from backend
+      const responseData = error.response?.data;
+      if (responseData?.errors && Array.isArray(responseData.errors)) {
+        return {
+          success: false,
+          error: responseData.message || 'Some attachments were rejected',
+          validationErrors: responseData.errors
+        };
+      }
       return {
         success: false,
-        error: error.response?.data?.message || error.message || 'Failed to send email'
+        error: responseData?.message || error.message || 'Failed to send email'
       };
     }
   },
@@ -1435,8 +1446,8 @@ const adminService = {
    * @param {Array<string>} bulkEmailData.specificUserIds - User IDs (required for Specific type)
    * @param {string} bulkEmailData.subject - Email subject
    * @param {string} bulkEmailData.message - Email message (HTML)
-   * @param {File[]} bulkEmailData.attachments - Optional file attachments (max 5 files, 100MB total)
-   * @returns {Promise<{success: boolean, message?: string, stats?: Object, error?: string}>}
+   * @param {File[]} bulkEmailData.attachments - Optional file attachments (max 10 files, 150MB total)
+   * @returns {Promise<{success: boolean, message?: string, stats?: Object, attachments?: Array, error?: string, validationErrors?: Array}>}
    */
   sendBulkEmail: async (bulkEmailData) => {
     try {
@@ -1485,19 +1496,70 @@ const adminService = {
             successfulSends: response.data.successfulSends || 0,
             failedSends: response.data.failedSends || 0,
             errors: response.data.errors || []
-          }
+          },
+          attachments: response.data.attachments || [],
+          attachmentCount: response.data.attachments?.length || 0
         };
       }
 
       return {
         success: false,
-        error: response.data?.message || 'Failed to send bulk email'
+        error: response.data?.message || 'Failed to send bulk email',
+        validationErrors: response.data?.errors || []
       };
     } catch (error) {
       console.error('Error sending bulk email:', error);
+      // Handle structured validation errors from backend
+      const responseData = error.response?.data;
+      if (responseData?.errors && Array.isArray(responseData.errors)) {
+        return {
+          success: false,
+          error: responseData.message || 'Some attachments were rejected',
+          validationErrors: responseData.errors
+        };
+      }
       return {
         success: false,
-        error: error.response?.data?.message || error.message || 'Failed to send bulk email'
+        error: responseData?.message || error.message || 'Failed to send bulk email'
+      };
+    }
+  },
+
+  /**
+   * Upload a single image asset for inline use in email body
+   * @param {File} file - Image file (jpg, jpeg, png, gif, webp only, max 10MB)
+   * @returns {Promise<{success: boolean, url?: string, fileName?: string, mimeType?: string, fileSize?: number, error?: string}>}
+   */
+  uploadEmailAsset: async (file) => {
+    try {
+      const formData = new FormData();
+      formData.append('File', file);
+
+      const response = await api.post('/Admins/UploadEmailAsset', formData, {
+        headers: {
+          'Content-Type': undefined
+        }
+      });
+
+      if (response.data && response.data.success) {
+        return {
+          success: true,
+          url: response.data.url,
+          fileName: response.data.fileName,
+          mimeType: response.data.mimeType,
+          fileSize: response.data.fileSize
+        };
+      }
+
+      return {
+        success: false,
+        error: response.data?.message || 'Failed to upload image'
+      };
+    } catch (error) {
+      console.error('Error uploading email asset:', error);
+      return {
+        success: false,
+        error: error.response?.data?.message || error.message || 'Failed to upload image'
       };
     }
   },

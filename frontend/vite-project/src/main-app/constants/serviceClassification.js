@@ -15,6 +15,17 @@ export const SERVICE_TIERS = {
   SPECIALIZED: 'specialized',
 };
 
+// ─── Active Categories ───────────────────────────────────────────────────────
+// Only these categories are currently available for gig creation.
+// All others are shown as locked / "Coming Soon".
+
+export const ACTIVE_CATEGORIES = [
+  'Adult Care',
+  'Child Care',
+  'Pet Care',
+  'Home Care',
+];
+
 // ─── Category Tier Map ───────────────────────────────────────────────────────
 
 export const CATEGORY_TIER_MAP = {
