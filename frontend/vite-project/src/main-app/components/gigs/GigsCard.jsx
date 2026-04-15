@@ -7,6 +7,7 @@ import {
   getRequiredSpecializationForSubcategory,
   SERVICE_TIERS,
   toServiceKey,
+  ACTIVE_CATEGORIES,
 } from "../../constants/serviceClassification";
 import "./gigs.css";
 
@@ -217,12 +218,15 @@ const GigsCard = ({
               className={validationErrors.category ? 'error' : ''}
             >
               <option value="">Service Category</option>
-              {Object.keys(categories).map((category) => (
-                <option key={category} value={category}>
-                  {isSpecializedCategory(category) ? "🔒 " : ""}{category}
-                  {isSpecializedCategory(category) ? " (Specialized)" : ""}
-                </option>
-              ))}
+              {Object.keys(categories).map((category) => {
+                const isActive = ACTIVE_CATEGORIES.includes(category);
+                return (
+                  <option key={category} value={isActive ? category : ""} disabled={!isActive}>
+                    {!isActive ? "🔒 " : ""}{category}
+                    {!isActive ? " (Coming Soon)" : ""}
+                  </option>
+                );
+              })}
             </select>
             {validationErrors.category && (
               <div className="validation-error">
