@@ -48,6 +48,7 @@ api.interceptors.request.use(
             // Public endpoints that don't require authentication
             const publicEndpoints = [
                 '/CareGivers/AddCaregiverUser',
+                '/CareGivers/AllCaregivers',
                 '/Clients/AddClientUser',
                 '/Admins',
                 '/Authentications/CheckEmailExists',
@@ -56,6 +57,7 @@ api.interceptors.request.use(
                 '/Authentications/ForgotPassword',
                 '/Authentications/ResetPassword',
                 '/Authentications/VerifyEmail',
+                '/Gigs',
             ];
 
             const isPublic = publicEndpoints.some(ep => config.url?.includes(ep));
