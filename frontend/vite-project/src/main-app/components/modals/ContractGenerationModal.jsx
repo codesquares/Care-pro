@@ -2,6 +2,9 @@ import { useState, useEffect } from "react";
 import { toast } from "react-toastify";
 import ContractService from "../../services/contractService";
 import { createNotification } from "../../services/notificationService";
+import AddressInput from "../AddressInput";
+import TaskProposalForm from "../task-proposals/TaskProposalForm";
+import ProposedTasksList from "../task-proposals/ProposedTasksList";
 import "./ContractGenerationModal.css";
 
 /**
@@ -30,6 +33,12 @@ const ContractGenerationModal = ({
     additionalNotes: "",
     revisionNotes: ""
   });
+  const [addressCoordinates, setAddressCoordinates] = useState(null);
+  
+  // NEW — additional tasks caregiver wants to add
+  const [additionalTasks, setAdditionalTasks] = useState([]);
+  // NEW — responses to client-proposed tasks (revision mode)
+  const [proposedTaskResponses, setProposedTaskResponses] = useState([]);
 
   /**
    * Get visits per week from order data
@@ -66,6 +75,7 @@ const ContractGenerationModal = ({
   // Initialize schedule with correct number of visits
   useEffect(() => {
     if (isOpen) {
+      document.body.style.overflow = 'hidden';
       if (isRevision && existingContract?.schedule) {
         // Pre-fill with existing schedule for revision
         setSchedule(existingContract.schedule.map(visit => ({
@@ -80,6 +90,9 @@ const ContractGenerationModal = ({
           additionalNotes: existingContract.caregiverAdditionalNotes || "",
           revisionNotes: ""
         });
+        setAddressCoordinates(null);
+        setAdditionalTasks([]);
+        setProposedTaskResponses([]);
       } else {
         // Initialize empty schedule entries
         const initialSchedule = Array(visitsPerWeek).fill(null).map(() => ({
@@ -95,8 +108,14 @@ const ContractGenerationModal = ({
           additionalNotes: "",
           revisionNotes: ""
         });
+        setAddressCoordinates(null);
+        setAdditionalTasks([]);
+        setProposedTaskResponses([]);
       }
+    } else {
+      document.body.style.overflow = '';
     }
+    return () => { document.body.style.overflow = ''; };
   }, [isOpen, visitsPerWeek, isRevision, existingContract]);
 
   const daysOfWeek = ContractService.getDaysOfWeek();
@@ -108,8 +127,36 @@ const ContractGenerationModal = ({
     ));
   };
 
+  const handleAddressChange = (address) => {
+    setFormData(prev => ({ ...prev, serviceAddress: address }));
+  };
+
+  const handleAddressValidation = (validation) => {
+    if (validation?.isValid && validation?.coordinates?.latitude != null) {
+      setAddressCoordinates(validation.coordinates);
+    }
+    if (validation?.isValid && validation?.formattedAddress) {
+      setFormData(prev => ({ ...prev, serviceAddress: validation.formattedAddress }));
+    }
+  };
+
   const handleFormChange = (field, value) => {
     setFormData(prev => ({ ...prev, [field]: value }));
+  };
+
+  // Handle caregiver responding to a single proposed task
+  const handleProposedTaskResponse = ({ proposedTaskId, accepted, note }) => {
+    setProposedTaskResponses(prev => {
+      const existing = prev.findIndex(r => r.proposedTaskId === proposedTaskId);
+      const newResponse = { proposedTaskId, accepted, note };
+      if (existing >= 0) {
+        const updated = [...prev];
+        updated[existing] = newResponse;
+        return updated;
+      }
+      return [...prev, newResponse];
+    });
+    toast.info(`Task ${accepted ? 'accepted' : 'rejected'}`);
   };
 
   const validateSchedule = () => {
@@ -149,10 +196,22 @@ const ContractGenerationModal = ({
           contractId: existingContract.id,
           revisedSchedule: schedule,
           serviceAddress: formData.serviceAddress,
+          ...(addressCoordinates && {
+            serviceLatitude: addressCoordinates.latitude,
+            serviceLongitude: addressCoordinates.longitude
+          }),
           specialClientRequirements: formData.specialClientRequirements,
           accessInstructions: formData.accessInstructions,
           additionalNotes: formData.additionalNotes,
-          revisionNotes: formData.revisionNotes
+          revisionNotes: formData.revisionNotes,
+          // NEW — responses to client-proposed tasks
+          ...(proposedTaskResponses.length > 0 && {
+            proposedTaskResponses
+          }),
+          // NEW — additional tasks during revision
+          ...(additionalTasks.length > 0 && {
+            additionalTasks
+          })
         });
       } else {
         // Generate new contract
@@ -160,9 +219,17 @@ const ContractGenerationModal = ({
           orderId: orderData?.id || orderData?.orderId,
           schedule: schedule,
           serviceAddress: formData.serviceAddress,
+          ...(addressCoordinates && {
+            serviceLatitude: addressCoordinates.latitude,
+            serviceLongitude: addressCoordinates.longitude
+          }),
           specialClientRequirements: formData.specialClientRequirements,
           accessInstructions: formData.accessInstructions,
-          additionalNotes: formData.additionalNotes
+          additionalNotes: formData.additionalNotes,
+          // NEW — additional tasks during generation
+          ...(additionalTasks.length > 0 && {
+            additionalTasks
+          })
         });
       }
 
@@ -313,10 +380,10 @@ const ContractGenerationModal = ({
             
             <div className="form-group">
               <label>Service Address <span className="required">*</span></label>
-              <input
-                type="text"
+              <AddressInput
                 value={formData.serviceAddress}
-                onChange={(e) => handleFormChange('serviceAddress', e.target.value)}
+                onChange={handleAddressChange}
+                onValidation={handleAddressValidation}
                 placeholder="Enter the full service address"
                 required
               />
@@ -365,6 +432,33 @@ const ContractGenerationModal = ({
               </div>
             )}
           </div>
+
+          {/* Client Proposed Tasks — show during revision if any exist */}
+          {isRevision && existingContract?.proposedTasks && existingContract.proposedTasks.length > 0 && (
+            <div className="proposed-tasks-review-section">
+              <ProposedTasksList
+                proposedTasks={existingContract.proposedTasks}
+                userRole="Caregiver"
+                showActions={true}
+                onRespond={handleProposedTaskResponse}
+              />
+              {proposedTaskResponses.length > 0 && (
+                <p className="responses-count">
+                  ✓ {proposedTaskResponses.length} response(s) recorded
+                </p>
+              )}
+            </div>
+          )}
+
+          {/* Additional Tasks — caregiver can add during generation or revision */}
+          <TaskProposalForm
+            tasks={additionalTasks}
+            onTasksChange={setAdditionalTasks}
+            label={isRevision ? "Add Additional Tasks (Optional)" : "Add Tasks to Contract (Optional)"}
+            placeholder="Task title..."
+            showCategoryAndPriority={true}
+            maxTasks={10}
+          />
 
           {/* Action Buttons */}
           <div className="contract-modal-actions">

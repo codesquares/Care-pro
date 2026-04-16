@@ -33,6 +33,7 @@ class SignalRChatService {
       onReconnecting: [],
       onReconnected: [],
       onMessage: [],
+      onMessageRedacted: [],
       onUserStatusChanged: [],
       onError: []
     };
@@ -147,6 +148,7 @@ class SignalRChatService {
       'onMessageRead': 'MessageRead',
       'onMessageDelivered': 'MessageDelivered',
       'onMessageDeleted': 'MessageDeleted',
+      'onMessageRedacted': 'MessageRedacted',
       'onUserStatusChanged': 'UserStatusChanged',
       'onAllMessagesRead': 'AllMessagesRead'
     };
@@ -167,6 +169,9 @@ class SignalRChatService {
             break;
           case 'onMessageDeleted':
             handler({ messageId: args[0], userId: args[1], recipientId: args[2] });
+            break;
+          case 'onMessageRedacted':
+            handler({ messageId: args[0], deliveredMessage: args[1], warning: args[2] });
             break;
           case 'onUserStatusChanged':
             handler({ userId: args[0], status: args[1] });
@@ -664,6 +669,19 @@ class SignalRChatService {
           
           return messageId;
         } catch (signalRError) {
+          // Check if this is a commitment-fee gate error — do NOT fall through to REST
+          const errMsg = signalRError?.message || '';
+          if (errMsg.toLowerCase().includes('booking commitment fee')) {
+            const commitmentError = new Error(errMsg);
+            commitmentError.isCommitmentRequired = true;
+            throw commitmentError;
+          }
+          // Check if this is a contact-info-blocked error — do NOT fall through to REST
+          if (errMsg.toLowerCase().includes('contact information') || errMsg.toLowerCase().includes('sharing personal contact')) {
+            const blockedError = new Error(errMsg);
+            blockedError.isComplianceBlocked = true;
+            throw blockedError;
+          }
           console.warn('🚨 SIGNALR SERVICE: SignalR message send failed, falling back to REST API:', signalRError);
           // Continue to REST API fallback
         }
@@ -753,8 +771,27 @@ class SignalRChatService {
         // Invalidate cache for this conversation to ensure fresh data on next fetch
         this.invalidateConversationCache(senderIdStr, receiverIdStr);
         
-        return response.data.messageId || response.data.id || `fallback-${Date.now()}`;
+        const restResult = { messageId: response.data.messageId || response.data.id || `fallback-${Date.now()}` };
+        // Attach redaction metadata if present
+        if (response.data.wasRedacted) {
+          restResult.wasRedacted = true;
+          restResult.deliveredMessage = response.data.deliveredMessage;
+          restResult.redactionWarning = response.data.redactionWarning;
+        }
+        return restResult;
       } catch (error) {
+        // Check for commitment-fee gate error before retrying
+        const firstErrMsg = error.response?.data?.message || error.response?.data?.error || error.message || '';
+        if (firstErrMsg.toLowerCase().includes('booking commitment fee')) {
+          const commitmentError = new Error(firstErrMsg);
+          commitmentError.isCommitmentRequired = true;
+          throw commitmentError;
+        }
+        if (firstErrMsg.toLowerCase().includes('contact information') || firstErrMsg.toLowerCase().includes('sharing personal contact')) {
+          const blockedError = new Error(firstErrMsg);
+          blockedError.isComplianceBlocked = true;
+          throw blockedError;
+        }
         // If that fails, let's try one more time with query parameters instead
         console.error('🚨 SIGNALR SERVICE: First REST API attempt failed:', error);
         try {
@@ -794,9 +831,28 @@ class SignalRChatService {
             }
           );
           
-          return response.data.messageId || response.data.id || `fallback-${Date.now()}`;
+          const retryResult = { messageId: response.data.messageId || response.data.id || `fallback-${Date.now()}` };
+          if (response.data.wasRedacted) {
+            retryResult.wasRedacted = true;
+            retryResult.deliveredMessage = response.data.deliveredMessage;
+            retryResult.redactionWarning = response.data.redactionWarning;
+          }
+          return retryResult;
         } catch (finalError) {
           console.error('🚨 SIGNALR SERVICE: All message sending attempts failed:', finalError);
+          // Check for commitment-fee gate error in REST responses
+          const restErrMsg = finalError.response?.data?.message || finalError.response?.data?.error || finalError.message || '';
+          if (restErrMsg.toLowerCase().includes('booking commitment fee')) {
+            const commitmentError = new Error(restErrMsg);
+            commitmentError.isCommitmentRequired = true;
+            throw commitmentError;
+          }
+          // Check for contact-info-blocked error in REST responses
+          if (restErrMsg.toLowerCase().includes('contact information') || restErrMsg.toLowerCase().includes('sharing personal contact')) {
+            const blockedError = new Error(restErrMsg);
+            blockedError.isComplianceBlocked = true;
+            throw blockedError;
+          }
           // Log the specific error details for better debugging
           if (finalError.response) {
             console.error('🚨 SIGNALR SERVICE: Server response:', {
@@ -809,6 +865,16 @@ class SignalRChatService {
         }
       }
     } catch (error) {
+      // Preserve commitment-gate errors — propagate them directly
+      if (error.isCommitmentRequired) {
+        throw error;
+      }
+
+      // Preserve compliance-blocked errors — propagate them directly
+      if (error.isComplianceBlocked) {
+        throw error;
+      }
+
       // Add more detailed error information for debugging
       console.error('🚨 SIGNALR SERVICE: Error sending message:', error);
       

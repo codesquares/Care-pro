@@ -20,6 +20,7 @@ import RefundPolicy from './pages/RefundPolicy';
 import NotFoundPage from './pages/NotFoundPage';
 import OrderFaq from './main-app/pages/care-giver/OrderFaq';
 import LoginPage from './main-app/pages/LoginPage';
+import Team from './pages/Team';
 import RoleSelectionPage from './main-app/pages/RoleSelectionPage';
 import RegisterFormPage from './main-app/pages/RegisterFormPage';
 import ForgotPasswordPage from './main-app/pages/ForgotPasswordPage';
@@ -39,6 +40,7 @@ import ContentBlog from './components/ContentfulBlog/Blog';
 import ContentBlogPost from './components/ContentfulBlog/BlogPost';
 import { BlogProvider } from './main-app/context/BlogContext';
 import PaymentSuccess from './main-app/pages/client/home-care-service/PaymentSuccess';
+import CommitmentSuccess from './main-app/pages/client/home-care-service/CommitmentSuccess';
 import HomeCareService from './main-app/pages/client/home-care-service/HomeCareService';
 import { MessageProvider } from './main-app/context/MessageContext';
 import { CaregiverStatusProvider } from './main-app/contexts/CaregiverStatusContext';
@@ -55,10 +57,17 @@ import Order2 from './main-app/pages/client/orders/OrderTasks&Details';
 import NotificationPoller from "./NotificationPoller"
 
 function ScrollToTop() {
-  const location = useLocation();
+  const { pathname } = useLocation();
+
   useEffect(() => {
-    window.scrollTo(0, 0);
-  }, [location]);
+    // Ensuring scroll happens clearly on page changes
+    window.scrollTo({
+      top: 0,
+      left: 0,
+      behavior: 'auto' // Immediately scroll to top
+    });
+  }, [pathname]);
+
   return null;
 }
 
@@ -69,11 +78,11 @@ function App() {
   return (
     <GoogleOAuthProvider clientId={GOOGLE_CLIENT_ID}>
       <BlogProvider>
-        <NotificationPoller />
         {/* <NotificationProvider> */}
           <MessageProvider>
-            <Router>
+            <Router future={{ v7_startTransition: true, v7_relativeSplatPath: true }}>
               <AuthProvider>
+                <NotificationPoller />
                 <CaregiverStatusProvider>
                   <ErrorBoundary>
                     <AppContent />
@@ -106,6 +115,7 @@ function AppContent() {
     '/become-caregiver',
     '/privacy-policy',
     '/terms-and-conditions',
+    '/team',
     '/login',
     '/register',
     '/register/form',
@@ -127,7 +137,7 @@ function AppContent() {
 
   // Define routes that should not have navbar
   const routesWithoutNavbar = ['/login', '/register', '/register/form', '/forgot-password', '/confirm-email', '/resend-confirmation'];
-  
+
   // Define routes that should not have footer
   const routesWithoutFooter = ['/login', '/register', '/register/form', '/forgot-password', '/confirm-email', '/resend-confirmation'];
 
@@ -136,7 +146,7 @@ function AppContent() {
   const isRootRoute = location.pathname === '/';
   const isMarketplaceRoute = location.pathname === '/marketplace';
   const isServiceRoute = location.pathname.startsWith('/service/');
-  
+
   // Check if current route should show navbar and footer
   // Marketing navbar for root and marketing-related pages
   const shouldShowMarketingNavbar = isRootRoute;
@@ -145,13 +155,13 @@ function AppContent() {
   // Service page: show role-appropriate navbar
   const shouldShowServiceNavbar = isServiceRoute;
   // Basic navbar for other public pages
-  const shouldShowBasicNavbar = isUnprotectedRoute && 
-                                !routesWithoutNavbar.includes(location.pathname) && 
-                                !isRootRoute &&
-                                !isMarketplaceRoute;
+  const shouldShowBasicNavbar = isUnprotectedRoute &&
+    !routesWithoutNavbar.includes(location.pathname) &&
+    !isRootRoute &&
+    !isMarketplaceRoute;
   const shouldShowFooter = !routesWithoutFooter.includes(location.pathname);
 
-  
+
 
   return (
     <div className="App">
@@ -174,8 +184,8 @@ function AppContent() {
       {/* <ConnectionStatusIndicator /> */}
       <Routes>
         {/* Root route with redirect logic for authenticated users */}
-        <Route 
-          path="/" 
+        <Route
+          path="/"
           element={
             isAuthenticated && user ? (
               user.role?.toLowerCase() === 'caregiver' ? (
@@ -186,7 +196,7 @@ function AppContent() {
             ) : (
               <MarketingPage />
             )
-          } 
+          }
         />
         {/* Marketplace route */}
         <Route path="/marketplace" element={<PublicMarketplace />} />
@@ -202,6 +212,7 @@ function AppContent() {
         <Route path="/become-caregiver" element={<BecomeCaregiver />} />
         <Route path="/privacy-policy" element={<PrivacyPolicy />} />
         <Route path="/terms-and-conditions" element={<TermsAndConditions />} />
+        <Route path="/team" element={<Team />} />
         <Route path="/refund-policy" element={<RefundPolicy />} />
         <Route path="/login" element={<LoginPage />} />
         <Route path="/register" element={<RoleSelectionPage />} />
@@ -223,6 +234,7 @@ function AppContent() {
         {/* <Route path="/Caregiver-Dashboard" element={<CaregiverDashboard />} /> */}
 
         <Route path="/app/client/payment-success" element={<PaymentSuccess />} />
+        <Route path="/app/client/commitment-success" element={<CommitmentSuccess />} />
         <Route path="/unauthorized" element={<UnauthorizedPage />} />
         <Route
           path="/app/*"

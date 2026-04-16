@@ -1,5 +1,5 @@
-import { useEffect, useState } from 'react';
-import { useParams, useLocation } from 'react-router-dom';
+import { useEffect, useState, useRef } from 'react';
+import { useParams, useLocation, useNavigate } from 'react-router-dom';
 import { useMessageContext } from '../../context/MessageContext';
 import { useAuth } from '../../context/AuthContext';
 import ChatArea from './Chatarea';
@@ -7,6 +7,9 @@ import axios from 'axios';
 import './messages.css';
 import './direct-message.css';
 import config from '../../config'; // Import centralized config for API URLs
+import ClientGigService from '../../services/clientGigService';
+import bookingCommitmentService from '../../services/bookingCommitmentService';
+import { createNotification } from '../../services/notificationService';
 
 // FIXED: Use centralized config instead of hardcoded Azure staging API URL
 const API_BASE_URL = config.BASE_URL.replace(/\/api$/, ''); // Remove /api suffix for consistency (only trailing)
@@ -14,6 +17,7 @@ const API_BASE_URL = config.BASE_URL.replace(/\/api$/, ''); // Remove /api suffi
 const DirectMessage = () => {
   const { recipientId } = useParams();
   const location = useLocation();
+  const navigate = useNavigate();
   const { userRole } = useAuth(); // Get current user's role
   const [recipientName, setRecipientName] = useState(location.state?.recipientName || "User");
   
@@ -22,10 +26,99 @@ const DirectMessage = () => {
   const [recipientRole, setRecipientRole] = useState(null); // Track whether recipient is 'Caregiver' or 'Client'
   const [loading, setLoading] = useState(false);
   const [apiError, setApiError] = useState(null);
+
+  // Hire Now state
+  const [caregiverGigs, setCaregiverGigs] = useState([]);
+  const [isLoadingGigs, setIsLoadingGigs] = useState(false);
+  const serviceId = location.state?.serviceId;
+
+  // Report caregiver state
+  const [showReportModal, setShowReportModal] = useState(false);
+  const [reportReason, setReportReason] = useState('');
+  const [reportDetails, setReportDetails] = useState('');
+  const [reportSubmitting, setReportSubmitting] = useState(false);
+  const [reportSubmitted, setReportSubmitted] = useState(false);
   
   // Determine if current user is a caregiver (viewing a client) or client (viewing a caregiver)
   const isCurrentUserCaregiver = userRole === 'Caregiver';
   const isCurrentUserClient = userRole === 'Client';
+
+  // Fetch caregiver gigs for Hire Now button
+  useEffect(() => {
+    if (isCurrentUserClient && recipientUserId && !serviceId) {
+      const fetchGigs = async () => {
+        setIsLoadingGigs(true);
+        try {
+          const allGigs = await ClientGigService.getAllGigs();
+          const published = allGigs.filter(gig => {
+            const status = gig.status?.toLowerCase();
+            return gig.caregiverId === recipientUserId && (status === 'published' || status === 'active');
+          });
+          setCaregiverGigs(published);
+        } catch (err) {
+          console.error('Error fetching caregiver gigs:', err);
+          setCaregiverGigs([]);
+        } finally {
+          setIsLoadingGigs(false);
+        }
+      };
+      fetchGigs();
+    }
+  }, [recipientUserId, isCurrentUserClient, serviceId]);
+
+  // Navigate to cart or commitment payment
+  const navigateWithCommitmentCheck = async (gigId) => {
+    try {
+      const result = await bookingCommitmentService.checkAccess(gigId);
+      if (result.success && result.data && result.data.hasAccess) {
+        navigate(`/app/client/cart/${gigId}`);
+      } else {
+        navigate(`/app/client/commitment-payment/${gigId}`);
+      }
+    } catch {
+      navigate(`/app/client/commitment-payment/${gigId}`);
+    }
+  };
+
+  const handleHireNowClick = async () => {
+    if (serviceId) {
+      await navigateWithCommitmentCheck(serviceId);
+      return;
+    }
+    if (isLoadingGigs) return;
+    if (caregiverGigs.length === 0) return;
+    if (caregiverGigs.length === 1) {
+      await navigateWithCommitmentCheck(caregiverGigs[0].id);
+    } else {
+      // If multiple gigs, navigate to first one (ChatArea's modal handles the multi-gig case)
+      await navigateWithCommitmentCheck(caregiverGigs[0].id);
+    }
+  };
+
+  const handleSubmitReport = async () => {
+    if (!reportReason) return;
+    setReportSubmitting(true);
+    try {
+      const user = JSON.parse(localStorage.getItem('userDetails'));
+      await createNotification({
+        type: 'caregiver_report',
+        title: 'Caregiver Reported',
+        message: `Client ${user?.firstName || 'A client'} reported caregiver ${recipientName}. Reason: ${reportReason}${reportDetails ? `. Details: ${reportDetails}` : ''}`,
+        recipientRole: 'Admin',
+        metadata: {
+          reportedCaregiverId: recipientUserId || recipientId,
+          reportedBy: user?.id,
+          reason: reportReason,
+          details: reportDetails
+        }
+      });
+      setReportSubmitted(true);
+    } catch (err) {
+      console.error('Error submitting report:', err);
+    } finally {
+      setReportSubmitting(false);
+    }
+  };
   
   // Extract recipient ID on component mount
   useEffect(() => {
@@ -199,6 +292,8 @@ const DirectMessage = () => {
     recipient,
     isLoading,
     error,
+    connectionState,
+    currentUserId,
     selectChat,
     handleSendMessage,
     initializeChat,
@@ -209,19 +304,59 @@ const DirectMessage = () => {
   const userId = user?.id;
   const token = localStorage.getItem('authToken') || "mock-token";
   
-  // We no longer initialize chat here - that's handled in the parent Messages component only
-  
-  // Separate effect for selecting chat to avoid connection cycling
+  // Track whether we've already kicked off initialization to prevent loops.
+  // initializeChat's identity changes on every render (its useCallback deps include
+  // fetchConversations which changes whenever conversations state updates), so we must
+  // NOT include it in the dependency array.
+  const initStartedRef = useRef(false);
+  const cleanupRef = useRef(null);
+
   useEffect(() => {
+    if (!userId || !token) return;
+
+    // Only attempt initialization once per mount
+    if (initStartedRef.current) return;
+    initStartedRef.current = true;
+
+    console.log('[DirectMessage] Initializing chat connection...', { userId });
+
+    const init = async () => {
+      try {
+        cleanupRef.current = await initializeChat(userId, token);
+      } catch (err) {
+        console.error('[DirectMessage] Failed to initialize chat:', err);
+      }
+    };
+    init();
+
+    return () => {
+      if (typeof cleanupRef.current === 'function') {
+        cleanupRef.current();
+      }
+    };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [userId, token]);
+  
+  // Select the chat once connection is ready
+  useEffect(() => {
+    // Wait until the SignalR connection is established before selecting a chat
+    if (connectionState !== 'Connected') {
+      console.log('[DirectMessage] Waiting for connection before selecting chat...', { connectionState });
+      return;
+    }
+    if (!currentUserId) {
+      console.log('[DirectMessage] Waiting for currentUserId to be set before selecting chat...');
+      return;
+    }
     if (recipientId && recipientId !== selectedChatId && !isLoading) {
-      console.log(`[DirectMessage] Selecting chat with recipient: ${recipientId}`);
-      // Add a small delay to avoid race conditions with other initializations
+      console.log(`[DirectMessage] Connection ready, selecting chat with recipient: ${recipientId}`);
+      // Add a small delay to allow conversations to start loading
       const timer = setTimeout(() => {
         selectChat(recipientId);
       }, 300);
       return () => clearTimeout(timer);
     }
-  }, [recipientId, selectedChatId, selectChat, isLoading]);
+  }, [recipientId, selectedChatId, selectChat, isLoading, connectionState, currentUserId]);
 
   // Handle sending a new message
   const handleSendNewMessage = (receiverId, messageText) => {
@@ -374,8 +509,8 @@ const DirectMessage = () => {
     name: recipientName,
     role: recipientRole, // Include role for display purposes
     // Add default values for properties used in ChatArea
-    isOnline: Math.random() > 0.5, 
-    lastActive: new Date().toISOString(), 
+    isOnline: false, 
+    lastActive: null, 
     avatar: "/avatar.jpg",  
     previewMessage: "Start a conversation..."
   };
@@ -429,17 +564,76 @@ const DirectMessage = () => {
   return (
     <div className="messages">
       <div className="direct-message-container">
+        {/* Report Caregiver Modal */}
+        {showReportModal && (
+          <div className="report-modal-overlay" onClick={(e) => { if (e.target === e.currentTarget) setShowReportModal(false); }}>
+            <div className="report-modal">
+              {reportSubmitted ? (
+                <>
+                  <div className="report-modal__icon report-modal__icon--success">✓</div>
+                  <h3>Report Submitted</h3>
+                  <p>Thank you for your feedback. Our team will review this report.</p>
+                  <button className="report-modal__btn report-modal__btn--close" onClick={() => setShowReportModal(false)}>Close</button>
+                </>
+              ) : (
+                <>
+                  <div className="report-modal__icon">⚠️</div>
+                  <h3>Report Caregiver</h3>
+                  <p>Please select a reason for reporting <strong>{recipientName}</strong></p>
+                  <div className="report-modal__reasons">
+                    {['Unresponsive or not replying', 'Could not reach an agreement', 'Unprofessional behaviour', 'Suspicious or fraudulent activity', 'Other'].map(reason => (
+                      <label key={reason} className={`report-modal__reason ${reportReason === reason ? 'selected' : ''}`}>
+                        <input type="radio" name="reportReason" value={reason} checked={reportReason === reason} onChange={(e) => setReportReason(e.target.value)} />
+                        {reason}
+                      </label>
+                    ))}
+                  </div>
+                  <textarea className="report-modal__details" placeholder="Additional details (optional)" value={reportDetails} onChange={(e) => setReportDetails(e.target.value)} rows="3" />
+                  <div className="report-modal__actions">
+                    <button className="report-modal__btn report-modal__btn--cancel" onClick={() => setShowReportModal(false)}>Cancel</button>
+                    <button className="report-modal__btn report-modal__btn--submit" onClick={handleSubmitReport} disabled={!reportReason || reportSubmitting}>
+                      {reportSubmitting ? 'Submitting...' : 'Submit Report'}
+                    </button>
+                  </div>
+                </>
+              )}
+            </div>
+          </div>
+        )}
+
         <div className="messages-header">
-          <h2>Conversation with {recipientName}</h2>
-          {recipientRole && (
-            <span className={`recipient-role-badge ${recipientRole.toLowerCase()}`}>
-              {recipientRole}
-            </span>
-          )}
-          {error && (
-            <div className="connection-status">
-              <span className="status-indicator offline"></span>
-              <span className="status-text">Offline Mode</span>
+          <div className="messages-header__left">
+            <h2>Conversation with {recipientName}</h2>
+            {recipientRole && (
+              <span className={`recipient-role-badge ${recipientRole.toLowerCase()}`}>
+                {recipientRole}
+              </span>
+            )}
+            {error && (
+              <div className="connection-status">
+                <span className="status-indicator offline"></span>
+                <span className="status-text">Offline Mode</span>
+              </div>
+            )}
+          </div>
+          {isCurrentUserClient && (
+            <div className="messages-header__actions">
+              <button className="dm-action-btn dm-action-btn--hire" onClick={handleHireNowClick} disabled={isLoadingGigs && !serviceId}>
+                <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                  <path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/>
+                  <circle cx="9" cy="7" r="4"/>
+                  <path d="m22 2-5 10-4-4Z"/>
+                </svg>
+                {isLoadingGigs && !serviceId ? 'Loading...' : 'Hire Now'}
+              </button>
+              <button className="dm-action-btn dm-action-btn--report" onClick={() => { setShowReportModal(true); setReportSubmitted(false); setReportReason(''); setReportDetails(''); }}>
+                <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                  <path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/>
+                  <line x1="12" y1="9" x2="12" y2="13"/>
+                  <line x1="12" y1="17" x2="12.01" y2="17"/>
+                </svg>
+                Report Caregiver
+              </button>
             </div>
           )}
         </div>

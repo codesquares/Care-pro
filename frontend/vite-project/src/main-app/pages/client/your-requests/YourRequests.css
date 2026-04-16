@@ -1,0 +1,306 @@
+/* Your Requests Page */
+.your-requests-page {
+  min-height: 100vh;
+  background: #fafaf7;
+}
+
+/* ─── Banner ─── */
+.your-requests-banner {
+  margin-bottom: 0;
+}
+
+.your-requests-banner-right {
+  display: flex;
+  align-items: center;
+  gap: 20px;
+  flex-shrink: 0;
+}
+
+.your-requests-tagline {
+  font-size: 0.85rem;
+  color: #4b5563;
+  font-weight: 500;
+  margin: 0;
+  text-align: right;
+  line-height: 1.5;
+  max-width: 260px;
+}
+
+.yr-create-btn {
+  padding: 10px 22px;
+  background: #1f2e5a;
+  color: #fff;
+  border: none;
+  border-radius: 10px;
+  font-size: 0.88rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s;
+  white-space: nowrap;
+}
+
+.yr-create-btn:hover {
+  background: #162347;
+  box-shadow: 0 2px 8px rgba(31, 46, 90, 0.25);
+}
+
+/* ─── Content Container ─── */
+.your-requests-content {
+  max-width: 960px;
+  margin: 0 auto;
+  padding: 20px 20px 60px;
+}
+
+/* ─── Tabs ─── */
+.yr-tabs {
+  display: flex;
+  gap: 0;
+  border-bottom: 1px solid #e2e0d6;
+  overflow-x: auto;
+  -webkit-overflow-scrolling: touch;
+  scrollbar-width: none;
+}
+
+.yr-tabs::-webkit-scrollbar {
+  display: none;
+}
+
+.yr-tab {
+  padding: 10px 18px;
+  background: none;
+  border: none;
+  border-bottom: 2px solid transparent;
+  font-size: 0.84rem;
+  font-weight: 500;
+  color: #64748b;
+  cursor: pointer;
+  white-space: nowrap;
+  transition: all 0.2s;
+}
+
+.yr-tab:hover {
+  color: #1e293b;
+}
+
+.yr-tab.active {
+  color: #1f2e5a;
+  font-weight: 600;
+  border-bottom-color: #1f2e5a;
+}
+
+/* ─── Filters ─── */
+.yr-filters {
+  display: flex;
+  gap: 10px;
+  padding: 14px 0;
+  flex-wrap: wrap;
+}
+
+.yr-filters select {
+  padding: 7px 12px;
+  border: 1px solid #d1d5db;
+  border-radius: 6px;
+  font-size: 0.82rem;
+  font-weight: 500;
+  color: #334155;
+  background: #fff;
+  cursor: pointer;
+  font-family: inherit;
+  min-width: 100px;
+}
+
+.yr-filters select:focus {
+  outline: none;
+  border-color: #94a3b8;
+}
+
+/* ─── Table Head ─── */
+.yr-table-head {
+  display: grid;
+  grid-template-columns: 2.5fr 1.2fr 1.2fr 1.2fr;
+  padding: 12px 16px;
+  border-bottom: 1px solid #d1d5db;
+  font-size: 0.8rem;
+  font-weight: 600;
+  color: #ef8c2f;
+  font-style: italic;
+}
+
+/* ─── Table Body ─── */
+.yr-table-body {
+  display: flex;
+  flex-direction: column;
+}
+
+.yr-row {
+  display: grid;
+  grid-template-columns: 2.5fr 1.2fr 1.2fr 1.2fr;
+  align-items: center;
+  padding: 18px 16px;
+  border-bottom: 1px solid #f1f0eb;
+  transition: background 0.15s;
+}
+
+.yr-row:hover {
+  background: #fdfcf8;
+}
+
+.yr-row-title {
+  font-size: 0.92rem;
+  font-weight: 500;
+  color: #1f2e5a;
+  text-decoration: underline;
+  cursor: pointer;
+  transition: color 0.15s;
+}
+
+.yr-row-title:hover {
+  color: #0f766e;
+}
+
+.yr-row-status {
+  font-size: 0.85rem;
+  font-weight: 500;
+  color: #475569;
+}
+
+.yr-row-responders {
+  font-size: 0.85rem;
+  color: #475569;
+}
+
+.yr-row-action button {
+  padding: 7px 16px;
+  background: transparent;
+  color: #1f2e5a;
+  border: 1.5px solid #d1d5db;
+  border-radius: 8px;
+  font-size: 0.82rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s;
+  white-space: nowrap;
+}
+
+.yr-row-action button:hover {
+  border-color: #1f2e5a;
+  background: #f8f7f3;
+}
+
+/* ─── No Results ─── */
+.yr-no-results {
+  text-align: center;
+  padding: 48px 20px;
+  color: #64748b;
+  font-size: 0.95rem;
+}
+
+/* ─── Empty State ─── */
+.your-requests-empty {
+  text-align: center;
+  padding: 80px 32px 60px;
+}
+
+.your-requests-empty h2 {
+  font-size: 1.5rem;
+  font-weight: 700;
+  color: #1e293b;
+  margin: 0 0 12px;
+}
+
+.your-requests-empty p {
+  font-size: 0.95rem;
+  color: #64748b;
+  margin: 0 0 32px;
+  line-height: 1.6;
+}
+
+/* ─── CTA Button ─── */
+.your-requests-cta {
+  display: inline-block;
+  padding: 14px 48px;
+  background: #3EDDCD;
+  color: #fff;
+  border: none;
+  border-radius: 8px;
+  font-size: 1rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.your-requests-cta:hover {
+  background: #2ecbbb;
+  transform: translateY(-1px);
+  box-shadow: 0 4px 12px rgba(62, 221, 205, 0.35);
+}
+
+/* ─── Loading ─── */
+.your-requests-loading {
+  text-align: center;
+  padding: 80px 32px;
+  font-size: 1rem;
+  color: #64748b;
+}
+
+/* ─── Responsive ─── */
+@media (max-width: 640px) {
+  .your-requests-content {
+    padding: 16px 12px 40px;
+  }
+
+  .your-requests-banner-right {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 12px;
+  }
+
+  .your-requests-tagline {
+    text-align: left;
+    max-width: 100%;
+  }
+
+  .yr-tabs {
+    gap: 0;
+  }
+
+  .yr-tab {
+    padding: 8px 12px;
+    font-size: 0.78rem;
+  }
+
+  .yr-filters {
+    gap: 8px;
+  }
+
+  .yr-filters select {
+    min-width: 80px;
+    font-size: 0.78rem;
+  }
+
+  .yr-table-head,
+  .yr-row {
+    grid-template-columns: 2fr 1fr 1fr 1.2fr;
+    padding: 12px 10px;
+    font-size: 0.75rem;
+    gap: 4px;
+  }
+
+  .yr-row-title {
+    font-size: 0.82rem;
+  }
+
+  .yr-row-action button {
+    padding: 5px 10px;
+    font-size: 0.75rem;
+  }
+
+  .your-requests-empty h2 {
+    font-size: 1.2rem;
+  }
+
+  .your-requests-cta {
+    padding: 12px 32px;
+    font-size: 0.9rem;
+  }
+}

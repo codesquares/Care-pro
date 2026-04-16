@@ -41,6 +41,46 @@ const generateTitle = (type, senderId) => {
       return `⭐ New review received`;
     case 'BookingConfirmed':
       return `🛒 New booking confirmed`;
+    case 'CommitmentConfirmed':
+      return `🔓 Chat access unlocked`;
+    case 'task_proposed_by_client':
+      return `📝 New task(s) proposed on visit`;
+    case 'task_proposal_accepted':
+      return `✅ Task proposal(s) accepted`;
+    case 'task_proposal_rejected':
+      return `❌ Task proposal(s) rejected`;
+    case 'contract_task_proposed_by_client':
+      return `📝 New task(s) proposed on contract`;
+    case 'contract_task_proposal_accepted':
+      return `✅ Contract task proposal(s) accepted`;
+    case 'contract_task_proposal_rejected':
+      return `❌ Contract task proposal(s) rejected`;
+    case 'visit_submitted':
+      return `📋 Visit submitted for review`;
+    case 'visit_cancelled_by_client':
+      return `🚫 Visit Cancelled`;
+    case 'visit_cancellation_requested':
+      return `⚠️ Caregiver Cancellation Request`;
+    case 'negotiation_started':
+      return `🤝 Negotiation started`;
+    case 'negotiation_counter':
+      return `🔄 New counter-offer received`;
+    case 'negotiation_agreed':
+      return `✅ Negotiation agreed`;
+    case 'negotiation_converted':
+      return `📋 Negotiation converted to contract`;
+    case 'negotiation_abandoned':
+      return `🚫 Negotiation abandoned`;
+    case 'order_cancelled':
+      return `🚫 Order Cancelled`;
+    case 'refund_requested':
+      return `💰 Refund Request Submitted`;
+    case 'refund_approved':
+      return `✅ Refund Request Approved`;
+    case 'refund_rejected':
+      return `❌ Refund Request Rejected`;
+    case 'refund_processed':
+      return `💸 Refund Processed`;
     default:
       return `New notification`;
   }
@@ -77,30 +117,100 @@ const generateContent = (type, senderId) => {
       return `You have received a new review. Tap to view it.`;
     case 'BookingConfirmed':
       return `A new booking has been confirmed. Tap to see the order details.`;
+    case 'CommitmentConfirmed':
+      return `Commitment fee paid — chat is now unlocked. Tap to view the service.`;
+    case 'task_proposed_by_client':
+      return `The client has proposed new task(s) on a visit. Please review and accept or reject.`;
+    case 'task_proposal_accepted':
+      return `Your caregiver accepted your proposed task(s).`;
+    case 'task_proposal_rejected':
+      return `Your caregiver rejected your proposed task(s).`;
+    case 'contract_task_proposed_by_client':
+      return `The client has proposed new task(s) on the contract. Please review during revision.`;
+    case 'contract_task_proposal_accepted':
+      return `Your proposed contract task(s) were accepted.`;
+    case 'contract_task_proposal_rejected':
+      return `Your proposed contract task(s) were rejected.`;
+    case 'visit_submitted':
+      return `A care visit has been submitted. Please review and approve.`;
+    case 'visit_cancelled_by_client':
+      return `The client has cancelled an upcoming visit.`;
+    case 'visit_cancellation_requested':
+      return `Your caregiver has requested to cancel an upcoming visit. Please review and confirm or deny the cancellation.`;
+    case 'negotiation_started':
+      return `A negotiation has been started on your order. Tap to review the terms.`;
+    case 'negotiation_counter':
+      return `A counter-offer has been submitted. Tap to review the updated terms.`;
+    case 'negotiation_agreed':
+      return `Both parties have agreed on the terms. The negotiation is ready to be converted to a contract.`;
+    case 'negotiation_converted':
+      return `The negotiation has been converted to a contract. Tap to view the contract details.`;
+    case 'negotiation_abandoned':
+      return `The negotiation has been abandoned.`;
+    case 'order_cancelled':
+      return `An order has been cancelled. Any undelivered visit amount has been credited to the client's wallet.`;
+    case 'refund_requested':
+      return `Your refund request has been submitted and is pending admin review.`;
+    case 'refund_approved':
+      return `Your refund request has been approved. The bank transfer will be processed shortly.`;
+    case 'refund_rejected':
+      return `Your refund request has been rejected. Please contact support for more details.`;
+    case 'refund_processed':
+      return `Your refund has been processed and the bank transfer is complete.`;
     default:
       return `You have a new notification from user ${senderId}.`;
   }
 };
 
-export const getNotifications = async (id, page = 1, pageSize = 10) => {
+/**
+ * Normalizes a single notification object from the API to ensure
+ * consistent field names across all code paths.
+ * - Ensures relatedEntityId is populated (falls back to orderId)
+ */
+const normalizeNotification = (n) => {
+  if (!n) return n;
+  return {
+    ...n,
+    // Ensure relatedEntityId is always set if orderId is available
+    relatedEntityId: n.relatedEntityId || n.orderId || null,
+  };
+};
+
+export const getNotifications = async (id, page = 1, pageSize = 50) => {
   try {
     const response = await api.get(`/Notifications?userId=${id}&page=${page}&pageSize=${pageSize}`);
 
     const data = response.data;
 
+    // Backend now returns { items, totalCount, page, pageSize, hasMore }
+    // Keep backward compat with old flat-array shape just in case
     if (Array.isArray(data)) {
       return {
-        items: data,
+        items: data.map(normalizeNotification),
         totalCount: data.length,
         currentPage: page,
         pageSize
       };
     }
 
+    const items = (data.items || []).map(normalizeNotification);
+
+    // Debug: log first notification to verify field names
+    if (items.length > 0) {
+      console.log('[NotificationService] Sample notification from API:', {
+        id: items[0].id,
+        type: items[0].type,
+        relatedEntityId: items[0].relatedEntityId,
+        orderId: items[0].orderId,
+        senderId: items[0].senderId,
+        isRead: items[0].isRead,
+      });
+    }
+
     return {
-      items: data.items || [],
-      totalCount: data.totalCount || 0,
-      currentPage: data.currentPage || page,
+      items,
+      totalCount: data.totalCount || items.length,
+      currentPage: data.page || page,
       pageSize: data.pageSize || pageSize
     };
   } catch (err) {

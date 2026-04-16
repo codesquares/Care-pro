@@ -2,20 +2,41 @@ import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { toast } from 'react-toastify';
 import CareRequestService from '../../../services/careRequestService';
+import '../../client/client-dashboard/marketplaceHero.css';
 import './RequestCaregiver.css';
 
-const serviceCategories = [
-  { id: 'Adult Care', icon: '👴', description: 'Elderly care and daily living assistance' },
-  { id: 'Child Care', icon: '👶', description: 'Babysitting, supervision, and child support' },
-  { id: 'Pet Care', icon: '🐕', description: 'Pet sitting, walking, and animal care' },
-  { id: 'Home Care', icon: '🏠', description: 'Housekeeping, cooking, and errands' },
-  { id: 'Post Surgery Care', icon: '🏥', description: 'Post-operative recovery support' },
-  { id: 'Special Needs Care', icon: '♿', description: 'Support for individuals with special needs' },
-  { id: 'Medical Support', icon: '⚕️', description: 'Nursing and health monitoring' },
-  { id: 'Mobility Support', icon: '🦽', description: 'Physical mobility and transport assistance' },
-  { id: 'Therapy & Wellness', icon: '🧘', description: 'Therapy, rehab, and wellness support' },
-  { id: 'Palliative', icon: '🕊️', description: 'Comfort and end-of-life care' },
+const serviceTypesByGroup = {
+  Medical: [
+    'Adult Care',
+    'Post Surgery Care',
+    'Special Needs Care',
+    'Medical Support',
+    'Palliative',
+    'Therapy & Wellness',
+  ],
+  'Non-Medical': [
+    'Adult Care',
+    'Child Care',
+    'Pet Care',
+    'Home Care',
+    'Mobility Support',
+  ],
+};
+
+const taskOptions = [
+  'Mobility support',
+  'Personal hygiene Support',
+  'Meal preparation',
+  'Medication reminders',
+  'Companionship',
+  'Light housekeeping',
+  'Chronic illness management',
+  'Night monitoring',
 ];
+
+const experienceOptions = ['No preference', '1+ years', '2+ years', '3+ years', '5+ years'];
+const certificationOptions = ['No preference', 'Caregiver training preferred', 'Certified nursing assistant', 'Licensed nurse required'];
+const languageOptions = ['English', 'Yoruba', 'Igbo', 'Hausa', 'Pidgin', 'French'];
 
 const urgencyOptions = [
   { id: 'within-24h', label: 'Urgent — Within 24 hours', color: '#ef4444' },
@@ -42,16 +63,24 @@ const frequencyOptions = [
   'As needed',
 ];
 
+const stepLabels = ['Service Details', 'Schedule', 'Budget', 'Summary'];
+
 const RequestCaregiver = () => {
   const navigate = useNavigate();
   const [step, setStep] = useState(1);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [submitted, setSubmitted] = useState(false);
+  const [submittedRequestId, setSubmittedRequestId] = useState(null);
 
   const [form, setForm] = useState({
+    serviceGroup: '',
     serviceCategory: '',
     title: '',
-    description: '',
+    tasks: [],
+    notes: '',
+    experiencePreference: '',
+    certificationPreference: '',
+    languagePreference: '',
     urgency: '',
     schedule: [],
     frequency: '',
@@ -63,7 +92,6 @@ const RequestCaregiver = () => {
 
   const [errors, setErrors] = useState({});
 
-  // Pre-fill location from user profile
   useEffect(() => {
     try {
       const userDetails = JSON.parse(localStorage.getItem('userDetails') || '{}');
@@ -78,15 +106,15 @@ const RequestCaregiver = () => {
     }
   }, []);
 
-  const totalSteps = 3;
+  const totalSteps = 4;
 
   const validateStep = (stepNum) => {
     const newErrors = {};
 
     if (stepNum === 1) {
-      if (!form.serviceCategory) newErrors.serviceCategory = 'Please select a service category';
-      if (!form.title.trim()) newErrors.title = 'Please provide a brief title';
-      if (!form.description.trim()) newErrors.description = 'Please describe what you need';
+      if (!form.serviceGroup) newErrors.serviceGroup = 'Please choose a service group';
+      if (!form.serviceCategory) newErrors.serviceCategory = 'Please select a service type';
+      if (!form.title.trim()) newErrors.title = 'Please provide a request title';
     }
 
     if (stepNum === 2) {
@@ -94,8 +122,6 @@ const RequestCaregiver = () => {
       if (form.schedule.length === 0) newErrors.schedule = 'Please select at least one preferred time';
       if (!form.frequency) newErrors.frequency = 'Please select how often you need care';
     }
-
-    // Step 3 has no required fields (location is pre-filled, rest is optional)
 
     setErrors(newErrors);
     return Object.keys(newErrors).length === 0;
@@ -124,12 +150,20 @@ const RequestCaregiver = () => {
     setErrors(prev => ({ ...prev, schedule: undefined }));
   };
 
-  const handleSubmit = async () => {
-    if (!validateStep(step)) return;
+  const handleTaskToggle = (task) => {
+    setForm(prev => ({
+      ...prev,
+      tasks: prev.tasks.includes(task)
+        ? prev.tasks.filter(t => t !== task)
+        : [...prev.tasks, task],
+    }));
+  };
 
+  const handleSubmit = async () => {
     try {
       setIsSubmitting(true);
-      await CareRequestService.submitCareRequest(form);
+      const result = await CareRequestService.submitCareRequest(form);
+      setSubmittedRequestId(result?.id || result?.careRequestId || null);
       setSubmitted(true);
       toast.success('Care request submitted successfully!');
     } catch (err) {
@@ -140,6 +174,10 @@ const RequestCaregiver = () => {
     }
   };
 
+  const availableServiceTypes = form.serviceGroup
+    ? serviceTypesByGroup[form.serviceGroup] || []
+    : [];
+
   if (submitted) {
     return (
       <div className="request-caregiver-page">
@@ -147,15 +185,24 @@ const RequestCaregiver = () => {
           <div className="success-icon">✅</div>
           <h2>Request Submitted!</h2>
           <p>
-            We've received your care request. Our team will review it and match you with
-            available caregivers. You'll receive notifications when caregivers respond.
+            We've received your care request and our matching engine is now finding
+            the best caregivers for you. You'll be notified when matches are ready.
           </p>
+          <div className="matching-status-hint">
+            <div className="matching-pulse" />
+            <span>Finding caregivers...</span>
+          </div>
           <div className="success-actions">
-            <button className="btn-primary" onClick={() => navigate('/app/client/dashboard')}>
+            {submittedRequestId && (
+              <button
+                className="btn-primary"
+                onClick={() => navigate(`/app/client/care-requests/${submittedRequestId}/matches`)}
+              >
+                View Matches
+              </button>
+            )}
+            <button className="btn-secondary" onClick={() => navigate('/app/client/dashboard')}>
               Back to Dashboard
-            </button>
-            <button className="btn-secondary" onClick={() => navigate('/marketplace')}>
-              Browse Marketplace
             </button>
           </div>
         </div>
@@ -165,30 +212,45 @@ const RequestCaregiver = () => {
 
   return (
     <div className="request-caregiver-page">
-      {/* Header */}
-      <div className="request-header">
-        <button className="back-btn" onClick={() => navigate('/app/client/dashboard')}>
-          ← Back
-        </button>
-        <div>
-          <h1>Request a Caregiver</h1>
-          <p>Can't find the right caregiver? Tell us what you need and we'll help match you.</p>
+      {/* Header Banner */}
+      <div className="marketplace-banner request-banner">
+        <div className="marketplace-banner-content">
+          <button className="back-btn" onClick={() => navigate('/app/client/dashboard')}>
+            Back
+          </button>
+          <h1 className="marketplace-banner-title">Request a Caregiver</h1>
         </div>
+        <p className="request-header-tagline">
+          Can't find the right caregiver?<br />
+          Tell us what you need &amp; we'll help match you.
+        </p>
       </div>
 
-      {/* Progress */}
-      <div className="request-progress">
-        <div className="progress-bar">
-          <div className="progress-fill" style={{ width: `${(step / totalSteps) * 100}%` }} />
-        </div>
-        <div className="progress-steps">
-          {['Service Details', 'Schedule & Urgency', 'Location & Budget'].map((label, i) => (
-            <span key={i} className={`step-label ${step >= i + 1 ? 'active' : ''} ${step > i + 1 ? 'completed' : ''}`}>
-              <span className="step-number">{step > i + 1 ? '✓' : i + 1}</span>
-              {label}
-            </span>
-          ))}
-        </div>
+      {/* Stepper */}
+      <div className="request-stepper">
+        {stepLabels.map((label, i) => {
+          const stepNum = i + 1;
+          const isActive = step === stepNum;
+          const isCompleted = step > stepNum;
+          return (
+            <div key={label} className="stepper-item-wrapper">
+              {i > 0 && <span className="stepper-chevron">&gt;</span>}
+              <button
+                className={`stepper-item ${isActive ? 'active' : ''} ${isCompleted ? 'completed' : ''}`}
+                onClick={() => {
+                  if (isCompleted) {
+                    setStep(stepNum);
+                    setErrors({});
+                  }
+                }}
+                type="button"
+              >
+                <span className="stepper-number">{stepNum}</span>
+                <span className="stepper-label">{label}</span>
+              </button>
+            </div>
+          );
+        })}
       </div>
 
       {/* Step 1: Service Details */}
@@ -196,29 +258,54 @@ const RequestCaregiver = () => {
         <div className="request-step">
           <h2>What type of care do you need?</h2>
 
-          <div className="category-grid">
-            {serviceCategories.map(cat => (
-              <button
-                key={cat.id}
-                className={`category-card ${form.serviceCategory === cat.id ? 'selected' : ''}`}
-                onClick={() => {
-                  setForm(prev => ({ ...prev, serviceCategory: cat.id }));
-                  setErrors(prev => ({ ...prev, serviceCategory: undefined }));
-                }}
-              >
-                <span className="category-icon">{cat.icon}</span>
-                <span className="category-name">{cat.id}</span>
-                <span className="category-desc">{cat.description}</span>
-              </button>
-            ))}
+          <div className="service-selection-row">
+            <div className="service-group-section">
+              <label className="field-label">Choose Service Group</label>
+              <div className="radio-group">
+                {Object.keys(serviceTypesByGroup).map(group => (
+                  <label key={group} className="radio-option">
+                    <input
+                      type="radio"
+                      name="serviceGroup"
+                      value={group}
+                      checked={form.serviceGroup === group}
+                      onChange={() => {
+                        setForm(prev => ({ ...prev, serviceGroup: group, serviceCategory: '' }));
+                        setErrors(prev => ({ ...prev, serviceGroup: undefined, serviceCategory: undefined }));
+                      }}
+                    />
+                    <span>{group}</span>
+                  </label>
+                ))}
+              </div>
+              {errors.serviceGroup && <p className="field-error">{errors.serviceGroup}</p>}
+            </div>
+
+            <div className="service-type-section">
+              <label className="field-label">Choose Service Type</label>
+              <div className="chip-grid">
+                {availableServiceTypes.map(type => (
+                  <button
+                    key={type}
+                    className={`chip ${form.serviceCategory === type ? 'selected' : ''}`}
+                    onClick={() => {
+                      setForm(prev => ({ ...prev, serviceCategory: type }));
+                      setErrors(prev => ({ ...prev, serviceCategory: undefined }));
+                    }}
+                  >
+                    {type}
+                  </button>
+                ))}
+              </div>
+              {errors.serviceCategory && <p className="field-error">{errors.serviceCategory}</p>}
+            </div>
           </div>
-          {errors.serviceCategory && <p className="field-error">{errors.serviceCategory}</p>}
 
           <div className="form-field">
-            <label>Request Title *</label>
+            <label>Request Title</label>
             <input
               type="text"
-              placeholder="e.g., Need an experienced elderly caregiver for my mother"
+              placeholder="Experienced Elderly Caregiver Needed"
               value={form.title}
               onChange={e => {
                 setForm(prev => ({ ...prev, title: e.target.value }));
@@ -230,24 +317,76 @@ const RequestCaregiver = () => {
           </div>
 
           <div className="form-field">
-            <label>Describe what you need *</label>
+            <label className="field-label">Tasks Required:</label>
+            <div className="chip-grid">
+              {taskOptions.map(task => (
+                <button
+                  key={task}
+                  className={`chip ${form.tasks.includes(task) ? 'selected' : ''}`}
+                  onClick={() => handleTaskToggle(task)}
+                >
+                  {task}
+                </button>
+              ))}
+            </div>
+          </div>
+
+          <div className="form-field">
+            <label>Notes</label>
             <textarea
-              placeholder="Tell us about the care recipient, their condition, what kind of help they need, and any other important details..."
-              value={form.description}
-              onChange={e => {
-                setForm(prev => ({ ...prev, description: e.target.value }));
-                setErrors(prev => ({ ...prev, description: undefined }));
-              }}
-              rows={5}
+              placeholder="My mother is calm and prefers someone patient and soft-spoken. She enjoys conversation and light walks. We need someone who can be consistent and kind."
+              value={form.notes}
+              onChange={e => setForm(prev => ({ ...prev, notes: e.target.value }))}
+              rows={3}
               maxLength={2000}
             />
-            <span className="char-count">{form.description.length}/2000</span>
-            {errors.description && <p className="field-error">{errors.description}</p>}
+          </div>
+
+          <div className="form-field">
+            <label className="field-label">Caregiver Preferences</label>
+            <div className="preferences-row">
+              <div className="preference-item">
+                <span className="pref-label">Experience:</span>
+                <select
+                  value={form.experiencePreference}
+                  onChange={e => setForm(prev => ({ ...prev, experiencePreference: e.target.value }))}
+                >
+                  <option value="">Select</option>
+                  {experienceOptions.map(opt => (
+                    <option key={opt} value={opt}>{opt}</option>
+                  ))}
+                </select>
+              </div>
+              <div className="preference-item">
+                <span className="pref-label">Certifications:</span>
+                <select
+                  value={form.certificationPreference}
+                  onChange={e => setForm(prev => ({ ...prev, certificationPreference: e.target.value }))}
+                >
+                  <option value="">Select</option>
+                  {certificationOptions.map(opt => (
+                    <option key={opt} value={opt}>{opt}</option>
+                  ))}
+                </select>
+              </div>
+              <div className="preference-item">
+                <span className="pref-label">Language:</span>
+                <select
+                  value={form.languagePreference}
+                  onChange={e => setForm(prev => ({ ...prev, languagePreference: e.target.value }))}
+                >
+                  <option value="">Select</option>
+                  {languageOptions.map(opt => (
+                    <option key={opt} value={opt}>{opt}</option>
+                  ))}
+                </select>
+              </div>
+            </div>
           </div>
         </div>
       )}
 
-      {/* Step 2: Schedule & Urgency */}
+      {/* Step 2: Schedule */}
       {step === 2 && (
         <div className="request-step">
           <h2>When do you need care?</h2>
@@ -319,7 +458,7 @@ const RequestCaregiver = () => {
         </div>
       )}
 
-      {/* Step 3: Location & Budget */}
+      {/* Step 3: Budget */}
       {step === 3 && (
         <div className="request-step">
           <h2>Where and what's your budget?</h2>
@@ -356,22 +495,41 @@ const RequestCaregiver = () => {
               maxLength={1000}
             />
           </div>
+        </div>
+      )}
 
-          {/* Summary */}
+      {/* Step 4: Summary */}
+      {step === 4 && (
+        <div className="request-step">
+          <h2>Review your request</h2>
+
           <div className="request-summary">
             <h3>Request Summary</h3>
             <div className="summary-grid">
               <div className="summary-item">
-                <span className="summary-label">Service</span>
-                <span className="summary-value">
-                  {serviceCategories.find(c => c.id === form.serviceCategory)?.icon}{' '}
-                  {form.serviceCategory}
-                </span>
+                <span className="summary-label">Service Group</span>
+                <span className="summary-value">{form.serviceGroup}</span>
+              </div>
+              <div className="summary-item">
+                <span className="summary-label">Service Type</span>
+                <span className="summary-value">{form.serviceCategory}</span>
               </div>
               <div className="summary-item">
                 <span className="summary-label">Title</span>
                 <span className="summary-value">{form.title}</span>
               </div>
+              {form.tasks.length > 0 && (
+                <div className="summary-item full-width">
+                  <span className="summary-label">Tasks</span>
+                  <span className="summary-value">{form.tasks.join(', ')}</span>
+                </div>
+              )}
+              {form.notes && (
+                <div className="summary-item full-width">
+                  <span className="summary-label">Notes</span>
+                  <span className="summary-value">{form.notes}</span>
+                </div>
+              )}
               <div className="summary-item">
                 <span className="summary-label">Urgency</span>
                 <span className="summary-value">
@@ -404,6 +562,24 @@ const RequestCaregiver = () => {
                   <span className="summary-value">{form.budget}</span>
                 </div>
               )}
+              {form.experiencePreference && (
+                <div className="summary-item">
+                  <span className="summary-label">Experience</span>
+                  <span className="summary-value">{form.experiencePreference}</span>
+                </div>
+              )}
+              {form.certificationPreference && (
+                <div className="summary-item">
+                  <span className="summary-label">Certifications</span>
+                  <span className="summary-value">{form.certificationPreference}</span>
+                </div>
+              )}
+              {form.languagePreference && (
+                <div className="summary-item">
+                  <span className="summary-label">Language</span>
+                  <span className="summary-value">{form.languagePreference}</span>
+                </div>
+              )}
             </div>
           </div>
         </div>
@@ -419,7 +595,7 @@ const RequestCaregiver = () => {
         <div className="nav-spacer" />
         {step < totalSteps ? (
           <button className="btn-primary" onClick={handleNext}>
-            Next →
+            Next
           </button>
         ) : (
           <button

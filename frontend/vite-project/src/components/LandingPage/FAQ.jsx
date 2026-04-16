@@ -1,42 +1,44 @@
 import { useState } from 'react';
 import '../../styles/components/FAQ.css';
 
-const FAQ = () => {
+const FAQ = ({ questions: customQuestions }) => {
   const [activeIndex, setActiveIndex] = useState(null);
 
-  const questions = [
+  const defaultQuestions = [
     {
       question: 'What types of healthcare professionals can join the platform?',
       answer:
-        'Yes, you can upgrade your package! Clients can choose to upgrade their care plan at the start of every new month, ensuring a seamless transition without the need to recalculate fees. This flexible option allows you to elevate your care experience as your needs evolve.',
+        'CarePro welcomes a wide range of care professionals, including adult and elderly caregivers, child care specialists, pet care providers, post-surgery recovery aides, special needs caregivers, mobility support professionals, home medical support nurses, therapy and wellness practitioners, and palliative care providers. To join, simply sign up, complete your profile, and go through our verification process.',
     },
     {
       question: 'Are there any fees to join the platform?',
       answer:
-        'Yes, you can request additional services not listed in the catalog. However, this option is available exclusively to premium clients. If you need to manage other illnesses or specific care requirements, any extra services may incur additional costs. Your personal care administrator will assess these requests and provide guidance on the necessary adjustments to your care plan.',
+        'Signing up on CarePro is free for both clients and care professionals. For clients, a 10% platform fee applies on orders over ₦100,000, and a 20% caregiver matching fee is applied to all service bookings. These fees cover caregiver screening, quality assurance, and ongoing support. All services start from a minimum of ₦10,000 per day.',
     },
     {
       question: 'How can I reach more patients through this platform?',
       answer:
-        'Clients are charged automatically at the beginning of every new month for their selected care package, unless the plan is canceled prior to renewal. If a plan is canceled after care has been accessed within a month, that month\'s subscription remains valid, and the cancellation will take effect from the following month. If care has not been accessed, a full reimbursement will be issued, minus any applicable taxes and electronic charges.',
+        'As a CarePro caregiver, you gain access to a broader client base by creating service gigs that are visible to all platform users. Our marketplace allows clients to search and filter by care category, so your services are easily discoverable. You can also build your reputation through client ratings and reviews, helping you attract more opportunities over time.',
     },
     {
       question: 'Can I connect with other healthcare professionals?',
       answer:
-        'Your caregivers are vetted professionals with extensive experience in the caregiving field. They undergo thorough background checks to ensure safety and security, and each caregiver provides three guarantors with permanent addresses in the state of operation. Our caregivers are well-trained to deliver a top-notch experience that guarantees value for your investment.',
+        'Yes! CarePro fosters a professional community where care providers can connect, share knowledge, and collaborate. By joining the platform, you become part of a network of verified caregivers across multiple specialties, opening doors for professional development and referral opportunities.',
     },
     {
       question: 'How do I create a profile?',
       answer:
-        'Yes, you can pause your plan. Clients have the flexibility to temporarily suspend their care package for a specified period. Please reach out to your personal care administrator to discuss the details and arrange for the pause, ensuring your care needs are managed effectively during this time.',
+        'Getting started is simple. Click "Become a Care Professional" and register with your details. Once signed up, complete your profile by adding your qualifications, certifications, experience, and the care categories you specialize in. Our team will then verify your credentials, and once approved, you can create service gigs and start receiving client requests.',
     },
     {
       question: 'Is my information secure on the platform?',
       answer:
-        'Yes, you can switch caregivers at any time. If you feel that a different caregiver would better meet your needs, simply contact your personal care administrator to facilitate the transition. Your satisfaction and comfort are our top priorities.',
+        'Absolutely. CarePro takes data security seriously. All personal information is protected with industry-standard encryption and secure authentication. Your data is never shared with third parties without your consent. We also conduct thorough background checks and identity verification on all caregivers to ensure a safe and trusted environment for everyone on the platform.',
     },
     // Add more questions as needed
   ];
+
+  const questions = customQuestions || defaultQuestions;
 
   const toggleQuestion = (index) => {
     // Set the active index to the currently clicked item, or null if the same item is clicked again

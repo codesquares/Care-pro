@@ -1,7 +1,7 @@
 import { createContext, useContext, useState, useEffect } from 'react';
 import { getDojahStatus } from '../services/dojahService';
 import assessmentService from '../services/assessmentService';
-import config from '../config';
+import api from '../services/api';
 
 // Create context
 const CaregiverStatusContext = createContext();
@@ -58,7 +58,8 @@ export function CaregiverStatusProvider({ children }) {
       
       const verificationData = await getDojahStatus(userId, 'Caregiver', token);
       
-      const isVerified = verificationData?.verificationStatus === "completed" || 
+      const status = verificationData?.verificationStatus?.toLowerCase?.() || '';
+      const isVerified = status === "completed" || status === "success" ||
                         verificationData?.isVerified === true;
       
       setStatusData(prev => ({
@@ -75,12 +76,11 @@ export function CaregiverStatusProvider({ children }) {
       console.error('Error fetching verification status:', error);
       setStatusData(prev => ({
         ...prev,
-        verificationStatus: null,
-        isVerified: false,
+        // Keep previous verificationStatus and isVerified on error
         verificationLoading: false,
         verificationError: error.message
       }));
-      return { isVerified: false, error: error.message };
+      return { isVerified: undefined, error: error.message };
     }
   };
 
@@ -107,12 +107,11 @@ export function CaregiverStatusProvider({ children }) {
       console.error('Error fetching qualification status:', error);
       setStatusData(prev => ({
         ...prev,
-        qualificationStatus: null,
-        isQualified: false,
+        // Keep previous qualificationStatus and isQualified on error
         qualificationLoading: false,
         qualificationError: error.message
       }));
-      return { isQualified: false, error: error.message };
+      return { isQualified: undefined, error: error.message };
     }
   };
 
@@ -121,34 +120,11 @@ export function CaregiverStatusProvider({ children }) {
     try {
       setStatusData(prev => ({ ...prev, certificatesLoading: true, certificatesError: null }));
       
-      const token = localStorage.getItem('authToken');
-      
-      // Don't make API call if no token
-      if (!token) {
-        setStatusData(prev => ({
-          ...prev,
-          certificates: [],
-          certificatesCount: 0,
-          hasCertificates: false,
-          certificatesLoading: false,
-          certificatesError: null
-        }));
-        return { certificatesCount: 0, hasCertificates: false };
-      }
-      
-      const response = await fetch(`${config.BASE_URL}/Certificates?caregiverId=${userId}`, {
-        method: 'GET',
-        headers: {
-          'accept': '*/*',
-          'Authorization': `Bearer ${token}`,
-        },
+      const response = await api.get(`/Certificates`, {
+        params: { caregiverId: userId },
       });
 
-      if (!response.ok) {
-        throw new Error(`Failed to fetch certificates: ${response.status}`);
-      }
-
-      const response_data = await response.json();
+      const response_data = response.data;
       
       // Handle the API response structure: { success: true, data: [...] }
       const certificatesArray = response_data?.success ? response_data.data : (Array.isArray(response_data) ? response_data : []);
@@ -170,13 +146,11 @@ export function CaregiverStatusProvider({ children }) {
       console.error('Error fetching certificates:', error);
       setStatusData(prev => ({
         ...prev,
-        certificates: [],
-        certificatesCount: 0,
-        hasCertificates: false,
+        // Keep previous certificates and hasCertificates on error
         certificatesLoading: false,
         certificatesError: error.message
       }));
-      return { certificatesCount: 0, hasCertificates: false, error: error.message };
+      return { hasCertificates: undefined, error: error.message };
     }
   };
 
@@ -189,6 +163,18 @@ export function CaregiverStatusProvider({ children }) {
       // Don't make API calls without a valid user ID and token
       return;
     }
+
+    // Only fetch caregiver-specific data for caregiver users
+    if (userDetails.role?.toLowerCase() !== 'caregiver') {
+      setStatusData(prev => ({
+        ...prev,
+        verificationLoading: false,
+        qualificationLoading: false,
+        certificatesLoading: false,
+        eligibilityChecked: true,
+      }));
+      return;
+    }
     
     // Fetch all data in parallel
     const [verificationResult, qualificationResult, certificatesResult] = await Promise.allSettled([
@@ -197,10 +183,16 @@ export function CaregiverStatusProvider({ children }) {
       fetchCertificates(userDetails.id)
     ]);
 
-    // Extract results
-    const isVerified = verificationResult.status === 'fulfilled' ? verificationResult.value.isVerified : false;
-    const isQualified = qualificationResult.status === 'fulfilled' ? qualificationResult.value.isQualified : false;
-    const hasCertificates = certificatesResult.status === 'fulfilled' ? certificatesResult.value.hasCertificates : false;
+    // Extract results — fall back to previous state values when a fetch errored
+    const isVerified = verificationResult.status === 'fulfilled' && verificationResult.value.isVerified !== undefined
+      ? verificationResult.value.isVerified
+      : statusData.isVerified;
+    const isQualified = qualificationResult.status === 'fulfilled' && qualificationResult.value.isQualified !== undefined
+      ? qualificationResult.value.isQualified
+      : statusData.isQualified;
+    const hasCertificates = certificatesResult.status === 'fulfilled' && certificatesResult.value.hasCertificates !== undefined
+      ? certificatesResult.value.hasCertificates
+      : statusData.hasCertificates;
 
     // Calculate overall publishing eligibility
     const canPublishGigs = isVerified && isQualified && hasCertificates;
@@ -225,8 +217,14 @@ export function CaregiverStatusProvider({ children }) {
     const initializeStatus = async () => {
       const userDetails = getUserDetails();
       if (!userDetails?.id) {
-        // Reset state when no user
+        // Reset state when no user - also reset loading states to prevent UI from being stuck
         setCurrentUserId(null);
+        setStatusData(prev => ({
+          ...prev,
+          verificationLoading: false,
+          qualificationLoading: false,
+          certificatesLoading: false,
+        }));
         return;
       }
 
@@ -301,6 +299,24 @@ export function CaregiverStatusProvider({ children }) {
     return result;
   };
 
+  // Optimistically mark verification as pending without an API call.
+  // Used immediately after user completes the Dojah widget, before the backend webhook arrives.
+  const setVerificationPending = () => {
+    setStatusData(prev => ({
+      ...prev,
+      verificationStatus: {
+        ...prev.verificationStatus,
+        verificationStatus: 'Pending',
+        verified: false,
+        isVerified: false,
+      },
+      isVerified: false,
+      verificationLoading: false,
+      verificationError: null,
+      lastUpdated: new Date().toISOString()
+    }));
+  };
+
   // Context value
   const value = {
     // Status data
@@ -311,6 +327,7 @@ export function CaregiverStatusProvider({ children }) {
     updateVerificationStatus,
     updateQualificationStatus,
     updateCertificates,
+    setVerificationPending,
     
     // Helper methods
     getPublishingEligibility: () => ({

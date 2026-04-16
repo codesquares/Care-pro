@@ -7,7 +7,8 @@ const PackageDetailsInput = ({
   onFocus, 
   onBlur, 
   placeholder, 
-  className 
+  className,
+  sampleTasks = [],
 }) => {
   const [tasks, setTasks] = useState([]);
   const [currentInput, setCurrentInput] = useState('');
@@ -186,6 +187,34 @@ const PackageDetailsInput = ({
           : "Press Enter or click the + button to add each task. Example: \"medication assistance\", \"vital checks\", \"hospital visit coordination\""
         }
       </div>
+
+      {/* Sample tasks from templates */}
+      {sampleTasks.length > 0 && tasks.length < 8 && (
+        <div className="sample-tasks-section">
+          <span className="sample-tasks-label">Suggested tasks:</span>
+          <div className="sample-tasks-list">
+            {sampleTasks
+              .filter(st => !tasks.some(t => t.toLowerCase() === st.text.toLowerCase()))
+              .slice(0, 12)
+              .map((st) => (
+                <button
+                  key={st.id}
+                  type="button"
+                  className="sample-task-chip"
+                  disabled={tasks.length >= 8}
+                  onClick={() => {
+                    if (tasks.length >= 8) return;
+                    const newTasks = [...tasks, st.text];
+                    setTasks(newTasks);
+                    updateParent(newTasks);
+                  }}
+                >
+                  + {st.text}
+                </button>
+              ))}
+          </div>
+        </div>
+      )}
 
       {/* Minimum tasks validation */}
       {tasks.length === 0 && (

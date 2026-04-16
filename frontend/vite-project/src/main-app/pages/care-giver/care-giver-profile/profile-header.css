@@ -594,8 +594,9 @@
 
   .caregiver-profile-actions {
     display: flex;
-    flex-direction: column;
-    gap: 12px;
+    flex-direction: row;
+    flex-wrap: wrap;
+    gap: 8px;
     margin: 0 0 16px 0;
     width: 100%;
     align-items: center;
@@ -605,7 +606,7 @@
   .caregiver-profile-actions > * {
     width: auto;
     text-align: center;
-    min-width: 200px;
+    min-width: 160px;
   }
 
   /* Verify Button Container */

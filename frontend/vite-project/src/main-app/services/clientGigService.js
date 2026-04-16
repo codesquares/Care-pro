@@ -2,9 +2,7 @@
  * Client Gig Service
  * Handles all API calls and data processing for client gig services
  */
-import axios from 'axios';
-
-// import api from './api';
+import api from './api';
 import config from '../config';
 
 const BASE_API_URL = config.BASE_URL;
@@ -29,15 +27,10 @@ const ClientGigService = {
   
   async getAllGigs() {
   try {
-    const authHeaders = {
-      headers: {
-        'Authorization': `Bearer ${localStorage.getItem('authToken') || ''}`
-      }
-    };
     // Fetch all gigs and all caregivers in parallel for better performance
     const [response, userResponse] = await Promise.all([
-      axios.get(`${BASE_API_URL}/Gigs`, authHeaders),
-      axios.get(`${BASE_API_URL}/CareGivers/AllCaregivers`, authHeaders)
+      api.get(`${BASE_API_URL}/Gigs`),
+      api.get(`${BASE_API_URL}/CareGivers/AllCaregivers`)
     ]);
 
     const allGigs = response.data || [];
@@ -85,7 +78,7 @@ const ClientGigService = {
           caregiverBio: caregiver.aboutMe || caregiver.description || '',
           caregiverExperience: caregiver.yearsOfExperience || caregiver.experience || 0,
           caregiverSpecializations: caregiver.specializations || caregiver.skills || [],
-          caregiverIsVerified: caregiver.isVerified || false,
+          caregiverIsVerified: caregiver.isIdentityVerified || caregiver.isVerified || false,
           caregiverIsAvailable: caregiver.isAvailable !== false, // Default to true if not specified
           caregiverJoinDate: caregiver.createdAt || caregiver.joinDate || '',
           caregiverLanguages: caregiver.languages || [],
@@ -105,11 +98,7 @@ const ClientGigService = {
     
     // In case of error, still try to return basic gig data if available
     try {
-      const fallbackResponse = await axios.get(`${BASE_API_URL}/Gigs`, {
-        headers: {
-          'Authorization': `Bearer ${localStorage.getItem('authToken') || ''}`
-        }
-      });
+      const fallbackResponse = await api.get(`${BASE_API_URL}/Gigs`);
       return fallbackResponse.data || [];
     } catch (fallbackError) {
       console.error('Complete failure to fetch gigs:', fallbackError);
@@ -117,6 +106,53 @@ const ClientGigService = {
     }
   }
 },
+
+  /**
+   * Get a single gig by ID (direct lookup, works for special gigs too)
+   */
+  async getGigById(gigId) {
+    try {
+      const [gigRes, userRes] = await Promise.all([
+        api.get(`${BASE_API_URL}/Gigs/${gigId}`),
+        api.get(`${BASE_API_URL}/CareGivers/AllCaregivers`)
+      ]);
+      const gig = gigRes.data;
+      if (!gig) return null;
+      const caregiverMap = new Map();
+      (userRes.data || []).forEach(c => caregiverMap.set(c.id, c));
+      const caregiver = caregiverMap.get(gig.caregiverId);
+      if (!caregiver) return gig;
+      return {
+        ...gig,
+        caregiverName: caregiver.firstName && caregiver.lastName
+          ? `${caregiver.firstName} ${caregiver.lastName}`
+          : caregiver.fullName || 'Unknown Caregiver',
+        caregiverFirstName: caregiver.firstName || '',
+        caregiverLastName: caregiver.lastName || '',
+        caregiverEmail: caregiver.email || '',
+        caregiverPhone: caregiver.phoneNumber || '',
+        gigImage: gig.image1 || '',
+        caregiverRating: caregiver.rating || 0,
+        caregiverReviewCount: caregiver.reviewCount || 0,
+        caregiverLocation: caregiver.location || caregiver.address || '',
+        caregiverBio: caregiver.aboutMe || caregiver.description || '',
+        caregiverExperience: caregiver.yearsOfExperience || caregiver.experience || 0,
+        caregiverSpecializations: caregiver.specializations || caregiver.skills || [],
+        caregiverIsVerified: caregiver.isIdentityVerified || caregiver.isVerified || false,
+        caregiverIsAvailable: caregiver.isAvailable !== false,
+        caregiverJoinDate: caregiver.createdAt || caregiver.joinDate || '',
+        caregiverLanguages: caregiver.languages || [],
+        caregiverCertifications: caregiver.certifications || [],
+        originalCaregiverId: gig.caregiverId,
+        caregiverProfileImage: caregiver.profileImage || './avatar.jpg',
+        introVideo: caregiver.introVideo || ''
+      };
+    } catch (err) {
+      console.error('Error fetching gig by ID:', err);
+      return null;
+    }
+  },
+
   /**
    * Get most popular gig services
    * @param {number} limit - Maximum number of gigs to return

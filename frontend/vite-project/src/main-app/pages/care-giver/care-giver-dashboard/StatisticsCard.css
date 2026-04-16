@@ -68,11 +68,15 @@
 }
 
 .stat-value {
-  font-size: 1.1rem;
+  font-size: 0.95rem;
   font-weight: 700;
   color: #000;
   margin: 2px 0 0 0;
   word-break: break-word;
+}
+
+.stat-value.earnings-value {
+  font-size: 0.75rem;
 }
 
 /* Responsive design for StatisticsCard */
@@ -99,7 +103,7 @@
   }
   
   .stat-value {
-    font-size: 1.2rem;
+    font-size: 1rem;
   }
 }
 

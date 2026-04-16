@@ -1,15 +1,15 @@
 import { useState, useEffect } from 'react';
 import { withdrawalService } from '../../services/withdrawalService';
-// import { useAuth } from '../../context/authContext'; // Assuming you have an auth context
- import { earningService } from '../../services/earningsService'; // Uncomment when the service is available
+import walletService from '../../services/walletService';
 import './earnings.css';
 import WithdrawalModal from './components/WithdrawalModal';
 
 const Earnings = () => {
-  const [earnings, setEarnings] = useState({
+  const [wallet, setWallet] = useState({
     totalEarned: 0,
-    withdrawableAmount: 0,
-    withdrawnAmount: 0,
+    withdrawableBalance: 0,
+    pendingBalance: 0,
+    totalWithdrawn: 0,
   });
   const [withdrawalHistory, setWithdrawalHistory] = useState([]);
   const [isLoading, setIsLoading] = useState(true);
@@ -27,31 +27,22 @@ const Earnings = () => {
         setIsLoading(true);
         setError(null);
         
-        // Load earnings data
-        const earningsData = await earningService.getUpdatedEarnings(currentUser.id);
-        if (!earningsData) {
-          setEarnings({
-            totalEarned: 0,
-            withdrawableAmount: 0,
-            withdrawnAmount: 0
+        // Load wallet summary (single source of truth)
+        const walletResult = await walletService.getWalletSummary(currentUser.id);
+        if (walletResult.success && walletResult.data) {
+          setWallet({
+            totalEarned: walletResult.data.totalEarned ?? 0,
+            withdrawableBalance: walletResult.data.withdrawableBalance ?? 0,
+            pendingBalance: walletResult.data.pendingBalance ?? 0,
+            totalWithdrawn: walletResult.data.totalWithdrawn ?? 0,
           });
-          // throw new Error("No earnings data found for this caregiver.");
         }
-        setEarnings({
-          totalEarned: earningsData.totalAmountEarned,
-          // totalEarned: 10000, // Placeholder until service is available
-          withdrawableAmount: earningsData.withdrawableAmount,
-          // withdrawableAmount: 8000, // Placeholder until service is available
-          // withdrawnAmount: earningsData.withdrawnAmount
-          withdrawnAmount: earningsData.totalAmountWithdrawn // Placeholder until service is available
-        });
-         
 
-        // // Check if there's a pending withdrawal
-        // const pendingStatus = await earningsService.hasPendingWithdrawal(currentUser.id);
-        // setHasPendingWithdrawal(pendingStatus.hasPendingRequest);
+        // Check if there's a pending withdrawal
+        const hasPending = await withdrawalService.hasPendingWithdrawal(currentUser.id);
+        setHasPendingWithdrawal(hasPending);
         
-         // Load withdrawal history
+        // Load withdrawal history
         try {
           const history = await withdrawalService.getWithdrawalHistory(currentUser.id);
           setWithdrawalHistory(Array.isArray(history) ? history : []);
@@ -69,7 +60,6 @@ const Earnings = () => {
 
     if (currentUser?.id) {
       fetchEarningsData();
-      
     }
   }, []);
 
@@ -87,7 +77,7 @@ const Earnings = () => {
       return;
     }
     
-    if (earnings.withdrawableAmount <= 0) {
+    if (wallet.withdrawableBalance <= 0) {
       alert("You don't have any withdrawable funds available.");
       return;
     }
@@ -120,7 +110,6 @@ const Earnings = () => {
       alert(err.response?.data?.errorMessage || "Failed to submit withdrawal request. Please try again.");
     }
   };
- console.log("withdrawal history", withdrawalHistory);
   if (isLoading) {
     return (
       <div className="earnings-container">
@@ -144,17 +133,20 @@ const Earnings = () => {
       <div className="earnings-summary">
         <div className="funds-card">
           <p>Withdrawable Balance:</p>
-          <h3>{formatCurrency(earnings.withdrawableAmount)}</h3>
+          <h3>{formatCurrency(wallet.withdrawableBalance)}</h3>
+          {wallet.pendingBalance > 0 && (
+            <p className="pending-balance">Pending: {formatCurrency(wallet.pendingBalance)}</p>
+          )}
           <div className="card-buttons">
-            <button className="btn withdraw" onClick={handleWithdrawalClick} disabled={hasPendingWithdrawal || earnings.withdrawableAmount <= 0}>
+            <button className="btn withdraw" onClick={handleWithdrawalClick} disabled={hasPendingWithdrawal || wallet.withdrawableBalance <= 0}>
               {hasPendingWithdrawal ? 'Withdrawal Pending' : 'Withdraw'}
             </button>
           </div>
         </div>
         <div className="total-card">
           <p>All Earnings</p>
-          <h3>{formatCurrency(earnings.totalEarned)}</h3>
-          <p className="withdrawn-amount">Withdrawn: {formatCurrency(earnings.withdrawnAmount)}</p>
+          <h3>{formatCurrency(wallet.totalEarned)}</h3>
+          <p className="withdrawn-amount">Withdrawn: {formatCurrency(wallet.totalWithdrawn)}</p>
         </div>
       </div>
 
@@ -194,7 +186,7 @@ const Earnings = () => {
         <WithdrawalModal
           onClose={() => setShowWithdrawalModal(false)}
           onSubmit={handleWithdrawalSubmit}
-          maxAmount={earnings.withdrawableAmount}
+          maxAmount={wallet.withdrawableBalance}
         />
       )}
     </div>

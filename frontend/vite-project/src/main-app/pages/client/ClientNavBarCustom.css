@@ -159,6 +159,7 @@
     height: 64px !important;
     min-height: 64px !important;
     margin: 0 !important;
+    font-size: 0.85rem !important;
   }
 }
 
@@ -270,20 +271,99 @@
   box-sizing: border-box !important;
 }
 
-/* Icon group styling - override with specificity */
+/* Icon group styling - standalone icons, no pill container */
 .client-desktop-nav .client-nav-icons {
   display: flex !important;
   align-items: center !important;
-  gap: 2px !important;
+  gap: 4px !important;
   list-style: none !important;
   margin: 0 !important;
-  padding: 6px 12px !important;
-  background-color: #f8f9fa !important;
-  border-radius: 12px !important;
-  border: 1px solid #e9ecef !important;
-  height: 40px !important;
+  padding: 0 !important;
+  background-color: transparent !important;
+  border-radius: 0 !important;
+  border: none !important;
+  height: auto !important;
   box-sizing: border-box !important;
   flex-shrink: 0 !important;
+}
+
+/* Standalone icons container */
+.client-standalone-icons {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+}
+
+.client-standalone-icon {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 36px;
+  height: 36px;
+  border-radius: 50%;
+  cursor: pointer;
+  color: #555;
+  transition: all 0.2s ease;
+}
+
+.client-standalone-icon:hover {
+  background-color: #f0f0f0;
+  color: #333;
+}
+
+/* Nav text links with icons */
+.client-nav-links {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  list-style: none;
+  margin: 0;
+  padding: 0;
+}
+
+.client-nav-text-link {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 0.875rem;
+  font-weight: 500;
+  color: #2c3e50;
+  padding: 8px 14px;
+  border-radius: 8px;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  white-space: nowrap;
+}
+
+.client-nav-text-link:hover {
+  background-color: #f8f9fa;
+  color: #007bff;
+}
+
+.client-nav-text-link:hover .client-nav-link-icon {
+  color: #007bff;
+}
+
+.client-nav-link-icon {
+  width: 16px;
+  height: 16px;
+  color: #555;
+  flex-shrink: 0;
+  transition: color 0.2s ease;
+}
+
+/* Dropdown chevron */
+.client-dropdown-chevron {
+  width: 12px;
+  height: 12px;
+  color: #6c757d;
+  cursor: pointer;
+  transition: color 0.2s ease;
+  flex-shrink: 0;
+}
+
+.client-dropdown-chevron:hover {
+  color: #333;
 }
 
 /* Individual icon links - override with specificity */
@@ -481,20 +561,9 @@
   text-transform: uppercase;
 }
 
-/* Dropdown arrow */
+/* Dropdown chevron (replaced inline SVG arrow) */
 .client-dropdown-arrow {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  color: #6c757d;
-  transition: transform 0.2s ease;
-  width: 14px;
-  height: 14px;
-}
-
-.client-dropdown-arrow svg {
-  width: 14px;
-  height: 14px;
+  display: none;
 }
 
 .client-profile-avatar:hover .client-dropdown-arrow {
@@ -722,7 +791,7 @@
   border: none;
   color: #666;
   /* Grey text */
-  font-size: 0.9rem;
+  font-size: 0.85rem;
   font-weight: 500;
   cursor: pointer;
   padding: 8px 12px;
@@ -733,6 +802,7 @@
   align-items: center;
   justify-content: center;
   box-sizing: border-box;
+  white-space: nowrap;
 }
 
 .nav-link-btn:hover {

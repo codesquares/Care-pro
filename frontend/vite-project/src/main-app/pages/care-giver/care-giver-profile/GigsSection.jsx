@@ -1,31 +1,36 @@
-import { useEffect, useState, useMemo } from "react";
-import { useNavigate, useLocation } from "react-router-dom";
-import config from "../../../config"; // Import centralized config for API URLs
+import { useEffect, useState, useMemo, useCallback } from "react";
+import { useNavigate, useLocation, useSearchParams } from "react-router-dom";
+import api from "../../../services/api";
+import GigService from "../../../services/gigService";
 
-import clock from "../../../../assets/main-app/clock.png"; // Ensure you have an empty gigs image in your assets
 import Toast from "../../../components/toast/Toast";
 import useToast from "../../../hooks/useToast";
 import { useGigEdit } from "../../../contexts/GigEditContext";
 import { useCaregiverStatus } from "../../../contexts/CaregiverStatusContext";
 import Modal from "../../../components/modal/Modal";
+import "../../../pages/client/client-dashboard/marketplaceHero.css";
 import "./gigs-section.css";
 
 const GigsSection = () => {
   const [gigs, setGigs] = useState([]);
+  const [deletedGigs, setDeletedGigs] = useState([]);
   const [isLoading, setIsLoading] = useState(true);
+  const [deletedLoading, setDeletedLoading] = useState(false);
   const [error, setError] = useState("");
   const [publishingGigs, setPublishingGigs] = useState(new Set());
   const [pausingGigs, setPausingGigs] = useState(new Set());
   const [deletingGigs, setDeletingGigs] = useState(new Set());
+  const [restoringGigs, setRestoringGigs] = useState(new Set());
   const [activeTab, setActiveTab] = useState("active");
   const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false);
   const [gigToDelete, setGigToDelete] = useState(null);
   const navigate = useNavigate();
   const location = useLocation();
+  const [searchParams, setSearchParams] = useSearchParams();
   const basePath = "/app/caregiver";
   const { toasts, showSuccess, showError, removeToast } = useToast();
   const { populateFromGig, resetForm } = useGigEdit();
-  const { canPublishGigs, isVerified, isQualified, hasCertificates, isLoading: statusLoading, eligibilityChecked } = useCaregiverStatus();
+  const { canPublishGigs, isVerified, isQualified, hasCertificates, isLoading: statusLoading, eligibilityChecked, hasErrors: statusHasErrors, refreshStatusData } = useCaregiverStatus();
 
   const handleNavigateToCreateGig = () => {
     // Reset form when creating new gig
@@ -44,19 +49,25 @@ const GigsSection = () => {
   };
 
   const handlePublishGig = async (gig) => {
+    // If status is still loading, refresh and wait before checking
+    if (statusLoading) {
+      showError('Checking your eligibility, please try again in a moment.');
+      return;
+    }
+
     // Check if we can publish (less than 2 active gigs AND caregiver eligibility)
-    if (!canPublishNewGig) {
-      if (activeGigs.length >= 2) {
-        showError('You can only have 2 active gigs at a time. Please pause one of your active gigs first to publish this one.');
-      } else if (!canPublishGigs) {
-        // Build specific eligibility error message
-        const missingRequirements = [];
-        if (!isVerified) missingRequirements.push('Complete identity verification');
-        if (!isQualified) missingRequirements.push('Pass qualification assessment');
-        if (!hasCertificates) missingRequirements.push('Upload at least one certificate');
-        
-        showError(`To publish gigs, you need to: ${missingRequirements.join(', ')}`);
-      }
+    if (activeGigs.length >= 2) {
+      showError('You can only have 2 active gigs at a time. Please pause one of your active gigs first to publish this one.');
+      return;
+    }
+    if (!canPublishGigs) {
+      // Build specific eligibility error message
+      const missingRequirements = [];
+      if (!isVerified) missingRequirements.push('Complete identity verification');
+      if (!isQualified) missingRequirements.push('Pass qualification assessment');
+      if (!hasCertificates) missingRequirements.push('Upload at least one certificate');
+      
+      showError(`To publish gigs, you need to: ${missingRequirements.join(', ')}`);
       return;
     }
 
@@ -69,25 +80,10 @@ const GigsSection = () => {
         throw new Error("Caregiver ID not found in local storage.");
       }
 
-      const token = localStorage.getItem('authToken');
-      const response = await fetch(
-        `${config.BASE_URL}/Gigs/UpdateGigStatusToPause/${gig.id}`,
-        {
-          method: 'PUT',
-          headers: {
-            'Content-Type': 'application/json',
-            'Authorization': `Bearer ${token}`
-          },
-          body: JSON.stringify({
-            status: 'published',
-            caregiverId: userDetails.id
-          })
-        }
-      );
-
-      if (!response.ok) {
-        throw new Error('Failed to publish gig');
-      }
+      await api.put(`/Gigs/UpdateGigStatusToPause/${gig.id}`, {
+        status: 'published',
+        caregiverId: userDetails.id
+      });
 
       // Update the gig status in local state
       setGigs(prevGigs => 
@@ -124,25 +120,10 @@ const GigsSection = () => {
         throw new Error("Caregiver ID not found in local storage.");
       }
 
-      const token = localStorage.getItem('authToken');
-      const response = await fetch(
-        `${config.BASE_URL}/Gigs/UpdateGigStatusToPause/${gig.id}`,
-        {
-          method: 'PUT',
-          headers: {
-            'Content-Type': 'application/json',
-            'Authorization': `Bearer ${token}`
-          },
-          body: JSON.stringify({
-            status: 'paused',
-            caregiverId: userDetails.id
-          })
-        }
-      );
-
-      if (!response.ok) {
-        throw new Error('Failed to pause gig');
-      }
+      await api.put(`/Gigs/UpdateGigStatusToPause/${gig.id}`, {
+        status: 'paused',
+        caregiverId: userDetails.id
+      });
 
       // Update the gig status in local state
       setGigs(prevGigs => 
@@ -169,7 +150,6 @@ const GigsSection = () => {
   };
 
   const handleDeleteGig = (gig) => {
-    // Open confirmation modal instead of browser alert
     setGigToDelete(gig);
     setIsDeleteModalOpen(true);
   };
@@ -178,9 +158,7 @@ const GigsSection = () => {
     if (!gigToDelete) return;
 
     try {
-      // Close modal immediately
       setIsDeleteModalOpen(false);
-      // Add gig to deleting set to show loading state
       setDeletingGigs(prev => new Set(prev).add(gigToDelete.id));
 
       const userDetails = JSON.parse(localStorage.getItem("userDetails"));
@@ -188,42 +166,26 @@ const GigsSection = () => {
         throw new Error("Caregiver ID not found in local storage.");
       }
 
-      const token = localStorage.getItem('authToken');
-      // Use soft delete endpoint with correct format
-      const response = await fetch(
-        `${config.BASE_URL}/Gigs/SoftDeleteGig/${gigToDelete.id}?caregiverId=${userDetails.id}`,
-        {
-          method: 'DELETE',
-          headers: {
-            'Authorization': `Bearer ${token}`
-          }
-        }
-      );
+      const result = await GigService.softDeleteGig(gigToDelete.id, userDetails.id);
 
-      if (!response.ok) {
-        // Handle specific error cases
-        if (response.status === 400) {
-          const errorData = await response.json().catch(() => ({}));
-          throw new Error(errorData.message || 'Gig is already deleted or invalid request');
-        } else if (response.status === 403) {
-          throw new Error('You do not have permission to delete this gig');
-        } else if (response.status === 404) {
-          throw new Error('Gig not found');
-        } else {
-          throw new Error('Failed to delete gig');
-        }
+      if (!result.success) {
+        // Backend returns user-friendly obligation error messages — show directly
+        showError(result.message);
+        return;
       }
 
-      // Remove the gig from local state (soft deleted gigs are filtered out)
+      // Remove the gig from active list
       setGigs(prevGigs => prevGigs.filter(g => g.id !== gigToDelete.id));
+      showSuccess('Gig deleted. You can restore it within 30 days.');
 
-      showSuccess('Gig deleted successfully!');
-      
+      // Refresh deleted gigs list if on that tab
+      if (activeTab === 'deleted') {
+        fetchDeletedGigs();
+      }
     } catch (err) {
       console.error('Error deleting gig:', err);
       showError(err.message || 'Failed to delete gig. Please try again.');
     } finally {
-      // Remove gig from deleting set and clear gigToDelete
       if (gigToDelete) {
         setDeletingGigs(prev => {
           const newSet = new Set(prev);
@@ -232,6 +194,41 @@ const GigsSection = () => {
         });
       }
       setGigToDelete(null);
+    }
+  };
+
+  const handleRestoreGig = async (gig) => {
+    try {
+      console.log('Restore gig — id:', gig.id, 'length:', gig.id?.length, 'canRestore:', gig.canRestore);
+      setRestoringGigs(prev => new Set(prev).add(gig.id));
+
+      const userDetails = JSON.parse(localStorage.getItem("userDetails"));
+      if (!userDetails?.id) {
+        throw new Error("Caregiver ID not found in local storage.");
+      }
+
+      const result = await GigService.restoreGig(gig.id, userDetails.id);
+
+      if (!result.success) {
+        showError(result.message);
+        return;
+      }
+
+      // Remove from deleted list
+      setDeletedGigs(prev => prev.filter(g => g.id !== gig.id));
+      showSuccess('Your gig has been restored as a Draft. Please review your details and republish when ready.');
+
+      // Refresh the main gigs list to show the restored draft
+      fetchGigs();
+    } catch (err) {
+      console.error('Error restoring gig:', err);
+      showError(err.message || 'Failed to restore gig. Please try again.');
+    } finally {
+      setRestoringGigs(prev => {
+        const newSet = new Set(prev);
+        newSet.delete(gig.id);
+        return newSet;
+      });
     }
   };
 
@@ -250,10 +247,28 @@ const GigsSection = () => {
   }, [gigs]);
 
   // Check if user can publish new gigs (max 2 active gigs allowed)
+  // While status is still loading, allow publish attempts (the handler will re-check)
   const canPublishNewGig = useMemo(() => 
-    activeGigs.length < 2 && canPublishGigs, 
-    [activeGigs, canPublishGigs]
+    activeGigs.length < 2 && (statusLoading || canPublishGigs), 
+    [activeGigs, canPublishGigs, statusLoading]
   );
+
+  const handleShareGig = async (gig) => {
+    const url = `${window.location.origin}/service/${gig.id}`;
+    if (navigator.share) {
+      try {
+        await navigator.share({ title: gig.title, url });
+      } catch (err) {
+        if (err.name !== 'AbortError') {
+          await navigator.clipboard.writeText(url);
+          showSuccess('Link copied to clipboard!');
+        }
+      }
+    } else {
+      await navigator.clipboard.writeText(url);
+      showSuccess('Link copied to clipboard!');
+    }
+  };
 
   // Extract fetchGigs as a reusable function
   const fetchGigs = async () => {
@@ -264,21 +279,15 @@ const GigsSection = () => {
         throw new Error("Caregiver ID not found in local storage.");
       }
 
-      const token = localStorage.getItem('authToken');
-      const response = await fetch(
-        `${config.BASE_URL}/Gigs/caregiver/${userDetails.id}`, // Using centralized API config
-        {
-          headers: {
-            'Authorization': token ? `Bearer ${token}` : '',
-          },
-        }
-      );
-      if (!response.ok) {
-        throw new Error("Failed to fetch gigs data.");
-      }
-
-      const data = await response.json();
-      setGigs(data);
+      const response = await api.get(`/Gigs/caregiver/${userDetails.id}`);
+      // Normalize PascalCase fields from backend
+      const normalized = (response.data || []).map(g => ({
+        ...g,
+        isSpecialGig: g.isSpecialGig || g.IsSpecialGig || false,
+        careRequestId: g.careRequestId || g.CareRequestId || null,
+        scopedClientId: g.scopedClientId || g.ScopedClientId || null,
+      }));
+      setGigs(normalized);
       setIsLoading(false);
     } catch (err) {
       setError(err.message);
@@ -286,9 +295,47 @@ const GigsSection = () => {
     }
   };
 
+  // Fetch deleted gigs for the "Deleted Gigs" tab
+  const fetchDeletedGigs = useCallback(async () => {
+    try {
+      setDeletedLoading(true);
+      const userDetails = JSON.parse(localStorage.getItem("userDetails"));
+      if (!userDetails?.id) return;
+
+      const result = await GigService.getDeletedGigs(userDetails.id);
+      if (result.success) {
+        setDeletedGigs(result.data);
+      }
+    } catch (err) {
+      console.error('Error fetching deleted gigs:', err);
+    } finally {
+      setDeletedLoading(false);
+    }
+  }, []);
+
+  // Support deep-link via ?tab=deleted (e.g., from deletion reminder notifications)
+  useEffect(() => {
+    const tabParam = searchParams.get('tab');
+    if (tabParam === 'deleted') {
+      setActiveTab('deleted');
+      // Clean up the query param so it doesn't persist on refresh
+      searchParams.delete('tab');
+      setSearchParams(searchParams, { replace: true });
+    }
+  }, []);
+
+  // Fetch deleted gigs when the tab is selected
+  useEffect(() => {
+    if (activeTab === 'deleted') {
+      fetchDeletedGigs();
+    }
+  }, [activeTab, fetchDeletedGigs]);
+
   // Fetch gigs on mount and when returning from edit page
   useEffect(() => {
     fetchGigs();
+    // Refresh caregiver eligibility status to ensure fresh data
+    refreshStatusData();
     
     // Clear the navigation state after using it
     if (location.state?.refreshGigs) {
@@ -296,11 +343,18 @@ const GigsSection = () => {
     }
   }, [location.state?.refreshGigs]);
 
+  // Retry loading caregiver status if it failed (e.g., due to transient auth issues)
+  useEffect(() => {
+    if (eligibilityChecked && statusHasErrors && refreshStatusData) {
+      refreshStatusData();
+    }
+  }, [eligibilityChecked, statusHasErrors]);
+
   if (isLoading) {
     return (
-      <div className="caregiver-gigs-section">
-        <div className="caregiver-spinner-container">
-          <div className="caregiver-spinner" />
+      <div className="gigs-page">
+        <div className="gigs-spinner-container">
+          <div className="gigs-spinner" />
           <p>Loading gigs...</p>
         </div>
       </div>
@@ -309,252 +363,202 @@ const GigsSection = () => {
 
   if (error) {
     return (
-      <div className="caregiver-gigs-section">
+      <div className="gigs-page">
         <p>Error: {error}</p>
       </div>
     );
   }
 
-  return (
-    <div className="caregiver-gigs-section">
-      <h3>Active Gigs</h3>
-      
-      {/* Tab Navigation */}
-      <div className="caregiver-gigs-tabs">
-        <button 
-          className={`caregiver-gigs-tab ${activeTab === "active" ? "active" : ""}`}
-          onClick={() => setActiveTab("active")}
-        >
-          Active Gigs ({activeGigs.length})
-        </button>
-        <button 
-          className={`caregiver-gigs-tab ${activeTab === "paused" ? "active" : ""}`}
-          onClick={() => setActiveTab("paused")}
-        >
-          Paused Gigs ({pausedGigs.length})
-        </button>
-        <button 
-          className={`caregiver-gigs-tab ${activeTab === "draft" ? "active" : ""}`}
-          onClick={() => setActiveTab("draft")}
-        >
-          Draft Gigs ({draftGigs.length})
-        </button>
-      </div>
+  const currentGigs = activeTab === 'active' ? activeGigs
+    : activeTab === 'paused' ? pausedGigs
+    : activeTab === 'draft' ? draftGigs
+    : [];
 
-      {/* No Gigs State */}
-      {activeGigs.length === 0 && pausedGigs.length === 0 && draftGigs.length === 0 ? (
-        <div className="caregiver-empty-state">
-          <img src={clock} alt="No Gigs" style={{ width: 80, marginBottom: 16 }} />
-          <h4>No Gigs Yet</h4>
-          <p>You haven't created any gigs. Get started by creating one.</p>
-          <button className="caregiver-create-gig-btn" onClick={handleNavigateToCreateGig}>
-            Create Your First Gig
+  const hasAnyGigs = activeGigs.length > 0 || pausedGigs.length > 0 || draftGigs.length > 0;
+
+  return (
+    <div className="gigs-page">
+      {/* ── Banner ── */}
+      <div className="marketplace-banner gigs-banner">
+        <div className="marketplace-banner-content">
+          <h1 className="marketplace-banner-title">Manage your Gig</h1>
+          <p className="marketplace-banner-subtitle">Offer your services to clients all over the world.</p>
+        </div>
+        <div className="gigs-banner-right">
+          <button className="gigs-create-btn" onClick={handleNavigateToCreateGig}>
+            ✏️ Create gig
           </button>
         </div>
-      ) : (
-      <div className="caregiver-gigs-grid">
-        {/* Create New Gig Card - Always first */}
-        <div className="caregiver-create-new-gig" onClick={handleNavigateToCreateGig}>
-          <span className="caregiver-create-icon">+</span>
-          <p className="caregiver-create-text">Create a new Gig</p>
-          <p className="caregiver-create-subtext">Add a new service offering</p>
+      </div>
+
+      <div className="gigs-content">
+        {/* ── Tabs ── */}
+        <div className="gigs-tabs">
+          <button className={`gigs-tab ${activeTab === 'active' ? 'active' : ''}`} onClick={() => setActiveTab('active')}>Active</button>
+          <button className={`gigs-tab ${activeTab === 'paused' ? 'active' : ''}`} onClick={() => setActiveTab('paused')}>Paused</button>
+          <button className={`gigs-tab ${activeTab === 'draft' ? 'active' : ''}`} onClick={() => setActiveTab('draft')}>Draft</button>
+          <button className={`gigs-tab ${activeTab === 'deleted' ? 'active' : ''}`} onClick={() => setActiveTab('deleted')}>Deleted</button>
         </div>
 
-        {/* Active Gigs Limit Notice - Only show after eligibility has been checked */}
-        {(activeTab === "paused" || activeTab === "draft") && !canPublishNewGig && eligibilityChecked && (
-          <div className="gig-limit-notice">
+        {/* ── Eligibility notice ── */}
+        {(activeTab === "paused" || activeTab === "draft") && !canPublishNewGig && eligibilityChecked && !statusLoading && !statusHasErrors && (
+          <div className="gigs-eligibility-notice">
             {activeGigs.length >= 2 ? (
               <p>⚠️ You have reached the maximum of 2 active gigs. Pause an active gig to publish more.</p>
             ) : (
               <div>
                 <p>⚠️ To publish gigs, you need to complete the following requirements:</p>
-                <ul className="eligibility-requirements">
-                  <li className={isVerified ? 'completed' : 'pending'}>
-                    {isVerified ? '✅' : '❌'} Complete identity verification
-                  </li>
-                  <li className={isQualified ? 'completed' : 'pending'}>
-                    {isQualified ? '✅' : '❌'} Pass qualification assessment
-                  </li>
-                  <li className={hasCertificates ? 'completed' : 'pending'}>
-                    {hasCertificates ? '✅' : '❌'} Upload at least one certificate
-                  </li>
+                <ul className="gigs-eligibility-list">
+                  <li className={isVerified ? 'completed' : 'pending'}>{isVerified ? '✅' : '❌'} Complete identity verification</li>
+                  <li className={isQualified ? 'completed' : 'pending'}>{isQualified ? '✅' : '❌'} Pass qualification assessment</li>
+                  <li className={hasCertificates ? 'completed' : 'pending'}>{hasCertificates ? '✅' : '❌'} Upload at least one certificate</li>
                 </ul>
               </div>
             )}
           </div>
         )}
 
-        {/* Active Tab Content */}
-          {activeTab === "active" && activeGigs.map((gig) => (
-            <div 
-              key={gig.id} 
-              className="caregiver-gig-card"
-              onClick={() => navigate(`/service/${gig.id}`)}
-              style={{ cursor: 'pointer' }}
-            >
-              <img
-                src={gig.image1 || "https://via.placeholder.com/300x160"}
-                alt={gig.title}
-                className="caregiver-gig-image"
-              />
-              <div className="caregiver-gig-content">
-                <h4 className="caregiver-gig-title">{gig.title}</h4>
-                <p className="caregiver-gig-description">{gig.description}</p>
-                <div className="caregiver-gig-actions">
-                  {/* Active/published gigs should not be editable or deletable - only pauseable */}
-                  {/* Clients may be viewing or booking these gigs, so changes should go through pause -> edit -> republish workflow */}
-                  {/* <button 
-                    className="caregiver-gig-action-btn caregiver-edit"
-                    onClick={(e) => {
-                      e.stopPropagation();
-                      handleEditGig(gig);
-                    }}
-                  >
-                    Edit
-                  </button> */}
-                  <button 
-                    className="caregiver-gig-action-btn caregiver-pause"
-                    onClick={(e) => {
-                      e.stopPropagation();
-                      handlePauseGig(gig);
-                    }}
-                    disabled={pausingGigs.has(gig.id)}
-                  >
-                    {pausingGigs.has(gig.id) ? 'Pausing...' : 'Pause'}
-                  </button>
-                  {/* <button 
-                    className="caregiver-gig-action-btn caregiver-delete"
-                    onClick={(e) => {
-                      e.stopPropagation();
-                      handleDeleteGig(gig);
-                    }}
-                    disabled={deletingGigs.has(gig.id)}
-                  >
-                    {deletingGigs.has(gig.id) ? 'Deleting...' : 'Delete'}
-                  </button> */}
-                </div>
-              </div>
-            </div>
-          ))}
-
-          {/* Paused Tab Content */}
-          {activeTab === "paused" && pausedGigs.map((gig) => (
-            <div 
-              key={gig.id} 
-              className="caregiver-gig-card"
-              onClick={() => handleEditGig(gig)}
-              style={{ cursor: 'pointer' }}
-            >
-              <img
-                src={gig.image1 || "https://via.placeholder.com/300x160"}
-                alt={gig.title}
-                className="caregiver-gig-image"
-              />
-              <div className="caregiver-gig-content">
-                <h4 className="caregiver-gig-title">{gig.title}</h4>
-                <p className="caregiver-gig-description">{gig.description}</p>
-                <div className="caregiver-gig-actions">
-                  <button 
-                    className="caregiver-gig-action-btn caregiver-edit"
-                    onClick={(e) => {
-                      e.stopPropagation();
-                      handleEditGig(gig);
-                    }}
-                  >
-                    Edit
-                  </button>
-                  <button 
-                    className={`caregiver-gig-action-btn caregiver-publish ${!canPublishNewGig ? 'disabled' : ''}`}
-                    onClick={(e) => {
-                      e.stopPropagation();
-                      handlePublishGig(gig);
-                    }}
-                    disabled={publishingGigs.has(gig.id) || !canPublishNewGig}
-                    title={!canPublishNewGig ? 
-                      (activeGigs.length >= 2 ? 
-                        'You can only have 2 active gigs. Pause an active gig first.' : 
-                        'Complete verification, assessment, and upload certificates to publish gigs.'
-                      ) : ''
-                    }
-                  >
-                    {publishingGigs.has(gig.id) ? 'Publishing...' : 'Publish'}
-                  </button>
-                  <button 
-                    className="caregiver-gig-action-btn caregiver-delete"
-                    onClick={(e) => {
-                      e.stopPropagation();
-                      handleDeleteGig(gig);
-                    }}
-                    disabled={deletingGigs.has(gig.id)}
-                  >
-                    {deletingGigs.has(gig.id) ? 'Deleting...' : 'Delete'}
-                  </button>
-                </div>
-              </div>
-            </div>
-          ))}
-
-          {/* Draft Tab Content */}
-          {activeTab === "draft" && draftGigs.map((gig) => (
-            <div 
-              key={gig.id} 
-              className="caregiver-gig-card"
-              onClick={() => handleEditGig(gig)}
-              style={{ cursor: 'pointer' }}
-            >
-              <img
-                src={gig.image1 || "https://via.placeholder.com/300x160"}
-                alt={gig.title}
-                className="caregiver-gig-image"
-              />
-              <div className="caregiver-gig-content">
-                <h4 className="caregiver-gig-title">{gig.title}</h4>
-                <p className="caregiver-gig-description">{gig.description}</p>
-                <div className="caregiver-gig-actions">
-                  <button 
-                    className="caregiver-gig-action-btn caregiver-edit"
-                    onClick={(e) => {
-                      e.stopPropagation();
-                      handleEditGig(gig);
-                    }}
-                  >
-                    Continue Editing
-                  </button>
-                  <button 
-                    className={`caregiver-gig-action-btn caregiver-publish ${!canPublishNewGig ? 'disabled' : ''}`}
-                    onClick={(e) => {
-                      e.stopPropagation();
-                      handlePublishGig(gig);
-                    }}
-                    disabled={publishingGigs.has(gig.id) || !canPublishNewGig}
-                    title={!canPublishNewGig ? 
-                      (activeGigs.length >= 2 ? 
-                        'You can only have 2 active gigs. Pause an active gig first.' : 
-                        'Complete verification, assessment, and upload certificates to publish gigs.'
-                      ) : ''
-                    }
-                  >
-                    {publishingGigs.has(gig.id) ? 'Publishing...' : 'Publish'}
-                  </button>
-                  <button 
-                    className="caregiver-gig-action-btn caregiver-delete"
-                    onClick={(e) => {
-                      e.stopPropagation();
-                      handleDeleteGig(gig);
-                    }}
-                    disabled={deletingGigs.has(gig.id)}
-                  >
-                    {deletingGigs.has(gig.id) ? 'Deleting...' : 'Delete'}
-                  </button>
-                </div>
-              </div>
-            </div>
-          ))}
+        {/* ── Table header ── */}
+        <div className="gigs-table-header">
+          <span className="gigs-th gigs-th--gig">Gig</span>
+          <span className="gigs-th gigs-th--orders">Orders</span>
+          <span className="gigs-th gigs-th--action">Action</span>
         </div>
-      )}
-      
+
+        {/* ── Deleted tab ── */}
+        {activeTab === 'deleted' ? (
+          deletedLoading ? (
+            <div className="gigs-spinner-container">
+              <div className="gigs-spinner" />
+              <p>Loading deleted gigs...</p>
+            </div>
+          ) : deletedGigs.length === 0 ? (
+            <div className="gigs-empty">
+              <h4>No Deleted Gigs</h4>
+              <p>You don't have any recently deleted gigs.</p>
+            </div>
+          ) : (
+            <div className="gigs-table-body">
+              {deletedGigs.map((gig) => {
+                const daysLeft = gig.daysRemaining ?? 0;
+                const isExpired = !gig.canRestore;
+                return (
+                  <div key={gig.id} className={`gigs-row ${isExpired ? 'gigs-row--expired' : ''}`}>
+                    <div className="gigs-cell gigs-cell--gig">
+                      {gig.image1 ? (
+                        <img src={gig.image1} alt={gig.title} className="gigs-thumb" />
+                      ) : (
+                        <div className="gigs-thumb gigs-thumb--placeholder">🩺</div>
+                      )}
+                      <div className="gigs-cell-info">
+                        <span className="gigs-cell-title">{gig.title}</span>
+                        <span className="gigs-cell-meta">
+                          {isExpired ? 'Permanently deleted' : `${daysLeft} day${daysLeft !== 1 ? 's' : ''} to restore`}
+                        </span>
+                      </div>
+                    </div>
+                    <div className="gigs-cell gigs-cell--orders">
+                      <span className="gigs-order-count">{gig.orderCount ?? 0}</span>
+                    </div>
+                    <div className="gigs-cell gigs-cell--action">
+                      {!isExpired && (
+                        <button className="gigs-link" onClick={() => handleRestoreGig(gig)} disabled={restoringGigs.has(gig.id)}>
+                          {restoringGigs.has(gig.id) ? 'Restoring...' : 'Restore'}
+                        </button>
+                      )}
+                    </div>
+                  </div>
+                );
+              })}
+            </div>
+          )
+        ) : !hasAnyGigs ? (
+          /* ── No gigs at all ── */
+          <div className="gigs-empty">
+            <h4>Create and publish your first Gig</h4>
+            <button className="gigs-empty-btn" onClick={handleNavigateToCreateGig}>Create Gig</button>
+          </div>
+        ) : currentGigs.length === 0 ? (
+          <div className="gigs-empty">
+            <h4>No {activeTab} gigs</h4>
+            <p>You don't have any {activeTab} gigs right now.</p>
+          </div>
+        ) : (
+          /* ── Gig rows ── */
+          <div className="gigs-table-body">
+            {currentGigs.map((gig) => (
+              <div key={gig.id} className="gigs-row">
+                <div className="gigs-cell gigs-cell--gig">
+                  {gig.image1 ? (
+                    <img src={gig.image1} alt={gig.title} className="gigs-thumb" />
+                  ) : (
+                    <div className="gigs-thumb gigs-thumb--placeholder">🩺</div>
+                  )}
+                  <div className="gigs-cell-info">
+                    <span className="gigs-cell-title">{gig.title}</span>
+                    {gig.isSpecialGig && <span className="gigs-badge gigs-badge--care-request">Care Request</span>}
+                  </div>
+                </div>
+                <div className="gigs-cell gigs-cell--orders">
+                  <span className="gigs-order-count">{gig.orderCount ?? 0}</span>
+                </div>
+                <div className="gigs-cell gigs-cell--action">
+                  {gig.isSpecialGig ? (
+                    <button className="gigs-link" onClick={() => navigate(`/service/${gig.id}`)}>Preview</button>
+                  ) : (
+                    <>
+                      {activeTab === 'active' && (
+                        <>
+                          <button className="gigs-link" onClick={() => navigate(`/service/${gig.id}`)}>Preview</button>
+                          <button className="gigs-link" onClick={() => handleShareGig(gig)}>Share</button>
+                          <button className="gigs-link" onClick={() => handlePauseGig(gig)} disabled={pausingGigs.has(gig.id)}>
+                            {pausingGigs.has(gig.id) ? 'Pausing...' : 'Pause'}
+                          </button>
+                        </>
+                      )}
+                      {activeTab === 'paused' && (
+                    <>
+                      <button className="gigs-link" onClick={() => handleEditGig(gig)}>Edit</button>
+                      <button
+                        className="gigs-link"
+                        onClick={() => handlePublishGig(gig)}
+                        disabled={publishingGigs.has(gig.id) || !canPublishNewGig}
+                        title={!canPublishNewGig ? (activeGigs.length >= 2 ? 'Max 2 active gigs. Pause one first.' : 'Complete all eligibility requirements to publish.') : ''}
+                      >
+                        {publishingGigs.has(gig.id) ? 'Publishing...' : 'Publish'}
+                      </button>
+                      <button className="gigs-link gigs-link--danger" onClick={() => handleDeleteGig(gig)} disabled={deletingGigs.has(gig.id)}>
+                        {deletingGigs.has(gig.id) ? 'Deleting...' : 'Delete'}
+                      </button>
+                    </>
+                  )}
+                  {activeTab === 'draft' && (
+                    <>
+                      <button className="gigs-link" onClick={() => handleEditGig(gig)}>Edit</button>
+                      <button
+                        className="gigs-link"
+                        onClick={() => handlePublishGig(gig)}
+                        disabled={publishingGigs.has(gig.id) || !canPublishNewGig}
+                        title={!canPublishNewGig ? (activeGigs.length >= 2 ? 'Max 2 active gigs. Pause one first.' : 'Complete all eligibility requirements to publish.') : ''}
+                      >
+                        {publishingGigs.has(gig.id) ? 'Publishing...' : 'Publish'}
+                      </button>
+                      <button className="gigs-link gigs-link--danger" onClick={() => handleDeleteGig(gig)} disabled={deletingGigs.has(gig.id)}>
+                        {deletingGigs.has(gig.id) ? 'Deleting...' : 'Delete'}
+                      </button>
+                    </>
+                  )}
+                    </>
+                  )}
+                </div>
+              </div>
+            ))}
+          </div>
+        )}
+      </div>
+
       {/* Toast Container */}
-      <div className="caregiver-toast-container">
+      <div className="gigs-toast-container">
         {toasts.map((toast) => (
           <Toast
             key={toast.id}
@@ -575,7 +579,7 @@ const GigsSection = () => {
         }}
         onProceed={confirmDeleteGig}
         title="Delete Gig?"
-        description={`Are you sure you want to delete "${gigToDelete?.title}"? This action cannot be undone and the gig will be permanently removed.`}
+        description={`Are you sure you want to delete "${gigToDelete?.title}"? It will be hidden immediately. You have **30 days** to restore it before it is permanently deleted.`}
         buttonText="Delete"
         buttonBgColor="#dc2626"
         secondaryButtonText="Cancel"

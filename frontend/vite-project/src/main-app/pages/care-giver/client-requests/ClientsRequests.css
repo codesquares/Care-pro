@@ -1,0 +1,265 @@
+/* ─── Clients Requests Page ─── */
+.clients-requests-page {
+  min-height: 100vh;
+  background: #fafaf7;
+}
+
+.clients-requests-banner {
+  margin-bottom: 0;
+}
+
+.clients-requests-banner-right {
+  display: flex;
+  align-items: center;
+  gap: 20px;
+  flex-shrink: 0;
+}
+
+.clients-requests-tagline {
+  font-size: 0.85rem;
+  color: #4b5563;
+  font-weight: 500;
+  margin: 0;
+  text-align: right;
+  line-height: 1.5;
+  max-width: 300px;
+}
+
+/* ─── Content ─── */
+.cr-content {
+  max-width: 960px;
+  margin: 0 auto;
+  padding: 20px 20px 60px;
+}
+
+/* ─── Filters ─── */
+.cr-filters {
+  display: flex;
+  gap: 10px;
+  padding: 14px 0;
+  flex-wrap: wrap;
+}
+
+.cr-filters select {
+  padding: 7px 12px;
+  border: 1px solid #d1d5db;
+  border-radius: 6px;
+  font-size: 0.82rem;
+  font-weight: 500;
+  color: #334155;
+  background: #fff;
+  cursor: pointer;
+  font-family: inherit;
+  min-width: 100px;
+}
+
+.cr-filters select:focus {
+  outline: none;
+  border-color: #94a3b8;
+}
+
+/* ─── Request Cards ─── */
+.cr-request-list {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.cr-request-card {
+  background: #fff;
+  border: 1px solid #e5e7eb;
+  border-radius: 12px;
+  padding: 20px 24px;
+  transition: box-shadow 0.2s;
+}
+
+.cr-request-card:hover {
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.06);
+}
+
+/* Card Meta */
+.cr-card-meta {
+  display: flex;
+  gap: 16px;
+  align-items: center;
+  margin-bottom: 10px;
+}
+
+.cr-posted {
+  font-size: 0.75rem;
+  color: #9ca3af;
+  font-weight: 500;
+}
+
+.cr-responders-badge {
+  font-size: 0.72rem;
+  color: #0ea5e9;
+  font-weight: 600;
+}
+
+/* Card Body */
+.cr-card-body {
+  display: flex;
+  gap: 32px;
+  margin-bottom: 16px;
+}
+
+.cr-card-left {
+  flex: 1.5;
+  min-width: 0;
+}
+
+.cr-card-title {
+  font-size: 1.05rem;
+  font-weight: 600;
+  color: #1e293b;
+  margin: 0 0 8px;
+}
+
+.cr-card-notes {
+  font-size: 0.83rem;
+  color: #64748b;
+  line-height: 1.5;
+  margin: 0;
+  display: -webkit-box;
+  -webkit-line-clamp: 3;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+}
+
+.cr-card-right {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.cr-detail-row {
+  display: flex;
+  gap: 8px;
+  align-items: baseline;
+  font-size: 0.82rem;
+}
+
+.cr-detail-label {
+  color: #9ca3af;
+  font-weight: 500;
+  white-space: nowrap;
+}
+
+.cr-detail-value {
+  color: #1e293b;
+  font-weight: 500;
+}
+
+/* Card Actions */
+.cr-card-actions {
+  display: flex;
+  gap: 10px;
+  justify-content: flex-end;
+}
+
+.cr-btn-read-more {
+  padding: 8px 20px;
+  background: #fff;
+  color: #1f2e5a;
+  border: 1.5px solid #d1d5db;
+  border-radius: 8px;
+  font-size: 0.82rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.cr-btn-read-more:hover {
+  border-color: #1f2e5a;
+  background: #f8f7f3;
+}
+
+.cr-btn-respond {
+  padding: 8px 20px;
+  background: #f5a623;
+  color: #fff;
+  border: none;
+  border-radius: 8px;
+  font-size: 0.82rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.cr-btn-respond:hover {
+  background: #e09500;
+  box-shadow: 0 2px 8px rgba(245, 166, 35, 0.35);
+}
+
+.cr-btn-responded {
+  padding: 8px 20px;
+  background: #e5e7eb;
+  color: #9ca3af;
+  border: none;
+  border-radius: 8px;
+  font-size: 0.82rem;
+  font-weight: 600;
+  cursor: default;
+}
+
+/* ─── Loading / Empty ─── */
+.cr-loading {
+  text-align: center;
+  padding: 80px 32px;
+  font-size: 1rem;
+  color: #64748b;
+}
+
+.cr-empty {
+  text-align: center;
+  padding: 80px 32px 60px;
+}
+
+.cr-empty h2 {
+  font-size: 1.3rem;
+  font-weight: 700;
+  color: #1e293b;
+  margin: 0 0 12px;
+}
+
+.cr-empty p {
+  font-size: 0.95rem;
+  color: #64748b;
+  margin: 0;
+  line-height: 1.6;
+}
+
+/* ─── Responsive ─── */
+@media (max-width: 640px) {
+  .cr-content {
+    padding: 16px 12px 40px;
+  }
+
+  .cr-card-body {
+    flex-direction: column;
+    gap: 16px;
+  }
+
+  .cr-card-actions {
+    flex-direction: column;
+  }
+
+  .cr-btn-read-more,
+  .cr-btn-respond,
+  .cr-btn-responded {
+    width: 100%;
+    text-align: center;
+  }
+
+  .clients-requests-banner-right {
+    flex-direction: column;
+    align-items: flex-start;
+  }
+
+  .clients-requests-tagline {
+    text-align: left;
+    max-width: 100%;
+  }
+}

@@ -21,7 +21,7 @@ const adminService = {
   getAllCaregivers: async () => {
     try {
       console.log('Fetching all caregivers...');
-      const response = await api.get('/CareGivers/AllCaregivers');
+      const response = await api.get('/CareGivers/AllCaregiversAdmin');
       
       if (response.data && Array.isArray(response.data)) {
         return {
@@ -58,7 +58,7 @@ const adminService = {
       }
 
       console.log(`Fetching caregiver: ${caregiverId}`);
-      const response = await api.get(`/CareGivers/${caregiverId}`);
+      const response = await api.get(`/CareGivers/${caregiverId}/admin`);
       
       if (response.data) {
         return {
@@ -258,7 +258,7 @@ const adminService = {
       }
 
       // Validate notification type
-      const validTypes = ['SystemAlert', 'OrderNotification', 'MessageNotification', 'WithdrawalRequest'];
+      const validTypes = ['system_alert', 'order_received', 'order_confirmation', 'order_completed', 'order_cancelled', 'order_disputed', 'chat_message', 'withdrawal_request', 'withdrawal_verified', 'withdrawal_completed', 'withdrawal_rejected', 'certificate_uploaded', 'certificate_verification', 'subscription_created', 'system_notice'];
       if (!validTypes.includes(type)) {
         return {
           success: false,
@@ -333,74 +333,33 @@ const adminService = {
    */
   broadcastNotificationToCaregivers: async (notificationData) => {
     try {
-      const { senderId, type, content, title } = notificationData;
+      const { title, content, type } = notificationData;
 
-      // Validate required fields
-      if (!senderId || !type || !content) {
+      if (!title || !content) {
         return {
           success: false,
-          error: 'Missing required fields: senderId, type, and content are required'
+          error: 'Missing required fields: title and content are required'
         };
       }
 
       console.log('Broadcasting notification to all caregivers...');
-      
-      // Get all caregivers
-      const caregiversResult = await adminService.getAllCaregivers();
-      
-      if (!caregiversResult.success) {
-        return {
-          success: false,
-          error: 'Failed to fetch caregivers: ' + caregiversResult.error
-        };
-      }
-
-      const caregivers = caregiversResult.data;
-      
-      if (!caregivers || caregivers.length === 0) {
-        return {
-          success: false,
-          error: 'No caregivers found in the system'
-        };
-      }
-
-      console.log(`Sending notification to ${caregivers.length} caregivers...`);
-
-      // Send notification to each caregiver
-      const results = await Promise.allSettled(
-        caregivers.map(caregiver => 
-          adminService.sendNotification({
-            recipientId: caregiver.id,
-            senderId,
-            type,
-            content,
-            title
-          })
-        )
-      );
-
-      // Count successes and failures
-      const successCount = results.filter(r => r.status === 'fulfilled' && r.value.success).length;
-      const failureCount = results.length - successCount;
-      const errors = results
-        .filter(r => r.status === 'rejected' || !r.value.success)
-        .map((r, idx) => ({
-          caregiverId: caregivers[idx]?.id,
-          error: r.status === 'rejected' ? r.reason : r.value.error
-        }));
+      const response = await api.post('/Notifications/BroadcastToCaregivers', {
+        title,
+        message: content,
+        type: type || 'broadcast'
+      });
 
       return {
-        success: successCount > 0,
-        successCount,
-        failureCount,
-        total: caregivers.length,
-        errors: errors.length > 0 ? errors : undefined
+        success: true,
+        successCount: response.data?.recipientsCount || 0,
+        failureCount: 0,
+        total: response.data?.recipientsCount || 0
       };
     } catch (error) {
       console.error('Error broadcasting notification to caregivers:', error);
       return {
         success: false,
-        error: error.message || 'Failed to broadcast notification'
+        error: error.response?.data?.message || error.message || 'Failed to broadcast notification'
       };
     }
   },
@@ -416,74 +375,33 @@ const adminService = {
    */
   broadcastNotificationToClients: async (notificationData) => {
     try {
-      const { senderId, type, content, title } = notificationData;
+      const { title, content, type } = notificationData;
 
-      // Validate required fields
-      if (!senderId || !type || !content) {
+      if (!title || !content) {
         return {
           success: false,
-          error: 'Missing required fields: senderId, type, and content are required'
+          error: 'Missing required fields: title and content are required'
         };
       }
 
       console.log('Broadcasting notification to all clients...');
-      
-      // Get all clients
-      const clientsResult = await adminService.getAllClients();
-      
-      if (!clientsResult.success) {
-        return {
-          success: false,
-          error: 'Failed to fetch clients: ' + clientsResult.error
-        };
-      }
-
-      const clients = clientsResult.data;
-      
-      if (!clients || clients.length === 0) {
-        return {
-          success: false,
-          error: 'No clients found in the system'
-        };
-      }
-
-      console.log(`Sending notification to ${clients.length} clients...`);
-
-      // Send notification to each client
-      const results = await Promise.allSettled(
-        clients.map(client => 
-          adminService.sendNotification({
-            recipientId: client.id,
-            senderId,
-            type,
-            content,
-            title
-          })
-        )
-      );
-
-      // Count successes and failures
-      const successCount = results.filter(r => r.status === 'fulfilled' && r.value.success).length;
-      const failureCount = results.length - successCount;
-      const errors = results
-        .filter(r => r.status === 'rejected' || !r.value.success)
-        .map((r, idx) => ({
-          clientId: clients[idx]?.id,
-          error: r.status === 'rejected' ? r.reason : r.value.error
-        }));
+      const response = await api.post('/Notifications/BroadcastToClients', {
+        title,
+        message: content,
+        type: type || 'broadcast'
+      });
 
       return {
-        success: successCount > 0,
-        successCount,
-        failureCount,
-        total: clients.length,
-        errors: errors.length > 0 ? errors : undefined
+        success: true,
+        successCount: response.data?.recipientsCount || 0,
+        failureCount: 0,
+        total: response.data?.recipientsCount || 0
       };
     } catch (error) {
       console.error('Error broadcasting notification to clients:', error);
       return {
         success: false,
-        error: error.message || 'Failed to broadcast notification'
+        error: error.response?.data?.message || error.message || 'Failed to broadcast notification'
       };
     }
   },
@@ -499,29 +417,32 @@ const adminService = {
    */
   broadcastNotificationToAllUsers: async (notificationData) => {
     try {
-      console.log('Broadcasting notification to all users (caregivers and clients)...');
-      
-      // Send to both caregivers and clients in parallel
-      const [caregiversResult, clientsResult] = await Promise.all([
-        adminService.broadcastNotificationToCaregivers(notificationData),
-        adminService.broadcastNotificationToClients(notificationData)
-      ]);
+      const { title, content, type } = notificationData;
 
-      const totalSuccess = (caregiversResult.successCount || 0) + (clientsResult.successCount || 0);
-      const totalFailures = (caregiversResult.failureCount || 0) + (clientsResult.failureCount || 0);
+      if (!title || !content) {
+        return {
+          success: false,
+          error: 'Missing required fields: title and content are required'
+        };
+      }
+
+      console.log('Broadcasting notification to all users...');
+      const response = await api.post('/Notifications/BroadcastToAll', {
+        title,
+        message: content,
+        type: type || 'broadcast'
+      });
 
       return {
-        success: totalSuccess > 0,
-        totalSuccessCount: totalSuccess,
-        totalFailureCount: totalFailures,
-        caregiversResult,
-        clientsResult
+        success: true,
+        totalSuccessCount: response.data?.recipientsCount || 0,
+        totalFailureCount: 0
       };
     } catch (error) {
       console.error('Error broadcasting notification to all users:', error);
       return {
         success: false,
-        error: error.message || 'Failed to broadcast notification'
+        error: error.response?.data?.message || error.message || 'Failed to broadcast notification'
       };
     }
   },
@@ -537,58 +458,24 @@ const adminService = {
   getDashboardStats: async () => {
     try {
       console.log('Fetching dashboard statistics...');
-      
-      // Fetch caregivers and clients in parallel
-      const [caregiversResult, clientsResult] = await Promise.all([
-        adminService.getAllCaregivers(),
-        adminService.getAllClients()
-      ]);
+      const response = await api.get('/Admins/DashboardStats');
 
-      if (!caregiversResult.success || !clientsResult.success) {
+      if (response.data && response.data.success) {
         return {
-          success: false,
-          error: 'Failed to fetch user data'
+          success: true,
+          data: response.data.data
         };
       }
 
-      const caregivers = caregiversResult.data || [];
-      const clients = clientsResult.data || [];
-
-      // Calculate statistics
-      const stats = {
-        users: {
-          total: caregivers.length + clients.length,
-          caregivers: caregivers.length,
-          clients: clients.length,
-          activeCaregivers: caregivers.filter(cg => cg.status === true).length,
-          availableCaregivers: caregivers.filter(cg => cg.isAvailable === true).length,
-          activeClients: clients.filter(client => client.status === true).length
-        },
-        caregivers: {
-          total: caregivers.length,
-          active: caregivers.filter(cg => cg.status === true).length,
-          inactive: caregivers.filter(cg => cg.status === false).length,
-          available: caregivers.filter(cg => cg.isAvailable === true).length,
-          totalEarnings: caregivers.reduce((sum, cg) => sum + (cg.totalEarning || 0), 0),
-          totalOrders: caregivers.reduce((sum, cg) => sum + (cg.noOfOrders || 0), 0),
-          totalHours: caregivers.reduce((sum, cg) => sum + (cg.noOfHoursSpent || 0), 0)
-        },
-        clients: {
-          total: clients.length,
-          active: clients.filter(client => client.status === true).length,
-          inactive: clients.filter(client => client.status === false).length
-        }
-      };
-
       return {
-        success: true,
-        data: stats
+        success: false,
+        error: response.data?.message || 'Invalid response format'
       };
     } catch (error) {
       console.error('Error fetching dashboard stats:', error);
       return {
         success: false,
-        error: error.message || 'Failed to fetch dashboard statistics'
+        error: error.response?.data?.message || error.message || 'Failed to fetch dashboard statistics'
       };
     }
   },
@@ -816,16 +703,36 @@ const adminService = {
    * Get all gigs in the system
    * @returns {Promise<{success: boolean, data?: Array, error?: string}>}
    */
-  getAllGigs: async () => {
+  getAllGigs: async (params = {}) => {
     try {
       console.log('Fetching all gigs...');
-      const response = await api.get('/Gigs');
+      const queryParams = {};
+      if (params.page) queryParams.page = params.page;
+      if (params.pageSize) queryParams.pageSize = params.pageSize;
+      if (params.status) queryParams.status = params.status;
+      if (params.search) queryParams.search = params.search;
+      if (params.category) queryParams.category = params.category;
+
+      const response = await api.get('/Gigs', { params: queryParams });
       
+      // Handle both paginated and full-list response shapes
       if (response.data && Array.isArray(response.data)) {
         return {
           success: true,
           data: response.data,
           count: response.data.length
+        };
+      }
+
+      if (response.data && response.data.success) {
+        return {
+          success: true,
+          data: response.data.data || [],
+          count: response.data.count || response.data.totalCount || 0,
+          totalCount: response.data.totalCount,
+          page: response.data.page,
+          pageSize: response.data.pageSize,
+          hasMore: response.data.hasMore
         };
       }
       
@@ -1026,6 +933,82 @@ const adminService = {
     };
   },
 
+  /**
+   * Bulk soft-delete gigs (SuperAdmin only)
+   * @param {Object} params - { gigIds?: string[], deleteAll?: boolean, adminUserId: string }
+   * @returns {Promise<{success: boolean, data?: Object, error?: string}>}
+   */
+  bulkSoftDeleteGigs: async ({ gigIds, deleteAll = false, adminUserId }) => {
+    try {
+      if (!adminUserId) {
+        return { success: false, error: 'Admin user ID is required for audit purposes.' };
+      }
+      if (!deleteAll && (!gigIds || gigIds.length === 0)) {
+        return { success: false, error: 'Either provide a list of gig IDs or set deleteAll to true.' };
+      }
+
+      const response = await api.delete('/Gigs/admin/BulkSoftDelete', {
+        data: { gigIds: gigIds || [], deleteAll, adminUserId }
+      });
+
+      return {
+        success: true,
+        data: response.data
+      };
+    } catch (error) {
+      console.error('Error bulk deleting gigs:', error);
+      return {
+        success: false,
+        error: error.response?.data?.message || error.message || 'Failed to bulk delete gigs'
+      };
+    }
+  },
+
+  /**
+   * Get all soft-deleted gigs (Admin/SuperAdmin)
+   * @param {Object} params - { page, pageSize, caregiverId }
+   * @returns {Promise<{success: boolean, data?: Array, totalCount?: number, hasMore?: boolean, error?: string}>}
+   */
+  getDeletedGigs: async (params = {}) => {
+    try {
+      const queryParams = {};
+      if (params.page) queryParams.page = params.page;
+      if (params.pageSize) queryParams.pageSize = params.pageSize;
+      if (params.caregiverId) queryParams.caregiverId = params.caregiverId;
+
+      const response = await api.get('/Gigs/admin/deleted', { params: queryParams });
+
+      if (response.data && response.data.success !== undefined) {
+        return {
+          success: response.data.success,
+          data: response.data.data || [],
+          totalCount: response.data.totalCount || 0,
+          page: response.data.page,
+          pageSize: response.data.pageSize,
+          hasMore: response.data.hasMore || false
+        };
+      }
+
+      // Fallback for array response
+      if (Array.isArray(response.data)) {
+        return {
+          success: true,
+          data: response.data,
+          totalCount: response.data.length,
+          hasMore: false
+        };
+      }
+
+      return { success: false, error: 'Invalid response format' };
+    } catch (error) {
+      console.error('Error fetching deleted gigs:', error);
+      return {
+        success: false,
+        error: error.response?.data?.message || error.message || 'Failed to fetch deleted gigs'
+      };
+    }
+  },
+
   // ============================================
   // ORDERS MANAGEMENT
   // ============================================
@@ -1034,16 +1017,26 @@ const adminService = {
    * Get all orders in the system (Admin endpoint)
    * @returns {Promise<{success: boolean, data?: Array, count?: number, error?: string}>}
    */
-  getAllOrders: async () => {
+  getAllOrders: async (params = {}) => {
     try {
       console.log('Fetching all orders...');
-      const response = await api.get('/Admins/AllOrders');
+      const queryParams = {};
+      if (params.page) queryParams.page = params.page;
+      if (params.pageSize) queryParams.pageSize = params.pageSize;
+      if (params.status) queryParams.status = params.status;
+      if (params.search) queryParams.search = params.search;
+
+      const response = await api.get('/Admins/AllOrders', { params: queryParams });
       
       if (response.data && response.data.success) {
         return {
           success: true,
           data: response.data.data || [],
-          count: response.data.count || 0
+          count: response.data.count || response.data.totalCount || 0,
+          totalCount: response.data.totalCount,
+          page: response.data.page,
+          pageSize: response.data.pageSize,
+          hasMore: response.data.hasMore
         };
       }
       
@@ -1072,7 +1065,7 @@ const adminService = {
       }
 
       console.log(`Fetching order: ${orderId}...`);
-      const response = await api.get(`/ClientOrders/${orderId}`);
+      const response = await api.get('/ClientOrders/orderId', { params: { orderId } });
       
       return {
         success: true,
@@ -1099,7 +1092,7 @@ const adminService = {
       }
 
       console.log(`Fetching orders for client: ${clientUserId}...`);
-      const response = await api.get(`/ClientOrders/${clientUserId}`);
+      const response = await api.get('/ClientOrders/clientUserId', { params: { clientUserId } });
       
       if (response.data && Array.isArray(response.data)) {
         return {
@@ -1134,7 +1127,7 @@ const adminService = {
       }
 
       console.log(`Fetching orders for caregiver: ${caregiverId}...`);
-      const response = await api.get(`/ClientOrders/${caregiverId}`);
+      const response = await api.get('/ClientOrders/caregiverId', { params: { caregiverId } });
       
       if (response.data && Array.isArray(response.data)) {
         return {
@@ -1169,7 +1162,7 @@ const adminService = {
       }
 
       console.log(`Fetching orders with earnings for caregiver: ${caregiverId}...`);
-      const response = await api.get(`/ClientOrders/CaregiverOrders/${caregiverId}`);
+      const response = await api.get('/ClientOrders/CaregiverOrders/caregiverId', { params: { caregiverId } });
       
       return {
         success: true,
@@ -1200,7 +1193,7 @@ const adminService = {
       }
 
       console.log(`Fetching orders for gig: ${gigId}...`);
-      const response = await api.get(`/ClientOrders/gigId`);
+      const response = await api.get('/ClientOrders/gigId', { params: { gigId } });
       
       if (response.data && Array.isArray(response.data)) {
         return {
@@ -1376,8 +1369,8 @@ const adminService = {
    * @param {string} emailData.recipientName - Recipient name
    * @param {string} emailData.subject - Email subject
    * @param {string} emailData.message - Email message (HTML)
-   * @param {File[]} emailData.attachments - Optional file attachments (max 5 files, 100MB total)
-   * @returns {Promise<{success: boolean, message?: string, attachmentCount?: number, error?: string}>}
+   * @param {File[]} emailData.attachments - Optional file attachments (max 10 files, 150MB total)
+   * @returns {Promise<{success: boolean, message?: string, attachmentCount?: number, attachments?: Array, error?: string, validationErrors?: Array}>}
    */
   sendEmail: async (emailData) => {
     try {
@@ -1393,12 +1386,12 @@ const adminService = {
       
       // Create FormData for multipart/form-data request
       const formData = new FormData();
-      formData.append('ToEmail', emailData.recipientEmail);
+      formData.append('RecipientEmail', emailData.recipientEmail);
       // Extract first name from full name (backend expects only first name for personalization)
       const firstName = emailData.recipientName.split(' ')[0];
-      formData.append('FirstName', firstName);
+      formData.append('RecipientName', firstName);
       formData.append('Subject', emailData.subject);
-      formData.append('HtmlContent', emailData.message);
+      formData.append('Message', emailData.message);
 
       // Add attachments if provided
       if (emailData.attachments && emailData.attachments.length > 0) {
@@ -1418,19 +1411,30 @@ const adminService = {
         return {
           success: true,
           message: response.data.message || `Email sent successfully to ${emailData.recipientEmail}`,
-          attachmentCount: response.data.attachmentCount || 0
+          attachmentCount: response.data.attachmentCount || 0,
+          attachments: response.data.attachments || []
         };
       }
 
       return {
         success: false,
-        error: response.data?.message || 'Failed to send email'
+        error: response.data?.message || 'Failed to send email',
+        validationErrors: response.data?.errors || []
       };
     } catch (error) {
       console.error('Error sending email:', error);
+      // Handle structured validation errors from backend
+      const responseData = error.response?.data;
+      if (responseData?.errors && Array.isArray(responseData.errors)) {
+        return {
+          success: false,
+          error: responseData.message || 'Some attachments were rejected',
+          validationErrors: responseData.errors
+        };
+      }
       return {
         success: false,
-        error: error.response?.data?.message || error.message || 'Failed to send email'
+        error: responseData?.message || error.message || 'Failed to send email'
       };
     }
   },
@@ -1442,8 +1446,8 @@ const adminService = {
    * @param {Array<string>} bulkEmailData.specificUserIds - User IDs (required for Specific type)
    * @param {string} bulkEmailData.subject - Email subject
    * @param {string} bulkEmailData.message - Email message (HTML)
-   * @param {File[]} bulkEmailData.attachments - Optional file attachments (max 5 files, 100MB total)
-   * @returns {Promise<{success: boolean, message?: string, stats?: Object, error?: string}>}
+   * @param {File[]} bulkEmailData.attachments - Optional file attachments (max 10 files, 150MB total)
+   * @returns {Promise<{success: boolean, message?: string, stats?: Object, attachments?: Array, error?: string, validationErrors?: Array}>}
    */
   sendBulkEmail: async (bulkEmailData) => {
     try {
@@ -1492,19 +1496,70 @@ const adminService = {
             successfulSends: response.data.successfulSends || 0,
             failedSends: response.data.failedSends || 0,
             errors: response.data.errors || []
-          }
+          },
+          attachments: response.data.attachments || [],
+          attachmentCount: response.data.attachments?.length || 0
         };
       }
 
       return {
         success: false,
-        error: response.data?.message || 'Failed to send bulk email'
+        error: response.data?.message || 'Failed to send bulk email',
+        validationErrors: response.data?.errors || []
       };
     } catch (error) {
       console.error('Error sending bulk email:', error);
+      // Handle structured validation errors from backend
+      const responseData = error.response?.data;
+      if (responseData?.errors && Array.isArray(responseData.errors)) {
+        return {
+          success: false,
+          error: responseData.message || 'Some attachments were rejected',
+          validationErrors: responseData.errors
+        };
+      }
       return {
         success: false,
-        error: error.response?.data?.message || error.message || 'Failed to send bulk email'
+        error: responseData?.message || error.message || 'Failed to send bulk email'
+      };
+    }
+  },
+
+  /**
+   * Upload a single image asset for inline use in email body
+   * @param {File} file - Image file (jpg, jpeg, png, gif, webp only, max 10MB)
+   * @returns {Promise<{success: boolean, url?: string, fileName?: string, mimeType?: string, fileSize?: number, error?: string}>}
+   */
+  uploadEmailAsset: async (file) => {
+    try {
+      const formData = new FormData();
+      formData.append('File', file);
+
+      const response = await api.post('/Admins/UploadEmailAsset', formData, {
+        headers: {
+          'Content-Type': undefined
+        }
+      });
+
+      if (response.data && response.data.success) {
+        return {
+          success: true,
+          url: response.data.url,
+          fileName: response.data.fileName,
+          mimeType: response.data.mimeType,
+          fileSize: response.data.fileSize
+        };
+      }
+
+      return {
+        success: false,
+        error: response.data?.message || 'Failed to upload image'
+      };
+    } catch (error) {
+      console.error('Error uploading email asset:', error);
+      return {
+        success: false,
+        error: error.response?.data?.message || error.message || 'Failed to upload image'
       };
     }
   },
@@ -1763,7 +1818,7 @@ const adminService = {
    * @returns {Array<string>} Available notification types
    */
   getNotificationTypes: () => {
-    return ['WithdrawalRequest', 'SystemAlert', 'OrderNotification', 'MessageNotification'];
+    return ['system_alert', 'system_notice', 'broadcast', 'order_received', 'order_confirmation', 'order_completed', 'order_cancelled', 'order_disputed', 'chat_message', 'withdrawal_request', 'withdrawal_verified', 'withdrawal_completed', 'withdrawal_rejected', 'certificate_uploaded', 'certificate_verification', 'subscription_created'];
   },
 
   /**
@@ -1800,16 +1855,25 @@ const adminService = {
    * Endpoint: GET /api/Admins/Certificates/All
    * @returns {Promise<{success: boolean, count?: number, data?: Array, error?: string}>}
    */
-  getAllCertificates: async () => {
+  getAllCertificates: async (params = {}) => {
     try {
       console.log('Fetching all certificates...');
-      const response = await api.get('/Admins/Certificates/All');
+      const queryParams = {};
+      if (params.page) queryParams.page = params.page;
+      if (params.pageSize) queryParams.pageSize = params.pageSize;
+      if (params.status) queryParams.status = params.status;
+
+      const response = await api.get('/Admins/Certificates/All', { params: queryParams });
       
       if (response.data && response.data.success) {
         return {
           success: true,
-          count: response.data.count || response.data.data?.length || 0,
-          data: response.data.data || []
+          count: response.data.count || response.data.totalCount || response.data.data?.length || 0,
+          data: response.data.data || [],
+          totalCount: response.data.totalCount,
+          page: response.data.page,
+          pageSize: response.data.pageSize,
+          hasMore: response.data.hasMore
         };
       }
       

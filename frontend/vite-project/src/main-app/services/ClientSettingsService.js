@@ -114,11 +114,16 @@ const ClientSettingsService = {
    * @param {string} address - Full address string
    * @returns {Promise<Object>} Response data with geocoded location info
    */
-  async updateClientAddress(clientId, address) {
+  async updateClientAddress(clientId, address, coordinates) {
     try {
-      const response = await axios.put(`${BASE_API_URL}/Clients/UpdateClientLocation/${clientId}`, {
-        address: address
-      });
+      const payload = { address };
+      // Include GPS coordinates if provided (more accurate than geocoding)
+      if (coordinates?.latitude != null && coordinates?.longitude != null) {
+        payload.latitude = coordinates.latitude;
+        payload.longitude = coordinates.longitude;
+      }
+
+      const response = await axios.put(`${BASE_API_URL}/Clients/UpdateClientLocation/${clientId}`, payload);
       
       return {
         success: true,

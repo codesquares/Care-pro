@@ -1,4 +1,4 @@
-import { Routes, Route } from 'react-router-dom';
+import { Routes, Route, Navigate } from 'react-router-dom';
 import CaregiverDashboard from './care-giver-dashboard/CaregiverDashboard';
 import UserProfile from './care-giver-profile/UserProfile';
 import NavigationBar from './care-giver-dashboard/NavigationBar';
@@ -7,7 +7,7 @@ import CaregiverProfile from '../../components/caregiver_settings/CaregiverProfi
 import Earnings from './Earnings';
 import EarningsPage from './EarningsPage';
 import WithdrawPage from './WithdrawPage';
-import Order from './Order';
+import CaregiverOrders from './orders/CaregiverOrders';
 import CreateGig from './CreateGig';
 import CreateOffer from '../CreateOffer';
 import Messages from '../Messages';
@@ -25,6 +25,8 @@ import '../../components/ErrorBoundary.css';
 import FAQPage from '../client/orders/FAQ';
 import CaregiverSubscriptions from './subscriptions/CaregiverSubscriptions';
 import CaregiverSubscriptionDetail from './subscriptions/CaregiverSubscriptionDetail';
+import CaregiverWallet from './wallet/CaregiverWallet';
+import ClientsRequests from './client-requests/ClientsRequests';
 import NotFoundPage from '../../../pages/NotFoundPage';
 
 function CareGiverRoutes() {
@@ -41,7 +43,7 @@ function CareGiverRoutes() {
                 <Route path='/earnings' element={<EarningsPage />} />
                 <Route path='/withdraw' element={<WithdrawPage />} />
                 <Route path='/earnings-old' element={<Earnings />} />
-                <Route path='/orders' element={<Order />} />
+                <Route path='/orders' element={<CaregiverOrders />} />
                 <Route path='/create-gigs' element={<CreateGig/>} />
                 <Route path='/create-offer' element={<CreateOffer/>} />
                 <Route path='/settings' element={<CaregiverSettings />} />
@@ -52,11 +54,14 @@ function CareGiverRoutes() {
                 <Route path="/verification" element={<VerificationPage />} />
                 <Route path="/verification-callback" element={<VerificationCallback />} />
                 <Route path="/assessment" element={<AssessmentPage />} />
-                <Route path="/specialized-assessment" element={<SpecializedAssessmentPage />} />
-                <Route path="/specialized-assessments" element={<SpecializedAssessmentsPage />} />
+                {/* Specialized assessments temporarily disabled */}
+                <Route path="/specialized-assessment" element={<Navigate to="/app/caregiver/assessment" replace />} />
+                <Route path="/specialized-assessments" element={<Navigate to="/app/caregiver/assessment" replace />} />
                 <Route path="/order-details/:orderId" element={<CaregiverOrderDetails />} />
                 <Route path="/subscriptions" element={<CaregiverSubscriptions />} />
                 <Route path="/subscriptions/:id" element={<CaregiverSubscriptionDetail />} />
+                <Route path="/wallet" element={<CaregiverWallet />} />
+                <Route path="/client-requests" element={<ClientsRequests />} />
                 <Route path="/faq" element={<FAQPage />} />
                 <Route path="*" element={<NotFoundPage />} />
             </Routes>

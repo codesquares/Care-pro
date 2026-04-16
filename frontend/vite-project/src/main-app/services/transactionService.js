@@ -1,3 +1,13 @@
+/**
+ * @deprecated This service is deprecated. Use walletService.js instead.
+ * The /api/Transactions endpoints do not exist in the current backend.
+ * All transaction/ledger data is now served from /api/Wallet/ledger/{caregiverId}.
+ *
+ * Migration:
+ *   - transactionService.getCaregiverTransactions → walletService.getLedgerHistory
+ *   - transactionService.getTransactionById → (removed, not supported by new API)
+ *   - transactionService.getTransactionSummary → walletService.getWalletSummary
+ */
 import api from './api';
 
 export const transactionService = {

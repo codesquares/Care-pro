@@ -3,6 +3,7 @@ import { useNavigate } from "react-router-dom";
 import { toast } from "react-toastify";
 import AddressInput from "../../../components/AddressInput";
 import { useAuth } from "../../../context/AuthContext";
+import config from "../../../config";
 import ClientSettingsService from "../../../services/ClientSettingsService";
 import ClientProfileHeader from "./ClientProfileHeader";
 import "./ClientSettings.css";
@@ -73,6 +74,7 @@ const ClientSettings = () => {
     postalCode: ""
   });
   const [addressValidation, setAddressValidation] = useState(null);
+  const [profileHeaderRefresh, setProfileHeaderRefresh] = useState(0);
 
   // Notification Preferences State
   const [notificationPreferences, setNotificationPreferences] = useState({
@@ -108,6 +110,41 @@ const ClientSettings = () => {
           country: userDetails.country || "",
           postalCode: userDetails.postalCode || ""
         });
+
+        // Fetch the persisted address from the Location table to ensure we show the latest saved value
+        if (userDetails.id) {
+          try {
+            const token = localStorage.getItem('authToken');
+            const locResponse = await fetch(
+              `${config.BASE_URL}/Location/user-location?userId=${userDetails.id}&userType=Client`,
+              { headers: { 'Authorization': token ? `Bearer ${token}` : '' } }
+            );
+            if (locResponse.ok) {
+              const locResult = await locResponse.json();
+              const locData = locResult.data || locResult;
+              if (locData?.address) {
+                setAddressForm(prev => ({
+                  ...prev,
+                  address: locData.address,
+                  city: locData.city || prev.city,
+                  state: locData.state || prev.state,
+                  country: locData.country || prev.country,
+                  postalCode: locData.postalCode || prev.postalCode
+                }));
+                // Keep localStorage in sync with the persisted address
+                updateUser({
+                  homeAddress: locData.address,
+                  address: locData.address,
+                  ...(locData.city && { serviceCity: locData.city }),
+                  ...(locData.state && { serviceState: locData.state }),
+                  location: locData.address
+                });
+              }
+            }
+          } catch (locErr) {
+            console.warn("Could not fetch location from Location table", locErr);
+          }
+        }
 
         if (userDetails.id) {
           try {
@@ -405,8 +442,12 @@ const ClientSettings = () => {
       // Use the formatted address if available from Google validation
       const addressToSend = addressValidation?.formattedAddress || addressForm.address;
 
-      // Update address via API
-      const response = await ClientSettingsService.updateClientAddress(userDetails.id, addressToSend);
+      // Update address via API — include GPS coordinates if available from validation
+      const response = await ClientSettingsService.updateClientAddress(
+        userDetails.id,
+        addressToSend,
+        addressValidation?.coordinates
+      );
 
       if (response.success) {
         // Extract location data from response
@@ -447,6 +488,9 @@ const ClientSettings = () => {
           country: newDetails.country || "",
           postalCode: newDetails.postalCode || ""
         });
+
+        // Tell ClientProfileHeader to re-fetch so the "show" link updates
+        setProfileHeaderRefresh(prev => prev + 1);
       } else {
         setMessage({
           type: "error",
@@ -500,6 +544,18 @@ const ClientSettings = () => {
     }
   };
 
+  // Called when ClientProfileHeader saves a location via its own modal
+  const handleProfileHeaderLocationSaved = (locationData) => {
+    setAddressForm({
+      address: locationData.address || "",
+      city: locationData.city || "",
+      state: locationData.state || "",
+      country: locationData.country || "",
+      postalCode: locationData.postalCode || ""
+    });
+    setAddressValidation(null);
+  };
+
   return (
     <div className="settings-content">
       {/* Message display */}
@@ -511,7 +567,10 @@ const ClientSettings = () => {
 
       {/* Left Section - Profile Header */}
       <div className="client-settings-profile-section">
-        <ClientProfileHeader />
+        <ClientProfileHeader
+          refreshTrigger={profileHeaderRefresh}
+          onLocationSaved={handleProfileHeaderLocationSaved}
+        />
       </div>
 
       {/* Right Section - Settings Cards */}

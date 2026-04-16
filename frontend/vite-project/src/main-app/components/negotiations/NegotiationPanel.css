@@ -1,0 +1,945 @@
+/* ──────────────────────────────────────────────────
+   NegotiationPanel — Clean Contract-Style Design
+   ────────────────────────────────────────────────── */
+
+/* Outer card */
+.neg-panel {
+  border: 1px solid #e8e6de;
+  border-radius: 14px;
+  background: #fff;
+  overflow: hidden;
+  box-shadow: 0 1px 4px rgba(0, 0, 0, 0.04);
+  margin: 0;
+  font-size: 14px;
+  color: #2c3e50;
+}
+
+/* Terminal states */
+.neg-panel--abandoned {
+  border-color: #fdd;
+  background: #fff8f8;
+}
+.neg-panel--converted {
+  border-color: #d1e7dd;
+  background: #f8fdfb;
+}
+
+/* ── Status bar ── */
+.neg-status-bar {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 16px 24px;
+  background: #fafaf7;
+  border-bottom: 1px solid #e8e6de;
+  color: #1f2e5a;
+}
+
+.neg-panel--abandoned .neg-status-bar {
+  background: #fff5f5;
+  border-bottom-color: #fecaca;
+}
+.neg-panel--converted .neg-status-bar {
+  background: #f0fdf4;
+  border-bottom-color: #bbf7d0;
+}
+
+.neg-status-icon {
+  font-size: 22px;
+  flex-shrink: 0;
+}
+
+.neg-status-text {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.neg-status-label {
+  font-weight: 700;
+  font-size: 15px;
+  color: #1f2e5a;
+}
+
+.neg-status-desc {
+  font-size: 13px;
+  color: #64748b;
+  line-height: 1.4;
+}
+
+.neg-round-badge {
+  flex-shrink: 0;
+  background: #f0f0eb;
+  border: 1px solid #d4d4cb;
+  border-radius: 20px;
+  padding: 4px 12px;
+  font-size: 12px;
+  font-weight: 600;
+  color: #1f2e5a;
+  white-space: nowrap;
+}
+
+.neg-abandon-reason,
+.neg-hint {
+  padding: 10px 24px;
+  font-size: 13px;
+  color: #666;
+}
+
+/* ── Agreement chips ── */
+.neg-agreement-row {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 12px 24px;
+  background: #fafaf7;
+  border-bottom: 1px solid #e8e6de;
+}
+
+.neg-chip {
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  padding: 5px 14px;
+  border-radius: 20px;
+  border: 1px solid #d4d4cb;
+  background: #fff;
+  font-size: 13px;
+  font-weight: 500;
+  color: #64748b;
+}
+
+.neg-chip--agreed {
+  border-color: #86efac;
+  background: #f0fdf4;
+  color: #166534;
+}
+
+.neg-chip-divider {
+  font-size: 14px;
+  color: #aaa;
+  font-weight: 700;
+}
+
+/* ── BothAgreed CTA ── */
+.neg-both-agreed-cta {
+  text-align: center;
+  padding: 28px 24px;
+  background: #fafaf7;
+  border-bottom: 1px solid #e8e6de;
+}
+
+.neg-both-agreed-icon {
+  font-size: 40px;
+  margin-bottom: 10px;
+}
+
+.neg-both-agreed-cta h3 {
+  font-size: 18px;
+  font-weight: 700;
+  color: #1f2e5a;
+  margin: 0 0 6px;
+}
+
+.neg-both-agreed-cta p {
+  font-size: 13px;
+  color: #64748b;
+  margin: 0 0 16px;
+  line-height: 1.5;
+}
+
+/* ── Two-column grid ── */
+.neg-proposals-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 0;
+}
+
+@media (max-width: 640px) {
+  .neg-proposals-grid {
+    grid-template-columns: 1fr;
+  }
+}
+
+.neg-col {
+  padding: 24px;
+}
+
+.neg-col--mine {
+  border-right: 1px solid #e8e6de;
+  background: #fff;
+}
+
+.neg-col--theirs {
+  background: #fafaf7;
+}
+
+.neg-col-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 20px;
+  padding-bottom: 10px;
+  border-bottom: 2px solid #1f2e5a;
+}
+
+.neg-col-title {
+  font-weight: 700;
+  font-size: 14px;
+  color: #1f2e5a;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+.neg-agreed-badge {
+  font-size: 11px;
+  background: #f0fdf4;
+  border: 1px solid #86efac;
+  color: #166534;
+  border-radius: 12px;
+  padding: 3px 10px;
+  font-weight: 600;
+}
+
+/* ── Section ── */
+.neg-section {
+  margin-bottom: 20px;
+}
+
+.neg-section-label {
+  font-size: 13px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  color: #1f2e5a;
+  margin-bottom: 10px;
+  padding-bottom: 6px;
+  border-bottom: 1px solid #e8e6de;
+}
+
+/* ── Task list ── */
+.neg-task-list {
+  list-style: none;
+  padding: 0;
+  margin: 0 0 8px;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.neg-task-item {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 6px 14px;
+  border-radius: 20px;
+  background: #f5f5f0;
+  border: 1px solid #e0dfda;
+  font-size: 13px;
+  line-height: 1.4;
+  color: #374151;
+}
+
+.neg-col--theirs .neg-task-item {
+  background: #f0f0eb;
+  border-color: #d8d8d2;
+}
+
+/* ── Schedule guide banner ── */
+.neg-schedule-guide {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 12px 16px;
+  border-radius: 10px;
+  margin-bottom: 12px;
+  background: #fffbeb;
+  border: 1px solid #fde68a;
+}
+
+.neg-schedule-guide--done {
+  background: #f0fdf4;
+  border-color: #bbf7d0;
+}
+
+.neg-schedule-guide-text {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.neg-schedule-guide-text strong {
+  font-size: 14px;
+  color: #92400e;
+}
+
+.neg-schedule-guide--done .neg-schedule-guide-text strong {
+  color: #166534;
+}
+
+.neg-schedule-guide-text span {
+  font-size: 13px;
+  color: #a16207;
+  line-height: 1.4;
+}
+
+.neg-schedule-guide--done .neg-schedule-guide-text span {
+  color: #15803d;
+}
+
+.neg-schedule-counter {
+  flex-shrink: 0;
+  font-size: 18px;
+  font-weight: 700;
+  padding: 6px 14px;
+  border-radius: 10px;
+  min-width: 56px;
+  text-align: center;
+}
+
+.neg-schedule-counter--pending {
+  background: #fef3c7;
+  color: #92400e;
+  border: 1px solid #fde68a;
+}
+
+.neg-schedule-counter--done {
+  background: #dcfce7;
+  color: #166534;
+  border: 1px solid #bbf7d0;
+}
+
+/* ── Schedule list ── */
+.neg-schedule-list {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  margin-bottom: 8px;
+}
+
+.neg-schedule-slot {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 8px 14px;
+  background: #f5f5f0;
+  border: 1px solid #e0dfda;
+  border-radius: 8px;
+  font-size: 13px;
+}
+
+.neg-col--theirs .neg-schedule-slot {
+  background: #f0f0eb;
+  border-color: #d8d8d2;
+}
+
+.neg-slot-day {
+  font-weight: 600;
+  min-width: 90px;
+  color: #1f2e5a;
+}
+
+.neg-slot-time {
+  color: #475569;
+}
+
+/* ── Add forms ── */
+.neg-add-row {
+  display: flex;
+  gap: 6px;
+  margin-top: 6px;
+}
+
+.neg-add-slot-form {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  flex-wrap: wrap;
+  margin-top: 8px;
+}
+
+.neg-time-sep {
+  font-size: 12px;
+  color: #888;
+}
+
+/* ── Inputs ── */
+.neg-input {
+  flex: 1;
+  min-width: 0;
+  padding: 9px 12px;
+  border: 1px solid #d4d4cb;
+  border-radius: 8px;
+  font-size: 13px;
+  color: #2c3e50;
+  background: #fff;
+  outline: none;
+  transition: border-color 0.2s;
+}
+
+.neg-input:focus {
+  border-color: #1f2e5a;
+  box-shadow: 0 0 0 3px rgba(31, 46, 90, 0.08);
+}
+
+.neg-input--time {
+  flex: 0 0 auto;
+  width: auto;
+}
+
+.neg-select {
+  padding: 9px 12px;
+  border: 1px solid #d4d4cb;
+  border-radius: 8px;
+  font-size: 13px;
+  color: #2c3e50;
+  background: #fff;
+  outline: none;
+}
+
+.neg-select:focus {
+  border-color: #1f2e5a;
+}
+
+.neg-label {
+  display: block;
+  font-size: 13px;
+  font-weight: 600;
+  color: #374151;
+  margin: 10px 0 5px;
+}
+
+.neg-textarea {
+  width: 100%;
+  padding: 10px 12px;
+  border: 1px solid #d4d4cb;
+  border-radius: 8px;
+  font-size: 13px;
+  color: #2c3e50;
+  resize: vertical;
+  outline: none;
+  transition: border-color 0.2s;
+  box-sizing: border-box;
+}
+
+.neg-textarea:focus {
+  border-color: #1f2e5a;
+  box-shadow: 0 0 0 3px rgba(31, 46, 90, 0.08);
+}
+
+/* ── Remove button ── */
+.neg-remove-btn {
+  background: none;
+  border: none;
+  cursor: pointer;
+  color: #aaa;
+  font-size: 12px;
+  padding: 2px 4px;
+  border-radius: 4px;
+  transition: color 0.15s, background 0.15s;
+  flex-shrink: 0;
+}
+
+.neg-remove-btn:hover {
+  color: #e74c3c;
+  background: #fee2e2;
+}
+
+/* ── Detail row ── */
+.neg-detail-row {
+  font-size: 13px;
+  margin: 6px 0;
+  color: #374151;
+  line-height: 1.5;
+}
+
+/* ── Notes ── */
+.neg-note {
+  padding: 12px 14px;
+  border-radius: 8px;
+  margin-top: 12px;
+  font-size: 13px;
+  line-height: 1.5;
+}
+
+.neg-note--mine {
+  background: #f5f5f0;
+  border-left: 3px solid #1f2e5a;
+}
+
+.neg-note--theirs {
+  background: #fffbeb;
+  border-left: 3px solid #d97706;
+}
+
+.neg-note-label {
+  font-weight: 600;
+  display: block;
+  margin-bottom: 4px;
+  color: #475569;
+  font-size: 12px;
+  text-transform: uppercase;
+  letter-spacing: 0.4px;
+}
+
+.neg-note-text {
+  color: #2c3e50;
+}
+
+/* ── Empty state ── */
+.neg-empty {
+  font-size: 13px;
+  color: #94a3b8;
+  font-style: italic;
+  margin: 4px 0 8px;
+}
+
+/* ── Agreed waiting ── */
+.neg-agreed-waiting {
+  font-size: 13px;
+  color: #1f2e5a;
+  margin: 8px 0 0;
+  font-style: italic;
+}
+
+/* ── Column actions ── */
+.neg-col-actions {
+  display: flex;
+  flex-direction: row;
+  flex-wrap: wrap;
+  gap: 10px;
+  margin-top: 20px;
+  padding-top: 16px;
+  border-top: 1px solid #e8e6de;
+}
+
+/* ── Buttons ── */
+.neg-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  padding: 10px 20px;
+  border-radius: 10px;
+  font-size: 14px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  border: none;
+  white-space: nowrap;
+  font-family: inherit;
+}
+
+.neg-btn:disabled {
+  opacity: 0.55;
+  cursor: not-allowed;
+}
+
+.neg-btn--generate {
+  background: #3EDDCD;
+  color: #1f2e5a;
+  box-shadow: 0 2px 8px rgba(62, 221, 205, 0.25);
+  width: 100%;
+  padding: 14px 24px;
+  font-size: 15px;
+  border-radius: 10px;
+}
+
+.neg-btn--generate:hover:not(:disabled) {
+  background: #2dcbbb;
+  box-shadow: 0 4px 12px rgba(62, 221, 205, 0.35);
+}
+
+.neg-btn--submit {
+  background: #1f2e5a;
+  color: #fff;
+}
+
+.neg-btn--submit:hover:not(:disabled) {
+  background: #162040;
+}
+
+.neg-btn--agree {
+  background: #1f2e5a;
+  color: #fff;
+}
+
+.neg-btn--agree:hover:not(:disabled) {
+  background: #162040;
+}
+
+.neg-btn--edit {
+  background: #fff;
+  color: #1f2e5a;
+  border: 1.5px solid #1f2e5a;
+}
+
+.neg-btn--edit:hover {
+  background: #f5f5f0;
+}
+
+.neg-btn--save {
+  background: #fff;
+  color: #1f2e5a;
+  border: 1.5px solid #d4d4cb;
+}
+
+.neg-btn--save:hover:not(:disabled) {
+  border-color: #1f2e5a;
+  background: #fafaf7;
+}
+
+.neg-btn--ghost {
+  background: transparent;
+  color: #64748b;
+  border: 1px solid #d4d4cb;
+}
+
+.neg-btn--ghost:hover {
+  background: #fafaf7;
+}
+
+.neg-btn--danger {
+  background: #ef4444;
+  color: #fff;
+}
+
+.neg-btn--danger:hover:not(:disabled) {
+  background: #dc2626;
+}
+
+.neg-btn--danger-ghost {
+  color: #ef4444;
+  border-color: #fecaca;
+}
+
+.neg-btn--danger-ghost:hover {
+  background: #fef2f2;
+}
+
+.neg-btn--sm {
+  padding: 8px 14px;
+  font-size: 13px;
+  flex-shrink: 0;
+}
+
+/* ── Abandon section ── */
+.neg-abandon-section {
+  padding: 16px 24px;
+  border-top: 1px solid #e8e6de;
+  background: #fafaf7;
+}
+
+.neg-abandon-form {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.neg-abandon-warning {
+  font-size: 13px;
+  color: #c0392b;
+  font-weight: 500;
+  margin: 0;
+}
+
+.neg-abandon-actions {
+  display: flex;
+  gap: 8px;
+}
+
+/* ── Start Negotiation modal (used in parent pages) ── */
+.neg-start-modal-overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(0,0,0,0.45);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 1100;
+  padding: 16px;
+}
+
+.neg-start-modal {
+  background: #fff;
+  border-radius: 14px;
+  width: 100%;
+  max-width: 560px;
+  max-height: 90vh;
+  overflow-y: auto;
+  box-shadow: 0 20px 60px rgba(0,0,0,0.25);
+}
+
+.neg-start-modal-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 18px 24px 14px;
+  border-bottom: 1px solid #e8e6de;
+  background: #fafaf7;
+  border-radius: 14px 14px 0 0;
+}
+
+.neg-start-modal-header h3 {
+  font-size: 17px;
+  font-weight: 700;
+  color: #1f2e5a;
+  margin: 0;
+}
+
+.neg-start-modal-close {
+  background: #f0f0eb;
+  border: none;
+  color: #1f2e5a;
+  cursor: pointer;
+  font-size: 18px;
+  width: 32px;
+  height: 32px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: background 0.15s;
+}
+
+.neg-start-modal-close:hover {
+  background: #e0dfda;
+}
+
+.neg-start-modal-body {
+  padding: 20px;
+}
+
+.neg-start-modal-body .neg-btn--submit {
+  width: 100%;
+  margin-top: 8px;
+  padding: 12px;
+  font-size: 14px;
+}
+
+/* ── Start modal form labels ── */
+.neg-start-label {
+  display: block;
+  font-size: 13px;
+  font-weight: 600;
+  color: #333;
+  margin: 12px 0 5px;
+}
+
+/* ── Start modal form inputs ── */
+.neg-start-input {
+  width: 100%;
+  padding: 9px 12px;
+  border: 1px solid #d4d4cb;
+  border-radius: 8px;
+  font-size: 13px;
+  color: #2c3e50;
+  background: #fff;
+  outline: none;
+  transition: border-color 0.2s;
+  box-sizing: border-box;
+}
+
+.neg-start-input:focus {
+  border-color: #1f2e5a;
+  box-shadow: 0 0 0 3px rgba(31, 46, 90, 0.08);
+}
+
+textarea.neg-start-input {
+  resize: vertical;
+  font-family: inherit;
+}
+
+/* ── Task row in modal ── */
+.neg-task-row {
+  display: inline-flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 6px;
+  padding: 6px 14px;
+  background: #f5f5f0;
+  border: 1px solid #e0dfda;
+  border-radius: 20px;
+  margin-bottom: 6px;
+  margin-right: 6px;
+  font-size: 13px;
+}
+
+.neg-task-row button {
+  background: none;
+  border: none;
+  cursor: pointer;
+  color: #aaa;
+  font-size: 14px;
+  padding: 2px 6px;
+  border-radius: 4px;
+  transition: color 0.15s, background 0.15s;
+}
+
+.neg-task-row button:hover {
+  color: #e74c3c;
+  background: #fee2e2;
+}
+
+/* ── Add task input row ── */
+.neg-add-task-row {
+  display: flex;
+  gap: 6px;
+  margin-top: 6px;
+}
+
+.neg-add-task-row input {
+  flex: 1;
+  min-width: 0;
+  padding: 9px 12px;
+  border: 1px solid #d4d4cb;
+  border-radius: 8px;
+  font-size: 13px;
+  outline: none;
+}
+
+.neg-add-task-row input:focus {
+  border-color: #1f2e5a;
+}
+
+.neg-add-task-row button {
+  padding: 9px 16px;
+  border: none;
+  border-radius: 8px;
+  background: #1f2e5a;
+  color: #fff;
+  font-size: 13px;
+  font-weight: 600;
+  cursor: pointer;
+  white-space: nowrap;
+}
+
+.neg-add-task-row button:hover {
+  background: #162040;
+}
+
+/* ── Schedule slot input row ── */
+.neg-slot-row {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  flex-wrap: wrap;
+  margin-bottom: 8px;
+}
+
+.neg-slot-row select,
+.neg-slot-row input[type="time"] {
+  padding: 9px 12px;
+  border: 1px solid #d4d4cb;
+  border-radius: 8px;
+  font-size: 13px;
+  color: #2c3e50;
+  background: #fff;
+  outline: none;
+}
+
+.neg-slot-row select:focus,
+.neg-slot-row input[type="time"]:focus {
+  border-color: #1f2e5a;
+}
+
+.neg-slot-row button {
+  padding: 9px 16px;
+  border: none;
+  border-radius: 8px;
+  background: #1f2e5a;
+  color: #fff;
+  font-size: 13px;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.neg-slot-row button:hover {
+  background: #162040;
+}
+
+/* ── Modal action buttons ── */
+.neg-start-modal-actions {
+  display: flex;
+  gap: 10px;
+  margin-top: 18px;
+}
+
+.neg-start-modal-actions .neg-btn--submit {
+  flex: 1;
+}
+
+.neg-start-modal-cancel {
+  padding: 10px 20px;
+  border-radius: 8px;
+  border: 1px solid #ddd;
+  background: #fff;
+  color: #555;
+  font-size: 13px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: background 0.2s, border-color 0.2s;
+}
+
+.neg-start-modal-cancel:hover {
+  background: #f5f5f5;
+  border-color: #bbb;
+}
+
+.neg-instructions {
+  font-size: 13px;
+  color: #475569;
+  background: #f5f5f0;
+  border-left: 3px solid #1f2e5a;
+  border-radius: 8px;
+  padding: 12px 16px;
+  margin-bottom: 18px;
+  line-height: 1.5;
+}
+
+/* ---------- Agreed Start Date ---------- */
+.neg-start-date-row {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin-bottom: 12px;
+}
+
+.neg-start-date-row label {
+  font-size: 13px;
+  font-weight: 600;
+  color: #333;
+  white-space: nowrap;
+}
+
+.neg-start-date-row input[type="date"] {
+  padding: 6px 10px;
+  border: 1px solid #ccc;
+  border-radius: 6px;
+  font-size: 13px;
+  font-family: inherit;
+}
+
+.neg-start-date-row .neg-required-hint {
+  font-size: 11px;
+  color: #e65100;
+  font-weight: 500;
+}
+
+.neg-start-date-display {
+  font-size: 13px;
+  color: #333;
+  margin-bottom: 8px;
+}
+
+.neg-start-date-display strong {
+  font-weight: 600;
+}
+
+.neg-start-date-warning {
+  font-size: 12px;
+  color: #e65100;
+  font-weight: 500;
+}

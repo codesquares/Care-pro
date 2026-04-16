@@ -11,12 +11,15 @@
   justify-content: space-between;
   align-items: center;
 }
+
 .navbar-logo {
   padding-left: clamp(10px, 3vw, 50px);
 }
+
 .navbar-logo img {
   height: 40px;
 }
+
 @media (max-width: 768px) {
   .navbar-logo {
     padding-left: 10px;
@@ -24,6 +27,7 @@
     height: 30px;
   }
 }
+
 .navbar-links {
   list-style-type: none;
   display: flex;
@@ -31,19 +35,28 @@
   margin: 0;
   padding-left: clamp(15px, 4vw, 60px);
 }
+
 .navbar-links li a {
   text-decoration: none;
   color: #333;
   font-weight: 500;
+  font-size: 0.9rem;
+  white-space: nowrap;
 }
+
 .navbar-links li a:hover {
   color: var(--primary-color-2);
 }
+
 .navbar-links li a.active {
-  color: var(--secondary-color-1); /* Active link color */
-  font-weight: bold; /* Optional: Make the active link bold */
-  border-bottom: 2px solid var(--secondary-color-1); /* Optional: Add underline for active link */
+  color: var(--secondary-color-1);
+  /* Active link color */
+  font-weight: bold;
+  /* Optional: Make the active link bold */
+  border-bottom: 2px solid var(--secondary-color-1);
+  /* Optional: Add underline for active link */
 }
+
 .navbar-cta .btn-primary {
   background-color: var(--primary-color-yellow);
   color: var(--primary-color-white);
@@ -55,40 +68,48 @@
   align-items: center;
   gap: 5px;
 }
+
 .navbar-cta .btn-primary:hover {
   background-color: var(--secondary-color-2);
 }
+
 .navbar-cta .btn-primary .calendar-icon {
   display: flex;
 }
+
 @media (max-width: 768px) {
   .navbar-cta {
     display: none;
   }
 }
+
 .navbar-cta.mobile-visible {
   display: block;
   width: 100%;
   padding: 15px;
   text-align: center;
 }
+
 .navbar-cta.mobile-visible .btn-primary {
   width: 100%;
   margin-right: 0;
   justify-content: center;
   margin-top: 10px;
 }
+
 .navbar-actions {
   display: flex;
   align-items: center;
   gap: 20px;
   padding-right: clamp(10px, 3vw, 50px);
 }
+
 @media (max-width: 768px) {
   .navbar-actions {
     padding-right: 10px;
   }
 }
+
 .navbar-message-icon {
   cursor: pointer;
   position: relative;
@@ -96,14 +117,17 @@
   align-items: center;
   justify-content: center;
 }
+
 .navbar-message-icon img {
   width: 24px;
   height: 24px;
   transition: transform 0.2s ease;
 }
+
 .navbar-message-icon:hover img {
   transform: scale(1.1);
 }
+
 .navbar-message-icon::after {
   content: "";
   position: absolute;
@@ -115,9 +139,11 @@
   border-radius: 50%;
   display: none;
 }
+
 .navbar-message-icon.has-notification::after {
   display: block;
 }
+
 @media (max-width: 768px) {
   .navbar {
     flex-direction: row;
@@ -126,6 +152,7 @@
     height: 70px;
     justify-content: space-between;
   }
+
   .navbar-links {
     display: none;
     flex-direction: column;
@@ -142,24 +169,29 @@
     pointer-events: none;
     transform: translateY(-10px);
   }
+
   .navbar-links li {
     padding: 12px 0;
     border-bottom: 1px solid #f0f0f0;
     width: 100%;
     text-align: center;
   }
+
   .navbar-links li:last-child {
     border-bottom: none;
   }
+
   .navbar-links li a {
     font-size: 1rem;
     display: block;
     width: 100%;
     padding: 5px 0;
   }
+
   .navbar-links li a:hover {
     color: var(--primary-color-2);
   }
+
   .navbar-links.active {
     display: flex;
     opacity: 1;
@@ -167,31 +199,39 @@
     transform: translateY(0);
   }
 }
+
 @media (min-width: 769px) and (max-width: 1024px) {
   .navbar {
     height: 80px;
     padding: 0 20px;
   }
+
   .navbar-logo {
     padding-left: 30px;
   }
+
   .navbar-logo img {
     height: 35px;
   }
+
   .navbar-links {
     gap: 30px;
   }
+
   .navbar-links li a {
-    font-size: 0.9rem;
+    font-size: 0.85rem;
   }
+
   .navbar-cta .btn-primary {
     padding: 8px 16px;
     margin-right: 50px;
   }
 }
+
 .navbar-toggle {
   display: none;
 }
+
 @media (max-width: 768px) {
   .navbar-toggle {
     display: block;
@@ -211,21 +251,25 @@
     opacity: 0;
     transform: translateY(-10px);
   }
+
   to {
     opacity: 1;
     transform: translateY(0);
   }
 }
+
 @keyframes menuFadeOut {
   from {
     opacity: 1;
     transform: translateY(0);
   }
+
   to {
     opacity: 0;
     transform: translateY(-10px);
   }
 }
+
 .navbar-links.active {
   animation: menuFadeIn 0.3s forwards;
 }

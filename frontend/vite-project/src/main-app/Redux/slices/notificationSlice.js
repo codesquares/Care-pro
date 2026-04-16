@@ -74,7 +74,29 @@ const notificationSlice = createSlice({
     loading: false,
     error: null,
   },
-  reducers: {},
+  reducers: {
+    // Real-time: push a single notification from SignalR
+    notificationReceived: (state, action) => {
+      const exists = state.notifications.some((n) => n.id === action.payload.id);
+      if (!exists) {
+        state.notifications = [action.payload, ...state.notifications];
+        if (!action.payload.isRead) {
+          state.unreadCount += 1;
+        }
+      }
+    },
+    // Real-time: server-pushed unread count
+    unreadCountUpdated: (state, action) => {
+      state.unreadCount = action.payload;
+    },
+    // Reset state on logout
+    clearNotifications: (state) => {
+      state.notifications = [];
+      state.unreadCount = 0;
+      state.loading = false;
+      state.error = null;
+    },
+  },
   extraReducers: (builder) => {
     builder
       // Fetch all
@@ -112,5 +134,8 @@ const notificationSlice = createSlice({
       });
   },
 });
+
+export const { notificationReceived, unreadCountUpdated, clearNotifications } =
+  notificationSlice.actions;
 
 export default notificationSlice.reducer;

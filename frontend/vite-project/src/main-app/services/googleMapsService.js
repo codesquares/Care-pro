@@ -1,5 +1,5 @@
 // Google Maps API service for address validation and autocomplete
-const GOOGLE_MAPS_API_KEY = 'AIzaSyAFOXMsHlKjKy1KfvGycISmst0hqQpxMho';
+const GOOGLE_MAPS_API_KEY = import.meta.env.VITE_GOOGLE_MAPS_API_KEY || '';
 
 class GoogleMapsService {
   constructor() {
@@ -13,14 +13,33 @@ class GoogleMapsService {
    * Load Google Maps API if not already loaded
    */
   async loadGoogleMapsAPI() {
-    if (this.isLoaded && window.google) {
+    if (this.isLoaded && window.google?.maps?.places) {
       return Promise.resolve();
     }
 
+    if (!GOOGLE_MAPS_API_KEY) {
+      console.error('Google Maps API key is not configured. Set VITE_GOOGLE_MAPS_API_KEY in your .env file.');
+      return Promise.reject(new Error('Google Maps API key not configured'));
+    }
+
     return new Promise((resolve, reject) => {
-      if (window.google) {
+      if (window.google?.maps?.places) {
         this.initializeServices();
         resolve();
+        return;
+      }
+
+      // Avoid loading the script multiple times
+      const existingScript = document.querySelector('script[src*="maps.googleapis.com/maps/api/js"]');
+      if (existingScript) {
+        // Script tag exists but API not ready yet — wait for it
+        existingScript.addEventListener('load', () => {
+          this.initializeServices();
+          resolve();
+        });
+        existingScript.addEventListener('error', () => {
+          reject(new Error('Failed to load Google Maps API'));
+        });
         return;
       }
 
@@ -46,11 +65,13 @@ class GoogleMapsService {
    * Initialize Google Maps services
    */
   initializeServices() {
-    if (window.google && window.google.maps) {
+    if (window.google?.maps?.places) {
       this.autocompleteService = new window.google.maps.places.AutocompleteService();
       this.geocoder = new window.google.maps.Geocoder();
       this.isLoaded = true;
       console.log('Google Maps services initialized');
+    } else {
+      console.error('Google Maps Places library not available. Check that the API key is valid and has Places API enabled.');
     }
   }
 
@@ -89,8 +110,9 @@ class GoogleMapsService {
 
         const request = {
           input: input,
-          types: ['address'],
-          componentRestrictions: { country: country }
+          componentRestrictions: { country: country },
+          location: new window.google.maps.LatLng(9.082, 8.6753),
+          radius: 600000
         };
 
         this.autocompleteService.getPlacePredictions(request, (predictions, status) => {
@@ -225,7 +247,9 @@ class GoogleMapsService {
       country: '',
       countryCode: '',
       postalCode: '',
-      county: ''
+      county: '',
+      sublocality: '',
+      neighborhood: ''
     };
 
     addressComponents.forEach(component => {
@@ -254,7 +278,19 @@ class GoogleMapsService {
       if (types.includes('administrative_area_level_2')) {
         components.county = component.long_name;
       }
+      // Capture sublocality for Nigerian neighborhoods/areas (e.g., Lekki, Ajah, Ikoyi)
+      if (types.includes('sublocality') || types.includes('sublocality_level_1')) {
+        components.sublocality = component.long_name;
+      }
+      if (types.includes('neighborhood')) {
+        components.neighborhood = component.long_name;
+      }
     });
+
+    // For Nigeria, prefer sublocality/neighborhood as the display city when locality is missing
+    if (!components.city && components.sublocality) {
+      components.city = components.sublocality;
+    }
 
     return components;
   }
@@ -299,36 +335,14 @@ class GoogleMapsService {
 
     const trimmedAddress = address.trim();
 
-    // Check for street number
-    if (!/^\d/.test(trimmedAddress)) {
-      validation.warnings.push('Address should start with a street number');
-    }
-
-    // Check for basic components
-    if (!/\d/.test(trimmedAddress)) {
-      validation.errors.push('Address should contain a street number');
-    }
-
     if (!/[a-zA-Z]/.test(trimmedAddress)) {
-      validation.errors.push('Address should contain street name');
+      validation.errors.push('Address should contain a location name');
     }
 
-    // Check for comma separation (city, state)
+    // Check for comma separation (area, city/state)
     const commaParts = trimmedAddress.split(',');
     if (commaParts.length < 2) {
-      validation.warnings.push('Address should include city and state (e.g., "123 Main St, Los Angeles, CA")');
-    }
-
-    // US state code pattern
-    const statePattern = /\b[A-Z]{2}\b/;
-    if (!statePattern.test(trimmedAddress)) {
-      validation.warnings.push('Address should include a state abbreviation (e.g., CA, NY, TX)');
-    }
-
-    // ZIP code pattern
-    const zipPattern = /\b\d{5}(-\d{4})?\b/;
-    if (!zipPattern.test(trimmedAddress)) {
-      validation.warnings.push('Consider including a ZIP code for better accuracy');
+      validation.warnings.push('Include area and city/state for better accuracy (e.g., "Lekki Phase 1, Lagos")');
     }
 
     validation.isValid = validation.errors.length === 0;

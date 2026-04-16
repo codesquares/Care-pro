@@ -18,27 +18,39 @@ const CertificateManagement = () => {
   const [reviewAction, setReviewAction] = useState(null); // 'approve' or 'reject'
   const [successMessage, setSuccessMessage] = useState('');
   const [imageZoom, setImageZoom] = useState(false);
+  const [currentPage, setCurrentPage] = useState(1);
+  const [pageSize] = useState(20);
+  const [totalCount, setTotalCount] = useState(0);
+  const [hasMore, setHasMore] = useState(false);
 
   // Get admin user ID from localStorage
   const adminId = JSON.parse(localStorage.getItem('userDetails') || '{}')?.id || 'admin_id';
 
   useEffect(() => {
     loadCertificates();
-  }, []);
+  }, [currentPage, statusFilter]);
 
   useEffect(() => {
     filterCertificates();
-  }, [certificates, searchTerm, statusFilter]);
+  }, [certificates, searchTerm]);
 
   const loadCertificates = async () => {
     try {
       setLoading(true);
       setError(null);
       
-      const result = await adminService.getAllCertificates();
+      const params = { page: currentPage, pageSize };
+      if (statusFilter !== 'All') {
+        const statusValue = adminService.getVerificationStatuses()[statusFilter];
+        if (statusValue) params.status = statusValue;
+      }
+
+      const result = await adminService.getAllCertificates(params);
       
       if (result.success) {
         setCertificates(result.data);
+        setTotalCount(result.totalCount || result.count || result.data.length);
+        setHasMore(result.hasMore || false);
         const stats = adminService.getCertificateStatistics(result.data);
         setStatistics(stats);
       } else {
@@ -55,13 +67,7 @@ const CertificateManagement = () => {
   const filterCertificates = () => {
     let filtered = [...certificates];
 
-    // Filter by status
-    if (statusFilter !== 'All') {
-      const statusValue = adminService.getVerificationStatuses()[statusFilter];
-      filtered = filtered.filter(cert => cert.verificationStatus === statusValue);
-    }
-
-    // Search filter
+    // Search filter (client-side)
     if (searchTerm) {
       filtered = adminService.filterCertificates(filtered, searchTerm);
     }
@@ -349,6 +355,27 @@ const CertificateManagement = () => {
           </tbody>
         </table>
       </div>
+
+      {/* Pagination Controls */}
+      {totalCount > pageSize && (
+        <div className="pagination-controls">
+          <button
+            className="btn-secondary"
+            disabled={currentPage <= 1}
+            onClick={() => setCurrentPage(prev => prev - 1)}
+          >
+            <i className="fas fa-chevron-left"></i> Previous
+          </button>
+          <span className="page-info">Page {currentPage} of {Math.ceil(totalCount / pageSize)}</span>
+          <button
+            className="btn-secondary"
+            disabled={!hasMore && currentPage >= Math.ceil(totalCount / pageSize)}
+            onClick={() => setCurrentPage(prev => prev + 1)}
+          >
+            Next <i className="fas fa-chevron-right"></i>
+          </button>
+        </div>
+      )}
 
       {/* Certificate Review Modal */}
       {showCertModal && selectedCertificate && (

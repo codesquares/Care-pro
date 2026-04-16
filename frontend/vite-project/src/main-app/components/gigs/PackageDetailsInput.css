@@ -29,15 +29,15 @@
 }
 .package-details-input .input-container .task-input:focus {
   outline: none;
-  border-color: #6474c4;
-  box-shadow: 0 0 0 3px rgba(100, 116, 196, 0.2);
+  border-color: #C5A24D;
+  box-shadow: 0 0 0 2px rgba(197, 162, 77, 0.15);
 }
 .package-details-input .input-container .task-input::placeholder {
   color: #888;
   font-style: italic;
 }
 .package-details-input .input-container .add-task-button {
-  background: #6474c4;
+  background: #1f1f1f;
   color: white;
   border: none;
   border-radius: 50%;
@@ -49,7 +49,7 @@
   display: flex;
   align-items: center;
   justify-content: center;
-  transition: all 0.3s ease;
+  transition: all 0.2s ease;
   flex-shrink: 0;
   min-width: 2.5rem;
   min-height: 2.5rem;
@@ -67,14 +67,14 @@
   }
 }
 .package-details-input .input-container .add-task-button:hover:not(:disabled) {
-  background: #5a6bb8;
-  transform: translateY(-2px);
-  box-shadow: 0 4px 8px rgba(100, 116, 196, 0.3);
+  background: #333;
+  transform: translateY(-1px);
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.15);
 }
 .package-details-input .input-container .add-task-button:active:not(:disabled) {
-  transform: translateY(-1px);
-  box-shadow: 0 2px 4px rgba(100, 116, 196, 0.3);
-  background: #4d5aa3;
+  transform: translateY(0);
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+  background: #444;
 }
 .package-details-input .input-container .add-task-button:disabled {
   background: #ccc;

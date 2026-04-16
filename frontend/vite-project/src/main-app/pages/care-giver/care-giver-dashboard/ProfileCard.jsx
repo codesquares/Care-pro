@@ -4,10 +4,12 @@ import "./ProfileCard.css";
 import profilecard1 from "../../../../assets/profilecard1.png";
 import { generateUsername } from "../../../utils/usernameGenerator";
 import config from "../../../config"; // Import centralized config for API URLs
+import { useCaregiverStatus } from "../../../contexts/CaregiverStatusContext";
 
 const ProfileCard = () => {
   const navigate = useNavigate();
   const basePath = "/app/caregiver";
+  const { isVerified, isQualified } = useCaregiverStatus();
 
   const [profile, setProfile] = useState(null);
   const [loading, setLoading] = useState(true);
@@ -116,6 +118,34 @@ const ProfileCard = () => {
         onClick={() => navigate(`${basePath}/Profile`)}
       >
         View Profile
+      </div>
+      <div className="profile-card-actions">
+        {isVerified ? (
+          <div className="profile-card-action-btn verified" aria-disabled="true">
+            <i className="fas fa-check-circle"></i> Verified
+          </div>
+        ) : (
+          <div
+            className="profile-card-action-btn"
+            style={{ cursor: "pointer" }}
+            onClick={() => navigate(`${basePath}/verification`)}
+          >
+            Get Verified
+          </div>
+        )}
+        {isQualified ? (
+          <div className="profile-card-action-btn qualified" aria-disabled="true">
+            <i className="fas fa-check-circle"></i> Qualified
+          </div>
+        ) : (
+          <div
+            className="profile-card-action-btn"
+            style={{ cursor: "pointer" }}
+            onClick={() => navigate(`${basePath}/assessment`)}
+          >
+            Take Assessment
+          </div>
+        )}
       </div>
       {/* <div className="availability-buttons">
         <button className="availability-button available">Available</button>

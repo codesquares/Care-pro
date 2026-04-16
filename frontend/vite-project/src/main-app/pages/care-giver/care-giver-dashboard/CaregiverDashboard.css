@@ -59,6 +59,40 @@
   margin-bottom: 16px;
 }
 
+/* Rightbar Header */
+.rightbar-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 16px;
+}
+
+.rightbar-title {
+  font-size: 1.1rem;
+  font-weight: 700;
+  color: #1f2e5a;
+  margin: 0;
+}
+
+.view-all-orders-btn {
+  padding: 8px 18px;
+  background: #1f2e5a;
+  color: #fff;
+  border: none;
+  border-radius: 8px;
+  font-size: 0.82rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s;
+  font-family: inherit;
+  white-space: nowrap;
+}
+
+.view-all-orders-btn:hover {
+  background: #162347;
+  box-shadow: 0 2px 8px rgba(31, 46, 90, 0.25);
+}
+
 /* Dropdown Styles - Mobile First */
 .custom-select {
   width: 100%;

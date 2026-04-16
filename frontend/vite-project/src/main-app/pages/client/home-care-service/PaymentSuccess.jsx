@@ -12,6 +12,8 @@ const PaymentSuccess = () => {
   const [paymentData, setPaymentData] = useState(null);
   const [error, setError] = useState(null);
   const [subscriptionInfo, setSubscriptionInfo] = useState(null);
+  const retryCountRef = useRef(0);
+  const MAX_RETRIES = 20; // ~2 minutes at 6-second intervals
 
   // Get transaction reference from URL or localStorage
   const txRef = searchParams.get("tx_ref") || localStorage.getItem("transactionReference");
@@ -25,6 +27,14 @@ const PaymentSuccess = () => {
     if (!txRef) {
       setError("No transaction reference found");
       setOrderStatus('Payment verification failed');
+      return;
+    }
+
+    // Handle cancelled payments immediately — no need to poll
+    if (status === "cancelled") {
+      setError("Payment was cancelled. No charges were made.");
+      setOrderStatus('Payment cancelled');
+      cleanupLocalStorage();
       return;
     }
 
@@ -52,8 +62,13 @@ const PaymentSuccess = () => {
         );
 
         if (!response.ok) {
-          throw new Error("Failed to verify payment status");
+          const errorBody = await response.text().catch(() => '');
+          console.error(`Payment status API error: ${response.status}`, errorBody);
+          throw new Error(`Server returned ${response.status}`);
         }
+
+        // Reset retry counter on successful API call
+        retryCountRef.current = 0;
 
         const data = await response.json();
         console.log("Payment Status Response:", data);
@@ -88,7 +103,8 @@ const PaymentSuccess = () => {
           }
 
         } else if (data.status === "pending") {
-          // Still pending — keep polling, update message only
+          // Still pending — keep polling, show the pending UI
+          setPaymentData(data);
           setOrderStatus('Payment is still being processed. Please wait...');
 
         } else if (data.status === "failed" || data.status === "amountmismatch") {
@@ -107,8 +123,19 @@ const PaymentSuccess = () => {
 
       } catch (err) {
         console.error("Payment verification error:", err);
-        // Don't stop polling on network errors — retry on next tick
-        setOrderStatus('Retrying payment verification...');
+        retryCountRef.current += 1;
+
+        if (retryCountRef.current >= MAX_RETRIES) {
+          stopPolling();
+          setError(
+            "Unable to verify your payment after multiple attempts. " +
+            "Don't worry — if your payment went through, your order will be processed automatically. " +
+            "Please check My Orders or contact support."
+          );
+          setOrderStatus('Payment verification timed out');
+        } else {
+          setOrderStatus(`Retrying payment verification... (attempt ${retryCountRef.current}/${MAX_RETRIES})`);
+        }
       }
     };
 
@@ -188,6 +215,12 @@ const PaymentSuccess = () => {
           <span>Order Fee:</span>
           <span>₦{breakdown.orderFee?.toLocaleString()}</span>
         </div>
+        {breakdown.commitmentFeeDeducted > 0 && (
+          <div className="breakdown-row breakdown-row--credit">
+            <span>Commitment Fee Deducted:</span>
+            <span>−₦{breakdown.commitmentFeeDeducted?.toLocaleString()}</span>
+          </div>
+        )}
         <div className="breakdown-row">
           <span>Service Charge (10%):</span>
           <span>₦{breakdown.serviceCharge?.toLocaleString()}</span>
@@ -207,6 +240,12 @@ const PaymentSuccess = () => {
   return (
     <div className="payment-success-page">
       <div className="payment-success-container">
+        {/* Branded top bar */}
+        <div className="payment-brand-bar">
+          <span className="payment-brand-bar__logo">CarePro</span>
+          <span className="payment-brand-bar__tag">Secure Payment</span>
+        </div>
+
         <div className="payment-success-card">
           {paymentData?.status === "completed" ? (
             <>
@@ -250,6 +289,12 @@ const PaymentSuccess = () => {
               <div className="payment-actions">
                 <button 
                   className="payment-btn payment-btn--primary"
+                  onClick={() => navigate(`/app/client/my-order/${paymentData?.clientOrderId}`)}
+                >
+                  Go to Negotiations
+                </button>
+                <button 
+                  className="payment-btn payment-btn--secondary"
                   onClick={() => navigate("/app/client/my-order")}
                 >
                   View My Orders
@@ -347,6 +392,14 @@ const PaymentSuccess = () => {
               <div className="payment-status-message payment-status-message--processing">
                 <div className="loading-spinner" style={{ margin: '0 auto 10px auto' }}></div>
                 {orderStatus}
+              </div>
+              <div className="payment-actions" style={{ marginTop: '20px' }}>
+                <button
+                  className="payment-btn payment-btn--secondary"
+                  onClick={() => navigate("/app/client/my-order")}
+                >
+                  View My Orders
+                </button>
               </div>
             </>
           )}

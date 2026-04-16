@@ -1,0 +1,113 @@
+/* ===== Client Billing List Page ===== */
+.client-billing-page {
+  background: #f9f9f9;
+  min-height: calc(100vh - 70px);
+}
+.client-billing-container {
+  max-width: 900px;
+  margin: 0 auto;
+  padding: 24px 20px 60px;
+}
+.client-billing__title {
+  font-size: 24px;
+  font-weight: 700;
+  color: #333;
+  margin: 0 0 20px;
+}
+.client-billing__loading {
+  text-align: center;
+  padding: 60px 0;
+  color: #888;
+  font-size: 15px;
+}
+
+/* Summary cards */
+.client-billing__summary {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+  gap: 14px;
+  margin-bottom: 24px;
+}
+.client-billing__stat-card {
+  background: #fff;
+  border: 1px solid #e0e0e0;
+  border-radius: 12px;
+  padding: 18px 20px;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+.client-billing__stat-label {
+  font-size: 12px;
+  color: #888;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+.client-billing__stat-value {
+  font-size: 20px;
+  font-weight: 700;
+  color: #333;
+}
+
+/* Filters */
+.client-billing__filters {
+  display: flex;
+  gap: 8px;
+  margin-bottom: 20px;
+  flex-wrap: wrap;
+}
+.client-billing__filter-btn {
+  padding: 8px 18px;
+  border: 1px solid #e0e0e0;
+  background: #fff;
+  font-size: 13px;
+  color: #666;
+  cursor: pointer;
+  border-radius: 20px;
+  font-weight: 500;
+  transition: all 0.2s;
+}
+.client-billing__filter-btn:hover {
+  background: #f0f0f0;
+  border-color: #ccc;
+}
+.client-billing__filter-btn--active {
+  background: #00B4A6 !important;
+  color: #fff !important;
+  border-color: #00B4A6 !important;
+  font-weight: 600;
+}
+
+/* Error */
+.client-billing__error {
+  background: #fdecea;
+  color: #c62828;
+  padding: 12px 16px;
+  border-radius: 8px;
+  font-size: 14px;
+  margin-bottom: 16px;
+}
+
+/* Empty */
+.client-billing__empty {
+  text-align: center;
+  padding: 60px 20px;
+  color: #888;
+  font-size: 15px;
+}
+
+/* List */
+.client-billing__list {
+  display: grid;
+  gap: 12px;
+}
+
+/* Responsive */
+@media (max-width: 600px) {
+  .client-billing__summary {
+    grid-template-columns: 1fr;
+  }
+  .client-billing__title {
+    font-size: 20px;
+  }
+}

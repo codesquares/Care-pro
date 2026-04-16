@@ -225,6 +225,22 @@
   background: #111827;
 }
 
+/* Locked floating message (commitment fee not paid) */
+.hcs-floating-message.hcs-floating-locked {
+  background: linear-gradient(135deg, #1f2937 0%, #374151 100%);
+  border: 1.5px solid #f59e0b;
+}
+
+.hcs-floating-message.hcs-floating-locked:hover {
+  background: linear-gradient(135deg, #374151 0%, #4b5563 100%);
+}
+
+.hcs-floating-lock {
+  font-size: 16px;
+  margin-right: 6px;
+  flex-shrink: 0;
+}
+
 .hcs-floating-avatar {
   width: 32px;
   height: 32px;
@@ -354,6 +370,50 @@
   background: #d97706;
 }
 
+/* Locked hire button (commitment fee not paid) */
+.hcs-hire-btn.hcs-hire-btn-locked {
+  background: linear-gradient(135deg, #f59e0b 0%, #d97706 100%);
+  font-size: 14px;
+  width: 100%;
+}
+
+.hcs-hire-btn.hcs-hire-btn-locked:hover {
+  background: linear-gradient(135deg, #d97706 0%, #b45309 100%);
+}
+
+.hcs-hire-btn.hcs-hire-btn-locked:disabled {
+  opacity: 0.7;
+  cursor: wait;
+}
+
+/* Commitment error on gig page */
+.hcs-commitment-error {
+  width: 100%;
+  padding: 8px 12px;
+  margin-top: 6px;
+  border-radius: 6px;
+  background: #fff3f3;
+  border: 1px solid #ffcdd2;
+  color: #c62828;
+  font-size: 0.85em;
+  line-height: 1.4;
+  text-align: center;
+}
+
+/* Redirect hint on CommitmentSuccess */
+.commitment-success-redirect-hint {
+  color: #059669;
+  font-size: 0.9em;
+  font-weight: 500;
+  margin-top: 4px;
+  animation: pulse-text 1.5s ease-in-out infinite;
+}
+
+@keyframes pulse-text {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.5; }
+}
+
 .hcs-arrow {
   font-size: 16px;
 }
@@ -376,89 +436,74 @@
   background: #f9fafb;
 }
 
-/* ---- Video Section ---- */
-.hcs-video-section {
-  margin-bottom: 32px;
-  max-width: 100%;
+/* Locked message button (commitment fee not paid) */
+.hcs-message-btn.hcs-message-btn-locked {
+  background: #fffbeb;
+  border-color: #f59e0b;
+  color: #92400e;
 }
 
-.hcs-video-section h3 {
-  font-size: 18px;
-  font-weight: 600;
-  color: #111827;
-  margin-bottom: 12px;
+.hcs-message-btn.hcs-message-btn-locked:hover {
+  background: #fef3c7;
+  border-color: #d97706;
 }
 
-.video-thumbnail-container {
-  position: relative;
-  cursor: pointer;
-  border-radius: 12px;
-  overflow: hidden;
-  width: 100%;
-  max-width: 100%;
-  background: #000;
-  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
-  transition: all 0.3s ease;
-  box-sizing: border-box;
-}
-
-.video-thumbnail-container:hover {
-  transform: translateY(-2px);
-  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.15);
-}
-
-.video-thumbnail {
-  width: 100%;
-  height: 280px;
-  object-fit: cover;
-  display: block;
-}
-
-.play-overlay {
+/* ---- Video CTA (centered play overlay on hero image) ---- */
+.hcs-video-cta {
   position: absolute;
   top: 0;
   left: 0;
   right: 0;
   bottom: 0;
-  background: rgba(0, 0, 0, 0.3);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  z-index: 2;
+}
+
+.hcs-video-cta-btn {
   display: flex;
   flex-direction: column;
   align-items: center;
-  justify-content: center;
-  color: white;
-  transition: all 0.3s ease;
+  gap: 8px;
+  padding: 18px 28px;
+  border-radius: 16px;
+  background: rgba(0, 0, 0, 0.45);
+  backdrop-filter: blur(4px);
+  transition: background 0.25s, transform 0.25s;
 }
 
-.video-thumbnail-container:hover .play-overlay {
-  background: rgba(0, 0, 0, 0.4);
+.hcs-video-cta:hover .hcs-video-cta-btn {
+  background: rgba(0, 0, 0, 0.6);
+  transform: scale(1.06);
 }
 
-.play-icon {
-  font-size: 24px;
-  margin-bottom: 8px;
-  background: #22d3ee;
-  color: white;
-  border-radius: 50%;
-  width: 56px;
-  height: 56px;
+.hcs-video-cta-icon {
   display: flex;
   align-items: center;
   justify-content: center;
-  transition: all 0.3s ease;
-  box-shadow: 0 4px 16px rgba(34, 211, 238, 0.4);
-  border: 3px solid rgba(255, 255, 255, 0.9);
+  width: 56px;
+  height: 56px;
+  border-radius: 50%;
+  background: rgba(255, 255, 255, 0.9);
+  color: #05668D;
+  font-size: 22px;
+  padding-left: 3px;
+  box-shadow: 0 2px 12px rgba(0, 0, 0, 0.25);
+  transition: background 0.25s;
 }
 
-.video-thumbnail-container:hover .play-icon {
-  background: #06b6d4;
-  transform: scale(1.1);
+.hcs-video-cta:hover .hcs-video-cta-icon {
+  background: #ffffff;
 }
 
-.play-text {
-  font-size: 13px;
-  font-weight: 500;
-  text-shadow: 0 2px 4px rgba(0, 0, 0, 0.5);
-  opacity: 0.9;
+.hcs-video-cta-label {
+  color: #ffffff;
+  font-size: 14px;
+  font-weight: 600;
+  letter-spacing: 0.3px;
+  text-shadow: 0 1px 4px rgba(0, 0, 0, 0.4);
 }
 
 /* ---- About the Gig ---- */
@@ -775,10 +820,6 @@
     top: 80px;
   }
 
-  .hcs-video-section {
-    max-width: calc(100% - 350px - 28px);
-  }
-
   .hcs-about-gig {
     max-width: calc(100% - 350px - 28px);
   }
@@ -827,10 +868,6 @@
     min-width: 370px;
   }
 
-  .hcs-video-section {
-    max-width: calc(100% - 370px - 32px);
-  }
-
   .hcs-about-gig {
     max-width: calc(100% - 370px - 32px);
   }
@@ -845,10 +882,6 @@
 
   .hcs-reviews-section {
     max-width: calc(100% - 370px - 32px);
-  }
-
-  .video-thumbnail {
-    height: 320px;
   }
 }
 
@@ -892,8 +925,19 @@
     max-width: 260px;
   }
 
-  .hcs-video-section {
-    max-width: 100%;
+  .hcs-video-cta-btn {
+    padding: 14px 22px;
+    gap: 6px;
+  }
+
+  .hcs-video-cta-icon {
+    width: 46px;
+    height: 46px;
+    font-size: 18px;
+  }
+
+  .hcs-video-cta-label {
+    font-size: 12px;
   }
 
   .hcs-about-gig {
@@ -912,15 +956,7 @@
     max-width: 100%;
   }
 
-  .video-thumbnail {
-    height: 200px;
-  }
 
-  .play-icon {
-    width: 48px;
-    height: 48px;
-    font-size: 20px;
-  }
 
   .hcs-review-date {
     margin-left: 0;

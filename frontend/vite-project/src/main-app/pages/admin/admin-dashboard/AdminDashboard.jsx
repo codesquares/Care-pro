@@ -5,46 +5,14 @@ import adminService from '../../../services/adminService';
 
 const AdminDashboard = () => {
   const [stats, setStats] = useState({
-    users: {
-      total: 0,
-      caregivers: 0,
-      clients: 0,
-      activeCaregivers: 0,
-      availableCaregivers: 0,
-      activeClients: 0
-    },
-    caregivers: {
-      total: 0,
-      active: 0,
-      inactive: 0,
-      available: 0,
-      totalEarnings: 0,
-      totalOrders: 0,
-      totalHours: 0
-    },
-    clients: {
-      total: 0,
-      active: 0,
-      inactive: 0
-    },
-    assessments: {
-      total: 0,
-      passed: 0,
-      failed: 0,
-      pending: 0
-    },
-    questions: {
-      total: 0,
-      caregiver: 0,
-      cleaner: 0
-    },
-    withdrawals: {
-      total: 0,
-      pending: 0,
-      verified: 0,
-      completed: 0,
-      rejected: 0
-    }
+    totalCaregivers: 0,
+    totalClients: 0,
+    totalOrders: 0,
+    totalGigs: 0,
+    pendingCertificates: 0,
+    activeSubscriptions: 0,
+    pendingWithdrawals: 0,
+    totalAdmins: 0
   });
   
   const [loading, setLoading] = useState(true);
@@ -56,15 +24,12 @@ const AdminDashboard = () => {
         setLoading(true);
         setError(null);
         
-        // Fetch real dashboard statistics using admin service
         const result = await adminService.getDashboardStats();
         
         if (result.success) {
           setStats(prevStats => ({
             ...prevStats,
-            users: result.data.users,
-            caregivers: result.data.caregivers,
-            clients: result.data.clients
+            ...result.data
           }));
         } else {
           setError(result.error || 'Failed to fetch dashboard data');
@@ -110,39 +75,23 @@ const AdminDashboard = () => {
               </div>
               <div className="stat-content">
                 <h3>Total Users</h3>
-                <p className="stat-number">{stats.users.total}</p>
+                <p className="stat-number">{stats.totalCaregivers + stats.totalClients}</p>
                 <div className="stat-breakdown">
-                  <span>Caregivers: {stats.users.caregivers}</span>
-                  <span>Clients: {stats.users.clients}</span>
+                  <span>Caregivers: {stats.totalCaregivers}</span>
+                  <span>Clients: {stats.totalClients}</span>
                 </div>
               </div>
             </div>
             
             <div className="stat-card">
               <div className="stat-icon">
-                <i className="fas fa-user-nurse"></i>
+                <i className="fas fa-shopping-cart"></i>
               </div>
               <div className="stat-content">
-                <h3>Caregivers</h3>
-                <p className="stat-number">{stats.caregivers.total}</p>
+                <h3>Orders</h3>
+                <p className="stat-number">{stats.totalOrders}</p>
                 <div className="stat-breakdown">
-                  <span>Active: {stats.caregivers.active}</span>
-                  <span>Available: {stats.caregivers.available}</span>
-                  <span>Total Earnings: ${stats.caregivers.totalEarnings.toFixed(2)}</span>
-                </div>
-              </div>
-            </div>
-            
-            <div className="stat-card">
-              <div className="stat-icon">
-                <i className="fas fa-user-friends"></i>
-              </div>
-              <div className="stat-content">
-                <h3>Clients</h3>
-                <p className="stat-number">{stats.clients.total}</p>
-                <div className="stat-breakdown">
-                  <span>Active: {stats.clients.active}</span>
-                  <span>Inactive: {stats.clients.inactive}</span>
+                  <span>Total Orders</span>
                 </div>
               </div>
             </div>
@@ -152,11 +101,49 @@ const AdminDashboard = () => {
                 <i className="fas fa-briefcase"></i>
               </div>
               <div className="stat-content">
-                <h3>Orders & Hours</h3>
-                <p className="stat-number">{stats.caregivers.totalOrders}</p>
+                <h3>Gigs</h3>
+                <p className="stat-number">{stats.totalGigs}</p>
                 <div className="stat-breakdown">
-                  <span>Total Orders: {stats.caregivers.totalOrders}</span>
-                  <span>Total Hours: {stats.caregivers.totalHours}</span>
+                  <span>Total Gigs</span>
+                </div>
+              </div>
+            </div>
+            
+            <div className="stat-card">
+              <div className="stat-icon">
+                <i className="fas fa-certificate"></i>
+              </div>
+              <div className="stat-content">
+                <h3>Pending Certificates</h3>
+                <p className="stat-number">{stats.pendingCertificates}</p>
+                <div className="stat-breakdown">
+                  <span>Awaiting Review</span>
+                </div>
+              </div>
+            </div>
+
+            <div className="stat-card">
+              <div className="stat-icon">
+                <i className="fas fa-credit-card"></i>
+              </div>
+              <div className="stat-content">
+                <h3>Subscriptions</h3>
+                <p className="stat-number">{stats.activeSubscriptions}</p>
+                <div className="stat-breakdown">
+                  <span>Active Subscriptions</span>
+                </div>
+              </div>
+            </div>
+
+            <div className="stat-card">
+              <div className="stat-icon">
+                <i className="fas fa-money-bill-wave"></i>
+              </div>
+              <div className="stat-content">
+                <h3>Pending Withdrawals</h3>
+                <p className="stat-number">{stats.pendingWithdrawals}</p>
+                <div className="stat-breakdown">
+                  <span>Admins: {stats.totalAdmins}</span>
                 </div>
               </div>
             </div>

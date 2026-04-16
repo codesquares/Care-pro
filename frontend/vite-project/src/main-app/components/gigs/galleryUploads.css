@@ -1,12 +1,22 @@
 @charset "UTF-8";
 .gig-gallery-uploads {
-  background-color: white;
-  padding: 25px;
-  width: 80%;
-  padding-top: 3rem;
-  border-radius: 12px;
-  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
-  margin: 20px 8rem;
+  background-color: #fff;
+  padding: 2rem 1.25rem;
+  width: 100%;
+  max-width: 920px;
+  border-radius: 0;
+  box-shadow: none;
+  margin: 0 auto;
+}
+@media (min-width: 768px) {
+  .gig-gallery-uploads {
+    padding: 2.5rem 2rem;
+  }
+}
+@media (min-width: 1024px) {
+  .gig-gallery-uploads {
+    padding: 3rem 1rem;
+  }
 }
 
 .galleryImage {
@@ -89,14 +99,16 @@
 
 .uploads-card-details h3 {
   margin: 0;
-  font-size: 20px;
-  color: #333;
+  font-size: 0.95rem;
+  font-weight: 600;
+  color: #1a1a2e;
 }
 
 .uploads-card-details p {
-  font-size: 14px;
-  color: #666;
-  margin: 5px 0;
+  font-size: 0.8rem;
+  color: #999;
+  margin: 4px 0;
+  line-height: 1.45;
 }
 
 .gallery-requirements {
@@ -105,15 +117,15 @@
   margin: 15px 0;
 }
 .gallery-requirements li {
-  font-size: 14px;
-  color: #666;
-  margin: 8px 0;
+  font-size: 0.8rem;
+  color: #999;
+  margin: 6px 0;
   position: relative;
-  padding-left: 20px;
+  padding-left: 16px;
 }
 .gallery-requirements li:before {
-  content: "•";
-  color: #007bff;
+  content: "\2022";
+  color: #C5A24D;
   font-weight: bold;
   position: absolute;
   left: 0;
@@ -145,8 +157,8 @@
   overflow: hidden;
 }
 .file-upload-large:hover {
-  border-color: #007bff;
-  background-color: #f8f9ff;
+  border-color: #C5A24D;
+  background-color: rgba(197, 162, 77, 0.03);
 }
 .file-upload-large.drag-over {
   border-color: #28a745;
@@ -289,8 +301,8 @@
 }
 
 .file-upload:hover {
-  border-color: #007bff;
-  background-color: #f4f9ff;
+  border-color: #C5A24D;
+  background-color: rgba(197, 162, 77, 0.03);
 }
 
 .file-upload.processing {

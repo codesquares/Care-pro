@@ -17,7 +17,7 @@ const SubscriptionService = {
   async getClientSubscriptions() {
     try {
       const response = await api.get('/subscriptions/client');
-      return { success: true, data: response.data };
+      return response.data;
     } catch (error) {
       console.error('Error fetching client subscriptions:', error);
       return { success: false, error: error.response?.data?.message || error.message };
@@ -32,7 +32,7 @@ const SubscriptionService = {
   async getClientSubscriptionSummary() {
     try {
       const response = await api.get('/subscriptions/client/summary');
-      return { success: true, data: response.data };
+      return response.data;
     } catch (error) {
       console.error('Error fetching client subscription summary:', error);
       return { success: false, error: error.response?.data?.message || error.message };
@@ -50,7 +50,7 @@ const SubscriptionService = {
   async getCaregiverSubscriptions() {
     try {
       const response = await api.get('/subscriptions/caregiver');
-      return { success: true, data: response.data };
+      return response.data;
     } catch (error) {
       console.error('Error fetching caregiver subscriptions:', error);
       return { success: false, error: error.response?.data?.message || error.message };
@@ -69,7 +69,7 @@ const SubscriptionService = {
   async getSubscriptionById(subscriptionId) {
     try {
       const response = await api.get(`/subscriptions/${subscriptionId}`);
-      return { success: true, data: response.data };
+      return response.data;
     } catch (error) {
       console.error('Error fetching subscription details:', error);
       return { success: false, error: error.response?.data?.message || error.message };
@@ -84,7 +84,7 @@ const SubscriptionService = {
   async getSubscriptionByOrderId(orderId) {
     try {
       const response = await api.get(`/subscriptions/by-order/${orderId}`);
-      return { success: true, data: response.data };
+      return response.data;
     } catch (error) {
       console.error('Error fetching subscription by order:', error);
       return { success: false, error: error.response?.data?.message || error.message };
@@ -104,7 +104,7 @@ const SubscriptionService = {
   async cancelSubscription(subscriptionId, reason) {
     try {
       const response = await api.post(`/subscriptions/${subscriptionId}/cancel`, { reason });
-      return { success: true, data: response.data };
+      return response.data;
     } catch (error) {
       console.error('Error cancelling subscription:', error);
       return { success: false, error: error.response?.data?.message || error.message };
@@ -119,7 +119,7 @@ const SubscriptionService = {
   async reactivateSubscription(subscriptionId) {
     try {
       const response = await api.post(`/subscriptions/${subscriptionId}/reactivate`);
-      return { success: true, data: response.data };
+      return response.data;
     } catch (error) {
       console.error('Error reactivating subscription:', error);
       return { success: false, error: error.response?.data?.message || error.message };
@@ -143,7 +143,7 @@ const SubscriptionService = {
         reason,
         issueProRatedRefund,
       });
-      return { success: true, data: response.data };
+      return response.data;
     } catch (error) {
       console.error('Error terminating subscription:', error);
       return { success: false, error: error.response?.data?.message || error.message };
@@ -163,7 +163,7 @@ const SubscriptionService = {
   async changePlan(subscriptionId, planData) {
     try {
       const response = await api.put(`/subscriptions/${subscriptionId}/plan`, planData);
-      return { success: true, data: response.data };
+      return response.data;
     } catch (error) {
       console.error('Error changing subscription plan:', error);
       return { success: false, error: error.response?.data?.message || error.message };
@@ -178,7 +178,7 @@ const SubscriptionService = {
   async getPlanHistory(subscriptionId) {
     try {
       const response = await api.get(`/subscriptions/${subscriptionId}/plan-history`);
-      return { success: true, data: response.data };
+      return response.data;
     } catch (error) {
       console.error('Error fetching plan history:', error);
       return { success: false, error: error.response?.data?.message || error.message };
@@ -201,7 +201,7 @@ const SubscriptionService = {
       const body = { reason };
       if (resumeDate) body.resumeDate = resumeDate;
       const response = await api.post(`/subscriptions/${subscriptionId}/pause`, body);
-      return { success: true, data: response.data };
+      return response.data;
     } catch (error) {
       console.error('Error pausing subscription:', error);
       return { success: false, error: error.response?.data?.message || error.message };
@@ -216,7 +216,7 @@ const SubscriptionService = {
   async resumeSubscription(subscriptionId) {
     try {
       const response = await api.post(`/subscriptions/${subscriptionId}/resume`);
-      return { success: true, data: response.data };
+      return response.data;
     } catch (error) {
       console.error('Error resuming subscription:', error);
       return { success: false, error: error.response?.data?.message || error.message };
@@ -238,7 +238,7 @@ const SubscriptionService = {
       const response = await api.post(`/subscriptions/${subscriptionId}/payment-method`, {
         redirectUrl,
       });
-      return { success: true, data: response.data };
+      return response.data;
     } catch (error) {
       console.error('Error updating payment method:', error);
       return { success: false, error: error.response?.data?.message || error.message };
@@ -257,7 +257,7 @@ const SubscriptionService = {
   async getBillingHistory(subscriptionId) {
     try {
       const response = await api.get(`/subscriptions/${subscriptionId}/payments`);
-      return { success: true, data: response.data };
+      return response.data;
     } catch (error) {
       console.error('Error fetching billing history:', error);
       return { success: false, error: error.response?.data?.message || error.message };
@@ -275,7 +275,7 @@ const SubscriptionService = {
   async getAdminAnalytics() {
     try {
       const response = await api.get('/subscriptions/admin/analytics');
-      return { success: true, data: response.data };
+      return response.data;
     } catch (error) {
       console.error('Error fetching admin analytics:', error);
       return { success: false, error: error.response?.data?.message || error.message };
@@ -291,7 +291,7 @@ const SubscriptionService = {
     try {
       const params = status ? { status } : {};
       const response = await api.get('/subscriptions/admin/all', { params });
-      return { success: true, data: response.data };
+      return response.data;
     } catch (error) {
       console.error('Error fetching admin subscriptions:', error);
       return { success: false, error: error.response?.data?.message || error.message };
@@ -306,7 +306,7 @@ const SubscriptionService = {
   async adminTerminateSubscription(subscriptionId) {
     try {
       const response = await api.post(`/subscriptions/admin/${subscriptionId}/terminate`);
-      return { success: true, data: response.data };
+      return response.data;
     } catch (error) {
       console.error('Error admin-terminating subscription:', error);
       return { success: false, error: error.response?.data?.message || error.message };
@@ -354,6 +354,8 @@ const SubscriptionService = {
       Paused: { className: 'sub-badge--paused', label: 'Paused' },
       Cancelled: { className: 'sub-badge--cancelled', label: 'Cancelled' },
       Terminated: { className: 'sub-badge--terminated', label: 'Terminated' },
+      Expired: { className: 'sub-badge--expired', label: 'Expired' },
+      Charging: { className: 'sub-badge--charging', label: 'Charging' },
     };
     return map[status] || { className: 'sub-badge--default', label: status || 'Unknown' };
   },

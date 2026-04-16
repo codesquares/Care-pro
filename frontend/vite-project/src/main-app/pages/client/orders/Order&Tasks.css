@@ -67,6 +67,36 @@
   margin-bottom: 15px;
   color: #333;
 }
+
+.task-sheets-empty-state {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 40px 20px;
+  text-align: center;
+  color: #666;
+}
+
+.task-sheets-empty-state .empty-state-icon {
+  font-size: 48px;
+  margin-bottom: 16px;
+}
+
+.task-sheets-empty-state h3 {
+  margin: 0 0 8px;
+  color: #333;
+  font-size: 18px;
+}
+
+.task-sheets-empty-state p {
+  margin: 0;
+  font-size: 14px;
+  color: #888;
+  max-width: 320px;
+  line-height: 1.5;
+}
+
 .my-orders-container .tasks-section .task-item {
   margin-bottom: 10px;
 }
@@ -500,8 +530,76 @@
 .modal-content.contract-modal-large {
   max-width: 900px;
   width: 95%;
-  min-height: 60vh;
+  max-height: 85vh;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+}
+
+.modal-content.contract-modal-large .contract-modal-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 20px 24px;
+  border-bottom: 1px solid #e0e0e0;
+  background-color: white;
+  position: sticky;
+  top: 0;
+  z-index: 1;
+  flex-shrink: 0;
+}
+
+.modal-content.contract-modal-large .contract-modal-header h3 {
+  margin: 0;
+  text-align: left;
+}
+
+.modal-content.contract-modal-large .contract-modal-close-btn {
+  background: none;
+  border: 1px solid #ddd;
+  border-radius: 50%;
+  width: 36px;
+  height: 36px;
+  font-size: 18px;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: #666;
+  transition: background-color 0.2s, color 0.2s;
+  flex-shrink: 0;
+}
+
+.modal-content.contract-modal-large .contract-modal-close-btn:hover {
+  background-color: #f5f5f5;
+  color: #333;
+}
+
+.modal-content.contract-modal-large .contract-modal-body {
+  flex: 1;
+  overflow-y: auto;
   padding: 24px;
+  scrollbar-width: thin;
+  scrollbar-color: #c1c1c1 #f1f1f1;
+}
+
+.modal-content.contract-modal-large .contract-modal-body::-webkit-scrollbar {
+  width: 8px;
+}
+
+.modal-content.contract-modal-large .contract-modal-body::-webkit-scrollbar-track {
+  background: #f1f1f1;
+  border-radius: 4px;
+}
+
+.modal-content.contract-modal-large .contract-modal-body::-webkit-scrollbar-thumb {
+  background-color: #c1c1c1;
+  border-radius: 4px;
+}
+
+.modal-content.contract-modal-large .contract-modal-body::-webkit-scrollbar-thumb:hover {
+  background-color: #a1a1a1;
 }
 
 @media (min-width: 769px) {
@@ -1088,4 +1186,276 @@
     min-width: 100%;
     margin-bottom: 4px;
   }
+}
+
+/* GPS Prompt Modal */
+.gps-prompt-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: rgba(0, 0, 0, 0.5);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 1000;
+}
+
+.gps-prompt-modal {
+  background: #fff;
+  border-radius: 12px;
+  padding: 28px 24px;
+  max-width: 420px;
+  width: 90%;
+  text-align: center;
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.18);
+}
+
+.gps-prompt-modal h3 {
+  margin: 0 0 12px;
+  font-size: 1.2rem;
+  color: #333;
+}
+
+.gps-prompt-modal p {
+  margin: 0 0 20px;
+  font-size: 0.92rem;
+  color: #666;
+  line-height: 1.5;
+}
+
+.gps-prompt-actions {
+  display: flex;
+  gap: 12px;
+  justify-content: center;
+}
+
+.gps-prompt-yes {
+  padding: 10px 20px;
+  border: none;
+  border-radius: 8px;
+  background: linear-gradient(135deg, #2ecc71, #27ae60);
+  color: #fff;
+  font-weight: 600;
+  cursor: pointer;
+  font-size: 0.9rem;
+}
+
+.gps-prompt-yes:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+.gps-prompt-skip {
+  padding: 10px 20px;
+  border: 1px solid #ddd;
+  border-radius: 8px;
+  background: #f8f8f8;
+  color: #555;
+  font-weight: 500;
+  cursor: pointer;
+  font-size: 0.9rem;
+}
+
+.gps-prompt-skip:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+/* Service Address Confirmation Step */
+.address-confirm-label {
+  font-weight: 600;
+  color: #333 !important;
+  font-size: 0.95rem !important;
+}
+
+.address-display-box {
+  background: #f4f7fa;
+  border: 1px solid #e0e6ed;
+  border-radius: 8px;
+  padding: 14px 16px;
+  margin-bottom: 18px;
+  text-align: left;
+}
+
+.address-display-box .current-address {
+  font-size: 0.95rem;
+  color: #333;
+  margin: 0 0 10px;
+  line-height: 1.5;
+}
+
+.edit-address-btn {
+  background: none;
+  border: 1px solid #3498db;
+  color: #3498db;
+  padding: 6px 14px;
+  border-radius: 6px;
+  cursor: pointer;
+  font-size: 0.85rem;
+  font-weight: 500;
+  transition: background 0.2s;
+}
+
+.edit-address-btn:hover {
+  background: #ebf5fb;
+}
+
+.address-edit-box {
+  margin-bottom: 18px;
+  text-align: left;
+}
+
+.done-editing-btn {
+  margin-top: 8px;
+  padding: 6px 16px;
+  border: none;
+  border-radius: 6px;
+  background: #3498db;
+  color: #fff;
+  font-weight: 500;
+  cursor: pointer;
+  font-size: 0.85rem;
+}
+
+.done-editing-btn:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.confirmed-address-preview {
+  background: #eafaf1;
+  border: 1px solid #a9dfbf;
+  border-radius: 6px;
+  padding: 10px 14px;
+  font-size: 0.9rem;
+  color: #1e8449;
+  margin-bottom: 10px !important;
+  text-align: left;
+}
+
+.gps-explanation {
+  font-size: 0.82rem !important;
+  color: #999 !important;
+}
+
+.gps-prompt-back {
+  padding: 10px 20px;
+  border: 1px solid #ddd;
+  border-radius: 8px;
+  background: transparent;
+  color: #777;
+  font-weight: 500;
+  cursor: pointer;
+  font-size: 0.85rem;
+}
+
+.gps-prompt-back:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+.gps-prompt-actions {
+  flex-wrap: wrap;
+}
+
+/* ===================================================
+   Dispute Category Select & Dispute History
+   =================================================== */
+.dispute-category-select {
+  width: 100%;
+  padding: 10px 12px;
+  border: 1px solid #ddd;
+  border-radius: 8px;
+  font-size: 0.9rem;
+  margin-bottom: 4px;
+  background: #fff;
+  font-family: inherit;
+}
+
+.dispute-history-section {
+  margin: 12px 0;
+  padding: 12px;
+  background: #fff8f0;
+  border: 1px solid #f5cba7;
+  border-radius: 8px;
+}
+
+.dispute-history-section h4 {
+  margin: 0 0 10px;
+  font-size: 0.95rem;
+  color: #b7410e;
+}
+
+.dispute-history-item {
+  background: #fff;
+  border: 1px solid #eee;
+  border-radius: 6px;
+  padding: 10px 12px;
+  margin-bottom: 8px;
+}
+
+.dispute-history-item:last-child {
+  margin-bottom: 0;
+}
+
+.dispute-history-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 4px;
+}
+
+.dispute-type-badge {
+  font-size: 0.75rem;
+  font-weight: 600;
+  padding: 2px 8px;
+  border-radius: 4px;
+  background: #eee;
+  color: #555;
+  text-transform: uppercase;
+}
+
+.dispute-type-badge[data-type="Visit"] {
+  background: #e8f4fd;
+  color: #2980b9;
+}
+
+.dispute-type-badge[data-type="Order"] {
+  background: #fef5e7;
+  color: #b7410e;
+}
+
+.dispute-status-badge {
+  font-size: 0.8rem;
+  font-weight: 600;
+}
+
+.dispute-category {
+  font-size: 0.85rem;
+  font-weight: 600;
+  color: #444;
+  margin: 2px 0;
+}
+
+.dispute-reason {
+  font-size: 0.83rem;
+  color: #666;
+  margin: 2px 0;
+  line-height: 1.4;
+}
+
+.dispute-resolution {
+  font-size: 0.83rem;
+  color: #1e8449;
+  margin: 4px 0 2px;
+  padding: 6px 8px;
+  background: #eafaf1;
+  border-radius: 4px;
+}
+
+.dispute-date {
+  font-size: 0.75rem;
+  color: #999;
 }

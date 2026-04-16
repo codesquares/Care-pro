@@ -369,7 +369,7 @@ const PublicMarketplace = () => {
                     <div 
                       key={service.id} 
                       className="matched-service-card"
-                      onClick={() => navigate(`/marketplace/service/${service.id}`)}
+                      onClick={() => navigate(`/service/${service.id}`)}
                     >
                       <div className="match-score-badge">
                         <span className="score">{service.matchScore}%</span>
@@ -380,7 +380,7 @@ const PublicMarketplace = () => {
                           src={service.gigImage || service.image1 || 'https://via.placeholder.com/300x180?text=Care+Service'} 
                           alt={service.title} 
                         />
-                        {service.caregiverIsVerified && (
+                        {(service.caregiverIsVerified || service.caregiverIsIdentityVerified) && (
                           <span className="verified-badge">✓ Verified</span>
                         )}
                       </div>

@@ -11,7 +11,7 @@ const StatisticsCard = ({totalOrders, totalEarnings}) => {
         <img src={StatisticCard1} alt="card1" className="stat-icon" />  
         <div className="stat-details">
           <p className="stat-title">Total Earnings</p>
-          <h4 className="stat-value">₦{totalEarnings}</h4>
+          <h4 className="stat-value earnings-value">₦{Number(totalEarnings).toLocaleString('en-NG', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</h4>
         </div>
       </div>
       <div className="stat">

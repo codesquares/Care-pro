@@ -4,7 +4,7 @@ import Sidebar from '../components/messages/Sidebar.jsx';
 import ChatArea from '../components/messages/Chatarea.jsx';
 import EmptyMessageState from '../components/messages/EmptyMessageState.jsx';
 import ToastContainer from '../components/toast/ToastContainer.jsx';
-import { useMessageContext } from '../context/MessageContext.jsx';
+import { useMessageContext } from '../context/MessageContext';
 import connectionManager from '../services/connectionManager.js';
 import useDebounce from '../hooks/useDebounce.js';
 import '../components/messages/messages.css';

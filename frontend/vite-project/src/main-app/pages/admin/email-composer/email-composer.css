@@ -1044,3 +1044,46 @@
     font-size: 0.8rem;
   }
 }
+
+/* Toolbar Divider */
+.toolbar-divider {
+  display: inline-block;
+  width: 1px;
+  height: 24px;
+  background-color: #d1d5db;
+  margin: 0 4px;
+  vertical-align: middle;
+}
+
+/* Result Attachments */
+.result-attachments-list {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+  margin-top: 0.5rem;
+}
+
+.result-attachment-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.25rem;
+  background-color: rgba(0, 0, 0, 0.06);
+  padding: 0.25rem 0.6rem;
+  border-radius: 20px;
+  font-size: 0.8rem;
+}
+
+/* Validation Errors */
+.validation-errors-list {
+  margin-top: 0.75rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.35rem;
+}
+
+.validation-error-item {
+  font-size: 0.85rem;
+  padding: 0.35rem 0.6rem;
+  background-color: rgba(0, 0, 0, 0.04);
+  border-radius: 6px;
+}

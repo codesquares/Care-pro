@@ -196,12 +196,13 @@ const PublishGig = ({
             {/* Only show "Save as Draft" for new gigs or drafts - prevents unpublishing active gigs */}
             {!isEditingPublishedGig && (
               <button 
-                className="draft-button" 
+                className={`draft-button ${isSaving ? 'disabled' : ''}`}
                 onClick={onSaveAsDraft}
                 onMouseEnter={(e) => onFieldHover && onFieldHover('publish-save-draft', e)}
                 onMouseLeave={(e) => onFieldLeave && onFieldLeave(e)}
+                disabled={isSaving}
               >
-                Save as Draft
+                {isSaving ? 'Saving...' : 'Save as Draft'}
               </button>
             )}
             <button 

@@ -1,4 +1,5 @@
 import { useEffect, useState, useRef } from "react";
+import { useLocation, useNavigate } from "react-router-dom";
 import "./profile-header.css";
 import { FaMapMarkerAlt, FaCalendarAlt, FaTruck } from "react-icons/fa";
 import profilecard1 from "../../../../assets/profilecard1.png";
@@ -14,6 +15,7 @@ import { toast } from "react-toastify";
 import config from "../../../config"; // Import centralized config for API URLs
 // import { generateUsername } from "../../../utils/usernameGenerator"; // TODO: Backend persistence not implemented yet
 import { useAuth } from "../../../context/AuthContext";
+import { useCaregiverStatus } from "../../../contexts/CaregiverStatusContext";
 
 /**
  * Normalize verification status from API response
@@ -65,6 +67,11 @@ const normalizeVerificationStatus = (status) => {
 
 const ProfileHeader = () => {
   const { updateUser } = useAuth();
+  const { verificationStatus: contextVerificationStatus, isVerified: contextIsVerified, isQualified } = useCaregiverStatus();
+  const location = useLocation();
+  const navigate = useNavigate();
+  const [showVerificationLandingModal, setShowVerificationLandingModal] = useState(false);
+  const [verificationLandingStatus, setVerificationLandingStatus] = useState(null);
   const [profile, setProfile] = useState({
     name: "",
     username: "",
@@ -101,6 +108,38 @@ const ProfileHeader = () => {
     };
   }, []);
 
+  // Show modal when arriving from verification page with status
+  useEffect(() => {
+    if (location.state?.verificationStatus) {
+      setVerificationLandingStatus(location.state.verificationStatus);
+      setShowVerificationLandingModal(true);
+      // Clear the state so modal doesn't reappear on refresh
+      window.history.replaceState({}, document.title);
+    }
+  }, [location.state]);
+
+  // Sync verification status from global context when it updates
+  // This ensures ProfileHeader reflects changes made on the VerificationPage
+  useEffect(() => {
+    if (contextIsVerified) {
+      setStatusFromApi(prev => ({
+        ...prev,
+        verified: true,
+        isVerified: true,
+        verificationStatus: 'completed',
+        hasVerification: true
+      }));
+    } else if (contextVerificationStatus?.verificationStatus?.toLowerCase?.() === 'pending') {
+      setStatusFromApi(prev => ({
+        ...prev,
+        verified: false,
+        isVerified: false,
+        verificationStatus: 'pending',
+        hasVerification: true
+      }));
+    }
+  }, [contextIsVerified, contextVerificationStatus]);
+
   useEffect(() => {
     return () => {};
   }, []);
@@ -125,6 +164,13 @@ const ProfileHeader = () => {
       // Use formatted address if available from Google validation, otherwise use input
       const addressToSend = addressValidation?.formattedAddress || editedLocation;
       
+      // Build payload — include GPS coordinates if available from Google validation
+      const payload = { address: addressToSend };
+      if (addressValidation?.coordinates?.latitude != null && addressValidation?.coordinates?.longitude != null) {
+        payload.latitude = addressValidation.coordinates.latitude;
+        payload.longitude = addressValidation.coordinates.longitude;
+      }
+
       // API call to update location using the new dedicated endpoint
       const response = await fetch(`${config.BASE_URL}/CareGivers/UpdateCaregiverLocation/${userDetails.id}`, {
         method: 'PUT',
@@ -132,7 +178,7 @@ const ProfileHeader = () => {
           'Content-Type': 'application/json',
           'Authorization': `Bearer ${localStorage.getItem('authToken') || ''}`,
         },
-        body: JSON.stringify({ address: addressToSend }),
+        body: JSON.stringify(payload),
       });
 
       if (!response.ok) {
@@ -159,25 +205,28 @@ const ProfileHeader = () => {
       // API returns JSON response with geocoded data
       const result = await response.json();
 
-      // Extract city from response
-      const cityName = result.data?.city || addressValidation?.addressComponents?.city || 'location';
+      // Extract location fields from backend response
+      const locData = result.data || {};
+      const cityName = locData.city || addressValidation?.addressComponents?.city || 'location';
+      const savedAddress = locData.address || addressToSend;
 
       // Update AuthContext with new location
       updateUser({
-        serviceAddress: addressToSend,
+        homeAddress: savedAddress,
+        address: savedAddress,
+        serviceAddress: savedAddress,
         serviceCity: cityName,
-        serviceState: result?.data?.state || addressValidation?.addressComponents?.state,
-        location: addressToSend
+        serviceState: locData.state || addressValidation?.addressComponents?.state,
+        city: cityName,
+        state: locData.state || addressValidation?.addressComponents?.state,
+        location: savedAddress
       });
 
       // Update the profile display with the new location (city only)
-      setProfile(prev => {
-        const updatedProfile = {
-          ...prev,
-          location: cityName
-        };
-        return updatedProfile;
-      });
+      setProfile(prev => ({
+        ...prev,
+        location: cityName
+      }));
 
       setShowLocationModal(false);
       setEditedLocation("");
@@ -185,6 +234,9 @@ const ProfileHeader = () => {
       
       // Show success message with city if available
       toast.success(`Location updated successfully! Now serving in ${cityName}.`);
+
+      // Refresh full profile from API to ensure UI is fully in sync
+      fetchProfile(true);
       
     } catch (err) {
       console.error('Error updating location:', err);
@@ -425,7 +477,11 @@ const ProfileHeader = () => {
           // Normalize verification status to handle different formats
           const normalizedStatus = normalizeVerificationStatus(verificationStatus);
           
-          setStatusFromApi(normalizedStatus);
+          // Only apply API result if context doesn't already have a fresher pending/verified state
+          const ctxStatus = contextVerificationStatus?.verificationStatus?.toLowerCase?.();
+          if (ctxStatus !== 'pending' && !contextIsVerified) {
+            setStatusFromApi(normalizedStatus);
+          }
         }
       } catch (verErr) {
         
@@ -446,6 +502,25 @@ const ProfileHeader = () => {
         });
       }
 
+      // Also sync from context if it has fresher data (e.g. after verification submission)
+      if (contextIsVerified) {
+        setStatusFromApi(prev => ({
+          ...prev,
+          verified: true,
+          isVerified: true,
+          verificationStatus: 'completed',
+          hasVerification: true
+        }));
+      } else if (contextVerificationStatus?.verificationStatus?.toLowerCase?.() === 'pending') {
+        setStatusFromApi(prev => ({
+          ...prev,
+          verified: false,
+          isVerified: false,
+          verificationStatus: 'pending',
+          hasVerification: true
+        }));
+      }
+
       const updatedProfile = {
         name: data.firstName && data.lastName ? `${data.firstName.charAt(0).toUpperCase() + data.firstName.slice(1)} ${data.lastName.charAt(0).toUpperCase() + data.lastName.slice(1)}` : "John Doe",
         username: data.email || "user@example.com",
@@ -457,7 +532,7 @@ const ProfileHeader = () => {
                  data.serviceCity || 
                  (data.location && data.location.includes(',') ? data.location.split(',')[0].trim() : data.location) || 
                  (data.serviceAddress && data.serviceAddress.includes(',') ? data.serviceAddress.split(',')[1]?.trim() : null) ||
-                 "New York",
+                 "Not set",
         memberSince: data.createdAt ? new Date(data.createdAt).toLocaleDateString('en-US', { 
           month: 'short', 
           day: 'numeric', 
@@ -497,6 +572,17 @@ const ProfileHeader = () => {
       else if (data.serviceAddress) userUpdates.serviceAddress = data.serviceAddress;
       if (locationData?.address) userUpdates.location = locationData.address;
       else if (data.location) userUpdates.location = data.location;
+      if (locationData?.address) userUpdates.homeAddress = locationData.address;
+      else if (data.homeAddress) userUpdates.homeAddress = data.homeAddress;
+      if (locationData?.address) userUpdates.address = locationData.address;
+      else if (data.address) userUpdates.address = data.address;
+      if (locationData?.city) userUpdates.city = locationData.city;
+      if (locationData?.state) userUpdates.state = locationData.state;
+      // Store coordinates from API response for proximity matching
+      if (locationData?.latitude != null) userUpdates.latitude = locationData.latitude;
+      else if (data.latitude != null) userUpdates.latitude = data.latitude;
+      if (locationData?.longitude != null) userUpdates.longitude = locationData.longitude;
+      else if (data.longitude != null) userUpdates.longitude = data.longitude;
       if (data.aboutMe) userUpdates.aboutMe = data.aboutMe;
       
       if (Object.keys(userUpdates).length > 0) {
@@ -659,17 +745,12 @@ const ProfileHeader = () => {
           
         </div>
        <div className="caregiver-profile-actions">
-          {statusFromApi?.verified === true || statusFromApi?.isVerified === true ? (
-            <AssessmentButton 
-              verificationStatus={statusFromApi} 
-              userId={userDetails?.id} 
-            />
-          ) : (
-            <VerifyButton 
-              verificationStatus={statusFromApi?.verificationStatus || 'not_verified'} 
-              userId={userDetails?.id}
-            />
-          )}
+          <VerifyButton 
+            verificationStatus={statusFromApi?.verificationStatus || 'not_verified'} 
+          />
+          <AssessmentButton 
+            userId={userDetails?.id} 
+          />
         </div>
          
         {/* Development Tool for Testing - Remove in Production */}
@@ -699,7 +780,7 @@ const ProfileHeader = () => {
                 value={editedLocation}
                 onChange={setEditedLocation}
                 onValidation={setAddressValidation}
-                placeholder="Enter full address (e.g., 123 Main St, Los Angeles, CA 90210)"
+                placeholder="Enter area or address (e.g., Lekki Phase 1, Lagos)"
                 className="caregiver-location-input"
                 showValidationIcon={true}
                 autoValidate={true}
@@ -773,6 +854,109 @@ const ProfileHeader = () => {
           </div>
         )}
       </div>
+
+      {/* Verification Landing Modal */}
+      {showVerificationLandingModal && (
+        <div 
+          className="caregiver-location-modal-overlay"
+          onClick={() => setShowVerificationLandingModal(false)}
+        >
+          <div 
+            className="caregiver-location-modal"
+            onClick={(e) => e.stopPropagation()}
+            style={{ maxWidth: '480px' }}
+          >
+            {verificationLandingStatus === 'pending' && (
+              <>
+                <h3>⏳ Verification In Progress</h3>
+                <p style={{ fontSize: '14px', color: '#6c757d', lineHeight: '1.5', marginBottom: '12px' }}>
+                  Your identity verification has been submitted and is being processed. This usually takes 24-48 hours.
+                </p>
+                <p style={{ fontSize: '14px', color: '#333', lineHeight: '1.5', marginBottom: '16px' }}>
+                  <strong>While you wait, you can:</strong>
+                </p>
+                <ul style={{ fontSize: '14px', color: '#333', lineHeight: '1.8', paddingLeft: '20px', marginBottom: '20px' }}>
+                  <li>📝 Create and save draft gigs</li>
+                  <li>📋 Take your qualification assessment</li>
+                  <li>📄 Upload your certificates</li>
+                </ul>
+                <p style={{ fontSize: '13px', color: '#888', marginBottom: '16px' }}>
+                  Once verified, you&apos;ll be able to publish your gigs.
+                </p>
+                <div style={{ display: 'flex', gap: '10px', justifyContent: 'flex-end' }}>
+                  <button
+                    onClick={() => setShowVerificationLandingModal(false)}
+                    className="caregiver-modal-btn caregiver-modal-cancel"
+                  >
+                    Stay on Profile
+                  </button>
+                  <button
+                    onClick={() => { setShowVerificationLandingModal(false); navigate('/app/caregiver/create-gigs'); }}
+                    className="caregiver-modal-btn caregiver-modal-save"
+                  >
+                    Create a Gig
+                  </button>
+                </div>
+              </>
+            )}
+            {verificationLandingStatus === 'failed' && (
+              <>
+                <h3>❌ Verification Failed</h3>
+                <p style={{ fontSize: '14px', color: '#6c757d', lineHeight: '1.5', marginBottom: '16px' }}>
+                  Your identity verification could not be completed. You can retry the verification process.
+                </p>
+                <div style={{ display: 'flex', gap: '10px', justifyContent: 'flex-end' }}>
+                  <button
+                    onClick={() => setShowVerificationLandingModal(false)}
+                    className="caregiver-modal-btn caregiver-modal-cancel"
+                  >
+                    Close
+                  </button>
+                  <button
+                    onClick={() => { setShowVerificationLandingModal(false); navigate('/app/caregiver/verification'); }}
+                    className="caregiver-modal-btn caregiver-modal-save"
+                  >
+                    Retry Verification
+                  </button>
+                </div>
+              </>
+            )}
+            {verificationLandingStatus === 'success' && (
+              <>
+                <h3>✅ Verification Complete!</h3>
+                <p style={{ fontSize: '14px', color: '#6c757d', lineHeight: '1.5', marginBottom: '16px' }}>
+                  Your identity has been verified. {!isQualified 
+                    ? 'Take your qualification assessment next to unlock gig publishing.'
+                    : 'You can now publish your gigs!'}
+                </p>
+                <div style={{ display: 'flex', gap: '10px', justifyContent: 'flex-end' }}>
+                  <button
+                    onClick={() => setShowVerificationLandingModal(false)}
+                    className="caregiver-modal-btn caregiver-modal-cancel"
+                  >
+                    Stay on Profile
+                  </button>
+                  {!isQualified ? (
+                    <button
+                      onClick={() => { setShowVerificationLandingModal(false); navigate('/app/caregiver/assessment'); }}
+                      className="caregiver-modal-btn caregiver-modal-save"
+                    >
+                      Take Assessment
+                    </button>
+                  ) : (
+                    <button
+                      onClick={() => { setShowVerificationLandingModal(false); navigate('/app/caregiver/create-gigs'); }}
+                      className="caregiver-modal-btn caregiver-modal-save"
+                    >
+                      Create a Gig
+                    </button>
+                  )}
+                </div>
+              </>
+            )}
+          </div>
+        </div>
+      )}
 
       <IntroVideo 
         profileIntrovideo={profile.introVideo} 

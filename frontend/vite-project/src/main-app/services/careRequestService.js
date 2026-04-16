@@ -1,123 +1,163 @@
 /**
  * Care Request Service
- * Handles submitting and managing client care requests.
+ * Handles submitting and managing client care requests,
+ * caregiver browsing/responding, and request lifecycle.
  */
-import config from '../config';
+import api from './api';
 
 class CareRequestService {
-  /**
-   * Submit a new care request
-   * @param {Object} requestData - The care request form data
-   * @returns {Promise<Object>} The created care request
-   */
-  static async submitCareRequest(requestData) {
+  // ─── Helpers ───
+
+  static _getClientId() {
     const userDetails = JSON.parse(localStorage.getItem('userDetails') || '{}');
-    const clientId = userDetails.id;
-    const token = localStorage.getItem('authToken');
+    if (!userDetails.id) throw new Error('User not logged in');
+    return userDetails.id;
+  }
 
-    if (!clientId) {
-      throw new Error('User not logged in');
-    }
+  // ─── Client: Create & List ───
 
+  static async submitCareRequest(requestData) {
+    const clientId = this._getClientId();
     const payload = {
       clientId,
+      serviceGroup: requestData.serviceGroup,
       serviceCategory: requestData.serviceCategory,
       title: requestData.title,
-      description: requestData.description,
+      tasks: requestData.tasks || [],
+      notes: requestData.notes || null,
+      experiencePreference: requestData.experiencePreference || null,
+      certificationPreference: requestData.certificationPreference || null,
+      languagePreference: requestData.languagePreference || null,
       urgency: requestData.urgency,
       schedule: requestData.schedule,
       frequency: requestData.frequency,
       duration: requestData.duration || null,
       location: requestData.location || null,
       budget: requestData.budget || null,
+      budgetMin: requestData.budgetMin || null,
+      budgetMax: requestData.budgetMax || null,
+      budgetType: requestData.budgetType || null,
+      servicePackageType: requestData.servicePackageType || null,
+      serviceMode: requestData.serviceMode || null,
       specialRequirements: requestData.specialRequirements || null,
     };
-
-    const response = await fetch(`${config.BASE_URL}/CareRequests`, {
-      method: 'POST',
-      headers: {
-        'Authorization': `Bearer ${token}`,
-        'Content-Type': 'application/json',
-      },
-      body: JSON.stringify(payload),
-    });
-
-    if (!response.ok) {
-      const errorText = await response.text().catch(() => '');
-      throw new Error(`Failed to submit care request: ${response.status} ${errorText}`);
-    }
-
-    return await response.json();
+    const response = await api.post('/CareRequests', payload);
+    return response.data;
   }
 
-  /**
-   * Get all care requests for the current client
-   * @returns {Promise<Array>} List of care requests
-   */
   static async getCareRequests() {
-    const userDetails = JSON.parse(localStorage.getItem('userDetails') || '{}');
-    const clientId = userDetails.id;
-    const token = localStorage.getItem('authToken');
-
-    if (!clientId) {
-      throw new Error('User not logged in');
-    }
-
-    const response = await fetch(`${config.BASE_URL}/CareRequests/client/${clientId}`, {
-      headers: {
-        'Authorization': `Bearer ${token}`,
-        'Content-Type': 'application/json',
-      },
-    });
-
-    if (!response.ok) {
-      throw new Error(`Failed to fetch care requests: ${response.status}`);
-    }
-
-    return await response.json();
+    const clientId = this._getClientId();
+    const response = await api.get(`/CareRequests/client/${clientId}`);
+    return response.data?.data || [];
   }
 
-  /**
-   * Get a single care request by ID
-   * @param {string} requestId
-   * @returns {Promise<Object>} The care request
-   */
   static async getCareRequest(requestId) {
-    const token = localStorage.getItem('authToken');
-
-    const response = await fetch(`${config.BASE_URL}/CareRequests/${requestId}`, {
-      headers: {
-        'Authorization': `Bearer ${token}`,
-        'Content-Type': 'application/json',
-      },
-    });
-
-    if (!response.ok) {
-      throw new Error(`Failed to fetch care request: ${response.status}`);
-    }
-
-    return await response.json();
+    const response = await api.get(`/CareRequests/${requestId}`);
+    return response.data;
   }
 
-  /**
-   * Cancel a care request
-   * @param {string} requestId
-   * @returns {Promise<void>}
-   */
+  // ─── Client: Request Detail with Responders ───
+
+  static async getRequestDetail(requestId) {
+    const response = await api.get(`/CareRequests/${requestId}/detail`);
+    return response.data?.data || response.data;
+  }
+
+  // ─── Client: Shortlist / Remove Shortlist ───
+
+  static async shortlistResponse(requestId, responseId) {
+    const response = await api.put(`/CareRequests/${requestId}/responses/${responseId}/shortlist`);
+    return response.data?.data || response.data;
+  }
+
+  static async removeShortlist(requestId, responseId) {
+    const response = await api.put(`/CareRequests/${requestId}/responses/${responseId}/remove-shortlist`);
+    return response.data?.data || response.data;
+  }
+
+  // ─── Client: Hire a Caregiver ───
+
+  static async hireCaregiver(requestId, responseId) {
+    const response = await api.post(`/CareRequests/${requestId}/responses/${responseId}/hire`);
+    return response.data?.data || response.data;
+  }
+
+  // ─── Client: Lifecycle Management ───
+
   static async cancelCareRequest(requestId) {
-    const token = localStorage.getItem('authToken');
+    await api.put(`/CareRequests/${requestId}/cancel`);
+  }
 
-    const response = await fetch(`${config.BASE_URL}/CareRequests/${requestId}/cancel`, {
-      method: 'PUT',
-      headers: {
-        'Authorization': `Bearer ${token}`,
-        'Content-Type': 'application/json',
-      },
-    });
+  static async pauseRequest(requestId) {
+    const response = await api.put(`/CareRequests/${requestId}/pause`);
+    return response.data;
+  }
 
-    if (!response.ok) {
-      throw new Error(`Failed to cancel care request: ${response.status}`);
+  static async reopenRequest(requestId) {
+    const response = await api.put(`/CareRequests/${requestId}/reopen`);
+    return response.data;
+  }
+
+  static async closeRequest(requestId) {
+    const response = await api.put(`/CareRequests/${requestId}/close`);
+    return response.data;
+  }
+
+  static async deleteRequest(requestId) {
+    const response = await api.delete(`/CareRequests/${requestId}`);
+    return response.data;
+  }
+
+  // ─── Client: Matches (existing) ───
+
+  static async getMatches(requestId) {
+    try {
+      const response = await api.get(`/CareRequests/${requestId}/matches`);
+      return response.data;
+    } catch (error) {
+      if (error.response?.status === 403) {
+        throw new Error('You are not authorized to view these matches.');
+      }
+      throw error;
     }
+  }
+
+  static async triggerMatch(requestId) {
+    const response = await api.post(`/CareRequests/${requestId}/match`);
+    return response.data;
+  }
+
+  // ─── Caregiver: Browse Matched Requests ───
+
+  static async getMatchedRequestsForCaregiver(filters = {}) {
+    const params = new URLSearchParams();
+    if (filters.serviceType) params.append('serviceType', filters.serviceType);
+    if (filters.budgetMin) params.append('budgetMin', filters.budgetMin);
+    if (filters.budgetMax) params.append('budgetMax', filters.budgetMax);
+    if (filters.location) params.append('location', filters.location);
+    if (filters.page) params.append('page', filters.page);
+    if (filters.pageSize) params.append('pageSize', filters.pageSize);
+
+    const query = params.toString();
+    const response = await api.get(`/CareRequests/caregiver/matched${query ? `?${query}` : ''}`);
+    return response.data?.data || response.data;
+  }
+
+  // ─── Caregiver: View Single Request Detail ───
+
+  static async getCaregiverViewRequest(requestId) {
+    const response = await api.get(`/CareRequests/${requestId}/caregiver-view`);
+    return response.data?.data || response.data;
+  }
+
+  // ─── Caregiver: Respond to a Request ───
+
+  static async respondToRequest(requestId, payload = {}) {
+    const response = await api.post(`/CareRequests/${requestId}/respond`, {
+      message: payload.message || null,
+      proposedRate: payload.proposedRate || null,
+    });
+    return response.data?.data || response.data;
   }
 }
 

@@ -1,0 +1,1130 @@
+/* ===================================================
+   Client Visit View — read-only visit history styles
+   =================================================== */
+
+/* ---------- Loading / Error / Empty ---------- */
+.cv-loading,
+.cv-error,
+.cv-empty {
+  padding: 20px;
+  text-align: center;
+  color: #666;
+  font-size: 14px;
+}
+
+.cv-error p {
+  color: #d32f2f;
+  margin-bottom: 10px;
+}
+
+.cv-retry-btn {
+  padding: 6px 16px;
+  border: 1px solid #d32f2f;
+  border-radius: 4px;
+  background: #fff;
+  color: #d32f2f;
+  cursor: pointer;
+  font-size: 14px;
+}
+
+.cv-retry-btn:hover {
+  background: #fce4ec;
+}
+
+/* ---------- Container ---------- */
+.cv-container {
+  width: 100%;
+}
+
+/* ---------- Summary bar ---------- */
+.cv-summary-bar {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px;
+  margin-bottom: 16px;
+  padding: 10px 14px;
+  background: #f8f9fa;
+  border-radius: 8px;
+}
+
+.cv-summary-total {
+  font-size: 15px;
+  font-weight: 700;
+  color: #333;
+  margin-right: 4px;
+}
+
+.cv-summary-tag {
+  padding: 3px 10px;
+  border-radius: 12px;
+  font-size: 12px;
+  font-weight: 600;
+}
+
+.cv-summary-tag--scheduled {
+  background: #e1f5fe;
+  color: #01579b;
+}
+
+.cv-summary-tag--active {
+  background: #fff3e0;
+  color: #e65100;
+}
+
+.cv-summary-tag--completed {
+  background: #e8f5e9;
+  color: #2e7d32;
+}
+
+.cv-summary-tag--cancelled {
+  background: #fce4ec;
+  color: #c62828;
+}
+
+/* ---------- Visit list ---------- */
+.cv-visit-list {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.cv-visit-card {
+  border: 1px solid #e0e0e0;
+  border-radius: 10px;
+  overflow: hidden;
+  background: #fff;
+  transition: border-color 0.15s;
+}
+
+.cv-visit-card--scheduled {
+  border-color: #b3e5fc;
+}
+
+.cv-visit-card--in-progress {
+  border-color: #ffe0b2;
+}
+
+.cv-visit-card--submitted {
+  border-color: #c8e6c9;
+}
+
+.cv-visit-card--cancelled {
+  border-color: #e0e0e0;
+  opacity: 0.65;
+}
+
+/* Card header */
+.cv-visit-card-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 12px 16px;
+  background: #fafafa;
+  user-select: none;
+}
+
+.cv-visit-card-header--clickable {
+  cursor: pointer;
+}
+
+.cv-visit-card-header--clickable:hover {
+  background: #f0f0f0;
+}
+
+.cv-visit-card-left {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.cv-visit-icon {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 28px;
+  height: 28px;
+  border-radius: 50%;
+  font-size: 14px;
+  font-weight: 700;
+  flex-shrink: 0;
+}
+
+.cv-visit-icon--scheduled {
+  background: #e1f5fe;
+  color: #0288d1;
+}
+
+.cv-visit-icon--in-progress {
+  background: #fff3e0;
+  color: #e65100;
+}
+
+.cv-visit-icon--submitted {
+  background: #e8f5e9;
+  color: #2e7d32;
+}
+
+.cv-visit-icon--cancelled {
+  background: #fce4ec;
+  color: #c62828;
+}
+
+.cv-visit-card-info {
+  display: flex;
+  flex-direction: column;
+}
+
+.cv-visit-card-title {
+  font-size: 14px;
+  font-weight: 600;
+  color: #333;
+  line-height: 1.2;
+}
+
+.cv-visit-card-date {
+  font-size: 12px;
+  color: #777;
+  margin-top: 1px;
+}
+
+.cv-visit-card-right {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.cv-visit-card-status {
+  font-size: 12px;
+  font-weight: 600;
+  padding: 3px 10px;
+  border-radius: 12px;
+}
+
+.cv-visit-card-status--scheduled {
+  background: #e1f5fe;
+  color: #01579b;
+}
+
+.cv-visit-card-status--in-progress {
+  background: #fff3e0;
+  color: #e65100;
+}
+
+.cv-visit-card-status--submitted {
+  background: #e8f5e9;
+  color: #2e7d32;
+}
+
+.cv-visit-card-status--cancelled {
+  background: #fce4ec;
+  color: #c62828;
+}
+
+.cv-visit-chevron {
+  font-size: 18px;
+  color: #999;
+  transition: transform 0.2s;
+  display: inline-block;
+}
+
+.cv-visit-chevron--open {
+  transform: rotate(90deg);
+}
+
+/* Card body (expanded content) */
+.cv-visit-card-body {
+  padding: 0 16px 16px;
+  border-top: 1px solid #f0f0f0;
+}
+
+/* ---------- Tab bar (legacy, kept for backward compat) ---------- */
+.cv-tab-bar {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  margin-bottom: 8px;
+  padding-bottom: 8px;
+  border-bottom: 1px solid #e0e0e0;
+}
+
+.cv-tab {
+  padding: 6px 14px;
+  border: 1px solid #ccc;
+  border-radius: 20px;
+  background: #fff;
+  cursor: pointer;
+  font-size: 13px;
+  color: #555;
+  transition: background-color 0.2s, border-color 0.2s, color 0.2s;
+  display: flex;
+  align-items: center;
+  gap: 4px;
+}
+
+.cv-tab:hover {
+  background: #f5f5f5;
+  border-color: #999;
+}
+
+.cv-tab--active {
+  background: #fdcf68;
+  border-color: #f0b429;
+  color: #000;
+  font-weight: 600;
+}
+
+.cv-tab--submitted {
+  border-color: #27ae60;
+}
+
+.cv-tab--submitted.cv-tab--active {
+  background: #d4edda;
+  border-color: #27ae60;
+}
+
+.cv-tab--cancelled {
+  border-color: #e53935;
+  opacity: 0.7;
+}
+
+.cv-tab--cancelled.cv-tab--active {
+  background: #ffebee;
+  border-color: #e53935;
+}
+
+.cv-tab-badge {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 16px;
+  height: 16px;
+  background: #27ae60;
+  color: #fff;
+  border-radius: 50%;
+  font-size: 10px;
+  font-weight: 700;
+}
+
+.cv-tab-badge--cancelled {
+  background: #e53935;
+}
+
+.cv-tab-report-dot {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: #e74c3c;
+  margin-left: 2px;
+}
+
+/* ---------- Info ---------- */
+.cv-info {
+  font-size: 12px;
+  color: #888;
+  margin-bottom: 12px;
+}
+
+/* ---------- Visit page ---------- */
+.cv-page {
+  padding: 4px 0;
+}
+
+/* ---------- Status row ---------- */
+.cv-status-row {
+  margin-bottom: 12px;
+}
+
+.cv-status-badge {
+  display: inline-block;
+  padding: 4px 12px;
+  border-radius: 12px;
+  font-size: 13px;
+  font-weight: 600;
+}
+
+.cv-status-badge--submitted {
+  background: #d4edda;
+  color: #1e7e34;
+}
+
+.cv-status-badge--pending {
+  background: #fff3cd;
+  color: #856404;
+}
+
+/* ---------- Check-in ---------- */
+.cv-checkin {
+  display: flex;
+  align-items: flex-start;
+  gap: 10px;
+  padding: 10px 12px;
+  background: #f0f9ff;
+  border: 1px solid #bce0fd;
+  border-radius: 8px;
+  margin-bottom: 14px;
+}
+
+.cv-checkin-icon {
+  font-size: 20px;
+  line-height: 1;
+}
+
+.cv-checkin-details {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.cv-checkin-label {
+  font-size: 13px;
+  font-weight: 600;
+  color: #333;
+}
+
+.cv-checkin-time {
+  font-size: 12px;
+  color: #555;
+}
+
+.cv-checkin-distance {
+  font-size: 12px;
+  color: #888;
+}
+
+/* ---------- Visit Duration ---------- */
+.cv-duration {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 8px 12px;
+  margin-bottom: 12px;
+  background: #f0f7ff;
+  border-radius: 6px;
+  border: 1px solid #d0e3f7;
+}
+
+.cv-duration-icon {
+  font-size: 16px;
+}
+
+.cv-duration-text {
+  font-size: 13px;
+  color: #2c5282;
+  font-weight: 500;
+}
+
+/* ---------- Progress ---------- */
+.cv-progress {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin-bottom: 12px;
+}
+
+.cv-progress-bar {
+  flex: 1;
+  height: 8px;
+  background: #e9ecef;
+  border-radius: 4px;
+  overflow: hidden;
+}
+
+.cv-progress-fill {
+  height: 100%;
+  background: linear-gradient(90deg, #27ae60, #2ecc71);
+  border-radius: 4px;
+  transition: width 0.3s;
+}
+
+.cv-progress-text {
+  font-size: 12px;
+  color: #666;
+  white-space: nowrap;
+}
+
+/* ---------- Task list ---------- */
+.cv-task-list {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  margin-bottom: 16px;
+}
+
+.cv-task {
+  display: flex;
+  align-items: flex-start;
+  gap: 8px;
+  padding: 8px 10px;
+  border-radius: 6px;
+  background: #fafafa;
+  border: 1px solid #eee;
+  font-size: 14px;
+  color: #444;
+}
+
+.cv-task--done {
+  background: #f0faf0;
+  border-color: #c3e6cb;
+}
+
+.cv-task-check {
+  flex-shrink: 0;
+  width: 20px;
+  height: 20px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 50%;
+  font-size: 12px;
+  font-weight: 700;
+}
+
+.cv-task--done .cv-task-check {
+  background: #27ae60;
+  color: #fff;
+}
+
+.cv-task:not(.cv-task--done) .cv-task-check {
+  background: #e9ecef;
+  color: #999;
+}
+
+.cv-task-text {
+  flex: 1;
+  line-height: 1.4;
+}
+
+.cv-task--done .cv-task-text {
+  text-decoration: line-through;
+  color: #888;
+}
+
+.cv-task-custom-badge {
+  flex-shrink: 0;
+  font-size: 10px;
+  padding: 2px 6px;
+  border-radius: 4px;
+  background: #e8f4fd;
+  color: #2980b9;
+  white-space: nowrap;
+}
+
+.cv-no-tasks {
+  text-align: center;
+  color: #999;
+  font-size: 13px;
+  padding: 12px 0;
+}
+
+/* ---------- Signature ---------- */
+.cv-signature {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 6px;
+  padding: 12px;
+  background: #fafafa;
+  border: 1px solid #eee;
+  border-radius: 8px;
+  margin-bottom: 16px;
+}
+
+.cv-signature-label {
+  font-size: 12px;
+  font-weight: 600;
+  color: #666;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+.cv-signature-image {
+  max-width: 220px;
+  max-height: 80px;
+  border: 1px solid #ddd;
+  border-radius: 4px;
+}
+
+.cv-signature-date {
+  font-size: 11px;
+  color: #999;
+}
+
+/* ---------- Reports ---------- */
+.cv-reports {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.cv-report-group {
+  border: 1px solid #eee;
+  border-radius: 8px;
+  overflow: hidden;
+}
+
+.cv-report-toggle {
+  width: 100%;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 10px 12px;
+  border: none;
+  background: #fafafa;
+  cursor: pointer;
+  font-size: 14px;
+  color: #333;
+  text-align: left;
+  font-weight: 500;
+}
+
+.cv-report-toggle:hover {
+  background: #f0f0f0;
+}
+
+.cv-report-toggle--incident {
+  background: #fef8f8;
+}
+
+.cv-report-toggle--incident:hover {
+  background: #fdf0f0;
+}
+
+.cv-report-count {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 20px;
+  height: 20px;
+  padding: 0 6px;
+  border-radius: 10px;
+  background: #2980b9;
+  color: #fff;
+  font-size: 11px;
+  font-weight: 700;
+}
+
+.cv-report-count--incident {
+  background: #e74c3c;
+}
+
+.cv-chevron {
+  margin-left: auto;
+  font-size: 18px;
+  color: #999;
+  transition: transform 0.2s;
+}
+
+.cv-chevron--open {
+  transform: rotate(90deg);
+}
+
+.cv-report-list {
+  padding: 8px 12px 12px;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.cv-report-loading {
+  font-size: 13px;
+  color: #999;
+  text-align: center;
+  padding: 8px 0;
+}
+
+.cv-report-card {
+  padding: 10px 12px;
+  border: 1px solid #e0e7ef;
+  border-radius: 6px;
+  background: #fff;
+}
+
+.cv-report-card--incident {
+  border-color: #f5c6cb;
+  background: #fff9f9;
+}
+
+.cv-report-card-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 6px;
+}
+
+.cv-report-category {
+  font-size: 13px;
+  font-weight: 600;
+  color: #333;
+}
+
+.cv-severity {
+  font-size: 11px;
+  padding: 2px 8px;
+  border-radius: 10px;
+  font-weight: 600;
+}
+
+.cv-severity--low,
+.cv-severity--minor {
+  background: #d4edda;
+  color: #155724;
+}
+
+.cv-severity--medium,
+.cv-severity--moderate {
+  background: #fff3cd;
+  color: #856404;
+}
+
+.cv-severity--high,
+.cv-severity--serious {
+  background: #f8d7da;
+  color: #721c24;
+}
+
+.cv-severity--critical {
+  background: #d32f2f;
+  color: #fff;
+}
+
+.cv-report-description {
+  font-size: 13px;
+  color: #555;
+  line-height: 1.5;
+  margin: 0 0 4px;
+}
+
+.cv-report-actions-taken {
+  font-size: 13px;
+  color: #555;
+  line-height: 1.5;
+  margin: 4px 0;
+}
+
+.cv-report-date {
+  font-size: 11px;
+  color: #999;
+}
+
+/* ---------- Service tasks (booking-time list) ---------- */
+.cv-service-tasks {
+  margin-top: 20px;
+  padding-top: 16px;
+  border-top: 1px solid #e0e0e0;
+}
+
+.cv-service-tasks-heading {
+  font-size: 14px;
+  font-weight: 600;
+  color: #888;
+  margin-bottom: 8px;
+}
+
+/* ---------- Responsive ---------- */
+@media (max-width: 480px) {
+  .cv-tab-bar {
+    gap: 4px;
+  }
+
+  .cv-tab {
+    padding: 5px 10px;
+    font-size: 12px;
+  }
+
+  .cv-task {
+    padding: 6px 8px;
+    font-size: 13px;
+  }
+}
+
+/* ===================================================
+   Visit Review Actions
+   =================================================== */
+.cv-review-section {
+  margin-top: 16px;
+  padding: 14px;
+  border-radius: 8px;
+  background: #f8f9fa;
+  border: 1px solid #e9ecef;
+}
+
+.cv-review-badge {
+  font-weight: 600;
+  font-size: 0.9rem;
+  padding: 8px 12px;
+  border-radius: 6px;
+}
+
+.cv-review-badge--approved {
+  color: #1e8449;
+  background: #eafaf1;
+  border: 1px solid #a9dfbf;
+}
+
+.cv-review-badge--disputed {
+  color: #922b21;
+  background: #fdedec;
+  border: 1px solid #f5b7b1;
+}
+
+.cv-review-date {
+  font-weight: 400;
+  font-size: 0.82rem;
+  color: #888;
+}
+
+.cv-review-reason {
+  margin-top: 6px;
+  font-size: 0.85rem;
+  font-weight: 400;
+  color: #666;
+}
+
+.cv-review-prompt {
+  font-weight: 600;
+  font-size: 0.9rem;
+  color: #333;
+  margin: 0 0 10px;
+}
+
+.cv-review-actions {
+  text-align: left;
+}
+
+.cv-review-buttons {
+  display: flex;
+  gap: 10px;
+  flex-wrap: wrap;
+}
+
+.cv-review-approve-btn {
+  padding: 8px 18px;
+  border: none;
+  border-radius: 6px;
+  background: linear-gradient(135deg, #2ecc71, #27ae60);
+  color: #fff;
+  font-weight: 600;
+  font-size: 0.85rem;
+  cursor: pointer;
+}
+
+.cv-review-approve-btn:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+.cv-review-dispute-btn {
+  padding: 8px 18px;
+  border: 1px solid #e74c3c;
+  border-radius: 6px;
+  background: #fff;
+  color: #e74c3c;
+  font-weight: 600;
+  font-size: 0.85rem;
+  cursor: pointer;
+}
+
+.cv-review-dispute-btn:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+.cv-review-cancel-btn {
+  padding: 8px 18px;
+  border: 1px solid #ccc;
+  border-radius: 6px;
+  background: #fff;
+  color: #666;
+  font-weight: 500;
+  font-size: 0.85rem;
+  cursor: pointer;
+}
+
+.cv-review-dispute-form {
+  text-align: left;
+}
+
+.cv-dispute-category-select {
+  width: 100%;
+  padding: 8px 10px;
+  border: 1px solid #ddd;
+  border-radius: 6px;
+  font-size: 0.9rem;
+  margin-bottom: 8px;
+  background: #fff;
+}
+
+.cv-dispute-reason-input {
+  width: 100%;
+  padding: 8px 10px;
+  border: 1px solid #ddd;
+  border-radius: 6px;
+  font-size: 0.9rem;
+  margin-bottom: 10px;
+  resize: vertical;
+  font-family: inherit;
+  box-sizing: border-box;
+}
+
+/* ===================================================
+   Client Visit View — Task Proposal Styles
+   =================================================== */
+
+.cv-task--pending {
+  border-left: 3px solid #ff9800;
+  background: #fffde7;
+}
+
+.cv-task--rejected {
+  border-left: 3px solid #f44336;
+  opacity: 0.65;
+}
+
+.cv-task-text--rejected {
+  text-decoration: line-through;
+  color: #999;
+}
+
+.cv-task-client-badge {
+  font-size: 10px;
+  padding: 1px 6px;
+  border-radius: 10px;
+  background: #e3f2fd;
+  color: #1565c0;
+  margin-left: 4px;
+  display: inline-block;
+}
+
+.cv-task-pending-badge {
+  font-size: 10px;
+  padding: 1px 6px;
+  border-radius: 10px;
+  background: #fff3e0;
+  color: #e65100;
+  margin-left: 4px;
+  display: inline-block;
+}
+
+.cv-task-rejected-badge {
+  font-size: 10px;
+  padding: 1px 6px;
+  border-radius: 10px;
+  background: #ffebee;
+  color: #c62828;
+  margin-left: 4px;
+  display: inline-block;
+}
+
+.cv-task-accepted-badge {
+  font-size: 10px;
+  padding: 1px 6px;
+  border-radius: 10px;
+  background: #e8f5e9;
+  color: #2e7d32;
+  margin-left: 4px;
+  display: inline-block;
+}
+
+/* ---------- Cancel Visit Section ---------- */
+.cv-cancel-section {
+  margin-top: 16px;
+  padding-top: 16px;
+  border-top: 1px solid #eee;
+}
+
+.cv-cancel-visit-btn {
+  width: 100%;
+  padding: 10px 16px;
+  background: #fff;
+  color: #e53935;
+  border: 1px solid #e53935;
+  border-radius: 8px;
+  font-size: 14px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: background 0.2s, color 0.2s;
+}
+
+.cv-cancel-visit-btn:hover {
+  background: #ffebee;
+}
+
+.cv-cancel-confirm {
+  background: #fff8e1;
+  border: 1px solid #ffe082;
+  border-radius: 8px;
+  padding: 16px;
+}
+
+.cv-cancel-prompt {
+  font-size: 0.9rem;
+  color: #555;
+  margin-bottom: 12px;
+  font-weight: 500;
+}
+
+.cv-cancel-reason-input {
+  width: 100%;
+  padding: 8px 12px;
+  border: 1px solid #ddd;
+  border-radius: 6px;
+  font-size: 14px;
+  resize: vertical;
+  margin-bottom: 12px;
+  font-family: inherit;
+  box-sizing: border-box;
+}
+
+/* ---------- Scheduled status ---------- */
+.cv-tab--scheduled {
+  border-color: #0288d1;
+  opacity: 0.8;
+}
+
+.cv-tab--scheduled.cv-tab--active {
+  background: #e1f5fe;
+  border-color: #0288d1;
+  opacity: 1;
+}
+
+.cv-tab-label {
+  display: block;
+  line-height: 1.2;
+}
+
+.cv-tab-date {
+  display: block;
+  font-size: 10px;
+  color: #888;
+  font-weight: 400;
+  margin-top: 2px;
+}
+
+.cv-tab-badge--scheduled {
+  background: #0288d1;
+}
+
+.cv-status-badge--scheduled {
+  background: #e1f5fe;
+  color: #01579b;
+}
+
+.cv-scheduled-info {
+  padding: 12px 16px;
+  background: #e1f5fe;
+  border: 1px solid #b3e5fc;
+  border-radius: 8px;
+  margin-bottom: 16px;
+  font-size: 13px;
+  color: #01579b;
+  line-height: 1.5;
+}
+
+.cv-scheduled-info p {
+  margin: 0 0 4px;
+}
+
+.cv-scheduled-info p:last-child {
+  margin-bottom: 0;
+}
+
+.cv-cancel-late-warning {
+  padding: 10px 14px;
+  background: #fff3e0;
+  border: 1px solid #ffcc02;
+  border-radius: 6px;
+  font-size: 13px;
+  color: #e65100;
+  margin-bottom: 10px;
+  line-height: 1.4;
+}
+
+.cv-cancel-full-credit {
+  padding: 10px 14px;
+  background: #e8f5e9;
+  border: 1px solid #a5d6a7;
+  border-radius: 6px;
+  font-size: 13px;
+  color: #2e7d32;
+  margin-bottom: 10px;
+  line-height: 1.4;
+}
+
+/* ---------- Reschedule ---------- */
+.cv-reschedule-btn {
+  display: inline-block;
+  margin-top: 10px;
+  padding: 8px 16px;
+  background: #0288d1;
+  color: #fff;
+  border: none;
+  border-radius: 6px;
+  font-size: 13px;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.cv-reschedule-btn:hover {
+  background: #0277bd;
+}
+
+.cv-reschedule-form {
+  margin-top: 12px;
+  padding: 14px;
+  background: #f5faff;
+  border: 1px solid #b3e5fc;
+  border-radius: 8px;
+}
+
+.cv-reschedule-label {
+  display: block;
+  font-size: 13px;
+  font-weight: 600;
+  color: #333;
+  margin-bottom: 6px;
+}
+
+.cv-reschedule-date-input {
+  display: block;
+  width: 100%;
+  padding: 8px 10px;
+  border: 1px solid #ccc;
+  border-radius: 6px;
+  font-size: 14px;
+  font-family: inherit;
+  margin-bottom: 10px;
+  box-sizing: border-box;
+}
+
+.cv-reschedule-reason-input {
+  width: 100%;
+  padding: 8px 12px;
+  border: 1px solid #ddd;
+  border-radius: 6px;
+  font-size: 14px;
+  resize: vertical;
+  margin-bottom: 12px;
+  font-family: inherit;
+  box-sizing: border-box;
+}
+
+.cv-reschedule-confirm-btn {
+  padding: 8px 18px;
+  background: #0288d1;
+  color: #fff;
+  border: none;
+  border-radius: 6px;
+  font-size: 14px;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.cv-reschedule-confirm-btn:hover {
+  background: #0277bd;
+}
+
+.cv-reschedule-confirm-btn:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}

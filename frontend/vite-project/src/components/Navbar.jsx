@@ -107,9 +107,9 @@ const Navbar = () => {
                     </Link>
                 </li>
                 <li>
-                    <Link to="/contentful-blog" onClick={handleLinkClick}>
+                    <a href="https://blog.oncarepro.com/" target="_blank" rel="noopener noreferrer" onClick={handleLinkClick}>
                         Blog
-                    </Link>
+                    </a>
                 </li>
             </ul>
 

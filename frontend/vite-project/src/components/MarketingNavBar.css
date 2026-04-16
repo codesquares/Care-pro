@@ -196,10 +196,11 @@
   text-decoration: none;
   color: #62646a;
   font-weight: 500;
-  font-size: 0.95rem;
+  font-size: 0.85rem;
   padding: 0.75rem 0;
   border-bottom: 1px solid #eee;
   transition: color 0.2s ease;
+  white-space: nowrap;
 }
 
 @media (min-width: 1024px) {
@@ -231,6 +232,7 @@
   transition: all 0.2s ease;
   font-weight: 500;
   white-space: nowrap;
+  font-size: 0.85rem;
 }
 
 @media (min-width: 1024px) {
@@ -259,6 +261,7 @@
   transition: all 0.2s ease;
   font-weight: 500;
   white-space: nowrap;
+  font-size: 0.85rem;
   text-decoration: none;
 }
 

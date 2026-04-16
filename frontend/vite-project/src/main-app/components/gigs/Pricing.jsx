@@ -3,7 +3,7 @@ import "./Pricing.css";
 import PackageDetailsInput from "./PackageDetailsInput";
 import PricingTemplates from "./PricingTemplates";
 
-const PricingTable = ({ pricing, onPricingChange, onFieldFocus, onFieldBlur, onFieldHover, onFieldLeave, validationErrors = {}, category }) => {
+const PricingTable = ({ pricing, onPricingChange, onFieldFocus, onFieldBlur, onFieldHover, onFieldLeave, validationErrors = {}, category, sampleTasks = [] }) => {
   const [activeTab, setActiveTab] = useState("manual"); // "templates" or "manual"
   const [selectedTemplate, setSelectedTemplate] = useState(null);
 
@@ -69,6 +69,7 @@ const PricingTable = ({ pricing, onPricingChange, onFieldFocus, onFieldBlur, onF
           onTemplateSelect={setSelectedTemplate}
           onApplyTemplate={handleApplyTemplate}
           category={category}
+          sampleTasks={sampleTasks}
         />
       )}
 
@@ -102,6 +103,7 @@ const PricingTable = ({ pricing, onPricingChange, onFieldFocus, onFieldBlur, onF
             onBlur={onFieldBlur}
             placeholder="Enter a task and press Enter (e.g., medication assistance, vital checks)"
             className={hasFieldError("Basic", "details") ? 'error' : ''}
+            sampleTasks={sampleTasks}
           />
           {getFieldError("Basic", "details") && (
             <div className="validation-error">

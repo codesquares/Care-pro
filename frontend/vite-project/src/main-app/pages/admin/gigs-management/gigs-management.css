@@ -1100,3 +1100,320 @@
   }
 }
 
+/* Bulk Delete Styles */
+.bulk-actions-bar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 12px 16px;
+  background: #fef3c7;
+  border: 1px solid #f59e0b;
+  border-radius: 8px;
+  margin-bottom: 16px;
+}
+
+.bulk-actions-left {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.selected-count {
+  font-size: 14px;
+  font-weight: 500;
+  color: #92400e;
+}
+
+.btn-bulk-delete {
+  padding: 8px 16px;
+  background: #dc2626;
+  color: #ffffff;
+  border: none;
+  border-radius: 6px;
+  font-size: 13px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: background 0.2s;
+}
+
+.btn-bulk-delete:hover:not(:disabled) {
+  background: #b91c1c;
+}
+
+.btn-bulk-delete:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+.btn-delete-all {
+  padding: 8px 16px;
+  background: transparent;
+  color: #dc2626;
+  border: 1px solid #dc2626;
+  border-radius: 6px;
+  font-size: 13px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.btn-delete-all:hover:not(:disabled) {
+  background: #dc2626;
+  color: #ffffff;
+}
+
+.btn-delete-all:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+.checkbox-col {
+  width: 40px;
+  text-align: center;
+}
+
+.checkbox-col input[type="checkbox"] {
+  width: 16px;
+  height: 16px;
+  cursor: pointer;
+}
+
+tr.row-selected {
+  background: #fef9c3 !important;
+}
+
+/* Bulk delete result banner */
+.alert-bulk-result {
+  position: relative;
+  padding: 16px 40px 16px 16px;
+  background: #ecfdf5;
+  border: 1px solid #6ee7b7;
+  border-radius: 8px;
+  margin-bottom: 16px;
+}
+
+.bulk-result-summary {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.bulk-result-summary strong {
+  color: #065f46;
+}
+
+.bulk-result-summary span {
+  font-size: 14px;
+  color: #047857;
+}
+
+.bulk-skipped-list {
+  margin: 8px 0 0 0;
+  padding-left: 20px;
+  font-size: 13px;
+  color: #92400e;
+}
+
+.alert-bulk-result > .close-btn {
+  position: absolute;
+  top: 8px;
+  right: 12px;
+  background: none;
+  border: none;
+  font-size: 18px;
+  cursor: pointer;
+  color: #6b7280;
+}
+
+/* Delete All Modal */
+.delete-all-modal {
+  max-width: 480px;
+}
+
+.delete-all-warning {
+  color: #dc2626;
+  margin-bottom: 12px;
+}
+
+.delete-all-input {
+  width: 100%;
+  padding: 10px 12px;
+  border: 2px solid #d1d5db;
+  border-radius: 6px;
+  font-size: 14px;
+  margin-top: 8px;
+  box-sizing: border-box;
+}
+
+.delete-all-input:focus {
+  border-color: #dc2626;
+  outline: none;
+}
+
+.btn-confirm-delete-all {
+  padding: 10px 20px;
+  background: #dc2626;
+  color: #ffffff;
+  border: none;
+  border-radius: 6px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: background 0.2s;
+}
+
+.btn-confirm-delete-all:hover:not(:disabled) {
+  background: #b91c1c;
+}
+
+.btn-confirm-delete-all:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+/* Admin Gigs View Toggle */
+.admin-gigs-view-toggle {
+  display: flex;
+  gap: 0;
+  margin-bottom: 1.5rem;
+  border: 1px solid #ddd;
+  border-radius: 8px;
+  overflow: hidden;
+  width: fit-content;
+}
+
+.admin-gigs-view-btn {
+  padding: 0.6rem 1.5rem;
+  border: none;
+  background: #f5f5f5;
+  color: #555;
+  font-size: 0.9rem;
+  font-weight: 500;
+  cursor: pointer;
+  transition: background 0.2s, color 0.2s;
+}
+
+.admin-gigs-view-btn:hover {
+  background: #e8e8e8;
+}
+
+.admin-gigs-view-btn.active {
+  background: #2563eb;
+  color: #fff;
+}
+
+/* Admin Deleted Gigs Section */
+.deleted-gigs-section {
+  padding: 1rem 0;
+}
+
+.deleted-gigs-filter {
+  display: flex;
+  gap: 0.75rem;
+  align-items: center;
+  margin-bottom: 1.5rem;
+}
+
+.deleted-gigs-filter input {
+  padding: 0.5rem 0.75rem;
+  border: 1px solid #ddd;
+  border-radius: 6px;
+  font-size: 0.9rem;
+  width: 280px;
+}
+
+.deleted-gigs-filter button {
+  padding: 0.5rem 1rem;
+  border: none;
+  border-radius: 6px;
+  background: #2563eb;
+  color: #fff;
+  font-size: 0.9rem;
+  cursor: pointer;
+}
+
+.deleted-gigs-filter button:hover {
+  background: #1d4ed8;
+}
+
+.deleted-gigs-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 0.9rem;
+}
+
+.deleted-gigs-table th,
+.deleted-gigs-table td {
+  padding: 0.75rem 1rem;
+  text-align: left;
+  border-bottom: 1px solid #eee;
+}
+
+.deleted-gigs-table th {
+  background: #f8f9fa;
+  font-weight: 600;
+  color: #444;
+}
+
+.deleted-gigs-table tr:hover {
+  background: #f9fafb;
+}
+
+.status-badge {
+  display: inline-block;
+  padding: 0.2rem 0.6rem;
+  border-radius: 12px;
+  font-size: 0.8rem;
+  font-weight: 500;
+}
+
+.status-restorable {
+  background: #dcfce7;
+  color: #166534;
+}
+
+.status-expired {
+  background: #fee2e2;
+  color: #991b1b;
+}
+
+.days-remaining {
+  font-weight: 500;
+  color: #444;
+}
+
+.days-remaining.warning {
+  color: #d97706;
+}
+
+.days-remaining.critical {
+  color: #dc2626;
+  font-weight: 600;
+}
+
+.deleted-gigs-pagination {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  gap: 1rem;
+  margin-top: 1.5rem;
+}
+
+.deleted-gigs-pagination button {
+  padding: 0.4rem 1rem;
+  border: 1px solid #ddd;
+  border-radius: 6px;
+  background: #fff;
+  cursor: pointer;
+  font-size: 0.85rem;
+}
+
+.deleted-gigs-pagination button:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.deleted-gigs-pagination span {
+  font-size: 0.9rem;
+  color: #555;
+}
+

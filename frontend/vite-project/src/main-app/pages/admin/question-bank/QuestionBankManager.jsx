@@ -11,15 +11,15 @@ const questionBankService = {
         throw new Error('Not authenticated');
       }
       
-      let endpoint = '/api/QuestionBank';
+      let endpoint = '/QuestionBank';
       
       // If category filter is applied
       if (filters.category) {
-        endpoint = `/api/QuestionBank/category/${encodeURIComponent(filters.category)}`;
+        endpoint = `/QuestionBank/category/${encodeURIComponent(filters.category)}`;
       } 
       // If userType filter is applied
       else if (filters.userType) {
-        endpoint = `/api/QuestionBank/userType/${encodeURIComponent(filters.userType)}`;
+        endpoint = `/QuestionBank/userType/${encodeURIComponent(filters.userType)}`;
       }
       
       const response = await api.get(endpoint, {
@@ -41,7 +41,7 @@ const questionBankService = {
         throw new Error('Not authenticated');
       }
       
-      const response = await api.get(`/api/QuestionBank/${id}`, {
+      const response = await api.get(`/QuestionBank/${id}`, {
         headers: { Authorization: `Bearer ${token}` }
       });
       
@@ -59,7 +59,7 @@ const questionBankService = {
         throw new Error('Not authenticated');
       }
       
-      const response = await api.post('/api/QuestionBank', questionData, {
+      const response = await api.post('/QuestionBank', questionData, {
         headers: { Authorization: `Bearer ${token}` }
       });
       
@@ -77,7 +77,7 @@ const questionBankService = {
         throw new Error('Not authenticated');
       }
       
-      const response = await api.post('/api/QuestionBank/batch', { Questions: questionsData }, {
+      const response = await api.post('/QuestionBank/batch', { Questions: questionsData }, {
         headers: { Authorization: `Bearer ${token}` }
       });
       
@@ -95,7 +95,7 @@ const questionBankService = {
         throw new Error('Not authenticated');
       }
       
-      const response = await api.put('/api/QuestionBank', questionData, {
+      const response = await api.put('/QuestionBank', questionData, {
         headers: { Authorization: `Bearer ${token}` }
       });
       
@@ -113,7 +113,7 @@ const questionBankService = {
         throw new Error('Not authenticated');
       }
       
-      const response = await api.delete(`/api/QuestionBank/${id}`, {
+      const response = await api.delete(`/QuestionBank/${id}`, {
         headers: { Authorization: `Bearer ${token}` }
       });
       
@@ -361,7 +361,7 @@ const questionBankService = {
       const batchSize = 10;
       for (let i = 0; i < sampleQuestions.length; i += batchSize) {
         const batch = sampleQuestions.slice(i, i + batchSize);
-        await api.post('/api/QuestionBank/batch', { Questions: batch }, {
+        await api.post('/QuestionBank/batch', { Questions: batch }, {
           headers: { Authorization: `Bearer ${token}` }
         });
       }

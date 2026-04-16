@@ -1,43 +1,28 @@
+/* ── Gig Creation Step Bar ────────────────────────────── */
 .page-bar-container {
   width: 100%;
-  padding: 1rem 8rem;
+  padding: 1rem 1rem;
   background-color: #f9f9f9;
-}
-@media (max-width: 768px) {
-  .page-bar-container {
-    padding: 1rem 2rem;
-  }
+  display: flex;
+  justify-content: center;
 }
 
 .page-bar-card {
-  background: white;
-  border-radius: 8px;
-  padding: 16px 24px;
+  background: #fff;
+  border-radius: 40px;
+  padding: 10px 32px;
   display: flex;
   align-items: center;
-  justify-content: space-between;
-  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
-  max-width: 100%;
-}
-@media (max-width: 768px) {
-  .page-bar-card {
-    padding: 12px 16px;
-    flex-direction: column;
-    gap: 16px;
-  }
+  justify-content: center;
+  box-shadow: 0 1px 6px rgba(0, 0, 0, 0.06);
+  width: 100%;
+  max-width: 920px;
 }
 
 .page-bar-steps {
   display: flex;
   align-items: center;
-  gap: 12px;
-}
-@media (max-width: 768px) {
-  .page-bar-steps {
-    gap: 8px;
-    flex-wrap: wrap;
-    justify-content: center;
-  }
+  gap: 4px;
 }
 
 .page-step {
@@ -45,134 +30,134 @@
   align-items: center;
   gap: 8px;
   cursor: default;
-  transition: all 0.3s ease;
-  padding: 4px 8px;
-  border-radius: 6px;
+  padding: 6px 14px;
+  border-radius: 24px;
+  transition: background-color 0.2s;
 }
 .page-step.clickable {
   cursor: pointer;
 }
 .page-step.clickable:hover {
-  background-color: rgba(29, 191, 115, 0.1);
+  background-color: rgba(197, 162, 77, 0.08);
 }
-.page-step.active {
-  background-color: rgba(29, 191, 115, 0.1);
-}
+
+/* Active step — gold/amber */
 .page-step.active .step-number {
-  background-color: #1dbf73;
-  color: white;
-  transform: scale(1.1);
+  background-color: #C5A24D;
+  color: #fff;
+  border-color: #C5A24D;
 }
 .page-step.active .step-name {
-  color: #1dbf73;
+  color: #C5A24D;
   font-weight: 600;
 }
+
+/* Completed valid — gold check */
 .page-step.completed-valid .step-number {
-  background-color: #4caf50;
-  color: white;
-  font-size: 14px;
-  font-weight: bold;
+  background-color: #C5A24D;
+  color: #fff;
+  font-size: 13px;
+  font-weight: 700;
+  border-color: #C5A24D;
 }
 .page-step.completed-valid .step-name {
-  color: #4caf50;
+  color: #333;
   font-weight: 500;
 }
+
+/* Completed invalid — red */
 .page-step.completed-invalid .step-number {
   background-color: #e74c3c;
-  color: white;
-  font-size: 14px;
-  font-weight: bold;
+  color: #fff;
+  font-size: 13px;
+  font-weight: 700;
+  border-color: #e74c3c;
 }
 .page-step.completed-invalid .step-name {
   color: #e74c3c;
   font-weight: 500;
-}
-@media (max-width: 768px) {
-  .page-step {
-    gap: 6px;
-  }
-  .page-step .step-name {
-    font-size: 12px;
-  }
 }
 
 .step-number {
   width: 28px;
   height: 28px;
   border-radius: 50%;
-  background-color: #f5f5f5;
+  background-color: #f0f0f0;
   display: flex;
   align-items: center;
   justify-content: center;
   font-size: 13px;
   font-weight: 600;
-  color: #999;
-  transition: all 0.3s ease;
-  border: 2px solid transparent;
-}
-@media (max-width: 768px) {
-  .step-number {
-    width: 24px;
-    height: 24px;
-    font-size: 11px;
-  }
+  color: #aaa;
+  border: 2px solid #e0e0e0;
+  transition: all 0.25s;
+  flex-shrink: 0;
 }
 
 .step-name {
   font-size: 14px;
-  color: #666;
+  color: #999;
   font-weight: 500;
-  transition: all 0.3s ease;
   white-space: nowrap;
-}
-@media (max-width: 768px) {
-  .step-name {
-    font-size: 12px;
-  }
+  transition: color 0.25s;
 }
 
 .step-separator {
   color: #ccc;
-  margin: 0 4px;
-  font-size: 16px;
-  transition: color 0.3s ease;
-}
-@media (max-width: 768px) {
-  .step-separator {
-    font-size: 14px;
-    margin: 0 2px;
-  }
+  margin: 0 2px;
+  font-size: 14px;
 }
 
 .page-bar-actions {
   margin-left: auto;
 }
-@media (max-width: 768px) {
-  .page-bar-actions {
-    margin-left: 0;
-  }
-}
 
 .save-button {
   padding: 8px 16px;
-  font-size: 14px;
-  background-color: #f5f5f5;
-  color: #333;
+  font-size: 13px;
+  background-color: transparent;
+  color: #666;
   border: none;
   border-radius: 6px;
   cursor: pointer;
-  transition: all 0.3s ease;
   font-weight: 500;
+  transition: color 0.2s;
 }
 .save-button:hover {
-  background-color: #e0e0e0;
-  transform: translateY(-1px);
-  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+  color: #333;
 }
-.save-button:active {
-  transform: translateY(0);
-}
+
+/* ── Responsive ──────────────────────────────────────── */
 @media (max-width: 768px) {
+  .page-bar-container {
+    padding: 0.75rem 0.5rem;
+  }
+  .page-bar-card {
+    padding: 8px 16px;
+    border-radius: 30px;
+  }
+  .page-bar-steps {
+    gap: 2px;
+  }
+  .page-step {
+    gap: 5px;
+    padding: 4px 8px;
+  }
+  .step-number {
+    width: 24px;
+    height: 24px;
+    font-size: 11px;
+  }
+  .step-name {
+    font-size: 12px;
+  }
+  .step-separator {
+    font-size: 12px;
+    margin: 0 1px;
+  }
+  .page-bar-actions {
+    margin-left: 0;
+  }
   .save-button {
     padding: 6px 12px;
     font-size: 12px;

@@ -11,7 +11,7 @@ const AddressInput = ({
   value = '',
   onChange,
   onValidation,
-  placeholder = 'Enter full address (e.g., 123 Main St, Los Angeles, CA 90210)',
+  placeholder = 'Enter area or address (e.g., Lekki Phase 1, Lagos)',
   disabled = false,
   required = false,
   className = '',

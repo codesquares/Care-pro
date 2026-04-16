@@ -1,12 +1,21 @@
 /* ===== Caregiver Subscriptions Page ===== */
 .cg-subs-page {
-  background: #f9f9f9;
-  min-height: calc(100vh - 70px);
+  background: #fafaf7;
+  min-height: 100vh;
+}
+.cg-subs__banner {
+  margin-bottom: 0;
+}
+.cg-subs__banner-sub {
+  font-size: 0.95rem;
+  color: #1f2e5a;
+  margin: 0;
+  opacity: 0.8;
 }
 .cg-subs-container {
-  max-width: 900px;
+  max-width: 960px;
   margin: 0 auto;
-  padding: 24px 20px;
+  padding: 0 20px 60px;
 }
 .cg-subs__title {
   font-size: 24px;
@@ -41,4 +50,67 @@
 .cg-subs__list {
   display: grid;
   gap: 14px;
+}
+
+/* Summary cards */
+.cg-subs__summary {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+  gap: 14px;
+  margin-bottom: 24px;
+}
+.cg-subs__stat-card {
+  background: #fff;
+  border: 1px solid #e2e0d6;
+  border-radius: 12px;
+  padding: 18px 20px;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+.cg-subs__stat-label {
+  font-size: 12px;
+  font-weight: 600;
+  text-transform: uppercase;
+  color: #888;
+  letter-spacing: 0.5px;
+}
+.cg-subs__stat-value {
+  font-size: 22px;
+  font-weight: 700;
+  color: #1f2e5a;
+}
+
+/* Filter tabs */
+.cg-subs__filters {
+  display: flex;
+  gap: 0;
+  border-bottom: 1px solid #e2e0d6;
+  overflow-x: auto;
+  -webkit-overflow-scrolling: touch;
+  scrollbar-width: none;
+  margin-bottom: 22px;
+}
+.cg-subs__filters::-webkit-scrollbar {
+  display: none;
+}
+.cg-subs__filter-btn {
+  padding: 12px 16px;
+  background: none;
+  border: none;
+  border-bottom: 2px solid transparent;
+  font-size: 0.82rem;
+  font-weight: 500;
+  color: #64748b;
+  cursor: pointer;
+  white-space: nowrap;
+  transition: all 0.2s;
+  font-family: inherit;
+}
+.cg-subs__filter-btn:hover { color: #1e293b; }
+.cg-subs__filter-btn--active { color: #1f2e5a; font-weight: 600; border-bottom-color: #1f2e5a; }
+
+@media (max-width: 640px) {
+  .cg-subs-container { padding: 0 12px 40px; }
+  .cg-subs__filter-btn { padding: 10px 12px; font-size: 0.78rem; }
 }

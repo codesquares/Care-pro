@@ -18,11 +18,10 @@ const CaregiverProcess = ({buttonText="Hire a Caregiver", btnBgColor="#373732", 
   }
   
   const steps = [
-    { icon: ep_select  , text: "Sign up and get verified: Provide details needed to vet you and get verified by the team." },
-    { icon:  bi_stars , text: "Create a gig: Create a gig which will be made visible to profiles on the platform." },
-    { icon:  clarity , text: "Get selected to give care: Get notified and speak with recipient on the platform when you recieve an order." },
-    { icon: tdesign, text: "Recieve Payment Get paid after confirmation of payment from recipient of service" },
-    
+    { icon: ep_select, title: "Sign Up & Get Verified", description: "Create your account and provide the details needed to verify your identity and qualifications. Our team reviews every application to ensure trust and safety." },
+    { icon: bi_stars, title: "Create Your Service Gig", description: "Set up your care service listing with your skills, experience, availability, and rates. Your gig will be visible to clients searching the marketplace." },
+    { icon: clarity, title: "Get Selected & Connect", description: "When a client selects you, you'll be notified instantly. Chat directly with them on the platform to discuss care needs and schedule details." },
+    { icon: tdesign, title: "Deliver Care & Get Paid", description: "Provide quality care to your client. Once the service is confirmed as complete, payment is securely released to you through the platform." },
   ];
   
   const handleButtonClick = async () => {
@@ -48,8 +47,12 @@ const CaregiverProcess = ({buttonText="Hire a Caregiver", btnBgColor="#373732", 
         <div className="steps-list">
           {steps.map((step, index) => (
             <div key={index} className="step-item">
-              <div className="icon"><img src={step.icon} alt={step.text} /></div>
-              <div className="text">{step.text}</div>
+              <div className="step-number">{index + 1}</div>
+              <div className="icon"><img src={step.icon} alt={step.title} /></div>
+              <div className="step-content">
+                <h3 className="step-title">{step.title}</h3>
+                <p className="step-description">{step.description}</p>
+              </div>
             </div>
           ))}
           <button className="hire-button"

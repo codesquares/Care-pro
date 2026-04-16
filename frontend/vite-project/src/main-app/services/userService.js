@@ -123,12 +123,18 @@ export const userService = {
   },
 
   // Update user location
-  updateLocation: async (location) => {
+  updateLocation: async (address, latitude, longitude) => {
     try {
       const userDetails = JSON.parse(localStorage.getItem("userDetails"));
       
       if (!userDetails?.id) {
         throw new Error("User ID not found");
+      }
+
+      const payload = { address };
+      if (latitude != null && longitude != null) {
+        payload.latitude = latitude;
+        payload.longitude = longitude;
       }
 
       const response = await fetch(`${config.BASE_URL}/CareGivers/UpdateCaregiverLocation/${userDetails.id}`, { // Using centralized API config
@@ -137,7 +143,7 @@ export const userService = {
           'Content-Type': 'application/json',
           'Authorization': `Bearer ${localStorage.getItem('authToken') || ''}`
         },
-        body: JSON.stringify({ location }),
+        body: JSON.stringify(payload),
       });
 
       if (!response.ok) {

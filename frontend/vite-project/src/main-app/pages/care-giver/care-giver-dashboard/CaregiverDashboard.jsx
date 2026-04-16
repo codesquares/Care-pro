@@ -7,10 +7,8 @@ import OrderList from './OrderList';
 import './CaregiverDashboard.css';
 import setting from '../../../../assets/setting.png';
 import config from '../../../config'; // Import centralized config for API URLs
-import CaregiverSubscriptionWidget from './CaregiverSubscriptionWidget';
 
 const CaregiverDashboard = () => {
-  const [filter, setFilter] = useState('All Orders'); // Default filter is 'All Orders'
   const [orders, setOrders] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
@@ -19,34 +17,42 @@ const CaregiverDashboard = () => {
       const navigate = useNavigate();
       const basePath = "/app/caregiver";
 
-  const handleFilterChange = (e) => {
-    setFilter(e.target.value); // Update the filter state based on the selected option
-  };
-
    // Retrieve user details from localStorage
    const userDetails = JSON.parse(localStorage.getItem("userDetails") || "{}");
    const caregiverId = userDetails?.id;
    // FIXED: Use centralized config instead of hardcoded Azure staging API URL fallback
    const vite_API_URL = config.BASE_URL; // Use centralized config for consistent API routing
-   // Ensure this is set in your .env file
-   const API_URL = `${vite_API_URL}/ClientOrders/CaregiverOrders/caregiverId?caregiverId=${caregiverId}`;
 
    useEffect(() => {
      const fetchOrders = async () => {
+       if (!caregiverId) {
+         setError('User not logged in');
+         setLoading(false);
+         return;
+       }
        try {
          const token = localStorage.getItem('authToken');
-         const response = await fetch(API_URL, {
-           headers: {
-             'Authorization': `Bearer ${token}`,
-             'Content-Type': 'application/json'
+         const response = await fetch(
+           `${vite_API_URL}/ClientOrders/CaregiverOrders/caregiverId?caregiverId=${caregiverId}`,
+           {
+             headers: {
+               'Authorization': `Bearer ${token}`,
+               'Content-Type': 'application/json'
+             }
            }
-         });
+         );
          if (!response.ok) {
            throw new Error(`Failed to fetch orders: ${response.status} ${response.statusText}`);
          }
          const data = await response.json();
  
          const ordersArray = Array.isArray(data) ? data : data.clientOrders || [];
+         // Sort orders by most recent first
+         ordersArray.sort((a, b) => {
+           const dateA = new Date(a.orderCreatedOn || a.orderDate || a.createdAt || 0);
+           const dateB = new Date(b.orderCreatedOn || b.orderDate || b.createdAt || 0);
+           return dateB - dateA;
+         });
          setOrders(ordersArray);
          setTotalOrders(ordersArray.length);
           // setTotalEarnings(data.totalEarning);
@@ -59,21 +65,32 @@ const CaregiverDashboard = () => {
      };
  
      fetchOrders();
-   }, []);
+   }, [caregiverId]);
 
-  // console.log("orders===>",orders) 
-  const earningsTotal = (orders || []).reduce((acc, order) => {
-    if (order.clientOrderStatus === 'Completed') {
-      return acc + (order.amount || 0);
-    }
-    return acc;
-  }, 0);
-
+  // Fetch total earnings from the same endpoint used by the NavigationBar
   useEffect(() => {
-    setTotalEarnings(earningsTotal);
-  }, [orders, earningsTotal]);
+    const fetchEarnings = async () => {
+      if (!caregiverId) return;
+      try {
+        const token = localStorage.getItem('authToken');
+        const response = await fetch(
+          `${vite_API_URL}/WithdrawalRequests/TotalAmountEarnedAndWithdrawn/${caregiverId}`,
+          {
+            headers: {
+              'Content-Type': 'application/json',
+              'Authorization': `Bearer ${token}`,
+            },
+          }
+        );
+        const data = await response.json();
+        setTotalEarnings(data.totalAmountEarned ?? 0);
+      } catch (error) {
+        console.error('Failed to fetch earnings:', error);
+      }
+    };
 
-  // console.log("totalEarnings===>", totalEarnings);
+    fetchEarnings();
+  }, [caregiverId, vite_API_URL]);
 
   // Add loading state for initial render
   if (loading) {
@@ -133,23 +150,16 @@ const CaregiverDashboard = () => {
         </div>
 
         <div className="rightbar">
-          <CaregiverSubscriptionWidget />
-
-          <div className="select-dropdown-container">
-            <label htmlFor="order-filter" className="sr-only">Filter orders</label>
-            <select
-              id="order-filter"
-              className="custom-select"
-              value={filter} // Set the selected option based on filter state
-              onChange={handleFilterChange} // Update state on change
+          <div className="rightbar-header">
+            <h3 className="rightbar-title">Recent Orders</h3>
+            <button
+              className="view-all-orders-btn"
+              onClick={() => navigate(`${basePath}/orders`)}
             >
-              <option value="All Orders">All Orders</option>
-              <option value="In Progress">In Progress</option>
-              <option value="Completed">Completed</option>
-              <option value="Cancelled">Cancelled</option>
-            </select>
+              View All Orders →
+            </button>
           </div>
-          <OrderList filter={filter} orders={orders} loading={loading} error={error} /> {/* Pass the selected filter to OrderList */}
+          <OrderList filter="All Orders" orders={orders.slice(0, 5)} loading={loading} error={error} />
         </div>
       </div>
     </>

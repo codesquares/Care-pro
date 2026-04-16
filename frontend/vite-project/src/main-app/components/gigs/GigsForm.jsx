@@ -29,6 +29,7 @@ import GigService from "../../services/gigService";
 import { isSpecializedCategory, toServiceKey } from "../../constants/serviceClassification";
 import specializedAssessmentService from "../../services/specializedAssessmentService";
 import CertificateUploadModal from "../shared/CertificateUploadModal";
+import { fetchGigTemplates, buildCategoriesMap, getTagsForSubcategories, getSampleTasks } from "../../services/gigTemplateService";
 
 const GigsForm = () => {
   const pages = ["Overview", "Pricing", "Gallery", "Publish"];
@@ -65,6 +66,9 @@ const GigsForm = () => {
   const [eligibilityError, setEligibilityError] = useState(null); // 403 error details from publish
   const [showEligibilityModal, setShowEligibilityModal] = useState(false);
   const [showCertUpload, setShowCertUpload] = useState(false);
+  // Gig template data from API
+  const [gigTemplates, setGigTemplates] = useState(null);
+  const [categories, setCategories] = useState({});
   const navigate = useNavigate();
   
   // Use caregiver status context for eligibility
@@ -73,7 +77,8 @@ const GigsForm = () => {
     isLoading: isLoadingStatus,
     isVerified,
     isQualified,
-    hasCertificates
+    hasCertificates,
+    refreshStatusData
   } = useCaregiverStatus();
   
   // Use context for form state and current step
@@ -129,6 +134,29 @@ const GigsForm = () => {
     };
     fetchEligibility();
   }, []);
+
+  // Fetch gig templates from API (categories, subcategories, tags, sample tasks)
+  useEffect(() => {
+    const loadTemplates = async () => {
+      try {
+        const data = await fetchGigTemplates();
+        setGigTemplates(data);
+        setCategories(buildCategoriesMap(data));
+      } catch (err) {
+        console.warn('Could not fetch gig templates, using empty categories:', err);
+      }
+    };
+    loadTemplates();
+  }, []);
+
+  // Derive suggested tags and sample tasks based on current category + subcategory selection
+  const suggestedTags = gigTemplates && formData.category
+    ? getTagsForSubcategories(gigTemplates, formData.category, formData.subcategory || [])
+    : [];
+
+  const sampleTasks = gigTemplates && formData.category
+    ? getSampleTasks(gigTemplates, formData.category, formData.subcategory || [])
+    : [];
 
   const goToNextPage = () => {
     const currentPageValidation = validateCurrentPage();
@@ -295,11 +323,13 @@ const GigsForm = () => {
       }
       
       try {
-        console.log('🔄 Auto-saving draft...');
+        console.log('🔄 Auto-saving draft...', 'data.id:', data.id);
         const result = await GigService.saveDraft(data);
         
-        // Only update form data with saved draft ID if save was successful
-        if (result.success && result.id && !formData.id) {
+        // Store the draft ID if this was a new creation (POST)
+        // Use data.id (the parameter) instead of formData (closure) to avoid stale reference
+        if (result.success && result.id && !data.id) {
+          console.log('📌 Auto-save captured new draft ID:', result.id);
           updateField('id', result.id);
         }
         
@@ -437,6 +467,8 @@ const GigsForm = () => {
     };
 
     fetchActiveGigsCount();
+    // Refresh caregiver eligibility status to ensure fresh data
+    refreshStatusData();
   }, []);
 
   // Cleanup blob URLs on component unmount
@@ -452,48 +484,7 @@ const GigsForm = () => {
     ? formData.searchTags.join(", ")
     : null;
 
-  const categories = {
-    "Adult Care": [
-      "Companionship", "Meal preparation", "Mobility assistance", "Medication reminders",
-      "Bathing and grooming", "Dressing assistance", "Toileting and hygiene support",
-      "Incontinence care", "Overnight supervision", "Chronic illness management"
-    ],
-    "Post Surgery Care": [
-      "Wound care", "Medication management", "Post-surgery care",
-      "Mobility assistance", "Home safety assessment", "Feeding assistance"
-    ],
-    "Child Care": [
-      "Respite", "Babysitting", "Meal preparation", "Recreational activities assistance",
-      "Emotional support and check-ins"
-    ],
-    "Pet Care": [
-      "Pet minding", "Dog walking", "Feeding assistance", "Companionship"
-    ],
-    "Home Care": [
-      "Light housekeeping", "Cleaning", "Cooking", "Home safety assessment",
-      "Errands and shopping", "Transportation to appointments"
-    ],
-    "Special Needs Care": [
-      "Dementia care", "Autism support", "Behavioral support", "Disability support services",
-      "Assistive device training", "Language or communication support"
-    ],
-    "Medical Support": [
-      "Nursing care", "Medication reminders", "Medical appointment coordination",
-      "Palliative care support", "Chronic illness management"
-    ],
-    "Mobility Support": [
-      "Mobility assistance", "Fall prevention monitoring", "Exercise and fitness support",
-      "Assistive device training", "Transportation to appointments"
-    ],
-    "Therapy & Wellness": [
-      "Physical therapy support", "Cognitive stimulation activities", "Emotional support and check-ins",
-      "Recreational activities assistance", "Acupuncture", "Massage therapy"
-    ],
-    "Palliative": [
-      "Palliative care support", "Overnight supervision", "Emotional support and check-ins",
-      "Home safety assessment"
-    ],
-  };
+  // categories is now loaded from API via gigTemplateService (state initialized above)
 
   console.log("services:", formData.subcategory);
 
@@ -507,6 +498,7 @@ const GigsForm = () => {
       return;
     }
 
+    setSaving(true);
     try {
       const formDataPayload = new FormData();
 
@@ -573,7 +565,7 @@ const GigsForm = () => {
         formDataPayload.append("Description", formData.description);
       }
 
-      // Handle create vs update based on edit mode
+      // Handle create vs update — use formData.id to decide (covers both edit mode and auto-saved drafts)
       let response;
       const authToken = localStorage.getItem('authToken');
       const draftRequestConfig = {
@@ -581,10 +573,10 @@ const GigsForm = () => {
           ...(authToken ? { Authorization: `Bearer ${authToken}` } : {})
         }
       };
-      if (isEditMode && formData?.id) {
+      if (formData?.id) {
         console.log(`🔄 Updating existing draft gig with ID: ${formData.id}`);
         response = await axios.put(
-          `${config.BASE_URL}/Gigs/UpdateGig/gigId?gigId=${formData.id}`,
+          `${config.BASE_URL}/Gigs/UpdateGig/${formData.id}`,
           formDataPayload,
           draftRequestConfig
         );
@@ -598,6 +590,12 @@ const GigsForm = () => {
       }
 
       if (response.status === 200) {
+        // Store the returned gig ID to prevent duplicate drafts
+        const returnedId = response.data?.id || response.data?.Id;
+        if (returnedId && !formData.id) {
+          console.log('📌 Draft save captured new gig ID:', returnedId);
+          updateField('id', String(returnedId));
+        }
         setServerMessage("Gig saved as draft successfully!");
         setModalTitle("Success!");
         setModalDescription("Your Gig has been successfully saved as draft.");
@@ -610,6 +608,8 @@ const GigsForm = () => {
       console.error("Error saving draft:", err);
       setServerMessage("Failed to save draft.");
       toast.error("Failed to save draft. Please try again.");
+    } finally {
+      setSaving(false);
     }
   };
 
@@ -806,11 +806,11 @@ const GigsForm = () => {
           }
         };
 
-        if (isEditMode && formData?.id) {
-          console.log(`🔄 Updating existing gig with ID: ${formData.id}`);
+        if (formData?.id) {
+          console.log(`🔄 Updating existing gig with ID: ${formData.id} (isEditMode: ${isEditMode})`);
           // Use centralized config for gig operations
           response = await axios.put(
-            `${config.BASE_URL}/Gigs/UpdateGig/gigId?gigId=${formData.id}`,
+            `${config.BASE_URL}/Gigs/UpdateGig/${formData.id}`,
             formDataPayload,
             requestConfig
           );
@@ -1025,7 +1025,7 @@ const GigsForm = () => {
 
       <div className="gigs-form-body">
         <div className="gigs-form-content">
-          <div className="main-content">
+          <div className="gigs-form-main">
             <PageBar 
               pages={pages} 
               currentPage={currentStep}
@@ -1046,6 +1046,7 @@ const GigsForm = () => {
                 onFieldLeave={handleFieldLeave}
                 clearValidationErrors={clearValidationErrors}
                 categoryEligibility={categoryEligibility}
+                suggestedTags={suggestedTags}
               />
             )}
             {currentStep === 1 && (
@@ -1060,6 +1061,7 @@ const GigsForm = () => {
                 onFieldLeave={handleFieldLeave}
                 validationErrors={validationErrors}
                 category={formData.category}
+                sampleTasks={sampleTasks}
               />
             )}
             {currentStep === 2 && (

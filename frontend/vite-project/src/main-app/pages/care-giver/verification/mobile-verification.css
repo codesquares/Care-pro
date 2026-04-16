@@ -2,7 +2,7 @@
 
 /* Global Mobile Verification Container */
 .mobile-verification-page {
-  min-height: 100vh;
+  height: calc(100vh - 64px);
   background: linear-gradient(135deg, #f8fafc 0%, #e2e8f0 50%, #f1f5f9 100%);
   padding: 0;
   margin: 0;
@@ -10,6 +10,7 @@
   display: flex;
   align-items: center;
   justify-content: center;
+  overflow: hidden;
 }
 
 .mobile-verification-container {
@@ -17,12 +18,23 @@
   width: 100%;
   padding: 20px;
   background: transparent;
-  min-height: 100vh;
+  max-height: calc(100vh - 64px);
   display: flex;
   flex-direction: column;
-  justify-content: center;
+  justify-content: flex-start;
   gap: 20px;
   box-sizing: border-box;
+  overflow: hidden;
+}
+
+/* Mobile navbar adjustment */
+@media (max-width: 1023px) {
+  .mobile-verification-page {
+    height: calc(100vh - 56px);
+  }
+  .mobile-verification-container {
+    max-height: calc(100vh - 56px);
+  }
 }
 
 /* Desktop scaling for larger screens */
@@ -468,13 +480,38 @@
 .verification-card {
   background: white;
   border-radius: 12px;
-  padding: 40px 32px;
+  padding: 0 32px 40px;
   box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
   width: 100%;
   max-width: 100%;
   box-sizing: border-box;
   border: 1px solid #e5e7eb;
   margin: 0 auto;
+  max-height: calc(100vh - 64px - 40px);
+  overflow-y: auto;
+  scrollbar-width: thin;
+  scrollbar-color: #06b6d4 #f0f0f0;
+}
+
+.verification-card::-webkit-scrollbar {
+  width: 6px;
+}
+.verification-card::-webkit-scrollbar-track {
+  background: #f0f0f0;
+  border-radius: 3px;
+}
+.verification-card::-webkit-scrollbar-thumb {
+  background: #06b6d4;
+  border-radius: 3px;
+}
+.verification-card::-webkit-scrollbar-thumb:hover {
+  background: #0891b2;
+}
+
+@media (max-width: 1023px) {
+  .verification-card {
+    max-height: calc(100vh - 56px - 40px);
+  }
 }
 
 .verification-content h2 {
@@ -485,6 +522,13 @@
   text-align: center;
   line-height: 1.2;
   letter-spacing: -0.025em;
+  position: sticky;
+  top: 0;
+  background: white;
+  z-index: 10;
+  padding-top: 40px;
+  padding-bottom: 10px;
+  border-bottom: 1px solid #f0f0f0;
 }
 
 .verification-subtitle {

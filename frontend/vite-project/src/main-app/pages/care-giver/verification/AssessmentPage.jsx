@@ -13,7 +13,7 @@ import { CATEGORY_TIER_MAP, SERVICE_TIERS } from "../../../constants/serviceClas
 
 const AssessmentPage = () => {
   const navigate = useNavigate();
-  const { refreshStatusData } = useCaregiverStatus();
+  const { refreshStatusData, isVerified, hasCertificates } = useCaregiverStatus();
   const [currentStep, setCurrentStep] = useState("hub"); // hub, welcome, instructions, questions, thank-you
   const [generalStatus, setGeneralStatus] = useState(null);
   const [generalStatusLoading, setGeneralStatusLoading] = useState(true);
@@ -408,9 +408,9 @@ const AssessmentPage = () => {
       localStorage.setItem('qualificationStatus', JSON.stringify(updatedStatus));
     }
     
-    // Scroll to top when transitioning to instructions
+    // Scroll to top when transitioning to questions
     window.scrollTo(0, 0);
-    setCurrentStep("instructions");
+    setCurrentStep("questions");
   };
 
   const beginQuestions = () => {
@@ -662,7 +662,8 @@ const AssessmentPage = () => {
             </div>
           </div>
 
-          {/* ── Specialized Assessments ──────────────────────────────── */}
+          {/* ── Specialized Assessments (temporarily disabled) ─────── */}
+          {false && (
           <div className="hub-section">
             <div className="hub-section-header">
               <h2><i className="fas fa-star"></i> Specialized Assessments</h2>
@@ -678,6 +679,7 @@ const AssessmentPage = () => {
               onUploadCert={() => setShowCertUpload(true)}
             />
           </div>
+          )}
         </div>
       </div>
     );
@@ -1300,7 +1302,9 @@ const AssessmentPage = () => {
                   </div>
                   <p className="score-message">
                     {isPassing 
-                      ? "Your assessment demonstrates excellent understanding of caregiving principles. You are now ready to start helping clients." 
+                      ? (isVerified && hasCertificates
+                          ? "Congratulations! You're fully eligible to publish gigs and start helping clients."
+                          : "Great job! Complete the remaining steps below to start publishing gigs.")
                       : "You have one more shot at getting this right, you can come back in time or try again now."
                     }
                   </p>
@@ -1311,19 +1315,41 @@ const AssessmentPage = () => {
               <div className="result-actions">
                 {isPassing ? (
                   <>
-                    <button 
-                      className="proceed-btn success"
-                      onClick={backToHub}
-                    >
-                      View All Assessments
-                      <i className="fas fa-arrow-right"></i>
-                    </button>
-                    <button 
-                      className="proceed-btn outline"
-                      onClick={() => navigate('/app/caregiver/profile')}
-                    >
-                      Go to Profile
-                    </button>
+                    {!isVerified && (
+                      <button 
+                        className="proceed-btn outline"
+                        onClick={() => navigate('/app/caregiver/verification')}
+                      >
+                        Get Verified
+                        <i className="fas fa-id-card" style={{ marginLeft: '6px' }}></i>
+                      </button>
+                    )}
+                    {!hasCertificates && (
+                      <button 
+                        className="proceed-btn outline"
+                        onClick={() => navigate('/app/caregiver/profile')}
+                      >
+                        Upload Certificates
+                        <i className="fas fa-file-upload" style={{ marginLeft: '6px' }}></i>
+                      </button>
+                    )}
+                    {isVerified && hasCertificates ? (
+                      <button 
+                        className="proceed-btn success"
+                        onClick={() => navigate('/app/caregiver/create-gigs')}
+                      >
+                        Create a Gig
+                        <i className="fas fa-arrow-right"></i>
+                      </button>
+                    ) : (
+                      <button 
+                        className="proceed-btn success"
+                        onClick={() => navigate('/app/caregiver/profile')}
+                      >
+                        Go to Profile
+                        <i className="fas fa-arrow-right"></i>
+                      </button>
+                    )}
                   </>
                 ) : (
                   <>

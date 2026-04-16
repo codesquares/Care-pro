@@ -3,6 +3,16 @@ import "./CaregiverSettings.css";
 import { toast } from "react-toastify";
 import ProfileHeader from "../../pages/care-giver/care-giver-profile/ProfileHeader";
 import config from "../../config";
+import caregiverBankAccountService from "../../services/caregiverBankAccountService";
+
+const NIGERIAN_BANKS = [
+  'Access Bank', 'Guaranty Trust Bank', 'First Bank of Nigeria',
+  'United Bank for Africa', 'Zenith Bank', 'Fidelity Bank',
+  'Sterling Bank', 'Stanbic IBTC Bank', 'Union Bank of Nigeria',
+  'Wema Bank', 'Ecobank Nigeria', 'Heritage Bank', 'Keystone Bank',
+  'Polaris Bank', 'Unity Bank', 'Citibank Nigeria',
+  'Standard Chartered Bank', 'Providus Bank', 'Kuda Bank', 'Opay', 'PalmPay',
+];
 
 const CaregiverSettings = () => {
   const [currentPassword, setCurrentPassword] = useState("");
@@ -12,10 +22,24 @@ const CaregiverSettings = () => {
   const [userData, setUserData] = useState(null);
   const [loading, setLoading] = useState(true);
 
+  // Bank account state
+  const [bankForm, setBankForm] = useState({
+    fullName: '',
+    bankName: '',
+    accountNumber: '',
+    accountName: '',
+  });
+  const [bankErrors, setBankErrors] = useState({});
+  const [bankLoading, setBankLoading] = useState(true);
+  const [bankSaving, setBankSaving] = useState(false);
+  const [hasSavedBank, setHasSavedBank] = useState(false);
+  const [isEditingBank, setIsEditingBank] = useState(false);
+
+  const userDetails = JSON.parse(localStorage.getItem("userDetails")) || {};
+
   useEffect(() => {
     const fetchUserData = async () => {
       try {
-        const userDetails = JSON.parse(localStorage.getItem("userDetails"));
         const userId = userDetails?.id;
 
         if (!userId) {
@@ -43,7 +67,30 @@ const CaregiverSettings = () => {
       }
     };
 
+    const fetchBankAccount = async () => {
+      try {
+        setBankLoading(true);
+        const result = await caregiverBankAccountService.getBankAccount(userDetails.id);
+        if (result.success && result.data) {
+          setBankForm({
+            fullName: result.data.fullName || '',
+            bankName: result.data.bankName || '',
+            accountNumber: result.data.accountNumber || '',
+            accountName: result.data.accountName || '',
+          });
+          setHasSavedBank(true);
+        }
+      } catch (err) {
+        console.error('Error fetching bank account:', err);
+      } finally {
+        setBankLoading(false);
+      }
+    };
+
     fetchUserData();
+    if (userDetails?.id) {
+      fetchBankAccount();
+    }
   }, []);
 
   const handlePasswordChange = async () => {
@@ -86,6 +133,48 @@ const CaregiverSettings = () => {
       setConfirmNewPassword("");
     } catch (err) {
       setPasswordMessage(`Error: ${err.message}`);
+    }
+  };
+
+  const handleBankInputChange = (e) => {
+    const { name, value } = e.target;
+    setBankForm((prev) => ({ ...prev, [name]: value }));
+    if (bankErrors[name]) {
+      setBankErrors((prev) => ({ ...prev, [name]: '' }));
+    }
+  };
+
+  const validateBankForm = () => {
+    const errs = {};
+    if (!bankForm.fullName.trim()) errs.fullName = 'Full name is required';
+    if (!bankForm.bankName) errs.bankName = 'Please select a bank';
+    if (!bankForm.accountNumber) {
+      errs.accountNumber = 'Account number is required';
+    } else if (!/^\d{10,}$/.test(bankForm.accountNumber)) {
+      errs.accountNumber = 'Account number must be at least 10 digits';
+    }
+    if (!bankForm.accountName.trim()) errs.accountName = 'Account name is required';
+    setBankErrors(errs);
+    return Object.keys(errs).length === 0;
+  };
+
+  const handleBankSave = async () => {
+    if (!validateBankForm()) return;
+    try {
+      setBankSaving(true);
+      const result = await caregiverBankAccountService.upsertBankAccount(bankForm);
+      if (result.success) {
+        toast.success('Bank account details saved successfully.');
+        setHasSavedBank(true);
+        setIsEditingBank(false);
+      } else {
+        toast.error(result.error || 'Failed to save bank details.');
+      }
+    } catch (err) {
+      console.error('Error saving bank account:', err);
+      toast.error('An error occurred while saving bank details.');
+    } finally {
+      setBankSaving(false);
     }
   };
 
@@ -156,6 +245,105 @@ const CaregiverSettings = () => {
             <button className="save-changes-btn" onClick={handlePasswordChange}>
               Save Changes
             </button>
+          </div>
+
+          <div className="settings-card">
+            <h3>Bank Account Details</h3>
+            {bankLoading ? (
+              <p>Loading bank details...</p>
+            ) : hasSavedBank && !isEditingBank ? (
+              <>
+                <div className="form-group">
+                  <label>Full Name</label>
+                  <input type="text" value={bankForm.fullName} readOnly />
+                </div>
+                <div className="form-group">
+                  <label>Bank Name</label>
+                  <input type="text" value={bankForm.bankName} readOnly />
+                </div>
+                <div className="form-group">
+                  <label>Account Number</label>
+                  <input type="text" value={bankForm.accountNumber} readOnly />
+                </div>
+                <div className="form-group">
+                  <label>Account Name</label>
+                  <input type="text" value={bankForm.accountName} readOnly />
+                </div>
+                <button className="save-changes-btn" onClick={() => setIsEditingBank(true)}>
+                  Edit Bank Details
+                </button>
+              </>
+            ) : (
+              <>
+                <div className="form-group">
+                  <label>Full Name</label>
+                  <input
+                    type="text"
+                    name="fullName"
+                    placeholder="Enter full name"
+                    value={bankForm.fullName}
+                    onChange={handleBankInputChange}
+                  />
+                  {bankErrors.fullName && <p className="status-message" style={{ color: 'red' }}>{bankErrors.fullName}</p>}
+                </div>
+                <div className="form-group">
+                  <label>Bank Name</label>
+                  <select
+                    name="bankName"
+                    className="reason-dropdown"
+                    value={bankForm.bankName}
+                    onChange={handleBankInputChange}
+                  >
+                    <option value="">Select Bank</option>
+                    {NIGERIAN_BANKS.map((bank) => (
+                      <option key={bank} value={bank}>{bank}</option>
+                    ))}
+                  </select>
+                  {bankErrors.bankName && <p className="status-message" style={{ color: 'red' }}>{bankErrors.bankName}</p>}
+                </div>
+                <div className="form-group">
+                  <label>Account Number</label>
+                  <input
+                    type="text"
+                    name="accountNumber"
+                    placeholder="Enter account number"
+                    value={bankForm.accountNumber}
+                    onChange={handleBankInputChange}
+                  />
+                  {bankErrors.accountNumber && <p className="status-message" style={{ color: 'red' }}>{bankErrors.accountNumber}</p>}
+                </div>
+                <div className="form-group">
+                  <label>Account Name</label>
+                  <input
+                    type="text"
+                    name="accountName"
+                    placeholder="Enter account name"
+                    value={bankForm.accountName}
+                    onChange={handleBankInputChange}
+                  />
+                  {bankErrors.accountName && <p className="status-message" style={{ color: 'red' }}>{bankErrors.accountName}</p>}
+                </div>
+                <div style={{ display: 'flex', gap: '0.5rem' }}>
+                  {isEditingBank && (
+                    <button
+                      className="deactivate-btn"
+                      style={{ flex: 1 }}
+                      onClick={() => setIsEditingBank(false)}
+                    >
+                      Cancel
+                    </button>
+                  )}
+                  <button
+                    className="save-changes-btn"
+                    style={{ flex: 1 }}
+                    onClick={handleBankSave}
+                    disabled={bankSaving}
+                  >
+                    {bankSaving ? 'Saving...' : 'Save Bank Details'}
+                  </button>
+                </div>
+              </>
+            )}
           </div>
 
           <div className="settings-card">

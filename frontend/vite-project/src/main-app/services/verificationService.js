@@ -712,15 +712,9 @@ const verificationService = {
            verificationStatus: verificationData.verificationStatus
         }
       
-      const response = await axios.post(
+      const response = await api.post(
         endpoint,
-        dataToSave,
-        {
-          headers: {
-            'Authorization': `Bearer ${token}`,
-            'Content-Type': 'application/json'
-          }
-        }
+        dataToSave
       );
 
       console.log('Successfully saved verification data to Azure:', response.data);
@@ -1042,15 +1036,9 @@ const verificationService = {
       const externalApiUrl = config.BASE_URL.replace(/\/api$/, ''); // Using centralized API config (only trailing)
       const endpoint = `${externalApiUrl}/api/Verifications`;
 
-      const response = await axios.post(
+      const response = await api.post(
         endpoint,
-        azureData,
-        {
-          headers: {
-            'Authorization': `Bearer ${localStorage.getItem('authToken')}`,
-            'Content-Type': 'application/json'
-          }
-        }
+        azureData
       );
 
       return {

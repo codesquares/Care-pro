@@ -62,20 +62,31 @@ const ContractService = {
 
       const API_URL = `${config.BASE_URL}/contracts/caregiver/generate`;
       
+      const requestBody = {
+          orderId: contractData.orderId,
+          schedule: contractData.schedule,
+          serviceAddress: contractData.serviceAddress.trim(),
+          ...(contractData.serviceLatitude != null && contractData.serviceLongitude != null && {
+            serviceLatitude: contractData.serviceLatitude,
+            serviceLongitude: contractData.serviceLongitude
+          }),
+          specialClientRequirements: contractData.specialClientRequirements?.trim() || '',
+          accessInstructions: contractData.accessInstructions?.trim() || '',
+          additionalNotes: contractData.additionalNotes?.trim() || ''
+      };
+
+      // NEW — optional additional tasks caregiver wants to add
+      if (contractData.additionalTasks && Array.isArray(contractData.additionalTasks) && contractData.additionalTasks.length > 0) {
+        requestBody.additionalTasks = contractData.additionalTasks;
+      }
+
       const response = await fetch(API_URL, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
           'Authorization': `Bearer ${authToken}`
         },
-        body: JSON.stringify({
-          orderId: contractData.orderId,
-          schedule: contractData.schedule,
-          serviceAddress: contractData.serviceAddress.trim(),
-          specialClientRequirements: contractData.specialClientRequirements?.trim() || '',
-          accessInstructions: contractData.accessInstructions?.trim() || '',
-          additionalNotes: contractData.additionalNotes?.trim() || ''
-        })
+        body: JSON.stringify(requestBody)
       });
 
       if (!response.ok) {
@@ -138,21 +149,37 @@ const ContractService = {
 
       const API_URL = `${config.BASE_URL}/contracts/caregiver/revise`;
       
+      const requestBody = {
+          contractId: revisionData.contractId,
+          revisedSchedule: revisionData.revisedSchedule,
+          serviceAddress: revisionData.serviceAddress?.trim() || '',
+          ...(revisionData.serviceLatitude != null && revisionData.serviceLongitude != null && {
+            serviceLatitude: revisionData.serviceLatitude,
+            serviceLongitude: revisionData.serviceLongitude
+          }),
+          specialClientRequirements: revisionData.specialClientRequirements?.trim() || '',
+          accessInstructions: revisionData.accessInstructions?.trim() || '',
+          additionalNotes: revisionData.additionalNotes?.trim() || '',
+          revisionNotes: revisionData.revisionNotes?.trim() || ''
+      };
+
+      // NEW — responses to client-proposed tasks
+      if (revisionData.proposedTaskResponses && Array.isArray(revisionData.proposedTaskResponses) && revisionData.proposedTaskResponses.length > 0) {
+        requestBody.proposedTaskResponses = revisionData.proposedTaskResponses;
+      }
+
+      // NEW — additional tasks caregiver wants to add during revision
+      if (revisionData.additionalTasks && Array.isArray(revisionData.additionalTasks) && revisionData.additionalTasks.length > 0) {
+        requestBody.additionalTasks = revisionData.additionalTasks;
+      }
+
       const response = await fetch(API_URL, {
         method: 'PUT',
         headers: {
           'Content-Type': 'application/json',
           'Authorization': `Bearer ${authToken}`
         },
-        body: JSON.stringify({
-          contractId: revisionData.contractId,
-          revisedSchedule: revisionData.revisedSchedule,
-          serviceAddress: revisionData.serviceAddress?.trim() || '',
-          specialClientRequirements: revisionData.specialClientRequirements?.trim() || '',
-          accessInstructions: revisionData.accessInstructions?.trim() || '',
-          additionalNotes: revisionData.additionalNotes?.trim() || '',
-          revisionNotes: revisionData.revisionNotes?.trim() || ''
-        })
+        body: JSON.stringify(requestBody)
       });
 
       if (!response.ok) {
@@ -244,9 +271,14 @@ const ContractService = {
   /**
    * Client approves a contract
    * @param {string} contractId - The contract ID to approve
+   * @param {Object} options - Approval options
+   * @param {number} [options.serviceLatitude] - GPS latitude
+   * @param {number} [options.serviceLongitude] - GPS longitude
+   * @param {string} [options.serviceAddress] - Confirmed/edited service address
+   * @param {boolean} [options.confirmAtServiceAddress] - Whether client confirmed they are at the address
    * @returns {Promise<Object>} - Approval result
    */
-  async clientApproveContract(contractId) {
+  async clientApproveContract(contractId, { serviceLatitude, serviceLongitude, serviceAddress, confirmAtServiceAddress } = {}) {
     try {
       if (!contractId) {
         return { success: false, error: 'Contract ID is required' };
@@ -258,13 +290,26 @@ const ContractService = {
       }
 
       const API_URL = `${config.BASE_URL}/contracts/${contractId}/client-approve`;
-      
+
+      const body = {};
+      if (serviceLatitude != null && serviceLongitude != null) {
+        body.serviceLatitude = serviceLatitude;
+        body.serviceLongitude = serviceLongitude;
+      }
+      if (serviceAddress != null) {
+        body.serviceAddress = serviceAddress;
+      }
+      if (confirmAtServiceAddress != null) {
+        body.confirmAtServiceAddress = confirmAtServiceAddress;
+      }
+
       const response = await fetch(API_URL, {
         method: 'PUT',
         headers: {
           'Content-Type': 'application/json',
           'Authorization': `Bearer ${authToken}`
-        }
+        },
+        body: JSON.stringify(body)
       });
 
       if (!response.ok) {
@@ -312,16 +357,23 @@ const ContractService = {
 
       const API_URL = `${config.BASE_URL}/contracts/${contractId}/client-request-review`;
       
+      const requestBody = {
+          comments: reviewData.comments.trim(),
+          preferredScheduleNotes: reviewData.preferredScheduleNotes?.trim() || ''
+      };
+
+      // NEW — optional array of tasks client wants to propose
+      if (reviewData.proposedTasks && Array.isArray(reviewData.proposedTasks) && reviewData.proposedTasks.length > 0) {
+        requestBody.proposedTasks = reviewData.proposedTasks;
+      }
+
       const response = await fetch(API_URL, {
         method: 'PUT',
         headers: {
           'Content-Type': 'application/json',
           'Authorization': `Bearer ${authToken}`
         },
-        body: JSON.stringify({
-          comments: reviewData.comments.trim(),
-          preferredScheduleNotes: reviewData.preferredScheduleNotes?.trim() || ''
-        })
+        body: JSON.stringify(requestBody)
       });
 
       if (!response.ok) {
@@ -1020,14 +1072,19 @@ const ContractService = {
   getContractStatuses() {
     return [
       { value: 'Draft', label: 'Draft', color: '#9e9e9e' },
-      { value: 'PendingClientApproval', label: 'Pending Approval', color: '#ffa726' },
-      { value: 'ClientReviewRequested', label: 'Changes Requested', color: '#42a5f5' },
+      { value: 'PendingClientApproval', label: 'Pending Client Approval', color: '#ffa726' },
+      { value: 'ClientReviewRequested', label: 'Client Requested Changes', color: '#42a5f5' },
       { value: 'Revised', label: 'Revised', color: '#ab47bc' },
       { value: 'Approved', label: 'Approved', color: '#66bb6a' },
-      { value: 'ClientRejected', label: 'Rejected', color: '#f44336' },
+      { value: 'Active', label: 'Active', color: '#66bb6a' },
+      { value: 'ClientRejected', label: 'Client Rejected', color: '#f44336' },
+      { value: 'PendingCaregiverApproval', label: 'Pending Caregiver Approval', color: '#ff9800' },
+      { value: 'CaregiverReviewRequested', label: 'Caregiver Requested Changes', color: '#29b6f6' },
+      { value: 'CaregiverRejected', label: 'Caregiver Rejected', color: '#ef5350' },
       { value: 'Expired', label: 'Expired', color: '#757575' },
       { value: 'Completed', label: 'Completed', color: '#4caf50' },
-      { value: 'Terminated', label: 'Terminated', color: '#d32f2f' }
+      { value: 'Terminated', label: 'Terminated', color: '#d32f2f' },
+      { value: 'Cancelled', label: 'Cancelled', color: '#9e9e9e' }
     ];
   },
 
@@ -1164,6 +1221,376 @@ const ContractService = {
     const period = hour >= 12 ? 'PM' : 'AM';
     const hour12 = hour === 0 ? 12 : hour > 12 ? hour - 12 : hour;
     return `${hour12}:${min.toString().padStart(2, '0')} ${period}`;
+  },
+
+  // ==========================================
+  // TASK PROPOSAL CONSTANTS & HELPERS
+  // ==========================================
+
+  TASK_CATEGORIES: [
+    { value: 'PersonalCare', label: 'Personal Care' },
+    { value: 'MedicalCare', label: 'Medical Care' },
+    { value: 'Companionship', label: 'Companionship' },
+    { value: 'HouseholdTasks', label: 'Household Tasks' },
+    { value: 'Mobility', label: 'Mobility' },
+    { value: 'Medication', label: 'Medication' },
+    { value: 'Meals', label: 'Meals' },
+    { value: 'Transportation', label: 'Transportation' },
+    { value: 'Other', label: 'Other' }
+  ],
+
+  TASK_PRIORITIES: [
+    { value: 'Low', label: 'Low' },
+    { value: 'Medium', label: 'Medium' },
+    { value: 'High', label: 'High' },
+    { value: 'Critical', label: 'Critical' }
+  ],
+
+  /**
+   * Get proposed tasks from a contract, grouped by status
+   * @param {Object} contract - Contract object with proposedTasks array
+   * @returns {Object} - { pending, accepted, rejected }
+   */
+  getProposedTasksByStatus(contract) {
+    const proposedTasks = contract?.proposedTasks || [];
+    return {
+      pending: proposedTasks.filter(t => t.status === 'Proposed'),
+      accepted: proposedTasks.filter(t => t.status === 'Accepted'),
+      rejected: proposedTasks.filter(t => t.status === 'Rejected')
+    };
+  },
+
+  // ==========================================
+  // CLIENT-INITIATED CONTRACT FLOW (FLOW B)
+  // ==========================================
+
+  /**
+   * Client generates a contract (Flow B)
+   * @param {Object} contractData
+   * @param {string} contractData.orderId
+   * @param {string} contractData.caregiverId
+   * @param {string} contractData.gigId
+   * @param {string} contractData.serviceAddress
+   * @param {string} [contractData.accessInstructions]
+   * @param {number} [contractData.serviceLatitude]
+   * @param {number} [contractData.serviceLongitude]
+   * @param {Array}  [contractData.schedule]
+   * @param {Array}  [contractData.tasks]
+   * @param {string} [contractData.specialClientRequirements]
+   * @param {string} [contractData.additionalNotes]
+   * @returns {Promise<Object>}
+   */
+  async generateContractAsClient(contractData) {
+    try {
+      if (!contractData?.orderId) return { success: false, error: 'Order ID is required' };
+      if (!contractData?.caregiverId) return { success: false, error: 'Caregiver ID is required' };
+      if (!contractData?.gigId) return { success: false, error: 'Gig ID is required' };
+      if (!contractData?.serviceAddress?.trim()) return { success: false, error: 'Service address is required' };
+
+      const authToken = localStorage.getItem('authToken');
+      if (!authToken) return { success: false, error: 'Authentication required' };
+
+      const requestBody = {
+        orderId: contractData.orderId,
+        caregiverId: contractData.caregiverId,
+        gigId: contractData.gigId,
+        serviceAddress: contractData.serviceAddress.trim(),
+      };
+
+      if (contractData.serviceLatitude != null && contractData.serviceLongitude != null) {
+        requestBody.serviceLatitude = contractData.serviceLatitude;
+        requestBody.serviceLongitude = contractData.serviceLongitude;
+      }
+      if (contractData.accessInstructions?.trim()) {
+        requestBody.accessInstructions = contractData.accessInstructions.trim();
+      }
+      if (contractData.schedule && Array.isArray(contractData.schedule) && contractData.schedule.length > 0) {
+        requestBody.schedule = contractData.schedule;
+      }
+      if (contractData.tasks && Array.isArray(contractData.tasks) && contractData.tasks.length > 0) {
+        requestBody.tasks = contractData.tasks;
+      }
+      if (contractData.specialClientRequirements?.trim()) {
+        requestBody.specialClientRequirements = contractData.specialClientRequirements.trim();
+      }
+      if (contractData.additionalNotes?.trim()) {
+        requestBody.additionalNotes = contractData.additionalNotes.trim();
+      }
+
+      const response = await fetch(`${config.BASE_URL}/contracts/client/generate`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${authToken}` },
+        body: JSON.stringify(requestBody)
+      });
+
+      if (!response.ok) {
+        const errorData = await response.json().catch(() => ({}));
+        return { success: false, error: errorData.message || `Failed to generate contract: ${response.status}`, statusCode: response.status };
+      }
+
+      const result = await response.json();
+      return { success: true, data: result };
+    } catch (error) {
+      console.error("Error in generateContractAsClient:", error);
+      return { success: false, error: error.message || 'Network error occurred while generating contract' };
+    }
+  },
+
+  /**
+   * Caregiver approves a client-initiated contract (Flow B)
+   * @param {string} contractId
+   * @param {Object} approvalData
+   * @param {Array}  approvalData.schedule - Required schedule confirmation
+   * @param {Array}  [approvalData.additionalTasks]
+   * @returns {Promise<Object>}
+   */
+  async caregiverApproveContract(contractId, approvalData) {
+    try {
+      if (!contractId) return { success: false, error: 'Contract ID is required' };
+      if (!approvalData?.schedule || !Array.isArray(approvalData.schedule) || approvalData.schedule.length === 0) {
+        return { success: false, error: 'Schedule is required for caregiver approval' };
+      }
+
+      const authToken = localStorage.getItem('authToken');
+      if (!authToken) return { success: false, error: 'Authentication required' };
+
+      const requestBody = { schedule: approvalData.schedule };
+      if (approvalData.additionalTasks && Array.isArray(approvalData.additionalTasks) && approvalData.additionalTasks.length > 0) {
+        requestBody.additionalTasks = approvalData.additionalTasks;
+      }
+
+      const response = await fetch(`${config.BASE_URL}/contracts/${contractId}/caregiver-approve`, {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${authToken}` },
+        body: JSON.stringify(requestBody)
+      });
+
+      if (!response.ok) {
+        const errorData = await response.json().catch(() => ({}));
+        return { success: false, error: errorData.message || `Failed to approve contract: ${response.status}`, statusCode: response.status };
+      }
+
+      const result = await response.json();
+      return { success: true, data: result };
+    } catch (error) {
+      console.error("Error in caregiverApproveContract:", error);
+      return { success: false, error: error.message || 'Network error occurred while approving contract' };
+    }
+  },
+
+  /**
+   * Caregiver requests review of client-initiated contract (Flow B, Round 1 only)
+   * @param {string} contractId
+   * @param {Object} reviewData
+   * @param {string} reviewData.reviewComments - Required
+   * @param {Array}  [reviewData.proposedSchedule]
+   * @param {Array}  [reviewData.proposedTasks]
+   * @returns {Promise<Object>}
+   */
+  async caregiverRequestReview(contractId, reviewData) {
+    try {
+      if (!contractId) return { success: false, error: 'Contract ID is required' };
+      if (!reviewData?.reviewComments?.trim()) return { success: false, error: 'Review comments are required' };
+
+      const authToken = localStorage.getItem('authToken');
+      if (!authToken) return { success: false, error: 'Authentication required' };
+
+      const requestBody = { reviewComments: reviewData.reviewComments.trim() };
+      if (reviewData.proposedSchedule && Array.isArray(reviewData.proposedSchedule) && reviewData.proposedSchedule.length > 0) {
+        requestBody.proposedSchedule = reviewData.proposedSchedule;
+      }
+      if (reviewData.proposedTasks && Array.isArray(reviewData.proposedTasks) && reviewData.proposedTasks.length > 0) {
+        requestBody.proposedTasks = reviewData.proposedTasks;
+      }
+
+      const response = await fetch(`${config.BASE_URL}/contracts/${contractId}/caregiver-request-review`, {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${authToken}` },
+        body: JSON.stringify(requestBody)
+      });
+
+      if (!response.ok) {
+        const errorData = await response.json().catch(() => ({}));
+        return { success: false, error: errorData.message || `Failed to request review: ${response.status}`, statusCode: response.status };
+      }
+
+      const result = await response.json();
+      return { success: true, data: result };
+    } catch (error) {
+      console.error("Error in caregiverRequestReview:", error);
+      return { success: false, error: error.message || 'Network error occurred while requesting review' };
+    }
+  },
+
+  /**
+   * Client revises a contract after caregiver review request (Flow B)
+   * @param {Object} revisionData
+   * @param {string} revisionData.contractId
+   * @param {string} [revisionData.serviceAddress]
+   * @param {string} [revisionData.accessInstructions]
+   * @param {Array}  [revisionData.schedule]
+   * @param {Array}  [revisionData.tasks]
+   * @param {Array}  [revisionData.proposedTaskResponses]
+   * @param {string} [revisionData.specialClientRequirements]
+   * @param {string} [revisionData.additionalNotes]
+   * @returns {Promise<Object>}
+   */
+  async clientReviseContract(revisionData) {
+    try {
+      if (!revisionData?.contractId) return { success: false, error: 'Contract ID is required' };
+
+      const authToken = localStorage.getItem('authToken');
+      if (!authToken) return { success: false, error: 'Authentication required' };
+
+      const requestBody = { contractId: revisionData.contractId };
+      if (revisionData.serviceAddress?.trim()) requestBody.serviceAddress = revisionData.serviceAddress.trim();
+      if (revisionData.accessInstructions?.trim()) requestBody.accessInstructions = revisionData.accessInstructions.trim();
+      if (revisionData.schedule && Array.isArray(revisionData.schedule) && revisionData.schedule.length > 0) {
+        requestBody.schedule = revisionData.schedule;
+      }
+      if (revisionData.tasks && Array.isArray(revisionData.tasks) && revisionData.tasks.length > 0) {
+        requestBody.tasks = revisionData.tasks;
+      }
+      if (revisionData.proposedTaskResponses && Array.isArray(revisionData.proposedTaskResponses) && revisionData.proposedTaskResponses.length > 0) {
+        requestBody.proposedTaskResponses = revisionData.proposedTaskResponses;
+      }
+      if (revisionData.specialClientRequirements?.trim()) requestBody.specialClientRequirements = revisionData.specialClientRequirements.trim();
+      if (revisionData.additionalNotes?.trim()) requestBody.additionalNotes = revisionData.additionalNotes.trim();
+
+      const response = await fetch(`${config.BASE_URL}/contracts/client/revise`, {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${authToken}` },
+        body: JSON.stringify(requestBody)
+      });
+
+      if (!response.ok) {
+        const errorData = await response.json().catch(() => ({}));
+        return { success: false, error: errorData.message || `Failed to revise contract: ${response.status}`, statusCode: response.status };
+      }
+
+      const result = await response.json();
+      return { success: true, data: result };
+    } catch (error) {
+      console.error("Error in clientReviseContract:", error);
+      return { success: false, error: error.message || 'Network error occurred while revising contract' };
+    }
+  },
+
+  /**
+   * Caregiver rejects a client-initiated contract (Flow B, Round 2 only)
+   * @param {string} contractId
+   * @param {string} [rejectionReason]
+   * @returns {Promise<Object>}
+   */
+  async caregiverRejectContract(contractId, rejectionReason) {
+    try {
+      if (!contractId) return { success: false, error: 'Contract ID is required' };
+
+      const authToken = localStorage.getItem('authToken');
+      if (!authToken) return { success: false, error: 'Authentication required' };
+
+      const requestBody = rejectionReason?.trim() ? { rejectionReason: rejectionReason.trim() } : {};
+
+      const response = await fetch(`${config.BASE_URL}/contracts/${contractId}/caregiver-reject`, {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${authToken}` },
+        body: JSON.stringify(requestBody)
+      });
+
+      if (!response.ok) {
+        const errorData = await response.json().catch(() => ({}));
+        return { success: false, error: errorData.message || `Failed to reject contract: ${response.status}`, statusCode: response.status };
+      }
+
+      const result = await response.json();
+      return { success: true, data: result };
+    } catch (error) {
+      console.error("Error in caregiverRejectContract:", error);
+      return { success: false, error: error.message || 'Network error occurred while rejecting contract' };
+    }
+  },
+
+  /**
+   * Get pending contracts for caregiver approval (Flow B)
+   * @param {string} caregiverId
+   * @returns {Promise<Object>}
+   */
+  async getCaregiverPendingApproval(caregiverId) {
+    try {
+      if (!caregiverId) return { success: false, error: 'Caregiver ID is required' };
+
+      const authToken = localStorage.getItem('authToken');
+      if (!authToken) return { success: false, error: 'Authentication required' };
+
+      const response = await fetch(`${config.BASE_URL}/contracts/caregiver/${caregiverId}/pending-approval`, {
+        method: 'GET',
+        headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${authToken}` }
+      });
+
+      if (!response.ok) {
+        const errorData = await response.json().catch(() => ({}));
+        return { success: false, error: errorData.message || `Failed to get pending contracts: ${response.status}`, statusCode: response.status };
+      }
+
+      const contracts = await response.json();
+      return { success: true, data: contracts || [] };
+    } catch (error) {
+      console.error("Error in getCaregiverPendingApproval:", error);
+      return { success: false, error: error.message || 'Network error occurred while fetching pending contracts' };
+    }
+  },
+
+  /**
+   * Determine available caregiver actions on a client-initiated contract (Flow B)
+   * @param {Object} contract
+   * @returns {Object} - { canApprove, canRequestReview, canReject, canRead }
+   */
+  getCaregiverClientInitiatedActions(contract) {
+    if (!contract) return { canApprove: false, canRequestReview: false, canReject: false, canRead: false };
+
+    const status = contract.status?.toLowerCase().replace(/\s+/g, '');
+    const round = contract.negotiationRound || 1;
+    const canAct = status === 'pendingcaregiverapproval';
+
+    return {
+      canApprove: canAct,
+      canRequestReview: canAct && round === 1,
+      canReject: canAct && round >= 2,
+      canRead: true
+    };
+  },
+
+  /**
+   * Determine available client actions on a client-initiated contract in review (Flow B)
+   * @param {Object} contract
+   * @returns {Object}
+   */
+  getClientFlowBActions(contract) {
+    if (!contract) return { canRevise: false, canRead: false };
+
+    const status = contract.status?.toLowerCase().replace(/\s+/g, '');
+    return {
+      canRevise: status === 'caregiverreviewrequested',
+      canRead: true
+    };
+  },
+
+  /**
+   * Check if a contract is client-initiated (Flow B)
+   * @param {Object} contract
+   * @returns {boolean}
+   */
+  isClientInitiated(contract) {
+    return contract?.initiatedByRole === 'Client';
+  },
+
+  /**
+   * Check if a contract is active (both flows end in Active)
+   * @param {Object} contract
+   * @returns {boolean}
+   */
+  isContractActive(contract) {
+    return contract?.status?.toLowerCase().replace(/\s+/g, '') === 'active';
   }
 };
 

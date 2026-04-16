@@ -51,7 +51,7 @@ const AbaoutUsTeam = () => {
         },
       ];
   return (
-        <section className="expert-team">
+        <section id="team" className="expert-team">
           <div className="heading-section">
             <h2>The Brains Behind Carepro</h2>
             <p className="philosophy">

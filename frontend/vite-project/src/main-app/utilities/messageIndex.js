@@ -10,7 +10,7 @@ export { default as ToastContainer } from '../components/toast/ToastContainer.js
 export { default as MessagesPage } from '../pages/Messages.jsx';
 
 // Export context providers
-export { MessageProvider, useMessageContext } from '../context/MessageContext.jsx';
+export { MessageProvider, useMessageContext } from '../context/MessageContext';
 export { NotificationProvider, useNotificationContext } from '../context/NotificationsContext.jsx';
 
 // Export services and utils

@@ -119,6 +119,7 @@ jobs:
           echo "🏗️ Building frontend for staging..."
           npm run build
         env:
+          VITE_GOOGLE_MAPS_API_KEY: ${{ secrets.VITE_GOOGLE_MAPS_API_KEY}}
           VITE_CONTENTFUL_SPACE_ID: ${{ secrets.VITE_CONTENTFUL_SPACE_ID }}
           VITE_CONTENTFUL_ACCESS_TOKEN_PUBLISHED: ${{ secrets.VITE_CONTENTFUL_ACCESS_TOKEN_PUBLISHED }}
           VITE_CONTENTFUL_ACCESS_TOKEN_DRAFT: ${{ secrets.VITE_CONTENTFUL_ACCESS_TOKEN_DRAFT }}
@@ -178,7 +179,8 @@ jobs:
         run: |
           echo "🏗️ Building frontend Docker image..."
           cd frontend/vite-project
-          docker build \
+          docker build --no-cache \
+            --build-arg VITE_GOOGLE_MAPS_API_KEY=${{ secrets.VITE_GOOGLE_MAPS_API_KEY }} \
             --build-arg VITE_CONTENTFUL_SPACE_ID=${{ secrets.VITE_CONTENTFUL_SPACE_ID }} \
             --build-arg VITE_CONTENTFUL_ACCESS_TOKEN_PUBLISHED=${{ secrets.VITE_CONTENTFUL_ACCESS_TOKEN_PUBLISHED }} \
             --build-arg VITE_CONTENTFUL_ACCESS_TOKEN_DRAFT=${{ secrets.VITE_CONTENTFUL_ACCESS_TOKEN_DRAFT }} \
@@ -268,15 +270,31 @@ jobs:
           echo "🌐 Deploying frontend to S3..."
           echo "📁 Checking downloaded artifacts..."
           ls -la ./frontend-build/
-          # Sync the downloaded frontend build to S3
-          aws s3 sync ./frontend-build/ s3://$S3_BUCKET --delete
+
+          # Sync all files EXCEPT index.html (with long cache for hashed assets)
+          aws s3 sync ./frontend-build/ s3://$S3_BUCKET --delete \
+            --exclude "index.html" \
+            --cache-control "public, max-age=31536000, immutable"
+
+          # Upload index.html separately with no-cache headers
+          aws s3 cp ./frontend-build/index.html s3://$S3_BUCKET/index.html \
+            --cache-control "no-cache, no-store, must-revalidate" \
+            --content-type "text/html"
+
           echo "✅ Frontend deployed to S3 successfully"
 
       # APPRUNNER DEPLOYMENT REMOVED: No longer deploying node-API
       # - name: 🔥 Update App Runner Service
       # - name: ⏳ Wait for App Runner Deployment  
       # All AppRunner deployment logic has been removed
-
+      - name: 🔄 Invalidate CloudFront Cache
+        run: |
+          echo "🔄 Invalidating CloudFront cache..."
+          aws cloudfront create-invalidation \
+            --distribution-id ${{ secrets.CLOUDFRONT_DISTRIBUTION_ID }} \
+            --paths "/*"
+          echo "✅ CloudFront cache invalidated"
+          
       - name: 🩺 Health Check
         run: |
           echo "🩺 Performing health checks..."
