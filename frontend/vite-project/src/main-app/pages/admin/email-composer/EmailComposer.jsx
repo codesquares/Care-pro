@@ -28,6 +28,8 @@ const EmailComposer = () => {
   const [attachments, setAttachments] = useState([]);
   const [attachmentErrors, setAttachmentErrors] = useState([]);
   const [uploadingInlineImage, setUploadingInlineImage] = useState(false);
+  const [previewHtml, setPreviewHtml] = useState('');
+  const [loadingPreview, setLoadingPreview] = useState(false);
 
   useEffect(() => {
     loadUsers();
@@ -217,6 +219,21 @@ const EmailComposer = () => {
       }
     };
     input.click();
+  };
+
+  const handleShowPreview = async () => {
+    try {
+      setLoadingPreview(true);
+      const html = await adminService.prepareEmailMessage(message, attachments);
+      setPreviewHtml(html);
+      setShowPreview(true);
+    } catch (err) {
+      console.error('Error generating preview:', err);
+      setPreviewHtml(message);
+      setShowPreview(true);
+    } finally {
+      setLoadingPreview(false);
+    }
   };
 
   const generateTemplateMessage = () => {
@@ -701,11 +718,14 @@ const EmailComposer = () => {
           {/* Preview Button */}
           <button
             className="btn-preview"
-            onClick={() => setShowPreview(true)}
-            disabled={!message}
+            onClick={handleShowPreview}
+            disabled={!message || loadingPreview}
           >
-            <i className="fas fa-eye"></i>
-            Preview Email
+            {loadingPreview ? (
+              <><i className="fas fa-spinner fa-spin"></i> Generating Preview...</>
+            ) : (
+              <><i className="fas fa-eye"></i> Preview Email</>
+            )}
           </button>
         </div>
 
@@ -818,7 +838,7 @@ const EmailComposer = () => {
                 <div className="preview-subject">
                   <strong>Subject:</strong> {subject}
                 </div>
-                <div className="preview-content" dangerouslySetInnerHTML={{ __html: message }} />
+                <div className="preview-content" dangerouslySetInnerHTML={{ __html: previewHtml }} />
               </div>
             </div>
 
