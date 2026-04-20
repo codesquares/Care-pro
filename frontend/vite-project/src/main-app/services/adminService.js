@@ -1391,7 +1391,8 @@ const adminService = {
       const firstName = emailData.recipientName.split(' ')[0];
       formData.append('RecipientName', firstName);
       formData.append('Subject', emailData.subject);
-      formData.append('Message', emailData.message);
+      const preparedMessage = await adminService.prepareEmailMessage(emailData.message, emailData.attachments);
+      formData.append('Message', preparedMessage);
 
       // Add attachments if provided
       if (emailData.attachments && emailData.attachments.length > 0) {
@@ -1465,7 +1466,8 @@ const adminService = {
       const formData = new FormData();
       formData.append('RecipientType', bulkEmailData.recipientType);
       formData.append('Subject', bulkEmailData.subject);
-      formData.append('Message', bulkEmailData.message);
+      const preparedMessage = await adminService.prepareEmailMessage(bulkEmailData.message, bulkEmailData.attachments);
+      formData.append('Message', preparedMessage);
 
       if (bulkEmailData.recipientType === 'Specific' && bulkEmailData.specificUserIds) {
         bulkEmailData.specificUserIds.forEach(id => {
@@ -1562,6 +1564,153 @@ const adminService = {
         error: error.response?.data?.message || error.message || 'Failed to upload image'
       };
     }
+  },
+
+  /**
+   * Build final HTML email body with CarePro branding and inline JPEG flyer previews
+   * @param {string} messageHtml - Admin-authored HTML body
+   * @param {File[]} attachments - Optional attachments
+   * @returns {Promise<string>} Branded HTML email body
+   */
+  prepareEmailMessage: async (messageHtml, attachments = []) => {
+    const contentHtml = (messageHtml || '').trim();
+
+    // Keep existing branded messages intact to avoid duplicate wrappers.
+    if (contentHtml.includes('data-carepro-email="true"')) {
+      return contentHtml;
+    }
+
+    const inlineFlyersHtml = await adminService.buildInlineJpegFlyersHtml(attachments);
+
+    return adminService.wrapEmailWithBranding(contentHtml, inlineFlyersHtml);
+  },
+
+  /**
+   * Wrap email body in a consistent CarePro branded shell.
+   * @param {string} contentHtml
+   * @param {string} extraBodyHtml
+   * @returns {string}
+   */
+  wrapEmailWithBranding: (contentHtml, extraBodyHtml = '') => {
+    return `
+      <div data-carepro-email="true" style="background-color: #f5f7fb; padding: 24px 12px;">
+        <table role="presentation" width="100%" cellspacing="0" cellpadding="0" style="max-width: 640px; margin: 0 auto; background: #ffffff; border-radius: 14px; overflow: hidden; border: 1px solid #e5e7eb;">
+          <tr>
+            <td style="background: linear-gradient(135deg, #0f172a 0%, #1e293b 100%); padding: 20px 24px; text-align: center;">
+              <img src="https://oncarepro.com/careproLogoWhite.svg" alt="CarePro" style="max-width: 170px; width: 100%; height: auto; display: inline-block;" />
+            </td>
+          </tr>
+          <tr>
+            <td style="padding: 24px; color: #1f2937; font-family: Arial, Helvetica, sans-serif; font-size: 15px; line-height: 1.65;">
+              ${contentHtml}
+              ${extraBodyHtml}
+            </td>
+          </tr>
+          <tr>
+            <td style="padding: 18px 24px 24px; border-top: 1px solid #eef2f7; color: #64748b; font-family: Arial, Helvetica, sans-serif; font-size: 13px; line-height: 1.5;">
+              <div style="margin-bottom: 6px; font-weight: 600; color: #334155;">CarePro Team</div>
+              <div>Trusted home care professionals, on-demand.</div>
+              <div style="margin-top: 6px;"><a href="https://oncarepro.com" style="color: #0f766e; text-decoration: none;">oncarepro.com</a></div>
+            </td>
+          </tr>
+        </table>
+      </div>
+    `;
+  },
+
+  /**
+   * Build inline image HTML for JPEG flyers so recipients can see flyers in-body.
+   * @param {File[]} attachments
+   * @returns {Promise<string>}
+   */
+  buildInlineJpegFlyersHtml: async (attachments = []) => {
+    if (!attachments || attachments.length === 0) {
+      return '';
+    }
+
+    const jpegFiles = attachments.filter(file => adminService.isJpegFile(file)).slice(0, 3);
+    if (jpegFiles.length === 0) {
+      return '';
+    }
+
+    const previews = [];
+
+    for (const file of jpegFiles) {
+      // Keep message payload practical for deliverability and provider limits.
+      if (!file || file.size > 5 * 1024 * 1024) {
+        continue;
+      }
+
+      try {
+        const dataUrl = await adminService.fileToDataUrl(file);
+        const safeName = adminService.escapeHtml(file.name);
+        previews.push(`
+          <div style="margin: 14px 0 18px;">
+            <div style="font-size: 12px; color: #64748b; margin-bottom: 8px;">${safeName}</div>
+            <img src="${dataUrl}" alt="${safeName}" style="display: block; max-width: 100%; width: auto; height: auto; border-radius: 8px; border: 1px solid #e5e7eb;" />
+          </div>
+        `);
+      } catch (error) {
+        console.warn('Failed to build inline JPEG preview for attachment:', file?.name, error);
+      }
+    }
+
+    if (previews.length === 0) {
+      return '';
+    }
+
+    return `
+      <div style="margin-top: 26px; padding-top: 18px; border-top: 1px solid #e5e7eb;">
+        <h3 style="margin: 0 0 12px; font-size: 16px; line-height: 1.3; color: #0f172a;">Flyer Preview</h3>
+        ${previews.join('')}
+      </div>
+    `;
+  },
+
+  /**
+   * Convert a browser File object into data URL for inline HTML image previews.
+   * @param {File} file
+   * @returns {Promise<string>}
+   */
+  fileToDataUrl: (file) => {
+    return new Promise((resolve, reject) => {
+      if (!file) {
+        reject(new Error('No file provided'));
+        return;
+      }
+
+      const reader = new FileReader();
+      reader.onload = () => resolve(reader.result);
+      reader.onerror = () => reject(reader.error || new Error('Failed to read file'));
+      reader.readAsDataURL(file);
+    });
+  },
+
+  /**
+   * Escape HTML special characters to prevent XSS when inserting user-controlled
+   * strings (e.g. file names) into inline HTML.
+   * @param {string} str
+   * @returns {string}
+   */
+  escapeHtml: (str) => {
+    return String(str || '')
+      .replace(/&/g, '&amp;')
+      .replace(/</g, '&lt;')
+      .replace(/>/g, '&gt;')
+      .replace(/"/g, '&quot;')
+      .replace(/'/g, '&#039;');
+  },
+
+  /**
+   * Check if file is a JPEG flyer candidate
+   * @param {File} file
+   * @returns {boolean}
+   */
+  isJpegFile: (file) => {
+    if (!file?.name) return false;
+    const lowerName = file.name.toLowerCase();
+    const mimeType = (file.type || '').toLowerCase();
+    return mimeType === 'image/jpeg' || mimeType === 'image/jpg' || lowerName.endsWith('.jpg') || lowerName.endsWith('.jpeg');
   },
 
   /**
@@ -1694,10 +1843,6 @@ const adminService = {
               </a>
             </div>
           ` : ''}
-          <p style="color: #666; font-size: 14px; margin-top: 30px;">
-            Best regards,<br>
-            The CarePro Team
-          </p>
         </div>
       `,
       reminder: `
@@ -1709,10 +1854,6 @@ const adminService = {
           ${variables.dueDate ? `
             <p style="margin-top: 20px;"><strong>Due Date:</strong> ${variables.dueDate}</p>
           ` : ''}
-          <p style="color: #666; font-size: 14px; margin-top: 30px;">
-            Best regards,<br>
-            The CarePro Team
-          </p>
         </div>
       `,
       alert: `
@@ -1727,10 +1868,6 @@ const adminService = {
               <p>${variables.action}</p>
             </div>
           ` : ''}
-          <p style="color: #666; font-size: 14px; margin-top: 30px;">
-            Best regards,<br>
-            The CarePro Team
-          </p>
         </div>
       `,
       welcome: `
@@ -1753,10 +1890,6 @@ const adminService = {
               Go to Dashboard
             </a>
           </div>
-          <p style="color: #666; font-size: 14px; margin-top: 30px;">
-            Best regards,<br>
-            The CarePro Team
-          </p>
         </div>
       `,
       update: `
@@ -1776,10 +1909,6 @@ const adminService = {
               </ul>
             </div>
           ` : ''}
-          <p style="color: #666; font-size: 14px; margin-top: 30px;">
-            Best regards,<br>
-            The CarePro Team
-          </p>
         </div>
       `
     };
