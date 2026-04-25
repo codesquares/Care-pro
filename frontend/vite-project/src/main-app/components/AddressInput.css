@@ -192,7 +192,7 @@
   }
   
   .address-suggestions {
-    max-height: 250px;
+    max-height: 160px; /* limit to 3–4 items so list stays above keyboard */
   }
   
   .address-suggestion {

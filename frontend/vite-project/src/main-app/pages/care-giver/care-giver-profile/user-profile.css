@@ -49,6 +49,7 @@
   flex-direction: column;
   gap: 0;
   order: 1;
+  background-color: #f4f5f7;
 
   /* Tablet and up */
   @media (min-width: 768px) {
