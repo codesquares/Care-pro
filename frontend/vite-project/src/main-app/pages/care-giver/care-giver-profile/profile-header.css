@@ -1001,6 +1001,18 @@
     bottom: 6px;
     right: 6px;
   }
+
+  /* Location modal — keep visible above on-screen keyboard */
+  .caregiver-location-modal-overlay {
+    align-items: flex-start;
+    padding-top: 16px;
+  }
+
+  .caregiver-location-modal {
+    width: 95%;
+    max-height: 60vh;           /* safe fallback for older browsers */
+    max-height: calc(100dvh - 80px); /* shrinks dynamically when keyboard opens */
+  }
 }
 
 @media (max-width: 480px) {
