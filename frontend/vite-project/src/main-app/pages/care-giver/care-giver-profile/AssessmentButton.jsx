@@ -40,7 +40,7 @@ const AssessmentButton = ({ userId }) => {
   if (qualificationStatus.isQualified === true) {
     return (
       <button className="assessment-button qualified" disabled>
-        <i className="fas fa-check-circle"></i> Qualified Caregiver (Score: {qualificationStatus.score})
+        <i className="fas fa-check-circle"></i> Qualified Caregiver
       </button>
     );
   }
