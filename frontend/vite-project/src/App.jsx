@@ -54,7 +54,7 @@ import CaregiverNavigationBar from './main-app/pages/care-giver/care-giver-dashb
 //Added for viewing Order Pages
 import Order from './main-app/pages/client/orders/MyOrders';
 import Order2 from './main-app/pages/client/orders/OrderTasks&Details';
-import NotificationPoller from "./NotificationPoller"
+import NotificationPoller from "./NotificationPoller";
 
 function ScrollToTop() {
   const { pathname } = useLocation();
