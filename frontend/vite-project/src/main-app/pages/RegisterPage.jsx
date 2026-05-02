@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import { useNavigate, Link, useLocation } from "react-router-dom";
 import "../../styles/main-app/pages/RegisterPage.css";
 import loginImg from "../../assets/loginImg.png";
@@ -7,11 +7,20 @@ import useApi from "../services/useApi";
 import { toast } from "react-toastify";
 import Modal from "../components/modal/Modal"; 
 import allUserService from "../services/allUserService";
+import {
+  submitSignupWithIdempotency,
+  classifyIdempotencyError,
+} from "../utils/idempotency";
 
 const CreateAccount = () => {
   const { data, error, loading, fetchData } = useApi("", "post");
   const navigate = useNavigate();
   const location = useLocation();
+
+  // Idempotency-Key for the in-flight signup submission. Generated once per
+  // user-initiated submit; reused for automatic retries; cleared after final
+  // outcome so the next explicit submit gets a new key.
+  const idempotencyKeyRef = useRef(null);
 
   // Get returnTo from URL parameters to preserve through auth flow
   const urlParams = new URLSearchParams(location.search);
@@ -144,7 +153,23 @@ Please log in to your existing account instead of creating a new one.`);
         ? "/Clients/AddClientUser"
         : "/Admins";
 
-      await fetchData(payload, endpoint);
+      // Only the four signup endpoints support Idempotency-Key. /Admins does not.
+      const useIdempotency =
+        endpoint === "/CareGivers/AddCaregiverUser" ||
+        endpoint === "/Clients/AddClientUser";
+
+      if (useIdempotency) {
+        await submitSignupWithIdempotency(idempotencyKeyRef, (key) =>
+          fetchData(payload, endpoint, {
+            headers: { "Idempotency-Key": key },
+          })
+        );
+      } else {
+        await fetchData(payload, endpoint);
+      }
+
+      // Clear key on definitive success.
+      idempotencyKeyRef.current = null;
 
       // Show success modal with email verification instructions
       setModalTitle("Registration Successful!");
@@ -161,6 +186,17 @@ You won't be able to log in until your email is verified.`);
       
     } catch (err) {
       console.error("Registration failed:", err);
+
+      // Idempotency client-side bug cases: surface a clearer message and force
+      // a fresh key on next submit.
+      const idempotencyKind = classifyIdempotencyError(err);
+      if (idempotencyKind === "different-endpoint" || idempotencyKind === "invalid-key") {
+        idempotencyKeyRef.current = null;
+      } else {
+        // Generic failure: also reset so the user's next click gets a new key.
+        idempotencyKeyRef.current = null;
+      }
+
       toast.error("Registration failed. Please try again.");
 
       // Show error modal
