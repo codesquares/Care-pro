@@ -823,20 +823,31 @@ const verificationService = {
         verifiedOn: verificationData ? verificationData.verifiedOn : null,
         updatedOn: verificationData ? verificationData.updatedOn : null,
         
-        // Computed fields for UI logic
-        hasSuccess: verificationData ? verificationData.verificationStatus === 'Completed' : false,
-        hasPending: verificationData ? verificationData.verificationStatus === 'Pending' : false,
-        hasFailed: verificationData ? verificationData.verificationStatus === 'Failed' : false,
+        // Computed fields for UI logic.
+        // Backend `verificationStatus` is now lowercase: 'success' | 'pending' | 'failed'.
+        // Compare case-insensitively to remain safe against legacy/PascalCase responses.
+        // Trust `isVerified` directly for the success boolean.
+        hasSuccess: verificationData ? (
+          verificationData.isVerified === true ||
+          ['success', 'completed', 'verified'].includes((verificationData.verificationStatus || '').toString().toLowerCase())
+        ) : false,
+        hasPending: verificationData ? (verificationData.verificationStatus || '').toString().toLowerCase() === 'pending' : false,
+        // 'failed' covers both verification failure and widget abandonment — backend does not differentiate.
+        hasFailed: verificationData ? (
+          verificationData.isVerified !== true &&
+          ['failed', 'cancelled', 'abandoned'].includes((verificationData.verificationStatus || '').toString().toLowerCase())
+        ) : false,
         hasAny: verificationData ? true : false,
         totalAttempts: verificationData ? 1 : 0,
         lastAttempt: verificationData ? verificationData.verifiedOn : null,
         needsVerification: !verificationData || !verificationData.isVerified,
-        message: verificationData ? 
-          (verificationData.isVerified ? 'Verification completed successfully' : 
-           verificationData.verificationStatus === 'Pending' ? 'Verification pending review' :
-           verificationData.verificationStatus === 'Failed' ? 'Verification failed' :
-           'Verification in progress') : 
-          'No verification found',
+        message: verificationData ? (() => {
+          const s = (verificationData.verificationStatus || '').toString().toLowerCase();
+          if (verificationData.isVerified) return 'Verification completed successfully';
+          if (s === 'pending') return 'Verification pending review';
+          if (s === 'failed' || s === 'cancelled' || s === 'abandoned') return 'Verification failed — please try again';
+          return 'Verification in progress';
+        })() : 'No verification found',
         mostRecentRecord: verificationData,
         
         // Current status for UI logic

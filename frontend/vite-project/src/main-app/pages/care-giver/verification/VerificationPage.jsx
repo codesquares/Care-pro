@@ -217,20 +217,26 @@ const CaregiverVerificationPage = () => {
     setProgress(60);
     setProgressMessage("Confirming verification with our servers...");
 
-    // 1. Register SignalR listener for real-time updates
+    // 1. Register SignalR listener for real-time updates.
+    // Backend payload: { userId, verificationStatus, isVerified, verificationMethod, timestamp }
+    // verificationStatus is one of (lowercase): 'success' | 'pending' | 'failed'.
+    // 'failed' covers both verification failure AND widget abandonment — backend
+    // does not differentiate, so we show a single "Try again" CTA for both.
+    // We trust `isVerified` directly (backend now sets it correctly for success).
     signalRListenerActiveRef.current = true;
     signalRNotificationService.onVerificationStatusChanged((data) => {
       if (!isMountedRef.current) return;
       // Only handle events for the current user
       if (data.userId && data.userId !== userDetails.id) return;
 
-      if (data.isVerified) {
+      const status = (data.verificationStatus || '').toString().toLowerCase();
+
+      if (data.isVerified === true || status === 'success') {
         handleVerificationResult({ isVerified: true, verificationMethod: data.verificationMethod });
-      } else if (data.verificationStatus === 'failed') {
+      } else if (status === 'failed') {
         handleVerificationResult({ isVerified: false, verificationStatus: 'failed' });
-      }
-      // "pending" events — just update progress message
-      if (data.verificationStatus === 'pending') {
+      } else if (status === 'pending') {
+        // Pending events — just update progress message; keep listening for final result
         setProgressMessage("Verification is being processed...");
       }
     });
