@@ -132,7 +132,8 @@ const PublicMarketplace = () => {
       maxScore += 10;
       if (gig.caregiverIsVerified) {
         score += 10;
-        matchReasons.push('Verified');
+        // Verified is shown as its own badge on the card image —
+        // do not duplicate it as a match-reason tag.
       }
       
       // 6. Rating bonus (10 points)

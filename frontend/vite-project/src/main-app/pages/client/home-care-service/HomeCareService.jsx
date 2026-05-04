@@ -532,7 +532,7 @@ const HomeCareService = () => {
       <div className="hcs-title-row">
         <h1 className="hcs-title">{title}</h1>
         <div className="hcs-title-actions">
-          <button
+          {/* <button
             className={`hcs-action-btn ${isFavorite ? 'active' : ''}`}
             onClick={handleFavorite}
             aria-label="Add to favorites"
@@ -541,7 +541,7 @@ const HomeCareService = () => {
               <path d="M12 21.35l-1.45-1.32C5.4 15.36 2 12.28 2 8.5 2 5.42 4.42 3 7.5 3c1.74 0 3.41.81 4.5 2.09C13.09 3.81 14.76 3 16.5 3 19.58 3 22 5.42 22 8.5c0 3.78-3.4 6.86-8.55 11.54L12 21.35z"/>
             </svg>
             <span>{isFavorite ? '201' : '200'}</span>
-          </button>
+          </button> */}
           <button className="hcs-action-btn" onClick={handleShare} aria-label="Share service">
             <span>share</span>
             <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
@@ -577,12 +577,12 @@ const HomeCareService = () => {
           <span className="hcs-bar-rating-num">{gigRating || 0}</span>
         </span>
         <span className="hcs-bar-separator">|</span>
-        <span className="hcs-bar-item hcs-orders-queue">3 orders in queue</span>
-        <span className="hcs-bar-separator">|</span>
+        {/* <span className="hcs-bar-item hcs-orders-queue">3 orders in queue</span>
+        <span className="hcs-bar-separator">|</span> */}
         <span className="hcs-bar-item">📍 {caregiverLocation || "Location not specified"}</span>
         <span className="hcs-bar-separator">|</span>
-        <span className="hcs-bar-item">last deliver: {lastDeliveryDate || "N/A"}</span>
-        <span className="hcs-bar-separator">|</span>
+        {/* <span className="hcs-bar-item">last deliver: {lastDeliveryDate || "N/A"}</span>
+        <span className="hcs-bar-separator">|</span> */}
         <span
           className="hcs-bar-item hcs-reviews-link"
           onClick={handleOpenReviews}
