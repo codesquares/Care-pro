@@ -496,7 +496,8 @@ const HomeCareService = () => {
     caregiverProfileImage,
     status,
     introVideo,
-    lastDeliveryDate
+    lastDeliveryDate,
+    isSpecialGig
   } = service;
 
 
@@ -528,6 +529,18 @@ const HomeCareService = () => {
 
   return (
     <div className="container-service">
+      {/* Private offer banner — only visible to the intended client/caregiver,
+          since the backend gates loading the gig itself. */}
+      {isSpecialGig && (
+        <div className="hcs-private-offer-banner" role="note">
+          <span className="hcs-private-offer-icon" aria-hidden="true">🔒</span>
+          <div className="hcs-private-offer-text">
+            <strong>Private offer for your care request</strong>
+            <span>This service was created specifically for you and isn't listed on the public marketplace.</span>
+          </div>
+        </div>
+      )}
+
       {/* Title + Actions Row */}
       <div className="hcs-title-row">
         <h1 className="hcs-title">{title}</h1>
@@ -542,14 +555,18 @@ const HomeCareService = () => {
             </svg>
             <span>{isFavorite ? '201' : '200'}</span>
           </button> */}
-          <button className="hcs-action-btn" onClick={handleShare} aria-label="Share service">
-            <span>share</span>
-            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-              <path d="M4 12v8a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-8"/>
-              <polyline points="16 6 12 2 8 6"/>
-              <line x1="12" y1="2" x2="12" y2="15"/>
-            </svg>
-          </button>
+          {/* Hide share for special/private gigs — a shared link will be a 404
+              for anyone who isn't the intended client or caregiver. */}
+          {!isSpecialGig && (
+            <button className="hcs-action-btn" onClick={handleShare} aria-label="Share service">
+              <span>share</span>
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                <path d="M4 12v8a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-8"/>
+                <polyline points="16 6 12 2 8 6"/>
+                <line x1="12" y1="2" x2="12" y2="15"/>
+              </svg>
+            </button>
+          )}
         </div>
       </div>
 
