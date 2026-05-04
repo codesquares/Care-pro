@@ -134,6 +134,9 @@ const TYPE_MAP = {
   'carerequestadminmatchupdate':       'CareRequestAdminMatchUpdate',
   'care_request_admin_no_match':       'CareRequestAdminNoMatch',
   'carerequestadminnomatch':           'CareRequestAdminNoMatch',
+  'care_request_new_responder':        'CareRequestNewResponder',
+  'carerequestnewresponder':           'CareRequestNewResponder',
+  'care request new responder':        'CareRequestNewResponder',
 
   // Negotiation
   'negotiation_started':          'NegotiationStarted',
@@ -151,6 +154,32 @@ const TYPE_MAP = {
   'negotiation_abandoned':        'NegotiationAbandoned',
   'negotiationabandoned':         'NegotiationAbandoned',
   'negotiation abandoned':        'NegotiationAbandoned',
+  'negotiation_both_agreed':      'NegotiationBothAgreed',
+  'negotiationbothagreed':        'NegotiationBothAgreed',
+  'negotiation both agreed':      'NegotiationBothAgreed',
+  'negotiation_caregiver_agreed': 'NegotiationCaregiverAgreed',
+  'negotiationcaregiveragreed':   'NegotiationCaregiverAgreed',
+  'negotiation caregiver agreed': 'NegotiationCaregiverAgreed',
+  'negotiation_caregiver_submitted': 'NegotiationCaregiverSubmitted',
+  'negotiationcaregiversubmitted':   'NegotiationCaregiverSubmitted',
+  'negotiation caregiver submitted': 'NegotiationCaregiverSubmitted',
+  'negotiation_client_agreed':    'NegotiationClientAgreed',
+  'negotiationclientagreed':      'NegotiationClientAgreed',
+  'negotiation client agreed':    'NegotiationClientAgreed',
+  'negotiation_client_submitted': 'NegotiationClientSubmitted',
+  'negotiationclientsubmitted':   'NegotiationClientSubmitted',
+  'negotiation client submitted': 'NegotiationClientSubmitted',
+
+  // Task Proposal
+  'task_proposal_accepted':       'TaskProposalAccepted',
+  'taskproposalaccepted':         'TaskProposalAccepted',
+  'task proposal accepted':       'TaskProposalAccepted',
+  'task_proposal_rejected':       'TaskProposalRejected',
+  'taskproposalrejected':         'TaskProposalRejected',
+  'task proposal rejected':       'TaskProposalRejected',
+  'task_proposal_submitted':      'TaskProposalSubmitted',
+  'taskproposalsubmitted':        'TaskProposalSubmitted',
+  'task proposal submitted':      'TaskProposalSubmitted',
 
   // Visit / Task Sheet
   'visit_submitted':             'VisitSubmitted',
@@ -198,6 +227,14 @@ const TYPE_MAP = {
   'paymentfailed':               'PaymentFailed',
   'payment failed':              'PaymentFailed',
 
+  // Subscription lifecycle (in addition to created/terminated above)
+  'subscription_suspended':      'SubscriptionSuspended',
+  'subscriptionsuspended':       'SubscriptionSuspended',
+  'subscription suspended':      'SubscriptionSuspended',
+  'subscription_past_due':       'SubscriptionSuspended',
+  'subscriptionpastdue':         'SubscriptionSuspended',
+  'subscription past due':       'SubscriptionSuspended',
+
   // Contract extras
   'contract_pending_client_approval': 'ContractPendingClientApproval',
   'contractpendingclientapproval':    'ContractPendingClientApproval',
@@ -224,15 +261,19 @@ const KNOWN_CANONICAL = new Set([
   'SystemNotice', 'SystemAlert', 'Signup',
   'CareRequestMatched', 'CareRequestNoMatch',
   'CareRequestAdminMatchUpdate', 'CareRequestAdminNoMatch',
+  'CareRequestNewResponder',
   'NegotiationStarted', 'NegotiationCounter', 'NegotiationAgreed',
   'NegotiationConverted', 'NegotiationAbandoned',
+  'NegotiationBothAgreed', 'NegotiationCaregiverAgreed', 'NegotiationCaregiverSubmitted',
+  'NegotiationClientAgreed', 'NegotiationClientSubmitted',
+  'TaskProposalAccepted', 'TaskProposalRejected', 'TaskProposalSubmitted',
   'VisitSubmitted',
   'VisitCancelledByClient',
   'VisitCancellationRequested',
   'Broadcast',
   'GigDeletionReminder', 'GigPermanentlyDeleted',
   'DisputeRaised',
-  'SubscriptionTerminated', 'SubscriptionCreated',
+  'SubscriptionTerminated', 'SubscriptionCreated', 'SubscriptionSuspended',
   'PaymentFailed',
   'ContractPendingClientApproval', 'ContractRevised',
   'CommitmentConfirmed',
@@ -459,16 +500,43 @@ export const getNotificationRoute = (notification, userRole) => {
       if (isAdmin) return `/app/admin/care-requests`;
       return null;
 
+    // ── Care Request: New Responder (caregiver responded to a request) ─
+    case 'CareRequestNewResponder':
+      if (isClient && relatedEntityId) return `/app/client/care-requests/${relatedEntityId}/matches`;
+      if (isClient) return `/app/client/care-requests`;
+      if (isAdmin && relatedEntityId) return `/app/admin/care-requests/${relatedEntityId}`;
+      if (isAdmin) return `/app/admin/care-requests`;
+      return null;
+
     // ── Negotiation notifications ─────────────────────────
     case 'NegotiationStarted':
     case 'NegotiationCounter':
     case 'NegotiationAgreed':
     case 'NegotiationConverted':
-    case 'NegotiationAbandoned': {
+    case 'NegotiationAbandoned':
+    case 'NegotiationBothAgreed':
+    case 'NegotiationCaregiverAgreed':
+    case 'NegotiationCaregiverSubmitted':
+    case 'NegotiationClientAgreed':
+    case 'NegotiationClientSubmitted': {
       const negOrderId = notification.orderId || relatedEntityId;
       if (negOrderId) {
         if (isClient) return `/app/client/my-order/${negOrderId}`;
         if (isCaregiver) return `/app/caregiver/order-details/${negOrderId}`;
+      }
+      if (isClient) return `/app/client/my-orders`;
+      if (isCaregiver) return `/app/caregiver/orders`;
+      return null;
+    }
+
+    // ── Task Proposal notifications ──────────────────────
+    case 'TaskProposalAccepted':
+    case 'TaskProposalRejected':
+    case 'TaskProposalSubmitted': {
+      const proposalOrderId = notification.orderId || relatedEntityId;
+      if (proposalOrderId) {
+        if (isClient) return `/app/client/my-order/${proposalOrderId}`;
+        if (isCaregiver) return `/app/caregiver/order-details/${proposalOrderId}`;
       }
       if (isClient) return `/app/client/my-orders`;
       if (isCaregiver) return `/app/caregiver/orders`;
@@ -527,14 +595,24 @@ export const getNotificationRoute = (notification, userRole) => {
       return null;
 
     // ── Payment failures ─────────────────────────────────
-    case 'PaymentFailed': {
-      const failedOrderId = notification.orderId || relatedEntityId;
+    // PaymentFailed notifications are emitted by the recurring-subscription
+    // auto-charge flow. relatedEntityId on these is a Subscriptions._id, NOT a
+    // ClientOrders._id. Backend now also populates `orderId` with the
+    // originating ClientOrders._id (Subscriptions.OriginalOrderId) when known.
+    // Defense in depth: only route to /my-order/{id} when notification.orderId
+    // is explicitly set; otherwise fall back to subscriptions/payment pages
+    // rather than blindly using relatedEntityId (which would 404).
+    case 'PaymentFailed':
+    case 'SubscriptionSuspended': {
+      const failedOrderId = notification.orderId; // do NOT fall back to relatedEntityId here
       if (failedOrderId) {
         if (isClient) return `/app/client/my-order/${failedOrderId}`;
+        if (isCaregiver) return `/app/caregiver/order-details/${failedOrderId}`;
         if (isAdmin) return `/app/admin/orders/${failedOrderId}`;
       }
-      if (isClient) return `/app/client/my-orders`;
-      if (isAdmin) return `/app/admin/orders`;
+      // No reliable order id — route to the subscriptions/payment area instead
+      if (isClient) return `/app/client/subscriptions`;
+      if (isAdmin) return `/app/admin/subscriptions`;
       return null;
     }
 
@@ -611,7 +689,18 @@ export const getNotificationActionLabel = (rawType) => {
     case 'NegotiationAgreed':
     case 'NegotiationConverted':
     case 'NegotiationAbandoned':
+    case 'NegotiationBothAgreed':
+    case 'NegotiationCaregiverAgreed':
+    case 'NegotiationCaregiverSubmitted':
+    case 'NegotiationClientAgreed':
+    case 'NegotiationClientSubmitted':
       return 'View Order';
+    case 'CareRequestNewResponder':
+      return 'View Responder';
+    case 'TaskProposalAccepted':
+    case 'TaskProposalRejected':
+    case 'TaskProposalSubmitted':
+      return 'View Proposal';
     case 'VisitSubmitted':
     case 'VisitCancelledByClient':
     case 'VisitCancellationRequested':
@@ -627,6 +716,8 @@ export const getNotificationActionLabel = (rawType) => {
       return 'View Subscription';
     case 'PaymentFailed':
       return 'View Payment';
+    case 'SubscriptionSuspended':
+      return 'View Subscription';
     case 'CommitmentConfirmed':
       return 'View Service';
     case 'ContractPendingClientApproval':
@@ -709,6 +800,22 @@ export const getNotificationTypeIcon = (rawType) => {
       return '📋';
     case 'NegotiationAbandoned':
       return '🚫';
+    case 'NegotiationBothAgreed':
+      return '✅';
+    case 'NegotiationCaregiverAgreed':
+    case 'NegotiationClientAgreed':
+      return '👍';
+    case 'NegotiationCaregiverSubmitted':
+    case 'NegotiationClientSubmitted':
+      return '📝';
+    case 'CareRequestNewResponder':
+      return '🙋';
+    case 'TaskProposalAccepted':
+      return '✅';
+    case 'TaskProposalRejected':
+      return '❌';
+    case 'TaskProposalSubmitted':
+      return '📋';
     case 'VisitSubmitted':
       return '📋';
     case 'VisitCancelledByClient':
@@ -727,6 +834,8 @@ export const getNotificationTypeIcon = (rawType) => {
       return '🎉';
     case 'PaymentFailed':
       return '❗';
+    case 'SubscriptionSuspended':
+      return '⏸️';
     case 'CommitmentConfirmed':
       return '🔓';
     case 'RefundRequested':

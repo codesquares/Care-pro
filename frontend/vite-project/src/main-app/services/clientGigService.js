@@ -91,6 +91,33 @@ const ClientGigService = {
         };
       });
 
+    // Sort newest → oldest. Backend GigDTO only emits `createdAt` (camelCase,
+    // System.Text.Json default) — the other name variants don't exist on the
+    // wire. Fall back to the MongoDB ObjectId embedded timestamp (first 8 hex
+    // chars = unix seconds) when createdAt is somehow missing on legacy
+    // records, so freshly added gigs always appear first.
+    const getGigTimestamp = (g) => {
+      if (g.createdAt) {
+        const t = new Date(g.createdAt).getTime();
+        if (!Number.isNaN(t)) return t;
+      }
+      const idStr = typeof g.id === 'string' ? g.id : '';
+      if (idStr.length >= 8) {
+        const seconds = parseInt(idStr.substring(0, 8), 16);
+        if (!Number.isNaN(seconds)) return seconds * 1000;
+      }
+      return 0;
+    };
+    validAndEnrichedGigs.sort((a, b) => {
+      const diff = getGigTimestamp(b) - getGigTimestamp(a);
+      if (diff !== 0) return diff;
+      // Stable secondary sort: ObjectId is monotonic, so lexicographic desc
+      // also yields newest-first as a tiebreaker.
+      const aId = typeof a.id === 'string' ? a.id : '';
+      const bId = typeof b.id === 'string' ? b.id : '';
+      return bId.localeCompare(aId);
+    });
+
     return validAndEnrichedGigs;
     
   } catch (error) {
@@ -154,12 +181,49 @@ const ClientGigService = {
   },
 
   /**
+   * Get a paginated, server-sorted slice of marketplace gigs.
+   * Backend supports: sort=newest|oldest|price_asc|price_desc|title,
+   * pageSize, page, status, search, category.
+   *
+   * Returns the raw paginated payload:
+   *   { success, data: GigDTO[], totalCount, page, pageSize, hasMore }
+   *
+   * Note: gigs returned here are NOT enriched with caregiver data. Use this
+   * for lightweight listings (e.g. marketing page top-N). For enriched data
+   * keep using getAllGigs().
+   */
+  async getGigsPaginated({ sort = 'newest', page = 1, pageSize = 10, status, search, category } = {}) {
+    try {
+      const params = new URLSearchParams();
+      params.set('sort', sort);
+      params.set('page', String(page));
+      params.set('pageSize', String(pageSize));
+      if (status) params.set('status', status);
+      if (search) params.set('search', search);
+      if (category) params.set('category', category);
+
+      const response = await api.get(`${BASE_API_URL}/Gigs?${params.toString()}`);
+      const payload = response.data || {};
+      return {
+        success: payload.success !== false,
+        data: Array.isArray(payload.data) ? payload.data : [],
+        totalCount: payload.totalCount || 0,
+        page: payload.page || page,
+        pageSize: payload.pageSize || pageSize,
+        hasMore: !!payload.hasMore,
+      };
+    } catch (error) {
+      console.error('Error fetching paginated gigs:', error);
+      return { success: false, data: [], totalCount: 0, page, pageSize, hasMore: false };
+    }
+  },
+
+  /**
    * Get most popular gig services
    * @param {number} limit - Maximum number of gigs to return
    * @returns {Promise<Array>} List of popular gig services
    */
-  async getPopularGigs(limit = 6) {
-    try {
+  async getPopularGigs(limit = 6) {    try {
       // Use getAllGigs to get enriched data with caregiver information
       const allEnrichedGigs = await this.getAllGigs();
       

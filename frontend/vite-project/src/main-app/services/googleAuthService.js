@@ -69,15 +69,17 @@ const GoogleAuthService = {
    * @param {string} role - "Client" or "Caregiver"
    * @returns {Promise<Object>} - Auth response
    */
-  async googleSignUpWithUserInfo(userInfo, role) {
+  async googleSignUpWithUserInfo(userInfo, role, idempotencyKey) {
     const endpoint = role === "Client" 
       ? `${config.BASE_URL}/Clients/GoogleSignUp`
       : `${config.BASE_URL}/CareGivers/GoogleSignUp`;
 
     try {
+      const headers = { "Content-Type": "application/json" };
+      if (idempotencyKey) headers["Idempotency-Key"] = idempotencyKey;
       const response = await fetch(endpoint, {
         method: "POST",
-        headers: { "Content-Type": "application/json" },
+        headers,
         body: JSON.stringify({ 
           email: userInfo.email,
           firstName: userInfo.given_name || userInfo.name?.split(' ')[0] || '',
@@ -92,13 +94,15 @@ const GoogleAuthService = {
       if (response.ok) {
         return {
           success: true,
+          replay: response.headers.get("Idempotent-Replay") === "true",
           ...data,
         };
       } else {
         return {
           success: false,
-          error: data.message || "Google sign up failed",
+          error: data.message || data.Message || "Google sign up failed",
           status: response.status,
+          message: data.message || data.Message,
         };
       }
     } catch (error) {
@@ -166,15 +170,17 @@ const GoogleAuthService = {
    * @param {string} role - "Client" or "Caregiver"
    * @returns {Promise<Object>} - Auth response
    */
-  async googleSignUpWithAccessToken(accessToken, userInfo, role) {
+  async googleSignUpWithAccessToken(accessToken, userInfo, role, idempotencyKey) {
     const endpoint = role === "Client" 
       ? `${config.BASE_URL}/Clients/GoogleSignUp`
       : `${config.BASE_URL}/CareGivers/GoogleSignUp`;
 
     try {
+      const headers = { "Content-Type": "application/json" };
+      if (idempotencyKey) headers["Idempotency-Key"] = idempotencyKey;
       const response = await fetch(endpoint, {
         method: "POST",
-        headers: { "Content-Type": "application/json" },
+        headers,
         body: JSON.stringify({ 
           accessToken,
           email: userInfo.email,
@@ -189,13 +195,15 @@ const GoogleAuthService = {
       if (response.ok) {
         return {
           success: true,
+          replay: response.headers.get("Idempotent-Replay") === "true",
           ...data,
         };
       } else {
         return {
           success: false,
-          error: data.message || "Google sign up failed",
+          error: data.message || data.Message || "Google sign up failed",
           status: response.status,
+          message: data.message || data.Message,
         };
       }
     } catch (error) {
@@ -263,11 +271,13 @@ const GoogleAuthService = {
    * @param {string} idToken - Google ID token
    * @returns {Promise<Object>} - Auth response with tokens and user info
    */
-  async googleSignUpClient(idToken) {
+  async googleSignUpClient(idToken, idempotencyKey) {
     try {
+      const headers = { "Content-Type": "application/json" };
+      if (idempotencyKey) headers["Idempotency-Key"] = idempotencyKey;
       const response = await fetch(`${config.BASE_URL}/Clients/GoogleSignUp`, {
         method: "POST",
-        headers: { "Content-Type": "application/json" },
+        headers,
         body: JSON.stringify({ idToken }),
       });
 
@@ -276,13 +286,15 @@ const GoogleAuthService = {
       if (response.ok) {
         return {
           success: true,
+          replay: response.headers.get("Idempotent-Replay") === "true",
           ...data,
         };
       } else {
         return {
           success: false,
-          error: data.message || "Google sign up failed",
+          error: data.message || data.Message || "Google sign up failed",
           status: response.status,
+          message: data.message || data.Message,
         };
       }
     } catch (error) {
@@ -299,11 +311,13 @@ const GoogleAuthService = {
    * @param {string} idToken - Google ID token
    * @returns {Promise<Object>} - Auth response with tokens and user info
    */
-  async googleSignUpCaregiver(idToken) {
+  async googleSignUpCaregiver(idToken, idempotencyKey) {
     try {
+      const headers = { "Content-Type": "application/json" };
+      if (idempotencyKey) headers["Idempotency-Key"] = idempotencyKey;
       const response = await fetch(`${config.BASE_URL}/CareGivers/GoogleSignUp`, {
         method: "POST",
-        headers: { "Content-Type": "application/json" },
+        headers,
         body: JSON.stringify({ idToken }),
       });
 
@@ -312,13 +326,15 @@ const GoogleAuthService = {
       if (response.ok) {
         return {
           success: true,
+          replay: response.headers.get("Idempotent-Replay") === "true",
           ...data,
         };
       } else {
         return {
           success: false,
-          error: data.message || "Google sign up failed",
+          error: data.message || data.Message || "Google sign up failed",
           status: response.status,
+          message: data.message || data.Message,
         };
       }
     } catch (error) {
@@ -336,11 +352,11 @@ const GoogleAuthService = {
    * @param {string} role - "Client" or "Caregiver"
    * @returns {Promise<Object>} - Auth response
    */
-  async googleSignUp(idToken, role) {
+  async googleSignUp(idToken, role, idempotencyKey) {
     if (role === "Client") {
-      return this.googleSignUpClient(idToken);
+      return this.googleSignUpClient(idToken, idempotencyKey);
     } else if (role === "Caregiver") {
-      return this.googleSignUpCaregiver(idToken);
+      return this.googleSignUpCaregiver(idToken, idempotencyKey);
     } else {
       return {
         success: false,

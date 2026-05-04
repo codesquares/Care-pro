@@ -11,6 +11,42 @@
   background: #ffffff;
 }
 
+/* ---- Private offer banner (special gigs only) ---- */
+.hcs-private-offer-banner {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  padding: 14px 18px;
+  margin-bottom: 16px;
+  background: linear-gradient(135deg, #eff6ff 0%, #dbeafe 100%);
+  border: 1px solid #bfdbfe;
+  border-left: 4px solid #2563eb;
+  border-radius: 10px;
+  color: #1e3a8a;
+}
+
+.hcs-private-offer-icon {
+  font-size: 1.4rem;
+  line-height: 1;
+}
+
+.hcs-private-offer-text {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  font-size: 0.88rem;
+}
+
+.hcs-private-offer-text strong {
+  font-size: 0.95rem;
+  font-weight: 700;
+}
+
+.hcs-private-offer-text span {
+  color: #1e40af;
+  opacity: 0.9;
+}
+
 /* ---- Title + Actions Row ---- */
 .hcs-title-row {
   display: flex;

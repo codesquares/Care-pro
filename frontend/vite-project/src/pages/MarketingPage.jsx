@@ -281,7 +281,7 @@ const MarketingPage = () => {
                 platform efficiently and find your perfect match.
               </p>
               <div className="how-actions split">
-                <button className="how-btn outline">Browse Services</button>
+                <button className="how-btn outline" onClick={() => navigate("/marketplace")}>Browse Services</button>
                 <button className="how-btn fill" onClick={() => navigate("/app/client/post-project")}>Post job request</button>
               </div>
             </div>

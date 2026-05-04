@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import { useNavigate, Link, useLocation } from "react-router-dom";
 import { GoogleLogin } from "@react-oauth/google";
 import "../../styles/main-app/pages/RegisterFormPage.css";
@@ -10,6 +10,11 @@ import Modal from "../components/modal/Modal";
 import allUserService from "../services/allUserService";
 import GoogleAuthService from "../services/googleAuthService";
 import { useAuth } from "../context/AuthContext";
+import {
+  createIdempotencyKey,
+  submitSignupWithIdempotency,
+  classifyIdempotencyError,
+} from "../utils/idempotency";
 
 /**
  * RegisterFormPage - Registration form (step 2)
@@ -20,6 +25,12 @@ const RegisterFormPage = () => {
   const navigate = useNavigate();
   const location = useLocation();
   const { login } = useAuth();
+
+  // Idempotency-Key refs for the in-flight signup submissions. Generated once
+  // per user-initiated submit; reused for automatic retries; cleared after the
+  // final outcome so the next explicit click gets a new key.
+  const idempotencyKeyRef = useRef(null);
+  const googleIdempotencyKeyRef = useRef(null);
 
   // Get role from navigation state
   const selectedRole = location.state?.role;
@@ -160,7 +171,22 @@ Please log in to your existing account instead of creating a new one.`);
           ? "/Clients/AddClientUser"
           : "/Admins";
 
-      await fetchData(payload, endpoint);
+      // Only the four signup endpoints support Idempotency-Key. /Admins does not.
+      const useIdempotency =
+        endpoint === "/CareGivers/AddCaregiverUser" ||
+        endpoint === "/Clients/AddClientUser";
+
+      if (useIdempotency) {
+        await submitSignupWithIdempotency(idempotencyKeyRef, (key) =>
+          fetchData(payload, endpoint, {
+            headers: { "Idempotency-Key": key },
+          })
+        );
+      } else {
+        await fetchData(payload, endpoint);
+      }
+
+      idempotencyKeyRef.current = null;
 
       // Show success modal with email verification instructions
       setModalTitle("Registration Successful!");
@@ -177,6 +203,10 @@ You won't be able to log in until your email is verified.`);
 
     } catch (err) {
       console.error("Registration failed:", err);
+      // Reset key so the user's next explicit click gets a fresh one. The
+      // classifyIdempotencyError call also flags client bugs for logging.
+      classifyIdempotencyError(err);
+      idempotencyKeyRef.current = null;
       toast.error("Registration failed. Please try again.");
 
       // Show error modal
@@ -254,8 +284,45 @@ You won't be able to log in until your email is verified.`);
         setIsModalOpen(true);
 
       } else if (signInResult.needsSignUp) {
-        // New user - sign them up with the selected role
-        const signUpResult = await GoogleAuthService.googleSignUp(idToken, selectedRole);
+        // New user - sign them up with the selected role.
+        // Use an Idempotency-Key per user-initiated submission; reuse on
+        // retryable 409 "still being processed", regenerate on 409 "expired".
+        if (!googleIdempotencyKeyRef.current) {
+          googleIdempotencyKeyRef.current = createIdempotencyKey();
+        }
+
+        let signUpResult;
+        let stillTries = 0;
+        let expiredRetried = false;
+        // eslint-disable-next-line no-constant-condition
+        while (true) {
+          // eslint-disable-next-line no-await-in-loop
+          signUpResult = await GoogleAuthService.googleSignUp(
+            idToken,
+            selectedRole,
+            googleIdempotencyKeyRef.current
+          );
+          if (signUpResult.success) break;
+          const kind = classifyIdempotencyError({
+            status: signUpResult.status,
+            message: signUpResult.message || signUpResult.error,
+          });
+          if (kind === "still-processing" && stillTries < 3) {
+            stillTries += 1;
+            // eslint-disable-next-line no-await-in-loop
+            await new Promise((r) => setTimeout(r, 1500));
+            continue;
+          }
+          if (kind === "expired" && !expiredRetried) {
+            expiredRetried = true;
+            googleIdempotencyKeyRef.current = createIdempotencyKey();
+            continue;
+          }
+          break;
+        }
+
+        // Clear so the next explicit user click mints a fresh key.
+        googleIdempotencyKeyRef.current = null;
 
         // Backend returns 'token' not 'accessToken'
         const signUpToken = signUpResult.token || signUpResult.accessToken;
