@@ -37,6 +37,14 @@ class SignalRNotificationService {
   /**
    * Register a callback for verification status changes (Dojah webhook results).
    * Payload: { userId, verificationStatus, isVerified, verificationMethod, timestamp }
+   *
+   * `verificationStatus` is one of (lowercase): 'success' | 'pending' | 'failed'.
+   *  - success: verification passed; isVerified will be true.
+   *  - pending: still in flow (Dojah Pending/Processing/Ongoing); isVerified false.
+   *  - failed:  verification failed OR widget abandoned (Dojah Failed/Cancelled/Abandoned); isVerified false.
+   *
+   * Compare case-insensitively to be safe. There is no separate 'abandoned' status —
+   * abandoned sessions arrive as 'failed'. Trust `isVerified` directly.
    */
   onVerificationStatusChanged(callback) {
     this._onVerificationStatusChanged = callback;

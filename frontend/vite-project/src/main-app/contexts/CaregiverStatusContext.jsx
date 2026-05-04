@@ -57,10 +57,15 @@ export function CaregiverStatusProvider({ children }) {
       setStatusData(prev => ({ ...prev, verificationLoading: true, verificationError: null }));
       
       const verificationData = await getDojahStatus(userId, 'Caregiver', token);
-      
-      const status = verificationData?.verificationStatus?.toLowerCase?.() || '';
-      const isVerified = status === "completed" || status === "success" ||
-                        verificationData?.isVerified === true;
+
+      // Backend now correctly sets `isVerified` whenever verificationStatus is
+      // success/completed/verified, so we can trust it directly. Keep the status
+      // string check (case-insensitive) as a defensive fallback for legacy responses.
+      const status = verificationData?.verificationStatus?.toString?.().toLowerCase?.() || '';
+      const isVerified = verificationData?.isVerified === true ||
+                         status === 'success' ||
+                         status === 'completed' ||
+                         status === 'verified';
       
       setStatusData(prev => ({
         ...prev,

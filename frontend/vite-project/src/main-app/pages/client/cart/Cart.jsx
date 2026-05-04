@@ -179,7 +179,12 @@ const Cart = () => {
             setLoading(true);
             setError(null);
             const allGigs = await ClientGigService.getAllGigs();
-            const foundGig = allGigs.find(gig => gig.id === id);
+            let foundGig = allGigs.find(gig => gig.id === id);
+            // Special/private gigs (e.g. care-request offers) are excluded from
+            // the marketplace list — fall back to a direct lookup by gig ID.
+            if (!foundGig) {
+              foundGig = await ClientGigService.getGigById(id);
+            }
             if (!foundGig) {
               throw new Error("Service not found or no longer available");
             }
