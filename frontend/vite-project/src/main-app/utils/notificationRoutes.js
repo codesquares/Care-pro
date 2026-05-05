@@ -247,6 +247,20 @@ const TYPE_MAP = {
   'commitment_confirmed':        'CommitmentConfirmed',
   'commitmentconfirmed':         'CommitmentConfirmed',
   'commitment confirmed':        'CommitmentConfirmed',
+
+  // Certificate
+  'certificate_uploaded':         'CertificateUploaded',
+  'certificateuploaded':          'CertificateUploaded',
+  'certificate uploaded':         'CertificateUploaded',
+  'certificate_verification':     'CertificateVerification',
+  'certificateverification':      'CertificateVerification',
+  'certificate verification':     'CertificateVerification',
+  'certificate_approved':         'CertificateVerification',
+  'certificateapproved':          'CertificateVerification',
+  'certificate_rejected':         'CertificateVerification',
+  'certificaterejected':          'CertificateVerification',
+  'certificate_review_required':  'CertificateVerification',
+  'certificatereviewrequired':    'CertificateVerification',
 };
 
 // Set of all canonical types for fast exact-match check
@@ -277,6 +291,7 @@ const KNOWN_CANONICAL = new Set([
   'PaymentFailed',
   'ContractPendingClientApproval', 'ContractRevised',
   'CommitmentConfirmed',
+  'CertificateUploaded', 'CertificateVerification',
 ]);
 
 /**
@@ -414,6 +429,14 @@ export const getNotificationRoute = (notification, userRole) => {
       if (relatedEntityId) return `/service/${relatedEntityId}`;
       if (isClient) return `/app/client/dashboard`;
       if (isCaregiver) return `/app/caregiver/dashboard`;
+      return null;
+
+    // ── Certificate notifications ────────────────────────
+    // Caregivers land on their profile (Certifications section).
+    // Admin has no in-app destination here.
+    case 'CertificateUploaded':
+    case 'CertificateVerification':
+      if (isCaregiver) return `/app/caregiver/profile`;
       return null;
 
     // ── Order / Booking notifications ────────────────────
@@ -677,6 +700,9 @@ export const getNotificationActionLabel = (rawType) => {
       return 'View Withdrawal';
     case 'VerificationUpdate':
       return 'View Verification';
+    case 'CertificateUploaded':
+    case 'CertificateVerification':
+      return 'View Certificate';
     case 'CareRequestMatched':
       return 'View Matches';
     case 'CareRequestNoMatch':

@@ -2351,6 +2351,7 @@ const adminService = {
       name: certificate.certificateName,
       issuer: certificate.certificateIssuer,
       imageUrl: certificate.certificateUrl,
+      previewUrl: certificate.certificatePreviewUrl,
       status: adminService.getStatusName(certificate.verificationStatus),
       statusValue: certificate.verificationStatus,
       statusClass: adminService.getStatusClass(certificate.verificationStatus),
