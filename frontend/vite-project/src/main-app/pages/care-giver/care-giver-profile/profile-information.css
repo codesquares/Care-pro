@@ -271,6 +271,30 @@
 }
 
 /* Responsive Styles */
+/* Collapsible section header (chevron) — visual styling shared across breakpoints,
+   but the collapse behaviour is mobile-only (see <=768px block below). */
+.profile-collapsible .profile-section-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  cursor: default;
+  user-select: none;
+  -webkit-tap-highlight-color: transparent;
+}
+
+.profile-collapsible .profile-section-header > span {
+  flex: 1;
+  min-width: 0;
+}
+
+.profile-collapsible .profile-section-chevron {
+  display: none; /* hidden on desktop — sections are always open there */
+  color: #6b7280;
+  transition: transform 0.3s ease;
+  flex-shrink: 0;
+}
+
 @media (max-width: 768px) {
   .profile-information-section,
   .services-section,
@@ -285,6 +309,39 @@
   .service-tag {
     font-size: 12px;
     padding: 5px 10px;
+  }
+
+  /* Collapsible behaviour: mobile only */
+  .profile-collapsible .profile-section-header {
+    cursor: pointer;
+    margin: 0;
+  }
+
+  .profile-collapsible .profile-section-header h3,
+  .profile-collapsible h3.profile-section-header {
+    margin: 0;
+  }
+
+  .profile-collapsible .profile-section-chevron {
+    display: block;
+  }
+
+  .profile-collapsible.open .profile-section-chevron {
+    transform: rotate(180deg);
+  }
+
+  .profile-collapsible .profile-section-body {
+    max-height: 0;
+    overflow: hidden;
+    opacity: 0;
+    transition: max-height 0.35s ease, opacity 0.25s ease, margin-top 0.35s ease;
+    margin-top: 0;
+  }
+
+  .profile-collapsible.open .profile-section-body {
+    max-height: 4000px;
+    opacity: 1;
+    margin-top: 16px;
   }
 }
 

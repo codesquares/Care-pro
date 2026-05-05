@@ -26,6 +26,32 @@ const ProfileInformation = ({ aboutMe, onUpdate, services = [] }) => {
   const [certificates, setCertificates] = useState([]);
   const [certificatesLoading, setCertificatesLoading] = useState(true);
 
+  // Collapsible sections (mobile only — CSS keeps them open on desktop)
+  const [openSections, setOpenSections] = useState({
+    description: true,
+    services: true,
+    certifications: true,
+  });
+  const toggleSection = (key) =>
+    setOpenSections((prev) => ({ ...prev, [key]: !prev[key] }));
+
+  const SectionChevron = () => (
+    <svg
+      className="profile-section-chevron"
+      width="16"
+      height="16"
+      viewBox="0 0 24 24"
+      fill="none"
+      stroke="currentColor"
+      strokeWidth="2"
+      strokeLinecap="round"
+      strokeLinejoin="round"
+      aria-hidden="true"
+    >
+      <polyline points="6 9 12 15 18 9" />
+    </svg>
+  );
+
   const userDetails = JSON.parse(localStorage.getItem("userDetails"));
   
   // Get the caregiver status context to refresh certificate status
@@ -208,19 +234,42 @@ const ProfileInformation = ({ aboutMe, onUpdate, services = [] }) => {
 
   return (
     <div>
-      <div className="profile-information-section">
-        <h3>Description</h3>
-        <p>{aboutMe || 'No description provided'}</p>
-        <button 
-          onClick={() => setShowModal(true)}
-          className="edit-description-btn"
+      <div className={`profile-information-section profile-collapsible ${openSections.description ? 'open' : ''}`}>
+        <h3
+          className="profile-section-header"
+          onClick={() => toggleSection('description')}
+          role="button"
+          tabIndex={0}
+          onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); toggleSection('description'); } }}
+          aria-expanded={openSections.description}
         >
-          Edit Description
-        </button>
+          <span>Description</span>
+          <SectionChevron />
+        </h3>
+        <div className="profile-section-body">
+          <p>{aboutMe || 'No description provided'}</p>
+          <button 
+            onClick={() => setShowModal(true)}
+            className="edit-description-btn"
+          >
+            Edit Description
+          </button>
+        </div>
       </div>
 
-      <div className="services-section">
-        <h3>Services</h3>
+      <div className={`services-section profile-collapsible ${openSections.services ? 'open' : ''}`}>
+        <h3
+          className="profile-section-header"
+          onClick={() => toggleSection('services')}
+          role="button"
+          tabIndex={0}
+          onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); toggleSection('services'); } }}
+          aria-expanded={openSections.services}
+        >
+          <span>Services</span>
+          <SectionChevron />
+        </h3>
+        <div className="profile-section-body">
         <div className="services-list">
           {services && services.length > 0 ? (
             services.map((service, index) => (
@@ -249,10 +298,22 @@ const ProfileInformation = ({ aboutMe, onUpdate, services = [] }) => {
             </div>
           )}
         </div>
+        </div>
       </div>
 
-      <div className="certifications-section">
-        <h3>Certifications</h3>
+      <div className={`certifications-section profile-collapsible ${openSections.certifications ? 'open' : ''}`}>
+        <h3
+          className="profile-section-header"
+          onClick={() => toggleSection('certifications')}
+          role="button"
+          tabIndex={0}
+          onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); toggleSection('certifications'); } }}
+          aria-expanded={openSections.certifications}
+        >
+          <span>Certifications</span>
+          <SectionChevron />
+        </h3>
+        <div className="profile-section-body">
         <div className="certifications-list">
           {certificatesLoading ? (
             <div style={{
@@ -422,6 +483,7 @@ const ProfileInformation = ({ aboutMe, onUpdate, services = [] }) => {
             + Add Certificate
           </button>
         </div>
+        </div>
       </div>
 
       {/* About Me Edit Modal */}
@@ -550,32 +612,47 @@ const ProfileInformation = ({ aboutMe, onUpdate, services = [] }) => {
                 )}
               </div>
               <div style={{ maxHeight: '60vh', overflow: 'auto' }}>
-                <img 
-                  src={selectedCertificate.certificateUrl} 
-                  alt={selectedCertificate.certificateName}
-                  style={{
-                    maxWidth: '100%',
-                    maxHeight: '100%',
-                    objectFit: 'contain',
-                    borderRadius: '8px',
-                    boxShadow: '0 2px 8px rgba(0,0,0,0.1)'
-                  }}
-                  onError={(e) => {
-                    e.target.style.display = 'none';
-                    e.target.nextSibling.style.display = 'block';
-                  }}
-                />
+                {selectedCertificate.certificatePreviewUrl ? (
+                  <img
+                    src={selectedCertificate.certificatePreviewUrl}
+                    alt={selectedCertificate.certificateName}
+                    style={{
+                      maxWidth: '100%',
+                      maxHeight: '100%',
+                      objectFit: 'contain',
+                      borderRadius: '8px',
+                      boxShadow: '0 2px 8px rgba(0,0,0,0.1)'
+                    }}
+                    onError={(e) => {
+                      e.target.style.display = 'none';
+                      if (e.target.nextSibling) e.target.nextSibling.style.display = 'block';
+                    }}
+                  />
+                ) : (
+                  <div style={{ padding: '20px', color: '#666' }}>
+                    <p>No preview available for this certificate.</p>
+                  </div>
+                )}
                 <div style={{ display: 'none', padding: '20px', color: '#666' }}>
-                  <p>Unable to load certificate image</p>
-                  <a 
-                    href={selectedCertificate.certificateUrl} 
-                    target="_blank" 
-                    rel="noopener noreferrer"
-                    style={{ color: '#0066cc' }}
-                  >
-                    Open in new tab
-                  </a>
+                  <p>Unable to load certificate preview</p>
                 </div>
+                {selectedCertificate.certificateUrl && (
+                  <div style={{ marginTop: '12px', textAlign: 'center' }}>
+                    <a
+                      href={selectedCertificate.certificateUrl}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      style={{
+                        color: '#0066cc',
+                        fontSize: '14px',
+                        fontWeight: '500',
+                        textDecoration: 'none'
+                      }}
+                    >
+                      📄 View full document
+                    </a>
+                  </div>
+                )}
               </div>
             </div>
           </div>

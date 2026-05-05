@@ -22,6 +22,38 @@ const Reviews = () => {
   const [error, setError] = useState("");
   const [filteredReviews, setFilteredReviews] = useState([]);
   const [reviewStats, setReviewStats] = useState(null);
+  const [isOpen, setIsOpen] = useState(true);
+
+  const SectionChevron = () => (
+    <svg
+      className="profile-section-chevron"
+      width="16"
+      height="16"
+      viewBox="0 0 24 24"
+      fill="none"
+      stroke="currentColor"
+      strokeWidth="2"
+      strokeLinecap="round"
+      strokeLinejoin="round"
+      aria-hidden="true"
+    >
+      <polyline points="6 9 12 15 18 9" />
+    </svg>
+  );
+
+  const ReviewsHeader = () => (
+    <h3
+      className="profile-section-header"
+      onClick={() => setIsOpen((v) => !v)}
+      role="button"
+      tabIndex={0}
+      onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); setIsOpen((v) => !v); } }}
+      aria-expanded={isOpen}
+    >
+      <span>Reviews from Clients</span>
+      <SectionChevron />
+    </h3>
+  );
 
   // Fetch caregiver's gigs with reviews using the new service
   useEffect(() => {
@@ -70,11 +102,13 @@ const Reviews = () => {
   // Loading state
   if (isLoading) {
     return (
-      <div className="reviews">
-        <h3>Reviews from Clients</h3>
-        <div className="spinner-container">
-          <div className="spinner" />
-          <p>Loading reviews...</p>
+      <div className={`reviews profile-collapsible ${isOpen ? 'open' : ''}`}>
+        <ReviewsHeader />
+        <div className="profile-section-body">
+          <div className="spinner-container">
+            <div className="spinner" />
+            <p>Loading reviews...</p>
+          </div>
         </div>
       </div>
     );
@@ -83,9 +117,11 @@ const Reviews = () => {
   // Error state
   if (error) {
     return (
-      <div className="reviews reviews-empty">
-        <h3>Reviews from Clients</h3>
-        <p className="error-message">Error: {error}</p>
+      <div className={`reviews reviews-empty profile-collapsible ${isOpen ? 'open' : ''}`}>
+        <ReviewsHeader />
+        <div className="profile-section-body">
+          <p className="error-message">Error: {error}</p>
+        </div>
       </div>
     );
   }
@@ -93,18 +129,20 @@ const Reviews = () => {
   // No reviews state
   if (reviewsFromApi.length === 0) {
     return (
-      <div className="reviews reviews-empty">
-        <h3>Reviews from Clients</h3>
-        <span className="empty-icon">💬</span>
-        <p>No reviews yet. Keep providing great service to receive your first review!</p>
+      <div className={`reviews reviews-empty profile-collapsible ${isOpen ? 'open' : ''}`}>
+        <ReviewsHeader />
+        <div className="profile-section-body">
+          <span className="empty-icon">💬</span>
+          <p>No reviews yet. Keep providing great service to receive your first review!</p>
+        </div>
       </div>
     );
   }
 
   return (
-    <div className="reviews">
-      <h3>Reviews from Clients</h3>
-      
+    <div className={`reviews profile-collapsible ${isOpen ? 'open' : ''}`}>
+      <ReviewsHeader />
+      <div className="profile-section-body">
       {/* Review Statistics */}
       {reviewStats && reviewStats.totalReviews > 0 && (
         <div className="review-stats">
@@ -185,6 +223,7 @@ const Reviews = () => {
             </div>
           </div>
         ))}
+      </div>
       </div>
     </div>
   );
