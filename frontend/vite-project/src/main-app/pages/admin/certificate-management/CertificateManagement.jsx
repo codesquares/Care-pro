@@ -401,16 +401,33 @@ const CertificateManagement = () => {
                 {/* Left: Certificate Image */}
                 <div className="cert-image-section">
                   <div className={`cert-image-container ${imageZoom ? 'zoomed' : ''}`}>
-                    <img
-                      src={selectedCertificate.imageUrl}
-                      alt="Certificate"
-                      onClick={() => setImageZoom(!imageZoom)}
-                    />
+                    {selectedCertificate.previewUrl ? (
+                      <img
+                        src={selectedCertificate.previewUrl}
+                        alt="Certificate"
+                        onClick={() => setImageZoom(!imageZoom)}
+                      />
+                    ) : (
+                      <div style={{ padding: '20px', color: '#666', textAlign: 'center' }}>
+                        <p>No preview available for this certificate.</p>
+                      </div>
+                    )}
                     <div className="image-controls">
-                      <button onClick={() => setImageZoom(!imageZoom)} className="zoom-btn">
-                        <i className={`fas fa-${imageZoom ? 'compress' : 'expand'}`}></i>
-                        {imageZoom ? 'Zoom Out' : 'Zoom In'}
-                      </button>
+                      {selectedCertificate.previewUrl && (
+                        <button onClick={() => setImageZoom(!imageZoom)} className="zoom-btn">
+                          <i className={`fas fa-${imageZoom ? 'compress' : 'expand'}`}></i>
+                          {imageZoom ? 'Zoom Out' : 'Zoom In'}
+                        </button>
+                      )}
+                      <a
+                        href={selectedCertificate.imageUrl}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="zoom-btn"
+                        style={{ marginLeft: '8px', textDecoration: 'none' }}
+                      >
+                        <i className="fas fa-external-link-alt"></i> View full document
+                      </a>
                     </div>
                   </div>
                 </div>

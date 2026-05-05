@@ -71,13 +71,8 @@ const CertificateUploadModal = ({
     }
   };
 
-  const convertFileToBase64 = (file) =>
-    new Promise((resolve, reject) => {
-      const reader = new FileReader();
-      reader.readAsDataURL(file);
-      reader.onload = () => resolve(reader.result.split(',')[1]);
-      reader.onerror = (error) => reject(error);
-    });
+  // Backend cap: file must be ≤ 10 MB (request body cap is ~12 MB).
+  const MAX_FILE_BYTES = 10 * 1024 * 1024;
 
   const resetForm = () => {
     setCertificateFile(null);
@@ -106,34 +101,43 @@ const CertificateUploadModal = ({
       return;
     }
 
+    if (certificateFile.size > MAX_FILE_BYTES) {
+      toast.error('Certificate file is too large. Maximum allowed size is 10 MB.');
+      return;
+    }
+
     try {
       setUploadLoading(true);
 
-      const base64Certificate = await convertFileToBase64(certificateFile);
-
-      const requestPayload = {
-        certificateName: selectedCert.name,
-        caregiverId,
-        certificateIssuer: selectedCert.issuer,
-        certificate: base64Certificate,
-        yearObtained: new Date(certificateYear, 0, 1).toISOString(),
-        ...(selectedCert.certCategory && {
-          certificateCategory: selectedCert.certCategory,
-        }),
-        ...(certificateExpiry && {
-          expiryDate: new Date(certificateExpiry).toISOString(),
-        }),
-      };
+      const formData = new FormData();
+      formData.append('Certificate', certificateFile);
+      formData.append('CertificateName', selectedCert.name);
+      formData.append('CaregiverId', caregiverId);
+      formData.append('CertificateIssuer', selectedCert.issuer);
+      formData.append(
+        'YearObtained',
+        new Date(certificateYear, 0, 1).toISOString(),
+      );
+      if (selectedCert.certCategory) {
+        formData.append('CertificateCategory', selectedCert.certCategory);
+      }
+      if (certificateExpiry) {
+        formData.append(
+          'ExpiryDate',
+          new Date(certificateExpiry).toISOString(),
+        );
+      }
 
       const response = await axios.post(
         `${config.BASE_URL}/Certificates`,
-        requestPayload,
+        formData,
         {
           headers: {
-            'Content-Type': 'application/json',
+            // Let the browser set Content-Type with the multipart boundary.
             Accept: '*/*',
             Authorization: `Bearer ${localStorage.getItem('authToken') || ''}`,
           },
+          timeout: 120000,
         },
       );
 
@@ -253,9 +257,19 @@ const CertificateUploadModal = ({
           </label>
           <input
             type="file"
-            onChange={(e) => setCertificateFile(e.target.files[0])}
+            onChange={(e) => {
+              const file = e.target.files[0];
+              if (file && file.size > MAX_FILE_BYTES) {
+                toast.error('Certificate file is too large. Maximum allowed size is 10 MB.');
+                e.target.value = '';
+                setCertificateFile(null);
+                return;
+              }
+              setCertificateFile(file);
+            }}
             accept=".pdf,.jpg,.jpeg,.png"
           />
+          <p className="cert-modal-hint">PDF, JPG or PNG. Max 10 MB.</p>
         </div>
 
         {/* Actions */}
