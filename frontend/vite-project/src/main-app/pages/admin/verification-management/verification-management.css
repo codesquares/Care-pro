@@ -596,11 +596,15 @@
   display: flex;
   gap: 1rem;
   margin-top: 2rem;
+  flex-wrap: wrap;
 }
 
 .btn-approve,
-.btn-reject {
-  flex: 1;
+.btn-reject,
+.btn-edit-name,
+.btn-override {
+  flex: 1 1 calc(50% - 0.5rem);
+  min-width: 200px;
   padding: 1rem 1.5rem;
   border: none;
   border-radius: 12px;
@@ -609,7 +613,7 @@
   align-items: center;
   justify-content: center;
   gap: 0.75rem;
-  font-size: 1.1rem;
+  font-size: 1.05rem;
   font-weight: 600;
   transition: all 0.3s ease;
 }
@@ -638,6 +642,97 @@
 .btn-reject:disabled {
   opacity: 0.6;
   cursor: not-allowed;
+}
+
+.btn-edit-name {
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  color: white;
+}
+.btn-edit-name:hover:not(:disabled) {
+  transform: translateY(-2px);
+  box-shadow: 0 6px 20px rgba(102, 126, 234, 0.4);
+}
+.btn-override {
+  background: linear-gradient(135deg, #ee7752 0%, #e73c7e 100%);
+  color: white;
+}
+.btn-override:hover:not(:disabled) {
+  transform: translateY(-2px);
+  box-shadow: 0 6px 20px rgba(231, 60, 126, 0.4);
+}
+.btn-edit-name:disabled,
+.btn-override:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+/* Override + Name-edit modals */
+.override-modal,
+.name-edit-modal {
+  max-width: 640px;
+}
+.override-context,
+.name-context {
+  margin: 0 0 1.25rem 0;
+  color: #4b5563;
+}
+.name-comparison {
+  background: #f3f4f6;
+  border: 1px solid #e5e7eb;
+  border-radius: 10px;
+  padding: 0.75rem 1rem;
+  margin-bottom: 1.25rem;
+  font-size: 0.95rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.35rem;
+  color: #374151;
+}
+.form-row {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 1rem;
+}
+@media (max-width: 640px) {
+  .form-row { grid-template-columns: 1fr; }
+}
+.form-row .form-group { margin-bottom: 1rem; }
+.form-row input[type="text"] {
+  width: 100%;
+  padding: 0.65rem 0.75rem;
+  border: 1px solid #d1d5db;
+  border-radius: 8px;
+  font-size: 1rem;
+}
+.warning-box {
+  background: #fff7ed;
+  border: 1px solid #fdba74;
+  border-radius: 10px;
+  padding: 0.75rem 1rem;
+  margin: 0.75rem 0 1rem 0;
+}
+.confirm-checkbox {
+  display: flex;
+  align-items: flex-start;
+  gap: 0.6rem;
+  cursor: pointer;
+  color: #7c2d12;
+  font-weight: 500;
+}
+.confirm-checkbox input[type="checkbox"] {
+  margin-top: 0.25rem;
+}
+.inline-error {
+  background: #fee2e2;
+  border: 1px solid #fca5a5;
+  color: #991b1b;
+  padding: 0.65rem 0.85rem;
+  border-radius: 8px;
+  margin-bottom: 1rem;
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  font-size: 0.95rem;
 }
 
 /* Review Form */

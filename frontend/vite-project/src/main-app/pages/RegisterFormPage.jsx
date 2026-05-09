@@ -15,6 +15,7 @@ import {
   submitSignupWithIdempotency,
   classifyIdempotencyError,
 } from "../utils/idempotency";
+import { getPasswordStrength } from "../utils/passwordStrength";
 
 /**
  * RegisterFormPage - Registration form (step 2)
@@ -96,8 +97,17 @@ const RegisterFormPage = () => {
     if (!formValues.lastName.trim()) newErrors.lastName = "Last name is required.";
     if (!formValues.email.trim() || !/\S+@\S+\.\S+/.test(formValues.email))
       newErrors.email = "Valid email address is required.";
-    if (!formValues.password || formValues.password.length < 8)
+    if (!formValues.password || formValues.password.length < 8) {
       newErrors.password = "Password must be at least 8 characters long.";
+    } else {
+      const strength = getPasswordStrength(formValues.password);
+      if (strength.label === "Weak") {
+        const need = strength.suggestions.length
+          ? ` Add ${strength.suggestions.slice(0, 3).join(", ")}.`
+          : "";
+        newErrors.password = `Password is too weak.${need}`;
+      }
+    }
     if (formValues.password !== formValues.confirmPassword)
       newErrors.confirmPassword = "Passwords do not match.";
     if (selectedRole === "Admin" && !department) newErrors.department = "Please select a department.";
@@ -536,6 +546,29 @@ You won't be able to log in until your email is verified.`);
                   )}
                 </button>
               </div>
+              {formValues.password && (() => {
+                const s = getPasswordStrength(formValues.password);
+                return (
+                  <div className="regform-password-strength" aria-live="polite">
+                    <div className="regform-strength-bar">
+                      <div
+                        className="regform-strength-bar-fill"
+                        style={{ width: `${s.percent}%`, backgroundColor: s.color }}
+                      />
+                    </div>
+                    <div className="regform-strength-meta">
+                      <span className="regform-strength-label" style={{ color: s.color }}>
+                        {s.label}
+                      </span>
+                      {s.suggestions.length > 0 && (
+                        <span className="regform-strength-hint">
+                          Add {s.suggestions.slice(0, 3).join(", ")}.
+                        </span>
+                      )}
+                    </div>
+                  </div>
+                );
+              })()}
               {errors.password && <p className="regform-error">{errors.password}</p>}
             </div>
 
