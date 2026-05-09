@@ -17,8 +17,50 @@ const VerificationManagement = () => {
   const [actionLoading, setActionLoading] = useState(false);
   const [successMessage, setSuccessMessage] = useState('');
 
+  // Admin escape-hatch: status override modal state
+  const [showOverrideModal, setShowOverrideModal] = useState(false);
+  const [overrideStatus, setOverrideStatus] = useState('Completed');
+  const [overrideReason, setOverrideReason] = useState('');
+  const [overrideExtraConfirm, setOverrideExtraConfirm] = useState(false);
+  const [overrideError, setOverrideError] = useState('');
+  const [overrideLoading, setOverrideLoading] = useState(false);
+
+  // Admin escape-hatch: caregiver name edit modal state
+  const [showNameModal, setShowNameModal] = useState(false);
+  const [nameForm, setNameForm] = useState({ firstName: '', middleName: '', lastName: '' });
+  const [nameReason, setNameReason] = useState('');
+  const [nameConfirmed, setNameConfirmed] = useState(false);
+  const [nameError, setNameError] = useState('');
+  const [nameLoading, setNameLoading] = useState(false);
+
   // Get admin user ID from localStorage
   const adminId = JSON.parse(localStorage.getItem('userDetails') || '{}')?.id || 'admin_id';
+
+  const ALLOWED_OVERRIDE_STATUSES = ['Completed', 'Verified', 'Success', 'Failed', 'Pending'];
+
+  // Treat Completed/Verified/Success as "verified". Failed/Pending as "not verified".
+  // Default override flips to the opposite side; flipping a verified record
+  // (e.g. Completed -> Failed) requires an extra confirmation in the UI.
+  const isVerifiedStatus = (s) => {
+    const v = (s || '').toLowerCase();
+    return v === 'completed' || v === 'verified' || v === 'success';
+  };
+  const defaultOverrideFor = (currentStatus) =>
+    isVerifiedStatus(currentStatus) ? 'Failed' : 'Completed';
+  const overrideIsRevocation = (currentStatus, nextStatus) =>
+    isVerifiedStatus(currentStatus) && !isVerifiedStatus(nextStatus);
+
+  // Resolve the caregiver's ObjectId for the name-edit endpoint. Pending list
+  // and webhook details both expose userId; in rare/older records that may be
+  // an email instead of an ObjectId — surface a clear error in that case.
+  const resolveCaregiverId = () => {
+    const candidate =
+      selectedVerification?.userId ||
+      selectedVerification?.caregiverId ||
+      webhookDetails?.userId ||
+      webhookDetails?.registeredProfile?.userId;
+    return candidate || '';
+  };
 
   useEffect(() => {
     loadVerifications();
@@ -97,6 +139,152 @@ const VerificationManagement = () => {
     setWebhookDetails(null);
     setAdminNotes('');
     setReviewAction(null);
+  };
+
+  // -------- Status override (escape-hatch) --------
+  const openOverrideModal = () => {
+    setOverrideStatus(defaultOverrideFor(selectedVerification?.verificationStatus));
+    setOverrideReason(adminNotes || '');
+    setOverrideExtraConfirm(false);
+    setOverrideError('');
+    setShowOverrideModal(true);
+  };
+
+  const closeOverrideModal = () => {
+    if (overrideLoading) return;
+    setShowOverrideModal(false);
+    setOverrideError('');
+    setOverrideExtraConfirm(false);
+  };
+
+  const handleOverrideSubmit = async () => {
+    if (!selectedVerification) return;
+    setOverrideError('');
+
+    if (!ALLOWED_OVERRIDE_STATUSES.includes(overrideStatus)) {
+      setOverrideError('Choose a valid status.');
+      return;
+    }
+    if (!overrideReason || overrideReason.trim().length < 5) {
+      setOverrideError('Reason is required (minimum 5 characters).');
+      return;
+    }
+    if (overrideIsRevocation(selectedVerification.verificationStatus, overrideStatus) && !overrideExtraConfirm) {
+      setOverrideError('You are revoking a verified record. Tick the extra confirmation to proceed.');
+      return;
+    }
+
+    setOverrideLoading(true);
+    try {
+      const result = await adminVerificationService.overrideVerificationStatus({
+        verificationId: selectedVerification.verificationId,
+        adminId,
+        newStatus: overrideStatus,
+        reason: overrideReason.trim()
+      });
+      if (result.success) {
+        setSuccessMessage(
+          `Verification status overridden: ${result.previousStatus || selectedVerification.verificationStatus} \u2192 ${result.newStatus || overrideStatus}.`
+        );
+        setTimeout(() => setSuccessMessage(''), 6000);
+        setShowOverrideModal(false);
+        closeReviewModal();
+        loadVerifications();
+      } else {
+        setOverrideError(result.error || 'Failed to override status');
+      }
+    } catch (err) {
+      console.error('Override status failed:', err);
+      setOverrideError('Failed to override status');
+    } finally {
+      setOverrideLoading(false);
+    }
+  };
+
+  // -------- Caregiver name edit (escape-hatch) --------
+  const openNameModal = () => {
+    // Pre-fill from Dojah-returned name so admin only edits if needed.
+    const dojahName = webhookDetails?.parsedData?.verifiedName || {};
+    const profile = webhookDetails?.registeredProfile || {};
+    setNameForm({
+      firstName: dojahName.firstName || profile.firstName || '',
+      middleName: dojahName.middleName || profile.middleName || '',
+      lastName: dojahName.lastName || profile.lastName || ''
+    });
+    setNameReason('');
+    setNameConfirmed(false);
+    setNameError('');
+    setShowNameModal(true);
+  };
+
+  const closeNameModal = () => {
+    if (nameLoading) return;
+    setShowNameModal(false);
+    setNameError('');
+    setNameConfirmed(false);
+  };
+
+  const handleNameSubmit = async () => {
+    if (!selectedVerification) return;
+    setNameError('');
+
+    const caregiverId = resolveCaregiverId();
+    if (!caregiverId) {
+      setNameError('Could not determine the caregiver ID for this verification.');
+      return;
+    }
+    if (!adminVerificationService.isObjectId(caregiverId)) {
+      setNameError(
+        'This verification record stores the caregiver as an email, not an ObjectId. Resolve the caregiver via the user list and update from there.'
+      );
+      return;
+    }
+    if (!nameForm.firstName.trim() || !nameForm.lastName.trim()) {
+      setNameError('First name and last name are required.');
+      return;
+    }
+    if (!nameReason || nameReason.trim().length < 5) {
+      setNameError('Reason is required (minimum 5 characters).');
+      return;
+    }
+    if (!nameConfirmed) {
+      setNameError('You must tick the confirmation checkbox.');
+      return;
+    }
+
+    setNameLoading(true);
+    try {
+      const result = await adminVerificationService.updateCaregiverName({
+        caregiverId,
+        adminId,
+        firstName: nameForm.firstName,
+        middleName: nameForm.middleName,
+        lastName: nameForm.lastName,
+        confirmed: true,
+        reason: nameReason.trim()
+      });
+      if (result.success) {
+        setSuccessMessage(
+          `Caregiver name updated: ${result.previousFirstName || ''} ${result.previousLastName || ''} \u2192 ${result.newFirstName || ''} ${result.newLastName || ''}.`
+        );
+        setTimeout(() => setSuccessMessage(''), 6000);
+        setShowNameModal(false);
+        // Reload pending list so the registered-profile column reflects the new name.
+        loadVerifications();
+        // Refresh the open webhook details too (registeredProfile is the stale piece).
+        if (selectedVerification.webhookLogId) {
+          const refreshed = await adminVerificationService.getWebhookDetails(selectedVerification.webhookLogId);
+          if (refreshed.success) setWebhookDetails(refreshed.data);
+        }
+      } else {
+        setNameError(result.error || 'Failed to update caregiver name');
+      }
+    } catch (err) {
+      console.error('Name edit failed:', err);
+      setNameError('Failed to update caregiver name');
+    } finally {
+      setNameLoading(false);
+    }
   };
 
   const showReview = (action) => {
@@ -504,6 +692,24 @@ const VerificationManagement = () => {
                     <i className="fas fa-times"></i>
                     Reject Verification
                   </button>
+                  <button
+                    className="btn-edit-name"
+                    onClick={openNameModal}
+                    disabled={actionLoading}
+                    title="Correct the caregiver's stored legal name (e.g. Dojah returned middle name in first-name slot)"
+                  >
+                    <i className="fas fa-id-card"></i>
+                    Correct Caregiver Name
+                  </button>
+                  <button
+                    className="btn-override"
+                    onClick={openOverrideModal}
+                    disabled={actionLoading}
+                    title="Override the verification status (escape-hatch; writes to admin audit log)"
+                  >
+                    <i className="fas fa-bolt"></i>
+                    Override Status
+                  </button>
                 </div>
               ) : (
                 <div className="review-form">
@@ -569,6 +775,219 @@ const VerificationManagement = () => {
                   {webhookDetails.rawPayload}
                 </pre>
               </details>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Override Status Modal */}
+      {showOverrideModal && selectedVerification && (
+        <div className="modal-overlay" onClick={closeOverrideModal}>
+          <div className="modal-content override-modal" onClick={(e) => e.stopPropagation()}>
+            <div className="modal-header">
+              <h2>
+                <i className="fas fa-bolt"></i>
+                Override Verification Status
+              </h2>
+              <button className="close-modal" onClick={closeOverrideModal} disabled={overrideLoading}>
+                <i className="fas fa-times"></i>
+              </button>
+            </div>
+            <div className="modal-body">
+              <p className="override-context">
+                Current status:{' '}
+                <span className={`status-badge ${getStatusBadgeClass(selectedVerification.verificationStatus)}`}>
+                  {selectedVerification.verificationStatus}
+                </span>
+              </p>
+
+              <div className="form-group">
+                <label>New Status</label>
+                <select
+                  value={overrideStatus}
+                  onChange={(e) => {
+                    setOverrideStatus(e.target.value);
+                    setOverrideExtraConfirm(false);
+                  }}
+                  disabled={overrideLoading}
+                >
+                  {ALLOWED_OVERRIDE_STATUSES.map(s => (
+                    <option key={s} value={s}>{s}</option>
+                  ))}
+                </select>
+              </div>
+
+              <div className="form-group">
+                <label>Reason (required, min 5 characters)</label>
+                <textarea
+                  value={overrideReason}
+                  onChange={(e) => setOverrideReason(e.target.value)}
+                  placeholder="e.g. Dojah returned middle name as first name; DOB and last name match document."
+                  rows="3"
+                  disabled={overrideLoading}
+                />
+                <small className="char-count">{overrideReason.length} characters</small>
+              </div>
+
+              {overrideIsRevocation(selectedVerification.verificationStatus, overrideStatus) && (
+                <div className="warning-box">
+                  <label className="confirm-checkbox">
+                    <input
+                      type="checkbox"
+                      checked={overrideExtraConfirm}
+                      onChange={(e) => setOverrideExtraConfirm(e.target.checked)}
+                      disabled={overrideLoading}
+                    />
+                    <span>
+                      <i className="fas fa-exclamation-triangle"></i>{' '}
+                      I understand I am revoking a verified record.
+                    </span>
+                  </label>
+                </div>
+              )}
+
+              {overrideError && (
+                <div className="inline-error">
+                  <i className="fas fa-exclamation-circle"></i> {overrideError}
+                </div>
+              )}
+
+              <div className="form-actions">
+                <button
+                  className="btn-confirm"
+                  onClick={handleOverrideSubmit}
+                  disabled={overrideLoading}
+                >
+                  {overrideLoading ? 'Processing...' : 'Apply Override'}
+                </button>
+                <button
+                  className="btn-cancel"
+                  onClick={closeOverrideModal}
+                  disabled={overrideLoading}
+                >
+                  Cancel
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Edit Caregiver Name Modal */}
+      {showNameModal && selectedVerification && (
+        <div className="modal-overlay" onClick={closeNameModal}>
+          <div className="modal-content name-edit-modal" onClick={(e) => e.stopPropagation()}>
+            <div className="modal-header">
+              <h2>
+                <i className="fas fa-id-card"></i>
+                Correct Caregiver Name
+              </h2>
+              <button className="close-modal" onClick={closeNameModal} disabled={nameLoading}>
+                <i className="fas fa-times"></i>
+              </button>
+            </div>
+            <div className="modal-body">
+              <p className="name-context">
+                Pre-filled from Dojah-returned data. Edit only if needed, then confirm.
+              </p>
+
+              {webhookDetails && (
+                <div className="name-comparison">
+                  <div>
+                    <strong>Currently stored:</strong>{' '}
+                    {[
+                      webhookDetails.registeredProfile?.firstName,
+                      webhookDetails.registeredProfile?.middleName,
+                      webhookDetails.registeredProfile?.lastName
+                    ].filter(Boolean).join(' ') || 'N/A'}
+                  </div>
+                  <div>
+                    <strong>Returned by Dojah:</strong>{' '}
+                    {[
+                      webhookDetails.parsedData?.verifiedName?.firstName,
+                      webhookDetails.parsedData?.verifiedName?.middleName,
+                      webhookDetails.parsedData?.verifiedName?.lastName
+                    ].filter(Boolean).join(' ') || 'N/A'}
+                  </div>
+                </div>
+              )}
+
+              <div className="form-row">
+                <div className="form-group">
+                  <label>First Name *</label>
+                  <input
+                    type="text"
+                    value={nameForm.firstName}
+                    onChange={(e) => setNameForm(f => ({ ...f, firstName: e.target.value }))}
+                    disabled={nameLoading}
+                  />
+                </div>
+                <div className="form-group">
+                  <label>Middle Name</label>
+                  <input
+                    type="text"
+                    value={nameForm.middleName}
+                    onChange={(e) => setNameForm(f => ({ ...f, middleName: e.target.value }))}
+                    disabled={nameLoading}
+                  />
+                </div>
+                <div className="form-group">
+                  <label>Last Name *</label>
+                  <input
+                    type="text"
+                    value={nameForm.lastName}
+                    onChange={(e) => setNameForm(f => ({ ...f, lastName: e.target.value }))}
+                    disabled={nameLoading}
+                  />
+                </div>
+              </div>
+
+              <div className="form-group">
+                <label>Reason (required, min 5 characters)</label>
+                <textarea
+                  value={nameReason}
+                  onChange={(e) => setNameReason(e.target.value)}
+                  placeholder="e.g. Correcting names per uploaded ID — middle name was in the first-name field."
+                  rows="3"
+                  disabled={nameLoading}
+                />
+                <small className="char-count">{nameReason.length} characters</small>
+              </div>
+
+              <div className="warning-box">
+                <label className="confirm-checkbox">
+                  <input
+                    type="checkbox"
+                    checked={nameConfirmed}
+                    onChange={(e) => setNameConfirmed(e.target.checked)}
+                    disabled={nameLoading}
+                  />
+                  <span>I confirm this change. The caregiver's profile and linked AppUser name will be updated.</span>
+                </label>
+              </div>
+
+              {nameError && (
+                <div className="inline-error">
+                  <i className="fas fa-exclamation-circle"></i> {nameError}
+                </div>
+              )}
+
+              <div className="form-actions">
+                <button
+                  className="btn-confirm"
+                  onClick={handleNameSubmit}
+                  disabled={nameLoading || !nameConfirmed}
+                >
+                  {nameLoading ? 'Saving...' : 'Save Name'}
+                </button>
+                <button
+                  className="btn-cancel"
+                  onClick={closeNameModal}
+                  disabled={nameLoading}
+                >
+                  Cancel
+                </button>
+              </div>
             </div>
           </div>
         </div>

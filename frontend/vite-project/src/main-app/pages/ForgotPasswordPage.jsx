@@ -5,6 +5,7 @@ import loginImg from "../../assets/loginImg.png";
 import loginLogo from "../../assets/loginLogo.png";
 import { forgotPassword, resetPasswordWithToken } from "../services/auth";
 import Modal from "../components/modal/Modal";
+import { getPasswordStrength as getPasswordStrengthShared } from "../utils/passwordStrength";
 
 const ForgotPasswordPage = () => {
   const [searchParams] = useSearchParams();
@@ -136,17 +137,8 @@ const ForgotPasswordPage = () => {
   };
 
   const getPasswordStrength = (password) => {
-    let score = 0;
-    if (password.length >= 8) score += 1;
-    if (password.length >= 12) score += 1;
-    if (/[a-z]/.test(password)) score += 1;
-    if (/[A-Z]/.test(password)) score += 1;
-    if (/[0-9]/.test(password)) score += 1;
-    if (/[^A-Za-z0-9]/.test(password)) score += 1;
-
-    if (score < 3) return { label: "Weak", color: "#f85c70" };
-    if (score < 5) return { label: "Medium", color: "#ffa726" };
-    return { label: "Strong", color: "#66bb6a" };
+    const s = getPasswordStrengthShared(password);
+    return { label: s.label, color: s.color };
   };
 
   const passwordStrength = newPassword ? getPasswordStrength(newPassword) : null;
