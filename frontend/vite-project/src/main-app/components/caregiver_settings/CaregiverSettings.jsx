@@ -4,6 +4,7 @@ import { toast } from "react-toastify";
 import ProfileHeader from "../../pages/care-giver/care-giver-profile/ProfileHeader";
 import config from "../../config";
 import caregiverBankAccountService from "../../services/caregiverBankAccountService";
+import ProfessionalProfileForms from "./ProfessionalProfileForms";
 
 const NIGERIAN_BANKS = [
   'Access Bank', 'Guaranty Trust Bank', 'First Bank of Nigeria',
@@ -344,6 +345,11 @@ const CaregiverSettings = () => {
                 </div>
               </>
             )}
+          </div>
+
+          <div className="settings-card">
+            <h3>Complete your Professional Profile</h3>
+            <ProfessionalProfileForms />
           </div>
 
           <div className="settings-card">

@@ -82,8 +82,12 @@ const ClientGigService = {
           caregiverIsAvailable: caregiver.isAvailable !== false, // Default to true if not specified
           caregiverJoinDate: caregiver.createdAt || caregiver.joinDate || '',
           caregiverLanguages: caregiver.languages || [],
-          caregiverCertifications: caregiver.certifications || [],
-          
+          // Preserve professional profile arrays from the gig detail endpoint
+          // (these are not present on the list endpoint, default to []).
+          caregiverEducation: gig.caregiverEducation || [],
+          caregiverCertifications: gig.caregiverCertifications || caregiver.certifications || [],
+          caregiverWorkExperience: gig.caregiverWorkExperience || [],
+
           // Keep the original caregiverId for reference
           originalCaregiverId: gig.caregiverId,
           caregiverProfileImage: caregiver.profileImage || "./avatar.jpg",
@@ -169,7 +173,9 @@ const ClientGigService = {
         caregiverIsAvailable: caregiver.isAvailable !== false,
         caregiverJoinDate: caregiver.createdAt || caregiver.joinDate || '',
         caregiverLanguages: caregiver.languages || [],
-        caregiverCertifications: caregiver.certifications || [],
+        caregiverEducation: gig.caregiverEducation || [],
+        caregiverCertifications: gig.caregiverCertifications || caregiver.certifications || [],
+        caregiverWorkExperience: gig.caregiverWorkExperience || [],
         originalCaregiverId: gig.caregiverId,
         caregiverProfileImage: caregiver.profileImage || './avatar.jpg',
         introVideo: caregiver.introVideo || ''
