@@ -188,6 +188,7 @@ import bookingCommitmentService from "../../../services/bookingCommitmentService
 import defaultAvatar from "../../../../assets/profilecard1.png";
 import VideoModal from "../../../components/VideoModal/VideoModal";
 import ReviewsModal from "../../../components/ReviewsModal/ReviewsModal";
+import CredentialsModal from "../../../components/CredentialsModal/CredentialsModal";
 import { useAuth } from "../../../context/AuthContext";
 
 const HomeCareService = () => {
@@ -209,6 +210,9 @@ const HomeCareService = () => {
   const [gigRating, setGigRating] = useState(0);
   // Commitment fee access state
   const [commitmentAccess, setCommitmentAccess] = useState(null);
+  // Credentials modal state
+  const [showCredentialsModal, setShowCredentialsModal] = useState(false);
+  const [credentialsTab, setCredentialsTab] = useState('education');
   const navigate = useNavigate();
   const { isAuthenticated, userRole } = useAuth();
   const basePath = "/app/client";
@@ -416,6 +420,24 @@ const HomeCareService = () => {
           throw new Error("Service not found or no longer available");
         }
 
+        // The marketplace list endpoint doesn't include the caregiver's
+        // professional-profile arrays (education, certifications, work
+        // experience). Always fetch the gig detail endpoint to merge those
+        // enriched fields in.
+        try {
+          const detail = await ClientGigService.getGigById(foundGig.id);
+          if (detail) {
+            foundGig = {
+              ...foundGig,
+              caregiverEducation: detail.caregiverEducation || [],
+              caregiverCertifications: detail.caregiverCertifications || foundGig.caregiverCertifications || [],
+              caregiverWorkExperience: detail.caregiverWorkExperience || [],
+            };
+          }
+        } catch (mergeErr) {
+          console.warn('Could not merge gig detail enrichment:', mergeErr);
+        }
+
         setService(foundGig);
         // console.log("Enriched service details:", foundGig);
 
@@ -485,6 +507,8 @@ const HomeCareService = () => {
     caregiverJoinDate,
     caregiverLanguages,
     caregiverCertifications,
+    caregiverEducation,
+    caregiverWorkExperience,
     packageDetails,
     packageName,
     image1,
@@ -808,6 +832,37 @@ const HomeCareService = () => {
             </div>
           </div>
           <p className="hcs-aboutme-bio">{caregiverBio || "No bio available."}</p>
+
+          {/* Credential Buttons */}
+          <div className="hcs-credential-buttons">
+            <button
+              className="hcs-cred-btn"
+              onClick={() => { setCredentialsTab('education'); setShowCredentialsModal(true); }}
+            >
+              🎓 Education
+              {(caregiverEducation || []).length > 0 && (
+                <span className="hcs-cred-btn-count">{(caregiverEducation || []).length}</span>
+              )}
+            </button>
+            <button
+              className="hcs-cred-btn"
+              onClick={() => { setCredentialsTab('certifications'); setShowCredentialsModal(true); }}
+            >
+              📜 Qualifications
+              {(caregiverCertifications || []).length > 0 && (
+                <span className="hcs-cred-btn-count">{(caregiverCertifications || []).length}</span>
+              )}
+            </button>
+            <button
+              className="hcs-cred-btn"
+              onClick={() => { setCredentialsTab('experience'); setShowCredentialsModal(true); }}
+            >
+              💼 Experience
+              {(caregiverWorkExperience || []).length > 0 && (
+                <span className="hcs-cred-btn-count">{(caregiverWorkExperience || []).length}</span>
+              )}
+            </button>
+          </div>
         </div>
       </div>
 
@@ -871,6 +926,18 @@ const HomeCareService = () => {
           </div>
         </div>
       )}
+
+      {/* Credentials Modal */}
+      <CredentialsModal
+        isOpen={showCredentialsModal}
+        onClose={() => setShowCredentialsModal(false)}
+        activeTab={credentialsTab}
+        onTabChange={setCredentialsTab}
+        education={caregiverEducation || []}
+        certifications={caregiverCertifications || []}
+        workExperience={caregiverWorkExperience || []}
+        caregiverName={caregiverName}
+      />
 
       {/* Reviews Modal */}
       <ReviewsModal

@@ -110,6 +110,18 @@
   flex-shrink: 0;
 }
 
+.provider-avatar-initials {
+  background: #004e98;
+  color: #ffffff;
+  align-items: center;
+  justify-content: center;
+  font-weight: 700;
+  font-size: 18px;
+  text-transform: uppercase;
+  letter-spacing: 1px;
+  object-fit: unset;
+}
+
 /* Meta column to the right of avatar */
 .provider-meta {
   display: flex;
