@@ -2,7 +2,7 @@ import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { useAuth } from "../../../context/AuthContext";
 import "./serviceCard.css";
-import defaultAvatar from "../../../../assets/profilecard1.png";
+
 import GigReviewService from "../../../services/gigReviewService";
 import ReviewsModal from "../../../components/ReviewsModal/ReviewsModal";
 
@@ -84,7 +84,7 @@ const ServiceCard = ({
   };
 
   const displayUserName = caregiverName || "Care Provider";
-  const displayAvatar = (caregiverProfileImage && caregiverProfileImage.trim() !== '') ? caregiverProfileImage : defaultAvatar;
+  const hasProfileImage = caregiverProfileImage && caregiverProfileImage.trim() !== '';
   const displayLocation = caregiverLocation || "Lagos, Nigeria";
   const formattedRating = gigRating > 0 ? gigRating.toFixed(1) : "0.0";
   const displayReviewCount = gigReviewCount;
@@ -135,14 +135,20 @@ const ServiceCard = ({
       <div className="card-content">
         {/* Second Container: Avatar left, meta right */}
         <div className="provider-row">
-          <img 
-            src={displayAvatar} 
-            alt={displayUserName} 
-            className="provider-avatar"
-            onError={(e) => {
-              e.target.src = defaultAvatar;
-            }}
-          />
+          {hasProfileImage ? (
+            <img
+              src={caregiverProfileImage}
+              alt={displayUserName}
+              className="provider-avatar"
+              onError={(e) => { e.target.style.display = 'none'; e.target.nextElementSibling.style.display = 'flex'; }}
+            />
+          ) : null}
+          <div
+            className="provider-avatar provider-avatar-initials"
+            style={{ display: hasProfileImage ? 'none' : 'flex' }}
+          >
+            {initials || displayUserName.charAt(0).toUpperCase()}
+          </div>
           <div className="provider-meta">
             <div className="provider-meta-top">
               <div className="provider-name-group">

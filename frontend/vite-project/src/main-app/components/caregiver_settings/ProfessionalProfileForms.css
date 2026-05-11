@@ -1,0 +1,249 @@
+/* ProfessionalProfileForms — settings card sub-forms */
+
+.ppf-root {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.ppf-intro {
+  font-size: 13px;
+  color: #6b7280;
+  line-height: 1.5;
+  margin: 0 0 4px;
+}
+
+.ppf-load-error {
+  font-size: 13px;
+  color: #dc2626;
+  margin: 0 0 8px;
+}
+
+/* ─── Section accordion ─── */
+.ppf-section {
+  border: 1px solid #e5e7eb;
+  border-radius: 10px;
+  overflow: hidden;
+}
+
+.ppf-section-header {
+  width: 100%;
+  background: #f9fafb;
+  border: none;
+  padding: 13px 14px;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  cursor: pointer;
+  text-align: left;
+  font-size: 14px;
+  font-weight: 600;
+  color: #111827;
+  transition: background 0.15s;
+}
+.ppf-section-header:hover { background: #f3f4f6; }
+
+.ppf-section-icon { font-size: 16px; }
+
+.ppf-section-title { flex: 1; }
+
+.ppf-section-count {
+  background: #004e98;
+  color: #fff;
+  font-size: 11px;
+  font-weight: 700;
+  border-radius: 10px;
+  padding: 1px 7px;
+  line-height: 1.6;
+}
+
+.ppf-chevron {
+  font-size: 11px;
+  color: #9ca3af;
+  margin-left: 4px;
+}
+
+.ppf-section-body {
+  padding: 14px;
+  border-top: 1px solid #e5e7eb;
+  background: #fff;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+/* ─── Entry list ─── */
+.ppf-entry-list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.ppf-entry {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 10px;
+  padding: 10px 12px;
+  background: #f9fafb;
+  border-radius: 8px;
+  border: 1px solid #e5e7eb;
+}
+
+.ppf-entry-text { flex: 1; min-width: 0; }
+
+.ppf-entry-title {
+  margin: 0 0 2px;
+  font-size: 13px;
+  font-weight: 600;
+  color: #111827;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.ppf-entry-sub {
+  margin: 0;
+  font-size: 12px;
+  color: #6b7280;
+}
+
+.ppf-entry-actions {
+  display: flex;
+  gap: 6px;
+  flex-shrink: 0;
+}
+
+.ppf-entry-edit,
+.ppf-entry-delete {
+  background: none;
+  border: 1px solid #e5e7eb;
+  border-radius: 6px;
+  padding: 3px 10px;
+  font-size: 12px;
+  cursor: pointer;
+  transition: background 0.12s;
+}
+.ppf-entry-edit { color: #004e98; }
+.ppf-entry-edit:hover { background: #eff6ff; border-color: #93c5fd; }
+.ppf-entry-delete { color: #dc2626; }
+.ppf-entry-delete:hover { background: #fef2f2; border-color: #fca5a5; }
+.ppf-entry-delete:disabled { opacity: 0.5; cursor: not-allowed; }
+
+/* ─── Add button ─── */
+.ppf-add-btn {
+  background: none;
+  border: 1px dashed #004e98;
+  color: #004e98;
+  border-radius: 8px;
+  padding: 9px;
+  font-size: 13px;
+  font-weight: 600;
+  cursor: pointer;
+  width: 100%;
+  transition: background 0.12s;
+}
+.ppf-add-btn:hover { background: #eff6ff; }
+
+/* ─── Form ─── */
+.ppf-form {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.ppf-row {
+  display: flex;
+  gap: 10px;
+  flex-wrap: wrap;
+}
+.ppf-row .ppf-field { flex: 1; min-width: 140px; }
+
+.ppf-field {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.ppf-field label {
+  font-size: 12px;
+  font-weight: 600;
+  color: #374151;
+}
+
+.ppf-field input,
+.ppf-field select,
+.ppf-field textarea {
+  border: 1px solid #d1d5db;
+  border-radius: 7px;
+  padding: 7px 10px;
+  font-size: 13px;
+  color: #111827;
+  background: #fff;
+  outline: none;
+  transition: border-color 0.15s;
+  width: 100%;
+  box-sizing: border-box;
+}
+.ppf-field input:focus,
+.ppf-field select:focus,
+.ppf-field textarea:focus { border-color: #004e98; }
+.ppf-field textarea { resize: vertical; }
+
+.ppf-month-year {
+  display: flex;
+  gap: 6px;
+}
+.ppf-month-year select { flex: 1; }
+
+.ppf-checkbox-label {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 13px;
+  color: #374151;
+  cursor: pointer;
+}
+.ppf-checkbox-label input[type="checkbox"] {
+  width: 15px;
+  height: 15px;
+  accent-color: #004e98;
+  cursor: pointer;
+}
+
+.ppf-form-actions {
+  display: flex;
+  gap: 8px;
+  justify-content: flex-end;
+}
+
+.ppf-save-btn {
+  background: #004e98;
+  color: #fff;
+  border: none;
+  border-radius: 7px;
+  padding: 8px 20px;
+  font-size: 13px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: background 0.15s;
+}
+.ppf-save-btn:hover:not(:disabled) { background: #003a74; }
+.ppf-save-btn:disabled { opacity: 0.6; cursor: not-allowed; }
+
+.ppf-cancel-btn {
+  background: #f3f4f6;
+  color: #374151;
+  border: 1px solid #e5e7eb;
+  border-radius: 7px;
+  padding: 8px 16px;
+  font-size: 13px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: background 0.15s;
+}
+.ppf-cancel-btn:hover:not(:disabled) { background: #e5e7eb; }
+.ppf-cancel-btn:disabled { opacity: 0.6; cursor: not-allowed; }
