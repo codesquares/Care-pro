@@ -167,9 +167,9 @@ const NavigationBar = () => {
                   <span>Profile</span>
                 </div>
               </li>
-              <li className="caregiver-notifications-item">
-                <div className="menu-item-content" onClick={() => setMobileMenuOpen(false)}>
-                  <NotificationBell navigateTo={(path) => navigate(path)} bellIcon={FaBell} />
+              <li className="caregiver-notifications-item" onClick={() => { navigate(`${basePath}/notifications`); setMobileMenuOpen(false); }}>
+                <div className="menu-item-content">
+                  <FaBell />
                   <span>Notifications</span>
                 </div>
               </li>

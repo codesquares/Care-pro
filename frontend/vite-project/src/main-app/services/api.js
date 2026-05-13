@@ -58,6 +58,7 @@ api.interceptors.request.use(
                 '/Authentications/ResetPassword',
                 '/Authentications/VerifyEmail',
                 '/Gigs',
+                '/Analytics/Event',
             ];
 
             const isPublic = publicEndpoints.some(ep => config.url?.includes(ep));
