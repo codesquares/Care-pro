@@ -11,6 +11,7 @@ import {
   submitSignupWithIdempotency,
   classifyIdempotencyError,
 } from "../utils/idempotency";
+import { trackEvent } from "../services/analyticsService";
 
 const CreateAccount = () => {
   const { data, error, loading, fetchData } = useApi("", "post");
@@ -170,6 +171,14 @@ Please log in to your existing account instead of creating a new one.`);
 
       // Clear key on definitive success.
       idempotencyKeyRef.current = null;
+
+      // Track successful caregiver signup for ad attribution
+      if (userType === "Caregiver") {
+        trackEvent('signup_complete', 'become_caregiver');
+        if (typeof window !== 'undefined' && typeof window.fbq === 'function') {
+          window.fbq('track', 'CompleteRegistration', { content_name: 'caregiver' });
+        }
+      }
 
       // Show success modal with email verification instructions
       setModalTitle("Registration Successful!");

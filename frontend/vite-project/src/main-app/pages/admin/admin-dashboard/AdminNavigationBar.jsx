@@ -7,6 +7,7 @@ import './admin-navigation-bar.css';
 
 const navItems = [
   { to: '/app/admin/dashboard',          icon: 'fa-chart-line',     label: 'Dashboard' },
+  { to: '/app/admin/analytics',          icon: 'fa-bullhorn',       label: 'Analytics' },
   { to: '/app/admin/caregivers',         icon: 'fa-user-nurse',     label: 'Caregivers' },
   { to: '/app/admin/clients',            icon: 'fa-user-friends',   label: 'Clients' },
   { to: '/app/admin/notifications',      icon: 'fa-bell',           label: 'Notifications' },

@@ -280,9 +280,9 @@ const ClientNavBar = () => {
                   <span>Profile</span>
                 </div>
               </li>
-              <li className="client-notifications-item">
-                <div className="client-menu-item-content" onClick={() => setMobileMenuOpen(false)}>
-                  <NotificationBell navigateTo={(path) => navigate(path)} bellIcon={FaBell} />
+              <li className="client-notifications-item" onClick={() => { navigate(`${basePath}/notifications`); setMobileMenuOpen(false); }}>
+                <div className="client-menu-item-content">
+                  <FaBell />
                   <span>Notifications</span>
                 </div>
               </li>

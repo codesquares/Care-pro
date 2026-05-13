@@ -55,6 +55,7 @@ import CaregiverNavigationBar from './main-app/pages/care-giver/care-giver-dashb
 import Order from './main-app/pages/client/orders/MyOrders';
 import Order2 from './main-app/pages/client/orders/OrderTasks&Details';
 import NotificationPoller from "./NotificationPoller";
+import { captureFbclidFromUrl } from './main-app/services/analyticsService';
 
 function ScrollToTop() {
   const { pathname } = useLocation();
@@ -70,6 +71,10 @@ function ScrollToTop() {
 
   return null;
 }
+
+// Capture fbclid from the URL once on initial app load so subsequent
+// analytics events in the session can be attributed to the Facebook ad click.
+captureFbclidFromUrl();
 
 // Google OAuth Client ID
 const GOOGLE_CLIENT_ID = "6881271599-i0v6f3onlaoekapmud8p4agio4891q4j.apps.googleusercontent.com";
