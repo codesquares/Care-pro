@@ -8,6 +8,7 @@ import earnImg from "../assets/story2.png";
 import worksLeftImg from "../assets/become-caregiver/works_left.png";
 import aminaCaregiverImg from "../assets/become-caregiver/aminacaregiver.png";
 import { FiUser, FiCheckCircle, FiBriefcase, FiDollarSign } from 'react-icons/fi';
+import { trackEvent } from "../main-app/services/analyticsService";
 import "./BecomeCaregiver.css";
 
 const BecomeCaregiver = () => {
@@ -17,10 +18,21 @@ const BecomeCaregiver = () => {
     useEffect(() => {
       if (isAuthenticated && user?.role?.toLowerCase() === 'caregiver') {
         navigate('/app/caregiver/dashboard', { replace: true });
+        return;
+      }
+      // Track page visit (and Meta Pixel ViewContent for ad attribution)
+      trackEvent('page_view', 'become_caregiver');
+      if (typeof window !== 'undefined' && typeof window.fbq === 'function') {
+        window.fbq('track', 'ViewContent', { content_name: 'become_caregiver' });
       }
     }, [isAuthenticated, user, navigate]);
     
     const handleAction = () => {
+      // Track CTA click before navigating
+      trackEvent('cta_click', 'become_caregiver');
+      if (typeof window !== 'undefined' && typeof window.fbq === 'function') {
+        window.fbq('track', 'Lead', { content_name: 'become_caregiver_cta' });
+      }
       navigate('/register');
     };
 

@@ -15,6 +15,7 @@ import QualityHealthCareCards from "../../../../components/QualityHealthCareCard
 import TopBanner from "../../../../components/TopBanner";
 import genralImg from "../../../../assets/nurse.png";
 import CareFacts from "../../../../pages/CareFacts";
+import { trackEvent } from "../../../services/analyticsService";
 
 // Category slug to backend category name mapping
 const categorySlugMap = {
@@ -155,6 +156,14 @@ const PublicMarketplace = () => {
     .sort((a, b) => b.matchScore - a.matchScore)
     .slice(0, 10); // Top 10 matches
   };
+
+  // Track marketplace page view (and Meta Pixel ViewContent for ad attribution)
+  useEffect(() => {
+    trackEvent('page_view', 'marketplace');
+    if (typeof window !== 'undefined' && typeof window.fbq === 'function') {
+      window.fbq('track', 'ViewContent', { content_name: 'marketplace' });
+    }
+  }, []);
 
   // Extract search query, category, and matched mode from URL parameters
   useEffect(() => {
