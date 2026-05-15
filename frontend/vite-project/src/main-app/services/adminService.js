@@ -2449,7 +2449,137 @@ const adminService = {
              caregiverName.includes(query) || 
              email.includes(query);
     });
-  }
+  },
+
+  // ============================================
+  // EXCEL EXPORT
+  // ============================================
+
+  /**
+   * Trigger a file download from a binary response.
+   * @private
+   */
+  _triggerBlobDownload(blob, filename) {
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = filename;
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+    URL.revokeObjectURL(url);
+  },
+
+  /**
+   * Export caregiver records to Excel (.xlsx).
+   * @param {Object} [params]
+   * @param {string} [params.startDate] - ISO 8601 date string e.g. '2024-01-01'
+   * @param {string} [params.endDate]   - ISO 8601 date string e.g. '2025-01-01'
+   */
+  async exportCaregivers({ startDate, endDate } = {}) {
+    try {
+      const query = new URLSearchParams();
+      if (startDate) query.set('startDate', startDate);
+      if (endDate) query.set('endDate', endDate);
+      const response = await api.get(
+        `/admin/export/caregivers${query.toString() ? `?${query}` : ''}`,
+        { responseType: 'blob' }
+      );
+      adminService._triggerBlobDownload(response.data, 'caregivers.xlsx');
+      return { success: true };
+    } catch (error) {
+      console.error('Error exporting caregivers:', error);
+      return { success: false, error: error.response?.data?.message || error.message || 'Export failed' };
+    }
+  },
+
+  /**
+   * Export client records to Excel (.xlsx).
+   * @param {Object} [params]
+   * @param {string} [params.startDate]
+   * @param {string} [params.endDate]
+   */
+  async exportClients({ startDate, endDate } = {}) {
+    try {
+      const query = new URLSearchParams();
+      if (startDate) query.set('startDate', startDate);
+      if (endDate) query.set('endDate', endDate);
+      const response = await api.get(
+        `/admin/export/clients${query.toString() ? `?${query}` : ''}`,
+        { responseType: 'blob' }
+      );
+      adminService._triggerBlobDownload(response.data, 'clients.xlsx');
+      return { success: true };
+    } catch (error) {
+      console.error('Error exporting clients:', error);
+      return { success: false, error: error.response?.data?.message || error.message || 'Export failed' };
+    }
+  },
+
+  /**
+   * Export caregiver journey snapshot records to Excel (.xlsx).
+   * @param {Object} [filters] - Same filters as getCaregiverSnapshots
+   */
+  async exportCaregiverSnapshots(filters = {}) {
+    try {
+      const query = new URLSearchParams();
+      const allowed = [
+        'journeyStage', 'isIdentityVerified', 'hasProfilePicture',
+        'hasPassedAssessment', 'hasPublishedGig', 'hasCertificate',
+        'registeredFrom', 'registeredTo',
+      ];
+      allowed.forEach(k => { if (filters[k] !== undefined && filters[k] !== '') query.set(k, filters[k]); });
+      const response = await api.get(
+        `/admin/export/caregiver-snapshots${query.toString() ? `?${query}` : ''}`,
+        { responseType: 'blob' }
+      );
+      adminService._triggerBlobDownload(response.data, 'caregiver_journey.xlsx');
+      return { success: true };
+    } catch (error) {
+      console.error('Error exporting caregiver snapshots:', error);
+      return { success: false, error: error.response?.data?.message || error.message || 'Export failed' };
+    }
+  },
+
+  // ============================================
+  // CAREGIVER JOURNEY SNAPSHOTS (JSON)
+  // ============================================
+
+  /**
+   * Get paginated caregiver journey snapshots.
+   * @param {Object} [params]
+   * @param {string}  [params.journeyStage]
+   * @param {boolean} [params.isIdentityVerified]
+   * @param {boolean} [params.hasProfilePicture]
+   * @param {boolean} [params.hasPassedAssessment]
+   * @param {boolean} [params.hasPublishedGig]
+   * @param {boolean} [params.hasCertificate]
+   * @param {string}  [params.registeredFrom]
+   * @param {string}  [params.registeredTo]
+   * @param {number}  [params.pageNumber=1]
+   * @param {number}  [params.pageSize=50]
+   */
+  async getCaregiverSnapshots(params = {}) {
+    try {
+      const query = new URLSearchParams();
+      const allowed = [
+        'journeyStage', 'isIdentityVerified', 'hasProfilePicture',
+        'hasPassedAssessment', 'hasPublishedGig', 'hasCertificate',
+        'registeredFrom', 'registeredTo', 'pageNumber', 'pageSize',
+      ];
+      allowed.forEach(k => { if (params[k] !== undefined && params[k] !== '') query.set(k, params[k]); });
+      const response = await api.get(
+        `/admin/caregiver-snapshots${query.toString() ? `?${query}` : ''}`
+      );
+      if (response.data?.success) {
+        return { success: true, data: response.data.data };
+      }
+      return { success: false, error: 'Invalid response format' };
+    } catch (error) {
+      console.error('Error fetching caregiver snapshots:', error);
+      return { success: false, error: error.response?.data?.message || error.message || 'Failed to fetch snapshots' };
+    }
+  },
 };
 
 export default adminService;

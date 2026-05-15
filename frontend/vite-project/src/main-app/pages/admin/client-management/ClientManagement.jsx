@@ -11,6 +11,9 @@ const ClientManagement = () => {
   const [statusFilter, setStatusFilter] = useState('all');
   const [selectedClient, setSelectedClient] = useState(null);
   const [showModal, setShowModal] = useState(false);
+  const [exportDates, setExportDates] = useState({ startDate: '', endDate: '' });
+  const [exporting, setExporting] = useState(false);
+  const [exportError, setExportError] = useState(null);
 
   useEffect(() => {
     fetchClients();
@@ -81,6 +84,14 @@ const ClientManagement = () => {
     setSelectedClient(null);
   };
 
+  const handleExport = async () => {
+    setExporting(true);
+    setExportError(null);
+    const result = await adminService.exportClients(exportDates);
+    if (!result.success) setExportError(result.error || 'Export failed');
+    setExporting(false);
+  };
+
   if (loading) {
     return (
       <div className="client-management">
@@ -95,9 +106,39 @@ const ClientManagement = () => {
   return (
     <div className="client-management">
       <div className="page-header">
-        <h1>Client Management</h1>
-        <p>Manage and monitor all clients in the system</p>
+        <div>
+          <h1>Client Management</h1>
+          <p>Manage and monitor all clients in the system</p>
+        </div>
+        <div className="export-bar">
+          <input
+            type="date"
+            className="export-date-input"
+            value={exportDates.startDate}
+            onChange={(e) => setExportDates(p => ({ ...p, startDate: e.target.value }))}
+            title="Export start date (optional)"
+          />
+          <input
+            type="date"
+            className="export-date-input"
+            value={exportDates.endDate}
+            onChange={(e) => setExportDates(p => ({ ...p, endDate: e.target.value }))}
+            title="Export end date (optional)"
+          />
+          <button className="btn-export" onClick={handleExport} disabled={exporting}>
+            <i className="fas fa-file-excel"></i>
+            {exporting ? 'Exporting…' : 'Export Excel'}
+          </button>
+        </div>
       </div>
+
+      {exportError && (
+        <div className="error-message">
+          <i className="fas fa-exclamation-triangle"></i>
+          <p>{exportError}</p>
+          <button onClick={() => setExportError(null)}>Dismiss</button>
+        </div>
+      )}
 
       {error && (
         <div className="error-message">

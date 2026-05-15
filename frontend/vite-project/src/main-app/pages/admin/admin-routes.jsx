@@ -1,7 +1,8 @@
 import { Routes, Route } from 'react-router-dom';
+import { useState } from 'react';
 import AdminDashboard from './admin-dashboard/AdminDashboard';
 import QuestionBankManager from './question-bank/QuestionBankManager';
-import AdminNavigationBar from './admin-dashboard/AdminNavigationBar';
+import AdminSidebar from './admin-dashboard/AdminSidebar';
 import WithdrawalManagement from './withdrawal-management/WithdrawalManagement';
 import UsersManagement from './users-management/UsersManagement';
 import CaregiverManagement from './caregiver-management/CaregiverManagement';
@@ -24,8 +25,11 @@ import DojahDataViewer from '../../components/admin/DojahDataViewer';
 import DojahAdminDashboard from '../../components/admin/DojahAdminDashboard';
 import WebhookDataAdmin from '../../components/admin/WebhookDataAdmin';
 import NotFoundPage from '../../../pages/NotFoundPage';
+import './admin-dashboard/admin-sidebar.css';
+
 function AdminRoutes() {
     const navigate = useNavigate();
+    const [sidebarOpen, setSidebarOpen] = useState(false);
     
     useEffect(() => {
         // Check if user has admin role
@@ -38,32 +42,50 @@ function AdminRoutes() {
     }, [navigate]);
     
     return (
-        <>
-        <AdminNavigationBar />
-        <Routes>
-            <Route path='/dashboard' element={<AdminDashboard />} />
-            <Route path='/question-bank' element={<QuestionBankManager />} />
-            <Route path='/withdrawals' element={<WithdrawalManagement />} />
-            <Route path='/users' element={<UsersManagement />} />
-            <Route path='/caregivers' element={<CaregiverManagement />} />
-            <Route path='/clients' element={<ClientManagement />} />
-            <Route path='/notifications' element={<NotificationCenter />} />
-            <Route path='/training-materials' element={<TrainingMaterialsUpload />} />
-            <Route path='/gigs' element={<GigsManagement />} />
-            <Route path='/orders' element={<OrdersManagement />} />
-            <Route path='/emails' element={<EmailComposer />} />
-            <Route path='/certificates' element={<CertificateManagement />} />
-            <Route path='/dojah-data' element={<DojahDataViewer />} />
-            <Route path="dojah-admin" element={<VerificationManagement />} />
-            <Route path="webhook-data" element={<WebhookDataAdmin />} />
-            <Route path="subscriptions" element={<SubscriptionAdmin />} />
-            <Route path="disputes" element={<DisputesManagement />} />
-            <Route path="refunds" element={<RefundManagement />} />
-            <Route path="analytics" element={<AnalyticsDashboard />} />
-            <Route path="care-requests/:requestId" element={<AdminCareRequestDetail />} />
-            <Route path="*" element={<NotFoundPage />} />
-        </Routes>
-        </>
+        <div style={{ display: 'flex', minHeight: '100vh' }}>
+            <AdminSidebar isOpen={sidebarOpen} onClose={() => setSidebarOpen(false)} />
+
+            <div className="admin-layout-content">
+                {/* Mobile-only topbar with hamburger */}
+                <header className="admin-mobile-topbar">
+                    <button
+                        className="admin-mobile-hamburger"
+                        onClick={() => setSidebarOpen(true)}
+                        aria-label="Open navigation menu"
+                    >
+                        <i className="fas fa-bars"></i>
+                    </button>
+                    <a href="/app/admin/dashboard" className="admin-mobile-topbar-logo">
+                        <i className="fas fa-shield-alt"></i>
+                        CarePro Admin
+                    </a>
+                </header>
+
+                <Routes>
+                    <Route path='/dashboard' element={<AdminDashboard />} />
+                    <Route path='/question-bank' element={<QuestionBankManager />} />
+                    <Route path='/withdrawals' element={<WithdrawalManagement />} />
+                    <Route path='/users' element={<UsersManagement />} />
+                    <Route path='/caregivers' element={<CaregiverManagement />} />
+                    <Route path='/clients' element={<ClientManagement />} />
+                    <Route path='/notifications' element={<NotificationCenter />} />
+                    <Route path='/training-materials' element={<TrainingMaterialsUpload />} />
+                    <Route path='/gigs' element={<GigsManagement />} />
+                    <Route path='/orders' element={<OrdersManagement />} />
+                    <Route path='/emails' element={<EmailComposer />} />
+                    <Route path='/certificates' element={<CertificateManagement />} />
+                    <Route path='/dojah-data' element={<DojahDataViewer />} />
+                    <Route path="dojah-admin" element={<VerificationManagement />} />
+                    <Route path="webhook-data" element={<WebhookDataAdmin />} />
+                    <Route path="subscriptions" element={<SubscriptionAdmin />} />
+                    <Route path="disputes" element={<DisputesManagement />} />
+                    <Route path="refunds" element={<RefundManagement />} />
+                    <Route path="analytics" element={<AnalyticsDashboard />} />
+                    <Route path="care-requests/:requestId" element={<AdminCareRequestDetail />} />
+                    <Route path="*" element={<NotFoundPage />} />
+                </Routes>
+            </div>
+        </div>
     );
 }
 

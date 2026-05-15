@@ -1,5 +1,6 @@
 import { useState, useEffect, useCallback } from 'react';
 import { getAnalyticsEvents } from '../../../services/analyticsService';
+import adminService from '../../../services/adminService';
 import './AnalyticsDashboard.css';
 
 const EVENT_TYPE_OPTIONS = [
@@ -33,6 +34,29 @@ const formatEventType = (type) => {
   return type.replace(/_/g, ' ').replace(/\b\w/g, (c) => c.toUpperCase());
 };
 
+const JOURNEY_STAGES = [
+  'Registered', 'ProfileStarted', 'ProfessionalDataAdded',
+  'Verified', 'AssessmentPassed', 'ReadyToPublish', 'Published',
+];
+
+const STAGE_COLORS = {
+  Registered: '#94a3b8',
+  ProfileStarted: '#60a5fa',
+  ProfessionalDataAdded: '#a78bfa',
+  Verified: '#34d399',
+  AssessmentPassed: '#fbbf24',
+  ReadyToPublish: '#f97316',
+  Published: '#10b981',
+};
+
+const SNAPSHOT_BOOL_FILTERS = [
+  { key: 'isIdentityVerified', label: 'Identity Verified' },
+  { key: 'hasProfilePicture', label: 'Has Profile Pic' },
+  { key: 'hasPassedAssessment', label: 'Passed Assessment' },
+  { key: 'hasPublishedGig', label: 'Has Published Gig' },
+  { key: 'hasCertificate', label: 'Has Certificate' },
+];
+
 const AnalyticsDashboard = () => {
   const [events, setEvents] = useState([]);
   const [summary, setSummary] = useState(null);
@@ -40,6 +64,25 @@ const AnalyticsDashboard = () => {
   const [pageNumber, setPageNumber] = useState(1);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState(null);
+
+  // Journey snapshot state
+  const [snapshots, setSnapshots] = useState([]);
+  const [snapshotTotal, setSnapshotTotal] = useState(0);
+  const [snapshotByStage, setSnapshotByStage] = useState({});
+  const [snapshotPage, setSnapshotPage] = useState(1);
+  const [snapshotLoading, setSnapshotLoading] = useState(false);
+  const [snapshotError, setSnapshotError] = useState(null);
+  const [snapshotExporting, setSnapshotExporting] = useState(false);
+  const [snapshotFilters, setSnapshotFilters] = useState({
+    journeyStage: '',
+    isIdentityVerified: '',
+    hasProfilePicture: '',
+    hasPassedAssessment: '',
+    hasPublishedGig: '',
+    hasCertificate: '',
+    registeredFrom: '',
+    registeredTo: '',
+  });
 
   const [filters, setFilters] = useState({
     startDate: '',
@@ -101,6 +144,56 @@ const AnalyticsDashboard = () => {
     setFilters({ startDate: '', endDate: '', eventType: '', page: '' });
     setPageNumber(1);
   };
+
+  // ── Snapshot fetch ──────────────────────────────────────
+  const fetchSnapshots = useCallback(async (overrides = {}) => {
+    setSnapshotLoading(true);
+    setSnapshotError(null);
+    try {
+      const params = { ...snapshotFilters, pageNumber: snapshotPage, pageSize: 50, ...overrides };
+      const result = await adminService.getCaregiverSnapshots(params);
+      if (result.success) {
+        setSnapshots(result.data.snapshots || []);
+        setSnapshotTotal(result.data.totalCount || 0);
+        setSnapshotByStage(result.data.byJourneyStage || {});
+      } else {
+        setSnapshotError(result.error || 'Failed to load caregiver journey data');
+        setSnapshots([]);
+      }
+    } catch (err) {
+      console.error('Error fetching snapshots:', err);
+      setSnapshotError('Failed to load caregiver journey data');
+      setSnapshots([]);
+    } finally {
+      setSnapshotLoading(false);
+    }
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [snapshotFilters, snapshotPage]);
+
+  useEffect(() => { fetchSnapshots(); }, [fetchSnapshots]);
+
+  const handleSnapshotFilterChange = (key, value) => {
+    setSnapshotFilters(prev => ({ ...prev, [key]: value }));
+    setSnapshotPage(1);
+  };
+
+  const handleSnapshotReset = () => {
+    setSnapshotFilters({
+      journeyStage: '', isIdentityVerified: '', hasProfilePicture: '',
+      hasPassedAssessment: '', hasPublishedGig: '', hasCertificate: '',
+      registeredFrom: '', registeredTo: '',
+    });
+    setSnapshotPage(1);
+  };
+
+  const handleSnapshotExport = async () => {
+    setSnapshotExporting(true);
+    await adminService.exportCaregiverSnapshots(snapshotFilters);
+    setSnapshotExporting(false);
+  };
+
+  const snapshotMaxStageCount = Math.max(1, ...Object.values(snapshotByStage));
+  const snapshotTotalPages = Math.max(1, Math.ceil(snapshotTotal / 50));
 
   const totalPages = Math.max(1, Math.ceil(totalCount / PAGE_SIZE));
   const fbSourcedPct = summary && summary.totalEvents
@@ -280,6 +373,147 @@ const AnalyticsDashboard = () => {
           </button>
         </div>
       )}
+
+      {/* ═══════════════════════════════════════════════════
+          CAREGIVER JOURNEY SNAPSHOT
+      ═══════════════════════════════════════════════════ */}
+      <section className="snapshot-section">
+        <div className="snapshot-section-header">
+          <div>
+            <h2 className="snapshot-title">Caregiver Journey Funnel</h2>
+            <p className="snapshot-subtitle">
+              Pre-computed snapshot · refreshes every 15 min · {snapshotTotal.toLocaleString()} caregivers matched
+            </p>
+          </div>
+          <button
+            className="analytics-btn analytics-btn-export"
+            onClick={handleSnapshotExport}
+            disabled={snapshotExporting}
+          >
+            <i className="fas fa-file-excel"></i>
+            {snapshotExporting ? 'Exporting…' : 'Export Excel'}
+          </button>
+        </div>
+
+        {/* Funnel bars */}
+        <div className="snapshot-funnel">
+          {JOURNEY_STAGES.map(stage => {
+            const count = snapshotByStage[stage] || 0;
+            const pct = Math.round((count / snapshotMaxStageCount) * 100);
+            return (
+              <div
+                key={stage}
+                className={`funnel-row${snapshotFilters.journeyStage === stage ? ' funnel-row--active' : ''}`}
+                onClick={() => handleSnapshotFilterChange('journeyStage', snapshotFilters.journeyStage === stage ? '' : stage)}
+              >
+                <span className="funnel-label">{stage}</span>
+                <div className="funnel-bar-track">
+                  <div
+                    className="funnel-bar-fill"
+                    style={{ width: `${pct}%`, background: STAGE_COLORS[stage] }}
+                  />
+                </div>
+                <span className="funnel-count">{count.toLocaleString()}</span>
+              </div>
+            );
+          })}
+        </div>
+
+        {/* Snapshot filters */}
+        <div className="snapshot-filters">
+          <div className="analytics-filter-group">
+            <label>Journey Stage</label>
+            <select value={snapshotFilters.journeyStage} onChange={e => handleSnapshotFilterChange('journeyStage', e.target.value)}>
+              <option value="">All stages</option>
+              {JOURNEY_STAGES.map(s => <option key={s} value={s}>{s}</option>)}
+            </select>
+          </div>
+          {SNAPSHOT_BOOL_FILTERS.map(({ key, label }) => (
+            <div key={key} className="analytics-filter-group">
+              <label>{label}</label>
+              <select value={snapshotFilters[key]} onChange={e => handleSnapshotFilterChange(key, e.target.value)}>
+                <option value="">Any</option>
+                <option value="true">Yes</option>
+                <option value="false">No</option>
+              </select>
+            </div>
+          ))}
+          <div className="analytics-filter-group">
+            <label>Registered from</label>
+            <input type="date" value={snapshotFilters.registeredFrom} onChange={e => handleSnapshotFilterChange('registeredFrom', e.target.value)} />
+          </div>
+          <div className="analytics-filter-group">
+            <label>Registered to</label>
+            <input type="date" value={snapshotFilters.registeredTo} onChange={e => handleSnapshotFilterChange('registeredTo', e.target.value)} />
+          </div>
+          <div className="analytics-filter-actions">
+            <button className="analytics-btn analytics-btn-secondary" onClick={handleSnapshotReset}>Reset</button>
+          </div>
+        </div>
+
+        {snapshotError && <div className="analytics-error">{snapshotError}</div>}
+
+        {/* Snapshot table */}
+        <div className="analytics-table-wrapper">
+          {snapshotLoading ? (
+            <div className="analytics-loading">Loading journey data…</div>
+          ) : snapshots.length === 0 ? (
+            <div className="analytics-empty">No caregivers match the selected filters.</div>
+          ) : (
+            <table className="analytics-table snapshot-table">
+              <thead>
+                <tr>
+                  <th>Name</th>
+                  <th>Email</th>
+                  <th>Location</th>
+                  <th>Stage</th>
+                  <th>Verified</th>
+                  <th>Assessment</th>
+                  <th>Certs</th>
+                  <th>Gigs (pub)</th>
+                  <th>Profile Pic</th>
+                  <th>Auth</th>
+                  <th>Registered</th>
+                </tr>
+              </thead>
+              <tbody>
+                {snapshots.map(s => (
+                  <tr key={s.caregiverId}>
+                    <td><strong>{s.firstName} {s.lastName}</strong></td>
+                    <td className="analytics-mono">{s.email}</td>
+                    <td>{[s.serviceCity, s.serviceState].filter(Boolean).join(', ') || '—'}</td>
+                    <td>
+                      <span className="snapshot-stage-badge" style={{ background: STAGE_COLORS[s.journeyStage] + '22', color: STAGE_COLORS[s.journeyStage], borderColor: STAGE_COLORS[s.journeyStage] }}>
+                        {s.journeyStage}
+                      </span>
+                    </td>
+                    <td>{s.isIdentityVerified ? <span className="snapshot-yes">✓</span> : <span className="snapshot-no">✗</span>}</td>
+                    <td>
+                      {s.hasPassedAnyAssessment
+                        ? <span className="snapshot-yes">✓ {s.latestAssessmentScore != null ? `(${s.latestAssessmentScore}%)` : ''}</span>
+                        : <span className="snapshot-no">✗</span>}
+                    </td>
+                    <td>{s.certificatesUploadedCount}/{s.certificatesVerifiedCount} verified</td>
+                    <td>{s.gigsPublishedCount} / {s.gigsDraftCount} draft</td>
+                    <td>{s.hasProfilePicture ? <span className="snapshot-yes">✓</span> : <span className="snapshot-no">✗</span>}</td>
+                    <td>{s.authProvider}</td>
+                    <td>{s.caregiverCreatedAt ? new Date(s.caregiverCreatedAt).toLocaleDateString() : '—'}</td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          )}
+        </div>
+
+        {/* Snapshot pagination */}
+        {snapshotTotal > 50 && (
+          <div className="analytics-pagination">
+            <button className="analytics-btn analytics-btn-secondary" disabled={snapshotPage <= 1 || snapshotLoading} onClick={() => setSnapshotPage(p => Math.max(1, p - 1))}>← Previous</button>
+            <span className="analytics-page-info">Page {snapshotPage} of {snapshotTotalPages} · {snapshotTotal.toLocaleString()} caregivers</span>
+            <button className="analytics-btn analytics-btn-secondary" disabled={snapshotPage >= snapshotTotalPages || snapshotLoading} onClick={() => setSnapshotPage(p => Math.min(snapshotTotalPages, p + 1))}>Next →</button>
+          </div>
+        )}
+      </section>
     </div>
   );
 };
