@@ -5,6 +5,11 @@
 }
 
 .page-header {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 1.5rem;
+  flex-wrap: wrap;
   margin-bottom: 2rem;
 }
 
@@ -17,6 +22,55 @@
 .page-header p {
   color: #666;
   font-size: 1rem;
+}
+
+.export-bar {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  flex-wrap: wrap;
+}
+
+.export-date-input {
+  padding: 0.55rem 0.75rem;
+  border: 1.5px solid #d1d5db;
+  border-radius: 8px;
+  font-size: 0.875rem;
+  color: #374151;
+  background: white;
+  cursor: pointer;
+  transition: border-color 0.2s;
+}
+
+.export-date-input:focus {
+  outline: none;
+  border-color: #667eea;
+}
+
+.btn-export {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.55rem 1.25rem;
+  background: linear-gradient(135deg, #11998e 0%, #38ef7d 100%);
+  color: white;
+  border: none;
+  border-radius: 8px;
+  font-size: 0.875rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  white-space: nowrap;
+}
+
+.btn-export:hover:not(:disabled) {
+  transform: translateY(-1px);
+  box-shadow: 0 4px 12px rgba(17, 153, 142, 0.4);
+}
+
+.btn-export:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
 }
 
 .loading-container {
