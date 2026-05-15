@@ -460,7 +460,7 @@
   display: flex;
   align-items: center;
   justify-content: center;
-  z-index: 1000;
+  z-index: 1100;
   padding: 1rem;
   animation: fadeIn 0.3s ease;
 }
@@ -474,9 +474,7 @@
   background: white;
   border-radius: 16px;
   box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
-  max-width: 95vw;
-  width: 100%;
-  min-width: 320px;
+  width: min(1200px, 94vw);
   max-height: 95vh;
   overflow-y: auto;
   overflow-x: hidden;
@@ -484,8 +482,7 @@
 }
 
 .cert-review-modal {
-  min-width: 1200px;
-  max-width: 1600px;
+  width: min(1200px, 94vw);
 }
 
 @keyframes slideUp {
@@ -1036,10 +1033,6 @@
 
 /* Responsive Design */
 @media (max-width: 1199px) {
-  .cert-review-modal {
-    min-width: 95vw;
-  }
-  
   .cert-review-grid {
     grid-template-columns: 1fr;
   }
@@ -1341,6 +1334,7 @@
   }
 
   .modal-content {
+    width: 98vw;
     border-radius: 12px;
   }
 

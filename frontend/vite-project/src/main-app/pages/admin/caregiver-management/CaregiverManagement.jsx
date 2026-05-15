@@ -16,6 +16,9 @@ const CaregiverManagement = () => {
   });
   const [selectedCaregiver, setSelectedCaregiver] = useState(null);
   const [showModal, setShowModal] = useState(false);
+  const [exportDates, setExportDates] = useState({ startDate: '', endDate: '' });
+  const [exporting, setExporting] = useState(false);
+  const [exportError, setExportError] = useState(null);
 
   useEffect(() => {
     fetchCaregivers();
@@ -100,6 +103,14 @@ const CaregiverManagement = () => {
     setSelectedCaregiver(null);
   };
 
+  const handleExport = async () => {
+    setExporting(true);
+    setExportError(null);
+    const result = await adminService.exportCaregivers(exportDates);
+    if (!result.success) setExportError(result.error || 'Export failed');
+    setExporting(false);
+  };
+
   if (loading) {
     return (
       <div className="caregiver-management">
@@ -114,9 +125,39 @@ const CaregiverManagement = () => {
   return (
     <div className="caregiver-management">
       <div className="page-header">
-        <h1>Caregiver Management</h1>
-        <p>Manage and monitor all caregivers in the system</p>
+        <div>
+          <h1>Caregiver Management</h1>
+          <p>Manage and monitor all caregivers in the system</p>
+        </div>
+        <div className="export-bar">
+          <input
+            type="date"
+            className="export-date-input"
+            value={exportDates.startDate}
+            onChange={(e) => setExportDates(p => ({ ...p, startDate: e.target.value }))}
+            title="Export start date (optional)"
+          />
+          <input
+            type="date"
+            className="export-date-input"
+            value={exportDates.endDate}
+            onChange={(e) => setExportDates(p => ({ ...p, endDate: e.target.value }))}
+            title="Export end date (optional)"
+          />
+          <button className="btn-export" onClick={handleExport} disabled={exporting}>
+            <i className="fas fa-file-excel"></i>
+            {exporting ? 'Exporting…' : 'Export Excel'}
+          </button>
+        </div>
       </div>
+
+      {exportError && (
+        <div className="error-message">
+          <i className="fas fa-exclamation-triangle"></i>
+          <p>{exportError}</p>
+          <button onClick={() => setExportError(null)}>Dismiss</button>
+        </div>
+      )}
 
       {error && (
         <div className="error-message">
