@@ -12,6 +12,9 @@ import config from "../../../config";
 import Modal from "../../../components/modal/Modal";
 import { useCaregiverStatus } from "../../../contexts/CaregiverStatusContext";
 import signalRNotificationService from "../../../services/signalRNotificationService";
+import useVerificationGate from "../../../hooks/useVerificationGate";
+import { initiateSession as initiateDojahSession } from "../../../services/dojahGateService";
+import VerificationGateState from "../../../components/verification/VerificationGateState";
 
 const DOJAH_WIDGET_SCRIPT = 'https://widget.dojah.io/widget.js';
 
@@ -19,6 +22,7 @@ const CaregiverVerificationPage = () => {
   const navigate = useNavigate();
   const dispatch = useDispatch();
   const { updateVerificationStatus, setVerificationPending } = useCaregiverStatus();
+  const { gate, loading: gateLoading, refresh: refreshGate, applyGate } = useVerificationGate();
   const [verificationMethod, setVerificationMethod] = useState("dojah");
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [error, setError] = useState("");
@@ -147,7 +151,11 @@ const CaregiverVerificationPage = () => {
       setIsError(true);
       setIsModalOpen(true);
     }
-  }, [stopVerificationListeners, updateVerificationStatus]);
+
+    // Refresh gate so the UI lands on already_verified / cooldown_active /
+    // max_attempts_reached / pending_review based on the latest server state.
+    refreshGate();
+  }, [stopVerificationListeners, updateVerificationStatus, refreshGate]);
 
   // Fallback polling — starts after 15s if SignalR hasn't delivered a final result
   const startFallbackPolling = useCallback(() => {
@@ -256,8 +264,11 @@ const CaregiverVerificationPage = () => {
     }, 10000);
   }, [userDetails.id, token, handleVerificationResult, startFallbackPolling]);
 
-  // Load Dojah Connect script and open the overlay widget
-  const openDojahWidget = useCallback(() => {
+  // Load Dojah Connect script and open the overlay widget.
+  // The session object is the response from POST /Dojah/initiate-session and
+  // carries the server-signed referenceId + userType that MUST be passed to
+  // the widget so the webhook can be matched back to this user.
+  const openDojahWidget = useCallback((session) => {
     const currentUser = userData || userDetails;
 
     const launchWidget = () => {
@@ -278,6 +289,9 @@ const CaregiverVerificationPage = () => {
         app_id: dojahAppId,
         p_key: dojahPublicKey,
         type: 'custom',
+        // Top-level reference_id (Dojah promotes this) — must be the
+        // server-issued ID from /Dojah/initiate-session.
+        reference_id: session.referenceId,
         config: {
           debug: config.ENV.DEBUG,
           widget_id: dojahWidgetId,
@@ -304,9 +318,15 @@ const CaregiverVerificationPage = () => {
           residence_country: currentUser?.country || 'NG',
         },
         metadata: {
-          user_id: currentUser?.id || userDetails.id || '',
-          user_type: 'caregiver',
-          reference_id: `caregiver_${currentUser?.id || userDetails.id}_${Date.now()}`,
+          user_id: session.userId || currentUser?.id || userDetails.id || '',
+          // userType comes from the server ("Caregiver" or "Client") and is
+          // critical for the webhook to route results to the correct profile.
+          user_type: session.userType,
+          // Redundant copy — backend uses metadata.reference_id as fallback
+          // when Dojah's nested envelope omits the top-level reference_id.
+          reference_id: session.referenceId,
+          platform: 'web',
+          timestamp: new Date().toISOString(),
         },
         onSuccess: (data) => {
           if (!isMountedRef.current) return;
@@ -387,6 +407,34 @@ const CaregiverVerificationPage = () => {
     document.head.appendChild(script);
   }, [userData, userDetails, dojahAppId, dojahPublicKey, dojahWidgetId, startVerificationListener]);
 
+  // Map a blocked-gate response (from initiate-session 403 OR eligibility) to a modal.
+  const showGateBlockedModal = useCallback((blockedGate) => {
+    const reason = blockedGate?.reason;
+    let title = 'Verification Unavailable';
+    let description = 'Verification is not available right now. Please try again later.';
+
+    if (reason === 'already_verified') {
+      title = 'Already Verified';
+      description = 'Your identity has already been verified.';
+    } else if (reason === 'pending_review') {
+      title = 'Verification Under Review';
+      description = 'Your verification is under review. We will notify you of the result.';
+    } else if (reason === 'cooldown_active') {
+      title = 'Please Wait Before Retrying';
+      description = 'You recently attempted verification. Please wait until the cooldown ends before trying again.';
+    } else if (reason === 'max_attempts_reached') {
+      title = 'Maximum Attempts Reached';
+      description = 'You have reached the maximum number of verification attempts. Please contact support.';
+    }
+
+    setModalTitle(title);
+    setModalDescription(description);
+    setButtonText('OK');
+    setButtonBgColor('#FF4B4B');
+    setIsError(true);
+    setIsModalOpen(true);
+  }, []);
+
   useEffect(() => {
     // Skip the second run caused by Strict Mode in development
     if (effectRan.current) return;
@@ -463,7 +511,7 @@ const CaregiverVerificationPage = () => {
     };
   }, []);
 
-  const handleStartVerification = () => {
+  const handleStartVerification = async () => {
     // Guard: prevent duplicate verification if already pending or completed
     if (verificationStatus?.hasSuccess || verificationStatus?.hasPending) {
       return;
@@ -485,8 +533,41 @@ const CaregiverVerificationPage = () => {
     setWidgetCompleted(false);
     widgetCompletedRef.current = false;
     setProgress(10);
+    setProgressMessage("Requesting verification session...");
+
+    // Server-side gate: must succeed before opening the (paid) widget.
+    let session;
+    try {
+      const result = await initiateDojahSession();
+      session = result?.session;
+      if (!session?.referenceId) {
+        throw new Error('Malformed initiate-session response (missing referenceId)');
+      }
+      // Sync the gate state with the new attempt count returned by the server.
+      if (result?.gate) applyGate(result.gate);
+    } catch (err) {
+      setIsSubmitting(false);
+      setProgress(0);
+      setProgressMessage("");
+      // 403 -> body is the gate object; render the matching blocked state.
+      const blockedGate = err?.response?.status === 403 ? err.response.data : null;
+      if (blockedGate) {
+        applyGate(blockedGate);
+        showGateBlockedModal(blockedGate);
+      } else {
+        setModalTitle('Verification Unavailable');
+        setModalDescription('We could not start verification right now. Please try again in a moment.');
+        setButtonText('OK');
+        setButtonBgColor('#FF4B4B');
+        setIsError(true);
+        setIsModalOpen(true);
+      }
+      return;
+    }
+
+    setProgress(20);
     setProgressMessage("Initializing verification...");
-    openDojahWidget();
+    openDojahWidget(session);
   };
 
   // Modal handlers
@@ -594,42 +675,24 @@ const CaregiverVerificationPage = () => {
                   </div>
                 )}
 
-                {/* Verification Status Display */}
-                {verificationStatus?.hasSuccess && (
-                  <div className="verification-status verified">
-                    <h3>✅ Account Verified</h3>
-                    <p>Your identity has been successfully verified!</p>
-                    <button
-                      type="button"
-                      onClick={() => navigate("/app/caregiver/assessments")}
-                      className="proceed-btn start-assessment"
-                    >
-                      Start Assessment
-                      <i className="fas fa-arrow-right"></i>
-                    </button>
-                  </div>
+                {/* Server-driven gate states (already_verified, pending_review,
+                    cooldown_active, max_attempts_reached). Renders nothing
+                    when the user is eligible. */}
+                {gate && gate.reason !== 'eligible' && (
+                  <VerificationGateState
+                    gate={gate}
+                    onProceed={
+                      gate.reason === 'already_verified'
+                        ? () => navigate("/app/caregiver/assessments")
+                        : undefined
+                    }
+                    proceedLabel="Start Assessment"
+                    onCooldownExpire={refreshGate}
+                  />
                 )}
 
-                {verificationStatus?.hasPending && !verificationStatus?.hasSuccess && (
-                  <div className="verification-status pending">
-                    <h3>⏳ Verification Pending</h3>
-                    <p>Your verification is being processed. You can start creating draft gigs while you wait!</p>
-                    <div className="pending-info">
-                      <p>Estimated processing time: 24-48 hours</p>
-                    </div>
-                    <button
-                      type="button"
-                      onClick={() => navigate("/app/caregiver/profile", { state: { verificationStatus: 'pending' } })}
-                      className="proceed-btn"
-                    >
-                      Go to Profile
-                      <i className="fas fa-arrow-right"></i>
-                    </button>
-                  </div>
-                )}
-
-                {/* Start / Retry Verification Button — hidden while polling */}
-                {!verificationStatus?.hasSuccess && !verificationStatus?.hasPending && !isSubmitting && (
+                {/* Start / Retry Verification Button — only when eligible */}
+                {gate?.isEligible && !isSubmitting && (
                   <div>
                     <div className="user-info-notice">
                       <div className="notice-icon">
@@ -655,10 +718,12 @@ const CaregiverVerificationPage = () => {
                     <button
                       type="button"
                       onClick={handleStartVerification}
-                      disabled={isSubmitting || isLoading}
+                      disabled={isSubmitting || isLoading || gateLoading}
                       className="proceed-btn start-verification"
                     >
-                      {isSubmitting ? "Processing..." : (verificationStatus?.hasFailed ? "Retry Verification" : "Start Verification")}
+                      {isSubmitting
+                        ? "Processing..."
+                        : ((gate?.attemptCount ?? 0) > 0 ? "Retry Verification" : "Start Verification")}
                       <i className="fas fa-arrow-right"></i>
                     </button>
                   </div>
@@ -670,7 +735,7 @@ const CaregiverVerificationPage = () => {
                     🔒 Your data is protected with bank-level security and encryption.
                   </p>
                   <p className="time-note">
-                    ⏱️ Verification typically takes 2-5 minutes to complete.
+                    ⏱️ The widget steps take a few minutes. Results are confirmed in real time — if manual review is required, you will be notified when complete.
                   </p>
                 </div>
               </div>
