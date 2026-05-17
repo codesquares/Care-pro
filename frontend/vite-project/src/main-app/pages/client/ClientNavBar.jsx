@@ -264,6 +264,12 @@ const ClientNavBar = () => {
                   <span>Messages</span>
                 </div>
               </li>
+              <li onClick={() => { navigate(`${basePath}/verification`); setMobileMenuOpen(false); }}>
+                <div className="client-menu-item-content">
+                  <span className="client-nav-icon" style={{ fontSize: '16px' }}>🛡️</span>
+                  <span>Verify My Identity</span>
+                </div>
+              </li>
               <li onClick={() => { navigate(`${basePath}/settings`); setMobileMenuOpen(false); }}>
                 <div className="client-menu-item-content">
                   <FaCog className="client-nav-icon" />
@@ -375,6 +381,12 @@ const ClientNavBar = () => {
                   navigate(`${basePath}/subscriptions`);
                 }}>
                   Subscriptions
+                </div>
+                <div className="client-dropdown-item" onClick={() => {
+                  setShowDropdown(false);
+                  navigate(`${basePath}/verification`);
+                }}>
+                  Verify My Identity
                 </div>
                 <div className="client-dropdown-item" onClick={() => {
                   setShowDropdown(false);
