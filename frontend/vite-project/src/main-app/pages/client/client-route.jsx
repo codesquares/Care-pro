@@ -13,7 +13,7 @@ import OrderDetails from './orders/OrderTasks&Details';
 import OrderHistory from './orders/OrderHistory';
 import ClientSettings from './client-settings/ClientSettings';
 import ClientPreferences from './preferences/ClientPreferences';
-// import ClientVerificationPage from './verification/VerificationPage';
+import ClientVerificationPage from './verification/VerificationPage';
 import CareNeedsSettings from './care-needs/CareNeedsSettings';
 import ClientProfile from './profile/ClientProfile';
 import RequestCaregiver from './request-caregiver/RequestCaregiver';
@@ -47,7 +47,7 @@ function ClientRoutes() {
             <Route path="/order-history" element={<OrderHistory />} />
             <Route path="/settings" element={<ClientSettings />} />
             <Route path="/preferences" element={<ClientPreferences />} />
-            {/* <Route path="/verification" element={<ClientVerificationPage />} /> */}
+            <Route path="/verification" element={<ClientVerificationPage />} />
             <Route path="/care-needs" element={<CareNeedsSettings />} />
             <Route path="/post-project" element={<RequestCaregiver />} />
             <Route path="/care-requests/:requestId/matches" element={<CareRequestMatches />} />
