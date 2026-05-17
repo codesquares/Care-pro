@@ -18,6 +18,7 @@ import AdminCareRequestDetail from './care-requests/AdminCareRequestDetail';
 import SubscriptionAdmin from './subscriptions/SubscriptionAdmin';
 import DisputesManagement from './disputes-management/DisputesManagement';
 import RefundManagement from './refund-management/RefundManagement';
+import PaymentResolution from './payment-resolution/PaymentResolution';
 import AnalyticsDashboard from './analytics/AnalyticsDashboard';
 import { useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
@@ -80,6 +81,7 @@ function AdminRoutes() {
                     <Route path="subscriptions" element={<SubscriptionAdmin />} />
                     <Route path="disputes" element={<DisputesManagement />} />
                     <Route path="refunds" element={<RefundManagement />} />
+                    <Route path="payment-resolution" element={<PaymentResolution />} />
                     <Route path="analytics" element={<AnalyticsDashboard />} />
                     <Route path="care-requests/:requestId" element={<AdminCareRequestDetail />} />
                     <Route path="*" element={<NotFoundPage />} />
