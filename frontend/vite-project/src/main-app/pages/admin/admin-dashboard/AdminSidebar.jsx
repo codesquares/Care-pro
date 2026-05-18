@@ -15,8 +15,9 @@ const NAV_GROUPS = [
   {
     label: 'Users',
     items: [
-      { to: '/app/admin/caregivers', icon: 'fa-user-nurse',    label: 'Caregivers' },
-      { to: '/app/admin/clients',    icon: 'fa-user-friends',  label: 'Clients' },
+      { to: '/app/admin/caregivers',   icon: 'fa-user-nurse',   label: 'Caregivers' },
+      { to: '/app/admin/clients',      icon: 'fa-user-friends', label: 'Clients' },
+      { to: '/app/admin/admin-users',  icon: 'fa-user-shield',  label: 'Admin Users' },
     ],
   },
   {
@@ -28,14 +29,16 @@ const NAV_GROUPS = [
       { to: '/app/admin/refunds',             icon: 'fa-money-bill-wave', label: 'Refunds' },
       { to: '/app/admin/payment-resolution',  icon: 'fa-wrench',          label: 'Payment Resolution' },
       { to: '/app/admin/disputes',            icon: 'fa-gavel',           label: 'Disputes' },
+      { to: '/app/admin/booking-commitments',  icon: 'fa-handshake',       label: 'Booking Commitments' },
     ],
   },
   {
     label: 'Compliance',
     items: [
-      { to: '/app/admin/certificates',  icon: 'fa-certificate',   label: 'Certificates' },
-      { to: '/app/admin/dojah-admin',   icon: 'fa-id-badge',      label: 'Verifications' },
-      { to: '/app/admin/question-bank', icon: 'fa-clipboard-list',label: 'Question Bank' },
+      { to: '/app/admin/certificates',   icon: 'fa-certificate',    label: 'Certificates' },
+      { to: '/app/admin/dojah-admin',    icon: 'fa-id-badge',       label: 'Verifications' },
+      { to: '/app/admin/question-bank',  icon: 'fa-clipboard-list', label: 'Question Bank' },
+      { to: '/app/admin/chat-compliance',icon: 'fa-shield-virus',   label: 'Chat Compliance' },
     ],
   },
   {

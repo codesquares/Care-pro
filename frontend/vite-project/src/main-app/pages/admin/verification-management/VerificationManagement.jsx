@@ -17,6 +17,13 @@ const VerificationManagement = () => {
   const [actionLoading, setActionLoading] = useState(false);
   const [successMessage, setSuccessMessage] = useState('');
 
+  // Webhook history modal state
+  const [showHistoryModal, setShowHistoryModal]     = useState(false);
+  const [historyLogs, setHistoryLogs]               = useState([]);
+  const [historyLoading, setHistoryLoading]         = useState(false);
+  const [historyError, setHistoryError]             = useState(null);
+  const [historySubject, setHistorySubject]         = useState(''); // caregiver name
+
   // Admin escape-hatch: status override modal state
   const [showOverrideModal, setShowOverrideModal] = useState(false);
   const [overrideStatus, setOverrideStatus] = useState('Completed');
@@ -326,6 +333,43 @@ const VerificationManagement = () => {
     }
   };
 
+  // -------- User webhook history --------
+  const handleViewHistory = async (verification) => {
+    const userId =
+      verification.userId ||
+      verification.caregiverId ||
+      verification.UserId;
+    if (!userId) {
+      alert('User ID not available for this verification record');
+      return;
+    }
+    setHistoryLogs([]);
+    setHistoryError(null);
+    setHistorySubject(verification.caregiverName || userId);
+    setHistoryLoading(true);
+    setShowHistoryModal(true);
+    try {
+      const result = await adminVerificationService.getUserWebhookHistory(userId);
+      if (result.success) {
+        const data = result.data;
+        setHistoryLogs(Array.isArray(data) ? data : (data?.logs || data?.data || []));
+      } else {
+        setHistoryError(result.error || 'Failed to load webhook history');
+      }
+    } catch (err) {
+      console.error('Error loading webhook history:', err);
+      setHistoryError('Failed to load webhook history');
+    } finally {
+      setHistoryLoading(false);
+    }
+  };
+
+  const closeHistoryModal = () => {
+    setShowHistoryModal(false);
+    setHistoryLogs([]);
+    setHistoryError(null);
+  };
+
   const getStatusBadgeClass = (status) => {
     switch (status?.toLowerCase()) {
       case 'completed':
@@ -524,7 +568,7 @@ const VerificationManagement = () => {
                       <span className="badge-no-data">No Data</span>
                     )}
                   </td>
-                  <td>
+                  <td className="verify-actions-cell">
                     <button
                       className="btn-review"
                       onClick={() => handleViewVerification(verification)}
@@ -532,6 +576,14 @@ const VerificationManagement = () => {
                     >
                       <i className="fas fa-eye"></i>
                       Review
+                    </button>
+                    <button
+                      className="btn-history"
+                      onClick={() => handleViewHistory(verification)}
+                      title="View all webhook logs for this user"
+                    >
+                      <i className="fas fa-history"></i>
+                      History
                     </button>
                   </td>
                 </tr>
@@ -775,6 +827,74 @@ const VerificationManagement = () => {
                   {webhookDetails.rawPayload}
                 </pre>
               </details>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Webhook History Modal */}
+      {showHistoryModal && (
+        <div className="modal-overlay" onClick={closeHistoryModal}>
+          <div className="modal-content verify-review-modal" onClick={(e) => e.stopPropagation()}>
+            <div className="modal-header">
+              <h2>
+                <i className="fas fa-history"></i>
+                Webhook History — {historySubject}
+              </h2>
+              <button className="close-modal" onClick={closeHistoryModal}>
+                <i className="fas fa-times"></i>
+              </button>
+            </div>
+            <div className="modal-body">
+              {historyLoading && (
+                <div style={{ textAlign: 'center', padding: '2rem', color: '#666' }}>
+                  <i className="fas fa-spinner fa-spin" style={{ fontSize: '1.5rem', marginBottom: '0.5rem' }}></i>
+                  <p>Loading webhook logs…</p>
+                </div>
+              )}
+              {historyError && (
+                <div className="inline-error" style={{ marginBottom: '1rem' }}>
+                  <i className="fas fa-exclamation-circle"></i> {historyError}
+                </div>
+              )}
+              {!historyLoading && !historyError && historyLogs.length === 0 && (
+                <p style={{ color: '#999', textAlign: 'center', padding: '2rem' }}>No webhook logs found for this user.</p>
+              )}
+              {historyLogs.length > 0 && (
+                <div className="history-log-list">
+                  {historyLogs.map((log, idx) => {
+                    const logId   = log.id || log.Id || log._id || idx;
+                    const event   = log.eventType || log.EventType || log.type || '—';
+                    const status  = log.status || log.Status || log.verificationStatus || '—';
+                    const method  = log.verificationMethod || log.VerificationMethod || '—';
+                    const recvAt  = log.receivedAt || log.ReceivedAt || log.createdAt || log.CreatedAt;
+                    return (
+                      <div key={logId} className="history-log-entry">
+                        <div className="history-log-header">
+                          <span className="history-log-idx">#{historyLogs.length - idx}</span>
+                          <span className={`status-badge ${getStatusBadgeClass(status)}`}>{status}</span>
+                          <span className="history-log-date">
+                            {recvAt ? new Date(recvAt).toLocaleString() : '—'}
+                          </span>
+                        </div>
+                        <div className="history-log-meta">
+                          {event !== '—' && <span><i className="fas fa-bolt"></i> {event}</span>}
+                          {method !== '—' && <span><i className="fas fa-id-badge"></i> {method}</span>}
+                          {(log.webhookLogId || log.WebhookLogId) && (
+                            <span className="history-log-id">ID: {log.webhookLogId || log.WebhookLogId}</span>
+                          )}
+                        </div>
+                        {(log.rawPayload || log.RawPayload) && (
+                          <details className="history-log-payload">
+                            <summary>Raw Payload</summary>
+                            <pre>{log.rawPayload || log.RawPayload}</pre>
+                          </details>
+                        )}
+                      </div>
+                    );
+                  })}
+                </div>
+              )}
             </div>
           </div>
         </div>
