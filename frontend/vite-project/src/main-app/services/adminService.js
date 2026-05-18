@@ -695,6 +695,212 @@ const adminService = {
     return '.pdf,.doc,.docx,.mp4,.mov,.avi,.wmv,.ppt,.pptx';
   },
 
+  /**
+   * Get all training materials
+   * Endpoint: GET /api/admin/TrainingMaterials
+   * @returns {Promise<{success: boolean, data?: Array, count?: number, error?: string}>}
+   */
+  getAllTrainingMaterials: async () => {
+    try {
+      const response = await api.get('/admin/TrainingMaterials');
+      const payload = response.data;
+      return {
+        success: true,
+        data: payload.data || payload || [],
+        count: payload.count ?? (Array.isArray(payload) ? payload.length : 0),
+      };
+    } catch (error) {
+      console.error('Error fetching training materials:', error);
+      return { success: false, error: error.response?.data?.message || error.message || 'Failed to fetch training materials' };
+    }
+  },
+
+  /**
+   * Get training materials filtered by user type
+   * Endpoint: GET /api/admin/TrainingMaterials/by-user-type/{userType}?activeOnly=true
+   * @param {string} userType - "Caregiver" | "Cleaner" | "Both"
+   * @param {boolean} [activeOnly=true]
+   * @returns {Promise<{success: boolean, data?: Array, totalCount?: number, userType?: string, error?: string}>}
+   */
+  getTrainingMaterialsByUserType: async (userType, activeOnly = true) => {
+    try {
+      const response = await api.get(`/admin/TrainingMaterials/by-user-type/${userType}`, {
+        params: { activeOnly },
+      });
+      const payload = response.data;
+      return {
+        success: true,
+        data: payload.data || payload || [],
+        totalCount: payload.totalCount ?? (Array.isArray(payload) ? payload.length : 0),
+        userType: payload.userType || userType,
+      };
+    } catch (error) {
+      console.error('Error fetching training materials by user type:', error);
+      return { success: false, error: error.response?.data?.message || error.message || 'Failed to fetch training materials' };
+    }
+  },
+
+  /**
+   * Get a single training material by ID
+   * Endpoint: GET /api/admin/TrainingMaterials/{id}
+   * @param {string} id
+   * @returns {Promise<{success: boolean, data?: Object, error?: string}>}
+   */
+  getTrainingMaterial: async (id) => {
+    try {
+      const response = await api.get(`/admin/TrainingMaterials/${id}`);
+      return { success: true, data: response.data };
+    } catch (error) {
+      console.error('Error fetching training material:', error);
+      return { success: false, error: error.response?.data?.message || error.message || 'Failed to fetch training material' };
+    }
+  },
+
+  /**
+   * Update a training material (title, description, userType, optionally replace file)
+   * Endpoint: PUT /api/admin/TrainingMaterials/{id}   multipart/form-data
+   * @param {string} id
+   * @param {Object} updateData
+   * @param {string} [updateData.title]
+   * @param {string} [updateData.description]
+   * @param {string} [updateData.userType]
+   * @param {File}   [updateData.file]
+   * @returns {Promise<{success: boolean, message?: string, error?: string}>}
+   */
+  updateTrainingMaterial: async (id, updateData) => {
+    try {
+      const formData = new FormData();
+      if (updateData.title)       formData.append('Title',       updateData.title);
+      if (updateData.description !== undefined) formData.append('Description', updateData.description);
+      if (updateData.userType)    formData.append('UserType',    updateData.userType);
+      if (updateData.file)        formData.append('File',        updateData.file);
+
+      const token = localStorage.getItem('authToken');
+      const response = await fetch(`${API_URL}/admin/TrainingMaterials/${id}`, {
+        method: 'PUT',
+        headers: { Authorization: `Bearer ${token}` },
+        body: formData,
+      });
+      const result = await response.json();
+      if (response.ok && (result.success !== false)) {
+        return { success: true, message: result.message || 'Training material updated successfully' };
+      }
+      return { success: false, error: result.message || 'Failed to update training material' };
+    } catch (error) {
+      console.error('Error updating training material:', error);
+      return { success: false, error: error.message || 'Failed to update training material' };
+    }
+  },
+
+  /**
+   * Delete a training material (removes from DB and Cloudinary)
+   * Endpoint: DELETE /api/admin/TrainingMaterials/{id}
+   * @param {string} id
+   * @returns {Promise<{success: boolean, message?: string, error?: string}>}
+   */
+  deleteTrainingMaterial: async (id) => {
+    try {
+      const response = await api.delete(`/admin/TrainingMaterials/${id}`);
+      const payload = response.data;
+      return { success: true, message: payload?.message || 'Training material deleted successfully' };
+    } catch (error) {
+      console.error('Error deleting training material:', error);
+      return { success: false, error: error.response?.data?.message || error.message || 'Failed to delete training material' };
+    }
+  },
+
+  /**
+   * Search training materials by title, description, or filename
+   * Endpoint: GET /api/admin/TrainingMaterials/search?searchTerm=
+   * @param {string} searchTerm - required
+   * @returns {Promise<{success: boolean, data?: Array, count?: number, searchTerm?: string, error?: string}>}
+   */
+  searchTrainingMaterials: async (searchTerm) => {
+    try {
+      if (!searchTerm || !searchTerm.trim()) {
+        return { success: false, error: 'Search term is required' };
+      }
+      const response = await api.get('/admin/TrainingMaterials/search', {
+        params: { searchTerm: searchTerm.trim() },
+      });
+      const payload = response.data;
+      return {
+        success: true,
+        data: payload.data || payload || [],
+        count: payload.count ?? (Array.isArray(payload) ? payload.length : 0),
+        searchTerm: payload.searchTerm || searchTerm,
+      };
+    } catch (error) {
+      console.error('Error searching training materials:', error);
+      return { success: false, error: error.response?.data?.message || error.message || 'Failed to search training materials' };
+    }
+  },
+
+  // ============================================
+  // ADMIN USER MANAGEMENT
+  // ============================================
+
+  /**
+   * Create a new admin account (SuperAdmin only)
+   * Endpoint: POST /api/Admins
+   * @param {Object} adminData
+   * @param {string} adminData.FirstName
+   * @param {string} adminData.LastName
+   * @param {string} [adminData.MiddleName]
+   * @param {string} adminData.Email
+   * @param {string} adminData.Password
+   * @param {string} adminData.Role - "Admin" | "SuperAdmin"
+   * @param {string} [adminData.Department]
+   * @param {string} [adminData.PhoneNo]
+   * @param {string} [adminData.Status]
+   * @returns {Promise<{success: boolean, data?: Object, error?: string}>}
+   */
+  createAdmin: async (adminData) => {
+    try {
+      const response = await api.post('/Admins', adminData);
+      const payload = response.data;
+      return { success: true, data: payload };
+    } catch (error) {
+      console.error('Error creating admin:', error);
+      return { success: false, error: error.response?.data?.message || error.response?.data?.Message || error.message || 'Failed to create admin' };
+    }
+  },
+
+  /**
+   * Get all admin accounts
+   * Endpoint: GET /api/Admins/AllAdminUsers
+   * @returns {Promise<{success: boolean, data?: Array, error?: string}>}
+   */
+  getAllAdminUsers: async () => {
+    try {
+      const response = await api.get('/Admins/AllAdminUsers');
+      const payload = response.data;
+      return {
+        success: true,
+        data: Array.isArray(payload) ? payload : (payload.data || []),
+      };
+    } catch (error) {
+      console.error('Error fetching admin users:', error);
+      return { success: false, error: error.response?.data?.message || error.message || 'Failed to fetch admin users' };
+    }
+  },
+
+  /**
+   * Get a single admin profile
+   * Endpoint: GET /api/Admins/{adminUserId}
+   * @param {string} adminUserId
+   * @returns {Promise<{success: boolean, data?: Object, error?: string}>}
+   */
+  getAdminUser: async (adminUserId) => {
+    try {
+      const response = await api.get(`/Admins/${adminUserId}`);
+      return { success: true, data: response.data };
+    } catch (error) {
+      console.error('Error fetching admin user:', error);
+      return { success: false, error: error.response?.data?.message || error.message || 'Failed to fetch admin user' };
+    }
+  },
+
   // ============================================
   // GIGS MANAGEMENT
   // ============================================

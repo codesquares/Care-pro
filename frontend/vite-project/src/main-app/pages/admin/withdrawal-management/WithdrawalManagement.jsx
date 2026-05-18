@@ -38,16 +38,31 @@ const WithdrawalManagement = () => {
   }, []);
 
   useEffect(() => {
+    const applyFilter = async () => {
+      if (filter === 'all') {
+        setFilteredWithdrawals(withdrawals);
+        return;
+      }
+      // Use server-side filter for specific statuses
+      try {
+        setIsLoading(true);
+        const data = await adminWithdrawalService.getWithdrawalRequestsByStatus(filter);
+        setFilteredWithdrawals(Array.isArray(data) ? data : []);
+      } catch (err) {
+        console.error('Error filtering withdrawals by status:', err);
+        // Fallback to client-side filter if server call fails
+        setFilteredWithdrawals(withdrawals.filter(w => w.status?.toLowerCase() === filter.toLowerCase()));
+      } finally {
+        setIsLoading(false);
+      }
+    };
+
     if (!Array.isArray(withdrawals)) {
       setFilteredWithdrawals([]);
       return;
     }
-    
-    if (filter === 'all') {
-      setFilteredWithdrawals(withdrawals);
-    } else {
-      setFilteredWithdrawals(withdrawals.filter(w => w.status.toLowerCase() === filter.toLowerCase()));
-    }
+
+    applyFilter();
   }, [filter, withdrawals]);
   
   const formatCurrency = (amount) => {

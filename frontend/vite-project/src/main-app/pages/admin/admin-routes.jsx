@@ -8,7 +8,10 @@ import UsersManagement from './users-management/UsersManagement';
 import CaregiverManagement from './caregiver-management/CaregiverManagement';
 import ClientManagement from './client-management/ClientManagement';
 import NotificationCenter from './notification-center/NotificationCenter';
-import TrainingMaterialsUpload from './training-materials/TrainingMaterialsUpload';
+import TrainingMaterials from './training-materials/TrainingMaterials';
+import AdminUserManagement from './users-management/AdminUserManagement';
+import ChatCompliance from './chat-compliance/ChatCompliance';
+import BookingCommitments from './booking-commitments/BookingCommitments';
 import GigsManagement from './gigs-management/GigsManagement';
 import OrdersManagement from './orders-management/OrdersManagement';
 import EmailComposer from './email-composer/EmailComposer';
@@ -70,7 +73,10 @@ function AdminRoutes() {
                     <Route path='/caregivers' element={<CaregiverManagement />} />
                     <Route path='/clients' element={<ClientManagement />} />
                     <Route path='/notifications' element={<NotificationCenter />} />
-                    <Route path='/training-materials' element={<TrainingMaterialsUpload />} />
+                    <Route path='/training-materials' element={<TrainingMaterials />} />
+                    <Route path='/admin-users' element={<AdminUserManagement />} />
+                    <Route path='/chat-compliance' element={<ChatCompliance />} />
+                    <Route path='/booking-commitments' element={<BookingCommitments />} />
                     <Route path='/gigs' element={<GigsManagement />} />
                     <Route path='/orders' element={<OrdersManagement />} />
                     <Route path='/emails' element={<EmailComposer />} />

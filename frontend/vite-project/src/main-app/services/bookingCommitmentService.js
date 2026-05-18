@@ -104,6 +104,32 @@ const bookingCommitmentService = {
       : error?.message || error?.response?.data?.message || '';
     return msg.toLowerCase().includes('booking commitment fee');
   },
+
+  /**
+   * Admin override: manually mark a booking commitment as complete.
+   * POST /api/booking-commitment/admin/manual-complete
+   *
+   * @param {string} gigId
+   * @param {string} clientId
+   * @param {string} adminId
+   * @param {string} reason
+   */
+  async adminManualComplete(gigId, clientId, adminId, reason) {
+    try {
+      const response = await api.post('/booking-commitment/admin/manual-complete', {
+        GigId: gigId,
+        ClientId: clientId,
+        AdminId: adminId,
+        Reason: reason,
+      });
+      return { success: true, data: response.data };
+    } catch (error) {
+      return {
+        success: false,
+        error: error.response?.data?.message || 'Failed to manually complete booking commitment',
+      };
+    }
+  },
 };
 
 export default bookingCommitmentService;
