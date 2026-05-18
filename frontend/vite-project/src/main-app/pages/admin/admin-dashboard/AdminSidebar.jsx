@@ -1,58 +1,67 @@
-import { useState } from 'react';
+import { useState, useMemo } from 'react';
 import { Link, useLocation, useNavigate } from 'react-router-dom';
 import { useAuth } from '../../../context/AuthContext';
 import { getInitials } from '../../../utils/avatarHelpers';
+import { hasPolicy } from '../../../utils/adminPermissions';
 import './admin-sidebar.css';
 
-const NAV_GROUPS = [
+// policy values match adminPermissions.js hasPolicy() keys
+// undefined / null = visible to all authenticated admins
+const ALL_NAV_GROUPS = [
   {
     label: 'Overview',
     items: [
-      { to: '/app/admin/dashboard', icon: 'fa-chart-line',     label: 'Dashboard' },
-      { to: '/app/admin/analytics', icon: 'fa-chart-bar',      label: 'Analytics' },
+      { to: '/app/admin/dashboard', icon: 'fa-chart-line', label: 'Dashboard' },
+      { to: '/app/admin/analytics', icon: 'fa-chart-bar',  label: 'Analytics', policy: 'analytics' },
     ],
   },
   {
     label: 'Users',
     items: [
-      { to: '/app/admin/caregivers',   icon: 'fa-user-nurse',   label: 'Caregivers' },
-      { to: '/app/admin/clients',      icon: 'fa-user-friends', label: 'Clients' },
-      { to: '/app/admin/admin-users',  icon: 'fa-user-shield',  label: 'Admin Users' },
+      { to: '/app/admin/caregivers',  icon: 'fa-user-nurse',   label: 'Caregivers',  policy: 'operations' },
+      { to: '/app/admin/clients',     icon: 'fa-user-friends', label: 'Clients',     policy: 'operations' },
+      { to: '/app/admin/admin-users', icon: 'fa-user-shield',  label: 'Admin Users', policy: 'superAdmin' },
     ],
   },
   {
     label: 'Operations',
     items: [
-      { to: '/app/admin/orders',     icon: 'fa-shopping-cart', label: 'Orders' },
-      { to: '/app/admin/gigs',       icon: 'fa-briefcase',     label: 'Gigs' },
-      { to: '/app/admin/withdrawals',         icon: 'fa-wallet',          label: 'Withdrawals' },
-      { to: '/app/admin/refunds',             icon: 'fa-money-bill-wave', label: 'Refunds' },
-      { to: '/app/admin/payment-resolution',  icon: 'fa-wrench',          label: 'Payment Resolution' },
-      { to: '/app/admin/disputes',            icon: 'fa-gavel',           label: 'Disputes' },
-      { to: '/app/admin/booking-commitments',  icon: 'fa-handshake',       label: 'Booking Commitments' },
+      { to: '/app/admin/orders',              icon: 'fa-shopping-cart',  label: 'Orders',              policy: 'finance' },
+      { to: '/app/admin/gigs',                icon: 'fa-briefcase',      label: 'Gigs',                policy: 'operations' },
+      { to: '/app/admin/withdrawals',         icon: 'fa-wallet',         label: 'Withdrawals',         policy: 'finance' },
+      { to: '/app/admin/refunds',             icon: 'fa-money-bill-wave',label: 'Refunds',             policy: 'financeOrOperations' },
+      { to: '/app/admin/payment-resolution',  icon: 'fa-wrench',         label: 'Payment Resolution',  policy: 'financeOrOperations' },
+      { to: '/app/admin/disputes',            icon: 'fa-gavel',          label: 'Disputes',            policy: 'operations' },
+      { to: '/app/admin/booking-commitments', icon: 'fa-handshake',      label: 'Booking Commitments', policy: 'financeOrOperations' },
     ],
   },
   {
     label: 'Compliance',
     items: [
-      { to: '/app/admin/certificates',   icon: 'fa-certificate',    label: 'Certificates' },
-      { to: '/app/admin/dojah-admin',    icon: 'fa-id-badge',       label: 'Verifications' },
-      { to: '/app/admin/question-bank',  icon: 'fa-clipboard-list', label: 'Question Bank' },
-      { to: '/app/admin/chat-compliance',icon: 'fa-shield-virus',   label: 'Chat Compliance' },
+      { to: '/app/admin/certificates',  icon: 'fa-certificate',    label: 'Certificates',  policy: 'operations' },
+      { to: '/app/admin/dojah-admin',   icon: 'fa-id-badge',       label: 'Verifications', policy: 'operations' },
+      { to: '/app/admin/question-bank', icon: 'fa-clipboard-list', label: 'Question Bank', policy: 'operations' },
+      { to: '/app/admin/chat-compliance',icon: 'fa-shield-virus',  label: 'Chat Compliance',policy: 'operations' },
     ],
   },
   {
     label: 'Communications',
     items: [
-      { to: '/app/admin/notifications', icon: 'fa-bell',      label: 'Notifications' },
-      { to: '/app/admin/emails',        icon: 'fa-envelope',  label: 'Emails' },
+      { to: '/app/admin/notifications', icon: 'fa-bell',     label: 'Notifications', policy: 'superAdmin' },
+      { to: '/app/admin/emails',        icon: 'fa-envelope', label: 'Emails',        policy: 'superAdmin' },
     ],
   },
   {
     label: 'Platform',
     items: [
-      { to: '/app/admin/training-materials', icon: 'fa-graduation-cap', label: 'Training' },
-      { to: '/app/admin/subscriptions',      icon: 'fa-sync-alt',       label: 'Subscriptions' },
+      { to: '/app/admin/training-materials', icon: 'fa-graduation-cap', label: 'Training',      policy: 'operations' },
+      { to: '/app/admin/subscriptions',      icon: 'fa-sync-alt',       label: 'Subscriptions', policy: 'superAdmin' },
+    ],
+  },
+  {
+    label: 'Data Tools',
+    items: [
+      { to: '/app/admin/data-tools/middle-name-fix', icon: 'fa-broom', label: 'Fix Middle Names', policy: 'operations' },
     ],
   },
 ];
@@ -62,6 +71,19 @@ const AdminSidebar = ({ isOpen, onClose }) => {
   const navigate = useNavigate();
   const { user, handleLogout } = useAuth();
   const [collapsed, setCollapsed] = useState(false);
+
+  const role       = user?.role       || '';
+  const department = user?.department  || user?.Department || '';
+
+  // Filter nav groups/items to only those the current user can access
+  const NAV_GROUPS = useMemo(() => {
+    return ALL_NAV_GROUPS
+      .map(group => ({
+        ...group,
+        items: group.items.filter(item => hasPolicy(item.policy, role, department)),
+      }))
+      .filter(group => group.items.length > 0);
+  }, [role, department]);
 
   const userName = user?.firstName ? `${user.firstName} ${user.lastName || ''}`.trim() : 'Admin';
   const userInitials = getInitials(userName);
@@ -141,7 +163,9 @@ const AdminSidebar = ({ isOpen, onClose }) => {
             {!collapsed && (
               <div className="sidebar-user-info">
                 <span className="sidebar-user-name">{userName}</span>
-                <span className="sidebar-user-role">Administrator</span>
+                <span className="sidebar-user-role">
+                  {role === 'SuperAdmin' ? 'Super Admin' : department || 'Administrator'}
+                </span>
               </div>
             )}
           </div>

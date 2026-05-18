@@ -168,7 +168,7 @@ Please log in to your existing account instead of creating a new one.`);
       lastName: formValues.lastName,
       email: formValues.email,
       // phoneNo: formValues.phone,
-      middleName: "testing",
+      middleName: formValues.middleName?.trim() || null,
       password: formValues.password,
       role: selectedRole,
       ...(selectedRole === "Admin" && department ? { department } : {})

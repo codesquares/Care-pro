@@ -9,6 +9,7 @@ import ClientOrderService from '../../../services/clientOrderService';
 import AddressInput from '../../../components/AddressInput';
 import { toast } from 'react-toastify';
 import { generateUsername } from '../../../utils/usernameGenerator';
+import { getInitials, getAvatarColor } from '../../../utils/avatarHelpers';
 
 /**
  * Enhanced Premium Client Profile Page Component
@@ -495,24 +496,41 @@ const ClientProfile = () => {
         <div className="profile-sidebar">
           <div className="profile-picture-container" style={{ background: 'transparent' }}>
             {console.log('Profile picture URL:', profile?.profilePicture, 'Uploading:', uploadingImage)}
-            <img 
-              key={profile?.profilePicture} // Force re-render when URL changes
-              src={isEditing ? editedProfile?.profilePicture || defaultAvatar : profile?.profilePicture || defaultAvatar}
-              alt="Profile"
-              className="large-profile-picture"
-              onLoad={(e) => console.log('Image loaded successfully. Dimensions:', e.target.naturalWidth, 'x', e.target.naturalHeight, 'URL:', e.target.src)}
-              onError={(e) => {
-                console.error('Failed to load profile picture:', e.target.src);
-                e.target.src = defaultAvatar;
-              }}
-              style={{ 
-                display: 'block',
-                background: 'transparent',
-                position: 'relative',
-                zIndex: 1,
-                opacity: 1
-              }}
-            />
+            {(() => {
+              const picSrc = isEditing ? editedProfile?.profilePicture : profile?.profilePicture;
+              const fullName = `${profile?.firstName || ''} ${profile?.lastName || ''}`.trim();
+              if (picSrc) {
+                return (
+                  <img
+                    key={picSrc}
+                    src={picSrc}
+                    alt="Profile"
+                    className="large-profile-picture"
+                    onLoad={(e) => console.log('Image loaded successfully. Dimensions:', e.target.naturalWidth, 'x', e.target.naturalHeight, 'URL:', e.target.src)}
+                    onError={(e) => {
+                      console.error('Failed to load profile picture:', e.target.src);
+                      e.target.style.display = 'none';
+                      e.target.nextSibling && (e.target.nextSibling.style.display = 'flex');
+                    }}
+                    style={{
+                      display: 'block',
+                      background: 'transparent',
+                      position: 'relative',
+                      zIndex: 1,
+                      opacity: 1
+                    }}
+                  />
+                );
+              }
+              return (
+                <div
+                  className="large-profile-picture client-profile-initials-circle"
+                  style={{ backgroundColor: getAvatarColor(fullName) }}
+                >
+                  {getInitials(fullName)}
+                </div>
+              );
+            })()}
             <input
               type="file"
               ref={fileInputRef}

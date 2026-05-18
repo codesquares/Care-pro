@@ -901,6 +901,34 @@ const adminService = {
     }
   },
 
+  /**
+   * Bulk-clear "testing" middle name for caregivers
+   * PUT /api/Admin/Caregivers/BulkClearMiddleName
+   */
+  bulkClearCaregiverMiddleName: async (adminId, userIds, reason) => {
+    try {
+      const response = await api.put('/Admin/Caregivers/BulkClearMiddleName', { adminId, userIds, reason });
+      return { success: true, data: response.data };
+    } catch (error) {
+      console.error('Error bulk-clearing caregiver middle names:', error);
+      return { success: false, error: error.response?.data?.message || error.message || 'Failed to clear caregiver middle names' };
+    }
+  },
+
+  /**
+   * Bulk-clear "testing" middle name for clients
+   * PUT /api/Admin/Clients/BulkClearMiddleName
+   */
+  bulkClearClientMiddleName: async (adminId, userIds, reason) => {
+    try {
+      const response = await api.put('/Admin/Clients/BulkClearMiddleName', { adminId, userIds, reason });
+      return { success: true, data: response.data };
+    } catch (error) {
+      console.error('Error bulk-clearing client middle names:', error);
+      return { success: false, error: error.response?.data?.message || error.message || 'Failed to clear client middle names' };
+    }
+  },
+
   // ============================================
   // GIGS MANAGEMENT
   // ============================================
