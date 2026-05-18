@@ -24,9 +24,10 @@ const NAV_GROUPS = [
     items: [
       { to: '/app/admin/orders',     icon: 'fa-shopping-cart', label: 'Orders' },
       { to: '/app/admin/gigs',       icon: 'fa-briefcase',     label: 'Gigs' },
-      { to: '/app/admin/withdrawals',icon: 'fa-wallet',        label: 'Withdrawals' },
-      { to: '/app/admin/refunds',    icon: 'fa-money-bill-wave',label: 'Refunds' },
-      { to: '/app/admin/disputes',   icon: 'fa-gavel',         label: 'Disputes' },
+      { to: '/app/admin/withdrawals',         icon: 'fa-wallet',          label: 'Withdrawals' },
+      { to: '/app/admin/refunds',             icon: 'fa-money-bill-wave', label: 'Refunds' },
+      { to: '/app/admin/payment-resolution',  icon: 'fa-wrench',          label: 'Payment Resolution' },
+      { to: '/app/admin/disputes',            icon: 'fa-gavel',           label: 'Disputes' },
     ],
   },
   {
