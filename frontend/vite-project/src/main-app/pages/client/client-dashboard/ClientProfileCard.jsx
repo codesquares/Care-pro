@@ -4,6 +4,7 @@ import "./clientProfileCard.css";
 import defaultAvatar from '../../../../assets/profilecard1.png';
 import { generateUsername } from "../../utils/usernameGenerator";
 import config from "../../../config"; // Centralized API configuration
+import { getInitials, getAvatarColor } from "../../../utils/avatarHelpers";
 
 const ClientProfileCard = () => {
   const navigate = useNavigate();
@@ -60,11 +61,21 @@ const ClientProfileCard = () => {
   
   return (
     <div className="profile-card">
-      <img
-        src={profile?.profilePicture || defaultAvatar}
-        alt="Profile"
-        className="profile-picture"
-      />
+      {profile?.profilePicture ? (
+        <img
+          src={profile.profilePicture}
+          alt="Profile"
+          className="profile-picture"
+          onError={(e) => { e.target.style.display = 'none'; e.target.nextSibling && (e.target.nextSibling.style.display = 'flex'); }}
+        />
+      ) : (
+        <div
+          className="profile-picture profile-picture-initials"
+          style={{ backgroundColor: getAvatarColor(userFullName) }}
+        >
+          {getInitials(userFullName)}
+        </div>
+      )}
       <div className="profile-details">
         <h3 className="profile-name">{userFullName.trim() || 'Welcome!'}</h3>
         {/* <p className="profile-username">@{username || 'guest'}</p> */} {/* TODO: Backend persistence not implemented yet */}

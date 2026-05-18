@@ -23,6 +23,7 @@ import DisputesManagement from './disputes-management/DisputesManagement';
 import RefundManagement from './refund-management/RefundManagement';
 import PaymentResolution from './payment-resolution/PaymentResolution';
 import AnalyticsDashboard from './analytics/AnalyticsDashboard';
+import MiddleNameFix from './data-tools/MiddleNameFix';
 import { useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import DojahDataViewer from '../../components/admin/DojahDataViewer';
@@ -89,6 +90,7 @@ function AdminRoutes() {
                     <Route path="refunds" element={<RefundManagement />} />
                     <Route path="payment-resolution" element={<PaymentResolution />} />
                     <Route path="analytics" element={<AnalyticsDashboard />} />
+                    <Route path="data-tools/middle-name-fix" element={<MiddleNameFix />} />
                     <Route path="care-requests/:requestId" element={<AdminCareRequestDetail />} />
                     <Route path="*" element={<NotFoundPage />} />
                 </Routes>

@@ -523,7 +523,7 @@
   align-items: center;
   justify-content: center;
   z-index: 1000;
-  padding: 2rem;
+  padding: 1rem;
   animation: fadeIn 0.3s ease;
 }
 
@@ -536,8 +536,9 @@
   background: white;
   border-radius: 20px;
   max-width: 1200px;
-  width: 100%;
-  max-height: 90vh;
+  width: min(1200px, 98vw);
+  min-width: min(900px, 96vw);
+  max-height: 92vh;
   overflow-y: auto;
   box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
   animation: slideUp 0.3s ease;
@@ -1001,10 +1002,6 @@
     font-size: 1.5rem;
   }
 
-  .comparison-grid {
-    grid-template-columns: 1fr;
-  }
-
   .verify-stats {
     grid-template-columns: 1fr;
   }
@@ -1023,5 +1020,11 @@
 
   .action-buttons {
     flex-direction: column;
+  }
+}
+
+@media (max-width: 640px) {
+  .comparison-grid {
+    grid-template-columns: 1fr;
   }
 }
