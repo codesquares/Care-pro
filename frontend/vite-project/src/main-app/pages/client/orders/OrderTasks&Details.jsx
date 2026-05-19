@@ -1,4 +1,5 @@
 import { useState, useEffect } from "react";
+import { useSelector } from "react-redux";
 import axios from "axios";
 import { useParams } from "react-router-dom";
 import { ToastContainer, toast } from "react-toastify";
@@ -51,6 +52,19 @@ const MyOrders = () => {
     // Negotiation state
     const [negotiation, setNegotiation] = useState(null);
     const [negotiationLoading, setNegotiationLoading] = useState(false);
+
+    // Re-fetch negotiation when the caregiver submits their proposals (SignalR notification)
+    const latestNotification = useSelector((state) => state.notifications.notifications[0]);
+    useEffect(() => {
+        if (!latestNotification || !negotiation) return;
+        const t = (latestNotification.notificationType || "").toLowerCase().replace(/[\s-]+/g, "_");
+        if (
+            (t === "negotiation_client_submitted" || t === "negotiation_caregiver_submitted") &&
+            latestNotification.relatedEntityId === negotiation.id
+        ) {
+            fetchNegotiationForOrder(orderId);
+        }
+    }, [latestNotification]); // eslint-disable-line react-hooks/exhaustive-deps
 
     // Start-negotiation modal state
     const [showStartNegModal, setShowStartNegModal] = useState(false);
@@ -1135,6 +1149,7 @@ const MyOrders = () => {
                                         </>
                                     ) : negotiation ? (
                                         <NegotiationPanel
+                                            key={negotiation.id + "-" + negotiation.negotiationRound}
                                             negotiation={negotiation}
                                             role="client"
                                             order={order}

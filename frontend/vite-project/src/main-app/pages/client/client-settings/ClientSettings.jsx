@@ -110,11 +110,12 @@ const ClientSettings = () => {
     try {
       const result = await Notification.requestPermission();
       if (result === 'granted') {
-        await subscribeForPush();
+        await Promise.all([subscribeForPush(), new Promise((r) => setTimeout(r, 600))]);
         const updated = await getSubscriptionState();
         setPushState(updated);
         toast.success('Push notifications enabled.');
       } else {
+        await new Promise((r) => setTimeout(r, 400));
         const updated = await getSubscriptionState();
         setPushState(updated);
       }
@@ -129,7 +130,7 @@ const ClientSettings = () => {
   const handleDisablePush = async () => {
     setPushLoading(true);
     try {
-      await unsubscribeFromPush();
+      await Promise.all([unsubscribeFromPush(), new Promise((r) => setTimeout(r, 600))]);
       const updated = await getSubscriptionState();
       setPushState(updated);
       toast.info('Push notifications turned off.');
@@ -144,7 +145,7 @@ const ClientSettings = () => {
   const handleResubscribePush = async () => {
     setPushLoading(true);
     try {
-      await subscribeForPush();
+      await Promise.all([subscribeForPush(), new Promise((r) => setTimeout(r, 600))]);
       const updated = await getSubscriptionState();
       setPushState(updated);
       toast.success('Push notifications re-enabled.');
@@ -1013,8 +1014,8 @@ const ClientSettings = () => {
           </form>
         </div>
 
-        {/* Account Deactivation Card */}
-        <div className="settings-card">
+        {/* Account Deactivation Card — temporarily hidden (no backend endpoint yet) */}
+        {/* <div className="settings-card">
           <h3>Account Deactivation</h3>
           <p className="deactivation-warning">
             When you deactivate your account:
@@ -1047,7 +1048,7 @@ const ClientSettings = () => {
           >
             Deactivate account
           </button>
-        </div>
+        </div> */}
 
         {/* Push Notifications Card */}
         {pushState.supported && (

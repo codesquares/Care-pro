@@ -20,6 +20,7 @@ import VerificationManagement from './verification-management/VerificationManage
 import AdminCareRequestDetail from './care-requests/AdminCareRequestDetail';
 import SubscriptionAdmin from './subscriptions/SubscriptionAdmin';
 import DisputesManagement from './disputes-management/DisputesManagement';
+import IncidentReportDetail from './incidents/IncidentReportDetail';
 import RefundManagement from './refund-management/RefundManagement';
 import PaymentResolution from './payment-resolution/PaymentResolution';
 import AnalyticsDashboard from './analytics/AnalyticsDashboard';
@@ -87,6 +88,7 @@ function AdminRoutes() {
                     <Route path="webhook-data" element={<WebhookDataAdmin />} />
                     <Route path="subscriptions" element={<SubscriptionAdmin />} />
                     <Route path="disputes" element={<DisputesManagement />} />
+                    <Route path="incidents/:id" element={<IncidentReportDetail />} />
                     <Route path="refunds" element={<RefundManagement />} />
                     <Route path="payment-resolution" element={<PaymentResolution />} />
                     <Route path="analytics" element={<AnalyticsDashboard />} />
