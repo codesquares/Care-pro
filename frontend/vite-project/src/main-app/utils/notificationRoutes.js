@@ -248,6 +248,17 @@ const TYPE_MAP = {
   'commitmentconfirmed':         'CommitmentConfirmed',
   'commitment confirmed':        'CommitmentConfirmed',
 
+  // Account Deletion
+  'account_deletion_scheduled':   'AccountDeletionScheduled',
+  'accountdeletionscheduled':     'AccountDeletionScheduled',
+  'account deletion scheduled':   'AccountDeletionScheduled',
+  'account_deletion_cancelled':   'AccountDeletionCancelled',
+  'accountdeletioncancelled':     'AccountDeletionCancelled',
+  'account deletion cancelled':   'AccountDeletionCancelled',
+  'account_permanently_deleted':  'AccountPermanentlyDeleted',
+  'accountpermanentlydeleted':    'AccountPermanentlyDeleted',
+  'account permanently deleted':  'AccountPermanentlyDeleted',
+
   // Certificate
   'certificate_uploaded':         'CertificateUploaded',
   'certificateuploaded':          'CertificateUploaded',
@@ -292,6 +303,7 @@ const KNOWN_CANONICAL = new Set([
   'ContractPendingClientApproval', 'ContractRevised',
   'CommitmentConfirmed',
   'CertificateUploaded', 'CertificateVerification',
+  'AccountDeletionScheduled', 'AccountDeletionCancelled', 'AccountPermanentlyDeleted',
 ]);
 
 /**
@@ -654,6 +666,23 @@ export const getNotificationRoute = (notification, userRole) => {
       return null;
     }
 
+    // ── Account Deletion ─────────────────────────────────────────────
+    case 'AccountDeletionScheduled':
+      // Route to settings so the user can see/cancel their pending deletion
+      if (isClient) return `/app/client/settings`;
+      if (isCaregiver) return `/app/caregiver/settings`;
+      return null;
+
+    case 'AccountDeletionCancelled':
+      // Informational — route to settings as confirmation
+      if (isClient) return `/app/client/settings`;
+      if (isCaregiver) return `/app/caregiver/settings`;
+      return null;
+
+    case 'AccountPermanentlyDeleted':
+      // Email-only notification — no in-app destination
+      return null;
+
     default:
       console.warn(`[NotificationRoutes] No route for type: "${type}" (raw: "${notification.type}")`, notification);
       return null;
@@ -754,6 +783,12 @@ export const getNotificationActionLabel = (rawType) => {
     case 'SystemNotice':
     case 'SystemAlert':
       return 'View';
+    case 'AccountDeletionScheduled':
+      return 'Cancel Deletion';
+    case 'AccountDeletionCancelled':
+      return 'View Settings';
+    case 'AccountPermanentlyDeleted':
+      return 'View Details';
     default:
       return 'View Details';
   }
@@ -851,6 +886,12 @@ export const getNotificationTypeIcon = (rawType) => {
     case 'GigDeletionReminder':
       return '⚠️';
     case 'GigPermanentlyDeleted':
+      return 'ℹ️';
+    case 'AccountDeletionScheduled':
+      return '🗑️';
+    case 'AccountDeletionCancelled':
+      return '✅';
+    case 'AccountPermanentlyDeleted':
       return 'ℹ️';
     case 'DisputeRaised':
       return '⚖️';

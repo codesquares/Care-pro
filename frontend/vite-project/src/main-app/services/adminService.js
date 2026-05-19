@@ -2814,6 +2814,62 @@ const adminService = {
       return { success: false, error: error.response?.data?.message || error.message || 'Failed to fetch snapshots' };
     }
   },
+
+  // ── Account Deletion (Admin) ─────────────────────────────────────────────
+
+  /**
+   * Admin: schedule a caregiver account for permanent deletion (30-day grace).
+   * DELETE /api/Admin/Caregivers/{caregiverId}/account
+   * @param {string} caregiverId
+   * @param {string} reason — mandatory, must not be empty
+   * @returns {Promise<{success, message?, permanentDeletionDate?, error?}>}
+   */
+  deleteCaregiverAccount: async (caregiverId, reason) => {
+    try {
+      if (!caregiverId) return { success: false, error: 'Caregiver ID is required' };
+      if (!reason || !reason.trim()) return { success: false, error: 'Reason is required' };
+      const response = await api.delete(`/Admin/Caregivers/${caregiverId}/account`, {
+        data: { reason },
+      });
+      return { success: true, ...response.data };
+    } catch (error) {
+      console.error('Error deleting caregiver account (admin):', error);
+      const data = error.response?.data;
+      return {
+        success: false,
+        message: data?.message || error.message || 'Failed to delete caregiver account',
+        blockers: data?.blockers || [],
+        error: data?.message || error.message,
+      };
+    }
+  },
+
+  /**
+   * Admin: schedule a client account for permanent deletion (30-day grace).
+   * DELETE /api/Admin/Clients/{clientId}/account
+   * @param {string} clientId
+   * @param {string} reason — mandatory, must not be empty
+   * @returns {Promise<{success, message?, permanentDeletionDate?, error?}>}
+   */
+  deleteClientAccount: async (clientId, reason) => {
+    try {
+      if (!clientId) return { success: false, error: 'Client ID is required' };
+      if (!reason || !reason.trim()) return { success: false, error: 'Reason is required' };
+      const response = await api.delete(`/Admin/Clients/${clientId}/account`, {
+        data: { reason },
+      });
+      return { success: true, ...response.data };
+    } catch (error) {
+      console.error('Error deleting client account (admin):', error);
+      const data = error.response?.data;
+      return {
+        success: false,
+        message: data?.message || error.message || 'Failed to delete client account',
+        blockers: data?.blockers || [],
+        error: data?.message || error.message,
+      };
+    }
+  },
 };
 
 export default adminService;

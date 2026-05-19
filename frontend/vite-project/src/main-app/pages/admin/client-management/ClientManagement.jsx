@@ -15,6 +15,12 @@ const ClientManagement = () => {
   const [exporting, setExporting] = useState(false);
   const [exportError, setExportError] = useState(null);
 
+  // Admin account deletion state
+  const [deleteReason, setDeleteReason] = useState('');
+  const [deleteLoading, setDeleteLoading] = useState(false);
+  const [deleteResult, setDeleteResult] = useState(null);
+  const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
+
   useEffect(() => {
     fetchClients();
   }, []);
@@ -82,6 +88,9 @@ const ClientManagement = () => {
   const closeModal = () => {
     setShowModal(false);
     setSelectedClient(null);
+    setDeleteReason('');
+    setDeleteResult(null);
+    setShowDeleteConfirm(false);
   };
 
   const handleExport = async () => {
@@ -300,6 +309,99 @@ const ClientManagement = () => {
                 <h3>Account Information</h3>
                 <p><strong>Created At:</strong> {new Date(selectedClient.createdAt).toLocaleString()}</p>
                 <p><strong>User ID:</strong> {selectedClient.id}</p>
+              </div>
+
+              {/* Danger Zone */}
+              <div className="detail-section" style={{ border: '1px solid #fca5a5', borderRadius: '8px', padding: '1rem', background: '#fef2f2' }}>
+                <h3 style={{ color: '#b91c1c', marginTop: 0 }}>Danger Zone — Delete Account</h3>
+                {deleteResult?.success ? (
+                  <div style={{ color: '#166534', background: '#dcfce7', borderRadius: '6px', padding: '0.75rem' }}>
+                    <p style={{ margin: 0, fontWeight: 600 }}>Account deletion scheduled.</p>
+                    <p style={{ margin: '0.25rem 0 0' }}>
+                      Permanent deletion on: <strong>{new Date(deleteResult.permanentDeletionDate).toLocaleDateString('en-GB', { day: 'numeric', month: 'long', year: 'numeric' })}</strong>
+                    </p>
+                  </div>
+                ) : (
+                  <>
+                    {deleteResult?.message && (
+                      <div style={{ color: '#b91c1c', background: '#fee2e2', borderRadius: '6px', padding: '0.75rem', marginBottom: '0.75rem' }}>
+                        <p style={{ margin: 0, fontWeight: 600 }}>{deleteResult.message}</p>
+                        {deleteResult.blockers?.length > 0 && (
+                          <ul style={{ paddingLeft: '1.25rem', margin: '0.5rem 0 0' }}>
+                            {deleteResult.blockers.map((b, i) => <li key={i}>{b}</li>)}
+                          </ul>
+                        )}
+                      </div>
+                    )}
+                    {!showDeleteConfirm ? (
+                      <>
+                        <p style={{ marginBottom: '0.5rem', fontSize: '0.875rem' }}>
+                          Scheduling deletion will soft-delete this client's account immediately.
+                          Their data will be permanently anonymised after 30 days.
+                        </p>
+                        <div style={{ marginBottom: '0.75rem' }}>
+                          <label style={{ display: 'block', marginBottom: '0.25rem', fontWeight: 600, fontSize: '0.875rem' }}>
+                            Reason <span style={{ color: '#ef4444' }}>*</span>
+                          </label>
+                          <textarea
+                            rows={2}
+                            placeholder="Enter reason for deletion (required)"
+                            value={deleteReason}
+                            onChange={(e) => setDeleteReason(e.target.value)}
+                            style={{ width: '100%', resize: 'vertical', padding: '0.5rem', borderRadius: '6px', border: '1px solid #fca5a5', fontSize: '0.875rem' }}
+                          />
+                        </div>
+                        <button
+                          onClick={() => {
+                            if (!deleteReason.trim()) {
+                              alert('Please enter a reason before proceeding.');
+                              return;
+                            }
+                            setShowDeleteConfirm(true);
+                          }}
+                          style={{
+                            background: '#ef4444', color: '#fff', border: 'none',
+                            borderRadius: '6px', padding: '0.5rem 1rem', cursor: 'pointer', fontWeight: 600,
+                          }}
+                        >
+                          Delete Account
+                        </button>
+                      </>
+                    ) : (
+                      <>
+                        <p style={{ fontWeight: 600, color: '#b91c1c', marginBottom: '0.75rem' }}>
+                          Are you sure? This will immediately soft-delete the client's account.
+                          Their data will be permanently erased after 30 days.
+                        </p>
+                        <div style={{ display: 'flex', gap: '0.75rem' }}>
+                          <button
+                            onClick={() => setShowDeleteConfirm(false)}
+                            style={{ padding: '0.5rem 1rem', borderRadius: '6px', border: '1px solid #d1d5db', background: '#fff', cursor: 'pointer' }}
+                          >
+                            Go back
+                          </button>
+                          <button
+                            disabled={deleteLoading}
+                            onClick={async () => {
+                              setDeleteLoading(true);
+                              setDeleteResult(null);
+                              const result = await adminService.deleteClientAccount(selectedClient.id, deleteReason);
+                              setDeleteResult(result);
+                              setShowDeleteConfirm(false);
+                              setDeleteLoading(false);
+                            }}
+                            style={{
+                              background: '#b91c1c', color: '#fff', border: 'none',
+                              borderRadius: '6px', padding: '0.5rem 1rem', cursor: 'pointer', fontWeight: 600,
+                            }}
+                          >
+                            {deleteLoading ? 'Processing...' : 'Yes, Delete Account'}
+                          </button>
+                        </div>
+                      </>
+                    )}
+                  </>
+                )}
               </div>
             </div>
           </div>

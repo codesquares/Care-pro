@@ -3,6 +3,7 @@ import { useDispatch, useSelector } from 'react-redux';
 import { fetchNotifications, fetchUnreadCount, notificationReceived, unreadCountUpdated, clearNotifications } from './main-app/Redux/slices/notificationSlice';
 import { useAuth } from './main-app/context/AuthContext';
 import signalRNotificationService from './main-app/services/signalRNotificationService';
+import { subscribeForPush } from './main-app/services/pushService';
 
 const CARE_REQUEST_TYPES = [
   'care_request_matched',
@@ -73,6 +74,24 @@ const NotificationPoller = () => {
       seenIdsRef.current.add(n.id);
     }
   }, [notifications]);
+
+  // ── Re-subscribe when the SW rotates the push subscription ──
+  useEffect(() => {
+    if (!isAuthenticated || !('serviceWorker' in navigator)) return;
+
+    const handleSWMessage = (event) => {
+      if (event.data?.type === 'PUSH_SUBSCRIPTION_CHANGED') {
+        subscribeForPush().catch((err) =>
+          console.warn('[NotificationPoller] Push re-subscribe failed:', err)
+        );
+      }
+    };
+
+    navigator.serviceWorker.addEventListener('message', handleSWMessage);
+    return () => {
+      navigator.serviceWorker.removeEventListener('message', handleSWMessage);
+    };
+  }, [isAuthenticated]);
 
   return null;
 };
