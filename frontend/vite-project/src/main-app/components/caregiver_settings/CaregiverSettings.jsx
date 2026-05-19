@@ -7,6 +7,7 @@ import caregiverBankAccountService from "../../services/caregiverBankAccountServ
 import ProfessionalProfileForms from "./ProfessionalProfileForms";
 import accountDeletionService from "../../services/accountDeletionService";
 import { useAuth } from "../../context/AuthContext";
+import { subscribeForPush, unsubscribeFromPush, getSubscriptionState } from "../../services/pushService";
 
 const NIGERIAN_BANKS = [
   'Access Bank', 'Guaranty Trust Bank', 'First Bank of Nigeria',
@@ -45,6 +46,10 @@ const CaregiverSettings = () => {
   const [bankSaving, setBankSaving] = useState(false);
   const [hasSavedBank, setHasSavedBank] = useState(false);
   const [isEditingBank, setIsEditingBank] = useState(false);
+
+  // Push notifications state
+  const [pushState, setPushState] = useState({ supported: false, permission: 'default', isSubscribed: false });
+  const [pushLoading, setPushLoading] = useState(false);
 
   const userDetails = JSON.parse(localStorage.getItem("userDetails")) || {};
 
@@ -103,6 +108,62 @@ const CaregiverSettings = () => {
       fetchBankAccount();
     }
   }, []);
+
+  // Load push subscription state on mount
+  useEffect(() => {
+    getSubscriptionState().then(setPushState).catch(() => {});
+  }, []);
+
+  const handleEnablePush = async () => {
+    setPushLoading(true);
+    try {
+      const result = await Notification.requestPermission();
+      if (result === 'granted') {
+        await subscribeForPush();
+        const updated = await getSubscriptionState();
+        setPushState(updated);
+        toast.success('Push notifications enabled.');
+      } else {
+        const updated = await getSubscriptionState();
+        setPushState(updated);
+      }
+    } catch (err) {
+      console.error('[CaregiverSettings] Enable push failed:', err);
+      toast.error('Could not enable push notifications.');
+    } finally {
+      setPushLoading(false);
+    }
+  };
+
+  const handleDisablePush = async () => {
+    setPushLoading(true);
+    try {
+      await unsubscribeFromPush();
+      const updated = await getSubscriptionState();
+      setPushState(updated);
+      toast.info('Push notifications turned off.');
+    } catch (err) {
+      console.error('[CaregiverSettings] Disable push failed:', err);
+      toast.error('Could not turn off push notifications.');
+    } finally {
+      setPushLoading(false);
+    }
+  };
+
+  const handleResubscribePush = async () => {
+    setPushLoading(true);
+    try {
+      await subscribeForPush();
+      const updated = await getSubscriptionState();
+      setPushState(updated);
+      toast.success('Push notifications re-enabled.');
+    } catch (err) {
+      console.error('[CaregiverSettings] Re-subscribe push failed:', err);
+      toast.error('Could not re-enable push notifications.');
+    } finally {
+      setPushLoading(false);
+    }
+  };
 
   const handlePasswordChange = async () => {
     const userDetails = JSON.parse(localStorage.getItem("userDetails"));
@@ -361,6 +422,40 @@ const CaregiverSettings = () => {
             <h3>Complete your Professional Profile</h3>
             <ProfessionalProfileForms />
           </div>
+
+          {/* ── Push Notifications ──────────────────────────────────────────── */}
+          {pushState.supported && (
+            <div className="settings-card">
+              <h3>Push Notifications</h3>
+              <p style={{ marginBottom: '1rem', color: '#6b7280', fontSize: '0.875rem' }}>
+                Receive alerts for job matches, visit reminders, and wallet updates even when the app is closed.
+              </p>
+              {pushState.permission === 'denied' ? (
+                <p style={{ color: '#ef4444' }}>
+                  Notifications are blocked by your browser. Open your browser settings to allow them for this site.
+                </p>
+              ) : pushState.permission === 'granted' && pushState.isSubscribed ? (
+                <div style={{ display: 'flex', alignItems: 'center', gap: '1rem' }}>
+                  <span style={{ color: '#10b981', fontWeight: 500 }}>&#10003; Notifications are On</span>
+                  <button
+                    className="deactivate-btn"
+                    onClick={handleDisablePush}
+                    disabled={pushLoading}
+                  >
+                    {pushLoading ? 'Updating...' : 'Turn Off'}
+                  </button>
+                </div>
+              ) : pushState.permission === 'granted' && !pushState.isSubscribed ? (
+                <button className="save-changes-btn" onClick={handleResubscribePush} disabled={pushLoading}>
+                  {pushLoading ? 'Updating...' : 'Re-enable Notifications'}
+                </button>
+              ) : (
+                <button className="save-changes-btn" onClick={handleEnablePush} disabled={pushLoading}>
+                  {pushLoading ? 'Requesting...' : 'Enable Notifications'}
+                </button>
+              )}
+            </div>
+          )}
 
           {/* ── Delete Account (Danger Zone) ───────────────────────────────── */}
           <div className="settings-card" style={{ borderColor: '#ef4444' }}>

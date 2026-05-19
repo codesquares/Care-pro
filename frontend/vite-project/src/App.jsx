@@ -28,7 +28,7 @@ import ConfirmEmailPage from './main-app/pages/ConfirmEmailPage';
 import ResendConfirmationPage from './main-app/pages/ResendConfirmationPage';
 import UnauthorizedPage from './main-app/pages/UnauthorizedPage';
 import CancelAccountDeletion from './main-app/pages/CancelAccountDeletion';
-import { ToastContainer } from 'react-toastify';
+import { ToastContainer, toast } from 'react-toastify';
 import 'react-toastify/dist/ReactToastify.css';
 import ProtectedRoute from './main-app/components/auth/ProtectedRoute';
 import MainAppRoutes from './main-app/routes';
@@ -106,6 +106,44 @@ function App() {
 function AppContent() {
   const location = useLocation();
   const { user, isAuthenticated } = useAuth();
+
+  // Register the service worker and show a toast when an update is available.
+  useEffect(() => {
+    if (!('serviceWorker' in navigator)) return;
+    navigator.serviceWorker
+      .register('/sw.js', { updateViaCache: 'none' })
+      .then((reg) => {
+        reg.addEventListener('updatefound', () => {
+          const newWorker = reg.installing;
+          if (!newWorker) return;
+          newWorker.addEventListener('statechange', () => {
+            if (
+              newWorker.state === 'installed' &&
+              navigator.serviceWorker.controller
+            ) {
+              toast.info(
+                <span>
+                  Update available!{' '}
+                  <button
+                    style={{ marginLeft: 8, padding: '2px 10px', cursor: 'pointer', borderRadius: 4, border: 'none', background: '#00B4A6', color: '#fff' }}
+                    onClick={() => window.location.reload()}
+                  >
+                    Refresh
+                  </button>
+                </span>,
+                {
+                  autoClose: false,
+                  closeOnClick: false,
+                  toastId: 'sw-update',
+                  containerId: 'main-toast-container',
+                }
+              );
+            }
+          });
+        });
+      })
+      .catch((err) => console.warn('[SW] Registration failed:', err));
+  }, []);
 
   // Define unprotected routes
   const unprotectedRoutes = [

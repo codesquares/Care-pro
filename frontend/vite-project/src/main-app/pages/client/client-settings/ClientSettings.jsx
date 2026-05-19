@@ -8,6 +8,7 @@ import ClientSettingsService from "../../../services/ClientSettingsService";
 import ClientProfileHeader from "./ClientProfileHeader";
 import accountDeletionService from "../../../services/accountDeletionService";
 import "./ClientSettings.css";
+import { subscribeForPush, unsubscribeFromPush, getSubscriptionState } from "../../../services/pushService";
 
 /**
  * Enhanced Client Settings Page Component - Hybrid Design
@@ -44,6 +45,10 @@ const ClientSettings = () => {
   const [deleteLoading, setDeleteLoading] = useState(false);
   const [deleteBlockers, setDeleteBlockers] = useState([]);
   const [pendingDeletionDate, setPendingDeletionDate] = useState(null);
+
+  // Push notifications state
+  const [pushState, setPushState] = useState({ supported: false, permission: 'default', isSubscribed: false });
+  const [pushLoading, setPushLoading] = useState(false);
 
   // Form states
   const [accountForm, setAccountForm] = useState({
@@ -94,6 +99,62 @@ const ClientSettings = () => {
     serviceUpdates: true,
     promotions: false
   });
+
+  // Load push subscription state on mount
+  useEffect(() => {
+    getSubscriptionState().then(setPushState).catch(() => {});
+  }, []);
+
+  const handleEnablePush = async () => {
+    setPushLoading(true);
+    try {
+      const result = await Notification.requestPermission();
+      if (result === 'granted') {
+        await subscribeForPush();
+        const updated = await getSubscriptionState();
+        setPushState(updated);
+        toast.success('Push notifications enabled.');
+      } else {
+        const updated = await getSubscriptionState();
+        setPushState(updated);
+      }
+    } catch (err) {
+      console.error('[ClientSettings] Enable push failed:', err);
+      toast.error('Could not enable push notifications.');
+    } finally {
+      setPushLoading(false);
+    }
+  };
+
+  const handleDisablePush = async () => {
+    setPushLoading(true);
+    try {
+      await unsubscribeFromPush();
+      const updated = await getSubscriptionState();
+      setPushState(updated);
+      toast.info('Push notifications turned off.');
+    } catch (err) {
+      console.error('[ClientSettings] Disable push failed:', err);
+      toast.error('Could not turn off push notifications.');
+    } finally {
+      setPushLoading(false);
+    }
+  };
+
+  const handleResubscribePush = async () => {
+    setPushLoading(true);
+    try {
+      await subscribeForPush();
+      const updated = await getSubscriptionState();
+      setPushState(updated);
+      toast.success('Push notifications re-enabled.');
+    } catch (err) {
+      console.error('[ClientSettings] Re-subscribe push failed:', err);
+      toast.error('Could not re-enable push notifications.');
+    } finally {
+      setPushLoading(false);
+    }
+  };
 
   useEffect(() => {
     const fetchClientInfo = async () => {
@@ -987,6 +1048,40 @@ const ClientSettings = () => {
             Deactivate account
           </button>
         </div>
+
+        {/* Push Notifications Card */}
+        {pushState.supported && (
+          <div className="settings-card">
+            <h3>Push Notifications</h3>
+            <p style={{ marginBottom: '1rem', color: '#6b7280', fontSize: '0.875rem' }}>
+              Get alerts for caregiver updates, booking confirmations, and messages even when the app is closed.
+            </p>
+            {pushState.permission === 'denied' ? (
+              <p style={{ color: '#ef4444' }}>
+                Notifications are blocked by your browser. Open your browser settings to allow them for this site.
+              </p>
+            ) : pushState.permission === 'granted' && pushState.isSubscribed ? (
+              <div style={{ display: 'flex', alignItems: 'center', gap: '1rem' }}>
+                <span style={{ color: '#10b981', fontWeight: 500 }}>&#10003; Notifications are On</span>
+                <button
+                  className="deactivate-btn"
+                  onClick={handleDisablePush}
+                  disabled={pushLoading}
+                >
+                  {pushLoading ? 'Updating...' : 'Turn Off'}
+                </button>
+              </div>
+            ) : pushState.permission === 'granted' && !pushState.isSubscribed ? (
+              <button className="save-btn" onClick={handleResubscribePush} disabled={pushLoading}>
+                {pushLoading ? 'Updating...' : 'Re-enable Notifications'}
+              </button>
+            ) : (
+              <button className="save-btn" onClick={handleEnablePush} disabled={pushLoading}>
+                {pushLoading ? 'Requesting...' : 'Enable Notifications'}
+              </button>
+            )}
+          </div>
+        )}
 
         {/* Delete Account (Danger Zone) Card */}
         <div className="settings-card" style={{ borderColor: '#ef4444' }}>
