@@ -13,6 +13,7 @@ const SUCCESS_TYPES = new Set([
   'VisitApproved', 'OrderCompleted', 'WithdrawalCompleted',
   'BookingConfirmed', 'NegotiationAgreed', 'NegotiationBothAgreed',
   'ContractApproved', 'RefundApproved',
+  'CommitmentConfirmed',
 ]);
 
 // Notification types that show an amber warning toast

@@ -521,11 +521,22 @@ export const getNotificationRoute = (notification, userRole) => {
       if (isAdmin) return `/app/admin/orders`;
       return null;
 
-    // ── Commitment fee confirmed (relatedEntityId = gigId) ─
+    // ── Commitment fee confirmed ──────────────────────────
+    // senderId = the other party in the conversation
+    // relatedEntityId = gigId (fallback only)
     case 'CommitmentConfirmed':
+      if (isClient) {
+        // Client paid — CTA is to chat with the caregiver (senderId = caregiver)
+        if (senderId) return `/app/client/message/${senderId}`;
+        return `/app/client/message`;
+      }
+      if (isCaregiver) {
+        // Caregiver notified — CTA is to open the conversation with the client (senderId = client)
+        if (senderId) return `/app/caregiver/message/${senderId}`;
+        return `/app/caregiver/message`;
+      }
+      // Last-resort deep link to the gig page
       if (relatedEntityId) return `/service/${relatedEntityId}`;
-      if (isClient) return `/app/client/dashboard`;
-      if (isCaregiver) return `/app/caregiver/dashboard`;
       return null;
 
     // ── Certificate notifications ────────────────────────
@@ -966,7 +977,7 @@ export const getNotificationActionLabel = (rawType) => {
     case 'SubscriptionSuspended':
       return 'View Subscription';
     case 'CommitmentConfirmed':
-      return 'View Service';
+      return 'Chat Now';
     case 'ContractPendingClientApproval':
     case 'ContractRevised':
       return 'View Contract';

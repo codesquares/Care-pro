@@ -6,6 +6,7 @@ import ClientReviewService from "../../../services/clientReviewService.js";
 import ContractService from "../../../services/contractService.js";
 import OrderTasksService from "../../../services/orderTasksService.js";
 import ClientOrderService from "../../../services/clientOrderService.js";
+import paymentReceiptService from "../../../services/paymentReceiptService.js";
 import config from "../../../config";
 import "../client-dashboard/marketplaceHero.css";
 import "../../care-giver/orders/CaregiverOrders.css";
@@ -204,6 +205,19 @@ const MyOrders = () => {
     navigate(`/app/client/my-order/${orderId}`);
   };
 
+  const [downloadingTxRef, setDownloadingTxRef] = useState(null);
+
+  const handleReceiptDownload = async (e, txRef) => {
+    e.stopPropagation();
+    if (downloadingTxRef) return;
+    setDownloadingTxRef(txRef);
+    const result = await paymentReceiptService.downloadOrderReceipt(txRef);
+    setDownloadingTxRef(null);
+    if (!result.success) {
+      toast.error(result.error || 'Failed to download receipt.', { containerId: 'main-toast-container' });
+    }
+  };
+
   const getPageNumbers = () => {
     const pages = [];
     const max = 5;
@@ -386,6 +400,17 @@ const MyOrders = () => {
                     >
                       {getActionText(order.clientOrderStatus)}
                     </button>
+                    {order.clientOrderStatus?.toLowerCase() === 'completed' && order.transactionReference && (
+                      <button
+                        className="cg-action-btn cg-action-btn--receipt"
+                        title="Download payment receipt"
+                        onClick={(e) => handleReceiptDownload(e, order.transactionReference)}
+                        disabled={downloadingTxRef === order.transactionReference}
+                        style={{ marginTop: '8px', fontSize: '0.78rem' }}
+                      >
+                        {downloadingTxRef === order.transactionReference ? 'Downloading…' : '⬇ Receipt'}
+                      </button>
+                    )}
                   </div>
                 </div>
               ))}

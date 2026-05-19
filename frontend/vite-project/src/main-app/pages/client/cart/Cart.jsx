@@ -101,6 +101,10 @@ const Cart = () => {
       if (!service) return;
       
       const user = JSON.parse(localStorage.getItem("userDetails"));
+
+      // Clear any stale transaction data from a previous attempt (browser-back edge case)
+      localStorage.removeItem('transactionReference');
+      localStorage.removeItem('paymentBreakdown');
     
       try {
         const payload = {

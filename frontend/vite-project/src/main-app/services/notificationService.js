@@ -42,7 +42,7 @@ const generateTitle = (type, senderId) => {
     case 'BookingConfirmed':
       return `🛒 New booking confirmed`;
     case 'CommitmentConfirmed':
-      return `🔓 Chat access unlocked`;
+      return `🔓 Gig Access Unlocked`;
     case 'task_proposed_by_client':
       return `📝 New task(s) proposed on visit`;
     case 'task_proposal_accepted':
@@ -118,7 +118,7 @@ const generateContent = (type, senderId) => {
     case 'BookingConfirmed':
       return `A new booking has been confirmed. Tap to see the order details.`;
     case 'CommitmentConfirmed':
-      return `Commitment fee paid — chat is now unlocked. Tap to view the service.`;
+      return `You've unlocked access to chat and can now discuss care details directly.`;
     case 'task_proposed_by_client':
       return `The client has proposed new task(s) on a visit. Please review and accept or reject.`;
     case 'task_proposal_accepted':
