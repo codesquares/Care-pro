@@ -79,7 +79,11 @@ const NegotiationPanel = ({ negotiation: initial, role, order, onNegotiationUpda
   const [addressGeoCoords, setAddressGeoCoords] = useState(null);
   const [specialRequirements, setSpecialRequirements] = useState(initial?.specialClientRequirements || "");
   const [additionalNotes, setAdditionalNotes] = useState(initial?.additionalNotes || "");
-  const [agreedStartDate, setAgreedStartDate] = useState(initial?.agreedStartDate ? initial.agreedStartDate.split("T")[0] : "");
+  const [agreedStartDate, setAgreedStartDate] = useState(
+    initial?.agreedStartDate
+      ? initial.agreedStartDate.split("T")[0]
+      : (initial?.id ? localStorage.getItem(`neg_start_${initial.id}`) || "" : "")
+  );
 
   // Add-task form
   const [newTask, setNewTask] = useState("");
@@ -103,12 +107,32 @@ const NegotiationPanel = ({ negotiation: initial, role, order, onNegotiationUpda
   const iAgreed = NegotiationService.hasMyPartyAgreed(neg, role);
   const theyAgreed = role === "client" ? neg?.caregiverAgreed : neg?.clientAgreed;
 
+  // Effective start date — DTO value if present, else localStorage fallback.
+  // Survives SignalR-triggered re-fetches that return null before the backend persists the value.
+  const effectiveStartDate = neg?.agreedStartDate
+    ? neg.agreedStartDate.split("T")[0]
+    : (neg?.id ? localStorage.getItem(`neg_start_${neg.id}`) || "" : "");
+
   const myProposedTasks = role === "client" ? neg?.clientProposedTasks : neg?.caregiverProposedTasks;
   const theirTasks = role === "client" ? neg?.caregiverProposedTasks : neg?.clientProposedTasks;
   const theirSchedule = role === "client" ? neg?.caregiverProposedSchedule : neg?.clientProposedSchedule;
   const myLatestNote = role === "client" ? neg?.lastClientNote : neg?.lastCaregiverNote;
   const theirNote = role === "client" ? neg?.lastCaregiverNote : neg?.lastClientNote;
   const theirLabel = role === "client" ? "Caregiver" : "Client";
+
+  // Warn both parties when their schedules don’t match — they need to align before agreeing
+  const scheduleMismatch = !isTerminal && (() => {
+    if (!theirSchedule?.length || !mySchedule?.length) return false;
+    if (theirSchedule.length !== mySchedule.length) return true;
+    return !theirSchedule.every((ts) =>
+      mySchedule.some(
+        (ms) =>
+          ms.dayOfWeek === ts.dayOfWeek &&
+          ms.startTime === ts.startTime &&
+          ms.endTime === ts.endTime
+      )
+    );
+  })();
   const myLabel = role === "client" ? "You (Client)" : "You (Caregiver)";
 
   // Schedule validation — require the correct number of unique days
@@ -135,6 +159,9 @@ const NegotiationPanel = ({ negotiation: initial, role, order, onNegotiationUpda
 
   const handleSave = async (submitForReview = false) => {
     setSaving(true);
+    // Always send the persisted start date — state may be "" if a SignalR re-fetch returned
+    // null from the backend, but the stored localStorage value is the source of truth.
+    const _effDate = agreedStartDate || (neg?.id ? localStorage.getItem(`neg_start_${neg.id}`) || "" : "");
     let payload;
     if (role === "client") {
       payload = {
@@ -143,7 +170,7 @@ const NegotiationPanel = ({ negotiation: initial, role, order, onNegotiationUpda
         specialClientRequirements: specialRequirements,
         serviceAddress,
         accessInstructions,
-        agreedStartDate: agreedStartDate ? `${agreedStartDate}T00:00:00Z` : undefined,
+        agreedStartDate: _effDate ? `${_effDate}T00:00:00Z` : undefined,
         submitForCaregiverReview: submitForReview,
         // Geocoded coordinates from Google Maps — used for caregiver check-in validation
         ...(addressGeoCoords && {
@@ -157,7 +184,7 @@ const NegotiationPanel = ({ negotiation: initial, role, order, onNegotiationUpda
         caregiverProposedTasks: myTasks,
         caregiverProposedSchedule: mySchedule,
         additionalNotes,
-        agreedStartDate: agreedStartDate ? `${agreedStartDate}T00:00:00Z` : undefined,
+        agreedStartDate: _effDate ? `${_effDate}T00:00:00Z` : undefined,
         submitForClientReview: submitForReview,
       };
     }
@@ -177,9 +204,17 @@ const NegotiationPanel = ({ negotiation: initial, role, order, onNegotiationUpda
             : fresh.clientProposedSchedule || []));
       setServiceAddress(fresh.serviceAddress || "");
       setAccessInstructions(fresh.accessInstructions || "");
-      setAgreedStartDate(fresh.agreedStartDate ? fresh.agreedStartDate.split("T")[0] : "");
+      // Persist to localStorage so the date survives future re-fetches that return null
+      const _savedDate = fresh.agreedStartDate ? fresh.agreedStartDate.split("T")[0] : "";
+      if (_savedDate && neg?.id) localStorage.setItem(`neg_start_${neg.id}`, _savedDate);
+      setAgreedStartDate(_savedDate || (neg?.id ? localStorage.getItem(`neg_start_${neg.id}`) || "" : ""));
       setEditMode(false);
-      toast.success(submitForReview ? "Submitted for review!" : "Draft saved.");
+      if (submitForReview) {
+        toast.success("Submitted for review!");
+        setTimeout(() => window.location.reload(), 1500);
+      } else {
+        toast.success("Draft saved.");
+      }
     } else {
       toast.error(result.error || "Failed to save.");
     }
@@ -188,7 +223,7 @@ const NegotiationPanel = ({ negotiation: initial, role, order, onNegotiationUpda
 
   const handleAgree = async () => {
     if (role === 'client') {
-      if (!neg?.agreedStartDate) {
+      if (!effectiveStartDate) {
         toast.error("Please set a contract start date before agreeing.");
         return;
       }
@@ -203,6 +238,7 @@ const NegotiationPanel = ({ negotiation: initial, role, order, onNegotiationUpda
     if (result.success) {
       update(result.data);
       toast.success(result.data.status === "BothAgreed" ? "🎉 Both parties agreed! Contract is ready." : "Agreement noted — waiting for the other party.");
+      setTimeout(() => window.location.reload(), 1500);
     } else {
       toast.error(result.error || "Failed to agree.");
     }
@@ -215,16 +251,18 @@ const NegotiationPanel = ({ negotiation: initial, role, order, onNegotiationUpda
       toast.error("Service address is missing. The client must provide it before generating the contract.");
       return;
     }
-    if (!neg?.agreedStartDate) {
+    if (!effectiveStartDate) {
       toast.error("Contract start date is required. Either party must set it before generating the contract.");
       return;
     }
     setConverting(true);
     const result = await NegotiationService.convertToContract(neg.id);
     if (result.success) {
+      if (neg?.id) localStorage.removeItem(`neg_start_${neg.id}`);
       update(result.data);
       if (onContractCreated) onContractCreated(result.data.contractId, result.data);
       toast.success("Contract generated and is now active!");
+      setTimeout(() => window.location.reload(), 1500);
     } else {
       toast.error(result.error || "Failed to generate contract.");
     }
@@ -235,9 +273,11 @@ const NegotiationPanel = ({ negotiation: initial, role, order, onNegotiationUpda
     setAbandoning(true);
     const result = await NegotiationService.abandon(neg.id, abandonReason);
     if (result.success) {
+      if (neg?.id) localStorage.removeItem(`neg_start_${neg.id}`);
       update(result.data);
       setShowAbandon(false);
       toast.info("Negotiation cancelled.");
+      setTimeout(() => window.location.reload(), 1500);
     } else {
       toast.error(result.error || "Failed to cancel.");
     }
@@ -247,8 +287,13 @@ const NegotiationPanel = ({ negotiation: initial, role, order, onNegotiationUpda
   // When the user opens edit mode, re-sync agreedStartDate from the persisted DTO
   // so any drift between local state and backend value is corrected before they see the field
   useEffect(() => {
-    if (editMode && neg?.agreedStartDate) {
-      setAgreedStartDate(neg.agreedStartDate.split("T")[0]);
+    if (editMode) {
+      if (neg?.agreedStartDate) {
+        setAgreedStartDate(neg.agreedStartDate.split("T")[0]);
+      } else {
+        const stored = neg?.id ? localStorage.getItem(`neg_start_${neg.id}`) || "" : "";
+        if (stored) setAgreedStartDate(stored);
+      }
     }
   }, [editMode]); // eslint-disable-line react-hooks/exhaustive-deps
 
@@ -267,7 +312,14 @@ const NegotiationPanel = ({ negotiation: initial, role, order, onNegotiationUpda
     setAccessInstructions(initial.accessInstructions || "");
     setSpecialRequirements(initial.specialClientRequirements || "");
     setAdditionalNotes(initial.additionalNotes || "");
-    setAgreedStartDate(initial.agreedStartDate ? initial.agreedStartDate.split("T")[0] : "");
+    if (initial.agreedStartDate) {
+      const d = initial.agreedStartDate.split("T")[0];
+      if (initial.id) localStorage.setItem(`neg_start_${initial.id}`, d);
+      setAgreedStartDate(d);
+    } else {
+      const stored = initial.id ? localStorage.getItem(`neg_start_${initial.id}`) || "" : "";
+      setAgreedStartDate(stored);
+    }
   }, [initial]); // eslint-disable-line react-hooks/exhaustive-deps
 
   const addTask = () => {
@@ -389,8 +441,8 @@ const NegotiationPanel = ({ negotiation: initial, role, order, onNegotiationUpda
           {/* Contract start date summary */}
           <div className="neg-section" style={{ textAlign: 'left', marginBottom: '12px' }}>
             <div className="neg-section-label">Contract Start Date</div>
-            {neg?.agreedStartDate ? (
-              <p className="neg-detail-row">{new Date(neg.agreedStartDate).toLocaleDateString()}</p>
+            {effectiveStartDate ? (
+              <p className="neg-detail-row">{new Date(effectiveStartDate + "T00:00:00").toLocaleDateString()}</p>
             ) : (
               <p className="neg-detail-row" style={{ color: '#d32f2f', fontWeight: 500 }}>
                 ⚠️ Contract start date is not set. Either party must set it before generating the contract.
@@ -398,13 +450,13 @@ const NegotiationPanel = ({ negotiation: initial, role, order, onNegotiationUpda
             )}
           </div>
 
-          <button className="neg-btn neg-btn--generate" onClick={handleConvert} disabled={converting || !neg?.serviceAddress || !neg?.agreedStartDate}>
+          <button className="neg-btn neg-btn--generate" onClick={handleConvert} disabled={converting || !neg?.serviceAddress || !effectiveStartDate}>
             {converting ? "Generating…" : "📄 Generate Contract"}
           </button>
           {!neg?.serviceAddress && role === 'client' && (
             <p className="neg-hint" style={{ marginTop: '8px' }}>Click "Edit My Proposals" below to add the service address.</p>
           )}
-          {!neg?.agreedStartDate && (
+          {!effectiveStartDate && (
             <p className="neg-hint" style={{ marginTop: '4px' }}>Click "Edit My Proposals" below to set the contract start date.</p>
           )}
         </div>
@@ -494,7 +546,10 @@ const NegotiationPanel = ({ negotiation: initial, role, order, onNegotiationUpda
                       className="neg-input"
                       type="date"
                       value={agreedStartDate}
-                      onChange={(e) => setAgreedStartDate(e.target.value)}
+                      onChange={(e) => {
+                        setAgreedStartDate(e.target.value);
+                        if (e.target.value && neg?.id) localStorage.setItem(`neg_start_${neg.id}`, e.target.value);
+                      }}
                       min={new Date().toISOString().split("T")[0]}
                     />
                     {!agreedStartDate && (
@@ -508,6 +563,12 @@ const NegotiationPanel = ({ negotiation: initial, role, order, onNegotiationUpda
             ) : (
               <>
                 <ScheduleList slots={mySchedule} editable={false} onRemove={null} />
+                {scheduleMismatch && (
+                  <div className="neg-schedule-mismatch">
+                    ⚠️ Your schedule doesn't match the {theirLabel}'s proposal — you'll need to update
+                    your schedule to align with theirs (or ask them to match yours) before either party can agree.
+                  </div>
+                )}
                 {agreedStartDate && (
                   <p className="neg-detail-row" style={{ marginTop: '8px' }}>
                     <strong>Start date:</strong> {new Date(agreedStartDate + "T00:00:00").toLocaleDateString()}
@@ -685,7 +746,14 @@ const NegotiationPanel = ({ negotiation: initial, role, order, onNegotiationUpda
             {!theirSchedule || theirSchedule.length === 0 ? (
               <p className="neg-empty">No schedule proposed yet.</p>
             ) : (
-              <ScheduleList slots={theirSchedule} editable={false} onRemove={null} />
+              <>
+                <ScheduleList slots={theirSchedule} editable={false} onRemove={null} />
+                {scheduleMismatch && (
+                  <p className="neg-schedule-mismatch neg-schedule-mismatch--theirs">
+                    ↑ This differs from your current schedule
+                  </p>
+                )}
+              </>
             )}
           </div>
 

@@ -311,6 +311,32 @@
   border: 1px solid #bbf7d0;
 }
 
+/* ── Schedule mismatch warning ── */
+.neg-schedule-mismatch {
+  display: flex;
+  align-items: flex-start;
+  padding: 10px 14px;
+  border-radius: 8px;
+  margin-top: 10px;
+  background: #fff7ed;
+  border: 1px solid #fed7aa;
+  font-size: 13px;
+  color: #9a3412;
+  font-weight: 500;
+  line-height: 1.5;
+}
+
+.neg-schedule-mismatch--theirs {
+  justify-content: center;
+  margin-top: 8px;
+  padding: 6px 12px;
+  font-size: 12px;
+  font-weight: 400;
+  color: #c2410c;
+  background: #fff7ed;
+  border-color: #fdba74;
+}
+
 /* ── Schedule list ── */
 .neg-schedule-list {
   display: flex;

@@ -213,6 +213,8 @@ const HomeCareService = () => {
   // Credentials modal state
   const [showCredentialsModal, setShowCredentialsModal] = useState(false);
   const [credentialsTab, setCredentialsTab] = useState('education');
+  // Pricing card collapsible state (tablet/desktop only)
+  const [pricingExpanded, setPricingExpanded] = useState(false);
   const navigate = useNavigate();
   const { isAuthenticated, userRole } = useAuth();
   const basePath = "/app/client";
@@ -694,28 +696,43 @@ const HomeCareService = () => {
         </div>
 
         {/* Right: Pricing Card */}
-        <div className="hcs-pricing-card">
-          <div className="hcs-pricing-header">
-            <span className="hcs-package-name">{packageName || "Basic Package"}</span>
-          </div>
-          <div className="hcs-pricing-price">₦{Number(price).toLocaleString()}</div>
-          <div className="hcs-pricing-delivery">Delivery: {deliveryTime || "Per Day"}</div>
-          <p className="hcs-pricing-bestfor">
-            Best for: routine monitoring, follow-ups, & light medical supervision
-          </p>
+        <div className={`hcs-pricing-card${pricingExpanded ? ' hcs-pricing-card--expanded' : ''}`}>
+          {/* Collapsible content area */}
+          <div className="hcs-pricing-inner">
+            <div className="hcs-pricing-header">
+              <span className="hcs-package-name">{packageName || "Basic Package"}</span>
+            </div>
+            <div className="hcs-pricing-price">₦{Number(price).toLocaleString()}</div>
+            <div className="hcs-pricing-delivery">Delivery: {deliveryTime || "Per Day"}</div>
+            <p className="hcs-pricing-bestfor">
+              Best for: routine monitoring, follow-ups, & light medical supervision
+            </p>
 
-          <div className="hcs-pricing-includes">
-            <span className="hcs-includes-label">Includes:</span>
-            <ul className="hcs-includes-list">
-              {(packageDetails || []).map((feature, i) => (
-                <li key={i}><span className="hcs-check">✓</span> {feature}</li>
-              ))}
-              {caregiverSpecializations && caregiverSpecializations.length > 0 && (
-                <li><span className="hcs-check">✓</span> Specializations: {caregiverSpecializations.join(', ')}</li>
-              )}
-            </ul>
+            <div className="hcs-pricing-includes">
+              <span className="hcs-includes-label">Includes:</span>
+              <ul className="hcs-includes-list">
+                {(packageDetails || []).map((feature, i) => (
+                  <li key={i}><span className="hcs-check">✓</span> {feature}</li>
+                ))}
+                {caregiverSpecializations && caregiverSpecializations.length > 0 && (
+                  <li><span className="hcs-check">✓</span> Specializations: {caregiverSpecializations.join(', ')}</li>
+                )}
+              </ul>
+            </div>
           </div>
 
+          {/* Expand / collapse toggle — only visible on tablet+ via CSS */}
+          <button
+            className={`hcs-pricing-expander${pricingExpanded ? ' hcs-pricing-expander--open' : ''}`}
+            onClick={() => setPricingExpanded(e => !e)}
+            aria-label={pricingExpanded ? 'Show less' : 'Show more details'}
+          >
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" width="16" height="16" aria-hidden="true">
+              <path d="M19 9l-7 7-7-7" />
+            </svg>
+          </button>
+
+          {/* CTA buttons — always visible */}
           <div className="hcs-pricing-buttons">
             {(!isAuthenticated || userRole === 'Client') && (
               commitmentAccess && !commitmentAccess.hasAccess ? (

@@ -314,6 +314,17 @@
   background: #fff;
 }
 
+/* Inner collapsible content wrapper */
+.hcs-pricing-inner {
+  /* base (mobile): no height constraint */
+  overflow: visible;
+}
+
+/* Expand / collapse toggle button */
+.hcs-pricing-expander {
+  display: none; /* hidden on mobile — single-column layout needs no toggle */
+}
+
 .hcs-pricing-header {
   margin-bottom: 4px;
 }
@@ -892,6 +903,69 @@
     flex-shrink: 0;
     position: sticky;
     top: 80px;
+    /* Collapsible: cap height to match image section */
+    display: flex;
+    flex-direction: column;
+    max-height: 380px;
+    overflow: hidden;
+  }
+
+  .hcs-pricing-card--expanded {
+    max-height: none;
+  }
+
+  /* Inner scrollable area — flex:1 fills available space, clips overflow */
+  .hcs-pricing-inner {
+    flex: 1 1 auto;
+    min-height: 0;
+    overflow: hidden;
+    position: relative;
+  }
+
+  /* Gradient fade hint at the bottom of clipped content */
+  .hcs-pricing-card:not(.hcs-pricing-card--expanded) .hcs-pricing-inner::after {
+    content: '';
+    position: absolute;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    height: 48px;
+    background: linear-gradient(to bottom, transparent, #fff);
+    pointer-events: none;
+  }
+
+  /* Expand / collapse toggle — always visible in two-column layout */
+  .hcs-pricing-expander {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+    width: 100%;
+    padding: 6px 0;
+    background: none;
+    border: none;
+    border-top: 1px solid #f3f4f6;
+    cursor: pointer;
+    color: #6b7280;
+    transition: color 0.15s;
+  }
+
+  .hcs-pricing-expander:hover {
+    color: #111827;
+  }
+
+  .hcs-pricing-expander svg {
+    transition: transform 0.25s ease;
+  }
+
+  .hcs-pricing-expander--open svg {
+    transform: rotate(180deg);
+  }
+
+  /* CTA buttons always pinned — never shrink away */
+  .hcs-pricing-buttons {
+    flex-shrink: 0;
+    padding-top: 12px;
   }
 
   .hcs-about-gig {
@@ -940,6 +1014,11 @@
   .hcs-pricing-card {
     width: 370px;
     min-width: 370px;
+    max-height: 420px; /* matches desktop image height */
+  }
+
+  .hcs-pricing-card--expanded {
+    max-height: none;
   }
 
   .hcs-about-gig {
