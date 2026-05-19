@@ -119,11 +119,12 @@ const CaregiverSettings = () => {
     try {
       const result = await Notification.requestPermission();
       if (result === 'granted') {
-        await subscribeForPush();
+        await Promise.all([subscribeForPush(), new Promise((r) => setTimeout(r, 600))]);
         const updated = await getSubscriptionState();
         setPushState(updated);
         toast.success('Push notifications enabled.');
       } else {
+        await new Promise((r) => setTimeout(r, 400));
         const updated = await getSubscriptionState();
         setPushState(updated);
       }
@@ -138,7 +139,7 @@ const CaregiverSettings = () => {
   const handleDisablePush = async () => {
     setPushLoading(true);
     try {
-      await unsubscribeFromPush();
+      await Promise.all([unsubscribeFromPush(), new Promise((r) => setTimeout(r, 600))]);
       const updated = await getSubscriptionState();
       setPushState(updated);
       toast.info('Push notifications turned off.');
@@ -153,7 +154,7 @@ const CaregiverSettings = () => {
   const handleResubscribePush = async () => {
     setPushLoading(true);
     try {
-      await subscribeForPush();
+      await Promise.all([subscribeForPush(), new Promise((r) => setTimeout(r, 600))]);
       const updated = await getSubscriptionState();
       setPushState(updated);
       toast.success('Push notifications re-enabled.');

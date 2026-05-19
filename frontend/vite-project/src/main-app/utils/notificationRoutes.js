@@ -186,6 +186,9 @@ const TYPE_MAP = {
   'visitsubmitted':              'VisitSubmitted',
   'visit submitted':             'VisitSubmitted',
   'visit_completed':             'VisitSubmitted',
+  'visit_approved':              'VisitApproved',
+  'visitapproved':               'VisitApproved',
+  'visit approved':              'VisitApproved',
 
   // Visit cancellation
   'visit_cancelled_by_client':      'VisitCancelledByClient',
@@ -272,6 +275,76 @@ const TYPE_MAP = {
   'certificaterejected':          'CertificateVerification',
   'certificate_review_required':  'CertificateVerification',
   'certificatereviewrequired':    'CertificateVerification',
+
+  // Visit Rescheduled
+  'visit_rescheduled':             'VisitRescheduled',
+  'visitrescheduled':              'VisitRescheduled',
+  'visit rescheduled':             'VisitRescheduled',
+
+  // Caregiver Checked In
+  'caregiver_checked_in':          'CaregiverCheckedIn',
+  'caregivercheckedin':            'CaregiverCheckedIn',
+  'caregiver checked in':          'CaregiverCheckedIn',
+
+  // Dispute Under Review
+  'dispute_under_review':          'DisputeUnderReview',
+  'disputeunderreview':            'DisputeUnderReview',
+  'dispute under review':          'DisputeUnderReview',
+
+  // Incident Reported
+  'incident_reported':             'IncidentReported',
+  'incidentreported':              'IncidentReported',
+  'incident reported':             'IncidentReported',
+
+  // Observation Report Filed
+  'observation_report_filed':      'ObservationReportFiled',
+  'observationreportfiled':        'ObservationReportFiled',
+  'observation report filed':      'ObservationReportFiled',
+
+  // Care Request lifecycle (client)
+  'care_request_created':          'CareRequestCreated',
+  'carerequestcreated':            'CareRequestCreated',
+  'care request created':          'CareRequestCreated',
+  'care_request_paused':           'CareRequestPaused',
+  'carerequestpaused':             'CareRequestPaused',
+  'care request paused':           'CareRequestPaused',
+  'care_request_reopened':         'CareRequestReopened',
+  'carequestreopened':             'CareRequestReopened',
+  'care request reopened':         'CareRequestReopened',
+  'care_request_closed':           'CareRequestClosed',
+  'carerequestclosed':             'CareRequestClosed',
+  'care request closed':           'CareRequestClosed',
+
+  // Shortlist Removed (caregiver)
+  'care_request_shortlist_removed': 'ShortlistRemoved',
+  'shortlistremoved':               'ShortlistRemoved',
+  'care request shortlist removed': 'ShortlistRemoved',
+
+  // Booking Commitment Expired (client)
+  'booking_commitment_expired':    'BookingCommitmentExpired',
+  'bookingcommitmentexpired':      'BookingCommitmentExpired',
+  'booking commitment expired':    'BookingCommitmentExpired',
+
+  // Withdrawal lifecycle (caregiver)
+  'withdrawal_verified':           'WithdrawalVerified',
+  'withdrawalverified':            'WithdrawalVerified',
+  'withdrawal verified':           'WithdrawalVerified',
+  'withdrawal_completed':          'WithdrawalCompleted',
+  'withdrawalcompleted':           'WithdrawalCompleted',
+  'withdrawal completed':          'WithdrawalCompleted',
+  'withdrawal_rejected':           'WithdrawalRejected',
+  'withdrawalrejected':            'WithdrawalRejected',
+  'withdrawal rejected':           'WithdrawalRejected',
+
+  // Refund Request Admin Alert
+  'refund_request_admin_alert':    'RefundRequestAdminAlert',
+  'refundrequestadminalert':       'RefundRequestAdminAlert',
+  'refund request admin alert':    'RefundRequestAdminAlert',
+
+  // Chat Violation Flagged (admin)
+  'chat_violation_flagged':        'ChatViolationFlagged',
+  'chatviolationflagged':          'ChatViolationFlagged',
+  'chat violation flagged':        'ChatViolationFlagged',
 };
 
 // Set of all canonical types for fast exact-match check
@@ -293,6 +366,7 @@ const KNOWN_CANONICAL = new Set([
   'NegotiationClientAgreed', 'NegotiationClientSubmitted',
   'TaskProposalAccepted', 'TaskProposalRejected', 'TaskProposalSubmitted',
   'VisitSubmitted',
+  'VisitApproved',
   'VisitCancelledByClient',
   'VisitCancellationRequested',
   'Broadcast',
@@ -304,6 +378,17 @@ const KNOWN_CANONICAL = new Set([
   'CommitmentConfirmed',
   'CertificateUploaded', 'CertificateVerification',
   'AccountDeletionScheduled', 'AccountDeletionCancelled', 'AccountPermanentlyDeleted',
+  'VisitRescheduled',
+  'CaregiverCheckedIn',
+  'DisputeUnderReview',
+  'IncidentReported',
+  'ObservationReportFiled',
+  'CareRequestCreated', 'CareRequestPaused', 'CareRequestReopened', 'CareRequestClosed',
+  'ShortlistRemoved',
+  'BookingCommitmentExpired',
+  'WithdrawalVerified', 'WithdrawalCompleted', 'WithdrawalRejected',
+  'RefundRequestAdminAlert',
+  'ChatViolationFlagged',
 ]);
 
 /**
@@ -455,7 +540,6 @@ export const getNotificationRoute = (notification, userRole) => {
     case 'OrderNotification':
     case 'OrderConfirmation':
     case 'BookingConfirmed':
-    case 'OrderCompleted':
     case 'OrderDisputed':
     case 'OrderCancelled':
       if (relatedEntityId) {
@@ -470,15 +554,21 @@ export const getNotificationRoute = (notification, userRole) => {
       if (isAdmin) return `/app/admin/orders`;
       return null;
 
+    case 'OrderCompleted': {
+      // Caregiver → wallet (credit just landed); Client → order detail
+      if (isCaregiver) return `/app/caregiver/wallet`;
+      if (relatedEntityId && isClient) return `/app/client/my-order/${relatedEntityId}`;
+      if (isClient) return `/app/client/my-orders`;
+      if (isAdmin) return `/app/admin/orders`;
+      return null;
+    }
+
     // ── Review notifications ─────────────────────────────
     case 'NewReview':
-      if (relatedEntityId) {
-        if (isClient) return `/app/client/my-order/${relatedEntityId}`;
-        if (isCaregiver) return `/app/caregiver/order-details/${relatedEntityId}`;
-      }
-      // Fallback to orders list
+      // Caregiver → dedicated reviews page (GET /api/reviews/caregiver/{id})
+      if (isCaregiver) return `/app/caregiver/profile/reviews`;
+      if (relatedEntityId && isClient) return `/app/client/my-order/${relatedEntityId}`;
       if (isClient) return `/app/client/my-orders`;
-      if (isCaregiver) return `/app/caregiver/orders`;
       return null;
 
     // ── Gig notifications ────────────────────────────────
@@ -579,6 +669,18 @@ export const getNotificationRoute = (notification, userRole) => {
     }
 
     // ── Visit / Task Sheet notifications ─────────────────
+    case 'VisitApproved': {
+      // Caregiver goes to wallet (payment just arrived).
+      // Client goes to the order details page.
+      if (isCaregiver) return `/app/caregiver/wallet`;
+      if (isClient) {
+        const visitOrderId = notification.orderId || relatedEntityId;
+        if (visitOrderId) return `/app/client/my-order/${visitOrderId}`;
+        return `/app/client/my-orders`;
+      }
+      return null;
+    }
+
     case 'VisitSubmitted':
     case 'VisitCancelledByClient':
     case 'VisitCancellationRequested': {
@@ -683,6 +785,94 @@ export const getNotificationRoute = (notification, userRole) => {
       // Email-only notification — no in-app destination
       return null;
 
+    // ── Visit Rescheduled ────────────────────────────────
+    case 'VisitRescheduled': {
+      // Backend: use orderId (not relatedEntityId which is the taskSheetId)
+      const reschOrderId = notification.orderId || relatedEntityId;
+      if (reschOrderId && isCaregiver) return `/app/caregiver/order-details/${reschOrderId}`;
+      if (isCaregiver) return `/app/caregiver/orders`;
+      return null;
+    }
+
+    // ── Caregiver Checked In ─────────────────────────────
+    case 'CaregiverCheckedIn': {
+      const checkinOrderId = notification.orderId || relatedEntityId;
+      if (checkinOrderId && isClient) return `/app/client/my-order/${checkinOrderId}`;
+      if (isClient) return `/app/client/my-order`;
+      return null;
+    }
+
+    // ── Dispute Under Review ─────────────────────────────
+    case 'DisputeUnderReview': {
+      const disputeOrderId = notification.orderId || relatedEntityId;
+      if (disputeOrderId) {
+        if (isClient) return `/app/client/my-order/${disputeOrderId}`;
+        if (isCaregiver) return `/app/caregiver/order-details/${disputeOrderId}`;
+      }
+      if (isAdmin) return `/app/admin/disputes`;
+      if (isClient) return `/app/client/my-order`;
+      if (isCaregiver) return `/app/caregiver/orders`;
+      return null;
+    }
+
+    // ── Incident Reported ────────────────────────────────
+    case 'IncidentReported': {
+      if (isAdmin && relatedEntityId) return `/app/admin/incidents/${relatedEntityId}`;
+      if (isAdmin) return `/app/admin/disputes`;
+      const incidentOrderId = notification.orderId || relatedEntityId;
+      if (incidentOrderId) {
+        if (isClient) return `/app/client/my-order/${incidentOrderId}`;
+        if (isCaregiver) return `/app/caregiver/order-details/${incidentOrderId}`;
+      }
+      return null;
+    }
+
+    // ── Observation Report Filed ─────────────────────────
+    case 'ObservationReportFiled': {
+      const obsOrderId = notification.orderId || relatedEntityId;
+      if (obsOrderId && isClient) return `/app/client/my-order/${obsOrderId}`;
+      if (isClient) return `/app/client/my-order`;
+      return null;
+    }
+
+    // ── Care Request Lifecycle (client) ──────────────────
+    case 'CareRequestCreated':
+    case 'CareRequestPaused':
+    case 'CareRequestReopened':
+    case 'CareRequestClosed':
+      if (isClient && relatedEntityId) return `/app/client/care-requests/${relatedEntityId}/detail`;
+      if (isClient) return `/app/client/your-requests`;
+      return null;
+
+    // ── Shortlist Removed (caregiver) ────────────────────
+    case 'ShortlistRemoved':
+      if (isCaregiver) return `/app/caregiver/my-responses`;
+      return null;
+
+    // ── Booking Commitment Expired ───────────────────────
+    case 'BookingCommitmentExpired':
+      if (isClient) return `/app/client/bookings`;
+      return null;
+
+    // ── Withdrawal Lifecycle ─────────────────────────────
+    case 'WithdrawalVerified':
+    case 'WithdrawalCompleted':
+    case 'WithdrawalRejected':
+      if (isCaregiver) return `/app/caregiver/withdraw`;
+      if (isAdmin) return `/app/admin/withdrawals`;
+      return null;
+
+    // ── Refund Request Admin Alert ───────────────────────
+    case 'RefundRequestAdminAlert':
+      if (isAdmin) return `/app/admin/refunds`;
+      if (isClient) return `/app/client/wallet`;
+      return null;
+
+    // ── Chat Violation Flagged ───────────────────────────
+    case 'ChatViolationFlagged':
+      if (isAdmin) return `/app/admin/chat-compliance`;
+      return null;
+
     default:
       console.warn(`[NotificationRoutes] No route for type: "${type}" (raw: "${notification.type}")`, notification);
       return null;
@@ -756,6 +946,8 @@ export const getNotificationActionLabel = (rawType) => {
     case 'TaskProposalRejected':
     case 'TaskProposalSubmitted':
       return 'View Proposal';
+    case 'VisitApproved':
+      return 'View Wallet';
     case 'VisitSubmitted':
     case 'VisitCancelledByClient':
     case 'VisitCancellationRequested':
@@ -789,6 +981,35 @@ export const getNotificationActionLabel = (rawType) => {
       return 'View Settings';
     case 'AccountPermanentlyDeleted':
       return 'View Details';
+    case 'VisitRescheduled':
+      return 'View Order';
+    case 'CaregiverCheckedIn':
+      return 'View Order';
+    case 'DisputeUnderReview':
+      return 'View Dispute';
+    case 'IncidentReported':
+      return 'View Incident';
+    case 'ObservationReportFiled':
+      return 'View Report';
+    case 'CareRequestCreated':
+    case 'CareRequestPaused':
+    case 'CareRequestReopened':
+    case 'CareRequestClosed':
+      return 'View Request';
+    case 'ShortlistRemoved':
+      return 'View Responses';
+    case 'BookingCommitmentExpired':
+      return 'View Bookings';
+    case 'WithdrawalVerified':
+      return 'View Withdrawal';
+    case 'WithdrawalCompleted':
+      return 'View Earnings';
+    case 'WithdrawalRejected':
+      return 'View Withdrawal';
+    case 'RefundRequestAdminAlert':
+      return 'Review Refund';
+    case 'ChatViolationFlagged':
+      return 'Review Violation';
     default:
       return 'View Details';
   }
@@ -877,6 +1098,8 @@ export const getNotificationTypeIcon = (rawType) => {
       return '❌';
     case 'TaskProposalSubmitted':
       return '📋';
+    case 'VisitApproved':
+      return '💸';
     case 'VisitSubmitted':
       return '📋';
     case 'VisitCancelledByClient':
@@ -915,6 +1138,38 @@ export const getNotificationTypeIcon = (rawType) => {
       return '📋';
     case 'ContractRevised':
       return '📝';
+    case 'VisitRescheduled':
+      return '🔄';
+    case 'CaregiverCheckedIn':
+      return '📍';
+    case 'DisputeUnderReview':
+      return '⚖️';
+    case 'IncidentReported':
+      return '🚨';
+    case 'ObservationReportFiled':
+      return '📋';
+    case 'CareRequestCreated':
+      return '📝';
+    case 'CareRequestPaused':
+      return '⏸️';
+    case 'CareRequestReopened':
+      return '🔓';
+    case 'CareRequestClosed':
+      return '🔒';
+    case 'ShortlistRemoved':
+      return 'ℹ️';
+    case 'BookingCommitmentExpired':
+      return '⏰';
+    case 'WithdrawalVerified':
+      return '🔍';
+    case 'WithdrawalCompleted':
+      return '✅';
+    case 'WithdrawalRejected':
+      return '❌';
+    case 'RefundRequestAdminAlert':
+      return '🚨';
+    case 'ChatViolationFlagged':
+      return '🚩';
     default:
       return '🔔';
   }
