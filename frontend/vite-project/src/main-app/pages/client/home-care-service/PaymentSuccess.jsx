@@ -2,6 +2,8 @@ import { useEffect, useRef, useState } from "react";
 import { useSearchParams, useNavigate } from "react-router-dom";
 import configs from '../../../config';
 import SubscriptionService from '../../../services/subscriptionService';
+import paymentReceiptService from '../../../services/paymentReceiptService';
+import { toast } from 'react-toastify';
 import './PaymentSuccess.css';
 
 const PaymentSuccess = () => {
@@ -12,8 +14,20 @@ const PaymentSuccess = () => {
   const [paymentData, setPaymentData] = useState(null);
   const [error, setError] = useState(null);
   const [subscriptionInfo, setSubscriptionInfo] = useState(null);
+  const [receiptDownloading, setReceiptDownloading] = useState(false);
   const retryCountRef = useRef(0);
   const MAX_RETRIES = 20; // ~2 minutes at 6-second intervals
+
+  const handleDownloadReceipt = async () => {
+    const ref = paymentData?.transactionReference;
+    if (!ref) return;
+    setReceiptDownloading(true);
+    const result = await paymentReceiptService.downloadOrderReceipt(ref);
+    setReceiptDownloading(false);
+    if (!result.success) {
+      toast.error(result.error || 'Failed to download receipt.', { containerId: 'main-toast-container' });
+    }
+  };
 
   // Get transaction reference from URL or localStorage
   const txRef = searchParams.get("tx_ref") || localStorage.getItem("transactionReference");
@@ -298,6 +312,13 @@ const PaymentSuccess = () => {
                   onClick={() => navigate("/app/client/my-order")}
                 >
                   View My Orders
+                </button>
+                <button
+                  className="payment-btn payment-btn--secondary"
+                  onClick={handleDownloadReceipt}
+                  disabled={receiptDownloading}
+                >
+                  {receiptDownloading ? 'Downloading…' : '⬇ Download Receipt'}
                 </button>
                 {subscriptionInfo && (
                   <button

@@ -2,6 +2,8 @@ import { useEffect, useRef, useState } from "react";
 import { useSearchParams, useNavigate } from "react-router-dom";
 import bookingCommitmentService from '../../../services/bookingCommitmentService';
 import api from '../../../services/api';
+import paymentReceiptService from '../../../services/paymentReceiptService';
+import { toast } from 'react-toastify';
 import './CommitmentSuccess.css';
 
 const CommitmentSuccess = () => {
@@ -13,6 +15,18 @@ const CommitmentSuccess = () => {
   const [paymentData, setPaymentData] = useState(null);
   const [error, setError] = useState(null);
   const [autoMessageStatus, setAutoMessageStatus] = useState(null); // 'sending' | 'sent' | 'failed'
+  const [receiptDownloading, setReceiptDownloading] = useState(false);
+
+  const handleDownloadReceipt = async () => {
+    const txRef = paymentData?.transactionReference;
+    if (!txRef) return;
+    setReceiptDownloading(true);
+    const result = await paymentReceiptService.downloadCommitmentReceipt(txRef);
+    setReceiptDownloading(false);
+    if (!result.success) {
+      toast.error(result.error || 'Failed to download receipt.', { containerId: 'main-toast-container' });
+    }
+  };
 
   // Get transaction reference from URL or localStorage
   const txRef = searchParams.get("tx_ref") || localStorage.getItem("commitmentTxRef");
@@ -262,6 +276,13 @@ const CommitmentSuccess = () => {
               <div className="commitment-actions">
                 <button className="commitment-btn commitment-btn--primary" onClick={handleGoToChat}>
                   💬 Go to Chat
+                </button>
+                <button
+                  className="commitment-btn commitment-btn--secondary"
+                  onClick={handleDownloadReceipt}
+                  disabled={receiptDownloading}
+                >
+                  {receiptDownloading ? 'Downloading…' : '⬇ Download Receipt'}
                 </button>
                 <button className="commitment-btn commitment-btn--secondary" onClick={() => navigate('/app/client/dashboard')}>
                   Browse More Services

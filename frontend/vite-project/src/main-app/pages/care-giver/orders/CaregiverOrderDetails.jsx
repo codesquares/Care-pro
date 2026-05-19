@@ -48,10 +48,17 @@ const CaregiverOrderDetails = () => {
     const latestNotification = useSelector((state) => state.notifications.notifications[0]);
     useEffect(() => {
         if (!latestNotification || !negotiation) return;
-        const t = (latestNotification.notificationType || "").toLowerCase().replace(/[\s-]+/g, "_");
+        // Notifications use `type` (both SignalR real-time and REST API responses).
+        // `notificationType` is kept as fallback for any legacy payloads.
+        const t = (latestNotification.type || latestNotification.notificationType || "").toLowerCase().replace(/[\s-]+/g, "_");
         if (
             (t === "negotiation_client_submitted" || t === "negotiation_caregiver_submitted") &&
-            latestNotification.relatedEntityId === negotiation.id
+            // relatedEntityId may be the negotiation ID or the order ID depending on the backend
+            (
+                latestNotification.relatedEntityId === negotiation.id ||
+                latestNotification.relatedEntityId === orderId ||
+                latestNotification.orderId === orderId
+            )
         ) {
             fetchNegotiationForOrder(orderId);
         }
@@ -872,21 +879,24 @@ const CaregiverOrderDetails = () => {
                                         <p><strong>Negotiation Round:</strong> {contract.negotiationRound || 1}</p>
                                     </div>
                                     
-                                    {/* Schedule Section */}
-                                    {contract.schedule && contract.schedule.length > 0 && (
-                                        <div className="contract-schedule">
-                                            <h4>📅 Service Schedule</h4>
-                                            <div className="schedule-display">
-                                                {contract.schedule.map((visit, idx) => (
-                                                    <div key={idx} className="schedule-visit">
-                                                        <span className="schedule-day">{visit.dayOfWeek}</span>
-                                                        <span className="schedule-time">{ContractService.formatTimeForDisplay(visit.startTime)} - {ContractService.formatTimeForDisplay(visit.endTime)}</span>
-                                                        <span className="schedule-duration">{ContractService.calculateVisitDuration(visit.startTime, visit.endTime)}hrs</span>
-                                                    </div>
-                                                ))}
+                                    {/* Schedule Section — contract.schedule for old flow, agreedSchedule for negotiation-generated contracts */}
+                                    {(() => {
+                                        const _slots = contract.schedule?.length > 0 ? contract.schedule : contract.agreedSchedule;
+                                        return _slots?.length > 0 ? (
+                                            <div className="contract-schedule">
+                                                <h4>📅 Service Schedule</h4>
+                                                <div className="schedule-display">
+                                                    {_slots.map((visit, idx) => (
+                                                        <div key={idx} className="schedule-visit">
+                                                            <span className="schedule-day">{visit.dayOfWeek}</span>
+                                                            <span className="schedule-time">{ContractService.formatTimeForDisplay(visit.startTime)} - {ContractService.formatTimeForDisplay(visit.endTime)}</span>
+                                                            <span className="schedule-duration">{ContractService.calculateVisitDuration(visit.startTime, visit.endTime)}hrs</span>
+                                                        </div>
+                                                    ))}
+                                                </div>
                                             </div>
-                                        </div>
-                                    )}
+                                        ) : null;
+                                    })()}
 
                                     {/* Service Details */}
                                     <div className="contract-summary">
@@ -903,6 +913,9 @@ const CaregiverOrderDetails = () => {
                                         )}
                                         {contract.caregiverAdditionalNotes && (
                                             <p><strong>Additional Notes:</strong> {contract.caregiverAdditionalNotes}</p>
+                                        )}
+                                        {!contract.caregiverAdditionalNotes && contract.additionalNotes && (
+                                            <p><strong>Additional Notes:</strong> {contract.additionalNotes}</p>
                                         )}
                                         {contract.contractStartDate && contract.contractEndDate && (
                                             <p><strong>Duration:</strong> {new Date(contract.contractStartDate).toLocaleDateString()} - {new Date(contract.contractEndDate).toLocaleDateString()}</p>
@@ -928,6 +941,7 @@ const CaregiverOrderDetails = () => {
                                         </div>
                                     )}
 
+                                    {/* Tasks — complex objects for old flow; agreedTasks strings for negotiation-generated contracts */}
                                     {contract.tasks && contract.tasks.length > 0 && (
                                         <div className="contract-tasks">
                                             <h4>Tasks & Requirements</h4>
@@ -942,6 +956,16 @@ const CaregiverOrderDetails = () => {
                                                     )}
                                                 </div>
                                             ))}
+                                        </div>
+                                    )}
+                                    {!contract.tasks?.length && contract.agreedTasks?.length > 0 && (
+                                        <div className="contract-tasks">
+                                            <h4>📝 Agreed Tasks</h4>
+                                            <ul style={{ paddingLeft: '20px', margin: '8px 0' }}>
+                                                {contract.agreedTasks.map((task, idx) => (
+                                                    <li key={idx} style={{ marginBottom: '4px' }}>{task}</li>
+                                                ))}
+                                            </ul>
                                         </div>
                                     )}
 
