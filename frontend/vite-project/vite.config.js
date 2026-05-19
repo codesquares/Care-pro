@@ -1,6 +1,7 @@
 import { defineConfig, loadEnv } from 'vite'
 import react from '@vitejs/plugin-react'
 import fs from 'fs'
+import { VitePWA } from 'vite-plugin-pwa'
 
 // https://vitejs.dev/config/
 export default defineConfig(({ mode }) => {
@@ -11,7 +12,33 @@ export default defineConfig(({ mode }) => {
   plugins: [
     react({
       jsxRuntime: 'automatic',
-    })
+    }),
+    VitePWA({
+      registerType: 'autoUpdate',
+      injectRegister: false,   // We register the SW manually for update detection
+      manifest: false,         // Use our existing /public/site.webmanifest
+      strategies: 'generateSW',
+      workbox: {
+        globPatterns: ['**/*.{js,css,html,ico,png,svg,woff2}'],
+        navigateFallback: '/index.html',
+        navigateFallbackDenylist: [/^\/api/, /^\/notificationHub/],
+        runtimeCaching: [
+          {
+            // Stale-while-revalidate for public listing endpoints (5-min TTL)
+            urlPattern: /\/api\/(Gigs|HomeCareServices|Marketplace)/i,
+            handler: 'StaleWhileRevalidate',
+            options: {
+              cacheName: 'public-api-cache',
+              expiration: { maxEntries: 100, maxAgeSeconds: 300 },
+            },
+          },
+        ],
+        importScripts: ['push-sw.js'],  // Push/notificationclick handlers
+      },
+      devOptions: {
+        enabled: false, // Keep SW off in dev to avoid caching stale API responses
+      },
+    }),
   ],
   server: {
     proxy: {

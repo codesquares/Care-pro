@@ -12,6 +12,7 @@ import '../components/messages/connection-status.css';
 import { useSelector, useDispatch } from 'react-redux';
 import { markNotificationAsRead } from '../Redux/slices/notificationSlice';
 import { toast } from 'react-toastify';
+import { subscribeForPush } from '../services/pushService';
 
 
 // Notification permission component - single definition
@@ -362,6 +363,11 @@ const Messages = ({ userId: propsUserId, token: propsToken }) => {
     try {
       const result = await Notification.requestPermission();
       setPermissionGranted(result === 'granted');
+      if (result === 'granted') {
+        subscribeForPush().catch((err) =>
+          console.warn('[Messages] Push subscribe failed:', err)
+        );
+      }
     } catch (err) {
       console.error('Error requesting notification permission:', err);
     }

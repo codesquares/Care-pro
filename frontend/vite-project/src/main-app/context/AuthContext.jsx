@@ -1,6 +1,7 @@
 import { createContext, useContext, useState, useEffect, useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { refreshToken, logout as authServiceLogout } from '../services/auth';
+import { unsubscribeFromPush } from '../services/pushService';
 
 const AuthContext = createContext();
 
@@ -46,6 +47,10 @@ export const AuthProvider = ({ children }) => {
 
     // Centralized logout function
     const handleLogout = useCallback(() => {
+        // Capture token BEFORE clearing localStorage so unsubscribeFromPush can use it
+        const tokenBeforeLogout = localStorage.getItem('authToken');
+        unsubscribeFromPush(tokenBeforeLogout).catch(() => {});
+
         try {
             // Clear all authentication data
             DATA_CATEGORIES.auth.forEach(key => {
