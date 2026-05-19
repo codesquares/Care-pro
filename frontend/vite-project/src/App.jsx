@@ -27,6 +27,7 @@ import ForgotPasswordPage from './main-app/pages/ForgotPasswordPage';
 import ConfirmEmailPage from './main-app/pages/ConfirmEmailPage';
 import ResendConfirmationPage from './main-app/pages/ResendConfirmationPage';
 import UnauthorizedPage from './main-app/pages/UnauthorizedPage';
+import CancelAccountDeletion from './main-app/pages/CancelAccountDeletion';
 import { ToastContainer } from 'react-toastify';
 import 'react-toastify/dist/ReactToastify.css';
 import ProtectedRoute from './main-app/components/auth/ProtectedRoute';
@@ -129,6 +130,7 @@ function AppContent() {
     '/resend-confirmation',
     '/unauthorized',
     '/splash',
+    '/cancel-account-deletion',
     '/Caregivergigpage',
     '/MyOrders',
     '/OrderTasks&Details',
@@ -141,10 +143,10 @@ function AppContent() {
   ];
 
   // Define routes that should not have navbar
-  const routesWithoutNavbar = ['/login', '/register', '/register/form', '/forgot-password', '/confirm-email', '/resend-confirmation'];
+  const routesWithoutNavbar = ['/login', '/register', '/register/form', '/forgot-password', '/confirm-email', '/resend-confirmation', '/cancel-account-deletion'];
 
   // Define routes that should not have footer
-  const routesWithoutFooter = ['/login', '/register', '/register/form', '/forgot-password', '/confirm-email', '/resend-confirmation'];
+  const routesWithoutFooter = ['/login', '/register', '/register/form', '/forgot-password', '/confirm-email', '/resend-confirmation', '/cancel-account-deletion'];
 
   // Check if current path is unprotected
   const isUnprotectedRoute = unprotectedRoutes.includes(location.pathname.toLowerCase());
@@ -225,6 +227,7 @@ function AppContent() {
         <Route path="/forgot-password" element={<ForgotPasswordPage />} />
         <Route path="/confirm-email" element={<ConfirmEmailPage />} />
         <Route path="/resend-confirmation" element={<ResendConfirmationPage />} />
+        <Route path="/cancel-account-deletion" element={<CancelAccountDeletion />} />
         <Route path="/service/:id" element={<HomeCareService />} />
         <Route path="/splash" element={<SplashScreen />} />
 

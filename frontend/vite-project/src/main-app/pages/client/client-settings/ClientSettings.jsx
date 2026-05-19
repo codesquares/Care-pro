@@ -6,6 +6,7 @@ import { useAuth } from "../../../context/AuthContext";
 import config from "../../../config";
 import ClientSettingsService from "../../../services/ClientSettingsService";
 import ClientProfileHeader from "./ClientProfileHeader";
+import accountDeletionService from "../../../services/accountDeletionService";
 import "./ClientSettings.css";
 
 /**
@@ -20,7 +21,7 @@ import "./ClientSettings.css";
  */
 const ClientSettings = () => {
   const navigate = useNavigate();
-  const { updateUser, user } = useAuth();
+  const { updateUser, user, handleLogout } = useAuth();
   const [isLoading, setIsLoading] = useState(false);
   const [message, setMessage] = useState({ type: "", text: "" });
   const [authProvider, setAuthProvider] = useState("Local"); // Track auth provider
@@ -35,6 +36,14 @@ const ClientSettings = () => {
 
   // Deactivation reason state
   const [deactivationReason, setDeactivationReason] = useState("");
+
+  // Delete account state
+  const [showDeleteModal, setShowDeleteModal] = useState(false);
+  const [showCancelDeletionModal, setShowCancelDeletionModal] = useState(false);
+  const [deleteReason, setDeleteReason] = useState("");
+  const [deleteLoading, setDeleteLoading] = useState(false);
+  const [deleteBlockers, setDeleteBlockers] = useState([]);
+  const [pendingDeletionDate, setPendingDeletionDate] = useState(null);
 
   // Form states
   const [accountForm, setAccountForm] = useState({
@@ -143,6 +152,26 @@ const ClientSettings = () => {
             }
           } catch (locErr) {
             console.warn("Could not fetch location from Location table", locErr);
+          }
+        }
+
+        if (userDetails.id) {
+          try {
+            const token = localStorage.getItem('authToken');
+            const profileRes = await fetch(`${config.BASE_URL}/Clients/${userDetails.id}`, {
+              headers: { 'Authorization': token ? `Bearer ${token}` : '' },
+            });
+            if (profileRes.ok) {
+              const profileData = await profileRes.json();
+              if (profileData?.accountDeletionRequestedAt) {
+                const deletionDate = new Date(
+                  new Date(profileData.accountDeletionRequestedAt).getTime() + 30 * 24 * 60 * 60 * 1000
+                );
+                setPendingDeletionDate(deletionDate);
+              }
+            }
+          } catch (err) {
+            console.warn('Could not fetch client profile for deletion status', err);
           }
         }
 
@@ -958,9 +987,172 @@ const ClientSettings = () => {
             Deactivate account
           </button>
         </div>
+
+        {/* Delete Account (Danger Zone) Card */}
+        <div className="settings-card" style={{ borderColor: '#ef4444' }}>
+          {pendingDeletionDate ? (
+            <>
+              <h3 style={{ color: '#ef4444' }}>Account Deletion Scheduled</h3>
+              <p style={{ marginBottom: '0.5rem' }}>
+                Your account is scheduled for permanent deletion on{' '}
+                <strong>
+                  {pendingDeletionDate.toLocaleDateString('en-GB', { day: 'numeric', month: 'long', year: 'numeric' })}
+                </strong>
+                . You can cancel this request before that date to fully restore your account.
+              </p>
+              <p style={{ marginBottom: '1rem', fontSize: '0.875rem', color: '#6b7280' }}>
+                If your session has expired, use the "Cancel my deletion request" link in your
+                scheduled-deletion email.
+              </p>
+              <button
+                type="button"
+                className="save-changes-btn"
+                onClick={() => setShowCancelDeletionModal(true)}
+              >
+                Cancel Deletion Request
+              </button>
+            </>
+          ) : (
+            <>
+              <h3 style={{ color: '#ef4444' }}>Delete Account</h3>
+              <p className="deactivation-warning">Requesting deletion will:</p>
+              <ul className="deactivation-list">
+                <li>Immediately prevent you from logging in.</li>
+                <li>Permanently and irreversibly erase all your data after 30 days.</li>
+                <li>You cannot delete if you have active orders in progress.</li>
+                <li>You have 30 days to cancel — after that the deletion cannot be undone.</li>
+              </ul>
+              <button
+                type="button"
+                className="deactivate-btn"
+                onClick={() => setShowDeleteModal(true)}
+              >
+                Delete Account
+              </button>
+            </>
+          )}
+        </div>
       </div>
 
-      {/* Confirmation Modal */}
+      {/* Delete Account Confirmation Modal */}
+      {showDeleteModal && (
+        <div className="client-location-modal-overlay" onClick={() => { setShowDeleteModal(false); setDeleteReason(''); setDeleteBlockers([]); }}>
+          <div className="client-location-modal" onClick={(e) => e.stopPropagation()}>
+            <h3 style={{ color: '#ef4444' }}>Delete Your Account?</h3>
+            <p style={{ marginBottom: '1rem' }}>
+              Are you sure? Your account will be <strong>permanently and irreversibly deleted</strong> after
+              a 30-day grace period. During that window you can cancel via Settings or the link in your
+              scheduled-deletion email.
+            </p>
+            {deleteBlockers.length > 0 && (
+              <div style={{ background: '#fef2f2', border: '1px solid #fca5a5', borderRadius: '6px', padding: '0.75rem', marginBottom: '1rem' }}>
+                <p style={{ fontWeight: 600, marginBottom: '0.5rem', color: '#b91c1c' }}>
+                  You cannot delete your account right now. Please resolve the following:
+                </p>
+                <ul style={{ paddingLeft: '1.25rem', margin: 0 }}>
+                  {deleteBlockers.map((b, i) => <li key={i} style={{ color: '#b91c1c' }}>{b}</li>)}
+                </ul>
+              </div>
+            )}
+            <div className="form-group">
+              <label>Reason for leaving (optional)</label>
+              <textarea
+                rows={3}
+                placeholder="Tell us why you're leaving..."
+                value={deleteReason}
+                onChange={(e) => setDeleteReason(e.target.value)}
+                style={{ width: '100%', resize: 'vertical', padding: '0.5rem', borderRadius: '6px', border: '1px solid #d1d5db' }}
+              />
+            </div>
+            <div className="client-modal-buttons">
+              <button
+                className="client-modal-btn client-modal-cancel"
+                onClick={() => { setShowDeleteModal(false); setDeleteReason(''); setDeleteBlockers([]); }}
+              >
+                Cancel
+              </button>
+              <button
+                className="client-modal-btn client-modal-save"
+                style={{ backgroundColor: '#ef4444' }}
+                disabled={deleteLoading}
+                onClick={async () => {
+                  setDeleteLoading(true);
+                  setDeleteBlockers([]);
+                  try {
+                    await accountDeletionService.requestClientDeletion(deleteReason);
+                    toast.success('Your account deletion has been scheduled. You will receive a confirmation email.');
+                    setShowDeleteModal(false);
+                    setDeleteReason('');
+                    handleLogout();
+                  } catch (err) {
+                    const data = err.response?.data || {};
+                    if (data.blockers && data.blockers.length > 0) {
+                      setDeleteBlockers(data.blockers);
+                    } else {
+                      toast.error(data.message || err.message || 'Failed to request account deletion.');
+                    }
+                  } finally {
+                    setDeleteLoading(false);
+                  }
+                }}
+              >
+                {deleteLoading ? 'Processing...' : 'Confirm Delete Account'}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Cancel Deletion Confirmation Modal */}
+      {showCancelDeletionModal && (
+        <div className="client-location-modal-overlay" onClick={() => setShowCancelDeletionModal(false)}>
+          <div className="client-location-modal" onClick={(e) => e.stopPropagation()}>
+            <h3>Cancel Account Deletion?</h3>
+            <p style={{ marginBottom: '1rem' }}>
+              Are you sure you want to cancel your deletion request? Your account will be fully restored
+              immediately.
+            </p>
+            <div className="client-modal-buttons">
+              <button
+                className="client-modal-btn client-modal-cancel"
+                onClick={() => setShowCancelDeletionModal(false)}
+              >
+                No, keep deletion scheduled
+              </button>
+              <button
+                className="client-modal-btn client-modal-save"
+                disabled={deleteLoading}
+                onClick={async () => {
+                  setDeleteLoading(true);
+                  try {
+                    await accountDeletionService.cancelClientDeletion();
+                    toast.success('Your account deletion has been cancelled. Your account is restored.');
+                    setShowCancelDeletionModal(false);
+                    setPendingDeletionDate(null);
+                  } catch (err) {
+                    if (err.response?.status === 401) {
+                      toast.error(
+                        'Your session has expired. To cancel your account deletion, please use the "Cancel my deletion request" link in your scheduled-deletion email. After 30 days the link expires — contact codesquareltd@gmail.com for help.'
+                      );
+                    } else if (err.response?.status === 400) {
+                      toast.error(err.response?.data?.message || 'Your grace period has ended. Account deletion cannot be cancelled.');
+                    } else {
+                      toast.error(err.message || 'Failed to cancel account deletion.');
+                    }
+                    setShowCancelDeletionModal(false);
+                  } finally {
+                    setDeleteLoading(false);
+                  }
+                }}
+              >
+                {deleteLoading ? 'Processing...' : 'Yes, Cancel Deletion'}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Existing generic confirmation modal (deactivation etc.) */}
       {showModal && (
         <div className="client-location-modal-overlay" onClick={() => setShowModal(false)}>
           <div className="client-location-modal" onClick={(e) => e.stopPropagation()}>
