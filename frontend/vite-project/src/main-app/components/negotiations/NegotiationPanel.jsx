@@ -165,23 +165,19 @@ const NegotiationPanel = ({ negotiation: initial, role, order, onNegotiationUpda
     const fn = role === "client" ? NegotiationService.clientUpdate : NegotiationService.caregiverUpdate;
     const result = await fn.call(NegotiationService, neg.id, payload);
     if (result.success) {
-      // Merge the response defensively: preserve existing fields the backend may not echo back
-      // (e.g. agreedStartDate is often omitted from partial PUT responses)
-      const merged = { ...neg, ...result.data };
-      update(merged);
-      // Sync my editable fields from response
-      setMyTasks(role === "client" ? merged.clientProposedTasks || [] : merged.caregiverProposedTasks || []);
+      // Backend always returns the full DTO — use it as the authoritative source of truth
+      const fresh = result.data;
+      update(fresh);
+      // Sync local state from the full DTO response
+      setMyTasks(role === "client" ? fresh.clientProposedTasks || [] : fresh.caregiverProposedTasks || []);
       setMySchedule(role === "client"
-        ? merged.clientProposedSchedule || []
-        : (merged.caregiverProposedSchedule?.length > 0
-            ? merged.caregiverProposedSchedule
-            : merged.clientProposedSchedule || []));
-      setServiceAddress(merged.serviceAddress || "");
-      setAccessInstructions(merged.accessInstructions || "");
-      // Only update agreedStartDate if we have a value — never wipe a date the user just set
-      if (merged.agreedStartDate) {
-        setAgreedStartDate(merged.agreedStartDate.split("T")[0]);
-      }
+        ? fresh.clientProposedSchedule || []
+        : (fresh.caregiverProposedSchedule?.length > 0
+            ? fresh.caregiverProposedSchedule
+            : fresh.clientProposedSchedule || []));
+      setServiceAddress(fresh.serviceAddress || "");
+      setAccessInstructions(fresh.accessInstructions || "");
+      setAgreedStartDate(fresh.agreedStartDate ? fresh.agreedStartDate.split("T")[0] : "");
       setEditMode(false);
       toast.success(submitForReview ? "Submitted for review!" : "Draft saved.");
     } else {
@@ -255,6 +251,24 @@ const NegotiationPanel = ({ negotiation: initial, role, order, onNegotiationUpda
       setAgreedStartDate(neg.agreedStartDate.split("T")[0]);
     }
   }, [editMode]); // eslint-disable-line react-hooks/exhaustive-deps
+
+  // Sync all local state when the parent passes a refreshed negotiation DTO
+  // (e.g. after the other party submits their proposals and the parent re-fetches)
+  // Guard: skip while the user is in editMode to avoid discarding unsaved changes
+  useEffect(() => {
+    if (editMode || !initial) return;
+    setNeg(initial);
+    setMyTasks(role === "client" ? (initial.clientProposedTasks || []) : (initial.caregiverProposedTasks || []));
+    const cgSched = (initial.caregiverProposedSchedule?.length > 0)
+      ? initial.caregiverProposedSchedule
+      : (initial.clientProposedSchedule || []);
+    setMySchedule(role === "client" ? (initial.clientProposedSchedule || []) : cgSched);
+    setServiceAddress(initial.serviceAddress || "");
+    setAccessInstructions(initial.accessInstructions || "");
+    setSpecialRequirements(initial.specialClientRequirements || "");
+    setAdditionalNotes(initial.additionalNotes || "");
+    setAgreedStartDate(initial.agreedStartDate ? initial.agreedStartDate.split("T")[0] : "");
+  }, [initial]); // eslint-disable-line react-hooks/exhaustive-deps
 
   const addTask = () => {
     const t = newTask.trim();
