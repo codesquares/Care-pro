@@ -697,7 +697,7 @@ const NegotiationPanel = ({ negotiation: initial, role, order, onNegotiationUpda
               </>
             )}
             {!editMode && !isTerminal && !iAgreed &&
-              ((status === 'PendingClientReview' && role === 'client') || (status === 'PendingCaregiverReview' && role === 'caregiver')) &&
+              ((status === 'PendingClientReview' && role === 'client') || (status === 'PendingCaregiverReview' && role === 'caregiver') || theyAgreed) &&
               (mySchedule.length > 0 || theirSchedule?.length > 0) && (
               <>
                 {role === 'client' && (!neg?.agreedStartDate || !neg?.serviceAddress) && (
