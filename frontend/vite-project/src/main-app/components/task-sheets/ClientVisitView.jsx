@@ -8,6 +8,14 @@ import TaskSheetService from "../../services/taskSheetService";
 import ClientProposeTasksSection from "./ClientProposeTasksSection";
 import "./ClientVisitView.css";
 
+const formatTimeStr = (t) => {
+  if (!t) return null;
+  const [h, m] = t.split(":").map(Number);
+  const ampm = h >= 12 ? "PM" : "AM";
+  const displayH = h % 12 || 12;
+  return `${displayH}:${String(m).padStart(2, "0")} ${ampm}`;
+};
+
 /**
  * ClientVisitView — read-only view of a single visit sheet for the client.
  *
@@ -16,7 +24,7 @@ import "./ClientVisitView.css";
  *  - orderId: the order ID
  *  - onVisitReviewed: callback after approve/dispute
  */
-const ClientVisitView = ({ sheet, orderId, onVisitReviewed, onSheetUpdated }) => {
+const ClientVisitView = ({ sheet, orderId, onVisitReviewed, onSheetUpdated, onRescheduleSuccess }) => {
   const [observations, setObservations] = useState([]);
   const [incidents, setIncidents] = useState([]);
   const [showObservations, setShowObservations] = useState(false);
@@ -100,18 +108,12 @@ const ClientVisitView = ({ sheet, orderId, onVisitReviewed, onSheetUpdated }) =>
       rescheduleReason.trim() || undefined
     );
     if (result.success) {
-      const msg = result.data.message || "Visit rescheduled successfully.";
-      toast.success(msg);
+      toast.success(result.data.message || "Visit rescheduled successfully.");
       setShowReschedule(false);
       setRescheduleDate("");
       setRescheduleReason("");
-      // Update local state with new date
-      if (onSheetUpdated) {
-        onSheetUpdated({
-          ...sheet,
-          scheduledDate: result.data.newDate || `${rescheduleDate}T00:00:00`,
-        });
-      }
+      // Full refetch so scheduledStartTime/scheduledEndTime are updated on old records
+      if (onRescheduleSuccess) onRescheduleSuccess();
     } else {
       toast.error(result.error || "Failed to reschedule visit.");
     }
@@ -195,7 +197,9 @@ const ClientVisitView = ({ sheet, orderId, onVisitReviewed, onSheetUpdated }) =>
           <span className="cv-status-badge cv-status-badge--scheduled">
             📅 Scheduled
             {sheet.scheduledDate &&
-              ` — ${new Date(sheet.scheduledDate).toLocaleDateString(undefined, { weekday: "long", month: "long", day: "numeric" })}`}
+              ` — ${new Date(sheet.scheduledDate).toLocaleDateString("en-NG", { timeZone: "Africa/Lagos", weekday: "long", month: "long", day: "numeric" })}`}
+            {sheet.scheduledStartTime && sheet.scheduledEndTime &&
+              ` · ${formatTimeStr(sheet.scheduledStartTime)} – ${formatTimeStr(sheet.scheduledEndTime)}`}
           </span>
         ) : isSubmitted ? (
           <span className="cv-status-badge cv-status-badge--submitted">
@@ -224,6 +228,11 @@ const ClientVisitView = ({ sheet, orderId, onVisitReviewed, onSheetUpdated }) =>
             {checkin.distanceFromServiceAddress != null && (
               <span className="cv-checkin-distance">
                 {checkin.distanceFromServiceAddress}m from service address
+              </span>
+            )}
+            {checkin.isLateCheckin && (
+              <span className="cv-checkin-late-tag">
+                Late arrival &middot; {checkin.minutesLate} min after scheduled start
               </span>
             )}
           </div>
@@ -277,6 +286,12 @@ const ClientVisitView = ({ sheet, orderId, onVisitReviewed, onSheetUpdated }) =>
             </button>
           ) : (
             <div className="cv-reschedule-form">
+              {sheet.scheduledStartTime && sheet.scheduledEndTime && (
+                <p className="cv-reschedule-hint">
+                  Visit {sheet.sheetNumber} runs {formatTimeStr(sheet.scheduledStartTime)}
+                  {" – "}{formatTimeStr(sheet.scheduledEndTime)}. Select a new date below.
+                </p>
+              )}
               <label className="cv-reschedule-label">New date</label>
               <input
                 type="date"

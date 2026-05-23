@@ -219,7 +219,15 @@ const TaskSheetTabs = ({ order }) => {
   const formatScheduledDate = (dateStr) => {
     if (!dateStr) return "";
     const d = new Date(dateStr);
-    return d.toLocaleDateString(undefined, { month: "short", day: "numeric" });
+    return d.toLocaleDateString("en-NG", { timeZone: "Africa/Lagos", month: "short", day: "numeric" });
+  };
+
+  const formatTimeStr = (t) => {
+    if (!t) return null;
+    const [h, m] = t.split(":").map(Number);
+    const ampm = h >= 12 ? "PM" : "AM";
+    const displayH = h % 12 || 12;
+    return `${displayH}:${String(m).padStart(2, "0")} ${ampm}`;
   };
 
   return (
@@ -238,7 +246,14 @@ const TaskSheetTabs = ({ order }) => {
           >
             <span className="ts-tab-label">Visit {sheet.sheetNumber}</span>
             {sheet.scheduledDate && (
-              <span className="ts-tab-date">{formatScheduledDate(sheet.scheduledDate)}</span>
+              <span className="ts-tab-date">
+                {formatScheduledDate(sheet.scheduledDate)}
+                {sheet.scheduledStartTime && sheet.scheduledEndTime && (
+                  <span className="ts-tab-time">
+                    {formatTimeStr(sheet.scheduledStartTime)}{" – "}{formatTimeStr(sheet.scheduledEndTime)}
+                  </span>
+                )}
+              </span>
             )}
             {sheet.status === "submitted" && <span className="ts-tab-badge">✓</span>}
             {sheet.status === "cancelled" && <span className="ts-tab-badge">✕</span>}

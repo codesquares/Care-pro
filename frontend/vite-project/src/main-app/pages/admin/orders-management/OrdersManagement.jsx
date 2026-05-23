@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import adminService from '../../../services/adminService';
+import AdminTaskSheets from './AdminTaskSheets';
 import './orders-management.css';
 
 const OrdersManagement = () => {
@@ -586,6 +587,12 @@ const OrdersManagement = () => {
                     <span>{selectedOrder.noOfOrders || 0}</span>
                   </div>
                 </div>
+              </div>
+
+              {/* Task Sheets */}
+              <div className="detail-section detail-section--full">
+                <h3>Task Sheets &amp; Visits</h3>
+                <AdminTaskSheets orderId={selectedOrder.id} />
               </div>
             </div>
 
