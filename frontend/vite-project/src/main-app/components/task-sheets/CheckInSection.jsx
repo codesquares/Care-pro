@@ -14,6 +14,7 @@ import VisitCheckinService from "../../services/visitCheckinService";
 const CheckInSection = ({ sheet, orderId, onCheckedIn, disabled = false }) => {
   const [loading, setLoading] = useState(false);
   const [showPermissionGuide, setShowPermissionGuide] = useState(false);
+  const [scheduleError, setScheduleError] = useState(null);
   const checkin = sheet?.checkin || null;
   const isCheckedIn = !!checkin;
 
@@ -52,6 +53,7 @@ const CheckInSection = ({ sheet, orderId, onCheckedIn, disabled = false }) => {
   const handleCheckin = async () => {
     if (loading || isCheckedIn || disabled) return;
 
+    setScheduleError(null);
     setLoading(true);
 
     // Pre-check permission state
@@ -103,12 +105,17 @@ const CheckInSection = ({ sheet, orderId, onCheckedIn, disabled = false }) => {
             `You need to be within ${result.maxDistanceMeters}m to check in.`
           );
           break;
-        case "OUTSIDE_SCHEDULE":
-          toast.error(
-            `Check-in is only allowed between ${result.scheduledStartTime} and ${result.scheduledEndTime} ` +
-            `on ${result.scheduledDay}s. Current time in Nigeria: ${result.currentTimeNigeria}.`
-          );
+        case "OUTSIDE_SCHEDULE": {
+          const isClosed = result.error && result.error.toLowerCase().includes("closed at");
+          setScheduleError({
+            type: isClosed ? "closed" : "early",
+            scheduledStartTime: result.scheduledStartTime,
+            scheduledEndTime: result.scheduledEndTime,
+            currentTimeNigeria: result.currentTimeNigeria,
+            errorMessage: result.error,
+          });
           break;
+        }
         case "NOT_SCHEDULED_TODAY":
           toast.error(
             `No visit is scheduled for today. Your next scheduled day is ${result.scheduledDay}.`
@@ -150,6 +157,30 @@ const CheckInSection = ({ sheet, orderId, onCheckedIn, disabled = false }) => {
             )}
           </div>
         </div>
+        {checkin.isLateCheckin && (
+          <div className="checkin-late-banner">
+            <span className="checkin-late-icon">⚠️</span>
+            <span className="checkin-late-text">
+              You checked in {checkin.minutesLate} minute{checkin.minutesLate !== 1 ? "s" : ""} after the scheduled start time. This has been recorded.
+            </span>
+          </div>
+        )}
+      </div>
+    );
+  }
+
+  // Hard-closed check-in window — show a serious state with no retry button
+  if (scheduleError?.type === "closed") {
+    return (
+      <div className="checkin-section checkin-section--closed">
+        <div className="checkin-status">
+          <span className="checkin-icon">🔒</span>
+          <div className="checkin-info">
+            <span className="checkin-label checkin-label--closed">Check-in Window Closed</span>
+            <span className="checkin-schedule-msg">{scheduleError.errorMessage}</span>
+            <span className="checkin-support-prompt">Please contact support to record this visit.</span>
+          </div>
+        </div>
       </div>
     );
   }
@@ -171,6 +202,15 @@ const CheckInSection = ({ sheet, orderId, onCheckedIn, disabled = false }) => {
 
   return (
     <div className="checkin-section">
+      {scheduleError?.type === "early" && (
+        <div className="checkin-early-notice">
+          <span className="checkin-early-icon">⏰</span>
+          <div className="checkin-early-body">
+            <strong>You&apos;re a bit early!</strong>
+            <p>{scheduleError.errorMessage}</p>
+          </div>
+        </div>
+      )}
       <button
         className="checkin-btn"
         onClick={handleCheckin}

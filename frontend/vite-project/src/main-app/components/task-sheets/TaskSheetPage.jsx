@@ -10,6 +10,14 @@ import ObservationReportModal from "./ObservationReportModal";
 import IncidentReportModal from "./IncidentReportModal";
 import "./TaskSheets.css";
 
+const formatTimeStr = (t) => {
+  if (!t) return null;
+  const [h, m] = t.split(":").map(Number);
+  const ampm = h >= 12 ? "PM" : "AM";
+  const displayH = h % 12 || 12;
+  return `${displayH}:${String(m).padStart(2, "0")} ${ampm}`;
+};
+
 /**
  * TaskSheetPage — renders the checklist for a single visit sheet.
  *
@@ -240,7 +248,9 @@ const TaskSheetPage = ({ sheet, orderId, onSheetUpdated, onActivateSheet, activa
               <strong>Scheduled Visit</strong>
               {sheet.scheduledDate && (
                 <span className="ts-scheduled-date">
-                  {" — "}{new Date(sheet.scheduledDate).toLocaleDateString(undefined, { weekday: "long", month: "long", day: "numeric" })}
+                  {" — "}{new Date(sheet.scheduledDate).toLocaleDateString("en-NG", { timeZone: "Africa/Lagos", weekday: "long", month: "long", day: "numeric" })}
+                  {sheet.scheduledStartTime && sheet.scheduledEndTime &&
+                    ` · ${formatTimeStr(sheet.scheduledStartTime)} – ${formatTimeStr(sheet.scheduledEndTime)}`}
                 </span>
               )}
               <p className="ts-scheduled-hint">Check in at the service location when you are ready to begin.</p>

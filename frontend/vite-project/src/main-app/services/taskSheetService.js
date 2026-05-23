@@ -251,7 +251,8 @@ const TaskSheetService = {
   },
 
   /**
-   * Reschedule a scheduled visit to a new date (client only).
+   * Reschedule a scheduled visit to a new date.
+   * Allowed for: Client (order owner), Admin, SuperAdmin.
    * @param {string} taskSheetId
    * @param {string} newDate - ISO date string e.g. "2025-07-10T00:00:00Z"
    * @param {string} [reason]
