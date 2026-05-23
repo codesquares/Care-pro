@@ -145,6 +145,64 @@ const VisitCheckinService = {
     if (meters < 1000) return `${Math.round(meters)}m`;
     return `${(meters / 1000).toFixed(1)}km`;
   },
+
+  /**
+   * Admin-only: manually record a check-in on behalf of a caregiver.
+   * Used when the caregiver's device failed. Accepts an explicit checkinTimestamp
+   * (the caregiver's actual arrival time, supplied by the admin).
+   * @param {Object} data - { taskSheetId, orderId, latitude, longitude, accuracy, checkinTimestamp }
+   * @returns {Promise<Object>} { success, data, error }
+   */
+  async adminManualCheckin({ taskSheetId, orderId, latitude, longitude, accuracy, checkinTimestamp }) {
+    try {
+      if (!taskSheetId || !orderId) {
+        return { success: false, error: "Task sheet and order ID are required" };
+      }
+      if (!checkinTimestamp) {
+        return { success: false, error: "Check-in timestamp is required" };
+      }
+
+      const authToken = localStorage.getItem("authToken");
+      if (!authToken) {
+        return { success: false, error: "Authentication required" };
+      }
+
+      const response = await fetch(`${config.BASE_URL}/visit-checkin`, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${authToken}`,
+        },
+        body: JSON.stringify({
+          taskSheetId,
+          orderId,
+          latitude,
+          longitude,
+          accuracy,
+          checkinTimestamp,
+        }),
+      });
+
+      if (!response.ok) {
+        const errorData = await response.json().catch(() => ({}));
+        return {
+          success: false,
+          error: errorData.error || `Manual check-in failed (${response.status})`,
+          errorCode: errorData.errorCode || null,
+          statusCode: response.status,
+          scheduledStartTime: errorData.scheduledStartTime ?? null,
+          scheduledEndTime: errorData.scheduledEndTime ?? null,
+          currentTimeNigeria: errorData.currentTimeNigeria ?? null,
+        };
+      }
+
+      const data = await response.json();
+      return { success: true, data };
+    } catch (error) {
+      console.error("Error in adminManualCheckin:", error);
+      return { success: false, error: error.message || "Network error" };
+    }
+  },
 };
 
 export default VisitCheckinService;

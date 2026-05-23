@@ -1,0 +1,477 @@
+/* ============================================================
+   AdminTaskSheets.css
+   Styles for the admin task-sheet panel embedded inside the
+   Order Details modal.
+   ============================================================ */
+
+.ats-container {
+  margin-top: 20px;
+}
+
+.ats-header {
+  display: flex;
+  align-items: center;
+  margin-bottom: 12px;
+}
+
+.ats-title {
+  font-size: 15px;
+  font-weight: 700;
+  color: #1a1a2e;
+  margin: 0;
+}
+
+.ats-count {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 22px;
+  height: 22px;
+  background: #e9ecef;
+  border-radius: 50%;
+  font-size: 12px;
+  font-weight: 600;
+  color: #555;
+  margin-left: 6px;
+}
+
+.ats-loading,
+.ats-empty {
+  padding: 20px;
+  text-align: center;
+  color: #888;
+  font-size: 13px;
+}
+
+.ats-error {
+  padding: 14px 16px;
+  background: #fff3f3;
+  border: 1px solid #f5c6cb;
+  border-radius: 8px;
+  color: #721c24;
+  font-size: 13px;
+}
+
+.ats-error button {
+  margin-top: 8px;
+  padding: 5px 14px;
+  border: 1px solid #721c24;
+  background: transparent;
+  color: #721c24;
+  border-radius: 6px;
+  cursor: pointer;
+  font-size: 12px;
+}
+
+/* ── Sheet rows ───────────────────────────────────────────── */
+
+.ats-list {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.ats-row {
+  border: 1px solid #e0e0e0;
+  border-radius: 8px;
+  background: #fff;
+  overflow: hidden;
+  transition: border-color 0.1s;
+}
+
+.ats-row--disputed {
+  border-color: #e74c3c;
+  background: #fff8f8;
+}
+
+/* ── Row summary (always visible) ─────────────────────────── */
+
+.ats-row-summary {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 10px 14px;
+  cursor: pointer;
+  user-select: none;
+  flex-wrap: wrap;
+}
+
+.ats-row-summary:hover {
+  background: #f9f9f9;
+}
+
+.ats-row-left {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  min-width: 110px;
+}
+
+.ats-visit-num {
+  font-size: 13px;
+  font-weight: 700;
+  color: #1a1a2e;
+}
+
+/* Sheet-status pill */
+.ats-status-pill {
+  font-size: 10px;
+  font-weight: 700;
+  text-transform: uppercase;
+  padding: 2px 7px;
+  border-radius: 10px;
+  letter-spacing: 0.4px;
+}
+
+.ats-status-pill--scheduled   { background: #e8f4fd; color: #1565c0; }
+.ats-status-pill--in-progress { background: #fff8e1; color: #f57f17; }
+.ats-status-pill--submitted   { background: #e8f5e9; color: #2e7d32; }
+.ats-status-pill--reviewed    { background: #e8f5e9; color: #2e7d32; }
+.ats-status-pill--cancelled   { background: #fce4e4; color: #c62828; }
+
+.ats-row-badges {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 6px;
+  flex: 1;
+}
+
+.ats-row-right {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-left: auto;
+}
+
+/* ── Generic badge ─────────────────────────────────────────── */
+
+.ats-badge {
+  font-size: 11px;
+  font-weight: 600;
+  padding: 2px 8px;
+  border-radius: 10px;
+  white-space: nowrap;
+}
+
+.ats-badge--green  { background: #d4edda; color: #155724; }
+.ats-badge--amber  { background: #fff3cd; color: #856404; }
+.ats-badge--yellow { background: #fff8e1; color: #f57f17; }
+.ats-badge--blue   { background: #d1ecf1; color: #0c5460; }
+.ats-badge--grey   { background: #e9ecef; color: #495057; }
+.ats-badge--red    { background: #f8d7da; color: #721c24; }
+
+/* ── Report count badges ───────────────────────────────────── */
+
+.ats-report-badge {
+  font-size: 11px;
+  font-weight: 600;
+  padding: 2px 7px;
+  border-radius: 10px;
+  white-space: nowrap;
+}
+
+.ats-report-badge--obs { background: #e0f3ff; color: #0c5460; }
+.ats-report-badge--inc { background: #fce4e4; color: #c62828; }
+
+/* ── Chevron toggle ────────────────────────────────────────── */
+
+.ats-chevron {
+  font-size: 20px;
+  color: #aaa;
+  transition: transform 0.15s;
+  line-height: 1;
+}
+
+.ats-chevron--open {
+  transform: rotate(90deg);
+}
+
+/* ── Action buttons ────────────────────────────────────────── */
+
+.ats-action-btn {
+  padding: 5px 12px;
+  border: none;
+  border-radius: 6px;
+  font-size: 12px;
+  font-weight: 600;
+  cursor: pointer;
+  white-space: nowrap;
+  transition: background 0.12s;
+}
+
+.ats-action-btn--reschedule         { background: #e8f4fd; color: #1565c0; }
+.ats-action-btn--reschedule:hover   { background: #bbdefb; }
+
+.ats-action-btn--confirm            { background: #2e7d32; color: #fff; }
+.ats-action-btn--confirm:hover      { background: #1b5e20; }
+.ats-action-btn--confirm:disabled   { opacity: 0.55; cursor: not-allowed; }
+
+.ats-action-btn--cancel             { background: #f5f5f5; color: #555; border: 1px solid #ddd; }
+.ats-action-btn--cancel:hover       { background: #e0e0e0; }
+
+.ats-action-btn--manual             { background: #fff3cd; color: #856404; border: 1px solid #fde68a; }
+.ats-action-btn--manual:hover       { background: #ffeaa7; }
+
+/* ── Dispute reason banner ─────────────────────────────────── */
+
+.ats-dispute-banner {
+  display: flex;
+  align-items: flex-start;
+  gap: 8px;
+  padding: 8px 14px;
+  background: #fff0f0;
+  border-top: 1px solid #f5c6cb;
+}
+
+.ats-dispute-icon {
+  font-size: 14px;
+  color: #c62828;
+  flex-shrink: 0;
+}
+
+.ats-dispute-reason {
+  font-size: 12px;
+  color: #721c24;
+  line-height: 1.4;
+}
+
+/* ── Reschedule inline form ────────────────────────────────── */
+
+.ats-reschedule-form {
+  padding: 14px 16px;
+  background: #f8f9fa;
+  border-top: 1px solid #e0e0e0;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.ats-reschedule-hint {
+  margin: 0;
+  font-size: 12px;
+  color: #444;
+  font-weight: 500;
+  line-height: 1.4;
+}
+
+/* ── Expanded detail panel ─────────────────────────────────── */
+
+.ats-detail {
+  padding: 16px;
+  border-top: 1px solid #e9ecef;
+  background: #fdfdfd;
+  display: flex;
+  flex-direction: column;
+  gap: 18px;
+}
+
+.ats-section {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.ats-section-title {
+  font-size: 11px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.6px;
+  color: #999;
+  margin: 0;
+}
+
+/* ── Check-in key/value grid ───────────────────────────────── */
+
+.ats-checkin-detail {
+  display: flex;
+  flex-direction: column;
+  gap: 7px;
+}
+
+.ats-checkin-row {
+  display: flex;
+  align-items: baseline;
+  gap: 10px;
+}
+
+.ats-checkin-key {
+  font-size: 12px;
+  color: #999;
+  min-width: 170px;
+  flex-shrink: 0;
+}
+
+.ats-checkin-val {
+  font-size: 13px;
+  color: #1a1a2e;
+  font-weight: 500;
+}
+
+.ats-mono {
+  font-family: monospace;
+  font-size: 12px;
+  word-break: break-all;
+}
+
+/* ── Arrival status badges ─────────────────────────────────── */
+
+.ats-arrival-badge {
+  display: inline-block;
+  padding: 2px 9px;
+  border-radius: 10px;
+  font-size: 12px;
+  font-weight: 600;
+}
+
+.ats-arrival-badge--ontime { background: #d4edda; color: #155724; }
+.ats-arrival-badge--late   { background: #fff3cd; color: #856404; }
+
+/* ── No check-in row ───────────────────────────────────────── */
+
+.ats-no-checkin {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  font-size: 13px;
+  color: #888;
+  flex-wrap: wrap;
+}
+
+/* ── Manual check-in form ──────────────────────────────────── */
+
+.ats-manual-checkin-form {
+  padding: 14px 16px;
+  background: #fffbeb;
+  border: 1px solid #fde68a;
+  border-radius: 8px;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.ats-form-hint {
+  font-size: 12px;
+  color: #78350f;
+  margin: 0;
+  line-height: 1.4;
+}
+
+.ats-form-field {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.ats-form-label {
+  font-size: 12px;
+  font-weight: 600;
+  color: #444;
+}
+
+.ats-form-input {
+  padding: 7px 10px;
+  border: 1px solid #ddd;
+  border-radius: 6px;
+  font-size: 13px;
+  width: 100%;
+  box-sizing: border-box;
+}
+
+.ats-form-input:focus {
+  outline: none;
+  border-color: #2980b9;
+  box-shadow: 0 0 0 2px rgba(41, 128, 185, 0.15);
+}
+
+.ats-form-row {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.ats-form-row--cols {
+  flex-direction: row;
+  gap: 10px;
+}
+
+.ats-form-row--cols .ats-form-field {
+  flex: 1;
+  min-width: 0;
+}
+
+.ats-form-actions {
+  display: flex;
+  gap: 8px;
+}
+
+/* ── Tasks list ────────────────────────────────────────────── */
+
+.ats-task-list {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 5px;
+}
+
+.ats-task-item {
+  display: flex;
+  align-items: flex-start;
+  gap: 8px;
+  font-size: 12px;
+  color: #333;
+  padding: 3px 0;
+}
+
+.ats-task-item--done .ats-task-text {
+  text-decoration: line-through;
+  color: #aaa;
+}
+
+.ats-task-check {
+  flex-shrink: 0;
+  font-size: 13px;
+  color: #27ae60;
+  width: 16px;
+  text-align: center;
+}
+
+.ats-task-text {
+  flex: 1;
+  line-height: 1.4;
+}
+
+.ats-task-tag {
+  font-size: 10px;
+  padding: 1px 6px;
+  border-radius: 8px;
+  background: #e0e0e0;
+  color: #555;
+  white-space: nowrap;
+  flex-shrink: 0;
+}
+
+.ats-task-tag--client {
+  background: #d1ecf1;
+  color: #0c5460;
+}
+
+.ats-empty-text {
+  font-size: 12px;
+  color: #aaa;
+  margin: 0;
+}
+
+/* ── Responsive: stack 3-col form on small screens ─────────── */
+
+@media (max-width: 480px) {
+  .ats-form-row--cols {
+    flex-direction: column;
+  }
+
+  .ats-checkin-key {
+    min-width: 120px;
+  }
+}

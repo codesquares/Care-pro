@@ -555,6 +555,11 @@
   border: 1px solid #e2e8f0;
 }
 
+/* Spans all grid columns — used for the Task Sheets panel */
+.detail-section--full {
+  grid-column: 1 / -1;
+}
+
 .detail-section h3 {
   margin: 0 0 1rem 0;
   color: #667eea;

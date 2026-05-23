@@ -64,11 +64,20 @@ const ClientVisitTabs = ({ order, onVisitReviewed }) => {
 
   const formatDate = (dateStr) => {
     if (!dateStr) return "—";
-    return new Date(dateStr).toLocaleDateString(undefined, {
+    return new Date(dateStr).toLocaleDateString("en-NG", {
+      timeZone: "Africa/Lagos",
       weekday: "short",
       month: "short",
       day: "numeric",
     });
+  };
+
+  const formatTimeStr = (t) => {
+    if (!t) return null;
+    const [h, m] = t.split(":").map(Number);
+    const ampm = h >= 12 ? "PM" : "AM";
+    const displayH = h % 12 || 12;
+    return `${displayH}:${String(m).padStart(2, "0")} ${ampm}`;
   };
 
   if (loading) {
@@ -158,7 +167,14 @@ const ClientVisitTabs = ({ order, onVisitReviewed }) => {
                   </span>
                   <div className="cv-visit-card-info">
                     <span className="cv-visit-card-title">Visit {sheet.sheetNumber}</span>
-                    <span className="cv-visit-card-date">{formatDate(sheet.scheduledDate)}</span>
+                    <span className="cv-visit-card-date">
+                      {formatDate(sheet.scheduledDate)}
+                      {sheet.scheduledStartTime && sheet.scheduledEndTime && (
+                        <span className="cv-visit-card-time">
+                          {" · "}{formatTimeStr(sheet.scheduledStartTime)}{" – "}{formatTimeStr(sheet.scheduledEndTime)}
+                        </span>
+                      )}
+                    </span>
                   </div>
                 </div>
                 <div className="cv-visit-card-right">
@@ -182,6 +198,7 @@ const ClientVisitTabs = ({ order, onVisitReviewed }) => {
                     orderId={orderId}
                     onVisitReviewed={handleVisitReviewed}
                     onSheetUpdated={handleSheetUpdated}
+                    onRescheduleSuccess={fetchSheets}
                   />
                 </div>
               )}
@@ -195,6 +212,7 @@ const ClientVisitTabs = ({ order, onVisitReviewed }) => {
                     orderId={orderId}
                     onVisitReviewed={handleVisitReviewed}
                     onSheetUpdated={handleSheetUpdated}
+                    onRescheduleSuccess={fetchSheets}
                   />
                 </div>
               )}
