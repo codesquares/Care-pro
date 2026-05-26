@@ -15,9 +15,9 @@ const PricingTable = ({ pricing, onPricingChange, onFieldFocus, onFieldBlur, onF
   const handleApplyTemplate = (templatePackages) => {
     // Apply only the Basic package from the template
     const basicOnly = {
-      Basic: templatePackages.Basic || Object.values(templatePackages)[0] || { name: "", details: "", deliveryTime: "1 Day Per Week", amount: "" },
-      Standard: { name: "", details: "", deliveryTime: "1 Day Per Week", amount: "" },
-      Premium: { name: "", details: "", deliveryTime: "1 Day Per Week", amount: "" },
+      Basic: templatePackages.Basic || Object.values(templatePackages)[0] || { name: "", details: "", deliveryTime: "Per Day", amount: "" },
+      Standard: { name: "", details: "", deliveryTime: "Per Day", amount: "" },
+      Premium: { name: "", details: "", deliveryTime: "Per Day", amount: "" },
     };
     onPricingChange(basicOnly);
     // Switch to manual tab after applying
@@ -120,14 +120,7 @@ const PricingTable = ({ pricing, onPricingChange, onFieldFocus, onFieldBlur, onF
             onFocus={() => onFieldFocus && onFieldFocus('basic-delivery')}
             onBlur={onFieldBlur}
           >
-            <option value="">Select frequency</option>
-            <option value="1 Day Per Week">1 Day Per Week</option>
-            <option value="2 Days Per Week">2 Days Per Week</option>
-            <option value="3 Days Per Week">3 Days Per Week</option>
-            <option value="4 Days Per Week">4 Days Per Week</option>
-            <option value="5 Days Per Week">5 Days Per Week</option>
-            <option value="6 Days Per Week">6 Days Per Week</option>
-            <option value="7 Days Per Week">7 Days Per Week</option>
+            <option value="Per Day">Per Day</option>
           </select>
         </div>
 

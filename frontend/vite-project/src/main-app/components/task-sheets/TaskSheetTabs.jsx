@@ -250,7 +250,7 @@ const TaskSheetTabs = ({ order }) => {
                 {formatScheduledDate(sheet.scheduledDate)}
                 {sheet.scheduledStartTime && sheet.scheduledEndTime && (
                   <span className="ts-tab-time">
-                    {formatTimeStr(sheet.scheduledStartTime)}{" – "}{formatTimeStr(sheet.scheduledEndTime)}
+                    {formatTimeStr(sheet.scheduledStartTime)}{" – "}{formatTimeStr(sheet.scheduledEndTime)}{" (WAT)"}
                   </span>
                 )}
               </span>

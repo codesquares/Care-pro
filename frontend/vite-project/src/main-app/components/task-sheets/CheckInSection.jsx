@@ -139,7 +139,8 @@ const CheckInSection = ({ sheet, orderId, onCheckedIn, disabled = false }) => {
   };
 
   if (isCheckedIn) {
-    const time = new Date(checkin.checkinTimestamp).toLocaleTimeString([], {
+    const time = new Date(checkin.checkinTimestamp).toLocaleTimeString("en-NG", {
+      timeZone: "Africa/Lagos",
       hour: "2-digit",
       minute: "2-digit",
     });
@@ -198,6 +199,95 @@ const CheckInSection = ({ sheet, orderId, onCheckedIn, disabled = false }) => {
         </div>
       </div>
     );
+  }
+
+  // Check-in window guard.
+  // If the sheet has a scheduled date + start time, check-in is allowed from 1 hour before
+  // the start time up to 2 hours after the start time (all times in Nigerian time, WAT UTC+1).
+  // If only a date is known (no start time), fall back to a date-only check.
+  // Legacy sheets with no scheduledDate skip this guard entirely.
+  const scheduledDateStr = sheet?.scheduledDate ? sheet.scheduledDate.split("T")[0] : null;
+  const scheduledStartTimeStr = sheet?.scheduledStartTime || null; // "HH:mm" in WAT
+
+  if (scheduledDateStr && scheduledStartTimeStr) {
+    const [startH, startM] = scheduledStartTimeStr.split(":").map(Number);
+    // Construct the scheduled start as a UTC timestamp (WAT = UTC+1, so use +01:00 offset)
+    const scheduledStartMs = new Date(
+      `${scheduledDateStr}T${String(startH).padStart(2, "0")}:${String(startM).padStart(2, "0")}:00+01:00`
+    ).getTime();
+    const windowOpenMs  = scheduledStartMs - 60 * 60 * 1000;       // 1 hour before
+    const windowCloseMs = scheduledStartMs + 2 * 60 * 60 * 1000;   // 2 hours after
+    const nowMs = Date.now();
+
+    if (nowMs < windowOpenMs) {
+      const openTimeStr = new Date(windowOpenMs).toLocaleTimeString("en-NG", {
+        timeZone: "Africa/Lagos", hour: "2-digit", minute: "2-digit",
+      });
+      const openDateStr = new Date(windowOpenMs).toLocaleDateString("en-NG", {
+        timeZone: "Africa/Lagos", weekday: "long", month: "long", day: "numeric",
+      });
+      return (
+        <div className="checkin-section checkin-section--wrong-date">
+          <div className="checkin-status">
+            <span className="checkin-icon">⏰</span>
+            <div className="checkin-info">
+              <span className="checkin-label">Check-in Not Yet Available</span>
+              <span className="checkin-hint">
+                Check-in opens at {openTimeStr} (WAT) on {openDateStr}.
+              </span>
+            </div>
+          </div>
+        </div>
+      );
+    }
+
+    if (nowMs > windowCloseMs) {
+      const closeTimeStr = new Date(windowCloseMs).toLocaleTimeString("en-NG", {
+        timeZone: "Africa/Lagos", hour: "2-digit", minute: "2-digit",
+      });
+      return (
+        <div className="checkin-section checkin-section--missed">
+          <div className="checkin-status">
+            <span className="checkin-icon">🔒</span>
+            <div className="checkin-info">
+              <span className="checkin-label">Check-in Window Closed</span>
+              <span className="checkin-hint">
+                The check-in window closed at {closeTimeStr} (WAT). Please contact support to record this visit.
+              </span>
+            </div>
+          </div>
+        </div>
+      );
+    }
+
+    // nowMs is within the window — fall through to show the button
+
+  } else if (scheduledDateStr) {
+    // Date-only fallback (no start time available)
+    const todayNigeria = new Date().toLocaleDateString("en-CA", { timeZone: "Africa/Lagos" });
+    if (todayNigeria !== scheduledDateStr) {
+      const isPast = todayNigeria > scheduledDateStr;
+      const formattedDate = new Date(`${scheduledDateStr}T12:00:00+01:00`).toLocaleDateString("en-NG", {
+        timeZone: "Africa/Lagos", weekday: "long", month: "long", day: "numeric",
+      });
+      return (
+        <div className="checkin-section checkin-section--wrong-date">
+          <div className="checkin-status">
+            <span className="checkin-icon">📅</span>
+            <div className="checkin-info">
+              <span className="checkin-label">
+                {isPast ? "Visit Date Has Passed" : "Check-in Not Yet Available"}
+              </span>
+              <span className="checkin-hint">
+                {isPast
+                  ? `This visit was scheduled for ${formattedDate}. Check-in is no longer available.`
+                  : `Check-in opens on ${formattedDate}.`}
+              </span>
+            </div>
+          </div>
+        </div>
+      );
+    }
   }
 
   return (

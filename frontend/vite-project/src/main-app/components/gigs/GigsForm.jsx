@@ -7,7 +7,7 @@ import GuidelinesCard from "./GuidelinesCard_fixed";
 import "./gigs.css";
 import "./Pricing.css";
 import "./galleryUploads.css";
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import PublishGig from "./Publish";
 import config from "../../config"; // Import centralized config for API URLs
 import axios from "axios";
@@ -52,6 +52,7 @@ const GigsForm = () => {
   const [activeGigsCount, setActiveGigsCount] = useState(0);
   const [isLoadingGigs, setIsLoadingGigs] = useState(true);
   const [showSuccessModal, setShowSuccessModal] = useState(false);
+  const [redirectCountdown, setRedirectCountdown] = useState(null);
   const [showFailureModal, setShowFailureModal] = useState(false);
   const [failureMessage, setFailureMessage] = useState("");
   const [showShareOptions, setShowShareOptions] = useState(false);
@@ -362,6 +363,10 @@ const GigsForm = () => {
   const [video, setVideo] = useState(null);
   const [selectedFile, setSelectedFile] = useState(null);
   const [imagePreview, setImagePreview] = useState(null);
+  const [imageRejectionError, setImageRejectionError] = useState(null);
+  const fileInputRef = useRef(null);
+  // Ref so the countdown interval can read the latest showShareOptions without a stale closure
+  const showShareOptionsRef = useRef(false);
 
   // Effect to set image preview if editing existing gig with image
   useEffect(() => {
@@ -450,9 +455,12 @@ const GigsForm = () => {
         const existingGigs = await response.json();
         console.log('🔍 All existing gigs:', existingGigs.map(g => ({ id: g.id, status: g.status, title: g.title })));
         
+        // Exclude special/care-request gigs — they have no Pause button so
+        // they must not count toward the 2-gig publish limit.
         const activeGigs = existingGigs.filter(gig => {
           const status = gig.status?.toLowerCase();
-          return status === 'published' || status === 'active';
+          const isSpecial = gig.isSpecialGig || gig.IsSpecialGig;
+          return (status === 'published' || status === 'active') && !isSpecial;
         });
         
         console.log('🔍 Active gigs found:', activeGigs.length, activeGigs.map(g => ({ id: g.id, status: g.status })));
@@ -479,6 +487,35 @@ const GigsForm = () => {
       }
     };
   }, [imagePreview]);
+
+  // Auto-redirect countdown after publish success
+  // Keep the ref in sync so the interval always sees the latest value
+  useEffect(() => {
+    showShareOptionsRef.current = showShareOptions;
+  }, [showShareOptions]);
+
+  useEffect(() => {
+    if (!showSuccessModal) {
+      setRedirectCountdown(null);
+      return;
+    }
+    setRedirectCountdown(5);
+    const interval = setInterval(() => {
+      // Pause while the share panel is open
+      if (showShareOptionsRef.current) return;
+      setRedirectCountdown(prev => {
+        if (prev <= 1) {
+          clearInterval(interval);
+          setShowSuccessModal(false);
+          setShowShareOptions(false);
+          navigate('/app/caregiver/profile', { state: { refreshGigs: true } });
+          return null;
+        }
+        return prev - 1;
+      });
+    }, 1000);
+    return () => clearInterval(interval);
+  }, [showSuccessModal]);
 
   const searchtags = formData.searchTags.length > 0
     ? formData.searchTags.join(", ")
@@ -893,6 +930,21 @@ const GigsForm = () => {
           }
         }
 
+        // Handle 422 — image moderation rejection from backend
+        if (err.response.status === 422 && err.response.data?.error === 'image_rejected') {
+          setImageRejectionError({
+            reason: err.response.data.reason,
+            suggestions: err.response.data.suggestions || []
+          });
+          setCurrentStep(2); // Navigate back to Gallery so the user sees the error inline
+          setSelectedFile(null);
+          setImagePreview(null);
+          if (fileInputRef.current) {
+            fileInputRef.current.value = ''; // Reset DOM input so re-selecting the same file fires onChange
+          }
+          return; // Don't show generic error
+        }
+
         const errorMessage = err.response.data?.title || err.response.data?.message || "Submission failed.";
         setServerMessage(`Error: ${errorMessage}`);
         toast.error(`Submission failed: ${errorMessage}`);
@@ -939,6 +991,7 @@ const GigsForm = () => {
       
       setSelectedFile(null);
       setImagePreview(null);
+      setImageRejectionError(null);
       console.log("Image removed/cleared");
       
       // Clear image validation error
@@ -954,51 +1007,63 @@ const GigsForm = () => {
     
     if (file) {
       // Validate file type
-      if (!file.type.startsWith('image/')) {
-        toast.error("Please select a valid image file (JPG, PNG, GIF, WebP).");
+      const allowedTypes = ['image/jpeg', 'image/jpg', 'image/png', 'image/webp'];
+      if (!file.type.startsWith('image/') || !allowedTypes.includes(file.type.toLowerCase())) {
+        const msg = `Unsupported file format (${file.type || 'unknown'}). Please use JPEG, PNG, or WebP.`;
+        toast.error(msg);
+        setValidationErrors(prev => ({ ...prev, image1: msg }));
         return;
       }
-      
-      // Additional validation for specific formats
-      const allowedTypes = ['image/jpeg', 'image/jpg', 'image/png', 'image/gif', 'image/webp'];
-      if (!allowedTypes.includes(file.type.toLowerCase())) {
-        toast.error("Unsupported file format. Please use JPG, PNG, GIF, or WebP.");
-        return;
-      }
-      
+
       // Validate file size (max 5MB)
       const maxSize = 5 * 1024 * 1024; // 5MB
       if (file.size > maxSize) {
-        toast.error("Image size must be less than 5MB.");
+        const msg = `Image is too large (${(file.size / 1024 / 1024).toFixed(1)} MB). Maximum allowed size is 5 MB.`;
+        toast.error(msg);
+        setValidationErrors(prev => ({ ...prev, image1: msg }));
         return;
       }
       
-      // Store the file object directly
-      setSelectedFile(file);
-      
+      // Clear any previous rejection error when a new file is selected
+      setImageRejectionError(null);
+
       // Cleanup previous blob URL to prevent memory leaks
       if (imagePreview && imagePreview.startsWith('blob:')) {
         URL.revokeObjectURL(imagePreview);
       }
-      
-      // Create preview using FileReader for data URL (CSP compliant)
+
+      // Create preview using FileReader for data URL (CSP compliant).
+      // setSelectedFile is deferred until the dimension check passes inside onload.
       const reader = new FileReader();
-      reader.onload = (e) => {
-        setImagePreview(e.target.result);
+      reader.onload = (readerEvent) => {
+        const img = new Image();
+        img.onload = () => {
+          const { naturalWidth: w, naturalHeight: h } = img;
+          if (w < 300 || h < 300) {
+            toast.error(`Image is too small (${w}\u00d7${h}px). Minimum size is 300\u00d7300 px.`);
+            setValidationErrors(prev => ({ ...prev, image1: `Image must be at least 300\u00d7300 px (yours is ${w}\u00d7${h}).` }));
+            return;
+          }
+          if (w > 5000 || h > 5000) {
+            toast.error(`Image is too large (${w}\u00d7${h}px). Maximum size is 5000\u00d75000 px.`);
+            setValidationErrors(prev => ({ ...prev, image1: `Image must not exceed 5000\u00d75000 px (yours is ${w}\u00d7${h}).` }));
+            return;
+          }
+          // All pre-checks pass — commit the selection
+          setSelectedFile(file);
+          setImagePreview(readerEvent.target.result);
+          console.log("File selected successfully:", file.name, file.size, "bytes");
+          toast.success("Image selected successfully!");
+          // Clear any lingering image validation error
+          setValidationErrors(prev => {
+            const next = { ...prev };
+            delete next.image1;
+            return next;
+          });
+        };
+        img.src = readerEvent.target.result;
       };
       reader.readAsDataURL(file);
-      
-      console.log("File selected successfully:", file.name, file.size, "bytes");
-      toast.success("Image selected successfully!");
-      
-      // Clear image validation error
-      if (validationErrors.image1) {
-        setValidationErrors(prev => {
-          const newErrors = { ...prev };
-          delete newErrors.image1;
-          return newErrors;
-        });
-      }
     }
   };
 
@@ -1074,6 +1139,8 @@ const GigsForm = () => {
                 validationErrors={validationErrors}
                 imagePreview={imagePreview}
                 selectedFile={selectedFile}
+                imageRejectionError={imageRejectionError}
+                fileInputRef={fileInputRef}
               />
             )}
             {currentStep === 3 && (
@@ -1142,6 +1209,7 @@ const GigsForm = () => {
         <div className="gig-success-modal-overlay" onClick={() => {
           setShowSuccessModal(false);
           setShowShareOptions(false);
+          navigate('/app/caregiver/profile', { state: { refreshGigs: true } });
         }}>
           <div className="gig-success-modal-content" onClick={(e) => e.stopPropagation()}>
             <div className="success-icon-container">
@@ -1166,7 +1234,11 @@ const GigsForm = () => {
               </div>
             </div>
             <h2 className="success-title">Your gig has been published</h2>
-            <p className="success-description">Spread the word to boost your sales.</p>
+            <p className="success-description">
+              {redirectCountdown !== null
+                ? `Redirecting to your gigs in ${redirectCountdown}…`
+                : 'Spread the word to boost your sales.'}
+            </p>
             
             <div className="success-modal-actions">
               <button 
@@ -1187,7 +1259,7 @@ const GigsForm = () => {
                 onClick={() => {
                   setShowSuccessModal(false);
                   setShowShareOptions(false);
-                  navigate("/app/caregiver/profile", { state: { refreshGigs: true } });
+                  navigate('/app/caregiver/profile', { state: { refreshGigs: true } });
                 }}
               >
                 Continue

@@ -601,6 +601,23 @@
   margin: 0;
 }
 
+.checkin-section--wrong-date {
+  background: #fff8e1;
+  border: 1px solid #ffe082;
+  border-style: solid;
+  text-align: left;
+}
+
+.checkin-section--wrong-date .checkin-label {
+  color: #e65100;
+}
+
+.checkin-section--wrong-date .checkin-hint {
+  color: #795548;
+  font-size: 12px;
+  margin: 0;
+}
+
 .checkin-section--closed {
   background: #fff3f3;
   border: 1px solid #f5c6cb;

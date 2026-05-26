@@ -7,7 +7,9 @@ const GalleryUploads = ({
   onFieldBlur, 
   validationErrors = {}, 
   imagePreview, 
-  selectedFile 
+  selectedFile,
+  imageRejectionError = null,
+  fileInputRef = null
 }) => {
   // Remove local state since we get preview from parent
   // const [imagePreviews, setImagePreviews] = useState([null, null, null]);
@@ -59,7 +61,7 @@ const GalleryUploads = ({
             <ul className="gallery-requirements">
               <li>Use a high-res image that represents your service</li>
               <li>Show your professionalism</li>
-              <li>Supported formats: JPG, PNG, GIF, WebP. Max size: 5MB</li>
+              <li>Supported formats: JPEG, PNG, WebP. Max size: 5MB</li>
             </ul>
             {selectedFile && (
               <div className="file-info">
@@ -71,6 +73,21 @@ const GalleryUploads = ({
             {validationErrors.image1 && (
               <div className="validation-error">
                 {validationErrors.image1}
+              </div>
+            )}
+            {imageRejectionError && (
+              <div className="image-rejection-error">
+                <p className="image-rejection-reason">{imageRejectionError.reason}</p>
+                {imageRejectionError.suggestions.length > 0 && (
+                  <>
+                    <p className="image-rejection-suggestions-label">Try one of these:</p>
+                    <ul className="image-rejection-suggestions">
+                      {imageRejectionError.suggestions.map((suggestion, i) => (
+                        <li key={i}>{suggestion}</li>
+                      ))}
+                    </ul>
+                  </>
+                )}
               </div>
             )}
           </div>
@@ -133,8 +150,9 @@ const GalleryUploads = ({
                   </div>
                 )}
                 <input
+                  ref={fileInputRef}
                   type="file"
-                  accept="image/*"
+                  accept=".jpg,.jpeg,.png,.webp,image/jpeg,image/png,image/webp"
                   onChange={(e) => handleImageChange(e, 0)}
                   style={{ display: 'none' }}
                 />

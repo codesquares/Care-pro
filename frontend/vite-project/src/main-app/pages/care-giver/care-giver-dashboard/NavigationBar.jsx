@@ -111,8 +111,14 @@ const NavigationBar = () => {
               </li>
               <li onClick={() => { navigate(`${basePath}/create-gigs`); setMobileMenuOpen(false); }}>
                 <div className="menu-item-content">
-                  <span>➕</span>
+                  <FaPlusCircle className="mobile-menu-icon" />
                   <span>Create Gig</span>
+                </div>
+              </li>
+              <li onClick={() => { navigate(`${basePath}/profile`); setMobileMenuOpen(false); }}>
+                <div className="menu-item-content">
+                  <FaBriefcase className="mobile-menu-icon" />
+                  <span>Manage Gigs</span>
                 </div>
               </li>
               <li onClick={() => { navigate(`${basePath}/orders`); setMobileMenuOpen(false); }}>
@@ -205,7 +211,11 @@ const NavigationBar = () => {
           </li>
           <li className="nav-link text-link" onClick={() => navigate(`${basePath}/create-gigs`)}>
             <FaPlusCircle className="nav-link-icon" />
-            + Gigs
+            Create Gig
+          </li>
+          <li className="nav-link text-link" onClick={() => navigate(`${basePath}/profile`)}>
+            <FaBriefcase className="nav-link-icon" />
+            Manage Gigs
           </li>
           <li className="nav-link text-link" onClick={() => navigate(`${basePath}/wallet`)}>
             <FaWallet className="nav-link-icon" />
