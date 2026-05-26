@@ -60,6 +60,8 @@ const AdminTaskSheets = ({ orderId }) => {
   // Reschedule inline form state
   const [rescheduleId, setRescheduleId] = useState(null);
   const [rescheduleDate, setRescheduleDate] = useState("");
+  const [rescheduleStartTime, setRescheduleStartTime] = useState("");
+  const [rescheduleEndTime, setRescheduleEndTime] = useState("");
   const [rescheduleReason, setRescheduleReason] = useState("");
   const [rescheduling, setRescheduling] = useState(false);
 
@@ -148,22 +150,28 @@ const AdminTaskSheets = ({ orderId }) => {
   // ── Actions ────────────────────────────────────────────────────────────────
 
   const handleReschedule = async (sheetId) => {
-    if (!rescheduleDate) {
-      toast.error("Please select a new date.");
+    if (!rescheduleDate && !rescheduleStartTime && !rescheduleEndTime) {
+      toast.error("Please select a new date, a new time window, or both.");
       return;
     }
     setRescheduling(true);
-    const result = await TaskSheetService.rescheduleSheet(
-      sheetId,
-      `${rescheduleDate}T00:00:00`,
-      rescheduleReason.trim() || undefined
-    );
+    const result = await TaskSheetService.rescheduleSheet(sheetId, {
+      newDate: rescheduleDate || null,
+      newStartTime: rescheduleStartTime || null,
+      newEndTime: rescheduleEndTime || null,
+      reason: rescheduleReason.trim() || undefined,
+    });
     if (result.success) {
+      const timeNote = result.data.scheduledStartTime && result.data.scheduledEndTime
+        ? ` · ${formatTimeStr(result.data.scheduledStartTime)}–${formatTimeStr(result.data.scheduledEndTime)} (WAT)`
+        : "";
       toast.success(
-        `Rescheduled: ${formatWAT(result.data.oldDate)} → ${formatWAT(result.data.newDate)}`
+        `Rescheduled: ${formatWAT(result.data.oldDate)} → ${formatWAT(result.data.newDate)}${timeNote}`
       );
       setRescheduleId(null);
       setRescheduleDate("");
+      setRescheduleStartTime("");
+      setRescheduleEndTime("");
       setRescheduleReason("");
       fetchSheets();
     } else {
@@ -213,6 +221,8 @@ const AdminTaskSheets = ({ orderId }) => {
     setExpandedId(null);
     setManualCheckinId(null);
     setRescheduleDate("");
+    setRescheduleStartTime("");
+    setRescheduleEndTime("");
     setRescheduleReason("");
     setRescheduleId((prev) => (prev === sheetId ? null : sheetId));
   };
@@ -310,11 +320,11 @@ const AdminTaskSheets = ({ orderId }) => {
                 <div className="ats-reschedule-form">
                   {sheet.scheduledStartTime && sheet.scheduledEndTime && (
                     <p className="ats-reschedule-hint">
-                      Visit {sheet.sheetNumber} &middot; {formatTimeStr(sheet.scheduledStartTime)}{" \u2013 "}{formatTimeStr(sheet.scheduledEndTime)} &mdash; select a new date below.
+                      Visit {sheet.sheetNumber} &middot; {formatTimeStr(sheet.scheduledStartTime)}{" \u2013 "}{formatTimeStr(sheet.scheduledEndTime)} (WAT) &mdash; update the date, the time window, or both.
                     </p>
                   )}
                   <div className="ats-form-field">
-                    <label className="ats-form-label">New visit date *</label>
+                    <label className="ats-form-label">New visit date <span className="ats-form-optional">(optional if changing time only)</span></label>
                     <input
                       type="date"
                       className="ats-form-input"
@@ -322,6 +332,24 @@ const AdminTaskSheets = ({ orderId }) => {
                       onChange={(e) => setRescheduleDate(e.target.value)}
                       min={new Date().toISOString().split("T")[0]}
                     />
+                  </div>
+                  <div className="ats-form-field">
+                    <label className="ats-form-label">New time window — Nigerian time (WAT) <span className="ats-form-optional">(optional if changing date only)</span></label>
+                    <div className="ats-time-row">
+                      <input
+                        type="time"
+                        className="ats-form-input ats-form-input--time"
+                        value={rescheduleStartTime}
+                        onChange={(e) => setRescheduleStartTime(e.target.value)}
+                      />
+                      <span className="ats-time-sep">–</span>
+                      <input
+                        type="time"
+                        className="ats-form-input ats-form-input--time"
+                        value={rescheduleEndTime}
+                        onChange={(e) => setRescheduleEndTime(e.target.value)}
+                      />
+                    </div>
                   </div>
                   <div className="ats-form-field">
                     <label className="ats-form-label">Reason (optional)</label>
@@ -336,7 +364,7 @@ const AdminTaskSheets = ({ orderId }) => {
                   <div className="ats-form-actions">
                     <button
                       className="ats-action-btn ats-action-btn--confirm"
-                      disabled={rescheduling || !rescheduleDate}
+                      disabled={rescheduling || (!rescheduleDate && !rescheduleStartTime && !rescheduleEndTime)}
                       onClick={() => handleReschedule(sheet.id)}
                     >
                       {rescheduling ? "Saving…" : "Confirm Reschedule"}
@@ -346,6 +374,8 @@ const AdminTaskSheets = ({ orderId }) => {
                       onClick={() => {
                         setRescheduleId(null);
                         setRescheduleDate("");
+                        setRescheduleStartTime("");
+                        setRescheduleEndTime("");
                         setRescheduleReason("");
                       }}
                     >

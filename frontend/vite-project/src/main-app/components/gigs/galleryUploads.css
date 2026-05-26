@@ -131,6 +131,46 @@
   left: 0;
 }
 
+/* Image moderation rejection error (422 from backend) */
+.image-rejection-error {
+  background-color: #fff5f5;
+  border: 1px solid #fc8181;
+  border-radius: 6px;
+  padding: 0.75rem 1rem;
+  margin-top: 0.75rem;
+}
+.image-rejection-reason {
+  color: #c53030;
+  font-size: 0.875rem;
+  font-weight: 600;
+  margin: 0 0 0.5rem;
+}
+.image-rejection-suggestions-label {
+  color: #744210;
+  font-size: 0.8rem;
+  font-weight: 600;
+  margin: 0 0 0.25rem;
+}
+.image-rejection-suggestions {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+}
+.image-rejection-suggestions li {
+  font-size: 0.8rem;
+  color: #744210;
+  padding-left: 14px;
+  position: relative;
+  margin: 4px 0;
+}
+.image-rejection-suggestions li::before {
+  content: "\2022";
+  color: #dd6b20;
+  font-weight: bold;
+  position: absolute;
+  left: 0;
+}
+
 .uploads-card-area {
   flex: 1;
   display: flex;

@@ -369,6 +369,28 @@
   color: #444;
 }
 
+.ats-form-optional {
+  font-weight: 400;
+  color: #999;
+}
+
+.ats-time-row {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.ats-form-input--time {
+  width: auto;
+  flex: 1;
+}
+
+.ats-time-sep {
+  font-size: 14px;
+  color: #555;
+  flex-shrink: 0;
+}
+
 .ats-form-input {
   padding: 7px 10px;
   border: 1px solid #ddd;
