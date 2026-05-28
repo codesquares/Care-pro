@@ -14,6 +14,7 @@ const SUCCESS_TYPES = new Set([
   'BookingConfirmed', 'NegotiationAgreed', 'NegotiationBothAgreed',
   'ContractApproved', 'RefundApproved',
   'CommitmentConfirmed',
+  'GigPublished', 'GigShared',
 ]);
 
 // Notification types that show an amber warning toast
@@ -35,6 +36,7 @@ const INFO_TYPES = new Set([
   'RefundRequestAdminAlert', 'ChatViolationFlagged',
   'TaskProposalAccepted', 'TaskProposalRejected', 'TaskProposalSubmitted',
   'ContractSent', 'ContractRevisionRequested', 'ContractPendingClientApproval',
+  'DraftGenerated', 'GigPaused', 'GigDeleted',
 ]);
 
 const CARE_REQUEST_TYPES = [

@@ -254,17 +254,20 @@ const TaskSheetService = {
    * Reschedule a scheduled visit to a new date.
    * Allowed for: Client (order owner), Admin, SuperAdmin.
    * @param {string} taskSheetId
-   * @param {string} newDate - ISO date string e.g. "2025-07-10T00:00:00Z"
-   * @param {string} [reason]
+   * @param {Object} opts
+   * @param {string|null} [opts.newDate] - ISO date string e.g. "2025-07-10". Null if only changing time.
+   * @param {string|null} [opts.newStartTime] - "HH:mm" in Nigerian time (WAT). Must be sent with newEndTime.
+   * @param {string|null} [opts.newEndTime] - "HH:mm" in Nigerian time (WAT). Must be sent with newStartTime.
+   * @param {string} [opts.reason]
    * @returns {Promise<Object>} { success, data, error }
    */
-  async rescheduleSheet(taskSheetId, newDate, reason) {
+  async rescheduleSheet(taskSheetId, { newDate = null, newStartTime = null, newEndTime = null, reason } = {}) {
     try {
       if (!taskSheetId) {
         return { success: false, error: "Task sheet ID is required" };
       }
-      if (!newDate) {
-        return { success: false, error: "New date is required" };
+      if (!newDate && !newStartTime && !newEndTime) {
+        return { success: false, error: "Please provide a new date, a new time window, or both." };
       }
 
       const authToken = localStorage.getItem("authToken");
@@ -272,7 +275,12 @@ const TaskSheetService = {
         return { success: false, error: "Authentication required" };
       }
 
-      const body = { newDate, reason: reason || undefined };
+      const body = {
+        newDate: newDate || null,
+        newStartTime: newStartTime || null,
+        newEndTime: newEndTime || null,
+        reason: reason || undefined,
+      };
 
       const response = await fetch(`${config.BASE_URL}/TaskSheets/${taskSheetId}/reschedule`, {
         method: "PUT",

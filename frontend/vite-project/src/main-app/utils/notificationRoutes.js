@@ -91,10 +91,28 @@ const TYPE_MAP = {
   'newreview':                   'NewReview',
   'review':                      'NewReview',
 
-  // Gig
+  // Gig lifecycle
   'new_gig':                     'NewGig',
   'newgig':                      'NewGig',
   'gig_created':                 'NewGig',
+  'gig_published':               'GigPublished',
+  'gigpublished':                'GigPublished',
+  'gig published':               'GigPublished',
+  'draft_generated':             'DraftGenerated',
+  'draftgenerated':              'DraftGenerated',
+  'draft generated':             'DraftGenerated',
+  'draft_saved':                 'DraftGenerated',
+  'draftsaved':                  'DraftGenerated',
+  'draft saved':                 'DraftGenerated',
+  'gig_paused':                  'GigPaused',
+  'gigpaused':                   'GigPaused',
+  'gig paused':                  'GigPaused',
+  'gig_shared':                  'GigShared',
+  'gigshared':                   'GigShared',
+  'gig shared':                  'GigShared',
+  'gig_deleted':                 'GigDeleted',
+  'gigdeleted':                  'GigDeleted',
+  'gig deleted':                 'GigDeleted',
 
   // Withdrawal
   'withdrawal_request':          'WithdrawalRequest',
@@ -355,7 +373,9 @@ const KNOWN_CANONICAL = new Set([
   'RefundRequested', 'RefundApproved', 'RefundRejected',
   'OrderNotification', 'OrderConfirmation', 'OrderCancelled', 'BookingConfirmed',
   'OrderCompleted', 'OrderDisputed',
-  'NewReview', 'NewGig', 'WithdrawalRequest', 'VerificationUpdate',
+  'NewReview', 'NewGig',
+  'GigPublished', 'DraftGenerated', 'GigPaused', 'GigShared', 'GigDeleted',
+  'WithdrawalRequest', 'VerificationUpdate',
   'SystemNotice', 'SystemAlert', 'Signup',
   'CareRequestMatched', 'CareRequestNoMatch',
   'CareRequestAdminMatchUpdate', 'CareRequestAdminNoMatch',
@@ -586,6 +606,19 @@ export const getNotificationRoute = (notification, userRole) => {
     case 'NewGig':
       if (relatedEntityId) return `/service/${relatedEntityId}`;
       if (isCaregiver) return `/app/caregiver/create-gigs`;
+      return null;
+
+    // relatedEntityId = gig ID for all gig lifecycle types
+    case 'GigPublished':
+    case 'GigShared': // reserved — handle gracefully when it ships
+      if (relatedEntityId && isCaregiver) return `/service/${relatedEntityId}`;
+      if (isCaregiver) return `/app/caregiver/profile`;
+      return null;
+
+    case 'DraftGenerated':
+    case 'GigPaused':
+    case 'GigDeleted':
+      if (isCaregiver) return `/app/caregiver/profile`;
       return null;
 
     // ── Withdrawal notifications ─────────────────────────
@@ -925,7 +958,14 @@ export const getNotificationActionLabel = (rawType) => {
     case 'NewReview':
       return 'View Review';
     case 'NewGig':
+    case 'GigPublished':
+    case 'GigPaused':
+    case 'GigShared':
       return 'View Gig';
+    case 'DraftGenerated':
+      return 'View Draft';
+    case 'GigDeleted':
+      return 'View Gigs';
     case 'WithdrawalRequest':
       return 'View Withdrawal';
     case 'VerificationUpdate':
@@ -1049,6 +1089,16 @@ export const getNotificationTypeIcon = (rawType) => {
       return '📢';
     case 'NewGig':
       return '🛠️';
+    case 'GigPublished':
+      return '🚀';
+    case 'DraftGenerated':
+      return '📝';
+    case 'GigPaused':
+      return '⏸️';
+    case 'GigShared':
+      return '🔗';
+    case 'GigDeleted':
+      return '🗑️';
     case 'Signup':
       return '👋';
     case 'ContractSent':

@@ -55,8 +55,8 @@ const GigsSection = () => {
       return;
     }
 
-    // Check if we can publish (less than 2 active gigs AND caregiver eligibility)
-    if (activeGigs.length >= 2) {
+    // Check if we can publish (less than 2 regular active gigs AND caregiver eligibility)
+    if (regularActiveGigsCount >= 2) {
       showError('You can only have 2 active gigs at a time. Please pause one of your active gigs first to publish this one.');
       return;
     }
@@ -94,8 +94,9 @@ const GigsSection = () => {
         )
       );
 
-      // Show success message (you can replace this with a toast notification)
       showSuccess('Gig published successfully!');
+      // Re-fetch silently to confirm backend count is accurate (no spinner flash)
+      await fetchGigs(true);
       
     } catch (err) {
       console.error('Error publishing gig:', err);
@@ -135,6 +136,8 @@ const GigsSection = () => {
       );
 
       showSuccess('Gig paused successfully!');
+      // Re-fetch silently to confirm backend count is accurate (no spinner flash)
+      await fetchGigs(true);
       
     } catch (err) {
       console.error('Error pausing gig:', err);
@@ -238,6 +241,13 @@ const GigsSection = () => {
     return gigs.filter(gig => status(gig) === 'published' || status(gig) === 'active');
   }, [gigs]);
 
+  // Only regular (non-special) active gigs count toward the 2-gig publish limit.
+  // Care-request / special gigs have no Pause button so they must not block publishing.
+  const regularActiveGigsCount = useMemo(() =>
+    activeGigs.filter(gig => !gig.isSpecialGig).length,
+    [activeGigs]
+  );
+
   const pausedGigs = useMemo(() => {
     return gigs.filter(gig => gig.status?.toLowerCase() === 'paused');
   }, [gigs]);
@@ -246,11 +256,11 @@ const GigsSection = () => {
     return gigs.filter(gig => gig.status?.toLowerCase() === 'draft');
   }, [gigs]);
 
-  // Check if user can publish new gigs (max 2 active gigs allowed)
+  // Check if user can publish new gigs (max 2 regular active gigs allowed)
   // While status is still loading, allow publish attempts (the handler will re-check)
   const canPublishNewGig = useMemo(() => 
-    activeGigs.length < 2 && (statusLoading || canPublishGigs), 
-    [activeGigs, canPublishGigs, statusLoading]
+    regularActiveGigsCount < 2 && (statusLoading || canPublishGigs), 
+    [regularActiveGigsCount, canPublishGigs, statusLoading]
   );
 
   const handleShareGig = async (gig) => {
@@ -271,9 +281,9 @@ const GigsSection = () => {
   };
 
   // Extract fetchGigs as a reusable function
-  const fetchGigs = async () => {
+  const fetchGigs = async (silent = false) => {
     try {
-      setIsLoading(true);
+      if (!silent) setIsLoading(true);
       const userDetails = JSON.parse(localStorage.getItem("userDetails"));
       if (!userDetails?.id) {
         throw new Error("Caregiver ID not found in local storage.");
@@ -288,10 +298,9 @@ const GigsSection = () => {
         scopedClientId: g.scopedClientId || g.ScopedClientId || null,
       }));
       setGigs(normalized);
-      setIsLoading(false);
+      if (!silent) setIsLoading(false);
     } catch (err) {
-      setError(err.message);
-      setIsLoading(false);
+      if (!silent) setError(err.message);
     }
   };
 
@@ -401,21 +410,26 @@ const GigsSection = () => {
         </div>
 
         {/* ── Eligibility notice ── */}
-        {(activeTab === "paused" || activeTab === "draft") && !canPublishNewGig && eligibilityChecked && !statusLoading && !statusHasErrors && (
-          <div className="gigs-eligibility-notice">
-            {activeGigs.length >= 2 ? (
-              <p>⚠️ You have reached the maximum of 2 active gigs. Pause an active gig to publish more.</p>
-            ) : (
-              <div>
-                <p>⚠️ To publish gigs, you need to complete the following requirements:</p>
-                <ul className="gigs-eligibility-list">
-                  <li className={isVerified ? 'completed' : 'pending'}>{isVerified ? '✅' : '❌'} Complete identity verification</li>
-                  <li className={isQualified ? 'completed' : 'pending'}>{isQualified ? '✅' : '❌'} Pass qualification assessment</li>
-                  <li className={hasCertificates ? 'completed' : 'pending'}>{hasCertificates ? '✅' : '❌'} Upload at least one certificate</li>
-                </ul>
+        {(activeTab === "paused" || activeTab === "draft") && eligibilityChecked && !statusLoading && !statusHasErrors && (
+          <>
+            {regularActiveGigsCount >= 2 && (
+              <div className="gigs-eligibility-notice">
+                <p>⚠️ You have reached the maximum of 2 active gigs. Pause an active gig to publish more.</p>
               </div>
             )}
-          </div>
+            {regularActiveGigsCount < 2 && !canPublishGigs && (
+              <div className="gigs-eligibility-notice">
+                <div>
+                  <p>⚠️ To publish gigs, you need to complete the following requirements:</p>
+                  <ul className="gigs-eligibility-list">
+                    <li className={isVerified ? 'completed' : 'pending'}>{isVerified ? '✅' : '❌'} Complete identity verification</li>
+                    <li className={isQualified ? 'completed' : 'pending'}>{isQualified ? '✅' : '❌'} Pass qualification assessment</li>
+                    <li className={hasCertificates ? 'completed' : 'pending'}>{hasCertificates ? '✅' : '❌'} Upload at least one certificate</li>
+                  </ul>
+                </div>
+              </div>
+            )}
+          </>
         )}
 
         {/* ── Table header ── */}
@@ -523,7 +537,7 @@ const GigsSection = () => {
                         className="gigs-link"
                         onClick={() => handlePublishGig(gig)}
                         disabled={publishingGigs.has(gig.id) || !canPublishNewGig}
-                        title={!canPublishNewGig ? (activeGigs.length >= 2 ? 'Max 2 active gigs. Pause one first.' : 'Complete all eligibility requirements to publish.') : ''}
+                        title={!canPublishNewGig ? (regularActiveGigsCount >= 2 ? 'Max 2 active gigs. Pause one first.' : 'Complete all eligibility requirements to publish.') : ''}
                       >
                         {publishingGigs.has(gig.id) ? 'Publishing...' : 'Publish'}
                       </button>
@@ -539,7 +553,7 @@ const GigsSection = () => {
                         className="gigs-link"
                         onClick={() => handlePublishGig(gig)}
                         disabled={publishingGigs.has(gig.id) || !canPublishNewGig}
-                        title={!canPublishNewGig ? (activeGigs.length >= 2 ? 'Max 2 active gigs. Pause one first.' : 'Complete all eligibility requirements to publish.') : ''}
+                        title={!canPublishNewGig ? (regularActiveGigsCount >= 2 ? 'Max 2 active gigs. Pause one first.' : 'Complete all eligibility requirements to publish.') : ''}
                       >
                         {publishingGigs.has(gig.id) ? 'Publishing...' : 'Publish'}
                       </button>

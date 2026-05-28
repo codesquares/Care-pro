@@ -45,6 +45,8 @@ const ClientVisitView = ({ sheet, orderId, onVisitReviewed, onSheetUpdated, onRe
   // Reschedule state
   const [showReschedule, setShowReschedule] = useState(false);
   const [rescheduleDate, setRescheduleDate] = useState("");
+  const [rescheduleStartTime, setRescheduleStartTime] = useState("");
+  const [rescheduleEndTime, setRescheduleEndTime] = useState("");
   const [rescheduleReason, setRescheduleReason] = useState("");
   const [rescheduleLoading, setRescheduleLoading] = useState(false);
 
@@ -97,22 +99,24 @@ const ClientVisitView = ({ sheet, orderId, onVisitReviewed, onSheetUpdated, onRe
   };
 
   const handleRescheduleVisit = async () => {
-    if (!rescheduleDate) {
-      toast.error("Please select a new date.");
+    if (!rescheduleDate && !rescheduleStartTime && !rescheduleEndTime) {
+      toast.error("Please select a new date, a new time window, or both.");
       return;
     }
     setRescheduleLoading(true);
-    const result = await TaskSheetService.rescheduleSheet(
-      sheet.id,
-      `${rescheduleDate}T00:00:00Z`,
-      rescheduleReason.trim() || undefined
-    );
+    const result = await TaskSheetService.rescheduleSheet(sheet.id, {
+      newDate: rescheduleDate || null,
+      newStartTime: rescheduleStartTime || null,
+      newEndTime: rescheduleEndTime || null,
+      reason: rescheduleReason.trim() || undefined,
+    });
     if (result.success) {
       toast.success(result.data.message || "Visit rescheduled successfully.");
       setShowReschedule(false);
       setRescheduleDate("");
+      setRescheduleStartTime("");
+      setRescheduleEndTime("");
       setRescheduleReason("");
-      // Full refetch so scheduledStartTime/scheduledEndTime are updated on old records
       if (onRescheduleSuccess) onRescheduleSuccess();
     } else {
       toast.error(result.error || "Failed to reschedule visit.");
@@ -199,7 +203,7 @@ const ClientVisitView = ({ sheet, orderId, onVisitReviewed, onSheetUpdated, onRe
             {sheet.scheduledDate &&
               ` — ${new Date(sheet.scheduledDate).toLocaleDateString("en-NG", { timeZone: "Africa/Lagos", weekday: "long", month: "long", day: "numeric" })}`}
             {sheet.scheduledStartTime && sheet.scheduledEndTime &&
-              ` · ${formatTimeStr(sheet.scheduledStartTime)} – ${formatTimeStr(sheet.scheduledEndTime)}`}
+              ` · ${formatTimeStr(sheet.scheduledStartTime)} – ${formatTimeStr(sheet.scheduledEndTime)} (WAT)`}
           </span>
         ) : isSubmitted ? (
           <span className="cv-status-badge cv-status-badge--submitted">
@@ -222,7 +226,14 @@ const ClientVisitView = ({ sheet, orderId, onVisitReviewed, onSheetUpdated, onRe
             <span className="cv-checkin-label">Caregiver Checked In</span>
             <span className="cv-checkin-time">
               {checkin.checkinTimestamp
-                ? new Date(checkin.checkinTimestamp).toLocaleString()
+                ? new Date(checkin.checkinTimestamp).toLocaleString("en-NG", {
+                    timeZone: "Africa/Lagos",
+                    year: "numeric",
+                    month: "short",
+                    day: "numeric",
+                    hour: "2-digit",
+                    minute: "2-digit",
+                  }) + " (WAT)"
                 : "—"}
             </span>
             {checkin.distanceFromServiceAddress != null && (
@@ -288,11 +299,11 @@ const ClientVisitView = ({ sheet, orderId, onVisitReviewed, onSheetUpdated, onRe
             <div className="cv-reschedule-form">
               {sheet.scheduledStartTime && sheet.scheduledEndTime && (
                 <p className="cv-reschedule-hint">
-                  Visit {sheet.sheetNumber} runs {formatTimeStr(sheet.scheduledStartTime)}
-                  {" – "}{formatTimeStr(sheet.scheduledEndTime)}. Select a new date below.
+                  Visit {sheet.sheetNumber} currently runs {formatTimeStr(sheet.scheduledStartTime)}
+                  {" – "}{formatTimeStr(sheet.scheduledEndTime)} (WAT). Update the date, the time window, or both.
                 </p>
               )}
-              <label className="cv-reschedule-label">New date</label>
+              <label className="cv-reschedule-label">New date <span className="cv-reschedule-optional">(optional if changing time only)</span></label>
               <input
                 type="date"
                 className="cv-reschedule-date-input"
@@ -300,6 +311,22 @@ const ClientVisitView = ({ sheet, orderId, onVisitReviewed, onSheetUpdated, onRe
                 onChange={(e) => setRescheduleDate(e.target.value)}
                 min={new Date().toISOString().split("T")[0]}
               />
+              <label className="cv-reschedule-label">New time window — Nigerian time (WAT) <span className="cv-reschedule-optional">(optional if changing date only)</span></label>
+              <div className="cv-reschedule-time-row">
+                <input
+                  type="time"
+                  className="cv-reschedule-time-input"
+                  value={rescheduleStartTime}
+                  onChange={(e) => setRescheduleStartTime(e.target.value)}
+                />
+                <span className="cv-reschedule-time-sep">–</span>
+                <input
+                  type="time"
+                  className="cv-reschedule-time-input"
+                  value={rescheduleEndTime}
+                  onChange={(e) => setRescheduleEndTime(e.target.value)}
+                />
+              </div>
               <textarea
                 className="cv-reschedule-reason-input"
                 placeholder="Reason for rescheduling (optional)"
@@ -311,13 +338,13 @@ const ClientVisitView = ({ sheet, orderId, onVisitReviewed, onSheetUpdated, onRe
                 <button
                   className="cv-reschedule-confirm-btn"
                   onClick={handleRescheduleVisit}
-                  disabled={rescheduleLoading || !rescheduleDate}
+                  disabled={rescheduleLoading || (!rescheduleDate && !rescheduleStartTime && !rescheduleEndTime)}
                 >
                   {rescheduleLoading ? "Rescheduling..." : "Confirm Reschedule"}
                 </button>
                 <button
                   className="cv-review-cancel-btn"
-                  onClick={() => { setShowReschedule(false); setRescheduleDate(""); setRescheduleReason(""); }}
+                  onClick={() => { setShowReschedule(false); setRescheduleDate(""); setRescheduleStartTime(""); setRescheduleEndTime(""); setRescheduleReason(""); }}
                   disabled={rescheduleLoading}
                 >
                   Cancel
@@ -459,7 +486,7 @@ const ClientVisitView = ({ sheet, orderId, onVisitReviewed, onSheetUpdated, onRe
           />
           {sheet.clientSignature.signedAt && (
             <span className="cv-signature-date">
-              Signed {new Date(sheet.clientSignature.signedAt).toLocaleString()}
+              Signed {new Date(sheet.clientSignature.signedAt).toLocaleString("en-NG", { timeZone: "Africa/Lagos", year: "numeric", month: "short", day: "numeric", hour: "2-digit", minute: "2-digit" })} (WAT)
             </span>
           )}
         </div>
@@ -500,7 +527,7 @@ const ClientVisitView = ({ sheet, orderId, onVisitReviewed, onSheetUpdated, onRe
                       <p className="cv-report-description">{obs.description}</p>
                       {obs.createdAt && (
                         <span className="cv-report-date">
-                          {new Date(obs.createdAt).toLocaleString()}
+                          {new Date(obs.createdAt).toLocaleString("en-NG", { timeZone: "Africa/Lagos", year: "numeric", month: "short", day: "numeric", hour: "2-digit", minute: "2-digit" })} (WAT)
                         </span>
                       )}
                     </div>
@@ -551,7 +578,7 @@ const ClientVisitView = ({ sheet, orderId, onVisitReviewed, onSheetUpdated, onRe
                       )}
                       {inc.dateTime && (
                         <span className="cv-report-date">
-                          Occurred: {new Date(inc.dateTime).toLocaleString()}
+                          Occurred: {new Date(inc.dateTime).toLocaleString("en-NG", { timeZone: "Africa/Lagos", year: "numeric", month: "short", day: "numeric", hour: "2-digit", minute: "2-digit" })} (WAT)
                         </span>
                       )}
                     </div>

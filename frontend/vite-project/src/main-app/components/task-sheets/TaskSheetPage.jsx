@@ -250,22 +250,29 @@ const TaskSheetPage = ({ sheet, orderId, onSheetUpdated, onActivateSheet, activa
                 <span className="ts-scheduled-date">
                   {" — "}{new Date(sheet.scheduledDate).toLocaleDateString("en-NG", { timeZone: "Africa/Lagos", weekday: "long", month: "long", day: "numeric" })}
                   {sheet.scheduledStartTime && sheet.scheduledEndTime &&
-                    ` · ${formatTimeStr(sheet.scheduledStartTime)} – ${formatTimeStr(sheet.scheduledEndTime)}`}
+                    ` · ${formatTimeStr(sheet.scheduledStartTime)} – ${formatTimeStr(sheet.scheduledEndTime)} (WAT)`}
                 </span>
               )}
-              <p className="ts-scheduled-hint">Check in at the service location when you are ready to begin.</p>
+              <p className="ts-scheduled-hint">When you arrive at the client's location, activate this visit to begin check-in.</p>
             </div>
           </div>
+          <button
+            className="ts-activate-btn"
+            onClick={() => onActivateSheet(sheet.id)}
+            disabled={activating}
+          >
+            {activating ? "Activating…" : "▶ Activate Visit"}
+          </button>
         </div>
       )}
 
-      {/* Check-in section */}
-      {!isSubmitted && !isCancelled && (
+      {/* Check-in section — only shown after the sheet has been activated (not while still scheduled) */}
+      {!isSubmitted && !isCancelled && !isScheduled && (
         <CheckInSection
           sheet={{ ...sheet, checkin }}
           orderId={orderId}
           onCheckedIn={handleCheckedIn}
-          disabled={isReadOnly}
+          disabled={isSubmitted || isCancelled || orderCompleted}
         />
       )}
 
@@ -367,7 +374,7 @@ const TaskSheetPage = ({ sheet, orderId, onSheetUpdated, onActivateSheet, activa
           />
           {sheet.clientSignature.signedAt && (
             <span className="ts-signature-date">
-              Signed {new Date(sheet.clientSignature.signedAt).toLocaleString()}
+              Signed {new Date(sheet.clientSignature.signedAt).toLocaleString("en-NG", { timeZone: "Africa/Lagos", year: "numeric", month: "short", day: "numeric", hour: "2-digit", minute: "2-digit" })} (WAT)
             </span>
           )}
         </div>
