@@ -3,7 +3,7 @@ import { useSelector, useDispatch } from 'react-redux';
 import { useNavigate } from 'react-router-dom';
 import { fetchNotifications, markNotificationAsRead, markAllNotificationsAsRead } from '../../Redux/slices/notificationSlice';
 import { formatDistanceToNow } from "date-fns";
-import { getNotificationRoute, getNotificationActionLabel, getNotificationTypeIcon } from '../../utils/notificationRoutes';
+import { getNotificationRoute, getNotificationActionLabel, getNotificationTypeIcon, normalizeNotificationType } from '../../utils/notificationRoutes';
 import "./Notifications.css";
 
 const NotificationsPage = () => {
@@ -56,6 +56,16 @@ const NotificationsPage = () => {
 
   const handleMarkAllAsRead = () => {
     dispatch(markAllNotificationsAsRead());
+  };
+
+  // For service_location_not_set notifications, check if the client has already
+  // set their GPS (written to localStorage by ContractDetailPage on save).
+  // This lets us show a "resolved" visual without a fresh API call.
+  const isGpsLocationResolved = (notification) => {
+    if (normalizeNotificationType(notification.type) !== 'ServiceLocationNotSet') return false;
+    const contractId = notification.relatedEntityId;
+    if (!contractId) return false;
+    return localStorage.getItem(`gps_set_contract_${contractId}`) === 'true';
   };
 
   const formatNotificationTime = (timestamp) => {
@@ -142,16 +152,27 @@ const NotificationsPage = () => {
               </div>
             ) : (
               notifications.map(notification => {
+                const type = normalizeNotificationType(notification.type);
                 const route = getNotificationRoute(notification, userRole);
                 const isClickable = !!route;
+                const isServiceLocationNotSet = type === 'ServiceLocationNotSet';
+                const resolved = isServiceLocationNotSet && isGpsLocationResolved(notification);
 
                 return (
                   <div 
                     key={notification.id} 
-                    className={`notification-entry ${!notification.isRead ? 'unread' : ''} ${isClickable ? 'clickable' : ''}`}
-                    onClick={() => handleNotificationClick(notification)}
-                    role={isClickable ? 'link' : undefined}
-                    title={isClickable ? getNotificationActionLabel(notification.type) : undefined}
+                    className={`notification-entry ${
+                      !notification.isRead ? 'unread' : ''
+                    } ${
+                      isClickable && !isServiceLocationNotSet ? 'clickable' : ''
+                    } ${
+                      isServiceLocationNotSet ? 'notification-entry--action-required' : ''
+                    } ${
+                      resolved ? 'notification-entry--resolved' : ''
+                    }`}
+                    onClick={() => !isServiceLocationNotSet && handleNotificationClick(notification)}
+                    role={isClickable && !isServiceLocationNotSet ? 'link' : undefined}
+                    title={isClickable && !isServiceLocationNotSet ? getNotificationActionLabel(notification.type) : undefined}
                   >
                     <div className="notification-icon">
                       {getNotificationTypeIcon(notification.type)}
@@ -166,11 +187,26 @@ const NotificationsPage = () => {
                       <span className="notification-time">
                         {formatNotificationTime(notification.createdAt)}
                       </span>
+                      {isServiceLocationNotSet && (
+                        resolved ? (
+                          <span className="notification-resolved-badge">✅ Location confirmed</span>
+                        ) : (
+                          <button
+                            className="notification-cta-btn"
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              handleNotificationClick(notification);
+                            }}
+                          >
+                            Confirm Location Now
+                          </button>
+                        )
+                      )}
                     </div>
                     {!notification.isRead && (
                       <div className="unread-dot"></div>
                     )}
-                    {isClickable && (
+                    {isClickable && !isServiceLocationNotSet && (
                       <div className="notification-go-arrow" aria-hidden="true">›</div>
                     )}
                   </div>

@@ -30,6 +30,7 @@ import ClientBilling from './billing/ClientBilling';
 import InvoiceDetail from './billing/InvoiceDetail';
 import ClientWallet from './wallet/ClientWallet';
 import ClientBookings from './bookings/ClientBookings';
+import ContractDetailPage from './orders/ContractDetailPage';
 import NotFoundPage from '../../../pages/NotFoundPage';
 
 
@@ -45,6 +46,7 @@ function ClientRoutes() {
             <Route path="/app/client/payment-success" element={<PaymentSuccess />} />
             <Route path="/my-order" element={<MyOrders />} />
             <Route path="/my-order/:orderId" element={<OrderDetails />} />
+            <Route path="/my-order/:orderId/contract" element={<ContractDetailPage />} />
             <Route path="/order-history" element={<OrderHistory />} />
             <Route path="/settings" element={<ClientSettings />} />
             <Route path="/preferences" element={<ClientPreferences />} />

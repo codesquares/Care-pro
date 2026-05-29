@@ -106,7 +106,11 @@ const MyOrders = () => {
     const [rejectReason, setRejectReason] = useState("");
     const [showGpsPrompt, setShowGpsPrompt] = useState(false);
     const [capturingGps, setCapturingGps] = useState(false);
-    
+
+    // Post-approval GPS follow-up prompt
+    const [showPostApprovalGpsPrompt, setShowPostApprovalGpsPrompt] = useState(false);
+    const [postApprovalGpsCapturing, setPostApprovalGpsCapturing] = useState(false);
+
     // NEW — proposed tasks for contract review request
     const [reviewProposedTasks, setReviewProposedTasks] = useState([]);
     
@@ -324,7 +328,7 @@ const MyOrders = () => {
 
     // Check if contract exists for this order
     const checkExistingContract = async (orderId) => {
-        if (!orderId) return;
+        if (!orderId) return false;
         
         try {
             setCheckingContract(true);
@@ -332,6 +336,7 @@ const MyOrders = () => {
             
             if (result.success && result.hasContract) {
                 setContract(result.data);
+                return true;
             } else if (!result.success) {
                 console.warn("Error checking existing contract:", result.error);
             }
@@ -340,6 +345,7 @@ const MyOrders = () => {
         } finally {
             setCheckingContract(false);
         }
+        return false;
     };
 
     // Fetch negotiation for this order
@@ -512,6 +518,11 @@ const MyOrders = () => {
                 setIsModalOpen(false);
                 setShowGpsPrompt(false);
 
+                // If GPS was not stamped at approval time, prompt the client to set it now
+                if (result.data?.serviceLocationSetByClient !== true) {
+                    setShowPostApprovalGpsPrompt(true);
+                }
+
                 // Re-fetch order data to reflect any backend state changes after approval
                 // This ensures the UI shows the correct order status
                 try {
@@ -568,6 +579,40 @@ const MyOrders = () => {
         setIsEditingAddress(false);
         setApprovalStep('address');
         setShowGpsPrompt(true);
+    };
+
+    // Post-approval: client confirms they are at the service address and stamps GPS
+    const handleSetPostApprovalGps = async () => {
+        setPostApprovalGpsCapturing(true);
+        const gps = await VisitCheckinService.getCurrentPosition();
+        setPostApprovalGpsCapturing(false);
+
+        if (!gps.success) {
+            toast.error(gps.error);
+            return;
+        }
+        if (gps.coords.accuracy > 150) {
+            toast.error('GPS signal too weak. Move outdoors and try again.');
+            return;
+        }
+
+        const result = await ContractService.setServiceLocation(contract.id, {
+            latitude: gps.coords.latitude,
+            longitude: gps.coords.longitude,
+            accuracy: gps.coords.accuracy,
+        });
+
+        if (result.success) {
+            setContract(prev => ({
+                ...prev,
+                serviceLocationSetByClient: true,
+                serviceLocationSetAt: result.data?.setAt || new Date().toISOString(),
+            }));
+            setShowPostApprovalGpsPrompt(false);
+            toast.success('Service location saved! Your caregiver will check in within 1500m of your location.');
+        } else {
+            toast.error(result.error || 'Failed to save location. Please try again.');
+        }
     };
 
     // Client requests review/changes (Round 1 only)
@@ -703,9 +748,14 @@ const MyOrders = () => {
                     setIsReviewSubmitted(hasExistingReview);
                 }
                 
-                // Check if contract exists for this order
-                await checkExistingContract(orderId);
-                await fetchNegotiationForOrder(orderId);
+                // Check if contract exists for this order.
+                // Only fetch the negotiation when no contract is present —
+                // once a negotiation converts to a contract the backend returns
+                // 404 for by-order negotiation lookups (expected, not an error).
+                const contractFound = await checkExistingContract(orderId);
+                if (!contractFound) {
+                    await fetchNegotiationForOrder(orderId);
+                }
                 
                 // Check if OrderTasks exist for this order
                 await checkExistingOrderTasks(orderId);
@@ -946,7 +996,7 @@ const MyOrders = () => {
                         <button
                             className="cod-btn"
                             style={{ marginLeft: 'auto', whiteSpace: 'nowrap', background: '#fff', color: '#0066cc', border: '2px solid #fff', fontWeight: 600, padding: '8px 18px', borderRadius: '8px' }}
-                            onClick={() => openModal("viewContract")}
+                            onClick={() => navigate(`/app/client/my-order/${orderId}/contract`)}
                         >
                             📋 View Contract
                         </button>
@@ -1000,7 +1050,7 @@ const MyOrders = () => {
                                                 You can request changes once before a final decision is required.
                                             </p>
                                             <div className="cod-contract-actions">
-                                                <button className="cod-btn cod-btn--review" onClick={() => openModal("viewContract")}>
+                                                <button className="cod-btn cod-btn--review" onClick={() => navigate(`/app/client/my-order/${orderId}/contract`)}>
                                                     Review Contract
                                                 </button>
                                                 <button className="cod-btn cod-btn--approve" onClick={startApprovalFlow} disabled={contractActionLoading}>
@@ -1034,7 +1084,7 @@ const MyOrders = () => {
                                             <h2>Contract Active</h2>
                                             <p className="cod-contract-note">Contract is active. Task sheets are available.</p>
                                             <div className="cod-contract-actions">
-                                                <button className="cod-btn cod-btn--outline" onClick={() => openModal("viewContract")}>View Full Contract</button>
+                                                <button className="cod-btn cod-btn--outline" onClick={() => navigate(`/app/client/my-order/${orderId}/contract`)}>View Full Contract</button>
                                             </div>
                                         </div>
                                     );
@@ -1047,7 +1097,7 @@ const MyOrders = () => {
                                             <h2>Awaiting Caregiver Approval</h2>
                                             <p className="cod-contract-note">Your contract has been sent. Waiting for the caregiver to review and approve it.</p>
                                             <div className="cod-contract-actions">
-                                                <button className="cod-btn cod-btn--outline" onClick={() => openModal("viewContract")}>View Contract Details</button>
+                                                <button className="cod-btn cod-btn--outline" onClick={() => navigate(`/app/client/my-order/${orderId}/contract`)}>View Contract Details</button>
                                             </div>
                                         </div>
                                     );
@@ -1066,7 +1116,7 @@ const MyOrders = () => {
                                                 </div>
                                             )}
                                             <div className="cod-contract-actions">
-                                                <button className="cod-btn cod-btn--outline" onClick={() => openModal("viewContract")}>View Details</button>
+                                                <button className="cod-btn cod-btn--outline" onClick={() => navigate(`/app/client/my-order/${orderId}/contract`)}>View Details</button>
                                                 <button className="cod-btn cod-btn--review" onClick={() => {
                                                     setClientReviseAddress(contract.serviceAddress || '');
                                                     setClientReviseRequirements(contract.specialClientRequirements || '');
@@ -1090,7 +1140,7 @@ const MyOrders = () => {
                                                 </div>
                                             )}
                                             <div className="cod-contract-actions">
-                                                <button className="cod-btn cod-btn--outline" onClick={() => openModal("viewContract")}>View Contract</button>
+                                                <button className="cod-btn cod-btn--outline" onClick={() => navigate(`/app/client/my-order/${orderId}/contract`)}>View Contract</button>
                                             </div>
                                         </div>
                                     );
@@ -1103,7 +1153,7 @@ const MyOrders = () => {
                                             <h2>Contract Rejected</h2>
                                             <p className="cod-contract-note">You have rejected this contract.</p>
                                             <div className="cod-contract-actions">
-                                                <button className="cod-btn cod-btn--outline" onClick={() => openModal("viewContract")}>View Contract Details</button>
+                                                <button className="cod-btn cod-btn--outline" onClick={() => navigate(`/app/client/my-order/${orderId}/contract`)}>View Contract Details</button>
                                             </div>
                                         </div>
                                     );
@@ -1116,7 +1166,7 @@ const MyOrders = () => {
                                             <h2>Contract Rejected</h2>
                                             <p className="cod-contract-note">The caregiver has rejected this contract.</p>
                                             <div className="cod-contract-actions">
-                                                <button className="cod-btn cod-btn--outline" onClick={() => openModal("viewContract")}>View Contract Details</button>
+                                                <button className="cod-btn cod-btn--outline" onClick={() => navigate(`/app/client/my-order/${orderId}/contract`)}>View Contract Details</button>
                                             </div>
                                         </div>
                                     );
@@ -1129,7 +1179,7 @@ const MyOrders = () => {
                                             <h2>Contract Terminated</h2>
                                             <p className="cod-contract-note">This contract has been terminated.</p>
                                             <div className="cod-contract-actions">
-                                                <button className="cod-btn cod-btn--outline" onClick={() => openModal("viewContract")}>View Contract Details</button>
+                                                <button className="cod-btn cod-btn--outline" onClick={() => navigate(`/app/client/my-order/${orderId}/contract`)}>View Contract Details</button>
                                             </div>
                                         </div>
                                     );
@@ -1142,7 +1192,7 @@ const MyOrders = () => {
                                         <h2>Contract: {ContractService.getStatusDisplayInfo(contract.status).label}</h2>
                                         <p className="cod-contract-note">Contract is being processed.</p>
                                         <div className="cod-contract-actions">
-                                            <button className="cod-btn cod-btn--outline" onClick={() => openModal("viewContract")}>View Contract Details</button>
+                                            <button className="cod-btn cod-btn--outline" onClick={() => navigate(`/app/client/my-order/${orderId}/contract`)}>View Contract Details</button>
                                         </div>
                                     </div>
                                 );
@@ -1782,6 +1832,39 @@ const MyOrders = () => {
                     orderData={orders[0]}
                     onOrderTasksCreated={handleOrderTasksCreated}
                 />
+            )}
+
+            {/* Post-approval GPS follow-up prompt */}
+            {showPostApprovalGpsPrompt && (
+                <div className="modal-overlay gps-prompt-overlay" onClick={() => !postApprovalGpsCapturing && setShowPostApprovalGpsPrompt(false)}>
+                    <div className="gps-prompt-modal" onClick={e => e.stopPropagation()}>
+                        <h3>📍 Set Your Service Location</h3>
+                        <p>Your contract is approved. Are you currently at the service address?</p>
+                        {contract?.serviceAddress && (
+                            <p className="confirmed-address-preview">{contract.serviceAddress}</p>
+                        )}
+                        <p className="gps-explanation">
+                            Setting your GPS location means your caregiver will need to be within 1500m to check in.
+                            If you skip, check-in will be unrestricted until you set it from the contract page.
+                        </p>
+                        <div className="gps-prompt-actions">
+                            <button
+                                className="gps-prompt-yes"
+                                onClick={handleSetPostApprovalGps}
+                                disabled={postApprovalGpsCapturing}
+                            >
+                                {postApprovalGpsCapturing ? 'Capturing location...' : "Yes, I'm here — set my location"}
+                            </button>
+                            <button
+                                className="gps-prompt-skip"
+                                onClick={() => setShowPostApprovalGpsPrompt(false)}
+                                disabled={postApprovalGpsCapturing}
+                            >
+                                Skip for now
+                            </button>
+                        </div>
+                    </div>
+                </div>
             )}
 
             {/* Service Address Confirmation & GPS Prompt Modal for Contract Approval */}
