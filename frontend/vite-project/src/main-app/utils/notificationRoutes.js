@@ -363,6 +363,16 @@ const TYPE_MAP = {
   'chat_violation_flagged':        'ChatViolationFlagged',
   'chatviolationflagged':          'ChatViolationFlagged',
   'chat violation flagged':        'ChatViolationFlagged',
+
+  // GPS Service Location
+  'service_location_set':          'ServiceLocationSet',
+  'serviceLocationSet':            'ServiceLocationSet',
+  'servicelocationset':            'ServiceLocationSet',
+  'service location set':          'ServiceLocationSet',
+  'service_location_not_set':      'ServiceLocationNotSet',
+  'serviceLocationNotSet':         'ServiceLocationNotSet',
+  'servicelocationnotset':         'ServiceLocationNotSet',
+  'service location not set':      'ServiceLocationNotSet',
 };
 
 // Set of all canonical types for fast exact-match check
@@ -409,6 +419,8 @@ const KNOWN_CANONICAL = new Set([
   'WithdrawalVerified', 'WithdrawalCompleted', 'WithdrawalRejected',
   'RefundRequestAdminAlert',
   'ChatViolationFlagged',
+  'ServiceLocationSet',
+  'ServiceLocationNotSet',
 ]);
 
 /**
@@ -917,6 +929,24 @@ export const getNotificationRoute = (notification, userRole) => {
       if (isAdmin) return `/app/admin/chat-compliance`;
       return null;
 
+    // ── GPS Service Location ─────────────────────────────
+    // ServiceLocationSet → caregiver-only, informational, deep-links to order
+    case 'ServiceLocationSet': {
+      const gpsOrderId = notification.orderId || relatedEntityId;
+      if (gpsOrderId && isCaregiver) return `/app/caregiver/order-details/${gpsOrderId}`;
+      if (isCaregiver) return `/app/caregiver/orders`;
+      return null;
+    }
+
+    // ServiceLocationNotSet → client-only, high-priority CTA to contract page
+    // ?autoGps=true triggers the GPS capture flow to open automatically
+    case 'ServiceLocationNotSet': {
+      const gpsOrderId = notification.orderId || relatedEntityId;
+      if (gpsOrderId && isClient) return `/app/client/my-order/${gpsOrderId}/contract?autoGps=true`;
+      if (isClient) return `/app/client/my-orders`;
+      return null;
+    }
+
     default:
       console.warn(`[NotificationRoutes] No route for type: "${type}" (raw: "${notification.type}")`, notification);
       return null;
@@ -1061,6 +1091,10 @@ export const getNotificationActionLabel = (rawType) => {
       return 'Review Refund';
     case 'ChatViolationFlagged':
       return 'Review Violation';
+    case 'ServiceLocationSet':
+      return 'View Contract';
+    case 'ServiceLocationNotSet':
+      return 'Confirm Location Now';
     default:
       return 'View Details';
   }
@@ -1231,6 +1265,9 @@ export const getNotificationTypeIcon = (rawType) => {
       return '🚨';
     case 'ChatViolationFlagged':
       return '🚩';
+    case 'ServiceLocationSet':
+    case 'ServiceLocationNotSet':
+      return '📍';
     default:
       return '🔔';
   }

@@ -1591,7 +1591,52 @@ const ContractService = {
    */
   isContractActive(contract) {
     return contract?.status?.toLowerCase().replace(/\s+/g, '') === 'active';
-  }
+  },
+
+  /**
+   * Set (or update) the client's real device GPS as the service location for a contract.
+   * POST /api/contracts/{contractId}/service-location
+   * Only callable by the client on the contract. GPS accuracy must be ≤ 50 metres.
+   * @param {string} contractId
+   * @param {{ latitude: number, longitude: number, accuracy: number }} coords
+   * @returns {Promise<{ success: boolean, data?: object, error?: string }>}
+   */
+  async setServiceLocation(contractId, { latitude, longitude, accuracy }) {
+    try {
+      if (!contractId) {
+        return { success: false, error: 'Contract ID is required' };
+      }
+
+      const authToken = localStorage.getItem('authToken');
+      if (!authToken) {
+        return { success: false, error: 'Authentication required' };
+      }
+
+      const response = await fetch(`${config.BASE_URL}/contracts/${contractId}/service-location`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${authToken}`,
+        },
+        body: JSON.stringify({ latitude, longitude, accuracy }),
+      });
+
+      if (!response.ok) {
+        const errorData = await response.json().catch(() => ({}));
+        return {
+          success: false,
+          error: errorData.message || `Failed to set service location (${response.status})`,
+          statusCode: response.status,
+        };
+      }
+
+      const data = await response.json();
+      return { success: true, data };
+    } catch (error) {
+      console.error('Error in setServiceLocation:', error);
+      return { success: false, error: error.message || 'Network error' };
+    }
+  },
 };
 
 export default ContractService;
