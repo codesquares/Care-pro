@@ -2,7 +2,7 @@ import  { useState, useRef, useEffect } from 'react';
 import { useSelector, useDispatch } from 'react-redux';
 import { markNotificationAsRead, markAllNotificationsAsRead } from '../../Redux/slices/notificationSlice';
 import { formatDistanceToNow } from 'date-fns';
-import { getNotificationRoute, getNotificationActionLabel, getNotificationTypeIcon } from '../../utils/notificationRoutes';
+import { getNotificationRoute, getNotificationActionLabel, getNotificationTypeIcon, normalizeNotificationType } from '../../utils/notificationRoutes';
 import './NotificationBell.css';
 
 const NotificationBell = ({ navigateTo, bellIcon: BellIcon }) => {
@@ -79,6 +79,16 @@ const NotificationBell = ({ navigateTo, bellIcon: BellIcon }) => {
 
   const userRole = getUserRole();
 
+  // Resolved check for service_location_not_set notifications:
+  // if the client has already set GPS (written to localStorage by ContractDetailPage),
+  // show the card as greyed-out resolved rather than actionable.
+  const isGpsLocationResolved = (notification) => {
+    if (normalizeNotificationType(notification.type) !== 'ServiceLocationNotSet') return false;
+    const contractId = notification.relatedEntityId;
+    if (!contractId) return false;
+    return localStorage.getItem(`gps_set_contract_${contractId}`) === 'true';
+  };
+
   return (
     <div className="notification-bell-container">
       <button className="notification-bell" onClick={toggleNotifications} ref={buttonRef}>
@@ -113,11 +123,18 @@ const NotificationBell = ({ navigateTo, bellIcon: BellIcon }) => {
                 {notifications.map((notification) => {
                   const route = getNotificationRoute(notification, userRole);
                   const isClickable = !!route && !!navigateTo;
+                  const resolved = isGpsLocationResolved(notification);
 
                   return (
                     <div
                       key={notification.id}
-                      className={`notification-item ${!notification.isRead ? 'unread' : ''} ${isClickable ? 'clickable' : ''}`}
+                      className={`notification-item ${
+                        !notification.isRead ? 'unread' : ''
+                      } ${
+                        isClickable ? 'clickable' : ''
+                      } ${
+                        resolved ? 'notification-item--resolved' : ''
+                      }`}
                       onClick={() => handleNotificationClick(notification)}
                       role={isClickable ? 'link' : undefined}
                       title={isClickable ? getNotificationActionLabel(notification.type) : undefined}
@@ -136,6 +153,9 @@ const NotificationBell = ({ navigateTo, bellIcon: BellIcon }) => {
                           <div className="notification-time">
                             {formatNotificationTime(notification.createdAt)}
                           </div>
+                          {resolved && (
+                            <span className="notification-resolved-tag">✅ Location confirmed</span>
+                          )}
                         </div>
                         {!notification.isRead && <div className="unread-dot"></div>}
                         {isClickable && (
