@@ -32,6 +32,7 @@ import ClientWallet from './wallet/ClientWallet';
 import ClientBookings from './bookings/ClientBookings';
 import ContractDetailPage from './orders/ContractDetailPage';
 import NotFoundPage from '../../../pages/NotFoundPage';
+import GigPriceNegotiation from '../../components/price-negotiation/GigPriceNegotiation';
 
 
 function ClientRoutes() {
@@ -68,6 +69,7 @@ function ClientRoutes() {
             <Route path="/wallet" element={<ClientWallet />} />
             <Route path="/bookings" element={<ClientBookings />} />
             <Route path="/faq" element={<FAQPage />} />
+            <Route path="/price-negotiation/:negotiationId" element={<GigPriceNegotiation />} />
             <Route path="*" element={<NotFoundPage />} />
         </Routes>
         </>

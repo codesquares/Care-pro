@@ -4,6 +4,7 @@ import NavigationBar from './NavigationBar';
 import ProfileCard from './ProfileCard';
 import StatisticsCard from './StatisticsCard';
 import OrderList from './OrderList';
+import PendingNegotiations from './PendingNegotiations';
 import './CaregiverDashboard.css';
 import setting from '../../../../assets/setting.png';
 import config from '../../../config';
@@ -294,6 +295,7 @@ const CaregiverDashboard = () => {
             </button>
           </div>
           <OrderList filter="All Orders" orders={orders.slice(0, 5)} loading={loading} error={error} />
+          <PendingNegotiations />
         </div>
       </div>
     </>

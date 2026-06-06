@@ -1368,3 +1368,101 @@
   margin-top: 2px;
   font-style: italic;
 }
+
+/* ── Gig action banner ─────────────────────────────────────────────────────
+   Shown below the chat header when a client arrives from a specific gig page.
+   Dismissed with the ✕ button; hire/negotiate actions remain in the header.
+   ─────────────────────────────────────────────────────────────────────────── */
+.chat-gig-banner {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  flex-wrap: wrap;
+  padding: 10px 16px;
+  background: linear-gradient(90deg, #f0f4ff 0%, #f5f0ff 100%);
+  border-bottom: 1px solid #d8e0ff;
+  font-size: 13px;
+}
+
+.chat-gig-banner__label {
+  color: #3c4a6e;
+  font-weight: 500;
+  white-space: nowrap;
+  flex-shrink: 0;
+}
+
+.chat-gig-banner__actions {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+
+.chat-gig-banner__btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  padding: 7px 14px;
+  border-radius: 7px;
+  font-size: 13px;
+  font-weight: 600;
+  cursor: pointer;
+  border: 1.5px solid transparent;
+  transition: background 0.13s, opacity 0.13s;
+  white-space: nowrap;
+  line-height: 1;
+}
+
+.chat-gig-banner__btn:disabled {
+  opacity: 0.55;
+  cursor: not-allowed;
+}
+
+/* Negotiate */
+.chat-gig-banner__btn--negotiate {
+  background: #f0f4ff;
+  color: #4a6cf7;
+  border-color: #c5d0fa;
+}
+.chat-gig-banner__btn--negotiate:not(:disabled):hover {
+  background: #e0e8ff;
+  border-color: #4a6cf7;
+}
+
+/* Hire Now */
+.chat-gig-banner__btn--hire {
+  background: #4a6cf7;
+  color: #fff;
+  border-color: #4a6cf7;
+}
+.chat-gig-banner__btn--hire:hover {
+  background: #3958d0;
+}
+
+/* Dismiss ✕ */
+.chat-gig-banner__btn--dismiss {
+  background: transparent;
+  color: #8a8fa8;
+  border-color: transparent;
+  padding: 7px 9px;
+  font-size: 15px;
+}
+.chat-gig-banner__btn--dismiss:hover {
+  color: #3c4a6e;
+  background: rgba(0, 0, 0, 0.05);
+}
+
+@media (max-width: 480px) {
+  .chat-gig-banner {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 8px;
+  }
+
+  .chat-gig-banner__btn--hire,
+  .chat-gig-banner__btn--negotiate {
+    flex: 1;
+    justify-content: center;
+  }
+}

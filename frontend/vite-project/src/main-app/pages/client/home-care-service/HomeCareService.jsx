@@ -181,10 +181,12 @@
 
 import { useState, useEffect, useRef } from "react";
 import { useParams, useNavigate } from "react-router-dom";
+import { toast } from "react-toastify";
 import "./home-care-service.css";
 import ClientGigService from "../../../services/clientGigService";
 import GigReviewService from "../../../services/gigReviewService";
 import bookingCommitmentService from "../../../services/bookingCommitmentService";
+import GigPriceNegotiationService from "../../../services/gigPriceNegotiationService";
 import defaultAvatar from "../../../../assets/profilecard1.png";
 import VideoModal from "../../../components/VideoModal/VideoModal";
 import ReviewsModal from "../../../components/ReviewsModal/ReviewsModal";
@@ -210,6 +212,9 @@ const HomeCareService = () => {
   const [gigRating, setGigRating] = useState(0);
   // Commitment fee access state
   const [commitmentAccess, setCommitmentAccess] = useState(null);
+  // Active price negotiation for this gig (null if none)
+  const [existingNegotiation, setExistingNegotiation] = useState(null);
+  const [negotiateLoading, setNegotiateLoading] = useState(false);
   // Credentials modal state
   const [showCredentialsModal, setShowCredentialsModal] = useState(false);
   const [credentialsTab, setCredentialsTab] = useState('education');
@@ -245,8 +250,8 @@ const HomeCareService = () => {
       return;
     }
 
-    // Block if commitment check hasn't completed yet or fee not paid
-    if (!commitmentAccess || !commitmentAccess.hasAccess) {
+    // Block if commitment check hasn't completed yet or fee not paid (and not a free path)
+    if (!commitmentAccess || (!commitmentAccess.hasAccess && !commitmentAccess.commitmentNotRequired)) {
       handleUnlockChat();
       return;
     }
@@ -262,6 +267,12 @@ const HomeCareService = () => {
         const result = await bookingCommitmentService.checkAccess(id);
         if (result.success) {
           setCommitmentAccess(result.data);
+          // If access is confirmed, check for an existing active negotiation on this gig
+          if (result.data?.hasAccess || result.data?.commitmentNotRequired) {
+            GigPriceNegotiationService.getByGig(id)
+              .then((neg) => setExistingNegotiation(neg))
+              .catch(() => {}); // 404 → null already handled inside service
+          }
         } else {
           setCommitmentAccess({ hasAccess: false });
         }
@@ -275,13 +286,44 @@ const HomeCareService = () => {
 
   const handleMessage = () => {
     // Block if commitment check hasn't completed yet or fee not paid
-    if (!commitmentAccess || !commitmentAccess.hasAccess) {
+    if (!commitmentAccess || (!commitmentAccess.hasAccess && !commitmentAccess.commitmentNotRequired)) {
       handleUnlockChat();
       return;
     }
     navigate(`${basePath}/message/${service.caregiverId}`, {
       state: { recipientName: service.caregiverName, serviceId: id },
     });
+  };
+
+  const handleNegotiate = async () => {
+    if (!isAuthenticated) {
+      navigate(`/login?returnTo=/service/${id}`);
+      return;
+    }
+    // Block negotiation if the gig is already at the minimum price
+    if (price <= 10000) {
+      toast.info('This gig is already at the minimum price of ₦10,000 and cannot be negotiated.');
+      return;
+    }
+    // If an active negotiation already exists, go straight to it
+    if (existingNegotiation?.negotiationId) {
+      navigate(`${basePath}/price-negotiation/${existingNegotiation.negotiationId}`, {
+        state: { gigId: id },
+      });
+      return;
+    }
+    setNegotiateLoading(true);
+    try {
+      const neg = await GigPriceNegotiationService.initiate({ gigId: id });
+      navigate(`${basePath}/price-negotiation/${neg.negotiationId}`, {
+        state: { gigId: id },
+      });
+    } catch (err) {
+      const msg = err.response?.data?.message || 'Could not start negotiation. Please try again.';
+      toast.error(msg);
+    } finally {
+      setNegotiateLoading(false);
+    }
   };
 
   const handleFavorite = () => {
@@ -743,8 +785,7 @@ const HomeCareService = () => {
                   🔓 Pay ₦5,000 to Unlock <span className="hcs-arrow">→</span>
                 </button>
               ) : (
-                <>
-                  <button className="hcs-hire-btn" onClick={handleHire}>
+        <>                  <button className="hcs-hire-btn" onClick={handleHire}>
                     Hire {caregiverFirstName || caregiverName} <span className="hcs-arrow">→</span>
                   </button>
                   <button
@@ -753,6 +794,24 @@ const HomeCareService = () => {
                   >
                     Send Message
                   </button>
+                  {isAuthenticated && userRole === 'Client' && (commitmentAccess?.hasAccess || commitmentAccess?.commitmentNotRequired) && (
+                    <div className="hcs-negotiate-wrap">
+                      <button
+                        className="hcs-negotiate-btn"
+                        onClick={handleNegotiate}
+                        disabled={negotiateLoading}
+                      >
+                        {negotiateLoading
+                          ? 'Starting…'
+                          : existingNegotiation?.negotiationId
+                            ? '🔄 Continue Negotiation'
+                            : '💸 Negotiate Price'}
+                      </button>
+                      <p className="hcs-negotiate-hint">
+                        Negotiation is optional — you can also pay the listed price directly.
+                      </p>
+                    </div>
+                  )}
                 </>
               )
             )}

@@ -495,6 +495,48 @@
   border-color: #d97706;
 }
 
+/* ---- Negotiate Price button ---- */
+.hcs-negotiate-wrap {
+  width: 100%;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.hcs-negotiate-btn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  width: 100%;
+  padding: 12px 20px;
+  border: 2px solid #4a6cf7;
+  border-radius: 8px;
+  background: #f0f4ff;
+  color: #4a6cf7;
+  font-size: 14px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: background 0.15s, border-color 0.15s;
+}
+
+.hcs-negotiate-btn:hover:not(:disabled) {
+  background: #e0e8ff;
+  border-color: #3958d0;
+}
+
+.hcs-negotiate-btn:disabled {
+  opacity: 0.55;
+  cursor: not-allowed;
+}
+
+.hcs-negotiate-hint {
+  font-size: 12px;
+  color: #888;
+  text-align: center;
+  margin: 4px 0 0;
+}
+
 /* ---- Video CTA (centered play overlay on hero image) ---- */
 .hcs-video-cta {
   position: absolute;
