@@ -10,6 +10,7 @@ import { createNotification } from '../../services/notificationService';
 import ClientGigService from '../../services/clientGigService';
 import ClientOrderService from '../../services/clientOrderService';
 import bookingCommitmentService from '../../services/bookingCommitmentService';
+import GigPriceNegotiationService from '../../services/gigPriceNegotiationService';
 
 const ChatArea = ({ messages, recipient, userId, onSendMessage, isOfflineMode = false }) => {
   const location = useLocation();
@@ -37,6 +38,11 @@ const ChatArea = ({ messages, recipient, userId, onSendMessage, isOfflineMode = 
 
   // Commitment gate modal state
   const [showCommitmentModal, setShowCommitmentModal] = useState(false);
+
+  // Gig action banner — shown when navigated from a specific gig (serviceId present)
+  const [showGigBanner, setShowGigBanner] = useState(!!serviceId);
+  const [existingNegotiation, setExistingNegotiation] = useState(null);
+  const [negotiateLoading, setNegotiateLoading] = useState(false);
 
   // 3-dot menu state
   const [showMoreMenu, setShowMoreMenu] = useState(false);
@@ -407,6 +413,35 @@ const ChatArea = ({ messages, recipient, userId, onSendMessage, isOfflineMode = 
       return [];
     } finally {
       setIsLoadingGigs(false);
+    }
+  };
+
+  // Load existing negotiation for the gig (only when banner is relevant)
+  useEffect(() => {
+    if (!isClientRoute || !serviceId) return;
+    GigPriceNegotiationService.getByGig(serviceId)
+      .then((neg) => setExistingNegotiation(neg))
+      .catch(() => {});
+  }, [isClientRoute, serviceId]);
+
+  // Navigate to existing or new negotiation
+  const handleNegotiateClick = async () => {
+    if (existingNegotiation?.negotiationId) {
+      navigate(`/app/client/price-negotiation/${existingNegotiation.negotiationId}`, {
+        state: { gigId: serviceId },
+      });
+      return;
+    }
+    setNegotiateLoading(true);
+    try {
+      const neg = await GigPriceNegotiationService.initiate({ gigId: serviceId });
+      navigate(`/app/client/price-negotiation/${neg.negotiationId}`, {
+        state: { gigId: serviceId },
+      });
+    } catch (err) {
+      console.error('Failed to start negotiation:', err);
+    } finally {
+      setNegotiateLoading(false);
     }
   };
 
@@ -868,6 +903,39 @@ const ChatArea = ({ messages, recipient, userId, onSendMessage, isOfflineMode = 
           </div>
         </div>
       </header>
+
+      {/* Gig action banner — shown when client arrives from a specific gig page */}
+      {isClientRoute && serviceId && showGigBanner && (
+        <div className="chat-gig-banner">
+          <span className="chat-gig-banner__label">Ready to proceed with this caregiver?</span>
+          <div className="chat-gig-banner__actions">
+            <button
+              className="chat-gig-banner__btn chat-gig-banner__btn--negotiate"
+              onClick={handleNegotiateClick}
+              disabled={negotiateLoading}
+            >
+              {negotiateLoading
+                ? 'Starting…'
+                : existingNegotiation?.negotiationId
+                  ? '🔄 Continue Negotiation'
+                  : '💸 Negotiate Price'}
+            </button>
+            <button
+              className="chat-gig-banner__btn chat-gig-banner__btn--hire"
+              onClick={() => navigateWithCommitmentCheck(serviceId)}
+            >
+              Hire Now →
+            </button>
+            <button
+              className="chat-gig-banner__btn chat-gig-banner__btn--dismiss"
+              onClick={() => setShowGigBanner(false)}
+              title="Dismiss — you can still hire later from the header"
+            >
+              ✕
+            </button>
+          </div>
+        </div>
+      )}
 
       <div 
         className="messages-container" 

@@ -118,11 +118,20 @@ const CareRequestDetail = () => {
     setHiring(true);
     try {
       const result = await CareRequestService.hireCaregiver(requestId, hireTarget);
-      toast.success('Caregiver hired! Redirecting to booking...');
       setHireTarget(null);
-      if (result.specialGigId) {
+      // New flow: hire creates a negotiation instead of a special gig directly.
+      // Navigate to negotiation with careRequestMeta so re-initiation works after rejection/expiry.
+      if (result.negotiationId) {
+        toast.success('Caregiver hired! Setting up price negotiation...');
+        navigate(`/app/client/price-negotiation/${result.negotiationId}`, {
+          state: { careRequestMeta: { careRequestId: requestId, responseId: hireTarget } },
+        });
+      } else if (result.specialGigId) {
+        // Legacy fallback in case backend has not yet deployed the new response shape
+        toast.success('Caregiver hired! Redirecting to booking...');
         navigate(`/app/client/commitment-payment/${result.specialGigId}`);
       } else {
+        toast.success('Caregiver hired!');
         fetchDetail();
       }
     } catch (err) {

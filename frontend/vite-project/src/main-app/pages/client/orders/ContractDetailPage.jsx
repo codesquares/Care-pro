@@ -8,7 +8,7 @@ import ProposedTasksList from '../../../components/task-proposals/ProposedTasksL
 import config from '../../../config';
 import './ContractDetailPage.css';
 
-const GPS_ACCURACY_THRESHOLD = 150; // metres — reject fix weaker than this
+const GPS_ACCURACY_THRESHOLD = 200; // metres — reject fix weaker than this
 
 const ContractDetailPage = () => {
     const { orderId } = useParams();

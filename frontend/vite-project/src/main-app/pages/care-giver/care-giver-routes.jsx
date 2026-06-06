@@ -30,6 +30,7 @@ import ClientsRequests from './client-requests/ClientsRequests';
 import CaregiverResponses from './CaregiverResponses';
 import CaregiverProfileReviews from './profile/CaregiverProfileReviews';
 import NotFoundPage from '../../../pages/NotFoundPage';
+import GigPriceNegotiation from '../../components/price-negotiation/GigPriceNegotiation';
 
 function CareGiverRoutes() {
     return (
@@ -67,6 +68,7 @@ function CareGiverRoutes() {
                 <Route path="/my-responses" element={<CaregiverResponses />} />
                 <Route path="/profile/reviews" element={<CaregiverProfileReviews />} />
                 <Route path="/faq" element={<FAQPage />} />
+                <Route path="/price-negotiation/:negotiationId" element={<GigPriceNegotiation />} />
                 <Route path="*" element={<NotFoundPage />} />
             </Routes>
         </GigEditProvider>

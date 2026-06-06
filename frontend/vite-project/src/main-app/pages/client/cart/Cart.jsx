@@ -82,7 +82,8 @@ const Cart = () => {
       checkCommitment();
     }, [id]);
 
-    // Calculate estimated price
+    // Calculate estimated price.
+    // commitmentNotRequired is true for CareRequest special gigs — no ₦5,000 deduction applies.
     const calculateEstimatedPrice = () => {
       const basePrice = service?.price || 0;
       let orderFee;
@@ -92,7 +93,12 @@ const Cart = () => {
         default: orderFee = basePrice;
       }
       const serviceFee = orderFee * 0.10;
-      const commitmentCredit = (commitmentAccess?.hasAccess && !commitmentAccess?.isAppliedToOrder) ? 5000 : 0;
+      const commitmentCredit =
+        (commitmentAccess?.hasAccess &&
+         !commitmentAccess?.isAppliedToOrder &&
+         !commitmentAccess?.commitmentNotRequired)
+          ? 5000
+          : 0;
       const totalAmount = orderFee + serviceFee - commitmentCredit;
       return { orderFee, serviceFee, commitmentCredit, totalAmount };
     };
@@ -327,8 +333,15 @@ const Cart = () => {
               <div className="sd-error">{paymentError}</div>
             )}
 
-            {/* Commitment gate — block payment if no commitment */}
-            {(!commitmentAccess || !commitmentAccess.hasAccess) && (
+            {/* Info notice for CareRequest bookings — no commitment fee required */}
+            {commitmentAccess?.commitmentNotRequired && (
+              <div className="sd-commitment-gate sd-commitment-gate--free">
+                <p>✅ No commitment fee required for this booking. Your CareRequest hire allows you to proceed directly to payment.</p>
+              </div>
+            )}
+
+            {/* Commitment gate — block payment if no commitment and not a free path */}
+            {(!commitmentAccess || (!commitmentAccess.hasAccess && !commitmentAccess.commitmentNotRequired)) && (
               <div className="sd-commitment-gate">
                 <p>🔒 You must pay the ₦5,000 commitment fee before placing an order. This fee is deducted from your total when you hire.</p>
                 <button
@@ -344,10 +357,18 @@ const Cart = () => {
             <button
               className="sd-cta"
               onClick={handleHire}
-              disabled={paymentDisabled || !commitmentAccess?.hasAccess}
+              disabled={paymentDisabled || (!commitmentAccess?.hasAccess && !commitmentAccess?.commitmentNotRequired)}
             >
-              <span>{paymentDisabled ? 'Payment unavailable' : !commitmentAccess?.hasAccess ? 'Pay commitment fee first' : 'Proceed to Payment'}</span>
-              {!paymentDisabled && commitmentAccess?.hasAccess && <span className="sd-cta__arrow">&rarr;</span>}
+              <span>
+                {paymentDisabled
+                  ? 'Payment unavailable'
+                  : (!commitmentAccess?.hasAccess && !commitmentAccess?.commitmentNotRequired)
+                    ? 'Pay commitment fee first'
+                    : 'Proceed to Payment'}
+              </span>
+              {!paymentDisabled && (commitmentAccess?.hasAccess || commitmentAccess?.commitmentNotRequired) && (
+                <span className="sd-cta__arrow">&rarr;</span>
+              )}
             </button>
           </div>
 

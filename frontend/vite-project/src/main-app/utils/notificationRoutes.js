@@ -156,6 +156,23 @@ const TYPE_MAP = {
   'carerequestnewresponder':           'CareRequestNewResponder',
   'care request new responder':        'CareRequestNewResponder',
 
+  // Gig Price Negotiation (new pre-payment per-visit rate negotiation)
+  'price_negotiation_offer_received':   'PriceNegotiationOfferReceived',
+  'pricenegotiationofferreceived':      'PriceNegotiationOfferReceived',
+  'price negotiation offer received':   'PriceNegotiationOfferReceived',
+  'price_negotiation_counter_received': 'PriceNegotiationCounterReceived',
+  'pricenegotiationcounterreceived':    'PriceNegotiationCounterReceived',
+  'price negotiation counter received': 'PriceNegotiationCounterReceived',
+  'price_negotiation_agreed':           'PriceNegotiationAgreed',
+  'pricenegotiationagreed':             'PriceNegotiationAgreed',
+  'price negotiation agreed':           'PriceNegotiationAgreed',
+  'price_negotiation_rejected':         'PriceNegotiationRejected',
+  'pricenegotiationrejected':           'PriceNegotiationRejected',
+  'price negotiation rejected':         'PriceNegotiationRejected',
+  'price_negotiation_expired':          'PriceNegotiationExpired',
+  'pricenegotiationexpired':            'PriceNegotiationExpired',
+  'price negotiation expired':          'PriceNegotiationExpired',
+
   // Negotiation
   'negotiation_started':          'NegotiationStarted',
   'negotiationstarted':           'NegotiationStarted',
@@ -421,6 +438,12 @@ const KNOWN_CANONICAL = new Set([
   'ChatViolationFlagged',
   'ServiceLocationSet',
   'ServiceLocationNotSet',
+  // Gig Price Negotiation
+  'PriceNegotiationOfferReceived',
+  'PriceNegotiationCounterReceived',
+  'PriceNegotiationAgreed',
+  'PriceNegotiationRejected',
+  'PriceNegotiationExpired',
 ]);
 
 /**
@@ -947,6 +970,53 @@ export const getNotificationRoute = (notification, userRole) => {
       return null;
     }
 
+    // ── Gig Price Negotiation ───────────────────────────────────
+    // Offer received → caregiver; relatedEntityId = negotiationId
+    case 'PriceNegotiationOfferReceived':
+      if (isCaregiver && relatedEntityId)
+        return `/app/caregiver/price-negotiation/${relatedEntityId}`;
+      if (isCaregiver) return `/app/caregiver/notifications`;
+      return null;
+
+    // Counter received → client; relatedEntityId = negotiationId
+    case 'PriceNegotiationCounterReceived':
+      if (isClient && relatedEntityId)
+        return `/app/client/price-negotiation/${relatedEntityId}`;
+      if (isClient) return `/app/client/notifications`;
+      return null;
+
+    // Agreed → different relatedEntityId per role (backend sends separate notifications):
+    //   Client:    relatedEntityId = GigIdForPayment → go to cart
+    //   Caregiver: relatedEntityId = NegotiationId   → go to negotiation summary
+    case 'PriceNegotiationAgreed':
+      if (isClient && relatedEntityId)
+        return `/app/client/cart/${relatedEntityId}`;
+      if (isCaregiver && relatedEntityId)
+        return `/app/caregiver/price-negotiation/${relatedEntityId}`;
+      if (isClient) return `/app/client/notifications`;
+      if (isCaregiver) return `/app/caregiver/notifications`;
+      return null;
+
+    // Rejected → sent to the OTHER party; relatedEntityId = negotiationId
+    case 'PriceNegotiationRejected':
+      if (isClient && relatedEntityId)
+        return `/app/client/price-negotiation/${relatedEntityId}`;
+      if (isCaregiver && relatedEntityId)
+        return `/app/caregiver/price-negotiation/${relatedEntityId}`;
+      if (isClient) return `/app/client/notifications`;
+      if (isCaregiver) return `/app/caregiver/notifications`;
+      return null;
+
+    // Expired → sent to both; relatedEntityId = negotiationId
+    case 'PriceNegotiationExpired':
+      if (isClient && relatedEntityId)
+        return `/app/client/price-negotiation/${relatedEntityId}`;
+      if (isCaregiver && relatedEntityId)
+        return `/app/caregiver/price-negotiation/${relatedEntityId}`;
+      if (isClient) return `/app/client/notifications`;
+      if (isCaregiver) return `/app/caregiver/notifications`;
+      return null;
+
     default:
       console.warn(`[NotificationRoutes] No route for type: "${type}" (raw: "${notification.type}")`, notification);
       return null;
@@ -1095,6 +1165,13 @@ export const getNotificationActionLabel = (rawType) => {
       return 'View Contract';
     case 'ServiceLocationNotSet':
       return 'Confirm Location Now';
+    case 'PriceNegotiationOfferReceived':
+    case 'PriceNegotiationCounterReceived':
+    case 'PriceNegotiationRejected':
+    case 'PriceNegotiationExpired':
+      return 'View Negotiation';
+    case 'PriceNegotiationAgreed':
+      return 'Proceed to Payment';
     default:
       return 'View Details';
   }
@@ -1201,6 +1278,16 @@ export const getNotificationTypeIcon = (rawType) => {
       return '🚫';
     case 'VisitCancellationRequested':
       return '⚠️';
+    case 'PriceNegotiationOfferReceived':
+      return '💸';
+    case 'PriceNegotiationCounterReceived':
+      return '🔄';
+    case 'PriceNegotiationAgreed':
+      return '🤝';
+    case 'PriceNegotiationRejected':
+      return '❌';
+    case 'PriceNegotiationExpired':
+      return '⏰';
     case 'GigDeletionReminder':
       return '⚠️';
     case 'GigPermanentlyDeleted':
