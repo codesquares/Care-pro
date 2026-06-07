@@ -1,5 +1,6 @@
 import { useState, useEffect, useCallback } from 'react';
 import { useParams, useNavigate, useLocation } from 'react-router-dom';
+import { useSelector } from 'react-redux';
 import { toast } from 'react-toastify';
 import GigPriceNegotiationService from '../../services/gigPriceNegotiationService';
 import './GigPriceNegotiation.css';
@@ -81,6 +82,23 @@ const GigPriceNegotiation = () => {
       setLoading(false);
     }
   }, [negotiationId]);
+
+  // ── Real-time: re-fetch when a price negotiation notification arrives via SignalR ──
+  const latestNotification = useSelector((state) => state.notifications.notifications[0]);
+  useEffect(() => {
+    if (!latestNotification) return;
+    const t = (latestNotification.type || latestNotification.notificationType || '')
+      .toLowerCase().replace(/[\s-]+/g, '_');
+    if (
+      t.startsWith('price_negotiation_') &&
+      (
+        latestNotification.relatedEntityId === negotiationId ||
+        !latestNotification.relatedEntityId
+      )
+    ) {
+      loadNegotiation();
+    }
+  }, [latestNotification]); // eslint-disable-line react-hooks/exhaustive-deps
 
   // ── Mount: load + restore session metadata ──
   useEffect(() => {

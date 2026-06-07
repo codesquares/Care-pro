@@ -44,6 +44,10 @@ const CARE_REQUEST_TYPES = [
   'care_request_no_match',
   'care_request_admin_match_update',
   'care_request_admin_no_match',
+  'care_request_created',
+  'care_request_paused',
+  'care_request_reopened',
+  'care_request_closed',
 ];
 
 // IDs already toasted this session — prevents duplicate toasts on reconnect

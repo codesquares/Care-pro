@@ -1,4 +1,5 @@
 import { useState, useEffect, useCallback, useRef } from "react";
+import { useSelector } from "react-redux";
 import TaskSheetService from "../../services/taskSheetService";
 import ClientVisitView from "./ClientVisitView";
 import "./ClientVisitView.css";
@@ -44,6 +45,24 @@ const ClientVisitTabs = ({ order, onVisitReviewed }) => {
     fetched.current = true;
     fetchSheets();
   }, [fetchSheets]);
+
+  // ------ Real-time: re-fetch sheets on visit-related SignalR notifications ------
+  const latestNotification = useSelector((state) => state.notifications.notifications[0]);
+  useEffect(() => {
+    if (!latestNotification) return;
+    const t = (latestNotification.type || latestNotification.notificationType || "")
+      .toLowerCase().replace(/[\s-]+/g, "_");
+    if (
+      (t.startsWith("visit_") || t === "caregiver_checked_in" || t === "incident_reported" || t === "observation_report_filed") &&
+      (
+        latestNotification.relatedEntityId === orderId ||
+        latestNotification.orderId === orderId
+      )
+    ) {
+      fetched.current = false;
+      fetchSheets();
+    }
+  }, [latestNotification]); // eslint-disable-line react-hooks/exhaustive-deps
 
   const handleSheetUpdated = (updatedSheet) => {
     if (updatedSheet) {
