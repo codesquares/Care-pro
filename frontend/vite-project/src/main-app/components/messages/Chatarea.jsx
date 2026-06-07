@@ -39,6 +39,27 @@ const ChatArea = ({ messages, recipient, userId, onSendMessage, isOfflineMode = 
   // Commitment gate modal state
   const [showCommitmentModal, setShowCommitmentModal] = useState(false);
 
+  // Forfeit commitment state
+  const [showForfeitModal, setShowForfeitModal] = useState(false);
+  const [forfeitLoading, setForfeitLoading] = useState(false);
+  const [commitmentForfeited, setCommitmentForfeited] = useState(false);
+  const [forfeitError, setForfeitError] = useState(null);
+
+  const handleForfeitConfirm = async () => {
+    if (!serviceId) return;
+    setForfeitLoading(true);
+    setForfeitError(null);
+    const result = await bookingCommitmentService.cancelCommitment(serviceId);
+    setForfeitLoading(false);
+    if (result.success) {
+      setShowForfeitModal(false);
+      setShowGigBanner(false);
+      setCommitmentForfeited(true);
+    } else {
+      setForfeitError(result.error || 'Failed to cancel. Please try again.');
+    }
+  };
+
   // Gig action banner — shown when navigated from a specific gig (serviceId present)
   const [showGigBanner, setShowGigBanner] = useState(!!serviceId);
   const [existingNegotiation, setExistingNegotiation] = useState(null);
@@ -927,12 +948,68 @@ const ChatArea = ({ messages, recipient, userId, onSendMessage, isOfflineMode = 
               Hire Now →
             </button>
             <button
+              className="chat-gig-banner__btn chat-gig-banner__btn--forfeit"
+              onClick={() => setShowForfeitModal(true)}
+            >
+              🚫 Forfeit & Cancel Access
+            </button>
+            <button
               className="chat-gig-banner__btn chat-gig-banner__btn--dismiss"
               onClick={() => setShowGigBanner(false)}
               title="Dismiss — you can still hire later from the header"
             >
               ✕
             </button>
+          </div>
+        </div>
+      )}
+
+      {/* Lost-access screen — shown after commitment is forfeited */}
+      {isClientRoute && commitmentForfeited && (
+        <div className="chat-access-lost">
+          <div className="chat-access-lost__icon">🚫</div>
+          <h3 className="chat-access-lost__title">Access Cancelled</h3>
+          <p className="chat-access-lost__body">
+            Your ₦5,000 commitment fee has been forfeited. You no longer have access to chat
+            with this caregiver or place an order. To regain access, you will need to pay a
+            new commitment fee.
+          </p>
+          <div className="chat-access-lost__actions">
+            <button className="chat-access-lost__btn chat-access-lost__btn--primary" onClick={() => navigate('/app/client/dashboard')}>
+              Go to Dashboard
+            </button>
+            <button className="chat-access-lost__btn chat-access-lost__btn--secondary" onClick={() => navigate('/app/client')}>Browse Marketplace</button>
+          </div>
+        </div>
+      )}
+
+      {/* Forfeit confirmation modal */}
+      {showForfeitModal && (
+        <div className="chat-forfeit-overlay" onClick={() => !forfeitLoading && setShowForfeitModal(false)}>
+          <div className="chat-forfeit-modal" onClick={e => e.stopPropagation()}>
+            <h3 className="chat-forfeit-modal__title">Cancel Booking Commitment?</h3>
+            <p className="chat-forfeit-modal__body">
+              Your <strong>₦5,000 commitment fee is non-refundable</strong>. You will immediately
+              lose access to chat with this caregiver and will not be able to pay for this gig
+              until you pay a new commitment fee.
+            </p>
+            {forfeitError && <p className="chat-forfeit-modal__error">{forfeitError}</p>}
+            <div className="chat-forfeit-modal__actions">
+              <button
+                className="chat-forfeit-modal__btn chat-forfeit-modal__btn--confirm"
+                onClick={handleForfeitConfirm}
+                disabled={forfeitLoading}
+              >
+                {forfeitLoading ? 'Cancelling…' : 'Yes, Forfeit Fee & Cancel'}
+              </button>
+              <button
+                className="chat-forfeit-modal__btn chat-forfeit-modal__btn--cancel"
+                onClick={() => setShowForfeitModal(false)}
+                disabled={forfeitLoading}
+              >
+                Keep Access
+              </button>
+            </div>
           </div>
         </div>
       )}

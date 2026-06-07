@@ -1440,6 +1440,17 @@
   background: #3958d0;
 }
 
+/* Forfeit & Cancel Access */
+.chat-gig-banner__btn--forfeit {
+  background: transparent;
+  color: #c0392b;
+  border-color: #e8b4b0;
+}
+.chat-gig-banner__btn--forfeit:hover {
+  background: #fff0ef;
+  border-color: #c0392b;
+}
+
 /* Dismiss ✕ */
 .chat-gig-banner__btn--dismiss {
   background: transparent;
@@ -1465,4 +1476,140 @@
     flex: 1;
     justify-content: center;
   }
+}
+
+/* ── Lost-access banner (after commitment forfeited) ──────────────────────── */
+.chat-access-lost {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 12px;
+  padding: 40px 24px;
+  background: #fff8f7;
+  border-bottom: 1px solid #fcd5d0;
+  text-align: center;
+}
+.chat-access-lost__icon {
+  font-size: 36px;
+}
+.chat-access-lost__title {
+  margin: 0;
+  font-size: 17px;
+  font-weight: 700;
+  color: #c0392b;
+}
+.chat-access-lost__body {
+  margin: 0;
+  font-size: 13px;
+  color: #555;
+  max-width: 420px;
+  line-height: 1.6;
+}
+.chat-access-lost__actions {
+  display: flex;
+  gap: 10px;
+  flex-wrap: wrap;
+  justify-content: center;
+  margin-top: 4px;
+}
+.chat-access-lost__btn {
+  padding: 9px 20px;
+  border-radius: 8px;
+  font-size: 13px;
+  font-weight: 600;
+  cursor: pointer;
+  border: 1.5px solid transparent;
+  transition: background 0.13s;
+}
+.chat-access-lost__btn--primary {
+  background: #4a6cf7;
+  color: #fff;
+  border-color: #4a6cf7;
+}
+.chat-access-lost__btn--primary:hover {
+  background: #3958d0;
+}
+.chat-access-lost__btn--secondary {
+  background: transparent;
+  color: #4a6cf7;
+  border-color: #c5d0fa;
+}
+.chat-access-lost__btn--secondary:hover {
+  background: #f0f4ff;
+}
+
+/* ── Forfeit confirmation modal ───────────────────────────────────────────── */
+.chat-forfeit-overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 1400;
+  background: rgba(15, 23, 42, 0.55);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 20px;
+}
+.chat-forfeit-modal {
+  background: #fff;
+  border-radius: 14px;
+  padding: 28px 24px 22px;
+  max-width: 420px;
+  width: 100%;
+  box-shadow: 0 8px 32px rgba(0,0,0,0.15);
+}
+.chat-forfeit-modal__title {
+  margin: 0 0 12px;
+  font-size: 16px;
+  font-weight: 700;
+  color: #c0392b;
+}
+.chat-forfeit-modal__body {
+  margin: 0 0 16px;
+  font-size: 14px;
+  color: #444;
+  line-height: 1.6;
+}
+.chat-forfeit-modal__error {
+  margin: 0 0 12px;
+  font-size: 13px;
+  color: #c0392b;
+  background: #fff0ef;
+  border-radius: 6px;
+  padding: 8px 12px;
+}
+.chat-forfeit-modal__actions {
+  display: flex;
+  gap: 10px;
+  flex-wrap: wrap;
+}
+.chat-forfeit-modal__btn {
+  flex: 1;
+  padding: 10px 16px;
+  border-radius: 8px;
+  font-size: 14px;
+  font-weight: 600;
+  cursor: pointer;
+  border: 1.5px solid transparent;
+  transition: background 0.13s;
+}
+.chat-forfeit-modal__btn:disabled {
+  opacity: 0.55;
+  cursor: not-allowed;
+}
+.chat-forfeit-modal__btn--confirm {
+  background: #c0392b;
+  color: #fff;
+  border-color: #c0392b;
+}
+.chat-forfeit-modal__btn--confirm:not(:disabled):hover {
+  background: #a93226;
+}
+.chat-forfeit-modal__btn--cancel {
+  background: transparent;
+  color: #444;
+  border-color: #ddd;
+}
+.chat-forfeit-modal__btn--cancel:not(:disabled):hover {
+  background: #f5f5f5;
 }
