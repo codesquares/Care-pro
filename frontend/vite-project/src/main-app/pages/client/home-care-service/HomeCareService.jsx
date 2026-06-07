@@ -820,7 +820,8 @@ const HomeCareService = () => {
                   🔓 Pay ₦5,000 to Unlock <span className="hcs-arrow">→</span>
                 </button>
               ) : (
-        <>                  <button className="hcs-hire-btn" onClick={handleHire}>
+        <>
+                  <button className="hcs-hire-btn" onClick={handleHire}>
                     Hire {caregiverFirstName || caregiverName} <span className="hcs-arrow">→</span>
                   </button>
                   <button
@@ -830,30 +831,33 @@ const HomeCareService = () => {
                     Send Message
                   </button>
                   {isAuthenticated && userRole === 'Client' && (commitmentAccess?.hasAccess || commitmentAccess?.commitmentNotRequired) && (
-                    <div className="hcs-negotiate-wrap">
-                      <button
-                        className="hcs-negotiate-btn"
-                        onClick={handleNegotiate}
-                        disabled={negotiateLoading}
-                      >
-                        {negotiateLoading
-                          ? 'Starting…'
-                          : existingNegotiation?.negotiationId
-                            ? '🔄 Continue Negotiation'
-                            : '💸 Negotiate Price'}
-                      </button>
-                      <p className="hcs-negotiate-hint">
-                        Negotiation is optional — you can also pay the listed price directly.
-                      </p>
-                    </div>
-                  )}
-                  {isAuthenticated && userRole === 'Client' && commitmentAccess?.hasAccess && !commitmentAccess?.commitmentNotRequired && (
-                    <button
-                      className="hcs-forfeit-btn"
-                      onClick={() => { setForfeitError(null); setShowForfeitModal(true); }}
-                    >
-                      🚫 Forfeit Fee & Cancel Access
-                    </button>
+                    <details className="hcs-more-options">
+                      <summary className="hcs-more-options__toggle">More options</summary>
+                      <div className="hcs-more-options__content">
+                        <button
+                          className="hcs-negotiate-btn"
+                          onClick={handleNegotiate}
+                          disabled={negotiateLoading}
+                        >
+                          {negotiateLoading
+                            ? 'Starting…'
+                            : existingNegotiation?.negotiationId
+                              ? '🔄 Continue Negotiation'
+                              : '💸 Negotiate Price'}
+                        </button>
+                        <p className="hcs-negotiate-hint">
+                          Negotiation is optional — you can also pay the listed price directly.
+                        </p>
+                        {commitmentAccess?.hasAccess && !commitmentAccess?.commitmentNotRequired && (
+                          <button
+                            className="hcs-forfeit-btn"
+                            onClick={() => { setForfeitError(null); setShowForfeitModal(true); }}
+                          >
+                            🚫 Forfeit Fee & Cancel Access
+                          </button>
+                        )}
+                      </div>
+                    </details>
                   )}
                 </>
               )
