@@ -949,7 +949,7 @@ const ChatArea = ({ messages, recipient, userId, onSendMessage, isOfflineMode = 
             </button>
             <button
               className="chat-gig-banner__btn chat-gig-banner__btn--forfeit"
-              onClick={() => setShowForfeitModal(true)}
+              onClick={() => { setForfeitError(null); setShowForfeitModal(true); }}
             >
               🚫 Forfeit & Cancel Access
             </button>

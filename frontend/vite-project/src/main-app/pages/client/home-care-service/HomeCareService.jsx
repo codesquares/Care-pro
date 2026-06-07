@@ -231,8 +231,8 @@ const HomeCareService = () => {
     const result = await bookingCommitmentService.cancelCommitment(id);
     setForfeitLoading(false);
     if (result.success) {
+      setCommitmentAccess({ hasAccess: false });
       setShowForfeitModal(false);
-      // Commitment watcher will re-check access and flip the UI automatically
     } else {
       setForfeitError(result.error || 'Failed to cancel. Please try again.');
     }
