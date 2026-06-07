@@ -537,6 +537,28 @@
   margin: 4px 0 0;
 }
 
+.hcs-forfeit-btn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  width: 100%;
+  padding: 11px 20px;
+  border: 1.5px solid #e8b4b0;
+  border-radius: 8px;
+  background: transparent;
+  color: #c0392b;
+  font-size: 13px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: background 0.15s, border-color 0.15s;
+  margin-top: 6px;
+}
+.hcs-forfeit-btn:hover {
+  background: #fff0ef;
+  border-color: #c0392b;
+}
+
 /* ---- Video CTA (centered play overlay on hero image) ---- */
 .hcs-video-cta {
   position: absolute;

@@ -181,6 +181,7 @@
 
 import { useState, useEffect, useRef } from "react";
 import { useParams, useNavigate } from "react-router-dom";
+import { useSelector } from "react-redux";
 import { toast } from "react-toastify";
 import "./home-care-service.css";
 import ClientGigService from "../../../services/clientGigService";
@@ -218,6 +219,24 @@ const HomeCareService = () => {
   // Credentials modal state
   const [showCredentialsModal, setShowCredentialsModal] = useState(false);
   const [credentialsTab, setCredentialsTab] = useState('education');
+  // Forfeit commitment modal state
+  const [showForfeitModal, setShowForfeitModal] = useState(false);
+  const [forfeitLoading, setForfeitLoading] = useState(false);
+  const [forfeitError, setForfeitError] = useState(null);
+
+  const handleForfeitConfirm = async () => {
+    if (!id) return;
+    setForfeitLoading(true);
+    setForfeitError(null);
+    const result = await bookingCommitmentService.cancelCommitment(id);
+    setForfeitLoading(false);
+    if (result.success) {
+      setShowForfeitModal(false);
+      // Commitment watcher will re-check access and flip the UI automatically
+    } else {
+      setForfeitError(result.error || 'Failed to cancel. Please try again.');
+    }
+  };
   // Pricing card collapsible state (tablet/desktop only)
   const [pricingExpanded, setPricingExpanded] = useState(false);
   const navigate = useNavigate();
@@ -283,6 +302,22 @@ const HomeCareService = () => {
     };
     checkCommitment();
   }, [id, isAuthenticated, userRole]);
+
+  // Re-check commitment access when a cancellation notification arrives (real-time)
+  const latestNotification = useSelector((state) => state.notifications.notifications[0]);
+  useEffect(() => {
+    if (!latestNotification || !isAuthenticated || userRole !== 'Client' || !id) return;
+    const t = (latestNotification.type || latestNotification.notificationType || '')
+      .toLowerCase().replace(/[\s-]+/g, '_');
+    if (
+      (t === 'commitment_cancelled_by_client' || t === 'commitment_confirmed') &&
+      (latestNotification.relatedEntityId === id || !latestNotification.relatedEntityId)
+    ) {
+      bookingCommitmentService.checkAccess(id)
+        .then((result) => { if (result.success) setCommitmentAccess(result.data); })
+        .catch(() => {});
+    }
+  }, [latestNotification]); // eslint-disable-line react-hooks/exhaustive-deps
 
   const handleMessage = () => {
     // Block if commitment check hasn't completed yet or fee not paid
@@ -812,6 +847,14 @@ const HomeCareService = () => {
                       </p>
                     </div>
                   )}
+                  {isAuthenticated && userRole === 'Client' && commitmentAccess?.hasAccess && !commitmentAccess?.commitmentNotRequired && (
+                    <button
+                      className="hcs-forfeit-btn"
+                      onClick={() => { setForfeitError(null); setShowForfeitModal(true); }}
+                    >
+                      🚫 Forfeit Fee & Cancel Access
+                    </button>
+                  )}
                 </>
               )
             )}
@@ -824,6 +867,37 @@ const HomeCareService = () => {
         <div className="hcs-about-gig">
           <h2>About the Gig</h2>
           <p>{caregiverBio}</p>
+        </div>
+      )}
+
+      {/* Forfeit commitment confirmation modal */}
+      {showForfeitModal && (
+        <div className="chat-forfeit-overlay" onClick={() => !forfeitLoading && setShowForfeitModal(false)}>
+          <div className="chat-forfeit-modal" onClick={e => e.stopPropagation()}>
+            <h3 className="chat-forfeit-modal__title">Cancel Booking Commitment?</h3>
+            <p className="chat-forfeit-modal__body">
+              Your <strong>₦5,000 commitment fee is non-refundable</strong>. You will immediately
+              lose access to chat with this caregiver and will not be able to pay for this gig
+              until you pay a new commitment fee.
+            </p>
+            {forfeitError && <p className="chat-forfeit-modal__error">{forfeitError}</p>}
+            <div className="chat-forfeit-modal__actions">
+              <button
+                className="chat-forfeit-modal__btn chat-forfeit-modal__btn--confirm"
+                onClick={handleForfeitConfirm}
+                disabled={forfeitLoading}
+              >
+                {forfeitLoading ? 'Cancelling…' : 'Yes, Forfeit Fee & Cancel'}
+              </button>
+              <button
+                className="chat-forfeit-modal__btn chat-forfeit-modal__btn--cancel"
+                onClick={() => setShowForfeitModal(false)}
+                disabled={forfeitLoading}
+              >
+                Keep Access
+              </button>
+            </div>
+          </div>
         </div>
       )}
 
