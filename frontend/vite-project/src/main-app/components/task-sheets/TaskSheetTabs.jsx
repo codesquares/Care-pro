@@ -1,4 +1,5 @@
 import { useState, useEffect, useCallback, useRef } from "react";
+import { useSelector } from "react-redux";
 import { toast } from "react-toastify";
 import TaskSheetService from "../../services/taskSheetService";
 import TaskSheetPage from "./TaskSheetPage";
@@ -73,6 +74,23 @@ const TaskSheetTabs = ({ order }) => {
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [loading, sheets.length, orderId, error, orderCompleted]);
+
+  // ------ Real-time: re-fetch sheets on visit-related SignalR notifications ------
+  const latestNotification = useSelector((state) => state.notifications.notifications[0]);
+  useEffect(() => {
+    if (!latestNotification) return;
+    const t = (latestNotification.type || latestNotification.notificationType || "")
+      .toLowerCase().replace(/[\s-]+/g, "_");
+    if (
+      t.startsWith("visit_") &&
+      (
+        latestNotification.relatedEntityId === orderId ||
+        latestNotification.orderId === orderId
+      )
+    ) {
+      fetchSheets();
+    }
+  }, [latestNotification]); // eslint-disable-line react-hooks/exhaustive-deps
 
   // ------ Auto-advance: if the active sheet is cancelled, jump to the next non-cancelled sheet ------
   useEffect(() => {
