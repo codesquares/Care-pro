@@ -108,13 +108,13 @@ const CommitmentSuccess = () => {
           stopPolling();
           setPaymentData(data);
           setStatusMessage('Payment verified! Chat access unlocked.');
-          cleanupLocalStorage();
 
-          // Auto-send first message
+          // Read gigId BEFORE cleanupLocalStorage removes it — needed for the chat banner
           const caregiverName = localStorage.getItem('commitmentCaregiverName') || '';
           if (data.caregiverId) {
             sendAutoFirstMessage(data.caregiverId, caregiverName);
           }
+          cleanupLocalStorage();
 
         } else if (data.status === "pending") {
           setStatusMessage('Payment is still being processed. Please wait...');
