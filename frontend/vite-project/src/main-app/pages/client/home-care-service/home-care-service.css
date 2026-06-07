@@ -393,7 +393,8 @@
 /* Pricing Buttons */
 .hcs-pricing-buttons {
   display: flex;
-  gap: 10px;
+  flex-direction: column;
+  gap: 8px;
 }
 
 .hcs-hire-btn {
@@ -495,14 +496,47 @@
   border-color: #d97706;
 }
 
-/* ---- Negotiate Price button ---- */
-.hcs-negotiate-wrap {
+/* ---- More options disclosure ---- */
+.hcs-more-options {
   width: 100%;
+}
+.hcs-more-options__toggle {
+  list-style: none;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  width: 100%;
+  padding: 9px 14px;
+  font-size: 13px;
+  font-weight: 600;
+  color: #6b7280;
+  background: transparent;
+  border: 1.5px dashed #d1d5db;
+  border-radius: 8px;
+  cursor: pointer;
+  user-select: none;
+  transition: border-color 0.15s, color 0.15s;
+}
+.hcs-more-options__toggle::-webkit-details-marker { display: none; }
+.hcs-more-options__toggle::before {
+  content: '⋯';
+  font-size: 16px;
+  line-height: 1;
+}
+details.hcs-more-options[open] .hcs-more-options__toggle {
+  color: #374151;
+  border-color: #9ca3af;
+  border-style: solid;
+}
+.hcs-more-options__content {
   display: flex;
   flex-direction: column;
-  gap: 6px;
+  gap: 8px;
+  padding-top: 8px;
 }
 
+/* ---- Negotiate Price button ---- */
 .hcs-negotiate-btn {
   display: flex;
   align-items: center;
