@@ -53,7 +53,7 @@ const MyOrders = () => {
     const [negotiation, setNegotiation] = useState(null);
     const [negotiationLoading, setNegotiationLoading] = useState(false);
 
-    // Re-fetch negotiation when the caregiver submits their proposals (SignalR notification)
+    // Re-fetch negotiation on any negotiation-related SignalR notification (real-time updates)
     const latestNotification = useSelector((state) => state.notifications.notifications[0]);
     useEffect(() => {
         if (!latestNotification || !negotiation) return;
@@ -61,7 +61,7 @@ const MyOrders = () => {
         // `notificationType` is kept as fallback for any legacy payloads.
         const t = (latestNotification.type || latestNotification.notificationType || "").toLowerCase().replace(/[\s-]+/g, "_");
         if (
-            (t === "negotiation_client_submitted" || t === "negotiation_caregiver_submitted") &&
+            t.startsWith("negotiation_") &&
             // relatedEntityId may be the negotiation ID or the order ID depending on the backend
             (
                 latestNotification.relatedEntityId === negotiation.id ||
@@ -70,6 +70,38 @@ const MyOrders = () => {
             )
         ) {
             fetchNegotiationForOrder(orderId);
+        }
+    }, [latestNotification]); // eslint-disable-line react-hooks/exhaustive-deps
+
+    // Re-fetch contract on any contract-related SignalR notification (real-time updates)
+    useEffect(() => {
+        if (!latestNotification) return;
+        const t = (latestNotification.type || latestNotification.notificationType || "").toLowerCase().replace(/[\s-]+/g, "_");
+        if (
+            (t.startsWith("contract_") || t.startsWith("task_proposal_")) &&
+            (
+                latestNotification.relatedEntityId === contract?.id ||
+                latestNotification.relatedEntityId === orderId ||
+                latestNotification.orderId === orderId
+            )
+        ) {
+            fetchContractForOrder(orderId);
+        }
+    }, [latestNotification]); // eslint-disable-line react-hooks/exhaustive-deps
+
+    // Re-fetch order on status/dispute SignalR notifications (real-time updates)
+    useEffect(() => {
+        if (!latestNotification) return;
+        const t = (latestNotification.type || latestNotification.notificationType || "").toLowerCase().replace(/[\s-]+/g, "_");
+        if (
+            (t === "order_cancelled" || t === "order_completed" || t === "order_disputed" || t === "dispute_raised" || t === "dispute_under_review") &&
+            (latestNotification.relatedEntityId === orderId || latestNotification.orderId === orderId)
+        ) {
+            const token = localStorage.getItem('authToken');
+            if (!token) return;
+            axios.get(`${config.BASE_URL}/ClientOrders/orderId?orderId=${orderId}`, { headers: { Authorization: `Bearer ${token}` } })
+                .then(res => setOrders([res.data]))
+                .catch(err => console.error("Failed to refresh order status:", err));
         }
     }, [latestNotification]); // eslint-disable-line react-hooks/exhaustive-deps
 
@@ -591,7 +623,7 @@ const MyOrders = () => {
             toast.error(gps.error);
             return;
         }
-        if (gps.coords.accuracy > 150) {
+        if (gps.coords.accuracy > 200) {
             toast.error('GPS signal too weak. Move outdoors and try again.');
             return;
         }

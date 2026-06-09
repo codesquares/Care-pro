@@ -44,7 +44,7 @@ const CaregiverOrderDetails = () => {
     const [negotiation, setNegotiation] = useState(null);
     const [negotiationLoading, setNegotiationLoading] = useState(false);
 
-    // Re-fetch negotiation when the client submits their proposals (SignalR notification)
+    // Re-fetch negotiation on any negotiation-related SignalR notification (real-time updates)
     const latestNotification = useSelector((state) => state.notifications.notifications[0]);
     useEffect(() => {
         if (!latestNotification || !negotiation) return;
@@ -52,7 +52,7 @@ const CaregiverOrderDetails = () => {
         // `notificationType` is kept as fallback for any legacy payloads.
         const t = (latestNotification.type || latestNotification.notificationType || "").toLowerCase().replace(/[\s-]+/g, "_");
         if (
-            (t === "negotiation_client_submitted" || t === "negotiation_caregiver_submitted") &&
+            t.startsWith("negotiation_") &&
             // relatedEntityId may be the negotiation ID or the order ID depending on the backend
             (
                 latestNotification.relatedEntityId === negotiation.id ||
@@ -61,6 +61,38 @@ const CaregiverOrderDetails = () => {
             )
         ) {
             fetchNegotiationForOrder(orderId);
+        }
+    }, [latestNotification]); // eslint-disable-line react-hooks/exhaustive-deps
+
+    // Re-fetch contract on any contract-related SignalR notification (real-time updates)
+    useEffect(() => {
+        if (!latestNotification) return;
+        const t = (latestNotification.type || latestNotification.notificationType || "").toLowerCase().replace(/[\s-]+/g, "_");
+        if (
+            (t.startsWith("contract_") || t.startsWith("task_proposal_")) &&
+            (
+                latestNotification.relatedEntityId === contract?.id ||
+                latestNotification.relatedEntityId === orderId ||
+                latestNotification.orderId === orderId
+            )
+        ) {
+            fetchContractForOrder(orderId);
+        }
+    }, [latestNotification]); // eslint-disable-line react-hooks/exhaustive-deps
+
+    // Re-fetch order on status/dispute SignalR notifications (real-time updates)
+    useEffect(() => {
+        if (!latestNotification) return;
+        const t = (latestNotification.type || latestNotification.notificationType || "").toLowerCase().replace(/[\s-]+/g, "_");
+        if (
+            (t === "order_cancelled" || t === "order_completed" || t === "order_disputed" || t === "dispute_raised" || t === "dispute_under_review") &&
+            (latestNotification.relatedEntityId === orderId || latestNotification.orderId === orderId)
+        ) {
+            const token = localStorage.getItem("authToken");
+            if (!token) return;
+            axios.get(`${config.BASE_URL}/ClientOrders/orderId?orderId=${orderId}`, { headers: { Authorization: `Bearer ${token}` } })
+                .then(res => setOrders([res.data]))
+                .catch(err => console.error("Failed to refresh order status:", err));
         }
     }, [latestNotification]); // eslint-disable-line react-hooks/exhaustive-deps
 
@@ -1122,8 +1154,8 @@ const CaregiverOrderDetails = () => {
                                 <div className="neg-section-label">Proposed Schedule</div>
                                 {/* Schedule guide banner */}
                                 {(() => {
-                                    const payOpt = (order?.paymentOption || order?.serviceType || '').toLowerCase();
-                                    const reqDays = payOpt === 'one-time' ? 1
+                                    const payOpt = (order?.serviceType || order?.paymentOption || '').toLowerCase();
+                                    const reqDays = payOpt !== 'monthly' ? 1
                                         : (order?.frequencyPerWeek || order?.visitsPerWeek || order?.selectedPackage?.visitsPerWeek || order?.packageDetails?.visitsPerWeek || 1);
                                     const uniqueDays = new Set(negInitSchedule.map(s => s.dayOfWeek)).size;
                                     const done = uniqueDays >= reqDays;
@@ -1157,6 +1189,12 @@ const CaregiverOrderDetails = () => {
                                     <input className="neg-input neg-input--time" type="time" value={negInitSlotEnd} onChange={e => setNegInitSlotEnd(e.target.value)} />
                                     <button className="neg-btn neg-btn--sm" onClick={() => {
                                         if (negInitSlotStart >= negInitSlotEnd) { toast.error('End time must be after start time.'); return; }
+                                        const _payOpt = (order?.serviceType || order?.paymentOption || '').toLowerCase();
+                                        const _reqDays = _payOpt !== 'monthly' ? 1 : (order?.frequencyPerWeek || order?.visitsPerWeek || order?.selectedPackage?.visitsPerWeek || order?.packageDetails?.visitsPerWeek || 1);
+                                        if (negInitSchedule.length >= _reqDays) {
+                                            toast.error(`You can only add ${_reqDays} day${_reqDays > 1 ? 's' : ''} for this contract. Remove a slot first to change it.`);
+                                            return;
+                                        }
                                         if (negInitSchedule.some(s => s.dayOfWeek === negInitSlotDay)) {
                                             toast.error(`You already have a slot for ${negInitSlotDay}. Remove it first to change the time.`);
                                             return;
@@ -1179,8 +1217,8 @@ const CaregiverOrderDetails = () => {
 
                             <div style={{ display: 'flex', gap: '10px', marginTop: '4px' }}>
                                 <button className="neg-btn neg-btn--submit" onClick={() => {
-                                    const payOpt = (order?.paymentOption || order?.serviceType || '').toLowerCase();
-                                    const reqDays = payOpt === 'one-time' ? 1
+                                    const payOpt = (order?.serviceType || order?.paymentOption || '').toLowerCase();
+                                    const reqDays = payOpt !== 'monthly' ? 1
                                         : (order?.frequencyPerWeek || order?.visitsPerWeek || order?.selectedPackage?.visitsPerWeek || order?.packageDetails?.visitsPerWeek || 1);
                                     const uniqueDays = new Set(negInitSchedule.map(s => s.dayOfWeek)).size;
                                     if (uniqueDays < reqDays) {

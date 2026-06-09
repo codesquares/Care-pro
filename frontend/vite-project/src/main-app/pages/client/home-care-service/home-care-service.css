@@ -393,7 +393,8 @@
 /* Pricing Buttons */
 .hcs-pricing-buttons {
   display: flex;
-  gap: 10px;
+  flex-direction: column;
+  gap: 8px;
 }
 
 .hcs-hire-btn {
@@ -493,6 +494,178 @@
 .hcs-message-btn.hcs-message-btn-locked:hover {
   background: #fef3c7;
   border-color: #d97706;
+}
+
+/* ---- More options disclosure ---- */
+.hcs-more-options {
+  width: 100%;
+}
+.hcs-more-options__toggle {
+  list-style: none;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  width: 100%;
+  padding: 9px 14px;
+  font-size: 13px;
+  font-weight: 600;
+  color: #6b7280;
+  background: transparent;
+  border: 1.5px dashed #d1d5db;
+  border-radius: 8px;
+  cursor: pointer;
+  user-select: none;
+  transition: border-color 0.15s, color 0.15s;
+}
+.hcs-more-options__toggle::-webkit-details-marker { display: none; }
+.hcs-more-options__toggle::before {
+  content: '⋯';
+  font-size: 16px;
+  line-height: 1;
+}
+details.hcs-more-options[open] .hcs-more-options__toggle {
+  color: #374151;
+  border-color: #9ca3af;
+  border-style: solid;
+}
+.hcs-more-options__content {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  padding-top: 8px;
+}
+
+/* ---- Negotiate Price button ---- */
+.hcs-negotiate-btn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  width: 100%;
+  padding: 12px 20px;
+  border: 2px solid #4a6cf7;
+  border-radius: 8px;
+  background: #f0f4ff;
+  color: #4a6cf7;
+  font-size: 14px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: background 0.15s, border-color 0.15s;
+}
+
+.hcs-negotiate-btn:hover:not(:disabled) {
+  background: #e0e8ff;
+  border-color: #3958d0;
+}
+
+.hcs-negotiate-btn:disabled {
+  opacity: 0.55;
+  cursor: not-allowed;
+}
+
+.hcs-negotiate-hint {
+  font-size: 12px;
+  color: #888;
+  text-align: center;
+  margin: 4px 0 0;
+}
+
+.hcs-forfeit-btn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  width: 100%;
+  padding: 11px 20px;
+  border: 1.5px solid #e8b4b0;
+  border-radius: 8px;
+  background: transparent;
+  color: #c0392b;
+  font-size: 13px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: background 0.15s, border-color 0.15s;
+  margin-top: 6px;
+}
+.hcs-forfeit-btn:hover {
+  background: #fff0ef;
+  border-color: #c0392b;
+}
+
+/* ---- Forfeit commitment modal (shared with chat) ---- */
+.chat-forfeit-overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 1400;
+  background: rgba(15, 23, 42, 0.55);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 20px;
+}
+.chat-forfeit-modal {
+  background: #fff;
+  border-radius: 14px;
+  padding: 28px 24px 22px;
+  max-width: 420px;
+  width: 100%;
+  box-shadow: 0 8px 32px rgba(0,0,0,0.15);
+}
+.chat-forfeit-modal__title {
+  margin: 0 0 12px;
+  font-size: 16px;
+  font-weight: 700;
+  color: #c0392b;
+}
+.chat-forfeit-modal__body {
+  margin: 0 0 16px;
+  font-size: 14px;
+  color: #444;
+  line-height: 1.6;
+}
+.chat-forfeit-modal__error {
+  margin: 0 0 12px;
+  font-size: 13px;
+  color: #c0392b;
+  background: #fff0ef;
+  border-radius: 6px;
+  padding: 8px 12px;
+}
+.chat-forfeit-modal__actions {
+  display: flex;
+  gap: 10px;
+  flex-wrap: wrap;
+}
+.chat-forfeit-modal__btn {
+  flex: 1;
+  padding: 10px 16px;
+  border-radius: 8px;
+  font-size: 14px;
+  font-weight: 600;
+  cursor: pointer;
+  border: 1.5px solid transparent;
+  transition: background 0.13s;
+}
+.chat-forfeit-modal__btn:disabled {
+  opacity: 0.55;
+  cursor: not-allowed;
+}
+.chat-forfeit-modal__btn--confirm {
+  background: #c0392b;
+  color: #fff;
+  border-color: #c0392b;
+}
+.chat-forfeit-modal__btn--confirm:not(:disabled):hover {
+  background: #a93226;
+}
+.chat-forfeit-modal__btn--cancel {
+  background: transparent;
+  color: #444;
+  border-color: #ddd;
+}
+.chat-forfeit-modal__btn--cancel:not(:disabled):hover {
+  background: #f5f5f5;
 }
 
 /* ---- Video CTA (centered play overlay on hero image) ---- */

@@ -216,7 +216,11 @@ const CareRequestMatches = () => {
       const { type, relatedEntityId } = e.detail || {};
       if (
         relatedEntityId === requestId &&
-        (type === 'care_request_matched' || type === 'care_request_no_match')
+        (
+          type === 'care_request_matched' || type === 'care_request_no_match' ||
+          type === 'care_request_created' || type === 'care_request_paused' ||
+          type === 'care_request_reopened' || type === 'care_request_closed'
+        )
       ) {
         fetchMatches(false);
       }

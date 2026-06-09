@@ -14,7 +14,7 @@ const CommitmentSuccess = () => {
   const [statusMessage, setStatusMessage] = useState('Verifying payment...');
   const [paymentData, setPaymentData] = useState(null);
   const [error, setError] = useState(null);
-  const [autoMessageStatus, setAutoMessageStatus] = useState(null); // 'sending' | 'sent' | 'failed'
+
   const [receiptDownloading, setReceiptDownloading] = useState(false);
 
   const handleDownloadReceipt = async () => {
@@ -34,25 +34,25 @@ const CommitmentSuccess = () => {
 
   const user = JSON.parse(localStorage.getItem("userDetails") || "{}");
 
-  // Send the automatic first message after unlock
+  // Send the automatic first message after unlock — fires silently in the background
+  // to open the chat thread and notify the caregiver (they cannot message first).
+  // The client is navigated straight to chat so the gig banner is shown immediately.
   const sendAutoFirstMessage = async (caregiverId, caregiverName) => {
     if (autoMessageSentRef.current) return; // Only send once
     autoMessageSentRef.current = true;
-    setAutoMessageStatus('sending');
 
     const greeting = `Hello ${caregiverName || 'there'}, can we discuss my care needs now?`;
+    const gigId = localStorage.getItem('commitmentGigId');
 
+    // Navigate immediately so the client sees the chat banner right away
+    navigate(`/app/client/message/${caregiverId}`, {
+      state: { recipientName: caregiverName, autoUnlocked: true, serviceId: gigId || undefined },
+    });
+
+    // Fire the thread-opener silently after navigation (best-effort)
     try {
       const token = localStorage.getItem('authToken');
-      if (!token || !user?.id) {
-        console.warn('Cannot auto-send message: missing auth');
-        setAutoMessageStatus('failed');
-        return;
-      }
-
-      // Use the REST Chat API to send the first message
-      // (SignalR hub may not be connected on this page, and the commitment
-      //  was just confirmed so the backend will allow it)
+      if (!token || !user?.id) return;
       await api.post('/Chat/send', {
         SenderId: user.id,
         ReceiverId: caregiverId,
@@ -63,20 +63,9 @@ const CommitmentSuccess = () => {
         message: greeting,
         timestamp: new Date().toISOString(),
       });
-      setAutoMessageStatus('sent');
-      console.log('Auto first message sent successfully');
-
-      // Auto-navigate to chat after a brief delay so the user sees the success state
-      setTimeout(() => {
-        const gigId = localStorage.getItem('commitmentGigId');
-        navigate(`/app/client/message/${caregiverId}`, {
-          state: { recipientName: caregiverName, autoUnlocked: true, serviceId: gigId || undefined },
-        });
-      }, 2500);
     } catch (err) {
-      console.error('Failed to auto-send first message:', err);
-      setAutoMessageStatus('failed');
-      // Not critical — user can still navigate to chat manually
+      console.error('Failed to auto-send thread-opener message:', err);
+      // Non-critical — client is already in chat and can message manually
     }
   };
 
@@ -119,13 +108,13 @@ const CommitmentSuccess = () => {
           stopPolling();
           setPaymentData(data);
           setStatusMessage('Payment verified! Chat access unlocked.');
-          cleanupLocalStorage();
 
-          // Auto-send first message
+          // Read gigId BEFORE cleanupLocalStorage removes it — needed for the chat banner
           const caregiverName = localStorage.getItem('commitmentCaregiverName') || '';
           if (data.caregiverId) {
             sendAutoFirstMessage(data.caregiverId, caregiverName);
           }
+          cleanupLocalStorage();
 
         } else if (data.status === "pending") {
           setStatusMessage('Payment is still being processed. Please wait...');
@@ -219,30 +208,6 @@ const CommitmentSuccess = () => {
                 When you hire this caregiver, the ₦5,000 fee will be deducted from your order total.
                 Please note: this fee is non-refundable if you choose not to hire.
               </p>
-
-              {autoMessageStatus === 'sent' && (
-                <p className="commitment-success-redirect-hint">
-                  Redirecting you to chat...
-                </p>
-              )}
-
-              {/* Auto message status */}
-              {autoMessageStatus === 'sending' && (
-                <div className="commitment-auto-message commitment-auto-message--sending">
-                  <div className="commitment-spinner-small" />
-                  Sending your first message...
-                </div>
-              )}
-              {autoMessageStatus === 'sent' && (
-                <div className="commitment-auto-message commitment-auto-message--sent">
-                  ✓ First message sent automatically
-                </div>
-              )}
-              {autoMessageStatus === 'failed' && (
-                <div className="commitment-auto-message commitment-auto-message--failed">
-                  Could not auto-send message — you can send it manually
-                </div>
-              )}
 
               {/* Payment details */}
               <div className="commitment-details">

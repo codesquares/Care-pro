@@ -1,4 +1,5 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
+import { useSelector } from 'react-redux';
 import { Link } from 'react-router-dom';
 import { FaDollarSign, FaClipboardList, FaChartLine, FaCreditCard, FaInfoCircle, FaClock } from 'react-icons/fa';
 import walletService from '../../services/walletService';
@@ -21,53 +22,63 @@ const EarningsPage = () => {
   // Get the current user from local storage
   const currentUser = JSON.parse(localStorage.getItem('userDetails')) || {};
 
-  useEffect(() => {
-    const fetchEarningsData = async () => {
-      try {
-        setIsLoading(true);
-        setError(null);
-        
-        // Load wallet summary (single source of truth)
-        const walletResult = await walletService.getWalletSummary(currentUser.id);
-        if (walletResult.success && walletResult.data) {
-          setWallet(prev => ({
-            ...prev,
-            totalEarned: walletResult.data.totalEarned ?? 0,
-            withdrawableBalance: walletResult.data.withdrawableBalance ?? 0,
-            pendingBalance: walletResult.data.pendingBalance ?? 0,
-            totalWithdrawn: walletResult.data.totalWithdrawn ?? 0,
-          }));
-        }
+  const fetchEarningsData = useCallback(async () => {
+    if (!currentUser?.id) return;
+    try {
+      setIsLoading(true);
+      setError(null);
 
-        // Load ledger history for chart data (OrderReceived entries = actual earnings)
-        const ledgerResult = await walletService.getLedgerHistory(currentUser.id, 200);
-        if (ledgerResult.success && Array.isArray(ledgerResult.data)) {
-          setLedgerEntries(ledgerResult.data);
-          // Count unique orders from ledger
-          const orderEntries = ledgerResult.data.filter(e => e.type === 'OrderReceived');
-          setWallet(prev => ({ ...prev, totalOrders: orderEntries.length }));
-        }
-
-        // Load withdrawal history for the transactions table
-        try {
-          const history = await withdrawalService.getCaregiverWithdrawalHistory(currentUser.id);
-          setWithdrawalHistory(Array.isArray(history) ? history : []);
-        } catch (historyError) {
-          console.error("Error fetching withdrawal history:", historyError);
-          setWithdrawalHistory([]);
-        }
-      } catch (err) {
-        console.error("Error fetching earnings data:", err);
-        setError("Failed to load earnings data. Please try again later.");
-      } finally {
-        setIsLoading(false);
+      // Load wallet summary (single source of truth)
+      const walletResult = await walletService.getWalletSummary(currentUser.id);
+      if (walletResult.success && walletResult.data) {
+        setWallet(prev => ({
+          ...prev,
+          totalEarned: walletResult.data.totalEarned ?? 0,
+          withdrawableBalance: walletResult.data.withdrawableBalance ?? 0,
+          pendingBalance: walletResult.data.pendingBalance ?? 0,
+          totalWithdrawn: walletResult.data.totalWithdrawn ?? 0,
+        }));
       }
-    };
 
-    if (currentUser?.id) {
+      // Load ledger history for chart data (OrderReceived entries = actual earnings)
+      const ledgerResult = await walletService.getLedgerHistory(currentUser.id, 200);
+      if (ledgerResult.success && Array.isArray(ledgerResult.data)) {
+        setLedgerEntries(ledgerResult.data);
+        // Count unique orders from ledger
+        const orderEntries = ledgerResult.data.filter(e => e.type === 'OrderReceived');
+        setWallet(prev => ({ ...prev, totalOrders: orderEntries.length }));
+      }
+
+      // Load withdrawal history for the transactions table
+      try {
+        const history = await withdrawalService.getCaregiverWithdrawalHistory(currentUser.id);
+        setWithdrawalHistory(Array.isArray(history) ? history : []);
+      } catch (historyError) {
+        console.error("Error fetching withdrawal history:", historyError);
+        setWithdrawalHistory([]);
+      }
+    } catch (err) {
+      console.error("Error fetching earnings data:", err);
+      setError("Failed to load earnings data. Please try again later.");
+    } finally {
+      setIsLoading(false);
+    }
+  }, [currentUser.id]); // eslint-disable-line react-hooks/exhaustive-deps
+
+  useEffect(() => {
+    fetchEarningsData();
+  }, [fetchEarningsData]);
+
+  // Re-fetch earnings on withdrawal status changes and visit approvals (real-time updates)
+  const latestNotification = useSelector((state) => state.notifications.notifications[0]);
+  useEffect(() => {
+    if (!latestNotification) return;
+    const t = (latestNotification.type || latestNotification.notificationType || '')
+      .toLowerCase().replace(/[\s-]+/g, '_');
+    if (t.startsWith('withdrawal_') || t === 'visit_approved') {
       fetchEarningsData();
     }
-  }, [currentUser.id]);
+  }, [latestNotification]); // eslint-disable-line react-hooks/exhaustive-deps
 
   const formatCurrency = (amount) => {
     return new Intl.NumberFormat('en-NG', {

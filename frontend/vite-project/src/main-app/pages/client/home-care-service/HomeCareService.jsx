@@ -181,10 +181,13 @@
 
 import { useState, useEffect, useRef } from "react";
 import { useParams, useNavigate } from "react-router-dom";
+import { useSelector } from "react-redux";
+import { toast } from "react-toastify";
 import "./home-care-service.css";
 import ClientGigService from "../../../services/clientGigService";
 import GigReviewService from "../../../services/gigReviewService";
 import bookingCommitmentService from "../../../services/bookingCommitmentService";
+import GigPriceNegotiationService from "../../../services/gigPriceNegotiationService";
 import defaultAvatar from "../../../../assets/profilecard1.png";
 import VideoModal from "../../../components/VideoModal/VideoModal";
 import ReviewsModal from "../../../components/ReviewsModal/ReviewsModal";
@@ -210,9 +213,30 @@ const HomeCareService = () => {
   const [gigRating, setGigRating] = useState(0);
   // Commitment fee access state
   const [commitmentAccess, setCommitmentAccess] = useState(null);
+  // Active price negotiation for this gig (null if none)
+  const [existingNegotiation, setExistingNegotiation] = useState(null);
+  const [negotiateLoading, setNegotiateLoading] = useState(false);
   // Credentials modal state
   const [showCredentialsModal, setShowCredentialsModal] = useState(false);
   const [credentialsTab, setCredentialsTab] = useState('education');
+  // Forfeit commitment modal state
+  const [showForfeitModal, setShowForfeitModal] = useState(false);
+  const [forfeitLoading, setForfeitLoading] = useState(false);
+  const [forfeitError, setForfeitError] = useState(null);
+
+  const handleForfeitConfirm = async () => {
+    if (!id) return;
+    setForfeitLoading(true);
+    setForfeitError(null);
+    const result = await bookingCommitmentService.cancelCommitment(id);
+    setForfeitLoading(false);
+    if (result.success) {
+      setCommitmentAccess({ hasAccess: false });
+      setShowForfeitModal(false);
+    } else {
+      setForfeitError(result.error || 'Failed to cancel. Please try again.');
+    }
+  };
   // Pricing card collapsible state (tablet/desktop only)
   const [pricingExpanded, setPricingExpanded] = useState(false);
   const navigate = useNavigate();
@@ -245,8 +269,8 @@ const HomeCareService = () => {
       return;
     }
 
-    // Block if commitment check hasn't completed yet or fee not paid
-    if (!commitmentAccess || !commitmentAccess.hasAccess) {
+    // Block if commitment check hasn't completed yet or fee not paid (and not a free path)
+    if (!commitmentAccess || (!commitmentAccess.hasAccess && !commitmentAccess.commitmentNotRequired)) {
       handleUnlockChat();
       return;
     }
@@ -262,6 +286,12 @@ const HomeCareService = () => {
         const result = await bookingCommitmentService.checkAccess(id);
         if (result.success) {
           setCommitmentAccess(result.data);
+          // If access is confirmed, check for an existing active negotiation on this gig
+          if (result.data?.hasAccess || result.data?.commitmentNotRequired) {
+            GigPriceNegotiationService.getByGig(id)
+              .then((neg) => setExistingNegotiation(neg))
+              .catch(() => {}); // 404 → null already handled inside service
+          }
         } else {
           setCommitmentAccess({ hasAccess: false });
         }
@@ -273,15 +303,62 @@ const HomeCareService = () => {
     checkCommitment();
   }, [id, isAuthenticated, userRole]);
 
+  // Re-check commitment access when a cancellation notification arrives (real-time)
+  const latestNotification = useSelector((state) => state.notifications.notifications[0]);
+  useEffect(() => {
+    if (!latestNotification || !isAuthenticated || userRole !== 'Client' || !id) return;
+    const t = (latestNotification.type || latestNotification.notificationType || '')
+      .toLowerCase().replace(/[\s-]+/g, '_');
+    if (
+      (t === 'commitment_cancelled_by_client' || t === 'commitment_confirmed') &&
+      (latestNotification.relatedEntityId === id || !latestNotification.relatedEntityId)
+    ) {
+      bookingCommitmentService.checkAccess(id)
+        .then((result) => { if (result.success) setCommitmentAccess(result.data); })
+        .catch(() => {});
+    }
+  }, [latestNotification]); // eslint-disable-line react-hooks/exhaustive-deps
+
   const handleMessage = () => {
     // Block if commitment check hasn't completed yet or fee not paid
-    if (!commitmentAccess || !commitmentAccess.hasAccess) {
+    if (!commitmentAccess || (!commitmentAccess.hasAccess && !commitmentAccess.commitmentNotRequired)) {
       handleUnlockChat();
       return;
     }
     navigate(`${basePath}/message/${service.caregiverId}`, {
       state: { recipientName: service.caregiverName, serviceId: id },
     });
+  };
+
+  const handleNegotiate = async () => {
+    if (!isAuthenticated) {
+      navigate(`/login?returnTo=/service/${id}`);
+      return;
+    }
+    // Block negotiation if the gig is already at the minimum price
+    if (price <= 10000) {
+      toast.info('This gig is already at the minimum price of ₦10,000 and cannot be negotiated.');
+      return;
+    }
+    // If an active negotiation already exists, go straight to it
+    if (existingNegotiation?.negotiationId) {
+      navigate(`${basePath}/price-negotiation/${existingNegotiation.negotiationId}`, {
+        state: { gigId: id },
+      });
+      return;
+    }
+    setNegotiateLoading(true);
+    try {
+      const neg = await GigPriceNegotiationService.initiate({ gigId: id });
+      navigate(`${basePath}/price-negotiation/${neg.negotiationId}`, {
+        state: { gigId: id },
+      });
+    } catch (err) {
+      const msg = err.response?.data?.message || 'Could not start negotiation. Please try again.';
+      toast.error(msg);
+    } finally {
+      setNegotiateLoading(false);
+    }
   };
 
   const handleFavorite = () => {
@@ -743,7 +820,7 @@ const HomeCareService = () => {
                   🔓 Pay ₦5,000 to Unlock <span className="hcs-arrow">→</span>
                 </button>
               ) : (
-                <>
+        <>
                   <button className="hcs-hire-btn" onClick={handleHire}>
                     Hire {caregiverFirstName || caregiverName} <span className="hcs-arrow">→</span>
                   </button>
@@ -753,6 +830,35 @@ const HomeCareService = () => {
                   >
                     Send Message
                   </button>
+                  {isAuthenticated && userRole === 'Client' && (commitmentAccess?.hasAccess || commitmentAccess?.commitmentNotRequired) && (
+                    <details className="hcs-more-options">
+                      <summary className="hcs-more-options__toggle">More options</summary>
+                      <div className="hcs-more-options__content">
+                        <button
+                          className="hcs-negotiate-btn"
+                          onClick={handleNegotiate}
+                          disabled={negotiateLoading}
+                        >
+                          {negotiateLoading
+                            ? 'Starting…'
+                            : existingNegotiation?.negotiationId
+                              ? '🔄 Continue Negotiation'
+                              : '💸 Negotiate Price'}
+                        </button>
+                        <p className="hcs-negotiate-hint">
+                          Negotiation is optional — you can also pay the listed price directly.
+                        </p>
+                        {commitmentAccess?.hasAccess && !commitmentAccess?.commitmentNotRequired && (
+                          <button
+                            className="hcs-forfeit-btn"
+                            onClick={() => { setForfeitError(null); setShowForfeitModal(true); }}
+                          >
+                            🚫 Forfeit Fee & Cancel Access
+                          </button>
+                        )}
+                      </div>
+                    </details>
+                  )}
                 </>
               )
             )}
@@ -765,6 +871,37 @@ const HomeCareService = () => {
         <div className="hcs-about-gig">
           <h2>About the Gig</h2>
           <p>{caregiverBio}</p>
+        </div>
+      )}
+
+      {/* Forfeit commitment confirmation modal */}
+      {showForfeitModal && (
+        <div className="chat-forfeit-overlay" onClick={() => !forfeitLoading && setShowForfeitModal(false)}>
+          <div className="chat-forfeit-modal" onClick={e => e.stopPropagation()}>
+            <h3 className="chat-forfeit-modal__title">Cancel Booking Commitment?</h3>
+            <p className="chat-forfeit-modal__body">
+              Your <strong>₦5,000 commitment fee is non-refundable</strong>. You will immediately
+              lose access to chat with this caregiver and will not be able to pay for this gig
+              until you pay a new commitment fee.
+            </p>
+            {forfeitError && <p className="chat-forfeit-modal__error">{forfeitError}</p>}
+            <div className="chat-forfeit-modal__actions">
+              <button
+                className="chat-forfeit-modal__btn chat-forfeit-modal__btn--confirm"
+                onClick={handleForfeitConfirm}
+                disabled={forfeitLoading}
+              >
+                {forfeitLoading ? 'Cancelling…' : 'Yes, Forfeit Fee & Cancel'}
+              </button>
+              <button
+                className="chat-forfeit-modal__btn chat-forfeit-modal__btn--cancel"
+                onClick={() => setShowForfeitModal(false)}
+                disabled={forfeitLoading}
+              >
+                Keep Access
+              </button>
+            </div>
+          </div>
         </div>
       )}
 

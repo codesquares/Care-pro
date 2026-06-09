@@ -59,10 +59,21 @@ const NegotiationPanel = ({ negotiation: initial, role, order, onNegotiationUpda
   const [myTasks, setMyTasks] = useState(
     role === "client" ? (initial?.clientProposedTasks || []) : (initial?.caregiverProposedTasks || [])
   );
-  // For caregivers: pre-fill their schedule from the client's proposal when they haven't set one yet
+  // Required days — computed here so it can cap the caregiver pre-fill below
+  const requiredDays = (() => {
+    const payOpt = (order?.serviceType || order?.paymentOption || '').toLowerCase();
+    if (payOpt !== 'monthly') return 1;
+    return order?.frequencyPerWeek
+      || order?.visitsPerWeek
+      || order?.selectedPackage?.visitsPerWeek
+      || order?.packageDetails?.visitsPerWeek
+      || 1;
+  })();
+  // For caregivers: pre-fill their schedule from the client's proposal when they haven't set one yet,
+  // capped to requiredDays so the counter never opens above the limit.
   const caregiverInitialSchedule = (initial?.caregiverProposedSchedule?.length > 0)
     ? initial.caregiverProposedSchedule
-    : (initial?.clientProposedSchedule || []);
+    : (initial?.clientProposedSchedule || []).slice(0, requiredDays);
   const [mySchedule, setMySchedule] = useState(
     role === "client" ? (initial?.clientProposedSchedule || []) : caregiverInitialSchedule
   );
@@ -136,16 +147,6 @@ const NegotiationPanel = ({ negotiation: initial, role, order, onNegotiationUpda
   const myLabel = role === "client" ? "You (Client)" : "You (Caregiver)";
 
   // Schedule validation — require the correct number of unique days
-  // Use multiple fallback fields (same pattern as ContractGenerationModal)
-  const requiredDays = (() => {
-    const payOpt = (order?.paymentOption || order?.serviceType || '').toLowerCase();
-    if (payOpt === 'one-time') return 1;
-    return order?.frequencyPerWeek
-      || order?.visitsPerWeek
-      || order?.selectedPackage?.visitsPerWeek
-      || order?.packageDetails?.visitsPerWeek
-      || 1;
-  })();
   const uniqueScheduledDays = new Set(mySchedule.map((s) => s.dayOfWeek)).size;
   const scheduleComplete = uniqueScheduledDays >= requiredDays;
 
@@ -199,9 +200,7 @@ const NegotiationPanel = ({ negotiation: initial, role, order, onNegotiationUpda
       setMyTasks(role === "client" ? fresh.clientProposedTasks || [] : fresh.caregiverProposedTasks || []);
       setMySchedule(role === "client"
         ? fresh.clientProposedSchedule || []
-        : (fresh.caregiverProposedSchedule?.length > 0
-            ? fresh.caregiverProposedSchedule
-            : fresh.clientProposedSchedule || []));
+        : fresh.caregiverProposedSchedule || []);
       setServiceAddress(fresh.serviceAddress || "");
       setAccessInstructions(fresh.accessInstructions || "");
       // Persist to localStorage so the date survives future re-fetches that return null
@@ -304,10 +303,7 @@ const NegotiationPanel = ({ negotiation: initial, role, order, onNegotiationUpda
     if (editMode || !initial) return;
     setNeg(initial);
     setMyTasks(role === "client" ? (initial.clientProposedTasks || []) : (initial.caregiverProposedTasks || []));
-    const cgSched = (initial.caregiverProposedSchedule?.length > 0)
-      ? initial.caregiverProposedSchedule
-      : (initial.clientProposedSchedule || []);
-    setMySchedule(role === "client" ? (initial.clientProposedSchedule || []) : cgSched);
+    setMySchedule(role === "client" ? (initial.clientProposedSchedule || []) : (initial.caregiverProposedSchedule || []));
     setServiceAddress(initial.serviceAddress || "");
     setAccessInstructions(initial.accessInstructions || "");
     setSpecialRequirements(initial.specialClientRequirements || "");

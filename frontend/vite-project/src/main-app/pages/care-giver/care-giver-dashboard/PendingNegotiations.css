@@ -1,0 +1,185 @@
+/* ─────────────────────────────────────────────────────────────────────────────
+   PendingNegotiations.css  —  pn- prefix throughout
+   ─────────────────────────────────────────────────────────────────────────── */
+
+.pn-widget {
+  background: #fff;
+  border-radius: 12px;
+  border: 1px solid #e8ecf0;
+  padding: 20px;
+  margin-top: 20px;
+}
+
+/* ── Header ──────────────────────────────────────────────────────────────── */
+.pn-header {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin-bottom: 16px;
+}
+
+.pn-title {
+  margin: 0;
+  font-size: 17px;
+  font-weight: 700;
+  color: #1a1d2e;
+}
+
+.pn-count-badge {
+  background: #4a6cf7;
+  color: #fff;
+  border-radius: 20px;
+  font-size: 12px;
+  font-weight: 700;
+  padding: 2px 9px;
+  line-height: 1.6;
+}
+
+/* ── States ──────────────────────────────────────────────────────────────── */
+.pn-loading,
+.pn-empty {
+  font-size: 14px;
+  color: #888;
+  padding: 8px 0;
+  margin: 0;
+}
+
+/* ── List ────────────────────────────────────────────────────────────────── */
+.pn-list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+/* ── Card ────────────────────────────────────────────────────────────────── */
+.pn-card {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 14px 16px;
+  border-radius: 10px;
+  border: 1px solid #edf0f7;
+  background: #fafbff;
+  cursor: pointer;
+  transition: background 0.12s, border-color 0.12s, box-shadow 0.12s;
+  outline: none;
+}
+
+.pn-card:hover,
+.pn-card:focus-visible {
+  background: #f0f4ff;
+  border-color: #c5d0fa;
+  box-shadow: 0 2px 8px rgba(74, 108, 247, 0.08);
+}
+
+/* ── Avatar ──────────────────────────────────────────────────────────────── */
+.pn-avatar {
+  width: 42px;
+  height: 42px;
+  border-radius: 50%;
+  flex-shrink: 0;
+  overflow: hidden;
+  background: #4a6cf7;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.pn-avatar img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.pn-avatar span {
+  color: #fff;
+  font-weight: 700;
+  font-size: 14px;
+}
+
+/* ── Info ────────────────────────────────────────────────────────────────── */
+.pn-info {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+}
+
+.pn-client-name {
+  font-size: 14px;
+  font-weight: 600;
+  color: #1a1d2e;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.pn-gig-title {
+  font-size: 12px;
+  color: #888;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.pn-price-row {
+  display: flex;
+  align-items: baseline;
+  gap: 6px;
+}
+
+.pn-price {
+  font-size: 14px;
+  font-weight: 700;
+  color: #4a6cf7;
+}
+
+.pn-proposed-by {
+  font-size: 11px;
+  color: #aaa;
+}
+
+/* ── Meta (timer + arrow) ────────────────────────────────────────────────── */
+.pn-meta {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  gap: 4px;
+  flex-shrink: 0;
+}
+
+.pn-timer {
+  font-size: 11px;
+  color: #b06000;
+  background: #fff3e0;
+  border-radius: 20px;
+  padding: 2px 8px;
+  white-space: nowrap;
+}
+
+.pn-arrow {
+  font-size: 20px;
+  color: #c0c7d0;
+  line-height: 1;
+}
+
+/* ── View all link ───────────────────────────────────────────────────────── */
+.pn-view-all {
+  display: block;
+  width: 100%;
+  margin-top: 14px;
+  background: none;
+  border: none;
+  color: #4a6cf7;
+  font-size: 13px;
+  font-weight: 600;
+  cursor: pointer;
+  text-align: center;
+  padding: 6px 0;
+}
+
+.pn-view-all:hover { text-decoration: underline; }

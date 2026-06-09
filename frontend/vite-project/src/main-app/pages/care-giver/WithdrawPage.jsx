@@ -1,4 +1,5 @@
 import { useState, useEffect } from 'react';
+import { useSelector } from 'react-redux';
 import { Link, useNavigate } from 'react-router-dom';
 import { withdrawalService } from '../../services/withdrawalService';
 import walletService from '../../services/walletService';
@@ -74,6 +75,17 @@ const WithdrawPage = () => {
       fetchWalletData();
     }
   }, [currentUser.id]);
+
+  // Re-fetch wallet data on withdrawal-related SignalR notifications (real-time updates)
+  const latestNotification = useSelector((state) => state.notifications.notifications[0]);
+  useEffect(() => {
+    if (!latestNotification || !currentUser?.id) return;
+    const t = (latestNotification.type || latestNotification.notificationType || '')
+      .toLowerCase().replace(/[\s-]+/g, '_');
+    if (t.startsWith('withdrawal_')) {
+      fetchWalletData();
+    }
+  }, [latestNotification]); // eslint-disable-line react-hooks/exhaustive-deps
 
   const handleInputChange = (e) => {
     const { name, value } = e.target;

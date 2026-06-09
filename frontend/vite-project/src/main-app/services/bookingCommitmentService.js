@@ -114,6 +114,31 @@ const bookingCommitmentService = {
    * @param {string} adminId
    * @param {string} reason
    */
+  /**
+   * Cancel an active booking commitment for a gig.
+   * The ₦5,000 fee is forfeited — this must only be called after the client
+   * has explicitly confirmed they understand it is non-refundable.
+   *
+   * POST /api/booking-commitment/{gigId}/cancel
+   *
+   * @param {string} gigId
+   * @returns {Promise<{success: boolean, data?: Object, error?: string}>}
+   */
+  async cancelCommitment(gigId) {
+    try {
+      const response = await api.post(`/booking-commitment/${gigId}/cancel`, {
+        confirmForfeit: true,
+      });
+      return { success: true, data: response.data };
+    } catch (error) {
+      console.error('Error cancelling booking commitment:', error);
+      return {
+        success: false,
+        error: error.response?.data?.message || error.message,
+      };
+    }
+  },
+
   async adminManualComplete(gigId, clientId, adminId, reason) {
     try {
       const response = await api.post('/booking-commitment/admin/manual-complete', {
