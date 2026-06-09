@@ -1154,8 +1154,8 @@ const CaregiverOrderDetails = () => {
                                 <div className="neg-section-label">Proposed Schedule</div>
                                 {/* Schedule guide banner */}
                                 {(() => {
-                                    const payOpt = (order?.paymentOption || order?.serviceType || '').toLowerCase();
-                                    const reqDays = payOpt === 'one-time' ? 1
+                                    const payOpt = (order?.serviceType || order?.paymentOption || '').toLowerCase();
+                                    const reqDays = payOpt !== 'monthly' ? 1
                                         : (order?.frequencyPerWeek || order?.visitsPerWeek || order?.selectedPackage?.visitsPerWeek || order?.packageDetails?.visitsPerWeek || 1);
                                     const uniqueDays = new Set(negInitSchedule.map(s => s.dayOfWeek)).size;
                                     const done = uniqueDays >= reqDays;
@@ -1189,6 +1189,12 @@ const CaregiverOrderDetails = () => {
                                     <input className="neg-input neg-input--time" type="time" value={negInitSlotEnd} onChange={e => setNegInitSlotEnd(e.target.value)} />
                                     <button className="neg-btn neg-btn--sm" onClick={() => {
                                         if (negInitSlotStart >= negInitSlotEnd) { toast.error('End time must be after start time.'); return; }
+                                        const _payOpt = (order?.serviceType || order?.paymentOption || '').toLowerCase();
+                                        const _reqDays = _payOpt !== 'monthly' ? 1 : (order?.frequencyPerWeek || order?.visitsPerWeek || order?.selectedPackage?.visitsPerWeek || order?.packageDetails?.visitsPerWeek || 1);
+                                        if (negInitSchedule.length >= _reqDays) {
+                                            toast.error(`You can only add ${_reqDays} day${_reqDays > 1 ? 's' : ''} for this contract. Remove a slot first to change it.`);
+                                            return;
+                                        }
                                         if (negInitSchedule.some(s => s.dayOfWeek === negInitSlotDay)) {
                                             toast.error(`You already have a slot for ${negInitSlotDay}. Remove it first to change the time.`);
                                             return;
@@ -1211,8 +1217,8 @@ const CaregiverOrderDetails = () => {
 
                             <div style={{ display: 'flex', gap: '10px', marginTop: '4px' }}>
                                 <button className="neg-btn neg-btn--submit" onClick={() => {
-                                    const payOpt = (order?.paymentOption || order?.serviceType || '').toLowerCase();
-                                    const reqDays = payOpt === 'one-time' ? 1
+                                    const payOpt = (order?.serviceType || order?.paymentOption || '').toLowerCase();
+                                    const reqDays = payOpt !== 'monthly' ? 1
                                         : (order?.frequencyPerWeek || order?.visitsPerWeek || order?.selectedPackage?.visitsPerWeek || order?.packageDetails?.visitsPerWeek || 1);
                                     const uniqueDays = new Set(negInitSchedule.map(s => s.dayOfWeek)).size;
                                     if (uniqueDays < reqDays) {
