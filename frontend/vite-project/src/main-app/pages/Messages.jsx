@@ -267,15 +267,6 @@ const Messages = ({ userId: propsUserId, token: propsToken }) => {
     };
   }, [userDetails.userId, token]); // Minimal dependencies
   
-  // Separate effect for URL parameter handling
-  useEffect(() => {
-    const userIdParam = searchParams.get('user');
-    if (userIdParam && !selectedChatId) {
-      // console.log(`[MessagesPage] Auto-selecting chat from URL param: ${userIdParam}`);
-      selectChat(userIdParam);
-    }
-  }, [searchParams]); // Removed selectChat from dependencies to prevent loops
-
   // Effect to show offline options after extended loading
   useEffect(() => {
     if (isLoading && !error) {
@@ -286,22 +277,6 @@ const Messages = ({ userId: propsUserId, token: propsToken }) => {
       return () => clearTimeout(offlineTimer);
     }
   }, [isLoading, error]);
-
-  // Handle window resize for mobile detection
-  useEffect(() => {
-    const handleResize = () => {
-      const mobile = window.innerWidth < 768;
-      setIsMobile(mobile);
-      
-      // Auto-show sidebar on desktop
-      if (!mobile) {
-        setShowSidebar(true);
-      }
-    };
-
-    window.addEventListener('resize', handleResize);
-    return () => window.removeEventListener('resize', handleResize);
-  }, []);
 
     // Debounced notification handler to prevent rapid re-renders
   const debouncedNotificationHandler = useMemo(
@@ -639,7 +614,7 @@ const Messages = ({ userId: propsUserId, token: propsToken }) => {
         </div>
       )}
       
-      {isLoading && !error && (
+      {isLoading && !error && conversations.length === 0 && (
         <div className="loading-indicator" role="status" aria-live="polite">
           <div className="spinner"></div>
           <p>Connecting to messaging service...</p>
