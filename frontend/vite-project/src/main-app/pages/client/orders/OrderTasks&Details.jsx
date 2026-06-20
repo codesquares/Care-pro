@@ -623,7 +623,7 @@ const MyOrders = () => {
             toast.error(gps.error);
             return;
         }
-        if (gps.coords.accuracy > 200) {
+        if (gps.coords.accuracy > 300) {
             toast.error('GPS signal too weak. Move outdoors and try again.');
             return;
         }

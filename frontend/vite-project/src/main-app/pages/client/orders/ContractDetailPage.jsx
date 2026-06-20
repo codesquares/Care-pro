@@ -8,7 +8,7 @@ import ProposedTasksList from '../../../components/task-proposals/ProposedTasksL
 import config from '../../../config';
 import './ContractDetailPage.css';
 
-const GPS_ACCURACY_THRESHOLD = 200; // metres — reject fix weaker than this
+const GPS_ACCURACY_THRESHOLD = 300; // metres — reject fix weaker than this
 
 const ContractDetailPage = () => {
     const { orderId } = useParams();
@@ -414,7 +414,7 @@ const ContractDetailPage = () => {
                                 : 'Once set, your caregiver will need to be within 1500m of this point to check in. Make sure you are physically at the service address before confirming.'}
                         </p>
                         <p className="cdp-modal-hint">
-                            Your device must report GPS accuracy of 150 metres or better.
+                            Your device must report GPS accuracy of 300 metres or better.
                             If you see a &ldquo;signal too weak&rdquo; error, move outdoors and try again.
                         </p>
 

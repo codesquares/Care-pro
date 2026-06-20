@@ -43,6 +43,7 @@ import { BlogProvider } from './main-app/context/BlogContext';
 import PaymentSuccess from './main-app/pages/client/home-care-service/PaymentSuccess';
 import CommitmentSuccess from './main-app/pages/client/home-care-service/CommitmentSuccess';
 import HomeCareService from './main-app/pages/client/home-care-service/HomeCareService';
+import SubscriptionPaymentConfirmed from './main-app/pages/client/subscriptions/SubscriptionPaymentConfirmed';
 import { MessageProvider } from './main-app/context/MessageContext';
 import { CaregiverStatusProvider } from './main-app/contexts/CaregiverStatusContext';
 // import { NotificationProvider } from './main-app/context/NotificationContext';
@@ -281,6 +282,14 @@ function AppContent() {
 
         <Route path="/app/client/payment-success" element={<PaymentSuccess />} />
         <Route path="/app/client/commitment-success" element={<CommitmentSuccess />} />
+        <Route
+          path="/subscription/payment-confirmed"
+          element={
+            <ProtectedRoute>
+              <SubscriptionPaymentConfirmed />
+            </ProtectedRoute>
+          }
+        />
         <Route path="/unauthorized" element={<UnauthorizedPage />} />
         <Route
           path="/app/*"

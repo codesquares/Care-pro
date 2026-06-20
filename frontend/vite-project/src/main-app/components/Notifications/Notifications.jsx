@@ -3,7 +3,13 @@ import { useSelector, useDispatch } from 'react-redux';
 import { useNavigate } from 'react-router-dom';
 import { fetchNotifications, markNotificationAsRead, markAllNotificationsAsRead } from '../../Redux/slices/notificationSlice';
 import { formatDistanceToNow } from "date-fns";
-import { getNotificationRoute, getNotificationActionLabel, getNotificationTypeIcon, normalizeNotificationType } from '../../utils/notificationRoutes';
+import {
+  getNotificationRoute,
+  getNotificationActionLabel,
+  getNotificationTypeIcon,
+  normalizeNotificationType,
+  extractPaymentActionRequiredUrl,
+} from '../../utils/notificationRoutes';
 import "./Notifications.css";
 
 const NotificationsPage = () => {
@@ -156,7 +162,12 @@ const NotificationsPage = () => {
                 const route = getNotificationRoute(notification, userRole);
                 const isClickable = !!route;
                 const isServiceLocationNotSet = type === 'ServiceLocationNotSet';
+                const isPaymentActionRequired = type === 'PaymentActionRequired';
+                const authUrl = isPaymentActionRequired
+                  ? extractPaymentActionRequiredUrl(notification.content || notification.message || '')
+                  : null;
                 const resolved = isServiceLocationNotSet && isGpsLocationResolved(notification);
+                const isActionRequired = isServiceLocationNotSet || isPaymentActionRequired;
 
                 return (
                   <div 
@@ -166,7 +177,7 @@ const NotificationsPage = () => {
                     } ${
                       isClickable && !isServiceLocationNotSet ? 'clickable' : ''
                     } ${
-                      isServiceLocationNotSet ? 'notification-entry--action-required' : ''
+                      isActionRequired ? 'notification-entry--action-required' : ''
                     } ${
                       resolved ? 'notification-entry--resolved' : ''
                     }`}
@@ -200,6 +211,23 @@ const NotificationsPage = () => {
                           >
                             Confirm Location Now
                           </button>
+                        )
+                      )}
+                      {isPaymentActionRequired && (
+                        authUrl ? (
+                          <button
+                            className="notification-cta-btn"
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              window.open(authUrl, '_blank', 'noopener,noreferrer');
+                            }}
+                          >
+                            Complete Payment
+                          </button>
+                        ) : (
+                          <span className="notification-fallback-note">
+                            Please check your email or dashboard to continue payment.
+                          </span>
                         )
                       )}
                     </div>

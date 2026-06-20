@@ -1,0 +1,115 @@
+.sub-pay-confirm-page {
+  min-height: calc(100vh - 70px);
+  background: #f8fafc;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 24px;
+}
+
+.sub-pay-confirm-card {
+  width: 100%;
+  max-width: 720px;
+  background: #fff;
+  border: 1px solid #e5e7eb;
+  border-radius: 12px;
+  padding: 24px;
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.06);
+}
+
+.sub-pay-confirm-card h1 {
+  margin: 0 0 8px;
+  font-size: 24px;
+  color: #111827;
+}
+
+.sub-pay-confirm-message {
+  margin: 0 0 20px;
+  font-size: 15px;
+  color: #374151;
+}
+
+.sub-pay-confirm-meta {
+  display: grid;
+  gap: 10px;
+  margin-bottom: 20px;
+  background: #f9fafb;
+  border: 1px solid #e5e7eb;
+  border-radius: 10px;
+  padding: 14px;
+}
+
+.sub-pay-confirm-meta > div {
+  display: flex;
+  justify-content: space-between;
+  gap: 16px;
+  font-size: 13px;
+}
+
+.sub-pay-confirm-meta span {
+  color: #6b7280;
+}
+
+.sub-pay-confirm-meta strong {
+  color: #111827;
+  text-align: right;
+}
+
+.sub-pay-confirm-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+}
+
+.sub-pay-confirm-actions button {
+  border: 1px solid #d1d5db;
+  background: #fff;
+  color: #374151;
+  border-radius: 8px;
+  padding: 10px 16px;
+  cursor: pointer;
+  font-size: 14px;
+  font-weight: 600;
+}
+
+.sub-pay-confirm-actions button:hover {
+  background: #f3f4f6;
+}
+
+.sub-pay-confirm-actions button:disabled {
+  opacity: 0.65;
+  cursor: not-allowed;
+}
+
+.sub-pay-confirm-actions .sub-pay-confirm-primary {
+  border-color: #00b4a6;
+  background: #00b4a6;
+  color: #fff;
+}
+
+.sub-pay-confirm-actions .sub-pay-confirm-primary:hover {
+  background: #009e92;
+}
+
+@media (max-width: 640px) {
+  .sub-pay-confirm-card {
+    padding: 18px;
+  }
+
+  .sub-pay-confirm-actions {
+    flex-direction: column;
+  }
+
+  .sub-pay-confirm-actions button {
+    width: 100%;
+  }
+
+  .sub-pay-confirm-meta > div {
+    flex-direction: column;
+    gap: 4px;
+  }
+
+  .sub-pay-confirm-meta strong {
+    text-align: left;
+  }
+}

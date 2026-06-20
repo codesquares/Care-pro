@@ -341,6 +341,14 @@
   font-weight: 600;
 }
 
+.notification-fallback-note {
+  display: inline-block;
+  margin-top: 10px;
+  font-size: 12px;
+  color: #92400e;
+  font-weight: 500;
+}
+
 .unread-dot {
   width: 10px;
   height: 10px;
