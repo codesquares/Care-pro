@@ -75,6 +75,16 @@ const NotificationBell = ({ navigateTo, bellIcon: BellIcon }) => {
     }
   };
 
+  const handleExternalPaymentAction = (notification, authUrl) => {
+    if (!authUrl) return;
+
+    if (!notification.isRead) {
+      dispatch(markNotificationAsRead(notification.id));
+    }
+
+    window.open(authUrl, '_blank', 'noopener,noreferrer');
+  };
+
   const formatNotificationTime = (timestamp) => {
     try {
       return formatDistanceToNow(new Date(timestamp), { addSuffix: true });
@@ -175,7 +185,7 @@ const NotificationBell = ({ navigateTo, bellIcon: BellIcon }) => {
                                 className="notification-cta-btn"
                                 onClick={(e) => {
                                   e.stopPropagation();
-                                  window.open(authUrl, '_blank', 'noopener,noreferrer');
+                                  handleExternalPaymentAction(notification, authUrl);
                                 }}
                               >
                                 Complete Payment

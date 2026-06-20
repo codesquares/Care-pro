@@ -286,7 +286,11 @@ function AppContent() {
           path="/subscription/payment-confirmed"
           element={
             <ProtectedRoute>
-              <SubscriptionPaymentConfirmed />
+              {user?.role?.toLowerCase() === 'client' ? (
+                <SubscriptionPaymentConfirmed />
+              ) : (
+                <Navigate to="/unauthorized" replace />
+              )}
             </ProtectedRoute>
           }
         />

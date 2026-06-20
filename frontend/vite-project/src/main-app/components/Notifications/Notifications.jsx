@@ -60,6 +60,16 @@ const NotificationsPage = () => {
     }
   };
 
+  const handleExternalPaymentAction = (notification, authUrl) => {
+    if (!authUrl) return;
+
+    if (!notification.isRead) {
+      dispatch(markNotificationAsRead(notification.id));
+    }
+
+    window.open(authUrl, '_blank', 'noopener,noreferrer');
+  };
+
   const handleMarkAllAsRead = () => {
     dispatch(markAllNotificationsAsRead());
   };
@@ -219,7 +229,7 @@ const NotificationsPage = () => {
                             className="notification-cta-btn"
                             onClick={(e) => {
                               e.stopPropagation();
-                              window.open(authUrl, '_blank', 'noopener,noreferrer');
+                              handleExternalPaymentAction(notification, authUrl);
                             }}
                           >
                             Complete Payment

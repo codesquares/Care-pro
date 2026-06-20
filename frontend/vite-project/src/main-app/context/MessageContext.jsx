@@ -1592,11 +1592,12 @@ export const MessageProvider = ({ children }) => {
     }
     
     const isSwitchingChat = selectedChatId !== chatId;
+    const shouldClearBeforeLoad = isSwitchingChat || forceReload;
 
     setSelectedChatId(chatId);
 
-    // Clear once when moving to a different chat to avoid showing stale messages.
-    if (isSwitchingChat) {
+    // Clear when switching chats or explicitly force reloading the same chat.
+    if (shouldClearBeforeLoad) {
       dispatchMessageState({
         type: 'CLEAR_MESSAGES'
       });

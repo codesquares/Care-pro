@@ -360,11 +360,11 @@ const MyOrders = () => {
     };
 
     // Check if contract exists for this order
-    const checkExistingContract = async (orderId) => {
+    const checkExistingContract = async (orderId, { silent = false } = {}) => {
         if (!orderId) return false;
         
         try {
-            setCheckingContract(true);
+            if (!silent) setCheckingContract(true);
             const result = await ContractService.checkExistingContract(orderId);
             
             if (result.success && result.hasContract) {
@@ -376,7 +376,7 @@ const MyOrders = () => {
         } catch (error) {
             console.error("Error checking existing contract:", error);
         } finally {
-            setCheckingContract(false);
+            if (!silent) setCheckingContract(false);
         }
         return false;
     };
@@ -394,7 +394,7 @@ const MyOrders = () => {
                     await sleep(delayMs);
                 }
 
-                foundContract = await checkExistingContract(orderId);
+                foundContract = await checkExistingContract(orderId, { silent: true });
                 if (foundContract) break;
             }
         } finally {
