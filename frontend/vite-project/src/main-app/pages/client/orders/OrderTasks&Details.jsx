@@ -46,6 +46,7 @@ const MyOrders = () => {
     const [contractActionLoading, setContractActionLoading] = useState(false);
     const [contractError, setContractError] = useState(null);
     const [pdfDownloading, setPdfDownloading] = useState(false);
+    const [contractFinalizing, setContractFinalizing] = useState(false);
 
     const [checkingContract, setCheckingContract] = useState(false);
 
@@ -85,7 +86,7 @@ const MyOrders = () => {
                 latestNotification.orderId === orderId
             )
         ) {
-            fetchContractForOrder(orderId);
+            checkExistingContract(orderId);
         }
     }, [latestNotification]); // eslint-disable-line react-hooks/exhaustive-deps
 
@@ -359,11 +360,11 @@ const MyOrders = () => {
     };
 
     // Check if contract exists for this order
-    const checkExistingContract = async (orderId) => {
+    const checkExistingContract = async (orderId, { silent = false } = {}) => {
         if (!orderId) return false;
         
         try {
-            setCheckingContract(true);
+            if (!silent) setCheckingContract(true);
             const result = await ContractService.checkExistingContract(orderId);
             
             if (result.success && result.hasContract) {
@@ -375,9 +376,32 @@ const MyOrders = () => {
         } catch (error) {
             console.error("Error checking existing contract:", error);
         } finally {
-            setCheckingContract(false);
+            if (!silent) setCheckingContract(false);
         }
         return false;
+    };
+
+    const sleep = (ms) => new Promise((resolve) => setTimeout(resolve, ms));
+
+    const finalizeContractAfterConversion = async (orderId) => {
+        setContractFinalizing(true);
+        const retryDelaysMs = [0, 400, 900, 1400, 2000];
+        let foundContract = false;
+
+        try {
+            for (const delayMs of retryDelaysMs) {
+                if (delayMs > 0) {
+                    await sleep(delayMs);
+                }
+
+                foundContract = await checkExistingContract(orderId, { silent: true });
+                if (foundContract) break;
+            }
+        } finally {
+            setContractFinalizing(false);
+        }
+
+        return foundContract;
     };
 
     // Fetch negotiation for this order
@@ -386,7 +410,13 @@ const MyOrders = () => {
             setNegotiationLoading(true);
             const result = await NegotiationService.getByOrderId(orderId);
             if (result.success) {
-                setNegotiation(result.hasNegotiation ? result.data : null);
+                const latestNegotiation = result.hasNegotiation ? result.data : null;
+                if (latestNegotiation?.status === 'ConvertedToContract') {
+                    setNegotiation(null);
+                    await finalizeContractAfterConversion(orderId);
+                    return;
+                }
+                setNegotiation(latestNegotiation);
             }
         } catch (err) {
             console.error("Error fetching negotiation:", err);
@@ -623,7 +653,7 @@ const MyOrders = () => {
             toast.error(gps.error);
             return;
         }
-        if (gps.coords.accuracy > 200) {
+        if (gps.coords.accuracy > 300) {
             toast.error('GPS signal too weak. Move outdoors and try again.');
             return;
         }
@@ -1231,7 +1261,12 @@ const MyOrders = () => {
                             })() : (
                                 /* No contract yet */
                                 <div className="cod-contract-state">
-                                    {negotiationLoading ? (
+                                    {contractFinalizing ? (
+                                        <>
+                                            <div className="cod-spinner" />
+                                            <p>Finalizing contract details...</p>
+                                        </>
+                                    ) : negotiationLoading ? (
                                         <>
                                             <div className="cod-spinner" />
                                             <p>Loading negotiation...</p>
@@ -1243,9 +1278,17 @@ const MyOrders = () => {
                                             role="client"
                                             order={order}
                                             onNegotiationUpdate={(updated) => setNegotiation(updated)}
-                                            onContractCreated={(contractData) => {
-                                                setContract(contractData);
+                                            onContractCreated={async (contractInfo) => {
+                                                const convertedContractId =
+                                                    contractInfo?.contractId ||
+                                                    (typeof contractInfo === 'string' ? contractInfo : null);
+
+                                                if (convertedContractId) {
+                                                    setContract((prev) => prev || { id: convertedContractId });
+                                                }
+
                                                 setNegotiation(null);
+                                                return await finalizeContractAfterConversion(orderId);
                                             }}
                                         />
                                     ) : order?.transactionId ? (

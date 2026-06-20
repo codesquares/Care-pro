@@ -1591,7 +1591,17 @@ export const MessageProvider = ({ children }) => {
       }
     }
     
+    const isSwitchingChat = selectedChatId !== chatId;
+    const shouldClearBeforeLoad = isSwitchingChat || forceReload;
+
     setSelectedChatId(chatId);
+
+    // Clear when switching chats or explicitly force reloading the same chat.
+    if (shouldClearBeforeLoad) {
+      dispatchMessageState({
+        type: 'CLEAR_MESSAGES'
+      });
+    }
     
     try {
       // Find recipient in conversations using either id or userId
@@ -1626,11 +1636,6 @@ export const MessageProvider = ({ children }) => {
       // console.log('🔄 SELECT_CHAT: Calling getMessageHistory with users:', currentUserId, 'and', chatId);
       
       try {
-        // Clear existing messages first to show loading state
-        dispatchMessageState({
-          type: 'CLEAR_MESSAGES'
-        });
-        
         // Try to get message history from SignalR service (which will try REST API first)
         // console.log('🔄 SELECT_CHAT: Attempting to get message history from service for users:', currentUserId, 'and', chatId);
         const messageHistory = await chatService.getMessageHistory(currentUserId, chatId);
@@ -1679,9 +1684,6 @@ export const MessageProvider = ({ children }) => {
           
         } else {
           // console.log('🔄 SELECT_CHAT: No message history available, this might be a new conversation');
-          dispatchMessageState({
-            type: 'CLEAR_MESSAGES'
-          });
         }
       } catch (error) {
         console.warn('🔄 SELECT_CHAT: Message history loading failed, trying direct conversations endpoint:', error.message);
@@ -1734,21 +1736,12 @@ export const MessageProvider = ({ children }) => {
               // console.log("🔄 SELECT_CHAT: SET_MESSAGES dispatched with", processedMessages.length, "fallback messages");
             } else {
               // console.log('🔄 SELECT_CHAT: No messages found in conversations endpoint either');
-              dispatchMessageState({
-                type: 'CLEAR_MESSAGES'
-              });
             }
           } else {
             // console.log('🔄 SELECT_CHAT: Invalid response from conversations endpoint');
-            dispatchMessageState({
-              type: 'CLEAR_MESSAGES'
-            });
           }
         } catch (fallbackError) {
           console.error('🔄 SELECT_CHAT: Direct conversations endpoint also failed:', fallbackError);
-          dispatchMessageState({
-            type: 'CLEAR_MESSAGES'
-          });
         }
       }
       

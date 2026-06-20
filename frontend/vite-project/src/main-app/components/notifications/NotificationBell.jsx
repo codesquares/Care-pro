@@ -2,7 +2,13 @@ import  { useState, useRef, useEffect } from 'react';
 import { useSelector, useDispatch } from 'react-redux';
 import { markNotificationAsRead, markAllNotificationsAsRead } from '../../Redux/slices/notificationSlice';
 import { formatDistanceToNow } from 'date-fns';
-import { getNotificationRoute, getNotificationActionLabel, getNotificationTypeIcon, normalizeNotificationType } from '../../utils/notificationRoutes';
+import {
+  getNotificationRoute,
+  getNotificationActionLabel,
+  getNotificationTypeIcon,
+  normalizeNotificationType,
+  extractPaymentActionRequiredUrl,
+} from '../../utils/notificationRoutes';
 import './NotificationBell.css';
 
 const NotificationBell = ({ navigateTo, bellIcon: BellIcon }) => {
@@ -69,6 +75,16 @@ const NotificationBell = ({ navigateTo, bellIcon: BellIcon }) => {
     }
   };
 
+  const handleExternalPaymentAction = (notification, authUrl) => {
+    if (!authUrl) return;
+
+    if (!notification.isRead) {
+      dispatch(markNotificationAsRead(notification.id));
+    }
+
+    window.open(authUrl, '_blank', 'noopener,noreferrer');
+  };
+
   const formatNotificationTime = (timestamp) => {
     try {
       return formatDistanceToNow(new Date(timestamp), { addSuffix: true });
@@ -88,6 +104,9 @@ const NotificationBell = ({ navigateTo, bellIcon: BellIcon }) => {
     if (!contractId) return false;
     return localStorage.getItem(`gps_set_contract_${contractId}`) === 'true';
   };
+
+  const isPaymentActionRequired = (notification) =>
+    normalizeNotificationType(notification.type) === 'PaymentActionRequired';
 
   return (
     <div className="notification-bell-container">
@@ -123,7 +142,12 @@ const NotificationBell = ({ navigateTo, bellIcon: BellIcon }) => {
                 {notifications.map((notification) => {
                   const route = getNotificationRoute(notification, userRole);
                   const isClickable = !!route && !!navigateTo;
+                  const isServiceLocationNotSet = normalizeNotificationType(notification.type) === 'ServiceLocationNotSet';
+                  const actionRequired = isPaymentActionRequired(notification) || isServiceLocationNotSet;
                   const resolved = isGpsLocationResolved(notification);
+                  const authUrl = isPaymentActionRequired(notification)
+                    ? extractPaymentActionRequiredUrl(notification.content || notification.message || '')
+                    : null;
 
                   return (
                     <div
@@ -132,6 +156,8 @@ const NotificationBell = ({ navigateTo, bellIcon: BellIcon }) => {
                         !notification.isRead ? 'unread' : ''
                       } ${
                         isClickable ? 'clickable' : ''
+                      } ${
+                        actionRequired ? 'notification-item--action-required' : ''
                       } ${
                         resolved ? 'notification-item--resolved' : ''
                       }`}
@@ -153,6 +179,23 @@ const NotificationBell = ({ navigateTo, bellIcon: BellIcon }) => {
                           <div className="notification-time">
                             {formatNotificationTime(notification.createdAt)}
                           </div>
+                          {isPaymentActionRequired(notification) && (
+                            authUrl ? (
+                              <button
+                                className="notification-cta-btn"
+                                onClick={(e) => {
+                                  e.stopPropagation();
+                                  handleExternalPaymentAction(notification, authUrl);
+                                }}
+                              >
+                                Complete Payment
+                              </button>
+                            ) : (
+                              <span className="notification-fallback-note">
+                                Please check your email or dashboard to continue payment.
+                              </span>
+                            )
+                          )}
                           {resolved && (
                             <span className="notification-resolved-tag">✅ Location confirmed</span>
                           )}

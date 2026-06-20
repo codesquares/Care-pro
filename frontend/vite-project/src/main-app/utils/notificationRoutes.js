@@ -264,6 +264,15 @@ const TYPE_MAP = {
   'payment_failed':              'PaymentFailed',
   'paymentfailed':               'PaymentFailed',
   'payment failed':              'PaymentFailed',
+  'payment_action_required':     'PaymentActionRequired',
+  'paymentactionrequired':       'PaymentActionRequired',
+  'payment action required':     'PaymentActionRequired',
+  'recurring_payment_successful': 'RecurringPaymentSuccessful',
+  'recurringpaymentsuccessful':   'RecurringPaymentSuccessful',
+  'recurring payment successful': 'RecurringPaymentSuccessful',
+  'payment_method_updated':      'PaymentMethodUpdated',
+  'paymentmethodupdated':        'PaymentMethodUpdated',
+  'payment method updated':      'PaymentMethodUpdated',
 
   // Subscription lifecycle (in addition to created/terminated above)
   'subscription_suspended':      'SubscriptionSuspended',
@@ -272,6 +281,21 @@ const TYPE_MAP = {
   'subscription_past_due':       'SubscriptionSuspended',
   'subscriptionpastdue':         'SubscriptionSuspended',
   'subscription past due':       'SubscriptionSuspended',
+  'subscription_cancelled':      'SubscriptionCancelled',
+  'subscriptioncancelled':       'SubscriptionCancelled',
+  'subscription cancelled':      'SubscriptionCancelled',
+  'subscription_reactivated':    'SubscriptionReactivated',
+  'subscriptionreactivated':     'SubscriptionReactivated',
+  'subscription reactivated':    'SubscriptionReactivated',
+  'subscription_plan_changed':   'SubscriptionPlanChanged',
+  'subscriptionplanchanged':     'SubscriptionPlanChanged',
+  'subscription plan changed':   'SubscriptionPlanChanged',
+  'subscription_paused':         'SubscriptionPaused',
+  'subscriptionpaused':          'SubscriptionPaused',
+  'subscription paused':         'SubscriptionPaused',
+  'subscription_resumed':        'SubscriptionResumed',
+  'subscriptionresumed':         'SubscriptionResumed',
+  'subscription resumed':        'SubscriptionResumed',
 
   // Contract extras
   'contract_pending_client_approval': 'ContractPendingClientApproval',
@@ -420,7 +444,9 @@ const KNOWN_CANONICAL = new Set([
   'GigDeletionReminder', 'GigPermanentlyDeleted',
   'DisputeRaised',
   'SubscriptionTerminated', 'SubscriptionCreated', 'SubscriptionSuspended',
-  'PaymentFailed',
+  'SubscriptionCancelled', 'SubscriptionReactivated', 'SubscriptionPlanChanged',
+  'SubscriptionPaused', 'SubscriptionResumed',
+  'PaymentFailed', 'PaymentActionRequired', 'RecurringPaymentSuccessful', 'PaymentMethodUpdated',
   'ContractPendingClientApproval', 'ContractRevised',
   'CommitmentConfirmed',
   'CertificateUploaded', 'CertificateVerification',
@@ -519,6 +545,14 @@ export const getNotificationRoute = (notification, userRole) => {
   const isClient = role === 'client';
   const isCaregiver = role === 'caregiver';
   const isAdmin = role === 'admin';
+
+  const getSubscriptionRoute = () => {
+    if (relatedEntityId && isClient) return `/app/client/subscriptions/${relatedEntityId}`;
+    if (relatedEntityId && isAdmin) return `/app/admin/subscriptions`;
+    if (isClient) return `/app/client/subscriptions`;
+    if (isAdmin) return `/app/admin/subscriptions`;
+    return null;
+  };
 
   switch (type) {
     // ── Contract notifications ───────────────────────────
@@ -806,9 +840,15 @@ export const getNotificationRoute = (notification, userRole) => {
     // ── Subscriptions ────────────────────────────────────
     case 'SubscriptionTerminated':
     case 'SubscriptionCreated':
-      if (isClient) return `/app/client/subscriptions`;
-      if (isAdmin) return `/app/admin/subscriptions`;
-      return null;
+    case 'SubscriptionCancelled':
+    case 'SubscriptionReactivated':
+    case 'SubscriptionPlanChanged':
+    case 'SubscriptionPaused':
+    case 'SubscriptionResumed':
+    case 'RecurringPaymentSuccessful':
+    case 'PaymentMethodUpdated':
+    case 'PaymentActionRequired':
+      return getSubscriptionRoute();
 
     // ── Payment failures ─────────────────────────────────
     // PaymentFailed notifications are emitted by the recurring-subscription
@@ -1111,9 +1151,18 @@ export const getNotificationActionLabel = (rawType) => {
       return 'View Dispute';
     case 'SubscriptionTerminated':
     case 'SubscriptionCreated':
+    case 'SubscriptionCancelled':
+    case 'SubscriptionReactivated':
+    case 'SubscriptionPlanChanged':
+    case 'SubscriptionPaused':
+    case 'SubscriptionResumed':
+    case 'RecurringPaymentSuccessful':
+    case 'PaymentMethodUpdated':
       return 'View Subscription';
     case 'PaymentFailed':
       return 'View Payment';
+    case 'PaymentActionRequired':
+      return 'Complete Payment';
     case 'SubscriptionSuspended':
       return 'View Subscription';
     case 'CommitmentConfirmed':
@@ -1304,8 +1353,24 @@ export const getNotificationTypeIcon = (rawType) => {
       return '🚫';
     case 'SubscriptionCreated':
       return '🎉';
+    case 'SubscriptionCancelled':
+      return '🚫';
+    case 'SubscriptionReactivated':
+      return '✅';
+    case 'SubscriptionPlanChanged':
+      return '🔄';
+    case 'SubscriptionPaused':
+      return '⏸️';
+    case 'SubscriptionResumed':
+      return '▶️';
     case 'PaymentFailed':
       return '❗';
+    case 'PaymentActionRequired':
+      return '⚠️';
+    case 'RecurringPaymentSuccessful':
+      return '✅';
+    case 'PaymentMethodUpdated':
+      return '💳';
     case 'SubscriptionSuspended':
       return '⏸️';
     case 'CommitmentConfirmed':
@@ -1358,4 +1423,63 @@ export const getNotificationTypeIcon = (rawType) => {
     default:
       return '🔔';
   }
+};
+
+const HTTPS_URL_REGEX = /https:\/\/[^\s)>]+/i;
+const PAYMENT_ACTION_ALLOWED_HOSTS = new Set([
+  'checkout.flutterwave.com',
+  'flutterwave.com',
+  'checkout.stripe.com',
+  'billing.stripe.com',
+  'paystack.com',
+  'oncarepro.com',
+  'www.oncarepro.com',
+]);
+
+const isAllowedPaymentActionUrl = (parsedUrl) => {
+  if (!parsedUrl || parsedUrl.protocol !== 'https:') return false;
+
+  const hostname = parsedUrl.hostname.toLowerCase();
+  if (!hostname) return false;
+
+  if (typeof window !== 'undefined' && window.location?.hostname) {
+    if (hostname === window.location.hostname.toLowerCase()) return true;
+  }
+
+  if (PAYMENT_ACTION_ALLOWED_HOSTS.has(hostname)) return true;
+
+  return (
+    hostname.endsWith('.flutterwave.com') ||
+    hostname.endsWith('.stripe.com') ||
+    hostname.endsWith('.paystack.com') ||
+    hostname.endsWith('.oncarepro.com')
+  );
+};
+
+export const extractPaymentActionRequiredUrl = (content = '') => {
+  if (!content || typeof content !== 'string') return null;
+
+  // Preferred deterministic token format: AUTH_URL=<https://...>
+  const tokenMatch = content.match(/AUTH_URL\s*=\s*<?(https:\/\/[^\s>]+)>?/i);
+  if (tokenMatch?.[1]) {
+    try {
+      const parsed = new URL(tokenMatch[1]);
+      if (isAllowedPaymentActionUrl(parsed)) return parsed.toString();
+    } catch {
+      // Continue to fallback extraction
+    }
+  }
+
+  // Fallback: first valid HTTPS URL in notification body
+  const fallbackMatch = content.match(HTTPS_URL_REGEX);
+  if (fallbackMatch?.[0]) {
+    try {
+      const parsed = new URL(fallbackMatch[0]);
+      if (isAllowedPaymentActionUrl(parsed)) return parsed.toString();
+    } catch {
+      return null;
+    }
+  }
+
+  return null;
 };

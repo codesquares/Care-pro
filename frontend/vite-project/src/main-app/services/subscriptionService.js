@@ -245,6 +245,21 @@ const SubscriptionService = {
     }
   },
 
+  /**
+   * Get source-of-truth status for payment method update flow.
+   * @param {string} subscriptionId
+   * @returns {Promise<Object>}
+   */
+  async getPaymentMethodStatus(subscriptionId) {
+    try {
+      const response = await api.get(`/subscriptions/${subscriptionId}/payment-method/status`);
+      return response.data;
+    } catch (error) {
+      console.error('Error fetching payment method status:', error);
+      return { success: false, error: error.response?.data?.message || error.message };
+    }
+  },
+
   // ========================
   // BILLING HISTORY
   // ========================

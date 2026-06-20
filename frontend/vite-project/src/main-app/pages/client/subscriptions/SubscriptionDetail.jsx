@@ -97,7 +97,7 @@ const SubscriptionDetail = () => {
 
   const handleUpdatePaymentMethod = async () => {
     setActionLoading(true);
-    const redirectUrl = `${window.location.origin}/app/client/subscriptions/${id}?card_updated=true`;
+    const redirectUrl = `${window.location.origin}/subscription/payment-confirmed?subscriptionId=${id}`;
     const result = await SubscriptionService.updatePaymentMethod(id, redirectUrl);
     setActionLoading(false);
     if (result.success && result.data?.authorizationLink) {

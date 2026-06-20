@@ -32,6 +32,7 @@ const CaregiverOrderDetails = () => {
     // Contract-related state
     const [contract, setContract] = useState(null);
     const [contractLoading, setContractLoading] = useState(false);
+    const [contractFinalizing, setContractFinalizing] = useState(false);
     const [contractError, setContractError] = useState(null);
     const [contractActionLoading, setContractActionLoading] = useState(false);
     const [pdfDownloading, setPdfDownloading] = useState(false);
@@ -164,26 +165,55 @@ const CaregiverOrderDetails = () => {
         fetchOrderDetails();
     }, [orderId]);
 
+    const sleep = (ms) => new Promise((resolve) => setTimeout(resolve, ms));
+
     // Fetch contract for the order
-    const fetchContractForOrder = async (orderId) => {
+    const fetchContractForOrder = async (orderId, { setLoadingState = true } = {}) => {
         try {
-            setContractLoading(true);
+            if (setLoadingState) setContractLoading(true);
             setContractError(null);
             
             const result = await ContractService.checkExistingContract(orderId);
             
             if (result.success && result.hasContract) {
                 setContract(result.data);
+                return true;
             } else if (!result.success && result.statusCode !== 404) {
                 // Only set error if it's not a 404 (no contract found)
                 setContractError(result.error);
+                return false;
             }
+            return false;
         } catch (error) {
             console.error("Error fetching contract:", error);
             setContractError("Failed to load contract information");
+            return false;
         } finally {
-            setContractLoading(false);
+            if (setLoadingState) setContractLoading(false);
         }
+    };
+
+    const finalizeContractAfterConversion = async (orderId) => {
+        setContractFinalizing(true);
+        setNegotiation(null);
+
+        const retryDelaysMs = [0, 400, 900, 1400, 2000];
+        let foundContract = false;
+
+        try {
+            for (const delayMs of retryDelaysMs) {
+                if (delayMs > 0) {
+                    await sleep(delayMs);
+                }
+
+                foundContract = await fetchContractForOrder(orderId, { setLoadingState: false });
+                if (foundContract) break;
+            }
+        } finally {
+            setContractFinalizing(false);
+        }
+
+        return foundContract;
     };
 
     // Fetch negotiation for the order
@@ -192,7 +222,13 @@ const CaregiverOrderDetails = () => {
             setNegotiationLoading(true);
             const result = await NegotiationService.getByOrderId(orderId);
             if (result.success) {
-                setNegotiation(result.hasNegotiation ? result.data : null);
+                const latestNegotiation = result.hasNegotiation ? result.data : null;
+                if (latestNegotiation?.status === 'ConvertedToContract') {
+                    setNegotiation(null);
+                    await finalizeContractAfterConversion(orderId);
+                    return;
+                }
+                setNegotiation(latestNegotiation);
             }
         } catch (err) {
             console.error("Error fetching negotiation:", err);
@@ -521,10 +557,10 @@ const CaregiverOrderDetails = () => {
                     ) : (
                         /* Contract flow view */
                         <div className="cod-contract-panel">
-                            {contractLoading ? (
+                            {(contractLoading || contractFinalizing) ? (
                                 <div className="cod-contract-state">
                                     <div className="cod-spinner" />
-                                    <p>Loading contract information...</p>
+                                    <p>{contractFinalizing ? 'Finalizing contract...' : 'Loading contract information...'}</p>
                                 </div>
                             ) : contract ? (() => {
                                 const isClientInitiated = ContractService.isClientInitiated(contract);
@@ -677,9 +713,8 @@ const CaregiverOrderDetails = () => {
                                             role="caregiver"
                                             order={order}
                                             onNegotiationUpdate={(updated) => setNegotiation(updated)}
-                                            onContractCreated={() => {
-                                                fetchContractForOrder(orderId);
-                                                setNegotiation(null);
+                                            onContractCreated={async () => {
+                                                return await finalizeContractAfterConversion(orderId);
                                             }}
                                         />
                                     ) : (order?.transactionId || order?.paymentTransactionId) ? (
