@@ -38,13 +38,13 @@ const SubscriptionPaymentConfirmed = () => {
     if (!subscriptionId) {
       setViewState('invalid');
       setMessage('Missing subscription reference. Please return to subscriptions.');
-      return { terminal: true };
+      return { terminal: true, nextViewState: 'invalid' };
     }
 
     const result = await SubscriptionService.getPaymentMethodStatus(subscriptionId);
     if (!result?.success || !result?.data) {
       setMessage(result?.error || 'Unable to confirm card update status yet.');
-      return { terminal: false };
+      return { terminal: false, nextViewState: 'unknown' };
     }
 
     const data = result.data;
@@ -55,24 +55,24 @@ const SubscriptionPaymentConfirmed = () => {
       setMessage('Your card update is complete.');
       // Confirm the subscription can now be fetched with updated details.
       await SubscriptionService.getSubscriptionById(subscriptionId);
-      return { terminal: true };
+      return { terminal: true, nextViewState: 'completed' };
     }
 
     if (data.cardUpdateState === 'failed' || data.cardUpdateState === 'expired') {
       setViewState('failed');
       setMessage(data.failureReason || 'We could not complete your card update. Please try again.');
-      return { terminal: true };
+      return { terminal: true, nextViewState: 'failed' };
     }
 
     if (data.cardUpdateState === 'none') {
       setViewState('failed');
       setMessage('No active card-update attempt was found. Please retry from your subscription page.');
-      return { terminal: true };
+      return { terminal: true, nextViewState: 'failed' };
     }
 
     setViewState('processing');
     setMessage('Processing your card update, please wait...');
-    return { terminal: false };
+    return { terminal: false, nextViewState: 'processing' };
   }, [subscriptionId]);
 
   useEffect(() => {
@@ -116,12 +116,15 @@ const SubscriptionPaymentConfirmed = () => {
 
   const handleManualRefresh = async () => {
     setManualRefreshing(true);
-    const { terminal } = await checkStatus();
-    if (!terminal && viewState !== 'processing') {
-      setViewState('timeout');
-      setMessage('Still processing in the background. Please try again in a moment.');
+    try {
+      const { terminal, nextViewState } = await checkStatus();
+      if (!terminal && nextViewState !== 'processing') {
+        setViewState('timeout');
+        setMessage('Still processing in the background. Please try again in a moment.');
+      }
+    } finally {
+      setManualRefreshing(false);
     }
-    setManualRefreshing(false);
   };
 
   const detailPath = useMemo(() => (

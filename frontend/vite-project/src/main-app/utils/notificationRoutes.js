@@ -546,6 +546,14 @@ export const getNotificationRoute = (notification, userRole) => {
   const isCaregiver = role === 'caregiver';
   const isAdmin = role === 'admin';
 
+  const getSubscriptionRoute = () => {
+    if (relatedEntityId && isClient) return `/app/client/subscriptions/${relatedEntityId}`;
+    if (relatedEntityId && isAdmin) return `/app/admin/subscriptions`;
+    if (isClient) return `/app/client/subscriptions`;
+    if (isAdmin) return `/app/admin/subscriptions`;
+    return null;
+  };
+
   switch (type) {
     // ── Contract notifications ───────────────────────────
     // relatedEntityId may be a contract ID (backend-generated notifications),
@@ -838,21 +846,9 @@ export const getNotificationRoute = (notification, userRole) => {
     case 'SubscriptionPaused':
     case 'SubscriptionResumed':
     case 'RecurringPaymentSuccessful':
-    case 'PaymentMethodUpdated': {
-      if (relatedEntityId && isClient) return `/app/client/subscriptions/${relatedEntityId}`;
-      if (relatedEntityId && isAdmin) return `/app/admin/subscriptions`;
-      if (isClient) return `/app/client/subscriptions`;
-      if (isAdmin) return `/app/admin/subscriptions`;
-      return null;
-    }
-
-    case 'PaymentActionRequired': {
-      if (relatedEntityId && isClient) return `/app/client/subscriptions/${relatedEntityId}`;
-      if (relatedEntityId && isAdmin) return `/app/admin/subscriptions`;
-      if (isClient) return `/app/client/subscriptions`;
-      if (isAdmin) return `/app/admin/subscriptions`;
-      return null;
-    }
+    case 'PaymentMethodUpdated':
+    case 'PaymentActionRequired':
+      return getSubscriptionRoute();
 
     // ── Payment failures ─────────────────────────────────
     // PaymentFailed notifications are emitted by the recurring-subscription
@@ -1430,6 +1426,35 @@ export const getNotificationTypeIcon = (rawType) => {
 };
 
 const HTTPS_URL_REGEX = /https:\/\/[^\s)>]+/i;
+const PAYMENT_ACTION_ALLOWED_HOSTS = new Set([
+  'checkout.flutterwave.com',
+  'flutterwave.com',
+  'checkout.stripe.com',
+  'billing.stripe.com',
+  'paystack.com',
+  'oncarepro.com',
+  'www.oncarepro.com',
+]);
+
+const isAllowedPaymentActionUrl = (parsedUrl) => {
+  if (!parsedUrl || parsedUrl.protocol !== 'https:') return false;
+
+  const hostname = parsedUrl.hostname.toLowerCase();
+  if (!hostname) return false;
+
+  if (typeof window !== 'undefined' && window.location?.hostname) {
+    if (hostname === window.location.hostname.toLowerCase()) return true;
+  }
+
+  if (PAYMENT_ACTION_ALLOWED_HOSTS.has(hostname)) return true;
+
+  return (
+    hostname.endsWith('.flutterwave.com') ||
+    hostname.endsWith('.stripe.com') ||
+    hostname.endsWith('.paystack.com') ||
+    hostname.endsWith('.oncarepro.com')
+  );
+};
 
 export const extractPaymentActionRequiredUrl = (content = '') => {
   if (!content || typeof content !== 'string') return null;
@@ -1439,7 +1464,7 @@ export const extractPaymentActionRequiredUrl = (content = '') => {
   if (tokenMatch?.[1]) {
     try {
       const parsed = new URL(tokenMatch[1]);
-      if (parsed.protocol === 'https:') return parsed.toString();
+      if (isAllowedPaymentActionUrl(parsed)) return parsed.toString();
     } catch {
       // Continue to fallback extraction
     }
@@ -1450,7 +1475,7 @@ export const extractPaymentActionRequiredUrl = (content = '') => {
   if (fallbackMatch?.[0]) {
     try {
       const parsed = new URL(fallbackMatch[0]);
-      if (parsed.protocol === 'https:') return parsed.toString();
+      if (isAllowedPaymentActionUrl(parsed)) return parsed.toString();
     } catch {
       return null;
     }

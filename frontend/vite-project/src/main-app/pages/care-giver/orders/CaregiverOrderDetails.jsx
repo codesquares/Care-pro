@@ -225,6 +225,7 @@ const CaregiverOrderDetails = () => {
                 const latestNegotiation = result.hasNegotiation ? result.data : null;
                 if (latestNegotiation?.status === 'ConvertedToContract') {
                     setNegotiation(null);
+                    await finalizeContractAfterConversion(orderId);
                     return;
                 }
                 setNegotiation(latestNegotiation);
@@ -713,7 +714,7 @@ const CaregiverOrderDetails = () => {
                                             order={order}
                                             onNegotiationUpdate={(updated) => setNegotiation(updated)}
                                             onContractCreated={async () => {
-                                                await finalizeContractAfterConversion(orderId);
+                                                return await finalizeContractAfterConversion(orderId);
                                             }}
                                         />
                                     ) : (order?.transactionId || order?.paymentTransactionId) ? (
