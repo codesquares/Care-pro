@@ -8,15 +8,27 @@ import VisitCheckinService from "../../services/visitCheckinService";
  * Props:
  *  - sheet: task sheet object (must include .checkin if already checked in)
  *  - orderId: the order ID
+ *  - serviceLocationSetByClient: whether client has set GPS service location
+ *  - serviceLocationSetAt: timestamp when client set service location
+ *  - serviceAddress: configured service address (optional context)
  *  - onCheckedIn(checkinData): callback after successful check-in
  *  - disabled: if true, check-in is not allowed (e.g. order completed)
  */
-const CheckInSection = ({ sheet, orderId, onCheckedIn, disabled = false }) => {
+const CheckInSection = ({
+  sheet,
+  orderId,
+  serviceLocationSetByClient,
+  serviceLocationSetAt,
+  serviceAddress,
+  onCheckedIn,
+  disabled = false,
+}) => {
   const [loading, setLoading] = useState(false);
   const [showPermissionGuide, setShowPermissionGuide] = useState(false);
   const [scheduleError, setScheduleError] = useState(null);
   const checkin = sheet?.checkin || null;
   const isCheckedIn = !!checkin;
+  const hasClientGpsLocation = serviceLocationSetByClient === true;
 
   // Proactively request location permission when the component mounts
   // so the browser prompt appears immediately for the caregiver
@@ -156,6 +168,11 @@ const CheckInSection = ({ sheet, orderId, onCheckedIn, disabled = false }) => {
             {checkin.distanceFromServiceAddress != null && (
               <span className="checkin-distance">{distance} from service address</span>
             )}
+            {checkin.distanceFromServiceAddress == null && (
+              <span className="checkin-unverified-note">
+                Checked in without distance verification because client GPS is not set.
+              </span>
+            )}
           </div>
         </div>
         {checkin.isLateCheckin && (
@@ -292,6 +309,19 @@ const CheckInSection = ({ sheet, orderId, onCheckedIn, disabled = false }) => {
 
   return (
     <div className="checkin-section">
+      {!hasClientGpsLocation && (
+        <div className="checkin-gps-warning">
+          <span className="checkin-gps-warning-icon">⚠️</span>
+          <div className="checkin-gps-warning-body">
+            <strong>Client GPS location is not set yet.</strong>
+            <p>
+              Check-in is available, but distance verification is currently disabled.
+              {serviceAddress ? " The listed service address may not be geocoded yet." : ""}
+              {!serviceLocationSetAt ? " Ask the client to set their service location for verified check-ins." : ""}
+            </p>
+          </div>
+        </div>
+      )}
       {scheduleError?.type === "early" && (
         <div className="checkin-early-notice">
           <span className="checkin-early-icon">⏰</span>
@@ -319,7 +349,9 @@ const CheckInSection = ({ sheet, orderId, onCheckedIn, disabled = false }) => {
         )}
       </button>
       <p className="checkin-hint">
-        Capture your GPS location when you arrive at the client's home.
+        {hasClientGpsLocation
+          ? "Capture your GPS location when you arrive at the client's home."
+          : "Capture your GPS location when you arrive. Distance verification will be unavailable until the client sets GPS location."}
       </p>
 
       {showPermissionGuide && (

@@ -16,8 +16,9 @@ import "./TaskSheets.css";
  *
  * Props:
  *  - order: the full order object (needs id, gigPackageDetails, paymentOption, frequencyPerWeek)
+ *  - contract: optional contract object with service-location metadata
  */
-const TaskSheetTabs = ({ order }) => {
+const TaskSheetTabs = ({ order, contract = null }) => {
   const [sheets, setSheets] = useState([]);
   const [maxSheets, setMaxSheets] = useState(1);
   const [activeIndex, setActiveIndex] = useState(0);
@@ -317,6 +318,9 @@ const TaskSheetTabs = ({ order }) => {
           key={activeSheet.id}
           sheet={activeSheet}
           orderId={orderId}
+          serviceLocationSetByClient={contract?.serviceLocationSetByClient}
+          serviceLocationSetAt={contract?.serviceLocationSetAt}
+          serviceAddress={contract?.serviceAddress}
           onSheetUpdated={handleSheetUpdated}
           onActivateSheet={handleActivateSheet}
           activating={activating}

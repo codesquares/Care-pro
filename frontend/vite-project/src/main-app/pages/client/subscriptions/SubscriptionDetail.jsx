@@ -202,9 +202,21 @@ const SubscriptionDetail = () => {
           </div>
         )}
 
-        {sub.status === 'Terminated' && sub.refundAmount > 0 && (
+        {sub.status === 'Terminated' && (
           <div className="sub-detail__banner sub-detail__banner--info">
-            A refund of ₦{sub.refundAmount.toLocaleString()} was issued.
+            Subscription billing has been terminated. Termination does not automatically issue a refund.
+            <div style={{ marginTop: '8px' }}>
+              If you need immediate refund handling for undelivered service, cancel the current order.
+            </div>
+            {sub.originalOrderId && (
+              <button
+                onClick={() => navigate(`/app/client/my-order/${sub.originalOrderId}`)}
+                className="sub-detail__banner-btn"
+                style={{ marginTop: '10px' }}
+              >
+                Open Current Order
+              </button>
+            )}
           </div>
         )}
 

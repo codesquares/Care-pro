@@ -134,14 +134,12 @@ const SubscriptionService = {
    * Immediately terminate a subscription.
    * @param {string} subscriptionId
    * @param {string} reason
-   * @param {boolean} issueProRatedRefund
    * @returns {Promise<Object>}
    */
-  async terminateSubscription(subscriptionId, reason, issueProRatedRefund = true) {
+  async terminateSubscription(subscriptionId, reason) {
     try {
       const response = await api.post(`/subscriptions/${subscriptionId}/terminate`, {
         reason,
-        issueProRatedRefund,
       });
       return response.data;
     } catch (error) {

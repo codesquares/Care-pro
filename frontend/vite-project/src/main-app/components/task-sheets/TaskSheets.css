@@ -703,6 +703,42 @@
   line-height: 1.4;
 }
 
+.checkin-gps-warning {
+  display: flex;
+  align-items: flex-start;
+  gap: 8px;
+  padding: 10px 12px;
+  background: #fff8e1;
+  border: 1px solid #ffd54f;
+  border-radius: 6px;
+  margin-bottom: 10px;
+  text-align: left;
+}
+
+.checkin-gps-warning-icon {
+  font-size: 16px;
+  line-height: 1;
+  flex-shrink: 0;
+}
+
+.checkin-gps-warning-body {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.checkin-gps-warning-body strong {
+  font-size: 13px;
+  color: #b45309;
+}
+
+.checkin-gps-warning-body p {
+  margin: 0;
+  font-size: 12px;
+  color: #78350f;
+  line-height: 1.4;
+}
+
 .checkin-status {
   display: flex;
   align-items: center;
@@ -733,6 +769,11 @@
 .checkin-distance {
   font-size: 11px;
   color: #28a745;
+}
+
+.checkin-unverified-note {
+  font-size: 12px;
+  color: #9a3412;
 }
 
 .checkin-btn {

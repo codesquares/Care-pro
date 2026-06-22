@@ -26,7 +26,17 @@ const formatTimeStr = (t) => {
  *  - orderId: the order ID (needed for check-in and reports)
  *  - onSheetUpdated: callback(updatedSheet) after a save/submit
  */
-const TaskSheetPage = ({ sheet, orderId, onSheetUpdated, onActivateSheet, activating, orderCompleted: orderCompletedProp }) => {
+const TaskSheetPage = ({
+  sheet,
+  orderId,
+  serviceLocationSetByClient,
+  serviceLocationSetAt,
+  serviceAddress,
+  onSheetUpdated,
+  onActivateSheet,
+  activating,
+  orderCompleted: orderCompletedProp,
+}) => {
   const [tasks, setTasks] = useState(sheet.tasks || []);
   const [saving, setSaving] = useState(false);
   const [submitting, setSubmitting] = useState(false);
@@ -271,6 +281,9 @@ const TaskSheetPage = ({ sheet, orderId, onSheetUpdated, onActivateSheet, activa
         <CheckInSection
           sheet={{ ...sheet, checkin }}
           orderId={orderId}
+          serviceLocationSetByClient={serviceLocationSetByClient}
+          serviceLocationSetAt={serviceLocationSetAt}
+          serviceAddress={serviceAddress}
           onCheckedIn={handleCheckedIn}
           disabled={isSubmitted || isCancelled || orderCompleted}
         />
