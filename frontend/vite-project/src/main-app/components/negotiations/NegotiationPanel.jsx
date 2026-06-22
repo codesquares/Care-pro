@@ -259,9 +259,18 @@ const NegotiationPanel = ({ negotiation: initial, role, order, onNegotiationUpda
     if (result.success) {
       if (neg?.id) localStorage.removeItem(`neg_start_${neg.id}`);
       update(result.data);
-      if (onContractCreated) onContractCreated(result.data.contractId, result.data);
+      const callbackPayload = {
+        contractId: result.data.contractId,
+        negotiation: result.data,
+      };
+      let finalized = true;
+      if (onContractCreated) {
+        finalized = await onContractCreated(callbackPayload, result.data);
+      }
+      if (finalized === false) {
+        toast.info("Contract created. Finalizing contract details...");
+      }
       toast.success("Contract generated and is now active!");
-      setTimeout(() => window.location.reload(), 1500);
     } else {
       toast.error(result.error || "Failed to generate contract.");
     }

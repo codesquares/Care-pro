@@ -70,7 +70,13 @@ const DirectMessage = () => {
   const navigateWithCommitmentCheck = async (gigId) => {
     try {
       const result = await bookingCommitmentService.checkAccess(gigId);
-      if (result.success && result.data && result.data.hasAccess) {
+      const canProceed = !!(
+        result.success &&
+        result.data &&
+        (result.data.hasAccess || result.data.commitmentNotRequired) &&
+        !result.data.isAppliedToOrder
+      );
+      if (canProceed) {
         navigate(`/app/client/cart/${gigId}`);
       } else {
         navigate(`/app/client/commitment-payment/${gigId}`);
@@ -90,8 +96,7 @@ const DirectMessage = () => {
     if (caregiverGigs.length === 1) {
       await navigateWithCommitmentCheck(caregiverGigs[0].id);
     } else {
-      // If multiple gigs, navigate to first one (ChatArea's modal handles the multi-gig case)
-      await navigateWithCommitmentCheck(caregiverGigs[0].id);
+      alert('Multiple gigs are available for this caregiver. Please open a specific gig first, then use Message so Hire Now is bound to that gig.');
     }
   };
 
@@ -616,26 +621,7 @@ const DirectMessage = () => {
               </div>
             )}
           </div>
-          {isCurrentUserClient && (
-            <div className="messages-header__actions">
-              <button className="dm-action-btn dm-action-btn--hire" onClick={handleHireNowClick} disabled={isLoadingGigs && !serviceId}>
-                <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                  <path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/>
-                  <circle cx="9" cy="7" r="4"/>
-                  <path d="m22 2-5 10-4-4Z"/>
-                </svg>
-                {isLoadingGigs && !serviceId ? 'Loading...' : 'Hire Now'}
-              </button>
-              <button className="dm-action-btn dm-action-btn--report" onClick={() => { setShowReportModal(true); setReportSubmitted(false); setReportReason(''); setReportDetails(''); }}>
-                <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                  <path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/>
-                  <line x1="12" y1="9" x2="12" y2="13"/>
-                  <line x1="12" y1="17" x2="12.01" y2="17"/>
-                </svg>
-                Report Caregiver
-              </button>
-            </div>
-          )}
+
         </div>
         <div className="direct-chat-area">
           <ChatArea

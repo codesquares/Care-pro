@@ -134,14 +134,12 @@ const SubscriptionService = {
    * Immediately terminate a subscription.
    * @param {string} subscriptionId
    * @param {string} reason
-   * @param {boolean} issueProRatedRefund
    * @returns {Promise<Object>}
    */
-  async terminateSubscription(subscriptionId, reason, issueProRatedRefund = true) {
+  async terminateSubscription(subscriptionId, reason) {
     try {
       const response = await api.post(`/subscriptions/${subscriptionId}/terminate`, {
         reason,
-        issueProRatedRefund,
       });
       return response.data;
     } catch (error) {
@@ -241,6 +239,21 @@ const SubscriptionService = {
       return response.data;
     } catch (error) {
       console.error('Error updating payment method:', error);
+      return { success: false, error: error.response?.data?.message || error.message };
+    }
+  },
+
+  /**
+   * Get source-of-truth status for payment method update flow.
+   * @param {string} subscriptionId
+   * @returns {Promise<Object>}
+   */
+  async getPaymentMethodStatus(subscriptionId) {
+    try {
+      const response = await api.get(`/subscriptions/${subscriptionId}/payment-method/status`);
+      return response.data;
+    } catch (error) {
+      console.error('Error fetching payment method status:', error);
       return { success: false, error: error.response?.data?.message || error.message };
     }
   },

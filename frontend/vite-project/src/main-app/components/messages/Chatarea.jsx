@@ -15,6 +15,7 @@ import GigPriceNegotiationService from '../../services/gigPriceNegotiationServic
 const ChatArea = ({ messages, recipient, userId, onSendMessage, isOfflineMode = false }) => {
   const location = useLocation();
   const navigate = useNavigate();
+  const searchParams = useMemo(() => new URLSearchParams(location.search), [location.search]);
   const [message, setMessage] = useState('');
   const messagesEndRef = useRef(null);
   const { handleDeleteMessage } = useMessageContext();
@@ -28,7 +29,9 @@ const ChatArea = ({ messages, recipient, userId, onSendMessage, isOfflineMode = 
 
   // Check if user is a client and extract serviceId
   const isClientRoute = location.pathname.includes('/client/');
-  const serviceId = location.state?.serviceId;
+  const routeServiceId = location.state?.serviceId;
+  const queryServiceId = searchParams.get('gigId');
+  const unlockContext = location.state?.unlockContext;
 
   // State for caregiver gigs and modal
   const [caregiverGigs, setCaregiverGigs] = useState([]);
@@ -44,6 +47,12 @@ const ChatArea = ({ messages, recipient, userId, onSendMessage, isOfflineMode = 
   const [forfeitLoading, setForfeitLoading] = useState(false);
   const [commitmentForfeited, setCommitmentForfeited] = useState(false);
   const [forfeitError, setForfeitError] = useState(null);
+
+  // Resolved commitment context for showing gig action banner reliably
+  const [resolvedServiceId, setResolvedServiceId] = useState(routeServiceId || queryServiceId || null);
+  const [isBannerEligible, setIsBannerEligible] = useState(false);
+  const [isResolvingBanner, setIsResolvingBanner] = useState(false);
+  const serviceId = resolvedServiceId || routeServiceId || queryServiceId;
 
   const handleForfeitConfirm = async () => {
     if (!serviceId) return;
@@ -64,10 +73,6 @@ const ChatArea = ({ messages, recipient, userId, onSendMessage, isOfflineMode = 
   const [showGigBanner, setShowGigBanner] = useState(!!serviceId);
   const [existingNegotiation, setExistingNegotiation] = useState(null);
   const [negotiateLoading, setNegotiateLoading] = useState(false);
-
-  // 3-dot menu state
-  const [showMoreMenu, setShowMoreMenu] = useState(false);
-  const moreMenuRef = useRef(null);
 
   // Active order state for this caregiver
   const [activeOrder, setActiveOrder] = useState(null); // null = no active order, object = active order
@@ -107,6 +112,110 @@ const ChatArea = ({ messages, recipient, userId, onSendMessage, isOfflineMode = 
       id: recipient.receiverId || recipient.id || recipient.userId || null
     };
   }, [recipient]);
+
+  // Resolve banner context only from explicit commitment-success redirect context.
+  // Do not recover from historical commitments to avoid stale/wrong gig banners.
+  useEffect(() => {
+    if (!isClientRoute) return;
+
+    let cancelled = false;
+
+    const isStatusUnlocked = (statusData) => {
+      const status = String(statusData?.status || '').toLowerCase();
+      return status === 'completed' && !statusData?.isAppliedToOrder;
+    };
+
+    const isAccessUnlocked = (accessData) => {
+      // Align with HomeCareService unlock semantics:
+      // unlocked if hasAccess OR commitmentNotRequired, but hide if already applied to order.
+      return !!(
+        (accessData?.hasAccess || accessData?.commitmentNotRequired) &&
+        !accessData?.isAppliedToOrder
+      );
+    };
+
+    const recipientId = safeRecipient?.id || recipient?.id;
+
+    const applyContext = (gigId, showBanner) => {
+      if (cancelled) return;
+      setResolvedServiceId(gigId || null);
+      setIsBannerEligible(Boolean(gigId && showBanner));
+      setShowGigBanner(Boolean(gigId && showBanner));
+      if (!gigId || !showBanner) {
+        setExistingNegotiation(null);
+      }
+    };
+
+    const verifyGigAccess = async (gigId) => {
+      if (!gigId) return false;
+      const checkResult = await bookingCommitmentService.checkAccess(gigId);
+      if (!checkResult.success || !checkResult.data) return false;
+
+      const caregiverMatches = !recipientId || String(checkResult.data.caregiverId) === String(recipientId);
+      if (!caregiverMatches) return false;
+      return {
+        unlocked: isAccessUnlocked(checkResult.data),
+        accessData: checkResult.data,
+      };
+    };
+
+    const resolveBannerContext = async () => {
+      setIsResolvingBanner(true);
+      try {
+        const isCommitmentRedirect = unlockContext?.source === 'commitment_success';
+        const unlockGigId = unlockContext?.gigId;
+        const unlockCaregiverId = unlockContext?.caregiverId;
+        const unlockTxRef = unlockContext?.transactionReference;
+
+        // Default-safe: no explicit unlock context means no service banner.
+        if (!isCommitmentRedirect || !unlockGigId || !unlockTxRef) {
+          applyContext(null, false);
+          return;
+        }
+
+        // Exact binding: if route/query carries a gigId, it must match unlock context gig.
+        const directGigCandidate = routeServiceId || queryServiceId || null;
+        if (directGigCandidate && String(directGigCandidate) !== String(unlockGigId)) {
+          applyContext(null, false);
+          return;
+        }
+
+        // Exact binding: if unlock context has caregiver, it must match current chat recipient.
+        if (unlockCaregiverId && recipientId && String(unlockCaregiverId) !== String(recipientId)) {
+          applyContext(null, false);
+          return;
+        }
+
+        const statusResult = await bookingCommitmentService.getPaymentStatus(unlockTxRef);
+        if (!statusResult.success || !statusResult.data || !isStatusUnlocked(statusResult.data)) {
+          applyContext(unlockGigId, false);
+          return;
+        }
+
+        // Ensure txRef verifies the same gig/caregiver as unlock context.
+        const statusGigMatches = String(statusResult.data.gigId || '') === String(unlockGigId);
+        const statusCaregiverMatches = !recipientId || String(statusResult.data.caregiverId || '') === String(recipientId);
+        if (!statusGigMatches || !statusCaregiverMatches) {
+          applyContext(null, false);
+          return;
+        }
+
+        const verified = await verifyGigAccess(unlockGigId);
+        applyContext(unlockGigId, !!verified?.unlocked);
+      } catch (err) {
+        console.error('Failed to resolve commitment banner context:', err);
+        applyContext(null, false);
+      } finally {
+        if (!cancelled) setIsResolvingBanner(false);
+      }
+    };
+
+    resolveBannerContext();
+
+    return () => {
+      cancelled = true;
+    };
+  }, [isClientRoute, routeServiceId, queryServiceId, recipient?.id, safeRecipient?.id, unlockContext]);
   
   // console.log("🎯 ChatArea: Component rendered with props:", {
   //   messagesCount: messages?.length || 0,
@@ -148,19 +257,6 @@ const ChatArea = ({ messages, recipient, userId, onSendMessage, isOfflineMode = 
     return () => window.removeEventListener('message-redacted', handleRedacted);
   }, []);
 
-  // Close 3-dot menu when clicking outside
-  useEffect(() => {
-    const handleClickOutside = (e) => {
-      if (moreMenuRef.current && !moreMenuRef.current.contains(e.target)) {
-        setShowMoreMenu(false);
-      }
-    };
-    if (showMoreMenu) {
-      document.addEventListener('mousedown', handleClickOutside);
-    }
-    return () => document.removeEventListener('mousedown', handleClickOutside);
-  }, [showMoreMenu]);
-
   // Check if there is an active order for this caregiver
   useEffect(() => {
     const checkActiveOrder = async () => {
@@ -194,7 +290,6 @@ const ChatArea = ({ messages, recipient, userId, onSendMessage, isOfflineMode = 
       const result = await ClientOrderService.cancelOrder(activeOrder.id || activeOrder.orderId);
       if (result.success) {
         setActiveOrder(null);
-        setShowMoreMenu(false);
         setShowCommitmentModal(true);
       } else {
         alert(result.error || 'Failed to terminate order. Please try again.');
@@ -470,7 +565,13 @@ const ChatArea = ({ messages, recipient, userId, onSendMessage, isOfflineMode = 
   const navigateWithCommitmentCheck = async (gigId) => {
     try {
       const result = await bookingCommitmentService.checkAccess(gigId);
-      if (result.success && result.data && result.data.hasAccess) {
+      const canProceed = !!(
+        result.success &&
+        result.data &&
+        (result.data.hasAccess || result.data.commitmentNotRequired) &&
+        !result.data.isAppliedToOrder
+      );
+      if (canProceed) {
         // Commitment fee confirmed paid — proceed to cart
         navigate(`/app/client/cart/${gigId}`);
       } else {
@@ -852,7 +953,7 @@ const ChatArea = ({ messages, recipient, userId, onSendMessage, isOfflineMode = 
           {/* Show Hire Me button for clients with priority logic */}
           {isClientRoute && (
             // Priority 1: Show if serviceId from navigation (direct from HomeCareService)
-            serviceId || 
+            (serviceId && isBannerEligible && !isResolvingBanner) || 
             // Priority 2: Show if caregiver has gigs or still loading (discovery mode)
             caregiverGigs.length > 0 || 
             isLoadingGigs
@@ -860,16 +961,16 @@ const ChatArea = ({ messages, recipient, userId, onSendMessage, isOfflineMode = 
             <button 
               className={`action-button hire-me-btn ${isLoadingGigs && !serviceId ? 'loading' : ''}`}
               title={
-                serviceId 
+                (serviceId && isBannerEligible && !isResolvingBanner) 
                   ? 'Hire Me - Return to Service'
                   : isLoadingGigs 
                     ? 'Loading services...' 
                     : `Hire Me${caregiverGigs.length > 1 ? ` (${caregiverGigs.length} services)` : ''}`
               }
               onClick={handleHireMeClick}
-              disabled={isLoadingGigs && !serviceId}
+              disabled={isLoadingGigs && !(serviceId && isBannerEligible && !isResolvingBanner)}
             >
-              {isLoadingGigs && !serviceId ? (
+              {isLoadingGigs && !(serviceId && isBannerEligible && !isResolvingBanner) ? (
                 <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="loading-spinner">
                   <path d="M21 12a9 9 0 11-6.219-8.56"/>
                 </svg>
@@ -881,8 +982,8 @@ const ChatArea = ({ messages, recipient, userId, onSendMessage, isOfflineMode = 
                 </svg>
               )}
               <span className="button-text">
-                {isLoadingGigs && !serviceId ? 'Loading...' : 'Hire Me'}
-                {!isLoadingGigs && !serviceId && caregiverGigs.length > 1 && (
+                {isLoadingGigs && !(serviceId && isBannerEligible && !isResolvingBanner) ? 'Loading...' : 'Hire Me'}
+                {!isLoadingGigs && !(serviceId && isBannerEligible && !isResolvingBanner) && caregiverGigs.length > 1 && (
                   <span className="service-count">({caregiverGigs.length})</span>
                 )}
               </span>
@@ -893,40 +994,11 @@ const ChatArea = ({ messages, recipient, userId, onSendMessage, isOfflineMode = 
               <path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6 19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72 12.84 12.84 0 0 0 .7 2.81 2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45 12.84 12.84 0 0 0 2.81.7A2 2 0 0 1 22 16.92z"></path>
             </svg>
           </button> */}
-          <div className="more-menu-wrapper" ref={moreMenuRef}>
-            <button className="action-button" title="More options" onClick={() => setShowMoreMenu(!showMoreMenu)}>
-              <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                <circle cx="12" cy="12" r="1"></circle>
-                <circle cx="19" cy="12" r="1"></circle>
-                <circle cx="5" cy="12" r="1"></circle>
-              </svg>
-            </button>
-            {showMoreMenu && isClientRoute && (
-              <div className="more-menu-dropdown">
-                <button className="more-menu-item more-menu-item--hire" onClick={() => { setShowMoreMenu(false); handleHireMeClick(); }}>
-                  <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                    <path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/>
-                    <circle cx="9" cy="7" r="4"/>
-                    <path d="m22 2-5 10-4-4Z"/>
-                  </svg>
-                  Hire Now
-                </button>
-                <button className="more-menu-item more-menu-item--report" onClick={() => { setShowMoreMenu(false); setShowReportModal(true); setReportSubmitted(false); setReportReason(''); setReportDetails(''); }}>
-                  <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                    <path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/>
-                    <line x1="12" y1="9" x2="12" y2="13"/>
-                    <line x1="12" y1="17" x2="12.01" y2="17"/>
-                  </svg>
-                  Report Caregiver
-                </button>
-              </div>
-            )}
-          </div>
         </div>
       </header>
 
       {/* Gig action banner — shown when client arrives from a specific gig page */}
-      {isClientRoute && serviceId && showGigBanner && (
+      {isClientRoute && serviceId && isBannerEligible && !isResolvingBanner && showGigBanner && (
         <div className="chat-gig-banner">
           <span className="chat-gig-banner__label">Ready to proceed with this caregiver?</span>
           <div className="chat-gig-banner__actions">
@@ -1180,7 +1252,7 @@ const ChatArea = ({ messages, recipient, userId, onSendMessage, isOfflineMode = 
       </div>
 
       {/* Service Selection Modal - only show in discovery mode (no direct serviceId) */}
-      {!serviceId && (
+      {!(serviceId && isBannerEligible && !isResolvingBanner) && (
         <ServiceSelectionModal
           isOpen={showServiceModal}
           onClose={() => setShowServiceModal(false)}
