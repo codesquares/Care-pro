@@ -92,6 +92,25 @@ const bookingCommitmentService = {
   },
 
   /**
+   * Get booking commitments for the logged-in client.
+   * Used as a recovery source when route state is missing.
+   *
+   * @returns {Promise<{success: boolean, data?: Array, error?: string}>}
+   */
+  async getClientCommitments() {
+    try {
+      const response = await api.get('/booking-commitment/client');
+      return { success: true, data: Array.isArray(response.data) ? response.data : [] };
+    } catch (error) {
+      console.error('Error fetching client booking commitments:', error);
+      return {
+        success: false,
+        error: error.response?.data?.message || error.message,
+      };
+    }
+  },
+
+  /**
    * Helper: determine if a SignalR or REST error is a commitment-gate block.
    * The backend hub throws: "You must pay the booking commitment fee before messaging this caregiver."
    *

@@ -34,6 +34,14 @@ const CommitmentSuccess = () => {
 
   const user = JSON.parse(localStorage.getItem("userDetails") || "{}");
 
+  const buildUnlockContext = (gigId, caregiverId, transactionReference) => ({
+    source: 'commitment_success',
+    gigId: gigId || null,
+    caregiverId: caregiverId || null,
+    transactionReference: transactionReference || null,
+    issuedAt: new Date().toISOString(),
+  });
+
   // Send the automatic first message after unlock — fires silently in the background
   // to open the chat thread and notify the caregiver (they cannot message first).
   // The client is navigated straight to chat so the gig banner is shown immediately.
@@ -43,10 +51,16 @@ const CommitmentSuccess = () => {
 
     const greeting = `Hello ${caregiverName || 'there'}, can we discuss my care needs now?`;
     const gigId = localStorage.getItem('commitmentGigId');
+    const unlockContext = buildUnlockContext(gigId, caregiverId, txRef);
 
     // Navigate immediately so the client sees the chat banner right away
     navigate(`/app/client/message/${caregiverId}`, {
-      state: { recipientName: caregiverName, autoUnlocked: true, serviceId: gigId || undefined },
+      state: {
+        recipientName: caregiverName,
+        autoUnlocked: true,
+        serviceId: gigId || undefined,
+        unlockContext,
+      },
     });
 
     // Fire the thread-opener silently after navigation (best-effort)
@@ -169,9 +183,11 @@ const CommitmentSuccess = () => {
   const handleGoToChat = () => {
     const caregiverId = paymentData?.caregiverId;
     const gigId = paymentData?.gigId || localStorage.getItem('commitmentGigId');
+    const txReference = paymentData?.transactionReference || txRef;
+    const unlockContext = buildUnlockContext(gigId, caregiverId, txReference);
     if (caregiverId) {
       navigate(`/app/client/message/${caregiverId}`, {
-        state: { serviceId: gigId || undefined },
+        state: { serviceId: gigId || undefined, unlockContext },
       });
     } else {
       navigate('/app/client/message');

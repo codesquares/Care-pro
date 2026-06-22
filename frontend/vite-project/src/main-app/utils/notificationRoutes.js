@@ -616,11 +616,17 @@ export const getNotificationRoute = (notification, userRole) => {
     case 'CommitmentConfirmed':
       if (isClient) {
         // Client paid — CTA is to chat with the caregiver (senderId = caregiver)
+        if (senderId && relatedEntityId) {
+          return `/app/client/message/${senderId}?gigId=${encodeURIComponent(relatedEntityId)}`;
+        }
         if (senderId) return `/app/client/message/${senderId}`;
         return `/app/client/message`;
       }
       if (isCaregiver) {
         // Caregiver notified — CTA is to open the conversation with the client (senderId = client)
+        if (senderId && relatedEntityId) {
+          return `/app/caregiver/message/${senderId}?gigId=${encodeURIComponent(relatedEntityId)}`;
+        }
         if (senderId) return `/app/caregiver/message/${senderId}`;
         return `/app/caregiver/message`;
       }

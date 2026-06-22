@@ -552,7 +552,7 @@ const CaregiverOrderDetails = () => {
                     {isTasksReady ? (
                         /* Tasks view */
                         <div className="cod-tasks-panel">
-                            {order ? <TaskSheetTabs order={order} /> : <p>No tasks available.</p>}
+                            {order ? <TaskSheetTabs order={order} contract={contract} /> : <p>No tasks available.</p>}
                         </div>
                     ) : (
                         /* Contract flow view */

@@ -72,30 +72,18 @@ export const CancelSubscriptionModal = ({ isOpen, onClose, subscription, onSucce
  */
 export const TerminateSubscriptionModal = ({ isOpen, onClose, subscription, onSuccess }) => {
   const [reason, setReason] = useState('');
-  const [issueRefund, setIssueRefund] = useState(true);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
 
   if (!isOpen) return null;
 
-  const estimatedRefund = subscription
-    ? SubscriptionService.estimateProRatedRefund(
-        subscription.remainingDaysInPeriod || 0,
-        subscription.recurringAmount || 0,
-        subscription.billingCycle
-      )
-    : 0;
-
   const handleTerminate = async () => {
     setLoading(true);
     setError(null);
-    const result = await SubscriptionService.terminateSubscription(subscription.id, reason, issueRefund);
+    const result = await SubscriptionService.terminateSubscription(subscription.id, reason);
     setLoading(false);
     if (result.success) {
-      const refundMsg = result.data?.refundAmount
-        ? ` Refund of ₦${result.data.refundAmount.toLocaleString()} issued.`
-        : '';
-      toast.success(`Subscription terminated.${refundMsg}`);
+      toast.success('Subscription terminated. Billing has been stopped.');
       onSuccess(result.data);
       onClose();
     } else {
@@ -112,14 +100,14 @@ export const TerminateSubscriptionModal = ({ isOpen, onClose, subscription, onSu
         </div>
         <div className="sub-modal__body">
           <div className="sub-modal__warning">
-            ⚠️ This will end your service immediately. This action cannot be undone.
+            ⚠️ This will stop future subscription billing immediately. This action cannot be undone.
           </div>
-          {issueRefund && estimatedRefund > 0 && (
-            <p className="sub-modal__info">
-              You'll receive a refund of approximately <strong>₦{estimatedRefund.toLocaleString()}</strong> for the{' '}
-              {subscription.remainingDaysInPeriod || 0} unused days.
-            </p>
-          )}
+          <p className="sub-modal__info">
+            Termination does not automatically issue a refund.
+          </p>
+          <p className="sub-modal__info">
+            If you need immediate refund handling for undelivered service, cancel the current order.
+          </p>
           <label className="sub-modal__label">Reason for termination</label>
           <textarea
             className="sub-modal__textarea"
@@ -128,14 +116,6 @@ export const TerminateSubscriptionModal = ({ isOpen, onClose, subscription, onSu
             placeholder="Why are you terminating?"
             rows={3}
           />
-          <label className="sub-modal__checkbox-label">
-            <input
-              type="checkbox"
-              checked={issueRefund}
-              onChange={(e) => setIssueRefund(e.target.checked)}
-            />
-            Issue pro-rated refund for unused days
-          </label>
           {error && <p className="sub-modal__error">{error}</p>}
         </div>
         <div className="sub-modal__footer">
