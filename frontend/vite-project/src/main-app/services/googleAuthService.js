@@ -269,6 +269,8 @@ const GoogleAuthService = {
   /**
    * Sign up as Client with Google
    * @param {string} idToken - Google ID token
+    * @param {string|null|undefined} idempotencyKey - Optional idempotency key for safe retries
+    * @param {Object} addressPayload - Optional address payload to include in signup
    * @returns {Promise<Object>} - Auth response with tokens and user info
    */
   async googleSignUpClient(idToken, idempotencyKey, addressPayload = {}) {
@@ -309,6 +311,8 @@ const GoogleAuthService = {
   /**
    * Sign up as Caregiver with Google
    * @param {string} idToken - Google ID token
+    * @param {string|null|undefined} idempotencyKey - Optional idempotency key for safe retries
+    * @param {Object} addressPayload - Optional address payload to include in signup
    * @returns {Promise<Object>} - Auth response with tokens and user info
    */
   async googleSignUpCaregiver(idToken, idempotencyKey, addressPayload = {}) {
@@ -350,6 +354,8 @@ const GoogleAuthService = {
    * Sign up with Google based on role
    * @param {string} idToken - Google ID token
    * @param {string} role - "Client" or "Caregiver"
+    * @param {string|null|undefined} idempotencyKey - Optional idempotency key for safe retries
+    * @param {Object} addressPayload - Optional address payload to include in signup
    * @returns {Promise<Object>} - Auth response
    */
   async googleSignUp(idToken, role, idempotencyKey, addressPayload = {}) {

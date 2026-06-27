@@ -2908,7 +2908,23 @@ const adminService = {
       };
 
       const response = await api.post('/Admins/Cleanup/DefaultAddress', requestBody);
-      return { success: true, data: response.data };
+      const envelope = response.data;
+      const payload = envelope?.data ?? envelope;
+      const bodySuccess = typeof envelope?.success === 'boolean' ? envelope.success : true;
+
+      if (!bodySuccess) {
+        return {
+          success: false,
+          error: envelope?.message || envelope?.Message || 'Failed to run default address cleanup',
+          data: payload,
+        };
+      }
+
+      return {
+        success: true,
+        data: payload,
+        message: envelope?.message || envelope?.Message,
+      };
     } catch (error) {
       console.error('Error running default address cleanup:', error);
 

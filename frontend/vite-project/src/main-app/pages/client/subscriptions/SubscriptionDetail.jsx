@@ -115,7 +115,7 @@ const SubscriptionDetail = () => {
       renewalPollTimerRef.current = setTimeout(poll, RENEWAL_POLL_INTERVAL_MS);
     };
 
-    poll();
+    renewalPollTimerRef.current = setTimeout(poll, 0);
   }, [clearRenewalPollTimer, fetchRenewalStatus, fetchSubscription]);
 
   useEffect(() => () => {
