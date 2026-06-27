@@ -2870,6 +2870,93 @@ const adminService = {
       };
     }
   },
+
+  /**
+   * Run default placeholder address cleanup (SuperAdmin only)
+   * POST /api/Admins/Cleanup/DefaultAddress
+   * @param {Object} payload
+   * @param {boolean} payload.dryRun
+   * @param {string} payload.scope - All | Caregivers | Clients
+   * @param {number} payload.previewLimit - 1..500
+   * @param {string|null} payload.reason - required when dryRun=false
+   * @returns {Promise<{success: boolean, data?: Object, error?: string, statusCode?: number, validationErrors?: Array<string>}>}
+   */
+  runDefaultAddressCleanup: async ({ dryRun = true, scope = 'All', previewLimit = 100, reason = null } = {}) => {
+    try {
+      const allowedScopes = ['All', 'Caregivers', 'Clients'];
+      if (!allowedScopes.includes(scope)) {
+        return { success: false, error: 'Invalid scope. Must be All, Caregivers, or Clients.' };
+      }
+
+      if (!Number.isInteger(previewLimit) || previewLimit < 1 || previewLimit > 500) {
+        return { success: false, error: 'PreviewLimit must be an integer between 1 and 500.' };
+      }
+
+      const trimmedReason = reason == null ? null : String(reason).trim();
+      if (!dryRun && !trimmedReason) {
+        return { success: false, error: 'Reason is required when DryRun is false.' };
+      }
+      if (trimmedReason && trimmedReason.length > 500) {
+        return { success: false, error: 'Reason cannot exceed 500 characters.' };
+      }
+
+      const requestBody = {
+        DryRun: !!dryRun,
+        Scope: scope,
+        PreviewLimit: previewLimit,
+        Reason: dryRun ? null : trimmedReason,
+      };
+
+      const response = await api.post('/Admins/Cleanup/DefaultAddress', requestBody);
+      const envelope = response.data;
+      const payload = envelope?.data ?? envelope;
+      const bodySuccess = typeof envelope?.success === 'boolean' ? envelope.success : true;
+
+      if (!bodySuccess) {
+        return {
+          success: false,
+          error: envelope?.message || envelope?.Message || 'Failed to run default address cleanup',
+          data: payload,
+        };
+      }
+
+      return {
+        success: true,
+        data: payload,
+        message: envelope?.message || envelope?.Message,
+      };
+    } catch (error) {
+      console.error('Error running default address cleanup:', error);
+
+      const statusCode = error.response?.status;
+      const responseData = error.response?.data;
+
+      const message =
+        responseData?.message ||
+        responseData?.Message ||
+        error.message ||
+        'Failed to run default address cleanup';
+
+      const validationErrors = [];
+      if (Array.isArray(responseData?.errors)) {
+        validationErrors.push(...responseData.errors.map((e) => String(e)));
+      }
+      if (responseData?.errors && typeof responseData.errors === 'object' && !Array.isArray(responseData.errors)) {
+        Object.values(responseData.errors).forEach((arr) => {
+          if (Array.isArray(arr)) {
+            arr.forEach((item) => validationErrors.push(String(item)));
+          }
+        });
+      }
+
+      return {
+        success: false,
+        error: message,
+        statusCode,
+        validationErrors: validationErrors.length ? validationErrors : undefined,
+      };
+    }
+  },
 };
 
 export default adminService;

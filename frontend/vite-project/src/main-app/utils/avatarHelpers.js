@@ -52,3 +52,26 @@ export const getAvatarColor = (name) => {
   
   return colors[Math.abs(hash) % colors.length];
 };
+
+/**
+ * Check whether an image URL is a real user-uploaded image and not a known placeholder.
+ * @param {string} imageUrl - URL/path to an avatar image
+ * @returns {boolean} True when URL is non-empty and not a known default avatar path
+ */
+export const isRealProfileImageUrl = (imageUrl) => {
+  if (!imageUrl || typeof imageUrl !== "string") return false;
+
+  const normalized = imageUrl.trim().toLowerCase();
+  if (!normalized) return false;
+
+  const defaultAvatarPaths = [
+    "./avatar.jpg",
+    "/avatar.jpg",
+    "avatar.jpg",
+    "./default-avatar.png",
+    "/default-avatar.png",
+    "default-avatar.png"
+  ];
+
+  return !defaultAvatarPaths.includes(normalized);
+};

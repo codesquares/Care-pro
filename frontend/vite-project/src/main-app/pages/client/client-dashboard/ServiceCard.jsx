@@ -1,6 +1,7 @@
 import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { useAuth } from "../../../context/AuthContext";
+import { getInitials, getAvatarColor, isRealProfileImageUrl } from "../../../utils/avatarHelpers";
 import "./serviceCard.css";
 
 import GigReviewService from "../../../services/gigReviewService";
@@ -10,6 +11,7 @@ const ServiceCard = ({
   id, 
   title, 
   image1, 
+  gigImage,
   packageDetails, 
   price,
   category,
@@ -58,8 +60,6 @@ const ServiceCard = ({
     navigate(`/service/${id}`);
   };
 
-  const initials = `${caregiverFirstName?.charAt(0) || ''}${caregiverLastName?.charAt(0) || ''}`.toUpperCase();
-
   const [showReviewsModal, setShowReviewsModal] = useState(false);
   const [gigReviews, setGigReviews] = useState([]);
   const [reviewStats, setReviewStats] = useState(null);
@@ -83,12 +83,17 @@ const ServiceCard = ({
     }
   };
 
-  const displayUserName = caregiverName || "Care Provider";
-  const hasProfileImage = caregiverProfileImage && caregiverProfileImage.trim() !== '';
+  const nameFromParts = `${caregiverFirstName || ""} ${caregiverLastName || ""}`.trim();
+  const displayUserName = caregiverName?.trim() || nameFromParts || "Care Provider";
+  const caregiverFullName = displayUserName;
+  const initials = getInitials(caregiverFullName);
+  const avatarBackgroundColor = getAvatarColor(caregiverFullName);
+
+  const hasRealProfileImage = isRealProfileImageUrl(caregiverProfileImage);
   const displayLocation = caregiverLocation || "Lagos, Nigeria";
   const formattedRating = gigRating > 0 ? gigRating.toFixed(1) : "0.0";
   const displayReviewCount = gigReviewCount;
-  const imgSrc = image1 || null;
+  const imgSrc = hasRealProfileImage ? caregiverProfileImage : (gigImage || image1 || null);
   const displayPrice = price ? `₦${price.toLocaleString()}` : "Contact for pricing";
 
   const handleCardClick = (e) => {
@@ -135,19 +140,11 @@ const ServiceCard = ({
       <div className="card-content">
         {/* Second Container: Avatar left, meta right */}
         <div className="provider-row">
-          {hasProfileImage ? (
-            <img
-              src={caregiverProfileImage}
-              alt={displayUserName}
-              className="provider-avatar"
-              onError={(e) => { e.target.style.display = 'none'; e.target.nextElementSibling.style.display = 'flex'; }}
-            />
-          ) : null}
           <div
             className="provider-avatar provider-avatar-initials"
-            style={{ display: hasProfileImage ? 'none' : 'flex' }}
+            style={{ backgroundColor: avatarBackgroundColor }}
           >
-            {initials || displayUserName.charAt(0).toUpperCase()}
+            {initials}
           </div>
           <div className="provider-meta">
             <div className="provider-meta-top">

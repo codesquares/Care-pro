@@ -110,10 +110,18 @@ class GoogleMapsService {
 
         const request = {
           input: input,
-          componentRestrictions: { country: country },
-          location: new window.google.maps.LatLng(9.082, 8.6753),
-          radius: 600000
         };
+
+        const normalizedCountry = typeof country === 'string' ? country.trim().toLowerCase() : '';
+        if (normalizedCountry && normalizedCountry !== 'global') {
+          request.componentRestrictions = { country: normalizedCountry };
+        }
+
+        // Keep Nigeria bias only when explicitly restricted to Nigeria.
+        if (normalizedCountry === 'ng') {
+          request.location = new window.google.maps.LatLng(9.082, 8.6753);
+          request.radius = 600000;
+        }
 
         this.autocompleteService.getPlacePredictions(request, (predictions, status) => {
           if (status === window.google.maps.places.PlacesServiceStatus.OK && predictions) {

@@ -111,6 +111,7 @@
 }
 
 .provider-avatar-initials {
+  display: flex;
   background: #004e98;
   color: #ffffff;
   align-items: center;
