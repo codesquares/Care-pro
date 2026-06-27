@@ -194,6 +194,18 @@
   box-shadow: 0 0 0 1px #e2e8f0;
 }
 
+.caregiver-avatar-initials {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  color: #ffffff;
+  font-size: 0.72rem;
+  font-weight: 700;
+  letter-spacing: 0.4px;
+  text-transform: uppercase;
+  object-fit: unset;
+}
+
 .caregiver-name {
   font-size: 0.82rem;
   color: #334155;

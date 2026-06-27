@@ -62,6 +62,7 @@ const ALL_NAV_GROUPS = [
     label: 'Data Tools',
     items: [
       { to: '/app/admin/data-tools/middle-name-fix', icon: 'fa-broom', label: 'Fix Middle Names', policy: 'operations' },
+      { to: '/app/admin/data-tools/default-address-cleanup', icon: 'fa-map-marked-alt', label: 'Default Address Cleanup', policy: 'superAdmin' },
     ],
   },
 ];

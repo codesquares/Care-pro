@@ -16,6 +16,7 @@ import TopBanner from "../../../../components/TopBanner";
 import genralImg from "../../../../assets/nurse.png";
 import CareFacts from "../../../../pages/CareFacts";
 import { trackEvent } from "../../../services/analyticsService";
+import { getInitials, getAvatarColor, isRealProfileImageUrl } from "../../../utils/avatarHelpers";
 
 // Category slug to backend category name mapping
 const categorySlugMap = {
@@ -375,7 +376,13 @@ const PublicMarketplace = () => {
                   <p className="matched-subtitle">Caregivers that best match your care preferences</p>
                 </div>
                 <div className="matched-services-grid">
-                  {matchedServices.slice(0, 6).map((service) => (
+                  {matchedServices.slice(0, 6).map((service) => {
+                    const displayName = service.caregiverName || 'Care Provider';
+                    const heroImageSrc = isRealProfileImageUrl(service.caregiverProfileImage)
+                      ? service.caregiverProfileImage
+                      : (service.gigImage || service.image1 || 'https://via.placeholder.com/300x180?text=Care+Service');
+
+                    return (
                     <div 
                       key={service.id} 
                       className="matched-service-card"
@@ -387,7 +394,7 @@ const PublicMarketplace = () => {
                       </div>
                       <div className="card-image">
                         <img 
-                          src={service.gigImage || service.image1 || 'https://via.placeholder.com/300x180?text=Care+Service'} 
+                          src={heroImageSrc}
                           alt={service.title} 
                         />
                         {(service.caregiverIsVerified || service.caregiverIsIdentityVerified) && (
@@ -397,12 +404,14 @@ const PublicMarketplace = () => {
                       <div className="card-content">
                         <h3>{service.title}</h3>
                         <div className="caregiver-info">
-                          <img 
-                            src={service.caregiverProfileImage || '/avatar.jpg'} 
-                            alt={service.caregiverName}
-                            className="caregiver-avatar"
-                          />
-                          <span className="caregiver-name">{service.caregiverName}</span>
+                          <div
+                            className="caregiver-avatar caregiver-avatar-initials"
+                            style={{ backgroundColor: getAvatarColor(displayName) }}
+                            aria-label={displayName}
+                          >
+                            {getInitials(displayName)}
+                          </div>
+                          <span className="caregiver-name">{displayName}</span>
                           {service.caregiverRating > 0 && (
                             <span className="rating">★ {service.caregiverRating.toFixed(1)}</span>
                           )}
@@ -418,7 +427,8 @@ const PublicMarketplace = () => {
                         </div>
                       </div>
                     </div>
-                  ))}
+                    );
+                  })}
                 </div>
                 {matchedServices.length > 6 && (
                   <button 

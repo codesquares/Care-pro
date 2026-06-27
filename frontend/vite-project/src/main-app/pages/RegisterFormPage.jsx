@@ -9,6 +9,7 @@ import { toast } from "react-toastify";
 import Modal from "../components/modal/Modal";
 import allUserService from "../services/allUserService";
 import GoogleAuthService from "../services/googleAuthService";
+import AddressInput from "../components/AddressInput";
 import { useAuth } from "../context/AuthContext";
 import {
   createIdempotencyKey,
@@ -90,6 +91,76 @@ const RegisterFormPage = () => {
   // Google auth state
   const [googleLoading, setGoogleLoading] = useState(false);
   const [department, setDepartment] = useState(""); // Admin department
+  const [signupAddress, setSignupAddress] = useState("");
+  const [addressValidation, setAddressValidation] = useState(null);
+
+  const requiresAddress = selectedRole === "Caregiver" || selectedRole === "Client";
+
+  const buildAddressPayload = () => {
+    const rawAddress = signupAddress.trim();
+    const components = addressValidation?.addressComponents || {};
+    const formattedAddress = addressValidation?.formattedAddress?.trim() || rawAddress;
+    const street = [components.streetNumber, components.streetName]
+      .filter(Boolean)
+      .join(" ")
+      .trim() ||
+      rawAddress.split(",")[0]?.trim() ||
+      rawAddress;
+
+    const payload = {
+      homeAddress: formattedAddress,
+      fullAddress: formattedAddress,
+      street,
+      city: components.city || components.sublocality || components.neighborhood || "",
+      state: components.state || "",
+      country: components.country || "",
+    };
+
+    // Postal code can be inaccurate in some regions, so only include when confidently provided.
+    if (components.postalCode) {
+      payload.postalCode = components.postalCode;
+    }
+
+    return payload;
+  };
+
+  const validateSignupAddress = () => {
+    if (!requiresAddress) return null;
+
+    const rawAddress = signupAddress.trim();
+    if (!rawAddress) {
+      return "Address is required.";
+    }
+
+    if (!addressValidation) {
+      return "Please provide a valid address.";
+    }
+
+    if (!addressValidation.isValid) {
+      return addressValidation.errorMessage || "Please provide a valid address.";
+    }
+
+    if (selectedRole === "Caregiver") {
+      if (addressValidation.isGoogleValidated) {
+        const countryCode = (addressValidation.addressComponents?.countryCode || "").toUpperCase();
+        const countryName = (addressValidation.addressComponents?.country || "").toLowerCase();
+        if (countryCode && countryCode !== "NG") {
+          return "Caregiver address must be in Nigeria.";
+        }
+        if (!countryCode && countryName && countryName !== "nigeria") {
+          return "Caregiver address must be in Nigeria.";
+        }
+      } else {
+        // Fallback mode: allow submission with warning, but still require explicit Nigeria mention.
+        const fallbackAddress = (addressValidation.formattedAddress || rawAddress).toLowerCase();
+        if (!fallbackAddress.includes("nigeria")) {
+          return "Caregiver address must be in Nigeria. Include Nigeria in the address.";
+        }
+      }
+    }
+
+    return null;
+  };
 
   const validate = () => {
     const newErrors = {};
@@ -111,6 +182,8 @@ const RegisterFormPage = () => {
     if (formValues.password !== formValues.confirmPassword)
       newErrors.confirmPassword = "Passwords do not match.";
     if (selectedRole === "Admin" && !department) newErrors.department = "Please select a department.";
+    const addressError = validateSignupAddress();
+    if (addressError) newErrors.address = addressError;
     return newErrors;
   };
 
@@ -171,8 +244,13 @@ Please log in to your existing account instead of creating a new one.`);
       middleName: formValues.middleName?.trim() || null,
       password: formValues.password,
       role: selectedRole,
+      ...(requiresAddress ? buildAddressPayload() : {}),
       ...(selectedRole === "Admin" && department ? { department } : {})
     };
+
+    if (requiresAddress && addressValidation?.isValid && !addressValidation?.isGoogleValidated) {
+      toast.warning("Google validation was unavailable. Proceeding with your typed address.");
+    }
 
     try {
       const endpoint = selectedRole === "Caregiver"
@@ -294,6 +372,19 @@ You won't be able to log in until your email is verified.`);
         setIsModalOpen(true);
 
       } else if (signInResult.needsSignUp) {
+        const addressError = validateSignupAddress();
+        if (addressError) {
+          setIsSubmitted(true);
+          setErrors((prev) => ({ ...prev, address: addressError }));
+          toast.error(addressError);
+          return;
+        }
+
+        const googleSignUpAddressPayload = requiresAddress ? buildAddressPayload() : {};
+        if (requiresAddress && addressValidation?.isValid && !addressValidation?.isGoogleValidated) {
+          toast.warning("Google validation was unavailable. Proceeding with your typed address.");
+        }
+
         // New user - sign them up with the selected role.
         // Use an Idempotency-Key per user-initiated submission; reuse on
         // retryable 409 "still being processed", regenerate on 409 "expired".
@@ -310,7 +401,8 @@ You won't be able to log in until your email is verified.`);
           signUpResult = await GoogleAuthService.googleSignUp(
             idToken,
             selectedRole,
-            googleIdempotencyKeyRef.current
+            googleIdempotencyKeyRef.current,
+            googleSignUpAddressPayload
           );
           if (signUpResult.success) break;
           const kind = classifyIdempotencyError({
@@ -514,6 +606,44 @@ You won't be able to log in until your email is verified.`);
               />
               {errors.email && <p className="regform-error">{errors.email}</p>}
             </div>
+
+            {/* Address */}
+            {requiresAddress && (
+              <div className="regform-field">
+                <label htmlFor="signupAddress">Home Address</label>
+                <AddressInput
+                  value={signupAddress}
+                  onChange={(value) => {
+                    setSignupAddress(value);
+                    if (isSubmitted) {
+                      setErrors(validate());
+                    }
+                  }}
+                  onValidation={(result) => {
+                    setAddressValidation(result);
+                    if (isSubmitted) {
+                      setErrors(validate());
+                    }
+                  }}
+                  placeholder={
+                    selectedRole === "Caregiver"
+                      ? "Enter your full address in Nigeria"
+                      : "Enter your full home address"
+                  }
+                  autoValidate={true}
+                  showValidationIcon={true}
+                  country={selectedRole === "Caregiver" ? "ng" : "global"}
+                  required={true}
+                  className="regform-address-input"
+                />
+                {addressValidation?.isValid && !addressValidation?.isGoogleValidated && (
+                  <p style={{ color: "#8a6d3b", fontSize: "13px", marginTop: "6px" }}>
+                    Google validation unavailable. We will submit your typed address.
+                  </p>
+                )}
+                {errors.address && <p className="regform-error">{errors.address}</p>}
+              </div>
+            )}
 
             {/* Password */}
             <div className="regform-field">

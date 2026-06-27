@@ -59,6 +59,7 @@ const AdminDashboard = () => {
     { to: '/app/admin/subscriptions',    icon: 'fa-sync-alt',       title: 'Subscriptions',          desc: 'Manage subscription plans and status',           policy: 'superAdmin' },
     { to: '/app/admin/admin-users',      icon: 'fa-user-shield',    title: 'Admin Users',            desc: 'Create and manage admin accounts',               policy: 'superAdmin' },
     { to: '/app/admin/data-tools/middle-name-fix', icon: 'fa-broom', title: 'Fix Middle Names',      desc: 'Clear "testing" placeholder middle names',       policy: 'operations' },
+    { to: '/app/admin/data-tools/default-address-cleanup', icon: 'fa-map-marked-alt', title: 'Default Address Cleanup', desc: 'Preview and clean legacy placeholder addresses', policy: 'superAdmin' },
   ];
 
   const visibleActions = ALL_QUICK_ACTIONS.filter(a => hasPolicy(a.policy, role, department));

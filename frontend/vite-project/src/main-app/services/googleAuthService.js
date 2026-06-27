@@ -271,14 +271,14 @@ const GoogleAuthService = {
    * @param {string} idToken - Google ID token
    * @returns {Promise<Object>} - Auth response with tokens and user info
    */
-  async googleSignUpClient(idToken, idempotencyKey) {
+  async googleSignUpClient(idToken, idempotencyKey, addressPayload = {}) {
     try {
       const headers = { "Content-Type": "application/json" };
       if (idempotencyKey) headers["Idempotency-Key"] = idempotencyKey;
       const response = await fetch(`${config.BASE_URL}/Clients/GoogleSignUp`, {
         method: "POST",
         headers,
-        body: JSON.stringify({ idToken }),
+        body: JSON.stringify({ idToken, ...addressPayload }),
       });
 
       const data = await response.json();
@@ -311,14 +311,14 @@ const GoogleAuthService = {
    * @param {string} idToken - Google ID token
    * @returns {Promise<Object>} - Auth response with tokens and user info
    */
-  async googleSignUpCaregiver(idToken, idempotencyKey) {
+  async googleSignUpCaregiver(idToken, idempotencyKey, addressPayload = {}) {
     try {
       const headers = { "Content-Type": "application/json" };
       if (idempotencyKey) headers["Idempotency-Key"] = idempotencyKey;
       const response = await fetch(`${config.BASE_URL}/CareGivers/GoogleSignUp`, {
         method: "POST",
         headers,
-        body: JSON.stringify({ idToken }),
+        body: JSON.stringify({ idToken, ...addressPayload }),
       });
 
       const data = await response.json();
@@ -352,11 +352,11 @@ const GoogleAuthService = {
    * @param {string} role - "Client" or "Caregiver"
    * @returns {Promise<Object>} - Auth response
    */
-  async googleSignUp(idToken, role, idempotencyKey) {
+  async googleSignUp(idToken, role, idempotencyKey, addressPayload = {}) {
     if (role === "Client") {
-      return this.googleSignUpClient(idToken, idempotencyKey);
+      return this.googleSignUpClient(idToken, idempotencyKey, addressPayload);
     } else if (role === "Caregiver") {
-      return this.googleSignUpCaregiver(idToken, idempotencyKey);
+      return this.googleSignUpCaregiver(idToken, idempotencyKey, addressPayload);
     } else {
       return {
         success: false,

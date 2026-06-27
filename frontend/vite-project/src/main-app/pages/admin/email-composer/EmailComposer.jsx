@@ -1,8 +1,10 @@
 import React, { useState, useEffect } from 'react';
+import { useLocation } from 'react-router-dom';
 import adminService from '../../../services/adminService';
 import './email-composer.css';
 
 const EmailComposer = () => {
+  const location = useLocation();
   const [emailMode, setEmailMode] = useState('bulk'); // 'individual' or 'bulk'
   const [recipientType, setRecipientType] = useState('All');
   const [selectedUsers, setSelectedUsers] = useState([]);
@@ -34,6 +36,26 @@ const EmailComposer = () => {
   useEffect(() => {
     loadUsers();
   }, []);
+
+  useEffect(() => {
+    const prefillRecipients = location.state?.prefillRecipients;
+    if (!Array.isArray(prefillRecipients) || prefillRecipients.length === 0) return;
+
+    const normalized = prefillRecipients
+      .filter((r) => r && r.id)
+      .map((r) => ({
+        id: r.id,
+        name: r.name || 'Caregiver',
+        email: r.email || '',
+        type: r.type || 'Caregiver'
+      }));
+
+    if (normalized.length > 0) {
+      setEmailMode('bulk');
+      setRecipientType('Specific');
+      setSelectedUsers(normalized);
+    }
+  }, [location.state]);
 
   useEffect(() => {
     if (useTemplate) {
