@@ -13,15 +13,30 @@ const getValue = (obj, pascalKey, camelKey, fallback = 0) => {
   return fallback;
 };
 
-const toPreviewRows = (payload) => {
-  const rows = getValue(payload, 'CaregiverRecipientPreview', 'caregiverRecipientPreview', []);
+const mapRecipientRows = (rows, type, offset = 0) => {
   if (!Array.isArray(rows)) return [];
-
   return rows.map((row, idx) => ({
-    id: row.UserId || row.userId || `row-${idx}`,
+    id: row.UserId || row.userId || `row-${type}-${offset + idx}`,
     email: row.Email || row.email || 'N/A',
     firstName: row.FirstName || row.firstName || 'N/A',
+    type,
   }));
+};
+
+const toPreviewRows = (payload, scope) => {
+  const caregiverRows = mapRecipientRows(
+    getValue(payload, 'CaregiverRecipientPreview', 'caregiverRecipientPreview', []),
+    'Caregiver'
+  );
+  const clientRows = mapRecipientRows(
+    getValue(payload, 'ClientRecipientPreview', 'clientRecipientPreview', []),
+    'Client',
+    caregiverRows.length
+  );
+
+  if (scope === 'Caregivers') return caregiverRows;
+  if (scope === 'Clients') return clientRows;
+  return [...caregiverRows, ...clientRows];
 };
 
 const DefaultAddressCleanup = () => {
@@ -44,7 +59,7 @@ const DefaultAddressCleanup = () => {
   const [result, setResult] = useState(null);
   const [lastRunWasDryRun, setLastRunWasDryRun] = useState(false);
 
-  const previewRows = useMemo(() => toPreviewRows(result), [result]);
+  const previewRows = useMemo(() => toPreviewRows(result, scope), [result, scope]);
 
   const hasDryRunResult = !!result && lastRunWasDryRun === true;
   const reasonTrimmed = reason.trim();
@@ -171,7 +186,7 @@ const DefaultAddressCleanup = () => {
       id: row.id,
       email: row.email,
       name: row.firstName,
-      type: 'Caregiver',
+      type: row.type || 'Caregiver',
     }));
 
     navigate('/app/admin/emails', {
@@ -280,7 +295,7 @@ const DefaultAddressCleanup = () => {
             onChange={(e) => setReviewAcknowledged(e.target.checked)}
             disabled={!hasDryRunResult || !canRunCleanup || loadingPreview || executing}
           />
-          <span>I have reviewed the dry-run summary and caregiver preview list.</span>
+          <span>I have reviewed the dry-run summary and recipient preview list.</span>
         </label>
       </div>
 
@@ -359,7 +374,7 @@ const DefaultAddressCleanup = () => {
 
           <div className="dac-card">
             <div className="dac-preview-header">
-              <h2>Caregiver Recipient Preview</h2>
+              <h2>Recipient Preview</h2>
               <button
                 className="dac-btn dac-btn-secondary"
                 onClick={handleProceedToEmail}
@@ -370,12 +385,13 @@ const DefaultAddressCleanup = () => {
             </div>
 
             {previewRows.length === 0 ? (
-              <p className="dac-muted">No caregiver recipients in this response.</p>
+              <p className="dac-muted">No recipients in this response.</p>
             ) : (
               <div className="dac-table-wrap">
                 <table className="dac-table">
                   <thead>
                     <tr>
+                      <th>Type</th>
                       <th>User ID</th>
                       <th>Email</th>
                       <th>First Name</th>
@@ -384,6 +400,7 @@ const DefaultAddressCleanup = () => {
                   <tbody>
                     {previewRows.map((row) => (
                       <tr key={row.id}>
+                        <td>{row.type}</td>
                         <td>{row.id}</td>
                         <td>{row.email}</td>
                         <td>{row.firstName}</td>

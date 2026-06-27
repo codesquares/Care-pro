@@ -615,6 +615,7 @@ You won't be able to log in until your email is verified.`);
                   value={signupAddress}
                   onChange={(value) => {
                     setSignupAddress(value);
+                    setAddressValidation(null);
                     if (isSubmitted) {
                       setErrors(validate());
                     }

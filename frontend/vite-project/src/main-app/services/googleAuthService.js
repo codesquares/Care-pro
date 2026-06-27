@@ -278,7 +278,7 @@ const GoogleAuthService = {
       const response = await fetch(`${config.BASE_URL}/Clients/GoogleSignUp`, {
         method: "POST",
         headers,
-        body: JSON.stringify({ idToken, ...addressPayload }),
+        body: JSON.stringify({ ...addressPayload, idToken }),
       });
 
       const data = await response.json();
@@ -318,7 +318,7 @@ const GoogleAuthService = {
       const response = await fetch(`${config.BASE_URL}/CareGivers/GoogleSignUp`, {
         method: "POST",
         headers,
-        body: JSON.stringify({ idToken, ...addressPayload }),
+        body: JSON.stringify({ ...addressPayload, idToken }),
       });
 
       const data = await response.json();

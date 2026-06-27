@@ -83,9 +83,9 @@ const ServiceCard = ({
     }
   };
 
-  const displayUserName = caregiverName || "Care Provider";
-  const caregiverFullName =
-    displayUserName || `${caregiverFirstName || ""} ${caregiverLastName || ""}`.trim() || "Care Provider";
+  const nameFromParts = `${caregiverFirstName || ""} ${caregiverLastName || ""}`.trim();
+  const displayUserName = caregiverName?.trim() || nameFromParts || "Care Provider";
+  const caregiverFullName = displayUserName;
   const initials = getInitials(caregiverFullName);
   const avatarBackgroundColor = getAvatarColor(caregiverFullName);
 
