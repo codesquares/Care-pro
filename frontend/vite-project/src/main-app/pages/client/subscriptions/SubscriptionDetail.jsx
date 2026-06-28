@@ -223,10 +223,16 @@ const SubscriptionDetail = () => {
     const nextAction = payload?.nextAction;
     const outcome = payload?.outcome;
     const authorizationUrl = payload?.latestPaymentAttempt?.authorizationUrl;
+    const failureReason = (payload?.message || result.error || '').toLowerCase();
+    const isTokenOrEmailMismatch = failureReason.includes('wrong token or email passed');
 
     if (!result.success) {
       if (nextAction === 'retry_or_update_payment_method') {
-        toast.error(payload?.message || result.error || 'Renewal failed. Retry or update card details.');
+        if (isTokenOrEmailMismatch) {
+          toast.error('Your saved payment method is no longer valid. Update your payment method, then retry payment.');
+        } else {
+          toast.error(payload?.message || result.error || 'Renewal failed. Retry or update card details.');
+        }
       } else {
         toast.error(result.error || payload?.message || 'Failed to trigger renewal.');
       }
@@ -315,6 +321,10 @@ const SubscriptionDetail = () => {
   const createdAt = sub.createdAt ? new Date(sub.createdAt).toLocaleDateString() : '—';
   const renewalState = renewalStatus?.renewalState || 'none';
   const renewalNextAction = renewalStatus?.nextAction || 'none';
+  const renewalErrorMessage = (renewalStatus?.latestPaymentAttempt?.errorMessage || '').toLowerCase();
+  const shouldPrioritizeUpdatePayment =
+    renewalNextAction === 'update_payment_method' ||
+    renewalErrorMessage.includes('wrong token or email passed');
   const showRenewalActions = sub.status === 'Suspended' || sub.status === 'PastDue' || renewalState === 'action_required';
   const renewalBusy = actionLoading || renewalChecking || renewalPolling;
 
@@ -399,6 +409,9 @@ const SubscriptionDetail = () => {
             <span>Next action: {renewalNextAction}</span>
             {renewalStatus.failedChargeAttempts != null && (
               <span>Failed attempts: {renewalStatus.failedChargeAttempts}</span>
+            )}
+            {shouldPrioritizeUpdatePayment && (
+              <span>Your payment method may be invalid. Update payment method before retrying.</span>
             )}
           </div>
         )}
@@ -507,11 +520,19 @@ const SubscriptionDetail = () => {
                   {renewalBusy ? 'Processing…' : 'Continue Payment'}
                 </button>
               )}
-              <button className="sub-detail__action-btn sub-detail__action-btn--primary" onClick={handleRenewSubscription} disabled={renewalBusy}>
-                {renewalBusy ? 'Processing…' : 'Retry Payment'}
+              <button
+                className={`sub-detail__action-btn ${shouldPrioritizeUpdatePayment ? 'sub-detail__action-btn--primary' : 'sub-detail__action-btn--outline'}`}
+                onClick={handleUpdatePaymentMethod}
+                disabled={actionLoading}
+              >
+                {actionLoading ? 'Processing…' : shouldPrioritizeUpdatePayment ? 'Update Payment Method (Recommended)' : 'Update Payment Method'}
               </button>
-              <button className="sub-detail__action-btn sub-detail__action-btn--outline" onClick={handleUpdatePaymentMethod} disabled={actionLoading}>
-                {actionLoading ? 'Processing…' : 'Update Payment Method'}
+              <button
+                className={`sub-detail__action-btn ${shouldPrioritizeUpdatePayment ? 'sub-detail__action-btn--outline' : 'sub-detail__action-btn--primary'}`}
+                onClick={handleRenewSubscription}
+                disabled={renewalBusy}
+              >
+                {renewalBusy ? 'Processing…' : shouldPrioritizeUpdatePayment ? 'Retry Payment (After Update)' : 'Retry Payment'}
               </button>
             </>
           )}
