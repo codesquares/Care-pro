@@ -223,7 +223,7 @@ const SubscriptionDetail = () => {
     const nextAction = payload?.nextAction;
     const outcome = payload?.outcome;
     const authorizationUrl = payload?.latestPaymentAttempt?.authorizationUrl;
-    const failureReason = (payload?.message || result.error || '').toLowerCase();
+    const failureReason = String(payload?.message || result.error || '').toLowerCase();
     const isTokenOrEmailMismatch = failureReason.includes('wrong token or email passed');
 
     if (!result.success) {
@@ -321,9 +321,10 @@ const SubscriptionDetail = () => {
   const createdAt = sub.createdAt ? new Date(sub.createdAt).toLocaleDateString() : '—';
   const renewalState = renewalStatus?.renewalState || 'none';
   const renewalNextAction = renewalStatus?.nextAction || 'none';
-  const renewalErrorMessage = (renewalStatus?.latestPaymentAttempt?.errorMessage || '').toLowerCase();
+  const renewalErrorMessage = String(renewalStatus?.latestPaymentAttempt?.errorMessage || '').toLowerCase();
   const shouldPrioritizeUpdatePayment =
     renewalNextAction === 'update_payment_method' ||
+    renewalNextAction === 'retry_or_update_payment_method' ||
     renewalErrorMessage.includes('wrong token or email passed');
   const showRenewalActions = sub.status === 'Suspended' || sub.status === 'PastDue' || renewalState === 'action_required';
   const renewalBusy = actionLoading || renewalChecking || renewalPolling;
