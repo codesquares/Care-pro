@@ -90,7 +90,7 @@ const ClientGigService = {
 
           // Keep the original caregiverId for reference
           originalCaregiverId: gig.caregiverId,
-          caregiverProfileImage: caregiver.profileImage || "./avatar.jpg",
+          caregiverProfileImage: caregiver.profileImage || '',
           introVideo:caregiver.introVideo || ""
         };
       });
@@ -177,7 +177,7 @@ const ClientGigService = {
         caregiverCertifications: gig.caregiverCertifications || caregiver.certifications || [],
         caregiverWorkExperience: gig.caregiverWorkExperience || [],
         originalCaregiverId: gig.caregiverId,
-        caregiverProfileImage: caregiver.profileImage || './avatar.jpg',
+        caregiverProfileImage: caregiver.profileImage || '',
         introVideo: caregiver.introVideo || ''
       };
     } catch (err) {

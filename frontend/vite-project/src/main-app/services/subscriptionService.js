@@ -259,6 +259,61 @@ const SubscriptionService = {
   },
 
   // ========================
+  // MANUAL RENEWAL
+  // ========================
+
+  /**
+   * Trigger a client-initiated renewal attempt.
+   * @param {string} subscriptionId
+   * @param {string|null} redirectUrl
+   * @returns {Promise<Object>}
+   */
+  async renewSubscription(subscriptionId, redirectUrl = null) {
+    try {
+      const body = {};
+      if (redirectUrl) body.redirectUrl = redirectUrl;
+      const response = await api.post(`/subscriptions/${subscriptionId}/renew`, body);
+      const payload = response.data?.data ?? response.data;
+      return {
+        success: response.data?.success ?? true,
+        data: payload,
+        message: response.data?.message || payload?.message,
+      };
+    } catch (error) {
+      console.error('Error triggering subscription renewal:', error);
+      return {
+        success: false,
+        error: error.response?.data?.message || error.message,
+        data: error.response?.data?.data || null,
+      };
+    }
+  },
+
+  /**
+   * Get source-of-truth renewal state for polling and recovery.
+   * @param {string} subscriptionId
+   * @returns {Promise<Object>}
+   */
+  async getRenewalStatus(subscriptionId) {
+    try {
+      const response = await api.get(`/subscriptions/${subscriptionId}/renew/status`);
+      const payload = response.data?.data ?? response.data;
+      return {
+        success: response.data?.success ?? true,
+        data: payload,
+        message: response.data?.message,
+      };
+    } catch (error) {
+      console.error('Error fetching renewal status:', error);
+      return {
+        success: false,
+        error: error.response?.data?.message || error.message,
+        data: error.response?.data?.data || null,
+      };
+    }
+  },
+
+  // ========================
   // BILLING HISTORY
   // ========================
 
