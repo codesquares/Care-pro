@@ -6,6 +6,12 @@ import paymentReceiptService from '../../../services/paymentReceiptService';
 import { toast } from 'react-toastify';
 import './CommitmentSuccess.css';
 
+const normalizePaymentStatus = (statusValue) => String(statusValue || '').trim().toLowerCase();
+const isSuccessfulPaymentStatus = (statusValue) => {
+  const normalized = normalizePaymentStatus(statusValue);
+  return normalized === 'completed' || normalized === 'successful' || normalized === 'succeeded' || normalized === 'success';
+};
+
 const CommitmentSuccess = () => {
   const [searchParams] = useSearchParams();
   const navigate = useNavigate();
@@ -118,7 +124,7 @@ const CommitmentSuccess = () => {
         const data = result.data;
         console.log("Commitment Payment Status:", data);
 
-        if (data.success && data.status === "completed") {
+        if (data.success && isSuccessfulPaymentStatus(data.status)) {
           stopPolling();
           setPaymentData(data);
           setStatusMessage('Payment verified! Chat access unlocked.');
@@ -130,17 +136,17 @@ const CommitmentSuccess = () => {
           }
           cleanupLocalStorage();
 
-        } else if (data.status === "pending") {
+        } else if (normalizePaymentStatus(data.status) === "pending") {
           setStatusMessage('Payment is still being processed. Please wait...');
 
-        } else if (data.status === "failed" || data.status === "amountmismatch") {
+        } else if (normalizePaymentStatus(data.status) === "failed" || normalizePaymentStatus(data.status) === "amountmismatch") {
           stopPolling();
           setPaymentData(data);
           setError(data.errorMessage || "Payment verification failed");
           setStatusMessage('Payment failed');
           cleanupLocalStorage();
 
-        } else if (data.status === "expired") {
+        } else if (normalizePaymentStatus(data.status) === "expired") {
           stopPolling();
           setPaymentData(data);
           setError("Payment session expired. Please try again.");
@@ -207,7 +213,7 @@ const CommitmentSuccess = () => {
     <div className="commitment-success-page">
       <div className="commitment-success-container">
         <div className="commitment-success-card">
-          {paymentData?.status === "completed" ? (
+          {isSuccessfulPaymentStatus(paymentData?.status) ? (
             <>
               {/* Success */}
               <div className="commitment-status-icon commitment-status-icon--success">
@@ -270,7 +276,7 @@ const CommitmentSuccess = () => {
                 </button>
               </div>
             </>
-          ) : paymentData?.status === "pending" || (!paymentData && !error) ? (
+          ) : normalizePaymentStatus(paymentData?.status) === "pending" || (!paymentData && !error) ? (
             <>
               {/* Pending / Loading */}
               <div className="commitment-status-icon commitment-status-icon--pending">
