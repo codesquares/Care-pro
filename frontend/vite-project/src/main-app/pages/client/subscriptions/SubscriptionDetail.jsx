@@ -222,6 +222,12 @@ const SubscriptionDetail = () => {
     const payload = result.data || null;
     const nextAction = payload?.nextAction;
     const outcome = payload?.outcome;
+    const normalizedOutcome = String(outcome || '').trim().toLowerCase();
+    const isRenewalSuccessOutcome =
+      normalizedOutcome === 'success' ||
+      normalizedOutcome === 'successful' ||
+      normalizedOutcome === 'succeeded' ||
+      normalizedOutcome === 'completed';
     const authorizationUrl = payload?.latestPaymentAttempt?.authorizationUrl;
     const failureReason = String(payload?.message || result.error || '').toLowerCase();
     const isTokenOrEmailMismatch = failureReason.includes('wrong token or email passed');
@@ -240,7 +246,7 @@ const SubscriptionDetail = () => {
       return;
     }
 
-    if (outcome === 'success' || nextAction === 'refresh_subscription') {
+    if (isRenewalSuccessOutcome || nextAction === 'refresh_subscription') {
       toast.success(payload?.message || 'Renewal payment processed successfully.');
       await fetchSubscription();
       await fetchRenewalStatus(false);
