@@ -98,7 +98,7 @@ const PricingModal = ({ isOpen, onClose }) => {
                       From <strong>${cat.minPriceUSD}</strong>
                     </>
                   )}
-                  <span className="pricing-category-card__per-day"> / day</span>
+                  <span className="pricing-category-card__per-day"> / visit</span>
                 </div>
               </div>
               <div className="pricing-category-card__check">
@@ -125,7 +125,7 @@ const PricingModal = ({ isOpen, onClose }) => {
                   {currency === "NGN"
                     ? `₦${selectedCategory.minPriceNGN.toLocaleString()}`
                     : `$${selectedCategory.minPriceUSD}`}
-                  /day
+                  /visit
                 </strong>
               </p>
               <span className="pricing-modal__detail-note">
@@ -148,7 +148,7 @@ const PricingModal = ({ isOpen, onClose }) => {
               <circle cx="8" cy="8" r="7" stroke="#6b7280" strokeWidth="1.5" />
               <path d="M8 5v3M8 10.5h.01" stroke="#6b7280" strokeWidth="1.5" strokeLinecap="round" />
             </svg>
-            All prices shown are minimum starting rates per day. Actual pricing depends on the caregiver&apos;s experience, qualifications, and service scope.
+            All prices shown are minimum starting rates per visit. Actual pricing depends on the caregiver&apos;s experience, qualifications, and service scope.
           </p>
         </div>
       </div>

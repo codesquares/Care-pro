@@ -380,7 +380,7 @@ const PublicMarketplace = () => {
                     const displayName = service.caregiverName || 'Care Provider';
                     const heroImageSrc = isRealProfileImageUrl(service.caregiverProfileImage)
                       ? service.caregiverProfileImage
-                      : (service.gigImage || service.image1 || 'https://via.placeholder.com/300x180?text=Care+Service');
+                      : null;
 
                     return (
                     <div 
@@ -393,10 +393,20 @@ const PublicMarketplace = () => {
                         <span className="label">match</span>
                       </div>
                       <div className="card-image">
-                        <img 
-                          src={heroImageSrc}
-                          alt={service.title} 
-                        />
+                        {heroImageSrc ? (
+                          <img
+                            src={heroImageSrc}
+                            alt={service.title}
+                          />
+                        ) : (
+                          <div
+                            className="card-image-initials"
+                            style={{ backgroundColor: getAvatarColor(displayName) }}
+                            aria-label={displayName}
+                          >
+                            {getInitials(displayName)}
+                          </div>
+                        )}
                         {(service.caregiverIsVerified || service.caregiverIsIdentityVerified) && (
                           <span className="verified-badge">✓ Verified</span>
                         )}

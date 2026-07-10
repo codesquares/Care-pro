@@ -621,7 +621,7 @@ const HomeCareService = () => {
   // Helper: render star icons for a rating
   const renderStars = (rating) => {
     const stars = [];
-    const fullStars = Math.floor(rating);
+    const fullStars = Math.max(0, Math.min(5, Math.round(rating || 0)));
     for (let i = 0; i < 5; i++) {
       stars.push(
         <span key={i} className={`star ${i < fullStars ? 'star-filled' : 'star-empty'}`}>★</span>
@@ -691,11 +691,15 @@ const HomeCareService = () => {
         </div>
         <span className="hcs-provider-name">{caregiverName}</span>
         {caregiverIsVerified && <span className="hcs-verified-badge">verified</span>}
-        <span className="hcs-bar-separator">|</span>
-        <span className="hcs-bar-item">
-          <span className="hcs-bar-stars">{renderStars(gigRating || 0)}</span>
-          <span className="hcs-bar-rating-num">{gigRating || 0}</span>
-        </span>
+        {gigReviewCount > 0 && (
+          <>
+            <span className="hcs-bar-separator">|</span>
+            <span className="hcs-bar-item">
+              <span className="hcs-bar-stars">{renderStars(gigRating)}</span>
+              <span className="hcs-bar-rating-num">{gigRating.toFixed(1)}</span>
+            </span>
+          </>
+        )}
         <span className="hcs-bar-separator">|</span>
         {/* <span className="hcs-bar-item hcs-orders-queue">3 orders in queue</span>
         <span className="hcs-bar-separator">|</span> */}
@@ -710,7 +714,7 @@ const HomeCareService = () => {
           tabIndex={0}
           onKeyDown={(e) => e.key === 'Enter' && handleOpenReviews()}
         >
-          ({gigReviewCount || 0} reviews)
+          {gigReviewCount > 0 ? `(${gigReviewCount} reviews)` : '(No reviews yet)'}
         </span>
       </div>
 
@@ -779,7 +783,7 @@ const HomeCareService = () => {
             <div className="hcs-pricing-header">
               <span className="hcs-package-name">{packageName || "Basic Package"}</span>
             </div>
-            <div className="hcs-pricing-price">₦{Number(price).toLocaleString()}</div>
+            <div className="hcs-pricing-price">₦{Number(price).toLocaleString()} /visit</div>
             <div className="hcs-pricing-delivery">Delivery: {deliveryTime || "Per Day"}</div>
             <p className="hcs-pricing-bestfor">
               Best for: routine monitoring, follow-ups, & light medical supervision
