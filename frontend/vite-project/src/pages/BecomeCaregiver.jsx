@@ -126,7 +126,7 @@ const BecomeCaregiver = () => {
                             <div className="how-icon pay-icon"><FiDollarSign /></div>
                             <div className="how-text">
                                 <h3>Get paid securely</h3>
-                                <p>After an order is completed, caregiver receive 85% of the client's cleared payment. Get paid automatically & securely after each completed session no cash stress or delays.</p>
+                                <p>After an order is completed, caregivers receive 60% of the client's cleared payment while the platform commission is 40%. This commission split is separate from any client-side checkout service charge. Get paid automatically and securely after each completed session, with no cash stress or delays.</p>
                             </div>
                         </div>
                         <button className="cta-full-btn" onClick={handleAction}>Create Account</button>

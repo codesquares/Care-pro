@@ -188,6 +188,7 @@ import ClientGigService from "../../../services/clientGigService";
 import GigReviewService from "../../../services/gigReviewService";
 import bookingCommitmentService from "../../../services/bookingCommitmentService";
 import GigPriceNegotiationService from "../../../services/gigPriceNegotiationService";
+import { getCommitmentGateEnabled } from "../../../services/publicConfigService";
 import defaultAvatar from "../../../../assets/profilecard1.png";
 import VideoModal from "../../../components/VideoModal/VideoModal";
 import ReviewsModal from "../../../components/ReviewsModal/ReviewsModal";
@@ -213,9 +214,11 @@ const HomeCareService = () => {
   const [gigRating, setGigRating] = useState(0);
   // Commitment fee access state
   const [commitmentAccess, setCommitmentAccess] = useState(null);
+  const [commitmentGateEnabled, setCommitmentGateEnabled] = useState(true);
   // Active price negotiation for this gig (null if none)
   const [existingNegotiation, setExistingNegotiation] = useState(null);
   const [negotiateLoading, setNegotiateLoading] = useState(false);
+  const [negotiationFeedback, setNegotiationFeedback] = useState('');
   // Credentials modal state
   const [showCredentialsModal, setShowCredentialsModal] = useState(false);
   const [credentialsTab, setCredentialsTab] = useState('education');
@@ -243,6 +246,28 @@ const HomeCareService = () => {
   const { isAuthenticated, userRole } = useAuth();
   const basePath = "/app/client";
   const serviceCardRef = useRef(null);
+  const isCommitmentRequired = commitmentGateEnabled && (!commitmentAccess || (!commitmentAccess.hasAccess && !commitmentAccess.commitmentNotRequired));
+  const isCommitmentUnlocked = !commitmentGateEnabled || !!(commitmentAccess?.hasAccess || commitmentAccess?.commitmentNotRequired);
+
+  useEffect(() => {
+    let isMounted = true;
+
+    const loadCommitmentGateConfig = async () => {
+      const enabled = await getCommitmentGateEnabled();
+      if (!isMounted) return;
+
+      setCommitmentGateEnabled(enabled);
+      if (!enabled) {
+        setCommitmentAccess({ hasAccess: true, commitmentNotRequired: true, isAppliedToOrder: false });
+      }
+    };
+
+    loadCommitmentGateConfig();
+
+    return () => {
+      isMounted = false;
+    };
+  }, []);
 
   // Helper function to get initials from name
   const getInitials = (name) => {
@@ -270,7 +295,7 @@ const HomeCareService = () => {
     }
 
     // Block if commitment check hasn't completed yet or fee not paid (and not a free path)
-    if (!commitmentAccess || (!commitmentAccess.hasAccess && !commitmentAccess.commitmentNotRequired)) {
+    if (isCommitmentRequired) {
       handleUnlockChat();
       return;
     }
@@ -282,6 +307,15 @@ const HomeCareService = () => {
   useEffect(() => {
     const checkCommitment = async () => {
       if (!isAuthenticated || userRole !== 'Client' || !id) return;
+
+      if (!commitmentGateEnabled) {
+        setCommitmentAccess({ hasAccess: true, commitmentNotRequired: true, isAppliedToOrder: false });
+        GigPriceNegotiationService.getByGig(id)
+          .then((neg) => setExistingNegotiation(neg))
+          .catch(() => {});
+        return;
+      }
+
       try {
         const result = await bookingCommitmentService.checkAccess(id);
         if (result.success) {
@@ -301,12 +335,12 @@ const HomeCareService = () => {
       }
     };
     checkCommitment();
-  }, [id, isAuthenticated, userRole]);
+  }, [id, isAuthenticated, userRole, commitmentGateEnabled]);
 
   // Re-check commitment access when a cancellation notification arrives (real-time)
   const latestNotification = useSelector((state) => state.notifications.notifications[0]);
   useEffect(() => {
-    if (!latestNotification || !isAuthenticated || userRole !== 'Client' || !id) return;
+    if (!latestNotification || !isAuthenticated || userRole !== 'Client' || !id || !commitmentGateEnabled) return;
     const t = (latestNotification.type || latestNotification.notificationType || '')
       .toLowerCase().replace(/[\s-]+/g, '_');
     if (
@@ -317,11 +351,11 @@ const HomeCareService = () => {
         .then((result) => { if (result.success) setCommitmentAccess(result.data); })
         .catch(() => {});
     }
-  }, [latestNotification]); // eslint-disable-line react-hooks/exhaustive-deps
+  }, [latestNotification, commitmentGateEnabled]); // eslint-disable-line react-hooks/exhaustive-deps
 
   const handleMessage = () => {
     // Block if commitment check hasn't completed yet or fee not paid
-    if (!commitmentAccess || (!commitmentAccess.hasAccess && !commitmentAccess.commitmentNotRequired)) {
+    if (isCommitmentRequired) {
       handleUnlockChat();
       return;
     }
@@ -335,9 +369,16 @@ const HomeCareService = () => {
       navigate(`/login?returnTo=/service/${id}`);
       return;
     }
+    setNegotiationFeedback('');
+
+    const parsedPrice = Number(String(price ?? '').replace(/[^\d.]/g, ''));
+    const isMinimumPrice = Number.isFinite(parsedPrice) && parsedPrice <= 10000;
+
     // Block negotiation if the gig is already at the minimum price
-    if (price <= 10000) {
-      toast.info('This gig is already at the minimum price of ₦10,000 and cannot be negotiated.');
+    if (isMinimumPrice) {
+      const message = 'Negotiation unavailable: this gig is already at the minimum price of ₦10,000 per visit.';
+      setNegotiationFeedback(message);
+      toast.info(message, { containerId: 'main-toast-container' });
       return;
     }
     // If an active negotiation already exists, go straight to it
@@ -355,7 +396,7 @@ const HomeCareService = () => {
       });
     } catch (err) {
       const msg = err.response?.data?.message || 'Could not start negotiation. Please try again.';
-      toast.error(msg);
+      toast.error(msg, { containerId: 'main-toast-container' });
     } finally {
       setNegotiateLoading(false);
     }
@@ -621,7 +662,7 @@ const HomeCareService = () => {
   // Helper: render star icons for a rating
   const renderStars = (rating) => {
     const stars = [];
-    const fullStars = Math.floor(rating);
+    const fullStars = Math.max(0, Math.min(5, Math.round(rating || 0)));
     for (let i = 0; i < 5; i++) {
       stars.push(
         <span key={i} className={`star ${i < fullStars ? 'star-filled' : 'star-empty'}`}>★</span>
@@ -691,11 +732,15 @@ const HomeCareService = () => {
         </div>
         <span className="hcs-provider-name">{caregiverName}</span>
         {caregiverIsVerified && <span className="hcs-verified-badge">verified</span>}
-        <span className="hcs-bar-separator">|</span>
-        <span className="hcs-bar-item">
-          <span className="hcs-bar-stars">{renderStars(gigRating || 0)}</span>
-          <span className="hcs-bar-rating-num">{gigRating || 0}</span>
-        </span>
+        {gigReviewCount > 0 && (
+          <>
+            <span className="hcs-bar-separator">|</span>
+            <span className="hcs-bar-item">
+              <span className="hcs-bar-stars">{renderStars(gigRating)}</span>
+              <span className="hcs-bar-rating-num">{gigRating.toFixed(1)}</span>
+            </span>
+          </>
+        )}
         <span className="hcs-bar-separator">|</span>
         {/* <span className="hcs-bar-item hcs-orders-queue">3 orders in queue</span>
         <span className="hcs-bar-separator">|</span> */}
@@ -710,7 +755,7 @@ const HomeCareService = () => {
           tabIndex={0}
           onKeyDown={(e) => e.key === 'Enter' && handleOpenReviews()}
         >
-          ({gigReviewCount || 0} reviews)
+          {gigReviewCount > 0 ? `(${gigReviewCount} reviews)` : '(No reviews yet)'}
         </span>
       </div>
 
@@ -744,10 +789,10 @@ const HomeCareService = () => {
           {/* Floating Message Bubble - overlaid on image */}
           {isAuthenticated && userRole === 'Client' && (
             <div
-              className={`hcs-floating-message${commitmentAccess && !commitmentAccess.hasAccess ? ' hcs-floating-locked' : ''}`}
-              onClick={commitmentAccess && !commitmentAccess.hasAccess ? handleUnlockChat : handleMessage}
+              className={`hcs-floating-message${isCommitmentRequired ? ' hcs-floating-locked' : ''}`}
+              onClick={isCommitmentRequired ? handleUnlockChat : handleMessage}
             >
-              {commitmentAccess && !commitmentAccess.hasAccess && (
+              {isCommitmentRequired && (
                 <span className="hcs-floating-lock">🔓</span>
               )}
               <img
@@ -758,12 +803,12 @@ const HomeCareService = () => {
               />
               <div className="hcs-floating-info">
                 <p className="hcs-floating-name">
-                  {commitmentAccess && !commitmentAccess.hasAccess
+                  {isCommitmentRequired
                     ? `Pay ₦5,000 to Unlock Chat`
                     : `Message: ${caregiverFirstName || caregiverName}`}
                 </p>
                 <span className="hcs-floating-status">
-                  {commitmentAccess && !commitmentAccess.hasAccess
+                  {isCommitmentRequired
                     ? 'Required before hiring or messaging'
                     : `${caregiverIsAvailable ? "Available" : "Away"} · for ${lastDeliveryDate || "Unknown days"}`}
                 </span>
@@ -779,7 +824,7 @@ const HomeCareService = () => {
             <div className="hcs-pricing-header">
               <span className="hcs-package-name">{packageName || "Basic Package"}</span>
             </div>
-            <div className="hcs-pricing-price">₦{Number(price).toLocaleString()}</div>
+            <div className="hcs-pricing-price">₦{Number(price).toLocaleString()} /visit</div>
             <div className="hcs-pricing-delivery">Delivery: {deliveryTime || "Per Day"}</div>
             <p className="hcs-pricing-bestfor">
               Best for: routine monitoring, follow-ups, & light medical supervision
@@ -812,7 +857,7 @@ const HomeCareService = () => {
           {/* CTA buttons — always visible */}
           <div className="hcs-pricing-buttons">
             {(!isAuthenticated || userRole === 'Client') && (
-              commitmentAccess && !commitmentAccess.hasAccess ? (
+              isCommitmentRequired ? (
                 <button
                   className="hcs-hire-btn hcs-hire-btn-locked"
                   onClick={isAuthenticated ? handleUnlockChat : () => navigate(`/login?returnTo=/service/${id}`)}
@@ -830,7 +875,7 @@ const HomeCareService = () => {
                   >
                     Send Message
                   </button>
-                  {isAuthenticated && userRole === 'Client' && (commitmentAccess?.hasAccess || commitmentAccess?.commitmentNotRequired) && (
+                  {isAuthenticated && userRole === 'Client' && isCommitmentUnlocked && (
                     <details className="hcs-more-options">
                       <summary className="hcs-more-options__toggle">More options</summary>
                       <div className="hcs-more-options__content">
@@ -848,7 +893,12 @@ const HomeCareService = () => {
                         <p className="hcs-negotiate-hint">
                           Negotiation is optional — you can also pay the listed price directly.
                         </p>
-                        {commitmentAccess?.hasAccess && !commitmentAccess?.commitmentNotRequired && (
+                        {negotiationFeedback && (
+                          <p className="hcs-negotiate-feedback" role="status" aria-live="polite">
+                            {negotiationFeedback}
+                          </p>
+                        )}
+                        {commitmentGateEnabled && commitmentAccess?.hasAccess && !commitmentAccess?.commitmentNotRequired && (
                           <button
                             className="hcs-forfeit-btn"
                             onClick={() => { setForfeitError(null); setShowForfeitModal(true); }}

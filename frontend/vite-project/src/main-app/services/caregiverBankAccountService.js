@@ -8,6 +8,20 @@
  */
 import api from './api';
 
+const PERMISSION_ERROR_MESSAGE = 'You do not have permission to access this resource.';
+
+const getApiErrorMessage = (error, fallbackMessage) => {
+  const status = error?.response?.status;
+  if (status === 403) return PERMISSION_ERROR_MESSAGE;
+
+  const data = error?.response?.data;
+  if (typeof data === 'string' && data.trim()) return data;
+  if (data?.errorMessage) return data.errorMessage;
+  if (data?.message) return data.message;
+  if (data?.title) return data.title;
+  return fallbackMessage;
+};
+
 const caregiverBankAccountService = {
   /**
    * Get a caregiver's saved bank account details.
@@ -27,7 +41,7 @@ const caregiverBankAccountService = {
       return {
         success: false,
         data: null,
-        error: error.response?.data?.errorMessage || 'Failed to load bank account details.',
+        error: getApiErrorMessage(error, 'Failed to load bank account details.'),
       };
     }
   },
@@ -50,7 +64,7 @@ const caregiverBankAccountService = {
     } catch (error) {
       console.error('Error saving bank account:', error);
       const data = error.response?.data;
-      let msg = data?.errorMessage || data?.title || 'Failed to save bank account details.';
+      let msg = getApiErrorMessage(error, 'Failed to save bank account details.');
       if (data?.errors) {
         const fieldErrors = Object.values(data.errors).flat().join(' | ');
         if (fieldErrors) msg = fieldErrors;
@@ -73,7 +87,7 @@ const caregiverBankAccountService = {
       return {
         success: false,
         data: null,
-        error: error.response?.data?.errorMessage || 'Failed to load financial summary.',
+        error: getApiErrorMessage(error, 'Failed to load financial summary.'),
       };
     }
   },

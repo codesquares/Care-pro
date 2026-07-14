@@ -7,6 +7,8 @@ import { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import ClientGigService from '../../../services/clientGigService';
 import config from '../../../config'; // Import centralized config for API URLs
+import { mapUiErrorCode, UI_ERROR_CODES } from '../../../utils/uiErrorMapper';
+import { getCommitmentGateEnabled } from '../../../services/publicConfigService';
 
 // Helper to format price
 const formatPrice = (amount) => `₦${(amount || 0).toLocaleString()}`;
@@ -26,6 +28,7 @@ const Cart = () => {
     const savedPerWeek = id ? sessionStorage.getItem(`cart_perweek_${id}`) : null;
     const [selectedFrequency, setSelectedFrequency] = useState(savedFreq || 'one-time');
     const [frequencyPerWeek, setFrequencyPerWeek] = useState(savedPerWeek ? Number(savedPerWeek) : 1);
+    const [referralCode, setReferralCode] = useState('');
     
     // Reviews modal state
     const [showReviewsModal, setShowReviewsModal] = useState(false);
@@ -35,9 +38,32 @@ const Cart = () => {
     
     // Commitment fee state
     const [commitmentAccess, setCommitmentAccess] = useState(null);
+    const [commitmentGateEnabled, setCommitmentGateEnabled] = useState(true);
 
     const navigate = useNavigate();
     const basePath = "/app/client";
+    const isCommitmentRequired = commitmentGateEnabled && (!commitmentAccess || (!commitmentAccess.hasAccess && !commitmentAccess.commitmentNotRequired));
+    const canProceedToPayment = !isCommitmentRequired;
+
+    useEffect(() => {
+      let isMounted = true;
+
+      const loadCommitmentGateConfig = async () => {
+        const enabled = await getCommitmentGateEnabled();
+        if (!isMounted) return;
+
+        setCommitmentGateEnabled(enabled);
+        if (!enabled) {
+          setCommitmentAccess({ hasAccess: true, commitmentNotRequired: true, isAppliedToOrder: false });
+        }
+      };
+
+      loadCommitmentGateConfig();
+
+      return () => {
+        isMounted = false;
+      };
+    }, []);
 
     // Handle frequency change
     const handleFrequencyChange = (type) => {
@@ -68,6 +94,11 @@ const Cart = () => {
     useEffect(() => {
       if (!id) return;
       const checkCommitment = async () => {
+        if (!commitmentGateEnabled) {
+          setCommitmentAccess({ hasAccess: true, commitmentNotRequired: true, isAppliedToOrder: false });
+          return;
+        }
+
         try {
           const result = await bookingCommitmentService.checkAccess(id);
           if (result.success) {
@@ -80,7 +111,7 @@ const Cart = () => {
         }
       };
       checkCommitment();
-    }, [id]);
+    }, [id, commitmentGateEnabled]);
 
     // Calculate estimated price.
     // commitmentNotRequired is true for CareRequest special gigs — no ₦5,000 deduction applies.
@@ -94,7 +125,7 @@ const Cart = () => {
       }
       const serviceFee = orderFee * 0.10;
       const commitmentCredit =
-        (commitmentAccess?.hasAccess &&
+        (commitmentGateEnabled && commitmentAccess?.hasAccess &&
          !commitmentAccess?.isAppliedToOrder &&
          !commitmentAccess?.commitmentNotRequired)
           ? 5000
@@ -113,12 +144,14 @@ const Cart = () => {
       localStorage.removeItem('paymentBreakdown');
     
       try {
+        const normalizedReferralCode = referralCode.trim();
         const payload = {
           gigId: id,
           serviceType: selectedFrequency,
           frequencyPerWeek: frequencyPerWeek,
           email: user?.email,
           redirectUrl: `${window.location.origin}/app/client/payment-success`,
+          ...(selectedFrequency === 'monthly' && normalizedReferralCode ? { referralCode: normalizedReferralCode } : {}),
         };
     
         const token = localStorage.getItem('authToken');
@@ -137,8 +170,9 @@ const Cart = () => {
         if (!response.ok) {
           const errorData = await response.json().catch(() => ({}));
           const msg = errorData.message || "Payment initiation failed";
+          const uiErrorCode = mapUiErrorCode({ message: msg, status: response.status });
 
-          if (msg.toLowerCase().includes('commitmentfeededucted') || msg.toLowerCase().includes('commitment fee')) {
+          if (uiErrorCode === UI_ERROR_CODES.COMMITMENT_REQUIRED_FOR_CHECKOUT) {
             setPaymentError(
               'You need to pay the ₦5,000 commitment fee before placing an order. ' +
               'Please use the "Unlock Chat" button above to pay the commitment fee first.'
@@ -147,14 +181,12 @@ const Cart = () => {
           }
 
           if (response.status === 400) {
-            const isActiveOrder = msg.toLowerCase().includes('active order');
-            const isRecurring = msg.toLowerCase().includes('recurring');
-            if (isRecurring) {
+            if (uiErrorCode === UI_ERROR_CODES.CHECKOUT_REPURCHASE_RECURRING_BLOCKED) {
               setPaymentError(msg);
               setPaymentDisabled(true);
               return;
             }
-            if (isActiveOrder) {
+            if (uiErrorCode === UI_ERROR_CODES.CHECKOUT_DUPLICATE_ACTIVE_ORDER) {
               setPaymentError(msg);
               return;
             }
@@ -302,6 +334,22 @@ const Cart = () => {
                   </p>
                 </div>
               )}
+
+              <div className="sd-referral-box">
+                <label htmlFor="referralCode" className="sd-referral-box__label">Referral Code</label>
+                <input
+                  id="referralCode"
+                  type="text"
+                  className="sd-referral-box__input"
+                  value={referralCode}
+                  onChange={(e) => setReferralCode(e.target.value)}
+                  disabled={selectedFrequency !== 'monthly'}
+                  placeholder={selectedFrequency === 'monthly' ? 'Enter referral code (optional)' : 'Available for recurring plans only'}
+                />
+                {selectedFrequency !== 'monthly' && (
+                  <p className="sd-referral-box__hint">Referral code is only applicable to recurring plans.</p>
+                )}
+              </div>
             </div>
 
             {/* Price summary (only show expanded if recurrent or commitment credit) */}
@@ -334,14 +382,14 @@ const Cart = () => {
             )}
 
             {/* Info notice for CareRequest bookings — no commitment fee required */}
-            {commitmentAccess?.commitmentNotRequired && (
+            {commitmentGateEnabled && commitmentAccess?.commitmentNotRequired && (
               <div className="sd-commitment-gate sd-commitment-gate--free">
                 <p>✅ No commitment fee required for this booking. Your CareRequest hire allows you to proceed directly to payment.</p>
               </div>
             )}
 
             {/* Commitment gate — block payment if no commitment and not a free path */}
-            {(!commitmentAccess || (!commitmentAccess.hasAccess && !commitmentAccess.commitmentNotRequired)) && (
+            {isCommitmentRequired && (
               <div className="sd-commitment-gate">
                 <p>🔒 You must pay the ₦5,000 commitment fee before placing an order. This fee is deducted from your total when you hire.</p>
                 <button
@@ -357,16 +405,16 @@ const Cart = () => {
             <button
               className="sd-cta"
               onClick={handleHire}
-              disabled={paymentDisabled || (!commitmentAccess?.hasAccess && !commitmentAccess?.commitmentNotRequired)}
+              disabled={paymentDisabled || !canProceedToPayment}
             >
               <span>
                 {paymentDisabled
                   ? 'Payment unavailable'
-                  : (!commitmentAccess?.hasAccess && !commitmentAccess?.commitmentNotRequired)
+                  : isCommitmentRequired
                     ? 'Pay commitment fee first'
                     : 'Proceed to Payment'}
               </span>
-              {!paymentDisabled && (commitmentAccess?.hasAccess || commitmentAccess?.commitmentNotRequired) && (
+              {!paymentDisabled && canProceedToPayment && (
                 <span className="sd-cta__arrow">&rarr;</span>
               )}
             </button>

@@ -35,16 +35,16 @@ const Plans = () => {
 
   const platformFees = [
     {
-      title: 'Platform Fee for New Clients',
+      title: 'Client Service Charge',
       description: 'Orders over ₦100,000',
       fee: '10%',
-      details: 'One-time fee for order processing and quality assurance'
+      details: 'Checkout charge paid by the client for order processing and quality assurance'
     },
     {
-      title: 'Caregiver Matching Fee',
-      description: 'All service bookings',
-      fee: '20%',
-      details: 'Fee for caregiver screening, matching, and ongoing support'
+      title: 'Caregiver/Platform Commission Split',
+      description: 'Applied to cleared caregiver earnings',
+      fee: '60% / 40%',
+      details: 'Caregiver receives 60% and platform commission is 40%; this is separate from client checkout service charge'
     }
   ];
 
@@ -52,7 +52,7 @@ const Plans = () => {
     <div className="our-plans">
       <Helmet>
         <title>Service Pricing - CarePro</title>
-        <meta name="description" content="Explore CarePro's service pricing across care categories. Affordable rates starting from ₦10,000/day for home care, child care, elderly care and more." />
+                <meta name="description" content="Explore CarePro's service pricing across care categories. Affordable rates starting from ₦10,000/visit for home care, child care, elderly care and more." />
         <meta name="keywords" content="care pricing, service rates, healthcare services, caregiver services, home care, eldercare, child care pricing" />
       </Helmet>
 
@@ -106,7 +106,7 @@ const Plans = () => {
                         From <strong>${cat.minPriceUSD}</strong>
                       </>
                     )}
-                    <span className="pricing-category-card__per-day"> / day</span>
+                    <span className="pricing-category-card__per-day"> / visit</span>
                   </div>
                 </div>
                 <div className="pricing-category-card__check">
@@ -133,7 +133,7 @@ const Plans = () => {
                     {currency === "NGN"
                       ? `₦${selectedCategory.minPriceNGN.toLocaleString()}`
                       : `$${selectedCategory.minPriceUSD}`}
-                    /day
+                      /visit
                   </strong>
                 </p>
                 <span className="pricing-modal__detail-note">
@@ -156,7 +156,7 @@ const Plans = () => {
                 <circle cx="8" cy="8" r="7" stroke="#6b7280" strokeWidth="1.5" />
                 <path d="M8 5v3M8 10.5h.01" stroke="#6b7280" strokeWidth="1.5" strokeLinecap="round" />
               </svg>
-              All prices shown are minimum starting rates per day. Actual pricing depends on the caregiver&apos;s experience, qualifications, and service scope.
+              All prices shown are minimum starting rates per visit. Actual pricing depends on the caregiver&apos;s experience, qualifications, and service scope.
             </p>
           </div>
         </div>
@@ -166,7 +166,7 @@ const Plans = () => {
         <div className="container">
           <div className="section-header">
             <h2>Platform Fees</h2>
-            <p>Transparent pricing with no hidden costs. Our fees support quality assurance and ongoing service excellence.</p>
+            <p>Transparent pricing with no hidden costs. Client checkout charges and caregiver-platform commission are separate concepts.</p>
           </div>
 
           <div className="fees-grid">

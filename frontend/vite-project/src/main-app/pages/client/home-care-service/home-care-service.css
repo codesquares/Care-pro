@@ -571,6 +571,17 @@ details.hcs-more-options[open] .hcs-more-options__toggle {
   margin: 4px 0 0;
 }
 
+.hcs-negotiate-feedback {
+  font-size: 12px;
+  color: #b45309;
+  background: #fffbeb;
+  border: 1px solid #fde68a;
+  border-radius: 8px;
+  padding: 8px 10px;
+  text-align: center;
+  margin: 0;
+}
+
 .hcs-forfeit-btn {
   display: flex;
   align-items: center;

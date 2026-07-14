@@ -3,6 +3,7 @@ import { connectionLogger } from '../utils/chatLogger';
 import connectionManager from './connectionManager';
 import signalRConnectionHelper from '../utils/signalRConnectionHelper';
 import messageReliabilityHelper from '../utils/messageReliabilityHelper';
+import { parseApiError, UI_ERROR_CODES } from '../utils/uiErrorMapper';
 
 // Constants
 import config from '../config';
@@ -696,7 +697,6 @@ class SignalRChatService {
       
       // Fallback to REST API
       const axios = (await import('axios')).default;
-      const timestamp = new Date().toISOString();
       
       // console.log('🚀 SIGNALR SERVICE: Using REST API fallback for message sending');
       
@@ -740,19 +740,10 @@ class SignalRChatService {
         //   Timestamp: timestamp
         // });
         
-        // Create payload with MongoDB-compatible IDs
+        // Canonical chat contract: receiverId + message (sender comes from auth token server-side)
         const payload = {
-          // PascalCase (C# standard)
-          SenderId: senderIdStr,
-          ReceiverId: receiverIdStr,
-          Message: message,
-          Timestamp: timestamp,
-          
-          // camelCase (JavaScript standard)
-          senderId: senderIdStr,
           receiverId: receiverIdStr,
-          message: message,
-          timestamp: timestamp
+          message,
         };
         
         const response = await axios.post(`${API_BASE_URL}/Chat/send`, payload, {
@@ -780,89 +771,22 @@ class SignalRChatService {
         }
         return restResult;
       } catch (error) {
-        // Check for commitment-fee gate error before retrying
-        const firstErrMsg = error.response?.data?.message || error.response?.data?.error || error.message || '';
-        if (firstErrMsg.toLowerCase().includes('booking commitment fee')) {
-          const commitmentError = new Error(firstErrMsg);
+        const parsedError = parseApiError(error, 'Failed to send message');
+
+        if (parsedError.uiErrorCode === UI_ERROR_CODES.COMMITMENT_REQUIRED_FOR_CHAT) {
+          const commitmentError = new Error(parsedError.message);
           commitmentError.isCommitmentRequired = true;
           throw commitmentError;
         }
-        if (firstErrMsg.toLowerCase().includes('contact information') || firstErrMsg.toLowerCase().includes('sharing personal contact')) {
-          const blockedError = new Error(firstErrMsg);
+
+        if (parsedError.uiErrorCode === UI_ERROR_CODES.CHAT_CONTACT_POLICY_BLOCK) {
+          const blockedError = new Error(parsedError.message);
           blockedError.isComplianceBlocked = true;
           throw blockedError;
         }
-        // If that fails, let's try one more time with query parameters instead
-        console.error('🚨 SIGNALR SERVICE: First REST API attempt failed:', error);
-        try {
-          // console.log('🚀 SIGNALR SERVICE: Attempting to send message via query parameters');
-          
-          // Ensure IDs are valid before attempting to send
-          if (!senderId || !receiverId) {
-            throw new Error('SenderId and ReceiverId must be provided - cannot send message with missing IDs');
-          }
-          
-          // Use IDs directly without validation
-          const validSenderId = senderId ? String(senderId).trim() : senderId;
-          const validReceiverId = receiverId ? String(receiverId).trim() : receiverId;
-          
-          // Include both camelCase and PascalCase in one payload
-          const messageBody = {
-            // Include both casing standards
-            Message: message,
-            message: message,
-            // Add other required fields in both formats with validated IDs
-            SenderId: validSenderId,
-            senderId: validSenderId,
-            ReceiverId: validReceiverId,
-            receiverId: validReceiverId,
-            Timestamp: timestamp,
-            timestamp: timestamp
-          };
-          
-          const response = await axios.post(
-            `${API_BASE_URL}/Chat/send?senderId=${encodeURIComponent(validSenderId)}&receiverId=${encodeURIComponent(validReceiverId)}`,
-            messageBody,
-            {
-              headers: {
-                'Content-Type': 'application/json',
-                'Authorization': `Bearer ${localStorage.getItem('authToken') || 'NO_TOKEN'}`
-              }
-            }
-          );
-          
-          const retryResult = { messageId: response.data.messageId || response.data.id || `fallback-${Date.now()}` };
-          if (response.data.wasRedacted) {
-            retryResult.wasRedacted = true;
-            retryResult.deliveredMessage = response.data.deliveredMessage;
-            retryResult.redactionWarning = response.data.redactionWarning;
-          }
-          return retryResult;
-        } catch (finalError) {
-          console.error('🚨 SIGNALR SERVICE: All message sending attempts failed:', finalError);
-          // Check for commitment-fee gate error in REST responses
-          const restErrMsg = finalError.response?.data?.message || finalError.response?.data?.error || finalError.message || '';
-          if (restErrMsg.toLowerCase().includes('booking commitment fee')) {
-            const commitmentError = new Error(restErrMsg);
-            commitmentError.isCommitmentRequired = true;
-            throw commitmentError;
-          }
-          // Check for contact-info-blocked error in REST responses
-          if (restErrMsg.toLowerCase().includes('contact information') || restErrMsg.toLowerCase().includes('sharing personal contact')) {
-            const blockedError = new Error(restErrMsg);
-            blockedError.isComplianceBlocked = true;
-            throw blockedError;
-          }
-          // Log the specific error details for better debugging
-          if (finalError.response) {
-            console.error('🚨 SIGNALR SERVICE: Server response:', {
-              status: finalError.response.status,
-              data: finalError.response.data,
-              headers: finalError.response.headers
-            });
-          }
-          throw finalError;
-        }
+
+        console.error('🚨 SIGNALR SERVICE: REST API message send failed:', error);
+        throw error;
       }
     } catch (error) {
       // Preserve commitment-gate errors — propagate them directly
@@ -907,6 +831,8 @@ class SignalRChatService {
    */
   async getMessageHistory(user1Id, user2Id, skip = 0, take = 50) {
     try {
+      const axios = (await import('axios')).default;
+
       // Validate inputs
       if (!user1Id || !user2Id) {
         console.warn('Missing user IDs for message history:', { user1Id, user2Id });
@@ -935,7 +861,6 @@ class SignalRChatService {
       // Always try to get history through REST API first, regardless of connection state
       // This ensures we can get message history even if SignalR connection isn't established
       try {
-        const axios = (await import('axios')).default;
         // console.log('🔍 SIGNALR SERVICE: Fetching message history via REST API for:', { user1Id, user2Id });
         
         // Use the correct history endpoint that exists

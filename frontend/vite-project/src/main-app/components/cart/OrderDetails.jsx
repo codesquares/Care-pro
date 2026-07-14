@@ -12,8 +12,6 @@ const getServiceTypeDisplayName = (serviceType, frequencyPerWeek) => {
   switch (serviceType) {
     case 'one-time':
       return 'One-Time Service';
-    case 'weekly':
-      return `Weekly (${frequencyPerWeek}x per week)`;
     case 'monthly':
       return `Monthly (${frequencyPerWeek}x per week × 4 weeks)`;
     default:
@@ -33,9 +31,6 @@ const OrderDetails = ({ service, selectedFrequency, frequencyPerWeek = 1, onPaym
     switch (selectedFrequency) {
       case 'one-time':
         orderFee = basePrice;
-        break;
-      case 'weekly':
-        orderFee = basePrice * frequencyPerWeek;
         break;
       case 'monthly':
         orderFee = basePrice * frequencyPerWeek * 4;

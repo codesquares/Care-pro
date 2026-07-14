@@ -35,7 +35,7 @@ const PublicBanner = () => {
       <div className="public-cta-banner">
         <div className="cta-content">
           <h3>Ready to get started?</h3>
-          <p>Join thousands of families finding quality care</p>
+          <p>Over 300+ care professionals are waiting for you.</p>
         </div>
         <div className="cta-actions">
           <button 

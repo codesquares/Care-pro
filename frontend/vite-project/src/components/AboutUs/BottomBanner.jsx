@@ -11,7 +11,7 @@ const BottomBanner = () => {
         <div className='about-cta-banner' style={{ backgroundImage: `url(${ctabannerImg})`, backgroundSize: 'cover', backgroundPosition: 'center' }}>
           <div className='cta-content'>
             <h2>Looking for the perfect care professional or are you a care professional looking for work?</h2>
-            <p>Join thousands of families who trust CarePro for quality care.</p>
+            <p>Over 300+ care professionals are waiting for you.</p>
             <div className='cta-buttons'>
               <button className='btn-primary' onClick={() => navigate('/book-caregiver')}>
                 Hire a Caregiver

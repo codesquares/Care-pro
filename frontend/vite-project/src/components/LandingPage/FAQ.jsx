@@ -13,7 +13,7 @@ const FAQ = ({ questions: customQuestions }) => {
     {
       question: 'Are there any fees to join the platform?',
       answer:
-        'Signing up on CarePro is free for both clients and care professionals. For clients, a 10% platform fee applies on orders over ₦100,000, and a 20% caregiver matching fee is applied to all service bookings. These fees cover caregiver screening, quality assurance, and ongoing support. All services start from a minimum of ₦10,000 per day.',
+        'Signing up on CarePro is free for both clients and care professionals. For clients, a 10% service charge may apply at checkout. Separately, caregiver payouts use a 60% caregiver / 40% platform commission split on cleared payments. These are distinct charges: the client service charge is not the same as the caregiver-platform commission split. All services start from a minimum of ₦10,000 per day.',
     },
     {
       question: 'How can I reach more patients through this platform?',

@@ -32,11 +32,18 @@ import DojahDataViewer from '../../components/admin/DojahDataViewer';
 import DojahAdminDashboard from '../../components/admin/DojahAdminDashboard';
 import WebhookDataAdmin from '../../components/admin/WebhookDataAdmin';
 import NotFoundPage from '../../../pages/NotFoundPage';
+import { hasPolicy } from '../../utils/adminPermissions';
+import WithdrawalTokenLookup from './withdrawal-management/WithdrawalTokenLookup';
+import ReferralsManagement from './referrals-management/ReferralsManagement';
 import './admin-dashboard/admin-sidebar.css';
 
 function AdminRoutes() {
     const navigate = useNavigate();
     const [sidebarOpen, setSidebarOpen] = useState(false);
+    const userDetails = JSON.parse(localStorage.getItem('userDetails') || '{}');
+    const role = userDetails?.role || '';
+    const department = userDetails?.department || '';
+    const canUseFinanceTools = hasPolicy('finance', role, department);
     
     useEffect(() => {
         // Check if user has admin role
@@ -71,7 +78,30 @@ function AdminRoutes() {
                 <Routes>
                     <Route path='/dashboard' element={<AdminDashboard />} />
                     <Route path='/question-bank' element={<QuestionBankManager />} />
-                    <Route path='/withdrawals' element={<WithdrawalManagement />} />
+                    <Route
+                        path='/withdrawals'
+                        element={
+                            canUseFinanceTools
+                                ? <WithdrawalManagement />
+                                : <NotFoundPage />
+                        }
+                    />
+                    <Route
+                        path='/withdrawals/token-lookup'
+                        element={
+                            canUseFinanceTools
+                                ? <WithdrawalTokenLookup />
+                                : <NotFoundPage />
+                        }
+                    />
+                    <Route
+                        path='/referrals'
+                        element={
+                            canUseFinanceTools
+                                ? <ReferralsManagement />
+                                : <NotFoundPage />
+                        }
+                    />
                     <Route path='/users' element={<UsersManagement />} />
                     <Route path='/caregivers' element={<CaregiverManagement />} />
                     <Route path='/clients' element={<ClientManagement />} />

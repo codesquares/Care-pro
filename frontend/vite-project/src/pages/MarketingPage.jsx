@@ -242,7 +242,7 @@ const MarketingPage = () => {
                   <p>{service.description}</p>
                   <div className="service-price">
                     Starting at {"\u20A6"}
-                    {service.basePrice.toLocaleString()}
+                    {service.basePrice.toLocaleString()} /visit
                   </div>
                 </div>
               </div>
@@ -461,7 +461,7 @@ const MarketingPage = () => {
           <div className="mk-final-cta__card">
             <h2>Looking for the perfect care professional?</h2>
             <p>
-              Join thousands of families who trust CarePro for quality care.
+              Over 300+ care professionals are waiting for you.
             </p>
             <button className="mk-final-cta__btn" onClick={handleHireCaregiver}>
               Hire a Caregiver

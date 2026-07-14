@@ -91,10 +91,19 @@ const ServiceCard = ({
 
   const hasRealProfileImage = isRealProfileImageUrl(caregiverProfileImage);
   const displayLocation = caregiverLocation || "Lagos, Nigeria";
-  const formattedRating = gigRating > 0 ? gigRating.toFixed(1) : "0.0";
   const displayReviewCount = gigReviewCount;
-  const imgSrc = hasRealProfileImage ? caregiverProfileImage : (gigImage || image1 || null);
+  const roundedDisplayRating = displayReviewCount > 0 ? Math.round(gigRating) : 0;
+  const imgSrc = hasRealProfileImage ? caregiverProfileImage : null;
   const displayPrice = price ? `₦${price.toLocaleString()}` : "Contact for pricing";
+  const displayPriceWithUnit = price ? `${displayPrice} /visit` : displayPrice;
+
+  const renderStars = (filledCount) => (
+    Array.from({ length: 5 }, (_, i) => (
+      <span key={i} className={i < filledCount ? 'rating-star-filled' : 'rating-star-empty'}>
+        ★
+      </span>
+    ))
+  );
 
   const handleCardClick = (e) => {
     if (e.target.closest('.hire-btn')) {
@@ -115,7 +124,13 @@ const ServiceCard = ({
         {imgSrc ? (
           <img src={imgSrc} alt={title} className="card-image" />
         ) : (
-          <div className="card-image card-image--placeholder">🩺</div>
+          <div
+            className="card-image card-image--initials"
+            style={{ backgroundColor: avatarBackgroundColor }}
+            aria-label={displayUserName}
+          >
+            {initials}
+          </div>
         )}
 
         {isPremium && (
@@ -162,7 +177,7 @@ const ServiceCard = ({
               </div>
 
               {displayReviewCount > 0 && (
-                <div 
+                <div
                   className="rating-section rating-clickable"
                   onClick={handleRatingClick}
                   role="button"
@@ -170,10 +185,7 @@ const ServiceCard = ({
                   onKeyDown={(e) => e.key === 'Enter' && handleRatingClick(e)}
                   title="Click to see reviews"
                 >
-                  <svg width="18" height="18" viewBox="0 0 24 24" fill="#ffc107">
-                    <path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/>
-                  </svg>
-                  <span className="rating-number">{formattedRating}</span>
+                  <span className="rating-stars">{renderStars(roundedDisplayRating)}</span>
                 </div>
               )}
             </div>
@@ -194,7 +206,7 @@ const ServiceCard = ({
         <div className="card-footer">
           <div className="pricing-info">
             <span className="price-label">Starting at</span>
-            <span className="price-amount">{displayPrice}</span>
+            <span className="price-amount">{displayPriceWithUnit}</span>
           </div>
           <button className="hire-btn" onClick={handleHireClick}>
             Hire Caregiver

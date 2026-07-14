@@ -11,6 +11,7 @@ import ClientGigService from '../../services/clientGigService';
 import ClientOrderService from '../../services/clientOrderService';
 import bookingCommitmentService from '../../services/bookingCommitmentService';
 import GigPriceNegotiationService from '../../services/gigPriceNegotiationService';
+import { getCommitmentGateEnabled } from '../../services/publicConfigService';
 
 const ChatArea = ({ messages, recipient, userId, onSendMessage, isOfflineMode = false }) => {
   const location = useLocation();
@@ -41,6 +42,7 @@ const ChatArea = ({ messages, recipient, userId, onSendMessage, isOfflineMode = 
 
   // Commitment gate modal state
   const [showCommitmentModal, setShowCommitmentModal] = useState(false);
+  const [commitmentGateEnabled, setCommitmentGateEnabled] = useState(true);
 
   // Forfeit commitment state
   const [showForfeitModal, setShowForfeitModal] = useState(false);
@@ -54,6 +56,22 @@ const ChatArea = ({ messages, recipient, userId, onSendMessage, isOfflineMode = 
   const [isResolvingBanner, setIsResolvingBanner] = useState(false);
   const serviceId = resolvedServiceId || routeServiceId || queryServiceId;
 
+  useEffect(() => {
+    let isMounted = true;
+
+    const loadCommitmentGateConfig = async () => {
+      const enabled = await getCommitmentGateEnabled();
+      if (!isMounted) return;
+      setCommitmentGateEnabled(enabled);
+    };
+
+    loadCommitmentGateConfig();
+
+    return () => {
+      isMounted = false;
+    };
+  }, []);
+
   const handleForfeitConfirm = async () => {
     if (!serviceId) return;
     setForfeitLoading(true);
@@ -63,7 +81,9 @@ const ChatArea = ({ messages, recipient, userId, onSendMessage, isOfflineMode = 
     if (result.success) {
       setShowForfeitModal(false);
       setShowGigBanner(false);
-      setCommitmentForfeited(true);
+      if (commitmentGateEnabled) {
+        setCommitmentForfeited(true);
+      }
     } else {
       setForfeitError(result.error || 'Failed to cancel. Please try again.');
     }
@@ -229,11 +249,12 @@ const ChatArea = ({ messages, recipient, userId, onSendMessage, isOfflineMode = 
   // Listen for commitment-fee-required events from MessageContext
   useEffect(() => {
     const handleCommitmentRequired = (e) => {
+      if (!commitmentGateEnabled) return;
       setShowCommitmentModal(true);
     };
     window.addEventListener('commitment-fee-required', handleCommitmentRequired);
     return () => window.removeEventListener('commitment-fee-required', handleCommitmentRequired);
-  }, []);
+  }, [commitmentGateEnabled]);
 
   // Listen for message send errors from MessageContext
   useEffect(() => {
@@ -563,6 +584,11 @@ const ChatArea = ({ messages, recipient, userId, onSendMessage, isOfflineMode = 
 
   // Helper: navigate to cart or commitment payment based on fee status
   const navigateWithCommitmentCheck = async (gigId) => {
+    if (!commitmentGateEnabled) {
+      navigate(`/app/client/cart/${gigId}`);
+      return;
+    }
+
     try {
       const result = await bookingCommitmentService.checkAccess(gigId);
       const canProceed = !!(
@@ -579,8 +605,8 @@ const ChatArea = ({ messages, recipient, userId, onSendMessage, isOfflineMode = 
         navigate(`/app/client/commitment-payment/${gigId}`);
       }
     } catch {
-      // On error, send to commitment payment to be safe
-      navigate(`/app/client/commitment-payment/${gigId}`);
+      // On error, keep fail-safe behavior aligned with current gate mode.
+      navigate(commitmentGateEnabled ? `/app/client/commitment-payment/${gigId}` : `/app/client/cart/${gigId}`);
     }
   };
 
@@ -1019,12 +1045,14 @@ const ChatArea = ({ messages, recipient, userId, onSendMessage, isOfflineMode = 
             >
               Hire Now →
             </button>
-            <button
-              className="chat-gig-banner__btn chat-gig-banner__btn--forfeit"
-              onClick={() => { setForfeitError(null); setShowForfeitModal(true); }}
-            >
-              🚫 Forfeit & Cancel Access
-            </button>
+            {commitmentGateEnabled && (
+              <button
+                className="chat-gig-banner__btn chat-gig-banner__btn--forfeit"
+                onClick={() => { setForfeitError(null); setShowForfeitModal(true); }}
+              >
+                🚫 Forfeit & Cancel Access
+              </button>
+            )}
             <button
               className="chat-gig-banner__btn chat-gig-banner__btn--dismiss"
               onClick={() => setShowGigBanner(false)}
@@ -1037,7 +1065,7 @@ const ChatArea = ({ messages, recipient, userId, onSendMessage, isOfflineMode = 
       )}
 
       {/* Lost-access screen — shown after commitment is forfeited */}
-      {isClientRoute && commitmentForfeited && (
+      {isClientRoute && commitmentGateEnabled && commitmentForfeited && (
         <div className="chat-access-lost">
           <div className="chat-access-lost__icon">🚫</div>
           <h3 className="chat-access-lost__title">Access Cancelled</h3>
@@ -1056,7 +1084,7 @@ const ChatArea = ({ messages, recipient, userId, onSendMessage, isOfflineMode = 
       )}
 
       {/* Forfeit confirmation modal */}
-      {showForfeitModal && (
+      {commitmentGateEnabled && showForfeitModal && (
         <div className="chat-forfeit-overlay" onClick={() => !forfeitLoading && setShowForfeitModal(false)}>
           <div className="chat-forfeit-modal" onClick={e => e.stopPropagation()}>
             <h3 className="chat-forfeit-modal__title">Cancel Booking Commitment?</h3>
@@ -1264,13 +1292,14 @@ const ChatArea = ({ messages, recipient, userId, onSendMessage, isOfflineMode = 
       )}
 
       {/* Commitment Gate Modal — shown when backend blocks a message */}
-      {showCommitmentModal && (
+      {commitmentGateEnabled && showCommitmentModal && (
         <div className="commitment-gate-overlay" onClick={() => setShowCommitmentModal(false)}>
           <div className="commitment-gate-modal" onClick={(e) => e.stopPropagation()}>
             <div className="commitment-gate-modal__icon">🔒</div>
             <h2 className="commitment-gate-modal__title">Chat Access Required</h2>
             <p className="commitment-gate-modal__desc">
               You need to pay a non-refundable ₦5,000 commitment fee before messaging this caregiver.
+              Once unlocked, chat is available across your relationship with this caregiver.
               If you hire them, this fee is deducted from your order total.
             </p>
             <div className="commitment-gate-modal__actions">

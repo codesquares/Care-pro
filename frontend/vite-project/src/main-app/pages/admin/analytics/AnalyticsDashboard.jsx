@@ -1,5 +1,10 @@
 import { useState, useEffect, useCallback } from 'react';
-import { getAnalyticsEvents } from '../../../services/analyticsService';
+import {
+  getAnalyticsEvents,
+  fetchGigViewsOverview,
+  fetchTopGigViews,
+  fetchGigViewsTimeseries,
+} from '../../../services/analyticsService';
 import adminService from '../../../services/adminService';
 import './AnalyticsDashboard.css';
 
@@ -27,6 +32,11 @@ const formatDateTime = (dt) => {
 const toApiDate = (yyyyMmDd, endOfDay = false) => {
   if (!yyyyMmDd) return undefined;
   return endOfDay ? `${yyyyMmDd}T23:59:59Z` : `${yyyyMmDd}T00:00:00Z`;
+};
+
+const formatDateLabel = (dt) => {
+  if (!dt) return '—';
+  return new Date(dt).toLocaleDateString([], { month: 'short', day: 'numeric' });
 };
 
 const formatEventType = (type) => {
@@ -58,6 +68,19 @@ const SNAPSHOT_BOOL_FILTERS = [
 ];
 
 const AnalyticsDashboard = () => {
+  // Gig views state
+  const [gigViewFilters, setGigViewFilters] = useState({ from: '', to: '', limit: 20 });
+  const [gigViewOverview, setGigViewOverview] = useState(null);
+  const [topGigViews, setTopGigViews] = useState([]);
+  const [selectedGigId, setSelectedGigId] = useState('');
+  const [selectedGigTitle, setSelectedGigTitle] = useState('');
+  const [timeseriesBucket, setTimeseriesBucket] = useState('day');
+  const [gigViewTimeseries, setGigViewTimeseries] = useState([]);
+  const [gigViewLoading, setGigViewLoading] = useState(false);
+  const [gigViewTimeseriesLoading, setGigViewTimeseriesLoading] = useState(false);
+  const [gigViewError, setGigViewError] = useState(null);
+  const [gigViewPermissionDenied, setGigViewPermissionDenied] = useState(false);
+
   const [events, setEvents] = useState([]);
   const [summary, setSummary] = useState(null);
   const [totalCount, setTotalCount] = useState(0);
@@ -91,6 +114,91 @@ const AnalyticsDashboard = () => {
     page: '',
   });
 
+  const loadGigViews = useCallback(async () => {
+    setGigViewLoading(true);
+    setGigViewError(null);
+    try {
+      const from = toApiDate(gigViewFilters.from, false);
+      const to = toApiDate(gigViewFilters.to, true);
+
+      const [overviewResp, topResp] = await Promise.all([
+        fetchGigViewsOverview(from, to),
+        fetchTopGigViews(gigViewFilters.limit || 20, from, to),
+      ]);
+
+      setGigViewPermissionDenied(false);
+      const overviewData = overviewResp?.data || overviewResp || null;
+      const topData = topResp?.data || topResp || [];
+      const topList = (Array.isArray(topData) ? topData : [])
+        .map((item) => ({
+          gigId: item?.gigId ?? item?.id ?? item?.gigID ?? '',
+          gigTitle: item?.gigTitle ?? item?.title ?? item?.gigName ?? 'Untitled gig',
+          views: item?.views ?? item?.totalViews ?? item?.viewCount ?? 0,
+          uniqueViewers: item?.uniqueViewers ?? item?.uniqueUsers ?? 0,
+          uniqueSessions: item?.uniqueSessions ?? item?.sessions ?? 0,
+        }))
+        .filter((item) => item.gigId !== '');
+
+      setGigViewOverview(overviewData);
+      setTopGigViews(topList);
+
+      if (topList.length > 0) {
+        const currentStillExists = topList.some((g) => g.gigId === selectedGigId);
+        if (!selectedGigId || !currentStillExists) {
+          setSelectedGigId(topList[0].gigId);
+          setSelectedGigTitle(topList[0].gigTitle || 'Untitled gig');
+        } else {
+          const selected = topList.find((g) => g.gigId === selectedGigId);
+          setSelectedGigTitle(selected?.gigTitle || 'Untitled gig');
+        }
+      } else {
+        setSelectedGigId('');
+        setSelectedGigTitle('');
+        setGigViewTimeseries([]);
+      }
+    } catch (err) {
+      const msg = err?.message || 'Failed to load gig views analytics.';
+      setGigViewError(msg);
+      setGigViewOverview(null);
+      setTopGigViews([]);
+      setSelectedGigId('');
+      setSelectedGigTitle('');
+      setGigViewTimeseries([]);
+      setGigViewPermissionDenied(msg === 'You do not have analytics access for this dashboard.');
+    } finally {
+      setGigViewLoading(false);
+    }
+  }, [gigViewFilters.from, gigViewFilters.limit, gigViewFilters.to, selectedGigId]);
+
+  const loadGigTimeseries = useCallback(async () => {
+    if (!selectedGigId || gigViewPermissionDenied) {
+      setGigViewTimeseries([]);
+      return;
+    }
+
+    setGigViewTimeseriesLoading(true);
+    setGigViewError(null);
+    try {
+      const from = toApiDate(gigViewFilters.from, false);
+      const to = toApiDate(gigViewFilters.to, true);
+      const resp = await fetchGigViewsTimeseries(selectedGigId, timeseriesBucket, from, to);
+      const data = resp?.data || resp || {};
+      const points = Array.isArray(data.points) ? data.points : (Array.isArray(data) ? data : []);
+      setGigViewTimeseries(points.map((point) => ({
+        periodStart: point?.periodStart ?? point?.startDate ?? point?.date ?? null,
+        periodEnd: point?.periodEnd ?? point?.endDate ?? point?.date ?? null,
+        views: point?.views ?? point?.count ?? point?.value ?? 0,
+      })));
+    } catch (err) {
+      const msg = err?.message || 'Failed to load gig views timeseries.';
+      setGigViewError(msg);
+      setGigViewTimeseries([]);
+      setGigViewPermissionDenied(msg === 'You do not have analytics access for this dashboard.');
+    } finally {
+      setGigViewTimeseriesLoading(false);
+    }
+  }, [gigViewFilters.from, gigViewFilters.to, gigViewPermissionDenied, selectedGigId, timeseriesBucket]);
+
   const fetchEvents = useCallback(async (overrides = {}) => {
     setIsLoading(true);
     setError(null);
@@ -117,7 +225,7 @@ const AnalyticsDashboard = () => {
       }
     } catch (err) {
       console.error('Error fetching analytics events:', err);
-      setError(err?.response?.data?.message || 'Failed to load analytics events.');
+      setError(err?.message || 'Failed to load analytics events.');
       setEvents([]);
       setSummary(null);
       setTotalCount(0);
@@ -130,6 +238,14 @@ const AnalyticsDashboard = () => {
   useEffect(() => {
     fetchEvents();
   }, [fetchEvents]);
+
+  useEffect(() => {
+    loadGigViews();
+  }, [loadGigViews]);
+
+  useEffect(() => {
+    loadGigTimeseries();
+  }, [loadGigTimeseries]);
 
   const handleFilterChange = (field, value) => {
     setFilters((prev) => ({ ...prev, [field]: value }));
@@ -210,6 +326,179 @@ const AnalyticsDashboard = () => {
           </p>
         </div>
       </header>
+
+      <section className="gigviews-section">
+        <div className="gigviews-header">
+          <div>
+            <h2 className="gigviews-title">Gig Views Analytics</h2>
+            <p className="gigviews-subtitle">Overview, top-performing gigs, and trend analysis</p>
+          </div>
+        </div>
+
+        <div className="gigviews-filters">
+          <div className="analytics-filter-group">
+            <label>From</label>
+            <input
+              type="date"
+              value={gigViewFilters.from}
+              onChange={(e) => setGigViewFilters(prev => ({ ...prev, from: e.target.value }))}
+            />
+          </div>
+          <div className="analytics-filter-group">
+            <label>To</label>
+            <input
+              type="date"
+              value={gigViewFilters.to}
+              onChange={(e) => setGigViewFilters(prev => ({ ...prev, to: e.target.value }))}
+            />
+          </div>
+          <div className="analytics-filter-group">
+            <label>Top limit</label>
+            <select
+              value={gigViewFilters.limit}
+              onChange={(e) => setGigViewFilters(prev => ({ ...prev, limit: Number(e.target.value) }))}
+            >
+              <option value={10}>10</option>
+              <option value={20}>20</option>
+              <option value={50}>50</option>
+            </select>
+          </div>
+          <div className="analytics-filter-actions">
+            <button
+              className="analytics-btn analytics-btn-secondary"
+              onClick={() => setGigViewFilters({ from: '', to: '', limit: 20 })}
+              disabled={gigViewLoading}
+            >
+              Reset
+            </button>
+          </div>
+        </div>
+
+        {gigViewPermissionDenied && (
+          <div className="analytics-error">You do not have analytics access for this dashboard.</div>
+        )}
+
+        {!gigViewPermissionDenied && (
+          <>
+            {gigViewError && <div className="analytics-error">{gigViewError}</div>}
+
+            <div className="gigviews-kpis">
+              <div className="gigviews-kpi-card">
+                <span className="gigviews-kpi-label">Total Views</span>
+                <strong className="gigviews-kpi-value">{((gigViewOverview?.totalViews ?? gigViewOverview?.views ?? 0)).toLocaleString()}</strong>
+              </div>
+              <div className="gigviews-kpi-card">
+                <span className="gigviews-kpi-label">Unique Viewers</span>
+                <strong className="gigviews-kpi-value">{((gigViewOverview?.uniqueViewers ?? gigViewOverview?.uniqueUsers ?? 0)).toLocaleString()}</strong>
+              </div>
+              <div className="gigviews-kpi-card">
+                <span className="gigviews-kpi-label">Unique Authenticated Users</span>
+                <strong className="gigviews-kpi-value">{((gigViewOverview?.uniqueAuthenticatedUsers ?? gigViewOverview?.authenticatedUsers ?? 0)).toLocaleString()}</strong>
+              </div>
+              <div className="gigviews-kpi-card">
+                <span className="gigviews-kpi-label">Unique Sessions</span>
+                <strong className="gigviews-kpi-value">{((gigViewOverview?.uniqueSessions ?? gigViewOverview?.sessions ?? 0)).toLocaleString()}</strong>
+              </div>
+            </div>
+
+            <div className="gigviews-grid">
+              <div className="gigviews-panel">
+                <div className="gigviews-panel-header">
+                  <h3>Top Gigs by Views</h3>
+                </div>
+                {gigViewLoading ? (
+                  <div className="analytics-loading">Loading gig views…</div>
+                ) : topGigViews.length === 0 ? (
+                  <div className="analytics-empty">No gig view data found for this range.</div>
+                ) : (
+                  <div className="analytics-table-wrapper">
+                    <table className="analytics-table">
+                      <thead>
+                        <tr>
+                          <th>Gig</th>
+                          <th>Views</th>
+                          <th>Unique Viewers</th>
+                          <th>Unique Sessions</th>
+                          <th>Action</th>
+                        </tr>
+                      </thead>
+                      <tbody>
+                        {topGigViews.map((gig) => (
+                          <tr key={gig.gigId} className={selectedGigId === gig.gigId ? 'gigviews-row-active' : ''}>
+                            <td>{gig.gigTitle || 'Untitled gig'}</td>
+                            <td>{(gig.views || 0).toLocaleString()}</td>
+                            <td>{(gig.uniqueViewers || 0).toLocaleString()}</td>
+                            <td>{(gig.uniqueSessions || 0).toLocaleString()}</td>
+                            <td>
+                              <button
+                                className="analytics-btn analytics-btn-secondary analytics-btn-sm"
+                                onClick={() => {
+                                  setSelectedGigId(gig.gigId);
+                                  setSelectedGigTitle(gig.gigTitle || 'Untitled gig');
+                                }}
+                              >
+                                View Trend
+                              </button>
+                            </td>
+                          </tr>
+                        ))}
+                      </tbody>
+                    </table>
+                  </div>
+                )}
+              </div>
+
+              <div className="gigviews-panel">
+                <div className="gigviews-panel-header gigviews-panel-header-space">
+                  <h3>
+                    {selectedGigId ? `Trend: ${selectedGigTitle}` : 'Trend'}
+                  </h3>
+                  <div className="gigviews-bucket-toggle">
+                    <button
+                      className={`analytics-btn analytics-btn-secondary analytics-btn-sm ${timeseriesBucket === 'day' ? 'is-active' : ''}`}
+                      onClick={() => setTimeseriesBucket('day')}
+                    >
+                      Day
+                    </button>
+                    <button
+                      className={`analytics-btn analytics-btn-secondary analytics-btn-sm ${timeseriesBucket === 'week' ? 'is-active' : ''}`}
+                      onClick={() => setTimeseriesBucket('week')}
+                    >
+                      Week
+                    </button>
+                  </div>
+                </div>
+
+                {selectedGigId === '' ? (
+                  <div className="analytics-empty">Choose a gig from the table to view timeseries trend.</div>
+                ) : gigViewTimeseriesLoading ? (
+                  <div className="analytics-loading">Loading trend…</div>
+                ) : gigViewTimeseries.length === 0 ? (
+                  <div className="analytics-empty">No trend points available for this gig and date range.</div>
+                ) : (
+                  <div className="gigviews-timeseries-list">
+                    {gigViewTimeseries.map((point, idx) => {
+                      const maxValue = Math.max(...gigViewTimeseries.map((p) => p.views || 0), 1);
+                      const widthPct = Math.max(6, Math.round(((point.views || 0) / maxValue) * 100));
+                      return (
+                        <div key={`${point.periodStart || idx}_${point.periodEnd || idx}`} className="gigviews-timeseries-row">
+                          <div className="gigviews-timeseries-label">
+                            {formatDateLabel(point.periodStart)} - {formatDateLabel(point.periodEnd)}
+                          </div>
+                          <div className="gigviews-timeseries-bar-track">
+                            <div className="gigviews-timeseries-bar-fill" style={{ width: `${widthPct}%` }} />
+                          </div>
+                          <div className="gigviews-timeseries-value">{(point.views || 0).toLocaleString()}</div>
+                        </div>
+                      );
+                    })}
+                  </div>
+                )}
+              </div>
+            </div>
+          </>
+        )}
+      </section>
 
       {/* Summary cards */}
       <section className="analytics-summary-grid">
