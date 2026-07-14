@@ -30,6 +30,7 @@ const ALL_NAV_GROUPS = [
       { to: '/app/admin/gigs',                icon: 'fa-briefcase',      label: 'Gigs',                policy: 'operations' },
       { to: '/app/admin/withdrawals',         icon: 'fa-wallet',         label: 'Withdrawals',         policy: 'finance' },
       { to: '/app/admin/refunds',             icon: 'fa-money-bill-wave',label: 'Refunds',             policy: 'financeOrOperations' },
+        { to: '/app/admin/referrals',           icon: 'fa-user-plus',      label: 'Referrals',           policy: 'finance' },
       { to: '/app/admin/payment-resolution',  icon: 'fa-wrench',         label: 'Payment Resolution',  policy: 'financeOrOperations' },
       { to: '/app/admin/disputes',            icon: 'fa-gavel',          label: 'Disputes',            policy: 'operations' },
       { to: '/app/admin/booking-commitments', icon: 'fa-handshake',      label: 'Booking Commitments', policy: 'financeOrOperations' },

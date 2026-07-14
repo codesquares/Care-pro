@@ -2,6 +2,7 @@ import { createContext, useContext, useState, useEffect, useCallback, useMemo, u
 import chatService from '../services/signalRChatService';
 import api from '../services/api';
 import config from '../config'; // Centralized API configuration
+import { parseApiError } from '../utils/uiErrorMapper';
 
 
 // Constants - Ensure the BASE_URL has protocol to prevent relative URL issues
@@ -1380,27 +1381,8 @@ export const MessageProvider = ({ children }) => {
       }
 
       // Extract user-friendly error message
-      let userFriendlyError = 'Message sending failed';
-      
-      if (error.response) {
-        console.error('Error response data:', error.response.data);
-        console.error('Error response status:', error.response.status);
-        console.error('Error status text:', error.response.statusText);
-        
-        // Extract error message from response (backend uses { "error": "..." } format)
-        if (error.response.data?.error) {
-          userFriendlyError = error.response.data.error;
-        } else if (error.response.data?.message) {
-          userFriendlyError = error.response.data.message;
-        } else if (error.response.data?.errors) {
-          const errorFields = Object.keys(error.response.data.errors);
-          if (errorFields.length > 0) {
-            userFriendlyError = `Validation failed: ${errorFields.join(', ')}`;
-          }
-        }
-      } else if (error.message) {
-        userFriendlyError = error.message;
-      }
+      const parsedError = parseApiError(error, 'Message sending failed');
+      const userFriendlyError = parsedError.message;
       
       // Update message status to failed with detailed error information
       dispatchMessageState({

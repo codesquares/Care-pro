@@ -27,7 +27,7 @@ const WithdrawalManagement = () => {
       setFilteredWithdrawals(data);
     } catch (err) {
       console.error('Error fetching withdrawal requests:', err);
-      setError('Failed to load withdrawal requests. Please try again later.');
+      setError(err?.message || 'Failed to load withdrawal requests. Please try again later.');
     } finally {
       setIsLoading(false);
     }

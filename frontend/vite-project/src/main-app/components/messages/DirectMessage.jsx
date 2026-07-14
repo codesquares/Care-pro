@@ -10,6 +10,7 @@ import config from '../../config'; // Import centralized config for API URLs
 import ClientGigService from '../../services/clientGigService';
 import bookingCommitmentService from '../../services/bookingCommitmentService';
 import { createNotification } from '../../services/notificationService';
+import { getCommitmentGateEnabled } from '../../services/publicConfigService';
 
 // FIXED: Use centralized config instead of hardcoded Azure staging API URL
 const API_BASE_URL = config.BASE_URL.replace(/\/api$/, ''); // Remove /api suffix for consistency (only trailing)
@@ -31,6 +32,7 @@ const DirectMessage = () => {
   const [caregiverGigs, setCaregiverGigs] = useState([]);
   const [isLoadingGigs, setIsLoadingGigs] = useState(false);
   const serviceId = location.state?.serviceId;
+  const [commitmentGateEnabled, setCommitmentGateEnabled] = useState(true);
 
   // Report caregiver state
   const [showReportModal, setShowReportModal] = useState(false);
@@ -42,6 +44,22 @@ const DirectMessage = () => {
   // Determine if current user is a caregiver (viewing a client) or client (viewing a caregiver)
   const isCurrentUserCaregiver = userRole === 'Caregiver';
   const isCurrentUserClient = userRole === 'Client';
+
+  useEffect(() => {
+    let isMounted = true;
+
+    const loadCommitmentGateConfig = async () => {
+      const enabled = await getCommitmentGateEnabled();
+      if (!isMounted) return;
+      setCommitmentGateEnabled(enabled);
+    };
+
+    loadCommitmentGateConfig();
+
+    return () => {
+      isMounted = false;
+    };
+  }, []);
 
   // Fetch caregiver gigs for Hire Now button
   useEffect(() => {
@@ -68,6 +86,11 @@ const DirectMessage = () => {
 
   // Navigate to cart or commitment payment
   const navigateWithCommitmentCheck = async (gigId) => {
+    if (!commitmentGateEnabled) {
+      navigate(`/app/client/cart/${gigId}`);
+      return;
+    }
+
     try {
       const result = await bookingCommitmentService.checkAccess(gigId);
       const canProceed = !!(
@@ -82,7 +105,7 @@ const DirectMessage = () => {
         navigate(`/app/client/commitment-payment/${gigId}`);
       }
     } catch {
-      navigate(`/app/client/commitment-payment/${gigId}`);
+      navigate(commitmentGateEnabled ? `/app/client/commitment-payment/${gigId}` : `/app/client/cart/${gigId}`);
     }
   };
 

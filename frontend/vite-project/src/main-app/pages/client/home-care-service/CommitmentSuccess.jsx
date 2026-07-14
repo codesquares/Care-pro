@@ -74,14 +74,8 @@ const CommitmentSuccess = () => {
       const token = localStorage.getItem('authToken');
       if (!token || !user?.id) return;
       await api.post('/Chat/send', {
-        SenderId: user.id,
-        ReceiverId: caregiverId,
-        Message: greeting,
-        Timestamp: new Date().toISOString(),
-        senderId: user.id,
-        receiverId: caregiverId,
-        message: greeting,
-        timestamp: new Date().toISOString(),
+          receiverId: caregiverId,
+          message: greeting,
       });
     } catch (err) {
       console.error('Failed to auto-send thread-opener message:', err);

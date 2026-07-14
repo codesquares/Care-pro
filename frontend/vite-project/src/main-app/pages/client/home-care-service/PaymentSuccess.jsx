@@ -241,6 +241,12 @@ const PaymentSuccess = () => {
             <span>−₦{breakdown.commitmentFeeDeducted?.toLocaleString()}</span>
           </div>
         )}
+        {breakdown.referralDiscountApplied > 0 && (
+          <div className="breakdown-row breakdown-row--credit">
+            <span>Referral Discount Applied:</span>
+            <span>−₦{breakdown.referralDiscountApplied?.toLocaleString()}</span>
+          </div>
+        )}
         <div className="breakdown-row">
           <span>Service Charge (10%):</span>
           <span>₦{breakdown.serviceCharge?.toLocaleString()}</span>

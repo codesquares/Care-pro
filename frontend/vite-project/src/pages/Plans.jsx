@@ -35,16 +35,16 @@ const Plans = () => {
 
   const platformFees = [
     {
-      title: 'Platform Fee for New Clients',
+      title: 'Client Service Charge',
       description: 'Orders over ₦100,000',
       fee: '10%',
-      details: 'One-time fee for order processing and quality assurance'
+      details: 'Checkout charge paid by the client for order processing and quality assurance'
     },
     {
-      title: 'Caregiver Matching Fee',
-      description: 'All service bookings',
-      fee: '20%',
-      details: 'Fee for caregiver screening, matching, and ongoing support'
+      title: 'Caregiver/Platform Commission Split',
+      description: 'Applied to cleared caregiver earnings',
+      fee: '60% / 40%',
+      details: 'Caregiver receives 60% and platform commission is 40%; this is separate from client checkout service charge'
     }
   ];
 
@@ -166,7 +166,7 @@ const Plans = () => {
         <div className="container">
           <div className="section-header">
             <h2>Platform Fees</h2>
-            <p>Transparent pricing with no hidden costs. Our fees support quality assurance and ongoing service excellence.</p>
+            <p>Transparent pricing with no hidden costs. Client checkout charges and caregiver-platform commission are separate concepts.</p>
           </div>
 
           <div className="fees-grid">
