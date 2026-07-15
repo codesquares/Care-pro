@@ -516,7 +516,7 @@ You won't be able to log in until your email is verified.`);
               <div>
                 <strong>Adult & Elderly Care</strong>
                 <p>Dignified, independence-focused assistance to keep seniors active, comfortable, and cared for.</p>
-                <span className="category-price">Starting at ₦10,000</span>
+                <span className="category-price">Starting at ₦10,000 /visit</span>
               </div>
             </div>
           </div>

@@ -3,6 +3,25 @@ import * as authService from './auth';
 import { preserveUserJourney } from './sessionRestoration';
 import config from '../config';
 
+const ANON_SESSION_ID_KEY = 'carepro_anon_session_id';
+
+const getOrCreateAnonSessionId = () => {
+    if (typeof window === 'undefined') return null;
+    try {
+        const existing = localStorage.getItem(ANON_SESSION_ID_KEY);
+        if (existing) return existing;
+
+        const generated =
+            (typeof crypto !== 'undefined' && crypto.randomUUID)
+                ? crypto.randomUUID()
+                : `sess_${Date.now()}_${Math.random().toString(36).slice(2, 12)}`;
+        localStorage.setItem(ANON_SESSION_ID_KEY, generated);
+        return generated;
+    } catch {
+        return null;
+    }
+};
+
 // --- Refresh token mutex ---
 // Ensures only one refresh request runs at a time; all concurrent 401s wait on the same promise.
 let isRefreshing = false;
@@ -57,6 +76,7 @@ api.interceptors.request.use(
                 '/Authentications/ForgotPassword',
                 '/Authentications/ResetPassword',
                 '/Authentications/VerifyEmail',
+                '/public-config',
                 '/Gigs',
                 '/Analytics/Event',
             ];
@@ -71,6 +91,12 @@ api.interceptors.request.use(
                 const controller = new AbortController();
                 controller.abort();
                 config.signal = controller.signal;
+            } else {
+                // Anonymous requests use a stable browser session id for backend dedupe.
+                const anonSessionId = getOrCreateAnonSessionId();
+                if (anonSessionId) {
+                    config.headers['X-Session-Id'] = anonSessionId;
+                }
             }
         } catch (error) {
             console.warn('Failed to attach token:', error);

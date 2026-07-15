@@ -110,7 +110,7 @@ const SuggestedServices = () => {
                 <h3>{category.name}</h3>
                 <p>{category.description}</p>
                 <div className="category-price">
-                  Starting at ₦{category.basePrice.toLocaleString()}
+                  Starting at ₦{category.basePrice.toLocaleString()} /visit
                 </div>
               </div>
             </div>

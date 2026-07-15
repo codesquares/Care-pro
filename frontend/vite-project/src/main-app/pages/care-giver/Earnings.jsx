@@ -107,7 +107,7 @@ const Earnings = () => {
       alert("Withdrawal request submitted successfully!");
     } catch (err) {
       console.error("Error creating withdrawal request:", err);
-      alert(err.response?.data?.errorMessage || "Failed to submit withdrawal request. Please try again.");
+      alert(err?.message || "Failed to submit withdrawal request. Please try again.");
     }
   };
   if (isLoading) {

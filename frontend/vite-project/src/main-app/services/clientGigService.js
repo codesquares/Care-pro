@@ -7,6 +7,35 @@ import config from '../config';
 
 const BASE_API_URL = config.BASE_URL;
 
+const sanitizePublicLocation = (rawLocation) => {
+  if (!rawLocation || typeof rawLocation !== 'string') return '';
+
+  const cleanSegment = (value) =>
+    value
+      .replace(/\b\d{5,}\b/g, '')
+      .replace(/\s+/g, ' ')
+      .trim();
+
+  const parts = rawLocation
+    .split(',')
+    .map((part) => cleanSegment(part))
+    .filter(Boolean);
+
+  if (parts.length >= 2) {
+    const streetLike = /\b(st(reet)?|rd|road|ave(nue)?|close|crescent|drive|dr|way|lane|ln|boulevard|blvd|plot|house|hse|no\.?)\b/i;
+    const city = parts[parts.length - 1];
+    let area = parts[parts.length - 2];
+
+    if (streetLike.test(area) && parts.length >= 3) {
+      area = parts[parts.length - 3];
+    }
+
+    return area && city ? `${area}, ${city}` : area || city;
+  }
+
+  return cleanSegment(rawLocation.replace(/\b\d{1,4}\s+/g, ''));
+};
+
 const ClientGigService = {
   /**
    * Get all available gig services
@@ -74,7 +103,7 @@ const ClientGigService = {
           gigImage:  gig.image1 || '',
           caregiverRating: caregiver.rating || 0,
           caregiverReviewCount: caregiver.reviewCount || 0,
-          caregiverLocation: caregiver.location || caregiver.address || '',
+          caregiverLocation: sanitizePublicLocation(caregiver.location || caregiver.address || ''),
           caregiverBio: caregiver.aboutMe || caregiver.description || '',
           caregiverExperience: caregiver.yearsOfExperience || caregiver.experience || 0,
           caregiverSpecializations: caregiver.specializations || caregiver.skills || [],
@@ -165,7 +194,7 @@ const ClientGigService = {
         gigImage: gig.image1 || '',
         caregiverRating: caregiver.rating || 0,
         caregiverReviewCount: caregiver.reviewCount || 0,
-        caregiverLocation: caregiver.location || caregiver.address || '',
+        caregiverLocation: sanitizePublicLocation(caregiver.location || caregiver.address || ''),
         caregiverBio: caregiver.aboutMe || caregiver.description || '',
         caregiverExperience: caregiver.yearsOfExperience || caregiver.experience || 0,
         caregiverSpecializations: caregiver.specializations || caregiver.skills || [],

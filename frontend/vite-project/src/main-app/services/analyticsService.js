@@ -1,5 +1,17 @@
 import api from './api';
 
+const ANALYTICS_PERMISSION_MESSAGE = 'You do not have analytics access for this dashboard.';
+
+const getAnalyticsErrorMessage = (error, fallback) => {
+  if (error?.response?.status === 403) return ANALYTICS_PERMISSION_MESSAGE;
+  const data = error?.response?.data;
+  if (typeof data === 'string' && data.trim()) return data;
+  if (data?.message) return data.message;
+  if (data?.errorMessage) return data.errorMessage;
+  if (data?.title) return data.title;
+  return fallback;
+};
+
 /**
  * Analytics service for tracking marketing/ad events.
  *
@@ -85,8 +97,63 @@ export const getAnalyticsEvents = async (filters = {}) => {
   params.pageNumber = filters.pageNumber || 1;
   params.pageSize = filters.pageSize || 50;
 
-  const response = await api.get('/Analytics/Events', { params });
-  return response.data;
+  try {
+    const response = await api.get('/Analytics/Events', { params });
+    return response.data;
+  } catch (error) {
+    throw new Error(getAnalyticsErrorMessage(error, 'Failed to load analytics events.'));
+  }
+};
+
+/**
+ * Admin gig views overview.
+ * GET /api/admin/analytics/gig-views/overview
+ */
+export const fetchGigViewsOverview = async (from, to) => {
+  const params = {};
+  if (from) params.from = from;
+  if (to) params.to = to;
+
+  try {
+    const response = await api.get('/admin/analytics/gig-views/overview', { params });
+    return response.data;
+  } catch (error) {
+    throw new Error(getAnalyticsErrorMessage(error, 'Failed to load gig views overview.'));
+  }
+};
+
+/**
+ * Admin top viewed gigs.
+ * GET /api/admin/analytics/gig-views/top
+ */
+export const fetchTopGigViews = async (limit = 20, from, to) => {
+  const params = { limit };
+  if (from) params.from = from;
+  if (to) params.to = to;
+
+  try {
+    const response = await api.get('/admin/analytics/gig-views/top', { params });
+    return response.data;
+  } catch (error) {
+    throw new Error(getAnalyticsErrorMessage(error, 'Failed to load top gig views.'));
+  }
+};
+
+/**
+ * Admin gig views timeseries.
+ * GET /api/admin/analytics/gig-views/{gigId}/timeseries
+ */
+export const fetchGigViewsTimeseries = async (gigId, bucket = 'day', from, to) => {
+  const params = { bucket };
+  if (from) params.from = from;
+  if (to) params.to = to;
+
+  try {
+    const response = await api.get(`/admin/analytics/gig-views/${gigId}/timeseries`, { params });
+    return response.data;
+  } catch (error) {
+    throw new Error(getAnalyticsErrorMessage(error, 'Failed to load gig views timeseries.'));
+  }
 };
 
 export default {
@@ -94,4 +161,7 @@ export default {
   getStoredFbclid,
   trackEvent,
   getAnalyticsEvents,
+  fetchGigViewsOverview,
+  fetchTopGigViews,
+  fetchGigViewsTimeseries,
 };

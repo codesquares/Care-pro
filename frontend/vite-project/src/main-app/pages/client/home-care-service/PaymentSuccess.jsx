@@ -6,6 +6,12 @@ import paymentReceiptService from '../../../services/paymentReceiptService';
 import { toast } from 'react-toastify';
 import './PaymentSuccess.css';
 
+const normalizePaymentStatus = (statusValue) => String(statusValue || '').trim().toLowerCase();
+const isSuccessfulPaymentStatus = (statusValue) => {
+  const normalized = normalizePaymentStatus(statusValue);
+  return normalized === 'completed' || normalized === 'successful' || normalized === 'succeeded' || normalized === 'success';
+};
+
 const PaymentSuccess = () => {
   const [searchParams] = useSearchParams();
   const navigate = useNavigate();
@@ -87,7 +93,7 @@ const PaymentSuccess = () => {
         const data = await response.json();
         console.log("Payment Status Response:", data);
 
-        if (data.success && data.status === "completed") {
+        if (data.success && isSuccessfulPaymentStatus(data.status)) {
           stopPolling();
           setPaymentData(data);
           setOrderStatus('Payment verified! Order created successfully.');
@@ -116,12 +122,12 @@ const PaymentSuccess = () => {
             }
           }
 
-        } else if (data.status === "pending") {
+        } else if (normalizePaymentStatus(data.status) === "pending") {
           // Still pending — keep polling, show the pending UI
           setPaymentData(data);
           setOrderStatus('Payment is still being processed. Please wait...');
 
-        } else if (data.status === "failed" || data.status === "amountmismatch") {
+        } else if (normalizePaymentStatus(data.status) === "failed" || normalizePaymentStatus(data.status) === "amountmismatch") {
           stopPolling();
           setPaymentData(data);
           setError(data.errorMessage || "Payment verification failed");
@@ -235,6 +241,12 @@ const PaymentSuccess = () => {
             <span>−₦{breakdown.commitmentFeeDeducted?.toLocaleString()}</span>
           </div>
         )}
+        {breakdown.referralDiscountApplied > 0 && (
+          <div className="breakdown-row breakdown-row--credit">
+            <span>Referral Discount Applied:</span>
+            <span>−₦{breakdown.referralDiscountApplied?.toLocaleString()}</span>
+          </div>
+        )}
         <div className="breakdown-row">
           <span>Service Charge (10%):</span>
           <span>₦{breakdown.serviceCharge?.toLocaleString()}</span>
@@ -261,7 +273,7 @@ const PaymentSuccess = () => {
         </div>
 
         <div className="payment-success-card">
-          {paymentData?.status === "completed" ? (
+          {isSuccessfulPaymentStatus(paymentData?.status) ? (
             <>
               {/* Success Header */}
               <div className="payment-status-icon payment-status-icon--success">
@@ -355,7 +367,7 @@ const PaymentSuccess = () => {
                 </div>
               )}
             </>
-          ) : paymentData?.status === "pending" ? (
+          ) : normalizePaymentStatus(paymentData?.status) === "pending" ? (
             <>
               {/* Pending Header */}
               <div className="payment-status-icon payment-status-icon--pending">
@@ -372,7 +384,7 @@ const PaymentSuccess = () => {
               
               <p>Please wait while we confirm your payment...</p>
             </>
-          ) : error || paymentData?.status === "failed" ? (
+          ) : error || normalizePaymentStatus(paymentData?.status) === "failed" || normalizePaymentStatus(paymentData?.status) === "amountmismatch" ? (
             <>
               {/* Failed Header */}
               <div className="payment-status-icon payment-status-icon--failed">

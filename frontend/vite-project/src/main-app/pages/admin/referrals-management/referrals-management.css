@@ -1,0 +1,233 @@
+.referrals-admin-page {
+  padding: 24px;
+}
+
+.referrals-admin-header h1 {
+  margin: 0;
+  font-size: 1.6rem;
+}
+
+.referrals-admin-header p {
+  margin: 6px 0 0;
+  color: #6b7280;
+}
+
+.referrals-admin-tabs {
+  display: flex;
+  gap: 10px;
+  margin: 20px 0;
+}
+
+.tab-btn {
+  border: 1px solid #d1d5db;
+  background: #fff;
+  color: #374151;
+  padding: 8px 14px;
+  border-radius: 8px;
+  cursor: pointer;
+  font-weight: 600;
+}
+
+.tab-btn.active {
+  background: #111827;
+  color: #fff;
+  border-color: #111827;
+}
+
+.ref-card {
+  border: 1px solid #e5e7eb;
+  border-radius: 12px;
+  background: #fff;
+  padding: 18px;
+}
+
+.ref-card h2 {
+  margin: 0 0 14px;
+  font-size: 1.1rem;
+}
+
+.ref-alert {
+  border-radius: 8px;
+  padding: 10px 12px;
+  margin-bottom: 14px;
+}
+
+.ref-alert--error {
+  background: #fef2f2;
+  border: 1px solid #fecaca;
+  color: #991b1b;
+}
+
+.ref-alert--success {
+  background: #ecfdf5;
+  border: 1px solid #a7f3d0;
+  color: #065f46;
+}
+
+.ref-grid-form {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+  gap: 12px;
+}
+
+.ref-grid-form label,
+.ref-single-form label,
+.ref-filter-row label {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  font-size: 0.9rem;
+  font-weight: 600;
+  color: #374151;
+}
+
+.ref-grid-form input,
+.ref-single-form input,
+.ref-filter-row input,
+.ref-modal textarea {
+  border: 1px solid #d1d5db;
+  border-radius: 8px;
+  padding: 8px 10px;
+  font-size: 0.9rem;
+}
+
+.ref-subtitle {
+  grid-column: 1 / -1;
+  margin-top: 4px;
+  font-size: 0.8rem;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  color: #6b7280;
+}
+
+.ref-single-form {
+  display: flex;
+  gap: 12px;
+  align-items: flex-end;
+  flex-wrap: wrap;
+}
+
+.ref-filter-row {
+  display: flex;
+  gap: 12px;
+  align-items: flex-end;
+  flex-wrap: wrap;
+  margin-bottom: 14px;
+}
+
+.ref-actions {
+  display: flex;
+  gap: 8px;
+  align-items: center;
+}
+
+.btn-primary,
+.btn-secondary {
+  border-radius: 8px;
+  padding: 8px 12px;
+  border: 1px solid transparent;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.btn-primary {
+  background: #0f766e;
+  color: #fff;
+}
+
+.btn-secondary {
+  background: #fff;
+  color: #374151;
+  border-color: #d1d5db;
+}
+
+.btn-small {
+  font-size: 0.8rem;
+  padding: 6px 8px;
+}
+
+.ref-result {
+  margin-top: 12px;
+  padding: 10px;
+  border-radius: 8px;
+  background: #f8fafc;
+  border: 1px solid #e5e7eb;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.ref-empty {
+  color: #6b7280;
+  font-size: 0.9rem;
+  padding: 8px 0;
+}
+
+.ref-table-wrap {
+  overflow-x: auto;
+}
+
+.ref-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 0.9rem;
+}
+
+.ref-table th,
+.ref-table td {
+  border-bottom: 1px solid #e5e7eb;
+  padding: 10px;
+  text-align: left;
+}
+
+.ref-table th {
+  background: #f9fafb;
+  color: #374151;
+  font-size: 0.8rem;
+  text-transform: uppercase;
+}
+
+.status-paid {
+  color: #059669;
+  font-weight: 700;
+}
+
+.ref-modal-overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(17, 24, 39, 0.45);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 16px;
+  z-index: 1000;
+}
+
+.ref-modal {
+  width: min(520px, 100%);
+  background: #fff;
+  border-radius: 12px;
+  padding: 16px;
+  border: 1px solid #e5e7eb;
+}
+
+.ref-modal h3 {
+  margin: 0 0 10px;
+}
+
+.ref-modal p {
+  margin: 0 0 12px;
+  color: #4b5563;
+}
+
+.ref-modal-note {
+  font-size: 0.8rem;
+  color: #6b7280;
+  margin: 8px 0 12px;
+}
+
+@media (max-width: 768px) {
+  .referrals-admin-page {
+    padding: 16px;
+  }
+}

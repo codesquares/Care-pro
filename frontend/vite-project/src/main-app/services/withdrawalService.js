@@ -5,6 +5,20 @@
  */
 import api from './api';
 
+const PERMISSION_ERROR_MESSAGE = 'You do not have permission to access this resource.';
+
+const getApiErrorMessage = (error, fallbackMessage) => {
+  const status = error?.response?.status;
+  if (status === 403) return PERMISSION_ERROR_MESSAGE;
+
+  const data = error?.response?.data;
+  if (typeof data === 'string' && data.trim()) return data;
+  if (data?.errorMessage) return data.errorMessage;
+  if (data?.message) return data.message;
+  if (data?.title) return data.title;
+  return fallbackMessage;
+};
+
 export const withdrawalService = {
   /**
    * Get withdrawal history for a caregiver.
@@ -17,7 +31,7 @@ export const withdrawalService = {
       return Array.isArray(response.data) ? response.data : [];
     } catch (error) {
       console.error('Error fetching withdrawal history:', error);
-      throw error;
+      throw new Error(getApiErrorMessage(error, 'Failed to fetch withdrawal history.'));
     }
   },
 
@@ -34,7 +48,7 @@ export const withdrawalService = {
       return Array.isArray(response.data) ? response.data : [];
     } catch (error) {
       console.error('Error fetching caregiver withdrawal history:', error);
-      throw error;
+      throw new Error(getApiErrorMessage(error, 'Failed to fetch caregiver withdrawal history.'));
     }
   },
 
@@ -49,6 +63,9 @@ export const withdrawalService = {
       return response.data?.hasPendingRequest ?? false;
     } catch (error) {
       console.error('Error checking pending withdrawal:', error);
+      if (error?.response?.status === 403) {
+        throw new Error(PERMISSION_ERROR_MESSAGE);
+      }
       return false;
     }
   },
@@ -76,7 +93,7 @@ export const withdrawalService = {
       return response.data;
     } catch (error) {
       console.error('Error creating withdrawal request:', error);
-      throw error;
+      throw new Error(getApiErrorMessage(error, 'Failed to submit withdrawal request. Please try again.'));
     }
   },
 
@@ -91,7 +108,7 @@ export const withdrawalService = {
       return response.data;
     } catch (error) {
       console.error('Error fetching withdrawal request:', error);
-      throw error;
+      throw new Error(getApiErrorMessage(error, 'Failed to fetch withdrawal request.'));
     }
   },
 
@@ -108,7 +125,7 @@ export const withdrawalService = {
       return response.data;
     } catch (error) {
       console.error('Error fetching earnings/withdrawal summary:', error);
-      throw error;
+      throw new Error(getApiErrorMessage(error, 'Failed to fetch earnings summary.'));
     }
   },
 };
@@ -129,7 +146,7 @@ export const adminWithdrawalService = {
       return Array.isArray(response.data) ? response.data : [];
     } catch (error) {
       console.error('Error fetching all withdrawal requests:', error);
-      throw error;
+      throw new Error(getApiErrorMessage(error, 'Failed to load withdrawal requests.'));
     }
   },
 
@@ -144,7 +161,7 @@ export const adminWithdrawalService = {
       return Array.isArray(response.data) ? response.data : [];
     } catch (error) {
       console.error('Error fetching withdrawal requests by status:', error);
-      throw error;
+      throw new Error(getApiErrorMessage(error, 'Failed to filter withdrawal requests.'));
     }
   },
 
@@ -159,7 +176,7 @@ export const adminWithdrawalService = {
       return response.data;
     } catch (error) {
       console.error('Error fetching withdrawal request by token:', error);
-      throw error;
+      throw new Error(getApiErrorMessage(error, 'Failed to fetch withdrawal by token.'));
     }
   },
 
@@ -181,7 +198,7 @@ export const adminWithdrawalService = {
       return response.data;
     } catch (error) {
       console.error('Error verifying withdrawal request:', error);
-      throw error;
+      throw new Error(getApiErrorMessage(error, 'Failed to verify withdrawal request.'));
     }
   },
 
@@ -196,7 +213,7 @@ export const adminWithdrawalService = {
       return response.data;
     } catch (error) {
       console.error('Error completing withdrawal request:', error);
-      throw error;
+      throw new Error(getApiErrorMessage(error, 'Failed to complete withdrawal request.'));
     }
   },
 
@@ -218,7 +235,7 @@ export const adminWithdrawalService = {
       return response.data;
     } catch (error) {
       console.error('Error rejecting withdrawal request:', error);
-      throw error;
+      throw new Error(getApiErrorMessage(error, 'Failed to reject withdrawal request.'));
     }
   },
 };

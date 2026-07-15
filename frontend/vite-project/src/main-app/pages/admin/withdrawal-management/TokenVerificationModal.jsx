@@ -75,14 +75,8 @@ const TokenVerificationModal = ({ withdrawal, onClose, onSubmit }) => {
         setIsModalOpen(true);
         
       } catch (error) {
-        console.error('Completion error:', error?.response?.status, error?.response?.data);
-        
-        const data = error?.response?.data;
-        let msg = data?.errorMessage || data?.title || 'Failed to complete the withdrawal request. Please try again.';
-        if (data?.errors) {
-          const fieldErrors = Object.values(data.errors).flat().join(' | ');
-          if (fieldErrors) msg = fieldErrors;
-        }
+        console.error('Completion error:', error);
+        const msg = error?.message || 'Failed to complete the withdrawal request. Please try again.';
         
         // Show error modal
         setModalTitle('Completion Failed');
@@ -128,18 +122,8 @@ const TokenVerificationModal = ({ withdrawal, onClose, onSubmit }) => {
       }
       
     } catch (error) {
-      console.error('Submit error:', error?.response?.status, error?.response?.data);
-      
-      // Extract the most useful error message from .NET or custom backend responses
-      const data = error?.response?.data;
-      let msg = data?.errorMessage
-        || data?.title
-        || `Failed to ${activeAction} the withdrawal request. Please try again.`;
-      // Append field-level .NET validation errors if present
-      if (data?.errors) {
-        const fieldErrors = Object.values(data.errors).flat().join(' | ');
-        if (fieldErrors) msg = fieldErrors;
-      }
+      console.error('Submit error:', error);
+      const msg = error?.message || `Failed to ${activeAction} the withdrawal request. Please try again.`;
       
       // Show error modal with backend message if available
       setModalTitle('Action Failed');

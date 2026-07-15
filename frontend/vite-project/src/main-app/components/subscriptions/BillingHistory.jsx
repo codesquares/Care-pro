@@ -2,6 +2,16 @@ import { useState, useEffect } from 'react';
 import SubscriptionService from '../../services/subscriptionService';
 import './BillingHistory.css';
 
+const normalizeBillingStatus = (statusValue) => String(statusValue || '').trim().toLowerCase();
+const isPaidBillingStatus = (statusValue) => {
+  const normalized = normalizeBillingStatus(statusValue);
+  return normalized === 'successful' || normalized === 'succeeded' || normalized === 'completed' || normalized === 'success';
+};
+const isFailedBillingStatus = (statusValue) => {
+  const normalized = normalizeBillingStatus(statusValue);
+  return normalized === 'failed' || normalized === 'amountmismatch' || normalized === 'expired';
+};
+
 /**
  * Shows payment attempt history for a subscription.
  * @param {{ subscriptionId: string }} props
@@ -44,25 +54,31 @@ const BillingHistory = ({ subscriptionId }) => {
             </tr>
           </thead>
           <tbody>
-            {payments.map((p, idx) => (
-              <tr key={p.id || idx} className={p.status === 'failed' ? 'billing-row--failed' : ''}>
-                <td>{p.attemptedAt ? new Date(p.attemptedAt).toLocaleDateString() : '—'}</td>
-                <td>{p.billingCycleNumber || '—'}</td>
-                <td>₦{(p.amount || 0).toLocaleString()}</td>
-                <td>
-                  <span className={`billing-status billing-status--${p.status}`}>
-                    {p.status === 'successful' ? '✓ Paid' : '✕ Failed'}
-                  </span>
-                </td>
-                <td>
-                  {p.status === 'failed' && p.errorMessage
-                    ? <span className="billing-error-msg">{p.errorMessage}</span>
-                    : p.orderId
-                      ? <span className="billing-order-link">Order #{p.orderId.slice(0, 8)}</span>
-                      : '—'}
-                </td>
-              </tr>
-            ))}
+            {payments.map((p, idx) => {
+              const normalizedStatus = normalizeBillingStatus(p.status);
+              const isPaid = isPaidBillingStatus(normalizedStatus);
+              const isFailed = isFailedBillingStatus(normalizedStatus);
+
+              return (
+                <tr key={p.id || idx} className={isFailed ? 'billing-row--failed' : ''}>
+                  <td>{p.attemptedAt ? new Date(p.attemptedAt).toLocaleDateString() : '—'}</td>
+                  <td>{p.billingCycleNumber || '—'}</td>
+                  <td>₦{(p.amount || 0).toLocaleString()}</td>
+                  <td>
+                    <span className={`billing-status billing-status--${normalizedStatus || 'unknown'}`}>
+                      {isPaid ? '✓ Paid' : isFailed ? '✕ Failed' : '… Pending'}
+                    </span>
+                  </td>
+                  <td>
+                    {isFailed && p.errorMessage
+                      ? <span className="billing-error-msg">{p.errorMessage}</span>
+                      : p.orderId
+                        ? <span className="billing-order-link">Order #{p.orderId.slice(0, 8)}</span>
+                        : '—'}
+                  </td>
+                </tr>
+              );
+            })}
           </tbody>
         </table>
       </div>

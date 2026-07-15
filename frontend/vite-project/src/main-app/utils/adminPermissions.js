@@ -13,6 +13,23 @@ export const OPERATIONS_DEPARTMENTS = ['HR', 'ComplianceAndLegal', 'CareLeads'];
 export const FINANCE_DEPARTMENT     = 'Finance';
 export const ANALYTICS_DEPARTMENT   = 'MarketingAndSales';
 
+const normalizeRole = (role) => {
+  const raw = String(role || '').trim().toLowerCase().replace(/[_\s-]+/g, '');
+  if (raw === 'superadmin') return 'SuperAdmin';
+  if (raw === 'admin') return 'Admin';
+  return role;
+};
+
+const normalizeDepartment = (dept) => {
+  const raw = String(dept || '').trim().toLowerCase().replace(/[_\s-]+/g, '');
+  if (raw === 'finance') return FINANCE_DEPARTMENT;
+  if (raw === 'hr') return 'HR';
+  if (raw === 'complianceandlegal') return 'ComplianceAndLegal';
+  if (raw === 'careleads') return 'CareLeads';
+  if (raw === 'marketingandsales') return ANALYTICS_DEPARTMENT;
+  return dept;
+};
+
 /**
  * Check whether a user satisfies a named policy.
  *
@@ -22,28 +39,31 @@ export const ANALYTICS_DEPARTMENT   = 'MarketingAndSales';
  * @returns {boolean}
  */
 export const hasPolicy = (policy, role, dept) => {
+  const normalizedRole = normalizeRole(role);
+  const normalizedDept = normalizeDepartment(dept);
+
   if (!policy) return true;                    // no restriction → all authenticated admins
-  if (role === 'SuperAdmin') return true;      // SuperAdmin always passes
-  if (role !== 'Admin') return false;          // only Admin role beyond this point
+  if (normalizedRole === 'SuperAdmin') return true;      // SuperAdmin always passes
+  if (normalizedRole !== 'Admin') return false;          // only Admin role beyond this point
 
   switch (policy) {
     case 'superAdmin':
       return false;
     case 'operations':
-      return OPERATIONS_DEPARTMENTS.includes(dept);
+      return OPERATIONS_DEPARTMENTS.includes(normalizedDept);
     case 'finance':
-      return dept === FINANCE_DEPARTMENT;
+      return normalizedDept === FINANCE_DEPARTMENT;
     case 'analytics':
-      return dept === ANALYTICS_DEPARTMENT;
+      return normalizedDept === ANALYTICS_DEPARTMENT;
     case 'financeOrOperations':
-      return dept === FINANCE_DEPARTMENT || OPERATIONS_DEPARTMENTS.includes(dept);
+      return normalizedDept === FINANCE_DEPARTMENT || OPERATIONS_DEPARTMENTS.includes(normalizedDept);
     default:
       return true;
   }
 };
 
 /** Convenience: check if user is SuperAdmin */
-export const isSuperAdmin = (role) => role === 'SuperAdmin';
+export const isSuperAdmin = (role) => normalizeRole(role) === 'SuperAdmin';
 
 /**
  * Return a human-readable label for a department string.

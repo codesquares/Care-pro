@@ -176,7 +176,7 @@ const WithdrawPage = () => {
       
     } catch (err) {
       console.error("Error creating withdrawal request:", err);
-      alert(err.response?.data?.errorMessage || "Failed to submit withdrawal request. Please try again.");
+      alert(err?.message || "Failed to submit withdrawal request. Please try again.");
     } finally {
       setIsSubmitting(false);
     }
@@ -338,7 +338,7 @@ const WithdrawPage = () => {
                 <span>{formatCurrency(parseFloat(formData.amountRequested))}</span>
               </div>
               <p className="charge-note">
-                No service charge — the full amount will be paid to your account.
+                No additional withdrawal service charge. The full requested wallet amount will be paid to your account.
               </p>
             </div>
           )}
