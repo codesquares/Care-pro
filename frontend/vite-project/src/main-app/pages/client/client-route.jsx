@@ -33,6 +33,7 @@ import ClientBookings from './bookings/ClientBookings';
 import ContractDetailPage from './orders/ContractDetailPage';
 import NotFoundPage from '../../../pages/NotFoundPage';
 import GigPriceNegotiation from '../../components/price-negotiation/GigPriceNegotiation';
+import OnboardingQaHarness from './onboarding/OnboardingQaHarness';
 
 
 function ClientRoutes() {
@@ -70,6 +71,7 @@ function ClientRoutes() {
             <Route path="/bookings" element={<ClientBookings />} />
             <Route path="/faq" element={<FAQPage />} />
             <Route path="/price-negotiation/:negotiationId" element={<GigPriceNegotiation />} />
+            <Route path="/onboarding-qa" element={<OnboardingQaHarness />} />
             <Route path="*" element={<NotFoundPage />} />
         </Routes>
         </>

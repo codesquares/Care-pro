@@ -10,12 +10,19 @@ import ClientGigService from "../../../services/clientGigService";
 import ClientProfileService from "../../../services/clientProfileService";
 import ClientCareNeedsService from "../../../services/clientCareNeedsService";
 import accountDeletionService from "../../../services/accountDeletionService";
+import { useClientOnboarding } from '../../../context/ClientOnboardingContext';
 
 
 
 
 const ClientDashboard = () => {
   const location = useLocation();
+  const {
+    isCanonicalClientRoute,
+    isTipSeen,
+    markTipSeen,
+    setMarketplaceFilterContext,
+  } = useClientOnboarding();
   const [services, setServices] = useState([]);
   const [filteredServices, setFilteredServices] = useState([]);
   const [popularGigs, setPopularGigs] = useState([]);
@@ -171,6 +178,28 @@ const ClientDashboard = () => {
            filters.searchTerm;
   };
 
+  const [marketplaceTipDismissed, setMarketplaceTipDismissed] = useState(false);
+  const [marketplaceTipInitiallySeen] = useState(() => isTipSeen('tip_marketplace_discovery'));
+  const showMarketplaceTip =
+    isCanonicalClientRoute &&
+    !marketplaceTipDismissed &&
+    !marketplaceTipInitiallySeen;
+
+  useEffect(() => {
+    setMarketplaceFilterContext(filters);
+  }, [filters, setMarketplaceFilterContext]);
+
+  useEffect(() => {
+    if (!showMarketplaceTip) return;
+
+    markTipSeen({
+      tipKey: 'tip_marketplace_discovery',
+      context: {
+        route: location.pathname,
+      },
+    });
+  }, [location.pathname, markTipSeen, showMarketplaceTip]);
+
   // Check if components should be hidden during search
   const shouldHideComponents = () => {
     return isActivelySearching || (filters.searchTerm && filters.searchTerm.trim() !== '');
@@ -306,6 +335,30 @@ const ClientDashboard = () => {
 
         {!loading && !error && (
           <div className="service-categories">
+            {showMarketplaceTip && (
+              <div className="client-tip-banner" role="note">
+                <div>
+                  <strong>Marketplace tip</strong>
+                  <p>Use search, category, and filters together to narrow down to matching caregivers quickly.</p>
+                </div>
+                <button
+                  type="button"
+                  onClick={() => {
+                    setMarketplaceTipDismissed(true);
+                    markTipSeen({
+                      tipKey: 'tip_marketplace_discovery',
+                      context: {
+                        route: location.pathname,
+                        dismissed: true,
+                      },
+                    });
+                  }}
+                >
+                  Dismiss
+                </button>
+              </div>
+            )}
+
             {/* Show categories if no filters or search are active */}
             {!hasActiveFiltersOrSearch() && (
                 <>

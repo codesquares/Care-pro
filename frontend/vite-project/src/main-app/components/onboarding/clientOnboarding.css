@@ -1,0 +1,110 @@
+.client-onboarding-card {
+  position: fixed;
+  right: 20px;
+  bottom: 20px;
+  width: min(360px, calc(100vw - 24px));
+  z-index: 1300;
+  background: #fffdf7;
+  border: 1px solid #f7d9a8;
+  box-shadow: 0 14px 28px rgba(24, 28, 35, 0.16);
+  border-radius: 12px;
+  padding: 14px;
+}
+
+.client-onboarding-card h4 {
+  margin: 0 0 8px;
+  font-size: 1rem;
+  color: #2c2c2c;
+}
+
+.client-onboarding-card p {
+  margin: 0;
+  color: #4f4f4f;
+  font-size: 0.92rem;
+  line-height: 1.4;
+}
+
+.client-onboarding-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  margin-bottom: 8px;
+}
+
+.client-onboarding-header span {
+  font-size: 0.72rem;
+  padding: 3px 8px;
+  border-radius: 999px;
+  color: #8b5f1f;
+  background: #ffeccf;
+  border: 1px solid #f0d3a5;
+}
+
+.client-onboarding-actions {
+  margin-top: 12px;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.client-onboarding-btn {
+  border: 1px solid #d6d6d6;
+  background: #ffffff;
+  border-radius: 8px;
+  padding: 7px 11px;
+  cursor: pointer;
+  font-size: 0.82rem;
+}
+
+.client-onboarding-btn.primary {
+  border-color: #0f766e;
+  background: #0f766e;
+  color: #ffffff;
+}
+
+.client-tip-banner {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 12px;
+  border: 1px solid #e4d8b3;
+  background: #fff9e7;
+  border-radius: 10px;
+  padding: 10px 12px;
+  margin: 0 0 14px;
+}
+
+.client-tip-banner strong {
+  display: block;
+  margin-bottom: 2px;
+  color: #4b3a1c;
+  font-size: 0.88rem;
+}
+
+.client-tip-banner p {
+  margin: 0;
+  color: #5f5239;
+  font-size: 0.82rem;
+  line-height: 1.35;
+}
+
+.client-tip-banner button {
+  border: 1px solid #d4c38f;
+  background: #fff;
+  color: #6a4e19;
+  border-radius: 7px;
+  height: 28px;
+  padding: 0 9px;
+  cursor: pointer;
+  flex-shrink: 0;
+}
+
+@media (max-width: 768px) {
+  .client-onboarding-card {
+    right: 12px;
+    left: 12px;
+    width: auto;
+    bottom: 12px;
+  }
+}
