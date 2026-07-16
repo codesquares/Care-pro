@@ -46,6 +46,7 @@ import HomeCareService from './main-app/pages/client/home-care-service/HomeCareS
 import SubscriptionPaymentConfirmed from './main-app/pages/client/subscriptions/SubscriptionPaymentConfirmed';
 import { MessageProvider } from './main-app/context/MessageContext';
 import { CaregiverStatusProvider } from './main-app/contexts/CaregiverStatusContext';
+import { ClientOnboardingProvider } from './main-app/context/ClientOnboardingContext';
 // import { NotificationProvider } from './main-app/context/NotificationContext';
 import SplashScreen from './main-app/components/SplashScreen/SplashScreen';
 import PublicMarketplace from './main-app/pages/client/client-dashboard/PublicMarketplace';
@@ -211,6 +212,7 @@ function AppContent() {
 
   return (
     <div className="App">
+      <ClientOnboardingProvider>
       {shouldShowBasicNavbar && <Navbar />}
       {shouldShowMarketingNavbar && <MarketingNavBar />}
       {shouldShowClientNavbar && <PublicClientNavBar />}
@@ -313,6 +315,7 @@ function AppContent() {
         {/* Catch-all route for non-existent pages */}
         <Route path="*" element={<NotFoundPage />} />
       </Routes>
+      </ClientOnboardingProvider>
       {shouldShowFooter && <Footer />}
       <ToastContainer
         position="bottom-right"

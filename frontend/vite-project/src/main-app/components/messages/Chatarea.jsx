@@ -12,10 +12,13 @@ import ClientOrderService from '../../services/clientOrderService';
 import bookingCommitmentService from '../../services/bookingCommitmentService';
 import GigPriceNegotiationService from '../../services/gigPriceNegotiationService';
 import { getCommitmentGateEnabled } from '../../services/publicConfigService';
+import { useClientOnboarding } from '../../context/ClientOnboardingContext';
+import { resolveChatTipVariant } from '../../utils/onboardingRuntime';
 
 const ChatArea = ({ messages, recipient, userId, onSendMessage, isOfflineMode = false }) => {
   const location = useLocation();
   const navigate = useNavigate();
+  const { isTipSeen, markTipSeen } = useClientOnboarding();
   const searchParams = useMemo(() => new URLSearchParams(location.search), [location.search]);
   const [message, setMessage] = useState('');
   const messagesEndRef = useRef(null);
@@ -107,6 +110,9 @@ const ChatArea = ({ messages, recipient, userId, onSendMessage, isOfflineMode = 
 
   // Send error message state (shown as banner above input)
   const [sendErrorMessage, setSendErrorMessage] = useState(null);
+  const [chatTipDismissed, setChatTipDismissed] = useState(false);
+  const [chatTipVariant, setChatTipVariant] = useState(null);
+  const [chatTipInitiallySeen] = useState(() => isTipSeen('tip_chat_access_status'));
   
   // Memoized function to get initials from name
   const getInitials = useCallback((name) => {
@@ -560,6 +566,68 @@ const ChatArea = ({ messages, recipient, userId, onSendMessage, isOfflineMode = 
       .then((neg) => setExistingNegotiation(neg))
       .catch(() => {});
   }, [isClientRoute, serviceId]);
+
+  useEffect(() => {
+    let cancelled = false;
+
+    const resolveTipVariant = async () => {
+      if (!isClientRoute || !safeRecipient?.id) {
+        return;
+      }
+
+      if (!commitmentGateEnabled) {
+        if (!cancelled) setChatTipVariant(resolveChatTipVariant({ commitmentGateEnabled: false, hasTipGigId: false, accessResult: null }));
+        return;
+      }
+
+      const tipGigId = serviceId || (caregiverGigs.length === 1 ? caregiverGigs[0]?.id : null);
+      if (!tipGigId) {
+        if (!cancelled) setChatTipVariant(resolveChatTipVariant({ commitmentGateEnabled: true, hasTipGigId: false, accessResult: null }));
+        return;
+      }
+
+      try {
+        const result = await bookingCommitmentService.checkAccess(tipGigId);
+        if (!cancelled) {
+          setChatTipVariant(resolveChatTipVariant({
+            commitmentGateEnabled: true,
+            hasTipGigId: true,
+            accessResult: result,
+          }));
+        }
+      } catch {
+        if (!cancelled) {
+          setChatTipVariant(resolveChatTipVariant({ commitmentGateEnabled: true, hasTipGigId: true, accessResult: null }));
+        }
+      }
+    };
+
+    resolveTipVariant();
+
+    return () => {
+      cancelled = true;
+    };
+  }, [caregiverGigs, commitmentGateEnabled, isClientRoute, safeRecipient?.id, serviceId]);
+
+  const showChatTip =
+    isClientRoute &&
+    !!chatTipVariant &&
+    !chatTipDismissed &&
+    !chatTipInitiallySeen;
+
+  useEffect(() => {
+    if (!showChatTip) return;
+
+    markTipSeen({
+      tipKey: 'tip_chat_access_status',
+      context: {
+        route: location.pathname,
+        caregiverId: safeRecipient?.id,
+        conversationId: safeRecipient?.id,
+      },
+      displayVariant: chatTipVariant,
+    });
+  }, [chatTipVariant, location.pathname, markTipSeen, safeRecipient?.id, showChatTip]);
 
   // Navigate to existing or new negotiation
   const handleNegotiateClick = async () => {
@@ -1024,6 +1092,37 @@ const ChatArea = ({ messages, recipient, userId, onSendMessage, isOfflineMode = 
       </header>
 
       {/* Gig action banner — shown when client arrives from a specific gig page */}
+      {showChatTip && (
+        <div className="client-tip-banner" role="note">
+          <div>
+            <strong>Chat access status</strong>
+            <p>
+              {chatTipVariant === 'access_granted' && 'You can message this caregiver now and proceed directly when ready.'}
+              {chatTipVariant === 'access_required' && 'Commitment payment is required before full chat access is granted for this context.'}
+              {chatTipVariant === 'gate_disabled' && 'Commitment gating is currently disabled, so chat access is open.'}
+            </p>
+          </div>
+          <button
+            type="button"
+            onClick={() => {
+              setChatTipDismissed(true);
+              markTipSeen({
+                tipKey: 'tip_chat_access_status',
+                context: {
+                  route: location.pathname,
+                  caregiverId: safeRecipient?.id,
+                  conversationId: safeRecipient?.id,
+                  dismissed: true,
+                },
+                displayVariant: chatTipVariant,
+              });
+            }}
+          >
+            Dismiss
+          </button>
+        </div>
+      )}
+
       {isClientRoute && serviceId && isBannerEligible && !isResolvingBanner && showGigBanner && (
         <div className="chat-gig-banner">
           <span className="chat-gig-banner__label">Ready to proceed with this caregiver?</span>

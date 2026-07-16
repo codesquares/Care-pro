@@ -9,12 +9,19 @@ import ClientGigService from '../../../services/clientGigService';
 import config from '../../../config'; // Import centralized config for API URLs
 import { mapUiErrorCode, UI_ERROR_CODES } from '../../../utils/uiErrorMapper';
 import { getCommitmentGateEnabled } from '../../../services/publicConfigService';
+import { useClientOnboarding } from '../../../context/ClientOnboardingContext';
 
 // Helper to format price
 const formatPrice = (amount) => `₦${(amount || 0).toLocaleString()}`;
 
 const Cart = () => {
    const { id } = useParams();
+    const {
+      walkthrough,
+      isRenderingStep4or5,
+      isTipSeen,
+      markTipSeen,
+    } = useClientOnboarding();
     const [service, setService] = useState(null);
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState(null);
@@ -44,6 +51,26 @@ const Cart = () => {
     const basePath = "/app/client";
     const isCommitmentRequired = commitmentGateEnabled && (!commitmentAccess || (!commitmentAccess.hasAccess && !commitmentAccess.commitmentNotRequired));
     const canProceedToPayment = !isCommitmentRequired;
+    const [cartTipDismissed, setCartTipDismissed] = useState(false);
+    const [cartTipInitiallySeen] = useState(() => isTipSeen('tip_cart_commitment_referral'));
+
+    const showCartTip =
+      walkthrough?.status === 'completed' &&
+      !isRenderingStep4or5 &&
+      !cartTipDismissed &&
+      !cartTipInitiallySeen;
+
+    useEffect(() => {
+      if (!showCartTip) return;
+
+      markTipSeen({
+        tipKey: 'tip_cart_commitment_referral',
+        context: {
+          route: window.location.pathname,
+          gigId: id,
+        },
+      });
+    }, [id, markTipSeen, showCartTip]);
 
     useEffect(() => {
       let isMounted = true;
@@ -267,6 +294,31 @@ const Cart = () => {
                 &times;
               </button>
             </div>
+
+            {showCartTip && (
+              <div className="client-tip-banner" role="note">
+                <div>
+                  <strong>Commitment and referral tip</strong>
+                  <p>Referral applies on recurring plans. Commitment rules still follow checkout validation.</p>
+                </div>
+                <button
+                  type="button"
+                  onClick={() => {
+                    setCartTipDismissed(true);
+                    markTipSeen({
+                      tipKey: 'tip_cart_commitment_referral',
+                      context: {
+                        route: window.location.pathname,
+                        gigId: id,
+                        dismissed: true,
+                      },
+                    });
+                  }}
+                >
+                  Dismiss
+                </button>
+              </div>
+            )}
 
             {/* Detail rows */}
             <div className="sd-details">
