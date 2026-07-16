@@ -12,6 +12,10 @@ dist
 dist-ssr
 *.local
 *.env
+
+# Local QA auth artifacts (never commit)
+.qa-secrets/
+.qa-secrets.*
 *.production
 *.staging
 
