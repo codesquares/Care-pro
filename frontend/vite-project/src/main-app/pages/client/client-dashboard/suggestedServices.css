@@ -50,10 +50,34 @@
     linear-gradient(160deg, color-mix(in srgb, var(--surface-subtle) 72%, var(--surface)) 0%, color-mix(in srgb, var(--surface) 82%, var(--accent) 18%) 100%);
   display: flex;
   flex-direction: column;
-  align-items: center;
+  align-items: stretch;
   justify-content: flex-start;
   padding: var(--space-4) var(--space-4) var(--space-3);
   min-height: 320px;
+}
+
+.featured-caregiver-card::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background:
+    linear-gradient(180deg, rgba(255, 255, 255, 0.68) 0%, rgba(255, 255, 255, 0.54) 100%),
+    radial-gradient(circle at 24% 14%, rgba(255, 255, 255, 0.34) 0%, transparent 46%);
+  z-index: 2;
+  pointer-events: none;
+}
+
+.featured-caregiver-photo {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  object-position: 34% 34%;
+  transform: scale(1.65);
+  opacity: 0.3;
+  z-index: 1;
+  pointer-events: none;
 }
 
 .featured-caregiver-card:hover {
@@ -69,6 +93,8 @@
 .featured-caregiver-label-wrap {
   width: 100%;
   margin-bottom: var(--space-3);
+  position: relative;
+  z-index: 3;
 }
 
 .featured-caregiver-eyebrow {
@@ -91,21 +117,177 @@
   font-weight: var(--font-weight-semibold);
 }
 
+.featured-caregiver-content {
+  width: 100%;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  flex: 1;
+  position: relative;
+  padding: 0.35rem 0 0.6rem;
+  z-index: 3;
+}
+
+.featured-pill {
+  border-radius: 999px;
+  font-size: 0.68rem;
+  font-weight: 600;
+  line-height: 1;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.35rem;
+  box-shadow: 0 8px 22px rgba(0, 0, 0, 0.12);
+}
+
+.featured-pill--orders {
+  background: #ffffff;
+  color: #374151;
+  padding: 0.5rem 0.75rem;
+  z-index: 4;
+}
+
+.featured-pill__icon {
+  font-size: 0.86rem;
+}
+
+.featured-pill--browse {
+  margin-top: 0.55rem;
+  background: color-mix(in srgb, var(--accent) 88%, #fff);
+  color: #3f340f;
+  padding: 0.45rem 0.78rem;
+  z-index: 3;
+}
+
+.featured-info-card {
+  width: min(92%, 290px);
+  margin-top: 0.58rem;
+  background: #ffffff;
+  border-radius: 0.72rem;
+  box-shadow: var(--shadow-rest);
+  padding: 0.56rem 0.66rem;
+  display: flex;
+  align-items: flex-start;
+  gap: 0.45rem;
+  z-index: 3;
+}
+
+.featured-info-card__emoji {
+  font-size: 1.05rem;
+  line-height: 1;
+}
+
+.featured-info-card__body strong {
+  display: block;
+  font-size: 0.67rem;
+  color: var(--ink-strong);
+  margin-bottom: 0.15rem;
+}
+
+.featured-info-card__body p {
+  margin: 0;
+  font-size: 0.56rem;
+  line-height: 1.25;
+  color: var(--muted);
+}
+
+.featured-connect-banner {
+  margin-top: -0.1rem;
+  background: #213f61;
+  color: #ffffff;
+  border-radius: 999px;
+  padding: 0.48rem 0.8rem;
+  font-size: 0.62rem;
+  font-weight: 600;
+  box-shadow: 0 8px 22px rgba(0, 0, 0, 0.18);
+  z-index: 5;
+}
+
+.featured-profile-card {
+  width: min(86%, 260px);
+  margin-top: -0.18rem;
+  background: #ffffff;
+  border-radius: 0.7rem;
+  box-shadow: var(--shadow-rest);
+  padding: 0.52rem 0.62rem;
+  z-index: 4;
+}
+
+.featured-profile-card__row {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.featured-profile-card__avatar {
+  width: 28px;
+  height: 28px;
+  border-radius: 999px;
+  background: var(--color-brand-deep-2);
+  color: #ffffff;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 0.58rem;
+  font-weight: 700;
+  flex-shrink: 0;
+}
+
+.featured-profile-card__meta {
+  display: flex;
+  align-items: center;
+  gap: 0.35rem;
+  flex-wrap: wrap;
+}
+
+.featured-profile-card__meta strong {
+  font-size: 0.67rem;
+  color: var(--ink-strong);
+}
+
+.featured-profile-card__badge {
+  font-size: 0.56rem;
+  color: #0e9f6e;
+  font-weight: 600;
+}
+
+.featured-profile-card__rating {
+  font-size: 0.56rem;
+  background: #fff4cc;
+  color: #725c1b;
+  padding: 0.13rem 0.3rem;
+  border-radius: 999px;
+  font-weight: 600;
+}
+
+.featured-profile-card__location {
+  margin-top: 0.28rem;
+  font-size: 0.55rem;
+  color: #4b5563;
+  display: block;
+}
+
 @media (min-width: 1024px) {
   .featured-caregiver-card {
     flex: 0 0 380px;
-    align-self: stretch;
-    min-height: 100%;
+    align-self: flex-start;
+    min-height: 490px;
   }
 }
 
-.featured-service-image {
-  width: 100%;
-  height: auto;
-  object-fit: contain;
-  display: block;
-  border-radius: var(--radius-md);
-  box-shadow: var(--shadow-rest);
+@media (max-width: 480px) {
+  .featured-caregiver-content {
+    padding-top: 0.2rem;
+  }
+
+  .featured-info-card {
+    width: min(94%, 300px);
+  }
+
+  .featured-profile-card {
+    width: min(90%, 270px);
+  }
 }
 
 /* Categories Grid - Right Side */
