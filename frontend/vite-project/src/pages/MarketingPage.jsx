@@ -1,103 +1,22 @@
 import { useNavigate } from "react-router-dom";
 import { useState, useEffect } from "react";
+import { FiCheckCircle, FiDollarSign, FiMessageCircle, FiShield, FiClipboard, FiMapPin, FiPause, FiPlay } from "react-icons/fi";
 import "./MarketingPage.css";
 import PricingModal from "../components/PricingModal/PricingModal";
 import ClientGigService from "../main-app/services/clientGigService";
 import ServiceCard from "../main-app/pages/client/client-dashboard/ServiceCard";
+import CategoryCard from "../components/category/CategoryCard";
+import VideoModal from "../main-app/components/VideoModal/VideoModal";
+import { categoryBrowseData } from "../main-app/constants/categoryBrowseData";
 import "../main-app/pages/client/client-dashboard/serviceCard.css";
 
 // Import assets
 import careproLogo from "../assets/careproLogo.svg";
 import nurseImg from "../assets/nurse.png";
 import nurseAndWomanImg from "../assets/nurseAndWoman.png";
-import afternoonLanding from "../assets/afternoon_landing.png";
 import caregiver1 from "../assets/caregiver1.png";
 import QHCC1 from "../assets/QHCC1.jpg";
 import avatarFemale1 from "../assets/avatar-female-1.jpg";
-
-// Service categories for the grid - mapped to backend categories
-const serviceCategories = [
-  {
-    id: 1,
-    slug: "adult-care",
-    name: "Adult Care",
-    description: "Compassionate care for seniors and adults",
-    icon: "👴",
-    basePrice: 10000,
-  },
-  {
-    id: 2,
-    slug: "post-surgery-care",
-    name: "Post Surgery Care",
-    description: "Recovery support after surgery or hospital discharge",
-    icon: "🏥",
-    basePrice: 10000,
-  },
-  {
-    id: 3,
-    slug: "child-care",
-    name: "Child Care",
-    description: "Professional childcare and nanny services",
-    icon: "👶",
-    basePrice: 10000,
-  },
-  {
-    id: 4,
-    slug: "pet-care",
-    name: "Pet Care",
-    description: "Pet minding, dog walking, and pet companionship",
-    icon: "🐕",
-    basePrice: 10000,
-  },
-  {
-    id: 5,
-    slug: "home-care",
-    name: "Home Care",
-    description: "General home assistance and daily living support",
-    icon: "🏠",
-    basePrice: 10000,
-  },
-  {
-    id: 6,
-    slug: "special-needs-care",
-    name: "Special Needs Care",
-    description: "Specialized care for individuals with special needs",
-    icon: "💙",
-    basePrice: 10000,
-  },
-  {
-    id: 7,
-    slug: "medical-support",
-    name: "Medical Support",
-    description: "Nursing care and medical assistance",
-    icon: "💊",
-    basePrice: 10000,
-  },
-  {
-    id: 8,
-    slug: "mobility-support",
-    name: "Mobility Support",
-    description: "Mobility assistance and fall prevention",
-    icon: "🦽",
-    basePrice: 10000,
-  },
-  {
-    id: 9,
-    slug: "therapy-wellness",
-    name: "Therapy & Wellness",
-    description: "Physical therapy and wellness support",
-    icon: "🧘",
-    basePrice: 10000,
-  },
-  {
-    id: 10,
-    slug: "palliative",
-    name: "Palliative",
-    description: "Palliative care and emotional support",
-    icon: "🤲",
-    basePrice: 10000,
-  },
-];
 
 // Healthcare facts
 const healthcareFacts = [
@@ -119,7 +38,47 @@ const healthcareFacts = [
   },
 ];
 
-
+const ENABLE_HERO_TRUST_PANEL = true;
+const HERO_VIDEO_URL = import.meta.env.VITE_HERO_WALKTHROUGH_VIDEO || "";
+const TRUST_ROTATION_MS = 5200;
+const heroTrustItems = [
+  {
+    title: "Verified marketplace caregivers",
+    message:
+      "Only caregivers with the verified marketplace badge are listed, and they have completed identity and background verification.",
+    icon: FiCheckCircle,
+  },
+  {
+    title: "Transparent pricing before booking",
+    message:
+      "See category starting rates and negotiate directly for prices above ₦10,000.",
+    icon: FiDollarSign,
+  },
+  {
+    title: "Flexible chat access",
+    message:
+      "Message caregivers instantly, or unlock chat with a small one-time fee, depending on availability.",
+    icon: FiMessageCircle,
+  },
+  {
+    title: "Escrow payment protection",
+    message:
+      "We release payment only after you approve a visit and no-show issues are resolved.",
+    icon: FiShield,
+  },
+  {
+    title: "Visit review logs",
+    message:
+      "Caregivers are required to complete incident reports and observation sheets for every visit.",
+    icon: FiClipboard,
+  },
+  {
+    title: "Check-in and check-out tracking",
+    message:
+      "Check-in and check-out times are recorded with location tracking to protect both clients and caregivers.",
+    icon: FiMapPin,
+  },
+];
 
 const MarketingPage = () => {
   const navigate = useNavigate();
@@ -127,6 +86,9 @@ const MarketingPage = () => {
   const [isPricingModalOpen, setIsPricingModalOpen] = useState(false);
   const [featuredGigs, setFeaturedGigs] = useState([]);
   const [gigsLoading, setGigsLoading] = useState(true);
+  const [isHeroVideoOpen, setIsHeroVideoOpen] = useState(false);
+  const [activeTrustIndex, setActiveTrustIndex] = useState(0);
+  const [isTrustRotationPaused, setIsTrustRotationPaused] = useState(false);
 
   useEffect(() => {
     const fetchFeaturedGigs = async () => {
@@ -141,6 +103,18 @@ const MarketingPage = () => {
     };
     fetchFeaturedGigs();
   }, []);
+
+  useEffect(() => {
+    if (!ENABLE_HERO_TRUST_PANEL || isTrustRotationPaused) {
+      return undefined;
+    }
+
+    const intervalId = window.setInterval(() => {
+      setActiveTrustIndex((prevIndex) => (prevIndex + 1) % heroTrustItems.length);
+    }, TRUST_ROTATION_MS);
+
+    return () => window.clearInterval(intervalId);
+  }, [isTrustRotationPaused]);
 
   const handleSearch = (e) => {
     e.preventDefault();
@@ -173,27 +147,24 @@ const MarketingPage = () => {
     navigate("/marketplace");
   };
 
+  const ActiveTrustIcon = heroTrustItems[activeTrustIndex].icon;
+
   return (
     <div className="marketing-page">
       {/* Hero Section */}
-      <section
-        className="mk-hero"
-        style={{
-          backgroundImage: `linear-gradient(90deg, rgba(0, 0, 0, 0.7) 0%, rgba(0, 0, 0, 0.4) 60%, rgba(0, 0, 0, 0.2) 100%), url(${afternoonLanding})`,
-        }}
-      >
+      <section className="mk-hero">
         <div className="mk-hero__content">
-          <div className="text-container">
-            <span className="connect-text">Connect with Verified</span>
-            <span className="profession-text">Home Care Professionals</span>
-            <span className="demand-text">on-demand</span>
+          <div className="text-container mk-hero__headline" data-animate="headline">
+            <span className="connect-text">Verified profiles<span className="mk-hero__accent-period">.</span></span>
+            <span className="profession-text">Secure hires<span className="mk-hero__accent-period">.</span></span>
+            <span className="demand-text">Complete care<span className="mk-hero__accent-period">.</span></span>
           </div>
 
           {/* Search Bar */}
-          <form className="mk-hero__search" onSubmit={handleSearch}>
+          <form className="mk-hero__search" data-animate="search" onSubmit={handleSearch}>
             <input
               type="text"
-              placeholder="What service are you looking for today?"
+              placeholder="Search services"
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
               onKeyUp={handleQuickSearch}
@@ -206,8 +177,31 @@ const MarketingPage = () => {
             </button>
           </form>
 
+          <div className="mk-hero__actions" data-animate="actions">
+            <button
+              className="mk-hero__video-trigger"
+              type="button"
+              onClick={() => {
+                if (HERO_VIDEO_URL) {
+                  setIsHeroVideoOpen(true);
+                }
+              }}
+              disabled={!HERO_VIDEO_URL}
+              aria-disabled={!HERO_VIDEO_URL}
+              title={HERO_VIDEO_URL ? "Watch how it works" : "Walkthrough video coming soon"}
+            >
+              <span className="mk-hero__video-icon" aria-hidden="true">▶</span>
+              Watch how it works
+            </button>
+            {!HERO_VIDEO_URL && (
+              <span className="mk-hero__status-badge" aria-label="Video coming soon">
+                Coming soon
+              </span>
+            )}
+          </div>
+
           {/* Popular Tags */}
-          <div className="mk-hero__popular">
+          <div className="mk-hero__popular" data-animate="popular">
             <span>Popular:</span>
             <button onClick={() => handleServiceClick("adult-care")}>
               Adult Care
@@ -223,38 +217,67 @@ const MarketingPage = () => {
             </button>
           </div>
         </div>
+
+        <div className="mk-hero__visual">
+          {ENABLE_HERO_TRUST_PANEL && (
+            <div className="mk-hero__trust" data-animate="trust" aria-live="polite">
+              <div className="mk-hero__trust-top">
+                <div className="mk-hero__trust-icon" aria-hidden="true">
+                  <ActiveTrustIcon size={18} />
+                </div>
+                <button
+                  type="button"
+                  className="mk-hero__trust-pause"
+                  onClick={() => setIsTrustRotationPaused((value) => !value)}
+                  aria-label={isTrustRotationPaused ? "Resume rotation" : "Pause rotation"}
+                  title={isTrustRotationPaused ? "Resume rotation" : "Pause rotation"}
+                  aria-pressed={isTrustRotationPaused}
+                >
+                  {isTrustRotationPaused ? <FiPlay size={14} /> : <FiPause size={14} />}
+                </button>
+              </div>
+              <p className="mk-hero__trust-title">{heroTrustItems[activeTrustIndex].title}</p>
+              <p className="mk-hero__trust-message">{heroTrustItems[activeTrustIndex].message}</p>
+            </div>
+          )}
+        </div>
+
+        <div className="mk-hero__divider" aria-hidden="true">
+          <svg viewBox="0 0 1440 80" preserveAspectRatio="none" focusable="false">
+            <path d="M0,22 C220,76 420,6 700,34 C970,62 1180,6 1440,28 L1440,80 L0,80 Z" />
+          </svg>
+        </div>
       </section>
+
+      <VideoModal
+        isOpen={isHeroVideoOpen}
+        onClose={() => setIsHeroVideoOpen(false)}
+        videoUrl={HERO_VIDEO_URL}
+        title="How CarePro Works"
+      />
 
       {/* Popular Services Section */}
       <section className="services-section">
         <div className="container">
           <h2>Popular Services</h2>
-          <div className="services-grid">
-            {serviceCategories.map((service) => (
-              <div
+          <div className="services-row" aria-label="Popular service categories">
+            {categoryBrowseData.map((service) => (
+              <CategoryCard
                 key={service.id}
-                className="service-card"
+                category={service}
+                showDescription={false}
+                showPrice={false}
                 onClick={() => handleServiceClick(service.slug)}
-              >
-                <div className="service-icon">{service.icon}</div>
-                <div className="service-body">
-                  <h3>{service.name}</h3>
-                  <p>{service.description}</p>
-                  <div className="service-price">
-                    Starting at {"\u20A6"}
-                    {service.basePrice.toLocaleString()} /visit
-                  </div>
-                </div>
-              </div>
+              />
             ))}
-            <div className="services-cta-sec" onClick={handleHireCaregiver}>
-              <div className="services-cta-sec-text">
-                Trusted homecare at your fingertips.
-              </div>
+          </div>
+          <div className="services-cta-sec" onClick={handleHireCaregiver}>
+            <div className="services-cta-sec-text">
+              Trusted homecare at your fingertips.
+            </div>
             <button className="services-cta-btn" type="button">
               Hire a caregiver <span aria-hidden="true">›</span>
             </button>
-          </div>
           </div>
           {/* <div className="browse-all-container">
             <button className="browse-all-btn" onClick={handleBrowseAll}>
