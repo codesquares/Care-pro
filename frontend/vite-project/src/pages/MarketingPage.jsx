@@ -1,12 +1,10 @@
 import { useNavigate } from "react-router-dom";
 import { useState, useEffect } from "react";
-import { FiCheckCircle, FiDollarSign, FiMessageCircle, FiShield, FiClipboard, FiMapPin, FiPause, FiPlay } from "react-icons/fi";
 import "./MarketingPage.css";
 import PricingModal from "../components/PricingModal/PricingModal";
 import ClientGigService from "../main-app/services/clientGigService";
 import ServiceCard from "../main-app/pages/client/client-dashboard/ServiceCard";
 import CategoryCard from "../components/category/CategoryCard";
-import VideoModal from "../main-app/components/VideoModal/VideoModal";
 import { categoryBrowseData } from "../main-app/constants/categoryBrowseData";
 import "../main-app/pages/client/client-dashboard/serviceCard.css";
 
@@ -40,49 +38,8 @@ const healthcareFacts = [
   },
 ];
 
-const ENABLE_HERO_TRUST_PANEL = true;
-const HERO_VIDEO_URL = import.meta.env.VITE_HERO_WALKTHROUGH_VIDEO || "";
 const HERO_BACKGROUND_VIDEO_URL = heroBackgroundVideo;
 const HERO_BACKGROUND_POSTER = heroVideoPoster;
-const TRUST_ROTATION_MS = 5200;
-const heroTrustItems = [
-  {
-    title: "Verified marketplace caregivers",
-    message:
-      "Only caregivers with the verified marketplace badge are listed, and they have completed identity and background verification.",
-    icon: FiCheckCircle,
-  },
-  {
-    title: "Transparent pricing before booking",
-    message:
-      "See category starting rates and negotiate directly for prices above ₦10,000.",
-    icon: FiDollarSign,
-  },
-  {
-    title: "Flexible chat access",
-    message:
-      "Message caregivers instantly, or unlock chat with a small one-time fee, depending on availability.",
-    icon: FiMessageCircle,
-  },
-  {
-    title: "Escrow payment protection",
-    message:
-      "We release payment only after you approve a visit and no-show issues are resolved.",
-    icon: FiShield,
-  },
-  {
-    title: "Visit review logs",
-    message:
-      "Caregivers are required to complete incident reports and observation sheets for every visit.",
-    icon: FiClipboard,
-  },
-  {
-    title: "Check-in and check-out tracking",
-    message:
-      "Check-in and check-out times are recorded with location tracking to protect both clients and caregivers.",
-    icon: FiMapPin,
-  },
-];
 
 const MarketingPage = () => {
   const navigate = useNavigate();
@@ -90,9 +47,6 @@ const MarketingPage = () => {
   const [isPricingModalOpen, setIsPricingModalOpen] = useState(false);
   const [featuredGigs, setFeaturedGigs] = useState([]);
   const [gigsLoading, setGigsLoading] = useState(true);
-  const [isHeroVideoOpen, setIsHeroVideoOpen] = useState(false);
-  const [activeTrustIndex, setActiveTrustIndex] = useState(0);
-  const [isTrustRotationPaused, setIsTrustRotationPaused] = useState(false);
   const [prefersReducedMotion, setPrefersReducedMotion] = useState(false);
   const [isHeroBackgroundLoaded, setIsHeroBackgroundLoaded] = useState(false);
 
@@ -111,24 +65,17 @@ const MarketingPage = () => {
   }, []);
 
   useEffect(() => {
-    if (!ENABLE_HERO_TRUST_PANEL || isTrustRotationPaused) {
-      return undefined;
-    }
-
-    const intervalId = window.setInterval(() => {
-      setActiveTrustIndex((prevIndex) => (prevIndex + 1) % heroTrustItems.length);
-    }, TRUST_ROTATION_MS);
-
-    return () => window.clearInterval(intervalId);
-  }, [isTrustRotationPaused]);
-
-  useEffect(() => {
     const mediaQuery = window.matchMedia("(prefers-reduced-motion: reduce)");
     const applyPreference = () => setPrefersReducedMotion(mediaQuery.matches);
 
     applyPreference();
-    mediaQuery.addEventListener("change", applyPreference);
-    return () => mediaQuery.removeEventListener("change", applyPreference);
+    if (typeof mediaQuery.addEventListener === "function") {
+      mediaQuery.addEventListener("change", applyPreference);
+      return () => mediaQuery.removeEventListener("change", applyPreference);
+    }
+
+    mediaQuery.addListener(applyPreference);
+    return () => mediaQuery.removeListener(applyPreference);
   }, []);
 
   useEffect(() => {
@@ -168,17 +115,15 @@ const MarketingPage = () => {
     navigate("/marketplace");
   };
 
-  const ActiveTrustIcon = heroTrustItems[activeTrustIndex].icon;
-
   return (
     <div className="marketing-page">
       {/* Hero Section */}
       <section className="mk-hero">
         <div className="mk-hero__content">
           <div className="text-container mk-hero__headline" data-animate="headline">
-            <span className="connect-text">Verified profiles<span className="mk-hero__accent-period">.</span></span>
-            <span className="profession-text">Secure hires<span className="mk-hero__accent-period">.</span></span>
-            <span className="demand-text">Complete care<span className="mk-hero__accent-period">.</span></span>
+            <span className="connect-text">Trusted profiles<span className="mk-hero__accent-period">.</span></span>
+            <span className="profession-text">Trusted hires<span className="mk-hero__accent-period">.</span></span>
+            <span className="demand-text">Trusted care<span className="mk-hero__accent-period">.</span></span>
           </div>
 
           {/* Search Bar */}
@@ -197,29 +142,6 @@ const MarketingPage = () => {
               Search
             </button>
           </form>
-
-          <div className="mk-hero__actions" data-animate="actions">
-            <button
-              className="mk-hero__video-trigger"
-              type="button"
-              onClick={() => {
-                if (HERO_VIDEO_URL) {
-                  setIsHeroVideoOpen(true);
-                }
-              }}
-              disabled={!HERO_VIDEO_URL}
-              aria-disabled={!HERO_VIDEO_URL}
-              title={HERO_VIDEO_URL ? "Watch how it works" : "Walkthrough video coming soon"}
-            >
-              <span className="mk-hero__video-icon" aria-hidden="true">▶</span>
-              Watch how it works
-            </button>
-            {!HERO_VIDEO_URL && (
-              <span className="mk-hero__status-badge" aria-label="Video coming soon">
-                Coming soon
-              </span>
-            )}
-          </div>
 
           {/* Popular Tags */}
           <div className="mk-hero__popular" data-animate="popular">
@@ -240,7 +162,7 @@ const MarketingPage = () => {
         </div>
 
         <div className="mk-hero__visual">
-          <div className="mk-hero__media" data-animate="visual">
+          <div className="mk-hero__media">
             <img
               src={HERO_BACKGROUND_POSTER}
               alt=""
@@ -261,37 +183,7 @@ const MarketingPage = () => {
                 <source src={HERO_BACKGROUND_VIDEO_URL} type="video/mp4" />
               </video>
             )}
-            <div className="mk-hero__media-overlay mk-hero__media-overlay--upper">
-              <FiCheckCircle size={16} aria-hidden="true" />
-              Verified caregiver profiles
-            </div>
-            <div className="mk-hero__media-overlay mk-hero__media-overlay--lower">
-              <FiShield size={16} aria-hidden="true" />
-              Escrow-secured payments
-            </div>
           </div>
-
-          {ENABLE_HERO_TRUST_PANEL && (
-            <div className="mk-hero__trust" data-animate="trust" aria-live="polite">
-              <div className="mk-hero__trust-top">
-                <div className="mk-hero__trust-icon" aria-hidden="true">
-                  <ActiveTrustIcon size={18} />
-                </div>
-                <button
-                  type="button"
-                  className="mk-hero__trust-pause"
-                  onClick={() => setIsTrustRotationPaused((value) => !value)}
-                  aria-label={isTrustRotationPaused ? "Resume rotation" : "Pause rotation"}
-                  title={isTrustRotationPaused ? "Resume rotation" : "Pause rotation"}
-                  aria-pressed={isTrustRotationPaused}
-                >
-                  {isTrustRotationPaused ? <FiPlay size={14} /> : <FiPause size={14} />}
-                </button>
-              </div>
-              <p className="mk-hero__trust-title">{heroTrustItems[activeTrustIndex].title}</p>
-              <p className="mk-hero__trust-message">{heroTrustItems[activeTrustIndex].message}</p>
-            </div>
-          )}
         </div>
 
         <div className="mk-hero__divider" aria-hidden="true">
@@ -300,13 +192,6 @@ const MarketingPage = () => {
           </svg>
         </div>
       </section>
-
-      <VideoModal
-        isOpen={isHeroVideoOpen}
-        onClose={() => setIsHeroVideoOpen(false)}
-        videoUrl={HERO_VIDEO_URL}
-        title="How CarePro Works"
-      />
 
       {/* Popular Services Section */}
       <section className="services-section">

@@ -33,15 +33,46 @@ const SuggestedServices = () => {
           }}
           aria-label="Featured Caregiver spotlight"
         >
+          <img
+            src={featuredServiceCard}
+            alt=""
+            aria-hidden="true"
+            className="featured-caregiver-photo"
+          />
           <div className="featured-caregiver-label-wrap">
             <span className="featured-caregiver-eyebrow">Featured Caregiver</span>
             <h3 className="featured-caregiver-title">Meet Your Caregiver</h3>
           </div>
-          <img
-            src={featuredServiceCard}
-            alt="Featured caregiver services"
-            className="featured-service-image"
-          />
+          <div className="featured-caregiver-content">
+            <div className="featured-pill featured-pill--orders">
+              <span className="featured-pill__icon" aria-hidden="true">🛍️</span>
+              <span>Manage active Orders</span>
+            </div>
+
+            <div className="featured-pill featured-pill--browse">Browse service categories</div>
+
+            <div className="featured-info-card">
+              <div className="featured-info-card__emoji" aria-hidden="true">😊</div>
+              <div className="featured-info-card__body">
+                <strong>Adult &amp; Elderly Care</strong>
+                <p>Dignified, independence-focused assistance to keep seniors active, comfortable, and cared for.</p>
+              </div>
+            </div>
+
+            <div className="featured-connect-banner">Connect with qualified Caregivers</div>
+
+            <div className="featured-profile-card">
+              <div className="featured-profile-card__row">
+                <div className="featured-profile-card__avatar">FA</div>
+                <div className="featured-profile-card__meta">
+                  <strong>Funke Adeyemi</strong>
+                  <span className="featured-profile-card__badge">Verified ✓</span>
+                  <span className="featured-profile-card__rating">⭐ 4.5</span>
+                </div>
+              </div>
+              <span className="featured-profile-card__location">📍 Ikoyi, Lagos, Nigeria</span>
+            </div>
+          </div>
         </div>
 
         {/* Right: Categories Grid */}
