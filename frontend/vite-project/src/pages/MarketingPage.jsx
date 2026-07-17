@@ -144,20 +144,26 @@ const MarketingPage = () => {
           </form>
 
           {/* Popular Tags */}
-          <div className="mk-hero__popular" data-animate="popular">
-            <span>Popular:</span>
-            <button onClick={() => handleServiceClick("adult-care")}>
-              Adult Care
-            </button>
-            <button onClick={() => handleServiceClick("child-care")}>
-              Nanny
-            </button>
-            <button onClick={() => handleServiceClick("home-care")}>
-              Home Care
-            </button>
-            <button onClick={() => handleServiceClick("pet-care")}>
-              Pet Care
-            </button>
+          <div className="mk-hero__popular-block" data-animate="popular">
+            <div className="mk-hero__popular">
+              <span>Popular:</span>
+              <button onClick={() => handleServiceClick("adult-care")}>
+                Adult Care
+              </button>
+              <button onClick={() => handleServiceClick("child-care")}>
+                Nanny
+              </button>
+              <button onClick={() => handleServiceClick("home-care")}>
+                Home Care
+              </button>
+              <button onClick={() => handleServiceClick("pet-care")}>
+                Pet Care
+              </button>
+            </div>
+
+            <p className="mk-hero__popular-tagline">
+              Now serving families across Nigeria.
+            </p>
           </div>
         </div>
 
