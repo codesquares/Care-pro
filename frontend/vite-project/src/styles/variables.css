@@ -1,1 +1,68 @@
+:root {
+	/* Brand palette */
+	--color-brand-deep: #0b3d3a;
+	--color-brand-deep-2: #145c52;
+	--color-brand-mint: #d7f2c2;
+	--color-brand-mint-2: #eef9e4;
+	--color-brand-cream: #faf8f3;
+	--color-brand-accent: #b5641e;
+
+	/* Supporting palette */
+	--color-skin: #e8b98a;
+	--color-hair: #3a2314;
+
+	/* Semantic aliases */
+	--surface: #ffffff;
+	--surface-alt: var(--color-brand-cream);
+	--surface-subtle: var(--color-brand-mint-2);
+	--border-subtle: rgba(11, 61, 58, 0.12);
+	--ink: #10241f;
+	--ink-strong: var(--color-brand-deep);
+	--muted: #5c7a72;
+	--accent: var(--color-brand-accent);
+	--success: #1f8f6a;
+
+	/* Typography */
+	--font-family-base: "Poppins", Helvetica, sans-serif;
+	--font-size-caption: 0.8rem;
+	--font-size-body-sm: 0.9rem;
+	--font-size-body: 1rem;
+	--font-size-h6: 1.05rem;
+	--font-size-h5: 1.25rem;
+	--font-size-h4: 1.5rem;
+	--font-size-h3: 1.85rem;
+	--font-weight-regular: 400;
+	--font-weight-medium: 500;
+	--font-weight-semibold: 600;
+	--font-weight-bold: 700;
+	--line-height-tight: 1.2;
+	--line-height-normal: 1.45;
+	--line-height-relaxed: 1.6;
+
+	/* Spacing */
+	--space-1: 4px;
+	--space-2: 8px;
+	--space-3: 12px;
+	--space-4: 16px;
+	--space-5: 24px;
+	--space-6: 32px;
+	--space-7: 48px;
+	--space-8: 64px;
+
+	/* Radius */
+	--radius-sm: 8px;
+	--radius-md: 12px;
+	--radius-lg: 16px;
+	--radius-xl: 20px;
+	--radius-pill: 999px;
+
+	/* Elevation */
+	--shadow-rest: 0 1px 2px rgba(11, 61, 58, 0.04), 0 10px 22px -12px rgba(11, 61, 58, 0.18);
+	--shadow-hover: 0 2px 4px rgba(11, 61, 58, 0.08), 0 16px 30px -14px rgba(11, 61, 58, 0.26);
+	--shadow-focus: 0 0 0 3px rgba(20, 92, 82, 0.25);
+
+	/* Motion */
+	--transition-fast: 180ms ease;
+	--transition-normal: 240ms ease;
+}
 

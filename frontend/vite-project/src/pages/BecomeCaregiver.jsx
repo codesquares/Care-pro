@@ -9,6 +9,8 @@ import worksLeftImg from "../assets/become-caregiver/works_left.png";
 import aminaCaregiverImg from "../assets/become-caregiver/aminacaregiver.png";
 import { FiUser, FiCheckCircle, FiBriefcase, FiDollarSign } from 'react-icons/fi';
 import { trackEvent } from "../main-app/services/analyticsService";
+import CategoryCard from "../components/category/CategoryCard";
+import { categoryBrowseData } from "../main-app/constants/categoryBrowseData";
 import "./BecomeCaregiver.css";
 
 const BecomeCaregiver = () => {
@@ -36,18 +38,22 @@ const BecomeCaregiver = () => {
       navigate('/register');
     };
 
-    const services = [
-        { title: "Adult & Elderly Care", description: "Dignified independence-focused assistance to keep seniors active, comfortable & contented", price: "₦10,000", icon: "👵" },
-        { title: "Post Surgery Care", description: "Recovery support after surgery or Hospital stay", price: "₦10,000", icon: "🏥" },
-        { title: "Child Care", description: "Trusted, nurturing caregivers for babies, toddlers & school-age children for parents", price: "₦10,000", icon: "👶" },
-        { title: "Pet Care", description: "Reliable feeding, walking, & companionship for your pet — even when you're away", price: "₦10,000", icon: "🐶" },
-        { title: "Home Care", description: "Compassionate everyday support, meals, mobility, companionship & light home help", price: "₦10,000", icon: "🏠" },
-        { title: "Special Needs Care", description: "Specialized care for individuals with special needs", price: "₦10,000", icon: "💙" },
-        { title: "Home Medical Support", description: "Ongoing clinical care at home, skilled nursing, vitals monitoring, chronic illness support", price: "₦10,000", icon: "💊" },
-        { title: "Mobility Support", description: "Mobility assistance and fall prevention", price: "₦10,000", icon: "♿" },
-        { title: "Therapy & Wellness", description: "Physical therapy and wellness support", price: "₦10,000", icon: "🧘" },
-        { title: "Palliative Care", description: "Palliative care and emotional support", price: "₦10,000", icon: "🙌" },
-    ];
+        const serviceSlugs = [
+            "adult-care",
+            "post-surgery-care",
+            "child-care",
+            "pet-care",
+            "home-care",
+            "special-needs-care",
+            "medical-support",
+            "mobility-support",
+            "therapy-wellness",
+            "palliative",
+        ];
+
+        const services = serviceSlugs
+            .map((slug) => categoryBrowseData.find((category) => category.slug === slug))
+            .filter(Boolean);
 
     return (
         <div className="become-caregiver-page">
@@ -139,15 +145,14 @@ const BecomeCaregiver = () => {
                 <div className="container">
                     <h2 className="section-title">Services you can offer as a care professional</h2>
                     <div className="prof-services-grid">
-                        {services.map((service, index) => (
-                            <div key={index} className="prof-service-card">
-                                <span className="p-icon">{service.icon}</span>
-                                <div className="p-body">
-                                    <h3>{service.title}</h3>
-                                    <p>{service.description}</p>
-                                    <span className="p-price">Starting at {service.price}</span>
-                                </div>
-                            </div>
+                        {services.map((service) => (
+                            <CategoryCard
+                                key={service.slug}
+                                category={service}
+                                showDescription={true}
+                                showPrice={true}
+                                onClick={() => navigate(`/marketplace?category=${service.slug}`)}
+                            />
                         ))}
                     </div>
                     <div className="get-started-banner" onClick={handleAction}>

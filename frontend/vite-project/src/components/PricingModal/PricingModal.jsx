@@ -1,19 +1,31 @@
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
+import CategoryCard from "../category/CategoryCard";
+import CategoryIllustration from "../category/CategoryIllustration";
+import { categoryBrowseData } from "../../main-app/constants/categoryBrowseData";
 import "./PricingModal.css";
 
-const pricingCategories = [
-  { slug: "adult-care", name: "Adult Care", icon: "👴", minPriceNGN: 10000, minPriceUSD: 7 },
-  { slug: "post-surgery-care", name: "Post Surgery Care", icon: "🏥", minPriceNGN: 10000, minPriceUSD: 7 },
-  { slug: "child-care", name: "Child Care", icon: "👶", minPriceNGN: 10000, minPriceUSD: 7 },
-  { slug: "pet-care", name: "Pet Care", icon: "🐕", minPriceNGN: 10000, minPriceUSD: 7 },
-  { slug: "home-care", name: "Home Care", icon: "🏠", minPriceNGN: 10000, minPriceUSD: 7 },
-  { slug: "special-needs-care", name: "Special Needs Care", icon: "💙", minPriceNGN: 10000, minPriceUSD: 7 },
-  { slug: "medical-support", name: "Medical Support", icon: "💊", minPriceNGN: 10000, minPriceUSD: 7 },
-  { slug: "mobility-support", name: "Mobility Support", icon: "🦽", minPriceNGN: 10000, minPriceUSD: 7 },
-  { slug: "therapy-wellness", name: "Therapy & Wellness", icon: "🧘", minPriceNGN: 10000, minPriceUSD: 7 },
-  { slug: "palliative", name: "Palliative", icon: "🤲", minPriceNGN: 10000, minPriceUSD: 7 },
+const pricingCategorySlugs = [
+  "adult-care",
+  "post-surgery-care",
+  "child-care",
+  "pet-care",
+  "home-care",
+  "special-needs-care",
+  "medical-support",
+  "mobility-support",
+  "therapy-wellness",
+  "palliative",
 ];
+
+const pricingCategories = pricingCategorySlugs
+  .map((slug) => categoryBrowseData.find((category) => category.slug === slug))
+  .filter(Boolean)
+  .map((category) => ({
+    ...category,
+    minPriceNGN: category.basePrice,
+    minPriceUSD: 7,
+  }));
 
 const PricingModal = ({ isOpen, onClose }) => {
   const navigate = useNavigate();
@@ -80,15 +92,15 @@ const PricingModal = ({ isOpen, onClose }) => {
         {/* Categories Grid */}
         <div className="pricing-modal__grid">
           {pricingCategories.map((cat) => (
-            <div
+            <CategoryCard
               key={cat.slug}
+              category={cat}
+              showDescription={false}
+              showPrice={true}
               className={`pricing-category-card ${selectedCategory?.slug === cat.slug ? "selected" : ""}`}
               onClick={() => handleCategoryClick(cat)}
-            >
-              <div className="pricing-category-card__icon">{cat.icon}</div>
-              <div className="pricing-category-card__info">
-                <h4 className="pricing-category-card__name">{cat.name}</h4>
-                <div className="pricing-category-card__price">
+              priceContent={
+                <>
                   {currency === "NGN" ? (
                     <>
                       From <strong>₦{cat.minPriceNGN.toLocaleString()}</strong>
@@ -99,24 +111,18 @@ const PricingModal = ({ isOpen, onClose }) => {
                     </>
                   )}
                   <span className="pricing-category-card__per-day"> / visit</span>
-                </div>
-              </div>
-              <div className="pricing-category-card__check">
-                {selectedCategory?.slug === cat.slug && (
-                  <svg width="22" height="22" viewBox="0 0 22 22" fill="none">
-                    <circle cx="11" cy="11" r="11" fill="#10b981" />
-                    <path d="M6 11.5L9.5 15L16 7" stroke="#fff" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round" />
-                  </svg>
-                )}
-              </div>
-            </div>
+                </>
+              }
+            />
           ))}
         </div>
 
         {/* Selected Category Detail */}
         {selectedCategory && (
           <div className="pricing-modal__detail">
-            <div className="pricing-modal__detail-icon">{selectedCategory.icon}</div>
+            <div className="pricing-modal__detail-icon" aria-hidden="true">
+              <CategoryIllustration slug={selectedCategory.slug} />
+            </div>
             <div className="pricing-modal__detail-info">
               <h3>{selectedCategory.name}</h3>
               <p>

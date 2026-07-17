@@ -3,6 +3,7 @@ import { createRoot } from 'react-dom/client';
 import { HelmetProvider } from 'react-helmet-async';
 import App from './App.jsx';
 import './index.css';
+import './styles/variables.css';
 import { Provider } from 'react-redux';
 import  store  from '../src/main-app/Redux/store.js';
 

@@ -1,16 +1,37 @@
 import "../../styles/components/client-hiring-process.css";
+import { useEffect, useState } from "react";
 import caregiverImg from "../../assets/nurseAndWoman.png";
 import ep_select from "../../assets/ep_select.svg";
 import bi_stars from "../../assets/bi_stars.svg";
 import clarity from "../../assets/clarity_talk-bubbles-line.svg";
 import tdesign from "../../assets/tdesign_money.svg";
 import arrow from "../../assets/arrow-right.svg";
+import { FiInfo } from "react-icons/fi";
 import { useAuth } from "../../main-app/context/AuthContext";
 import { useNavigate } from "react-router-dom";
+import { getCommitmentGateEnabled } from "../../main-app/services/publicConfigService";
 
 const ClientHiringProcess = () => {
   const { isAuthenticated, user } = useAuth();
   const navigate = useNavigate();
+  const [commitmentGateEnabled, setCommitmentGateEnabled] = useState(true);
+
+  useEffect(() => {
+    let isMounted = true;
+
+    const loadCommitmentGateConfig = async () => {
+      const enabled = await getCommitmentGateEnabled();
+      if (isMounted) {
+        setCommitmentGateEnabled(enabled);
+      }
+    };
+
+    loadCommitmentGateConfig();
+
+    return () => {
+      isMounted = false;
+    };
+  }, []);
 
   const steps = [
     {
@@ -21,9 +42,10 @@ const ClientHiringProcess = () => {
     },
     {
       icon: tdesign,
-      title: "Pay a Commitment Fee",
-      description:
-        "Once you find a caregiver, pay a small non-refundable commitment fee to initiate contact. This fee is deducted from your total balance when the full gig is paid for.",
+      title: commitmentGateEnabled ? "Pay a Commitment Fee" : "Message Caregivers Instantly",
+      description: commitmentGateEnabled
+        ? "Once you find a caregiver, pay a small non-refundable commitment fee to initiate contact. This fee is deducted from your total balance when the full gig is paid for."
+        : "Once you find a caregiver, start chatting directly to discuss your care needs, schedule, and pricing. No commitment fee is currently required to initiate contact.",
     },
     {
       icon: clarity,
@@ -34,8 +56,9 @@ const ClientHiringProcess = () => {
     {
       icon: bi_stars,
       title: "Receive Quality Care & Pay",
-      description:
-        "Your caregiver delivers the agreed-upon service. Confirm completion and release payment securely through the platform. If no contract is reached, you only lose the commitment fee.",
+      description: commitmentGateEnabled
+        ? "Your caregiver delivers the agreed-upon service. Confirm completion and release payment securely through the platform. If no contract is reached, you only lose the commitment fee."
+        : "Your caregiver delivers the agreed-upon service. Confirm completion and release payment securely through the platform.",
     },
   ];
 
@@ -79,15 +102,27 @@ const ClientHiringProcess = () => {
         </div>
       </div>
 
-      <div className="commitment-fee-note">
-        <div className="note-icon">💡</div>
-        <div className="note-content">
-          <h4>About the Commitment Fee</h4>
-          <p>
-            The commitment fee is non-refundable but is <strong>deducted from your total balance</strong> when you pay for the full gig. If you and the caregiver cannot reach an agreement and no contract is generated, you only lose the commitment fee — no further charges apply.
-          </p>
+      {commitmentGateEnabled ? (
+        <div className="commitment-fee-note">
+          <div className="note-icon" aria-hidden="true"><FiInfo /></div>
+          <div className="note-content">
+            <h4>About the Commitment Fee</h4>
+            <p>
+              The commitment fee is non-refundable but is <strong>deducted from your total balance</strong> when you pay for the full gig. If you and the caregiver cannot reach an agreement and no contract is generated, you only lose the commitment fee — no further charges apply.
+            </p>
+          </div>
         </div>
-      </div>
+      ) : (
+        <div className="commitment-fee-note">
+          <div className="note-icon" aria-hidden="true"><FiInfo /></div>
+          <div className="note-content">
+            <h4>Chat Access Update</h4>
+            <p>
+              You can currently message caregivers directly without paying a commitment fee.
+            </p>
+          </div>
+        </div>
+      )}
     </div>
   );
 };
