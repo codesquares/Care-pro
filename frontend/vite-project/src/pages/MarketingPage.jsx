@@ -17,6 +17,8 @@ import nurseAndWomanImg from "../assets/nurseAndWoman.png";
 import caregiver1 from "../assets/caregiver1.png";
 import QHCC1 from "../assets/QHCC1.jpg";
 import avatarFemale1 from "../assets/avatar-female-1.jpg";
+import heroBackgroundVideo from "../assets/hero/marketing-hero-bg.mp4";
+import heroVideoPoster from "../assets/hero/marketing-hero-poster.jpg";
 
 // Healthcare facts
 const healthcareFacts = [
@@ -40,6 +42,8 @@ const healthcareFacts = [
 
 const ENABLE_HERO_TRUST_PANEL = true;
 const HERO_VIDEO_URL = import.meta.env.VITE_HERO_WALKTHROUGH_VIDEO || "";
+const HERO_BACKGROUND_VIDEO_URL = heroBackgroundVideo;
+const HERO_BACKGROUND_POSTER = heroVideoPoster;
 const TRUST_ROTATION_MS = 5200;
 const heroTrustItems = [
   {
@@ -89,6 +93,8 @@ const MarketingPage = () => {
   const [isHeroVideoOpen, setIsHeroVideoOpen] = useState(false);
   const [activeTrustIndex, setActiveTrustIndex] = useState(0);
   const [isTrustRotationPaused, setIsTrustRotationPaused] = useState(false);
+  const [prefersReducedMotion, setPrefersReducedMotion] = useState(false);
+  const [isHeroBackgroundLoaded, setIsHeroBackgroundLoaded] = useState(false);
 
   useEffect(() => {
     const fetchFeaturedGigs = async () => {
@@ -115,6 +121,21 @@ const MarketingPage = () => {
 
     return () => window.clearInterval(intervalId);
   }, [isTrustRotationPaused]);
+
+  useEffect(() => {
+    const mediaQuery = window.matchMedia("(prefers-reduced-motion: reduce)");
+    const applyPreference = () => setPrefersReducedMotion(mediaQuery.matches);
+
+    applyPreference();
+    mediaQuery.addEventListener("change", applyPreference);
+    return () => mediaQuery.removeEventListener("change", applyPreference);
+  }, []);
+
+  useEffect(() => {
+    if (prefersReducedMotion) {
+      setIsHeroBackgroundLoaded(false);
+    }
+  }, [prefersReducedMotion]);
 
   const handleSearch = (e) => {
     e.preventDefault();
@@ -219,6 +240,37 @@ const MarketingPage = () => {
         </div>
 
         <div className="mk-hero__visual">
+          <div className="mk-hero__media" data-animate="visual">
+            <img
+              src={HERO_BACKGROUND_POSTER}
+              alt=""
+              aria-hidden="true"
+              className={`mk-hero__media-poster ${isHeroBackgroundLoaded ? "is-hidden" : ""}`}
+            />
+            {!prefersReducedMotion && (
+              <video
+                className={`mk-hero__media-video ${isHeroBackgroundLoaded ? "is-visible" : ""}`}
+                autoPlay
+                muted
+                loop
+                playsInline
+                preload="metadata"
+                poster={HERO_BACKGROUND_POSTER}
+                onLoadedData={() => setIsHeroBackgroundLoaded(true)}
+              >
+                <source src={HERO_BACKGROUND_VIDEO_URL} type="video/mp4" />
+              </video>
+            )}
+            <div className="mk-hero__media-overlay mk-hero__media-overlay--upper">
+              <FiCheckCircle size={16} aria-hidden="true" />
+              Verified caregiver profiles
+            </div>
+            <div className="mk-hero__media-overlay mk-hero__media-overlay--lower">
+              <FiShield size={16} aria-hidden="true" />
+              Escrow-secured payments
+            </div>
+          </div>
+
           {ENABLE_HERO_TRUST_PANEL && (
             <div className="mk-hero__trust" data-animate="trust" aria-live="polite">
               <div className="mk-hero__trust-top">

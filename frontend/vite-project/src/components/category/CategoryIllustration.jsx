@@ -5,110 +5,127 @@ const commonProps = {
   fill: "none",
 };
 
+const frame = (
+  <>
+    <rect x="16" y="10" width="118" height="80" rx="18" fill="var(--color-brand-mint-2)" />
+    <rect x="16" y="10" width="118" height="80" rx="18" stroke="var(--color-brand-deep)" strokeOpacity="0.18" strokeWidth="2" />
+  </>
+);
+
 const illustrations = {
+  // Reference mapping: Old -> Adult Care
   "adult-care": (
     <svg {...commonProps}>
-      <path d="M35 90c-1-14 4-22 10-22s11 8 10 22" fill="#c8e6b8" />
-      <circle cx="45" cy="56" r="11" fill="var(--color-skin)" />
-      <path d="M35 53c1-6 5-9 10-9s9 3 10 9" stroke="var(--color-hair)" strokeWidth="3" fill="none" strokeLinecap="round" />
-      <rect x="93" y="46" width="26" height="38" rx="10" fill="var(--color-brand-deep-2)" />
-      <circle cx="106" cy="34" r="11" fill="var(--color-skin)" />
-      <path d="M96 31c3-9 8-13 11-13s8 4 11 13" stroke="var(--color-hair)" strokeWidth="3" fill="none" strokeLinecap="round" />
-      <path d="M93 58c-7 3-11 8-11 16" stroke="var(--color-brand-deep-2)" strokeWidth="7" strokeLinecap="round" fill="none" />
-      <circle cx="72" cy="40" r="3" fill="var(--color-brand-accent)" opacity="0.6" />
+      {frame}
+      <circle cx="52" cy="34" r="9" fill="var(--color-skin)" />
+      <path d="M44 31c1-5 4-7 8-7s7 2 8 7" stroke="var(--color-hair)" strokeWidth="3" strokeLinecap="round" />
+      <rect x="42" y="44" width="20" height="24" rx="9" fill="var(--color-brand-deep-2)" />
+      <path d="M88 32v38" stroke="var(--color-brand-deep)" strokeWidth="5" strokeLinecap="round" />
+      <path d="M88 51h14" stroke="var(--color-brand-accent)" strokeWidth="5" strokeLinecap="round" />
+      <path d="M88 70h16" stroke="var(--color-brand-deep)" strokeWidth="5" strokeLinecap="round" />
     </svg>
   ),
+  // Reference mapping: Stethoscope -> Post Surgery Care
   "post-surgery-care": (
     <svg {...commonProps}>
-      <rect x="30" y="55" width="70" height="28" rx="8" fill="var(--color-brand-mint)" />
-      <rect x="30" y="48" width="70" height="10" rx="5" fill="var(--color-brand-deep)" />
-      <circle cx="48" cy="48" r="10" fill="var(--color-skin)" />
-      <rect x="30" y="65" width="70" height="6" fill="#fff" />
-      <path d="M112 40c8 0 14 6 14 14s-6 14-14 14" stroke="var(--color-brand-deep-2)" strokeWidth="4" fill="none" strokeLinecap="round" />
-      <path d="M108 30l4 8 4-8" stroke="var(--color-brand-accent)" strokeWidth="3" fill="none" strokeLinecap="round" strokeLinejoin="round" />
-      <path d="M28 90h74" stroke="var(--color-brand-deep)" strokeWidth="4" strokeLinecap="round" />
+      {frame}
+      <path d="M48 36c0 10 8 18 18 18s18-8 18-18" stroke="var(--color-brand-deep-2)" strokeWidth="5" strokeLinecap="round" />
+      <path d="M84 36c0 10 8 18 18 18" stroke="var(--color-brand-deep-2)" strokeWidth="5" strokeLinecap="round" />
+      <circle cx="102" cy="54" r="7" fill="none" stroke="var(--color-brand-deep)" strokeWidth="4" />
+      <rect x="56" y="28" width="20" height="14" rx="5" fill="var(--surface)" stroke="var(--color-brand-deep)" strokeWidth="3" />
+      <path d="M66 31v8M62 35h8" stroke="var(--color-brand-accent)" strokeWidth="3" strokeLinecap="round" />
     </svg>
   ),
+  // Reference mapping: Baby_boy -> Child Care
   "child-care": (
     <svg {...commonProps}>
-      <circle cx="55" cy="45" r="14" fill="var(--color-skin)" />
-      <path d="M42 40c2-8 7-11 13-11s11 3 13 11" stroke="var(--color-hair)" strokeWidth="3" fill="none" strokeLinecap="round" />
-      <rect x="38" y="60" width="34" height="30" rx="12" fill="var(--color-brand-accent)" />
-      <circle cx="105" cy="62" r="9" fill="var(--color-skin)" />
-      <path d="M97 58c1-5 4-7 8-7s7 2 8 7" stroke="var(--color-hair)" strokeWidth="2.5" fill="none" strokeLinecap="round" />
-      <rect x="93" y="71" width="24" height="20" rx="9" fill="var(--color-brand-deep-2)" />
-      <circle cx="100" cy="50" r="5" fill="var(--color-brand-mint)" />
+      {frame}
+      <circle cx="58" cy="38" r="12" fill="var(--color-skin)" />
+      <path d="M47 34c2-7 6-10 11-10s9 3 11 10" stroke="var(--color-hair)" strokeWidth="3" strokeLinecap="round" />
+      <rect x="44" y="52" width="28" height="24" rx="11" fill="var(--color-brand-deep-2)" />
+      <circle cx="94" cy="53" r="8" fill="var(--color-brand-accent)" />
+      <path d="M94 45v16M86 53h16" stroke="var(--surface)" strokeWidth="3" strokeLinecap="round" />
+      <circle cx="106" cy="65" r="6" fill="var(--color-brand-mint)" />
     </svg>
   ),
   "pet-care": (
     <svg {...commonProps}>
-      <rect x="35" y="45" width="30" height="42" rx="12" fill="var(--color-brand-deep-2)" />
-      <circle cx="50" cy="34" r="12" fill="var(--color-skin)" />
-      <path d="M39 30c2-7 6-10 11-10s9 3 11 10" stroke="var(--color-hair)" strokeWidth="3" fill="none" strokeLinecap="round" />
-      <path d="M65 70c15-2 25-6 30-14" stroke="var(--color-brand-deep)" strokeWidth="3" fill="none" strokeLinecap="round" />
-      <ellipse cx="112" cy="66" rx="16" ry="10" fill="var(--color-brand-deep)" />
-      <circle cx="123" cy="58" r="6" fill="var(--color-brand-deep)" />
-      <path d="M100 66c-2-3-2-6 0-8" stroke="var(--color-brand-deep)" strokeWidth="3" fill="none" strokeLinecap="round" />
+      {frame}
+      <circle cx="46" cy="40" r="8" fill="var(--color-brand-accent)" />
+      <circle cx="64" cy="40" r="8" fill="var(--color-brand-accent)" />
+      <circle cx="40" cy="56" r="8" fill="var(--color-brand-accent)" />
+      <circle cx="70" cy="56" r="8" fill="var(--color-brand-accent)" />
+      <path d="M56 44c9 0 16 8 16 17 0 7-6 13-16 13s-16-6-16-13c0-9 7-17 16-17z" fill="var(--color-brand-deep-2)" />
+      <circle cx="102" cy="34" r="9" fill="var(--color-skin)" />
+      <path d="M94 31c1-5 4-7 8-7s7 2 8 7" stroke="var(--color-hair)" strokeWidth="3" strokeLinecap="round" />
+      <path d="M95 60c9-2 17-8 20-14" stroke="var(--color-brand-deep)" strokeWidth="4" strokeLinecap="round" />
     </svg>
   ),
+  // Reference mapping: Home -> Home Care
   "home-care": (
     <svg {...commonProps}>
-      <path d="M55 30l-30 24v34h60V54z" fill="var(--color-brand-deep)" />
-      <rect x="70" y="66" width="14" height="22" fill="var(--color-brand-mint)" />
-      <rect x="35" y="58" width="14" height="12" fill="var(--color-brand-mint)" />
-      <path d="M20 54l35-28 35 28" stroke="var(--color-brand-deep)" strokeWidth="4" fill="none" strokeLinecap="round" strokeLinejoin="round" />
-      <path d="M110 50c8 3 13 10 13 18" stroke="var(--color-brand-accent)" strokeWidth="4" fill="none" strokeLinecap="round" />
-      <circle cx="112" cy="42" r="8" fill="var(--color-skin)" />
+      {frame}
+      <path d="M34 52l25-20 25 20v28H34z" fill="var(--color-brand-deep)" />
+      <path d="M31 52l28-22 28 22" stroke="var(--color-brand-deep-2)" strokeWidth="4" strokeLinecap="round" strokeLinejoin="round" />
+      <rect x="54" y="64" width="10" height="16" rx="3" fill="var(--color-brand-mint)" />
+      <rect x="41" y="59" width="9" height="8" rx="2" fill="var(--color-brand-mint)" />
+      <path d="M96 60l10-10 10 10" stroke="var(--color-brand-accent)" strokeWidth="4" strokeLinecap="round" strokeLinejoin="round" />
+      <path d="M106 50v18" stroke="var(--color-brand-accent)" strokeWidth="4" strokeLinecap="round" />
     </svg>
   ),
+  // Reference mapping: Disabled_person + Blind -> Special Needs Care
   "special-needs-care": (
     <svg {...commonProps}>
-      <path d="M75 32c8-10 24-10 28 2 4 10-6 20-28 34-22-14-32-24-28-34 4-12 20-12 28-2z" fill="var(--color-brand-accent)" opacity="0.85" />
-      <circle cx="40" cy="72" r="10" fill="var(--color-skin)" />
-      <rect x="28" y="82" width="24" height="16" rx="8" fill="var(--color-brand-deep-2)" />
-      <circle cx="110" cy="72" r="10" fill="var(--color-skin)" />
-      <rect x="98" y="82" width="24" height="16" rx="8" fill="var(--color-brand-deep)" />
+      {frame}
+      <circle cx="52" cy="33" r="8" fill="var(--color-skin)" />
+      <path d="M52 42v14M52 49h13" stroke="var(--color-brand-deep-2)" strokeWidth="4" strokeLinecap="round" />
+      <circle cx="75" cy="68" r="14" fill="none" stroke="var(--color-brand-deep)" strokeWidth="4" />
+      <path d="M75 68l13 8" stroke="var(--color-brand-accent)" strokeWidth="4" strokeLinecap="round" />
+      <path d="M97 34q10 0 14 6" stroke="var(--color-brand-deep-2)" strokeWidth="4" strokeLinecap="round" />
+      <path d="M97 44q10 0 14-6" stroke="var(--color-brand-deep-2)" strokeWidth="4" strokeLinecap="round" />
+      <path d="M95 39h20" stroke="var(--color-brand-accent)" strokeWidth="3" strokeLinecap="round" />
     </svg>
   ),
+  // Reference mapping: Pharmacy -> Medical Support
   "medical-support": (
     <svg {...commonProps}>
-      <rect x="55" y="35" width="40" height="26" rx="6" fill="#fff" stroke="var(--color-brand-deep)" strokeWidth="3" />
-      <rect x="65" y="42" width="8" height="8" fill="var(--color-brand-accent)" />
-      <rect x="77" y="42" width="8" height="8" fill="var(--color-brand-deep-2)" />
-      <circle cx="45" cy="70" r="11" fill="var(--color-skin)" />
-      <rect x="32" y="82" width="26" height="16" rx="8" fill="var(--color-brand-deep-2)" />
-      <path d="M100 68c0-8 6-14 14-14s14 6 14 14-6 14-14 14" stroke="var(--color-brand-deep)" strokeWidth="4" fill="none" strokeLinecap="round" />
-      <path d="M114 60v10l7 4" stroke="var(--color-brand-accent)" strokeWidth="3" fill="none" strokeLinecap="round" strokeLinejoin="round" />
+      {frame}
+      <rect x="36" y="30" width="56" height="44" rx="10" fill="var(--surface)" stroke="var(--color-brand-deep)" strokeWidth="3" />
+      <path d="M56 38v28M44 52h24" stroke="var(--color-brand-accent)" strokeWidth="4" strokeLinecap="round" />
+      <rect x="96" y="34" width="24" height="10" rx="5" fill="var(--color-brand-deep-2)" />
+      <rect x="96" y="50" width="24" height="10" rx="5" fill="var(--color-brand-accent)" />
     </svg>
   ),
+  // Reference mapping: Wheelchair -> Mobility Support
   "mobility-support": (
     <svg {...commonProps}>
-      <circle cx="50" cy="45" r="11" fill="var(--color-skin)" />
-      <rect x="36" y="60" width="28" height="30" rx="12" fill="var(--color-brand-deep-2)" />
-      <path d="M36 90l-6 6M64 90l6 6" stroke="var(--color-brand-deep)" strokeWidth="4" strokeLinecap="round" />
-      <circle cx="30" cy="96" r="4" fill="none" stroke="var(--color-brand-deep)" strokeWidth="3" />
-      <path d="M85 40v50M85 40l14 8M85 40l-14 8" stroke="var(--color-brand-accent)" strokeWidth="4" fill="none" strokeLinecap="round" />
-      <path d="M75 90h20" stroke="var(--color-brand-deep)" strokeWidth="4" strokeLinecap="round" />
+      {frame}
+      <circle cx="53" cy="33" r="8" fill="var(--color-skin)" />
+      <path d="M53 42v14M53 49h12" stroke="var(--color-brand-deep-2)" strokeWidth="4" strokeLinecap="round" />
+      <circle cx="82" cy="66" r="14" fill="none" stroke="var(--color-brand-deep)" strokeWidth="4" />
+      <path d="M62 58h17l8 13" stroke="var(--color-brand-deep-2)" strokeWidth="4" strokeLinecap="round" strokeLinejoin="round" />
+      <circle cx="110" cy="70" r="6" fill="var(--color-brand-accent)" />
     </svg>
   ),
+  // Reference mapping: Meditation -> Therapy & Wellness
   "therapy-wellness": (
     <svg {...commonProps}>
-      <circle cx="75" cy="38" r="12" fill="var(--color-skin)" />
-      <path d="M63 34c2-8 6-11 12-11s10 3 12 11" stroke="var(--color-hair)" strokeWidth="3" fill="none" strokeLinecap="round" />
-      <path d="M75 52c-14 0-22 10-18 26M75 52c14 0 22 10 18 26" stroke="var(--color-brand-deep-2)" strokeWidth="7" fill="none" strokeLinecap="round" />
-      <path d="M75 52v34" stroke="var(--color-brand-deep-2)" strokeWidth="8" strokeLinecap="round" />
-      <path d="M35 30q6-8 12 0" stroke="var(--color-brand-mint)" strokeWidth="3" fill="none" strokeLinecap="round" />
-      <path d="M103 30q6-8 12 0" stroke="var(--color-brand-mint)" strokeWidth="3" fill="none" strokeLinecap="round" />
+      {frame}
+      <circle cx="75" cy="33" r="8" fill="var(--color-skin)" />
+      <path d="M67 30c1-5 4-7 8-7s7 2 8 7" stroke="var(--color-hair)" strokeWidth="3" strokeLinecap="round" />
+      <path d="M75 44c-12 0-18 9-16 20M75 44c12 0 18 9 16 20" stroke="var(--color-brand-deep-2)" strokeWidth="5" strokeLinecap="round" />
+      <path d="M59 70h32" stroke="var(--color-brand-accent)" strokeWidth="4" strokeLinecap="round" />
+      <path d="M47 54q8 8 16 0M87 54q8 8 16 0" stroke="var(--color-brand-mint)" strokeWidth="3" strokeLinecap="round" />
     </svg>
   ),
+  // New 10th icon for Palliative
   palliative: (
     <svg {...commonProps}>
-      <circle cx="58" cy="50" r="10" fill="var(--color-skin)" />
-      <rect x="46" y="63" width="24" height="26" rx="10" fill="var(--color-brand-deep-2)" />
-      <circle cx="92" cy="50" r="10" fill="var(--color-skin)" />
-      <rect x="80" y="63" width="24" height="26" rx="10" fill="var(--color-brand-deep)" />
-      <path d="M66 74h18" stroke="var(--color-brand-accent)" strokeWidth="4" strokeLinecap="round" />
-      <path d="M75 30c4-6 12-6 14 1 2 5-3 10-14 17-11-7-16-12-14-17 2-7 10-7 14-1z" fill="var(--color-brand-accent)" opacity="0.85" />
+      {frame}
+      <path d="M72 66c0-8 8-14 8-22 0-4-2-8-5-10-3 2-5 6-5 10 0 8 8 14 8 22z" fill="var(--color-brand-accent)" />
+      <rect x="68" y="66" width="14" height="14" rx="5" fill="var(--color-brand-deep-2)" />
+      <path d="M44 72c7 5 15 8 23 8M106 72c-7 5-15 8-23 8" stroke="var(--color-brand-deep)" strokeWidth="5" strokeLinecap="round" />
+      <path d="M60 52c5-5 11-5 15 0 4-5 10-5 15 0 0 8-8 12-15 18-7-6-15-10-15-18z" fill="var(--color-brand-mint)" />
     </svg>
   ),
 };
