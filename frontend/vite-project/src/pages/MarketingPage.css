@@ -17,7 +17,12 @@ Marketing Page Styles
 
 /* ========== HERO SECTION ========== */
 .marketing-page .mk-hero {
-  background: linear-gradient(135deg, #0b3d3a 0%, #0f4b46 54%, #0b3d3a 100%);
+  background: linear-gradient(
+    135deg,
+    color-mix(in srgb, var(--color-brand-deep) 92%, black) 0%,
+    var(--color-brand-deep) 52%,
+    color-mix(in srgb, var(--color-brand-deep-2) 88%, black) 100%
+  );
   min-height: 460px;
   display: flex;
   align-items: center;
@@ -86,10 +91,10 @@ Marketing Page Styles
 .marketing-page .mk-hero__visual {
   position: relative;
   z-index: 1;
-  width: min(36vw, 430px);
+  width: min(39vw, 460px);
   display: flex;
   flex-direction: column;
-  gap: 0;
+  gap: var(--space-3);
 }
 
 @media (max-width: 1023px) {
@@ -156,6 +161,10 @@ Marketing Page Styles
 
 .marketing-page .mk-hero [data-animate="trust"] {
   animation-delay: 360ms;
+}
+
+.marketing-page .mk-hero [data-animate="visual"] {
+  animation-delay: 310ms;
 }
 
 .marketing-page .mk-hero [data-animate="popular"] {
@@ -308,6 +317,99 @@ Marketing Page Styles
 
 .marketing-page .mk-hero__search button:hover {
   background-color: color-mix(in srgb, var(--success) 88%, black);
+}
+
+.marketing-page .mk-hero__media {
+  position: relative;
+  overflow: hidden;
+  border-radius: clamp(16px, 2vw, 22px);
+  min-height: clamp(210px, 29vw, 310px);
+  border: 1px solid color-mix(in srgb, var(--surface) 28%, transparent);
+  background: color-mix(in srgb, var(--color-brand-deep-2) 88%, black);
+  box-shadow:
+    inset 0 1px 0 color-mix(in srgb, var(--surface) 20%, transparent),
+    0 14px 34px rgba(0, 0, 0, 0.26);
+}
+
+.marketing-page .mk-hero__media::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(
+    180deg,
+    color-mix(in srgb, var(--color-brand-deep-2) 14%, transparent) 0%,
+    color-mix(in srgb, var(--color-brand-deep-2) 48%, transparent) 100%
+  );
+  pointer-events: none;
+  z-index: 2;
+}
+
+.marketing-page .mk-hero__media-poster,
+.marketing-page .mk-hero__media-video {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.marketing-page .mk-hero__media-poster {
+  opacity: 1;
+  transition: opacity var(--transition-normal);
+}
+
+.marketing-page .mk-hero__media-poster.is-hidden {
+  opacity: 0;
+}
+
+.marketing-page .mk-hero__media-video {
+  opacity: 0;
+  transition: opacity var(--transition-normal);
+}
+
+.marketing-page .mk-hero__media-video.is-visible {
+  opacity: 1;
+}
+
+.marketing-page .mk-hero__media-overlay {
+  position: absolute;
+  z-index: 3;
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-2);
+  border-radius: 999px;
+  padding: 0.44rem 0.75rem;
+  background: color-mix(in srgb, var(--surface) 93%, transparent);
+  color: var(--color-brand-deep-2);
+  border: 1px solid color-mix(in srgb, var(--color-brand-deep) 20%, transparent);
+  box-shadow: 0 8px 18px rgba(22, 24, 39, 0.22);
+  font-size: 0.74rem;
+  font-weight: var(--font-weight-semibold);
+  letter-spacing: 0.01em;
+}
+
+.marketing-page .mk-hero__media-overlay--upper {
+  top: 12px;
+  right: 12px;
+}
+
+.marketing-page .mk-hero__media-overlay--lower {
+  left: 12px;
+  bottom: 12px;
+}
+
+@media (max-width: 1023px) {
+  .marketing-page .mk-hero__media {
+    width: 100%;
+    min-height: clamp(190px, 52vw, 300px);
+  }
+}
+
+@media (max-width: 520px) {
+  .marketing-page .mk-hero__media-overlay {
+    font-size: 0.68rem;
+    padding: 0.36rem 0.6rem;
+  }
 }
 
 .marketing-page .mk-hero__actions {
@@ -541,12 +643,10 @@ Marketing Page Styles
 .marketing-page .services-row {
   display: flex;
   gap: var(--space-2);
-  overflow-x: auto;
-  overflow-y: hidden;
-  padding: 0 var(--space-2) var(--space-2);
-  margin: 0 calc(var(--space-2) * -1) var(--space-5);
-  scroll-snap-type: x mandatory;
-  scrollbar-width: thin;
+  overflow: visible;
+  padding: 0 0 var(--space-2);
+  margin: 0 0 var(--space-5);
+  align-items: stretch;
 }
 
 .marketing-page .services-row::-webkit-scrollbar {
@@ -559,7 +659,26 @@ Marketing Page Styles
 }
 
 .marketing-page .services-row .category-card--compact {
-  scroll-snap-align: start;
+  flex: 1 1 0;
+  min-width: 0;
+  scroll-snap-align: none;
+}
+
+@media (max-width: 1023px) {
+  .marketing-page .services-row {
+    overflow-x: auto;
+    overflow-y: hidden;
+    padding: 0 var(--space-2) var(--space-2);
+    margin: 0 calc(var(--space-2) * -1) var(--space-5);
+    scroll-snap-type: x mandatory;
+    scrollbar-width: thin;
+  }
+
+  .marketing-page .services-row .category-card--compact {
+    flex: 0 0 108px;
+    min-width: 108px;
+    scroll-snap-align: start;
+  }
 }
 
 .marketing-page .services-cta-sec {
