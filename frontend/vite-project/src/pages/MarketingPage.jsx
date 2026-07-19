@@ -4,100 +4,19 @@ import "./MarketingPage.css";
 import PricingModal from "../components/PricingModal/PricingModal";
 import ClientGigService from "../main-app/services/clientGigService";
 import ServiceCard from "../main-app/pages/client/client-dashboard/ServiceCard";
+import CategoryCard from "../components/category/CategoryCard";
+import { categoryBrowseData } from "../main-app/constants/categoryBrowseData";
 import "../main-app/pages/client/client-dashboard/serviceCard.css";
 
 // Import assets
 import careproLogo from "../assets/careproLogo.svg";
 import nurseImg from "../assets/nurse.png";
 import nurseAndWomanImg from "../assets/nurseAndWoman.png";
-import afternoonLanding from "../assets/afternoon_landing.png";
 import caregiver1 from "../assets/caregiver1.png";
 import QHCC1 from "../assets/QHCC1.jpg";
 import avatarFemale1 from "../assets/avatar-female-1.jpg";
-
-// Service categories for the grid - mapped to backend categories
-const serviceCategories = [
-  {
-    id: 1,
-    slug: "adult-care",
-    name: "Adult Care",
-    description: "Compassionate care for seniors and adults",
-    icon: "👴",
-    basePrice: 10000,
-  },
-  {
-    id: 2,
-    slug: "post-surgery-care",
-    name: "Post Surgery Care",
-    description: "Recovery support after surgery or hospital discharge",
-    icon: "🏥",
-    basePrice: 10000,
-  },
-  {
-    id: 3,
-    slug: "child-care",
-    name: "Child Care",
-    description: "Professional childcare and nanny services",
-    icon: "👶",
-    basePrice: 10000,
-  },
-  {
-    id: 4,
-    slug: "pet-care",
-    name: "Pet Care",
-    description: "Pet minding, dog walking, and pet companionship",
-    icon: "🐕",
-    basePrice: 10000,
-  },
-  {
-    id: 5,
-    slug: "home-care",
-    name: "Home Care",
-    description: "General home assistance and daily living support",
-    icon: "🏠",
-    basePrice: 10000,
-  },
-  {
-    id: 6,
-    slug: "special-needs-care",
-    name: "Special Needs Care",
-    description: "Specialized care for individuals with special needs",
-    icon: "💙",
-    basePrice: 10000,
-  },
-  {
-    id: 7,
-    slug: "medical-support",
-    name: "Medical Support",
-    description: "Nursing care and medical assistance",
-    icon: "💊",
-    basePrice: 10000,
-  },
-  {
-    id: 8,
-    slug: "mobility-support",
-    name: "Mobility Support",
-    description: "Mobility assistance and fall prevention",
-    icon: "🦽",
-    basePrice: 10000,
-  },
-  {
-    id: 9,
-    slug: "therapy-wellness",
-    name: "Therapy & Wellness",
-    description: "Physical therapy and wellness support",
-    icon: "🧘",
-    basePrice: 10000,
-  },
-  {
-    id: 10,
-    slug: "palliative",
-    name: "Palliative",
-    description: "Palliative care and emotional support",
-    icon: "🤲",
-    basePrice: 10000,
-  },
-];
+import heroBackgroundVideo from "../../__mocks__/newgifvideo.gif";
+import heroVideoPoster from "../assets/hero/marketing-hero-poster.jpg";
 
 // Healthcare facts
 const healthcareFacts = [
@@ -119,7 +38,9 @@ const healthcareFacts = [
   },
 ];
 
-
+const HERO_BACKGROUND_VIDEO_URL = heroBackgroundVideo;
+const HERO_BACKGROUND_POSTER = heroVideoPoster;
+const IS_HERO_BACKGROUND_GIF = /\.gif($|\?)/i.test(HERO_BACKGROUND_VIDEO_URL);
 
 const MarketingPage = () => {
   const navigate = useNavigate();
@@ -127,6 +48,8 @@ const MarketingPage = () => {
   const [isPricingModalOpen, setIsPricingModalOpen] = useState(false);
   const [featuredGigs, setFeaturedGigs] = useState([]);
   const [gigsLoading, setGigsLoading] = useState(true);
+  const [prefersReducedMotion, setPrefersReducedMotion] = useState(false);
+  const [isHeroBackgroundLoaded, setIsHeroBackgroundLoaded] = useState(false);
 
   useEffect(() => {
     const fetchFeaturedGigs = async () => {
@@ -141,6 +64,26 @@ const MarketingPage = () => {
     };
     fetchFeaturedGigs();
   }, []);
+
+  useEffect(() => {
+    const mediaQuery = window.matchMedia("(prefers-reduced-motion: reduce)");
+    const applyPreference = () => setPrefersReducedMotion(mediaQuery.matches);
+
+    applyPreference();
+    if (typeof mediaQuery.addEventListener === "function") {
+      mediaQuery.addEventListener("change", applyPreference);
+      return () => mediaQuery.removeEventListener("change", applyPreference);
+    }
+
+    mediaQuery.addListener(applyPreference);
+    return () => mediaQuery.removeListener(applyPreference);
+  }, []);
+
+  useEffect(() => {
+    if (prefersReducedMotion) {
+      setIsHeroBackgroundLoaded(false);
+    }
+  }, [prefersReducedMotion]);
 
   const handleSearch = (e) => {
     e.preventDefault();
@@ -176,24 +119,19 @@ const MarketingPage = () => {
   return (
     <div className="marketing-page">
       {/* Hero Section */}
-      <section
-        className="mk-hero"
-        style={{
-          backgroundImage: `linear-gradient(90deg, rgba(0, 0, 0, 0.7) 0%, rgba(0, 0, 0, 0.4) 60%, rgba(0, 0, 0, 0.2) 100%), url(${afternoonLanding})`,
-        }}
-      >
+      <section className="mk-hero">
         <div className="mk-hero__content">
-          <div className="text-container">
-            <span className="connect-text">Connect with Verified</span>
-            <span className="profession-text">Home Care Professionals</span>
-            <span className="demand-text">on-demand</span>
+          <div className="text-container mk-hero__headline" data-animate="headline">
+            <span className="connect-text">Trusted profiles<span className="mk-hero__accent-period">.</span></span>
+            <span className="profession-text">Trusted hires<span className="mk-hero__accent-period">.</span></span>
+            <span className="demand-text">Trusted care<span className="mk-hero__accent-period">.</span></span>
           </div>
 
           {/* Search Bar */}
-          <form className="mk-hero__search" onSubmit={handleSearch}>
+          <form className="mk-hero__search" data-animate="search" onSubmit={handleSearch}>
             <input
               type="text"
-              placeholder="What service are you looking for today?"
+              placeholder="Search services"
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
               onKeyUp={handleQuickSearch}
@@ -207,21 +145,68 @@ const MarketingPage = () => {
           </form>
 
           {/* Popular Tags */}
-          <div className="mk-hero__popular">
-            <span>Popular:</span>
-            <button onClick={() => handleServiceClick("adult-care")}>
-              Adult Care
-            </button>
-            <button onClick={() => handleServiceClick("child-care")}>
-              Nanny
-            </button>
-            <button onClick={() => handleServiceClick("home-care")}>
-              Home Care
-            </button>
-            <button onClick={() => handleServiceClick("pet-care")}>
-              Pet Care
-            </button>
+          <div className="mk-hero__popular-block" data-animate="popular">
+            <div className="mk-hero__popular">
+              <span>Popular:</span>
+              <button onClick={() => handleServiceClick("adult-care")}>
+                Adult Care
+              </button>
+              <button onClick={() => handleServiceClick("child-care")}>
+                Nanny
+              </button>
+              <button onClick={() => handleServiceClick("home-care")}>
+                Home Care
+              </button>
+              <button onClick={() => handleServiceClick("pet-care")}>
+                Pet Care
+              </button>
+            </div>
+
+            <p className="mk-hero__popular-tagline">
+              Now serving families across Nigeria.
+            </p>
           </div>
+        </div>
+
+        <div className="mk-hero__visual">
+          <div className="mk-hero__media">
+            <img
+              src={HERO_BACKGROUND_POSTER}
+              alt=""
+              aria-hidden="true"
+              className={`mk-hero__media-poster ${isHeroBackgroundLoaded ? "is-hidden" : ""}`}
+            />
+            {!prefersReducedMotion && (
+              IS_HERO_BACKGROUND_GIF ? (
+                <img
+                  src={HERO_BACKGROUND_VIDEO_URL}
+                  alt=""
+                  aria-hidden="true"
+                  className={`mk-hero__media-video ${isHeroBackgroundLoaded ? "is-visible" : ""}`}
+                  onLoad={() => setIsHeroBackgroundLoaded(true)}
+                />
+              ) : (
+                <video
+                  className={`mk-hero__media-video ${isHeroBackgroundLoaded ? "is-visible" : ""}`}
+                  autoPlay
+                  muted
+                  loop
+                  playsInline
+                  preload="metadata"
+                  poster={HERO_BACKGROUND_POSTER}
+                  onLoadedData={() => setIsHeroBackgroundLoaded(true)}
+                >
+                  <source src={HERO_BACKGROUND_VIDEO_URL} type="video/mp4" />
+                </video>
+              )
+            )}
+          </div>
+        </div>
+
+        <div className="mk-hero__divider" aria-hidden="true">
+          <svg viewBox="0 0 1440 80" preserveAspectRatio="none" focusable="false">
+            <path d="M0,22 C220,76 420,6 700,34 C970,62 1180,6 1440,28 L1440,80 L0,80 Z" />
+          </svg>
         </div>
       </section>
 
@@ -229,32 +214,24 @@ const MarketingPage = () => {
       <section className="services-section">
         <div className="container">
           <h2>Popular Services</h2>
-          <div className="services-grid">
-            {serviceCategories.map((service) => (
-              <div
+          <div className="services-row" aria-label="Popular service categories">
+            {categoryBrowseData.map((service) => (
+              <CategoryCard
                 key={service.id}
-                className="service-card"
+                category={service}
+                showDescription={false}
+                showPrice={false}
                 onClick={() => handleServiceClick(service.slug)}
-              >
-                <div className="service-icon">{service.icon}</div>
-                <div className="service-body">
-                  <h3>{service.name}</h3>
-                  <p>{service.description}</p>
-                  <div className="service-price">
-                    Starting at {"\u20A6"}
-                    {service.basePrice.toLocaleString()} /visit
-                  </div>
-                </div>
-              </div>
+              />
             ))}
-            <div className="services-cta-sec" onClick={handleHireCaregiver}>
-              <div className="services-cta-sec-text">
-                Trusted homecare at your fingertips.
-              </div>
+          </div>
+          <div className="services-cta-sec" onClick={handleHireCaregiver}>
+            <div className="services-cta-sec-text">
+              Trusted homecare at your fingertips.
+            </div>
             <button className="services-cta-btn" type="button">
               Hire a caregiver <span aria-hidden="true">›</span>
             </button>
-          </div>
           </div>
           {/* <div className="browse-all-container">
             <button className="browse-all-btn" onClick={handleBrowseAll}>

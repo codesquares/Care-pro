@@ -43,7 +43,7 @@ const BookCaregiver = () => {
     },
     {
       question: 'How much does it cost to hire a caregiver?',
-      answer: 'Services start from ₦10,000 per day. For bookings over ₦100,000, a 10% client checkout service charge may apply. This is separate from the caregiver/platform commission split used for caregiver payouts. You can see clear pricing on each caregiver\'s service gig before you book.'
+      answer: 'Services start from ₦10,000 per day. A 10% client checkout service charge applies to all bookings. This is separate from the caregiver/platform commission split used for caregiver payouts. You can see clear pricing on each caregiver\'s service gig before you book.'
     },
     {
       question: 'Can I choose a specific caregiver?',

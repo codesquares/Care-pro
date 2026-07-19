@@ -13,6 +13,7 @@ import { useSelector, useDispatch } from 'react-redux';
 import { markNotificationAsRead } from '../Redux/slices/notificationSlice';
 import { toast } from 'react-toastify';
 import { subscribeForPush } from '../services/pushService';
+import chatService from '../services/signalRChatService';
 
 
 // Notification permission component - single definition
@@ -516,16 +517,11 @@ const Messages = ({ userId: propsUserId, token: propsToken }) => {
 
   // Debug helper
   const logChatServiceDebug = () => {
-    import('../services/signalRChatService').then(module => {
-      const chatService = module.default;
-      if (chatService && typeof chatService.getDebugInfo === 'function') {
-        chatService.getDebugInfo();
-      } else {
-        console.warn('Chat service debug method not available');
-      }
-    }).catch(err => {
-      console.error('Error loading chat service for debug:', err);
-    });
+    if (chatService && typeof chatService.getDebugInfo === 'function') {
+      chatService.getDebugInfo();
+    } else {
+      console.warn('Chat service debug method not available');
+    }
   };
   
   

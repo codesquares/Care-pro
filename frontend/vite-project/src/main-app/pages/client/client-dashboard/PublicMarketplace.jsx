@@ -12,6 +12,7 @@ import ClientGigService from "../../../services/clientGigService";
 import ClientCareNeedsService from "../../../services/clientCareNeedsService";
 import MatchingService from "../../../services/matchingService";
 import QualityHealthCareCards from "../../../../components/QualityHealthCareCards";
+import { categoryBrowseData } from "../../../constants/categoryBrowseData";
 import TopBanner from "../../../../components/TopBanner";
 import genralImg from "../../../../assets/nurse.png";
 import CareFacts from "../../../../pages/CareFacts";
@@ -320,6 +321,10 @@ const PublicMarketplace = () => {
     }
   };
 
+  const activeCategoryMeta = categoryBrowseData.find(
+    (category) => category.name === activeCategory
+  );
+
   return (
     <div className="dashboard client-dashboard-flex">
       <div className="rightbar">
@@ -348,6 +353,11 @@ const PublicMarketplace = () => {
                   <p className="category-subtitle">
                     Browse {filteredServices.length} {activeCategory.toLowerCase()} services
                   </p>
+                  {activeCategoryMeta && (
+                    <p className="category-context-line">
+                      {activeCategoryMeta.description} • Starting at ₦{activeCategoryMeta.basePrice.toLocaleString()} /visit
+                    </p>
+                  )}
                 </div>
               </div>
             )}

@@ -19,7 +19,16 @@ export default defineConfig(({ mode }) => {
       manifest: false,         // Use our existing /public/site.webmanifest
       strategies: 'generateSW',
       workbox: {
-        globPatterns: ['**/*.{js,css,html,ico,png,svg,woff2}'],
+        maximumFileSizeToCacheInBytes: 5 * 1024 * 1024,
+        globPatterns: [
+          '**/*.js',
+          '**/*.css',
+          '**/*.html',
+          '**/*.ico',
+          '**/*.png',
+          '**/*.svg',
+          '**/*.woff2',
+        ],
         navigateFallback: '/index.html',
         navigateFallbackDenylist: [/^\/api/, /^\/notificationHub/],
         runtimeCaching: [
