@@ -437,6 +437,14 @@ Marketing Page Styles
   font-size: 0.9rem;
 }
 
+.marketing-page .mk-hero__popular-block {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 0.38rem;
+  width: 100%;
+}
+
 .marketing-page .mk-hero__popular > span {
   font-weight: 600;
   color: color-mix(in srgb, var(--surface) 85%, transparent);
@@ -460,11 +468,37 @@ Marketing Page Styles
   border-color: color-mix(in srgb, var(--color-brand-mint) 85%, transparent);
 }
 
+.marketing-page .mk-hero__popular-tagline {
+  margin: 0.52rem 0 0;
+  padding-top: 0.22rem;
+  border-top: 1px solid color-mix(in srgb, var(--surface) 22%, transparent);
+  font-size: 0.74rem;
+  line-height: 1.28;
+  font-weight: 500;
+  color: color-mix(in srgb, var(--surface) 72%, transparent);
+  max-width: 38ch;
+  text-align: left;
+  align-self: flex-start;
+}
+
 /* Hero small-screen overrides */
 @media (max-width: 480px) {
   .marketing-page .mk-hero__popular {
     flex-wrap: wrap;
   }
+
+  .marketing-page .mk-hero__popular-block {
+    gap: 0.28rem;
+  }
+
+  .marketing-page .mk-hero__popular-tagline {
+    margin-top: 0.44rem;
+    padding-top: 0.18rem;
+    font-size: 0.69rem;
+    line-height: 1.25;
+    max-width: 31ch;
+  }
+
   .marketing-page .mk-hero__search input {
     padding: 12px;
     font-size: 13px;

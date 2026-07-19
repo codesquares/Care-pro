@@ -112,6 +112,23 @@ function AppContent() {
   // Register the service worker and show a toast when an update is available.
   useEffect(() => {
     if (!('serviceWorker' in navigator)) return;
+
+    if (import.meta.env.DEV) {
+      navigator.serviceWorker
+        .getRegistrations()
+        .then((registrations) => Promise.all(registrations.map((reg) => reg.unregister())))
+        .catch((err) => console.warn('[SW] Dev unregister failed:', err));
+
+      if ('caches' in window) {
+        caches
+          .keys()
+          .then((keys) => Promise.all(keys.map((key) => caches.delete(key))))
+          .catch((err) => console.warn('[SW] Dev cache clear failed:', err));
+      }
+
+      return;
+    }
+
     navigator.serviceWorker
       .register('/sw.js', { updateViaCache: 'none' })
       .then((reg) => {

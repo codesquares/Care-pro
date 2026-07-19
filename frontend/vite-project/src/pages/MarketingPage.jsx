@@ -15,7 +15,7 @@ import nurseAndWomanImg from "../assets/nurseAndWoman.png";
 import caregiver1 from "../assets/caregiver1.png";
 import QHCC1 from "../assets/QHCC1.jpg";
 import avatarFemale1 from "../assets/avatar-female-1.jpg";
-import heroBackgroundVideo from "../assets/hero/marketing-hero-bg.mp4";
+import heroBackgroundVideo from "../../__mocks__/newgifvideo.gif";
 import heroVideoPoster from "../assets/hero/marketing-hero-poster.jpg";
 
 // Healthcare facts
@@ -40,6 +40,7 @@ const healthcareFacts = [
 
 const HERO_BACKGROUND_VIDEO_URL = heroBackgroundVideo;
 const HERO_BACKGROUND_POSTER = heroVideoPoster;
+const IS_HERO_BACKGROUND_GIF = /\.gif($|\?)/i.test(HERO_BACKGROUND_VIDEO_URL);
 
 const MarketingPage = () => {
   const navigate = useNavigate();
@@ -144,20 +145,26 @@ const MarketingPage = () => {
           </form>
 
           {/* Popular Tags */}
-          <div className="mk-hero__popular" data-animate="popular">
-            <span>Popular:</span>
-            <button onClick={() => handleServiceClick("adult-care")}>
-              Adult Care
-            </button>
-            <button onClick={() => handleServiceClick("child-care")}>
-              Nanny
-            </button>
-            <button onClick={() => handleServiceClick("home-care")}>
-              Home Care
-            </button>
-            <button onClick={() => handleServiceClick("pet-care")}>
-              Pet Care
-            </button>
+          <div className="mk-hero__popular-block" data-animate="popular">
+            <div className="mk-hero__popular">
+              <span>Popular:</span>
+              <button onClick={() => handleServiceClick("adult-care")}>
+                Adult Care
+              </button>
+              <button onClick={() => handleServiceClick("child-care")}>
+                Nanny
+              </button>
+              <button onClick={() => handleServiceClick("home-care")}>
+                Home Care
+              </button>
+              <button onClick={() => handleServiceClick("pet-care")}>
+                Pet Care
+              </button>
+            </div>
+
+            <p className="mk-hero__popular-tagline">
+              Now serving families across Nigeria.
+            </p>
           </div>
         </div>
 
@@ -170,18 +177,28 @@ const MarketingPage = () => {
               className={`mk-hero__media-poster ${isHeroBackgroundLoaded ? "is-hidden" : ""}`}
             />
             {!prefersReducedMotion && (
-              <video
-                className={`mk-hero__media-video ${isHeroBackgroundLoaded ? "is-visible" : ""}`}
-                autoPlay
-                muted
-                loop
-                playsInline
-                preload="metadata"
-                poster={HERO_BACKGROUND_POSTER}
-                onLoadedData={() => setIsHeroBackgroundLoaded(true)}
-              >
-                <source src={HERO_BACKGROUND_VIDEO_URL} type="video/mp4" />
-              </video>
+              IS_HERO_BACKGROUND_GIF ? (
+                <img
+                  src={HERO_BACKGROUND_VIDEO_URL}
+                  alt=""
+                  aria-hidden="true"
+                  className={`mk-hero__media-video ${isHeroBackgroundLoaded ? "is-visible" : ""}`}
+                  onLoad={() => setIsHeroBackgroundLoaded(true)}
+                />
+              ) : (
+                <video
+                  className={`mk-hero__media-video ${isHeroBackgroundLoaded ? "is-visible" : ""}`}
+                  autoPlay
+                  muted
+                  loop
+                  playsInline
+                  preload="metadata"
+                  poster={HERO_BACKGROUND_POSTER}
+                  onLoadedData={() => setIsHeroBackgroundLoaded(true)}
+                >
+                  <source src={HERO_BACKGROUND_VIDEO_URL} type="video/mp4" />
+                </video>
+              )
             )}
           </div>
         </div>
