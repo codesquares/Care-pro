@@ -26,6 +26,7 @@ const imageAlt = {
   "adult-care": "Adult care icon",
   "post-surgery-care": "Post surgery care icon",
   "child-care": "Child care icon",
+  "pet-care": "Pet care icon",
   "home-care": "Home care icon",
   "medical-support": "Medical support icon",
   "mobility-support": "Mobility support icon",
@@ -36,6 +37,7 @@ const imageIllustrations = {
   "adult-care": oldIcon,
   "post-surgery-care": stethoscopeIcon,
   "child-care": babyBoyIcon,
+  "pet-care": blindIcon,
   "home-care": homeIcon,
   "medical-support": pharmacyIcon,
   "mobility-support": wheelchairIcon,
@@ -43,19 +45,6 @@ const imageIllustrations = {
 };
 
 const vectorIllustrations = {
-  "pet-care": (
-    <svg {...commonProps}>
-      {frame}
-      <circle cx="46" cy="40" r="8" fill="var(--color-brand-accent)" />
-      <circle cx="64" cy="40" r="8" fill="var(--color-brand-accent)" />
-      <circle cx="40" cy="56" r="8" fill="var(--color-brand-accent)" />
-      <circle cx="70" cy="56" r="8" fill="var(--color-brand-accent)" />
-      <path d="M56 44c9 0 16 8 16 17 0 7-6 13-16 13s-16-6-16-13c0-9 7-17 16-17z" fill="var(--color-brand-deep-2)" />
-      <circle cx="102" cy="34" r="9" fill="var(--color-skin)" />
-      <path d="M94 31c1-5 4-7 8-7s7 2 8 7" stroke="var(--color-hair)" strokeWidth="3" strokeLinecap="round" />
-      <path d="M95 60c9-2 17-8 20-14" stroke="var(--color-brand-deep)" strokeWidth="4" strokeLinecap="round" />
-    </svg>
-  ),
   palliative: (
     <svg {...commonProps}>
       {frame}
@@ -70,10 +59,7 @@ const vectorIllustrations = {
 const CategoryIllustration = ({ slug }) => {
   if (slug === "special-needs-care") {
     return (
-      <div className="category-card__art-asset-group" role="presentation" aria-hidden="true">
-        <img className="category-card__art-asset" src={disabledPersonIcon} alt="" />
-        <img className="category-card__art-asset category-card__art-asset--offset" src={blindIcon} alt="" />
-      </div>
+      <img className="category-card__art-asset" src={disabledPersonIcon} alt="" />
     );
   }
 
@@ -87,7 +73,7 @@ const CategoryIllustration = ({ slug }) => {
     );
   }
 
-  return vectorIllustrations[slug] || vectorIllustrations["pet-care"];
+  return vectorIllustrations[slug] || null;
 };
 
 export default CategoryIllustration;
