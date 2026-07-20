@@ -270,17 +270,17 @@ const GoogleAuthService = {
    * Sign up as Client with Google
    * @param {string} idToken - Google ID token
     * @param {string|null|undefined} idempotencyKey - Optional idempotency key for safe retries
-    * @param {Object} addressPayload - Optional address payload to include in signup
+    * @param {Object} signupPayload - Optional signup payload fields to include in signup
    * @returns {Promise<Object>} - Auth response with tokens and user info
    */
-  async googleSignUpClient(idToken, idempotencyKey, addressPayload = {}) {
+    async googleSignUpClient(idToken, idempotencyKey, signupPayload = {}) {
     try {
       const headers = { "Content-Type": "application/json" };
       if (idempotencyKey) headers["Idempotency-Key"] = idempotencyKey;
       const response = await fetch(`${config.BASE_URL}/Clients/GoogleSignUp`, {
         method: "POST",
         headers,
-        body: JSON.stringify({ ...addressPayload, idToken }),
+        body: JSON.stringify({ ...signupPayload, idToken }),
       });
 
       const data = await response.json();
@@ -312,17 +312,17 @@ const GoogleAuthService = {
    * Sign up as Caregiver with Google
    * @param {string} idToken - Google ID token
     * @param {string|null|undefined} idempotencyKey - Optional idempotency key for safe retries
-    * @param {Object} addressPayload - Optional address payload to include in signup
+    * @param {Object} signupPayload - Optional signup payload fields to include in signup
    * @returns {Promise<Object>} - Auth response with tokens and user info
    */
-  async googleSignUpCaregiver(idToken, idempotencyKey, addressPayload = {}) {
+    async googleSignUpCaregiver(idToken, idempotencyKey, signupPayload = {}) {
     try {
       const headers = { "Content-Type": "application/json" };
       if (idempotencyKey) headers["Idempotency-Key"] = idempotencyKey;
       const response = await fetch(`${config.BASE_URL}/CareGivers/GoogleSignUp`, {
         method: "POST",
         headers,
-        body: JSON.stringify({ ...addressPayload, idToken }),
+        body: JSON.stringify({ ...signupPayload, idToken }),
       });
 
       const data = await response.json();
@@ -355,14 +355,14 @@ const GoogleAuthService = {
    * @param {string} idToken - Google ID token
    * @param {string} role - "Client" or "Caregiver"
     * @param {string|null|undefined} idempotencyKey - Optional idempotency key for safe retries
-    * @param {Object} addressPayload - Optional address payload to include in signup
+    * @param {Object} signupPayload - Optional signup payload fields to include in signup
    * @returns {Promise<Object>} - Auth response
    */
-  async googleSignUp(idToken, role, idempotencyKey, addressPayload = {}) {
+  async googleSignUp(idToken, role, idempotencyKey, signupPayload = {}) {
     if (role === "Client") {
-      return this.googleSignUpClient(idToken, idempotencyKey, addressPayload);
+      return this.googleSignUpClient(idToken, idempotencyKey, signupPayload);
     } else if (role === "Caregiver") {
-      return this.googleSignUpCaregiver(idToken, idempotencyKey, addressPayload);
+      return this.googleSignUpCaregiver(idToken, idempotencyKey, signupPayload);
     } else {
       return {
         success: false,

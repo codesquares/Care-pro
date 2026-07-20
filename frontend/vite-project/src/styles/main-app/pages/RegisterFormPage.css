@@ -406,6 +406,28 @@
     flex: 1;
 }
 
+.regform-consent {
+    margin-top: -4px;
+}
+
+.regform-consent-label {
+    display: flex;
+    align-items: flex-start;
+    gap: 10px;
+    color: #374151;
+    font-size: 0.86rem;
+    line-height: 1.4;
+    cursor: pointer;
+}
+
+.regform-consent-label input[type="checkbox"] {
+    margin-top: 2px;
+    width: 16px;
+    height: 16px;
+    accent-color: #05668D;
+    flex-shrink: 0;
+}
+
 /* Submit button */
 .regform-submit {
     width: 100%;

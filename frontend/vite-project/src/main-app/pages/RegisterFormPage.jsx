@@ -93,6 +93,7 @@ const RegisterFormPage = () => {
   const [department, setDepartment] = useState(""); // Admin department
   const [signupAddress, setSignupAddress] = useState("");
   const [addressValidation, setAddressValidation] = useState(null);
+  const [marketingConsent, setMarketingConsent] = useState(false);
 
   const requiresAddress = selectedRole === "Caregiver" || selectedRole === "Client";
 
@@ -244,6 +245,7 @@ Please log in to your existing account instead of creating a new one.`);
       middleName: formValues.middleName?.trim() || null,
       password: formValues.password,
       role: selectedRole,
+      marketingConsent,
       ...(requiresAddress ? buildAddressPayload() : {}),
       ...(selectedRole === "Admin" && department ? { department } : {})
     };
@@ -380,7 +382,10 @@ You won't be able to log in until your email is verified.`);
           return;
         }
 
-        const googleSignUpAddressPayload = requiresAddress ? buildAddressPayload() : {};
+        const googleSignUpPayload = {
+          ...(requiresAddress ? buildAddressPayload() : {}),
+          marketingConsent,
+        };
         if (requiresAddress && addressValidation?.isValid && !addressValidation?.isGoogleValidated) {
           toast.warning("Google validation was unavailable. Proceeding with your typed address.");
         }
@@ -402,7 +407,7 @@ You won't be able to log in until your email is verified.`);
             idToken,
             selectedRole,
             googleIdempotencyKeyRef.current,
-            googleSignUpAddressPayload
+            googleSignUpPayload
           );
           if (signUpResult.success) break;
           const kind = classifyIdempotencyError({
@@ -758,6 +763,21 @@ You won't be able to log in until your email is verified.`);
                 {errors.department && <p className="regform-error">{errors.department}</p>}
               </div>
             )}
+
+            {/* Marketing consent */}
+            <div className="regform-consent">
+              <label className="regform-consent-label" htmlFor="marketingConsent">
+                <input
+                  id="marketingConsent"
+                  type="checkbox"
+                  checked={marketingConsent}
+                  onChange={(e) => setMarketingConsent(e.target.checked)}
+                />
+                <span>
+                  I'd like to receive occasional updates, tips, and offers from CarePro.
+                </span>
+              </label>
+            </div>
 
             {/* Submit */}
             <button type="submit" className="regform-submit" disabled={loading || googleLoading}>
