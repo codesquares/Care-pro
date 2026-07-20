@@ -8,6 +8,7 @@ import ProfessionalProfileForms from "./ProfessionalProfileForms";
 import accountDeletionService from "../../services/accountDeletionService";
 import { useAuth } from "../../context/AuthContext";
 import { subscribeForPush, unsubscribeFromPush, getSubscriptionState } from "../../services/pushService";
+import CaregiverSettingsService from "../../services/CaregiverSettingsService";
 
 const NIGERIAN_BANKS = [
   'Access Bank', 'Guaranty Trust Bank', 'First Bank of Nigeria',
@@ -50,6 +51,10 @@ const CaregiverSettings = () => {
   // Push notifications state
   const [pushState, setPushState] = useState({ supported: false, permission: 'default', isSubscribed: false });
   const [pushLoading, setPushLoading] = useState(false);
+  const [notificationPreferences, setNotificationPreferences] = useState(
+    CaregiverSettingsService.defaultPreferences
+  );
+  const [notificationPrefLoading, setNotificationPrefLoading] = useState(false);
 
   const userDetails = JSON.parse(localStorage.getItem("userDetails")) || {};
 
@@ -108,6 +113,25 @@ const CaregiverSettings = () => {
       fetchBankAccount();
     }
   }, []);
+
+  useEffect(() => {
+    const loadCaregiverNotificationPreferences = async () => {
+      if (!userDetails?.id) return;
+
+      setNotificationPrefLoading(true);
+      const result = await CaregiverSettingsService.getNotificationPreferences(userDetails.id);
+
+      if (result.success) {
+        setNotificationPreferences(result.data);
+      } else if (result.error) {
+        toast.error(result.error);
+      }
+
+      setNotificationPrefLoading(false);
+    };
+
+    loadCaregiverNotificationPreferences();
+  }, [userDetails?.id]);
 
   // Load push subscription state on mount
   useEffect(() => {
@@ -249,6 +273,34 @@ const CaregiverSettings = () => {
     } finally {
       setBankSaving(false);
     }
+  };
+
+  const handleNotificationToggle = (key) => {
+    setNotificationPreferences((prev) => ({
+      ...prev,
+      [key]: !prev[key],
+    }));
+  };
+
+  const handleNotificationSave = async () => {
+    if (!userDetails?.id) {
+      toast.error("Caregiver ID not found. Please log in again.");
+      return;
+    }
+
+    setNotificationPrefLoading(true);
+    const result = await CaregiverSettingsService.updateNotificationPreferences(
+      userDetails.id,
+      notificationPreferences
+    );
+
+    if (result.success) {
+      toast.success("Notification preferences updated successfully.");
+    } else {
+      toast.error(result.error || "Failed to update notification preferences.");
+    }
+
+    setNotificationPrefLoading(false);
   };
 
   return (
@@ -422,6 +474,88 @@ const CaregiverSettings = () => {
           <div className="settings-card">
             <h3>Complete your Professional Profile</h3>
             <ProfessionalProfileForms />
+          </div>
+
+          <div className="settings-card">
+            <h3>Notification Preferences</h3>
+            <p style={{ marginBottom: "1rem", color: "#6b7280", fontSize: "0.875rem" }}>
+              Manage which caregiver-related notifications you receive.
+            </p>
+            <div className="notification-options">
+              <div className="notification-item">
+                <div className="notification-info">
+                  <span className="notification-title">Email Notifications</span>
+                  <span className="notification-description">Receive caregiver account updates by email</span>
+                </div>
+                <button
+                  type="button"
+                  className={`notification-toggle ${notificationPreferences.emailNotifications ? 'active' : ''}`}
+                  onClick={() => handleNotificationToggle('emailNotifications')}
+                />
+              </div>
+              <div className="notification-item">
+                <div className="notification-info">
+                  <span className="notification-title">SMS Notifications</span>
+                  <span className="notification-description">Receive caregiver account updates by text message</span>
+                </div>
+                <button
+                  type="button"
+                  className={`notification-toggle ${notificationPreferences.smsNotifications ? 'active' : ''}`}
+                  onClick={() => handleNotificationToggle('smsNotifications')}
+                />
+              </div>
+              <div className="notification-item">
+                <div className="notification-info">
+                  <span className="notification-title">Marketing Emails</span>
+                  <span className="notification-description">Receive occasional tips and platform updates</span>
+                </div>
+                <button
+                  type="button"
+                  className={`notification-toggle ${notificationPreferences.marketingEmails ? 'active' : ''}`}
+                  onClick={() => handleNotificationToggle('marketingEmails')}
+                />
+              </div>
+              <div className="notification-item">
+                <div className="notification-info">
+                  <span className="notification-title">Promotions</span>
+                  <span className="notification-description">Receive promotional offers and discounts</span>
+                </div>
+                <button
+                  type="button"
+                  className={`notification-toggle ${notificationPreferences.promotions ? 'active' : ''}`}
+                  onClick={() => handleNotificationToggle('promotions')}
+                />
+              </div>
+              <div className="notification-item">
+                <div className="notification-info">
+                  <span className="notification-title">New Gig Opportunities</span>
+                  <span className="notification-description">Email alerts for newly available gig opportunities</span>
+                </div>
+                <button
+                  type="button"
+                  className={`notification-toggle ${notificationPreferences.newGig ? 'active' : ''}`}
+                  onClick={() => handleNotificationToggle('newGig')}
+                />
+              </div>
+              <div className="notification-item">
+                <div className="notification-info">
+                  <span className="notification-title">Care Request Updates</span>
+                  <span className="notification-description">Email updates for care-request matches and shortlist/hiring flow</span>
+                </div>
+                <button
+                  type="button"
+                  className={`notification-toggle ${notificationPreferences.careRequestUpdates ? 'active' : ''}`}
+                  onClick={() => handleNotificationToggle('careRequestUpdates')}
+                />
+              </div>
+            </div>
+            <button
+              className="save-changes-btn"
+              onClick={handleNotificationSave}
+              disabled={notificationPrefLoading}
+            >
+              {notificationPrefLoading ? "Saving..." : "Save Changes"}
+            </button>
           </div>
 
           {/* ── Push Notifications ──────────────────────────────────────────── */}

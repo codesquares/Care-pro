@@ -133,19 +133,22 @@ const AddressInput = ({
 
   // Handle input blur
   const handleBlur = useCallback((e) => {
+    // React nulls out e.currentTarget once the synchronous dispatch phase ends,
+    // so it must be captured now — it would read as null inside the setTimeout below.
+    const container = e.currentTarget;
     // Delay hiding suggestions to allow clicking on them
     setTimeout(() => {
-      if (e.currentTarget && document.activeElement && !e.currentTarget.contains(document.activeElement)) {
+      if (container && document.activeElement && !container.contains(document.activeElement)) {
         hideSuggestions();
         setFocusedSuggestionIndex(-1);
-        
+
         // Auto-validate on blur if enabled
         if (autoValidate && address && !validationResult) {
           triggerValidation();
         }
       }
     }, 150);
-  }, []); // Empty dependencies to prevent recreation
+  }, [autoValidate, address, validationResult, triggerValidation, hideSuggestions]);
 
   // Handle suggestion click
   const handleSuggestionClick = (suggestion, index) => {

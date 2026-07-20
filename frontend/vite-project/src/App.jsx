@@ -26,6 +26,7 @@ import RegisterFormPage from './main-app/pages/RegisterFormPage';
 import ForgotPasswordPage from './main-app/pages/ForgotPasswordPage';
 import ConfirmEmailPage from './main-app/pages/ConfirmEmailPage';
 import ResendConfirmationPage from './main-app/pages/ResendConfirmationPage';
+import EmailUnsubscribePage from './main-app/pages/EmailUnsubscribePage';
 import UnauthorizedPage from './main-app/pages/UnauthorizedPage';
 import CancelAccountDeletion from './main-app/pages/CancelAccountDeletion';
 import { ToastContainer, toast } from 'react-toastify';
@@ -185,6 +186,7 @@ function AppContent() {
     '/forgot-password',
     '/confirm-email',
     '/resend-confirmation',
+    '/email-preferences/unsubscribe',
     '/unauthorized',
     '/splash',
     '/cancel-account-deletion',
@@ -200,10 +202,10 @@ function AppContent() {
   ];
 
   // Define routes that should not have navbar
-  const routesWithoutNavbar = ['/login', '/register', '/register/form', '/forgot-password', '/confirm-email', '/resend-confirmation', '/cancel-account-deletion'];
+  const routesWithoutNavbar = ['/login', '/register', '/register/form', '/forgot-password', '/confirm-email', '/resend-confirmation', '/cancel-account-deletion', '/email-preferences/unsubscribe'];
 
   // Define routes that should not have footer
-  const routesWithoutFooter = ['/login', '/register', '/register/form', '/forgot-password', '/confirm-email', '/resend-confirmation', '/cancel-account-deletion'];
+  const routesWithoutFooter = ['/login', '/register', '/register/form', '/forgot-password', '/confirm-email', '/resend-confirmation', '/cancel-account-deletion', '/email-preferences/unsubscribe'];
 
   // Check if current path is unprotected
   const isUnprotectedRoute = unprotectedRoutes.includes(location.pathname.toLowerCase());
@@ -285,6 +287,7 @@ function AppContent() {
         <Route path="/forgot-password" element={<ForgotPasswordPage />} />
         <Route path="/confirm-email" element={<ConfirmEmailPage />} />
         <Route path="/resend-confirmation" element={<ResendConfirmationPage />} />
+        <Route path="/email-preferences/unsubscribe" element={<EmailUnsubscribePage />} />
         <Route path="/cancel-account-deletion" element={<CancelAccountDeletion />} />
         <Route path="/service/:id" element={<HomeCareService />} />
         <Route path="/splash" element={<SplashScreen />} />
