@@ -54,15 +54,15 @@
 }
 
 .pricing-modal__title {
-  font-size: 1.5rem;
-  font-weight: 700;
-  color: #1e293b;
+  font-size: var(--font-size-h5);
+  font-weight: var(--font-weight-bold);
+  color: var(--ink-strong);
   margin: 0 0 0.25rem;
 }
 
 .pricing-modal__subtitle {
-  font-size: 0.9rem;
-  color: #64748b;
+  font-size: var(--font-size-body-sm);
+  color: var(--muted);
   margin: 0;
 }
 
@@ -70,25 +70,25 @@
   background: none;
   border: none;
   font-size: 1.75rem;
-  color: #94a3b8;
+  color: var(--muted);
   cursor: pointer;
   line-height: 1;
   padding: 0.25rem;
-  border-radius: 8px;
-  transition: all 0.2s;
+  border-radius: var(--radius-sm);
+  transition: all var(--transition-fast);
 }
 
 .pricing-modal__close:hover {
-  background: #f1f5f9;
-  color: #334155;
+  background: var(--surface-subtle);
+  color: var(--ink);
 }
 
 /* ========== CURRENCY TOGGLE ========== */
 .pricing-modal__currency-toggle {
   display: flex;
   gap: 0;
-  background: #f1f5f9;
-  border-radius: 10px;
+  background: var(--surface-subtle);
+  border-radius: var(--radius-md);
   padding: 4px;
   width: fit-content;
   margin-bottom: 1.5rem;
@@ -97,23 +97,23 @@
 .currency-btn {
   padding: 0.45rem 1.25rem;
   border: none;
-  border-radius: 8px;
-  font-size: 0.85rem;
-  font-weight: 600;
+  border-radius: var(--radius-sm);
+  font-size: var(--font-size-body-sm);
+  font-weight: var(--font-weight-semibold);
   cursor: pointer;
-  transition: all 0.2s;
+  transition: all var(--transition-fast);
   background: transparent;
-  color: #64748b;
+  color: var(--muted);
 }
 
 .currency-btn.active {
-  background: #ffffff;
-  color: #1e293b;
-  box-shadow: 0 1px 4px rgba(0, 0, 0, 0.08);
+  background: var(--surface);
+  color: var(--ink-strong);
+  box-shadow: var(--shadow-rest);
 }
 
 .currency-btn:hover:not(.active) {
-  color: #334155;
+  color: var(--ink);
 }
 
 /* ========== CATEGORIES GRID ========== */
@@ -133,23 +133,23 @@
 /* ========== CATEGORY CARD ========== */
 .pricing-category-card {
   position: relative;
-  border: 2px solid #e2e8f0;
-  border-radius: 12px;
-  background: #ffffff;
-  transition: all 0.2s;
+  border: 2px solid var(--border-subtle);
+  border-radius: var(--radius-md);
+  background: var(--surface);
+  transition: all var(--transition-fast);
 }
 
 .pricing-category-card:hover {
-  border-color: #a5b4fc;
-  background: #f8faff;
+  border-color: color-mix(in srgb, var(--color-brand-deep) 28%, transparent);
+  background: var(--surface-subtle);
   transform: translateY(-1px);
-  box-shadow: 0 4px 12px rgba(99, 102, 241, 0.08);
+  box-shadow: var(--shadow-hover);
 }
 
 .pricing-category-card.selected {
-  border-color: #10b981;
-  background: #ecfdf5;
-  box-shadow: 0 0 0 3px rgba(16, 185, 129, 0.12);
+  border-color: var(--success);
+  background: color-mix(in srgb, var(--success) 8%, var(--surface));
+  box-shadow: 0 0 0 3px color-mix(in srgb, var(--success) 18%, transparent);
 }
 
 .pricing-category-card.selected::after {
@@ -159,14 +159,14 @@
   right: 0.55rem;
   width: 20px;
   height: 20px;
-  border-radius: 50%;
-  background: #10b981;
-  color: #fff;
+  border-radius: var(--radius-pill);
+  background: var(--success);
+  color: var(--surface);
   display: flex;
   align-items: center;
   justify-content: center;
   font-size: 0.72rem;
-  font-weight: 700;
+  font-weight: var(--font-weight-bold);
 }
 
 .pricing-category-card .category-card__art {
@@ -190,18 +190,18 @@
 
 .pricing-category-card .category-card__price {
   margin-top: 0;
-  color: #64748b;
+  color: var(--muted);
   font-size: 0.8rem;
 }
 
 .pricing-category-card__per-day {
-  color: #94a3b8;
+  color: var(--muted);
   font-size: 0.75rem;
 }
 
 .pricing-category-card .category-card__price strong {
-  color: #059669;
-  font-weight: 700;
+  color: var(--success);
+  font-weight: var(--font-weight-bold);
 }
 
 /* ========== SELECTED DETAIL BAR ========== */
@@ -209,10 +209,10 @@
   display: flex;
   align-items: center;
   gap: 1rem;
-  background: linear-gradient(135deg, #ecfdf5 0%, #f0fdf4 100%);
-  border: 1.5px solid #a7f3d0;
-  border-radius: 14px;
-  padding: 1rem 1.25rem;
+  background: color-mix(in srgb, var(--success) 8%, var(--surface));
+  border: 1.5px solid color-mix(in srgb, var(--success) 30%, transparent);
+  border-radius: var(--radius-lg);
+  padding: var(--space-4) var(--space-5);
   margin-bottom: 1.25rem;
   animation: pricingSlideUp 0.25s ease;
 }
@@ -220,8 +220,8 @@
 .pricing-modal__detail-icon {
   width: 72px;
   height: 72px;
-  border-radius: 14px;
-  background: #d1fae5;
+  border-radius: var(--radius-lg);
+  background: color-mix(in srgb, var(--success) 16%, var(--surface));
   display: flex;
   align-items: center;
   justify-content: center;
@@ -238,21 +238,21 @@
 }
 
 .pricing-modal__detail-info h3 {
-  font-size: 1.05rem;
-  font-weight: 700;
-  color: #064e3b;
+  font-size: var(--font-size-h6);
+  font-weight: var(--font-weight-bold);
+  color: var(--ink-strong);
   margin: 0 0 0.15rem;
 }
 
 .pricing-modal__detail-info p {
-  font-size: 0.9rem;
-  color: #047857;
+  font-size: var(--font-size-body-sm);
+  color: var(--success);
   margin: 0 0 0.2rem;
 }
 
 .pricing-modal__detail-note {
-  font-size: 0.75rem;
-  color: #6b7280;
+  font-size: var(--font-size-caption);
+  color: var(--muted);
   font-style: italic;
 }
 
@@ -261,22 +261,22 @@
   align-items: center;
   gap: 0.5rem;
   padding: 0.7rem 1.5rem;
-  background: #059669;
-  color: #ffffff;
+  background: var(--success);
+  color: var(--surface);
   border: none;
-  border-radius: 10px;
-  font-size: 0.9rem;
-  font-weight: 600;
+  border-radius: var(--radius-md);
+  font-size: var(--font-size-body-sm);
+  font-weight: var(--font-weight-semibold);
   cursor: pointer;
-  transition: all 0.2s;
+  transition: all var(--transition-fast);
   white-space: nowrap;
   flex-shrink: 0;
 }
 
 .pricing-modal__cta:hover {
-  background: #047857;
+  background: color-mix(in srgb, var(--success) 85%, black);
   transform: translateY(-1px);
-  box-shadow: 0 4px 14px rgba(5, 150, 105, 0.3);
+  box-shadow: var(--shadow-hover);
 }
 
 .pricing-modal__cta:active {
@@ -285,15 +285,15 @@
 
 /* ========== FOOTER NOTE ========== */
 .pricing-modal__footer {
-  border-top: 1px solid #f1f5f9;
+  border-top: 1px solid var(--border-subtle);
   padding-top: 1rem;
 }
 
 .pricing-modal__footer p {
-  font-size: 0.78rem;
-  color: #94a3b8;
+  font-size: var(--font-size-caption);
+  color: var(--muted);
   margin: 0;
-  line-height: 1.5;
+  line-height: var(--line-height-normal);
 }
 
 /* ========== RESPONSIVE ========== */

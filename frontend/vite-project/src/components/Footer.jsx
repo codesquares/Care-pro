@@ -34,6 +34,7 @@ const footerSections = [
     links: [
       { to: "/become-caregiver", label: "Become a Care Professional" },
       { to: "/become-caregiver", label: "How it Works" },
+      { to: "/become-a-referrer", label: "Become a Referrer" },
     ],
   },
   {

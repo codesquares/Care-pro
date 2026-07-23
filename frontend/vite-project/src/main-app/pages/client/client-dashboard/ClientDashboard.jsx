@@ -11,6 +11,7 @@ import ClientProfileService from "../../../services/clientProfileService";
 import ClientCareNeedsService from "../../../services/clientCareNeedsService";
 import accountDeletionService from "../../../services/accountDeletionService";
 import { useClientOnboarding } from '../../../context/ClientOnboardingContext';
+import PendingCommitmentBanner from '../../../components/PendingCommitmentBanner';
 
 
 
@@ -207,6 +208,8 @@ const ClientDashboard = () => {
 
   return (
     <div className="dashboard client-dashboard-flex">
+      <PendingCommitmentBanner />
+
       {/* Pending deletion banner */}
       {pendingDeletionDate && showDeletionBanner && (
         <div style={{

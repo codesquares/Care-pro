@@ -1,17 +1,29 @@
 import { useCallback, useEffect, useMemo, useState } from 'react';
 import referralAdminService from '../../../services/referralAdminService';
+import { getAliasError } from '../../../utils/aliasValidation';
 import './referrals-management.css';
 
 const TABS = {
+  APPLICATIONS: 'applications',
   REFERRERS: 'referrers',
   CODES: 'codes',
   REDEMPTIONS: 'redemptions',
+};
+
+const APPLICATION_FILTERS = ['PendingApproval', 'Approved', 'Rejected', 'All'];
+
+const APPLICATION_FILTER_LABELS = {
+  PendingApproval: 'Pending',
+  Approved: 'Approved',
+  Rejected: 'Rejected',
+  All: 'All',
 };
 
 const initialReferrerForm = {
   fullName: '',
   email: '',
   phoneNo: '',
+  alias: '',
   bankName: '',
   accountNumber: '',
   accountName: '',
@@ -24,11 +36,19 @@ const ReferralsManagement = () => {
   const [successMessage, setSuccessMessage] = useState('');
 
   const [referrerForm, setReferrerForm] = useState(initialReferrerForm);
+  const [aliasError, setAliasError] = useState(null);
   const [generatedCode, setGeneratedCode] = useState(null);
   const [referrerIdInput, setReferrerIdInput] = useState('');
   const [referrers, setReferrers] = useState([]);
   const [loadingReferrers, setLoadingReferrers] = useState(false);
   const [isReferrerLookupUnavailable, setIsReferrerLookupUnavailable] = useState(false);
+
+  const [applications, setApplications] = useState([]);
+  const [loadingApplications, setLoadingApplications] = useState(false);
+  const [applicationsFilter, setApplicationsFilter] = useState('PendingApproval');
+  const [actioningId, setActioningId] = useState(null);
+  const [confirmingRejectId, setConfirmingRejectId] = useState(null);
+  const [generatedCodesByReferrerId, setGeneratedCodesByReferrerId] = useState({});
 
   const [redemptions, setRedemptions] = useState([]);
   const [loadingRedemptions, setLoadingRedemptions] = useState(false);
@@ -77,15 +97,128 @@ const ReferralsManagement = () => {
     }
   }, [activeTab, loadReferrers]);
 
+  const loadApplications = useCallback(async () => {
+    clearAlerts();
+    setLoadingApplications(true);
+    const result = await referralAdminService.getReferrers();
+    setLoadingApplications(false);
+
+    if (!result.success) {
+      setError(result.error || 'Failed to load referral applications.');
+      return;
+    }
+
+    setApplications(result.data || []);
+  }, [clearAlerts]);
+
+  useEffect(() => {
+    if (activeTab === TABS.APPLICATIONS) {
+      loadApplications();
+    }
+  }, [activeTab, loadApplications]);
+
+  const filteredApplications = useMemo(() => {
+    if (applicationsFilter === 'All') return applications;
+    return applications.filter((a) => a.status === applicationsFilter);
+  }, [applications, applicationsFilter]);
+
+  const handleApprove = async (referrerId) => {
+    clearAlerts();
+    setActioningId(referrerId);
+    const result = await referralAdminService.approveReferrer(referrerId);
+    setActioningId(null);
+
+    if (!result.success) {
+      setError(result.error || 'Failed to approve referrer.');
+      return;
+    }
+
+    setSuccessMessage('Referrer approved.');
+    await loadApplications();
+  };
+
+  const handleRejectClick = (referrerId) => {
+    clearAlerts();
+    setConfirmingRejectId(referrerId);
+  };
+
+  const handleCancelReject = () => {
+    setConfirmingRejectId(null);
+  };
+
+  const handleConfirmReject = async (referrerId) => {
+    clearAlerts();
+    setActioningId(referrerId);
+    const result = await referralAdminService.rejectReferrer(referrerId);
+    setActioningId(null);
+    setConfirmingRejectId(null);
+
+    if (!result.success) {
+      setError(result.error || 'Failed to reject referrer.');
+      return;
+    }
+
+    setSuccessMessage('Referrer rejected.');
+    await loadApplications();
+  };
+
+  const handleGenerateCodeForRow = async (referrerId) => {
+    clearAlerts();
+    setActioningId(referrerId);
+    const result = await referralAdminService.generateReferralCode(referrerId);
+    setActioningId(null);
+
+    if (!result.success) {
+      setError(result.error || 'Failed to generate referral code.');
+      return;
+    }
+
+    setGeneratedCodesByReferrerId((prev) => ({
+      ...prev,
+      [referrerId]: { id: result.data?.id, code: result.data?.code, sent: false },
+    }));
+    setSuccessMessage(`Referral code generated: ${result.data?.code}`);
+  };
+
+  const handleSendEmailForRow = async (referrerId) => {
+    const entry = generatedCodesByReferrerId[referrerId];
+    if (!entry?.id) return;
+
+    clearAlerts();
+    setActioningId(referrerId);
+    const result = await referralAdminService.sendReferralCodeEmail(entry.id);
+    setActioningId(null);
+
+    if (!result.success) {
+      setError(result.error || 'Failed to send referral code email.');
+      return;
+    }
+
+    setGeneratedCodesByReferrerId((prev) => ({
+      ...prev,
+      [referrerId]: { ...prev[referrerId], sent: true },
+    }));
+    setSuccessMessage('Referral code emailed to referrer.');
+  };
+
   const handleCreateReferrer = async (e) => {
     e.preventDefault();
     clearAlerts();
+
+    const aliasValidationError = getAliasError(referrerForm.alias);
+    if (aliasValidationError) {
+      setAliasError(aliasValidationError);
+      return;
+    }
+    setAliasError(null);
+
     setIsSubmitting(true);
 
     const payload = {
       fullName: referrerForm.fullName.trim(),
       email: referrerForm.email.trim(),
       phoneNo: referrerForm.phoneNo.trim(),
+      alias: referrerForm.alias.trim(),
       ...(hasBankDetails
         ? {
             bankAccount: {
@@ -109,6 +242,7 @@ const ReferralsManagement = () => {
     const created = result.data;
     setSuccessMessage(`Referrer created: ${created?.fullName || 'Success'}`);
     setReferrerForm(initialReferrerForm);
+    setAliasError(null);
     if (created?.id) {
       setReferrerIdInput(created.id);
       setReferrers((prev) => {
@@ -202,6 +336,12 @@ const ReferralsManagement = () => {
 
       <div className="referrals-admin-tabs">
         <button
+          className={`tab-btn ${activeTab === TABS.APPLICATIONS ? 'active' : ''}`}
+          onClick={() => setActiveTab(TABS.APPLICATIONS)}
+        >
+          Applications
+        </button>
+        <button
           className={`tab-btn ${activeTab === TABS.REFERRERS ? 'active' : ''}`}
           onClick={() => setActiveTab(TABS.REFERRERS)}
         >
@@ -224,6 +364,128 @@ const ReferralsManagement = () => {
       {error && <div className="ref-alert ref-alert--error">{error}</div>}
       {successMessage && <div className="ref-alert ref-alert--success">{successMessage}</div>}
 
+      {activeTab === TABS.APPLICATIONS && (
+        <section className="ref-card">
+          <h2>Referral Applications</h2>
+
+          <div className="ref-filter-row">
+            {APPLICATION_FILTERS.map((filter) => (
+              <button
+                key={filter}
+                type="button"
+                className={`btn-secondary btn-small ${applicationsFilter === filter ? 'active' : ''}`}
+                onClick={() => setApplicationsFilter(filter)}
+              >
+                {APPLICATION_FILTER_LABELS[filter]}
+              </button>
+            ))}
+            <button type="button" className="btn-secondary btn-small" onClick={loadApplications} disabled={loadingApplications}>
+              {loadingApplications ? 'Refreshing…' : 'Refresh'}
+            </button>
+          </div>
+
+          {loadingApplications ? (
+            <div className="ref-empty">Loading applications…</div>
+          ) : filteredApplications.length === 0 ? (
+            <div className="ref-empty">No applications match this filter.</div>
+          ) : (
+            <div className="ref-table-wrap">
+              <table className="ref-table">
+                <thead>
+                  <tr>
+                    <th>Full Name</th>
+                    <th>Email</th>
+                    <th>Alias</th>
+                    <th>Status</th>
+                    <th>Applied</th>
+                    <th>Actions</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {filteredApplications.map((app) => {
+                    const isActioning = actioningId === app.id;
+                    const codeEntry = generatedCodesByReferrerId[app.id];
+                    return (
+                      <tr key={app.id}>
+                        <td>{app.fullName || 'Unnamed'}</td>
+                        <td>{app.email}</td>
+                        <td>{app.alias || '—'}</td>
+                        <td>
+                          <span className={`status-badge status-badge--${(app.status || 'unknown').toLowerCase()}`}>
+                            {app.status || 'Unknown'}
+                          </span>
+                        </td>
+                        <td>{app.createdAt ? new Date(app.createdAt).toLocaleDateString() : '—'}</td>
+                        <td>
+                          {app.status === 'PendingApproval' && (
+                            confirmingRejectId === app.id ? (
+                              <span className="ref-actions">
+                                <button
+                                  className="btn-danger btn-small"
+                                  onClick={() => handleConfirmReject(app.id)}
+                                  disabled={isActioning}
+                                >
+                                  {isActioning ? 'Rejecting…' : 'Confirm reject?'}
+                                </button>
+                                <button className="btn-secondary btn-small" onClick={handleCancelReject} disabled={isActioning}>
+                                  Cancel
+                                </button>
+                              </span>
+                            ) : (
+                              <span className="ref-actions">
+                                <button
+                                  className="btn-primary btn-small"
+                                  onClick={() => handleApprove(app.id)}
+                                  disabled={isActioning}
+                                >
+                                  {isActioning ? 'Approving…' : 'Approve'}
+                                </button>
+                                <button
+                                  className="btn-secondary btn-small"
+                                  onClick={() => handleRejectClick(app.id)}
+                                  disabled={isActioning}
+                                >
+                                  Reject
+                                </button>
+                              </span>
+                            )
+                          )}
+
+                          {app.status === 'Approved' && (
+                            codeEntry ? (
+                              <span className="ref-actions">
+                                <span className="ref-generated-code">{codeEntry.code}</span>
+                                <button
+                                  className="btn-primary btn-small"
+                                  onClick={() => handleSendEmailForRow(app.id)}
+                                  disabled={isActioning || codeEntry.sent}
+                                >
+                                  {codeEntry.sent ? 'Email Sent' : isActioning ? 'Sending…' : 'Send Email'}
+                                </button>
+                              </span>
+                            ) : (
+                              <button
+                                className="btn-primary btn-small"
+                                onClick={() => handleGenerateCodeForRow(app.id)}
+                                disabled={isActioning}
+                              >
+                                {isActioning ? 'Generating…' : 'Generate Code'}
+                              </button>
+                            )
+                          )}
+
+                          {app.status === 'Rejected' && <span className="ref-empty">No action</span>}
+                        </td>
+                      </tr>
+                    );
+                  })}
+                </tbody>
+              </table>
+            </div>
+          )}
+        </section>
+      )}
+
       {activeTab === TABS.REFERRERS && (
         <section className="ref-card">
           <h2>Create Referrer</h2>
@@ -239,6 +501,20 @@ const ReferralsManagement = () => {
             <label>
               Phone Number
               <input value={referrerForm.phoneNo} onChange={(e) => setReferrerForm((p) => ({ ...p, phoneNo: e.target.value }))} required />
+            </label>
+            <label>
+              Alias
+              <input
+                value={referrerForm.alias}
+                onChange={(e) => {
+                  const value = e.target.value;
+                  setReferrerForm((p) => ({ ...p, alias: value }));
+                  setAliasError(value ? getAliasError(value) : null);
+                }}
+                placeholder="e.g. drwealth"
+                required
+              />
+              {aliasError && <span className="ref-field-error">{aliasError}</span>}
             </label>
 
             <div className="ref-subtitle">Optional Bank Account</div>
