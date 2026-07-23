@@ -379,6 +379,11 @@ const TYPE_MAP = {
   'shortlistremoved':               'ShortlistRemoved',
   'care request shortlist removed': 'ShortlistRemoved',
 
+  // Caregiver Became Ineligible (client) — fires pre-payment (negotiation blocked,
+  // relatedEntityId = careRequestId) or post-payment (order flagged, orderId set)
+  'caregiver_became_ineligible':    'CaregiverBecameIneligible',
+  'caregiverbecameineligible':      'CaregiverBecameIneligible',
+
   // Booking Commitment Expired (client)
   'booking_commitment_expired':    'BookingCommitmentExpired',
   'bookingcommitmentexpired':      'BookingCommitmentExpired',
@@ -458,6 +463,7 @@ const KNOWN_CANONICAL = new Set([
   'ObservationReportFiled',
   'CareRequestCreated', 'CareRequestPaused', 'CareRequestReopened', 'CareRequestClosed',
   'ShortlistRemoved',
+  'CaregiverBecameIneligible',
   'BookingCommitmentExpired',
   'WithdrawalVerified', 'WithdrawalCompleted', 'WithdrawalRejected',
   'RefundRequestAdminAlert',
@@ -974,6 +980,20 @@ export const getNotificationRoute = (notification, userRole) => {
       if (isCaregiver) return `/app/caregiver/my-responses`;
       return null;
 
+    // ── Caregiver Became Ineligible (client) ─────────────
+    // Two distinct backend triggers share this type:
+    //   Post-payment (money already captured, order flagged): notification.orderId is set.
+    //   Pre-payment (negotiation blocked, nothing charged): orderId is absent,
+    //     relatedEntityId is the CareRequestId — send them back to browse other caregivers.
+    // Mirrors the PaymentFailed/SubscriptionSuspended pattern above: check orderId in
+    // isolation, do NOT fall back to relatedEntityId for it (that would blend the two cases).
+    case 'CaregiverBecameIneligible': {
+      if (isClient && notification.orderId) return `/app/client/my-order/${notification.orderId}`;
+      if (isClient && relatedEntityId) return `/app/client/care-requests/${relatedEntityId}/matches`;
+      if (isClient) return `/app/client/your-requests`;
+      return null;
+    }
+
     // ── Booking Commitment Expired ───────────────────────
     case 'BookingCommitmentExpired':
       if (isClient) return `/app/client/bookings`;
@@ -1204,6 +1224,10 @@ export const getNotificationActionLabel = (rawType) => {
       return 'View Request';
     case 'ShortlistRemoved':
       return 'View Responses';
+    case 'CaregiverBecameIneligible':
+      // Neutral label — this function only receives the type, not the full notification,
+      // so it can't tell the order-vs-request case apart here (getNotificationRoute can).
+      return 'View Details';
     case 'BookingCommitmentExpired':
       return 'View Bookings';
     case 'WithdrawalVerified':
@@ -1411,6 +1435,8 @@ export const getNotificationTypeIcon = (rawType) => {
       return '🔒';
     case 'ShortlistRemoved':
       return 'ℹ️';
+    case 'CaregiverBecameIneligible':
+      return '⚠️';
     case 'BookingCommitmentExpired':
       return '⏰';
     case 'WithdrawalVerified':

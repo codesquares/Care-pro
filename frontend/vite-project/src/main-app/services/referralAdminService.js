@@ -13,16 +13,17 @@ const triggerBlobDownload = (blob, filename) => {
 };
 
 const referralAdminService = {
-  async getReferrers() {
+  async getReferrers(status) {
+    const query = status ? `?status=${encodeURIComponent(status)}` : '';
     try {
-      const response = await api.get('/referrals/referrers');
+      const response = await api.get(`/referrals/referrers${query}`);
       const rows = response.data?.data || [];
       return { success: true, data: Array.isArray(rows) ? rows : [] };
     } catch (error) {
       // Some environments block GET on the primary route; retry the documented fallback path.
       if (error?.response?.status === 405) {
         try {
-          const fallbackResponse = await api.get('/referrals/referrers/list');
+          const fallbackResponse = await api.get(`/referrals/referrers/list${query}`);
           const fallbackRows = fallbackResponse.data?.data || [];
           return {
             success: true,
@@ -68,6 +69,36 @@ const referralAdminService = {
       return { success: true, data: response.data?.data || response.data };
     } catch (error) {
       const parsed = parseApiError(error, 'Failed to generate referral code.');
+      return { success: false, error: parsed.message, uiErrorCode: parsed.uiErrorCode };
+    }
+  },
+
+  async approveReferrer(referrerId) {
+    try {
+      const response = await api.post(`/referrals/referrers/${referrerId}/approve`);
+      return { success: true, data: response.data?.data || response.data };
+    } catch (error) {
+      const parsed = parseApiError(error, 'Failed to approve referrer.');
+      return { success: false, error: parsed.message, uiErrorCode: parsed.uiErrorCode };
+    }
+  },
+
+  async rejectReferrer(referrerId) {
+    try {
+      const response = await api.post(`/referrals/referrers/${referrerId}/reject`);
+      return { success: true, data: response.data?.data || response.data };
+    } catch (error) {
+      const parsed = parseApiError(error, 'Failed to reject referrer.');
+      return { success: false, error: parsed.message, uiErrorCode: parsed.uiErrorCode };
+    }
+  },
+
+  async sendReferralCodeEmail(referralCodeId) {
+    try {
+      const response = await api.post(`/referrals/codes/${referralCodeId}/send-email`);
+      return { success: true, data: response.data?.data || response.data };
+    } catch (error) {
+      const parsed = parseApiError(error, 'Failed to send referral code email.');
       return { success: false, error: parsed.message, uiErrorCode: parsed.uiErrorCode };
     }
   },

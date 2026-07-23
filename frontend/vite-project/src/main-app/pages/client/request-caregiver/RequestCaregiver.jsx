@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { toast } from 'react-toastify';
 import CareRequestService from '../../../services/careRequestService';
+import { subscribeForPush, getSubscriptionState } from '../../../services/pushService';
 import '../../client/client-dashboard/marketplaceHero.css';
 import './RequestCaregiver.css';
 
@@ -71,6 +72,8 @@ const RequestCaregiver = () => {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [submitted, setSubmitted] = useState(false);
   const [submittedRequestId, setSubmittedRequestId] = useState(null);
+  const [showPushPrompt, setShowPushPrompt] = useState(false);
+  const [pushPromptLoading, setPushPromptLoading] = useState(false);
 
   const [form, setForm] = useState({
     serviceGroup: '',
@@ -166,11 +169,34 @@ const RequestCaregiver = () => {
       setSubmittedRequestId(result?.id || result?.careRequestId || null);
       setSubmitted(true);
       toast.success('Care request submitted successfully!');
+
+      // This is the moment the client most needs to be pulled back for match/
+      // negotiation events — only prompt if they haven't already granted or
+      // denied notification permission (matches ClientSettings.jsx's gating).
+      getSubscriptionState()
+        .then((state) => setShowPushPrompt(state.supported && state.permission === 'default'))
+        .catch(() => {});
     } catch (err) {
       console.error('Failed to submit care request:', err);
       toast.error('Failed to submit request. Please try again.');
     } finally {
       setIsSubmitting(false);
+    }
+  };
+
+  const handleEnablePushFromPrompt = async () => {
+    setPushPromptLoading(true);
+    try {
+      const result = await Notification.requestPermission();
+      if (result === 'granted') {
+        await subscribeForPush();
+        toast.success('Push notifications enabled — we\'ll let you know when caregivers respond.');
+      }
+    } catch (err) {
+      console.error('[RequestCaregiver] Enable push failed:', err);
+    } finally {
+      setPushPromptLoading(false);
+      setShowPushPrompt(false);
     }
   };
 
@@ -192,6 +218,23 @@ const RequestCaregiver = () => {
             <div className="matching-pulse" />
             <span>Finding caregivers...</span>
           </div>
+          {showPushPrompt && (
+            <div className="push-opt-in-prompt">
+              <p>Get notified the moment a caregiver responds or your matches are ready.</p>
+              <div className="push-opt-in-prompt-actions">
+                <button
+                  className="btn-primary"
+                  onClick={handleEnablePushFromPrompt}
+                  disabled={pushPromptLoading}
+                >
+                  {pushPromptLoading ? 'Enabling…' : 'Turn On Notifications'}
+                </button>
+                <button className="btn-secondary" onClick={() => setShowPushPrompt(false)}>
+                  Not Now
+                </button>
+              </div>
+            </div>
+          )}
           <div className="success-actions">
             {submittedRequestId && (
               <button

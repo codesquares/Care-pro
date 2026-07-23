@@ -5,6 +5,7 @@ import { BrowserRouter as Router, Route, Routes } from 'react-router-dom';
 import { GoogleOAuthProvider } from '@react-oauth/google';
 import Navbar from './components/Navbar';
 import Footer from './components/Footer';
+import ReferralPromoPopup from './components/ReferralPromoPopup';
 import MarketingNavBar from './components/MarketingNavBar';
 import AboutUs from './pages/AboutUs';
 import Blog from './pages/Blog';
@@ -14,6 +15,7 @@ import Plans from './pages/Plans';
 import BookCaregiver from './pages/BookCaregiver';
 import MarketingPage from './pages/MarketingPage';
 import BecomeCaregiver from './pages/BecomeCaregiver';
+import BecomeReferrer from './pages/BecomeReferrer';
 import PrivacyPolicy from './pages/PrivacyPolicy';
 import TermsAndConditions from './pages/TermsAndConditions';
 import RefundPolicy from './pages/RefundPolicy';
@@ -177,6 +179,7 @@ function AppContent() {
     '/plans',
     '/book-caregiver',
     '/become-caregiver',
+    '/become-a-referrer',
     '/privacy-policy',
     '/terms-and-conditions',
     '/team',
@@ -277,6 +280,7 @@ function AppContent() {
         <Route path="/plans" element={<Plans />} />
         <Route path="/book-caregiver" element={<BookCaregiver />} />
         <Route path="/become-caregiver" element={<BecomeCaregiver />} />
+        <Route path="/become-a-referrer" element={<BecomeReferrer />} />
         <Route path="/privacy-policy" element={<PrivacyPolicy />} />
         <Route path="/terms-and-conditions" element={<TermsAndConditions />} />
         <Route path="/team" element={<Team />} />
@@ -337,6 +341,7 @@ function AppContent() {
       </Routes>
       </ClientOnboardingProvider>
       {shouldShowFooter && <Footer />}
+      {shouldShowFooter && <ReferralPromoPopup />}
       <ToastContainer
         position="bottom-right"
         autoClose={3000}

@@ -1,0 +1,33 @@
+.pending-commitment-banner {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 12px 16px;
+  margin-bottom: 16px;
+  background: #fff7e6;
+  border: 1px solid #f0c869;
+  border-radius: 10px;
+}
+
+.pending-commitment-banner__text {
+  font-size: 14px;
+  font-weight: 500;
+  color: #6b5100;
+}
+
+.pending-commitment-banner__btn {
+  flex-shrink: 0;
+  padding: 8px 16px;
+  border: none;
+  border-radius: 8px;
+  background: #135DFF;
+  color: #fff;
+  font-size: 13px;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.pending-commitment-banner__btn:hover {
+  background: #0f4bd1;
+}

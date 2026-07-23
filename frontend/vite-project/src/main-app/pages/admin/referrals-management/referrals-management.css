@@ -91,6 +91,12 @@
   font-size: 0.9rem;
 }
 
+.ref-field-error {
+  color: #991b1b;
+  font-size: 0.8rem;
+  font-weight: 500;
+}
+
 .ref-subtitle {
   grid-column: 1 / -1;
   margin-top: 4px;
@@ -144,6 +150,66 @@
 .btn-small {
   font-size: 0.8rem;
   padding: 6px 8px;
+}
+
+.btn-danger {
+  border-radius: 8px;
+  padding: 8px 12px;
+  border: 1px solid transparent;
+  font-weight: 600;
+  cursor: pointer;
+  background: #dc2626;
+  color: #fff;
+}
+
+.btn-primary:disabled,
+.btn-secondary:disabled,
+.btn-danger:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+.ref-filter-row .btn-secondary.active {
+  background: #111827;
+  color: #fff;
+  border-color: #111827;
+}
+
+.status-badge {
+  display: inline-block;
+  padding: 4px 10px;
+  border-radius: 999px;
+  font-size: 0.78rem;
+  font-weight: 600;
+}
+
+.status-badge--pendingapproval {
+  background: #fff7e4;
+  color: #92600a;
+}
+
+.status-badge--approved {
+  background: #ecfdf5;
+  color: #065f46;
+}
+
+.status-badge--rejected {
+  background: #fef2f2;
+  color: #991b1b;
+}
+
+.status-badge--unknown {
+  background: #f3f4f6;
+  color: #4b5563;
+}
+
+.ref-generated-code {
+  font-family: monospace;
+  font-weight: 700;
+  background: #f8fafc;
+  border: 1px solid #e5e7eb;
+  border-radius: 6px;
+  padding: 4px 8px;
 }
 
 .ref-result {

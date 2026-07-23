@@ -23,6 +23,7 @@ const WARN_TYPES = new Set([
   'OrderCancelled', 'VisitCancelledByClient', 'VisitCancellationRequested',
   'RefundRejected', 'PaymentFailed', 'SubscriptionSuspended',
   'NegotiationAbandoned', 'ContractRejected',
+  'CaregiverBecameIneligible',
 ]);
 
 // Notification types that fire an info toast

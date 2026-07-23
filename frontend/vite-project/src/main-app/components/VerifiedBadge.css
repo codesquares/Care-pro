@@ -1,0 +1,47 @@
+/* Inline variant — name-adjacent labeled badge (ServiceCard-style) */
+.verified-badge {
+  display: flex;
+  align-items: center;
+  gap: 3px;
+  flex-shrink: 0;
+}
+
+.verified-badge .name-dot {
+  font-size: 14px;
+  color: #d9a22b;
+  line-height: 1;
+}
+
+.verified-badge .verified-text {
+  font-size: 13px;
+  font-weight: 600;
+  color: #22a06b;
+}
+
+@media (max-width: 768px) {
+  .verified-badge .verified-text {
+    font-size: 14px;
+  }
+}
+
+@media (max-width: 480px) {
+  .verified-badge .verified-text {
+    font-size: 12px;
+  }
+}
+
+/* Overlay variant — compact icon-only checkmark on an avatar (CareRequestDetail-style) */
+.verified-badge-overlay {
+  position: absolute;
+  bottom: 2px;
+  right: 0;
+  width: 20px;
+  height: 20px;
+  background: #22c55e;
+  color: #fff;
+  border-radius: 50%;
+  font-size: 0.6rem;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
