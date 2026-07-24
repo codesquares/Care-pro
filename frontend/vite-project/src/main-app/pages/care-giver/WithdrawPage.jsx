@@ -15,7 +15,6 @@ const WithdrawPage = () => {
     totalWithdrawn: 0,
   });
   const [formData, setFormData] = useState({
-    caregiverId: '',
     amountRequested: '',
     accountNumber: '',
     bankName: '',
@@ -146,7 +145,6 @@ const WithdrawPage = () => {
       setIsSubmitting(true);
       
       const withdrawalRequestData = {
-        caregiverId: currentUser.id,
         amountRequested: parseFloat(formData.amountRequested),
         accountNumber: formData.accountNumber,
         bankName: formData.bankName,

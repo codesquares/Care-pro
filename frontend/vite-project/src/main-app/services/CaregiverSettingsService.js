@@ -3,13 +3,16 @@ import api from "./api";
 const notificationPreferencesEndpoint = (caregiverId) =>
   `/CaregiverPreferences/notification-preferences/${caregiverId}`;
 
+// Matches the backend's actual "no preference record yet" default
+// (CaregiverPreferenceService.GetNotificationPreferencesAsync) — this is only ever shown
+// transiently before the real GET resolves, or if it fails, so it must reflect that default
+// exactly rather than an arbitrary placeholder.
 const defaultPreferences = {
   emailNotifications: true,
-  smsNotifications: false,
+  smsNotifications: true,
   marketingEmails: false,
-  promotions: false,
-  newGig: true,
-  careRequestUpdates: true,
+  newGig: false,
+  careRequestUpdates: false,
 };
 
 const normalizePreferences = (raw = {}) => {
@@ -19,7 +22,6 @@ const normalizePreferences = (raw = {}) => {
     emailNotifications: !!source.emailNotifications,
     smsNotifications: !!source.smsNotifications,
     marketingEmails: !!source.marketingEmails,
-    promotions: !!source.promotions,
     newGig: !!source.newGig,
     careRequestUpdates: !!source.careRequestUpdates,
   };
@@ -29,7 +31,6 @@ const buildPayload = (preferences) => ({
   emailNotifications: !!preferences.emailNotifications,
   smsNotifications: !!preferences.smsNotifications,
   marketingEmails: !!preferences.marketingEmails,
-  promotions: !!preferences.promotions,
   newGig: !!preferences.newGig,
   careRequestUpdates: !!preferences.careRequestUpdates,
 });
