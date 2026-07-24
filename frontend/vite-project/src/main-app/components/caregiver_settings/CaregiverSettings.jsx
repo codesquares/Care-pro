@@ -220,7 +220,9 @@ const CaregiverSettings = () => {
 
       if (!response.ok) {
         const errorData = await response.json();
+        setPasswordMessage(errorData.message || "Failed to update password");
         toast.error(errorData.message || "Failed to update password");
+        return;
       }
 
       setPasswordMessage("Password updated successfully.");
@@ -495,35 +497,25 @@ const CaregiverSettings = () => {
               </div>
               <div className="notification-item">
                 <div className="notification-info">
-                  <span className="notification-title">SMS Notifications</span>
+                  <span className="notification-title">SMS Notifications (Coming soon)</span>
                   <span className="notification-description">Receive caregiver account updates by text message</span>
                 </div>
                 <button
                   type="button"
+                  disabled
+                  title="SMS notifications are not available yet."
                   className={`notification-toggle ${notificationPreferences.smsNotifications ? 'active' : ''}`}
-                  onClick={() => handleNotificationToggle('smsNotifications')}
                 />
               </div>
               <div className="notification-item">
                 <div className="notification-info">
                   <span className="notification-title">Marketing Emails</span>
-                  <span className="notification-description">Receive occasional tips and platform updates</span>
+                  <span className="notification-description">Receive occasional tips, platform updates, and promotional offers</span>
                 </div>
                 <button
                   type="button"
                   className={`notification-toggle ${notificationPreferences.marketingEmails ? 'active' : ''}`}
                   onClick={() => handleNotificationToggle('marketingEmails')}
-                />
-              </div>
-              <div className="notification-item">
-                <div className="notification-info">
-                  <span className="notification-title">Promotions</span>
-                  <span className="notification-description">Receive promotional offers and discounts</span>
-                </div>
-                <button
-                  type="button"
-                  className={`notification-toggle ${notificationPreferences.promotions ? 'active' : ''}`}
-                  onClick={() => handleNotificationToggle('promotions')}
                 />
               </div>
               <div className="notification-item">

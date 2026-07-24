@@ -492,6 +492,11 @@
 .notification-toggle.active::after {
   transform: translateX(20px);
 }
+
+.notification-toggle:disabled {
+  cursor: not-allowed;
+  opacity: 0.5;
+}
 @media (max-width: 768px) {
   .settings-card {
     padding: 20px;
