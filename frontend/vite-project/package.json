@@ -96,6 +96,9 @@
     "flatted": "^3.4.2",
     "picomatch": ">=2.3.2",
     "follow-redirects": "^1.16.0",
-    "path-to-regexp": ">=0.1.13"
+    "path-to-regexp": ">=0.1.13",
+    "@eslint/config-array": {
+      "minimatch": "^10.2.5"
+    }
   }
 }
