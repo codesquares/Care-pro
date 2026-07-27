@@ -65,10 +65,18 @@ jobs:
 
       - name: 🔒 Audit Frontend Dependencies (STRICT)
         working-directory: frontend/vite-project
+        # Fails on any high/critical advisory except the scoped exception below.
+        # audit-ci config: frontend/vite-project/audit-ci.json
+        #   allowlist: GHSA-qwww-vcr4-c8h2 (react-router "RSC Mode CSRF Bypass")
+        #   Confirmed non-applicable — this is a client-only SPA that never loads
+        #   the RSC code path the advisory targets. See audit-ci.json for the full
+        #   investigation notes and the re-check condition. This is a scoped,
+        #   single-advisory exception, not a severity-threshold downgrade — any
+        #   other high/critical finding still fails this step.
         run: |
           echo "🔒 Auditing frontend dependencies (PRODUCTION MODE)..."
           npm ci
-          npm audit --audit-level=high --omit=dev
+          npx audit-ci --config audit-ci.json
           echo "✅ Frontend security audit passed"
 
       # NODE-API AUDIT REMOVED: No longer deploying to AppRunner
