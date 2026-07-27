@@ -72,19 +72,19 @@ export const withdrawalService = {
 
   /**
    * Create a new withdrawal request.
+   * CaregiverId is derived by the server from the JWT — the frontend does not send it.
    * No service charge is deducted — platform commission is already taken at credit time.
    * The amount requested equals the amount the caregiver will receive.
-   * @param {{ caregiverId: string, amountRequested: number, accountNumber?: string, bankName?: string, accountName?: string }} withdrawalData
+   * @param {{ amountRequested: number, accountNumber?: string, bankName?: string, accountName?: string }} withdrawalData
    * @returns {Promise<Object>} Created withdrawal request
    */
   async createWithdrawalRequest(withdrawalData) {
-    if (!withdrawalData?.amountRequested || !withdrawalData?.caregiverId) {
-      throw new Error('Invalid withdrawal data: caregiverId and amountRequested are required');
+    if (!withdrawalData?.amountRequested) {
+      throw new Error('Invalid withdrawal data: amountRequested is required');
     }
 
     try {
       const response = await api.post('/WithdrawalRequests', {
-        CaregiverId: withdrawalData.caregiverId,
         AmountRequested: withdrawalData.amountRequested,
         AccountNumber: withdrawalData.accountNumber || null,
         BankName: withdrawalData.bankName || null,

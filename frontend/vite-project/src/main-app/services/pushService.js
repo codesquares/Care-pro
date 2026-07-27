@@ -40,11 +40,17 @@ async function fetchVapidPublicKey() {
  * Returns the PushSubscription object, or null if push is not supported/configured.
  */
 export async function subscribeForPush() {
-  if (!('serviceWorker' in navigator) || !('PushManager' in window)) return null;
-  if (Notification.permission !== 'granted') return null;
+  if (!('serviceWorker' in navigator) || !('PushManager' in window)) {
+    throw new Error('Push notifications are not supported in this browser.');
+  }
+  if (Notification.permission !== 'granted') {
+    throw new Error('Notification permission has not been granted.');
+  }
 
   const publicKey = await fetchVapidPublicKey();
-  if (!publicKey) return null;
+  if (!publicKey) {
+    throw new Error('Push notifications are not configured on this server.');
+  }
 
   const reg = await navigator.serviceWorker.ready;
   const sub = await reg.pushManager.subscribe({

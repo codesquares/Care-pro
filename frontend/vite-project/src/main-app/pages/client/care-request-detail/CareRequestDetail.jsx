@@ -2,6 +2,7 @@ import { useState, useEffect, useCallback } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { toast } from 'react-toastify';
 import CareRequestService from '../../../services/careRequestService';
+import VerifiedBadge from '../../../components/VerifiedBadge';
 import './CareRequestDetail.css';
 
 const URGENCY_LABELS = {
@@ -50,6 +51,27 @@ const CareRequestDetail = () => {
   }, [requestId]);
 
   useEffect(() => { fetchDetail(); }, [fetchDetail]);
+
+  // Live-refresh on care request lifecycle notifications — same CustomEvent
+  // and pattern CareRequestMatches.jsx already uses, scoped to this requestId.
+  useEffect(() => {
+    const handleRequestUpdate = (e) => {
+      const { type, relatedEntityId } = e.detail || {};
+      if (
+        relatedEntityId === requestId &&
+        (
+          type === 'care_request_matched' || type === 'care_request_no_match' ||
+          type === 'care_request_created' || type === 'care_request_paused' ||
+          type === 'care_request_reopened' || type === 'care_request_closed'
+        )
+      ) {
+        fetchDetail();
+      }
+    };
+
+    window.addEventListener('care-request-update', handleRequestUpdate);
+    return () => window.removeEventListener('care-request-update', handleRequestUpdate);
+  }, [requestId, fetchDetail]);
 
   // ─── Lifecycle Actions ───
 
@@ -337,7 +359,7 @@ const CaregiverCard = ({ caregiver, activeTab, onViewProfile, onShortlist, onRem
         ) : (
           <div className="crd-cg-initials">{initials}</div>
         )}
-        {(cg.isVerified || cg.isIdentityVerified) && <span className="crd-cg-verified" title="Verified">✓</span>}
+        <VerifiedBadge isVerified={cg.isVerified || cg.isIdentityVerified} variant="overlay" />
       </div>
 
       <h4 className="crd-cg-name">{cg.caregiverName}</h4>

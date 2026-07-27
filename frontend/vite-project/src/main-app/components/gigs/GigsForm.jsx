@@ -643,6 +643,22 @@ const GigsForm = () => {
       }
     } catch (err) {
       console.error("Error saving draft:", err);
+
+      // Handle 422 — image moderation rejection from backend (same as publish path)
+      if (err.response?.status === 422 && err.response.data?.error === 'image_rejected') {
+        setImageRejectionError({
+          reason: err.response.data.reason,
+          suggestions: err.response.data.suggestions || []
+        });
+        setCurrentStep(2); // Navigate back to Gallery so the user sees the error inline
+        setSelectedFile(null);
+        setImagePreview(null);
+        if (fileInputRef.current) {
+          fileInputRef.current.value = ''; // Reset DOM input so re-selecting the same file fires onChange
+        }
+        return; // Don't show generic error
+      }
+
       setServerMessage("Failed to save draft.");
       toast.error("Failed to save draft. Please try again.");
     } finally {

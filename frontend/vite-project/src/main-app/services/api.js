@@ -79,6 +79,7 @@ api.interceptors.request.use(
                 '/public-config',
                 '/Gigs',
                 '/Analytics/Event',
+                '/referrals/apply',
             ];
 
             const isPublic = publicEndpoints.some(ep => config.url?.includes(ep));

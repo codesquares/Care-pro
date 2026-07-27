@@ -1,7 +1,8 @@
-import { useState, useEffect, useMemo } from 'react';
+import { useState, useEffect, useMemo, useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { toast } from 'react-toastify';
 import CareRequestService from '../../../services/careRequestService';
+import PendingCommitmentBanner from '../../../components/PendingCommitmentBanner';
 import '../../client/client-dashboard/marketplaceHero.css';
 import './YourRequests.css';
 
@@ -27,20 +28,41 @@ const YourRequests = () => {
   const [locationFilter, setLocationFilter] = useState('');
   const [sortBy, setSortBy] = useState('newest');
 
+  const fetchRequests = useCallback(async (showLoader = true) => {
+    try {
+      if (showLoader) setLoading(true);
+      const data = await CareRequestService.getCareRequests();
+      setRequests(data || []);
+    } catch (err) {
+      console.error('Failed to load care requests:', err);
+      if (showLoader) toast.error('Failed to load your requests.');
+    } finally {
+      if (showLoader) setLoading(false);
+    }
+  }, []);
+
   useEffect(() => {
-    const fetchRequests = async () => {
-      try {
-        const data = await CareRequestService.getCareRequests();
-        setRequests(data || []);
-      } catch (err) {
-        console.error('Failed to load care requests:', err);
-        toast.error('Failed to load your requests.');
-      } finally {
-        setLoading(false);
+    fetchRequests(true);
+  }, [fetchRequests]);
+
+  // Live-refresh on care request lifecycle notifications (same CustomEvent
+  // CareRequestMatches.jsx listens for) — this list spans all requests, not
+  // one, so refetch on any care_request_* event rather than filtering by id.
+  useEffect(() => {
+    const handleRequestUpdate = (e) => {
+      const { type } = e.detail || {};
+      if (
+        type === 'care_request_matched' || type === 'care_request_no_match' ||
+        type === 'care_request_created' || type === 'care_request_paused' ||
+        type === 'care_request_reopened' || type === 'care_request_closed'
+      ) {
+        fetchRequests(false);
       }
     };
-    fetchRequests();
-  }, []);
+
+    window.addEventListener('care-request-update', handleRequestUpdate);
+    return () => window.removeEventListener('care-request-update', handleRequestUpdate);
+  }, [fetchRequests]);
 
   // Count per tab
   const tabCounts = useMemo(() => {
@@ -91,6 +113,8 @@ const YourRequests = () => {
 
   return (
     <div className="your-requests-page">
+      <PendingCommitmentBanner />
+
       {/* Banner */}
       <div className="marketplace-banner your-requests-banner">
         <div className="marketplace-banner-content">

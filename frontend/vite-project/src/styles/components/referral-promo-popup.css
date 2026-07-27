@@ -1,0 +1,111 @@
+/* ===== Referral Promo Popup ===== */
+.referral-promo-popup__overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(15, 23, 42, 0.55);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 1200;
+  padding: 20px;
+  animation: referral-promo-fade-in 0.25s ease;
+}
+
+.referral-promo-popup {
+  position: relative;
+  background: #ffffff;
+  border-radius: 16px;
+  max-width: 380px;
+  width: 100%;
+  padding: 32px 28px 28px;
+  text-align: center;
+  box-shadow: 0 20px 60px rgba(0, 0, 0, 0.25);
+  animation: referral-promo-pop-in 0.3s ease;
+}
+
+.referral-promo-popup__close {
+  position: absolute;
+  top: 12px;
+  right: 14px;
+  background: none;
+  border: none;
+  font-size: 22px;
+  line-height: 1;
+  color: #94a3b8;
+  cursor: pointer;
+}
+
+.referral-promo-popup__close:hover {
+  color: #1a2332;
+}
+
+.referral-promo-popup__badge {
+  display: inline-block;
+  background: #05668D;
+  color: #ffffff;
+  font-weight: 700;
+  font-size: 18px;
+  padding: 8px 18px;
+  border-radius: 999px;
+  margin-bottom: 16px;
+}
+
+.referral-promo-popup__title {
+  font-size: 20px;
+  font-weight: 700;
+  color: #1a2332;
+  margin: 0 0 10px;
+}
+
+.referral-promo-popup__description {
+  font-size: 14px;
+  color: #475569;
+  line-height: 1.5;
+  margin: 0 0 22px;
+}
+
+.referral-promo-popup__actions {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.referral-promo-popup__cta {
+  display: inline-block;
+  background: #00B4A6;
+  color: #ffffff;
+  font-weight: 600;
+  font-size: 14px;
+  padding: 12px 20px;
+  border-radius: 8px;
+  text-decoration: none;
+  transition: background 0.2s ease;
+}
+
+.referral-promo-popup__cta:hover {
+  background: #059a8d;
+}
+
+.referral-promo-popup__dismiss {
+  background: none;
+  border: none;
+  color: #64748b;
+  font-size: 13px;
+  cursor: pointer;
+  padding: 4px;
+}
+
+.referral-promo-popup__dismiss:hover {
+  color: #1a2332;
+  text-decoration: underline;
+}
+
+@keyframes referral-promo-fade-in {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+
+@keyframes referral-promo-pop-in {
+  from { opacity: 0; transform: scale(0.92) translateY(10px); }
+  to { opacity: 1; transform: scale(1) translateY(0); }
+}
