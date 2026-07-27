@@ -22,7 +22,11 @@ module.exports = {
         visitor: {
           MetaProperty(path) {
             if (path.node.meta.name === 'import' && path.node.property.name === 'meta') {
-              path.replaceWithSourceString('process.env.NODE_ENV === "test" ? global.importMeta : import.meta');
+              // babel.config.cjs is only loaded by babel-jest (Vite uses esbuild directly,
+              // see vite.config.js), so this always runs under Jest — no need to reference
+              // `import.meta` in the replacement itself, which would just reintroduce the
+              // syntax error this plugin exists to avoid.
+              path.replaceWithSourceString('global.importMeta');
             }
           }
         }
