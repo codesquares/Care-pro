@@ -1,0 +1,525 @@
+.care-matching {
+  padding: 2rem;
+  max-width: 1500px;
+  margin: 0 auto;
+}
+
+.care-matching .page-header {
+  margin-bottom: 2rem;
+}
+
+.care-matching .page-header h1 {
+  font-size: 2rem;
+  color: #1a1a1a;
+  margin-bottom: 0.5rem;
+}
+
+.care-matching .page-header p {
+  color: #666;
+  font-size: 1rem;
+}
+
+.care-matching .loading-container {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 4rem;
+}
+
+.care-matching .spinner {
+  border: 4px solid #f3f3f3;
+  border-top: 4px solid #4a90e2;
+  border-radius: 50%;
+  width: 40px;
+  height: 40px;
+  animation: care-matching-spin 1s linear infinite;
+  margin-bottom: 1rem;
+}
+
+@keyframes care-matching-spin {
+  0% { transform: rotate(0deg); }
+  100% { transform: rotate(360deg); }
+}
+
+.care-matching .error-message {
+  background-color: #fee;
+  border: 1px solid #fcc;
+  border-radius: 8px;
+  padding: 1rem;
+  margin-bottom: 1.5rem;
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+}
+
+.care-matching .error-message i {
+  color: #d32f2f;
+  font-size: 1.25rem;
+}
+
+.care-matching .error-message button {
+  margin-left: auto;
+  padding: 0.5rem 1rem;
+  background-color: #4a90e2;
+  color: white;
+  border: none;
+  border-radius: 4px;
+  cursor: pointer;
+}
+
+.care-matching .filters-section {
+  background: white;
+  padding: 1.5rem;
+  border-radius: 12px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+  margin-bottom: 2rem;
+}
+
+.care-matching .search-box {
+  position: relative;
+  margin-bottom: 1rem;
+}
+
+.care-matching .search-box i {
+  position: absolute;
+  left: 1rem;
+  top: 50%;
+  transform: translateY(-50%);
+  color: #999;
+}
+
+.care-matching .search-box input {
+  width: 100%;
+  padding: 0.75rem 1rem 0.75rem 2.5rem;
+  border: 1px solid #ddd;
+  border-radius: 8px;
+  font-size: 1rem;
+}
+
+.care-matching .filter-controls {
+  display: flex;
+  gap: 1rem;
+  flex-wrap: wrap;
+}
+
+.care-matching .filter-controls select,
+.care-matching .filter-controls input {
+  flex: 1;
+  min-width: 150px;
+  padding: 0.75rem;
+  border: 1px solid #ddd;
+  border-radius: 8px;
+  font-size: 0.9rem;
+}
+
+.care-matching .btn-reset {
+  padding: 0.75rem 1.5rem;
+  background-color: #f5f5f5;
+  border: 1px solid #ddd;
+  border-radius: 8px;
+  cursor: pointer;
+  font-weight: 500;
+}
+
+.care-matching .btn-reset:hover {
+  background-color: #e0e0e0;
+}
+
+/* Two-column matching layout: caregiver search left, selected caregiver's gigs right */
+.matching-layout {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 1.5rem;
+}
+
+@media (min-width: 1100px) {
+  .matching-layout {
+    grid-template-columns: 3fr 2fr;
+    align-items: start;
+  }
+}
+
+.caregivers-table-container {
+  background: white;
+  border-radius: 12px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+  overflow-x: auto;
+}
+
+.caregivers-table {
+  width: 100%;
+  border-collapse: collapse;
+}
+
+.caregivers-table thead {
+  background-color: #f8f9fa;
+}
+
+.caregivers-table th {
+  padding: 1rem;
+  text-align: left;
+  font-weight: 600;
+  color: #333;
+  border-bottom: 2px solid #dee2e6;
+}
+
+.caregivers-table td {
+  padding: 1rem;
+  border-bottom: 1px solid #dee2e6;
+}
+
+.caregivers-table tbody tr {
+  cursor: pointer;
+}
+
+.caregivers-table tbody tr:hover {
+  background-color: #f8f9fa;
+}
+
+.caregivers-table tbody tr.row-selected {
+  background-color: #eef2ff;
+}
+
+.profile-image {
+  width: 36px;
+  height: 36px;
+  border-radius: 50%;
+  object-fit: cover;
+}
+
+.availability-badge {
+  display: inline-block;
+  padding: 0.25rem 0.75rem;
+  border-radius: 12px;
+  font-size: 0.8rem;
+  font-weight: 500;
+}
+
+.availability-badge.available {
+  background-color: #cce5ff;
+  color: #004085;
+}
+
+.availability-badge.unavailable {
+  background-color: #fff3cd;
+  color: #856404;
+}
+
+.verified-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35rem;
+  padding: 0.25rem 0.75rem;
+  border-radius: 12px;
+  font-size: 0.8rem;
+  font-weight: 500;
+}
+
+.verified-badge.verified {
+  background-color: #d4edda;
+  color: #155724;
+}
+
+.verified-badge.unverified {
+  background-color: #f8d7da;
+  color: #721c24;
+}
+
+.btn-view {
+  padding: 0.4rem 0.9rem;
+  background-color: #4a90e2;
+  color: white;
+  border: none;
+  border-radius: 6px;
+  cursor: pointer;
+  font-size: 0.85rem;
+}
+
+.btn-view:hover {
+  background-color: #357abd;
+}
+
+/* Gigs panel */
+.gigs-panel {
+  background: white;
+  border-radius: 12px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+  padding: 1.5rem;
+}
+
+.gigs-panel h2 {
+  font-size: 1.15rem;
+  color: #1a1a1a;
+  margin: 0 0 1rem;
+}
+
+.no-gigs {
+  color: #666;
+  padding: 1rem 0;
+}
+
+.gigs-table {
+  width: 100%;
+  border-collapse: collapse;
+}
+
+.gigs-table th {
+  text-align: left;
+  padding: 0.6rem;
+  font-size: 0.8rem;
+  color: #666;
+  border-bottom: 2px solid #dee2e6;
+}
+
+.gigs-table td {
+  padding: 0.6rem;
+  border-bottom: 1px solid #eee;
+  font-size: 0.9rem;
+}
+
+.category-tag {
+  display: inline-block;
+  background: #edf2f7;
+  color: #667eea;
+  padding: 0.3rem 0.6rem;
+  border-radius: 6px;
+  font-size: 0.8rem;
+  font-weight: 500;
+}
+
+.status-badge {
+  display: inline-block;
+  padding: 0.3rem 0.7rem;
+  border-radius: 20px;
+  font-size: 0.75rem;
+  font-weight: 600;
+  text-transform: uppercase;
+}
+
+.status-badge.status-active,
+.status-badge.status-published {
+  background: #c6f6d5;
+  color: #22543d;
+}
+
+.status-badge.status-paused {
+  background: #feebc8;
+  color: #7b341e;
+}
+
+.status-badge.status-draft {
+  background: #e2e8f0;
+  color: #4a5568;
+}
+
+.btn-recommend {
+  padding: 0.45rem 0.9rem;
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  color: white;
+  border: none;
+  border-radius: 6px;
+  cursor: pointer;
+  font-size: 0.8rem;
+  font-weight: 600;
+  white-space: nowrap;
+}
+
+.btn-recommend:hover:not(:disabled) {
+  opacity: 0.9;
+}
+
+.btn-recommend:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+/* Recommend to Client modal
+   Note: named care-matching-modal-* (not the generic .modal-overlay/.modal-content
+   used elsewhere in admin/) because every admin page's CSS is bundled into one
+   global stylesheet with no scoping — bare .modal-content rules from other pages
+   collide and cascade order (not component mount) decides which wins. Confirmed
+   via computed style inspection: an unrelated page's .modal-content rule was
+   overriding this modal's width down to 320px, causing the footer buttons to
+   overflow. Keep this modal's classes uniquely prefixed to avoid relying on
+   selector-specificity/load-order wars with unrelated pages. */
+.care-matching-modal-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background-color: rgba(0, 0, 0, 0.7);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 1000;
+  padding: 2rem;
+}
+
+.care-matching-modal-content {
+  background: white;
+  border-radius: 12px;
+  max-width: 95vw;
+  max-height: 90vh;
+  overflow-y: auto;
+  position: relative;
+}
+
+.recommend-modal {
+  width: 520px;
+}
+
+.care-matching-modal-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 1.5rem;
+  border-bottom: 1px solid #dee2e6;
+}
+
+.care-matching-modal-header h2 {
+  margin: 0;
+  font-size: 1.1rem;
+  color: #1a1a1a;
+}
+
+.care-matching-modal-close {
+  background: none;
+  border: none;
+  font-size: 1.25rem;
+  cursor: pointer;
+  color: #666;
+}
+
+.care-matching-modal-body {
+  padding: 1.5rem;
+}
+
+.care-matching-modal-footer {
+  display: flex;
+  justify-content: flex-end;
+  gap: 0.75rem;
+  padding: 1rem 1.5rem;
+  border-top: 1px solid #dee2e6;
+}
+
+.alert {
+  padding: 0.85rem 1rem;
+  border-radius: 8px;
+  margin-bottom: 1rem;
+}
+
+.alert p {
+  margin: 0;
+}
+
+.alert-success {
+  background-color: #d1fae5;
+  color: #065f46;
+  border-left: 4px solid #10b981;
+}
+
+.alert-error {
+  background-color: #fee2e2;
+  color: #991b1b;
+  border-left: 4px solid #ef4444;
+}
+
+.client-list {
+  max-height: 320px;
+  overflow-y: auto;
+  border: 1px solid #eee;
+  border-radius: 8px;
+}
+
+.client-item {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0.75rem 1rem;
+  border-bottom: 1px solid #f0f0f0;
+  cursor: pointer;
+}
+
+.client-item:last-child {
+  border-bottom: none;
+}
+
+.client-item:hover {
+  background-color: #f8f9fa;
+}
+
+.client-item.selected {
+  background-color: #eef2ff;
+}
+
+.client-item strong {
+  display: block;
+  color: #1a1a1a;
+  font-size: 0.9rem;
+}
+
+.client-email {
+  display: block;
+  color: #666;
+  font-size: 0.8rem;
+}
+
+.client-item i {
+  color: #667eea;
+}
+
+.btn-secondary {
+  padding: 0.6rem 1.25rem;
+  background-color: #f5f5f5;
+  border: 1px solid #ddd;
+  border-radius: 8px;
+  cursor: pointer;
+  font-weight: 500;
+}
+
+.btn-secondary:hover {
+  background-color: #e0e0e0;
+}
+
+.btn-send {
+  padding: 0.6rem 1.25rem;
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  color: white;
+  border: none;
+  border-radius: 8px;
+  cursor: pointer;
+  font-weight: 600;
+}
+
+.btn-send:hover:not(:disabled) {
+  opacity: 0.9;
+}
+
+.btn-send:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+@media (max-width: 768px) {
+  .care-matching {
+    padding: 1rem;
+  }
+
+  .filter-controls {
+    flex-direction: column;
+  }
+
+  .caregivers-table {
+    font-size: 0.85rem;
+  }
+
+  .care-matching-modal-overlay {
+    padding: 1rem;
+  }
+
+  .recommend-modal {
+    width: 100%;
+  }
+}

@@ -14,6 +14,7 @@ import OurProcess from './pages/OurProcess';
 import Plans from './pages/Plans';
 import BookCaregiver from './pages/BookCaregiver';
 import MarketingPage from './pages/MarketingPage';
+import StartAssessmentRedirect from './pages/StartAssessmentRedirect';
 import BecomeCaregiver from './pages/BecomeCaregiver';
 import BecomeReferrer from './pages/BecomeReferrer';
 import PrivacyPolicy from './pages/PrivacyPolicy';
@@ -288,6 +289,7 @@ function AppContent() {
         <Route path="/login" element={<LoginPage />} />
         <Route path="/register" element={<RoleSelectionPage />} />
         <Route path="/register/form" element={<RegisterFormPage />} />
+        <Route path="/start-assessment" element={<StartAssessmentRedirect />} />
         <Route path="/forgot-password" element={<ForgotPasswordPage />} />
         <Route path="/confirm-email" element={<ConfirmEmailPage />} />
         <Route path="/resend-confirmation" element={<ResendConfirmationPage />} />

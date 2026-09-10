@@ -116,6 +116,10 @@ const MarketingPage = () => {
     navigate("/marketplace");
   };
 
+  const handleStartAssessment = () => {
+    navigate(`/register?returnTo=${encodeURIComponent("/start-assessment")}`);
+  };
+
   return (
     <div className="marketing-page">
       {/* Hero Section */}
@@ -165,6 +169,14 @@ const MarketingPage = () => {
             <p className="mk-hero__popular-tagline">
               Now serving families across Nigeria.
             </p>
+          </div>
+
+          {/* Assessment CTA */}
+          <div className="mk-hero__assessment-cta" data-animate="assessment-cta">
+            <p>Not sure where to start?</p>
+            <button type="button" onClick={handleStartAssessment}>
+              Get a Free Care Assessment <span aria-hidden="true">&rarr;</span>
+            </button>
           </div>
         </div>
 

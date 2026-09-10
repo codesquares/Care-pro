@@ -13,6 +13,7 @@ import AdminUserManagement from './users-management/AdminUserManagement';
 import ChatCompliance from './chat-compliance/ChatCompliance';
 import BookingCommitments from './booking-commitments/BookingCommitments';
 import GigsManagement from './gigs-management/GigsManagement';
+import CareMatching from './care-matching/CareMatching';
 import OrdersManagement from './orders-management/OrdersManagement';
 import EmailComposer from './email-composer/EmailComposer';
 import CertificateManagement from './certificate-management/CertificateManagement';
@@ -111,6 +112,7 @@ function AdminRoutes() {
                     <Route path='/chat-compliance' element={<ChatCompliance />} />
                     <Route path='/booking-commitments' element={<BookingCommitments />} />
                     <Route path='/gigs' element={<GigsManagement />} />
+                    <Route path='/care-matching' element={<CareMatching />} />
                     <Route path='/orders' element={<OrdersManagement />} />
                     <Route path='/emails' element={<EmailComposer />} />
                     <Route path='/certificates' element={<CertificateManagement />} />
