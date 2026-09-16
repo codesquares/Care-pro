@@ -77,14 +77,6 @@ const ClientNavBar = () => {
     };
   }, []);
 
-  // ✅ Move this useEffect before early return
-  useEffect(() => {
-    document.addEventListener("mousedown", handleClickOutside);
-    return () => {
-      document.removeEventListener("mousedown", handleClickOutside);
-    };
-  }, []);
-
   // Early return if no user data - prevents errors during logout
   if (!user) {
     return null;
@@ -352,9 +344,9 @@ const ClientNavBar = () => {
               <FaShoppingBag className="client-nav-link-icon" />
               Orders
             </li>
-            <li className="client-nav-text-link" onClick={() => navigate(`${basePath}/your-requests`)}>
+            <li className="client-nav-text-link" onClick={() => navigate('/marketplace')}>
               <FaClipboardList className="client-nav-link-icon" />
-              Request
+              Packages
             </li>
           </ul>
 

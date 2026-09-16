@@ -23,7 +23,7 @@ const footerSections = [
   {
     title: "For Clients",
     links: [
-      { to: "/app/client/post-project", label: "Post Requests" },
+      { to: "/marketplace", label: "Browse Care Packages" },
       { to: "/book-caregiver", label: "Hire Care Professionals" },
       { to: "/book-caregiver", label: "How Carepro works" },
       { to: "/plans", label: "Pricing" },

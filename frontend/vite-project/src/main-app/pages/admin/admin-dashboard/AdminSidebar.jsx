@@ -28,6 +28,7 @@ const ALL_NAV_GROUPS = [
     items: [
       { to: '/app/admin/orders',              icon: 'fa-shopping-cart',  label: 'Orders',              policy: 'finance' },
       { to: '/app/admin/gigs',                icon: 'fa-briefcase',      label: 'Gigs',                policy: 'operations' },
+      { to: '/app/admin/packages',            icon: 'fa-box-open',       label: 'Care Packages',       policy: 'operations' },
       { to: '/app/admin/care-matching',       icon: 'fa-search-location',label: 'Care Matching',       policy: 'operations' },
       { to: '/app/admin/withdrawals',         icon: 'fa-wallet',         label: 'Withdrawals',         policy: 'finance' },
       { to: '/app/admin/refunds',             icon: 'fa-money-bill-wave',label: 'Refunds',             policy: 'financeOrOperations' },

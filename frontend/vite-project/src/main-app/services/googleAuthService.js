@@ -456,6 +456,7 @@ const GoogleAuthService = {
     const role = authData.role || authData.Role || authData.userRole || authData.UserRole;
     const profilePicture = authData.profilePicture || authData.ProfilePicture;
     const authProvider = authData.authProvider || authData.AuthProvider || 'Google';
+    const department = authData.department || authData.Department;
     
     console.log("🔍 Parsed values - token:", !!accessToken, "role:", role, "id:", userId);
     
@@ -475,6 +476,7 @@ const GoogleAuthService = {
       firstName: firstName,
       lastName: lastName,
       role: role,
+      department: department,
       profilePicture: profilePicture,
       authProvider: authProvider
     };
@@ -491,6 +493,7 @@ const GoogleAuthService = {
   getDashboardPath(role) {
     switch (role) {
       case "Admin":
+      case "SuperAdmin":
         return "/app/admin/dashboard";
       case "Client":
         return "/app/client/dashboard";
@@ -499,6 +502,67 @@ const GoogleAuthService = {
       default:
         return "/app";
     }
+  },
+
+  /**
+   * Build the AuthContext `userData` shape from a raw googleSignIn/googleSignUp
+   * result. Single shared builder so every Google-auth caller (LoginPage,
+   * RegisterFormPage's sign-in and sign-up branches) stays in sync — a field
+   * added here (e.g. `department`) doesn't need to be re-added at each call site.
+   * @param {object} result - Raw response from googleSignIn/googleSignUp
+   * @param {string} [fallbackRole] - Role to use if the response omits one (sign-up only)
+   * @returns {object}
+   */
+  buildUserData(result, fallbackRole) {
+    return {
+      id: result.id || result.userId,
+      email: result.email,
+      firstName: result.firstName,
+      lastName: result.lastName,
+      role: result.role || fallbackRole,
+      department: result.department,
+      profilePicture: result.profilePicture,
+      authProvider: result.authProvider || 'Google',
+    };
+  },
+
+  /**
+   * Whether a returnTo value is safe to redirect to: an in-app relative path
+   * only. Rejects protocol-relative ("//evil.com") and backslash-prefixed
+   * ("/\evil.com", which some browsers treat as protocol-relative) values,
+   * and absolute URLs, so a caller can't turn the post-auth redirect into an
+   * open redirect via the returnTo query param.
+   * @param {string} decodedReturnTo - Already-decoded returnTo value
+   * @returns {boolean}
+   */
+  isSafeReturnTo(decodedReturnTo) {
+    return typeof decodedReturnTo === "string" && /^\/(?!\/|\\)/.test(decodedReturnTo);
+  },
+
+  /**
+   * Single shared decision for where to send a user right after a
+   * successful Google sign-in/sign-up: honor a valid returnTo (the same way
+   * the email/password login flow already does), otherwise fall back to
+   * their role's dashboard. Used by every Google-auth caller (LoginPage,
+   * RegisterFormPage) so a fix here covers every returnTo=... caller
+   * (assessment CTA, Plans.jsx, PricingModal.jsx) at once.
+   * @param {string} role - User role, for the dashboard fallback
+   * @param {string} [returnTo] - Raw returnTo value as read from the URL/state
+   * @returns {string} - Path to redirect to
+   */
+  getPostAuthRedirect(role, returnTo) {
+    if (returnTo) {
+      let decoded;
+      try {
+        decoded = decodeURIComponent(returnTo);
+      } catch {
+        decoded = null;
+      }
+      if (this.isSafeReturnTo(decoded)) {
+        return decoded;
+      }
+    }
+    return this.getDashboardPath(role);
   },
 };
 

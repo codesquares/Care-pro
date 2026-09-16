@@ -262,16 +262,15 @@ const MarketingPage = () => {
               <div className="how-image">
                 <img src={caregiver1} alt="Browse caregivers" />
               </div>
-              <h3>Post job request or Browse service categories</h3>
+              <h3>Browse service categories</h3>
               <p>
                 There are several ways to discover the perfect caregiver or
-                service on carepro. You can either use the search feature or
-                post job request, explore these methods to navigate the
-                platform efficiently and find your perfect match.
+                service on carepro. Use the search feature or browse service
+                categories to navigate the platform efficiently and find your
+                perfect match.
               </p>
               <div className="how-actions split">
-                <button className="how-btn outline" onClick={() => navigate("/marketplace")}>Browse Services</button>
-                <button className="how-btn fill" onClick={() => navigate("/app/client/post-project")}>Post job request</button>
+                <button className="how-btn fill" onClick={() => navigate("/marketplace")}>Browse Services</button>
               </div>
             </div>
 

@@ -31,10 +31,6 @@ const ClientDashboardHero = ({
     navigate("/app/client/profile");
   };
 
-  const handleYourRequests = () => {
-    navigate("/app/client/your-requests");
-  };
-
   const handleResolveIssues = () => {
     navigate("/app/client/notifications");
   };
@@ -43,8 +39,8 @@ const ClientDashboardHero = ({
     navigate("/app/client/wallet");
   };
 
-  const handlePostBrief = () => {
-    navigate("/app/client/post-project");
+  const handleBrowsePackages = () => {
+    navigate("/marketplace");
   };
 
   const handleSetCarePreferences = () => {
@@ -99,21 +95,6 @@ const ClientDashboardHero = ({
           <p className="welcome-subtitle">Let's get you all set up</p>
         </div>
         <div className="banner-cards">
-          <div className="profile-completion-card" onClick={handleYourRequests}>
-            <div className="profile-icon">
-              <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-                <path d="M9 5H7a2 2 0 0 0-2 2v12a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2V7a2 2 0 0 0-2-2h-2" />
-                <rect x="9" y="3" width="6" height="4" rx="1" />
-                <line x1="9" y1="12" x2="15" y2="12" />
-                <line x1="9" y1="16" x2="13" y2="16" />
-              </svg>
-            </div>
-            <div className="profile-info">
-              <span className="profile-label">YOUR REQUESTS</span>
-              <span className="profile-percentage">View and manage your care requests</span>
-              <span className="profile-cta">Click here to see your requests.</span>
-            </div>
-          </div>
           <div className="profile-completion-card" onClick={handleWallet}>
             <div className="profile-icon">
               <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
@@ -160,8 +141,8 @@ const ClientDashboardHero = ({
           </div>
         </div>
 
-        {/* Post Project Brief Card */}
-        <div className="action-card brief-card" onClick={handlePostBrief}>
+        {/* Browse Packages Card */}
+        <div className="action-card brief-card" onClick={handleBrowsePackages}>
           <div className="card-icon brief-icon">
             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5">
               <path d="M9 5H7a2 2 0 0 0-2 2v12a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2V7a2 2 0 0 0-2-2h-2" />
@@ -172,8 +153,8 @@ const ClientDashboardHero = ({
           </div>
           <div className="card-content">
             <span className="card-label card-label-gray">CAN'T FIND YOUR PREFERRED CAREGIVER?</span>
-            <span className="card-title">Post a project brief</span>
-            <span className="card-subtitle">Get tailored offers for your needs.</span>
+            <span className="card-title">Browse care packages</span>
+            <span className="card-subtitle">Choose from our guided care packages.</span>
           </div>
         </div>
       </div>

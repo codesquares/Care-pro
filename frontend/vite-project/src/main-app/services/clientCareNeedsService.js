@@ -407,103 +407,20 @@ class ClientCareNeedsService {
       if (!careNeeds || !careNeeds.primaryCondition) {
         return [];
       }
-      
+
       // Get the current client ID
       const userDetails = JSON.parse(localStorage.getItem('userDetails') || '{}');
       const clientId = userDetails.id;
-      
-      if (clientId) {
-        // If we have the MatchingService, use it for better recommendations
-        try {
-          // Dynamically import MatchingService to avoid circular dependencies
-          const { default: MatchingService } = await import('./matchingService');
-          return await MatchingService.getRecommendedCaregivers(clientId);
-        } catch (matchingError) {
-          console.warn('MatchingService not available, using fallback method:', matchingError);
-        }
+
+      if (!clientId) {
+        return [];
       }
-      
-      // Fallback to mock recommendations
-      return [
-        {
-          id: 'cg-1',
-          name: 'Sarah Johnson',
-          rating: 4.9,
-          specialties: ['Elder Care', 'Medication Management'],
-          yearsExperience: 5,
-          hourlyRate: 25,
-          matchScore: 95
-        },
-        {
-          id: 'cg-2',
-          name: 'Michael Chen',
-          rating: 4.7,
-          specialties: ['Post-Surgery Care', 'Physical Therapy'],
-          yearsExperience: 3,
-          hourlyRate: 30,
-          matchScore: 87
-        },
-        {
-          id: 'cg-3',
-          name: 'Aisha Williams',
-          rating: 4.8,
-          specialties: ['Special Needs Care', 'Pediatric Care'],
-          yearsExperience: 7,
-          hourlyRate: 28,
-          matchScore: 82
-        }
-      ];
+
+      // Dynamically import MatchingService to avoid circular dependencies
+      const { default: MatchingService } = await import('./matchingService');
+      return await MatchingService.getRecommendedCaregivers(clientId);
     } catch (error) {
       console.error('Error in getMatchingCaregivers:', error);
-      throw error;
-    }
-  }
-  
-  /**
-   * Get relevant gigs based on client care needs
-   * @param {string} clientId - Client ID
-   * @returns {Promise<Array>} List of relevant gigs
-   */
-  static async getRelevantGigs(clientId) {
-    try {
-      // If we have the MatchingService, use it for better recommendations
-      try {
-        // Dynamically import MatchingService to avoid circular dependencies
-        const { default: MatchingService } = await import('./matchingService');
-        return await MatchingService.getRecommendedGigs(clientId);
-      } catch (matchingError) {
-        console.warn('MatchingService not available, using fallback method:', matchingError);
-      }
-      
-      // Fallback to mock data
-      return [
-        {
-          id: 'gig-1',
-          title: 'Elder Care Assistance',
-          description: 'Looking for compassionate caregiver',
-          location: 'Lagos',
-          payRate: 28,
-          matchScore: 90
-        },
-        {
-          id: 'gig-2',
-          title: 'Special Needs Support',
-          description: 'Seeking experienced caregiver',
-          location: 'Abuja',
-          payRate: 32,
-          matchScore: 85
-        },
-        {
-          id: 'gig-3',
-          title: 'Post-Surgery Recovery',
-          description: 'Need assistance with recovery',
-          location: 'Lagos',
-          payRate: 30,
-          matchScore: 80
-        }
-      ];
-    } catch (error) {
-      console.error('Error in getRelevantGigs:', error);
       throw error;
     }
   }

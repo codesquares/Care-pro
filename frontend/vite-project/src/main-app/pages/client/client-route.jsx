@@ -16,10 +16,6 @@ import ClientPreferences from './preferences/ClientPreferences';
 import ClientVerificationPage from './verification/VerificationPage';
 import CareNeedsSettings from './care-needs/CareNeedsSettings';
 import ClientProfile from './profile/ClientProfile';
-import RequestCaregiver from './request-caregiver/RequestCaregiver';
-import CareRequestMatches from './care-request-matches/CareRequestMatches';
-import CareRequestDetail from './care-request-detail/CareRequestDetail';
-import YourRequests from './your-requests/YourRequests';
 import Cart from '../client/cart/Cart';
 import NotificationsPage from '../../components/Notifications/Notifications';
 import ResolutionCenter from './orders/ResolutionCenter';
@@ -32,8 +28,8 @@ import ClientWallet from './wallet/ClientWallet';
 import ClientBookings from './bookings/ClientBookings';
 import ContractDetailPage from './orders/ContractDetailPage';
 import NotFoundPage from '../../../pages/NotFoundPage';
-import GigPriceNegotiation from '../../components/price-negotiation/GigPriceNegotiation';
 import OnboardingQaHarness from './onboarding/OnboardingQaHarness';
+import FeatureMovedNotice from '../../components/shared/FeatureMovedNotice';
 
 
 function ClientRoutes() {
@@ -54,10 +50,12 @@ function ClientRoutes() {
             <Route path="/preferences" element={<ClientPreferences />} />
             <Route path="/verification" element={<ClientVerificationPage />} />
             <Route path="/care-needs" element={<CareNeedsSettings />} />
-            <Route path="/post-project" element={<RequestCaregiver />} />
-            <Route path="/care-requests/:requestId/matches" element={<CareRequestMatches />} />
-            <Route path="/care-requests/:requestId/detail" element={<CareRequestDetail />} />
-            <Route path="/your-requests" element={<YourRequests />} />
+            {/* Tier A: the competitive care-request flow is retired pending the
+                package-request + internal-assignment rebuild (Tier D). */}
+            <Route path="/post-project" element={<FeatureMovedNotice title="Care requests are being rebuilt" message="Posting a job request is moving to guided care packages. This will be back soon." />} />
+            <Route path="/care-requests/:requestId/matches" element={<FeatureMovedNotice title="Care requests are being rebuilt" message="Caregiver matching is moving to guided care packages. This will be back soon." />} />
+            <Route path="/care-requests/:requestId/detail" element={<FeatureMovedNotice title="Care requests are being rebuilt" message="Care request details are moving to guided care packages. This will be back soon." />} />
+            <Route path="/your-requests" element={<FeatureMovedNotice title="Care requests are being rebuilt" message="Your care requests are moving to guided care packages. This will be back soon." />} />
             <Route path="/profile" element={<ClientProfile />} />
             <Route path="/notifications" element={<NotificationsPage />} />
             <Route path="/cart/:id" element={<Cart />} />
@@ -70,7 +68,7 @@ function ClientRoutes() {
             <Route path="/wallet" element={<ClientWallet />} />
             <Route path="/bookings" element={<ClientBookings />} />
             <Route path="/faq" element={<FAQPage />} />
-            <Route path="/price-negotiation/:negotiationId" element={<GigPriceNegotiation />} />
+            <Route path="/price-negotiation/:negotiationId" element={<FeatureMovedNotice title="Care requests are being rebuilt" message="Price negotiation is moving to guided care packages. This will be back soon." />} />
             <Route path="/onboarding-qa" element={<OnboardingQaHarness />} />
             <Route path="*" element={<NotFoundPage />} />
         </Routes>

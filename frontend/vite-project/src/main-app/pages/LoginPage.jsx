@@ -50,7 +50,7 @@ const LoginPage = () => {
           if (returnTo) {
             navigate(decodeURIComponent(returnTo), { replace: true });
           } else {
-            const dashboardPath = userRole === "Admin" ? "/app/admin/dashboard" :
+            const dashboardPath = userRole === "Admin" || userRole === "SuperAdmin" ? "/app/admin/dashboard" :
               userRole === "Client" ? "/app/client/dashboard" :
                 "/app/caregiver/profile";
             navigate(dashboardPath, { replace: true });
@@ -141,21 +141,12 @@ const LoginPage = () => {
         console.log("Google Sign In API Response:", result);
         GoogleAuthService.storeAuthData(result);
 
-        const userData = {
-          id: result.id || result.userId,
-          email: result.email,
-          firstName: result.firstName,
-          lastName: result.lastName,
-          role: result.role,
-          profilePicture: result.profilePicture,
-          authProvider: result.authProvider || 'Google',
-        };
+        const userData = GoogleAuthService.buildUserData(result);
 
         login(userData, accessToken, result.refreshToken, result.isFirstLogin);
 
         setTimeout(() => {
-          const dashboardPath = GoogleAuthService.getDashboardPath(result.role);
-          window.location.href = dashboardPath;
+          window.location.href = GoogleAuthService.getPostAuthRedirect(result.role, returnTo);
         }, 1500);
 
       } else if (result.requiresLinking) {

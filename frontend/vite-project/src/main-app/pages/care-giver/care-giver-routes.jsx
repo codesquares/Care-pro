@@ -25,11 +25,9 @@ import FAQPage from '../client/orders/FAQ';
 import CaregiverSubscriptions from './subscriptions/CaregiverSubscriptions';
 import CaregiverSubscriptionDetail from './subscriptions/CaregiverSubscriptionDetail';
 import CaregiverWallet from './wallet/CaregiverWallet';
-import ClientsRequests from './client-requests/ClientsRequests';
-import CaregiverResponses from './CaregiverResponses';
 import CaregiverProfileReviews from './profile/CaregiverProfileReviews';
 import NotFoundPage from '../../../pages/NotFoundPage';
-import GigPriceNegotiation from '../../components/price-negotiation/GigPriceNegotiation';
+import FeatureMovedNotice from '../../components/shared/FeatureMovedNotice';
 
 function CareGiverRoutes() {
     return (
@@ -62,11 +60,13 @@ function CareGiverRoutes() {
                 <Route path="/subscriptions" element={<CaregiverSubscriptions />} />
                 <Route path="/subscriptions/:id" element={<CaregiverSubscriptionDetail />} />
                 <Route path="/wallet" element={<CaregiverWallet />} />
-                <Route path="/client-requests" element={<ClientsRequests />} />
-                <Route path="/my-responses" element={<CaregiverResponses />} />
+                {/* Tier A: the competitive care-request flow is retired pending the
+                    package-request + internal-assignment rebuild (Tier D). */}
+                <Route path="/client-requests" element={<FeatureMovedNotice title="Care requests are being rebuilt" message="Client requests are moving to guided care packages. This will be back soon." />} />
+                <Route path="/my-responses" element={<FeatureMovedNotice title="Care requests are being rebuilt" message="Your responses are moving to guided care packages. This will be back soon." />} />
                 <Route path="/profile/reviews" element={<CaregiverProfileReviews />} />
                 <Route path="/faq" element={<FAQPage />} />
-                <Route path="/price-negotiation/:negotiationId" element={<GigPriceNegotiation />} />
+                <Route path="/price-negotiation/:negotiationId" element={<FeatureMovedNotice title="Care requests are being rebuilt" message="Price negotiation is moving to guided care packages. This will be back soon." />} />
                 <Route path="*" element={<NotFoundPage />} />
             </Routes>
         </GigEditProvider>
