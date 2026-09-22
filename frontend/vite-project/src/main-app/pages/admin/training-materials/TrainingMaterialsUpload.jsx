@@ -141,10 +141,10 @@ const TrainingMaterialsUpload = () => {
   };
 
   return (
-    <div className="training-materials-upload">
-      <div className="page-header">
-        <div className="header-content">
-          <div className="header-icon">
+    <div className="tmu-training-materials-upload">
+      <div className="tmu-page-header">
+        <div className="tmu-header-content">
+          <div className="tmu-header-icon">
             <i className="fas fa-graduation-cap"></i>
           </div>
           <div>
@@ -155,24 +155,24 @@ const TrainingMaterialsUpload = () => {
       </div>
 
       {error && (
-        <div className="alert alert-error">
+        <div className="tmu-alert tmu-alert-error">
           <i className="fas fa-exclamation-circle"></i>
           <div>
             <strong>Error</strong>
             <p>{error}</p>
           </div>
-          <button onClick={() => setError(null)} className="alert-close">×</button>
+          <button onClick={() => setError(null)} className="tmu-alert-close">×</button>
         </div>
       )}
 
       {result && (
-        <div className="alert alert-success">
+        <div className="tmu-alert tmu-alert-success">
           <i className="fas fa-check-circle"></i>
           <div>
             <strong>Success!</strong>
             <p>{result.message}</p>
             {result.data && (
-              <div className="result-details">
+              <div className="tmu-result-details">
                 <p><strong>File Name:</strong> {result.data.fileName}</p>
                 <p><strong>File Size:</strong> {(result.data.fileSize / (1024 * 1024)).toFixed(2)} MB</p>
                 {result.data.cloudinaryUrl && (
@@ -180,7 +180,7 @@ const TrainingMaterialsUpload = () => {
                     href={result.data.cloudinaryUrl} 
                     target="_blank" 
                     rel="noopener noreferrer"
-                    className="file-link"
+                    className="tmu-file-link"
                   >
                     <i className="fas fa-external-link-alt"></i>
                     View Uploaded File
@@ -189,25 +189,25 @@ const TrainingMaterialsUpload = () => {
               </div>
             )}
           </div>
-          <button onClick={() => setResult(null)} className="alert-close">×</button>
+          <button onClick={() => setResult(null)} className="tmu-alert-close">×</button>
         </div>
       )}
 
-      <div className="upload-container">
-        <div className="info-section">
+      <div className="tmu-upload-container">
+        <div className="tmu-info-section">
           <h3><i className="fas fa-info-circle"></i> Upload Guidelines</h3>
-          <div className="info-content">
-            <div className="info-item">
+          <div className="tmu-info-content">
+            <div className="tmu-info-item">
               <h4>Accepted File Types</h4>
-              <div className="file-types">
-                <span className="file-type-badge"><i className="fas fa-file-pdf"></i> PDF</span>
-                <span className="file-type-badge"><i className="fas fa-file-word"></i> Word Documents</span>
-                <span className="file-type-badge"><i className="fas fa-file-powerpoint"></i> PowerPoint</span>
-                <span className="file-type-badge"><i className="fas fa-file-video"></i> Videos (MP4, MOV, AVI)</span>
+              <div className="tmu-file-types">
+                <span className="tmu-file-type-badge"><i className="fas fa-file-pdf"></i> PDF</span>
+                <span className="tmu-file-type-badge"><i className="fas fa-file-word"></i> Word Documents</span>
+                <span className="tmu-file-type-badge"><i className="fas fa-file-powerpoint"></i> PowerPoint</span>
+                <span className="tmu-file-type-badge"><i className="fas fa-file-video"></i> Videos (MP4, MOV, AVI)</span>
               </div>
             </div>
 
-            <div className="info-item">
+            <div className="tmu-info-item">
               <h4>Requirements</h4>
               <ul>
                 <li><i className="fas fa-check"></i> Title: 3-200 characters</li>
@@ -217,7 +217,7 @@ const TrainingMaterialsUpload = () => {
               </ul>
             </div>
 
-            <div className="info-item">
+            <div className="tmu-info-item">
               <h4>User Types</h4>
               <ul>
                 <li><strong>Caregiver:</strong> Only caregivers can access</li>
@@ -228,11 +228,11 @@ const TrainingMaterialsUpload = () => {
           </div>
         </div>
 
-        <div className="form-section">
-          <form onSubmit={handleSubmit} className="upload-form">
-            <div className="form-group">
+        <div className="tmu-form-section">
+          <form onSubmit={handleSubmit} className="tmu-upload-form">
+            <div className="tmu-form-group">
               <label htmlFor="title">
-                Title <span className="required">*</span>
+                Title <span className="tmu-required">*</span>
               </label>
               <input
                 type="text"
@@ -245,14 +245,14 @@ const TrainingMaterialsUpload = () => {
                 minLength={3}
                 maxLength={200}
               />
-              <small className="char-count">
+              <small className="tmu-char-count">
                 {formData.title.length}/200 characters
               </small>
             </div>
 
-            <div className="form-group">
+            <div className="tmu-form-group">
               <label htmlFor="userType">
-                Target Audience <span className="required">*</span>
+                Target Audience <span className="tmu-required">*</span>
               </label>
               <select
                 id="userType"
@@ -265,14 +265,14 @@ const TrainingMaterialsUpload = () => {
                   <option key={type} value={type}>{type}</option>
                 ))}
               </select>
-              <small className="help-text">
+              <small className="tmu-help-text">
                 Select who can access this training material
               </small>
             </div>
 
-            <div className="form-group">
+            <div className="tmu-form-group">
               <label htmlFor="description">
-                Description <span className="optional">(Optional)</span>
+                Description <span className="tmu-optional">(Optional)</span>
               </label>
               <textarea
                 id="description"
@@ -283,16 +283,16 @@ const TrainingMaterialsUpload = () => {
                 rows="4"
                 maxLength={500}
               />
-              <small className="char-count">
+              <small className="tmu-char-count">
                 {formData.description.length}/500 characters
               </small>
             </div>
 
-            <div className="form-group">
+            <div className="tmu-form-group">
               <label htmlFor="file-input">
-                Training Material File <span className="required">*</span>
+                Training Material File <span className="tmu-required">*</span>
               </label>
-              <div className="file-input-wrapper">
+              <div className="tmu-file-input-wrapper">
                 <input
                   type="file"
                   id="file-input"
@@ -300,17 +300,17 @@ const TrainingMaterialsUpload = () => {
                   onChange={handleFileChange}
                   required
                 />
-                <div className="file-input-display">
+                <div className="tmu-file-input-display">
                   {fileInfo ? (
-                    <div className="file-selected">
+                    <div className="tmu-file-selected">
                       <i className={`fas ${getFileIcon()}`}></i>
-                      <div className="file-details">
-                        <span className="file-name">{fileInfo.name}</span>
-                        <span className="file-size">{fileInfo.size} MB</span>
+                      <div className="tmu-file-details">
+                        <span className="tmu-file-name">{fileInfo.name}</span>
+                        <span className="tmu-file-size">{fileInfo.size} MB</span>
                       </div>
                       <button
                         type="button"
-                        className="btn-remove-file"
+                        className="tmu-btn-remove-file"
                         onClick={() => {
                           setFormData(prev => ({ ...prev, file: null }));
                           setFileInfo(null);
@@ -321,7 +321,7 @@ const TrainingMaterialsUpload = () => {
                       </button>
                     </div>
                   ) : (
-                    <div className="file-placeholder">
+                    <div className="tmu-file-placeholder">
                       <i className="fas fa-cloud-upload-alt"></i>
                       <p>Click to select or drag and drop file here</p>
                       <small>PDF, Documents, or Videos</small>
@@ -331,10 +331,10 @@ const TrainingMaterialsUpload = () => {
               </div>
             </div>
 
-            <div className="form-actions">
+            <div className="tmu-form-actions">
               <button
                 type="button"
-                className="btn-secondary"
+                className="tmu-btn-secondary"
                 onClick={handleClearForm}
                 disabled={loading}
               >
@@ -343,12 +343,12 @@ const TrainingMaterialsUpload = () => {
               </button>
               <button
                 type="submit"
-                className="btn-primary"
+                className="tmu-btn-primary"
                 disabled={loading || !formData.file}
               >
                 {loading ? (
                   <>
-                    <span className="spinner-small"></span>
+                    <span className="tmu-spinner-small"></span>
                     Uploading...
                   </>
                 ) : (

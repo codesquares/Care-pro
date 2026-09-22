@@ -8,7 +8,7 @@
 }
 .cg-subs__banner-sub {
   font-size: 0.95rem;
-  color: #1f2e5a;
+  color: var(--color-brand-deep);
   margin: 0;
   opacity: 0.8;
 }
@@ -78,7 +78,7 @@
 .cg-subs__stat-value {
   font-size: 22px;
   font-weight: 700;
-  color: #1f2e5a;
+  color: var(--color-brand-deep);
 }
 
 /* Filter tabs */
@@ -108,7 +108,7 @@
   font-family: inherit;
 }
 .cg-subs__filter-btn:hover { color: #1e293b; }
-.cg-subs__filter-btn--active { color: #1f2e5a; font-weight: 600; border-bottom-color: #1f2e5a; }
+.cg-subs__filter-btn--active { color: var(--color-brand-deep); font-weight: 600; border-bottom-color: var(--color-brand-deep); }
 
 @media (max-width: 640px) {
   .cg-subs-container { padding: 0 12px 40px; }

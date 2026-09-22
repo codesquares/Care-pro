@@ -1,6 +1,7 @@
 import "./packageCard.css";
 
 const PackageCard = ({
+  id,
   category,
   tierLabel,
   requiredCaregiverType,
@@ -8,6 +9,7 @@ const PackageCard = ({
   description,
   basePrice,
   additionalDayPrice,
+  onSelect,
 }) => {
   const displayPrice = basePrice ? `₦${basePrice.toLocaleString()}` : "Contact for pricing";
 
@@ -42,6 +44,14 @@ const PackageCard = ({
           </span>
         ) : null}
       </div>
+
+      <button
+        type="button"
+        className="package-card-select-button"
+        onClick={() => onSelect?.({ id, category, tierLabel })}
+      >
+        Select This Package
+      </button>
     </div>
   );
 };

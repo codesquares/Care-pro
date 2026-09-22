@@ -144,38 +144,38 @@ const IntroVideo = ({ profileIntrovideo, onVideoUpdate }) => {
 
         {videoPreviewUrl ? (
           <div className="intro-video-preview">
-            <div className="video-thumbnail-container" onClick={openVideoViewModal}>
-              <video className="video-thumbnail">
+            <div className="iv-video-thumbnail-container" onClick={openVideoViewModal}>
+              <video className="iv-video-thumbnail">
                 <source src={videoPreviewUrl} type="video/mp4" />
                 Your browser does not support the video tag.
               </video>
-              <div className="play-overlay">
-                <div className="play-icon">▶</div>
-                <span className="play-text">Click to view video</span>
+              <div className="iv-play-overlay">
+                <div className="iv-play-icon">▶</div>
+                <span className="iv-play-text">Click to view video</span>
               </div>
             </div>
-            <div className="video-actions">
+            <div className="iv-video-actions">
               <button 
                 onClick={openVideoViewModal} 
-                className="view-video-btn"
+                className="iv-view-video-btn"
               >
                 View Video
               </button>
               <button 
                 onClick={openUploadModal} 
-                className="update-video-btn"
+                className="iv-update-video-btn"
               >
                 Update Video
               </button>
             </div>
           </div>
         ) : (
-          <div className="video-placeholder">
-            <span className="video-icon">🎥</span>
+          <div className="iv-video-placeholder">
+            <span className="iv-video-icon">🎥</span>
             <p>Create a short introduction video</p>
             <button 
               onClick={openUploadModal} 
-              className="get-started-btn"
+              className="iv-get-started-btn"
             >
               Get Started
             </button>
@@ -188,10 +188,10 @@ const IntroVideo = ({ profileIntrovideo, onVideoUpdate }) => {
           <div className="intro-video-upload-modal-content" onClick={(e) => e.stopPropagation()}>
             <h3>Select a video to upload</h3>
             
-            <div className="file-input-container">
-              <label htmlFor="video-file-input" className="file-input-label">
-                <span className="file-input-icon">📁</span>
-                <span className="file-input-text">
+            <div className="iv-file-input-container">
+              <label htmlFor="video-file-input" className="iv-file-input-label">
+                <span className="iv-file-input-icon">📁</span>
+                <span className="iv-file-input-text">
                   {videoFile ? `Selected: ${videoFile.name}` : "Click to choose video file"}
                 </span>
               </label>
@@ -200,11 +200,11 @@ const IntroVideo = ({ profileIntrovideo, onVideoUpdate }) => {
                 type="file" 
                 accept="video/*" 
                 onChange={handleFileChange}
-                className="file-input-hidden"
+                className="iv-file-input-hidden"
               />
             </div>
 
-            <p className="file-hint">
+            <p className="iv-file-hint">
               Supported formats: MP4, MOV, AVI, WMV (Max: 50MB)
             </p>
 
@@ -215,7 +215,7 @@ const IntroVideo = ({ profileIntrovideo, onVideoUpdate }) => {
                 fontSize: "14px",
                 color: "#666"
               }}>
-                <div className="spinner" />
+                <div className="iv-spinner" />
                 Uploading...
               </div>
             ) : (

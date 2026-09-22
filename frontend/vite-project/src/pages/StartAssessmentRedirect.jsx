@@ -1,14 +1,33 @@
-import { useEffect } from "react";
+import { useEffect, useMemo } from "react";
+import { useSearchParams } from "react-router-dom";
 import "./StartAssessmentRedirect.css";
 
 const WHATSAPP_NUMBER = "2348131952778";
-const WHATSAPP_MESSAGE = "Hi, I'd like a free care assessment for my family.";
-const WHATSAPP_LINK = `https://wa.me/${WHATSAPP_NUMBER}?text=${encodeURIComponent(WHATSAPP_MESSAGE)}`;
+const DEFAULT_MESSAGE = "Hi, I'd like a free care assessment for my family.";
+
+const buildMessage = (category, tier) => {
+  if (category && tier) {
+    return `Hi, I'd like a free care assessment for my family. I'm interested in the "${tier}" (${category}) package.`;
+  }
+  if (category) {
+    return `Hi, I'd like a free care assessment for my family. I'm interested in the ${category} package.`;
+  }
+  return DEFAULT_MESSAGE;
+};
 
 const StartAssessmentRedirect = () => {
+  const [searchParams] = useSearchParams();
+  const category = searchParams.get("category");
+  const tier = searchParams.get("tier");
+
+  const whatsappLink = useMemo(() => {
+    const message = buildMessage(category, tier);
+    return `https://wa.me/${WHATSAPP_NUMBER}?text=${encodeURIComponent(message)}`;
+  }, [category, tier]);
+
   useEffect(() => {
-    window.location.href = WHATSAPP_LINK;
-  }, []);
+    window.location.href = whatsappLink;
+  }, [whatsappLink]);
 
   return (
     <div className="start-assessment-redirect">
@@ -20,7 +39,7 @@ const StartAssessmentRedirect = () => {
         </p>
         <a
           className="start-assessment-redirect__button"
-          href={WHATSAPP_LINK}
+          href={whatsappLink}
         >
           Open WhatsApp
         </a>

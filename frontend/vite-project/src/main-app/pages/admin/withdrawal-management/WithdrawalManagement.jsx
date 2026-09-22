@@ -129,15 +129,15 @@ const WithdrawalManagement = () => {
   const getStatusBadgeClass = (status) => {
     switch (status.toLowerCase()) {
       case 'pending':
-        return 'status-badge pending';
+        return 'wm-status-badge pending';
       case 'verified':
-        return 'status-badge verified';
+        return 'wm-status-badge verified';
       case 'completed':
-        return 'status-badge completed';
+        return 'wm-status-badge completed';
       case 'rejected':
-        return 'status-badge rejected';
+        return 'wm-status-badge rejected';
       default:
-        return 'status-badge';
+        return 'wm-status-badge';
     }
   };
   
@@ -146,7 +146,7 @@ const WithdrawalManagement = () => {
       case 'pending':
         return (
           <button 
-            className="action-btn verify" 
+            className="wm-action-btn verify" 
             onClick={() => handleActionClick(withdrawal)}
           >
             Verify
@@ -155,16 +155,16 @@ const WithdrawalManagement = () => {
       case 'verified':
         return (
           <button 
-            className="action-btn complete" 
+            className="wm-action-btn complete" 
             onClick={() => handleActionClick(withdrawal)}
           >
             Complete
           </button>
         );
       case 'completed':
-        return <span className="action-complete">Processed</span>;
+        return <span className="wm-action-complete">Processed</span>;
       case 'rejected':
-        return <span className="action-rejected">Rejected</span>;
+        return <span className="wm-action-rejected">Rejected</span>;
       default:
         return null;
     }
@@ -172,26 +172,26 @@ const WithdrawalManagement = () => {
   
   if (isLoading) {
     return (
-      <div className="withdrawal-management">
-        <h2 className="page-title">Withdrawal Management</h2>
-        <div className="loading-spinner">Loading withdrawal requests...</div>
+      <div className="wm-withdrawal-management">
+        <h2 className="wm-page-title">Withdrawal Management</h2>
+        <div className="wm-loading-spinner">Loading withdrawal requests...</div>
       </div>
     );
   }
   
   return (
-    <div className="withdrawal-management">
-      <h2 className="page-title">Withdrawal Management</h2>
+    <div className="wm-withdrawal-management">
+      <h2 className="wm-page-title">Withdrawal Management</h2>
       
-      {error && <div className="error-message">{error}</div>}
+      {error && <div className="wm-error-message">{error}</div>}
       
-      <div className="filter-container">
+      <div className="wm-filter-container">
         <label htmlFor="status-filter">Filter by status:</label>
         <select 
           id="status-filter" 
           value={filter} 
           onChange={handleFilterChange}
-          className="status-filter"
+          className="wm-status-filter"
         >
           <option value="all">All Requests</option>
           <option value="pending">Pending</option>
@@ -202,10 +202,10 @@ const WithdrawalManagement = () => {
       </div>
       
       {filteredWithdrawals?.length === 0 ? (
-        <div className="no-withdrawals">No withdrawal requests found.</div>
+        <div className="wm-no-withdrawals">No withdrawal requests found.</div>
       ) : (
-        <div className="withdrawals-table-container">
-          <table className="withdrawals-table">
+        <div className="wm-withdrawals-table-container">
+          <table className="wm-withdrawals-table">
             <thead>
               <tr>
                 <th>Date</th>
@@ -229,28 +229,28 @@ const WithdrawalManagement = () => {
                   <td>{formatCurrency(withdrawal.serviceCharge)}</td>
                   <td>{formatCurrency(withdrawal.finalAmount)}</td>
                   <td>
-                    <div className="bank-info">
+                    <div className="wm-bank-info">
                       <div>{withdrawal.bankName}</div>
                       <div>{withdrawal.accountNumber}</div>
                       <div>{withdrawal.accountName}</div>
                     </div>
                   </td>
                   <td>
-                    <span className="token">{withdrawal.token}</span>
+                    <span className="wm-token">{withdrawal.token}</span>
                   </td>
                   <td>
                     <span className={getStatusBadgeClass(withdrawal.status)}>
                       {withdrawal.status}
                     </span>
                   </td>
-                  <td className="processed-at">
+                  <td className="wm-processed-at">
                     {withdrawal.rejectedAt
                       ? <span title="Rejected at">{formatDateTime(withdrawal.rejectedAt)}</span>
                       : withdrawal.completedAt
                       ? <span title="Completed at">{formatDateTime(withdrawal.completedAt)}</span>
                       : withdrawal.verifiedAt
                       ? <span title="Verified at">{formatDateTime(withdrawal.verifiedAt)}</span>
-                      : <span className="not-processed">—</span>}
+                      : <span className="wm-not-processed">—</span>}
                   </td>
                   <td>
                     {renderActionButton(withdrawal)}

@@ -28,6 +28,11 @@ import CaregiverWallet from './wallet/CaregiverWallet';
 import CaregiverProfileReviews from './profile/CaregiverProfileReviews';
 import NotFoundPage from '../../../pages/NotFoundPage';
 import FeatureMovedNotice from '../../components/shared/FeatureMovedNotice';
+import VettingHub from './vetting/VettingHub';
+import ClassificationForm from './vetting/ClassificationForm';
+import GuarantorsForm from './vetting/GuarantorsForm';
+import AddressHistoryForm from './vetting/AddressHistoryForm';
+import SocialMediaForm from './vetting/SocialMediaForm';
 
 function CareGiverRoutes() {
     return (
@@ -60,6 +65,11 @@ function CareGiverRoutes() {
                 <Route path="/subscriptions" element={<CaregiverSubscriptions />} />
                 <Route path="/subscriptions/:id" element={<CaregiverSubscriptionDetail />} />
                 <Route path="/wallet" element={<CaregiverWallet />} />
+                <Route path="/vetting" element={<VettingHub />} />
+                <Route path="/vetting/classification" element={<ClassificationForm />} />
+                <Route path="/vetting/guarantors" element={<GuarantorsForm />} />
+                <Route path="/vetting/address-history" element={<AddressHistoryForm />} />
+                <Route path="/vetting/social-media" element={<SocialMediaForm />} />
                 {/* Tier A: the competitive care-request flow is retired pending the
                     package-request + internal-assignment rebuild (Tier D). */}
                 <Route path="/client-requests" element={<FeatureMovedNotice title="Care requests are being rebuilt" message="Client requests are moving to guided care packages. This will be back soon." />} />

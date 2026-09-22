@@ -32,6 +32,7 @@ import ResendConfirmationPage from './main-app/pages/ResendConfirmationPage';
 import EmailUnsubscribePage from './main-app/pages/EmailUnsubscribePage';
 import UnauthorizedPage from './main-app/pages/UnauthorizedPage';
 import CancelAccountDeletion from './main-app/pages/CancelAccountDeletion';
+import GuarantorConfirmationPage from './main-app/pages/GuarantorConfirmationPage';
 import { ToastContainer, toast } from 'react-toastify';
 import 'react-toastify/dist/ReactToastify.css';
 import ProtectedRoute from './main-app/components/auth/ProtectedRoute';
@@ -194,6 +195,7 @@ function AppContent() {
     '/unauthorized',
     '/splash',
     '/cancel-account-deletion',
+    '/guarantor-confirmation',
     '/Caregivergigpage',
     '/MyOrders',
     '/OrderTasks&Details',
@@ -229,7 +231,10 @@ function AppContent() {
     !routesWithoutNavbar.includes(location.pathname) &&
     !isRootRoute &&
     !isMarketplaceRoute;
-  const shouldShowFooter = !routesWithoutFooter.includes(location.pathname);
+  // The admin/caregiver/client dashboards (everything under /app/*) have their
+  // own chrome and are never meant to show the public marketing footer.
+  const shouldShowFooter = !routesWithoutFooter.includes(location.pathname) &&
+    !location.pathname.startsWith('/app/');
 
 
 
@@ -295,6 +300,7 @@ function AppContent() {
         <Route path="/resend-confirmation" element={<ResendConfirmationPage />} />
         <Route path="/email-preferences/unsubscribe" element={<EmailUnsubscribePage />} />
         <Route path="/cancel-account-deletion" element={<CancelAccountDeletion />} />
+        <Route path="/guarantor-confirmation" element={<GuarantorConfirmationPage />} />
         <Route path="/service/:id" element={<HomeCareService />} />
         <Route path="/splash" element={<SplashScreen />} />
 

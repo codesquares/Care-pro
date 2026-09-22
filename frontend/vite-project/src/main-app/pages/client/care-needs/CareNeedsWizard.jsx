@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { useNavigate, useSearchParams } from 'react-router-dom';
 import { toast } from 'react-toastify';
 import ClientCareNeedsService from '../../../services/clientCareNeedsService';
+import { marketplaceLinkForCategoryName } from '../../../constants/categoryBrowseData';
 import './CareNeedsWizard.css';
 
 // Tab Components
@@ -255,17 +256,9 @@ const CareNeedsWizard = () => {
         if (returnTo) {
           navigate(returnTo);
         } else {
-          // Default: redirect to marketplace with care needs filter
-          const filterParams = new URLSearchParams();
-          if (careNeeds.serviceCategories && careNeeds.serviceCategories.length > 0) {
-            const categorySlug = careNeeds.serviceCategories[0]
-              .toLowerCase()
-              .replace(/\s+/g, '-')
-              .replace('&', '');
-            filterParams.set('category', categorySlug);
-          }
-          filterParams.set('matched', 'true');
-          navigate(`/marketplace?${filterParams.toString()}`);
+          // Default: redirect to marketplace, filtered to a real package category if one matches
+          const hasCategory = careNeeds.serviceCategories && careNeeds.serviceCategories.length > 0;
+          navigate(hasCategory ? marketplaceLinkForCategoryName(careNeeds.serviceCategories[0]) : '/marketplace');
         }
       }, 1500);
       

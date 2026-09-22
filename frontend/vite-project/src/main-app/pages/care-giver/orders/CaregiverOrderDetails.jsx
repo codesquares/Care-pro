@@ -909,8 +909,8 @@ const CaregiverOrderDetails = () => {
             </div>
 
             {isModalOpen && (
-                <div className="modal-overlay">
-                    <div className={`modal-content ${modalType === 'contract' ? 'contract-modal-large' : ''}`}>
+                <div className="cod-modal-overlay">
+                    <div className={`cod-modal-content ${modalType === 'contract' ? 'cod-contract-modal-large' : ''}`}>
                         {modalType === "update" && (
                             <>
                                 <h3>Mark Order as Completed</h3>
@@ -920,7 +920,7 @@ const CaregiverOrderDetails = () => {
                                     onChange={(e) => setNotes(e.target.value)}
                                     rows="4"
                                 />
-                                <div className="modal-actions">
+                                <div className="cod-modal-actions">
                                     <button onClick={handleSubmitAction}>
                                         Mark as Completed
                                     </button>
@@ -931,13 +931,13 @@ const CaregiverOrderDetails = () => {
 
                         {modalType === "contract" && contract && (
                             <>
-                                <div className="contract-modal-header">
+                                <div className="cod-contract-modal-header">
                                     <h3>Contract Details</h3>
-                                    <button className="contract-modal-close-btn" onClick={closeModal}>✕</button>
+                                    <button className="cod-contract-modal-close-btn" onClick={closeModal}>✕</button>
                                 </div>
-                                <div className="contract-modal-body">
-                                <div className="contract-details-modal">
-                                    <div className="contract-header">
+                                <div className="cod-contract-modal-body">
+                                <div className="cod-contract-details-modal">
+                                    <div className="cod-contract-header">
                                         <p><strong>Contract ID:</strong> {contract.id}</p>
                                         <p><strong>Initiated By:</strong> {contract.initiatedByRole || 'Caregiver'}</p>
                                         <p><strong>Status:</strong> <span className={`status-${contract.status?.toLowerCase().replace(/\s+/g, '-')}`}>
@@ -950,14 +950,14 @@ const CaregiverOrderDetails = () => {
                                     {(() => {
                                         const _slots = contract.schedule?.length > 0 ? contract.schedule : contract.agreedSchedule;
                                         return _slots?.length > 0 ? (
-                                            <div className="contract-schedule">
+                                            <div className="cod-contract-schedule">
                                                 <h4>📅 Service Schedule</h4>
-                                                <div className="schedule-display">
+                                                <div className="cod-schedule-display">
                                                     {_slots.map((visit, idx) => (
-                                                        <div key={idx} className="schedule-visit">
-                                                            <span className="schedule-day">{visit.dayOfWeek}</span>
-                                                            <span className="schedule-time">{ContractService.formatTimeForDisplay(visit.startTime)} - {ContractService.formatTimeForDisplay(visit.endTime)}</span>
-                                                            <span className="schedule-duration">{ContractService.calculateVisitDuration(visit.startTime, visit.endTime)}hrs</span>
+                                                        <div key={idx} className="cod-schedule-visit">
+                                                            <span className="cod-schedule-day">{visit.dayOfWeek}</span>
+                                                            <span className="cod-schedule-time">{ContractService.formatTimeForDisplay(visit.startTime)} - {ContractService.formatTimeForDisplay(visit.endTime)}</span>
+                                                            <span className="cod-schedule-duration">{ContractService.calculateVisitDuration(visit.startTime, visit.endTime)}hrs</span>
                                                         </div>
                                                     ))}
                                                 </div>
@@ -966,7 +966,7 @@ const CaregiverOrderDetails = () => {
                                     })()}
 
                                     {/* Service Details */}
-                                    <div className="contract-summary">
+                                    <div className="cod-contract-summary">
                                         <h4>📍 Service Details</h4>
                                         <p><strong>Total Amount:</strong> ₦{contract.totalAmount?.toLocaleString()}</p>
                                         {contract.serviceAddress && (
@@ -988,7 +988,7 @@ const CaregiverOrderDetails = () => {
                                             <p><strong>Duration:</strong> {new Date(contract.contractStartDate).toLocaleDateString()} - {new Date(contract.contractEndDate).toLocaleDateString()}</p>
                                         )}
                                         {contract.selectedPackage && (
-                                            <div className="package-details">
+                                            <div className="cod-package-details">
                                                 <h5>Package Information</h5>
                                                 <p><strong>Type:</strong> {contract.selectedPackage.packageType}</p>
                                                 <p><strong>Visits per Week:</strong> {contract.selectedPackage.visitsPerWeek}</p>
@@ -1000,9 +1000,9 @@ const CaregiverOrderDetails = () => {
 
                                     {/* Client Review Comments */}
                                     {contract.clientReviewComments && (
-                                        <div className="client-review-section">
+                                        <div className="cod-client-review-section">
                                             <h4>⚠️ Client Feedback</h4>
-                                            <div className="client-feedback-box">
+                                            <div className="cod-client-feedback-box">
                                                 <p>{contract.clientReviewComments}</p>
                                             </div>
                                         </div>
@@ -1010,10 +1010,10 @@ const CaregiverOrderDetails = () => {
 
                                     {/* Tasks — complex objects for old flow; agreedTasks strings for negotiation-generated contracts */}
                                     {contract.tasks && contract.tasks.length > 0 && (
-                                        <div className="contract-tasks">
+                                        <div className="cod-contract-tasks">
                                             <h4>Tasks & Requirements</h4>
                                             {contract.tasks.map((task, index) => (
-                                                <div key={index} className="task-item">
+                                                <div key={index} className="cod-task-item">
                                                     <h5>{task.title}</h5>
                                                     <p>{task.description}</p>
                                                     <p><strong>Category:</strong> {task.category}</p>
@@ -1026,7 +1026,7 @@ const CaregiverOrderDetails = () => {
                                         </div>
                                     )}
                                     {!contract.tasks?.length && contract.agreedTasks?.length > 0 && (
-                                        <div className="contract-tasks">
+                                        <div className="cod-contract-tasks">
                                             <h4>📝 Agreed Tasks</h4>
                                             <ul style={{ paddingLeft: '20px', margin: '8px 0' }}>
                                                 {contract.agreedTasks.map((task, idx) => (
@@ -1046,7 +1046,7 @@ const CaregiverOrderDetails = () => {
                                     )}
 
                                     {contract.generatedTerms && (
-                                        <div className="contract-terms">
+                                        <div className="cod-contract-terms">
                                             <iframe
                                                 srcDoc={contract.generatedTerms}
                                                 sandbox="allow-same-origin"
@@ -1073,11 +1073,11 @@ const CaregiverOrderDetails = () => {
 
                         {modalType === "caregiverReview" && (
                             <>
-                                <div className="contract-modal-header">
+                                <div className="cod-contract-modal-header">
                                     <h3>Request Changes</h3>
-                                    <button className="contract-modal-close-btn" onClick={closeModal}>✕</button>
+                                    <button className="cod-contract-modal-close-btn" onClick={closeModal}>✕</button>
                                 </div>
-                                <div className="contract-modal-body">
+                                <div className="cod-contract-modal-body">
                                     <p style={{ marginBottom: '12px', color: '#555' }}>
                                         Let the client know what needs to change. They will revise and resubmit the contract.
                                     </p>
@@ -1088,7 +1088,7 @@ const CaregiverOrderDetails = () => {
                                         rows="5"
                                         style={{ width: '100%', padding: '10px', borderRadius: '6px', border: '1px solid #ddd', fontSize: '14px', resize: 'vertical' }}
                                     />
-                                    <div className="modal-actions" style={{ marginTop: '16px', display: 'flex', gap: '10px' }}>
+                                    <div className="cod-modal-actions" style={{ marginTop: '16px', display: 'flex', gap: '10px' }}>
                                         <button
                                             className="request-changes-btn"
                                             onClick={handleCaregiverRequestReview}
@@ -1104,11 +1104,11 @@ const CaregiverOrderDetails = () => {
 
                         {modalType === "caregiverReject" && (
                             <>
-                                <div className="contract-modal-header">
+                                <div className="cod-contract-modal-header">
                                     <h3>Reject Contract</h3>
-                                    <button className="contract-modal-close-btn" onClick={closeModal}>✕</button>
+                                    <button className="cod-contract-modal-close-btn" onClick={closeModal}>✕</button>
                                 </div>
-                                <div className="contract-modal-body">
+                                <div className="cod-contract-modal-body">
                                     <p style={{ marginBottom: '12px', color: '#d32f2f' }}>
                                         Are you sure you want to reject this contract? This action cannot be undone.
                                     </p>
@@ -1119,7 +1119,7 @@ const CaregiverOrderDetails = () => {
                                         rows="4"
                                         style={{ width: '100%', padding: '10px', borderRadius: '6px', border: '1px solid #ddd', fontSize: '14px', resize: 'vertical' }}
                                     />
-                                    <div className="modal-actions" style={{ marginTop: '16px', display: 'flex', gap: '10px' }}>
+                                    <div className="cod-modal-actions" style={{ marginTop: '16px', display: 'flex', gap: '10px' }}>
                                         <button
                                             className="reject-contract-btn"
                                             onClick={handleCaregiverReject}
@@ -1139,31 +1139,31 @@ const CaregiverOrderDetails = () => {
 
             {/* Start Negotiation Modal */}
             {showStartNegModal && (
-                <div className="neg-start-modal-overlay">
-                    <div className="neg-start-modal">
-                        <div className="neg-start-modal-header">
+                <div className="cod-neg-start-modal-overlay">
+                    <div className="cod-neg-start-modal">
+                        <div className="cod-neg-start-modal-header">
                             <h3>🤝 Start Negotiation</h3>
-                            <button className="neg-start-modal-close" onClick={() => setShowStartNegModal(false)}>✕</button>
+                            <button className="cod-neg-start-modal-close" onClick={() => setShowStartNegModal(false)}>✕</button>
                         </div>
-                        <div className="neg-start-modal-body">
-                            <p className="neg-instructions">
+                        <div className="cod-neg-start-modal-body">
+                            <p className="cod-neg-instructions">
                                 Propose your schedule and tasks for this service. The client will review, add their own proposals, and both of you will agree before the contract is generated.
                             </p>
 
                             {/* Initial tasks */}
-                            <div className="neg-section">
-                                <div className="neg-section-label">Proposed Tasks</div>
-                                <ul className="neg-task-list">
+                            <div className="cod-neg-section">
+                                <div className="cod-neg-section-label">Proposed Tasks</div>
+                                <ul className="cod-neg-task-list">
                                     {negInitTasks.map((t, i) => (
-                                        <li key={i} className="neg-task-item">
+                                        <li key={i} className="cod-neg-task-item">
                                             <span>• {t}</span>
-                                            <button className="neg-remove-btn" onClick={() => setNegInitTasks(prev => prev.filter((_,idx) => idx !== i))}>✕</button>
+                                            <button className="cod-neg-remove-btn" onClick={() => setNegInitTasks(prev => prev.filter((_,idx) => idx !== i))}>✕</button>
                                         </li>
                                     ))}
                                 </ul>
-                                <div className="neg-add-row">
+                                <div className="cod-neg-add-row">
                                     <input
-                                        className="neg-input"
+                                        className="cod-neg-input"
                                         type="text"
                                         placeholder="Add a task and press Enter…"
                                         value={negInitNewTask}
@@ -1185,8 +1185,8 @@ const CaregiverOrderDetails = () => {
                             </div>
 
                             {/* Initial schedule */}
-                            <div className="neg-section">
-                                <div className="neg-section-label">Proposed Schedule</div>
+                            <div className="cod-neg-section">
+                                <div className="cod-neg-section-label">Proposed Schedule</div>
                                 {/* Schedule guide banner */}
                                 {(() => {
                                     const payOpt = (order?.serviceType || order?.paymentOption || '').toLowerCase();
@@ -1206,22 +1206,22 @@ const CaregiverOrderDetails = () => {
                                         </div>
                                     ) : null;
                                 })()}
-                                <div className="neg-schedule-list">
+                                <div className="cod-neg-schedule-list">
                                     {negInitSchedule.map((s, i) => (
-                                        <div key={i} className="neg-schedule-slot">
-                                            <span className="neg-slot-day">{s.dayOfWeek}</span>
-                                            <span className="neg-slot-time">{s.startTime} – {s.endTime}</span>
-                                            <button className="neg-remove-btn" onClick={() => setNegInitSchedule(prev => prev.filter((_,idx) => idx !== i))}>✕</button>
+                                        <div key={i} className="cod-neg-schedule-slot">
+                                            <span className="cod-neg-slot-day">{s.dayOfWeek}</span>
+                                            <span className="cod-neg-slot-time">{s.startTime} – {s.endTime}</span>
+                                            <button className="cod-neg-remove-btn" onClick={() => setNegInitSchedule(prev => prev.filter((_,idx) => idx !== i))}>✕</button>
                                         </div>
                                     ))}
                                 </div>
-                                <div className="neg-add-slot-form" style={{ marginTop: '8px' }}>
-                                    <select className="neg-select" value={negInitSlotDay} onChange={e => setNegInitSlotDay(e.target.value)}>
+                                <div className="cod-neg-add-slot-form" style={{ marginTop: '8px' }}>
+                                    <select className="cod-neg-select" value={negInitSlotDay} onChange={e => setNegInitSlotDay(e.target.value)}>
                                         {["Monday","Tuesday","Wednesday","Thursday","Friday","Saturday","Sunday"].map(d => <option key={d}>{d}</option>)}
                                     </select>
-                                    <input className="neg-input neg-input--time" type="time" value={negInitSlotStart} onChange={e => setNegInitSlotStart(e.target.value)} />
-                                    <span className="neg-time-sep">to</span>
-                                    <input className="neg-input neg-input--time" type="time" value={negInitSlotEnd} onChange={e => setNegInitSlotEnd(e.target.value)} />
+                                    <input className="cod-neg-input cod-neg-input--time" type="time" value={negInitSlotStart} onChange={e => setNegInitSlotStart(e.target.value)} />
+                                    <span className="cod-neg-time-sep">to</span>
+                                    <input className="cod-neg-input cod-neg-input--time" type="time" value={negInitSlotEnd} onChange={e => setNegInitSlotEnd(e.target.value)} />
                                     <button className="neg-btn neg-btn--sm" onClick={() => {
                                         if (negInitSlotStart >= negInitSlotEnd) { toast.error('End time must be after start time.'); return; }
                                         const _payOpt = (order?.serviceType || order?.paymentOption || '').toLowerCase();
@@ -1240,14 +1240,14 @@ const CaregiverOrderDetails = () => {
                             </div>
 
                             {/* Note about service address */}
-                            <div className="neg-section">
+                            <div className="cod-neg-section">
                                 <p style={{ fontSize: '13px', color: '#888', fontStyle: 'italic', margin: '0 0 8px' }}>
                                     📍 The client will provide the service address and access instructions.
                                 </p>
-                                <label className="neg-label">Additional Notes</label>
-                                <textarea className="neg-textarea" rows="2" value={negInitNotes} onChange={e => setNegInitNotes(e.target.value)} placeholder="Any other details for the client…" />
-                                <label className="neg-label">Opening Message to Client (Optional)</label>
-                                <textarea className="neg-textarea" rows="2" value={negInitNote} onChange={e => setNegInitNote(e.target.value)} placeholder={`e.g. "I'm available on these days and can cover all tasks in the gig package…"`} />
+                                <label className="cod-neg-label">Additional Notes</label>
+                                <textarea className="cod-neg-textarea" rows="2" value={negInitNotes} onChange={e => setNegInitNotes(e.target.value)} placeholder="Any other details for the client…" />
+                                <label className="cod-neg-label">Opening Message to Client (Optional)</label>
+                                <textarea className="cod-neg-textarea" rows="2" value={negInitNote} onChange={e => setNegInitNote(e.target.value)} placeholder={`e.g. "I'm available on these days and can cover all tasks in the gig package…"`} />
                             </div>
 
                             <div style={{ display: 'flex', gap: '10px', marginTop: '4px' }}>

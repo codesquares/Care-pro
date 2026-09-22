@@ -1,6 +1,7 @@
 import { useNavigate } from "react-router-dom";
 import "./clientDashboardHero.css";
 import CareNeedsSummaryCard from "./CareNeedsSummaryCard";
+import { marketplaceLinkForCategorySlug } from "../../../constants/categoryBrowseData";
 
 // Category navigation items
 const categories = [
@@ -14,17 +15,15 @@ const categories = [
   { name: "Home Medical Support", slug: "medical-support" },
 ];
 
-const ClientDashboardHero = ({ 
+const ClientDashboardHero = ({
   userName, // TODO: Backend persistence not implemented yet - keeping prop for now
-  profileCompletion = 10, 
+  profileCompletion = 10,
   remindersCount = 3,
-  filters = { serviceType: '', priceRange: { min: '', max: '' }, location: '' },
-  onFilterChange = () => {}
 }) => {
   const navigate = useNavigate();
 
   const handleCategoryClick = (slug) => {
-    navigate(`/marketplace?category=${slug}`);
+    navigate(marketplaceLinkForCategorySlug(slug));
   };
 
   const handleSetupProfile = () => {
@@ -41,34 +40,6 @@ const ClientDashboardHero = ({
 
   const handleBrowsePackages = () => {
     navigate("/marketplace");
-  };
-
-  const handleSetCarePreferences = () => {
-    navigate("/app/client/care-needs?returnTo=/app/client/dashboard");
-  };
-
-  // Filter handlers
-  const handleServiceTypeChange = (e) => {
-    onFilterChange({ ...filters, serviceType: e.target.value });
-  };
-
-  const handleBudgetChange = (e) => {
-    const value = e.target.value;
-    const [min, max] = value.split('-');
-    onFilterChange({ 
-      ...filters, 
-      priceRange: { min: min || '', max: max || '' } 
-    });
-  };
-
-  const handleLocationChange = (e) => {
-    onFilterChange({ ...filters, location: e.target.value });
-  };
-
-  // Get current budget value for select
-  const getBudgetValue = () => {
-    if (!filters.priceRange?.min && !filters.priceRange?.max) return '';
-    return `${filters.priceRange.min || ''}-${filters.priceRange.max || ''}`;
   };
 
   return (
@@ -152,64 +123,15 @@ const ClientDashboardHero = ({
             </svg>
           </div>
           <div className="card-content">
-            <span className="card-label card-label-gray">CAN'T FIND YOUR PREFERRED CAREGIVER?</span>
+            <span className="card-label card-label-gray">PRE-PRICED CARE PACKAGES</span>
             <span className="card-title">Browse care packages</span>
-            <span className="card-subtitle">Choose from our guided care packages.</span>
+            <span className="card-subtitle">Pick a package and CarePro assigns your caregiver.</span>
           </div>
         </div>
       </div>
 
       {/* Care Needs Summary Card */}
       <CareNeedsSummaryCard />
-
-      {/* Filter Bar */}
-      <div className="dashboard-filter-bar">
-        <div className="filter-label">Quick Filters:</div>
-        <div className="preferences-filters">
-          <select 
-            className="filter-select"
-            value={filters.serviceType || ''}
-            onChange={handleServiceTypeChange}
-          >
-            <option value="">Service options</option>
-            <option value="Adult Care">Adult Care</option>
-            <option value="Post Surgery Care">Post Surgery Care</option>
-            <option value="Child Care">Child Care</option>
-            <option value="Pet Care">Pet Care</option>
-            <option value="Home Care">Home Care</option>
-            <option value="Special Needs Care">Special Needs Care</option>
-            <option value="Elderly Care">Elderly Care</option>
-            <option value="Rehabilitation">Rehabilitation</option>
-          </select>
-
-          <select 
-            className="filter-select"
-            value={getBudgetValue()}
-            onChange={handleBudgetChange}
-          >
-            <option value="">Budget</option>
-            <option value="0-5000">₦0 - ₦5,000</option>
-            <option value="5000-10000">₦5,000 - ₦10,000</option>
-            <option value="10000-20000">₦10,000 - ₦20,000</option>
-            <option value="20000-">₦20,000+</option>
-          </select>
-
-          <select 
-            className="filter-select"
-            value={filters.location || ''}
-            onChange={handleLocationChange}
-          >
-            <option value="">Location</option>
-            <option value="Lagos">Lagos</option>
-            <option value="Abuja">Abuja</option>
-            <option value="Port Harcourt">Port Harcourt</option>
-            <option value="Ibadan">Ibadan</option>
-            <option value="Kano">Kano</option>
-            <option value="Enugu">Enugu</option>
-            <option value="Kaduna">Kaduna</option>
-          </select>
-        </div>
-      </div>
     </div>
   );
 };

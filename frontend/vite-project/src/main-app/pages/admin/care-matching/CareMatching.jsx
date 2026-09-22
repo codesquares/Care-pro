@@ -238,9 +238,9 @@ const CareMatching = () => {
         </div>
       </div>
 
-      <div className="matching-layout">
-        <div className="caregivers-table-container">
-          <table className="caregivers-table">
+      <div className="cm-matching-layout">
+        <div className="cm-caregivers-table-container">
+          <table className="cm-caregivers-table">
             <thead>
               <tr>
                 <th>Profile</th>
@@ -269,24 +269,24 @@ const CareMatching = () => {
                       <img
                         src={caregiver.profileImage || '/default-avatar.png'}
                         alt={`${caregiver.firstName} ${caregiver.lastName}`}
-                        className="profile-image"
+                        className="cm-profile-image"
                       />
                     </td>
                     <td>{`${caregiver.firstName} ${caregiver.lastName}`}</td>
                     <td>{caregiver.location || 'N/A'}</td>
                     <td>
-                      <span className={`availability-badge ${caregiver.isAvailable ? 'available' : 'unavailable'}`}>
+                      <span className={`cm-availability-badge ${caregiver.isAvailable ? 'available' : 'unavailable'}`}>
                         {caregiver.isAvailable ? 'Available' : 'Unavailable'}
                       </span>
                     </td>
                     <td>
-                      <span className={`verified-badge ${caregiver.isIdentityVerified ? 'verified' : 'unverified'}`}>
+                      <span className={`cm-verified-badge ${caregiver.isIdentityVerified ? 'verified' : 'unverified'}`}>
                         <i className={`fas ${caregiver.isIdentityVerified ? 'fa-check-circle' : 'fa-circle-exclamation'}`}></i>
                         {caregiver.isIdentityVerified ? 'Verified' : 'Not Verified'}
                       </span>
                     </td>
                     <td>
-                      <button className="btn-view" onClick={() => handleSelectCaregiver(caregiver)}>
+                      <button className="cm-btn-view" onClick={() => handleSelectCaregiver(caregiver)}>
                         View Gigs
                       </button>
                     </td>
@@ -298,7 +298,7 @@ const CareMatching = () => {
         </div>
 
         {selectedCaregiver && (
-          <div className="gigs-panel">
+          <div className="cm-gigs-panel">
             <h2>{`${selectedCaregiver.firstName} ${selectedCaregiver.lastName}`}'s Gigs</h2>
 
             {gigsError && (
@@ -314,9 +314,9 @@ const CareMatching = () => {
                 <p>Loading gigs...</p>
               </div>
             ) : caregiverGigs.length === 0 ? (
-              <p className="no-gigs">This caregiver has no gigs yet.</p>
+              <p className="cm-no-gigs">This caregiver has no gigs yet.</p>
             ) : (
-              <table className="gigs-table">
+              <table className="cm-gigs-table">
                 <thead>
                   <tr>
                     <th>Title</th>
@@ -331,17 +331,17 @@ const CareMatching = () => {
                   {caregiverGigs.map((gig) => (
                     <tr key={gig.id}>
                       <td>{gig.title}</td>
-                      <td><span className="category-tag">{gig.category}</span></td>
+                      <td><span className="cm-category-tag">{gig.category}</span></td>
                       <td>{gig.packageType || 'N/A'}</td>
                       <td><strong>{formatCurrency(gig.price)}</strong></td>
                       <td>
-                        <span className={`status-badge status-${(gig.status || '').toLowerCase()}`}>
+                        <span className={`cm-status-badge status-${(gig.status || '').toLowerCase()}`}>
                           {gig.status}
                         </span>
                       </td>
                       <td>
                         <button
-                          className="btn-recommend"
+                          className="cm-btn-recommend"
                           disabled={gig.status !== 'Active' && gig.status !== 'Published'}
                           onClick={() => openRecommendModal(gig)}
                         >
@@ -360,7 +360,7 @@ const CareMatching = () => {
       {/* Recommend to Client Modal */}
       {recommendGig && (
         <div className="care-matching-modal-overlay" onClick={closeRecommendModal}>
-          <div className="care-matching-modal-content recommend-modal" onClick={(e) => e.stopPropagation()}>
+          <div className="care-matching-modal-content care-matching-recommend-modal" onClick={(e) => e.stopPropagation()}>
             <div className="care-matching-modal-header">
               <h2>Recommend "{recommendGig.title}"</h2>
               <button className="care-matching-modal-close" onClick={closeRecommendModal}>
@@ -370,7 +370,7 @@ const CareMatching = () => {
 
             <div className="care-matching-modal-body">
               {sendResult && (
-                <div className={`alert ${sendResult.success ? 'alert-success' : 'alert-error'}`}>
+                <div className={`cm-alert ${sendResult.success ? 'cm-alert-success' : 'cm-alert-error'}`}>
                   <p>{sendResult.message || sendResult.error}</p>
                 </div>
               )}
@@ -387,7 +387,7 @@ const CareMatching = () => {
                     />
                   </div>
 
-                  <div className="client-list">
+                  <div className="cm-client-list">
                     {loadingClients ? (
                       <p>Loading clients...</p>
                     ) : filteredClients.length === 0 ? (
@@ -396,12 +396,12 @@ const CareMatching = () => {
                       filteredClients.map((client) => (
                         <div
                           key={client.id}
-                          className={`client-item ${selectedClientId === client.id ? 'selected' : ''}`}
+                          className={`cm-client-item ${selectedClientId === client.id ? 'selected' : ''}`}
                           onClick={() => setSelectedClientId(client.id)}
                         >
                           <div>
                             <strong>{client.firstName} {client.lastName}</strong>
-                            <span className="client-email">{client.email}</span>
+                            <span className="cm-client-email">{client.email}</span>
                           </div>
                           {selectedClientId === client.id && (
                             <i className="fas fa-check-circle"></i>
@@ -415,12 +415,12 @@ const CareMatching = () => {
             </div>
 
             <div className="care-matching-modal-footer">
-              <button className="btn-secondary" onClick={closeRecommendModal}>
+              <button className="cm-btn-secondary" onClick={closeRecommendModal}>
                 {sendResult?.success ? 'Close' : 'Cancel'}
               </button>
               {!sendResult?.success && (
                 <button
-                  className="btn-send"
+                  className="cm-btn-send"
                   disabled={!selectedClientId || sending}
                   onClick={handleSendRecommendation}
                 >

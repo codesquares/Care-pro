@@ -272,10 +272,10 @@ const PackagesManagement = () => {
           <input type="checkbox" checked={showInactive} onChange={(e) => setShowInactive(e.target.checked)} />
           Show inactive
         </label>
-        <button className="btn-secondary btn-sm" onClick={loadPackages} disabled={loadingList}>
+        <button className="pkgmgmt-btn-secondary btn-sm" onClick={loadPackages} disabled={loadingList}>
           <i className="fas fa-sync-alt"></i> Refresh
         </button>
-        <button className="btn-primary btn-sm" onClick={openCreate}>
+        <button className="pkgmgmt-btn-primary btn-sm" onClick={openCreate}>
           <i className="fas fa-plus"></i> Add Package
         </button>
       </div>
@@ -307,7 +307,7 @@ const PackagesManagement = () => {
           <i className="fas fa-inbox"></i>
           <p>{packages.length === 0 ? 'No packages yet' : 'No packages match your filters'}</p>
           {packages.length === 0 && (
-            <button className="btn-primary" onClick={openCreate}>
+            <button className="pkgmgmt-btn-primary" onClick={openCreate}>
               <i className="fas fa-plus"></i> Add First Package
             </button>
           )}
@@ -521,10 +521,10 @@ const PackagesManagement = () => {
                 )}
 
                 <div className="form-actions">
-                  <button type="button" className="btn-secondary" onClick={closeForm} disabled={saving}>
+                  <button type="button" className="pkgmgmt-btn-secondary" onClick={closeForm} disabled={saving}>
                     Cancel
                   </button>
-                  <button type="submit" className="btn-primary" disabled={saving}>
+                  <button type="submit" className="pkgmgmt-btn-primary" disabled={saving}>
                     {saving
                       ? <><i className="fas fa-spinner fa-spin"></i> Saving…</>
                       : <><i className="fas fa-save"></i> {editingId ? 'Save Changes' : 'Create Package'}</>}
@@ -549,10 +549,10 @@ const PackagesManagement = () => {
                 <br /><small style={{ color: '#999' }}>This cannot be undone.</small>
               </p>
               <div className="form-actions" style={{ justifyContent: 'center' }}>
-                <button className="btn-secondary" onClick={() => setDeleteTarget(null)} disabled={deleteLoading}>
+                <button className="pkgmgmt-btn-secondary" onClick={() => setDeleteTarget(null)} disabled={deleteLoading}>
                   Cancel
                 </button>
-                <button className="btn-danger" onClick={handleDeleteConfirm} disabled={deleteLoading}>
+                <button className="pkgmgmt-btn-danger" onClick={handleDeleteConfirm} disabled={deleteLoading}>
                   {deleteLoading
                     ? <><i className="fas fa-spinner fa-spin"></i> Deleting…</>
                     : <><i className="fas fa-trash-alt"></i> Delete</>}

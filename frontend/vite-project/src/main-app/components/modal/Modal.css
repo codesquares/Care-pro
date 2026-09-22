@@ -94,7 +94,7 @@
 
 /* Primary Button */
 .primary-button {
-  background-color: #00B4A6;
+  background-color: var(--color-brand-deep);
   color: #ffffff;
   border: none;
   border-radius: 8px;
@@ -111,11 +111,11 @@
 }
 
 .primary-button:hover {
-  background-color: #009688;
+  background-color: var(--color-brand-deep-2);
 }
 
 .primary-button:active {
-  background-color: #00897b;
+  background-color: color-mix(in srgb, var(--color-brand-deep-2) 85%, black);
 }
 
 /* Secondary Button */

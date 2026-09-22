@@ -1,7 +1,7 @@
 /* Assessment button styles */
 .assessment-button {
   background-color: transparent;
-  color: rgb(57, 92, 158);
+  color: var(--color-brand-deep);
   border: 1px solid rgb(79, 73, 73);
   border-radius: 6px;
   padding: 10px 20px;
@@ -22,7 +22,7 @@
 }
 
 .assessment-button:hover:not(:disabled) {
-  background-color: #2563eb;
+  background-color: var(--color-brand-deep-2);
   color: white;
   transform: translateY(-2px);
   box-shadow: 0 4px 8px rgba(0, 0, 0, 0.15);

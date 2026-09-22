@@ -17,7 +17,7 @@
 .header-icon {
   width: 60px;
   height: 60px;
-  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  background: linear-gradient(135deg, var(--color-brand-deep) 0%, var(--color-brand-accent) 100%);
   border-radius: 16px;
   display: flex;
   align-items: center;
@@ -112,7 +112,7 @@
   transition: border-color 0.2s;
 }
 
-.pkg-search-wrap input:focus { outline: none; border-color: #667eea; }
+.pkg-search-wrap input:focus { outline: none; border-color: var(--color-brand-deep); }
 
 .pkg-inactive-toggle {
   display: flex;
@@ -146,11 +146,11 @@
   transition: all 0.2s;
 }
 
-.pkg-pill:hover { border-color: #667eea; color: #667eea; }
+.pkg-pill:hover { border-color: var(--color-brand-deep); color: var(--color-brand-deep); }
 
 .pkg-pill--active {
-  background: #667eea;
-  border-color: #667eea;
+  background: var(--color-brand-deep);
+  border-color: var(--color-brand-deep);
   color: white;
 }
 
@@ -164,7 +164,7 @@
 
 .pkg-table { width: 100%; border-collapse: collapse; min-width: 900px; }
 
-.pkg-table thead tr { background: #f8f9fc; }
+.pkg-table thead tr { background: var(--surface-subtle); }
 
 .pkg-table th {
   padding: 0.85rem 1rem;
@@ -186,7 +186,7 @@
 }
 
 .pkg-table tbody tr:last-child td { border-bottom: none; }
-.pkg-table tbody tr:hover { background: #fafbff; }
+.pkg-table tbody tr:hover { background: var(--surface-subtle); }
 .pkg-table tbody tr.pkg-row--inactive { opacity: 0.55; }
 
 .pkg-tier-cell { font-weight: 600; }
@@ -203,8 +203,8 @@
   white-space: nowrap;
 }
 
-.pkg-badge--type { background: #e8f0fe; color: #3c6bc5; }
-.pkg-badge--pay { background: #f3e8ff; color: #7c3aed; }
+.pkg-badge--type { background: color-mix(in srgb, var(--color-brand-deep) 10%, white); color: var(--color-brand-deep); }
+.pkg-badge--pay { background: color-mix(in srgb, var(--color-brand-deep) 10%, white); color: var(--color-brand-deep); }
 .pkg-badge--active { background: #e8f5e9; color: #2e7d32; }
 .pkg-badge--inactive { background: #f5f5f5; color: #888; }
 
@@ -254,7 +254,7 @@
   width: 36px;
   height: 36px;
   border: 3px solid #e0e0e0;
-  border-top-color: #667eea;
+  border-top-color: var(--color-brand-deep);
   border-radius: 50%;
   animation: spin 0.7s linear infinite;
 }
@@ -321,7 +321,7 @@
 .form-group select:focus,
 .form-group textarea:focus {
   outline: none;
-  border-color: #667eea;
+  border-color: var(--color-brand-deep);
   box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
 }
 
@@ -344,9 +344,9 @@
   border-top: 1px solid #e0e0e0;
 }
 
-.btn-primary,
-.btn-secondary,
-.btn-danger {
+.pkgmgmt-btn-primary,
+.pkgmgmt-btn-secondary,
+.pkgmgmt-btn-danger {
   padding: 0.85rem 2rem;
   border: none;
   border-radius: 10px;
@@ -359,25 +359,25 @@
   transition: all 0.3s;
 }
 
-.btn-primary {
-  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+.pkgmgmt-btn-primary {
+  background: linear-gradient(135deg, var(--color-brand-deep) 0%, var(--color-brand-accent) 100%);
   color: white;
   box-shadow: 0 4px 12px rgba(102, 126, 234, 0.3);
 }
 
-.btn-primary:hover:not(:disabled) {
+.pkgmgmt-btn-primary:hover:not(:disabled) {
   transform: translateY(-2px);
   box-shadow: 0 6px 16px rgba(102, 126, 234, 0.4);
 }
 
-.btn-primary:disabled { opacity: 0.6; cursor: not-allowed; transform: none; }
+.pkgmgmt-btn-primary:disabled { opacity: 0.6; cursor: not-allowed; transform: none; }
 
-.btn-secondary { background-color: #f5f5f5; color: #333; }
-.btn-secondary:hover:not(:disabled) { background-color: #e0e0e0; }
+.pkgmgmt-btn-secondary { background-color: #f5f5f5; color: #333; }
+.pkgmgmt-btn-secondary:hover:not(:disabled) { background-color: #e0e0e0; }
 
-.btn-danger { background: #ef4444; color: white; }
-.btn-danger:hover:not(:disabled) { background: #dc2626; }
-.btn-danger:disabled { opacity: 0.6; cursor: not-allowed; }
+.pkgmgmt-btn-danger { background: #ef4444; color: white; }
+.pkgmgmt-btn-danger:hover:not(:disabled) { background: #dc2626; }
+.pkgmgmt-btn-danger:disabled { opacity: 0.6; cursor: not-allowed; }
 
 /* Modals */
 .pkg-modal-overlay {
@@ -449,5 +449,5 @@
   .page-header h1 { font-size: 1.5rem; }
   .form-row { grid-template-columns: 1fr; }
   .form-actions { flex-direction: column; }
-  .btn-primary, .btn-secondary, .btn-danger { width: 100%; justify-content: center; }
+  .pkgmgmt-btn-primary, .pkgmgmt-btn-secondary, .pkgmgmt-btn-danger { width: 100%; justify-content: center; }
 }

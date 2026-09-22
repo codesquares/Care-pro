@@ -422,9 +422,9 @@ const EmailComposer = () => {
 
       {/* Result Alert */}
       {result && (
-        <div className={`alert ${result.success ? 'alert-success' : 'alert-error'}`}>
+        <div className={`ec-alert ${result.success ? 'ec-alert-success' : 'ec-alert-error'}`}>
           <i className={`fas ${result.success ? 'fa-check-circle' : 'fa-exclamation-circle'}`}></i>
-          <div className="alert-content">
+          <div className="ec-alert-content">
             <strong>{result.success ? 'Success!' : 'Error'}</strong>
             <p>{result.message || result.error}</p>
             {result.attachmentCount > 0 && (
@@ -785,16 +785,16 @@ const EmailComposer = () => {
 
       {/* User Selector Modal */}
       {showUserSelector && (
-        <div className="modal-overlay" onClick={() => setShowUserSelector(false)}>
-          <div className="modal-content" onClick={(e) => e.stopPropagation()}>
-            <div className="modal-header">
+        <div className="ec-modal-overlay" onClick={() => setShowUserSelector(false)}>
+          <div className="ec-modal-content" onClick={(e) => e.stopPropagation()}>
+            <div className="ec-modal-header">
               <h2>Select Users</h2>
-              <button className="close-btn" onClick={() => setShowUserSelector(false)}>
+              <button className="ec-close-btn" onClick={() => setShowUserSelector(false)}>
                 <i className="fas fa-times"></i>
               </button>
             </div>
 
-            <div className="modal-body">
+            <div className="ec-modal-body">
               <div className="user-search">
                 <i className="fas fa-search"></i>
                 <input
@@ -835,8 +835,8 @@ const EmailComposer = () => {
               </div>
             </div>
 
-            <div className="modal-footer">
-              <button className="btn-secondary" onClick={() => setShowUserSelector(false)}>
+            <div className="ec-modal-footer">
+              <button className="ec-btn-secondary" onClick={() => setShowUserSelector(false)}>
                 Done ({selectedUsers.length} selected)
               </button>
             </div>
@@ -846,16 +846,16 @@ const EmailComposer = () => {
 
       {/* Email Preview Modal */}
       {showPreview && (
-        <div className="modal-overlay" onClick={() => setShowPreview(false)}>
-          <div className="modal-content preview-modal" onClick={(e) => e.stopPropagation()}>
-            <div className="modal-header">
+        <div className="ec-modal-overlay" onClick={() => setShowPreview(false)}>
+          <div className="ec-modal-content preview-modal" onClick={(e) => e.stopPropagation()}>
+            <div className="ec-modal-header">
               <h2>Email Preview</h2>
-              <button className="close-btn" onClick={() => setShowPreview(false)}>
+              <button className="ec-close-btn" onClick={() => setShowPreview(false)}>
                 <i className="fas fa-times"></i>
               </button>
             </div>
 
-            <div className="modal-body">
+            <div className="ec-modal-body">
               <div className="email-preview">
                 <div className="preview-subject">
                   <strong>Subject:</strong> {subject}
@@ -864,8 +864,8 @@ const EmailComposer = () => {
               </div>
             </div>
 
-            <div className="modal-footer">
-              <button className="btn-secondary" onClick={() => setShowPreview(false)}>
+            <div className="ec-modal-footer">
+              <button className="ec-btn-secondary" onClick={() => setShowPreview(false)}>
                 Close
               </button>
             </div>

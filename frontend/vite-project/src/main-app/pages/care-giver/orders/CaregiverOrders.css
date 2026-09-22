@@ -19,7 +19,7 @@
 
 .cg-orders-earnings-btn {
   padding: 10px 22px;
-  background: #1f2e5a;
+  background: var(--color-brand-deep);
   color: #fff;
   border: none;
   border-radius: 10px;
@@ -31,8 +31,8 @@
 }
 
 .cg-orders-earnings-btn:hover {
-  background: #162347;
-  box-shadow: 0 2px 8px rgba(31, 46, 90, 0.25);
+  background: var(--color-brand-deep-2);
+  box-shadow: 0 2px 8px rgba(43, 57, 95, 0.25);
 }
 
 /* ─── Content ─── */
@@ -75,9 +75,9 @@
 }
 
 .cg-orders-tab.active {
-  color: #1f2e5a;
+  color: var(--color-brand-deep);
   font-weight: 600;
-  border-bottom-color: #1f2e5a;
+  border-bottom-color: var(--color-brand-deep);
 }
 
 .cg-tab-count {
@@ -87,7 +87,7 @@
 }
 
 .cg-orders-tab.active .cg-tab-count {
-  color: #1f2e5a;
+  color: var(--color-brand-deep);
 }
 
 /* ─── Service Mode Filter ─── */
@@ -118,12 +118,12 @@
 }
 
 .cg-mode-radio input[type="radio"] {
-  accent-color: #1f2e5a;
+  accent-color: var(--color-brand-deep);
   margin: 0;
 }
 
 .cg-mode-radio.active {
-  color: #1f2e5a;
+  color: var(--color-brand-deep);
   font-weight: 600;
 }
 
@@ -137,7 +137,7 @@
   width: 40px;
   height: 40px;
   border: 3px solid #e2e0d6;
-  border-top-color: #1f2e5a;
+  border-top-color: var(--color-brand-deep);
   border-radius: 50%;
   animation: cgSpin 0.8s linear infinite;
   margin: 0 auto 16px;
@@ -168,7 +168,7 @@
 
 .cg-retry-btn {
   padding: 10px 28px;
-  background: #1f2e5a;
+  background: var(--color-brand-deep);
   color: #fff;
   border: none;
   border-radius: 8px;
@@ -185,7 +185,7 @@
 .cg-orders-empty h2 {
   font-size: 1.4rem;
   font-weight: 700;
-  color: #1f2e5a;
+  color: var(--color-brand-deep);
   margin: 0 0 8px;
 }
 
@@ -272,7 +272,7 @@
   width: 32px;
   height: 32px;
   border-radius: 50%;
-  background: linear-gradient(135deg, #1f2e5a, #2d4a8a);
+  background: linear-gradient(135deg, var(--color-brand-deep), var(--color-brand-deep-2));
   color: #fff;
   display: flex;
   align-items: center;
@@ -286,7 +286,7 @@
 .cg-order-client-name {
   font-size: 0.85rem;
   font-weight: 600;
-  color: #1f2e5a;
+  color: var(--color-brand-deep);
 }
 
 .cg-verified-badge {
@@ -437,7 +437,7 @@
 .cg-action-btn {
   padding: 9px 20px;
   background: transparent;
-  color: #1f2e5a;
+  color: var(--color-brand-deep);
   border: 1.5px solid #d1d5db;
   border-radius: 10px;
   font-size: 0.8rem;
@@ -449,7 +449,7 @@
 }
 
 .cg-action-btn:hover {
-  border-color: #1f2e5a;
+  border-color: var(--color-brand-deep);
   background: #fafaf7;
 }
 
@@ -480,13 +480,13 @@
 }
 
 .cg-page-btn:hover:not(:disabled) {
-  border-color: #1f2e5a;
-  color: #1f2e5a;
+  border-color: var(--color-brand-deep);
+  color: var(--color-brand-deep);
 }
 
 .cg-page-btn.active {
-  background: #1f2e5a;
-  border-color: #1f2e5a;
+  background: var(--color-brand-deep);
+  border-color: var(--color-brand-deep);
   color: #fff;
   font-weight: 700;
 }

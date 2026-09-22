@@ -248,7 +248,7 @@ const GigsManagement = () => {
     return (
       <div className="gigs-management">
         <div className="loading-container">
-          <div className="spinner"></div>
+          <div className="gm-spinner"></div>
           <p>Loading gigs...</p>
         </div>
       </div>
@@ -284,7 +284,7 @@ const GigsManagement = () => {
       </div>
 
       {error && (
-        <div className="alert alert-error">
+        <div className="gm-alert gm-alert-error">
           <i className="fas fa-exclamation-circle"></i>
           {error}
           <button onClick={loadGigs} className="retry-btn">
@@ -296,41 +296,41 @@ const GigsManagement = () => {
       {/* Statistics Cards */}
       {statistics && (
         <div className="stats-grid">
-          <div className="stat-card stat-total">
-            <div className="stat-icon">
+          <div className="gm-stat-card gm-stat-total">
+            <div className="gm-stat-icon">
               <i className="fas fa-briefcase"></i>
             </div>
-            <div className="stat-content">
+            <div className="gm-stat-content">
               <h3>{statistics.total}</h3>
               <p>Total Gigs</p>
             </div>
           </div>
 
-          <div className="stat-card stat-active">
-            <div className="stat-icon">
+          <div className="gm-stat-card gm-stat-active">
+            <div className="gm-stat-icon">
               <i className="fas fa-check-circle"></i>
             </div>
-            <div className="stat-content">
+            <div className="gm-stat-content">
               <h3>{statistics.active}</h3>
               <p>Active Gigs</p>
             </div>
           </div>
 
-          <div className="stat-card stat-paused">
-            <div className="stat-icon">
+          <div className="gm-stat-card gm-stat-paused">
+            <div className="gm-stat-icon">
               <i className="fas fa-pause-circle"></i>
             </div>
-            <div className="stat-content">
+            <div className="gm-stat-content">
               <h3>{statistics.paused}</h3>
               <p>Paused Gigs</p>
             </div>
           </div>
 
-          <div className="stat-card stat-draft">
-            <div className="stat-icon">
+          <div className="gm-stat-card gm-stat-draft">
+            <div className="gm-stat-icon">
               <i className="fas fa-file-alt"></i>
             </div>
-            <div className="stat-content">
+            <div className="gm-stat-content">
               <h3>{statistics.draft}</h3>
               <p>Draft Gigs</p>
             </div>
@@ -342,7 +342,7 @@ const GigsManagement = () => {
       <>
       {/* Bulk Delete Result Banner */}
       {bulkDeleteResult && (
-        <div className="alert alert-bulk-result">
+        <div className="gm-alert gm-alert-bulk-result">
           <div className="bulk-result-summary">
             <strong>{bulkDeleteResult.message}</strong>
             <span>Deleted: {bulkDeleteResult.deletedCount} | Skipped: {bulkDeleteResult.skippedCount} | Failed: {bulkDeleteResult.failedCount}</span>
@@ -354,7 +354,7 @@ const GigsManagement = () => {
               ))}
             </ul>
           )}
-          <button className="close-btn" onClick={() => setBulkDeleteResult(null)}>×</button>
+          <button className="gm-close-btn" onClick={() => setBulkDeleteResult(null)}>×</button>
         </div>
       )}
 
@@ -539,7 +539,7 @@ const GigsManagement = () => {
                   <td data-label="Actions">
                     <div className="action-buttons">
                       <button
-                        className="btn-view"
+                        className="gm-btn-view"
                         onClick={() => handleViewGig(gig.id)}
                         title="View Details"
                       >
@@ -603,7 +603,7 @@ const GigsManagement = () => {
           <div className="table-container">
             {deletedLoading ? (
               <div className="loading-container">
-                <div className="spinner"></div>
+                <div className="gm-spinner"></div>
                 <p>Loading deleted gigs...</p>
               </div>
             ) : deletedGigs.length === 0 ? (
@@ -676,16 +676,16 @@ const GigsManagement = () => {
 
       {/* Gig Details Modal */}
       {showGigModal && selectedGig && (
-        <div className="modal-overlay" onClick={closeGigModal}>
-          <div className="modal-content gig-details-modal" onClick={(e) => e.stopPropagation()}>
-            <div className="modal-header">
+        <div className="gm-modal-overlay" onClick={closeGigModal}>
+          <div className="gm-modal-content gig-details-modal" onClick={(e) => e.stopPropagation()}>
+            <div className="gm-modal-header">
               <h2>Gig Details</h2>
-              <button className="close-btn" onClick={closeGigModal}>
+              <button className="gm-close-btn" onClick={closeGigModal}>
                 <i className="fas fa-times"></i>
               </button>
             </div>
 
-            <div className="modal-body">
+            <div className="gm-modal-body">
               <div className="gig-details-grid">
                 {/* Image Section */}
                 <div className="detail-section">
@@ -815,7 +815,7 @@ const GigsManagement = () => {
               </div>
             </div>
 
-            <div className="modal-footer">
+            <div className="gm-modal-footer">
               <button className="btn-close" onClick={closeGigModal}>
                 Close
               </button>
@@ -826,15 +826,15 @@ const GigsManagement = () => {
 
       {/* Delete All Confirmation Modal */}
       {showDeleteAllConfirm && (
-        <div className="modal-overlay" onClick={() => { setShowDeleteAllConfirm(false); setDeleteAllInput(''); }}>
-          <div className="modal-content delete-all-modal" onClick={(e) => e.stopPropagation()}>
-            <div className="modal-header">
+        <div className="gm-modal-overlay" onClick={() => { setShowDeleteAllConfirm(false); setDeleteAllInput(''); }}>
+          <div className="gm-modal-content delete-all-modal" onClick={(e) => e.stopPropagation()}>
+            <div className="gm-modal-header">
               <h2>Delete All Gigs</h2>
-              <button className="close-btn" onClick={() => { setShowDeleteAllConfirm(false); setDeleteAllInput(''); }}>
+              <button className="gm-close-btn" onClick={() => { setShowDeleteAllConfirm(false); setDeleteAllInput(''); }}>
                 <i className="fas fa-times"></i>
               </button>
             </div>
-            <div className="modal-body">
+            <div className="gm-modal-body">
               <p className="delete-all-warning">
                 This will soft-delete <strong>ALL gigs</strong> in the system. Gigs with active contracts, subscriptions, or orders will be skipped.
               </p>
@@ -847,7 +847,7 @@ const GigsManagement = () => {
                 placeholder="Type DELETE ALL"
               />
             </div>
-            <div className="modal-footer">
+            <div className="gm-modal-footer">
               <button className="btn-close" onClick={() => { setShowDeleteAllConfirm(false); setDeleteAllInput(''); }}>
                 Cancel
               </button>

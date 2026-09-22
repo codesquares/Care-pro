@@ -164,7 +164,7 @@ const CertificateManagement = () => {
     return (
       <div className="certificate-management">
         <div className="loading-container">
-          <div className="spinner"></div>
+          <div className="cert-spinner"></div>
           <p>Loading certificates...</p>
         </div>
       </div>
@@ -186,7 +186,7 @@ const CertificateManagement = () => {
 
       {/* Success Message */}
       {successMessage && (
-        <div className="alert alert-success">
+        <div className="cert-alert cert-alert-success">
           <i className="fas fa-check-circle"></i>
           <span>{successMessage}</span>
           <button onClick={() => setSuccessMessage('')} className="close-alert">
@@ -197,7 +197,7 @@ const CertificateManagement = () => {
 
       {/* Error Alert */}
       {error && (
-        <div className="alert alert-error">
+        <div className="cert-alert cert-alert-error">
           <i className="fas fa-exclamation-circle"></i>
           <span>{error}</span>
           <button onClick={loadCertificates} className="retry-btn">
@@ -210,38 +210,38 @@ const CertificateManagement = () => {
       {/* Statistics Cards */}
       {statistics && (
         <div className="stats-grid">
-          <div className="stat-card stat-total">
-            <div className="stat-icon">
+          <div className="cert-stat-card cert-stat-total">
+            <div className="cert-stat-icon">
               <i className="fas fa-certificate"></i>
             </div>
-            <div className="stat-content">
+            <div className="cert-stat-content">
               <h3>{statistics.total}</h3>
               <p>Total Certificates</p>
             </div>
           </div>
-          <div className="stat-card stat-pending">
-            <div className="stat-icon">
+          <div className="cert-stat-card cert-stat-pending">
+            <div className="cert-stat-icon">
               <i className="fas fa-clock"></i>
             </div>
-            <div className="stat-content">
+            <div className="cert-stat-content">
               <h3>{statistics.manualReview}</h3>
               <p>Pending Review</p>
             </div>
           </div>
-          <div className="stat-card stat-verified">
-            <div className="stat-icon">
+          <div className="cert-stat-card cert-stat-verified">
+            <div className="cert-stat-icon">
               <i className="fas fa-check-circle"></i>
             </div>
-            <div className="stat-content">
+            <div className="cert-stat-content">
               <h3>{statistics.verified}</h3>
               <p>Verified</p>
             </div>
           </div>
-          <div className="stat-card stat-invalid">
-            <div className="stat-icon">
+          <div className="cert-stat-card cert-stat-invalid">
+            <div className="cert-stat-icon">
               <i className="fas fa-times-circle"></i>
             </div>
-            <div className="stat-content">
+            <div className="cert-stat-content">
               <h3>{statistics.invalid}</h3>
               <p>Invalid/Rejected</p>
             </div>
@@ -341,7 +341,7 @@ const CertificateManagement = () => {
                     </td>
                     <td>
                       <button
-                        className="btn-view"
+                        className="cert-btn-view"
                         onClick={() => handleViewCertificate(cert.id)}
                       >
                         <i className="fas fa-eye"></i>
@@ -379,9 +379,9 @@ const CertificateManagement = () => {
 
       {/* Certificate Review Modal */}
       {showCertModal && selectedCertificate && (
-        <div className="modal-overlay" onClick={closeCertModal}>
-          <div className="modal-content cert-review-modal" onClick={(e) => e.stopPropagation()}>
-            <div className="modal-header">
+        <div className="cert-modal-overlay" onClick={closeCertModal}>
+          <div className="cert-modal-content cert-review-modal" onClick={(e) => e.stopPropagation()}>
+            <div className="cert-modal-header">
               <h2>
                 <i className="fas fa-certificate"></i>
                 Certificate Review
@@ -391,7 +391,7 @@ const CertificateManagement = () => {
               </button>
             </div>
 
-            <div className="modal-body">
+            <div className="cert-modal-body">
               {!selectedCertificate || !selectedCertificate.imageUrl ? (
                 <div className="loading-state">
                   <p>Loading certificate details...</p>

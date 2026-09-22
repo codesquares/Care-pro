@@ -1,4 +1,4 @@
-.withdrawal-management {
+.wm-withdrawal-management {
   padding: 20px;
   max-width: 1200px;
   margin: 0 auto;
@@ -6,20 +6,20 @@
   box-sizing: border-box;
 }
 
-.page-title {
+.wm-page-title {
   font-size: 24px;
   margin-bottom: 20px;
   color: #333;
 }
 
-.loading-spinner {
+.wm-loading-spinner {
   text-align: center;
   margin: 50px 0;
   font-size: 16px;
   color: #666;
 }
 
-.error-message {
+.wm-error-message {
   background-color: #ffecec;
   color: #cc0000;
   border: 1px solid #cc0000;
@@ -29,18 +29,18 @@
   text-align: center;
 }
 
-.filter-container {
+.wm-filter-container {
   margin-bottom: 20px;
   display: flex;
   align-items: center;
 }
 
-.filter-container label {
+.wm-filter-container label {
   margin-right: 10px;
   font-weight: 500;
 }
 
-.status-filter {
+.wm-status-filter {
   padding: 8px;
   border-radius: 4px;
   border: 1px solid #ddd;
@@ -48,7 +48,7 @@
   min-width: 150px;
 }
 
-.no-withdrawals {
+.wm-no-withdrawals {
   text-align: center;
   padding: 40px;
   color: #888;
@@ -57,41 +57,41 @@
   border-radius: 8px;
 }
 
-.withdrawals-table-container {
+.wm-withdrawals-table-container {
   overflow-x: auto;
   -webkit-overflow-scrolling: touch;
   width: 100%;
   max-width: 100%;
 }
 
-.withdrawals-table {
+.wm-withdrawals-table {
   width: 100%;
   border-collapse: collapse;
   margin-top: 10px;
 }
 
-.withdrawals-table th,
-.withdrawals-table td {
+.wm-withdrawals-table th,
+.wm-withdrawals-table td {
   padding: 12px;
   text-align: left;
   border-bottom: 1px solid #eee;
 }
 
-.withdrawals-table th {
+.wm-withdrawals-table th {
   background-color: #f5f5f5;
   font-weight: 600;
 }
 
-.withdrawals-table tr:hover {
+.wm-withdrawals-table tr:hover {
   background-color: #fafafa;
 }
 
-.bank-info {
+.wm-bank-info {
   font-size: 13px;
   line-height: 1.4;
 }
 
-.status-badge {
+.wm-status-badge {
   display: inline-block;
   padding: 6px 10px;
   border-radius: 20px;
@@ -100,27 +100,27 @@
   text-transform: uppercase;
 }
 
-.status-badge.pending {
+.wm-status-badge.pending {
   background-color: #fff8e1;
   color: #f39c12;
 }
 
-.status-badge.verified {
+.wm-status-badge.verified {
   background-color: #e3f2fd;
   color: #2980b9;
 }
 
-.status-badge.completed {
+.wm-status-badge.completed {
   background-color: #e8f5e9;
   color: #27ae60;
 }
 
-.status-badge.rejected {
+.wm-status-badge.rejected {
   background-color: #ffebee;
   color: #e74c3c;
 }
 
-.token {
+.wm-token {
   font-family: monospace;
   background-color: #f5f5f5;
   padding: 3px 6px;
@@ -128,7 +128,7 @@
   font-size: 14px;
 }
 
-.action-btn {
+.wm-action-btn {
   padding: 8px 12px;
   border: none;
   border-radius: 4px;
@@ -137,90 +137,90 @@
   font-weight: 500;
 }
 
-.action-btn.verify {
-  background-color: #3498db;
+.wm-action-btn.verify {
+  background-color: var(--color-brand-deep);
   color: white;
 }
 
-.action-btn.complete {
+.wm-action-btn.complete {
   background-color: #2ecc71;
   color: white;
 }
 
-.action-complete,
-.action-rejected {
+.wm-action-complete,
+.wm-action-rejected {
   font-size: 13px;
   font-style: italic;
   color: #888;
 }
-.processed-at {
+.wm-processed-at {
   font-size: 13px;
   color: #555;
   white-space: nowrap;
 }
 
-.not-processed {
+.wm-not-processed {
   color: #ccc;
 }
 
 /* ── Tablet / small desktop responsive ── */
 @media (max-width: 1100px) {
-  .withdrawal-management {
+  .wm-withdrawal-management {
     padding: 16px 12px;
   }
 
-  .withdrawals-table th,
-  .withdrawals-table td {
+  .wm-withdrawals-table th,
+  .wm-withdrawals-table td {
     padding: 10px 8px;
     font-size: 13px;
   }
 
-  .bank-info {
+  .wm-bank-info {
     font-size: 12px;
     min-width: 110px;
   }
 
-  .token {
+  .wm-token {
     font-size: 12px;
   }
 
-  .status-badge {
+  .wm-status-badge {
     font-size: 11px;
     padding: 4px 8px;
   }
 
-  .processed-at {
+  .wm-processed-at {
     font-size: 12px;
   }
 
-  .action-btn {
+  .wm-action-btn {
     padding: 6px 10px;
     font-size: 12px;
   }
 }
 
 @media (max-width: 768px) {
-  .withdrawal-management {
+  .wm-withdrawal-management {
     padding: 12px 8px;
   }
 
-  .page-title {
+  .wm-page-title {
     font-size: 20px;
   }
 
-  .filter-container {
+  .wm-filter-container {
     flex-direction: column;
     align-items: flex-start;
     gap: 6px;
   }
 
-  .withdrawals-table th,
-  .withdrawals-table td {
+  .wm-withdrawals-table th,
+  .wm-withdrawals-table td {
     padding: 8px 6px;
     font-size: 12px;
   }
 
-  .withdrawals-table {
+  .wm-withdrawals-table {
     min-width: 900px;
   }
 }

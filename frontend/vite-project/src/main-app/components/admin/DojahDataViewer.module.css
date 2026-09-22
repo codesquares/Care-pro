@@ -28,9 +28,9 @@
 }
 
 .tabButton.active {
-  background: #007bff;
+  background: var(--color-brand-deep);
   color: white;
-  border-color: #007bff;
+  border-color: var(--color-brand-deep);
 }
 
 .closeBtn {
@@ -128,5 +128,5 @@ details {
 
 summary {
   cursor: pointer;
-  color: #007bff;
+  color: var(--color-brand-deep);
 }

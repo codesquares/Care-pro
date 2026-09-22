@@ -1,8 +1,11 @@
 import { useState, useEffect, useMemo } from "react";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, useSearchParams } from "react-router-dom";
 import { useAuth } from "../../../context/AuthContext";
 import "./clientDashboard.css";
 import "./responsiveFixes.css";
+import "./serviceCategory.css";
+import "./marketplaceHero.css";
+import "./publicMarketplace.css";
 import PackageCard from "./PackageCard";
 import ClientPackageService from "../../../services/clientPackageService";
 import { trackEvent } from "../../../services/analyticsService";
@@ -16,6 +19,7 @@ const SORT_OPTIONS = [
 const PublicMarketplace = () => {
   const navigate = useNavigate();
   const { isAuthenticated } = useAuth();
+  const [searchParams] = useSearchParams();
 
   const [packages, setPackages] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -24,6 +28,13 @@ const PublicMarketplace = () => {
   const [category, setCategory] = useState("");
   const [searchTerm, setSearchTerm] = useState("");
   const [sortBy, setSortBy] = useState("default");
+
+  // Read ?category= and ?q= from the URL so links from the homepage, dashboard, etc.
+  // actually pre-filter the catalog instead of silently landing on "All categories".
+  useEffect(() => {
+    setCategory(searchParams.get("category") || "");
+    setSearchTerm(searchParams.get("q") || "");
+  }, [searchParams]);
 
   // Track marketplace page view (and Meta Pixel ViewContent for ad attribution)
   useEffect(() => {
@@ -52,6 +63,14 @@ const PublicMarketplace = () => {
     }
     fetchPackages();
   }, [isAuthenticated]);
+
+  const handleSelectPackage = (pkg) => {
+    trackEvent('select_package', 'marketplace');
+    const params = new URLSearchParams();
+    if (pkg.category) params.set('category', pkg.category);
+    if (pkg.tierLabel) params.set('tier', pkg.tierLabel);
+    navigate(`/start-assessment?${params.toString()}`);
+  };
 
   const categories = useMemo(() => {
     const unique = new Set(packages.map((pkg) => pkg.category).filter(Boolean));
@@ -133,7 +152,7 @@ const PublicMarketplace = () => {
         </div>
 
         {!loading && !error && packages.length > 0 && (
-          <div className="marketplace-filters" style={{ marginBottom: 20 }}>
+          <div className="marketplace-filters marketplace-filters--packages">
             <select
               className="marketplace-filter-select"
               value={category}
@@ -214,7 +233,7 @@ const PublicMarketplace = () => {
             </div>
             <div className="service-list">
               {group.items.map((pkg) => (
-                <PackageCard key={pkg.id} {...pkg} />
+                <PackageCard key={pkg.id} {...pkg} onSelect={handleSelectPackage} />
               ))}
             </div>
           </div>

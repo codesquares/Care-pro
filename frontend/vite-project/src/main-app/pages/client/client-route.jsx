@@ -30,6 +30,8 @@ import ContractDetailPage from './orders/ContractDetailPage';
 import NotFoundPage from '../../../pages/NotFoundPage';
 import OnboardingQaHarness from './onboarding/OnboardingQaHarness';
 import FeatureMovedNotice from '../../components/shared/FeatureMovedNotice';
+import MyPackageRequests from './package-requests/MyPackageRequests';
+import PackageRequestDetail from './package-requests/PackageRequestDetail';
 
 
 function ClientRoutes() {
@@ -56,6 +58,8 @@ function ClientRoutes() {
             <Route path="/care-requests/:requestId/matches" element={<FeatureMovedNotice title="Care requests are being rebuilt" message="Caregiver matching is moving to guided care packages. This will be back soon." />} />
             <Route path="/care-requests/:requestId/detail" element={<FeatureMovedNotice title="Care requests are being rebuilt" message="Care request details are moving to guided care packages. This will be back soon." />} />
             <Route path="/your-requests" element={<FeatureMovedNotice title="Care requests are being rebuilt" message="Your care requests are moving to guided care packages. This will be back soon." />} />
+            <Route path="/requests" element={<MyPackageRequests />} />
+            <Route path="/requests/:id" element={<PackageRequestDetail />} />
             <Route path="/profile" element={<ClientProfile />} />
             <Route path="/notifications" element={<NotificationsPage />} />
             <Route path="/cart/:id" element={<Cart />} />

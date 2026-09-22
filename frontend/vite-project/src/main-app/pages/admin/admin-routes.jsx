@@ -14,6 +14,10 @@ import ChatCompliance from './chat-compliance/ChatCompliance';
 import BookingCommitments from './booking-commitments/BookingCommitments';
 import GigsManagement from './gigs-management/GigsManagement';
 import PackagesManagement from './packages-management/PackagesManagement';
+import AssignmentConsole from './assignment-console/AssignmentConsole';
+import PayRatesManagement from './pay-rates/PayRatesManagement';
+import PayrollManagement from './payroll/PayrollManagement';
+import GuarantorOverride from './guarantor-override/GuarantorOverride';
 import CareMatching from './care-matching/CareMatching';
 import OrdersManagement from './orders-management/OrdersManagement';
 import EmailComposer from './email-composer/EmailComposer';
@@ -123,6 +127,38 @@ function AdminRoutes() {
                         }
                     />
                     <Route path='/care-matching' element={<CareMatching />} />
+                    <Route
+                        path='/assignments'
+                        element={
+                            canUseOperationsTools
+                                ? <AssignmentConsole />
+                                : <NotFoundPage />
+                        }
+                    />
+                    <Route
+                        path='/pay-rates'
+                        element={
+                            canUseOperationsTools
+                                ? <PayRatesManagement />
+                                : <NotFoundPage />
+                        }
+                    />
+                    <Route
+                        path='/payroll'
+                        element={
+                            canUseOperationsTools
+                                ? <PayrollManagement />
+                                : <NotFoundPage />
+                        }
+                    />
+                    <Route
+                        path='/guarantors'
+                        element={
+                            canUseOperationsTools
+                                ? <GuarantorOverride />
+                                : <NotFoundPage />
+                        }
+                    />
                     <Route path='/orders' element={<OrdersManagement />} />
                     <Route path='/emails' element={<EmailComposer />} />
                     <Route path='/certificates' element={<CertificateManagement />} />

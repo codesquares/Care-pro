@@ -1,9 +1,8 @@
 import { useState, useRef, useEffect } from "react";
-import { useNavigate, useLocation } from "react-router-dom";
-import { FaBell, FaEnvelope, FaCog, FaHome, FaShoppingBag, FaClipboardList, FaChevronDown } from "react-icons/fa";
+import { useNavigate } from "react-router-dom";
+import { FaBell, FaEnvelope, FaCog, FaHome, FaClipboardList, FaFileAlt, FaChevronDown } from "react-icons/fa";
 import logo from '../../../assets/careproLogo.svg';
 
-import receipt from "../../../assets/main-app/receipt.svg";
 import homeIcon from "../../../assets/home_icon.png";
 import NotificationBell from "../../components/notifications/NotificationBell";
 import { useAuth } from "../../context/AuthContext";
@@ -13,47 +12,15 @@ import "./ClientNavBarCustom.css";
 
 const ClientNavBar = () => {
   const navigate = useNavigate();
-  const location = useLocation();
   const basePath = "/app/client";
   const dropdownRef = useRef(null);
-  const debounceRef = useRef(null);
   const { user, handleLogout } = useAuth();
 
   const [showDropdown, setShowDropdown] = useState(false);
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [searchQuery, setSearchQuery] = useState("");
-  const [isTyping, setIsTyping] = useState(false);
 
   const userName = user?.firstName ? `${user.firstName} ${user.lastName}` : "";
-
-  // ✅ Move ALL useEffect hooks before any conditional returns
-  // Initialize search query from URL on component mount
-  useEffect(() => {
-    if (!user) return; // Handle no user case inside the effect
-    
-    const urlParams = new URLSearchParams(location.search);
-    const searchParam = urlParams.get('q');
-    if (searchParam) {
-      setSearchQuery(searchParam);
-    } else {
-      setSearchQuery('');
-    }
-  }, [location.search, user]);
-
-  // Listen for clear search events from dashboard
-  useEffect(() => {
-    if (!user) return; // Handle no user case inside the effect
-    
-    const handleClearSearch = () => {
-      setSearchQuery('');
-      setIsTyping(false);
-    };
-
-    window.addEventListener('clearSearch', handleClearSearch);
-    return () => {
-      window.removeEventListener('clearSearch', handleClearSearch);
-    };
-  }, [user]);
 
   useEffect(() => {
     const handleClickOutside = (event) => {
@@ -65,15 +32,6 @@ const ClientNavBar = () => {
     document.addEventListener("mousedown", handleClickOutside);
     return () => {
       document.removeEventListener("mousedown", handleClickOutside);
-    };
-  }, []);
-
-  // Cleanup debounce on unmount
-  useEffect(() => {
-    return () => {
-      if (debounceRef.current) {
-        clearTimeout(debounceRef.current);
-      }
     };
   }, []);
 
@@ -109,69 +67,15 @@ const ClientNavBar = () => {
 
   const handleSearch = (e) => {
     e.preventDefault();
-    setIsTyping(false); // Reset typing state on form submission
     if (searchQuery.trim()) {
-      // Navigate to dashboard with search query parameter
-      navigate(`${basePath}/dashboard?q=${encodeURIComponent(searchQuery.trim())}`);
-      // Dispatch search event with completed search
-      window.dispatchEvent(new CustomEvent('searchChanged', { 
-        detail: { searchQuery: searchQuery.trim(), isSearching: false } 
-      }));
+      navigate(`/marketplace?q=${encodeURIComponent(searchQuery.trim())}`);
     } else {
-      // If empty search, go to dashboard without query
-      navigate(`${basePath}/dashboard`);
-      window.dispatchEvent(new CustomEvent('searchChanged', { 
-        detail: { searchQuery: '', isSearching: false } 
-      }));
+      navigate('/marketplace');
     }
   };
 
   const handleSearchInputChange = (e) => {
-    const value = e.target.value;
-    setSearchQuery(value);
-    
-    // Set typing state to true when user starts typing
-    if (!isTyping && value.trim()) {
-      setIsTyping(true);
-      // Immediately notify that searching has started
-      window.dispatchEvent(new CustomEvent('searchChanged', { 
-        detail: { searchQuery: value.trim(), isSearching: true } 
-      }));
-    }
-    
-    // If search is cleared, immediately notify and reset typing state
-    if (!value.trim()) {
-      setIsTyping(false);
-      window.dispatchEvent(new CustomEvent('searchChanged', { 
-        detail: { searchQuery: '', isSearching: false } 
-      }));
-      if (location.pathname === `${basePath}/dashboard`) {
-        window.history.pushState({}, '', `${basePath}/dashboard`);
-      }
-      return;
-    }
-
-    // Clear existing timeout
-    if (debounceRef.current) {
-      clearTimeout(debounceRef.current);
-    }
-
-    // Set up debounced navigation for real-time search
-    debounceRef.current = setTimeout(() => {
-      if (location.pathname === `${basePath}/dashboard`) {
-        // Only update URL if we're already on dashboard
-        if (value.trim()) {
-          const newUrl = `${basePath}/dashboard?q=${encodeURIComponent(value.trim())}`;
-          window.history.pushState({}, '', newUrl);
-          // Trigger a custom event to notify dashboard of URL change
-          window.dispatchEvent(new CustomEvent('searchChanged', { 
-            detail: { searchQuery: value.trim(), isSearching: false } 
-          }));
-        }
-      }
-      // Reset typing state after debounce period
-      setIsTyping(false);
-    }, 300); // 300ms debounce
+    setSearchQuery(e.target.value);
   };
 
   return (
@@ -238,10 +142,10 @@ const ClientNavBar = () => {
                   <span>Dashboard</span>
                 </div>
               </li>
-              <li onClick={() => { navigate(`${basePath}/my-order`); setMobileMenuOpen(false); }}>
+              <li onClick={() => { navigate(`${basePath}/requests`); setMobileMenuOpen(false); }}>
                 <div className="client-menu-item-content">
-                  <img src={receipt} alt="Orders" />
-                  <span>My Orders</span>
+                  <FaFileAlt className="client-nav-icon" />
+                  <span>My Requests</span>
                 </div>
               </li>
               <li onClick={() => { navigate(`${basePath}/subscriptions`); setMobileMenuOpen(false); }}>
@@ -340,9 +244,9 @@ const ClientNavBar = () => {
               <FaHome className="client-nav-link-icon" />
               Dashboard
             </li>
-            <li className="client-nav-text-link" onClick={() => navigate(`${basePath}/my-order`)}>
-              <FaShoppingBag className="client-nav-link-icon" />
-              Orders
+            <li className="client-nav-text-link" onClick={() => navigate(`${basePath}/requests`)}>
+              <FaFileAlt className="client-nav-link-icon" />
+              My Requests
             </li>
             <li className="client-nav-text-link" onClick={() => navigate('/marketplace')}>
               <FaClipboardList className="client-nav-link-icon" />

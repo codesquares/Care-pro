@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import ClientCareNeedsService from '../../../services/clientCareNeedsService';
+import { marketplaceLinkForCategoryName } from '../../../constants/categoryBrowseData';
 import './careNeedsSummaryCard.css';
 
 /**
@@ -51,15 +52,11 @@ const CareNeedsSummaryCard = () => {
     navigate('/app/client/care-needs?returnTo=/app/client/dashboard');
   };
 
-  const handleFindMatches = () => {
+  const handleBrowseMatchingPackages = () => {
     if (careNeeds?.serviceCategories && careNeeds.serviceCategories.length > 0) {
-      const categorySlug = careNeeds.serviceCategories[0]
-        .toLowerCase()
-        .replace(/\s+/g, '-')
-        .replace('&', '');
-      navigate(`/marketplace?category=${categorySlug}&matched=true`);
+      navigate(marketplaceLinkForCategoryName(careNeeds.serviceCategories[0]));
     } else {
-      navigate('/marketplace?matched=true');
+      navigate('/marketplace');
     }
   };
 
@@ -90,8 +87,8 @@ const CareNeedsSummaryCard = () => {
           </div>
           <div className="cn-card-content">
             <span className="cn-card-label">SET YOUR CARE PREFERENCES</span>
-            <span className="cn-card-title">Get matched with the best caregivers</span>
-            <span className="cn-card-subtitle">Tell us what you need for personalized results</span>
+            <span className="cn-card-title">Get pointed to the right care package</span>
+            <span className="cn-card-subtitle">Tell us what you need and we'll assign a vetted caregiver</span>
           </div>
           <div className="cn-card-arrow">
             <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
@@ -139,8 +136,8 @@ const CareNeedsSummaryCard = () => {
         </div>
       </div>
 
-      {/* Find Matches Card */}
-      <div className="care-needs-card match-card" onClick={handleFindMatches}>
+      {/* Browse Matching Packages Card */}
+      <div className="care-needs-card match-card" onClick={handleBrowseMatchingPackages}>
         <div className="cn-card-icon match-icon">
           <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
             <circle cx="11" cy="11" r="8" />
@@ -148,8 +145,8 @@ const CareNeedsSummaryCard = () => {
           </svg>
         </div>
         <div className="cn-card-content">
-          <span className="cn-card-label match">FIND YOUR MATCHES</span>
-          <span className="cn-card-title">View caregivers that match your needs</span>
+          <span className="cn-card-label match">BROWSE MATCHING PACKAGES</span>
+          <span className="cn-card-title">See care packages that fit your needs</span>
         </div>
         <div className="cn-card-arrow">
           <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">

@@ -243,11 +243,11 @@ const TrainingMaterials = () => {
 
   // ─── render ───────────────────────────────────────────────
   return (
-    <div className="training-materials-upload">
+    <div className="tmu-training-materials-upload">
       {/* Header */}
-      <div className="page-header">
-        <div className="header-content">
-          <div className="header-icon">
+      <div className="tmu-page-header">
+        <div className="tmu-header-content">
+          <div className="tmu-header-icon">
             <i className="fas fa-graduation-cap"></i>
           </div>
           <div>
@@ -259,10 +259,10 @@ const TrainingMaterials = () => {
 
       {/* Global toast */}
       {toast && (
-        <div className={`alert alert-${toast.type === 'error' ? 'error' : 'success'}`}>
+        <div className={`tmu-alert tmu-alert-${toast.type === 'error' ? 'error' : 'success'}`}>
           <i className={`fas fa-${toast.type === 'error' ? 'exclamation-circle' : 'check-circle'}`}></i>
           <div><p>{toast.msg}</p></div>
-          <button className="alert-close" onClick={() => setToast(null)}>×</button>
+          <button className="tmu-alert-close" onClick={() => setToast(null)}>×</button>
         </div>
       )}
 
@@ -302,10 +302,10 @@ const TrainingMaterials = () => {
                   </button>
                 )}
               </div>
-              <button type="submit" className="btn-primary btn-sm">Search</button>
+              <button type="submit" className="tmu-btn-primary tm-btn-sm">Search</button>
             </form>
 
-            <button className="btn-secondary btn-sm" onClick={loadMaterials} disabled={loadingList}>
+            <button className="tmu-btn-secondary tm-btn-sm" onClick={loadMaterials} disabled={loadingList}>
               <i className="fas fa-sync-alt"></i> Refresh
             </button>
           </div>
@@ -325,19 +325,19 @@ const TrainingMaterials = () => {
 
           {/* List */}
           {listError && (
-            <div className="alert alert-error">
+            <div className="tmu-alert tmu-alert-error">
               <i className="fas fa-exclamation-circle"></i>
               <div><p>{listError}</p></div>
             </div>
           )}
 
           {loadingList ? (
-            <div className="tm-loading"><div className="spinner"></div><p>Loading…</p></div>
+            <div className="tm-loading"><div className="tm-spinner"></div><p>Loading…</p></div>
           ) : materials.length === 0 ? (
             <div className="tm-empty">
               <i className="fas fa-inbox"></i>
               <p>{searchTerm ? `No results for "${searchTerm}"` : 'No training materials found'}</p>
-              <button className="btn-primary" onClick={() => setActiveTab('upload')}>
+              <button className="tmu-btn-primary" onClick={() => setActiveTab('upload')}>
                 <i className="fas fa-plus"></i> Upload First Material
               </button>
             </div>
@@ -374,7 +374,7 @@ const TrainingMaterials = () => {
                         <td>{fmtDate(cd)}</td>
                         <td className="tm-actions">
                           <button
-                            className="btn-icon btn-icon--view"
+                            className="tm-btn-icon tm-btn-icon--view"
                             title="View details"
                             onClick={() => openDetail(m)}
                             disabled={loadingDetail}
@@ -382,14 +382,14 @@ const TrainingMaterials = () => {
                             <i className="fas fa-eye"></i>
                           </button>
                           <button
-                            className="btn-icon btn-icon--edit"
+                            className="tm-btn-icon tm-btn-icon--edit"
                             title="Edit"
                             onClick={() => openEdit(m)}
                           >
                             <i className="fas fa-pencil-alt"></i>
                           </button>
                           <button
-                            className="btn-icon btn-icon--delete"
+                            className="tm-btn-icon tm-btn-icon--delete"
                             title="Delete"
                             onClick={() => confirmDelete(m)}
                           >
@@ -411,42 +411,42 @@ const TrainingMaterials = () => {
       {activeTab === 'upload' && (
         <div>
           {uploadError && (
-            <div className="alert alert-error">
+            <div className="tmu-alert tmu-alert-error">
               <i className="fas fa-exclamation-circle"></i>
               <div><strong>Error</strong><p>{uploadError}</p></div>
-              <button onClick={() => setUploadError(null)} className="alert-close">×</button>
+              <button onClick={() => setUploadError(null)} className="tmu-alert-close">×</button>
             </div>
           )}
           {uploadResult && (
-            <div className="alert alert-success">
+            <div className="tmu-alert tmu-alert-success">
               <i className="fas fa-check-circle"></i>
               <div>
                 <strong>Success!</strong>
                 <p>{uploadResult.message}</p>
                 {uploadResult.data?.cloudinaryUrl && (
-                  <a href={uploadResult.data.cloudinaryUrl} target="_blank" rel="noopener noreferrer" className="file-link">
+                  <a href={uploadResult.data.cloudinaryUrl} target="_blank" rel="noopener noreferrer" className="tmu-file-link">
                     <i className="fas fa-external-link-alt"></i> View Uploaded File
                   </a>
                 )}
               </div>
-              <button onClick={() => setUploadResult(null)} className="alert-close">×</button>
+              <button onClick={() => setUploadResult(null)} className="tmu-alert-close">×</button>
             </div>
           )}
 
-          <div className="upload-container">
-            <div className="info-section">
+          <div className="tmu-upload-container">
+            <div className="tmu-info-section">
               <h3><i className="fas fa-info-circle"></i> Upload Guidelines</h3>
-              <div className="info-content">
-                <div className="info-item">
+              <div className="tmu-info-content">
+                <div className="tmu-info-item">
                   <h4>Accepted File Types</h4>
-                  <div className="file-types">
-                    <span className="file-type-badge"><i className="fas fa-file-pdf"></i> PDF</span>
-                    <span className="file-type-badge"><i className="fas fa-file-word"></i> Word</span>
-                    <span className="file-type-badge"><i className="fas fa-file-powerpoint"></i> PowerPoint</span>
-                    <span className="file-type-badge"><i className="fas fa-file-video"></i> Videos</span>
+                  <div className="tmu-file-types">
+                    <span className="tmu-file-type-badge"><i className="fas fa-file-pdf"></i> PDF</span>
+                    <span className="tmu-file-type-badge"><i className="fas fa-file-word"></i> Word</span>
+                    <span className="tmu-file-type-badge"><i className="fas fa-file-powerpoint"></i> PowerPoint</span>
+                    <span className="tmu-file-type-badge"><i className="fas fa-file-video"></i> Videos</span>
                   </div>
                 </div>
-                <div className="info-item">
+                <div className="tmu-info-item">
                   <h4>Requirements</h4>
                   <ul>
                     <li><i className="fas fa-check"></i> Title: 3–200 characters</li>
@@ -454,7 +454,7 @@ const TrainingMaterials = () => {
                     <li><i className="fas fa-check"></i> Select target audience</li>
                   </ul>
                 </div>
-                <div className="info-item">
+                <div className="tmu-info-item">
                   <h4>User Types</h4>
                   <ul>
                     <li><strong>Caregiver:</strong> Only caregivers can access</li>
@@ -465,52 +465,52 @@ const TrainingMaterials = () => {
               </div>
             </div>
 
-            <div className="form-section">
-              <form onSubmit={handleUploadSubmit} className="upload-form">
-                <div className="form-group">
-                  <label htmlFor="upload-title">Title <span className="required">*</span></label>
+            <div className="tmu-form-section">
+              <form onSubmit={handleUploadSubmit} className="tmu-upload-form">
+                <div className="tmu-form-group">
+                  <label htmlFor="upload-title">Title <span className="tmu-required">*</span></label>
                   <input
                     type="text" id="upload-title" name="title"
                     value={uploadForm.title} onChange={handleUploadInputChange}
                     placeholder="e.g., Introduction to Elder Care"
                     required minLength={3} maxLength={200}
                   />
-                  <small className="char-count">{uploadForm.title.length}/200</small>
+                  <small className="tmu-char-count">{uploadForm.title.length}/200</small>
                 </div>
 
-                <div className="form-group">
-                  <label htmlFor="upload-userType">Target Audience <span className="required">*</span></label>
+                <div className="tmu-form-group">
+                  <label htmlFor="upload-userType">Target Audience <span className="tmu-required">*</span></label>
                   <select id="upload-userType" name="userType" value={uploadForm.userType} onChange={handleUploadInputChange} required>
                     {USER_TYPES.map(t => <option key={t} value={t}>{t}</option>)}
                   </select>
                 </div>
 
-                <div className="form-group">
-                  <label htmlFor="upload-description">Description <span className="optional">(Optional)</span></label>
+                <div className="tmu-form-group">
+                  <label htmlFor="upload-description">Description <span className="tmu-optional">(Optional)</span></label>
                   <textarea
                     id="upload-description" name="description"
                     value={uploadForm.description} onChange={handleUploadInputChange}
                     placeholder="Describe the training content…" rows="4" maxLength={500}
                   />
-                  <small className="char-count">{uploadForm.description.length}/500</small>
+                  <small className="tmu-char-count">{uploadForm.description.length}/500</small>
                 </div>
 
-                <div className="form-group">
-                  <label htmlFor="upload-file-input">File <span className="required">*</span></label>
-                  <div className="file-input-wrapper">
+                <div className="tmu-form-group">
+                  <label htmlFor="upload-file-input">File <span className="tmu-required">*</span></label>
+                  <div className="tmu-file-input-wrapper">
                     <input
                       type="file" id="upload-file-input"
                       accept={ACCEPTED_FILE_TYPES} onChange={handleUploadFileChange} required
                     />
-                    <div className="file-input-display">
+                    <div className="tmu-file-input-display">
                       {uploadFileInfo ? (
-                        <div className="file-selected">
+                        <div className="tmu-file-selected">
                           <i className={`fas ${fileIcon(uploadFileInfo.name)}`}></i>
-                          <div className="file-details">
-                            <span className="file-name">{uploadFileInfo.name}</span>
-                            <span className="file-size">{uploadFileInfo.size}</span>
+                          <div className="tmu-file-details">
+                            <span className="tmu-file-name">{uploadFileInfo.name}</span>
+                            <span className="tmu-file-size">{uploadFileInfo.size}</span>
                           </div>
-                          <button type="button" className="btn-remove-file" onClick={() => {
+                          <button type="button" className="tmu-btn-remove-file" onClick={() => {
                             setUploadForm(p => ({ ...p, file: null }));
                             setUploadFileInfo(null);
                             document.getElementById('upload-file-input').value = '';
@@ -519,7 +519,7 @@ const TrainingMaterials = () => {
                           </button>
                         </div>
                       ) : (
-                        <div className="file-placeholder">
+                        <div className="tmu-file-placeholder">
                           <i className="fas fa-cloud-upload-alt"></i>
                           <p>Click to select or drag and drop</p>
                           <small>PDF, Documents, or Videos</small>
@@ -529,11 +529,11 @@ const TrainingMaterials = () => {
                   </div>
                 </div>
 
-                <div className="form-actions">
-                  <button type="button" className="btn-secondary" onClick={handleClearUpload} disabled={uploadLoading}>
+                <div className="tmu-form-actions">
+                  <button type="button" className="tmu-btn-secondary" onClick={handleClearUpload} disabled={uploadLoading}>
                     <i className="fas fa-redo"></i> Clear
                   </button>
-                  <button type="submit" className="btn-primary" disabled={uploadLoading || !uploadForm.file}>
+                  <button type="submit" className="tmu-btn-primary" disabled={uploadLoading || !uploadForm.file}>
                     {uploadLoading
                       ? <><i className="fas fa-spinner fa-spin"></i> Uploading…</>
                       : <><i className="fas fa-cloud-upload-alt"></i> Upload Material</>}
@@ -585,7 +585,7 @@ const TrainingMaterials = () => {
                     <a
                       href={detailItem.cloudinaryUrl || detailItem.CloudinaryUrl || detailItem.fileUrl}
                       target="_blank" rel="noopener noreferrer"
-                      className="file-link"
+                      className="tmu-file-link"
                     >
                       <i className="fas fa-external-link-alt"></i> Open File
                     </a>
@@ -606,45 +606,45 @@ const TrainingMaterials = () => {
               <button className="tm-modal-close" onClick={() => !editLoading && setEditItem(null)}><i className="fas fa-times"></i></button>
             </div>
             <div className="tm-modal-body">
-              {editError && <div className="alert alert-error" style={{marginBottom:'1rem'}}><i className="fas fa-exclamation-circle"></i><div><p>{editError}</p></div></div>}
-              <form onSubmit={handleEditSubmit} className="upload-form">
-                <div className="form-group">
-                  <label>Title <span className="required">*</span></label>
+              {editError && <div className="tmu-alert tmu-alert-error" style={{marginBottom:'1rem'}}><i className="fas fa-exclamation-circle"></i><div><p>{editError}</p></div></div>}
+              <form onSubmit={handleEditSubmit} className="tmu-upload-form">
+                <div className="tmu-form-group">
+                  <label>Title <span className="tmu-required">*</span></label>
                   <input
                     type="text" value={editForm.title}
                     onChange={e => setEditForm(p => ({ ...p, title: e.target.value }))}
                     required minLength={3} maxLength={200}
                   />
-                  <small className="char-count">{editForm.title.length}/200</small>
+                  <small className="tmu-char-count">{editForm.title.length}/200</small>
                 </div>
-                <div className="form-group">
-                  <label>Target Audience <span className="required">*</span></label>
+                <div className="tmu-form-group">
+                  <label>Target Audience <span className="tmu-required">*</span></label>
                   <select value={editForm.userType} onChange={e => setEditForm(p => ({ ...p, userType: e.target.value }))}>
                     {USER_TYPES.map(t => <option key={t} value={t}>{t}</option>)}
                   </select>
                 </div>
-                <div className="form-group">
-                  <label>Description <span className="optional">(Optional)</span></label>
+                <div className="tmu-form-group">
+                  <label>Description <span className="tmu-optional">(Optional)</span></label>
                   <textarea
                     value={editForm.description}
                     onChange={e => setEditForm(p => ({ ...p, description: e.target.value }))}
                     rows="3" maxLength={500}
                   />
-                  <small className="char-count">{editForm.description.length}/500</small>
+                  <small className="tmu-char-count">{editForm.description.length}/500</small>
                 </div>
-                <div className="form-group">
-                  <label>Replace File <span className="optional">(Optional — leave blank to keep current)</span></label>
-                  <div className="file-input-wrapper">
+                <div className="tmu-form-group">
+                  <label>Replace File <span className="tmu-optional">(Optional — leave blank to keep current)</span></label>
+                  <div className="tmu-file-input-wrapper">
                     <input type="file" id="edit-file-input" accept={ACCEPTED_FILE_TYPES} onChange={handleEditFileChange} />
-                    <div className="file-input-display">
+                    <div className="tmu-file-input-display">
                       {editFileInfo ? (
-                        <div className="file-selected">
+                        <div className="tmu-file-selected">
                           <i className={`fas ${fileIcon(editFileInfo.name)}`}></i>
-                          <div className="file-details">
-                            <span className="file-name">{editFileInfo.name}</span>
-                            <span className="file-size">{editFileInfo.size}</span>
+                          <div className="tmu-file-details">
+                            <span className="tmu-file-name">{editFileInfo.name}</span>
+                            <span className="tmu-file-size">{editFileInfo.size}</span>
                           </div>
-                          <button type="button" className="btn-remove-file" onClick={() => {
+                          <button type="button" className="tmu-btn-remove-file" onClick={() => {
                             setEditForm(p => ({ ...p, file: null }));
                             setEditFileInfo(null);
                             document.getElementById('edit-file-input').value = '';
@@ -653,7 +653,7 @@ const TrainingMaterials = () => {
                           </button>
                         </div>
                       ) : (
-                        <div className="file-placeholder">
+                        <div className="tmu-file-placeholder">
                           <i className="fas fa-exchange-alt"></i>
                           <p>Click to select a replacement file</p>
                           <small>Leave blank to keep existing file</small>
@@ -662,11 +662,11 @@ const TrainingMaterials = () => {
                     </div>
                   </div>
                 </div>
-                <div className="form-actions">
-                  <button type="button" className="btn-secondary" onClick={() => setEditItem(null)} disabled={editLoading}>
+                <div className="tmu-form-actions">
+                  <button type="button" className="tmu-btn-secondary" onClick={() => setEditItem(null)} disabled={editLoading}>
                     Cancel
                   </button>
-                  <button type="submit" className="btn-primary" disabled={editLoading}>
+                  <button type="submit" className="tmu-btn-primary" disabled={editLoading}>
                     {editLoading
                       ? <><i className="fas fa-spinner fa-spin"></i> Saving…</>
                       : <><i className="fas fa-save"></i> Save Changes</>}
@@ -690,11 +690,11 @@ const TrainingMaterials = () => {
                 Are you sure you want to permanently delete <strong>{deleteTarget.title || deleteTarget.Title}</strong>?
                 <br /><small style={{ color: '#999' }}>This will also remove the file from Cloudinary and cannot be undone.</small>
               </p>
-              <div className="form-actions" style={{ justifyContent: 'center' }}>
-                <button className="btn-secondary" onClick={() => setDeleteTarget(null)} disabled={deleteLoading}>
+              <div className="tmu-form-actions" style={{ justifyContent: 'center' }}>
+                <button className="tmu-btn-secondary" onClick={() => setDeleteTarget(null)} disabled={deleteLoading}>
                   Cancel
                 </button>
-                <button className="btn-danger" onClick={handleDeleteConfirm} disabled={deleteLoading}>
+                <button className="tm-btn-danger" onClick={handleDeleteConfirm} disabled={deleteLoading}>
                   {deleteLoading
                     ? <><i className="fas fa-spinner fa-spin"></i> Deleting…</>
                     : <><i className="fas fa-trash-alt"></i> Delete</>}

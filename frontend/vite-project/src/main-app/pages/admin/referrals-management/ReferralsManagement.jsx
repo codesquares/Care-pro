@@ -336,25 +336,25 @@ const ReferralsManagement = () => {
 
       <div className="referrals-admin-tabs">
         <button
-          className={`tab-btn ${activeTab === TABS.APPLICATIONS ? 'active' : ''}`}
+          className={`ref-tab-btn ${activeTab === TABS.APPLICATIONS ? 'active' : ''}`}
           onClick={() => setActiveTab(TABS.APPLICATIONS)}
         >
           Applications
         </button>
         <button
-          className={`tab-btn ${activeTab === TABS.REFERRERS ? 'active' : ''}`}
+          className={`ref-tab-btn ${activeTab === TABS.REFERRERS ? 'active' : ''}`}
           onClick={() => setActiveTab(TABS.REFERRERS)}
         >
           Referrers
         </button>
         <button
-          className={`tab-btn ${activeTab === TABS.CODES ? 'active' : ''}`}
+          className={`ref-tab-btn ${activeTab === TABS.CODES ? 'active' : ''}`}
           onClick={() => setActiveTab(TABS.CODES)}
         >
           Codes
         </button>
         <button
-          className={`tab-btn ${activeTab === TABS.REDEMPTIONS ? 'active' : ''}`}
+          className={`ref-tab-btn ${activeTab === TABS.REDEMPTIONS ? 'active' : ''}`}
           onClick={() => setActiveTab(TABS.REDEMPTIONS)}
         >
           Redemptions
@@ -373,13 +373,13 @@ const ReferralsManagement = () => {
               <button
                 key={filter}
                 type="button"
-                className={`btn-secondary btn-small ${applicationsFilter === filter ? 'active' : ''}`}
+                className={`ref-btn-secondary ref-btn-small ${applicationsFilter === filter ? 'active' : ''}`}
                 onClick={() => setApplicationsFilter(filter)}
               >
                 {APPLICATION_FILTER_LABELS[filter]}
               </button>
             ))}
-            <button type="button" className="btn-secondary btn-small" onClick={loadApplications} disabled={loadingApplications}>
+            <button type="button" className="ref-btn-secondary ref-btn-small" onClick={loadApplications} disabled={loadingApplications}>
               {loadingApplications ? 'Refreshing…' : 'Refresh'}
             </button>
           </div>
@@ -411,7 +411,7 @@ const ReferralsManagement = () => {
                         <td>{app.email}</td>
                         <td>{app.alias || '—'}</td>
                         <td>
-                          <span className={`status-badge status-badge--${(app.status || 'unknown').toLowerCase()}`}>
+                          <span className={`ref-status-badge ref-status-badge--${(app.status || 'unknown').toLowerCase()}`}>
                             {app.status || 'Unknown'}
                           </span>
                         </td>
@@ -421,27 +421,27 @@ const ReferralsManagement = () => {
                             confirmingRejectId === app.id ? (
                               <span className="ref-actions">
                                 <button
-                                  className="btn-danger btn-small"
+                                  className="ref-btn-danger ref-btn-small"
                                   onClick={() => handleConfirmReject(app.id)}
                                   disabled={isActioning}
                                 >
                                   {isActioning ? 'Rejecting…' : 'Confirm reject?'}
                                 </button>
-                                <button className="btn-secondary btn-small" onClick={handleCancelReject} disabled={isActioning}>
+                                <button className="ref-btn-secondary ref-btn-small" onClick={handleCancelReject} disabled={isActioning}>
                                   Cancel
                                 </button>
                               </span>
                             ) : (
                               <span className="ref-actions">
                                 <button
-                                  className="btn-primary btn-small"
+                                  className="ref-btn-primary ref-btn-small"
                                   onClick={() => handleApprove(app.id)}
                                   disabled={isActioning}
                                 >
                                   {isActioning ? 'Approving…' : 'Approve'}
                                 </button>
                                 <button
-                                  className="btn-secondary btn-small"
+                                  className="ref-btn-secondary ref-btn-small"
                                   onClick={() => handleRejectClick(app.id)}
                                   disabled={isActioning}
                                 >
@@ -456,7 +456,7 @@ const ReferralsManagement = () => {
                               <span className="ref-actions">
                                 <span className="ref-generated-code">{codeEntry.code}</span>
                                 <button
-                                  className="btn-primary btn-small"
+                                  className="ref-btn-primary ref-btn-small"
                                   onClick={() => handleSendEmailForRow(app.id)}
                                   disabled={isActioning || codeEntry.sent}
                                 >
@@ -465,7 +465,7 @@ const ReferralsManagement = () => {
                               </span>
                             ) : (
                               <button
-                                className="btn-primary btn-small"
+                                className="ref-btn-primary ref-btn-small"
                                 onClick={() => handleGenerateCodeForRow(app.id)}
                                 disabled={isActioning}
                               >
@@ -533,7 +533,7 @@ const ReferralsManagement = () => {
             </label>
 
             <div className="ref-actions">
-              <button type="submit" className="btn-primary" disabled={isSubmitting}>
+              <button type="submit" className="ref-btn-primary" disabled={isSubmitting}>
                 {isSubmitting ? 'Creating…' : 'Create Referrer'}
               </button>
             </div>
@@ -571,11 +571,11 @@ const ReferralsManagement = () => {
             </label>
             <div className="ref-actions">
               {!isReferrerLookupUnavailable && (
-                <button type="button" className="btn-secondary" onClick={loadReferrers} disabled={loadingReferrers || isSubmitting}>
+                <button type="button" className="ref-btn-secondary" onClick={loadReferrers} disabled={loadingReferrers || isSubmitting}>
                   {loadingReferrers ? 'Refreshing…' : 'Refresh Referrers'}
                 </button>
               )}
-              <button type="submit" className="btn-primary" disabled={isSubmitting}>
+              <button type="submit" className="ref-btn-primary" disabled={isSubmitting}>
                 {isSubmitting ? 'Generating…' : 'Generate Code'}
               </button>
             </div>
@@ -619,10 +619,10 @@ const ReferralsManagement = () => {
               />
             </label>
             <div className="ref-actions">
-              <button className="btn-secondary" onClick={handleFetchRedemptions} disabled={loadingRedemptions}>
+              <button className="ref-btn-secondary" onClick={handleFetchRedemptions} disabled={loadingRedemptions}>
                 {loadingRedemptions ? 'Loading…' : 'Load Redemptions'}
               </button>
-              <button className="btn-secondary" onClick={handleExportRedemptions} disabled={isSubmitting}>
+              <button className="ref-btn-secondary" onClick={handleExportRedemptions} disabled={isSubmitting}>
                 Export XLSX
               </button>
             </div>
@@ -655,11 +655,11 @@ const ReferralsManagement = () => {
                       <td>{row.redeemedAt ? new Date(row.redeemedAt).toLocaleString() : '—'}</td>
                       <td>
                         {row.payoutStatus === 'Pending' ? (
-                          <button className="btn-primary btn-small" onClick={() => openMarkPaidModal(row)}>
+                          <button className="ref-btn-primary ref-btn-small" onClick={() => openMarkPaidModal(row)}>
                             Mark Paid
                           </button>
                         ) : (
-                          <span className="status-paid">Paid</span>
+                          <span className="ref-status-paid">Paid</span>
                         )}
                       </td>
                     </tr>
@@ -691,10 +691,10 @@ const ReferralsManagement = () => {
               Backend currently does not accept notes for mark-paid. This field is informational only.
             </div>
             <div className="ref-actions">
-              <button className="btn-primary" onClick={handleConfirmMarkPaid} disabled={isSubmitting}>
+              <button className="ref-btn-primary" onClick={handleConfirmMarkPaid} disabled={isSubmitting}>
                 {isSubmitting ? 'Updating…' : 'Confirm Mark Paid'}
               </button>
-              <button className="btn-secondary" onClick={() => setShowMarkPaidModal(false)}>
+              <button className="ref-btn-secondary" onClick={() => setShowMarkPaidModal(false)}>
                 Cancel
               </button>
             </div>

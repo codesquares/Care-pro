@@ -1,0 +1,419 @@
+/* Shared styles for the caregiver vetting section (hub + 4 forms) */
+
+.vet-page {
+  padding: 2rem;
+  max-width: 900px;
+  margin: 0 auto;
+}
+
+.vet-header {
+  margin-bottom: 1.5rem;
+}
+
+.vet-back-link {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4rem;
+  color: var(--color-brand-deep);
+  font-size: 0.9rem;
+  font-weight: 600;
+  text-decoration: none;
+  cursor: pointer;
+  margin-bottom: 0.75rem;
+  background: none;
+  border: none;
+  padding: 0;
+}
+
+.vet-back-link:hover { text-decoration: underline; }
+
+.vet-header h1 {
+  font-size: 1.75rem;
+  color: #1a1a1a;
+  margin: 0;
+  display: flex;
+  align-items: center;
+  gap: 0.6rem;
+}
+
+.vet-header p {
+  color: #666;
+  font-size: 0.95rem;
+  margin: 0.5rem 0 0 0;
+  line-height: 1.5;
+}
+
+/* Alerts */
+.vet-alert {
+  padding: 1rem 1.25rem;
+  border-radius: 12px;
+  margin-bottom: 1.25rem;
+  display: flex;
+  align-items: flex-start;
+  gap: 0.85rem;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
+}
+
+.vet-alert i { font-size: 1.25rem; margin-top: 0.15rem; }
+.vet-alert p { margin: 0; }
+.vet-alert-close {
+  margin-left: auto;
+  background: none;
+  border: none;
+  font-size: 1.4rem;
+  cursor: pointer;
+  opacity: 0.7;
+  color: inherit;
+  padding: 0;
+}
+.vet-alert-close:hover { opacity: 1; }
+.vet-alert-error { background-color: #fee; border: 1px solid #fcc; color: #c62828; }
+.vet-alert-success { background-color: #e8f5e9; border: 1px solid #c8e6c9; color: #2e7d32; }
+.vet-alert-info { background-color: #e8f0fe; border: 1px solid #c9d3f7; color: #3c50b5; }
+
+/* Hub cards */
+.vet-cards {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+  gap: 1.25rem;
+}
+
+.vet-card {
+  background: white;
+  border-radius: 16px;
+  box-shadow: 0 4px 12px rgba(0,0,0,0.08);
+  padding: 1.5rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+  cursor: pointer;
+  transition: transform 0.15s, box-shadow 0.15s;
+  border: 2px solid transparent;
+}
+
+.vet-card:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 8px 20px rgba(0,0,0,0.12);
+}
+
+.vet-card--done { border-color: #c8e6c9; }
+.vet-card--attention { border-color: #ffe0a3; }
+
+.vet-card-top {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 0.75rem;
+}
+
+.vet-card-icon {
+  width: 44px;
+  height: 44px;
+  border-radius: 12px;
+  background: linear-gradient(135deg, var(--color-brand-deep) 0%, var(--color-brand-deep-2) 100%);
+  color: white;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 1.2rem;
+  flex-shrink: 0;
+}
+
+.vet-card h3 { margin: 0; font-size: 1.05rem; color: #1a1a1a; }
+.vet-card-status { font-size: 0.85rem; color: #666; line-height: 1.4; }
+.vet-card-arrow { color: #bbb; font-size: 1.1rem; }
+
+/* Badges */
+.vet-pkg-badge {
+  padding: 0.25rem 0.7rem;
+  border-radius: 20px;
+  font-size: 0.78rem;
+  font-weight: 700;
+  display: inline-block;
+  white-space: nowrap;
+}
+.vet-pkg-badge--active { background: #e8f5e9; color: #2e7d32; }
+.vet-pkg-badge--inactive { background: #fff8e1; color: #f9a825; }
+.vet-pkg-badge--type { background: #e8f0fe; color: #3c6bc5; }
+.vet-pkg-badge--danger { background: #fdecea; color: #c62828; }
+
+/* Loading / empty */
+.vet-pkg-loading {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 1rem;
+  padding: 3rem 1rem;
+  color: #666;
+}
+.vet-spinner {
+  width: 32px;
+  height: 32px;
+  border: 3px solid #e0e0e0;
+  border-top-color: var(--color-brand-deep);
+  border-radius: 50%;
+  animation: spin 0.7s linear infinite;
+}
+@keyframes spin { to { transform: rotate(360deg); } }
+.vet-pkg-empty {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.75rem;
+  padding: 2.5rem 1rem;
+  color: #999;
+  text-align: center;
+}
+.vet-pkg-empty i { font-size: 2.5rem; opacity: 0.4; }
+
+/* Panels / cards for forms */
+.vet-panel {
+  background: white;
+  border-radius: 16px;
+  box-shadow: 0 4px 12px rgba(0,0,0,0.08);
+  padding: 1.5rem;
+  margin-bottom: 1.5rem;
+}
+
+.vet-panel-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+  margin-bottom: 1rem;
+}
+.vet-panel-header h2 { margin: 0; font-size: 1.1rem; color: #1a1a1a; }
+
+/* Coverage / progress */
+.vet-progress-track {
+  height: 10px;
+  border-radius: 6px;
+  background: #eee;
+  overflow: hidden;
+  margin: 0.6rem 0;
+}
+.vet-progress-fill {
+  height: 100%;
+  background: linear-gradient(90deg, var(--color-brand-deep), var(--color-brand-deep-2));
+  transition: width 0.3s;
+}
+.vet-progress-fill--complete { background: linear-gradient(90deg, #43a047, #2e7d32); }
+
+.vet-explainer {
+  background: #f7f8fc;
+  border: 1px solid #e6e8f5;
+  border-radius: 10px;
+  padding: 0.9rem 1rem;
+  font-size: 0.85rem;
+  color: #555;
+  line-height: 1.5;
+  margin-bottom: 1rem;
+}
+
+/* Entity list items (guarantors, addresses, handles) */
+.vet-list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 0.85rem;
+}
+
+.vet-item {
+  border: 2px solid #eee;
+  border-radius: 12px;
+  padding: 1rem 1.25rem;
+}
+
+.vet-item-top {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 1rem;
+  margin-bottom: 0.5rem;
+}
+.vet-item-top strong { display: block; font-size: 1rem; color: #1a1a1a; }
+.vet-item-sub { font-size: 0.82rem; color: #888; }
+
+.vet-item-detail {
+  display: flex;
+  gap: 1.25rem;
+  flex-wrap: wrap;
+  font-size: 0.85rem;
+  color: #555;
+  margin-bottom: 0.6rem;
+}
+.vet-item-detail i { color: #999; margin-right: 0.3rem; }
+
+.vet-item-meta {
+  display: flex;
+  gap: 1rem;
+  font-size: 0.8rem;
+  color: #999;
+  margin-bottom: 0.5rem;
+  flex-wrap: wrap;
+}
+
+.vet-item-actions {
+  display: flex;
+  gap: 0.6rem;
+  justify-content: flex-end;
+  padding-top: 0.6rem;
+  border-top: 1px solid #f0f0f0;
+  flex-wrap: wrap;
+}
+
+.vet-field-error {
+  color: #c62828;
+  font-size: 0.8rem;
+  margin: 0.3rem 0 0 0;
+}
+
+.vet-cap-note {
+  font-size: 0.82rem;
+  color: #888;
+  margin-top: 0.5rem;
+}
+
+/* Buttons */
+.vet-btn-sm { padding: 0.5rem 1rem !important; font-size: 0.85rem !important; }
+.vet-btn-primary,
+.vet-btn-secondary,
+.vet-btn-danger {
+  padding: 0.75rem 1.6rem;
+  border: none;
+  border-radius: 10px;
+  font-size: 0.95rem;
+  font-weight: 600;
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+  transition: all 0.2s;
+  white-space: nowrap;
+}
+.vet-btn-primary {
+  background: linear-gradient(135deg, var(--color-brand-deep) 0%, var(--color-brand-deep-2) 100%);
+  color: white;
+  box-shadow: 0 4px 12px rgba(43, 57, 95, 0.3);
+}
+.vet-btn-primary:hover:not(:disabled) { transform: translateY(-2px); box-shadow: 0 6px 16px rgba(43, 57, 95, 0.4); }
+.vet-btn-primary:disabled { opacity: 0.55; cursor: not-allowed; transform: none; }
+.vet-btn-secondary { background-color: #f5f5f5; color: #333; }
+.vet-btn-secondary:hover:not(:disabled) { background-color: #e0e0e0; }
+.vet-btn-secondary:disabled { opacity: 0.6; cursor: not-allowed; }
+.vet-btn-danger { background-color: #fdecea; color: #c62828; }
+.vet-btn-danger:hover:not(:disabled) { background-color: #fadbd8; }
+.vet-btn-danger:disabled { opacity: 0.6; cursor: not-allowed; }
+
+/* Form */
+.vet-form-group { display: flex; flex-direction: column; gap: 0.5rem; margin-bottom: 1rem; }
+.vet-form-row { display: grid; grid-template-columns: 1fr 1fr; gap: 1rem; }
+.vet-form-group label { font-weight: 600; color: #333; font-size: 0.9rem; }
+.vet-required { color: #e53e3e; font-weight: bold; }
+.vet-form-group input,
+.vet-form-group select,
+.vet-form-group textarea {
+  padding: 0.7rem 0.85rem;
+  border: 2px solid #e0e0e0;
+  border-radius: 10px;
+  font-size: 0.95rem;
+  font-family: inherit;
+  width: 100%;
+  box-sizing: border-box;
+}
+.vet-form-group textarea { resize: vertical; min-height: 70px; }
+.vet-form-group input:focus,
+.vet-form-group select:focus,
+.vet-form-group textarea:focus {
+  outline: none;
+  border-color: var(--color-brand-deep);
+  box-shadow: 0 0 0 3px rgba(43, 57, 95, 0.1);
+}
+.vet-form-hint { font-size: 0.8rem; color: #888; margin: 0.2rem 0 0 0; }
+.vet-form-actions {
+  display: flex;
+  gap: 1rem;
+  justify-content: flex-end;
+  margin-top: 1rem;
+  padding-top: 1rem;
+  border-top: 1px solid #e0e0e0;
+}
+
+/* Modal */
+.vet-pkg-modal-overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(0,0,0,0.45);
+  z-index: 9000;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 1rem;
+}
+.vet-pkg-modal {
+  background: white;
+  border-radius: 16px;
+  width: 100%;
+  max-width: 640px;
+  max-height: 90vh;
+  overflow-y: auto;
+  box-shadow: 0 20px 60px rgba(0,0,0,0.3);
+}
+.vet-pkg-modal--sm { max-width: 480px; }
+.vet-pkg-modal-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 1.25rem 1.5rem;
+  border-bottom: 1px solid #eee;
+}
+.vet-pkg-modal-header h2 {
+  margin: 0;
+  font-size: 1.1rem;
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  color: #1a1a1a;
+}
+.vet-pkg-modal-close {
+  background: none;
+  border: none;
+  font-size: 1.3rem;
+  cursor: pointer;
+  color: #999;
+  padding: 0.25rem;
+  transition: color 0.2s;
+}
+.vet-pkg-modal-close:hover { color: #333; }
+.vet-pkg-modal-body { padding: 1.5rem; }
+.vet-pkg-modal-body p { margin: 0 0 1rem 0; color: #444; line-height: 1.5; }
+
+/* Radio / classification cards */
+.vet-type-options {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+  gap: 0.85rem;
+  margin-bottom: 1rem;
+}
+.vet-type-option {
+  border: 2px solid #e0e0e0;
+  border-radius: 12px;
+  padding: 1rem;
+  cursor: pointer;
+  transition: all 0.15s;
+}
+.vet-type-option:hover { border-color: #c9d3f7; background: #fafbff; }
+.vet-type-option--selected { border-color: var(--color-brand-deep); background: #f0f2ff; }
+.vet-type-option label { display: flex; align-items: center; gap: 0.6rem; font-weight: 600; color: #333; cursor: pointer; }
+
+@media (max-width: 768px) {
+  .vet-page { padding: 1.25rem; }
+  .vet-header h1 { font-size: 1.4rem; }
+  .vet-form-row { grid-template-columns: 1fr; }
+  .vet-form-actions { flex-direction: column; }
+  .vet-form-actions .vet-btn-primary,
+  .vet-form-actions .vet-btn-secondary { width: 100%; justify-content: center; }
+  .vet-item-actions { justify-content: flex-start; }
+}

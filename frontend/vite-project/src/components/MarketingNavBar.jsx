@@ -96,8 +96,8 @@ const MarketingNavBar = () => {
       // Logged out state - promotional nav
       return (
         <>
-          <Link to="/book-caregiver" onClick={closeMobileMenu}>
-            Hire a caregiver
+          <Link to="/marketplace" onClick={closeMobileMenu}>
+            Browse Care Packages
           </Link>
           <Link to="/become-caregiver" onClick={closeMobileMenu}>
             Become a caregiver

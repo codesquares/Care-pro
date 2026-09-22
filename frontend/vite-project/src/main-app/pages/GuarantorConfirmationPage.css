@@ -1,0 +1,112 @@
+.gcp-page {
+  min-height: 100vh;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: var(--surface-subtle);
+  padding: 1rem;
+}
+
+.gcp-card {
+  background: var(--surface);
+  border-radius: var(--radius-md);
+  padding: 2rem;
+  max-width: 460px;
+  width: 100%;
+  box-shadow: var(--shadow-rest);
+  text-align: center;
+}
+
+.gcp-icon {
+  font-size: 2.5rem;
+  margin-bottom: 0.75rem;
+}
+
+.gcp-title {
+  font-size: 1.5rem;
+  font-weight: var(--font-weight-bold);
+  margin-bottom: 0.5rem;
+  color: var(--ink-strong);
+}
+
+.gcp-invalid {
+  color: var(--muted);
+  margin-top: 1rem;
+}
+
+.gcp-success-box {
+  background: color-mix(in srgb, var(--success) 12%, white);
+  border: 1px solid color-mix(in srgb, var(--success) 35%, white);
+  border-radius: var(--radius-sm);
+  padding: 1rem;
+  margin-top: 1rem;
+  margin-bottom: 1.25rem;
+  color: var(--success);
+}
+
+.gcp-box-title {
+  margin: 0;
+  font-weight: var(--font-weight-semibold);
+}
+
+.gcp-box-message {
+  margin: 0.4rem 0 0;
+  font-size: 0.9rem;
+}
+
+.gcp-error-box {
+  background: #fef2f2;
+  border: 1px solid #fecaca;
+  border-radius: var(--radius-sm);
+  padding: 1rem;
+  margin-top: 1rem;
+  color: #b91c1c;
+}
+
+.gcp-help-text {
+  margin-top: 1rem;
+  font-size: 0.875rem;
+  color: var(--muted);
+}
+
+.gcp-help-link {
+  color: var(--color-brand-deep);
+}
+
+.gcp-intro {
+  color: var(--ink);
+  margin-top: 0.5rem;
+  line-height: var(--line-height-relaxed);
+}
+
+.gcp-confirm-btn {
+  margin-top: 1.25rem;
+  background: var(--color-brand-deep);
+  color: #fff;
+  border: none;
+  border-radius: var(--radius-sm);
+  padding: 0.7rem 1.6rem;
+  font-size: 1rem;
+  font-weight: var(--font-weight-semibold);
+  cursor: pointer;
+  transition: background-color var(--transition-fast);
+}
+
+.gcp-confirm-btn:hover:not(:disabled) {
+  background: var(--color-brand-deep-2);
+}
+
+.gcp-confirm-btn:disabled {
+  cursor: not-allowed;
+  opacity: 0.7;
+}
+
+.gcp-footer {
+  margin-top: 1.5rem;
+  font-size: 0.8rem;
+  color: var(--muted);
+}
+
+.gcp-footer-link {
+  color: var(--muted);
+}

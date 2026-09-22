@@ -149,49 +149,49 @@ const TokenVerificationModal = ({ withdrawal, onClose, onSubmit }) => {
   };
 
   return (
-    <div className="token-verification-modal-overlay">
-      <div className="token-verification-modal">
-        <div className="modal-header">
+    <div className="tvm-token-verification-modal-overlay">
+      <div className="tvm-token-verification-modal">
+        <div className="tvm-modal-header">
           <h2>{getModalTitle()}</h2>
-          <button className="close-btn" onClick={onClose}>&times;</button>
+          <button className="tvm-close-btn" onClick={onClose}>&times;</button>
         </div>
         
-        <div className="withdrawal-details">
-          <div className="detail-row">
-            <span className="label">Caregiver:</span>
-            <span className="value">{withdrawal.caregiverName}</span>
+        <div className="tvm-withdrawal-details">
+          <div className="tvm-detail-row">
+            <span className="tvm-label">Caregiver:</span>
+            <span className="tvm-value">{withdrawal.caregiverName}</span>
           </div>
-          <div className="detail-row">
-            <span className="label">Amount Requested:</span>
-            <span className="value">{formatCurrency(withdrawal.amountRequested)}</span>
+          <div className="tvm-detail-row">
+            <span className="tvm-label">Amount Requested:</span>
+            <span className="tvm-value">{formatCurrency(withdrawal.amountRequested)}</span>
           </div>
-          <div className="detail-row">
-            <span className="label">Service Charge:</span>
-            <span className="value">{formatCurrency(withdrawal.serviceCharge)}</span>
+          <div className="tvm-detail-row">
+            <span className="tvm-label">Service Charge:</span>
+            <span className="tvm-value">{formatCurrency(withdrawal.serviceCharge)}</span>
           </div>
-          <div className="detail-row">
-            <span className="label">Final Amount:</span>
-            <span className="value final-amount">{formatCurrency(withdrawal.finalAmount)}</span>
+          <div className="tvm-detail-row">
+            <span className="tvm-label">Final Amount:</span>
+            <span className="tvm-value tvm-final-amount">{formatCurrency(withdrawal.finalAmount)}</span>
           </div>
-          <div className="detail-row">
-            <span className="label">Bank Name:</span>
-            <span className="value">{withdrawal.bankName}</span>
+          <div className="tvm-detail-row">
+            <span className="tvm-label">Bank Name:</span>
+            <span className="tvm-value">{withdrawal.bankName}</span>
           </div>
-          <div className="detail-row">
-            <span className="label">Account Number:</span>
-            <span className="value">{withdrawal.accountNumber}</span>
+          <div className="tvm-detail-row">
+            <span className="tvm-label">Account Number:</span>
+            <span className="tvm-value">{withdrawal.accountNumber}</span>
           </div>
-          <div className="detail-row">
-            <span className="label">Account Name:</span>
-            <span className="value">{withdrawal.accountName}</span>
+          <div className="tvm-detail-row">
+            <span className="tvm-label">Account Name:</span>
+            <span className="tvm-value">{withdrawal.accountName}</span>
           </div>
-          <div className="detail-row">
-            <span className="label">Verification Token:</span>
-            <span className="value token">{withdrawal.token}</span>
+          <div className="tvm-detail-row">
+            <span className="tvm-label">Verification Token:</span>
+            <span className="tvm-value tvm-token">{withdrawal.token}</span>
           </div>
-          <div className="detail-row">
-            <span className="label">Status:</span>
-            <span className={`value status status-${withdrawal.status.toLowerCase()}`}>{withdrawal.status}</span>
+          <div className="tvm-detail-row">
+            <span className="tvm-label">Status:</span>
+            <span className={`tvm-value tvm-status tvm-status-${withdrawal.status.toLowerCase()}`}>{withdrawal.status}</span>
           </div>
         </div>
 
@@ -201,36 +201,36 @@ const TokenVerificationModal = ({ withdrawal, onClose, onSubmit }) => {
         ) : financialSummary ? (
           <div className="financial-summary-section" style={{ margin: '16px 0', padding: '14px', background: '#f0f7ff', borderRadius: '8px', border: '1px solid #d0e3f7' }}>
             <h4 style={{ margin: '0 0 10px', fontSize: '0.95em', color: '#1a3d5c' }}>Caregiver Financial Summary</h4>
-            <div className="detail-row">
-              <span className="label">Total Earned:</span>
-              <span className="value">{formatCurrency(financialSummary.totalEarned ?? 0)}</span>
+            <div className="tvm-detail-row">
+              <span className="tvm-label">Total Earned:</span>
+              <span className="tvm-value">{formatCurrency(financialSummary.totalEarned ?? 0)}</span>
             </div>
-            <div className="detail-row">
-              <span className="label">Withdrawable Balance:</span>
-              <span className="value" style={{ fontWeight: 600, color: '#27ae60' }}>{formatCurrency(financialSummary.withdrawableBalance ?? 0)}</span>
+            <div className="tvm-detail-row">
+              <span className="tvm-label">Withdrawable Balance:</span>
+              <span className="tvm-value" style={{ fontWeight: 600, color: '#27ae60' }}>{formatCurrency(financialSummary.withdrawableBalance ?? 0)}</span>
             </div>
-            <div className="detail-row">
-              <span className="label">Pending Balance:</span>
-              <span className="value">{formatCurrency(financialSummary.pendingBalance ?? 0)}</span>
+            <div className="tvm-detail-row">
+              <span className="tvm-label">Pending Balance:</span>
+              <span className="tvm-value">{formatCurrency(financialSummary.pendingBalance ?? 0)}</span>
             </div>
-            <div className="detail-row">
-              <span className="label">Total Withdrawn:</span>
-              <span className="value">{formatCurrency(financialSummary.totalWithdrawn ?? 0)}</span>
+            <div className="tvm-detail-row">
+              <span className="tvm-label">Total Withdrawn:</span>
+              <span className="tvm-value">{formatCurrency(financialSummary.totalWithdrawn ?? 0)}</span>
             </div>
             {financialSummary.bankAccount ? (
               <>
                 <h4 style={{ margin: '10px 0 6px', fontSize: '0.9em', color: '#1a3d5c' }}>Saved Bank Account</h4>
-                <div className="detail-row">
-                  <span className="label">Bank:</span>
-                  <span className="value">{financialSummary.bankAccount.bankName}</span>
+                <div className="tvm-detail-row">
+                  <span className="tvm-label">Bank:</span>
+                  <span className="tvm-value">{financialSummary.bankAccount.bankName}</span>
                 </div>
-                <div className="detail-row">
-                  <span className="label">Account No:</span>
-                  <span className="value">{financialSummary.bankAccount.accountNumber}</span>
+                <div className="tvm-detail-row">
+                  <span className="tvm-label">Account No:</span>
+                  <span className="tvm-value">{financialSummary.bankAccount.accountNumber}</span>
                 </div>
-                <div className="detail-row">
-                  <span className="label">Account Name:</span>
-                  <span className="value">{financialSummary.bankAccount.accountName}</span>
+                <div className="tvm-detail-row">
+                  <span className="tvm-label">Account Name:</span>
+                  <span className="tvm-value">{financialSummary.bankAccount.accountName}</span>
                 </div>
               </>
             ) : (
@@ -240,17 +240,17 @@ const TokenVerificationModal = ({ withdrawal, onClose, onSubmit }) => {
         ) : null}
         
         {withdrawal.status === 'Pending' && (
-          <div className="action-section">
+          <div className="tvm-action-section">
             {!activeAction ? (
-              <div className="action-buttons">
+              <div className="tvm-action-buttons">
                 <button 
-                  className="btn verify-btn" 
+                  className="tvm-btn tvm-verify-btn" 
                   onClick={() => setActiveAction('verify')}
                 >
                   Verify Request
                 </button>
                 <button 
-                  className="btn reject-btn" 
+                  className="tvm-btn tvm-reject-btn" 
                   onClick={() => setActiveAction('reject')}
                 >
                   Reject Request
@@ -258,7 +258,7 @@ const TokenVerificationModal = ({ withdrawal, onClose, onSubmit }) => {
               </div>
             ) : (
               <form onSubmit={handleSubmit}>
-                <div className="form-group">
+                <div className="tvm-form-group">
                   <label>Admin Notes:</label>
                   <textarea
                     value={notes}
@@ -269,20 +269,20 @@ const TokenVerificationModal = ({ withdrawal, onClose, onSubmit }) => {
                     }
                     rows="3"
                   ></textarea>
-                  {error && <span className="error">{error}</span>}
+                  {error && <span className="tvm-error">{error}</span>}
                 </div>
                 
-                <div className="form-actions">
+                <div className="tvm-form-actions">
                   <button 
                     type="button" 
-                    className="btn cancel-btn" 
+                    className="tvm-btn tvm-cancel-btn" 
                     onClick={() => setActiveAction(null)}
                   >
                     Back
                   </button>
                   <button
                     type="submit"
-                    className={`btn ${activeAction === 'verify' ? 'confirm-verify-btn' : 'confirm-reject-btn'}`}
+                    className={`tvm-btn ${activeAction === 'verify' ? 'tvm-confirm-verify-btn' : 'tvm-confirm-reject-btn'}`}
                     disabled={isSubmitting}
                   >
                     {isSubmitting
@@ -296,10 +296,10 @@ const TokenVerificationModal = ({ withdrawal, onClose, onSubmit }) => {
         )}
         
         {withdrawal.status === 'Verified' && (
-          <div className="action-section">
-            <div className="action-buttons">
+          <div className="tvm-action-section">
+            <div className="tvm-action-buttons">
               <button 
-                className="btn complete-btn" 
+                className="tvm-btn tvm-complete-btn" 
                 onClick={() => handleAction('complete')}
               >
                 Mark as Completed
