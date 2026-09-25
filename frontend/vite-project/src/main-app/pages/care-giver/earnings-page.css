@@ -23,7 +23,7 @@
 }
 
 .withdraw-earnings-btn {
-  background: #3498db;
+  background: var(--color-brand-deep);
   color: white;
   padding: 14px 28px;
   border-radius: 8px;
@@ -33,13 +33,13 @@
   transition: all 0.3s ease;
   border: none;
   cursor: pointer;
-  box-shadow: 0 2px 8px rgba(52, 152, 219, 0.2);
+  box-shadow: 0 2px 8px rgba(43, 57, 95, 0.2);
 }
 
 .withdraw-earnings-btn:hover {
-  background: #2980b9;
+  background: var(--color-brand-deep-2);
   transform: translateY(-1px);
-  box-shadow: 0 4px 12px rgba(52, 152, 219, 0.3);
+  box-shadow: 0 4px 12px rgba(43, 57, 95, 0.3);
 }
 
 /* Stats Grid */
@@ -230,17 +230,17 @@
 }
 
 .chart-bar {
-  background: linear-gradient(180deg, #3498db, #2980b9);
+  background: linear-gradient(180deg, var(--color-brand-deep), var(--color-brand-deep-2));
   border-radius: 6px 6px 0 0;
   min-height: 24px;
   flex: 1;
   max-width: 32px;
   transition: all 0.3s ease;
-  box-shadow: 0 2px 4px rgba(52, 152, 219, 0.2);
+  box-shadow: 0 2px 4px rgba(43, 57, 95, 0.2);
 }
 
 .chart-bar:hover {
-  background: linear-gradient(180deg, #2980b9, #1f4e79);
+  background: linear-gradient(180deg, var(--color-brand-deep-2), var(--color-brand-deep-2));
   transform: scaleY(1.05);
 }
 
@@ -331,7 +331,7 @@
 }
 
 .transactions-table tbody tr:hover {
-  background-color: rgba(52, 152, 219, 0.02);
+  background-color: rgba(43, 57, 95, 0.02);
 }
 
 .activity-cell {

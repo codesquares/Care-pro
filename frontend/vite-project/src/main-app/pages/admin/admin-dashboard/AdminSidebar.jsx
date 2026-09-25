@@ -28,6 +28,13 @@ const ALL_NAV_GROUPS = [
     items: [
       { to: '/app/admin/orders',              icon: 'fa-shopping-cart',  label: 'Orders',              policy: 'finance' },
       { to: '/app/admin/gigs',                icon: 'fa-briefcase',      label: 'Gigs',                policy: 'operations' },
+      { to: '/app/admin/packages',            icon: 'fa-box-open',       label: 'Care Packages',       policy: 'operations' },
+      // Retired — Care Matching is superseded by Assignments (route now shows a FeatureMovedNotice).
+      // { to: '/app/admin/care-matching',       icon: 'fa-search-location',label: 'Care Matching',       policy: 'operations' },
+      { to: '/app/admin/assignments',         icon: 'fa-user-check',     label: 'Assignments',         policy: 'operations' },
+      { to: '/app/admin/pay-rates',           icon: 'fa-money-check-alt',label: 'Pay Rates',           policy: 'operations' },
+      { to: '/app/admin/payroll',             icon: 'fa-file-invoice-dollar', label: 'Payroll',        policy: 'operations' },
+      { to: '/app/admin/guarantors',          icon: 'fa-user-shield',    label: 'Guarantors',          policy: 'operations' },
       { to: '/app/admin/withdrawals',         icon: 'fa-wallet',         label: 'Withdrawals',         policy: 'finance' },
       { to: '/app/admin/refunds',             icon: 'fa-money-bill-wave',label: 'Refunds',             policy: 'financeOrOperations' },
         { to: '/app/admin/referrals',           icon: 'fa-user-plus',      label: 'Referrals',           policy: 'finance' },

@@ -109,7 +109,7 @@
   height: 36px;
   min-width: 36px;
   border-radius: 50%;
-  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  background: linear-gradient(135deg, var(--color-brand-deep) 0%, var(--color-brand-accent) 100%);
   color: #fff;
   display: flex;
   align-items: center;
@@ -125,7 +125,7 @@
 
 .avatar:hover {
   transform: scale(1.05);
-  box-shadow: 0 2px 8px rgba(102, 126, 234, 0.3);
+  box-shadow: 0 2px 8px color-mix(in srgb, var(--color-brand-deep) 30%, transparent);
 }
 
 .avatar-initials {
@@ -279,7 +279,7 @@
 }
 
 .mobile-menu-links li.caregiver-notifications-item {
-  color: #007bff;
+  color: var(--color-brand-deep);
   padding: 0;
   overflow: visible;
 }
@@ -434,7 +434,7 @@
   .text-link {
     font-size: 0.875rem;
     padding: 8px 14px;
-    color: #2c3e50 !important;
+    color: var(--muted) !important;
     font-weight: 500;
     cursor: pointer;
     white-space: nowrap;
@@ -445,11 +445,11 @@
 
   .text-link:hover {
     background-color: #f8f9fa;
-    color: #007bff !important;
+    color: var(--color-brand-deep) !important;
   }
 
   .text-link:hover .nav-link-icon {
-    color: #007bff;
+    color: var(--color-brand-deep);
   }
 
   .nav-link-icon {
@@ -707,7 +707,7 @@
 
   .nav-user-name {
     font-size: 0.875rem;
-    color: #2c3e50;
+    color: var(--ink-strong);
     font-weight: 500;
     white-space: nowrap;
     overflow: hidden;
@@ -727,7 +727,7 @@
     display: flex !important;
     align-items: center !important;
     justify-content: center !important;
-    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%) !important;
+    background: linear-gradient(135deg, var(--color-brand-deep) 0%, var(--color-brand-accent) 100%) !important;
     color: white !important;
     font-weight: 600 !important;
     position: relative !important;
@@ -791,9 +791,9 @@
 }
 
 .search-input:focus {
-  border-color: #007bff;
+  border-color: var(--color-brand-deep);
   background-color: #ffffff;
-  box-shadow: 0 0 0 3px rgba(0, 123, 255, 0.1);
+  box-shadow: var(--shadow-focus);
 }
 
 .search-input::placeholder {
@@ -855,9 +855,9 @@
 }
 
 .mobile-search-input:focus {
-  border-color: #007bff;
+  border-color: var(--color-brand-deep);
   background-color: #ffffff;
-  box-shadow: 0 0 0 2px rgba(0, 123, 255, 0.1);
+  box-shadow: 0 0 0 2px color-mix(in srgb, var(--color-brand-deep) 24%, transparent);
 }
 
 .mobile-search-input::placeholder {

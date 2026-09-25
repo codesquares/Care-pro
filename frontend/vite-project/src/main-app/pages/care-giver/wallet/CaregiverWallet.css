@@ -30,7 +30,7 @@
 
 /* Total Earned Banner */
 .cg-wallet__total-banner {
-  background: linear-gradient(135deg, #00B4A6 0%, #009688 100%);
+  background: linear-gradient(135deg, var(--color-brand-deep) 0%, var(--color-brand-deep-2) 100%);
   border-radius: 14px;
   padding: 24px 28px;
   display: flex;
@@ -189,9 +189,9 @@
   background: #f0f0f0;
 }
 .cg-wallet__ledger-filter--active {
-  background: #00B4A6;
+  background: var(--color-brand-deep);
   color: #fff;
-  border-color: #00B4A6;
+  border-color: var(--color-brand-deep);
   font-weight: 600;
 }
 .cg-wallet__ledger-empty {
@@ -271,8 +271,8 @@
 }
 .cg-wallet__load-more-btn {
   background: none;
-  border: 1px solid #00B4A6;
-  color: #00B4A6;
+  border: 1px solid var(--color-brand-deep);
+  color: var(--color-brand-deep);
   padding: 8px 24px;
   border-radius: 8px;
   font-size: 13px;
@@ -281,7 +281,7 @@
   transition: all 0.2s;
 }
 .cg-wallet__load-more-btn:hover {
-  background: #00B4A6;
+  background: var(--color-brand-deep);
   color: #fff;
 }
 

@@ -13,7 +13,7 @@
 }
 
 .back-link {
-  color: #3498db;
+  color: var(--color-brand-deep);
   text-decoration: none;
   font-size: 16px;
   font-weight: 500;
@@ -25,7 +25,7 @@
 }
 
 .back-link:hover {
-  color: #2980b9;
+  color: var(--color-brand-deep-2);
 }
 
 .withdraw-title {
@@ -91,8 +91,8 @@
 
 .form-input:focus {
   outline: none;
-  border-color: #3498db;
-  box-shadow: 0 0 0 3px rgba(52, 152, 219, 0.1);
+  border-color: var(--color-brand-deep);
+  box-shadow: 0 0 0 3px rgba(43, 57, 95, 0.1);
 }
 
 .form-input.error {
@@ -179,7 +179,7 @@
 }
 
 .withdraw-submit-btn {
-  background: #3498db;
+  background: var(--color-brand-deep);
   color: white;
   border: none;
   border-radius: 8px;
@@ -192,7 +192,7 @@
 }
 
 .withdraw-submit-btn:hover:not(:disabled) {
-  background: #2980b9;
+  background: var(--color-brand-deep-2);
   transform: translateY(-1px);
 }
 
@@ -313,7 +313,7 @@
 /* Focus states for accessibility */
 .back-link:focus,
 .withdraw-submit-btn:focus {
-  outline: 2px solid #3498db;
+  outline: 2px solid var(--color-brand-deep);
   outline-offset: 2px;
 }
 

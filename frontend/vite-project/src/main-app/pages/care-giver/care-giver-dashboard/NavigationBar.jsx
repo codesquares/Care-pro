@@ -3,7 +3,7 @@ import { useNavigate } from "react-router-dom";
 import "./NavigationBar.css";
 import logo from '../../../../assets/careproLogo.svg';
 import hear from "../../../../assets/main-app/heart.svg";
-import { FaBell, FaEnvelope, FaReceipt, FaHome, FaCog, FaStore, FaClipboardList, FaBriefcase, FaChevronDown, FaShoppingBag, FaWallet, FaPlusCircle } from "react-icons/fa";
+import { FaBell, FaEnvelope, FaHome, FaCog, FaStore, FaBriefcase, FaChevronDown, FaWallet, FaPlusCircle, FaClipboardCheck, FaTasks } from "react-icons/fa";
 import NotificationBell from "../../../components/notifications/NotificationBell";
 import { useAuth } from "../../../context/AuthContext";
 import { getInitials } from "../../../utils/avatarHelpers";
@@ -121,22 +121,22 @@ const NavigationBar = () => {
                   <span>Manage Gigs</span>
                 </div>
               </li>
-              <li onClick={() => { navigate(`${basePath}/orders`); setMobileMenuOpen(false); }}>
+              <li onClick={() => { navigate(`${basePath}/assignments`); setMobileMenuOpen(false); }}>
                 <div className="menu-item-content">
-                  <FaReceipt className="mobile-menu-icon" />
-                  <span>All Orders</span>
-                </div>
-              </li>
-              <li onClick={() => { navigate(`${basePath}/client-requests`); setMobileMenuOpen(false); }}>
-                <div className="menu-item-content">
-                  <span className="mobile-menu-icon" style={{ fontSize: '16px' }}>📋</span>
-                  <span>Client Requests</span>
+                  <FaTasks className="mobile-menu-icon" />
+                  <span>My Assignments</span>
                 </div>
               </li>
               <li onClick={() => { navigate(`${basePath}/wallet`); setMobileMenuOpen(false); }}>
                 <div className="menu-item-content">
                   <FaWallet className="mobile-menu-icon" />
                   <span>Wallet</span>
+                </div>
+              </li>
+              <li onClick={() => { navigate(`${basePath}/vetting`); setMobileMenuOpen(false); }}>
+                <div className="menu-item-content">
+                  <FaClipboardCheck className="mobile-menu-icon" />
+                  <span>Vetting</span>
                 </div>
               </li>
               <li onClick={() => { navigate(`${basePath}/subscriptions`); setMobileMenuOpen(false); }}>
@@ -201,13 +201,9 @@ const NavigationBar = () => {
             <FaHome className="nav-link-icon" />
             Dashboard
           </li>
-          <li className="nav-link text-link" onClick={() => navigate(`${basePath}/orders`)}>
-            <FaShoppingBag className="nav-link-icon" />
-            Orders
-          </li>
-          <li className="nav-link text-link" onClick={() => navigate(`${basePath}/client-requests`)}>
-            <FaClipboardList className="nav-link-icon" />
-            Request
+          <li className="nav-link text-link" onClick={() => navigate(`${basePath}/assignments`)}>
+            <FaTasks className="nav-link-icon" />
+            Assignments
           </li>
           <li className="nav-link text-link" onClick={() => navigate(`${basePath}/create-gigs`)}>
             <FaPlusCircle className="nav-link-icon" />
@@ -220,6 +216,10 @@ const NavigationBar = () => {
           <li className="nav-link text-link" onClick={() => navigate(`${basePath}/wallet`)}>
             <FaWallet className="nav-link-icon" />
             Wallet
+          </li>
+          <li className="nav-link text-link" onClick={() => navigate(`${basePath}/vetting`)}>
+            <FaClipboardCheck className="nav-link-icon" />
+            Vetting
           </li>
         </ul>
 

@@ -103,9 +103,9 @@ const ClientManagement = () => {
 
   if (loading) {
     return (
-      <div className="client-management">
-        <div className="loading-container">
-          <div className="spinner"></div>
+      <div className="clm-client-management">
+        <div className="clm-loading-container">
+          <div className="clm-spinner"></div>
           <p>Loading clients...</p>
         </div>
       </div>
@@ -113,28 +113,28 @@ const ClientManagement = () => {
   }
 
   return (
-    <div className="client-management">
-      <div className="page-header">
+    <div className="clm-client-management">
+      <div className="clm-page-header">
         <div>
           <h1>Client Management</h1>
           <p>Manage and monitor all clients in the system</p>
         </div>
-        <div className="export-bar">
+        <div className="clm-export-bar">
           <input
             type="date"
-            className="export-date-input"
+            className="clm-export-date-input"
             value={exportDates.startDate}
             onChange={(e) => setExportDates(p => ({ ...p, startDate: e.target.value }))}
             title="Export start date (optional)"
           />
           <input
             type="date"
-            className="export-date-input"
+            className="clm-export-date-input"
             value={exportDates.endDate}
             onChange={(e) => setExportDates(p => ({ ...p, endDate: e.target.value }))}
             title="Export end date (optional)"
           />
-          <button className="btn-export" onClick={handleExport} disabled={exporting}>
+          <button className="clm-btn-export" onClick={handleExport} disabled={exporting}>
             <i className="fas fa-file-excel"></i>
             {exporting ? 'Exporting…' : 'Export Excel'}
           </button>
@@ -142,7 +142,7 @@ const ClientManagement = () => {
       </div>
 
       {exportError && (
-        <div className="error-message">
+        <div className="clm-error-message">
           <i className="fas fa-exclamation-triangle"></i>
           <p>{exportError}</p>
           <button onClick={() => setExportError(null)}>Dismiss</button>
@@ -150,36 +150,36 @@ const ClientManagement = () => {
       )}
 
       {error && (
-        <div className="error-message">
+        <div className="clm-error-message">
           <i className="fas fa-exclamation-triangle"></i>
           <p>{error}</p>
           <button onClick={fetchClients}>Retry</button>
         </div>
       )}
 
-      <div className="stats-summary">
-        <div className="stat-box">
+      <div className="clm-stats-summary">
+        <div className="clm-stat-box">
           <h3>Total Clients</h3>
-          <p className="stat-value">{clients.length}</p>
+          <p className="clm-stat-value">{clients.length}</p>
         </div>
-        <div className="stat-box">
+        <div className="clm-stat-box">
           <h3>Active</h3>
-          <p className="stat-value">{clients.filter(c => c.status).length}</p>
+          <p className="clm-stat-value">{clients.filter(c => c.status).length}</p>
         </div>
-        <div className="stat-box">
+        <div className="clm-stat-box">
           <h3>Inactive</h3>
-          <p className="stat-value">{clients.filter(c => !c.status).length}</p>
+          <p className="clm-stat-value">{clients.filter(c => !c.status).length}</p>
         </div>
-        <div className="stat-box">
+        <div className="clm-stat-box">
           <h3>Activity Rate</h3>
-          <p className="stat-value">
+          <p className="clm-stat-value">
             {clients.length > 0 ? ((clients.filter(c => c.status).length / clients.length) * 100).toFixed(1) : 0}%
           </p>
         </div>
       </div>
 
-      <div className="filters-section">
-        <div className="search-box">
+      <div className="clm-filters-section">
+        <div className="clm-search-box">
           <i className="fas fa-search"></i>
           <input
             type="text"
@@ -189,7 +189,7 @@ const ClientManagement = () => {
           />
         </div>
 
-        <div className="filter-controls">
+        <div className="clm-filter-controls">
           <select
             value={statusFilter}
             onChange={(e) => setStatusFilter(e.target.value)}
@@ -200,7 +200,7 @@ const ClientManagement = () => {
           </select>
 
           <button
-            className="btn-reset"
+            className="clm-btn-reset"
             onClick={() => {
               setSearchTerm('');
               setStatusFilter('all');
@@ -211,8 +211,8 @@ const ClientManagement = () => {
         </div>
       </div>
 
-      <div className="clients-table-container">
-        <table className="clients-table">
+      <div className="clm-clients-table-container">
+        <table className="clm-clients-table">
           <thead>
             <tr>
               <th>Profile</th>
@@ -239,7 +239,7 @@ const ClientManagement = () => {
                     <img
                       src={client.profileImage || '/default-avatar.png'}
                       alt={`${client.firstName} ${client.lastName}`}
-                      className="profile-image"
+                      className="clm-profile-image"
                     />
                   </td>
                   <td>{`${client.firstName} ${client.lastName}`}</td>
@@ -247,14 +247,14 @@ const ClientManagement = () => {
                   <td>{client.phoneNo}</td>
                   <td>{client.homeAddress || 'N/A'}</td>
                   <td>
-                    <span className={`status-badge ${client.status ? 'active' : 'inactive'}`}>
+                    <span className={`clm-status-badge ${client.status ? 'active' : 'inactive'}`}>
                       {client.status ? 'Active' : 'Inactive'}
                     </span>
                   </td>
                   <td>{new Date(client.createdAt).toLocaleDateString()}</td>
                   <td>
                     <button
-                      className="btn-view"
+                      className="clm-btn-view"
                       onClick={() => handleViewDetails(client.id)}
                     >
                       View Details
@@ -269,50 +269,50 @@ const ClientManagement = () => {
 
       {/* Modal for viewing client details */}
       {showModal && selectedClient && (
-        <div className="modal-overlay" onClick={closeModal}>
-          <div className="modal-content client-details-modal" onClick={(e) => e.stopPropagation()}>
-            <button className="modal-close" onClick={closeModal}>
+        <div className="clm-modal-overlay" onClick={closeModal}>
+          <div className="clm-modal-content clm-client-details-modal" onClick={(e) => e.stopPropagation()}>
+            <button className="clm-modal-close" onClick={closeModal}>
               <i className="fas fa-times"></i>
             </button>
             
-            <div className="modal-header">
+            <div className="clm-modal-header">
               <img
                 src={selectedClient.profileImage || '/default-avatar.png'}
                 alt={`${selectedClient.firstName} ${selectedClient.lastName}`}
-                className="modal-profile-image"
+                className="clm-modal-profile-image"
               />
               <div>
                 <h2>{`${selectedClient.firstName} ${selectedClient.middleName || ''} ${selectedClient.lastName}`}</h2>
-                <p className="modal-email">{selectedClient.email}</p>
+                <p className="clm-modal-email">{selectedClient.email}</p>
               </div>
             </div>
 
-            <div className="modal-body">
-              <div className="detail-section">
+            <div className="clm-modal-body">
+              <div className="clm-detail-section">
                 <h3>Contact Information</h3>
                 <p><strong>Phone:</strong> {selectedClient.phoneNo}</p>
                 <p><strong>Email:</strong> {selectedClient.email}</p>
                 <p><strong>Home Address:</strong> {selectedClient.homeAddress || 'N/A'}</p>
               </div>
 
-              <div className="detail-section">
+              <div className="clm-detail-section">
                 <h3>Account Status</h3>
                 <p><strong>Status:</strong> 
-                  <span className={`status-badge ${selectedClient.status ? 'active' : 'inactive'}`}>
+                  <span className={`clm-status-badge ${selectedClient.status ? 'active' : 'inactive'}`}>
                     {selectedClient.status ? 'Active' : 'Inactive'}
                   </span>
                 </p>
                 <p><strong>Role:</strong> {selectedClient.role}</p>
               </div>
 
-              <div className="detail-section">
+              <div className="clm-detail-section">
                 <h3>Account Information</h3>
                 <p><strong>Created At:</strong> {new Date(selectedClient.createdAt).toLocaleString()}</p>
                 <p><strong>User ID:</strong> {selectedClient.id}</p>
               </div>
 
               {/* Danger Zone */}
-              <div className="detail-section" style={{ border: '1px solid #fca5a5', borderRadius: '8px', padding: '1rem', background: '#fef2f2' }}>
+              <div className="clm-detail-section" style={{ border: '1px solid #fca5a5', borderRadius: '8px', padding: '1rem', background: '#fef2f2' }}>
                 <h3 style={{ color: '#b91c1c', marginTop: 0 }}>Danger Zone — Delete Account</h3>
                 {deleteResult?.success ? (
                   <div style={{ color: '#166534', background: '#dcfce7', borderRadius: '6px', padding: '0.75rem' }}>

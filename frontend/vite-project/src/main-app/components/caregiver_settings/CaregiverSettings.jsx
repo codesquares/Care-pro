@@ -68,7 +68,7 @@ const CaregiverSettings = () => {
           return;
         }
 
-        const response = await fetch(`${config.BASE_URL}/CareGivers/${userId}`, {
+        const response = await fetch(`${config.BASE_URL}/CareGivers/me`, {
           headers: {
             'Authorization': `Bearer ${localStorage.getItem('authToken') || ''}`
           }
@@ -313,9 +313,9 @@ const CaregiverSettings = () => {
         </div>
 
         <div className="settings-panel">
-          <div className="settings-card">
+          <div className="cgs-settings-card">
             <h3>Personal Information</h3>
-            <div className="form-group">
+            <div className="cgs-form-group">
               <label>Full Name</label>
               <input 
                 type="text" 
@@ -323,7 +323,7 @@ const CaregiverSettings = () => {
                 readOnly 
               />
             </div>
-            <div className="form-group">
+            <div className="cgs-form-group">
               <label>Email</label>
               <input 
                 type="email" 
@@ -331,14 +331,14 @@ const CaregiverSettings = () => {
                 readOnly 
               />
             </div>
-            <button className="save-changes-btn" disabled>
+            <button className="cgs-save-changes-btn" disabled>
               Save Changes
             </button>
           </div>
 
-          <div className="settings-card">
+          <div className="cgs-settings-card">
             <h3>Update Password</h3>
-            <div className="form-group">
+            <div className="cgs-form-group">
               <label>Current Password</label>
               <input
                 type="password"
@@ -347,7 +347,7 @@ const CaregiverSettings = () => {
                 onChange={(e) => setCurrentPassword(e.target.value)}
               />
             </div>
-            <div className="form-group">
+            <div className="cgs-form-group">
               <label>New Password</label>
               <input
                 type="password"
@@ -356,7 +356,7 @@ const CaregiverSettings = () => {
                 onChange={(e) => setNewPassword(e.target.value)}
               />
             </div>
-            <div className="form-group">
+            <div className="cgs-form-group">
               <label>Confirm New Password</label>
               <input
                 type="password"
@@ -365,44 +365,44 @@ const CaregiverSettings = () => {
                 onChange={(e) => setConfirmNewPassword(e.target.value)}
               />
             </div>
-            <p className="password-hint">
+            <p className="cgs-password-hint">
               * 8 characters or longer. Combine upper and lowercase letters and numbers.
             </p>
-            {passwordMessage && <p className="status-message">{passwordMessage}</p>}
-            <button className="save-changes-btn" onClick={handlePasswordChange}>
+            {passwordMessage && <p className="cgs-status-message">{passwordMessage}</p>}
+            <button className="cgs-save-changes-btn" onClick={handlePasswordChange}>
               Save Changes
             </button>
           </div>
 
-          <div className="settings-card">
+          <div className="cgs-settings-card">
             <h3>Bank Account Details</h3>
             {bankLoading ? (
               <p>Loading bank details...</p>
             ) : hasSavedBank && !isEditingBank ? (
               <>
-                <div className="form-group">
+                <div className="cgs-form-group">
                   <label>Full Name</label>
                   <input type="text" value={bankForm.fullName} readOnly />
                 </div>
-                <div className="form-group">
+                <div className="cgs-form-group">
                   <label>Bank Name</label>
                   <input type="text" value={bankForm.bankName} readOnly />
                 </div>
-                <div className="form-group">
+                <div className="cgs-form-group">
                   <label>Account Number</label>
                   <input type="text" value={bankForm.accountNumber} readOnly />
                 </div>
-                <div className="form-group">
+                <div className="cgs-form-group">
                   <label>Account Name</label>
                   <input type="text" value={bankForm.accountName} readOnly />
                 </div>
-                <button className="save-changes-btn" onClick={() => setIsEditingBank(true)}>
+                <button className="cgs-save-changes-btn" onClick={() => setIsEditingBank(true)}>
                   Edit Bank Details
                 </button>
               </>
             ) : (
               <>
-                <div className="form-group">
+                <div className="cgs-form-group">
                   <label>Full Name</label>
                   <input
                     type="text"
@@ -411,13 +411,13 @@ const CaregiverSettings = () => {
                     value={bankForm.fullName}
                     onChange={handleBankInputChange}
                   />
-                  {bankErrors.fullName && <p className="status-message" style={{ color: 'red' }}>{bankErrors.fullName}</p>}
+                  {bankErrors.fullName && <p className="cgs-status-message" style={{ color: 'red' }}>{bankErrors.fullName}</p>}
                 </div>
-                <div className="form-group">
+                <div className="cgs-form-group">
                   <label>Bank Name</label>
                   <select
                     name="bankName"
-                    className="reason-dropdown"
+                    className="cgs-reason-dropdown"
                     value={bankForm.bankName}
                     onChange={handleBankInputChange}
                   >
@@ -426,9 +426,9 @@ const CaregiverSettings = () => {
                       <option key={bank} value={bank}>{bank}</option>
                     ))}
                   </select>
-                  {bankErrors.bankName && <p className="status-message" style={{ color: 'red' }}>{bankErrors.bankName}</p>}
+                  {bankErrors.bankName && <p className="cgs-status-message" style={{ color: 'red' }}>{bankErrors.bankName}</p>}
                 </div>
-                <div className="form-group">
+                <div className="cgs-form-group">
                   <label>Account Number</label>
                   <input
                     type="text"
@@ -437,9 +437,9 @@ const CaregiverSettings = () => {
                     value={bankForm.accountNumber}
                     onChange={handleBankInputChange}
                   />
-                  {bankErrors.accountNumber && <p className="status-message" style={{ color: 'red' }}>{bankErrors.accountNumber}</p>}
+                  {bankErrors.accountNumber && <p className="cgs-status-message" style={{ color: 'red' }}>{bankErrors.accountNumber}</p>}
                 </div>
-                <div className="form-group">
+                <div className="cgs-form-group">
                   <label>Account Name</label>
                   <input
                     type="text"
@@ -448,12 +448,12 @@ const CaregiverSettings = () => {
                     value={bankForm.accountName}
                     onChange={handleBankInputChange}
                   />
-                  {bankErrors.accountName && <p className="status-message" style={{ color: 'red' }}>{bankErrors.accountName}</p>}
+                  {bankErrors.accountName && <p className="cgs-status-message" style={{ color: 'red' }}>{bankErrors.accountName}</p>}
                 </div>
                 <div style={{ display: 'flex', gap: '0.5rem' }}>
                   {isEditingBank && (
                     <button
-                      className="deactivate-btn"
+                      className="cgs-deactivate-btn"
                       style={{ flex: 1 }}
                       onClick={() => setIsEditingBank(false)}
                     >
@@ -461,7 +461,7 @@ const CaregiverSettings = () => {
                     </button>
                   )}
                   <button
-                    className="save-changes-btn"
+                    className="cgs-save-changes-btn"
                     style={{ flex: 1 }}
                     onClick={handleBankSave}
                     disabled={bankSaving}
@@ -473,76 +473,76 @@ const CaregiverSettings = () => {
             )}
           </div>
 
-          <div className="settings-card">
+          <div className="cgs-settings-card">
             <h3>Complete your Professional Profile</h3>
             <ProfessionalProfileForms />
           </div>
 
-          <div className="settings-card">
+          <div className="cgs-settings-card">
             <h3>Notification Preferences</h3>
             <p style={{ marginBottom: "1rem", color: "#6b7280", fontSize: "0.875rem" }}>
               Manage which caregiver-related notifications you receive.
             </p>
-            <div className="notification-options">
-              <div className="notification-item">
-                <div className="notification-info">
-                  <span className="notification-title">Email Notifications</span>
-                  <span className="notification-description">Receive caregiver account updates by email</span>
+            <div className="cgs-notification-options">
+              <div className="cgs-notification-item">
+                <div className="cgs-notification-info">
+                  <span className="cgs-notification-title">Email Notifications</span>
+                  <span className="cgs-notification-description">Receive caregiver account updates by email</span>
                 </div>
                 <button
                   type="button"
-                  className={`notification-toggle ${notificationPreferences.emailNotifications ? 'active' : ''}`}
+                  className={`cgs-notification-toggle ${notificationPreferences.emailNotifications ? 'active' : ''}`}
                   onClick={() => handleNotificationToggle('emailNotifications')}
                 />
               </div>
-              <div className="notification-item">
-                <div className="notification-info">
-                  <span className="notification-title">SMS Notifications (Coming soon)</span>
-                  <span className="notification-description">Receive caregiver account updates by text message</span>
+              <div className="cgs-notification-item">
+                <div className="cgs-notification-info">
+                  <span className="cgs-notification-title">SMS Notifications (Coming soon)</span>
+                  <span className="cgs-notification-description">Receive caregiver account updates by text message</span>
                 </div>
                 <button
                   type="button"
                   disabled
                   title="SMS notifications are not available yet."
-                  className={`notification-toggle ${notificationPreferences.smsNotifications ? 'active' : ''}`}
+                  className={`cgs-notification-toggle ${notificationPreferences.smsNotifications ? 'active' : ''}`}
                 />
               </div>
-              <div className="notification-item">
-                <div className="notification-info">
-                  <span className="notification-title">Marketing Emails</span>
-                  <span className="notification-description">Receive occasional tips, platform updates, and promotional offers</span>
+              <div className="cgs-notification-item">
+                <div className="cgs-notification-info">
+                  <span className="cgs-notification-title">Marketing Emails</span>
+                  <span className="cgs-notification-description">Receive occasional tips, platform updates, and promotional offers</span>
                 </div>
                 <button
                   type="button"
-                  className={`notification-toggle ${notificationPreferences.marketingEmails ? 'active' : ''}`}
+                  className={`cgs-notification-toggle ${notificationPreferences.marketingEmails ? 'active' : ''}`}
                   onClick={() => handleNotificationToggle('marketingEmails')}
                 />
               </div>
-              <div className="notification-item">
-                <div className="notification-info">
-                  <span className="notification-title">New Gig Opportunities</span>
-                  <span className="notification-description">Email alerts for newly available gig opportunities</span>
+              <div className="cgs-notification-item">
+                <div className="cgs-notification-info">
+                  <span className="cgs-notification-title">New Gig Opportunities</span>
+                  <span className="cgs-notification-description">Email alerts for newly available gig opportunities</span>
                 </div>
                 <button
                   type="button"
-                  className={`notification-toggle ${notificationPreferences.newGig ? 'active' : ''}`}
+                  className={`cgs-notification-toggle ${notificationPreferences.newGig ? 'active' : ''}`}
                   onClick={() => handleNotificationToggle('newGig')}
                 />
               </div>
-              <div className="notification-item">
-                <div className="notification-info">
-                  <span className="notification-title">Care Request Updates</span>
-                  <span className="notification-description">Email updates for care-request matches and shortlist/hiring flow</span>
+              <div className="cgs-notification-item">
+                <div className="cgs-notification-info">
+                  <span className="cgs-notification-title">Care Request Updates</span>
+                  <span className="cgs-notification-description">Email updates for care-request matches and shortlist/hiring flow</span>
                 </div>
                 <button
                   type="button"
-                  className={`notification-toggle ${notificationPreferences.careRequestUpdates ? 'active' : ''}`}
+                  className={`cgs-notification-toggle ${notificationPreferences.careRequestUpdates ? 'active' : ''}`}
                   onClick={() => handleNotificationToggle('careRequestUpdates')}
                 />
               </div>
             </div>
             <button
-              className="save-changes-btn"
+              className="cgs-save-changes-btn"
               onClick={handleNotificationSave}
               disabled={notificationPrefLoading}
             >
@@ -552,7 +552,7 @@ const CaregiverSettings = () => {
 
           {/* ── Push Notifications ──────────────────────────────────────────── */}
           {pushState.supported && (
-            <div className="settings-card">
+            <div className="cgs-settings-card">
               <h3>Push Notifications</h3>
               <p style={{ marginBottom: '1rem', color: '#6b7280', fontSize: '0.875rem' }}>
                 Receive alerts for job matches, visit reminders, and wallet updates even when the app is closed.
@@ -565,7 +565,7 @@ const CaregiverSettings = () => {
                 <div style={{ display: 'flex', alignItems: 'center', gap: '1rem' }}>
                   <span style={{ color: '#10b981', fontWeight: 500 }}>&#10003; Notifications are On</span>
                   <button
-                    className="deactivate-btn"
+                    className="cgs-deactivate-btn"
                     onClick={handleDisablePush}
                     disabled={pushLoading}
                   >
@@ -573,11 +573,11 @@ const CaregiverSettings = () => {
                   </button>
                 </div>
               ) : pushState.permission === 'granted' && !pushState.isSubscribed ? (
-                <button className="save-changes-btn" onClick={handleResubscribePush} disabled={pushLoading}>
+                <button className="cgs-save-changes-btn" onClick={handleResubscribePush} disabled={pushLoading}>
                   {pushLoading ? 'Updating...' : 'Re-enable Notifications'}
                 </button>
               ) : (
-                <button className="save-changes-btn" onClick={handleEnablePush} disabled={pushLoading}>
+                <button className="cgs-save-changes-btn" onClick={handleEnablePush} disabled={pushLoading}>
                   {pushLoading ? 'Requesting...' : 'Enable Notifications'}
                 </button>
               )}
@@ -585,7 +585,7 @@ const CaregiverSettings = () => {
           )}
 
           {/* ── Delete Account (Danger Zone) ───────────────────────────────── */}
-          <div className="settings-card" style={{ borderColor: '#ef4444' }}>
+          <div className="cgs-settings-card" style={{ borderColor: '#ef4444' }}>
             {userData?.accountDeletionRequestedAt ? (
               <>
                 <h3 style={{ color: '#ef4444' }}>Account Deletion Scheduled</h3>
@@ -605,7 +605,7 @@ const CaregiverSettings = () => {
                   scheduled-deletion email.
                 </p>
                 <button
-                  className="save-changes-btn"
+                  className="cgs-save-changes-btn"
                   onClick={() => setShowCancelDeletionModal(true)}
                 >
                   Cancel Deletion Request
@@ -614,17 +614,17 @@ const CaregiverSettings = () => {
             ) : (
               <>
                 <h3 style={{ color: '#ef4444' }}>Delete Account</h3>
-                <p className="deactivation-warning">
+                <p className="cgs-deactivation-warning">
                   Requesting deletion will:
                 </p>
-                <ul className="deactivation-list">
+                <ul className="cgs-deactivation-list">
                   <li>Immediately hide your profile and all active gigs.</li>
                   <li>Permanently and irreversibly erase all your data after 30 days.</li>
                   <li>You cannot delete if you have active orders, a pending withdrawal, or an outstanding wallet balance.</li>
                   <li>You have 30 days to cancel — after that the deletion cannot be undone.</li>
                 </ul>
                 <button
-                  className="deactivate-btn"
+                  className="cgs-deactivate-btn"
                   onClick={() => setShowDeleteModal(true)}
                 >
                   Delete Account
@@ -637,8 +637,8 @@ const CaregiverSettings = () => {
 
       {/* ── Delete Account Confirmation Modal ─────────────────────────────── */}
       {showDeleteModal && (
-        <div className="client-location-modal-overlay" onClick={() => { setShowDeleteModal(false); setDeleteReason(''); setDeleteBlockers([]); }}>
-          <div className="client-location-modal" onClick={(e) => e.stopPropagation()}>
+        <div className="cgs-location-modal-overlay" onClick={() => { setShowDeleteModal(false); setDeleteReason(''); setDeleteBlockers([]); }}>
+          <div className="cgs-location-modal" onClick={(e) => e.stopPropagation()}>
             <h3 style={{ color: '#ef4444' }}>Delete Your Account?</h3>
             <p style={{ marginBottom: '1rem' }}>
               Are you sure? Your account will be <strong>permanently and irreversibly deleted</strong> after
@@ -655,7 +655,7 @@ const CaregiverSettings = () => {
                 </ul>
               </div>
             )}
-            <div className="form-group">
+            <div className="cgs-form-group">
               <label>Reason for leaving (optional)</label>
               <textarea
                 rows={3}
@@ -665,15 +665,15 @@ const CaregiverSettings = () => {
                 style={{ width: '100%', resize: 'vertical', padding: '0.5rem', borderRadius: '6px', border: '1px solid #d1d5db' }}
               />
             </div>
-            <div className="client-modal-buttons">
+            <div className="cgs-modal-buttons">
               <button
-                className="client-modal-btn client-modal-cancel"
+                className="cgs-modal-btn cgs-modal-cancel"
                 onClick={() => { setShowDeleteModal(false); setDeleteReason(''); setDeleteBlockers([]); }}
               >
                 Cancel
               </button>
               <button
-                className="client-modal-btn client-modal-save"
+                className="cgs-modal-btn cgs-modal-save"
                 style={{ backgroundColor: '#ef4444' }}
                 disabled={deleteLoading}
                 onClick={async () => {
@@ -706,22 +706,22 @@ const CaregiverSettings = () => {
 
       {/* ── Cancel Deletion Confirmation Modal ────────────────────────────── */}
       {showCancelDeletionModal && (
-        <div className="client-location-modal-overlay" onClick={() => setShowCancelDeletionModal(false)}>
-          <div className="client-location-modal" onClick={(e) => e.stopPropagation()}>
+        <div className="cgs-location-modal-overlay" onClick={() => setShowCancelDeletionModal(false)}>
+          <div className="cgs-location-modal" onClick={(e) => e.stopPropagation()}>
             <h3>Cancel Account Deletion?</h3>
             <p style={{ marginBottom: '1rem' }}>
               Are you sure you want to cancel your deletion request? Your account and all your gigs will be
               fully restored immediately.
             </p>
-            <div className="client-modal-buttons">
+            <div className="cgs-modal-buttons">
               <button
-                className="client-modal-btn client-modal-cancel"
+                className="cgs-modal-btn cgs-modal-cancel"
                 onClick={() => setShowCancelDeletionModal(false)}
               >
                 No, keep deletion scheduled
               </button>
               <button
-                className="client-modal-btn client-modal-save"
+                className="cgs-modal-btn cgs-modal-save"
                 disabled={deleteLoading}
                 onClick={async () => {
                   setDeleteLoading(true);

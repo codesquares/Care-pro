@@ -146,7 +146,7 @@ const UsersManagement = () => {
       
       {loading ? (
         <div className="loading-container">
-          <div className="spinner"></div>
+          <div className="um-spinner"></div>
           <p>Loading users...</p>
         </div>
       ) : error ? (
@@ -246,13 +246,13 @@ const UsersManagement = () => {
       
       {/* User Details Modal */}
       {showUserModal && selectedUser && (
-        <div className="modal-overlay">
-          <div className="modal-content user-details-modal">
-            <div className="modal-header">
+        <div className="um-modal-overlay">
+          <div className="um-modal-content user-details-modal">
+            <div className="um-modal-header">
               <h2>User Details</h2>
-              <button className="close-btn" onClick={() => setShowUserModal(false)}>×</button>
+              <button className="um-close-btn" onClick={() => setShowUserModal(false)}>×</button>
             </div>
-            <div className="modal-body">
+            <div className="um-modal-body">
               <div className="user-profile-header">
                 <div className="large-avatar">
                   {selectedUser.firstName[0]}{selectedUser.lastName[0]}
@@ -296,7 +296,7 @@ const UsersManagement = () => {
               
               <div className="user-actions">
                 <button 
-                  className="btn primary-btn" 
+                  className="um-btn um-primary-btn" 
                   onClick={() => {
                     setShowUserModal(false);
                     openSendNotification(selectedUser);
@@ -313,13 +313,13 @@ const UsersManagement = () => {
       
       {/* Send Notification Modal */}
       {showNotificationModal && selectedUser && (
-        <div className="modal-overlay">
-          <div className="modal-content notification-modal">
-            <div className="modal-header">
+        <div className="um-modal-overlay">
+          <div className="um-modal-content notification-modal">
+            <div className="um-modal-header">
               <h2>Send Notification</h2>
-              <button className="close-btn" onClick={() => setShowNotificationModal(false)}>×</button>
+              <button className="um-close-btn" onClick={() => setShowNotificationModal(false)}>×</button>
             </div>
-            <div className="modal-body">
+            <div className="um-modal-body">
               <p className="recipient">
                 To: <strong>{selectedUser.firstName} {selectedUser.lastName}</strong>
               </p>
@@ -337,13 +337,13 @@ const UsersManagement = () => {
               
               <div className="modal-actions">
                 <button 
-                  className="btn secondary-btn" 
+                  className="um-btn um-secondary-btn" 
                   onClick={() => setShowNotificationModal(false)}
                 >
                   Cancel
                 </button>
                 <button 
-                  className="btn primary-btn" 
+                  className="um-btn um-primary-btn" 
                   onClick={handleSendNotification}
                   disabled={!notificationText.trim()}
                 >

@@ -23,14 +23,14 @@
 .aum-header-icon {
   width: 56px;
   height: 56px;
-  background: linear-gradient(135deg, #667eea, #764ba2);
+  background: linear-gradient(135deg, var(--color-brand-deep), var(--color-brand-accent));
   border-radius: 14px;
   display: flex;
   align-items: center;
   justify-content: center;
   font-size: 1.6rem;
   color: white;
-  box-shadow: 0 4px 12px rgba(102,126,234,0.3);
+  box-shadow: 0 4px 12px color-mix(in srgb, var(--color-brand-deep) 30%, transparent);
 }
 
 .aum-header h1 { margin: 0; font-size: 1.8rem; color: #1a1a1a; }
@@ -108,7 +108,7 @@
   transition: border-color 0.2s;
 }
 
-.aum-search-wrap input:focus { outline: none; border-color: #667eea; }
+.aum-search-wrap input:focus { outline: none; border-color: var(--color-brand-deep); }
 
 /* ─── Table ──────────────────────────────────────────── */
 .aum-table-wrap {
@@ -154,7 +154,7 @@
   width: 36px;
   height: 36px;
   border-radius: 50%;
-  background: linear-gradient(135deg, #667eea, #764ba2);
+  background: linear-gradient(135deg, var(--color-brand-deep), var(--color-brand-accent));
   color: white;
   display: flex;
   align-items: center;
@@ -292,7 +292,7 @@
   width: 72px;
   height: 72px;
   border-radius: 50%;
-  background: linear-gradient(135deg, #667eea, #764ba2);
+  background: linear-gradient(135deg, var(--color-brand-deep), var(--color-brand-accent));
   color: white;
   display: flex;
   align-items: center;
@@ -356,22 +356,22 @@
 .aum-pw-toggle:hover { color: #333; }
 
 /* Shared utilities (fallback if not in global CSS) */
-.spinner {
+.aum-spinner {
   width: 36px;
   height: 36px;
   border: 3px solid #e0e0e0;
-  border-top-color: #667eea;
+  border-top-color: var(--color-brand-deep);
   border-radius: 50%;
   animation: spin 0.7s linear infinite;
 }
 
 @keyframes spin { to { transform: rotate(360deg); } }
 
-.btn-sm { padding: 0.6rem 1.2rem !important; font-size: 0.9rem !important; }
+.aum-btn-sm { padding: 0.6rem 1.2rem !important; font-size: 0.9rem !important; }
 
-.form-group { display: flex; flex-direction: column; gap: 0.5rem; }
-.form-group label { font-weight: 600; color: #333; font-size: 0.95rem; }
-.form-group input, .form-group select {
+.aum-form-group { display: flex; flex-direction: column; gap: 0.5rem; }
+.aum-form-group label { font-weight: 600; color: #333; font-size: 0.95rem; }
+.aum-form-group input, .aum-form-group select {
   padding: 0.75rem 0.85rem;
   border: 2px solid #e0e0e0;
   border-radius: 10px;
@@ -380,16 +380,16 @@
   background: white;
   transition: border-color 0.2s;
 }
-.form-group input:focus, .form-group select:focus {
+.aum-form-group input:focus, .aum-form-group select:focus {
   outline: none;
-  border-color: #667eea;
-  box-shadow: 0 0 0 3px rgba(102,126,234,0.1);
+  border-color: var(--color-brand-deep);
+  box-shadow: 0 0 0 3px color-mix(in srgb, var(--color-brand-deep) 10%, transparent);
 }
 
-.required { color: #e53e3e; font-weight: bold; }
-.optional  { color: #999; font-weight: normal; font-size: 0.85rem; }
+.aum-required { color: #e53e3e; font-weight: bold; }
+.aum-optional  { color: #999; font-weight: normal; font-size: 0.85rem; }
 
-.form-actions {
+.aum-form-actions {
   display: flex;
   gap: 1rem;
   justify-content: flex-end;
@@ -397,9 +397,9 @@
   border-top: 1px solid #e0e0e0;
 }
 
-.btn-primary {
+.aum-btn-primary {
   padding: 0.75rem 1.75rem;
-  background: linear-gradient(135deg, #667eea, #764ba2);
+  background: linear-gradient(135deg, var(--color-brand-deep), var(--color-brand-accent));
   color: white;
   border: none;
   border-radius: 10px;
@@ -412,10 +412,10 @@
   transition: opacity 0.2s;
 }
 
-.btn-primary:hover:not(:disabled) { opacity: 0.9; }
-.btn-primary:disabled { opacity: 0.6; cursor: not-allowed; }
+.aum-btn-primary:hover:not(:disabled) { opacity: 0.9; }
+.aum-btn-primary:disabled { opacity: 0.6; cursor: not-allowed; }
 
-.btn-secondary {
+.aum-btn-secondary {
   padding: 0.75rem 1.5rem;
   background: white;
   color: #555;
@@ -430,10 +430,10 @@
   transition: all 0.2s;
 }
 
-.btn-secondary:hover:not(:disabled) { border-color: #667eea; color: #667eea; }
-.btn-secondary:disabled { opacity: 0.6; cursor: not-allowed; }
+.aum-btn-secondary:hover:not(:disabled) { border-color: var(--color-brand-deep); color: var(--color-brand-deep); }
+.aum-btn-secondary:disabled { opacity: 0.6; cursor: not-allowed; }
 
-.btn-icon {
+.aum-btn-icon {
   width: 34px;
   height: 34px;
   border: none;
@@ -446,11 +446,11 @@
   transition: all 0.2s;
 }
 
-.btn-icon--view  { background: #e8f0fe; color: #3c6bc5; }
-.btn-icon--view:hover  { background: #3c6bc5; color: white; }
-.btn-icon:disabled { opacity: 0.4; cursor: not-allowed; }
+.aum-btn-icon--view  { background: #e8f0fe; color: #3c6bc5; }
+.aum-btn-icon--view:hover  { background: #3c6bc5; color: white; }
+.aum-btn-icon:disabled { opacity: 0.4; cursor: not-allowed; }
 
-.alert {
+.aum-alert {
   padding: 1rem 1.25rem;
   border-radius: 10px;
   display: flex;
@@ -458,9 +458,9 @@
   gap: 0.75rem;
 }
 
-.alert i { font-size: 1.2rem; margin-top: 0.1rem; }
-.alert p { margin: 0; }
-.alert-error { background: #fee; border: 1px solid #fcc; color: #c62828; }
+.aum-alert i { font-size: 1.2rem; margin-top: 0.1rem; }
+.aum-alert p { margin: 0; }
+.aum-alert-error { background: #fee; border: 1px solid #fcc; color: #c62828; }
 
 @media (max-width: 640px) {
   .aum-page    { padding: 1rem; }

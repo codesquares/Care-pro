@@ -82,7 +82,7 @@
 }
 
 .dac-btn-primary {
-  background: #0f6ad8;
+  background: var(--color-brand-deep);
   color: #fff;
 }
 

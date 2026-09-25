@@ -616,28 +616,19 @@ export const getNotificationRoute = (notification, userRole) => {
       if (isAdmin) return `/app/admin/orders`;
       return null;
 
-    // ── Commitment fee confirmed ──────────────────────────
-    // senderId = the other party in the conversation
-    // relatedEntityId = gigId (fallback only)
+    // ── Commitment fee confirmed (legacy) ─────────────────
+    // Chat is no longer unlocked by a fee — conversations are tied to assignments — so this
+    // resolves to the plain conversation with the other party (senderId), same as NewMessage.
+    // That page reads its access/identity from the assignment, not from any gig.
     case 'CommitmentConfirmed':
       if (isClient) {
-        // Client paid — CTA is to chat with the caregiver (senderId = caregiver)
-        if (senderId && relatedEntityId) {
-          return `/app/client/message/${senderId}?gigId=${encodeURIComponent(relatedEntityId)}`;
-        }
         if (senderId) return `/app/client/message/${senderId}`;
         return `/app/client/message`;
       }
       if (isCaregiver) {
-        // Caregiver notified — CTA is to open the conversation with the client (senderId = client)
-        if (senderId && relatedEntityId) {
-          return `/app/caregiver/message/${senderId}?gigId=${encodeURIComponent(relatedEntityId)}`;
-        }
         if (senderId) return `/app/caregiver/message/${senderId}`;
         return `/app/caregiver/message`;
       }
-      // Last-resort deep link to the gig page
-      if (relatedEntityId) return `/service/${relatedEntityId}`;
       return null;
 
     // ── Certificate notifications ────────────────────────
@@ -684,15 +675,11 @@ export const getNotificationRoute = (notification, userRole) => {
       return null;
 
     // ── Gig notifications ────────────────────────────────
+    // The public gig page (/service/:id) is retired — gigs are no longer client-purchasable — so gig
+    // notifications only make sense for the owning caregiver, who manages gigs from their profile.
     case 'NewGig':
-      if (relatedEntityId) return `/service/${relatedEntityId}`;
-      if (isCaregiver) return `/app/caregiver/create-gigs`;
-      return null;
-
-    // relatedEntityId = gig ID for all gig lifecycle types
     case 'GigPublished':
     case 'GigShared': // reserved — handle gracefully when it ships
-      if (relatedEntityId && isCaregiver) return `/service/${relatedEntityId}`;
       if (isCaregiver) return `/app/caregiver/profile`;
       return null;
 
@@ -733,30 +720,16 @@ export const getNotificationRoute = (notification, userRole) => {
       if (isAdmin) return `/app/admin/notifications`;
       return null;
 
-    // ── Care Request Matching ─────────────────────────
-    case 'CareRequestMatched':
-      if (isClient && relatedEntityId) return `/app/client/care-requests/${relatedEntityId}/matches`;
-      if (isClient) return `/app/client/care-requests`;
-      return null;
-
-    case 'CareRequestNoMatch':
-      if (isClient && relatedEntityId) return `/app/client/care-requests/${relatedEntityId}/matches`;
-      if (isClient) return `/app/client/care-requests`;
-      return null;
-
-    case 'CareRequestAdminMatchUpdate':
-    case 'CareRequestAdminNoMatch':
-      if (isAdmin && relatedEntityId) return `/app/admin/care-requests/${relatedEntityId}`;
-      if (isAdmin) return `/app/admin/care-requests`;
-      return null;
-
-    // ── Care Request: New Responder (caregiver responded to a request) ─
-    case 'CareRequestNewResponder':
-      if (isClient && relatedEntityId) return `/app/client/care-requests/${relatedEntityId}/matches`;
-      if (isClient) return `/app/client/care-requests`;
-      if (isAdmin && relatedEntityId) return `/app/admin/care-requests/${relatedEntityId}`;
-      if (isAdmin) return `/app/admin/care-requests`;
-      return null;
+    // ── Care Request Matching (retired backend flow — see note below) ──
+    // CareRequestMatched, CareRequestNoMatch, CareRequestAdminMatchUpdate,
+    // CareRequestAdminNoMatch and CareRequestNewResponder have no backend
+    // trigger left (confirmed against CarePro-Api: the competitive
+    // care-request/matching flow was fully retired, no code path creates
+    // these notification types anymore — CareRequestMatched never even
+    // existed as a backend constant). Intentionally left unhandled so they
+    // fall through to `default`: a legacy/in-flight notification of one of
+    // these types still displays (icon/label), it just isn't clickable,
+    // rather than sending the user to a dead or placeholder route.
 
     // ── Negotiation notifications ─────────────────────────
     case 'NegotiationStarted':
@@ -966,31 +939,28 @@ export const getNotificationRoute = (notification, userRole) => {
       return null;
     }
 
-    // ── Care Request Lifecycle (client) ──────────────────
-    case 'CareRequestCreated':
-    case 'CareRequestPaused':
-    case 'CareRequestReopened':
-    case 'CareRequestClosed':
-      if (isClient && relatedEntityId) return `/app/client/care-requests/${relatedEntityId}/detail`;
-      if (isClient) return `/app/client/your-requests`;
-      return null;
+    // ── Care Request Lifecycle (client) — retired backend flow ───
+    // CareRequestCreated/Paused/Reopened/Closed have no backend trigger left
+    // (see note above CareRequestMatched) — falls through to `default`.
 
-    // ── Shortlist Removed (caregiver) ────────────────────
-    case 'ShortlistRemoved':
-      if (isCaregiver) return `/app/caregiver/my-responses`;
-      return null;
+    // ── Shortlist Removed (caregiver) — retired backend flow ─────
+    // Defined on the backend but never dispatched via SendNotificationCommand
+    // anywhere — falls through to `default`.
 
     // ── Caregiver Became Ineligible (client) ─────────────
-    // Two distinct backend triggers share this type:
+    // Two distinct backend triggers share this type (confirmed still live —
+    // PendingPaymentService.cs actually dispatches this one, unlike the
+    // retired care-request/negotiation types above):
     //   Post-payment (money already captured, order flagged): notification.orderId is set.
     //   Pre-payment (negotiation blocked, nothing charged): orderId is absent,
-    //     relatedEntityId is the CareRequestId — send them back to browse other caregivers.
+    //     relatedEntityId is the CareRequestId — the old "browse other caregivers
+    //     for this request" page is retired, so send them to the marketplace
+    //     (the real, working browse-caregivers destination) instead.
     // Mirrors the PaymentFailed/SubscriptionSuspended pattern above: check orderId in
     // isolation, do NOT fall back to relatedEntityId for it (that would blend the two cases).
     case 'CaregiverBecameIneligible': {
       if (isClient && notification.orderId) return `/app/client/my-order/${notification.orderId}`;
-      if (isClient && relatedEntityId) return `/app/client/care-requests/${relatedEntityId}/matches`;
-      if (isClient) return `/app/client/your-requests`;
+      if (isClient) return `/marketplace`;
       return null;
     }
 
@@ -1036,52 +1006,12 @@ export const getNotificationRoute = (notification, userRole) => {
       return null;
     }
 
-    // ── Gig Price Negotiation ───────────────────────────────────
-    // Offer received → caregiver; relatedEntityId = negotiationId
-    case 'PriceNegotiationOfferReceived':
-      if (isCaregiver && relatedEntityId)
-        return `/app/caregiver/price-negotiation/${relatedEntityId}`;
-      if (isCaregiver) return `/app/caregiver/notifications`;
-      return null;
-
-    // Counter received → client; relatedEntityId = negotiationId
-    case 'PriceNegotiationCounterReceived':
-      if (isClient && relatedEntityId)
-        return `/app/client/price-negotiation/${relatedEntityId}`;
-      if (isClient) return `/app/client/notifications`;
-      return null;
-
-    // Agreed → different relatedEntityId per role (backend sends separate notifications):
-    //   Client:    relatedEntityId = GigIdForPayment → go to cart
-    //   Caregiver: relatedEntityId = NegotiationId   → go to negotiation summary
-    case 'PriceNegotiationAgreed':
-      if (isClient && relatedEntityId)
-        return `/app/client/cart/${relatedEntityId}`;
-      if (isCaregiver && relatedEntityId)
-        return `/app/caregiver/price-negotiation/${relatedEntityId}`;
-      if (isClient) return `/app/client/notifications`;
-      if (isCaregiver) return `/app/caregiver/notifications`;
-      return null;
-
-    // Rejected → sent to the OTHER party; relatedEntityId = negotiationId
-    case 'PriceNegotiationRejected':
-      if (isClient && relatedEntityId)
-        return `/app/client/price-negotiation/${relatedEntityId}`;
-      if (isCaregiver && relatedEntityId)
-        return `/app/caregiver/price-negotiation/${relatedEntityId}`;
-      if (isClient) return `/app/client/notifications`;
-      if (isCaregiver) return `/app/caregiver/notifications`;
-      return null;
-
-    // Expired → sent to both; relatedEntityId = negotiationId
-    case 'PriceNegotiationExpired':
-      if (isClient && relatedEntityId)
-        return `/app/client/price-negotiation/${relatedEntityId}`;
-      if (isCaregiver && relatedEntityId)
-        return `/app/caregiver/price-negotiation/${relatedEntityId}`;
-      if (isClient) return `/app/client/notifications`;
-      if (isCaregiver) return `/app/caregiver/notifications`;
-      return null;
+    // ── Gig Price Negotiation — retired backend flow ─────────────
+    // PriceNegotiationOfferReceived/CounterReceived/Agreed/Rejected/Expired
+    // have no backend trigger left: no PriceNegotiation service, controller,
+    // or command exists anywhere in CarePro-Api anymore — only the
+    // notification-type constants themselves remain (unused). Intentionally
+    // left unhandled so they fall through to `default`.
 
     default:
       console.warn(`[NotificationRoutes] No route for type: "${type}" (raw: "${notification.type}")`, notification);

@@ -1,0 +1,299 @@
+/* ── Page shell ── */
+.asn-page {
+  min-height: 60vh;
+  background: #f9fafb;
+}
+
+.asn-banner-subtitle {
+  color: rgba(255, 255, 255, 0.85);
+  margin: 0.35rem 0 0;
+}
+
+.asn-content {
+  max-width: 960px;
+  margin: 0 auto;
+  padding: 1.5rem 1.25rem 3rem;
+}
+
+.asn-header-row {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 1rem;
+  flex-wrap: wrap;
+  margin-bottom: 1rem;
+}
+
+/* ── Status badge (shared list + detail) ── */
+.asn-status-badge {
+  display: inline-block;
+  align-self: flex-start;
+  width: fit-content;
+  padding: 0.35rem 0.85rem;
+  border-radius: 999px;
+  font-size: 0.8rem;
+  font-weight: 600;
+  margin-bottom: 1rem;
+}
+
+.asn-status-badge--PendingAcceptance {
+  background: #fff8e1;
+  color: #f9a825;
+}
+
+.asn-status-badge--Accepted {
+  background: #e8f5e9;
+  color: #2e7d32;
+}
+
+.asn-status-badge--Declined,
+.asn-status-badge--Cancelled {
+  background: #f5f5f5;
+  color: #888;
+}
+
+.asn-pay-basis {
+  color: #6b7280;
+  font-size: 0.875rem;
+  margin: -0.5rem 0 1rem;
+}
+
+/* ── Refresh button ── */
+.asn-refresh-btn {
+  background: var(--color-brand-deep);
+  color: #fff;
+  border: none;
+  border-radius: 8px;
+  padding: 0.5rem 1.1rem;
+  font-weight: 600;
+  font-size: 0.9rem;
+  cursor: pointer;
+  white-space: nowrap;
+  align-self: flex-start;
+}
+
+.asn-refresh-btn:hover {
+  background: var(--color-brand-deep-2);
+}
+
+.asn-refresh-btn:disabled {
+  opacity: 0.6;
+  cursor: default;
+}
+
+/* ── List view ── */
+.asn-list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+}
+
+.asn-list-item {
+  background: #fff;
+  border: 1px solid #e5e7eb;
+  border-radius: 10px;
+  padding: 1rem 1.25rem;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+  cursor: pointer;
+  transition: box-shadow 0.15s ease, border-color 0.15s ease;
+  flex-wrap: wrap;
+}
+
+.asn-list-item:hover {
+  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.06);
+  border-color: var(--color-brand-deep);
+}
+
+.asn-list-item-main {
+  display: flex;
+  flex-direction: column;
+  gap: 0.2rem;
+}
+
+.asn-list-item-main strong {
+  font-size: 1rem;
+  color: #1f2937;
+}
+
+.asn-list-item-tier,
+.asn-list-item-pay {
+  color: #6b7280;
+  font-size: 0.875rem;
+}
+
+.asn-list-item-meta {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+}
+
+.asn-list-item-meta .asn-status-badge {
+  margin: 0;
+}
+
+.asn-list-item-date {
+  color: #9ca3af;
+  font-size: 0.8rem;
+}
+
+/* ── Detail view ── */
+.asn-status-panel {
+  background: #fff;
+  border: 1px solid #e5e7eb;
+  border-radius: 10px;
+  padding: 1.5rem;
+  margin-bottom: 1.25rem;
+}
+
+.asn-status-panel h2 {
+  margin: 0 0 0.5rem;
+  font-size: 1.1rem;
+  color: #1f2937;
+}
+
+.asn-status-panel p {
+  margin: 0;
+  color: #4b5563;
+  line-height: 1.5;
+}
+
+.asn-contract-card,
+.asn-visits-card {
+  background: #fff;
+  border: 1px solid #e5e7eb;
+  border-radius: 10px;
+  padding: 1.5rem;
+  margin-bottom: 1.25rem;
+}
+
+.asn-contract-card h2,
+.asn-visits-card h2 {
+  margin: 0 0 1rem;
+  font-size: 1.1rem;
+  color: #1f2937;
+}
+
+.asn-contract-summary {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 1.5rem;
+  margin-bottom: 1rem;
+}
+
+.asn-contract-summary > div {
+  display: flex;
+  flex-direction: column;
+  gap: 0.2rem;
+}
+
+.asn-contract-label {
+  font-size: 0.75rem;
+  text-transform: uppercase;
+  letter-spacing: 0.03em;
+  color: #9ca3af;
+}
+
+.asn-contract-terms-wrap {
+  border: 1px solid #e5e7eb;
+  border-radius: 8px;
+  overflow: hidden;
+  margin-bottom: 1rem;
+}
+
+.asn-contract-terms-frame {
+  width: 100%;
+  height: 420px;
+  border: none;
+  display: block;
+}
+
+.asn-download-btn {
+  align-self: auto;
+}
+
+/* ── Visit history ── */
+.asn-visits-note {
+  color: #6b7280;
+  font-size: 0.85rem;
+  line-height: 1.45;
+  margin: -0.25rem 0 1rem;
+}
+
+.asn-visit-list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 0.6rem;
+}
+
+.asn-visit-item {
+  border: 1px solid #e5e7eb;
+  border-radius: 8px;
+  padding: 0.85rem 1rem;
+}
+
+.asn-visit-main {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.75rem;
+  margin-bottom: 0.35rem;
+}
+
+.asn-visit-main strong {
+  color: #1f2937;
+  font-size: 0.95rem;
+}
+
+.asn-visit-status {
+  padding: 0.2rem 0.6rem;
+  border-radius: 999px;
+  font-size: 0.75rem;
+  font-weight: 600;
+  background: #f3f4f6;
+  color: #4b5563;
+  white-space: nowrap;
+}
+
+.asn-visit-status--submitted {
+  background: #e8f5e9;
+  color: #2e7d32;
+}
+
+.asn-visit-status--in-progress {
+  background: #fff8e1;
+  color: #f9a825;
+}
+
+.asn-visit-meta {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.35rem 1rem;
+  color: #6b7280;
+  font-size: 0.8rem;
+}
+
+.asn-message-btn {
+  margin: 8px 0 4px;
+  padding: 8px 18px;
+  background: var(--color-brand-deep);
+  color: #fff;
+  border: none;
+  border-radius: 6px;
+  font-size: 0.9rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: background-color 0.2s ease;
+}
+
+.asn-message-btn:hover {
+  background: var(--color-brand-deep-2);
+}

@@ -13,11 +13,18 @@ import AdminUserManagement from './users-management/AdminUserManagement';
 import ChatCompliance from './chat-compliance/ChatCompliance';
 import BookingCommitments from './booking-commitments/BookingCommitments';
 import GigsManagement from './gigs-management/GigsManagement';
+import PackagesManagement from './packages-management/PackagesManagement';
+import AssignmentConsole from './assignment-console/AssignmentConsole';
+import PayRatesManagement from './pay-rates/PayRatesManagement';
+import PayrollManagement from './payroll/PayrollManagement';
+import GuarantorOverride from './guarantor-override/GuarantorOverride';
+// Retired: Care Matching (admin gig -> client recommendation emails). Superseded by the Assignment Console;
+// source preserved commented out at ./care-matching/CareMatching.jsx.
+// import CareMatching from './care-matching/CareMatching';
 import OrdersManagement from './orders-management/OrdersManagement';
 import EmailComposer from './email-composer/EmailComposer';
 import CertificateManagement from './certificate-management/CertificateManagement';
 import VerificationManagement from './verification-management/VerificationManagement';
-import AdminCareRequestDetail from './care-requests/AdminCareRequestDetail';
 import SubscriptionAdmin from './subscriptions/SubscriptionAdmin';
 import DisputesManagement from './disputes-management/DisputesManagement';
 import IncidentReportDetail from './incidents/IncidentReportDetail';
@@ -35,6 +42,7 @@ import NotFoundPage from '../../../pages/NotFoundPage';
 import { hasPolicy } from '../../utils/adminPermissions';
 import WithdrawalTokenLookup from './withdrawal-management/WithdrawalTokenLookup';
 import ReferralsManagement from './referrals-management/ReferralsManagement';
+import FeatureMovedNotice from '../../components/shared/FeatureMovedNotice';
 import './admin-dashboard/admin-sidebar.css';
 
 function AdminRoutes() {
@@ -44,6 +52,7 @@ function AdminRoutes() {
     const role = userDetails?.role || '';
     const department = userDetails?.department || '';
     const canUseFinanceTools = hasPolicy('finance', role, department);
+    const canUseOperationsTools = hasPolicy('operations', role, department);
     
     useEffect(() => {
         // Check if user has admin role
@@ -111,6 +120,47 @@ function AdminRoutes() {
                     <Route path='/chat-compliance' element={<ChatCompliance />} />
                     <Route path='/booking-commitments' element={<BookingCommitments />} />
                     <Route path='/gigs' element={<GigsManagement />} />
+                    <Route
+                        path='/packages'
+                        element={
+                            canUseOperationsTools
+                                ? <PackagesManagement />
+                                : <NotFoundPage />
+                        }
+                    />
+                    <Route path='/care-matching' element={<FeatureMovedNotice title="Care Matching has been retired" message="Caregivers are now matched to package requests in the Assignment Console. Recommending a specific caregiver's gig to a client is no longer supported." homePath="/app/admin/assignments" homeLabel="Go to Assignments" />} />
+                    <Route
+                        path='/assignments'
+                        element={
+                            canUseOperationsTools
+                                ? <AssignmentConsole />
+                                : <NotFoundPage />
+                        }
+                    />
+                    <Route
+                        path='/pay-rates'
+                        element={
+                            canUseOperationsTools
+                                ? <PayRatesManagement />
+                                : <NotFoundPage />
+                        }
+                    />
+                    <Route
+                        path='/payroll'
+                        element={
+                            canUseOperationsTools
+                                ? <PayrollManagement />
+                                : <NotFoundPage />
+                        }
+                    />
+                    <Route
+                        path='/guarantors'
+                        element={
+                            canUseOperationsTools
+                                ? <GuarantorOverride />
+                                : <NotFoundPage />
+                        }
+                    />
                     <Route path='/orders' element={<OrdersManagement />} />
                     <Route path='/emails' element={<EmailComposer />} />
                     <Route path='/certificates' element={<CertificateManagement />} />
@@ -125,7 +175,9 @@ function AdminRoutes() {
                     <Route path="analytics" element={<AnalyticsDashboard />} />
                     <Route path="data-tools/middle-name-fix" element={<MiddleNameFix />} />
                     <Route path="data-tools/default-address-cleanup" element={<DefaultAddressCleanup />} />
-                    <Route path="care-requests/:requestId" element={<AdminCareRequestDetail />} />
+                    {/* Tier A: the competitive care-request flow is retired pending the
+                        package-request + internal-assignment rebuild (Tier D). */}
+                    <Route path="care-requests/:requestId" element={<FeatureMovedNotice title="Care requests are being rebuilt" message="Care request details are moving to guided care packages. This will be back soon." homePath="/app/admin/dashboard" homeLabel="Go to admin home" />} />
                     <Route path="*" element={<NotFoundPage />} />
                 </Routes>
             </div>

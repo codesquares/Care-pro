@@ -825,12 +825,12 @@ const QuestionBankManager = () => {
   };
 
   return (
-    <div className="question-bank-manager">
+    <div className="qbm-question-bank-manager">
       <h1>Question Bank Manager</h1>
       
-      <div className="question-bank-actions">
+      <div className="qbm-question-bank-actions">
         <button 
-          className="primary-button add-question-button"
+          className="qbm-primary-button add-question-button"
           onClick={() => setIsAddingQuestion(true)}
           disabled={isAddingQuestion || editingQuestion}
         >
@@ -838,7 +838,7 @@ const QuestionBankManager = () => {
         </button>
         
         <button 
-          className="secondary-button import-button"
+          className="qbm-secondary-button import-button"
           onClick={() => setIsImporting(true)}
           disabled={isImporting || isAddingQuestion || editingQuestion}
         >
@@ -846,7 +846,7 @@ const QuestionBankManager = () => {
         </button>
         
         <button 
-          className="secondary-button generate-button"
+          className="qbm-secondary-button generate-button"
           onClick={handleGenerateSampleQuestions}
           disabled={isSampleGenerating || isAddingQuestion || editingQuestion}
         >
@@ -855,7 +855,7 @@ const QuestionBankManager = () => {
         </button>
         
         <button 
-          className="secondary-button refresh-button"
+          className="qbm-secondary-button refresh-button"
           onClick={loadQuestions}
           disabled={loading}
         >
@@ -863,18 +863,18 @@ const QuestionBankManager = () => {
         </button>
       </div>
       
-      {success && <div className="success-message">{success}</div>}
-      {error && <div className="error-message">{error}</div>}
+      {success && <div className="qbm-success-message">{success}</div>}
+      {error && <div className="qbm-error-message">{error}</div>}
       
       {/* Import Questions Modal */}
       {isImporting && (
-        <div className="modal">
-          <div className="modal-content">
+        <div className="qbm-modal">
+          <div className="qbm-modal-content">
             <h2>Import Questions</h2>
-            <p className="modal-instruction">
+            <p className="qbm-modal-instruction">
               Paste JSON array of questions in the format:
             </p>
-            <pre className="code-example">
+            <pre className="qbm-code-example">
 {`[
   {
     "question": "Sample question text?",
@@ -888,18 +888,18 @@ const QuestionBankManager = () => {
 ]`}
             </pre>
             <textarea
-              className="import-textarea"
+              className="qbm-import-textarea"
               value={importData}
               onChange={handleImportDataChange}
               rows={10}
               placeholder="Paste JSON data here..."
             ></textarea>
             
-            <div className="modal-actions">
-              <button className="secondary-button" onClick={cancelImporting}>
+            <div className="qbm-modal-actions">
+              <button className="qbm-secondary-button" onClick={cancelImporting}>
                 Cancel
               </button>
-              <button className="primary-button" onClick={handleImportQuestions} disabled={loading}>
+              <button className="qbm-primary-button" onClick={handleImportQuestions} disabled={loading}>
                 {loading ? <i className="fas fa-spinner fa-spin"></i> : 'Import'}
               </button>
             </div>
@@ -909,11 +909,11 @@ const QuestionBankManager = () => {
       
       {/* Add Question Form */}
       {isAddingQuestion && (
-        <div className="question-form">
+        <div className="qbm-question-form">
           <h2>Add New Question</h2>
           
-          <div className="form-row">
-            <div className="form-group">
+          <div className="qbm-form-row">
+            <div className="qbm-form-group">
               <label>Category</label>
               <select 
                 value={newQuestion.category}
@@ -926,7 +926,7 @@ const QuestionBankManager = () => {
               </select>
             </div>
             
-            <div className="form-group">
+            <div className="qbm-form-group">
               <label>User Type</label>
               <select 
                 value={newQuestion.userType}
@@ -940,7 +940,7 @@ const QuestionBankManager = () => {
             </div>
           </div>
           
-          <div className="form-group">
+          <div className="qbm-form-group">
             <label>Question</label>
             <textarea 
               value={newQuestion.question}
@@ -950,11 +950,11 @@ const QuestionBankManager = () => {
             ></textarea>
           </div>
           
-          <div className="options-container">
+          <div className="qbm-options-container">
             <label>Options</label>
             {newQuestion.options.map((option, index) => (
-              <div key={index} className="option-row">
-                <span className="option-label">{indexToLetter(index)}.</span>
+              <div key={index} className="qbm-option-row">
+                <span className="qbm-option-label">{indexToLetter(index)}.</span>
                 <input 
                   type="text"
                   value={option}
@@ -972,7 +972,7 @@ const QuestionBankManager = () => {
             ))}
           </div>
           
-          <div className="form-group">
+          <div className="qbm-form-group">
             <label>Explanation</label>
             <textarea 
               value={newQuestion.explanation}
@@ -982,11 +982,11 @@ const QuestionBankManager = () => {
             ></textarea>
           </div>
           
-          <div className="form-actions">
-            <button className="secondary-button" onClick={cancelAddingQuestion}>
+          <div className="qbm-form-actions">
+            <button className="qbm-secondary-button" onClick={cancelAddingQuestion}>
               Cancel
             </button>
-            <button className="primary-button" onClick={handleAddQuestion} disabled={loading}>
+            <button className="qbm-primary-button" onClick={handleAddQuestion} disabled={loading}>
               {loading ? <i className="fas fa-spinner fa-spin"></i> : 'Add Question'}
             </button>
           </div>
@@ -995,11 +995,11 @@ const QuestionBankManager = () => {
       
       {/* Edit Question Form */}
       {editingQuestion && (
-        <div className="question-form">
+        <div className="qbm-question-form">
           <h2>Edit Question</h2>
           
-          <div className="form-row">
-            <div className="form-group">
+          <div className="qbm-form-row">
+            <div className="qbm-form-group">
               <label>Category</label>
               <select 
                 value={editingQuestion.category}
@@ -1012,7 +1012,7 @@ const QuestionBankManager = () => {
               </select>
             </div>
             
-            <div className="form-group">
+            <div className="qbm-form-group">
               <label>User Type</label>
               <select 
                 value={editingQuestion.userType}
@@ -1025,7 +1025,7 @@ const QuestionBankManager = () => {
               </select>
             </div>
             
-            <div className="form-group">
+            <div className="qbm-form-group">
               <label>Status</label>
               <select 
                 value={editingQuestion.active ? 'active' : 'inactive'}
@@ -1037,7 +1037,7 @@ const QuestionBankManager = () => {
             </div>
           </div>
           
-          <div className="form-group">
+          <div className="qbm-form-group">
             <label>Question</label>
             <textarea 
               value={editingQuestion.question}
@@ -1047,11 +1047,11 @@ const QuestionBankManager = () => {
             ></textarea>
           </div>
           
-          <div className="options-container">
+          <div className="qbm-options-container">
             <label>Options</label>
             {editingQuestion.options.map((option, index) => (
-              <div key={index} className="option-row">
-                <span className="option-label">{indexToLetter(index)}.</span>
+              <div key={index} className="qbm-option-row">
+                <span className="qbm-option-label">{indexToLetter(index)}.</span>
                 <input 
                   type="text"
                   value={option}
@@ -1069,7 +1069,7 @@ const QuestionBankManager = () => {
             ))}
           </div>
           
-          <div className="form-group">
+          <div className="qbm-form-group">
             <label>Explanation</label>
             <textarea 
               value={editingQuestion.explanation}
@@ -1079,11 +1079,11 @@ const QuestionBankManager = () => {
             ></textarea>
           </div>
           
-          <div className="form-actions">
-            <button className="secondary-button" onClick={cancelEditing}>
+          <div className="qbm-form-actions">
+            <button className="qbm-secondary-button" onClick={cancelEditing}>
               Cancel
             </button>
-            <button className="primary-button" onClick={handleUpdateQuestion} disabled={loading}>
+            <button className="qbm-primary-button" onClick={handleUpdateQuestion} disabled={loading}>
               {loading ? <i className="fas fa-spinner fa-spin"></i> : 'Save Changes'}
             </button>
           </div>
@@ -1091,10 +1091,10 @@ const QuestionBankManager = () => {
       )}
       
       {/* Filters */}
-      <div className="filters">
+      <div className="qbm-filters">
         <h3>Filters</h3>
-        <div className="filter-row">
-          <div className="filter-group">
+        <div className="qbm-filter-row">
+          <div className="qbm-filter-group">
             <label>Category</label>
             <select 
               value={filters.category}
@@ -1107,7 +1107,7 @@ const QuestionBankManager = () => {
             </select>
           </div>
           
-          <div className="filter-group">
+          <div className="qbm-filter-group">
             <label>User Type</label>
             <select 
               value={filters.userType}
@@ -1120,27 +1120,27 @@ const QuestionBankManager = () => {
             </select>
           </div>
           
-          <button className="secondary-button" onClick={resetFilters}>
+          <button className="qbm-secondary-button" onClick={resetFilters}>
             Reset Filters
           </button>
         </div>
       </div>
       
       {/* Questions List */}
-      <div className="questions-list">
+      <div className="qbm-questions-list">
         <h3>Questions ({questions.length})</h3>
         
-        {loading && <div className="loading">Loading questions...</div>}
+        {loading && <div className="qbm-loading">Loading questions...</div>}
         
         {!loading && questions.length === 0 && (
-          <div className="no-questions">
+          <div className="qbm-no-questions">
             <p>No questions found. Try adjusting your filters or add new questions.</p>
           </div>
         )}
         
         {!loading && questions.length > 0 && (
-          <div className="question-table-container">
-            <table className="question-table">
+          <div className="qbm-question-table-container">
+            <table className="qbm-question-table">
               <thead>
                 <tr>
                   <th>Question</th>
@@ -1153,14 +1153,14 @@ const QuestionBankManager = () => {
               <tbody>
                 {questions.map((question) => (
                   <tr key={question.id} className={question.active === false ? 'inactive' : ''}>
-                    <td className="question-text-cell">
-                      <div className="question-content">
+                    <td className="qbm-question-text-cell">
+                      <div className="qbm-question-content">
                         <p>{question.question}</p>
-                        <div className="question-options">
+                        <div className="qbm-question-options">
                           {question.options.map((option, index) => (
                             <div 
                               key={index} 
-                              className={`question-option ${question.correctAnswer === indexToLetter(index) ? 'correct' : ''}`}
+                              className={`qbm-question-option ${question.correctAnswer === indexToLetter(index) ? 'correct' : ''}`}
                             >
                               <strong>{indexToLetter(index)}:</strong> {option}
                             </div>
@@ -1171,21 +1171,21 @@ const QuestionBankManager = () => {
                     <td>{question.category}</td>
                     <td>{question.userType}</td>
                     <td>
-                      <span className={`status-badge ${question.active !== false ? 'active' : 'inactive'}`}>
+                      <span className={`qbm-status-badge ${question.active !== false ? 'active' : 'inactive'}`}>
                         {question.active !== false ? 'Active' : 'Inactive'}
                       </span>
                     </td>
                     <td>
-                      <div className="action-buttons">
+                      <div className="qbm-action-buttons">
                         <button 
-                          className="edit-button" 
+                          className="qbm-edit-button" 
                           onClick={() => startEditing(question)}
                           disabled={!!editingQuestion}
                         >
                           <i className="fas fa-edit"></i>
                         </button>
                         <button 
-                          className="delete-button" 
+                          className="qbm-delete-button" 
                           onClick={() => handleDeleteQuestion(question.id)}
                           disabled={loading}
                         >

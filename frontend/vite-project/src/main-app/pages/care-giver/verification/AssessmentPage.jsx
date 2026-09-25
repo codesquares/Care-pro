@@ -549,72 +549,72 @@ const AssessmentPage = () => {
   // ─── Hub View ─────────────────────────────────────────────────────────────
   const renderHub = () => {
     return (
-      <div className="mobile-assessment-container fade-in">
-        <div className="assessment-content">
+      <div className="ma-mobile-assessment-container ma-fade-in">
+        <div className="ma-assessment-content">
           {/* Hub Header */}
-          <div className="account-verification-header">
+          <div className="ma-account-verification-header">
             <h1>Caregiver Assessments</h1>
-            <p className="hub-subtitle">
+            <p className="asp-hub-subtitle">
               Complete assessments and certifications to unlock service categories
             </p>
           </div>
 
           {/* ── General Assessment Card ─────────────────────────────────── */}
-          <div className="hub-section">
-            <div className="hub-section-header">
+          <div className="asp-hub-section">
+            <div className="asp-hub-section-header">
               <h2><i className="fas fa-clipboard-check"></i> General Assessment</h2>
-              <span className="hub-badge hub-badge-required">Required</span>
+              <span className="asp-hub-badge asp-hub-badge-required">Required</span>
             </div>
 
-            <div className={`hub-card ${generalStatus?.isQualified ? 'hub-card-passed' : generalStatus?.assessmentCompleted ? 'hub-card-failed' : 'hub-card-new'}`}>
+            <div className={`asp-hub-card ${generalStatus?.isQualified ? 'asp-hub-card-passed' : generalStatus?.assessmentCompleted ? 'asp-hub-card-failed' : 'asp-hub-card-new'}`}>
               {generalStatusLoading ? (
-                <div className="hub-card-loading">
-                  <div className="spinner"></div>
+                <div className="asp-hub-card-loading">
+                  <div className="ma-spinner"></div>
                   <p>Checking status...</p>
                 </div>
               ) : generalStatus?.isQualified ? (
                 /* ── Passed ──────────────────────────────────── */
-                <div className="hub-card-body">
-                  <div className="hub-status-row">
-                    <div className="hub-status-icon hub-icon-passed">✅</div>
-                    <div className="hub-status-info">
+                <div className="asp-hub-card-body">
+                  <div className="asp-hub-status-row">
+                    <div className="asp-hub-status-icon asp-hub-icon-passed">✅</div>
+                    <div className="asp-hub-status-info">
                       <h3>Assessment Passed</h3>
                       <p>You've successfully completed the general caregiver assessment.</p>
                     </div>
                   </div>
                   {generalStatus?.score != null && (
-                    <div className="hub-score-bar">
-                      <div className="hub-score-fill passing" style={{ width: `${generalStatus.score}%` }}></div>
-                      <span className="hub-score-label">{generalStatus.score}%</span>
+                    <div className="asp-hub-score-bar">
+                      <div className="asp-hub-score-fill passing" style={{ width: `${generalStatus.score}%` }}></div>
+                      <span className="asp-hub-score-label">{generalStatus.score}%</span>
                     </div>
                   )}
                 </div>
               ) : generalStatus?.assessmentCompleted ? (
                 /* ── Failed / needs retake ────────────────────── */
-                <div className="hub-card-body">
-                  <div className="hub-status-row">
-                    <div className="hub-status-icon hub-icon-failed">⚠️</div>
-                    <div className="hub-status-info">
+                <div className="asp-hub-card-body">
+                  <div className="asp-hub-status-row">
+                    <div className="asp-hub-status-icon asp-hub-icon-failed">⚠️</div>
+                    <div className="asp-hub-status-info">
                       <h3>Assessment Not Passed</h3>
                       <p>You need a score of 70% or higher to qualify.</p>
                     </div>
                   </div>
                   {generalStatus?.score != null && (
-                    <div className="hub-score-bar">
-                      <div className="hub-score-fill failing" style={{ width: `${generalStatus.score}%` }}></div>
-                      <span className="hub-score-label">{generalStatus.score}%</span>
+                    <div className="asp-hub-score-bar">
+                      <div className="asp-hub-score-fill failing" style={{ width: `${generalStatus.score}%` }}></div>
+                      <span className="asp-hub-score-label">{generalStatus.score}%</span>
                     </div>
                   )}
                   {(() => {
                     const canRetakeAfter = generalStatus?.canRetakeAfter;
                     const retakeBlocked = canRetakeAfter && new Date(canRetakeAfter) > new Date();
                     return retakeBlocked ? (
-                      <div className="hub-cooldown">
+                      <div className="asp-hub-cooldown">
                         <i className="fas fa-hourglass-half"></i>
                         You can retake after {new Date(canRetakeAfter).toLocaleDateString()}
                       </div>
                     ) : (
-                      <button className="hub-action-btn" onClick={handleStartGeneralAssessment}>
+                      <button className="asp-hub-action-btn" onClick={handleStartGeneralAssessment}>
                         <i className="fas fa-redo"></i> Retake Assessment
                       </button>
                     );
@@ -622,10 +622,10 @@ const AssessmentPage = () => {
                 </div>
               ) : (
                 /* ── Not yet taken ───────────────────────────── */
-                <div className="hub-card-body">
-                  <div className="hub-status-row">
-                    <div className="hub-status-icon hub-icon-new">📝</div>
-                    <div className="hub-status-info">
+                <div className="asp-hub-card-body">
+                  <div className="asp-hub-status-row">
+                    <div className="asp-hub-status-icon asp-hub-icon-new">📝</div>
+                    <div className="asp-hub-status-info">
                       <h3>Not Yet Taken</h3>
                       <p>
                         Complete this assessment to qualify as a caregiver. It covers
@@ -634,20 +634,20 @@ const AssessmentPage = () => {
                     </div>
                   </div>
 
-                  <div className="hub-detail-chips">
-                    <span className="hub-chip">
+                  <div className="asp-hub-detail-chips">
+                    <span className="asp-hub-chip">
                       <i className="fas fa-clock"></i> ~15 min
                     </span>
-                    <span className="hub-chip">
+                    <span className="asp-hub-chip">
                       <i className="fas fa-list-ol"></i> 30 questions
                     </span>
-                    <span className="hub-chip">
+                    <span className="asp-hub-chip">
                       <i className="fas fa-trophy"></i> 70% to pass
                     </span>
                   </div>
 
                   <button
-                    className="hub-action-btn hub-action-primary"
+                    className="asp-hub-action-btn asp-hub-action-primary"
                     onClick={handleStartGeneralAssessment}
                     disabled={isLoading}
                   >
@@ -664,12 +664,12 @@ const AssessmentPage = () => {
 
           {/* ── Specialized Assessments (temporarily disabled) ─────── */}
           {false && (
-          <div className="hub-section">
-            <div className="hub-section-header">
+          <div className="asp-hub-section">
+            <div className="asp-hub-section-header">
               <h2><i className="fas fa-star"></i> Specialized Assessments</h2>
-              <span className="hub-badge hub-badge-advanced">Advanced</span>
+              <span className="asp-hub-badge asp-hub-badge-advanced">Advanced</span>
             </div>
-            <p className="hub-section-desc">
+            <p className="asp-hub-section-desc">
               Unlock specialized care categories by passing category-specific assessments
               and uploading required certifications.
             </p>
@@ -696,33 +696,33 @@ const AssessmentPage = () => {
       qualificationStatus = {};
     }
     return (
-      <div className="mobile-assessment-container fade-in">
+      <div className="ma-mobile-assessment-container ma-fade-in">
         {/* User Profile Card */}
         {/* <div className="caregiver-profile-card-assesment">
           <ProfileCard />
         </div> */}
 
         {/* Assessment Content */}
-        <div className="assessment-content">
+        <div className="ma-assessment-content">
           {/* Back to Hub */}
-          <button className="hub-back-btn" onClick={backToHub}>
+          <button className="asp-hub-back-btn" onClick={backToHub}>
             <i className="fas fa-arrow-left"></i> All Assessments
           </button>
 
           {/* Account Verification Header */}
-          <div className="account-verification-header">
+          <div className="ma-account-verification-header">
             <h1>Account Verification</h1>
-            <div className="verification-progress-bar">
-              <div className="progress-segment active"></div>
-              <div className="progress-segment"></div>
-              <div className="progress-segment"></div>
+            <div className="ma-verification-progress-bar">
+              <div className="ma-progress-segment active"></div>
+              <div className="ma-progress-segment"></div>
+              <div className="ma-progress-segment"></div>
             </div>
           </div>
 
           {/* Assessment Welcome Card */}
-          <div className="assessment-welcome-card">
-            <div className="welcome-content">
-              <div className="assessment-illustration">
+          <div className="ma-assessment-welcome-card">
+            <div className="ma-welcome-content">
+              <div className="ma-assessment-illustration">
                 <svg width="120" height="130" viewBox="0 0 218 230" fill="none" xmlns="http://www.w3.org/2000/svg">
                   <path d="M12.2489 184.52C14.4489 178.308 13.5195 172.799 12.2488 165.271C10.6606 155.861 8.01348 134.732 21.4255 121.239C32.1551 110.444 44.3671 104.904 49.1319 103.484" stroke="#18181B" strokeWidth="3.01337" strokeLinecap="round"/>
                   <path d="M39.2969 184.264C40.0641 181.576 47.6073 169.889 46.6482 162.004C46.3031 159.761 46.5447 154.602 51.3071 151.91" stroke="#18181B" strokeWidth="3.01337" strokeLinecap="round"/>
@@ -762,42 +762,42 @@ const AssessmentPage = () => {
               <p>The assessment consists of {userDetails.role?.toLowerCase() === 'cleaner' ? '10' : '30'} questions and should take approximately 15 minutes to complete.</p>
             </div>
 
-            <div className="assessment-instructions">
-              <div className="instruction-item">
-                <div className="instruction-icon">
+            <div className="ma-assessment-instructions">
+              <div className="ma-instruction-item">
+                <div className="ma-instruction-icon">
                   <i className="fas fa-lightbulb"></i>
                 </div>
-                <div className="instruction-content">
+                <div className="ma-instruction-content">
                   <h4>Be Honest</h4>
                   <p>Answer all questions truthfully to ensure the best client matches for your skills.</p>
                 </div>
               </div>
 
-              <div className="instruction-item">
-                <div className="instruction-icon">
+              <div className="ma-instruction-item">
+                <div className="ma-instruction-icon">
                   <i className="fas fa-clock"></i>
                 </div>
-                <div className="instruction-content">
+                <div className="ma-instruction-content">
                   <h4>Take your time</h4>
                   <p>There's no time limit, so think carefully before choosing your answer.</p>
                 </div>
               </div>
 
-              <div className="instruction-item">
-                <div className="instruction-icon">
+              <div className="ma-instruction-item">
+                <div className="ma-instruction-icon">
                   <i className="fas fa-check-double"></i>
                 </div>
-                <div className="instruction-content">
+                <div className="ma-instruction-content">
                   <h4>Complete in one session</h4>
                   <p>For best results, complete the assessment in one sitting without interruptions.</p>
                 </div>
               </div>
 
-              <div className="instruction-item">
-                <div className="instruction-icon">
+              <div className="ma-instruction-item">
+                <div className="ma-instruction-icon">
                   <i className="fas fa-award"></i>
                 </div>
-                <div className="instruction-content">
+                <div className="ma-instruction-content">
                   <h4>Detailed Responses</h4>
                   <p>For open-ended questions, provide detailed responses that showcase your experience and knowledge.</p>
                 </div>
@@ -806,8 +806,8 @@ const AssessmentPage = () => {
 
             {/* Training Materials Section - Only show if endpoint is available */}
             {(trainingMaterials.length > 0 || loadingMaterials || (materialsError && !materialsError.includes('not available'))) && (
-              <div className="training-materials-section">
-                <div className="training-materials-header">
+              <div className="ma-training-materials-section">
+                <div className="ma-training-materials-header">
                   <h3>📚 Latest Training Manual</h3>
                   <p>Review the latest training manual before starting your assessment to improve your chances of success.</p>
                   <div className="download-notice" style={{
@@ -825,16 +825,16 @@ const AssessmentPage = () => {
                 </div>
                 
                 {loadingMaterials ? (
-                  <div className="loading-materials">
-                    <div className="spinner"></div>
+                  <div className="ma-loading-materials">
+                    <div className="ma-spinner"></div>
                     <p>Loading latest training manual...</p>
                   </div>
                 ) : materialsError ? (
-                  <div className="materials-error">
+                  <div className="ma-materials-error">
                     <p>{materialsError}</p>
                     {!materialsError.includes('not available') && (
                       <button 
-                        className="retry-materials-btn"
+                        className="ma-retry-materials-btn"
                         onClick={fetchTrainingMaterials}
                       >
                         <i className="fas fa-redo"></i>
@@ -843,24 +843,24 @@ const AssessmentPage = () => {
                     )}
                   </div>
                 ) : trainingMaterials.length > 0 ? (
-                  <div className="training-materials-list">
+                  <div className="ma-training-materials-list">
                     {trainingMaterials.map((material) => (
-                      <div key={material.id} className="training-material-item">
-                        <div className="material-info">
-                          <div className="material-icon">
+                      <div key={material.id} className="ma-training-material-item">
+                        <div className="ma-material-info">
+                          <div className="ma-material-icon">
                             <i className={`fas ${
                               material.fileType?.toLowerCase() === 'pdf' ? 'fa-file-pdf' :
                               material.fileType?.toLowerCase() === 'doc' || material.fileType?.toLowerCase() === 'docx' ? 'fa-file-word' :
                               'fa-file-download'
                             }`}></i>
                           </div>
-                          <div className="material-details">
+                          <div className="ma-material-details">
                             <h4>{material.title}</h4>
                             {material.description && (
-                              <p className="material-description">{material.description}</p>
+                              <p className="ma-material-description">{material.description}</p>
                             )}
-                            <div className="material-meta">
-                              <span className="file-type">{material.fileType}</span>
+                            <div className="ma-material-meta">
+                              <span className="ma-file-type">{material.fileType}</span>
                               {material.fileSize && material.fileSize > 0 ? (
                                 <span className="file-size">
                                   {material.fileSize >= 1024 * 1024 
@@ -880,7 +880,7 @@ const AssessmentPage = () => {
                         </div>
                         <div className="material-actions">
                           <button
-                            className="download-material-btn"
+                            className="ma-download-material-btn"
                             onClick={() => handleDownloadMaterial(material.id, material.fileName)}
                             title={`Download ${material.title}`}
                           >
@@ -892,7 +892,7 @@ const AssessmentPage = () => {
                     ))}
                   </div>
                 ) : (
-                  <div className="no-materials">
+                  <div className="ma-no-materials">
                     <p>No training manual is currently available.</p>
                   </div>
                 )}
@@ -900,16 +900,16 @@ const AssessmentPage = () => {
             )}
 
             {isLoading ? (
-              <div className="loading-indicator">
-                <div className="spinner"></div>
+              <div className="ma-loading-indicator">
+                <div className="ma-spinner"></div>
                 <p>Loading assessment questions...</p>
               </div>
             ) : (
               <>
-                {error && <div className="error-message">{error}</div>}
+                {error && <div className="ma-error-message">{error}</div>}
                 
                 <button 
-                  className="proceed-btn"
+                  className="ma-proceed-btn"
                   onClick={startAssessment}
                   disabled={isLoading || questions.length === 0}
                 >
@@ -926,44 +926,44 @@ const AssessmentPage = () => {
 
   const renderInstructionsScreen = () => {
     return (
-      <div className="mobile-assessment-container fade-in">
+      <div className="ma-mobile-assessment-container ma-fade-in">
         {/* Assessment Content */}
-        <div className="assessment-content">
+        <div className="ma-assessment-content">
           {/* Back to Hub */}
-          <button className="hub-back-btn" onClick={backToHub}>
+          <button className="asp-hub-back-btn" onClick={backToHub}>
             <i className="fas fa-arrow-left"></i> All Assessments
           </button>
 
           {/* Account Verification Header */}
-          <div className="account-verification-header">
+          <div className="ma-account-verification-header">
             <h1>Account Verification</h1>
-            <div className="verification-progress-bar">
-              <div className="progress-segment active"></div>
-              <div className="progress-segment active"></div>
-              <div className="progress-segment"></div>
+            <div className="ma-verification-progress-bar">
+              <div className="ma-progress-segment active"></div>
+              <div className="ma-progress-segment active"></div>
+              <div className="ma-progress-segment"></div>
             </div>
           </div>
 
           {/* Question Card */}
-          <div className="question-card">
-            <div className="question-content">
+          <div className="ma-question-card">
+            <div className="ma-question-content">
               <h2>Welcome to the Caregiver Assessment</h2>
-              <div className="question-text">
+              <div className="ma-question-text">
                 <p>Describe how you will respond to a medical emergency while caring for a patient at home?</p>
               </div>
               <div className="answer-input">
                 <textarea 
                   placeholder="Type your response here..."
-                  className="response-textarea"
+                  className="ma-response-textarea"
                   rows="4"
                 />
               </div>
-              <div className="question-navigation">
-                <button className="nav-btn previous-btn">
+              <div className="ma-question-navigation">
+                <button className="ma-nav-btn ma-previous-btn">
                   <i className="fas fa-arrow-left"></i>
                   Previous
                 </button>
-                <button className="nav-btn next-btn" onClick={beginQuestions}>
+                <button className="ma-nav-btn ma-next-btn" onClick={beginQuestions}>
                   Next
                   <i className="fas fa-arrow-right"></i>
                 </button>
@@ -978,10 +978,10 @@ const AssessmentPage = () => {
   const renderQuestionsScreen = () => {
     if (questions.length === 0) {
       return (
-        <div className="error-message">
+        <div className="ma-error-message">
           <p>No questions are available. Please try again later.</p>
           <button 
-            className="primary-button"
+            className="asp-primary-button"
             onClick={() => navigate('/app/caregiver/profile')}
           >
             Return to Profile
@@ -996,54 +996,54 @@ const AssessmentPage = () => {
     console.log('Current Question Structure:', currentQ);
     
     return (
-      <div className="mobile-assessment-container fade-in">
+      <div className="ma-mobile-assessment-container ma-fade-in">
         {/* Assessment Content */}
-        <div className="assessment-content">
+        <div className="ma-assessment-content">
           {/* Back to Hub */}
-          <button className="hub-back-btn" onClick={backToHub}>
+          <button className="asp-hub-back-btn" onClick={backToHub}>
             <i className="fas fa-arrow-left"></i> All Assessments
           </button>
 
           {/* Account Verification Header */}
-          <div className="account-verification-header">
+          <div className="ma-account-verification-header">
             <h1>Account Verification</h1>
-            <div className="verification-progress-bar">
-              <div className="progress-segment active"></div>
-              <div className="progress-segment active"></div>
-              <div className="progress-segment active"></div>
+            <div className="ma-verification-progress-bar">
+              <div className="ma-progress-segment active"></div>
+              <div className="ma-progress-segment active"></div>
+              <div className="ma-progress-segment active"></div>
             </div>
           </div>
 
           {/* Question Card */}
-          <div className="question-card">
-            <div className="question-content">
+          <div className="ma-question-card">
+            <div className="ma-question-content">
               <h2>Caregiver Assessment</h2>
               
               {/* Progress indicator */}
-              <div className="question-progress">
-                <div className="progress-text">
+              <div className="ma-question-progress">
+                <div className="ma-progress-text">
                   Question {currentQuestion + 1} of {questions.length}
                 </div>
-                <div className="progress-bar">
+                <div className="ma-progress-bar">
                   <div 
-                    className="progress-fill" 
+                    className="ma-progress-fill" 
                     style={{ width: `${(currentQuestion + 1) / questions.length * 100}%` }}
                   ></div>
                 </div>
               </div>
 
-              <div className="question-text">
+              <div className="ma-question-text">
                 <p>{currentQ.question || currentQ.Question || currentQ.text || "Question text not available"}</p>
               </div>
 
-              <div className="answer-options">
+              <div className="ma-answer-options">
                 {(currentQ.options || currentQ.Options || []).map((option, index) => {
                   // Determine the option letter (A, B, C, D)
                   const optionLetter = String.fromCharCode(65 + index); // 65 is ASCII for 'A'
                   
                   return (
                     <div 
-                      className={`answer-option ${answers[currentQ.id] === optionLetter ? 'selected' : ''}`} 
+                      className={`ma-answer-option ${answers[currentQ.id] === optionLetter ? 'selected' : ''}`} 
                       key={index}
                       onClick={() => handleAnswerChange(currentQ.id, optionLetter)}
                     >
@@ -1056,22 +1056,22 @@ const AssessmentPage = () => {
                         onChange={() => handleAnswerChange(currentQ.id, optionLetter)}
                         style={{ display: 'none' }}
                       />
-                      <label htmlFor={`option-${index}`} className="option-label">
-                        <div className="option-indicator">
-                          <span className="option-letter">{optionLetter}</span>
+                      <label htmlFor={`option-${index}`} className="ma-option-label">
+                        <div className="ma-option-indicator">
+                          <span className="ma-option-letter">{optionLetter}</span>
                         </div>
-                        <span className="option-text">{option}</span>
+                        <span className="ma-option-text">{option}</span>
                       </label>
                     </div>
                   );
                 })}
               </div>
               
-              {error && <div className="error-message">{error}</div>}
+              {error && <div className="ma-error-message">{error}</div>}
               
-              <div className="question-navigation">
+              <div className="ma-question-navigation">
                 <button 
-                  className="nav-btn previous-btn"
+                  className="ma-nav-btn ma-previous-btn"
                   onClick={moveToPreviousQuestion}
                   disabled={currentQuestion === 0}
                 >
@@ -1080,13 +1080,13 @@ const AssessmentPage = () => {
                 </button>
                 
                 <button 
-                  className="nav-btn next-btn"
+                  className="ma-nav-btn ma-next-btn"
                   onClick={moveToNextQuestion}
                   disabled={isSubmitting}
                 >
                   {currentQuestion === questions.length - 1 ? 'Submit' : 'Next'}
                   <i className="fas fa-arrow-right"></i>
-                  {isSubmitting && <i className="fas fa-spinner fa-spin ml-2"></i>}
+                  {isSubmitting && <i className="fas fa-spinner fa-spin asp-ml-2"></i>}
                 </button>
               </div>
             </div>
@@ -1101,32 +1101,32 @@ const AssessmentPage = () => {
     const score = assessmentResult?.score || 0;
     
     return (
-      <div className="mobile-assessment-container fade-in">
+      <div className="ma-mobile-assessment-container ma-fade-in">
         {/* Assessment Content */}
-        <div className="assessment-content">
+        <div className="ma-assessment-content">
           {/* Back to Hub */}
-          <button className="hub-back-btn" onClick={backToHub}>
+          <button className="asp-hub-back-btn" onClick={backToHub}>
             <i className="fas fa-arrow-left"></i> All Assessments
           </button>
 
           {/* Account Verification Header */}
-          <div className="account-verification-header">
+          <div className="ma-account-verification-header">
             <h1>Account Verification</h1>
-            <div className="verification-progress-bar">
-              <div className="progress-segment active"></div>
-              <div className="progress-segment active"></div>
-              <div className="progress-segment active"></div>
+            <div className="ma-verification-progress-bar">
+              <div className="ma-progress-segment active"></div>
+              <div className="ma-progress-segment active"></div>
+              <div className="ma-progress-segment active"></div>
             </div>
           </div>
 
           {/* Results Card */}
-          <div className="results-card">
-            <div className="results-content">
+          <div className="ma-results-card">
+            <div className="ma-results-content">
               <h2>Caregiver Assessment</h2>
               
               {/* Result Status */}
-              <div className={`result-status ${isPassing ? 'success' : 'failure'}`}>
-                <div className="result-illustration">
+              <div className={`ma-result-status ${isPassing ? 'success' : 'failure'}`}>
+                <div className="ma-result-illustration">
                   {isPassing ? (
                     <svg width="120" height="120" viewBox="0 0 500 500" fill="none" xmlns="http://www.w3.org/2000/svg">
                       {/* Background circle */}
@@ -1281,26 +1281,26 @@ const AssessmentPage = () => {
                 <div className="result-message">
                   {isPassing ? (
                     <>
-                      <h3 className="result-title">Congratulations!</h3>
-                      <p className="result-subtitle">
+                      <h3 className="ma-result-title">Congratulations!</h3>
+                      <p className="ma-result-subtitle">
                         You have successfully qualified as a caregiver
                       </p>
                     </>
                   ) : (
                     <>
-                      <h3 className="result-title">OH OH</h3>
-                      <p className="result-subtitle">
+                      <h3 className="ma-result-title">OH OH</h3>
+                      <p className="ma-result-subtitle">
                         You did not meet the qualifications threshold to work with CarePro
                       </p>
                     </>
                   )}
                 </div>
                 
-                <div className="score-display">
-                  <div className={`score-circle ${isPassing ? 'passing' : 'failing'}`}>
-                    <span className="score-percentage">{score}%</span>
+                <div className="ma-score-display">
+                  <div className={`ma-score-circle ${isPassing ? 'passing' : 'failing'}`}>
+                    <span className="ma-score-percentage">{score}%</span>
                   </div>
-                  <p className="score-message">
+                  <p className="ma-score-message">
                     {isPassing 
                       ? (isVerified && hasCertificates
                           ? "Congratulations! You're fully eligible to publish gigs and start helping clients."
@@ -1312,12 +1312,12 @@ const AssessmentPage = () => {
               </div>
 
               {/* Action Buttons */}
-              <div className="result-actions">
+              <div className="ma-result-actions">
                 {isPassing ? (
                   <>
                     {!isVerified && (
                       <button 
-                        className="proceed-btn outline"
+                        className="ma-proceed-btn outline"
                         onClick={() => navigate('/app/caregiver/verification')}
                       >
                         Get Verified
@@ -1326,7 +1326,7 @@ const AssessmentPage = () => {
                     )}
                     {!hasCertificates && (
                       <button 
-                        className="proceed-btn outline"
+                        className="ma-proceed-btn outline"
                         onClick={() => navigate('/app/caregiver/profile')}
                       >
                         Upload Certificates
@@ -1335,7 +1335,7 @@ const AssessmentPage = () => {
                     )}
                     {isVerified && hasCertificates ? (
                       <button 
-                        className="proceed-btn success"
+                        className="ma-proceed-btn success"
                         onClick={() => navigate('/app/caregiver/create-gigs')}
                       >
                         Create a Gig
@@ -1343,7 +1343,7 @@ const AssessmentPage = () => {
                       </button>
                     ) : (
                       <button 
-                        className="proceed-btn success"
+                        className="ma-proceed-btn success"
                         onClick={() => navigate('/app/caregiver/profile')}
                       >
                         Go to Profile
@@ -1354,14 +1354,14 @@ const AssessmentPage = () => {
                 ) : (
                   <>
                     <button 
-                      className="proceed-btn outline"
+                      className="ma-proceed-btn outline"
                       onClick={backToHub}
                     >
                       View All Assessments
                     </button>
                     {assessmentResult?.attemptNumber < 3 && (
                       <button 
-                        className="restart-btn"
+                        className="ma-restart-btn"
                         onClick={() => {
                           // Scroll to top before restarting
                           window.scrollTo(0, 0);
@@ -1382,11 +1382,11 @@ const AssessmentPage = () => {
               </div>
 
               {/* Additional Info */}
-              {success && <div className="success-message">{success}</div>}
+              {success && <div className="ma-success-message">{success}</div>}
               
               {assessmentResult?.assessmentId && (
                 <button 
-                  className="refresh-score-btn" 
+                  className="ma-refresh-score-btn" 
                   onClick={async () => {
                     try {
                       const scoreResult = await assessmentService.calculateAssessmentScore(assessmentResult.assessmentId);
@@ -1418,39 +1418,39 @@ const AssessmentPage = () => {
               )}
 
               {/* Detailed Results (Collapsible) */}
-              <details className="detailed-results">
+              <details className="ma-detailed-results">
                 <summary>View Detailed Results</summary>
-                <div className="results-breakdown">
+                <div className="ma-results-breakdown">
                   <p><strong>Passing threshold:</strong> 70%</p>
                   <p><strong>Attempt:</strong> {assessmentResult?.attemptNumber || 1} of 3 allowed</p>
                   
                   {!isPassing && assessmentResult?.attemptNumber < 3 && (
-                    <p className="retake-info">You may retake the assessment immediately.</p>
+                    <p className="ma-retake-info">You may retake the assessment immediately.</p>
                   )}
                   
                   {!isPassing && assessmentResult?.attemptNumber >= 3 && (
-                    <p className="waiting-period-info">You must wait 15 days before your next attempt.</p>
+                    <p className="ma-waiting-period-info">You must wait 15 days before your next attempt.</p>
                   )}
 
                   {/* Question Results */}
                   {questionsWithAnswers.length > 0 && (
-                    <div className="questions-summary">
+                    <div className="ma-questions-summary">
                       <h4>Questions & Answers</h4>
                       {questionsWithAnswers.map((q, index) => (
-                        <div key={index} className={`result-item ${q.isCorrect ? 'correct' : 'incorrect'}`}>
-                          <div className="result-question">
-                            <span className="question-number">{index + 1}.</span> {q.text}
+                        <div key={index} className={`ma-result-item ${q.isCorrect ? 'correct' : 'incorrect'}`}>
+                          <div className="ma-result-question">
+                            <span className="asp-question-number">{index + 1}.</span> {q.text}
                           </div>
                           
-                          <div className="result-status-mini">
+                          <div className="ma-result-status-mini">
                             {q.isCorrect ? 
-                              <div className="correct-badge"><i className="fas fa-check-circle"></i> Correct</div> : 
-                              <div className="incorrect-badge"><i className="fas fa-times-circle"></i> Incorrect</div>
+                              <div className="ma-correct-badge"><i className="fas fa-check-circle"></i> Correct</div> : 
+                              <div className="ma-incorrect-badge"><i className="fas fa-times-circle"></i> Incorrect</div>
                             }
                           </div>
                           
                           {q.explanation && (
-                            <div className="result-explanation">
+                            <div className="ma-result-explanation">
                               {q.explanation}
                             </div>
                           )}
@@ -1473,7 +1473,7 @@ const AssessmentPage = () => {
         <title>Caregiver Assessment | CarePro</title>
       </Helmet>
       
-      <div className="mobile-assessment-page">
+      <div className="ma-mobile-assessment-page">
         {currentStep === 'hub' && renderHub()}
         {currentStep === 'welcome' && renderWelcomeScreen()}
         {currentStep === 'instructions' && renderInstructionsScreen()}

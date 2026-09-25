@@ -184,7 +184,7 @@ const MiddleNameFix = () => {
             <p>Users who signed up with <code>"testing"</code> stored as their middle name</p>
           </div>
         </div>
-        <button className="btn-secondary btn-sm" onClick={loadAffected} disabled={loading || fixing}>
+        <button className="mnf-btn-secondary mnf-btn-sm" onClick={loadAffected} disabled={loading || fixing}>
           <i className="fas fa-sync-alt"></i> Refresh
         </button>
       </div>
@@ -206,7 +206,7 @@ const MiddleNameFix = () => {
       )}
 
       {fetchErr && (
-        <div className="alert alert-error" style={{ marginBottom: '1rem' }}>
+        <div className="mnf-alert mnf-alert-error" style={{ marginBottom: '1rem' }}>
           <i className="fas fa-exclamation-circle"></i>
           <div><p>{fetchErr}</p></div>
         </div>
@@ -246,7 +246,7 @@ const MiddleNameFix = () => {
           </label>
         )}
         <button
-          className="btn-primary"
+          className="mnf-btn-primary"
           onClick={handleFix}
           disabled={selected.size === 0 || fixing || loading}
         >
@@ -261,7 +261,7 @@ const MiddleNameFix = () => {
       {/* Table */}
       {loading ? (
         <div className="mnf-loading">
-          <div className="spinner"></div>
+          <div className="mnf-spinner"></div>
           <p>Loading affected users…</p>
         </div>
       ) : rows.length === 0 && !fetchErr ? (

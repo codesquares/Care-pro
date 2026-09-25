@@ -150,15 +150,15 @@ const ChatCompliance = () => {
                 placeholder="e.g. ContactSharing…"
               />
             </div>
-            <button type="submit" className="btn-primary btn-sm" disabled={vLoading}>
+            <button type="submit" className="cc-btn-primary cc-btn-sm" disabled={vLoading}>
               <i className="fas fa-filter"></i> Apply
             </button>
             {(userIdFilter || typeFilter) && (
-              <button type="button" className="btn-secondary btn-sm" onClick={() => { setUserIdFilter(''); setTypeFilter(''); }}>
+              <button type="button" className="cc-btn-secondary cc-btn-sm" onClick={() => { setUserIdFilter(''); setTypeFilter(''); }}>
                 <i className="fas fa-times"></i> Clear
               </button>
             )}
-            <button type="button" className="btn-secondary btn-sm" onClick={() => loadViolations(0)} disabled={vLoading}>
+            <button type="button" className="cc-btn-secondary cc-btn-sm" onClick={() => loadViolations(0)} disabled={vLoading}>
               <i className="fas fa-sync-alt"></i> Refresh
             </button>
           </form>
@@ -166,7 +166,7 @@ const ChatCompliance = () => {
           {vError && <div className="cc-error"><i className="fas fa-exclamation-circle"></i> {vError}</div>}
 
           {vLoading && violations.length === 0 ? (
-            <div className="cc-loading"><div className="spinner"></div><p>Loading…</p></div>
+            <div className="cc-loading"><div className="cc-spinner"></div><p>Loading…</p></div>
           ) : violations.length === 0 ? (
             <div className="cc-empty"><i className="fas fa-check-circle"></i><p>No violations found</p></div>
           ) : (
@@ -198,7 +198,7 @@ const ChatCompliance = () => {
                         <td>{fmtDate(date)}</td>
                         <td>
                           <button
-                            className="btn-icon btn-icon--view"
+                            className="cc-btn-icon cc-btn-icon--view"
                             title="View detail"
                             onClick={() => openDetail(v)}
                             disabled={detailLoading}
@@ -213,7 +213,7 @@ const ChatCompliance = () => {
               </table>
               {hasMore && (
                 <div className="cc-loadmore">
-                  <button className="btn-secondary" onClick={handleLoadMore} disabled={vLoading}>
+                  <button className="cc-btn-secondary" onClick={handleLoadMore} disabled={vLoading}>
                     {vLoading ? <><i className="fas fa-spinner fa-spin"></i> Loading…</> : 'Load More'}
                   </button>
                 </div>
@@ -243,7 +243,7 @@ const ChatCompliance = () => {
                 onChange={e => setDays(Number(e.target.value))}
               />
             </div>
-            <button className="btn-primary btn-sm" onClick={loadOffenders} disabled={oLoading}>
+            <button className="cc-btn-primary cc-btn-sm" onClick={loadOffenders} disabled={oLoading}>
               <i className="fas fa-search"></i> Fetch
             </button>
           </div>
@@ -251,7 +251,7 @@ const ChatCompliance = () => {
           {oError && <div className="cc-error"><i className="fas fa-exclamation-circle"></i> {oError}</div>}
 
           {oLoading ? (
-            <div className="cc-loading"><div className="spinner"></div><p>Loading…</p></div>
+            <div className="cc-loading"><div className="cc-spinner"></div><p>Loading…</p></div>
           ) : offenders.length === 0 ? (
             <div className="cc-empty">
               <i className="fas fa-user-check"></i>

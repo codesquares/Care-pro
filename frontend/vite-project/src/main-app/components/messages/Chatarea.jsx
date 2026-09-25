@@ -1,25 +1,11 @@
 import { useState, useEffect, useRef, useCallback, useMemo } from 'react';
-import { useLocation, useNavigate } from 'react-router-dom';
 import './chatarea.css';
-import '../../pages/client/home-care-service/CommitmentSuccess.css';
 import MessageInput from './MessageInput';
 import MessageStatus from './MessageStatus';
-import ServiceSelectionModal from './ServiceSelectionModal';
 import { useMessageContext } from '../../context/MessageContext';
 import { createNotification } from '../../services/notificationService';
-import ClientGigService from '../../services/clientGigService';
-import ClientOrderService from '../../services/clientOrderService';
-import bookingCommitmentService from '../../services/bookingCommitmentService';
-import GigPriceNegotiationService from '../../services/gigPriceNegotiationService';
-import { getCommitmentGateEnabled } from '../../services/publicConfigService';
-import { useClientOnboarding } from '../../context/ClientOnboardingContext';
-import { resolveChatTipVariant } from '../../utils/onboardingRuntime';
 
 const ChatArea = ({ messages, recipient, userId, onSendMessage, isOfflineMode = false }) => {
-  const location = useLocation();
-  const navigate = useNavigate();
-  const { isTipSeen, markTipSeen } = useClientOnboarding();
-  const searchParams = useMemo(() => new URLSearchParams(location.search), [location.search]);
   const [message, setMessage] = useState('');
   const messagesEndRef = useRef(null);
   const { handleDeleteMessage } = useMessageContext();
@@ -31,76 +17,6 @@ const ChatArea = ({ messages, recipient, userId, onSendMessage, isOfflineMode = 
   const [lastMessageCount, setLastMessageCount] = useState(0);
   const chatAreaRef = useRef(null);
 
-  // Check if user is a client and extract serviceId
-  const isClientRoute = location.pathname.includes('/client/');
-  const routeServiceId = location.state?.serviceId;
-  const queryServiceId = searchParams.get('gigId');
-  const unlockContext = location.state?.unlockContext;
-
-  // State for caregiver gigs and modal
-  const [caregiverGigs, setCaregiverGigs] = useState([]);
-  const [isLoadingGigs, setIsLoadingGigs] = useState(false);
-  const [showServiceModal, setShowServiceModal] = useState(false);
-  const [gigCache, setGigCache] = useState(new Map()); // Cache gigs by caregiver ID
-
-  // Commitment gate modal state
-  const [showCommitmentModal, setShowCommitmentModal] = useState(false);
-  const [commitmentGateEnabled, setCommitmentGateEnabled] = useState(true);
-
-  // Forfeit commitment state
-  const [showForfeitModal, setShowForfeitModal] = useState(false);
-  const [forfeitLoading, setForfeitLoading] = useState(false);
-  const [commitmentForfeited, setCommitmentForfeited] = useState(false);
-  const [forfeitError, setForfeitError] = useState(null);
-
-  // Resolved commitment context for showing gig action banner reliably
-  const [resolvedServiceId, setResolvedServiceId] = useState(routeServiceId || queryServiceId || null);
-  const [isBannerEligible, setIsBannerEligible] = useState(false);
-  const [isResolvingBanner, setIsResolvingBanner] = useState(false);
-  const serviceId = resolvedServiceId || routeServiceId || queryServiceId;
-
-  useEffect(() => {
-    let isMounted = true;
-
-    const loadCommitmentGateConfig = async () => {
-      const enabled = await getCommitmentGateEnabled();
-      if (!isMounted) return;
-      setCommitmentGateEnabled(enabled);
-    };
-
-    loadCommitmentGateConfig();
-
-    return () => {
-      isMounted = false;
-    };
-  }, []);
-
-  const handleForfeitConfirm = async () => {
-    if (!serviceId) return;
-    setForfeitLoading(true);
-    setForfeitError(null);
-    const result = await bookingCommitmentService.cancelCommitment(serviceId);
-    setForfeitLoading(false);
-    if (result.success) {
-      setShowForfeitModal(false);
-      setShowGigBanner(false);
-      if (commitmentGateEnabled) {
-        setCommitmentForfeited(true);
-      }
-    } else {
-      setForfeitError(result.error || 'Failed to cancel. Please try again.');
-    }
-  };
-
-  // Gig action banner — shown when navigated from a specific gig (serviceId present)
-  const [showGigBanner, setShowGigBanner] = useState(!!serviceId);
-  const [existingNegotiation, setExistingNegotiation] = useState(null);
-  const [negotiateLoading, setNegotiateLoading] = useState(false);
-
-  // Active order state for this caregiver
-  const [activeOrder, setActiveOrder] = useState(null); // null = no active order, object = active order
-  const [isCheckingOrder, setIsCheckingOrder] = useState(false);
-
   // Report caregiver state
   const [showReportModal, setShowReportModal] = useState(false);
   const [reportReason, setReportReason] = useState('');
@@ -110,9 +26,6 @@ const ChatArea = ({ messages, recipient, userId, onSendMessage, isOfflineMode = 
 
   // Send error message state (shown as banner above input)
   const [sendErrorMessage, setSendErrorMessage] = useState(null);
-  const [chatTipDismissed, setChatTipDismissed] = useState(false);
-  const [chatTipVariant, setChatTipVariant] = useState(null);
-  const [chatTipInitiallySeen] = useState(() => isTipSeen('tip_chat_access_status'));
   
   // Memoized function to get initials from name
   const getInitials = useCallback((name) => {
@@ -139,110 +52,6 @@ const ChatArea = ({ messages, recipient, userId, onSendMessage, isOfflineMode = 
     };
   }, [recipient]);
 
-  // Resolve banner context only from explicit commitment-success redirect context.
-  // Do not recover from historical commitments to avoid stale/wrong gig banners.
-  useEffect(() => {
-    if (!isClientRoute) return;
-
-    let cancelled = false;
-
-    const isStatusUnlocked = (statusData) => {
-      const status = String(statusData?.status || '').toLowerCase();
-      return status === 'completed' && !statusData?.isAppliedToOrder;
-    };
-
-    const isAccessUnlocked = (accessData) => {
-      // Align with HomeCareService unlock semantics:
-      // unlocked if hasAccess OR commitmentNotRequired, but hide if already applied to order.
-      return !!(
-        (accessData?.hasAccess || accessData?.commitmentNotRequired) &&
-        !accessData?.isAppliedToOrder
-      );
-    };
-
-    const recipientId = safeRecipient?.id || recipient?.id;
-
-    const applyContext = (gigId, showBanner) => {
-      if (cancelled) return;
-      setResolvedServiceId(gigId || null);
-      setIsBannerEligible(Boolean(gigId && showBanner));
-      setShowGigBanner(Boolean(gigId && showBanner));
-      if (!gigId || !showBanner) {
-        setExistingNegotiation(null);
-      }
-    };
-
-    const verifyGigAccess = async (gigId) => {
-      if (!gigId) return false;
-      const checkResult = await bookingCommitmentService.checkAccess(gigId);
-      if (!checkResult.success || !checkResult.data) return false;
-
-      const caregiverMatches = !recipientId || String(checkResult.data.caregiverId) === String(recipientId);
-      if (!caregiverMatches) return false;
-      return {
-        unlocked: isAccessUnlocked(checkResult.data),
-        accessData: checkResult.data,
-      };
-    };
-
-    const resolveBannerContext = async () => {
-      setIsResolvingBanner(true);
-      try {
-        const isCommitmentRedirect = unlockContext?.source === 'commitment_success';
-        const unlockGigId = unlockContext?.gigId;
-        const unlockCaregiverId = unlockContext?.caregiverId;
-        const unlockTxRef = unlockContext?.transactionReference;
-
-        // Default-safe: no explicit unlock context means no service banner.
-        if (!isCommitmentRedirect || !unlockGigId || !unlockTxRef) {
-          applyContext(null, false);
-          return;
-        }
-
-        // Exact binding: if route/query carries a gigId, it must match unlock context gig.
-        const directGigCandidate = routeServiceId || queryServiceId || null;
-        if (directGigCandidate && String(directGigCandidate) !== String(unlockGigId)) {
-          applyContext(null, false);
-          return;
-        }
-
-        // Exact binding: if unlock context has caregiver, it must match current chat recipient.
-        if (unlockCaregiverId && recipientId && String(unlockCaregiverId) !== String(recipientId)) {
-          applyContext(null, false);
-          return;
-        }
-
-        const statusResult = await bookingCommitmentService.getPaymentStatus(unlockTxRef);
-        if (!statusResult.success || !statusResult.data || !isStatusUnlocked(statusResult.data)) {
-          applyContext(unlockGigId, false);
-          return;
-        }
-
-        // Ensure txRef verifies the same gig/caregiver as unlock context.
-        const statusGigMatches = String(statusResult.data.gigId || '') === String(unlockGigId);
-        const statusCaregiverMatches = !recipientId || String(statusResult.data.caregiverId || '') === String(recipientId);
-        if (!statusGigMatches || !statusCaregiverMatches) {
-          applyContext(null, false);
-          return;
-        }
-
-        const verified = await verifyGigAccess(unlockGigId);
-        applyContext(unlockGigId, !!verified?.unlocked);
-      } catch (err) {
-        console.error('Failed to resolve commitment banner context:', err);
-        applyContext(null, false);
-      } finally {
-        if (!cancelled) setIsResolvingBanner(false);
-      }
-    };
-
-    resolveBannerContext();
-
-    return () => {
-      cancelled = true;
-    };
-  }, [isClientRoute, routeServiceId, queryServiceId, recipient?.id, safeRecipient?.id, unlockContext]);
-  
   // console.log("🎯 ChatArea: Component rendered with props:", {
   //   messagesCount: messages?.length || 0,
   //   recipientId: recipient?.id,
@@ -251,16 +60,6 @@ const ChatArea = ({ messages, recipient, userId, onSendMessage, isOfflineMode = 
   // });
   // console.log("🎯 ChatArea: Messages array:", messages);
   // console.log("🎯 ChatArea: Recipient object:", recipient);
-
-  // Listen for commitment-fee-required events from MessageContext
-  useEffect(() => {
-    const handleCommitmentRequired = (e) => {
-      if (!commitmentGateEnabled) return;
-      setShowCommitmentModal(true);
-    };
-    window.addEventListener('commitment-fee-required', handleCommitmentRequired);
-    return () => window.removeEventListener('commitment-fee-required', handleCommitmentRequired);
-  }, [commitmentGateEnabled]);
 
   // Listen for message send errors from MessageContext
   useEffect(() => {
@@ -283,49 +82,6 @@ const ChatArea = ({ messages, recipient, userId, onSendMessage, isOfflineMode = 
     window.addEventListener('message-redacted', handleRedacted);
     return () => window.removeEventListener('message-redacted', handleRedacted);
   }, []);
-
-  // Check if there is an active order for this caregiver
-  useEffect(() => {
-    const checkActiveOrder = async () => {
-      if (!isClientRoute || !safeRecipient?.id || !userId) return;
-      setIsCheckingOrder(true);
-      try {
-        const orders = await ClientOrderService.getOrderHistory(userId);
-        if (Array.isArray(orders)) {
-          const active = orders.find(
-            (o) =>
-              o.caregiverId === safeRecipient.id &&
-              o.clientOrderStatus !== 'Completed' &&
-              o.clientOrderStatus !== 'Cancelled'
-          );
-          setActiveOrder(active || null);
-        }
-      } catch (err) {
-        console.error('Error checking active order:', err);
-      } finally {
-        setIsCheckingOrder(false);
-      }
-    };
-    checkActiveOrder();
-  }, [isClientRoute, safeRecipient?.id, userId]);
-
-  // Handle terminate order
-  const handleTerminateOrder = async () => {
-    if (!activeOrder) return;
-    if (!window.confirm('Are you sure you want to terminate this order? This will revoke chat access and require a new ₦5,000 commitment fee to re-engage with this caregiver.')) return;
-    try {
-      const result = await ClientOrderService.cancelOrder(activeOrder.id || activeOrder.orderId);
-      if (result.success) {
-        setActiveOrder(null);
-        setShowCommitmentModal(true);
-      } else {
-        alert(result.error || 'Failed to terminate order. Please try again.');
-      }
-    } catch (err) {
-      console.error('Error terminating order:', err);
-      alert('Something went wrong. Please try again.');
-    }
-  };
 
   // Handle report caregiver submission
   const handleSubmitReport = async () => {
@@ -491,20 +247,6 @@ const ChatArea = ({ messages, recipient, userId, onSendMessage, isOfflineMode = 
     return () => document.removeEventListener('click', handleClickOutside);
   }, [showDeleteMenu]);
 
-  // Fetch caregiver gigs when recipient changes (for Hire Me button)
-  // Only fetch if no serviceId (avoid unnecessary API calls when coming from HomeCareService)
-  useEffect(() => {
-    if (isClientRoute && recipient?.id && !serviceId) {
-      // console.log('Fetching gigs for discovery mode - no direct serviceId available');
-      fetchCaregiverGigs(recipient.id);
-    } else if (isClientRoute && recipient?.id && serviceId) {
-      // console.log('Direct mode from HomeCareService - skipping gig fetch, using serviceId:', serviceId);
-      // Clear any previous gig data since we're in direct mode
-      setCaregiverGigs([]);
-      setIsLoadingGigs(false);
-    }
-  }, [recipient?.id, isClientRoute, serviceId]);
-
   // Handle sending animation - simplified to work with existing message flow
   const handleSendMessageWithAnimation = () => {
     if (message.trim()) {
@@ -512,202 +254,6 @@ const ChatArea = ({ messages, recipient, userId, onSendMessage, isOfflineMode = 
       // The parent component will handle adding it to the messages array
       handleSendMessage();
     }
-  };
-
-  // Fetch caregiver gigs for the Hire Me button
-  const fetchCaregiverGigs = async (caregiverId) => {
-    // Check cache first
-    if (gigCache.has(caregiverId)) {
-      const cachedData = gigCache.get(caregiverId);
-      const cacheAge = Date.now() - cachedData.timestamp;
-      
-      // Use cached data if less than 5 minutes old
-      if (cacheAge < 5 * 60 * 1000) {
-        setCaregiverGigs(cachedData.gigs);
-        return cachedData.gigs;
-      }
-    }
-
-    setIsLoadingGigs(true);
-    try {
-      // Get all gigs and filter for this caregiver's published/active gigs
-      const allGigs = await ClientGigService.getAllGigs();
-      const caregiverPublishedGigs = allGigs.filter(
-        gig => {
-          const status = gig.status?.toLowerCase();
-          return gig.caregiverId === caregiverId && 
-                 (status === 'published' || status === 'active');
-        }
-      );
-
-      // Cache the results
-      setGigCache(prev => new Map(prev.set(caregiverId, {
-        gigs: caregiverPublishedGigs,
-        timestamp: Date.now()
-      })));
-
-      setCaregiverGigs(caregiverPublishedGigs);
-      // console.log(`Found ${caregiverPublishedGigs.length} published gigs for caregiver ${caregiverId}`);
-      
-      return caregiverPublishedGigs;
-    } catch (error) {
-      console.error('Error fetching caregiver gigs:', error);
-      setCaregiverGigs([]);
-      return [];
-    } finally {
-      setIsLoadingGigs(false);
-    }
-  };
-
-  // Load existing negotiation for the gig (only when banner is relevant)
-  useEffect(() => {
-    if (!isClientRoute || !serviceId) return;
-    GigPriceNegotiationService.getByGig(serviceId)
-      .then((neg) => setExistingNegotiation(neg))
-      .catch(() => {});
-  }, [isClientRoute, serviceId]);
-
-  useEffect(() => {
-    let cancelled = false;
-
-    const resolveTipVariant = async () => {
-      if (!isClientRoute || !safeRecipient?.id) {
-        return;
-      }
-
-      if (!commitmentGateEnabled) {
-        if (!cancelled) setChatTipVariant(resolveChatTipVariant({ commitmentGateEnabled: false, hasTipGigId: false, accessResult: null }));
-        return;
-      }
-
-      const tipGigId = serviceId || (caregiverGigs.length === 1 ? caregiverGigs[0]?.id : null);
-      if (!tipGigId) {
-        if (!cancelled) setChatTipVariant(resolveChatTipVariant({ commitmentGateEnabled: true, hasTipGigId: false, accessResult: null }));
-        return;
-      }
-
-      try {
-        const result = await bookingCommitmentService.checkAccess(tipGigId);
-        if (!cancelled) {
-          setChatTipVariant(resolveChatTipVariant({
-            commitmentGateEnabled: true,
-            hasTipGigId: true,
-            accessResult: result,
-          }));
-        }
-      } catch {
-        if (!cancelled) {
-          setChatTipVariant(resolveChatTipVariant({ commitmentGateEnabled: true, hasTipGigId: true, accessResult: null }));
-        }
-      }
-    };
-
-    resolveTipVariant();
-
-    return () => {
-      cancelled = true;
-    };
-  }, [caregiverGigs, commitmentGateEnabled, isClientRoute, safeRecipient?.id, serviceId]);
-
-  const showChatTip =
-    isClientRoute &&
-    !!chatTipVariant &&
-    !chatTipDismissed &&
-    !chatTipInitiallySeen;
-
-  useEffect(() => {
-    if (!showChatTip) return;
-
-    markTipSeen({
-      tipKey: 'tip_chat_access_status',
-      context: {
-        route: location.pathname,
-        caregiverId: safeRecipient?.id,
-        conversationId: safeRecipient?.id,
-      },
-      displayVariant: chatTipVariant,
-    });
-  }, [chatTipVariant, location.pathname, markTipSeen, safeRecipient?.id, showChatTip]);
-
-  // Navigate to existing or new negotiation
-  const handleNegotiateClick = async () => {
-    if (existingNegotiation?.negotiationId) {
-      navigate(`/app/client/price-negotiation/${existingNegotiation.negotiationId}`, {
-        state: { gigId: serviceId },
-      });
-      return;
-    }
-    setNegotiateLoading(true);
-    try {
-      const neg = await GigPriceNegotiationService.initiate({ gigId: serviceId });
-      navigate(`/app/client/price-negotiation/${neg.negotiationId}`, {
-        state: { gigId: serviceId },
-      });
-    } catch (err) {
-      console.error('Failed to start negotiation:', err);
-    } finally {
-      setNegotiateLoading(false);
-    }
-  };
-
-  // Helper: navigate to cart or commitment payment based on fee status
-  const navigateWithCommitmentCheck = async (gigId) => {
-    if (!commitmentGateEnabled) {
-      navigate(`/app/client/cart/${gigId}`);
-      return;
-    }
-
-    try {
-      const result = await bookingCommitmentService.checkAccess(gigId);
-      const canProceed = !!(
-        result.success &&
-        result.data &&
-        (result.data.hasAccess || result.data.commitmentNotRequired) &&
-        !result.data.isAppliedToOrder
-      );
-      if (canProceed) {
-        // Commitment fee confirmed paid — proceed to cart
-        navigate(`/app/client/cart/${gigId}`);
-      } else {
-        // Commitment fee not paid — go to commitment payment page
-        navigate(`/app/client/commitment-payment/${gigId}`);
-      }
-    } catch {
-      // On error, keep fail-safe behavior aligned with current gate mode.
-      navigate(commitmentGateEnabled ? `/app/client/commitment-payment/${gigId}` : `/app/client/cart/${gigId}`);
-    }
-  };
-
-  // Handle Hire Me button click with priority logic
-  const handleHireMeClick = async () => {
-    // Priority 1: Use serviceId from navigation state (direct from HomeCareService)
-    if (serviceId) {
-      await navigateWithCommitmentCheck(serviceId);
-      return;
-    }
-
-    // Priority 2: Use fetched gigs (general messaging context)
-    if (isLoadingGigs) {
-      return; // Don't do anything if still loading
-    }
-
-    if (caregiverGigs.length === 0) {
-      return;
-    }
-
-    if (caregiverGigs.length === 1) {
-      // Direct navigation with commitment check if only one service
-      const service = caregiverGigs[0];
-      await navigateWithCommitmentCheck(service.id);
-    } else {
-      // Open modal for multiple services
-      setShowServiceModal(true);
-    }
-  };
-
-  // Handle service selection from modal
-  const handleSelectService = (service) => {
-    navigateWithCommitmentCheck(service.id);
   };
 
   const handleSendMessage = async () => {
@@ -806,11 +352,7 @@ const ChatArea = ({ messages, recipient, userId, onSendMessage, isOfflineMode = 
           console.error("Failed to send message:", sendError);
           // Restore message in input if sending failed
           setMessage(messageText);
-          // Commitment gate is handled via the 'commitment-fee-required' event from MessageContext
-          // Other send errors (including compliance) are handled via the 'message-error' event
-          if (!sendError?.isCommitmentRequired) {
-            // Only show generic alert if no specific error event was dispatched
-          }
+          // Send errors (assignment gate, compliance) surface via the 'message-error' event
         }
         
       } else {
@@ -909,6 +451,15 @@ const ChatArea = ({ messages, recipient, userId, onSendMessage, isOfflineMode = 
 
   const messageGroups = groupMessagesByDate(visibleMessages);
   const isNewConversation = !visibleMessages || visibleMessages.length === 0;
+
+  // Read-only when the server says this pair can no longer (or never could) message: the assignment
+  // ended, or it is an old-model thread with no assignment behind it. Unknown state stays sendable —
+  // the server enforces the real gate either way.
+  const accessState = recipient?.accessState;
+  const isReadOnly = recipient?.canSend === false;
+  const readOnlyNotice = accessState === 'Ended'
+    ? 'This assignment has ended, so this conversation is now read-only. Please contact CarePro support if you have further questions.'
+    : 'This is an archived conversation from before assignments. It is read-only history — please contact CarePro support if you have questions.';
 
   const formatMessageDate = (dateString) => {
     const date = new Date(dateString);
@@ -1019,7 +570,14 @@ const ChatArea = ({ messages, recipient, userId, onSendMessage, isOfflineMode = 
             {safeRecipient.isOnline && <span className="avatar-online-indicator"></span>}
           </div>
           <div className="recipient-details">
-            <h3>{safeRecipient.name}</h3>
+            <h3>
+              {safeRecipient.name}
+              {isReadOnly && (
+                <span className={`chat-readonly-badge chat-readonly-badge--${(accessState || 'archived').toLowerCase()}`}>
+                  {accessState === 'Ended' ? 'Ended' : 'Archived'}
+                </span>
+              )}
+            </h3>
             <div className="status-indicator recipient-status">
               {safeRecipient.isOnline ? (
                 <span className="status online">Online</span>
@@ -1044,45 +602,6 @@ const ChatArea = ({ messages, recipient, userId, onSendMessage, isOfflineMode = 
           </div>
         </div>
         <div className="chat-actions">
-          {/* Show Hire Me button for clients with priority logic */}
-          {isClientRoute && (
-            // Priority 1: Show if serviceId from navigation (direct from HomeCareService)
-            (serviceId && isBannerEligible && !isResolvingBanner) || 
-            // Priority 2: Show if caregiver has gigs or still loading (discovery mode)
-            caregiverGigs.length > 0 || 
-            isLoadingGigs
-          ) && (
-            <button 
-              className={`action-button hire-me-btn ${isLoadingGigs && !serviceId ? 'loading' : ''}`}
-              title={
-                (serviceId && isBannerEligible && !isResolvingBanner) 
-                  ? 'Hire Me - Return to Service'
-                  : isLoadingGigs 
-                    ? 'Loading services...' 
-                    : `Hire Me${caregiverGigs.length > 1 ? ` (${caregiverGigs.length} services)` : ''}`
-              }
-              onClick={handleHireMeClick}
-              disabled={isLoadingGigs && !(serviceId && isBannerEligible && !isResolvingBanner)}
-            >
-              {isLoadingGigs && !(serviceId && isBannerEligible && !isResolvingBanner) ? (
-                <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="loading-spinner">
-                  <path d="M21 12a9 9 0 11-6.219-8.56"/>
-                </svg>
-              ) : (
-                <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                  <path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/>
-                  <circle cx="9" cy="7" r="4"/>
-                  <path d="m22 2-5 10-4-4Z"/>
-                </svg>
-              )}
-              <span className="button-text">
-                {isLoadingGigs && !(serviceId && isBannerEligible && !isResolvingBanner) ? 'Loading...' : 'Hire Me'}
-                {!isLoadingGigs && !(serviceId && isBannerEligible && !isResolvingBanner) && caregiverGigs.length > 1 && (
-                  <span className="service-count">({caregiverGigs.length})</span>
-                )}
-              </span>
-            </button>
-          )}
           {/* <button className="action-button" title="Accept Offer">
             <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
               <path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6 19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72 12.84 12.84 0 0 0 .7 2.81 2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45 12.84 12.84 0 0 0 2.81.7A2 2 0 0 1 22 16.92z"></path>
@@ -1090,128 +609,6 @@ const ChatArea = ({ messages, recipient, userId, onSendMessage, isOfflineMode = 
           </button> */}
         </div>
       </header>
-
-      {/* Gig action banner — shown when client arrives from a specific gig page */}
-      {showChatTip && (
-        <div className="client-tip-banner" role="note">
-          <div>
-            <strong>Chat access status</strong>
-            <p>
-              {chatTipVariant === 'access_granted' && 'You can message this caregiver now and proceed directly when ready.'}
-              {chatTipVariant === 'access_required' && 'Commitment payment is required before full chat access is granted for this context.'}
-              {chatTipVariant === 'gate_disabled' && 'Commitment gating is currently disabled, so chat access is open.'}
-            </p>
-          </div>
-          <button
-            type="button"
-            onClick={() => {
-              setChatTipDismissed(true);
-              markTipSeen({
-                tipKey: 'tip_chat_access_status',
-                context: {
-                  route: location.pathname,
-                  caregiverId: safeRecipient?.id,
-                  conversationId: safeRecipient?.id,
-                  dismissed: true,
-                },
-                displayVariant: chatTipVariant,
-              });
-            }}
-          >
-            Dismiss
-          </button>
-        </div>
-      )}
-
-      {isClientRoute && serviceId && isBannerEligible && !isResolvingBanner && showGigBanner && (
-        <div className="chat-gig-banner">
-          <span className="chat-gig-banner__label">Ready to proceed with this caregiver?</span>
-          <div className="chat-gig-banner__actions">
-            <button
-              className="chat-gig-banner__btn chat-gig-banner__btn--negotiate"
-              onClick={handleNegotiateClick}
-              disabled={negotiateLoading}
-            >
-              {negotiateLoading
-                ? 'Starting…'
-                : existingNegotiation?.negotiationId
-                  ? '🔄 Continue Negotiation'
-                  : '💸 Negotiate Price'}
-            </button>
-            <button
-              className="chat-gig-banner__btn chat-gig-banner__btn--hire"
-              onClick={() => navigateWithCommitmentCheck(serviceId)}
-            >
-              Hire Now →
-            </button>
-            {commitmentGateEnabled && (
-              <button
-                className="chat-gig-banner__btn chat-gig-banner__btn--forfeit"
-                onClick={() => { setForfeitError(null); setShowForfeitModal(true); }}
-              >
-                🚫 Forfeit & Cancel Access
-              </button>
-            )}
-            <button
-              className="chat-gig-banner__btn chat-gig-banner__btn--dismiss"
-              onClick={() => setShowGigBanner(false)}
-              title="Dismiss — you can still hire later from the header"
-            >
-              ✕
-            </button>
-          </div>
-        </div>
-      )}
-
-      {/* Lost-access screen — shown after commitment is forfeited */}
-      {isClientRoute && commitmentGateEnabled && commitmentForfeited && (
-        <div className="chat-access-lost">
-          <div className="chat-access-lost__icon">🚫</div>
-          <h3 className="chat-access-lost__title">Access Cancelled</h3>
-          <p className="chat-access-lost__body">
-            Your ₦5,000 commitment fee has been forfeited. You no longer have access to chat
-            with this caregiver or place an order. To regain access, you will need to pay a
-            new commitment fee.
-          </p>
-          <div className="chat-access-lost__actions">
-            <button className="chat-access-lost__btn chat-access-lost__btn--primary" onClick={() => navigate('/app/client/dashboard')}>
-              Go to Dashboard
-            </button>
-            <button className="chat-access-lost__btn chat-access-lost__btn--secondary" onClick={() => navigate('/app/client')}>Browse Marketplace</button>
-          </div>
-        </div>
-      )}
-
-      {/* Forfeit confirmation modal */}
-      {commitmentGateEnabled && showForfeitModal && (
-        <div className="chat-forfeit-overlay" onClick={() => !forfeitLoading && setShowForfeitModal(false)}>
-          <div className="chat-forfeit-modal" onClick={e => e.stopPropagation()}>
-            <h3 className="chat-forfeit-modal__title">Cancel Booking Commitment?</h3>
-            <p className="chat-forfeit-modal__body">
-              Your <strong>₦5,000 commitment fee is non-refundable</strong>. You will immediately
-              lose access to chat with this caregiver and will not be able to pay for this gig
-              until you pay a new commitment fee.
-            </p>
-            {forfeitError && <p className="chat-forfeit-modal__error">{forfeitError}</p>}
-            <div className="chat-forfeit-modal__actions">
-              <button
-                className="chat-forfeit-modal__btn chat-forfeit-modal__btn--confirm"
-                onClick={handleForfeitConfirm}
-                disabled={forfeitLoading}
-              >
-                {forfeitLoading ? 'Cancelling…' : 'Yes, Forfeit Fee & Cancel'}
-              </button>
-              <button
-                className="chat-forfeit-modal__btn chat-forfeit-modal__btn--cancel"
-                onClick={() => setShowForfeitModal(false)}
-                disabled={forfeitLoading}
-              >
-                Keep Access
-              </button>
-            </div>
-          </div>
-        </div>
-      )}
 
       <div 
         className="messages-container" 
@@ -1243,7 +640,7 @@ const ChatArea = ({ messages, recipient, userId, onSendMessage, isOfflineMode = 
                   {getInitials(safeRecipient.name)}
                 </div>
                 <h3>Start a conversation with {safeRecipient.name}</h3>
-                <p>Send a message to begin chatting</p>
+                {!isReadOnly && <p>Send a message to begin chatting</p>}
                 {isOfflineMode && (
                   <div className="offline-note">
                     <small>Note: You're currently offline. Your messages will be delivered when you're back online.</small>
@@ -1310,7 +707,7 @@ const ChatArea = ({ messages, recipient, userId, onSendMessage, isOfflineMode = 
                       </div>
                     </div>
                     {/* Only show actions for your own messages that are not deleted */}
-                    {msg.senderId === userId && !msg.isDeleted && (
+                    {msg.senderId === userId && !msg.isDeleted && !isReadOnly && (
                       <div className="message-actions">
                         <button className="action-button" onClick={(e) => handleMessageActions(e, msg.id)}>
                           <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" className="bi bi-three-dots" viewBox="0 0 16 16">
@@ -1368,57 +765,20 @@ const ChatArea = ({ messages, recipient, userId, onSendMessage, isOfflineMode = 
         </div>
       )}
 
-      <div className="chat-input-area">
-        <MessageInput
-          message={message}
-          setMessage={setMessage}
-          onSendMessage={handleSendMessageWithAnimation}
-          onKeyPress={handleKeyPress}
-          placeholder={isOfflineMode ? 'Compose message (offline mode)' : 'Type your message...'}
-        />
-      </div>
-
-      {/* Service Selection Modal - only show in discovery mode (no direct serviceId) */}
-      {!(serviceId && isBannerEligible && !isResolvingBanner) && (
-        <ServiceSelectionModal
-          isOpen={showServiceModal}
-          onClose={() => setShowServiceModal(false)}
-          services={caregiverGigs}
-          caregiverName={recipient?.name || 'Caregiver'}
-          onSelectService={handleSelectService}
-          isLoading={isLoadingGigs}
-        />
-      )}
-
-      {/* Commitment Gate Modal — shown when backend blocks a message */}
-      {commitmentGateEnabled && showCommitmentModal && (
-        <div className="commitment-gate-overlay" onClick={() => setShowCommitmentModal(false)}>
-          <div className="commitment-gate-modal" onClick={(e) => e.stopPropagation()}>
-            <div className="commitment-gate-modal__icon">🔒</div>
-            <h2 className="commitment-gate-modal__title">Chat Access Required</h2>
-            <p className="commitment-gate-modal__desc">
-              You need to pay a non-refundable ₦5,000 commitment fee before messaging this caregiver.
-              Once unlocked, chat is available across your relationship with this caregiver.
-              If you hire them, this fee is deducted from your order total.
-            </p>
-            <div className="commitment-gate-modal__actions">
-              <button
-                className="commitment-gate-modal__btn-primary"
-                onClick={() => {
-                  setShowCommitmentModal(false);
-                  navigate('/app/client/dashboard');
-                }}
-              >
-                🔓 Go to Marketplace to Unlock
-              </button>
-              <button
-                className="commitment-gate-modal__btn-secondary"
-                onClick={() => setShowCommitmentModal(false)}
-              >
-                Dismiss
-              </button>
-            </div>
-          </div>
+      {isReadOnly ? (
+        <div className="chat-readonly-notice" role="note">
+          <strong>{accessState === 'Ended' ? 'Conversation closed' : 'Archived conversation'}</strong>
+          <p>{readOnlyNotice}</p>
+        </div>
+      ) : (
+        <div className="chat-input-area">
+          <MessageInput
+            message={message}
+            setMessage={setMessage}
+            onSendMessage={handleSendMessageWithAnimation}
+            onKeyPress={handleKeyPress}
+            placeholder={isOfflineMode ? 'Compose message (offline mode)' : 'Type your message...'}
+          />
         </div>
       )}
 

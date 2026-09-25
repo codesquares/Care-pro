@@ -7,6 +7,23 @@ import config from "../../../config";
 import { useCaregiverStatus } from "../../../contexts/CaregiverStatusContext";
 import CertificateUploadModal from "../../../components/shared/CertificateUploadModal";
 
+// The API serialises DocumentVerificationStatus as its numeric enum value.
+const VERIFICATION_STATUS_NAMES = [
+  'PendingVerification',
+  'Verified',
+  'Invalid',
+  'VerificationFailed',
+  'ManualReviewRequired',
+  'NotVerified',
+];
+
+const getVerificationStatusName = (cert) => {
+  const status = cert.verificationStatus;
+  if (typeof status === 'number') return VERIFICATION_STATUS_NAMES[status] || 'PendingVerification';
+  if (status) return status;
+  return cert.isVerified ? 'Verified' : 'PendingVerification';
+};
+
 const ProfileInformation = ({ aboutMe, onUpdate, services = [] }) => {
   const [searchParams, setSearchParams] = useSearchParams();
   const [showModal, setShowModal] = useState(false);
@@ -37,7 +54,7 @@ const ProfileInformation = ({ aboutMe, onUpdate, services = [] }) => {
 
   const SectionChevron = () => (
     <svg
-      className="profile-section-chevron"
+      className="pi-section-chevron"
       width="16"
       height="16"
       viewBox="0 0 24 24"
@@ -151,7 +168,7 @@ const ProfileInformation = ({ aboutMe, onUpdate, services = [] }) => {
 
   // Helper function to get status badge configuration
   const getStatusBadgeConfig = (cert) => {
-    const status = cert.verificationStatus || (cert.isVerified ? 'Verified' : 'PendingVerification');
+    const status = getVerificationStatusName(cert);
     
     const configs = {
       'Verified': {
@@ -167,12 +184,6 @@ const ProfileInformation = ({ aboutMe, onUpdate, services = [] }) => {
         icon: '⚠️'
       },
       'Invalid': {
-        text: '❌ Invalid',
-        color: '#ef4444',
-        bgColor: '#fee2e2',
-        icon: '❌'
-      },
-      'Rejected': {
         text: '❌ Rejected',
         color: '#ef4444',
         bgColor: '#fee2e2',
@@ -189,6 +200,12 @@ const ProfileInformation = ({ aboutMe, onUpdate, services = [] }) => {
         color: '#3b82f6',
         bgColor: '#dbeafe',
         icon: '⏳'
+      },
+      'NotVerified': {
+        text: 'Not verified',
+        color: '#6b7280',
+        bgColor: '#f3f4f6',
+        icon: ''
       }
     };
     
@@ -199,25 +216,6 @@ const ProfileInformation = ({ aboutMe, onUpdate, services = [] }) => {
   const parseErrorMessages = (errorMessage) => {
     if (!errorMessage) return [];
     return errorMessage.split(' | ').filter(msg => msg.trim());
-  };
-
-  // Function to retry verification for a certificate
-  const handleRetryVerification = async (certificateId) => {
-    try {
-      setUploadLoading(true);
-      await axios.post(`${config.BASE_URL}/Certificates/${certificateId}/retry-verification`, {}, {
-        headers: { 
-          "Authorization": `Bearer ${localStorage.getItem('authToken')}`
-        }
-      });
-      toast.success("Verification retry initiated");
-      await fetchCertificates();
-    } catch (err) {
-      console.error("Retry verification failed", err);
-      toast.error(`Retry failed: ${err.response?.data?.message || err.message || 'Unknown error'}`);
-    } finally {
-      setUploadLoading(false);
-    }
   };
 
   // Function to open certificate in modal
@@ -234,9 +232,9 @@ const ProfileInformation = ({ aboutMe, onUpdate, services = [] }) => {
 
   return (
     <div>
-      <div className={`profile-information-section profile-collapsible ${openSections.description ? 'open' : ''}`}>
+      <div className={`pi-information-section pi-collapsible ${openSections.description ? 'open' : ''}`}>
         <h3
-          className="profile-section-header"
+          className="pi-section-header"
           onClick={() => toggleSection('description')}
           role="button"
           tabIndex={0}
@@ -246,20 +244,20 @@ const ProfileInformation = ({ aboutMe, onUpdate, services = [] }) => {
           <span>Description</span>
           <SectionChevron />
         </h3>
-        <div className="profile-section-body">
+        <div className="pi-section-body">
           <p>{aboutMe || 'No description provided'}</p>
           <button 
             onClick={() => setShowModal(true)}
-            className="edit-description-btn"
+            className="pi-edit-description-btn"
           >
             Edit Description
           </button>
         </div>
       </div>
 
-      <div className={`services-section profile-collapsible ${openSections.services ? 'open' : ''}`}>
+      <div className={`pi-services-section pi-collapsible ${openSections.services ? 'open' : ''}`}>
         <h3
-          className="profile-section-header"
+          className="pi-section-header"
           onClick={() => toggleSection('services')}
           role="button"
           tabIndex={0}
@@ -269,11 +267,11 @@ const ProfileInformation = ({ aboutMe, onUpdate, services = [] }) => {
           <span>Services</span>
           <SectionChevron />
         </h3>
-        <div className="profile-section-body">
-        <div className="services-list">
+        <div className="pi-section-body">
+        <div className="pi-services-list">
           {services && services.length > 0 ? (
             services.map((service, index) => (
-              <span key={index} className="service-tag">
+              <span key={index} className="pi-service-tag">
                 {service}
               </span>
             ))
@@ -301,9 +299,9 @@ const ProfileInformation = ({ aboutMe, onUpdate, services = [] }) => {
         </div>
       </div>
 
-      <div className={`certifications-section profile-collapsible ${openSections.certifications ? 'open' : ''}`}>
+      <div className={`pi-certifications-section pi-collapsible ${openSections.certifications ? 'open' : ''}`}>
         <h3
-          className="profile-section-header"
+          className="pi-section-header"
           onClick={() => toggleSection('certifications')}
           role="button"
           tabIndex={0}
@@ -313,8 +311,8 @@ const ProfileInformation = ({ aboutMe, onUpdate, services = [] }) => {
           <span>Certifications</span>
           <SectionChevron />
         </h3>
-        <div className="profile-section-body">
-        <div className="certifications-list">
+        <div className="pi-section-body">
+        <div className="pi-certifications-list">
           {certificatesLoading ? (
             <div style={{
               display: 'flex',
@@ -330,10 +328,11 @@ const ProfileInformation = ({ aboutMe, onUpdate, services = [] }) => {
               const statusConfig = getStatusBadgeConfig(cert);
               const errorMessages = parseErrorMessages(cert.verificationErrorMessage || cert.errorMessage);
               const confidence = cert.verificationConfidence ? (cert.verificationConfidence * 100).toFixed(0) : null;
-              const canRetry = cert.verificationStatus === 'VerificationFailed' || cert.verificationStatus === 'Invalid';
+              const statusName = getVerificationStatusName(cert);
+              const needsSupport = statusName === 'Invalid' || statusName === 'VerificationFailed';
               
               return (
-                <div key={cert.id} className="certification-item" style={{
+                <div key={cert.id} className="pi-certification-item" style={{
                   border: '1px solid #e5e7eb',
                   borderRadius: '8px',
                   padding: '16px',
@@ -370,7 +369,7 @@ const ProfileInformation = ({ aboutMe, onUpdate, services = [] }) => {
                   
                   {cert.verificationDate && (
                     <p style={{ margin: '4px 0', fontSize: '12px', color: '#9ca3af' }}>
-                      Verified: {new Date(cert.verificationDate).toLocaleDateString()}
+                      {statusName === 'Verified' ? 'Verified' : 'Reviewed'}: {new Date(cert.verificationDate).toLocaleDateString()}
                     </p>
                   )}
                   
@@ -393,7 +392,7 @@ const ProfileInformation = ({ aboutMe, onUpdate, services = [] }) => {
                     </div>
                   )}
                   
-                  {cert.verificationStatus === 'ManualReviewRequired' && (
+                  {statusName === 'ManualReviewRequired' && (
                     <div style={{
                       marginTop: '8px',
                       padding: '8px',
@@ -407,11 +406,25 @@ const ProfileInformation = ({ aboutMe, onUpdate, services = [] }) => {
                     </div>
                   )}
                   
+                  {needsSupport && (
+                    <div style={{
+                      marginTop: '8px',
+                      padding: '8px',
+                      backgroundColor: '#fef2f2',
+                      borderRadius: '4px',
+                      borderLeft: '3px solid #ef4444'
+                    }}>
+                      <p style={{ margin: 0, fontSize: '12px', color: '#991b1b' }}>
+                        This certificate needs review — please contact CarePro support to resolve it.
+                      </p>
+                    </div>
+                  )}
+
                   <div style={{ display: 'flex', alignItems: 'center', gap: '10px', marginTop: '12px', flexWrap: 'wrap' }}>
                     {cert.certificateUrl && (
                       <button 
                         onClick={() => handleViewCertificate(cert)}
-                        className="certificate-view-link"
+                        className="pi-certificate-view-link"
                         style={{
                           color: '#0066cc',
                           textDecoration: 'none',
@@ -429,26 +442,6 @@ const ProfileInformation = ({ aboutMe, onUpdate, services = [] }) => {
                       </button>
                     )}
                     
-                    {canRetry && (
-                      <button 
-                        onClick={() => handleRetryVerification(cert.id)}
-                        disabled={uploadLoading}
-                        style={{
-                          color: '#6b7280',
-                          fontSize: '13px',
-                          fontWeight: '500',
-                          padding: '6px 12px',
-                          borderRadius: '4px',
-                          border: '1px solid #d1d5db',
-                          transition: 'all 0.2s ease',
-                          backgroundColor: 'white',
-                          cursor: uploadLoading ? 'not-allowed' : 'pointer',
-                          opacity: uploadLoading ? 0.6 : 1
-                        }}
-                      >
-                        🔄 Retry Verification
-                      </button>
-                    )}
                   </div>
                 </div>
               );
@@ -478,7 +471,7 @@ const ProfileInformation = ({ aboutMe, onUpdate, services = [] }) => {
           )}
           <button 
             onClick={() => setShowCertModal(true)}
-            className="add-certification-btn"
+            className="pi-add-certification-btn"
           >
             + Add Certificate
           </button>
@@ -488,8 +481,8 @@ const ProfileInformation = ({ aboutMe, onUpdate, services = [] }) => {
 
       {/* About Me Edit Modal */}
       {showModal && (
-        <div className="modal-overlay" onClick={() => setShowModal(false)}>
-          <div className="modal-content" onClick={(e) => e.stopPropagation()}>
+        <div className="pi-modal-overlay" onClick={() => setShowModal(false)}>
+          <div className="pi-modal-content" onClick={(e) => e.stopPropagation()}>
             <h3>Edit About Me</h3>
             <textarea
               value={editedAboutMe}
@@ -498,17 +491,17 @@ const ProfileInformation = ({ aboutMe, onUpdate, services = [] }) => {
               rows={6}
               autoFocus
             />
-            <div className="modal-actions">
+            <div className="pi-modal-actions">
               <button 
                 onClick={() => setShowModal(false)}
-                className="modal-btn cancel"
+                className="pi-modal-btn cancel"
               >
                 Cancel
               </button>
               <button 
                 onClick={handleSave}
                 disabled={loading}
-                className="modal-btn save"
+                className="pi-modal-btn save"
               >
                 {loading ? 'Saving...' : 'Save'}
               </button>
@@ -527,13 +520,13 @@ const ProfileInformation = ({ aboutMe, onUpdate, services = [] }) => {
 
       {/* Certificate View Modal */}
       {showViewModal && selectedCertificate && (
-        <div className="modal-overlay" onClick={handleCloseViewModal}>
-          <div className="modal-content" onClick={(e) => e.stopPropagation()} style={{ maxWidth: '80vw', maxHeight: '80vh', padding: '20px' }}>
-            <div className="modal-header">
+        <div className="pi-modal-overlay" onClick={handleCloseViewModal}>
+          <div className="pi-modal-content" onClick={(e) => e.stopPropagation()} style={{ maxWidth: '80vw', maxHeight: '80vh', padding: '20px' }}>
+            <div className="pi-modal-header">
               <h3>Certificate: {selectedCertificate.certificateName}</h3>
               <button 
                 onClick={handleCloseViewModal}
-                className="modal-close"
+                className="pi-modal-close"
                 style={{
                   position: 'absolute',
                   top: '10px',
@@ -548,7 +541,7 @@ const ProfileInformation = ({ aboutMe, onUpdate, services = [] }) => {
                 ×
               </button>
             </div>
-            <div className="modal-body" style={{ textAlign: 'center', marginTop: '20px' }}>
+            <div className="pi-modal-body" style={{ textAlign: 'center', marginTop: '20px' }}>
               <div style={{ marginBottom: '15px' }}>
                 <p style={{ margin: '5px 0', fontSize: '14px', color: '#666' }}>
                   <strong>Issuer:</strong> {selectedCertificate.certificateIssuer}
@@ -661,10 +654,10 @@ const ProfileInformation = ({ aboutMe, onUpdate, services = [] }) => {
 
       {/* Success Modal */}
       {showSuccessModal && (
-        <div className="modal-overlay" onClick={() => setShowSuccessModal(false)}>
-          <div className="success-modal-content" onClick={(e) => e.stopPropagation()}>
-            <div className="success-icon-container">
-              <div className="success-checkmark">
+        <div className="pi-modal-overlay" onClick={() => setShowSuccessModal(false)}>
+          <div className="pi-success-modal-content" onClick={(e) => e.stopPropagation()}>
+            <div className="pi-success-icon-container">
+              <div className="pi-success-checkmark">
                 <svg width="64" height="64" viewBox="0 0 100 100" fill="none" xmlns="http://www.w3.org/2000/svg">
                   <defs>
                     <linearGradient id="tickGradient" x1="0%" y1="0%" x2="100%" y2="100%">
@@ -687,7 +680,7 @@ const ProfileInformation = ({ aboutMe, onUpdate, services = [] }) => {
             <h3>Your certificate has been successfully uploaded</h3>
             <button 
               onClick={() => setShowSuccessModal(false)}
-              className="success-modal-btn"
+              className="pi-success-modal-btn"
             >
               Continue
             </button>

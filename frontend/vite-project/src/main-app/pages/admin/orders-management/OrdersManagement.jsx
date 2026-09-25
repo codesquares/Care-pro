@@ -139,7 +139,7 @@ const OrdersManagement = () => {
     return (
       <div className="orders-management">
         <div className="loading-container">
-          <div className="spinner"></div>
+          <div className="om-spinner"></div>
           <p>Loading orders...</p>
         </div>
       </div>
@@ -159,10 +159,10 @@ const OrdersManagement = () => {
       </div>
 
       {error && (
-        <div className="alert alert-error">
+        <div className="om-alert om-alert-error">
           <i className="fas fa-exclamation-circle"></i>
           {error}
-          <button onClick={loadOrders} className="retry-btn">
+          <button onClick={loadOrders} className="om-retry-btn">
             <i className="fas fa-redo"></i> Retry
           </button>
         </div>
@@ -171,61 +171,61 @@ const OrdersManagement = () => {
       {/* Statistics Cards */}
       {statistics && (
         <div className="stats-grid">
-          <div className="stat-card stat-total">
-            <div className="stat-icon">
+          <div className="om-stat-card om-stat-total">
+            <div className="om-stat-icon">
               <i className="fas fa-shopping-cart"></i>
             </div>
-            <div className="stat-content">
+            <div className="om-stat-content">
               <h3>{statistics.total}</h3>
               <p>Total Orders</p>
             </div>
           </div>
 
-          <div className="stat-card stat-pending">
-            <div className="stat-icon">
+          <div className="om-stat-card om-stat-pending">
+            <div className="om-stat-icon">
               <i className="fas fa-clock"></i>
             </div>
-            <div className="stat-content">
+            <div className="om-stat-content">
               <h3>{statistics.pending}</h3>
               <p>Pending Orders</p>
             </div>
           </div>
 
-          <div className="stat-card stat-progress">
-            <div className="stat-icon">
+          <div className="om-stat-card om-stat-progress">
+            <div className="om-stat-icon">
               <i className="fas fa-spinner"></i>
             </div>
-            <div className="stat-content">
+            <div className="om-stat-content">
               <h3>{statistics.inProgress}</h3>
               <p>In Progress</p>
             </div>
           </div>
 
-          <div className="stat-card stat-completed">
-            <div className="stat-icon">
+          <div className="om-stat-card om-stat-completed">
+            <div className="om-stat-icon">
               <i className="fas fa-check-circle"></i>
             </div>
-            <div className="stat-content">
+            <div className="om-stat-content">
               <h3>{statistics.completed}</h3>
               <p>Completed</p>
             </div>
           </div>
 
-          <div className="stat-card stat-disputed">
-            <div className="stat-icon">
+          <div className="om-stat-card om-stat-disputed">
+            <div className="om-stat-icon">
               <i className="fas fa-exclamation-triangle"></i>
             </div>
-            <div className="stat-content">
+            <div className="om-stat-content">
               <h3>{statistics.disputed}</h3>
               <p>Disputed</p>
             </div>
           </div>
 
-          <div className="stat-card stat-revenue">
-            <div className="stat-icon">
+          <div className="om-stat-card om-stat-revenue">
+            <div className="om-stat-icon">
               <i className="fas fa-money-bill-wave"></i>
             </div>
-            <div className="stat-content">
+            <div className="om-stat-content">
               <h3>{formatCurrency(statistics.totalRevenue)}</h3>
               <p>Total Revenue</p>
             </div>
@@ -392,7 +392,7 @@ const OrdersManagement = () => {
                   <td>
                     <div className="action-buttons">
                       <button
-                        className="btn-view"
+                        className="om-btn-view"
                         onClick={() => handleViewOrder(order.id)}
                         title="View Details"
                       >
@@ -430,16 +430,16 @@ const OrdersManagement = () => {
 
       {/* Order Details Modal */}
       {showOrderModal && selectedOrder && (
-        <div className="modal-overlay" onClick={closeOrderModal}>
-          <div className="modal-content" onClick={(e) => e.stopPropagation()}>
-            <div className="modal-header">
+        <div className="om-modal-overlay" onClick={closeOrderModal}>
+          <div className="om-modal-content" onClick={(e) => e.stopPropagation()}>
+            <div className="om-modal-header">
               <h2>Order Details</h2>
-              <button className="close-btn" onClick={closeOrderModal}>
+              <button className="om-close-btn" onClick={closeOrderModal}>
                 <i className="fas fa-times"></i>
               </button>
             </div>
 
-            <div className="modal-body">
+            <div className="om-modal-body">
               <div className="order-details-grid">
                 {/* Order Info */}
                 <div className="detail-section">
@@ -596,8 +596,8 @@ const OrdersManagement = () => {
               </div>
             </div>
 
-            <div className="modal-footer">
-              <button className="btn-close" onClick={closeOrderModal}>
+            <div className="om-modal-footer">
+              <button className="om-btn-close" onClick={closeOrderModal}>
                 Close
               </button>
             </div>

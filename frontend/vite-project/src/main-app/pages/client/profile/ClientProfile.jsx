@@ -3,7 +3,6 @@ import { useNavigate } from 'react-router-dom';
 import './ClientProfile.css';
 import defaultAvatar from '../../../../assets/profilecard1.png';
 import ClientProfileService from '../../../services/clientProfileService';
-import ClientCareNeedsService from '../../../services/clientCareNeedsService';
 import OrderMetrics from '../../../components/client/OrderMetrics';
 import ClientOrderService from '../../../services/clientOrderService';
 import AddressInput from '../../../components/AddressInput';
@@ -37,8 +36,6 @@ const ClientProfile = () => {
   const [addressValidation, setAddressValidation] = useState(null);
 
   // Care needs state
-  const [careNeeds, setCareNeeds] = useState(null);
-  const [hasCareNeeds, setHasCareNeeds] = useState(false);
 
   // Service history counts
   const [serviceHistoryCounts, setServiceHistoryCounts] = useState({ active: 0, completed: 0 });
@@ -108,21 +105,6 @@ const ClientProfile = () => {
     
     fetchProfile();
   }, [clientId]);
-
-  // Fetch care needs from the care needs service
-  useEffect(() => {
-    const fetchCareNeeds = async () => {
-      try {
-        const needs = await ClientCareNeedsService.getCareNeeds();
-        setCareNeeds(needs);
-        setHasCareNeeds(!!(needs?.serviceCategories && needs.serviceCategories.length > 0));
-      } catch (err) {
-        console.warn('Could not fetch care needs:', err);
-        setHasCareNeeds(false);
-      }
-    };
-    fetchCareNeeds();
-  }, []);
 
   // Generate username using the centralized utility
   // TODO: Backend persistence not implemented yet - commenting out username generation
@@ -732,65 +714,30 @@ const ClientProfile = () => {
           </div>
           
           <div className="profile-section">
-            <h2>Care Needs</h2>
-            {hasCareNeeds && careNeeds?.serviceCategories && (
-              <div className="care-needs-details">
-                <div className="care-needs-categories">
-                  <label>Service Categories</label>
-                  <div className="care-needs-tags">
-                    {careNeeds.serviceCategories.map((cat) => (
-                      <span key={cat} className="care-needs-tag">
-                        {categoryIcons[cat] || '📋'} {cat}
-                      </span>
-                    ))}
-                  </div>
-                </div>
-                {careNeeds.caregiverRequirements?.experienceLevel && (
-                  <div className="care-needs-detail-row">
-                    <label>Experience Level</label>
-                    <p>{careNeeds.caregiverRequirements.experienceLevel}</p>
-                  </div>
-                )}
-                {careNeeds.caregiverRequirements?.certifications?.length > 0 && (
-                  <div className="care-needs-detail-row">
-                    <label>Preferred Certifications</label>
-                    <div className="care-needs-tags">
-                      {careNeeds.caregiverRequirements.certifications.map((cert) => (
-                        <span key={cert} className="care-needs-tag cert-tag">{cert}</span>
-                      ))}
-                    </div>
-                  </div>
-                )}
-                {careNeeds.caregiverRequirements?.languages?.length > 0 && (
-                  <div className="care-needs-detail-row">
-                    <label>Languages</label>
-                    <div className="care-needs-tags">
-                      {careNeeds.caregiverRequirements.languages.map((lang) => (
-                        <span key={lang} className="care-needs-tag lang-tag">{lang}</span>
-                      ))}
-                    </div>
-                  </div>
-                )}
-              </div>
-            )}
-            {!hasCareNeeds && (
-              <div className="care-needs-summary">
-                <p className="care-needs-description">
-                  You haven't specified your care needs yet.
-                </p>
-              </div>
-            )}
+            <h2>Care Packages</h2>
             <div className="care-needs-summary">
-              <button 
+              <p className="care-needs-description">
+                Browse our care packages, or talk to our care team for a free assessment. We'll match you with a vetted caregiver.
+              </p>
+            </div>
+            <div className="care-needs-summary">
+              <button
                 className="care-needs-btn"
-                onClick={() => navigate('/app/client/care-needs?returnTo=/app/client/profile')}
+                onClick={() => navigate('/marketplace')}
               >
-                <i className={hasCareNeeds ? "fas fa-edit" : "fas fa-plus-circle"}></i>
-                {hasCareNeeds ? 'Edit Care Needs' : 'Set Care Needs'}
+                <i className="fas fa-box-open"></i>
+                Browse Care Packages
+              </button>
+              <button
+                className="care-needs-btn"
+                onClick={() => navigate('/start-assessment')}
+              >
+                <i className="fas fa-comments"></i>
+                Get a Free Care Assessment
               </button>
             </div>
           </div>
-          
+
           {/* <div className="profile-section">
             <h2>Quick Actions</h2>
             <div className="profile-actions">

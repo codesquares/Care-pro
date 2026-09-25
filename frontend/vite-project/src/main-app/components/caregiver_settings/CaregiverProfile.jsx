@@ -67,56 +67,56 @@ const ProfilePage = () => {
       if (error) return <p>Error: {error}</p>;
       console.log("thi is the profile page");
     return (
-        <div className="profile-page-container">
+        <div className="cgp-page-container">
             
             {/* Left Section - Profile Details */}
             <div >
-                <div className="profile-info-section">
-                    <img src={profileCardImage} alt="Profile" className="profile-image" />
-                    <h2 className="profile-name">{profile.name}</h2>
-                    {/* <p className="profile-email">{profile.username}</p> */} {/* TODO: Backend persistence not implemented yet */}
-                    <div className="profile-rating">★★★★☆ (29 reviews)</div>
+                <div className="cgp-info-section">
+                    <img src={profileCardImage} alt="Profile" className="cgp-profile-image" />
+                    <h2 className="cgp-profile-name">{profile.name}</h2>
+                    {/* <p className="cgp-profile-email">{profile.username}</p> */} {/* TODO: Backend persistence not implemented yet */}
+                    <div className="cgp-profile-rating">★★★★☆ (29 reviews)</div>
                     {/*I know the spaces arent the cleanest solution but they seemed the easiest if you need me to change it please let me know*/}
-                    <p className="profile-location">Location                             {profile.location}</p>
-                    <p className="profile-membership">Member since               {profile.memberSince ? new Date(profile.memberSince).toLocaleDateString('en-GB', { day: 'numeric', month: 'long', year: 'numeric' }) : 'N/A'}</p>
+                    <p className="cgp-profile-location">Location                             {profile.location}</p>
+                    <p className="cgp-profile-membership">Member since               {profile.memberSince ? new Date(profile.memberSince).toLocaleDateString('en-GB', { day: 'numeric', month: 'long', year: 'numeric' }) : 'N/A'}</p>
                 </div>
 
-                <div className="profile-stats-section">
-                    <div className="stats-item">
-                        <img src="https://via.placeholder.com/20" alt="icon" className="stats-icon" />
-                        <p className="stats-label">Total Spent:</p>
-                        <p className="stats-value">₦50,500.00</p>
+                <div className="cgp-stats-section">
+                    <div className="cgp-stats-item">
+                        <img src="https://via.placeholder.com/20" alt="icon" className="cgp-stats-icon" />
+                        <p className="cgp-stats-label">Total Spent:</p>
+                        <p className="cgp-stats-value">₦50,500.00</p>
                     </div>
-                    <div className="stats-item">
-                        <img src="https://via.placeholder.com/20" alt="icon" className="stats-icon" />
-                        <p className="stats-label">No. of orders:</p>
-                        <p className="stats-value">11</p>
+                    <div className="cgp-stats-item">
+                        <img src="https://via.placeholder.com/20" alt="icon" className="cgp-stats-icon" />
+                        <p className="cgp-stats-label">No. of orders:</p>
+                        <p className="cgp-stats-value">11</p>
                     </div>
                 </div>
 
-                <div className="profile-settings-section">
-                    <button className="account-settings">⚙️ Account settings</button>
+                <div className="cgp-settings-section">
+                    <button className="cgp-account-settings">⚙️ Account settings</button>
                 </div>
                 
                 {/* Messages Section */}
-                <div className="profile-messages-section">
+                <div className="cgp-messages-section">
                     <h2>Messages</h2>
-                    <div className="messages-preview">
+                    <div className="cgp-messages-preview">
                         <p>View your conversations with clients</p>
-                        <button className="view-messages-btn" onClick={() => window.location.href = "/app/caregiver/message"}>View All Messages</button>
+                        <button className="cgp-view-messages-btn" onClick={() => window.location.href = "/app/caregiver/message"}>View All Messages</button>
                     </div>
                 </div>
             </div>
             {/* Right Section - Reviews */}
-            <div className="reviews-section">
+            <div className="cgp-reviews-section">
                 <h2>Reviews from Caregivers</h2>
                 {[...Array(5)].map((_, index) => (
-                    <div className="review-card" key={index}>
-                        <img src={profileCardImage} alt="Reviewer" className="reviewer-image" />
-                        <div className="review-content">
-                            <h3 className="reviewer-name">Josiah Ruben</h3>
-                            <div className="review-rating">★★★★★</div>
-                            <p className="review-text">
+                    <div className="cgp-review-card" key={index}>
+                        <img src={profileCardImage} alt="Reviewer" className="cgp-reviewer-image" />
+                        <div className="cgp-review-content">
+                            <h3 className="cgp-reviewer-name">Josiah Ruben</h3>
+                            <div className="cgp-review-rating">★★★★★</div>
+                            <p className="cgp-review-text">
                                 "I can't thank Ruth enough for the care and kindness she provided to my mother.
                                 Her attention to detail and genuine concern for her well-being went above and beyond our expectations.
                                 She always made sure he was comfortable, listened to his needs, and offered companionship."

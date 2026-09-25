@@ -3,19 +3,20 @@ import { useState } from 'react';
 import "../styles/components/footer.css";
 import logo from '../assets/careproLogoWhite.svg';
 import { Link } from 'react-router-dom';
+import { marketplaceLinkForCategorySlug } from '../main-app/constants/categoryBrowseData';
 
 const footerSections = [
   {
     title: "Service Categories",
     links: [
-      { to: "/marketplace?category=home-care", label: "Home Care" },
-      { to: "/marketplace?category=adult-care", label: "Adult & Elderly Care" },
-      { to: "/marketplace?category=child-care", label: "Child Care" },
-      { to: "/marketplace?category=pet-care", label: "Pet Care" },
-      { to: "/marketplace?category=medical-support", label: "Home Medical Support" },
-      { to: "/marketplace?category=post-surgery-care", label: "Post Surgery Care" },
-      { to: "/marketplace?category=mobility-support", label: "Mobility Support" },
-      { to: "/marketplace?category=special-needs-care", label: "Special Needs Care" },
+      { to: marketplaceLinkForCategorySlug("home-care"), label: "Home Care" },
+      { to: marketplaceLinkForCategorySlug("adult-care"), label: "Adult & Elderly Care" },
+      { to: marketplaceLinkForCategorySlug("child-care"), label: "Child Care" },
+      { to: marketplaceLinkForCategorySlug("pet-care"), label: "Pet Care" },
+      { to: marketplaceLinkForCategorySlug("medical-support"), label: "Home Medical Support" },
+      { to: marketplaceLinkForCategorySlug("post-surgery-care"), label: "Post Surgery Care" },
+      { to: marketplaceLinkForCategorySlug("mobility-support"), label: "Mobility Support" },
+      { to: marketplaceLinkForCategorySlug("special-needs-care"), label: "Special Needs Care" },
       { to: "/marketplace", label: "Therapy & Wellness" },
       { to: "/marketplace", label: "Palliative" },
     ],
@@ -23,9 +24,8 @@ const footerSections = [
   {
     title: "For Clients",
     links: [
-      { to: "/app/client/post-project", label: "Post Requests" },
-      { to: "/book-caregiver", label: "Hire Care Professionals" },
-      { to: "/book-caregiver", label: "How Carepro works" },
+      { to: "/marketplace", label: "Browse Care Packages" },
+      { to: "/start-assessment", label: "Get a Free Care Assessment" },
       { to: "/plans", label: "Pricing" },
     ],
   },

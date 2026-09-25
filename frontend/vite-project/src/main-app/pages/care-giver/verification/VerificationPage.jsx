@@ -586,7 +586,7 @@ const CaregiverVerificationPage = () => {
   const currentUser = userData || userDetails;
 
   return (
-    <div className="mobile-verification-page">
+    <div className="mv-mobile-verification-page">
       <Helmet>
         <title>Account Verification - CareGiver | CarePro</title>
         <meta 
@@ -596,72 +596,72 @@ const CaregiverVerificationPage = () => {
         <meta name="keywords" content="caregiver verification, identity verification, KYC, caregiver profile" />
       </Helmet>
 
-      <div className="mobile-verification-container fade-in">
+      <div className="mv-mobile-verification-container mv-fade-in">
         <div className="content-wrapper">
           {/* Polling / Loading State — takes over the entire content area during verification */}
           {(progress > 0 || progressMessage) ? (
-            <div className="verification-card">
-              <div className="verification-content">
-                <div className="verification-polling-state">
-                  <div className="progress-spinner-icon">
+            <div className="vp-verification-card">
+              <div className="mv-verification-content">
+                <div className="dwf-verification-polling-state">
+                  <div className="dwf-progress-spinner-icon">
                     <i className="fas fa-circle-notch fa-spin"></i>
                   </div>
                   <h2>{widgetCompleted ? "Confirming Verification" : "Verification In Progress"}</h2>
-                  <div className="progress-circle">
-                    <div className="progress-bar">
+                  <div className="dwf-progress-circle">
+                    <div className="vp-progress-bar">
                       <div 
-                        className="progress-fill" 
+                        className="vp-progress-fill" 
                         style={{ width: `${progress}%` }}
                       ></div>
                     </div>
-                    <span className="progress-text">{progress}%</span>
+                    <span className="dwf-progress-text">{progress}%</span>
                   </div>
                   {progressMessage && (
-                    <p className="progress-message">{progressMessage}</p>
+                    <p className="vp-progress-message">{progressMessage}</p>
                   )}
                   {widgetCompleted && (
-                    <p className="progress-sub-message">Confirming your verification — this should only take a moment.</p>
+                    <p className="dwf-progress-sub-message">Confirming your verification — this should only take a moment.</p>
                   )}
                 </div>
               </div>
             </div>
           ) : (
           /* Account Verification Card — shown when not loading/polling */
-            <div className="verification-card">
-              <div className="verification-content">
+            <div className="vp-verification-card">
+              <div className="mv-verification-content">
                 <h2>Account Verification</h2>
-                <p className="verification-subtitle">
+                <p className="mv-verification-subtitle">
                   To ensure the safety of our clients and maintain high-quality services, we require all 
                   caregivers to verify their identity. Please choose a verification method below.
                 </p>
 
                 {/* Verification Instructions */}
-                <div className="verification-instructions">
-                  <div className="instruction-item">
-                    <div className="instruction-icon">
+                <div className="mv-verification-instructions">
+                  <div className="mv-instruction-item">
+                    <div className="mv-instruction-icon">
                       <i className="fas fa-id-card"></i>
                     </div>
-                    <div className="instruction-content">
+                    <div className="mv-instruction-content">
                       <h4>Government ID verification</h4>
                       <p>Get verified with your Bank verification Number</p>
                     </div>
                   </div>
 
-                  <div className="instruction-item">
-                    <div className="instruction-icon">
+                  <div className="mv-instruction-item">
+                    <div className="mv-instruction-icon">
                       <i className="fas fa-mobile-alt"></i>
                     </div>
-                    <div className="instruction-content">
+                    <div className="mv-instruction-content">
                       <h4>NIN Verification</h4>
                       <p>Get verified with your National Identification Number</p>
                     </div>
                   </div>
 
-                  <div className="instruction-item">
-                    <div className="instruction-icon">
+                  <div className="mv-instruction-item">
+                    <div className="mv-instruction-icon">
                       <i className="fas fa-camera"></i>
                     </div>
-                    <div className="instruction-content">
+                    <div className="mv-instruction-content">
                       <h4>Selfie Verification</h4>
                       <p>Take a selfie to confirm your identity</p>
                     </div>
@@ -670,7 +670,7 @@ const CaregiverVerificationPage = () => {
 
                 {/* Error Display */}
                 {error && (
-                  <div className="error-message">
+                  <div className="vp-error-message">
                     <p>{error}</p>
                   </div>
                 )}
@@ -694,11 +694,11 @@ const CaregiverVerificationPage = () => {
                 {/* Start / Retry Verification Button — only when eligible */}
                 {gate?.isEligible && !isSubmitting && (
                   <div>
-                    <div className="user-info-notice">
-                      <div className="notice-icon">
+                    <div className="mv-user-info-notice">
+                      <div className="mv-notice-icon">
                         <i className="fas fa-info-circle"></i>
                       </div>
-                      <div className="notice-content">
+                      <div className="mv-notice-content">
                         <p>
                           <strong>Verification Process:</strong> Complete your identity verification 
                           right here — no need to leave this page. Your information
@@ -719,7 +719,7 @@ const CaregiverVerificationPage = () => {
                       type="button"
                       onClick={handleStartVerification}
                       disabled={isSubmitting || isLoading || gateLoading}
-                      className="proceed-btn start-verification"
+                      className="mv-start-verification"
                     >
                       {isSubmitting
                         ? "Processing..."
@@ -730,8 +730,8 @@ const CaregiverVerificationPage = () => {
                 )}
 
                 {/* Additional Info */}
-                <div className="verification-info">
-                  <p className="privacy-note">
+                <div className="vp-verification-info">
+                  <p className="vp-privacy-note">
                     🔒 Your data is protected with bank-level security and encryption.
                   </p>
                   <p className="time-note">

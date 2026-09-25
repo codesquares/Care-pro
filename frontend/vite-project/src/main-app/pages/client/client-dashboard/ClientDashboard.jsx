@@ -1,48 +1,12 @@
 
 import { useState, useEffect } from "react";
-import { useLocation } from "react-router-dom";
 import "./clientDashboard.css";
 import "./responsiveFixes.css";
 import ClientDashboardHero from "./ClientDashboardHero";
-import ServiceCategory from "./ServiceCategory";
-import FilterBarDropdown from "../components/FilterBar";
-import ClientGigService from "../../../services/clientGigService";
 import ClientProfileService from "../../../services/clientProfileService";
-import ClientCareNeedsService from "../../../services/clientCareNeedsService";
 import accountDeletionService from "../../../services/accountDeletionService";
-import { useClientOnboarding } from '../../../context/ClientOnboardingContext';
-import PendingCommitmentBanner from '../../../components/PendingCommitmentBanner';
-
-
-
 
 const ClientDashboard = () => {
-  const location = useLocation();
-  const {
-    isCanonicalClientRoute,
-    isTipSeen,
-    markTipSeen,
-    setMarketplaceFilterContext,
-  } = useClientOnboarding();
-  const [services, setServices] = useState([]);
-  const [filteredServices, setFilteredServices] = useState([]);
-  const [popularGigs, setPopularGigs] = useState([]);
-  const [topRatedGigs, setTopRatedGigs] = useState([]);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState(null);
-  const [isActivelySearching, setIsActivelySearching] = useState(false);
-
-  const [filters, setFilters] = useState({
-    sortBy: '',
-    priceRange: { min: '', max: '' },
-    serviceType: '',
-    location: '',
-    minRating: '',
-    quickFilter: '',
-    searchTerm: ''
-  });
-
-  const [careNeedsSet, setCareNeedsSet] = useState(false);
   const [profileCompletion, setProfileCompletion] = useState(10);
   const [pendingDeletionDate, setPendingDeletionDate] = useState(null);
   const [showDeletionBanner, setShowDeletionBanner] = useState(true);
@@ -51,7 +15,7 @@ const ClientDashboard = () => {
   const user = JSON.parse(localStorage.getItem("userDetails") || "{}");
 
   // Calculate profile completion percentage from real data
-  const calculateProfileCompletion = (profile, hasCareNeeds) => {
+  const calculateProfileCompletion = (profile) => {
     const fields = [
       { check: () => !!profile?.firstName, weight: 10 },
       { check: () => !!profile?.lastName, weight: 10 },
@@ -61,26 +25,23 @@ const ClientDashboard = () => {
       { check: () => !!profile?.bio, weight: 10 },
       { check: () => !!profile?.profilePicture && profile.profilePicture !== '', weight: 15 },
       { check: () => !!profile?.isVerified, weight: 5 },
-      { check: () => hasCareNeeds, weight: 10 },
     ];
-    return fields.reduce((sum, f) => sum + (f.check() ? f.weight : 0), 0);
+    // Weights no longer add up to 100 now that care needs isn't a profile item, so normalise.
+    const total = fields.reduce((sum, f) => sum + f.weight, 0);
+    const earned = fields.reduce((sum, f) => sum + (f.check() ? f.weight : 0), 0);
+    return Math.round((earned / total) * 100);
   };
 
-  // Fetch profile and care needs to compute completion
+  // Fetch profile to compute completion
   useEffect(() => {
     const fetchProfileData = async () => {
       try {
         const clientId = user?.id;
         if (!clientId) return;
 
-        const [profile, careNeeds] = await Promise.all([
-          ClientProfileService.getProfile(clientId).catch(() => null),
-          ClientCareNeedsService.getCareNeeds().catch(() => null),
-        ]);
+        const profile = await ClientProfileService.getProfile(clientId).catch(() => null);
 
-        const hasCareNeeds = !!(careNeeds?.serviceCategories && careNeeds.serviceCategories.length > 0);
-        setCareNeedsSet(hasCareNeeds);
-        setProfileCompletion(calculateProfileCompletion(profile, hasCareNeeds));
+        setProfileCompletion(calculateProfileCompletion(profile));
 
         // Check for pending account deletion
         if (profile?.accountDeletionRequestedAt) {
@@ -96,120 +57,8 @@ const ClientDashboard = () => {
     fetchProfileData();
   }, [user?.id]);
 
-  // Extract search query from URL parameters
-  useEffect(() => {
-    const urlParams = new URLSearchParams(location.search);
-    const searchQuery = urlParams.get('q');
-    setFilters(prevFilters => ({
-      ...prevFilters,
-      searchTerm: searchQuery || ''
-    }));
-  }, [location.search]);
-
-  // Listen for real-time search changes from navigation bar
-  useEffect(() => {
-    const handleSearchChange = (event) => {
-      const { searchQuery, isSearching } = event.detail;
-      setFilters(prevFilters => ({
-        ...prevFilters,
-        searchTerm: searchQuery || ''
-      }));
-      
-      // Update active searching state
-      if (isSearching !== undefined) {
-        setIsActivelySearching(isSearching);
-      }
-    };
-
-    window.addEventListener('searchChanged', handleSearchChange);
-    
-    return () => {
-      window.removeEventListener('searchChanged', handleSearchChange);
-    };
-  }, []);
-
-  useEffect(() => {
-    const fetchData = async () => {
-      try {
-        setLoading(true);
-
-        const allGigs = await ClientGigService.getAllGigs();
-        setServices(allGigs);
-        setFilteredServices(ClientGigService.applyAdvancedFilters(allGigs, filters));
-
-        const popular = await ClientGigService.getPopularGigs(6);
-        setPopularGigs(popular);
-
-        const topRated = await ClientGigService.getTopRatedGigs(6);
-        setTopRatedGigs(topRated);
-
-        // const careNeeds = await ClientCareNeedsService.getCareNeeds();
-        // setCareNeedsSet(!!(careNeeds && careNeeds.primaryCondition));
-      } catch (error) {
-        console.error("Error fetching services:", error);
-        setError(error.message);
-      } finally {
-        setLoading(false);
-      }
-    };
-
-    fetchData();
-  }, []);
-
-  useEffect(() => {
-    if (services.length === 0) return;
-
-    const filtered = ClientGigService.applyAdvancedFilters(services, filters);
-    setFilteredServices(filtered);
-  }, [filters, services]);
-
-  const handleFilterChange = (newFilters) => {
-    setFilters(newFilters);
-  };
-
-  // Check if any filters or search are active
-  const hasActiveFiltersOrSearch = () => {
-    return filters.quickFilter ||
-           filters.sortBy ||
-           filters.serviceType ||
-           filters.location ||
-           filters.minRating ||
-           filters.priceRange.min ||
-           filters.priceRange.max ||
-           filters.searchTerm;
-  };
-
-  const [marketplaceTipDismissed, setMarketplaceTipDismissed] = useState(false);
-  const [marketplaceTipInitiallySeen] = useState(() => isTipSeen('tip_marketplace_discovery'));
-  const showMarketplaceTip =
-    isCanonicalClientRoute &&
-    !marketplaceTipDismissed &&
-    !marketplaceTipInitiallySeen;
-
-  useEffect(() => {
-    setMarketplaceFilterContext(filters);
-  }, [filters, setMarketplaceFilterContext]);
-
-  useEffect(() => {
-    if (!showMarketplaceTip) return;
-
-    markTipSeen({
-      tipKey: 'tip_marketplace_discovery',
-      context: {
-        route: location.pathname,
-      },
-    });
-  }, [location.pathname, markTipSeen, showMarketplaceTip]);
-
-  // Check if components should be hidden during search
-  const shouldHideComponents = () => {
-    return isActivelySearching || (filters.searchTerm && filters.searchTerm.trim() !== '');
-  };
-
   return (
     <div className="dashboard client-dashboard-flex">
-      <PendingCommitmentBanner />
-
       {/* Pending deletion banner */}
       {pendingDeletionDate && showDeletionBanner && (
         <div style={{
@@ -315,139 +164,11 @@ const ClientDashboard = () => {
       )}
 
       <div className="rightbar">
-        {!shouldHideComponents() && (
-          <ClientDashboardHero
-            userName={user.firstName || 'User'}
-            profileCompletion={profileCompletion}
-            remindersCount={3}
-            filters={filters}
-            onFilterChange={handleFilterChange}
-          />
-        )}
-
-        {shouldHideComponents() && (
-          <FilterBarDropdown filters={filters} onFilterChange={handleFilterChange} />
-        )}
-
-        {loading && (
-          <div className="spinner-container">
-            <div className="loading-spinner"></div>
-          </div>
-        )}
-        {error && <p className="error-message">{error}</p>}
-
-        {!loading && !error && (
-          <div className="service-categories">
-            {showMarketplaceTip && (
-              <div className="client-tip-banner" role="note">
-                <div>
-                  <strong>Marketplace tip</strong>
-                  <p>Use search, category, and filters together to narrow down to matching caregivers quickly.</p>
-                </div>
-                <button
-                  type="button"
-                  onClick={() => {
-                    setMarketplaceTipDismissed(true);
-                    markTipSeen({
-                      tipKey: 'tip_marketplace_discovery',
-                      context: {
-                        route: location.pathname,
-                        dismissed: true,
-                      },
-                    });
-                  }}
-                >
-                  Dismiss
-                </button>
-              </div>
-            )}
-
-            {/* Show categories if no filters or search are active */}
-            {!hasActiveFiltersOrSearch() && (
-                <>
-                  {popularGigs.length > 0 && (
-                    <ServiceCategory
-                      title="Popular Services"
-                      services={popularGigs}
-                      seeMoreLink="/dashboard?filter=popular"
-                    />
-                  )}
-
-                  {topRatedGigs.length > 0 && (
-                    <ServiceCategory
-                      title="Top Rated Services"
-                      services={topRatedGigs}
-                      seeMoreLink="/dashboard?filter=top-rated"
-                    />
-                  )}
-                </>
-            )}
-
-            <ServiceCategory
-              title={
-                hasActiveFiltersOrSearch()
-                  ? filters.searchTerm 
-                    ? `Search Results${filters.searchTerm ? ` for "${filters.searchTerm}"` : ''}`
-                    : "Filtered Services"
-                  : "All Services"
-              }
-              services={filteredServices}
-            />
-
-            {filteredServices.length === 0 && hasActiveFiltersOrSearch() && (
-              <div className="no-results">
-                <h3>No services found</h3>
-                <p>
-                  {filters.searchTerm 
-                    ? `No results found for "${filters.searchTerm}". Try searching for something else or adjusting your filters.`
-                    : "Try adjusting your filters or search for something else."
-                  }
-                </p>
-                <div className="reset-buttons">
-                  {filters.searchTerm && (
-                    <button
-                      className="reset-button search-reset"
-                      onClick={() => {
-                        setFilters(prevFilters => ({
-                          ...prevFilters,
-                          searchTerm: ''
-                        }));
-                        setIsActivelySearching(false);
-                        // Clear the URL search parameter
-                        window.history.pushState({}, '', location.pathname);
-                        // Notify navigation bar to clear search input
-                        window.dispatchEvent(new CustomEvent('clearSearch'));
-                      }}
-                    >
-                      Clear Search
-                    </button>
-                  )}
-                  <button
-                    className="reset-button"
-                    onClick={() => {
-                      setFilters({
-                        sortBy: '',
-                        priceRange: { min: '', max: '' },
-                        serviceType: '',
-                        location: '',
-                        minRating: '',
-                        quickFilter: '',
-                        searchTerm: ''
-                      });
-                      setIsActivelySearching(false);
-                      // Clear the URL search parameter
-                      window.history.pushState({}, '', location.pathname);
-                      // Notify navigation bar to clear search input
-                      window.dispatchEvent(new CustomEvent('clearSearch'));
-                    }}
-                  >
-                    Reset All Filters
-                  </button>
-                </div>
-              </div>
-            )}
-          </div>
-        )}
+        <ClientDashboardHero
+          userName={user.firstName || 'User'}
+          profileCompletion={profileCompletion}
+          remindersCount={3}
+        />
       </div>
     </div>
   );

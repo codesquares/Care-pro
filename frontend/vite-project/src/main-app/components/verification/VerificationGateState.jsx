@@ -13,6 +13,7 @@
  */
 
 import { useEffect, useState } from 'react';
+import './VerificationGateState.css';
 
 function formatRemaining(ms) {
   if (ms <= 0) return '0 seconds';
@@ -62,14 +63,14 @@ export default function VerificationGateState({
   switch (gate.reason) {
     case 'already_verified':
       return (
-        <div className="verification-status verified">
+        <div className="vgs-status verified">
           <h3>✅ Account Verified</h3>
           <p>Your identity has been successfully verified.</p>
           {onProceed && (
             <button
               type="button"
               onClick={onProceed}
-              className="proceed-btn start-assessment"
+              className="vgs-proceed-btn"
             >
               {proceedLabel}
               <i className="fas fa-arrow-right"></i>
@@ -80,7 +81,7 @@ export default function VerificationGateState({
 
     case 'pending_review':
       return (
-        <div className="verification-status pending">
+        <div className="vgs-status pending">
           <h3>⏳ Verification Under Review</h3>
           <p>
             Your verification is under review. We will notify you of the result
@@ -91,7 +92,7 @@ export default function VerificationGateState({
 
     case 'cooldown_active':
       return (
-        <div className="verification-status pending">
+        <div className="vgs-status pending">
           <h3>⏳ Please Wait Before Retrying</h3>
           <p>
             You can retry verification in{' '}
@@ -111,7 +112,7 @@ export default function VerificationGateState({
 
     case 'max_attempts_reached':
       return (
-        <div className="verification-status">
+        <div className="vgs-status">
           <h3>🚫 Maximum Attempts Reached</h3>
           <p>
             You have reached the maximum number of verification attempts.

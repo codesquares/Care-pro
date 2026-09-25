@@ -23,10 +23,6 @@ const MarketplaceHero = ({
     navigate(`/marketplace?category=${slug}`);
   };
 
-  const handlePostRequest = () => {
-    navigate("/app/client/your-requests");
-  };
-
   // Filter handlers
   const handleServiceTypeChange = (e) => {
     onFilterChange({ ...filters, serviceType: e.target.value });
@@ -80,12 +76,9 @@ const MarketplaceHero = ({
         <div className="marketplace-banner-content">
           <h1 className="marketplace-banner-title">Browse Verified Caregivers</h1>
           <p className="marketplace-banner-subtitle">
-            You can either use the search feature or post job request, explore these methods to navigate the platform efficiently & find your perfect match.
+            Use the search and filters below to explore care packages and find your perfect match.
           </p>
         </div>
-        <button className="marketplace-post-btn" onClick={handlePostRequest}>
-          Post your Request &gt;
-        </button>
       </div>
 
       {/* Filter Dropdowns */}

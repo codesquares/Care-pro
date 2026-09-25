@@ -6,15 +6,15 @@
 :root {
   --sidebar-width: 240px;
   --sidebar-collapsed-width: 64px;
-  --sidebar-bg: #1e1b4b;
+  --sidebar-bg: var(--color-brand-deep-2);
   --sidebar-border: rgba(255,255,255,0.08);
   --sidebar-text: rgba(255,255,255,0.72);
   --sidebar-text-muted: rgba(255,255,255,0.4);
-  --sidebar-active-bg: rgba(139, 92, 246, 0.22);
-  --sidebar-active-text: #fff;
-  --sidebar-active-border: #818cf8;
+  --sidebar-active-bg: color-mix(in srgb, var(--color-brand-accent) 22%, transparent);
+  --sidebar-active-text: var(--surface);
+  --sidebar-active-border: var(--color-brand-accent);
   --sidebar-hover-bg: rgba(255,255,255,0.07);
-  --sidebar-accent: #818cf8;
+  --sidebar-accent: var(--color-brand-accent);
 }
 
 /* ── Base sidebar ── */
@@ -89,7 +89,7 @@
 .sidebar-logo-icon {
   width: 36px;
   height: 36px;
-  background: linear-gradient(135deg, #667eea, #764ba2);
+  background: linear-gradient(135deg, var(--color-brand-deep), var(--color-brand-accent));
   border-radius: 10px;
   display: flex;
   align-items: center;
@@ -216,7 +216,7 @@
 }
 
 .sidebar-nav-item--active .sidebar-nav-icon {
-  color: #c4b5fd;
+  color: color-mix(in srgb, var(--color-brand-accent) 75%, white);
 }
 
 .sidebar-nav-label {
@@ -244,7 +244,7 @@
 .sidebar-user-avatar {
   width: 34px;
   height: 34px;
-  background: linear-gradient(135deg, #667eea, #764ba2);
+  background: linear-gradient(135deg, var(--color-brand-deep), var(--color-brand-accent));
   border-radius: 50%;
   display: flex;
   align-items: center;
@@ -302,7 +302,7 @@
 .admin-layout-content {
   margin-left: var(--sidebar-width);
   min-height: 100vh;
-  background: #f8fafc;
+  background: var(--surface-subtle);
   transition: margin-left 0.25s ease;
 }
 

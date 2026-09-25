@@ -14,6 +14,7 @@ import OurProcess from './pages/OurProcess';
 import Plans from './pages/Plans';
 import BookCaregiver from './pages/BookCaregiver';
 import MarketingPage from './pages/MarketingPage';
+import StartAssessmentRedirect from './pages/StartAssessmentRedirect';
 import BecomeCaregiver from './pages/BecomeCaregiver';
 import BecomeReferrer from './pages/BecomeReferrer';
 import PrivacyPolicy from './pages/PrivacyPolicy';
@@ -31,6 +32,7 @@ import ResendConfirmationPage from './main-app/pages/ResendConfirmationPage';
 import EmailUnsubscribePage from './main-app/pages/EmailUnsubscribePage';
 import UnauthorizedPage from './main-app/pages/UnauthorizedPage';
 import CancelAccountDeletion from './main-app/pages/CancelAccountDeletion';
+import GuarantorConfirmationPage from './main-app/pages/GuarantorConfirmationPage';
 import { ToastContainer, toast } from 'react-toastify';
 import 'react-toastify/dist/ReactToastify.css';
 import ProtectedRoute from './main-app/components/auth/ProtectedRoute';
@@ -45,7 +47,7 @@ import ContentBlogPost from './components/ContentfulBlog/BlogPost';
 import { BlogProvider } from './main-app/context/BlogContext';
 import PaymentSuccess from './main-app/pages/client/home-care-service/PaymentSuccess';
 import CommitmentSuccess from './main-app/pages/client/home-care-service/CommitmentSuccess';
-import HomeCareService from './main-app/pages/client/home-care-service/HomeCareService';
+import FeatureMovedNotice from './main-app/components/shared/FeatureMovedNotice';
 import SubscriptionPaymentConfirmed from './main-app/pages/client/subscriptions/SubscriptionPaymentConfirmed';
 import { MessageProvider } from './main-app/context/MessageContext';
 import { CaregiverStatusProvider } from './main-app/contexts/CaregiverStatusContext';
@@ -193,6 +195,7 @@ function AppContent() {
     '/unauthorized',
     '/splash',
     '/cancel-account-deletion',
+    '/guarantor-confirmation',
     '/Caregivergigpage',
     '/MyOrders',
     '/OrderTasks&Details',
@@ -228,7 +231,10 @@ function AppContent() {
     !routesWithoutNavbar.includes(location.pathname) &&
     !isRootRoute &&
     !isMarketplaceRoute;
-  const shouldShowFooter = !routesWithoutFooter.includes(location.pathname);
+  // The admin/caregiver/client dashboards (everything under /app/*) have their
+  // own chrome and are never meant to show the public marketing footer.
+  const shouldShowFooter = !routesWithoutFooter.includes(location.pathname) &&
+    !location.pathname.startsWith('/app/');
 
 
 
@@ -288,12 +294,17 @@ function AppContent() {
         <Route path="/login" element={<LoginPage />} />
         <Route path="/register" element={<RoleSelectionPage />} />
         <Route path="/register/form" element={<RegisterFormPage />} />
+        <Route path="/start-assessment" element={<StartAssessmentRedirect />} />
         <Route path="/forgot-password" element={<ForgotPasswordPage />} />
         <Route path="/confirm-email" element={<ConfirmEmailPage />} />
         <Route path="/resend-confirmation" element={<ResendConfirmationPage />} />
         <Route path="/email-preferences/unsubscribe" element={<EmailUnsubscribePage />} />
         <Route path="/cancel-account-deletion" element={<CancelAccountDeletion />} />
-        <Route path="/service/:id" element={<HomeCareService />} />
+        <Route path="/guarantor-confirmation" element={<GuarantorConfirmationPage />} />
+        {/* Retired: gigs are no longer client-purchasable (care is requested as packages and the caregiver
+            is assigned internally). Kept as a deliberate notice so old shared links and notification
+            deep links land somewhere sensible instead of a 404. */}
+        <Route path="/service/:id" element={<FeatureMovedNotice title="This service page has moved" message="Care is now arranged through guided care packages, and we match you with the right caregiver for you. Browse the packages to get started." homePath="/marketplace" homeLabel="Browse care packages" />} />
         <Route path="/splash" element={<SplashScreen />} />
 
         {/* <Route path="/Caregivergigpage" element={<Caregivergigpage />} /> */}

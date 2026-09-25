@@ -43,7 +43,7 @@
   width: 80px;
   height: 80px;
   border-radius: 50%;
-  background-color: #3b82f6;
+  background-color: var(--color-brand-deep);
   display: flex;
   align-items: center;
   justify-content: center;
@@ -201,7 +201,7 @@
 }
 
 .profile-error button {
-  background-color: #007bff;
+  background-color: var(--color-brand-deep);
   color: white;
   border: none;
   padding: 10px 20px;
@@ -214,7 +214,7 @@
 }
 
 .profile-error button:hover {
-  background-color: #0056b3;
+  background-color: var(--color-brand-deep-2);
 }
 
 /* Responsive design for ProfileCard */
