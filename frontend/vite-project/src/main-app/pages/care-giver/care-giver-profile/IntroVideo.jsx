@@ -96,6 +96,7 @@ const IntroVideo = ({ profileIntrovideo, onVideoUpdate }) => {
           method: "PUT",
           headers: {
             'accept': '*/*',
+            'Authorization': `Bearer ${localStorage.getItem('authToken') || ''}`,
           },
           body: formData,
         }

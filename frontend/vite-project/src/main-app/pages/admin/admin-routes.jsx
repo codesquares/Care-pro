@@ -18,7 +18,9 @@ import AssignmentConsole from './assignment-console/AssignmentConsole';
 import PayRatesManagement from './pay-rates/PayRatesManagement';
 import PayrollManagement from './payroll/PayrollManagement';
 import GuarantorOverride from './guarantor-override/GuarantorOverride';
-import CareMatching from './care-matching/CareMatching';
+// Retired: Care Matching (admin gig -> client recommendation emails). Superseded by the Assignment Console;
+// source preserved commented out at ./care-matching/CareMatching.jsx.
+// import CareMatching from './care-matching/CareMatching';
 import OrdersManagement from './orders-management/OrdersManagement';
 import EmailComposer from './email-composer/EmailComposer';
 import CertificateManagement from './certificate-management/CertificateManagement';
@@ -126,7 +128,7 @@ function AdminRoutes() {
                                 : <NotFoundPage />
                         }
                     />
-                    <Route path='/care-matching' element={<CareMatching />} />
+                    <Route path='/care-matching' element={<FeatureMovedNotice title="Care Matching has been retired" message="Caregivers are now matched to package requests in the Assignment Console. Recommending a specific caregiver's gig to a client is no longer supported." homePath="/app/admin/assignments" homeLabel="Go to Assignments" />} />
                     <Route
                         path='/assignments'
                         element={

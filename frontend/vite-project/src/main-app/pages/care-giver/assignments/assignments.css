@@ -1,5 +1,31 @@
+/* ── Page shell ── */
+.asn-page {
+  min-height: 60vh;
+  background: #f9fafb;
+}
+
+.asn-banner-subtitle {
+  color: rgba(255, 255, 255, 0.85);
+  margin: 0.35rem 0 0;
+}
+
+.asn-content {
+  max-width: 960px;
+  margin: 0 auto;
+  padding: 1.5rem 1.25rem 3rem;
+}
+
+.asn-header-row {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 1rem;
+  flex-wrap: wrap;
+  margin-bottom: 1rem;
+}
+
 /* ── Status badge (shared list + detail) ── */
-.pr-status-badge {
+.asn-status-badge {
   display: inline-block;
   align-self: flex-start;
   width: fit-content;
@@ -7,42 +33,33 @@
   border-radius: 999px;
   font-size: 0.8rem;
   font-weight: 600;
-  margin: 0 18px 1rem;
+  margin-bottom: 1rem;
 }
 
-@media (min-width: 768px) {
-  .pr-status-badge {
-    margin-left: 2.6rem;
-  }
-}
-
-.pr-status-badge--pending,
-.pr-status-badge--assigned {
+.asn-status-badge--PendingAcceptance {
   background: #fff8e1;
   color: #f9a825;
 }
 
-.pr-status-badge--confirmed {
+.asn-status-badge--Accepted {
   background: #e8f5e9;
   color: #2e7d32;
 }
 
-.pr-status-badge--cancelled {
+.asn-status-badge--Declined,
+.asn-status-badge--Cancelled {
   background: #f5f5f5;
   color: #888;
 }
 
-.pr-header-row {
-  display: flex;
-  align-items: flex-start;
-  justify-content: space-between;
-  gap: 1rem;
-  flex-wrap: wrap;
-  width: 100%;
+.asn-pay-basis {
+  color: #6b7280;
+  font-size: 0.875rem;
+  margin: -0.5rem 0 1rem;
 }
 
-/* ── Header refresh button ── */
-.pr-refresh-btn {
+/* ── Refresh button ── */
+.asn-refresh-btn {
   background: var(--color-brand-deep);
   color: #fff;
   border: none;
@@ -55,17 +72,17 @@
   align-self: flex-start;
 }
 
-.pr-refresh-btn:hover {
+.asn-refresh-btn:hover {
   background: var(--color-brand-deep-2);
 }
 
-.pr-refresh-btn:disabled {
+.asn-refresh-btn:disabled {
   opacity: 0.6;
   cursor: default;
 }
 
 /* ── List view ── */
-.pr-list {
+.asn-list {
   list-style: none;
   margin: 0;
   padding: 0;
@@ -74,7 +91,7 @@
   gap: 0.75rem;
 }
 
-.pr-list-item {
+.asn-list-item {
   background: #fff;
   border: 1px solid #e5e7eb;
   border-radius: 10px;
@@ -88,44 +105,45 @@
   flex-wrap: wrap;
 }
 
-.pr-list-item:hover {
+.asn-list-item:hover {
   box-shadow: 0 2px 10px rgba(0, 0, 0, 0.06);
   border-color: var(--color-brand-deep);
 }
 
-.pr-list-item-main {
+.asn-list-item-main {
   display: flex;
   flex-direction: column;
   gap: 0.2rem;
 }
 
-.pr-list-item-main strong {
+.asn-list-item-main strong {
   font-size: 1rem;
   color: #1f2937;
 }
 
-.pr-list-item-tier {
+.asn-list-item-tier,
+.asn-list-item-pay {
   color: #6b7280;
   font-size: 0.875rem;
 }
 
-.pr-list-item-meta {
+.asn-list-item-meta {
   display: flex;
   align-items: center;
   gap: 1rem;
 }
 
-.pr-list-item-meta .pr-status-badge {
+.asn-list-item-meta .asn-status-badge {
   margin: 0;
 }
 
-.pr-list-item-date {
+.asn-list-item-date {
   color: #9ca3af;
   font-size: 0.8rem;
 }
 
 /* ── Detail view ── */
-.pr-status-panel {
+.asn-status-panel {
   background: #fff;
   border: 1px solid #e5e7eb;
   border-radius: 10px;
@@ -133,20 +151,20 @@
   margin-bottom: 1.25rem;
 }
 
-.pr-status-panel h2 {
+.asn-status-panel h2 {
   margin: 0 0 0.5rem;
   font-size: 1.1rem;
   color: #1f2937;
 }
 
-.pr-status-panel p {
+.asn-status-panel p {
   margin: 0;
   color: #4b5563;
   line-height: 1.5;
 }
 
-.pr-caregiver-card,
-.pr-contract-card {
+.asn-contract-card,
+.asn-visits-card {
   background: #fff;
   border: 1px solid #e5e7eb;
   border-radius: 10px;
@@ -154,95 +172,117 @@
   margin-bottom: 1.25rem;
 }
 
-.pr-caregiver-card h2,
-.pr-contract-card h2 {
+.asn-contract-card h2,
+.asn-visits-card h2 {
   margin: 0 0 1rem;
   font-size: 1.1rem;
   color: #1f2937;
 }
 
-.pr-caregiver-body {
-  display: flex;
-  align-items: center;
-  gap: 1rem;
-}
-
-.pr-caregiver-photo {
-  width: 64px;
-  height: 64px;
-  border-radius: 50%;
-  object-fit: cover;
-  flex-shrink: 0;
-}
-
-.pr-caregiver-photo--initials {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  background: var(--color-brand-deep);
-  color: #fff;
-  font-weight: 700;
-  font-size: 1.1rem;
-}
-
-.pr-caregiver-name {
-  font-size: 1.05rem;
-  font-weight: 600;
-  color: #1f2937;
-}
-
-.pr-caregiver-meta {
-  color: #6b7280;
-  font-size: 0.875rem;
-  margin-top: 0.15rem;
-}
-
-.pr-caregiver-confirmed {
-  color: #9ca3af;
-  font-size: 0.8rem;
-  margin-top: 0.25rem;
-}
-
-.pr-contract-summary {
+.asn-contract-summary {
   display: flex;
   flex-wrap: wrap;
   gap: 1.5rem;
   margin-bottom: 1rem;
 }
 
-.pr-contract-summary > div {
+.asn-contract-summary > div {
   display: flex;
   flex-direction: column;
   gap: 0.2rem;
 }
 
-.pr-contract-label {
+.asn-contract-label {
   font-size: 0.75rem;
   text-transform: uppercase;
   letter-spacing: 0.03em;
   color: #9ca3af;
 }
 
-.pr-contract-terms-wrap {
+.asn-contract-terms-wrap {
   border: 1px solid #e5e7eb;
   border-radius: 8px;
   overflow: hidden;
   margin-bottom: 1rem;
 }
 
-.pr-contract-terms-frame {
+.asn-contract-terms-frame {
   width: 100%;
   height: 420px;
   border: none;
   display: block;
 }
 
-.pr-download-btn {
+.asn-download-btn {
   align-self: auto;
 }
 
-.pr-message-btn {
-  margin-top: 10px;
+/* ── Visit history ── */
+.asn-visits-note {
+  color: #6b7280;
+  font-size: 0.85rem;
+  line-height: 1.45;
+  margin: -0.25rem 0 1rem;
+}
+
+.asn-visit-list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 0.6rem;
+}
+
+.asn-visit-item {
+  border: 1px solid #e5e7eb;
+  border-radius: 8px;
+  padding: 0.85rem 1rem;
+}
+
+.asn-visit-main {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.75rem;
+  margin-bottom: 0.35rem;
+}
+
+.asn-visit-main strong {
+  color: #1f2937;
+  font-size: 0.95rem;
+}
+
+.asn-visit-status {
+  padding: 0.2rem 0.6rem;
+  border-radius: 999px;
+  font-size: 0.75rem;
+  font-weight: 600;
+  background: #f3f4f6;
+  color: #4b5563;
+  white-space: nowrap;
+}
+
+.asn-visit-status--submitted {
+  background: #e8f5e9;
+  color: #2e7d32;
+}
+
+.asn-visit-status--in-progress {
+  background: #fff8e1;
+  color: #f9a825;
+}
+
+.asn-visit-meta {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.35rem 1rem;
+  color: #6b7280;
+  font-size: 0.8rem;
+}
+
+.asn-message-btn {
+  margin: 8px 0 4px;
   padding: 8px 18px;
   background: var(--color-brand-deep);
   color: #fff;
@@ -254,6 +294,6 @@
   transition: background-color 0.2s ease;
 }
 
-.pr-message-btn:hover {
+.asn-message-btn:hover {
   background: var(--color-brand-deep-2);
 }

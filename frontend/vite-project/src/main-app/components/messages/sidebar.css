@@ -603,10 +603,18 @@
 .sidebar .chat-list-container .chat-item .chat-preview .chat-header .chat-name-row {
   display: flex;
   align-items: center;
-  gap: 0.375rem;
+  flex-wrap: wrap;
+  gap: 0.125rem 0.375rem;
   min-width: 0;
   flex: 1;
   margin-right: 0.5rem;
+}
+
+.sidebar .chat-list-container .chat-item .chat-preview .chat-header .chat-name-row .chat-readonly-badge {
+  margin-left: 0;
+  padding: 0.0625rem 0.375rem;
+  font-size: 0.625rem;
+  flex-shrink: 0;
 }
 
 .sidebar .chat-list-container .chat-item .chat-preview .chat-header .chat-name-row h4 {

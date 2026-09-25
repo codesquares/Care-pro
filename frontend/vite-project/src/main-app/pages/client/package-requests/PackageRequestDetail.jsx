@@ -167,6 +167,13 @@ const PackageRequestDetail = () => {
                         Confirmed {new Date(caregiver.confirmedAt).toLocaleDateString()}
                       </div>
                     )}
+                    <button
+                      type="button"
+                      className="pr-message-btn"
+                      onClick={() => navigate(`/app/client/message/${caregiver.caregiverId}`)}
+                    >
+                      Message your caregiver
+                    </button>
                   </div>
                 </div>
               ) : (

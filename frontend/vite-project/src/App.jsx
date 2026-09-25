@@ -47,7 +47,7 @@ import ContentBlogPost from './components/ContentfulBlog/BlogPost';
 import { BlogProvider } from './main-app/context/BlogContext';
 import PaymentSuccess from './main-app/pages/client/home-care-service/PaymentSuccess';
 import CommitmentSuccess from './main-app/pages/client/home-care-service/CommitmentSuccess';
-import HomeCareService from './main-app/pages/client/home-care-service/HomeCareService';
+import FeatureMovedNotice from './main-app/components/shared/FeatureMovedNotice';
 import SubscriptionPaymentConfirmed from './main-app/pages/client/subscriptions/SubscriptionPaymentConfirmed';
 import { MessageProvider } from './main-app/context/MessageContext';
 import { CaregiverStatusProvider } from './main-app/contexts/CaregiverStatusContext';
@@ -301,7 +301,10 @@ function AppContent() {
         <Route path="/email-preferences/unsubscribe" element={<EmailUnsubscribePage />} />
         <Route path="/cancel-account-deletion" element={<CancelAccountDeletion />} />
         <Route path="/guarantor-confirmation" element={<GuarantorConfirmationPage />} />
-        <Route path="/service/:id" element={<HomeCareService />} />
+        {/* Retired: gigs are no longer client-purchasable (care is requested as packages and the caregiver
+            is assigned internally). Kept as a deliberate notice so old shared links and notification
+            deep links land somewhere sensible instead of a 404. */}
+        <Route path="/service/:id" element={<FeatureMovedNotice title="This service page has moved" message="Care is now arranged through guided care packages, and we match you with the right caregiver for you. Browse the packages to get started." homePath="/marketplace" homeLabel="Browse care packages" />} />
         <Route path="/splash" element={<SplashScreen />} />
 
         {/* <Route path="/Caregivergigpage" element={<Caregivergigpage />} /> */}

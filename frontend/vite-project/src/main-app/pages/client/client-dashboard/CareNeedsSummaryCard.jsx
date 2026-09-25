@@ -1,161 +1,179 @@
-import { useState, useEffect } from 'react';
-import { useNavigate } from 'react-router-dom';
-import ClientCareNeedsService from '../../../services/clientCareNeedsService';
-import { marketplaceLinkForCategoryName } from '../../../constants/categoryBrowseData';
-import './careNeedsSummaryCard.css';
+// ============================================================================
+// RETIRED — Client "Care Needs" setup wizard (dashboard summary card; replaced by CareGetStartedCards.jsx).
+//
+// The wizard promised caregiver matching and recommendations that no longer
+// exist: caregivers are now assigned internally by CarePro from a care
+// package (see the Assignment Console), and a client never picks or is
+// matched to a caregiver themselves. Its saved data was read by nothing
+// meaningful, and its save swallowed server errors and reported success. The
+// /app/client/care-needs route now shows a FeatureMovedNotice
+// (see client-route.jsx); the dashboard, profile and settings entry points
+// were repointed at care packages and the free care assessment.
+//
+// The entire file below is commented out on purpose, not deleted, so it can be
+// referenced later. To restore: uncomment the wizard files + their services,
+// and restore the import + <Route> in client-route.jsx. If it is ever rebuilt,
+// do NOT reuse the old save (it hid failures) or the old matching promises.
+// ============================================================================
 
-/**
- * CareNeedsSummaryCard - Displays a summary of the client's care needs
- * Styled to match the action cards design pattern
- */
-const CareNeedsSummaryCard = () => {
-  const navigate = useNavigate();
-  const [careNeeds, setCareNeeds] = useState(null);
-  const [isLoading, setIsLoading] = useState(true);
-  const [hasNeeds, setHasNeeds] = useState(false);
-
-  // Service category icons mapping
-  const categoryIcons = {
-    'Adult Care': '👴',
-    'Child Care': '👶',
-    'Pet Care': '🐕',
-    'Home Care': '🏠',
-    'Post Surgery Care': '🏥',
-    'Special Needs Care': '♿',
-    'Medical Support': '⚕️',
-    'Mobility Support': '🦽',
-    'Therapy & Wellness': '🧘',
-    'Palliative': '🕊️'
-  };
-
-  useEffect(() => {
-    const fetchCareNeeds = async () => {
-      try {
-        setIsLoading(true);
-        const needs = await ClientCareNeedsService.getCareNeeds();
-        setCareNeeds(needs);
-        
-        const hasServiceCategories = needs?.serviceCategories && needs.serviceCategories.length > 0;
-        setHasNeeds(hasServiceCategories);
-      } catch (error) {
-        console.error('Error fetching care needs:', error);
-        setHasNeeds(false);
-      } finally {
-        setIsLoading(false);
-      }
-    };
-
-    fetchCareNeeds();
-  }, []);
-
-  const handleEditCareNeeds = () => {
-    navigate('/app/client/care-needs?returnTo=/app/client/dashboard');
-  };
-
-  const handleBrowseMatchingPackages = () => {
-    if (careNeeds?.serviceCategories && careNeeds.serviceCategories.length > 0) {
-      navigate(marketplaceLinkForCategoryName(careNeeds.serviceCategories[0]));
-    } else {
-      navigate('/marketplace');
-    }
-  };
-
-  const handleSetupCareNeeds = () => {
-    navigate('/app/client/care-needs?returnTo=/app/client/dashboard');
-  };
-
-  if (isLoading) {
-    return (
-      <div className="care-needs-card-wrapper">
-        <div className="care-needs-card loading">
-          <div className="loading-spinner-small"></div>
-        </div>
-      </div>
-    );
-  }
-
-  // Show setup prompt if no care needs set
-  if (!hasNeeds) {
-    return (
-      <div className="care-needs-card-wrapper">
-        <div className="care-needs-card setup-card" onClick={handleSetupCareNeeds}>
-          <div className="cn-card-icon setup-icon">
-            <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5">
-              <circle cx="12" cy="12" r="3" />
-              <path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z" />
-            </svg>
-          </div>
-          <div className="cn-card-content">
-            <span className="cn-card-label">SET YOUR CARE PREFERENCES</span>
-            <span className="cn-card-title">Get pointed to the right care package</span>
-            <span className="cn-card-subtitle">Tell us what you need and we'll assign a vetted caregiver</span>
-          </div>
-          <div className="cn-card-arrow">
-            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-              <path d="m9 18 6-6-6-6"/>
-            </svg>
-          </div>
-        </div>
-      </div>
-    );
-  }
-
-  // Get caregiver requirements summary
-  const requirements = careNeeds?.caregiverRequirements || {};
-  const certifications = requirements.certifications || [];
-  const experienceLevel = requirements.experienceLevel || '';
-  const languages = requirements.languages || [];
-  const primaryCategory = careNeeds.serviceCategories[0];
-
-  return (
-    <div className="care-needs-card-wrapper">
-      {/* Main Summary Card */}
-      <div className="care-needs-card has-needs" onClick={handleEditCareNeeds}>
-        <div className="cn-card-icon active-icon">
-          <span className="check-icon">✓</span>
-        </div>
-        <div className="cn-card-content">
-          <span className="cn-card-label success">CARE PREFERENCES SET</span>
-          <span className="cn-card-title">
-            {categoryIcons[primaryCategory] || '📋'} {primaryCategory}
-            {careNeeds.serviceCategories.length > 1 && (
-              <span className="more-categories">+{careNeeds.serviceCategories.length - 1} more</span>
-            )}
-          </span>
-          <div className="cn-card-stats">
-            {experienceLevel && <span className="stat">📊 {experienceLevel.split(' ')[0]}</span>}
-            {certifications.length > 0 && <span className="stat">🏅 {certifications.length} certs</span>}
-            {languages.length > 0 && <span className="stat">🗣️ {languages.length} langs</span>}
-          </div>
-        </div>
-        <div className="cn-card-action">
-          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-            <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7" />
-            <path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z" />
-          </svg>
-        </div>
-      </div>
-
-      {/* Browse Matching Packages Card */}
-      <div className="care-needs-card match-card" onClick={handleBrowseMatchingPackages}>
-        <div className="cn-card-icon match-icon">
-          <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-            <circle cx="11" cy="11" r="8" />
-            <path d="m21 21-4.35-4.35" />
-          </svg>
-        </div>
-        <div className="cn-card-content">
-          <span className="cn-card-label match">BROWSE MATCHING PACKAGES</span>
-          <span className="cn-card-title">See care packages that fit your needs</span>
-        </div>
-        <div className="cn-card-arrow">
-          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-            <path d="m9 18 6-6-6-6"/>
-          </svg>
-        </div>
-      </div>
-    </div>
-  );
-};
-
-export default CareNeedsSummaryCard;
+// import { useState, useEffect } from 'react';
+// import { useNavigate } from 'react-router-dom';
+// import ClientCareNeedsService from '../../../services/clientCareNeedsService';
+// import { marketplaceLinkForCategoryName } from '../../../constants/categoryBrowseData';
+// import './careNeedsSummaryCard.css';
+//
+// /**
+//  * CareNeedsSummaryCard - Displays a summary of the client's care needs
+//  * Styled to match the action cards design pattern
+//  */
+// const CareNeedsSummaryCard = () => {
+//   const navigate = useNavigate();
+//   const [careNeeds, setCareNeeds] = useState(null);
+//   const [isLoading, setIsLoading] = useState(true);
+//   const [hasNeeds, setHasNeeds] = useState(false);
+//
+//   // Service category icons mapping
+//   const categoryIcons = {
+//     'Adult Care': '👴',
+//     'Child Care': '👶',
+//     'Pet Care': '🐕',
+//     'Home Care': '🏠',
+//     'Post Surgery Care': '🏥',
+//     'Special Needs Care': '♿',
+//     'Medical Support': '⚕️',
+//     'Mobility Support': '🦽',
+//     'Therapy & Wellness': '🧘',
+//     'Palliative': '🕊️'
+//   };
+//
+//   useEffect(() => {
+//     const fetchCareNeeds = async () => {
+//       try {
+//         setIsLoading(true);
+//         const needs = await ClientCareNeedsService.getCareNeeds();
+//         setCareNeeds(needs);
+//
+//         const hasServiceCategories = needs?.serviceCategories && needs.serviceCategories.length > 0;
+//         setHasNeeds(hasServiceCategories);
+//       } catch (error) {
+//         console.error('Error fetching care needs:', error);
+//         setHasNeeds(false);
+//       } finally {
+//         setIsLoading(false);
+//       }
+//     };
+//
+//     fetchCareNeeds();
+//   }, []);
+//
+//   const handleEditCareNeeds = () => {
+//     navigate('/app/client/care-needs?returnTo=/app/client/dashboard');
+//   };
+//
+//   const handleBrowseMatchingPackages = () => {
+//     if (careNeeds?.serviceCategories && careNeeds.serviceCategories.length > 0) {
+//       navigate(marketplaceLinkForCategoryName(careNeeds.serviceCategories[0]));
+//     } else {
+//       navigate('/marketplace');
+//     }
+//   };
+//
+//   const handleSetupCareNeeds = () => {
+//     navigate('/app/client/care-needs?returnTo=/app/client/dashboard');
+//   };
+//
+//   if (isLoading) {
+//     return (
+//       <div className="care-needs-card-wrapper">
+//         <div className="care-needs-card loading">
+//           <div className="loading-spinner-small"></div>
+//         </div>
+//       </div>
+//     );
+//   }
+//
+//   // Show setup prompt if no care needs set
+//   if (!hasNeeds) {
+//     return (
+//       <div className="care-needs-card-wrapper">
+//         <div className="care-needs-card setup-card" onClick={handleSetupCareNeeds}>
+//           <div className="cn-card-icon setup-icon">
+//             <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5">
+//               <circle cx="12" cy="12" r="3" />
+//               <path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z" />
+//             </svg>
+//           </div>
+//           <div className="cn-card-content">
+//             <span className="cn-card-label">SET YOUR CARE PREFERENCES</span>
+//             <span className="cn-card-title">Get pointed to the right care package</span>
+//             <span className="cn-card-subtitle">Tell us what you need and we'll assign a vetted caregiver</span>
+//           </div>
+//           <div className="cn-card-arrow">
+//             <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+//               <path d="m9 18 6-6-6-6"/>
+//             </svg>
+//           </div>
+//         </div>
+//       </div>
+//     );
+//   }
+//
+//   // Get caregiver requirements summary
+//   const requirements = careNeeds?.caregiverRequirements || {};
+//   const certifications = requirements.certifications || [];
+//   const experienceLevel = requirements.experienceLevel || '';
+//   const languages = requirements.languages || [];
+//   const primaryCategory = careNeeds.serviceCategories[0];
+//
+//   return (
+//     <div className="care-needs-card-wrapper">
+//       {/* Main Summary Card */}
+//       <div className="care-needs-card has-needs" onClick={handleEditCareNeeds}>
+//         <div className="cn-card-icon active-icon">
+//           <span className="check-icon">✓</span>
+//         </div>
+//         <div className="cn-card-content">
+//           <span className="cn-card-label success">CARE PREFERENCES SET</span>
+//           <span className="cn-card-title">
+//             {categoryIcons[primaryCategory] || '📋'} {primaryCategory}
+//             {careNeeds.serviceCategories.length > 1 && (
+//               <span className="more-categories">+{careNeeds.serviceCategories.length - 1} more</span>
+//             )}
+//           </span>
+//           <div className="cn-card-stats">
+//             {experienceLevel && <span className="stat">📊 {experienceLevel.split(' ')[0]}</span>}
+//             {certifications.length > 0 && <span className="stat">🏅 {certifications.length} certs</span>}
+//             {languages.length > 0 && <span className="stat">🗣️ {languages.length} langs</span>}
+//           </div>
+//         </div>
+//         <div className="cn-card-action">
+//           <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+//             <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7" />
+//             <path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z" />
+//           </svg>
+//         </div>
+//       </div>
+//
+//       {/* Browse Matching Packages Card */}
+//       <div className="care-needs-card match-card" onClick={handleBrowseMatchingPackages}>
+//         <div className="cn-card-icon match-icon">
+//           <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+//             <circle cx="11" cy="11" r="8" />
+//             <path d="m21 21-4.35-4.35" />
+//           </svg>
+//         </div>
+//         <div className="cn-card-content">
+//           <span className="cn-card-label match">BROWSE MATCHING PACKAGES</span>
+//           <span className="cn-card-title">See care packages that fit your needs</span>
+//         </div>
+//         <div className="cn-card-arrow">
+//           <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+//             <path d="m9 18 6-6-6-6"/>
+//           </svg>
+//         </div>
+//       </div>
+//     </div>
+//   );
+// };
+//
+// export default CareNeedsSummaryCard;

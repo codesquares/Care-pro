@@ -27,9 +27,14 @@ const ProfileCard = () => {
 
     const fetchProfile = async () => {
       try {
-        // Use centralized config instead of hardcoded URL for consistent API routing
+        const token = localStorage.getItem("authToken");
         const response = await fetch(
-          `${config.BASE_URL}/CareGivers/${caregiverId}`
+          `${config.BASE_URL}/CareGivers/me`,
+          {
+            headers: {
+              Authorization: `Bearer ${token}`,
+            },
+          }
         );
 
         if (!response.ok) {

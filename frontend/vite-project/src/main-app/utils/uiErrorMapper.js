@@ -17,6 +17,28 @@ export const UI_ERROR_CODES = {
   UNKNOWN: 'UNKNOWN',
 };
 
+// Flattens ASP.NET model-validation detail ({ errors: { Field: ["msg"] } }, or a plain
+// string array) into one readable string. Returns null when there is nothing usable.
+// On a body-binding failure ASP.NET also adds a bare "request" entry ("The request field
+// is required.") next to the real cause, and appends line/byte offsets to JSON errors -
+// both are noise to a user, so they are dropped when a more specific message exists.
+export const formatValidationErrors = (errors) => {
+  if (!errors || typeof errors !== 'object') return null;
+  let messages;
+  if (Array.isArray(errors)) {
+    messages = errors;
+  } else {
+    const entries = Object.entries(errors);
+    const hasSpecific = entries.some(([field]) => field !== 'request');
+    messages = entries.filter(([field]) => !(hasSpecific && field === 'request')).flatMap(([, v]) => v);
+  }
+  const cleaned = messages
+    .filter((m) => typeof m === 'string' && m.trim())
+    .map((m) => m.replace(/\s*\|\s*LineNumber: \d+\s*\|\s*BytePositionInLine: \d+\.?/, '').trim());
+  const unique = [...new Set(cleaned)];
+  return unique.length > 0 ? unique.join(' ') : null;
+};
+
 export const extractApiErrorMessage = (error, fallback = 'Something went wrong.') => {
   if (!error) return fallback;
   if (typeof error === 'string') return error;

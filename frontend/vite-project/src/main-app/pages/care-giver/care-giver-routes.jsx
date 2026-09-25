@@ -6,7 +6,12 @@ import CaregiverSettings from '../../components/caregiver_settings/CaregiverSett
 import CaregiverProfile from '../../components/caregiver_settings/CaregiverProfile';
 import EarningsPage from './EarningsPage';
 import WithdrawPage from './WithdrawPage';
-import CaregiverOrders from './orders/CaregiverOrders';
+// Legacy Orders flow — retired in favor of My Assignments. Component files are
+// preserved (fully commented out, not deleted) at ./orders/CaregiverOrders.jsx
+// and ./orders/CaregiverOrderDetails.jsx; their imports below are retired too.
+// import CaregiverOrders from './orders/CaregiverOrders';
+import MyAssignments from './assignments/MyAssignments';
+import AssignmentDetail from './assignments/AssignmentDetail';
 import CreateGig from './CreateGig';
 import CreateOffer from '../CreateOffer';
 import Messages from '../Messages';
@@ -18,7 +23,7 @@ import SpecializedAssessmentPage from './verification/SpecializedAssessmentPage'
 import SpecializedAssessmentsPage from './verification/SpecializedAssessmentsPage';
 import NotificationsPage from '../../components/Notifications/Notifications';
 import ErrorBoundary from '../../components/ErrorBoundary';
-import CaregiverOrderDetails from './orders/CaregiverOrderDetails';
+// import CaregiverOrderDetails from './orders/CaregiverOrderDetails';
 import { GigEditProvider } from '../../contexts/GigEditContext';
 import '../../components/ErrorBoundary.css';
 import FAQPage from '../client/orders/FAQ';
@@ -47,7 +52,9 @@ function CareGiverRoutes() {
                 <Route path='/profile' element={<UserProfile />} />
                 <Route path='/earnings' element={<EarningsPage />} />
                 <Route path='/withdraw' element={<WithdrawPage />} />
-                <Route path='/orders' element={<CaregiverOrders />} />
+                <Route path='/orders' element={<FeatureMovedNotice title="Orders have moved" message="Your orders are now under My Assignments." homePath="/app/caregiver/assignments" homeLabel="Go to My Assignments" />} />
+                <Route path='/assignments' element={<MyAssignments />} />
+                <Route path='/assignments/:id' element={<AssignmentDetail />} />
                 <Route path='/create-gigs' element={<CreateGig/>} />
                 <Route path='/create-offer' element={<CreateOffer/>} />
                 <Route path='/settings' element={<CaregiverSettings />} />
@@ -61,7 +68,7 @@ function CareGiverRoutes() {
                 {/* Specialized assessments temporarily disabled */}
                 <Route path="/specialized-assessment" element={<Navigate to="/app/caregiver/assessment" replace />} />
                 <Route path="/specialized-assessments" element={<Navigate to="/app/caregiver/assessment" replace />} />
-                <Route path="/order-details/:orderId" element={<CaregiverOrderDetails />} />
+                <Route path="/order-details/:orderId" element={<FeatureMovedNotice title="Orders have moved" message="Your orders are now under My Assignments." homePath="/app/caregiver/assignments" homeLabel="Go to My Assignments" />} />
                 <Route path="/subscriptions" element={<CaregiverSubscriptions />} />
                 <Route path="/subscriptions/:id" element={<CaregiverSubscriptionDetail />} />
                 <Route path="/wallet" element={<CaregiverWallet />} />

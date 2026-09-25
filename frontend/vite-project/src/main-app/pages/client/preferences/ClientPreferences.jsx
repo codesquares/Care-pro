@@ -2,13 +2,12 @@ import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import './ClientPreferences.css';
 import ClientPreferenceService from '../../../services/clientPreferenceService';
-import ServiceCard from '../client-dashboard/ServiceCard';
 // import ClientTaskService from '../../../services/clientTaskService'; // Disabled for now
 
 /**
- * ClientPreferences component for managing client service preferences and recommendations
- * This component leverages the clientAI service to provide personalized recommendations
- * and generates task lists based on preferences
+ * ClientPreferences component for managing client service preferences.
+ * The gig-based "Recommendations" tab was removed with the retirement of direct gig hiring
+ * (care is now requested as packages and the caregiver is assigned internally).
  */
 const ClientPreferences = () => {
   const [preferences, setPreferences] = useState({
@@ -30,13 +29,12 @@ const ClientPreferences = () => {
     specialRequirements: ''
   });
   
-  const [recommendations, setRecommendations] = useState([]);
   // const [tasks, setTasks] = useState([]); // Disabled tasks feature
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
   const [success, setSuccess] = useState(null);
   const [offlineMode, setOfflineMode] = useState(false);
-  const [activeTab, setActiveTab] = useState('preferences'); // 'preferences', 'recommendations'
+  const [activeTab, setActiveTab] = useState('preferences');
   
   const serviceTypes = [
     'Home Care',
@@ -87,7 +85,7 @@ const ClientPreferences = () => {
     'Arabic'
   ];
   
-  // Fetch client's current preferences and recommendations
+  // Fetch client's current preferences
   useEffect(() => {
     const fetchData = async () => {
       try {
@@ -113,13 +111,6 @@ const ClientPreferences = () => {
         // Attempt to fetch preferences from service
         const fetchedPreferences = await ClientPreferenceService.getPreferences(clientId);
         setPreferences(fetchedPreferences);
-        
-        // Get initial recommendations
-        const initialRecommendations = await ClientPreferenceService.getRecommendations(
-          clientId, 
-          fetchedPreferences
-        );
-        setRecommendations(initialRecommendations);
         
         // // Fetch existing tasks if available - DISABLED
         // try {
@@ -283,19 +274,6 @@ const ClientPreferences = () => {
         setOfflineMode(true);
       }
       
-      // Update recommendations based on new preferences
-      let updatedRecommendations = [];
-      try {
-        updatedRecommendations = await ClientPreferenceService.getRecommendations(
-          clientId,
-          preferences
-        );
-        setRecommendations(updatedRecommendations);
-      } catch (recError) {
-        console.warn('Error getting recommendations:', recError);
-        // We'll continue with any recommendations we might have
-      }
-      
       // // Generate and save tasks based on preferences - DISABLED
       // let generatedTasks = [];
       // try {
@@ -311,11 +289,6 @@ const ClientPreferences = () => {
       
       // Clear success message after 5 seconds
       setTimeout(() => setSuccess(null), 5000);
-      
-      // Switch to recommendations tab if we have recommendations
-      if (updatedRecommendations && updatedRecommendations.length > 0) {
-        setActiveTab('recommendations');
-      }
       
       setLoading(false);
     } catch (err) {
@@ -378,12 +351,6 @@ const ClientPreferences = () => {
           onClick={() => setActiveTab('preferences')}
         >
           <i className="fas fa-sliders-h"></i> Preferences
-        </button>
-        <button 
-          className={`tab-button ${activeTab === 'recommendations' ? 'active' : ''}`}
-          onClick={() => setActiveTab('recommendations')}
-        >
-          <i className="fas fa-star"></i> Recommendations
         </button>
         {/* Tasks tab disabled for now */}
         {/* <button 
@@ -608,35 +575,6 @@ const ClientPreferences = () => {
             </button>
           </div>
         </div>
-        )}
-        
-        {/* Recommendations Section */}
-        {activeTab === 'recommendations' && (
-          <div className="recommendations-section">
-            <h2>Recommended Services</h2>
-            
-            {loading ? (
-              <div className="loading-spinner">
-                <i className="fas fa-spinner fa-spin"></i>
-                <p>Loading recommendations...</p>
-              </div>
-            ) : recommendations.length > 0 ? (
-              <div className="recommendations-grid">
-                {recommendations.map(service => (
-                  <ServiceCard 
-                    key={service.id} 
-                    {...service}
-                    isPublic={false}
-                  />
-                ))}
-              </div>
-            ) : (
-              <div className="no-recommendations">
-                <i className="fas fa-search"></i>
-                <p>No recommendations available. Update your preferences to get personalized suggestions.</p>
-              </div>
-            )}
-          </div>
         )}
         
         {/* Tasks Section - DISABLED */}

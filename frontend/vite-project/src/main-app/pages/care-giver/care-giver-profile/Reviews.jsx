@@ -55,9 +55,9 @@ const Reviews = () => {
     </h3>
   );
 
-  // Fetch caregiver's gigs with reviews using the new service
+  // Fetch the caregiver's reviews
   useEffect(() => {
-    const fetchGigsWithReviews = async () => {
+    const fetchReviews = async () => {
       try {
         setIsLoading(true);
         setError("");
@@ -67,7 +67,7 @@ const Reviews = () => {
           throw new Error("Caregiver ID not found in local storage.");
         }
 
-        const enrichedReviews = await CaregiverReviewService.getGigsWithReviews(userDetails.id);
+        const enrichedReviews = await CaregiverReviewService.getCaregiverReviews(userDetails.id);
         const stats = CaregiverReviewService.calculateReviewStats(enrichedReviews);
         
         setReviewsFromApi(enrichedReviews);
@@ -82,7 +82,7 @@ const Reviews = () => {
       }
     };
 
-    fetchGigsWithReviews();
+    fetchReviews();
     
     // Cleanup cache when component unmounts
     return () => {
@@ -198,16 +198,6 @@ const Reviews = () => {
                   </span>
                 </div>
               </div>
-              
-              {/* Gig Information */}
-              {review.gig && (
-                <div className="rv-review-gig-info">
-                  <span className="rv-review-gig-title">Service: {review.gig.title}</span>
-                  {review.gig.category && (
-                    <span className="rv-review-gig-category"> • {review.gig.category}</span>
-                  )}
-                </div>
-              )}
               
               <p className="rv-review-text">{review.comment || "Great service!"}</p>
               

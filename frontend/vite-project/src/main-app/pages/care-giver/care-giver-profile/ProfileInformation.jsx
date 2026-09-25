@@ -7,6 +7,23 @@ import config from "../../../config";
 import { useCaregiverStatus } from "../../../contexts/CaregiverStatusContext";
 import CertificateUploadModal from "../../../components/shared/CertificateUploadModal";
 
+// The API serialises DocumentVerificationStatus as its numeric enum value.
+const VERIFICATION_STATUS_NAMES = [
+  'PendingVerification',
+  'Verified',
+  'Invalid',
+  'VerificationFailed',
+  'ManualReviewRequired',
+  'NotVerified',
+];
+
+const getVerificationStatusName = (cert) => {
+  const status = cert.verificationStatus;
+  if (typeof status === 'number') return VERIFICATION_STATUS_NAMES[status] || 'PendingVerification';
+  if (status) return status;
+  return cert.isVerified ? 'Verified' : 'PendingVerification';
+};
+
 const ProfileInformation = ({ aboutMe, onUpdate, services = [] }) => {
   const [searchParams, setSearchParams] = useSearchParams();
   const [showModal, setShowModal] = useState(false);
@@ -151,7 +168,7 @@ const ProfileInformation = ({ aboutMe, onUpdate, services = [] }) => {
 
   // Helper function to get status badge configuration
   const getStatusBadgeConfig = (cert) => {
-    const status = cert.verificationStatus || (cert.isVerified ? 'Verified' : 'PendingVerification');
+    const status = getVerificationStatusName(cert);
     
     const configs = {
       'Verified': {
@@ -167,12 +184,6 @@ const ProfileInformation = ({ aboutMe, onUpdate, services = [] }) => {
         icon: '⚠️'
       },
       'Invalid': {
-        text: '❌ Invalid',
-        color: '#ef4444',
-        bgColor: '#fee2e2',
-        icon: '❌'
-      },
-      'Rejected': {
         text: '❌ Rejected',
         color: '#ef4444',
         bgColor: '#fee2e2',
@@ -189,6 +200,12 @@ const ProfileInformation = ({ aboutMe, onUpdate, services = [] }) => {
         color: '#3b82f6',
         bgColor: '#dbeafe',
         icon: '⏳'
+      },
+      'NotVerified': {
+        text: 'Not verified',
+        color: '#6b7280',
+        bgColor: '#f3f4f6',
+        icon: ''
       }
     };
     
@@ -199,25 +216,6 @@ const ProfileInformation = ({ aboutMe, onUpdate, services = [] }) => {
   const parseErrorMessages = (errorMessage) => {
     if (!errorMessage) return [];
     return errorMessage.split(' | ').filter(msg => msg.trim());
-  };
-
-  // Function to retry verification for a certificate
-  const handleRetryVerification = async (certificateId) => {
-    try {
-      setUploadLoading(true);
-      await axios.post(`${config.BASE_URL}/Certificates/${certificateId}/retry-verification`, {}, {
-        headers: { 
-          "Authorization": `Bearer ${localStorage.getItem('authToken')}`
-        }
-      });
-      toast.success("Verification retry initiated");
-      await fetchCertificates();
-    } catch (err) {
-      console.error("Retry verification failed", err);
-      toast.error(`Retry failed: ${err.response?.data?.message || err.message || 'Unknown error'}`);
-    } finally {
-      setUploadLoading(false);
-    }
   };
 
   // Function to open certificate in modal
@@ -330,7 +328,8 @@ const ProfileInformation = ({ aboutMe, onUpdate, services = [] }) => {
               const statusConfig = getStatusBadgeConfig(cert);
               const errorMessages = parseErrorMessages(cert.verificationErrorMessage || cert.errorMessage);
               const confidence = cert.verificationConfidence ? (cert.verificationConfidence * 100).toFixed(0) : null;
-              const canRetry = cert.verificationStatus === 'VerificationFailed' || cert.verificationStatus === 'Invalid';
+              const statusName = getVerificationStatusName(cert);
+              const needsSupport = statusName === 'Invalid' || statusName === 'VerificationFailed';
               
               return (
                 <div key={cert.id} className="pi-certification-item" style={{
@@ -370,7 +369,7 @@ const ProfileInformation = ({ aboutMe, onUpdate, services = [] }) => {
                   
                   {cert.verificationDate && (
                     <p style={{ margin: '4px 0', fontSize: '12px', color: '#9ca3af' }}>
-                      Verified: {new Date(cert.verificationDate).toLocaleDateString()}
+                      {statusName === 'Verified' ? 'Verified' : 'Reviewed'}: {new Date(cert.verificationDate).toLocaleDateString()}
                     </p>
                   )}
                   
@@ -393,7 +392,7 @@ const ProfileInformation = ({ aboutMe, onUpdate, services = [] }) => {
                     </div>
                   )}
                   
-                  {cert.verificationStatus === 'ManualReviewRequired' && (
+                  {statusName === 'ManualReviewRequired' && (
                     <div style={{
                       marginTop: '8px',
                       padding: '8px',
@@ -407,6 +406,20 @@ const ProfileInformation = ({ aboutMe, onUpdate, services = [] }) => {
                     </div>
                   )}
                   
+                  {needsSupport && (
+                    <div style={{
+                      marginTop: '8px',
+                      padding: '8px',
+                      backgroundColor: '#fef2f2',
+                      borderRadius: '4px',
+                      borderLeft: '3px solid #ef4444'
+                    }}>
+                      <p style={{ margin: 0, fontSize: '12px', color: '#991b1b' }}>
+                        This certificate needs review — please contact CarePro support to resolve it.
+                      </p>
+                    </div>
+                  )}
+
                   <div style={{ display: 'flex', alignItems: 'center', gap: '10px', marginTop: '12px', flexWrap: 'wrap' }}>
                     {cert.certificateUrl && (
                       <button 
@@ -429,26 +442,6 @@ const ProfileInformation = ({ aboutMe, onUpdate, services = [] }) => {
                       </button>
                     )}
                     
-                    {canRetry && (
-                      <button 
-                        onClick={() => handleRetryVerification(cert.id)}
-                        disabled={uploadLoading}
-                        style={{
-                          color: '#6b7280',
-                          fontSize: '13px',
-                          fontWeight: '500',
-                          padding: '6px 12px',
-                          borderRadius: '4px',
-                          border: '1px solid #d1d5db',
-                          transition: 'all 0.2s ease',
-                          backgroundColor: 'white',
-                          cursor: uploadLoading ? 'not-allowed' : 'pointer',
-                          opacity: uploadLoading ? 0.6 : 1
-                        }}
-                      >
-                        🔄 Retry Verification
-                      </button>
-                    )}
                   </div>
                 </div>
               );

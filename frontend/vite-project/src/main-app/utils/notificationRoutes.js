@@ -616,28 +616,19 @@ export const getNotificationRoute = (notification, userRole) => {
       if (isAdmin) return `/app/admin/orders`;
       return null;
 
-    // ── Commitment fee confirmed ──────────────────────────
-    // senderId = the other party in the conversation
-    // relatedEntityId = gigId (fallback only)
+    // ── Commitment fee confirmed (legacy) ─────────────────
+    // Chat is no longer unlocked by a fee — conversations are tied to assignments — so this
+    // resolves to the plain conversation with the other party (senderId), same as NewMessage.
+    // That page reads its access/identity from the assignment, not from any gig.
     case 'CommitmentConfirmed':
       if (isClient) {
-        // Client paid — CTA is to chat with the caregiver (senderId = caregiver)
-        if (senderId && relatedEntityId) {
-          return `/app/client/message/${senderId}?gigId=${encodeURIComponent(relatedEntityId)}`;
-        }
         if (senderId) return `/app/client/message/${senderId}`;
         return `/app/client/message`;
       }
       if (isCaregiver) {
-        // Caregiver notified — CTA is to open the conversation with the client (senderId = client)
-        if (senderId && relatedEntityId) {
-          return `/app/caregiver/message/${senderId}?gigId=${encodeURIComponent(relatedEntityId)}`;
-        }
         if (senderId) return `/app/caregiver/message/${senderId}`;
         return `/app/caregiver/message`;
       }
-      // Last-resort deep link to the gig page
-      if (relatedEntityId) return `/service/${relatedEntityId}`;
       return null;
 
     // ── Certificate notifications ────────────────────────
@@ -684,15 +675,11 @@ export const getNotificationRoute = (notification, userRole) => {
       return null;
 
     // ── Gig notifications ────────────────────────────────
+    // The public gig page (/service/:id) is retired — gigs are no longer client-purchasable — so gig
+    // notifications only make sense for the owning caregiver, who manages gigs from their profile.
     case 'NewGig':
-      if (relatedEntityId) return `/service/${relatedEntityId}`;
-      if (isCaregiver) return `/app/caregiver/create-gigs`;
-      return null;
-
-    // relatedEntityId = gig ID for all gig lifecycle types
     case 'GigPublished':
     case 'GigShared': // reserved — handle gracefully when it ships
-      if (relatedEntityId && isCaregiver) return `/service/${relatedEntityId}`;
       if (isCaregiver) return `/app/caregiver/profile`;
       return null;
 

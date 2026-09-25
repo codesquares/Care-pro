@@ -1,10 +1,11 @@
 import { useEffect, useState, useRef } from "react";
 import { useLocation, useNavigate } from "react-router-dom";
 import "./profile-header.css";
-import { FaMapMarkerAlt, FaCalendarAlt, FaTruck } from "react-icons/fa";
+import { FaMapMarkerAlt, FaCalendarAlt } from "react-icons/fa";
 import profilecard1 from "../../../../assets/profilecard1.png";
 import IntroVideo from "./IntroVideo";
 import ProfileInformation from "./ProfileInformation";
+import VettingLinkCard from "./VettingLinkCard";
 import VerifyButton from "./VerifyButton";
 import AssessmentButton from "./AssessmentButton";
 import TestVerificationToggle from "../../../components/dev/TestVerificationToggle";
@@ -76,11 +77,8 @@ const ProfileHeader = () => {
     name: "",
     username: "",
     bio: "",
-    rating: 0,
-    reviews: 0,
     location: "",
     memberSince: "",
-    lastDelivery: "",
     picture: "",
     introVideo: "",
     aboutMe: "",
@@ -414,7 +412,7 @@ const ProfileHeader = () => {
 
       // Use centralized config instead of hardcoded URL for consistent API routing
       const token = localStorage.getItem('authToken');
-      const response = await fetch(`${config.BASE_URL}/CareGivers/${userDetails.id}`, {
+      const response = await fetch(`${config.BASE_URL}/CareGivers/me`, {
         headers: {
           'Authorization': token ? `Bearer ${token}` : '',
         },
@@ -525,8 +523,6 @@ const ProfileHeader = () => {
         name: data.firstName && data.lastName ? `${data.firstName.charAt(0).toUpperCase() + data.firstName.slice(1)} ${data.lastName.charAt(0).toUpperCase() + data.lastName.slice(1)}` : "John Doe",
         username: data.email || "user@example.com",
         bio: data.aboutMe || "Passionate caregiver dedicated to providing quality care.",
-        rating: data.rating || 4.8,
-        reviews: data.reviewsCount || 24,
         // Prioritize location from Location table, then fallback to old fields
         location: locationData?.city || 
                  data.serviceCity || 
@@ -538,11 +534,6 @@ const ProfileHeader = () => {
           day: 'numeric', 
           year: 'numeric' 
         }).replace(',', ',') : "January 2023",
-        lastDelivery: data.lastDelivery ? new Date(data.lastDelivery).toLocaleDateString('en-US', { 
-          month: 'short', 
-          day: 'numeric', 
-          year: 'numeric' 
-        }).replace(',', ',') : "2 days ago",
         picture: data.profileImage || profilecard1,
         introVideo: data.introVideo || "",
         aboutMe: data.aboutMe || "",
@@ -684,17 +675,6 @@ const ProfileHeader = () => {
           <p className="caregiver-bio">{`"${profile.aboutMe.slice(0, 60)}${profile.aboutMe.length > 60 ? '...' : ''}"`}</p>
         </div>
       
-        {/* <div className="caregiver-profile-rating-section">
-          <div className="caregiver-rating">
-            <span className="caregiver-stars">
-              {"⭐".repeat(Math.round(profile.rating))}
-            </span>
-            <span className="caregiver-rating-text">
-              ({profile.rating}, {profile.reviews} Reviews)
-            </span>
-          </div>
-        </div> */}
-
         <div className="caregiver-profile-details">
           <div 
             className="caregiver-detail-item caregiver-detail-item-clickable"
@@ -711,12 +691,6 @@ const ProfileHeader = () => {
               <FaCalendarAlt className="caregiver-detail-icon" /> Member since
             </span>
             <span className="caregiver-detail-value">{profile.memberSince}</span>
-          </div>
-          <div className="caregiver-detail-item">
-            <span className="caregiver-detail-label">
-              <FaTruck className="caregiver-detail-icon" /> Last delivery
-            </span>
-            <span className="caregiver-detail-value">{profile.lastDelivery}</span>
           </div>
           <div className="caregiver-detail-button">
             <button 
@@ -967,6 +941,7 @@ const ProfileHeader = () => {
         services={profile.services}
         onUpdate={(newAboutMe) => setProfile(prev => ({ ...prev, aboutMe: newAboutMe }))}
       />
+      <VettingLinkCard />
     </div>
   );
 };

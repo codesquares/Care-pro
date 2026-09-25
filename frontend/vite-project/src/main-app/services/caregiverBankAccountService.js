@@ -7,6 +7,7 @@
  * - Admins can view any caregiver's bank account and financial summary.
  */
 import api from './api';
+import { formatValidationErrors } from '../utils/uiErrorMapper';
 
 const PERMISSION_ERROR_MESSAGE = 'You do not have permission to access this resource.';
 
@@ -18,6 +19,8 @@ const getApiErrorMessage = (error, fallbackMessage) => {
   if (typeof data === 'string' && data.trim()) return data;
   if (data?.errorMessage) return data.errorMessage;
   if (data?.message) return data.message;
+  const validationMessage = formatValidationErrors(data?.errors);
+  if (validationMessage) return validationMessage;
   if (data?.title) return data.title;
   return fallbackMessage;
 };
@@ -63,13 +66,11 @@ const caregiverBankAccountService = {
       return { success: true, data: response.data };
     } catch (error) {
       console.error('Error saving bank account:', error);
-      const data = error.response?.data;
-      let msg = getApiErrorMessage(error, 'Failed to save bank account details.');
-      if (data?.errors) {
-        const fieldErrors = Object.values(data.errors).flat().join(' | ');
-        if (fieldErrors) msg = fieldErrors;
-      }
-      return { success: false, data: null, error: msg };
+      return {
+        success: false,
+        data: null,
+        error: getApiErrorMessage(error, 'Failed to save bank account details.'),
+      };
     }
   },
 

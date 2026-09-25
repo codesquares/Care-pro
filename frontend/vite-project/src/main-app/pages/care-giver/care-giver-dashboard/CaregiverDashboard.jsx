@@ -3,18 +3,19 @@ import { useNavigate } from 'react-router-dom';
 import NavigationBar from './NavigationBar';
 import ProfileCard from './ProfileCard';
 import StatisticsCard from './StatisticsCard';
-import OrderList from './OrderList';
-import PendingNegotiations from './PendingNegotiations';
+// RETIRED — legacy Orders list widget, replaced by My Assignments. Preserved for restore.
+// import OrderList from './OrderList';
 import './CaregiverDashboard.css';
 import setting from '../../../../assets/setting.png';
 import config from '../../../config';
 import accountDeletionService from '../../../services/accountDeletionService';
 
 const CaregiverDashboard = () => {
-  const [orders, setOrders] = useState([]);
-  const [loading, setLoading] = useState(true);
+  // RETIRED — legacy order list/count, replaced by My Assignments. Preserved for restore.
+  // const [orders, setOrders] = useState([]);
+  // const [totalOrders, setTotalOrders] = useState(0);
+  const [loading] = useState(false);
   const [error, setError] = useState(null);
-  const [totalOrders, setTotalOrders] = useState(0);
   const [totalEarnings, setTotalEarnings] = useState(0);
   const [pendingDeletionDate, setPendingDeletionDate] = useState(null);
   const [showDeletionBanner, setShowDeletionBanner] = useState(true);
@@ -35,7 +36,7 @@ const CaregiverDashboard = () => {
       if (!caregiverId) return;
       try {
         const token = localStorage.getItem('authToken');
-        const res = await fetch(`${vite_API_URL}/CareGivers/${caregiverId}`, {
+        const res = await fetch(`${vite_API_URL}/CareGivers/me`, {
           headers: { 'Authorization': token ? `Bearer ${token}` : '' },
         });
         if (res.ok) {
@@ -54,49 +55,59 @@ const CaregiverDashboard = () => {
     checkDeletionStatus();
   }, [caregiverId]);
 
+  // Kept from the old fetchOrders effect below: the not-logged-in guard is
+  // still real behavior the dashboard needs, independent of legacy orders.
   useEffect(() => {
-     const fetchOrders = async () => {
-       if (!caregiverId) {
-         setError('User not logged in');
-         setLoading(false);
-         return;
-       }
-       try {
-         const token = localStorage.getItem('authToken');
-         const response = await fetch(
-           `${vite_API_URL}/ClientOrders/CaregiverOrders/caregiverId?caregiverId=${caregiverId}`,
-           {
-             headers: {
-               'Authorization': `Bearer ${token}`,
-               'Content-Type': 'application/json'
-             }
-           }
-         );
-         if (!response.ok) {
-           throw new Error(`Failed to fetch orders: ${response.status} ${response.statusText}`);
-         }
-         const data = await response.json();
- 
-         const ordersArray = Array.isArray(data) ? data : data.clientOrders || [];
-         // Sort orders by most recent first
-         ordersArray.sort((a, b) => {
-           const dateA = new Date(a.orderCreatedOn || a.orderDate || a.createdAt || 0);
-           const dateB = new Date(b.orderCreatedOn || b.orderDate || b.createdAt || 0);
-           return dateB - dateA;
-         });
-         setOrders(ordersArray);
-         setTotalOrders(ordersArray.length);
-          // setTotalEarnings(data.totalEarning);
-       } catch (error) {
-         console.error("Error fetching orders:", error);
-         setError(error.message);
-       } finally {
-         setLoading(false);
-       }
-     };
- 
-     fetchOrders();
-   }, [caregiverId]);
+    if (!caregiverId) {
+      setError('User not logged in');
+    }
+  }, [caregiverId]);
+
+  // RETIRED — legacy order fetch/sort/count, replaced by My Assignments.
+  // Preserved for restore; see care-giver-routes.jsx for the route swap.
+  // useEffect(() => {
+  //    const fetchOrders = async () => {
+  //      if (!caregiverId) {
+  //        setError('User not logged in');
+  //        setLoading(false);
+  //        return;
+  //      }
+  //      try {
+  //        const token = localStorage.getItem('authToken');
+  //        const response = await fetch(
+  //          `${vite_API_URL}/ClientOrders/CaregiverOrders/caregiverId?caregiverId=${caregiverId}`,
+  //          {
+  //            headers: {
+  //              'Authorization': `Bearer ${token}`,
+  //              'Content-Type': 'application/json'
+  //            }
+  //          }
+  //        );
+  //        if (!response.ok) {
+  //          throw new Error(`Failed to fetch orders: ${response.status} ${response.statusText}`);
+  //        }
+  //        const data = await response.json();
+  //
+  //        const ordersArray = Array.isArray(data) ? data : data.clientOrders || [];
+  //        // Sort orders by most recent first
+  //        ordersArray.sort((a, b) => {
+  //          const dateA = new Date(a.orderCreatedOn || a.orderDate || a.createdAt || 0);
+  //          const dateB = new Date(b.orderCreatedOn || b.orderDate || b.createdAt || 0);
+  //          return dateB - dateA;
+  //        });
+  //        setOrders(ordersArray);
+  //        setTotalOrders(ordersArray.length);
+  //         // setTotalEarnings(data.totalEarning);
+  //      } catch (error) {
+  //        console.error("Error fetching orders:", error);
+  //        setError(error.message);
+  //      } finally {
+  //        setLoading(false);
+  //      }
+  //    };
+  //
+  //    fetchOrders();
+  //  }, [caregiverId]);
 
   // Fetch total earnings from the same endpoint used by the NavigationBar
   useEffect(() => {
@@ -267,7 +278,8 @@ const CaregiverDashboard = () => {
       <div className="caregiver-dashboard">
         <div className="leftbar">
           <ProfileCard />
-          <StatisticsCard totalOrders={totalOrders} totalEarnings={totalEarnings} />
+          {/* totalOrders is no longer tracked here now that legacy orders are retired. */}
+          <StatisticsCard totalOrders={0} totalEarnings={totalEarnings} />
           <div 
             className="setting-container" 
             role="button"
@@ -286,16 +298,18 @@ const CaregiverDashboard = () => {
 
         <div className="rightbar">
           <div className="rightbar-header">
-            <h3 className="rightbar-title">Recent Orders</h3>
+            <h3 className="rightbar-title">My Assignments</h3>
             <button
               className="view-all-orders-btn"
-              onClick={() => navigate(`${basePath}/orders`)}
+              onClick={() => navigate(`${basePath}/assignments`)}
             >
-              View All Orders →
+              View All Assignments →
             </button>
           </div>
+          {/* RETIRED — legacy Recent Orders widget, replaced by the button above
+              pointing to My Assignments. Preserved for restore.
           <OrderList filter="All Orders" orders={orders.slice(0, 5)} loading={loading} error={error} />
-          <PendingNegotiations />
+          */}
         </div>
       </div>
     </>

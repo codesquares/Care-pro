@@ -68,7 +68,7 @@ const CaregiverSettings = () => {
           return;
         }
 
-        const response = await fetch(`${config.BASE_URL}/CareGivers/${userId}`, {
+        const response = await fetch(`${config.BASE_URL}/CareGivers/me`, {
           headers: {
             'Authorization': `Bearer ${localStorage.getItem('authToken') || ''}`
           }

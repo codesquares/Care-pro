@@ -1,22 +1,20 @@
 import { Routes, Route } from 'react-router-dom';
 import ClientDashboard from './client-dashboard/ClientDashboard';
-import HomeCareService from './home-care-service/HomeCareService';
 import NavigationBar from './ClientNavBar';
 import PaymentPage from './payment/PaymentPage';
 import Messages from '../Messages';
 import DirectMessage from '../../components/messages/DirectMessage';
 import PaymentSuccess from './home-care-service/PaymentSuccess';
 import CommitmentSuccess from './home-care-service/CommitmentSuccess';
-import CommitmentPayment from './home-care-service/CommitmentPayment';
 import MyOrders from './orders/MyOrders';
 import OrderDetails from './orders/OrderTasks&Details';
 import OrderHistory from './orders/OrderHistory';
 import ClientSettings from './client-settings/ClientSettings';
 import ClientPreferences from './preferences/ClientPreferences';
 import ClientVerificationPage from './verification/VerificationPage';
-import CareNeedsSettings from './care-needs/CareNeedsSettings';
+// Retired: Care Needs wizard (source preserved commented out under ./care-needs/).
+// import CareNeedsSettings from './care-needs/CareNeedsSettings';
 import ClientProfile from './profile/ClientProfile';
-import Cart from '../client/cart/Cart';
 import NotificationsPage from '../../components/Notifications/Notifications';
 import ResolutionCenter from './orders/ResolutionCenter';
 import FAQPage from './orders/FAQ';
@@ -51,7 +49,9 @@ function ClientRoutes() {
             <Route path="/settings" element={<ClientSettings />} />
             <Route path="/preferences" element={<ClientPreferences />} />
             <Route path="/verification" element={<ClientVerificationPage />} />
-            <Route path="/care-needs" element={<CareNeedsSettings />} />
+            {/* Retired: the Care Needs wizard promised caregiver matching that no longer exists — caregivers are
+                assigned internally from a care package. Old bookmarks and returnTo links land on this notice. */}
+            <Route path="/care-needs" element={<FeatureMovedNotice title="Care needs setup has been retired" message="You no longer need to set up care preferences. Browse our care packages, or talk to our care team for a free assessment, and we'll match you with a vetted caregiver." homePath="/marketplace" homeLabel="Browse care packages" />} />
             {/* Tier A: the competitive care-request flow is retired pending the
                 package-request + internal-assignment rebuild (Tier D). */}
             <Route path="/post-project" element={<FeatureMovedNotice title="Care requests are being rebuilt" message="Posting a job request is moving to guided care packages. This will be back soon." />} />
@@ -62,9 +62,13 @@ function ClientRoutes() {
             <Route path="/requests/:id" element={<PackageRequestDetail />} />
             <Route path="/profile" element={<ClientProfile />} />
             <Route path="/notifications" element={<NotificationsPage />} />
-            <Route path="/cart/:id" element={<Cart />} />
+            {/* Retired: direct gig checkout. Care is requested as packages and the caregiver is assigned
+                internally; POST /payments/initiate is rejected server-side for every caller. */}
+            <Route path="/cart/:id" element={<FeatureMovedNotice title="Direct hiring has been retired" message="You no longer pick and pay for a specific caregiver. Choose a care package and we'll match you with the right caregiver." homePath="/marketplace" homeLabel="Browse care packages" />} />
             <Route path="/commitment-success" element={<CommitmentSuccess />} />
-            <Route path="/commitment-payment/:id" element={<CommitmentPayment />} />
+            {/* Chat is no longer unlocked by a fee (conversations are tied to assignments), so the fee can't be
+                started any more. /commitment-success stays so an in-flight payment can still verify and get a receipt. */}
+            <Route path="/commitment-payment/:id" element={<FeatureMovedNotice title="Chat unlock payments have been retired" message="Messaging is now available between you and your assigned caregiver once they accept your package request — no payment is needed." homePath="/app/client/requests" homeLabel="Go to My Requests" />} />
             <Route path="/subscriptions" element={<ClientSubscriptions />} />
             <Route path="/subscriptions/:id" element={<SubscriptionDetail />} />
             <Route path="/billing" element={<ClientBilling />} />

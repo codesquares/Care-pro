@@ -1,6 +1,6 @@
 import { useNavigate } from "react-router-dom";
 import "./clientDashboardHero.css";
-import CareNeedsSummaryCard from "./CareNeedsSummaryCard";
+import CareGetStartedCards from "./CareGetStartedCards";
 import { marketplaceLinkForCategorySlug } from "../../../constants/categoryBrowseData";
 
 // Category navigation items
@@ -130,8 +130,8 @@ const ClientDashboardHero = ({
         </div>
       </div>
 
-      {/* Care Needs Summary Card */}
-      <CareNeedsSummaryCard />
+      {/* Next steps: free assessment + my requests (replaces the retired care-needs summary card) */}
+      <CareGetStartedCards />
     </div>
   );
 };

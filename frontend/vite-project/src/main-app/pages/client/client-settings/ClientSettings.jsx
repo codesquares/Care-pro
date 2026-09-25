@@ -836,18 +836,26 @@ const ClientSettings = () => {
           )}
         </div>
 
-        {/* Care Preferences Card */}
+        {/* Care Packages Card (replaces the retired Care Preferences wizard card) */}
         <div className="settings-card">
-          <h3>Care Preferences</h3>
+          <h3>Care Packages</h3>
           <p className="card-description">
-            Set your care preferences to get personalized caregiver recommendations
+            Browse our care packages, or talk to our care team for a free assessment. We'll match you with a vetted caregiver.
           </p>
           <button
             type="button"
             className="save-changes-btn"
-            onClick={() => navigate('/app/client/care-needs?returnTo=/app/client/settings')}
+            onClick={() => navigate('/marketplace')}
           >
-            Manage Care Preferences
+            Browse Care Packages
+          </button>
+          <button
+            type="button"
+            className="save-changes-btn"
+            onClick={() => navigate('/start-assessment')}
+            style={{ marginLeft: '0.75rem' }}
+          >
+            Get a Free Care Assessment
           </button>
         </div>
 

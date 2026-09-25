@@ -4,11 +4,9 @@ import "./clientDashboard.css";
 import "./responsiveFixes.css";
 import ClientDashboardHero from "./ClientDashboardHero";
 import ClientProfileService from "../../../services/clientProfileService";
-import ClientCareNeedsService from "../../../services/clientCareNeedsService";
 import accountDeletionService from "../../../services/accountDeletionService";
 
 const ClientDashboard = () => {
-  const [careNeedsSet, setCareNeedsSet] = useState(false);
   const [profileCompletion, setProfileCompletion] = useState(10);
   const [pendingDeletionDate, setPendingDeletionDate] = useState(null);
   const [showDeletionBanner, setShowDeletionBanner] = useState(true);
@@ -17,7 +15,7 @@ const ClientDashboard = () => {
   const user = JSON.parse(localStorage.getItem("userDetails") || "{}");
 
   // Calculate profile completion percentage from real data
-  const calculateProfileCompletion = (profile, hasCareNeeds) => {
+  const calculateProfileCompletion = (profile) => {
     const fields = [
       { check: () => !!profile?.firstName, weight: 10 },
       { check: () => !!profile?.lastName, weight: 10 },
@@ -27,26 +25,23 @@ const ClientDashboard = () => {
       { check: () => !!profile?.bio, weight: 10 },
       { check: () => !!profile?.profilePicture && profile.profilePicture !== '', weight: 15 },
       { check: () => !!profile?.isVerified, weight: 5 },
-      { check: () => hasCareNeeds, weight: 10 },
     ];
-    return fields.reduce((sum, f) => sum + (f.check() ? f.weight : 0), 0);
+    // Weights no longer add up to 100 now that care needs isn't a profile item, so normalise.
+    const total = fields.reduce((sum, f) => sum + f.weight, 0);
+    const earned = fields.reduce((sum, f) => sum + (f.check() ? f.weight : 0), 0);
+    return Math.round((earned / total) * 100);
   };
 
-  // Fetch profile and care needs to compute completion
+  // Fetch profile to compute completion
   useEffect(() => {
     const fetchProfileData = async () => {
       try {
         const clientId = user?.id;
         if (!clientId) return;
 
-        const [profile, careNeeds] = await Promise.all([
-          ClientProfileService.getProfile(clientId).catch(() => null),
-          ClientCareNeedsService.getCareNeeds().catch(() => null),
-        ]);
+        const profile = await ClientProfileService.getProfile(clientId).catch(() => null);
 
-        const hasCareNeeds = !!(careNeeds?.serviceCategories && careNeeds.serviceCategories.length > 0);
-        setCareNeedsSet(hasCareNeeds);
-        setProfileCompletion(calculateProfileCompletion(profile, hasCareNeeds));
+        setProfileCompletion(calculateProfileCompletion(profile));
 
         // Check for pending account deletion
         if (profile?.accountDeletionRequestedAt) {

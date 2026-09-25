@@ -127,12 +127,6 @@
   min-width: 0;
 }
 
-.gigs-th--orders {
-  width: 100px;
-  text-align: center;
-  flex-shrink: 0;
-}
-
 .gigs-th--action {
   width: 200px;
   text-align: right;
@@ -173,12 +167,6 @@
   display: flex;
   align-items: center;
   gap: 12px;
-}
-
-.gigs-cell--orders {
-  width: 100px;
-  text-align: center;
-  flex-shrink: 0;
 }
 
 .gigs-cell--action {
@@ -227,12 +215,6 @@
   font-size: 0.75rem;
   color: #94a3b8;
   margin-top: 2px;
-}
-
-.gigs-order-count {
-  font-size: 0.88rem;
-  font-weight: 500;
-  color: #475569;
 }
 
 /* ─── Action links ─── */
@@ -346,10 +328,6 @@
     padding: 10px 14px;
   }
 
-  .gigs-th--orders {
-    width: 60px;
-  }
-
   .gigs-th--action {
     width: auto;
     flex: 0 0 auto;
@@ -363,12 +341,6 @@
 
   .gigs-cell--gig {
     flex: 1 1 100%;
-  }
-
-  .gigs-cell--orders {
-    width: auto;
-    text-align: left;
-    flex: 0 0 auto;
   }
 
   .gigs-cell--action {
