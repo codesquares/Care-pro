@@ -6,6 +6,7 @@
  */
 import api from './api';
 import config from '../config';
+import { extractApiErrorMessage } from '../utils/uiErrorMapper';
 
 const BASE = '/caregiver/assignments';
 
@@ -112,6 +113,54 @@ const CaregiverAssignmentService = {
     } catch (error) {
       console.error('Error fetching visit history:', error);
       return { success: false, error: extractError(error, 'Failed to load visit history') };
+    }
+  },
+
+  /**
+   * Endpoint: POST /api/caregiver/assignments/{id}/accept
+   * Idempotent server-side — accepting an already-Accepted assignment returns
+   * success with the same status rather than an error, so a double-click/double
+   * submit is safe. 409 if the assignment is no longer PendingAcceptance
+   * (already responded, or cancelled by staff); 403 if it isn't this caregiver's.
+   * Uses the shared error mapper (uiErrorMapper) rather than the plain
+   * message-only extractError above, so field-level validation reasons surface.
+   * @param {string} id
+   * @returns {Promise<{success: boolean, data?: {success, assignmentId, status, message}, error?: string, status?: number}>}
+   */
+  async acceptAssignment(id) {
+    try {
+      const response = await api.post(`${BASE}/${id}/accept`);
+      return { success: true, data: response.data };
+    } catch (error) {
+      console.error('Error accepting assignment:', error);
+      return {
+        success: false,
+        error: extractApiErrorMessage(error, 'Failed to accept this assignment'),
+        status: error.response?.status,
+      };
+    }
+  },
+
+  /**
+   * Endpoint: POST /api/caregiver/assignments/{id}/decline
+   * Reason is optional server-side (max 500 chars, not required) — the UI
+   * should match that, not force one. 409 if the assignment is no longer
+   * PendingAcceptance; 403 if it isn't this caregiver's.
+   * @param {string} id
+   * @param {string} [reason]
+   * @returns {Promise<{success: boolean, data?: {success, assignmentId, status, message}, error?: string, status?: number}>}
+   */
+  async declineAssignment(id, reason) {
+    try {
+      const response = await api.post(`${BASE}/${id}/decline`, { reason: reason?.trim() || null });
+      return { success: true, data: response.data };
+    } catch (error) {
+      console.error('Error declining assignment:', error);
+      return {
+        success: false,
+        error: extractApiErrorMessage(error, 'Failed to decline this assignment'),
+        status: error.response?.status,
+      };
     }
   },
 };

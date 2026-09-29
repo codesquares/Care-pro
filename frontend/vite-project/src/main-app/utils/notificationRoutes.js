@@ -65,6 +65,10 @@ const TYPE_MAP = {
   'refundrejected':              'RefundRejected',
   'earnings_added':              'EarningsAdded',
   'earningsadded':               'EarningsAdded',
+  'payroll_approved':            'PayrollApproved',
+  'payrollapproved':             'PayrollApproved',
+  'payroll_paid':                'PayrollPaid',
+  'payrollpaid':                 'PayrollPaid',
 
   // Order / Booking
   'order_notification':          'OrderNotification',
@@ -476,6 +480,12 @@ const KNOWN_CANONICAL = new Set([
   'PriceNegotiationAgreed',
   'PriceNegotiationRejected',
   'PriceNegotiationExpired',
+  // Package assignment (Phase 4/6)
+  'PackageAssignmentOffered', 'PackageAssignmentConfirmed',
+  'PackageAssignmentDeclined', 'PackageAssignmentCancelled',
+  'PackageContractGenerated',
+  // Payroll (Phase 9.7)
+  'PayrollApproved', 'PayrollPaid',
 ]);
 
 /**
@@ -614,6 +624,13 @@ export const getNotificationRoute = (notification, userRole) => {
     case 'EarningsAdded':
       if (isCaregiver) return `/app/caregiver/earnings`;
       if (isAdmin) return `/app/admin/orders`;
+      return null;
+
+    // ── Payroll (Phase 9.7, package assignments) ─────────
+    case 'PayrollApproved':
+    case 'PayrollPaid':
+      if (isCaregiver) return `/app/caregiver/earnings`;
+      if (isAdmin) return `/app/admin/payroll`;
       return null;
 
     // ── Commitment fee confirmed (legacy) ─────────────────
@@ -766,14 +783,42 @@ export const getNotificationRoute = (notification, userRole) => {
       return null;
     }
 
+    // ── Package assignment (Phase 4/6) ───────────────────
+    // Caregiver: an offer to review, or one withdrawn before they responded —
+    // both point at the assignment itself.
+    case 'PackageAssignmentOffered':
+    case 'PackageAssignmentCancelled': {
+      if (isCaregiver && relatedEntityId) return `/app/caregiver/assignments/${relatedEntityId}`;
+      if (isCaregiver) return `/app/caregiver/assignments`;
+      return null;
+    }
+
+    // Client: their caregiver is now confirmed, or the auto-generated contract
+    // is ready — both carry the package request id (not an order/contract id).
+    case 'PackageAssignmentConfirmed':
+    case 'PackageContractGenerated': {
+      if (isClient && relatedEntityId) return `/app/client/requests/${relatedEntityId}`;
+      if (isClient) return `/app/client/requests`;
+      return null;
+    }
+
     // ── Visit / Task Sheet notifications ─────────────────
+    // A package-assignment visit has no ClientOrder, so orderId is empty for these —
+    // the backend sends the AssignmentId/PackageRequestId as relatedEntityId instead
+    // in that case (never a bare TaskSheetId, which neither side could resolve to a
+    // page). Order-flow visits keep sending a real orderId, so that branch is checked
+    // first and unaffected.
     case 'VisitApproved': {
-      // Caregiver goes to wallet (payment just arrived).
-      // Client goes to the order details page.
-      if (isCaregiver) return `/app/caregiver/wallet`;
+      // Caregiver goes to wallet (payment just arrived) for order-flow visits, where
+      // approval releases a per-visit wallet credit; package visits have no such
+      // credit (paid via payroll instead), so route to the assignment there.
+      if (isCaregiver) {
+        if (!notification.orderId && relatedEntityId) return `/app/caregiver/assignments/${relatedEntityId}`;
+        return `/app/caregiver/wallet`;
+      }
       if (isClient) {
-        const visitOrderId = notification.orderId || relatedEntityId;
-        if (visitOrderId) return `/app/client/my-order/${visitOrderId}`;
+        if (notification.orderId) return `/app/client/my-order/${notification.orderId}`;
+        if (relatedEntityId) return `/app/client/requests/${relatedEntityId}`;
         return `/app/client/my-orders`;
       }
       return null;
@@ -782,10 +827,12 @@ export const getNotificationRoute = (notification, userRole) => {
     case 'VisitSubmitted':
     case 'VisitCancelledByClient':
     case 'VisitCancellationRequested': {
-      const visitOrderId = notification.orderId || relatedEntityId;
-      if (visitOrderId) {
-        if (isClient) return `/app/client/my-order/${visitOrderId}`;
-        if (isCaregiver) return `/app/caregiver/order-details/${visitOrderId}`;
+      if (notification.orderId) {
+        if (isClient) return `/app/client/my-order/${notification.orderId}`;
+        if (isCaregiver) return `/app/caregiver/order-details/${notification.orderId}`;
+      } else if (relatedEntityId) {
+        if (isClient) return `/app/client/requests/${relatedEntityId}`;
+        if (isCaregiver) return `/app/caregiver/assignments/${relatedEntityId}`;
       }
       if (isClient) return `/app/client/my-orders`;
       if (isCaregiver) return `/app/caregiver/orders`;
@@ -900,9 +947,12 @@ export const getNotificationRoute = (notification, userRole) => {
 
     // ── Caregiver Checked In ─────────────────────────────
     case 'CaregiverCheckedIn': {
-      const checkinOrderId = notification.orderId || relatedEntityId;
-      if (checkinOrderId && isClient) return `/app/client/my-order/${checkinOrderId}`;
-      if (isClient) return `/app/client/my-order`;
+      // Package assignment: orderId is empty, relatedEntityId is the PackageRequestId.
+      if (isClient) {
+        if (notification.orderId) return `/app/client/my-order/${notification.orderId}`;
+        if (relatedEntityId) return `/app/client/requests/${relatedEntityId}`;
+        return `/app/client/my-order`;
+      }
       return null;
     }
 
@@ -1030,7 +1080,14 @@ export const getNotificationActionLabel = (rawType) => {
     case 'ContractApproved':
     case 'ContractRejected':
     case 'ContractRevisionRequested':
+    case 'PackageContractGenerated':
       return 'View Contract';
+    case 'PackageAssignmentOffered':
+      return 'Review Offer';
+    case 'PackageAssignmentCancelled':
+      return 'View Assignment';
+    case 'PackageAssignmentConfirmed':
+      return 'View Request';
     case 'NewMessage':
       return 'Open Conversation';
     case 'Payment':
@@ -1039,6 +1096,9 @@ export const getNotificationActionLabel = (rawType) => {
     case 'OrderPayment':
     case 'EarningsAdded':
       return 'View Payment';
+    case 'PayrollApproved':
+    case 'PayrollPaid':
+      return 'View Earnings';
     case 'RefundRequested':
     case 'RefundApproved':
     case 'RefundRejected':
@@ -1202,6 +1262,9 @@ export const getNotificationTypeIcon = (rawType) => {
       return '💰';
     case 'EarningsAdded':
       return '💵';
+    case 'PayrollApproved':
+    case 'PayrollPaid':
+      return '💰';
     case 'RefundProcessed':
       return '🔄';
     case 'SystemNotice':
@@ -1229,6 +1292,14 @@ export const getNotificationTypeIcon = (rawType) => {
       return '❌';
     case 'ContractRevisionRequested':
       return '📝';
+    case 'PackageContractGenerated':
+      return '📋';
+    case 'PackageAssignmentOffered':
+      return '🙋';
+    case 'PackageAssignmentConfirmed':
+      return '✅';
+    case 'PackageAssignmentCancelled':
+      return '❌';
     case 'OrderNotification':
     case 'OrderConfirmation':
     case 'BookingConfirmed':

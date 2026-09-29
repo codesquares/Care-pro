@@ -80,13 +80,15 @@ const VisitCheckinService = {
 
   /**
    * Submit a visit check-in to the backend.
-   * @param {Object} data - { taskSheetId, orderId, latitude, longitude, accuracy }
+   * @param {Object} data - { taskSheetId, orderId, latitude, longitude, accuracy } —
+   *   orderId is only required for the legacy order flow; omit it for a package-assignment
+   *   visit (the backend resolves the assignment from the task sheet itself).
    * @returns {Promise<Object>} { success, data, error }
    */
   async checkin({ taskSheetId, orderId, latitude, longitude, accuracy }) {
     try {
-      if (!taskSheetId || !orderId) {
-        return { success: false, error: "Task sheet and order ID are required" };
+      if (!taskSheetId) {
+        return { success: false, error: "Task sheet ID is required" };
       }
 
       const authToken = localStorage.getItem("authToken");
@@ -102,7 +104,7 @@ const VisitCheckinService = {
         },
         body: JSON.stringify({
           taskSheetId,
-          orderId,
+          orderId: orderId || null,
           latitude,
           longitude,
           accuracy,

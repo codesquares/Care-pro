@@ -13,7 +13,7 @@ const BottomBanner = () => {
             <h2>Looking for the perfect care professional or are you a care professional looking for work?</h2>
             <p>Over 300+ care professionals are waiting for you.</p>
             <div className='cta-buttons'>
-              <button className='btn-primary' onClick={() => navigate('/book-caregiver')}>
+              <button className='btn-primary' onClick={() => navigate('/marketplace')}>
                 Hire a Caregiver
               </button>
               <button className='btn-secondary' onClick={() => navigate('/become-caregiver')}>

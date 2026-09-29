@@ -3,24 +3,8 @@ import { useState } from 'react';
 import "../styles/components/footer.css";
 import logo from '../assets/careproLogoWhite.svg';
 import { Link } from 'react-router-dom';
-import { marketplaceLinkForCategorySlug } from '../main-app/constants/categoryBrowseData';
 
 const footerSections = [
-  {
-    title: "Service Categories",
-    links: [
-      { to: marketplaceLinkForCategorySlug("home-care"), label: "Home Care" },
-      { to: marketplaceLinkForCategorySlug("adult-care"), label: "Adult & Elderly Care" },
-      { to: marketplaceLinkForCategorySlug("child-care"), label: "Child Care" },
-      { to: marketplaceLinkForCategorySlug("pet-care"), label: "Pet Care" },
-      { to: marketplaceLinkForCategorySlug("medical-support"), label: "Home Medical Support" },
-      { to: marketplaceLinkForCategorySlug("post-surgery-care"), label: "Post Surgery Care" },
-      { to: marketplaceLinkForCategorySlug("mobility-support"), label: "Mobility Support" },
-      { to: marketplaceLinkForCategorySlug("special-needs-care"), label: "Special Needs Care" },
-      { to: "/marketplace", label: "Therapy & Wellness" },
-      { to: "/marketplace", label: "Palliative" },
-    ],
-  },
   {
     title: "For Clients",
     links: [

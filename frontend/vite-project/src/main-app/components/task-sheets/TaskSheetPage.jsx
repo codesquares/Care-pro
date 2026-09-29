@@ -23,12 +23,18 @@ const formatTimeStr = (t) => {
  *
  * Props:
  *  - sheet: the TaskSheet object
- *  - orderId: the order ID (needed for check-in and reports)
+ *  - orderId: the order ID (needed for check-in and reports); null in assignment mode
+ *  - mode: "order" (default) or "assignment" — package-assignment visits always
+ *    start with an empty task list (no proposed tasks from a package contract),
+ *    so submitting with zero tasks is allowed; cancellation requests and
+ *    observation/incident reports are order-only on the backend today, so
+ *    those sections are hidden rather than exposing a broken action.
  *  - onSheetUpdated: callback(updatedSheet) after a save/submit
  */
 const TaskSheetPage = ({
   sheet,
   orderId,
+  mode = "order",
   serviceLocationSetByClient,
   serviceLocationSetAt,
   serviceAddress,
@@ -37,6 +43,7 @@ const TaskSheetPage = ({
   activating,
   orderCompleted: orderCompletedProp,
 }) => {
+  const isAssignmentMode = mode === "assignment";
   const [tasks, setTasks] = useState(sheet.tasks || []);
   const [saving, setSaving] = useState(false);
   const [submitting, setSubmitting] = useState(false);
@@ -393,8 +400,8 @@ const TaskSheetPage = ({
         </div>
       )}
 
-      {/* Report action buttons */}
-      {!orderCompleted && (
+      {/* Report action buttons — order-only on the backend today, so hidden in assignment mode */}
+      {!orderCompleted && !isAssignmentMode && (
         <div className="ts-report-actions">
           <button
             className="ts-report-btn ts-report-btn--observation"
@@ -417,13 +424,14 @@ const TaskSheetPage = ({
         </div>
       )}
 
-      {/* Submit button */}
+      {/* Submit button — a package visit always starts with an empty task list
+          (no proposed tasks from a package contract), so zero tasks doesn't block submit. */}
       {!isReadOnly && (
         <div className="ts-submit-section">
           <button
             className="ts-submit-btn"
             onClick={handleSubmitClick}
-            disabled={submitting || tasks.length === 0 || hasPending}
+            disabled={submitting || (!isAssignmentMode && tasks.length === 0) || hasPending}
           >
             {submitting ? "Submitting..." : `Submit Visit ${sheet.sheetNumber}`}
           </button>
@@ -446,8 +454,8 @@ const TaskSheetPage = ({
         submitting={submitting}
       />
 
-      {/* Caregiver cancel-request section */}
-      {!isCancelled && !isSubmitted && (
+      {/* Caregiver cancel-request section — order-only on the backend today, so hidden in assignment mode */}
+      {!isAssignmentMode && !isCancelled && !isSubmitted && (
         <div className="ts-caregiver-cancel-section">
           {!showCancelRequest ? (
             <button
@@ -492,23 +500,25 @@ const TaskSheetPage = ({
         </div>
       )}
 
-      {/* Observation report modal */}
-      <ObservationReportModal
-        isOpen={showObservation}
-        onClose={() => setShowObservation(false)}
-        orderId={orderId}
-        taskSheetId={sheet.id}
-        onReportCreated={handleObservationCreated}
-      />
-
-      {/* Incident report modal */}
-      <IncidentReportModal
-        isOpen={showIncident}
-        onClose={() => setShowIncident(false)}
-        orderId={orderId}
-        taskSheetId={sheet.id}
-        onReportCreated={handleIncidentCreated}
-      />
+      {/* Observation/incident report modals — order-only on the backend today */}
+      {!isAssignmentMode && (
+        <>
+          <ObservationReportModal
+            isOpen={showObservation}
+            onClose={() => setShowObservation(false)}
+            orderId={orderId}
+            taskSheetId={sheet.id}
+            onReportCreated={handleObservationCreated}
+          />
+          <IncidentReportModal
+            isOpen={showIncident}
+            onClose={() => setShowIncident(false)}
+            orderId={orderId}
+            taskSheetId={sheet.id}
+            onReportCreated={handleIncidentCreated}
+          />
+        </>
+      )}
     </div>
   );
 };

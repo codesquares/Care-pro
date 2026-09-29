@@ -8,6 +8,7 @@ import NotificationBell from "../../../components/notifications/NotificationBell
 import { useAuth } from "../../../context/AuthContext";
 import { getInitials } from "../../../utils/avatarHelpers";
 import config from "../../../config"; // Import centralized config for API URLs
+import CaregiverAssignmentService from "../../../services/caregiverAssignmentService";
 
 
 const NavigationBar = () => {
@@ -18,6 +19,20 @@ const NavigationBar = () => {
 
   const [showDropdown, setShowDropdown] = useState(false);
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
+  const [pendingOfferCount, setPendingOfferCount] = useState(0);
+
+  // Best-effort, fetched once when the nav mounts (it's rendered once for the
+  // whole caregiver shell, not per-route) — a soft nudge toward Assignments,
+  // not a real-time counter. A failed fetch just leaves the badge hidden.
+  useEffect(() => {
+    let cancelled = false;
+    CaregiverAssignmentService.getMyAssignments().then((result) => {
+      if (cancelled || !result.success) return;
+      const count = result.data.filter((a) => a.status === "PendingAcceptance").length;
+      setPendingOfferCount(count);
+    });
+    return () => { cancelled = true; };
+  }, []);
 
   const userName = user?.firstName ? `${user.firstName} ${user.lastName}` : "";
 
@@ -125,6 +140,9 @@ const NavigationBar = () => {
                 <div className="menu-item-content">
                   <FaTasks className="mobile-menu-icon" />
                   <span>My Assignments</span>
+                  {pendingOfferCount > 0 && (
+                    <span className="asn-nav-badge">{pendingOfferCount > 9 ? "9+" : pendingOfferCount}</span>
+                  )}
                 </div>
               </li>
               <li onClick={() => { navigate(`${basePath}/wallet`); setMobileMenuOpen(false); }}>
@@ -204,6 +222,9 @@ const NavigationBar = () => {
           <li className="nav-link text-link" onClick={() => navigate(`${basePath}/assignments`)}>
             <FaTasks className="nav-link-icon" />
             Assignments
+            {pendingOfferCount > 0 && (
+              <span className="asn-nav-badge">{pendingOfferCount > 9 ? "9+" : pendingOfferCount}</span>
+            )}
           </li>
           <li className="nav-link text-link" onClick={() => navigate(`${basePath}/create-gigs`)}>
             <FaPlusCircle className="nav-link-icon" />

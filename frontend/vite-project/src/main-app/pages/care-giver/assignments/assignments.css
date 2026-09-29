@@ -297,3 +297,172 @@
 .asn-message-btn:hover {
   background: var(--color-brand-deep-2);
 }
+
+/* ── Offer accept/decline actions (detail page + list card) ── */
+.asn-offer-actions {
+  display: flex;
+  gap: 0.75rem;
+  margin: 0.5rem 0 1rem;
+  flex-wrap: wrap;
+}
+
+.asn-offer-btn {
+  padding: 8px 20px;
+  border-radius: 6px;
+  font-size: 0.9rem;
+  font-weight: 600;
+  cursor: pointer;
+  border: none;
+  transition: background-color 0.2s ease, opacity 0.2s ease;
+}
+
+.asn-offer-btn:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+.asn-offer-btn--accept {
+  background: #2e7d32;
+  color: #fff;
+}
+
+.asn-offer-btn--accept:hover:not(:disabled) {
+  background: #256427;
+}
+
+.asn-offer-btn--decline {
+  background: #fdecea;
+  color: #c62828;
+}
+
+.asn-offer-btn--decline:hover:not(:disabled) {
+  background: #fadbd8;
+}
+
+.asn-offer-label {
+  display: inline-block;
+  font-size: 0.78rem;
+  font-weight: 700;
+  color: #f9a825;
+  text-transform: uppercase;
+  letter-spacing: 0.03em;
+  margin-bottom: 0.35rem;
+}
+
+.asn-list-item--offer {
+  border: 1.5px solid #f9a825;
+  background: #fffdf6;
+}
+
+.asn-inline-error {
+  color: #c62828;
+  font-size: 0.85rem;
+  margin: 0.25rem 0 0.75rem;
+}
+
+.asn-contract-generating {
+  color: #6b7280;
+  font-style: italic;
+}
+
+.asn-inline-link-btn {
+  background: none;
+  border: none;
+  padding: 0;
+  color: var(--color-brand-deep, #2b395f);
+  font-weight: 600;
+  text-decoration: underline;
+  cursor: pointer;
+  font-size: inherit;
+  font-style: normal;
+}
+
+/* ── Decline reason dialog ── */
+.asn-dialog-overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(15, 23, 42, 0.5);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 1000;
+  padding: 1rem;
+}
+
+.asn-dialog {
+  background: #fff;
+  border-radius: 12px;
+  padding: 1.5rem;
+  max-width: 420px;
+  width: 100%;
+  box-shadow: 0 20px 40px rgba(15, 23, 42, 0.2);
+}
+
+.asn-dialog h2 {
+  margin: 0 0 0.5rem;
+  font-size: 1.15rem;
+  color: var(--color-brand-deep, #2b395f);
+}
+
+.asn-dialog-body {
+  color: #5c6a8a;
+  font-size: 0.9rem;
+  margin: 0 0 1rem;
+}
+
+.asn-dialog-textarea {
+  width: 100%;
+  box-sizing: border-box;
+  border: 1px solid #d1d5db;
+  border-radius: 8px;
+  padding: 0.6rem 0.75rem;
+  font-family: inherit;
+  font-size: 0.9rem;
+  resize: vertical;
+}
+
+.asn-dialog-charcount {
+  text-align: right;
+  font-size: 0.75rem;
+  color: #9ca3af;
+  margin: 0.25rem 0 1rem;
+}
+
+.asn-dialog-actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 0.6rem;
+}
+
+.asn-dialog-btn {
+  padding: 8px 18px;
+  border-radius: 6px;
+  font-size: 0.88rem;
+  font-weight: 600;
+  cursor: pointer;
+  border: none;
+  transition: background-color 0.2s ease, opacity 0.2s ease;
+}
+
+.asn-dialog-btn:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+.asn-dialog-btn--secondary {
+  background: #f3f4f6;
+  color: #374151;
+}
+
+.asn-dialog-btn--secondary:hover:not(:disabled) {
+  background: #e5e7eb;
+}
+
+.asn-dialog-btn--danger {
+  background: #c62828;
+  color: #fff;
+}
+
+.asn-dialog-btn--danger:hover:not(:disabled) {
+  background: #a92121;
+}

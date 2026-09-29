@@ -113,6 +113,46 @@ const TaskSheetService = {
   },
 
   /**
+   * Create a new task sheet for a package assignment (Phase 9.5) — the
+   * assignment-based alternative to createSheet(orderId). No maxSheets cap:
+   * a package assignment is an ongoing engagement, not a fixed-length gig.
+   * @param {string} assignmentId
+   * @returns {Promise<Object>} { success, data, error }
+   */
+  async createSheetForAssignment(assignmentId) {
+    try {
+      if (!assignmentId) {
+        return { success: false, error: "Assignment ID is required" };
+      }
+
+      const authToken = localStorage.getItem("authToken");
+      if (!authToken) {
+        return { success: false, error: "Authentication required" };
+      }
+
+      const response = await fetch(`${config.BASE_URL}/TaskSheets/for-assignment/${assignmentId}`, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${authToken}`,
+        },
+      });
+
+      if (!response.ok) {
+        const errorData = await response.json().catch(() => ({}));
+        const errorMsg = errorData.error || `Failed to create visit: ${response.status}`;
+        return { success: false, error: errorMsg, statusCode: response.status };
+      }
+
+      const data = await response.json();
+      return { success: true, data };
+    } catch (error) {
+      console.error("Error in createSheetForAssignment:", error);
+      return { success: false, error: error.message || "Network error" };
+    }
+  },
+
+  /**
    * Update a task sheet's tasks (toggle completion, add tasks).
    * @param {string} taskSheetId
    * @param {Array} tasks - full tasks array

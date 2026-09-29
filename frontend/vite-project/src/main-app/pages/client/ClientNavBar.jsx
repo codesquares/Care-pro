@@ -231,7 +231,7 @@ const ClientNavBar = () => {
 
         <div className="client-nav-actions">
           <div className="client-standalone-icons">
-            <div className="client-standalone-icon" onClick={() => navigate(`${basePath}/notifications`)}>
+            <div className="client-standalone-icon">
               <NotificationBell navigateTo={(path) => navigate(path)} bellIcon={FaBell} />
             </div>
             <div className="client-standalone-icon" onClick={() => navigate(`${basePath}/message`)}>
