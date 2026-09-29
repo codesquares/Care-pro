@@ -1,4 +1,4 @@
-Marketing Page Styles
+/* Marketing Page Styles */
 /* Mobile-first responsive design */
 
 .marketing-page {
@@ -53,8 +53,12 @@ Marketing Page Styles
 
 @media (min-width: 1024px) {
   .marketing-page .mk-hero {
-    min-height: 540px;
-    height: min(43.4vw, 750px);
+    /* Was a fixed `height`, capping the section at its old floor even when
+       the text column needed more room (it does, on most laptop widths —
+       see mk-hero__content below). A min-height keeps the same visual
+       floor but lets the section grow to fit its content instead of
+       silently shrinking that content to fit the floor. */
+    min-height: max(540px, min(43.4vw, 750px));
     padding: 0;
     display: block;
   }
@@ -83,13 +87,21 @@ Marketing Page Styles
   .marketing-page .mk-hero__content {
     max-width: none;
     width: 48.9%;
-    height: 100%;
-    position: absolute;
-    left: 0;
-    top: 0;
+    /* No longer absolutely positioned / height:100% of .mk-hero — that
+       forced every stacked child into a fixed ~540-750px box regardless
+       of how tall the headline+subline+search+popular+CTA stack actually
+       needed to be, and flexbox took the shortfall out of mk-hero__search
+       specifically (the only child with overflow:hidden, so its automatic
+       minimum size is 0). Left in normal flow, this column now sizes to
+       its own content, and .mk-hero (min-height above) grows to match
+       since this is its only in-flow child. */
     padding: 8% 0 0 5.2%;
     box-sizing: border-box;
     gap: clamp(0.75rem, 1vw, 1.25rem);
+  }
+
+  .marketing-page .mk-hero__content > * {
+    flex-shrink: 0;
   }
 }
 
@@ -106,9 +118,13 @@ Marketing Page Styles
   .marketing-page .mk-hero__visual {
     position: absolute;
     left: 55.3%;
-    right: auto;
+    right: 0;
     top: 4.1%;
-    width: 39.8%;
+    /* width was 39.8%, which with left:55.3% only reached 95.1% — leaving
+       a ~78px gap at 1440px before the viewport edge. `right: 0` makes it
+       flush against the hero's own right edge instead of a hand-tuned
+       width. */
+    width: auto;
     height: 91.7%;
     margin: 0;
   }

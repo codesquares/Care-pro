@@ -1,6 +1,8 @@
 import { useState, useEffect, useCallback } from "react";
 import { useNavigate } from "react-router-dom";
 import CaregiverAssignmentService from "../../../services/caregiverAssignmentService";
+import AssignmentDeclineDialog from "./AssignmentDeclineDialog";
+import Modal from "../../../components/modal/Modal";
 import "../../client/client-dashboard/clientDashboard.css";
 import "../../client/client-dashboard/marketplaceHero.css";
 import "./assignments.css";
@@ -24,6 +26,13 @@ const MyAssignments = () => {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
 
+  // Which assignment's dialog is open / which is mid-request — keyed by id,
+  // since this is a list and more than one card could have offers.
+  const [acceptConfirmId, setAcceptConfirmId] = useState(null);
+  const [declineDialogId, setDeclineDialogId] = useState(null);
+  const [actionSubmittingId, setActionSubmittingId] = useState(null);
+  const [actionError, setActionError] = useState(null);
+
   const load = useCallback(async () => {
     setLoading(true);
     setError(null);
@@ -39,6 +48,39 @@ const MyAssignments = () => {
   useEffect(() => {
     load();
   }, [load]);
+
+  // Pending offers first, most recently assigned first within each group —
+  // matches the list's existing implicit ordering (backend already sorts by
+  // AssignedAt desc), just partitioned so offers surface above settled ones.
+  const sortedAssignments = [...assignments].sort((a, b) => {
+    const aPending = a.status === "PendingAcceptance" ? 0 : 1;
+    const bPending = b.status === "PendingAcceptance" ? 0 : 1;
+    return aPending - bPending;
+  });
+
+  const acceptTarget = assignments.find((a) => a.id === acceptConfirmId);
+
+  const handleAccept = async (assignmentId) => {
+    if (actionSubmittingId) return;
+    setActionSubmittingId(assignmentId);
+    setActionError(null);
+    const result = await CaregiverAssignmentService.acceptAssignment(assignmentId);
+    setActionSubmittingId(null);
+    setAcceptConfirmId(null);
+    if (!result.success) setActionError(result.error);
+    await load();
+  };
+
+  const handleDecline = async (assignmentId, reason) => {
+    if (actionSubmittingId) return;
+    setActionSubmittingId(assignmentId);
+    setActionError(null);
+    const result = await CaregiverAssignmentService.declineAssignment(assignmentId, reason);
+    setActionSubmittingId(null);
+    setDeclineDialogId(null);
+    if (!result.success) setActionError(result.error);
+    await load();
+  };
 
   return (
     <div className="asn-page">
@@ -81,36 +123,82 @@ const MyAssignments = () => {
           </div>
         )}
 
+        {actionError && <p className="asn-inline-error">{actionError}</p>}
+
         {!loading && !error && assignments.length > 0 && (
           <ul className="asn-list">
-            {assignments.map((a) => (
-              <li
-                key={a.id}
-                className="asn-list-item"
-                onClick={() => navigate(`/app/caregiver/assignments/${a.id}`)}
-              >
-                <div className="asn-list-item-main">
-                  <strong>{a.clientName}</strong>
-                  <span className="asn-list-item-tier">
-                    {a.packageCategory} · {a.packageTierLabel}
-                  </span>
-                  {a.payCalculationType && (
-                    <span className="asn-list-item-pay">
-                      Pay basis: {a.payCalculationType}
+            {sortedAssignments.map((a) => {
+              const isOffer = a.status === "PendingAcceptance";
+              const submitting = actionSubmittingId === a.id;
+              return (
+                <li
+                  key={a.id}
+                  className={`asn-list-item${isOffer ? " asn-list-item--offer" : ""}`}
+                  onClick={() => navigate(`/app/caregiver/assignments/${a.id}`)}
+                >
+                  <div className="asn-list-item-main">
+                    {isOffer && <span className="asn-offer-label">Offer awaiting your response</span>}
+                    <strong>{a.clientName}</strong>
+                    <span className="asn-list-item-tier">
+                      {a.packageCategory} · {a.packageTierLabel}
                     </span>
-                  )}
-                </div>
-                <div className="asn-list-item-meta">
-                  <StatusBadge status={a.status} />
-                  <span className="asn-list-item-date">
-                    {a.assignedAt ? new Date(a.assignedAt).toLocaleDateString() : ""}
-                  </span>
-                </div>
-              </li>
-            ))}
+                    {a.payCalculationType && (
+                      <span className="asn-list-item-pay">
+                        Pay basis: {a.payCalculationType}
+                      </span>
+                    )}
+                    {isOffer && (
+                      <div className="asn-offer-actions" onClick={(e) => e.stopPropagation()}>
+                        <button
+                          type="button"
+                          className="asn-offer-btn asn-offer-btn--accept"
+                          onClick={() => setAcceptConfirmId(a.id)}
+                          disabled={submitting}
+                        >
+                          Accept
+                        </button>
+                        <button
+                          type="button"
+                          className="asn-offer-btn asn-offer-btn--decline"
+                          onClick={() => setDeclineDialogId(a.id)}
+                          disabled={submitting}
+                        >
+                          Decline
+                        </button>
+                      </div>
+                    )}
+                  </div>
+                  <div className="asn-list-item-meta">
+                    <StatusBadge status={a.status} />
+                    <span className="asn-list-item-date">
+                      {a.assignedAt ? new Date(a.assignedAt).toLocaleDateString() : ""}
+                    </span>
+                  </div>
+                </li>
+              );
+            })}
           </ul>
         )}
       </div>
+
+      <Modal
+        isOpen={!!acceptConfirmId}
+        onClose={() => setAcceptConfirmId(null)}
+        onProceed={() => handleAccept(acceptConfirmId)}
+        title="Accept this assignment?"
+        description={`Accepting is a commitment to ${acceptTarget?.clientName || "this client"} and to the contract terms — you'll be confirmed as their caregiver right away.`}
+        buttonText={actionSubmittingId === acceptConfirmId ? "Accepting…" : "Yes, accept"}
+        buttonBgColor="#2e7d32"
+        secondaryButtonText="Cancel"
+        onSecondaryAction={() => setAcceptConfirmId(null)}
+      />
+
+      <AssignmentDeclineDialog
+        isOpen={!!declineDialogId}
+        onCancel={() => setDeclineDialogId(null)}
+        onConfirm={(reason) => handleDecline(declineDialogId, reason)}
+        submitting={actionSubmittingId === declineDialogId}
+      />
     </div>
   );
 };

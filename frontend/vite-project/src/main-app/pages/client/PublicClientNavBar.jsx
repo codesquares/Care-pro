@@ -374,7 +374,7 @@ const PublicClientNavBar = () => {
               <div className="public-nav-links">
                 <button
                   className="nav-link-btn"
-                  onClick={() => navigate('/book-caregiver')}
+                  onClick={() => navigate('/marketplace')}
                 >
                   Hire a caregiver
                 </button>

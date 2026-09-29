@@ -1,6 +1,9 @@
 import { useState, useEffect, useCallback } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import CaregiverAssignmentService from "../../../services/caregiverAssignmentService";
+import AssignmentDeclineDialog from "./AssignmentDeclineDialog";
+import Modal from "../../../components/modal/Modal";
+import TaskSheetTabs from "../../../components/task-sheets/TaskSheetTabs";
 import "../../client/client-dashboard/clientDashboard.css";
 import "./assignments.css";
 
@@ -11,20 +14,12 @@ const STATUS_COPY = {
   },
   Declined: {
     title: "You declined this assignment",
-    body: "This assignment is no longer active.",
+    body: "This request has gone back to our team — they'll find another caregiver for it. No further action needed from you.",
   },
   Cancelled: {
     title: "This assignment was cancelled",
     body: "This assignment is no longer active. If this wasn't expected, reach out to CarePro support.",
   },
-};
-
-const formatMinutes = (minutes) => {
-  if (minutes == null) return null;
-  const h = Math.floor(minutes / 60);
-  const m = Math.round(minutes % 60);
-  if (h === 0) return `${m}m`;
-  return `${h}h ${m}m`;
 };
 
 const AssignmentDetail = () => {
@@ -40,9 +35,10 @@ const AssignmentDetail = () => {
   const [contractError, setContractError] = useState(null);
   const [pdfDownloading, setPdfDownloading] = useState(false);
 
-  const [visits, setVisits] = useState([]);
-  const [visitsLoading, setVisitsLoading] = useState(false);
-  const [visitsError, setVisitsError] = useState(null);
+  const [showAcceptConfirm, setShowAcceptConfirm] = useState(false);
+  const [showDeclineDialog, setShowDeclineDialog] = useState(false);
+  const [actionSubmitting, setActionSubmitting] = useState(false);
+  const [actionError, setActionError] = useState(null);
 
   const loadAssignment = useCallback(async () => {
     setLoading(true);
@@ -73,24 +69,11 @@ const AssignmentDetail = () => {
     setContractLoading(false);
   }, [id]);
 
-  const loadVisits = useCallback(async () => {
-    setVisitsLoading(true);
-    setVisitsError(null);
-    const result = await CaregiverAssignmentService.getVisits(id);
-    if (result.success) {
-      setVisits(result.data);
-    } else {
-      setVisitsError(result.error);
-    }
-    setVisitsLoading(false);
-  }, [id]);
-
   useEffect(() => {
     if (assignment?.status === "Accepted") {
       loadContract();
-      loadVisits();
     }
-  }, [assignment?.status, loadContract, loadVisits]);
+  }, [assignment?.status, loadContract]);
 
   const handleDownloadPdf = async () => {
     setPdfDownloading(true);
@@ -99,6 +82,42 @@ const AssignmentDetail = () => {
       setContractError(result.error);
     }
     setPdfDownloading(false);
+  };
+
+  const handleAcceptConfirmed = async () => {
+    // Guard at the handler level, not just via a disabled button — Modal
+    // doesn't expose a disabled/loading prop for its own buttons, so a fast
+    // double-click could otherwise fire this twice before the re-render lands.
+    if (actionSubmitting) return;
+    setActionSubmitting(true);
+    setActionError(null);
+    const result = await CaregiverAssignmentService.acceptAssignment(id);
+    setActionSubmitting(false);
+    setShowAcceptConfirm(false);
+    if (result.success) {
+      await loadAssignment();
+    } else {
+      // 403 (not your assignment) or 409 (already responded / cancelled by
+      // staff) both land here — show the message, then reload so the status
+      // badge and buttons reflect whatever actually happened server-side.
+      setActionError(result.error);
+      await loadAssignment();
+    }
+  };
+
+  const handleDeclineConfirmed = async (reason) => {
+    if (actionSubmitting) return;
+    setActionSubmitting(true);
+    setActionError(null);
+    const result = await CaregiverAssignmentService.declineAssignment(id, reason);
+    setActionSubmitting(false);
+    setShowDeclineDialog(false);
+    if (result.success) {
+      await loadAssignment();
+    } else {
+      setActionError(result.error);
+      await loadAssignment();
+    }
   };
 
   if (loading) {
@@ -160,6 +179,29 @@ const AssignmentDetail = () => {
           <p className="asn-pay-basis">Pay basis: {assignment.payCalculationType}</p>
         )}
 
+        {actionError && <p className="asn-inline-error">{actionError}</p>}
+
+        {assignment.status === "PendingAcceptance" && (
+          <div className="asn-offer-actions">
+            <button
+              type="button"
+              className="asn-offer-btn asn-offer-btn--accept"
+              onClick={() => setShowAcceptConfirm(true)}
+              disabled={actionSubmitting}
+            >
+              Accept
+            </button>
+            <button
+              type="button"
+              className="asn-offer-btn asn-offer-btn--decline"
+              onClick={() => setShowDeclineDialog(true)}
+              disabled={actionSubmitting}
+            >
+              Decline
+            </button>
+          </div>
+        )}
+
         {(isAccepted || wasAccepted) && (
           <button
             type="button"
@@ -170,10 +212,11 @@ const AssignmentDetail = () => {
           </button>
         )}
 
-        {assignment.status === "Declined" && assignment.declineReason && (
+        {assignment.status === "Declined" && statusInfo && (
           <div className="asn-status-panel">
             <h2>{statusInfo.title}</h2>
-            <p>Reason given: {assignment.declineReason}</p>
+            <p>{statusInfo.body}</p>
+            {assignment.declineReason && <p>Reason given: {assignment.declineReason}</p>}
           </div>
         )}
 
@@ -193,7 +236,13 @@ const AssignmentDetail = () => {
                 <p className="error-message">{contractError}</p>
               )}
               {!contractLoading && !contract && !contractError && (
-                <p>No contract has been generated for this assignment yet.</p>
+                <p className="asn-contract-generating">
+                  Your contract is being generated — this is usually instant, but can take
+                  a moment. Try{" "}
+                  <button type="button" className="asn-inline-link-btn" onClick={loadContract}>
+                    refreshing
+                  </button>.
+                </p>
               )}
               {!contractLoading && contract && (
                 <>
@@ -243,55 +292,35 @@ const AssignmentDetail = () => {
             </div>
 
             <div className="asn-visits-card">
-              <h2>Visit History</h2>
+              <h2>Visits</h2>
               <p className="asn-visits-note">
-                This shows visits you've already checked in for — there's no
-                pre-generated future schedule for package assignments, since
-                each visit is created the day you check in.
+                There's no pre-generated future schedule for package
+                assignments — start each visit yourself when you arrive.
               </p>
-
-              {visitsLoading && <p>Loading visit history…</p>}
-              {!visitsLoading && visitsError && (
-                <p className="error-message">{visitsError}</p>
-              )}
-              {!visitsLoading && !visitsError && visits.length === 0 && (
-                <p>No visits recorded yet for this assignment.</p>
-              )}
-              {!visitsLoading && !visitsError && visits.length > 0 && (
-                <ul className="asn-visit-list">
-                  {visits.map((v) => (
-                    <li key={v.id} className="asn-visit-item">
-                      <div className="asn-visit-main">
-                        <strong>
-                          {v.scheduledDate
-                            ? new Date(v.scheduledDate).toLocaleDateString()
-                            : "Undated visit"}
-                        </strong>
-                        <span className={`asn-visit-status asn-visit-status--${(v.status || "").toLowerCase()}`}>
-                          {v.status}
-                        </span>
-                      </div>
-                      <div className="asn-visit-meta">
-                        {v.checkin?.checkinTimestamp && (
-                          <span>
-                            Checked in {new Date(v.checkin.checkinTimestamp).toLocaleTimeString()}
-                          </span>
-                        )}
-                        {v.visitDurationMinutes != null && (
-                          <span>Duration: {formatMinutes(v.visitDurationMinutes)}</span>
-                        )}
-                        {v.submittedAt && (
-                          <span>Submitted {new Date(v.submittedAt).toLocaleString()}</span>
-                        )}
-                      </div>
-                    </li>
-                  ))}
-                </ul>
-              )}
+              <TaskSheetTabs assignmentId={id} contract={contract} />
             </div>
           </>
         )}
       </div>
+
+      <Modal
+        isOpen={showAcceptConfirm}
+        onClose={() => setShowAcceptConfirm(false)}
+        onProceed={handleAcceptConfirmed}
+        title="Accept this assignment?"
+        description={`Accepting is a commitment to ${assignment.clientName || "this client"} and to the contract terms — you'll be confirmed as their caregiver right away.`}
+        buttonText={actionSubmitting ? "Accepting…" : "Yes, accept"}
+        buttonBgColor="#2e7d32"
+        secondaryButtonText="Cancel"
+        onSecondaryAction={() => setShowAcceptConfirm(false)}
+      />
+
+      <AssignmentDeclineDialog
+        isOpen={showDeclineDialog}
+        onCancel={() => setShowDeclineDialog(false)}
+        onConfirm={handleDeclineConfirmed}
+        submitting={actionSubmitting}
+      />
     </div>
   );
 };

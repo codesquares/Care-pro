@@ -1,9 +1,21 @@
 import { useState, useEffect, useCallback } from "react";
 import { useParams, useNavigate } from "react-router-dom";
+import { toast } from "react-toastify";
 import ClientPackageRequestService from "../../../services/clientPackageRequestService";
+import DisputeService from "../../../services/disputeService";
+import ContractService from "../../../services/contractService";
+import VisitCheckinService from "../../../services/visitCheckinService";
 import { getInitials } from "../../../utils/avatarHelpers";
 import "../client-dashboard/clientDashboard.css";
 import "./packageRequests.css";
+
+const formatMinutes = (minutes) => {
+  if (minutes == null) return null;
+  const h = Math.floor(minutes / 60);
+  const m = Math.round(minutes % 60);
+  if (h === 0) return `${m}m`;
+  return `${h}h ${m}m`;
+};
 
 const STATUS_COPY = {
   pending: {
@@ -32,6 +44,16 @@ const PackageRequestDetail = () => {
   const [contractLoading, setContractLoading] = useState(false);
   const [contractError, setContractError] = useState(null);
   const [pdfDownloading, setPdfDownloading] = useState(false);
+
+  const [visits, setVisits] = useState([]);
+  const [visitsLoading, setVisitsLoading] = useState(false);
+  const [visitsError, setVisitsError] = useState(null);
+  const [reviewingId, setReviewingId] = useState(null);
+  const [disputingId, setDisputingId] = useState(null);
+  const [disputeCategory, setDisputeCategory] = useState("");
+  const [disputeReason, setDisputeReason] = useState("");
+  const [gpsLoading, setGpsLoading] = useState(false);
+  const [gpsError, setGpsError] = useState(null);
 
   const loadRequest = useCallback(async () => {
     setLoading(true);
@@ -62,11 +84,24 @@ const PackageRequestDetail = () => {
     setContractLoading(false);
   }, [id]);
 
+  const loadVisits = useCallback(async () => {
+    setVisitsLoading(true);
+    setVisitsError(null);
+    const result = await ClientPackageRequestService.getVisits(id);
+    if (result.success) {
+      setVisits(result.data);
+    } else {
+      setVisitsError(result.error);
+    }
+    setVisitsLoading(false);
+  }, [id]);
+
   useEffect(() => {
     if (request?.status === "confirmed") {
       loadContract();
+      loadVisits();
     }
-  }, [request?.status, loadContract]);
+  }, [request?.status, loadContract, loadVisits]);
 
   const handleDownloadPdf = async () => {
     setPdfDownloading(true);
@@ -75,6 +110,78 @@ const PackageRequestDetail = () => {
       setContractError(result.error);
     }
     setPdfDownloading(false);
+  };
+
+  const handleSetServiceLocation = async () => {
+    if (gpsLoading || !contract?.id) return;
+    setGpsLoading(true);
+    setGpsError(null);
+
+    const gpsResult = await VisitCheckinService.getCurrentPosition();
+    if (!gpsResult.success) {
+      setGpsError(gpsResult.error);
+      setGpsLoading(false);
+      return;
+    }
+
+    const result = await ContractService.setServiceLocation(contract.id, {
+      latitude: gpsResult.coords.latitude,
+      longitude: gpsResult.coords.longitude,
+      accuracy: gpsResult.coords.accuracy,
+    });
+
+    if (result.success) {
+      toast.success("Location confirmed — your caregiver's check-ins will now be verified against it.");
+      await loadContract();
+    } else {
+      setGpsError(result.error || "Failed to save your location.");
+    }
+    setGpsLoading(false);
+  };
+
+  const handleApproveVisit = async (taskSheetId) => {
+    if (reviewingId) return;
+    setReviewingId(taskSheetId);
+    const result = await DisputeService.reviewVisit(taskSheetId, { reviewStatus: "Approved" });
+    if (result.success) {
+      toast.success("Visit approved.");
+      await loadVisits();
+    } else {
+      toast.error(result.error || "Failed to approve visit.");
+    }
+    setReviewingId(null);
+  };
+
+  const handleOpenDispute = (taskSheetId) => {
+    setDisputingId(taskSheetId);
+    setDisputeCategory("");
+    setDisputeReason("");
+  };
+
+  const handleSubmitDispute = async (taskSheetId) => {
+    if (!disputeCategory) {
+      toast.error("Please select a category for the dispute.");
+      return;
+    }
+    if (!disputeReason.trim()) {
+      toast.error("Please describe what happened.");
+      return;
+    }
+    if (reviewingId) return;
+    setReviewingId(taskSheetId);
+    const result = await DisputeService.reviewVisit(taskSheetId, {
+      reviewStatus: "Disputed",
+      disputeCategory,
+      disputeReason: disputeReason.trim(),
+    });
+    if (result.success) {
+      toast.success("Dispute submitted — our team will review it.");
+      setDisputingId(null);
+      await loadVisits();
+    } else {
+      toast.error(result.error || "Failed to submit dispute.");
+    }
+    setReviewingId(null);
   };
 
   if (loading) {
@@ -214,6 +321,42 @@ const PackageRequestDetail = () => {
                     )}
                   </div>
 
+                  <div className="pr-location-panel">
+                    {contract.serviceLocationSetByClient ? (
+                      <p className="pr-location-confirmed">
+                        ✓ Precise location confirmed
+                        {contract.serviceLocationSetAt
+                          ? ` on ${new Date(contract.serviceLocationSetAt).toLocaleDateString()}`
+                          : ""}
+                        .{" "}
+                        <button
+                          type="button"
+                          className="pr-location-update-link"
+                          onClick={handleSetServiceLocation}
+                          disabled={gpsLoading}
+                        >
+                          {gpsLoading ? "Updating…" : "Update it"}
+                        </button>
+                      </p>
+                    ) : (
+                      <>
+                        <p className="pr-location-hint">
+                          Share your exact location so we can verify your caregiver actually visited when they check in.
+                          Without it, check-ins can't be distance-verified.
+                        </p>
+                        <button
+                          type="button"
+                          className="pr-location-btn"
+                          onClick={handleSetServiceLocation}
+                          disabled={gpsLoading}
+                        >
+                          {gpsLoading ? "Getting your location…" : "📍 Share My Precise Location"}
+                        </button>
+                      </>
+                    )}
+                    {gpsError && <p className="error-message pr-location-error">{gpsError}</p>}
+                  </div>
+
                   {contract.generatedTermsHtml && (
                     <div className="pr-contract-terms-wrap">
                       <iframe
@@ -234,6 +377,127 @@ const PackageRequestDetail = () => {
                     {pdfDownloading ? "Downloading…" : "Download Contract PDF"}
                   </button>
                 </>
+              )}
+            </div>
+
+            <div className="pr-visits-card">
+              <h2>Visits</h2>
+              {visitsLoading && <p>Loading visits…</p>}
+              {!visitsLoading && visitsError && (
+                <p className="error-message">{visitsError}</p>
+              )}
+              {!visitsLoading && !visitsError && visits.length === 0 && (
+                <p>No visits recorded yet for this request.</p>
+              )}
+              {!visitsLoading && !visitsError && visits.length > 0 && (
+                <ul className="pr-visit-list">
+                  {visits.map((v) => {
+                    const needsReview = v.status === "submitted" && !v.clientReviewStatus;
+                    const completedCount = (v.tasks || []).filter((t) => t.completed).length;
+                    return (
+                      <li key={v.id} className="pr-visit-item">
+                        <div className="pr-visit-main">
+                          <strong>
+                            Visit {v.sheetNumber}
+                            {v.scheduledDate ? ` — ${new Date(v.scheduledDate).toLocaleDateString()}` : ""}
+                          </strong>
+                          <span className={`pr-visit-status pr-visit-status--${(v.status || "").toLowerCase()}`}>
+                            {v.status === "in-progress" ? "In progress" : v.status}
+                          </span>
+                        </div>
+
+                        <div className="pr-visit-meta">
+                          {v.checkin?.checkinTimestamp && (
+                            <span>
+                              Caregiver checked in {new Date(v.checkin.checkinTimestamp).toLocaleTimeString()}
+                              {v.checkin.distanceFromServiceAddress != null &&
+                                ` (${Math.round(v.checkin.distanceFromServiceAddress)}m from service address)`}
+                            </span>
+                          )}
+                          {v.visitDurationMinutes != null && (
+                            <span>Duration: {formatMinutes(v.visitDurationMinutes)}</span>
+                          )}
+                          {v.tasks?.length > 0 && (
+                            <span>Tasks: {completedCount}/{v.tasks.length} completed</span>
+                          )}
+                          {v.submittedAt && (
+                            <span>Submitted {new Date(v.submittedAt).toLocaleString()}</span>
+                          )}
+                        </div>
+
+                        {v.clientReviewStatus === "Approved" && (
+                          <div className="pr-visit-review pr-visit-review--approved">✓ You approved this visit</div>
+                        )}
+                        {v.clientReviewStatus === "Disputed" && (
+                          <div className="pr-visit-review pr-visit-review--disputed">
+                            ⚠ Disputed{v.clientDisputeReason ? `: ${v.clientDisputeReason}` : ""}
+                          </div>
+                        )}
+
+                        {needsReview && disputingId !== v.id && (
+                          <div className="pr-visit-actions">
+                            <button
+                              type="button"
+                              className="pr-visit-approve-btn"
+                              onClick={() => handleApproveVisit(v.id)}
+                              disabled={reviewingId === v.id}
+                            >
+                              {reviewingId === v.id ? "Approving…" : "Approve Visit"}
+                            </button>
+                            <button
+                              type="button"
+                              className="pr-visit-dispute-btn"
+                              onClick={() => handleOpenDispute(v.id)}
+                              disabled={reviewingId === v.id}
+                            >
+                              Dispute
+                            </button>
+                          </div>
+                        )}
+
+                        {needsReview && disputingId === v.id && (
+                          <div className="pr-visit-dispute-form">
+                            <select
+                              value={disputeCategory}
+                              onChange={(e) => setDisputeCategory(e.target.value)}
+                              className="pr-visit-dispute-select"
+                            >
+                              <option value="">Select a reason…</option>
+                              {Object.entries(DisputeService.VISIT_CATEGORIES).map(([key, label]) => (
+                                <option key={key} value={key}>{label}</option>
+                              ))}
+                            </select>
+                            <textarea
+                              className="pr-visit-dispute-reason"
+                              placeholder="Describe what happened (required)"
+                              value={disputeReason}
+                              onChange={(e) => setDisputeReason(e.target.value)}
+                              rows="3"
+                            />
+                            <div className="pr-visit-dispute-actions">
+                              <button
+                                type="button"
+                                className="pr-visit-dispute-cancel-btn"
+                                onClick={() => setDisputingId(null)}
+                                disabled={reviewingId === v.id}
+                              >
+                                Cancel
+                              </button>
+                              <button
+                                type="button"
+                                className="pr-visit-dispute-submit-btn"
+                                onClick={() => handleSubmitDispute(v.id)}
+                                disabled={reviewingId === v.id}
+                              >
+                                {reviewingId === v.id ? "Submitting…" : "Submit Dispute"}
+                              </button>
+                            </div>
+                          </div>
+                        )}
+                      </li>
+                    );
+                  })}
+                </ul>
               )}
             </div>
           </>

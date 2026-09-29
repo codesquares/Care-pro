@@ -18,6 +18,7 @@ import AssignmentConsole from './assignment-console/AssignmentConsole';
 import PayRatesManagement from './pay-rates/PayRatesManagement';
 import PayrollManagement from './payroll/PayrollManagement';
 import GuarantorOverride from './guarantor-override/GuarantorOverride';
+import PaymentLinkGenerator from './payment-links/PaymentLinkGenerator';
 // Retired: Care Matching (admin gig -> client recommendation emails). Superseded by the Assignment Console;
 // source preserved commented out at ./care-matching/CareMatching.jsx.
 // import CareMatching from './care-matching/CareMatching';
@@ -158,6 +159,14 @@ function AdminRoutes() {
                         element={
                             canUseOperationsTools
                                 ? <GuarantorOverride />
+                                : <NotFoundPage />
+                        }
+                    />
+                    <Route
+                        path='/payment-links'
+                        element={
+                            canUseOperationsTools
+                                ? <PaymentLinkGenerator />
                                 : <NotFoundPage />
                         }
                     />

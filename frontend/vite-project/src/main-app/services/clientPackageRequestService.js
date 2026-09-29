@@ -68,6 +68,24 @@ const ClientPackageRequestService = {
   },
 
   /**
+   * Endpoint: GET /api/client/package-requests/{id}/visits
+   * The client's own view of visits (task sheets) submitted under this request.
+   * @param {string} id
+   * @returns {Promise<{success: boolean, data?: Array, error?: string}>}
+   */
+  async getVisits(id) {
+    try {
+      const response = await api.get(`${BASE}/${id}/visits`);
+      const payload = response.data || {};
+      const data = Array.isArray(payload.data) ? payload.data : [];
+      return { success: true, data };
+    } catch (error) {
+      console.error('Error fetching request visits:', error);
+      return { success: false, error: extractError(error, 'Failed to load visit history') };
+    }
+  },
+
+  /**
    * Endpoint: GET /api/client/package-requests/{id}/contract/pdf
    * Downloads the PDF directly (not JSON), so this bypasses the axios instance
    * the same way ContractDetailPage.jsx's legacy download does.
