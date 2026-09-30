@@ -95,3 +95,13 @@ export const marketplaceLinkForCategoryName = (name) => {
   const match = categoryBrowseData.find((c) => c.name === name);
   return marketplaceLinkForCategorySlug(match?.slug);
 };
+
+// The four real package categories, in display order. `category` is the exact backend
+// Package.Category value (also the ?category= filter on /marketplace); `slug` keys the
+// icon in CategoryIllustration.
+export const PACKAGE_CATEGORIES = [
+  { category: "Adult/Elder Care", name: "Adult & Elder Care", slug: "pkg-adult-elder-care" },
+  { category: "Post-Partum Care", name: "Post-Partum Care", slug: "pkg-post-partum-care" },
+  { category: "Post Surgery Care", name: "Post Surgery Care", slug: "pkg-post-surgery-care" },
+  { category: "Live-in Package", name: "Live-in Care", slug: "pkg-live-in-package" },
+];

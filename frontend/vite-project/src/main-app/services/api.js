@@ -77,6 +77,7 @@ api.interceptors.request.use(
                 '/Authentications/ResetPassword',
                 '/Authentications/VerifyEmail',
                 '/public-config',
+                '/public/packages',
                 '/Gigs',
                 '/Analytics/Event',
                 '/referrals/apply',

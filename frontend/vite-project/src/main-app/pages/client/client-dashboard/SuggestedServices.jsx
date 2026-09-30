@@ -1,100 +1,74 @@
+import { useCallback, useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import "./suggestedServices.css";
-import CategoryCard from "../../../../components/category/CategoryCard";
-import { categoryBrowseData } from "../../../constants/categoryBrowseData";
-import featuredServiceCard from "../../../../assets/CTA.png";
+import PackageCategoryCard from "../../../../components/category/PackageCategoryCard";
+import { PACKAGE_CATEGORIES } from "../../../constants/categoryBrowseData";
+import ClientPackageService from "../../../services/clientPackageService";
 
+/**
+ * Signed-in package overview for the client dashboard: the same PackageCategoryCard as the public
+ * homepage, but fed by the authenticated catalog (GET /client/packages) so real prices show.
+ * Selecting a tier goes to the free-assessment intake pre-filled with that package — the same
+ * action the marketplace's "Select This Package" performs.
+ */
 const SuggestedServices = () => {
   const navigate = useNavigate();
-  const featuredCategories = categoryBrowseData.slice(0, 6);
+  const [packages, setPackages] = useState([]);
+  const [status, setStatus] = useState("loading"); // loading | ready | error
 
-  const handleCategoryClick = (categorySlug) => {
-    navigate(`/marketplace?category=${categorySlug}`);
+  const load = useCallback(async () => {
+    setStatus("loading");
+    const result = await ClientPackageService.getPackages();
+    if (result.success) {
+      setPackages(result.data);
+      setStatus("ready");
+    } else {
+      setStatus("error");
+    }
+  }, []);
+
+  useEffect(() => {
+    load();
+  }, [load]);
+
+  const handleSelect = (category, tier) => {
+    if (!tier) {
+      navigate(`/marketplace?category=${encodeURIComponent(category.category)}`);
+      return;
+    }
+    const params = new URLSearchParams({ category: category.category, tier: tier.tierLabel });
+    navigate(`/start-assessment?${params.toString()}`);
   };
 
   return (
     <div className="suggested-services-section">
       <div className="suggested-services-header">
-        <h2>Suggested services</h2>
+        <h2>Care packages</h2>
       </div>
 
-      <div className="suggested-services-layout">
-        {/* Featured Service Card Image */}
-        <div
-          className="featured-caregiver-card"
-          onClick={() => navigate('/marketplace')}
-          role="button"
-          tabIndex={0}
-          onKeyDown={(event) => {
-            if (event.key === "Enter" || event.key === " ") {
-              event.preventDefault();
-              navigate('/marketplace');
-            }
-          }}
-          aria-label="Featured Caregiver spotlight"
-        >
-          <img
-            src={featuredServiceCard}
-            alt=""
-            aria-hidden="true"
-            className="featured-caregiver-photo"
-          />
-          <div className="featured-caregiver-label-wrap">
-            <span className="featured-caregiver-eyebrow">Featured Caregiver</span>
-            <h3 className="featured-caregiver-title">Meet Your Caregiver</h3>
-          </div>
-          <div className="featured-caregiver-content">
-            <div className="featured-pill featured-pill--orders">
-              <span className="featured-pill__icon" aria-hidden="true">🛍️</span>
-              <span>Manage active Orders</span>
-            </div>
+      {status === "loading" && <p className="suggested-services-note">Loading care packages…</p>}
 
-            <div className="featured-pill featured-pill--browse">Browse service categories</div>
-
-            <div className="featured-info-card">
-              <div className="featured-info-card__emoji" aria-hidden="true">😊</div>
-              <div className="featured-info-card__body">
-                <strong>Adult &amp; Elderly Care</strong>
-                <p>Dignified, independence-focused assistance to keep seniors active, comfortable, and cared for.</p>
-              </div>
-            </div>
-
-            <div className="featured-connect-banner">Connect with qualified Caregivers</div>
-
-            <div className="featured-profile-card">
-              <div className="featured-profile-card__row">
-                <div className="featured-profile-card__avatar">FA</div>
-                <div className="featured-profile-card__meta">
-                  <strong>Funke Adeyemi</strong>
-                  <span className="featured-profile-card__badge">Verified ✓</span>
-                  <span className="featured-profile-card__rating">⭐ 4.5</span>
-                </div>
-              </div>
-              <span className="featured-profile-card__location">📍 Ikoyi, Lagos, Nigeria</span>
-            </div>
-          </div>
+      {status === "error" && (
+        <div className="suggested-services-note">
+          <p>We couldn't load care packages right now.</p>
+          <button type="button" className="pkg-cat-card__select" onClick={load}>Try again</button>
         </div>
+      )}
 
-        {/* Right: Categories Grid */}
-        <div className="suggested-categories-grid">
-          {featuredCategories.map((category) => (
-            <CategoryCard
-              key={category.id}
+      {status === "ready" && (
+        <div className="pkg-cat-grid" aria-label="Care package categories">
+          {PACKAGE_CATEGORIES.map((category) => (
+            <PackageCategoryCard
+              key={category.category}
               category={category}
-              showDescription={true}
-              showPrice={true}
-              className="suggested-category-card"
-              onClick={() => handleCategoryClick(category.slug)}
+              tiers={packages.filter((p) => p.category === category.category)}
+              onSelect={handleSelect}
+              showPrice
+              selectLabel="Select this package"
             />
           ))}
         </div>
-      </div>
-
-      {/* <div className="browse-categories-container">
-        <button className="browse-categories-btn" onClick={() => navigate('/marketplace')}>
-          Browse service categories
-        </button>
-      </div> */}
+      )}
     </div>
   );
 };

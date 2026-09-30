@@ -132,8 +132,8 @@ const PublicMarketplace = () => {
             <h3>Sign in to view care packages</h3>
             <p>Care packages are available to signed-in clients. Log in or create an account to browse what's available.</p>
             <div className="reset-buttons">
-              <button className="reset-button" onClick={() => navigate('/login')}>Login</button>
-              <button className="reset-button search-reset" onClick={() => navigate('/register')}>Sign Up</button>
+              <button className="reset-button" onClick={() => navigate(`/login?returnTo=${encodeURIComponent(`/marketplace${window.location.search}`)}`)}>Login</button>
+              <button className="reset-button search-reset" onClick={() => navigate(`/register?returnTo=${encodeURIComponent(`/marketplace${window.location.search}`)}`)}>Sign Up</button>
             </div>
           </div>
         </div>
