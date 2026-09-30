@@ -25,9 +25,19 @@ const StartAssessmentRedirect = () => {
     return `https://wa.me/${WHATSAPP_NUMBER}?text=${encodeURIComponent(message)}`;
   }, [category, tier]);
 
+  // replace(), not href: this page exists only to bounce to WhatsApp, so it must not stay in
+  // history — otherwise "back" from WhatsApp lands here and re-fires the redirect.
   useEffect(() => {
-    window.location.href = whatsappLink;
+    window.location.replace(whatsappLink);
   }, [whatsappLink]);
+
+  // Fallback button: same reasoning. Plain left-clicks replace; modified clicks (new tab/window,
+  // copy link) keep the native href behaviour.
+  const handleFallbackClick = (event) => {
+    if (event.defaultPrevented || event.button !== 0 || event.metaKey || event.ctrlKey || event.shiftKey || event.altKey) return;
+    event.preventDefault();
+    window.location.replace(whatsappLink);
+  };
 
   return (
     <div className="start-assessment-redirect">
@@ -40,6 +50,7 @@ const StartAssessmentRedirect = () => {
         <a
           className="start-assessment-redirect__button"
           href={whatsappLink}
+          onClick={handleFallbackClick}
         >
           Open WhatsApp
         </a>

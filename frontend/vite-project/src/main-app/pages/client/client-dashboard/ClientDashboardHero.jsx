@@ -1,6 +1,7 @@
 import { useNavigate } from "react-router-dom";
 import "./clientDashboardHero.css";
 import CareGetStartedCards from "./CareGetStartedCards";
+import SuggestedServices from "./SuggestedServices";
 import { marketplaceLinkForCategorySlug } from "../../../constants/categoryBrowseData";
 
 // Category navigation items
@@ -129,6 +130,9 @@ const ClientDashboardHero = ({
           </div>
         </div>
       </div>
+
+      {/* Real packages with prices (authenticated catalog) */}
+      <SuggestedServices />
 
       {/* Next steps: free assessment + my requests (replaces the retired care-needs summary card) */}
       <CareGetStartedCards />

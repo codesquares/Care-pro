@@ -308,6 +308,7 @@
 
 .asc-available { color: #2e7d32; font-weight: 600; }
 .asc-unavailable { color: #c62828; font-weight: 600; }
+.asc-not-ready { color: #8a5a00; background: #fff4d6; padding: 0.1rem 0.5rem; border-radius: 20px; font-weight: 600; }
 
 .asc-candidate-about {
   font-size: 0.85rem;

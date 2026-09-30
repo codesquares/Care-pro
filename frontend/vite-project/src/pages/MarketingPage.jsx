@@ -1,9 +1,12 @@
 import { useNavigate } from "react-router-dom";
-import { useState } from "react";
+import { useEffect, useState } from "react";
+import { useAuth } from "../main-app/context/AuthContext";
 import "./MarketingPage.css";
 import PricingModal from "../components/PricingModal/PricingModal";
-import CategoryCard from "../components/category/CategoryCard";
-import { categoryBrowseData, REAL_PACKAGE_CATEGORY_BY_SLUG } from "../main-app/constants/categoryBrowseData";
+import PackageCategoryCard from "../components/category/PackageCategoryCard";
+import { PACKAGE_CATEGORIES } from "../main-app/constants/categoryBrowseData";
+import PublicPackageService from "../main-app/services/publicPackageService";
+import { getPackageSelectNavigation } from "../main-app/utils/packageSelectNavigation";
 
 // Import assets
 import nurseAndWomanImg from "../assets/nurseAndWoman.png";
@@ -22,6 +25,17 @@ const MarketingPage = () => {
   const navigate = useNavigate();
   const [searchQuery, setSearchQuery] = useState("");
   const [isPricingModalOpen, setIsPricingModalOpen] = useState(false);
+  const { isAuthenticated } = useAuth();
+  const [packageSummaries, setPackageSummaries] = useState([]);
+
+  // Public, price-free package summaries for the Popular Services cards (no auth needed).
+  useEffect(() => {
+    let cancelled = false;
+    PublicPackageService.getPackageSummaries().then((result) => {
+      if (!cancelled && result.success) setPackageSummaries(result.data);
+    });
+    return () => { cancelled = true; };
+  }, []);
 
   const handleSearch = (e) => {
     e.preventDefault();
@@ -42,13 +56,15 @@ const MarketingPage = () => {
     navigate(`/marketplace?category=${encodeURIComponent(categoryValue)}`);
   };
 
-  const handleServiceClick = (categorySlug) => {
-    const realCategory = REAL_PACKAGE_CATEGORY_BY_SLUG[categorySlug];
-    if (realCategory) {
-      navigate(`/marketplace?category=${encodeURIComponent(realCategory)}`);
-    } else {
-      navigate("/marketplace");
-    }
+  // Viewing tier details on a card needs no signup. Selecting one goes to the priced package
+  // view (/marketplace, filtered to that tier); anonymous visitors sign up first via the same
+  // returnTo flow the assessment CTA uses, so they land back on that priced view afterwards.
+  const handleSelectPackage = (category, tier) => {
+    navigate(getPackageSelectNavigation({
+      isAuthenticated,
+      category: category.category,
+      tierLabel: tier?.tierLabel,
+    }));
   };
 
   const handleBrowsePackages = () => {
@@ -142,14 +158,13 @@ const MarketingPage = () => {
       <section className="services-section">
         <div className="container">
           <h2>Popular Services</h2>
-          <div className="services-row" aria-label="Popular service categories">
-            {categoryBrowseData.map((service) => (
-              <CategoryCard
-                key={service.id}
-                category={service}
-                showDescription={false}
-                showPrice={false}
-                onClick={() => handleServiceClick(service.slug)}
+          <div className="pkg-cat-grid" aria-label="Popular care package categories">
+            {PACKAGE_CATEGORIES.map((category) => (
+              <PackageCategoryCard
+                key={category.category}
+                category={category}
+                tiers={packageSummaries.filter((p) => p.category === category.category)}
+                onSelect={handleSelectPackage}
               />
             ))}
           </div>

@@ -641,6 +641,10 @@
 }
 
 /* ========== SERVICES SECTION ========== */
+.marketing-page .pkg-cat-grid {
+  margin: 0 0 var(--space-5);
+}
+
 .marketing-page .services-section {
   padding: var(--space-6) 0;
   background-color: var(--surface);

@@ -484,6 +484,7 @@ const KNOWN_CANONICAL = new Set([
   'PackageAssignmentOffered', 'PackageAssignmentConfirmed',
   'PackageAssignmentDeclined', 'PackageAssignmentCancelled',
   'PackageContractGenerated',
+  'PackageRequestReceived', 'PackagePaymentRequestFailed', 'PackageContractDeliveryFailed',
   // Payroll (Phase 9.7)
   'PayrollApproved', 'PayrollPaid',
 ]);
@@ -802,6 +803,15 @@ export const getNotificationRoute = (notification, userRole) => {
       return null;
     }
 
+    // Ops alerts (admin only): a new request awaiting assignment, or a charged-but-unfulfilled /
+    // undelivered-contract failure — all land on the Assignment Console where staff act.
+    case 'PackageRequestReceived':
+    case 'PackagePaymentRequestFailed':
+    case 'PackageContractDeliveryFailed': {
+      if (isAdmin) return `/app/admin/assignments`;
+      return null;
+    }
+
     // ── Visit / Task Sheet notifications ─────────────────
     // A package-assignment visit has no ClientOrder, so orderId is empty for these —
     // the backend sends the AssignmentId/PackageRequestId as relatedEntityId instead
@@ -1088,6 +1098,10 @@ export const getNotificationActionLabel = (rawType) => {
       return 'View Assignment';
     case 'PackageAssignmentConfirmed':
       return 'View Request';
+    case 'PackageRequestReceived':
+    case 'PackagePaymentRequestFailed':
+    case 'PackageContractDeliveryFailed':
+      return 'Open Assignments';
     case 'NewMessage':
       return 'Open Conversation';
     case 'Payment':

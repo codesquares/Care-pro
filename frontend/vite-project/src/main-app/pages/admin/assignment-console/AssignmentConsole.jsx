@@ -341,6 +341,12 @@ const AssignmentConsole = () => {
                             <span className={c.isAvailable ? 'asc-available' : 'asc-unavailable'}>
                               {c.isAvailable ? 'Available' : 'Not marked available'}
                             </span>
+                            {c.assessmentReady === false && (
+                              <span className="asc-not-ready" title={c.readinessMessage || undefined}>
+                                <i className="fas fa-exclamation-triangle"></i>{' '}
+                                Not yet ready{c.readinessGaps?.length ? `: ${c.readinessGaps.join(' & ')} outstanding` : ''}
+                              </span>
+                            )}
                           </div>
                           {c.aboutMe && <p className="asc-candidate-about">{c.aboutMe}</p>}
                           {assignBlockers?.caregiverId === c.caregiverId && (
