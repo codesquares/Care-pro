@@ -5,6 +5,8 @@ import "./responsiveFixes.css";
 import ClientDashboardHero from "./ClientDashboardHero";
 import ClientProfileService from "../../../services/clientProfileService";
 import accountDeletionService from "../../../services/accountDeletionService";
+import ClientPackageRequestService from "../../../services/clientPackageRequestService";
+import { useNavigate } from "react-router-dom";
 
 const ClientDashboard = () => {
   const [profileCompletion, setProfileCompletion] = useState(10);
@@ -13,6 +15,19 @@ const ClientDashboard = () => {
   const [cancelDeletionLoading, setCancelDeletionLoading] = useState(false);
   const [showCancelDeletionConfirm, setShowCancelDeletionConfirm] = useState(false);
   const user = JSON.parse(localStorage.getItem("userDetails") || "{}");
+  const navigate = useNavigate();
+  // A confirmed request whose service location the client hasn't confirmed yet. Never gates care — just a prompt.
+  const [locationPromptRequestId, setLocationPromptRequestId] = useState(null);
+  useEffect(() => {
+    let cancelled = false;
+    (async () => {
+      const result = await ClientPackageRequestService.getMyRequests();
+      if (cancelled || !result.success) return;
+      const needing = result.data.find((r) => r.serviceLocationNeeded);
+      setLocationPromptRequestId(needing ? needing.id : null);
+    })();
+    return () => { cancelled = true; };
+  }, []);
 
   // Calculate profile completion percentage from real data
   const calculateProfileCompletion = (profile) => {
@@ -59,6 +74,26 @@ const ClientDashboard = () => {
 
   return (
     <div className="dashboard client-dashboard-flex">
+      {locationPromptRequestId && (
+        <div data-testid="location-prompt" style={{
+          background: '#eff6ff', border: '1px solid #93c5fd', borderRadius: '8px',
+          padding: '0.875rem 1rem', margin: '0 0 0.75rem', display: 'flex',
+          alignItems: 'center', gap: '0.75rem', flexWrap: 'wrap',
+        }}>
+          <span style={{ fontSize: '1.1rem' }}>📍</span>
+          <div style={{ flex: 1, minWidth: '200px' }}>
+            <p style={{ margin: 0, fontWeight: 600 }}>Confirm your precise service location</p>
+            <p style={{ margin: '0.25rem 0 0', fontSize: '0.875rem' }}>
+              It lets us verify your caregiver's visits against your address. Your care is not affected if you do this later.
+            </p>
+          </div>
+          <button type="button" onClick={() => navigate(`/app/client/requests/${locationPromptRequestId}`)}
+            style={{ background: '#1e3a5f', color: '#fff', border: 'none', borderRadius: 6, padding: '0.5rem 1rem', fontWeight: 600, cursor: 'pointer' }}>
+            Confirm location
+          </button>
+        </div>
+      )}
+
       {/* Pending deletion banner */}
       {pendingDeletionDate && showDeletionBanner && (
         <div style={{

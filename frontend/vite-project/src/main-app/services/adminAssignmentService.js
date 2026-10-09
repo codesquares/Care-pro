@@ -71,6 +71,8 @@ const AdminAssignmentService = {
         AssignedBy: 'staff',
         // Optional staff-written brief shown to the caregiver before they accept (no phone/street address).
         CareBrief: payload.careBrief || null,
+        // Full service address (staff-entered). Shared with the caregiver only after they accept.
+        ServiceAddress: payload.serviceAddress || null,
       });
       const body = response.data || {};
       return { success: true, data: body.data };

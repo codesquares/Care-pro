@@ -182,6 +182,9 @@ const AssignmentDetail = () => {
         )}
 
         <CareBriefCard brief={assignment.careBrief} />
+        {assignment.clientDetailsReleased && assignment.serviceAddress && (
+          <p className="asn-service-address" data-testid="service-address"><strong>Service address:</strong> {assignment.serviceAddress}</p>
+        )}
         {assignment.status === "PendingAcceptance" && (
           <p className="asn-brief-note">
             The client's full name, contact details and address are shared once you accept.

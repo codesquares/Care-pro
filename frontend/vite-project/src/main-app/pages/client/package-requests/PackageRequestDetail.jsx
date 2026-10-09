@@ -411,7 +411,7 @@ const PackageRequestDetail = () => {
                     </div>
                   )}
 
-                  <div className="pr-location-panel">
+                  <div className={`pr-location-panel${contract.serviceLocationSetByClient ? "" : " pr-location-panel--needed"}`} data-testid="location-panel" data-confirmed={contract.serviceLocationSetByClient ? "true" : "false"}>
                     {contract.serviceLocationSetByClient ? (
                       <p className="pr-location-confirmed">
                         ✓ Precise location confirmed

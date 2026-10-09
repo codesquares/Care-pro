@@ -63,6 +63,8 @@ const AssignmentConsole = () => {
   const EMPTY_BRIEF = { careNeedsSummary: '', schedule: '', startDate: '', duration: '', area: '' };
   const [careBrief, setCareBrief] = useState(EMPTY_BRIEF);
   const setBriefField = (k, v) => setCareBrief((b) => ({ ...b, [k]: v }));
+  // FULL service address — separate from the area-only brief; released to the caregiver only after acceptance.
+  const [serviceAddress, setServiceAddress] = useState('');
 
   const selectRequest = async (req) => {
     setSelectedRequest(req);
@@ -70,6 +72,7 @@ const AssignmentConsole = () => {
     setCandidatesError(null);
     setAssignBlockers(null);
     setCareBrief(EMPTY_BRIEF);
+    setServiceAddress('');
     setLoadingCandidates(true);
     const result = await AdminAssignmentService.getCandidates(req.id);
     if (result.success) {
@@ -88,6 +91,7 @@ const AssignmentConsole = () => {
       packageRequestId: selectedRequest.id,
       caregiverId: candidate.caregiverId,
       matchScore: candidate.matchScore,
+      serviceAddress: serviceAddress.trim() || null,
       careBrief: {
         careNeedsSummary: careBrief.careNeedsSummary.trim() || null,
         schedule: careBrief.schedule.trim() || null,
@@ -359,6 +363,14 @@ const AssignmentConsole = () => {
                   <label>Area (city / neighborhood only)
                     <input type="text" maxLength={120} placeholder="e.g. Lekki, Lagos" value={careBrief.area} onChange={(e) => setBriefField('area', e.target.value)} />
                   </label>
+                </fieldset>
+
+                <fieldset className="asc-brief" data-testid="service-address-form">
+                  <legend>Service address (full — shared with the caregiver only after they accept)</legend>
+                  <label>Full address where care is delivered
+                    <input type="text" maxLength={300} placeholder="e.g. 12 Admiralty Way, Lekki Phase 1, Lagos" value={serviceAddress} onChange={(e) => setServiceAddress(e.target.value)} />
+                  </label>
+                  <p className="asc-brief-warning">Used to verify check-ins by location. The client is asked to confirm their precise GPS location too.</p>
                 </fieldset>
 
                 {candidatesError && (
