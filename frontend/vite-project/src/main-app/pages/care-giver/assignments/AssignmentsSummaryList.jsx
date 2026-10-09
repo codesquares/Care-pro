@@ -38,6 +38,7 @@ const AssignmentsSummaryList = ({ pending, active, loading, error, onRetry }) =>
           >
             <div className="asn-list-item-main">
               {isOffer && <span className="asn-offer-label">Offer awaiting your response</span>}
+              {/* clientName is the first name only until the caregiver accepts (enforced by the API) */}
               <strong>{a.clientName}</strong>
               <span className="asn-list-item-tier">{a.packageCategory} · {a.packageTierLabel}</span>
             </div>

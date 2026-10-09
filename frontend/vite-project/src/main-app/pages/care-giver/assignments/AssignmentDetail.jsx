@@ -1,6 +1,7 @@
 import { useState, useEffect, useCallback } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import CaregiverAssignmentService from "../../../services/caregiverAssignmentService";
+import CareBriefCard from "./CareBriefCard";
 import AssignmentDeclineDialog from "./AssignmentDeclineDialog";
 import Modal from "../../../components/modal/Modal";
 import TaskSheetTabs from "../../../components/task-sheets/TaskSheetTabs";
@@ -177,6 +178,13 @@ const AssignmentDetail = () => {
 
         {assignment.payCalculationType && (
           <p className="asn-pay-basis">Pay basis: {assignment.payCalculationType}</p>
+        )}
+
+        <CareBriefCard brief={assignment.careBrief} />
+        {assignment.status === "PendingAcceptance" && (
+          <p className="asn-brief-note">
+            The client's full name, contact details and address are shared once you accept.
+          </p>
         )}
 
         {actionError && <p className="asn-inline-error">{actionError}</p>}

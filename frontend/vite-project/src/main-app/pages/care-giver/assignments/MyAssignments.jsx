@@ -1,6 +1,7 @@
 import { useState, useEffect, useCallback } from "react";
 import { useNavigate } from "react-router-dom";
 import CaregiverAssignmentService from "../../../services/caregiverAssignmentService";
+import CareBriefCard from "./CareBriefCard";
 import AssignmentDeclineDialog from "./AssignmentDeclineDialog";
 import Modal from "../../../components/modal/Modal";
 import "../../client/client-dashboard/clientDashboard.css";
@@ -147,6 +148,7 @@ const MyAssignments = () => {
                         Pay basis: {a.payCalculationType}
                       </span>
                     )}
+                    {isOffer && <CareBriefCard brief={a.careBrief} compact />}
                     {isOffer && (
                       <div className="asn-offer-actions" onClick={(e) => e.stopPropagation()}>
                         <button

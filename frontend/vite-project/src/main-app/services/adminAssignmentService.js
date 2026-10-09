@@ -69,6 +69,8 @@ const AdminAssignmentService = {
         CaregiverId: payload.caregiverId,
         MatchScore: payload.matchScore,
         AssignedBy: 'staff',
+        // Optional staff-written brief shown to the caregiver before they accept (no phone/street address).
+        CareBrief: payload.careBrief || null,
       });
       const body = response.data || {};
       return { success: true, data: body.data };

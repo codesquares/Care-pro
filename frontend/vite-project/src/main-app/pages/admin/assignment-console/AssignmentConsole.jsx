@@ -58,12 +58,17 @@ const AssignmentConsole = () => {
   const [candidatesError, setCandidatesError] = useState(null);
   const [assigningId, setAssigningId] = useState(null);
   const [assignBlockers, setAssignBlockers] = useState(null); // { caregiverId, reasons }
+  // Care brief shown to the caregiver BEFORE they accept. Staff-written; never put a phone number or street address here.
+  const EMPTY_BRIEF = { careNeedsSummary: '', schedule: '', startDate: '', duration: '', area: '' };
+  const [careBrief, setCareBrief] = useState(EMPTY_BRIEF);
+  const setBriefField = (k, v) => setCareBrief((b) => ({ ...b, [k]: v }));
 
   const selectRequest = async (req) => {
     setSelectedRequest(req);
     setCandidates([]);
     setCandidatesError(null);
     setAssignBlockers(null);
+    setCareBrief(EMPTY_BRIEF);
     setLoadingCandidates(true);
     const result = await AdminAssignmentService.getCandidates(req.id);
     if (result.success) {
@@ -82,6 +87,13 @@ const AssignmentConsole = () => {
       packageRequestId: selectedRequest.id,
       caregiverId: candidate.caregiverId,
       matchScore: candidate.matchScore,
+      careBrief: {
+        careNeedsSummary: careBrief.careNeedsSummary.trim() || null,
+        schedule: careBrief.schedule.trim() || null,
+        startDate: careBrief.startDate ? new Date(careBrief.startDate).toISOString() : null,
+        duration: careBrief.duration.trim() || null,
+        area: careBrief.area.trim() || null,
+      },
     });
     if (result.success) {
       showToast('success', `${candidate.caregiverName} assigned — awaiting their acceptance.`);
@@ -309,6 +321,28 @@ const AssignmentConsole = () => {
                     <div><p>This request is "{selectedRequest.status}" — it can't be assigned unless it's back to "pending".</p></div>
                   </div>
                 )}
+
+                <fieldset className="asc-brief" data-testid="care-brief-form">
+                  <legend>Care brief (shown to the caregiver before they accept)</legend>
+                  <p className="asc-brief-warning">
+                    Do <strong>not</strong> include the client's phone number, street address or surname — those are released after acceptance.
+                  </p>
+                  <label>Care needs summary
+                    <textarea rows={3} maxLength={2000} value={careBrief.careNeedsSummary} onChange={(e) => setBriefField('careNeedsSummary', e.target.value)} />
+                  </label>
+                  <label>Schedule / hours
+                    <input type="text" maxLength={300} placeholder="e.g. Mon–Fri, 8am–4pm" value={careBrief.schedule} onChange={(e) => setBriefField('schedule', e.target.value)} />
+                  </label>
+                  <label>Start date
+                    <input type="date" value={careBrief.startDate} onChange={(e) => setBriefField('startDate', e.target.value)} />
+                  </label>
+                  <label>Duration
+                    <input type="text" maxLength={100} placeholder="e.g. 4 weeks" value={careBrief.duration} onChange={(e) => setBriefField('duration', e.target.value)} />
+                  </label>
+                  <label>Area (city / neighborhood only)
+                    <input type="text" maxLength={120} placeholder="e.g. Lekki, Lagos" value={careBrief.area} onChange={(e) => setBriefField('area', e.target.value)} />
+                  </label>
+                </fieldset>
 
                 {candidatesError && (
                   <div className="alert alert-error">
