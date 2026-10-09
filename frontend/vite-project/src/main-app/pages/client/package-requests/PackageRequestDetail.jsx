@@ -1,4 +1,5 @@
 import { useState, useEffect, useCallback } from "react";
+import Modal from "../../../components/modal/Modal";
 import { useParams, useNavigate } from "react-router-dom";
 import { toast } from "react-toastify";
 import ClientPackageRequestService from "../../../services/clientPackageRequestService";
@@ -100,8 +101,30 @@ const PackageRequestDetail = () => {
     if (request?.status === "confirmed") {
       loadContract();
       loadVisits();
+    } else if (request?.status === "cancelled") {
+      loadContract(); // so the cancellation time can be shown
     }
   }, [request?.status, loadContract, loadVisits]);
+
+  // ── Cancellation window ──
+  const [cancelConfirmOpen, setCancelConfirmOpen] = useState(false);
+  const [cancelling, setCancelling] = useState(false);
+  const [cancelError, setCancelError] = useState(null);
+
+  const handleCancelOrder = async () => {
+    setCancelling(true);
+    setCancelError(null);
+    const result = await ClientPackageRequestService.cancelRequest(id);
+    setCancelling(false);
+    if (result.success) {
+      setCancelConfirmOpen(false);
+      setContract(result.data);
+      await loadRequest();
+    } else {
+      setCancelError(result.error);
+      await loadContract(); // window may have just closed — refresh what we show
+    }
+  };
 
   const handleDownloadPdf = async () => {
     setPdfDownloading(true);
@@ -243,6 +266,11 @@ const PackageRequestDetail = () => {
           <div className="pr-status-panel">
             <h2>{statusInfo.title}</h2>
             <p>{statusInfo.body}</p>
+            {request.status === "cancelled" && contract?.cancelledAt && (
+              <p data-testid="cancelled-at">
+                You cancelled this order on {new Date(contract.cancelledAt).toLocaleString()}. Our team will review any refund and contact you.
+              </p>
+            )}
           </div>
         )}
 
@@ -320,6 +348,29 @@ const PackageRequestDetail = () => {
                       </div>
                     )}
                   </div>
+
+                  {contract.cancellationAcknowledgement && (
+                    <div className="pr-cancel-panel" data-testid="cancel-window">
+                      <p className="pr-cancel-ack">{contract.cancellationAcknowledgement}</p>
+                      {contract.cancellationWindowOpen ? (
+                        <>
+                          <p className="pr-cancel-ends">
+                            Cancellation window closes {new Date(contract.cancellationWindowEndsAt).toLocaleString()}.
+                          </p>
+                          <button type="button" className="pr-cancel-btn" onClick={() => setCancelConfirmOpen(true)} disabled={cancelling}>
+                            Cancel order
+                          </button>
+                        </>
+                      ) : (
+                        <p className="pr-cancel-ends" data-testid="window-closed">
+                          {contract.acceptedByNonCancellationAt
+                            ? `The cancellation window closed on ${new Date(contract.cancellationWindowEndsAt).toLocaleString()}. You are treated as having agreed to the terms of this agreement.`
+                            : "The cancellation window has closed."}
+                        </p>
+                      )}
+                      {cancelError && <p className="error-message">{cancelError}</p>}
+                    </div>
+                  )}
 
                   <div className="pr-location-panel">
                     {contract.serviceLocationSetByClient ? (
@@ -503,6 +554,18 @@ const PackageRequestDetail = () => {
           </>
         )}
       </div>
+
+      <Modal
+        isOpen={cancelConfirmOpen}
+        onClose={() => setCancelConfirmOpen(false)}
+        onProceed={handleCancelOrder}
+        title="Cancel this order?"
+        description="Your caregiver will be told the assignment has ended. Cancelling does not refund you automatically — our team will review it and contact you."
+        buttonText={cancelling ? "Cancelling…" : "Yes, cancel order"}
+        buttonBgColor="#b91c1c"
+        secondaryButtonText="Keep order"
+        onSecondaryAction={() => setCancelConfirmOpen(false)}
+      />
     </div>
   );
 };

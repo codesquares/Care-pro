@@ -485,6 +485,7 @@ const KNOWN_CANONICAL = new Set([
   'PackageAssignmentDeclined', 'PackageAssignmentCancelled',
   'PackageContractGenerated',
   'PackageRequestReceived', 'PackagePaymentRequestFailed', 'PackageContractDeliveryFailed',
+  'PackageRequestCancelledByClient',
   // Payroll (Phase 9.7)
   'PayrollApproved', 'PayrollPaid',
 ]);
@@ -807,7 +808,8 @@ export const getNotificationRoute = (notification, userRole) => {
     // undelivered-contract failure — all land on the Assignment Console where staff act.
     case 'PackageRequestReceived':
     case 'PackagePaymentRequestFailed':
-    case 'PackageContractDeliveryFailed': {
+    case 'PackageContractDeliveryFailed':
+    case 'PackageRequestCancelledByClient': {
       if (isAdmin) return `/app/admin/assignments`;
       return null;
     }
@@ -1101,6 +1103,7 @@ export const getNotificationActionLabel = (rawType) => {
     case 'PackageRequestReceived':
     case 'PackagePaymentRequestFailed':
     case 'PackageContractDeliveryFailed':
+    case 'PackageRequestCancelledByClient':
       return 'Open Assignments';
     case 'NewMessage':
       return 'Open Conversation';

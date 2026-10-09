@@ -500,3 +500,10 @@
   opacity: 0.6;
   cursor: default;
 }
+
+/* Cancellation window */
+.pr-cancel-panel { margin: 1rem 0; padding: 1rem; background: #fffbeb; border: 1px solid #fcd34d; border-radius: 10px; }
+.pr-cancel-ack { margin: 0 0 0.5rem; font-weight: 600; }
+.pr-cancel-ends { margin: 0 0 0.75rem; font-size: 0.85rem; color: #6b7280; }
+.pr-cancel-btn { background: #b91c1c; color: #fff; border: none; border-radius: 6px; padding: 0.5rem 1rem; font-weight: 600; cursor: pointer; }
+.pr-cancel-btn:disabled { opacity: 0.6; cursor: not-allowed; }

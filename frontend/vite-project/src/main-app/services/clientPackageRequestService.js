@@ -68,6 +68,21 @@ const ClientPackageRequestService = {
   },
 
   /**
+   * Endpoint: POST /api/client/package-requests/{id}/cancel
+   * Cancels the order inside the contract's cancellation window (default 48h). 409 once the window has ended.
+   * @param {string} id
+   * @returns {Promise<{success: boolean, data?: Object, error?: string, status?: number}>}
+   */
+  async cancelRequest(id) {
+    try {
+      const response = await api.post(`${BASE}/${id}/cancel`);
+      return { success: true, data: response.data?.data };
+    } catch (error) {
+      return { success: false, error: extractError(error, 'Could not cancel this order'), status: error.response?.status };
+    }
+  },
+
+  /**
    * Endpoint: GET /api/client/package-requests/{id}/visits
    * The client's own view of visits (task sheets) submitted under this request.
    * @param {string} id
