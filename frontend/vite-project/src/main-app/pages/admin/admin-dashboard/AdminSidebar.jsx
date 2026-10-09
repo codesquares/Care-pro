@@ -34,6 +34,7 @@ const ALL_NAV_GROUPS = [
       { to: '/app/admin/assignments',         icon: 'fa-user-check',     label: 'Assignments',         policy: 'operations' },
       { to: '/app/admin/payment-links',        icon: 'fa-link',           label: 'Payment Links',       policy: 'operations' },
       { to: '/app/admin/pay-rates',           icon: 'fa-money-check-alt',label: 'Pay Rates',           policy: 'operations' },
+      { to: '/app/admin/package-visits', icon: 'fa-map-marker-alt', label: 'Package Visits', policy: 'operations' },
       { to: '/app/admin/payroll',             icon: 'fa-file-invoice-dollar', label: 'Payroll',        policy: 'operations' },
       { to: '/app/admin/guarantors',          icon: 'fa-user-shield',    label: 'Guarantors',          policy: 'operations' },
       { to: '/app/admin/withdrawals',         icon: 'fa-wallet',         label: 'Withdrawals',         policy: 'finance' },

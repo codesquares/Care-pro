@@ -17,6 +17,7 @@ import PackagesManagement from './packages-management/PackagesManagement';
 import AssignmentConsole from './assignment-console/AssignmentConsole';
 import PayRatesManagement from './pay-rates/PayRatesManagement';
 import PayrollManagement from './payroll/PayrollManagement';
+import PackageVisits from './package-visits/PackageVisits';
 import GuarantorOverride from './guarantor-override/GuarantorOverride';
 import PaymentLinkGenerator from './payment-links/PaymentLinkGenerator';
 // Retired: Care Matching (admin gig -> client recommendation emails). Superseded by the Assignment Console;
@@ -135,6 +136,14 @@ function AdminRoutes() {
                         element={
                             canUseOperationsTools
                                 ? <AssignmentConsole />
+                                : <NotFoundPage />
+                        }
+                    />
+                    <Route
+                        path='/package-visits'
+                        element={
+                            canUseOperationsTools
+                                ? <PackageVisits />
                                 : <NotFoundPage />
                         }
                     />

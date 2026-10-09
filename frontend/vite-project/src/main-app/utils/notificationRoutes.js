@@ -485,7 +485,7 @@ const KNOWN_CANONICAL = new Set([
   'PackageAssignmentDeclined', 'PackageAssignmentCancelled',
   'PackageContractGenerated',
   'PackageRequestReceived', 'PackagePaymentRequestFailed', 'PackageContractDeliveryFailed',
-  'PackageRequestCancelledByClient',
+  'PackageRequestCancelledByClient', 'PackageVisitFlagged',
   // Payroll (Phase 9.7)
   'PayrollApproved', 'PayrollPaid',
 ]);
@@ -814,6 +814,12 @@ export const getNotificationRoute = (notification, userRole) => {
       return null;
     }
 
+    // A package-visit check-in was flagged (HARD reason) — deep-link to that visit in the admin review screen.
+    case 'PackageVisitFlagged': {
+      if (isAdmin) return relatedEntityId ? `/app/admin/package-visits?checkin=${relatedEntityId}` : `/app/admin/package-visits`;
+      return null;
+    }
+
     // ── Visit / Task Sheet notifications ─────────────────
     // A package-assignment visit has no ClientOrder, so orderId is empty for these —
     // the backend sends the AssignmentId/PackageRequestId as relatedEntityId instead
@@ -1105,6 +1111,8 @@ export const getNotificationActionLabel = (rawType) => {
     case 'PackageContractDeliveryFailed':
     case 'PackageRequestCancelledByClient':
       return 'Open Assignments';
+    case 'PackageVisitFlagged':
+      return 'Review Visit';
     case 'NewMessage':
       return 'Open Conversation';
     case 'Payment':

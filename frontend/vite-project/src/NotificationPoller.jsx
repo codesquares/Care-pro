@@ -37,6 +37,7 @@ const INFO_TYPES = new Set([
   'RefundRequestAdminAlert', 'ChatViolationFlagged',
   'TaskProposalAccepted', 'TaskProposalRejected', 'TaskProposalSubmitted',
   'ContractSent', 'ContractRevisionRequested', 'ContractPendingClientApproval',
+  'PackageVisitFlagged',
   'DraftGenerated', 'GigPaused', 'GigDeleted',
 ]);
 
