@@ -578,3 +578,5 @@
 .asc-brief label { display: grid; gap: 2px; font-size: 0.85rem; color: #374151; }
 .asc-brief input, .asc-brief textarea { padding: 0.45rem 0.6rem; border: 1px solid #d1d5db; border-radius: 6px; font: inherit; }
 .asc-brief-warning { margin: 0; font-size: 0.8rem; color: #9a3412; }
+
+.asc-request-contract { font-size: 0.8rem; color: #374151; margin-top: 0.25rem; }

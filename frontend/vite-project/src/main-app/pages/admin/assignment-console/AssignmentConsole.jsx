@@ -283,6 +283,22 @@ const AssignmentConsole = () => {
                       {r.packageCategory} — {r.packageTierLabel}
                       <small>{r.requiredCaregiverType}{r.requiredSpecialty ? ` · ${r.requiredSpecialty}` : ''}</small>
                     </div>
+                    {r.contract && (
+                      <div className="asc-request-contract" data-testid="admin-contract-state">
+                        <strong>Contract:</strong>{' '}
+                        {r.contract.cancelledAt
+                          ? `Cancelled by client ${new Date(r.contract.cancelledAt).toLocaleString()}`
+                          : r.contract.acceptedByNonCancellationAt
+                            ? `Window closed ${new Date(r.contract.acceptedByNonCancellationAt).toLocaleString()} — agreed by non-cancellation`
+                            : r.contract.cancellationWindowEndsAt
+                              ? `Cancellation window open until ${new Date(r.contract.cancellationWindowEndsAt).toLocaleString()}`
+                              : 'No cancellation window'}
+                        {' · '}
+                        {r.contract.clientAgreedAt
+                          ? `Client agreed ${new Date(r.contract.clientAgreedAt).toLocaleString()}`
+                          : 'Client has not ticked "I agree"'}
+                      </div>
+                    )}
                     <div className="asc-request-meta">
                       {r.location && <span><i className="fas fa-map-marker-alt"></i> {r.location}</span>}
                       {r.budget != null && <span>{fmtNaira(r.budget)}</span>}

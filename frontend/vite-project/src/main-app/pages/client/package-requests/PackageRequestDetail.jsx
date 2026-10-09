@@ -111,6 +111,19 @@ const PackageRequestDetail = () => {
   const [cancelling, setCancelling] = useState(false);
   const [cancelError, setCancelError] = useState(null);
 
+  const [agreeChecked, setAgreeChecked] = useState(false);
+  const [agreeing, setAgreeing] = useState(false);
+  const [agreeError, setAgreeError] = useState(null);
+
+  const handleAgree = async () => {
+    setAgreeing(true);
+    setAgreeError(null);
+    const result = await ClientPackageRequestService.agreeToContract(id);
+    setAgreeing(false);
+    if (result.success) setContract(result.data);
+    else setAgreeError(result.error);
+  };
+
   const handleCancelOrder = async () => {
     setCancelling(true);
     setCancelError(null);
@@ -268,7 +281,7 @@ const PackageRequestDetail = () => {
             <p>{statusInfo.body}</p>
             {request.status === "cancelled" && contract?.cancelledAt && (
               <p data-testid="cancelled-at">
-                You cancelled this order on {new Date(contract.cancelledAt).toLocaleString()}. Our team will review any refund and contact you.
+                You cancelled this order on {new Date(contract.cancelledAt).toLocaleString()}. Our team will contact you about any refund due.
               </p>
             )}
           </div>
@@ -357,6 +370,9 @@ const PackageRequestDetail = () => {
                           <p className="pr-cancel-ends">
                             Cancellation window closes {new Date(contract.cancellationWindowEndsAt).toLocaleString()}.
                           </p>
+                          <p className="pr-cancel-ends" data-testid="care-begin-client">
+                            Care will begin after the window closes, so your caregiver won't start visits before then.
+                          </p>
                           <button type="button" className="pr-cancel-btn" onClick={() => setCancelConfirmOpen(true)} disabled={cancelling}>
                             Cancel order
                           </button>
@@ -369,6 +385,29 @@ const PackageRequestDetail = () => {
                         </p>
                       )}
                       {cancelError && <p className="error-message">{cancelError}</p>}
+                    </div>
+                  )}
+
+                  {contract.cancellationAcknowledgement && request.status !== "cancelled" && (
+                    <div className="pr-agree-panel" data-testid="agree-panel">
+                      {contract.clientAgreedAt ? (
+                        <p className="pr-agree-done" data-testid="agreed-state">
+                          ✓ Agreed on {new Date(contract.clientAgreedAt).toLocaleString()}
+                        </p>
+                      ) : (
+                        <>
+                          <p className="pr-agree-state" data-testid="agreed-state">Not yet confirmed</p>
+                          <label className="pr-agree-label">
+                            <input type="checkbox" checked={agreeChecked} onChange={(e) => setAgreeChecked(e.target.checked)} />
+                            {" "}I have read and agree to the terms of this agreement.
+                          </label>
+                          <button type="button" className="pr-agree-btn" onClick={handleAgree} disabled={!agreeChecked || agreeing}>
+                            {agreeing ? "Saving…" : "Confirm"}
+                          </button>
+                          <p className="pr-cancel-ends">Optional — your care is not affected if you don't confirm.</p>
+                          {agreeError && <p className="error-message">{agreeError}</p>}
+                        </>
+                      )}
                     </div>
                   )}
 
@@ -560,7 +599,7 @@ const PackageRequestDetail = () => {
         onClose={() => setCancelConfirmOpen(false)}
         onProceed={handleCancelOrder}
         title="Cancel this order?"
-        description="Your caregiver will be told the assignment has ended. Cancelling does not refund you automatically — our team will review it and contact you."
+        description="Your order will be cancelled. Our team will contact you about any refund due."
         buttonText={cancelling ? "Cancelling…" : "Yes, cancel order"}
         buttonBgColor="#b91c1c"
         secondaryButtonText="Keep order"

@@ -301,6 +301,11 @@ const AssignmentDetail = () => {
 
             <div className="asn-visits-card">
               <h2>Visits</h2>
+              {contract?.cancellationWindowOpen && (
+                <p className="asn-brief-note" data-testid="care-begin-banner">
+                  Care can begin after {new Date(contract.cancellationWindowEndsAt).toLocaleString()}. The client has a cancellation period until then.
+                </p>
+              )}
               <p className="asn-visits-note">
                 There's no pre-generated future schedule for package
                 assignments — start each visit yourself when you arrive.

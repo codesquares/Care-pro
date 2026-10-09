@@ -68,6 +68,19 @@ const ClientPackageRequestService = {
   },
 
   /**
+   * Endpoint: POST /api/client/package-requests/{id}/agree
+   * The client's optional explicit "I agree" tick (idempotent; identity from the JWT).
+   */
+  async agreeToContract(id) {
+    try {
+      const response = await api.post(`${BASE}/${id}/agree`);
+      return { success: true, data: response.data?.data };
+    } catch (error) {
+      return { success: false, error: extractError(error, 'Could not record your confirmation'), status: error.response?.status };
+    }
+  },
+
+  /**
    * Endpoint: POST /api/client/package-requests/{id}/cancel
    * Cancels the order inside the contract's cancellation window (default 48h). 409 once the window has ended.
    * @param {string} id
