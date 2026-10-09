@@ -140,6 +140,7 @@ const PayrollManagement = () => {
   const [overrideReason, setOverrideReason] = useState('');
   const [approving, setApproving] = useState(false);
   const [approveError, setApproveError] = useState(null);
+  const [ackFlags, setAckFlags] = useState(false);
 
   const openApprove = (payroll) => {
     setApproveTarget(payroll);
@@ -147,6 +148,7 @@ const PayrollManagement = () => {
     setFinalAmount(String(payroll.calculatedAmount));
     setOverrideReason('');
     setApproveError(null);
+    setAckFlags(false);
   };
 
   const closeApprove = () => {
@@ -167,11 +169,17 @@ const PayrollManagement = () => {
         return;
       }
     }
+    const flagged = approveTarget.unclearedHardFlagCount || 0;
+    if (flagged > 0 && !ackFlags) {
+      setApproveError(`Clear the ${flagged} flagged visit(s) first, or tick the confirmation to approve with them uncleared.`);
+      return;
+    }
     setApproving(true);
     setApproveError(null);
     const overrides = overrideOn
       ? { finalAmount: Number(finalAmount), overrideReason: overrideReason.trim() || undefined }
       : {};
+    if (flagged > 0) overrides.acknowledgeUnclearedFlaggedVisits = flagged;
     const result = await AdminPayrollService.approvePayroll(approveTarget.id, overrides);
     if (result.success) {
       showToast('success', result.message || 'Payroll approved — caregiver wallet credited, notification sent.');
@@ -297,6 +305,13 @@ const PayrollManagement = () => {
                   </td>
                   <td>
                     <span className={`pkg-badge pkg-badge--status-${p.status.toLowerCase()}`}>{p.status}</span>
+                    {p.status === 'Draft' && p.unclearedHardFlagCount > 0 && (
+                      <a className="pr-flag-warning" data-testid="flag-warning" href={`/app/admin/package-visits?caregiverId=${p.caregiverId}&flagged=hard&unclearedOnly=1`}
+                         title="Open the flagged visits">⚠ {p.unclearedHardFlagCount} uncleared flagged visit{p.unclearedHardFlagCount === 1 ? '' : 's'}</a>
+                    )}
+                    {p.status === 'Approved' && p.approvedWithUnclearedFlags > 0 && (
+                      <span className="pr-flag-warning pr-flag-warning--ack" data-testid="approved-over-flags">approved over {p.approvedWithUnclearedFlags} flagged</span>
+                    )}
                   </td>
                   <td className="pkg-actions">
                     {p.status === 'Draft' && (
@@ -418,6 +433,23 @@ const PayrollManagement = () => {
                 {approveTarget.payCalculationType === 'Hourly' &&
                   ` (${approveTarget.hoursWorked?.toFixed(2)}h × ${fmtNaira(approveTarget.rateApplied)})`}
               </p>
+
+              {approveTarget.unclearedHardFlagCount > 0 && (
+                <div className="alert alert-error" data-testid="approve-flag-warning" style={{ marginBottom: '1rem' }}>
+                  <i className="fas fa-exclamation-triangle"></i>
+                  <div>
+                    <p>
+                      {approveTarget.unclearedHardFlagCount} visit{approveTarget.unclearedHardFlagCount === 1 ? ' has' : 's have'} an uncleared GPS flag this month.{' '}
+                      <a href={`/app/admin/package-visits?caregiverId=${approveTarget.caregiverId}&flagged=hard&unclearedOnly=1`} target="_blank" rel="noreferrer">Review them</a>.
+                      Flagged visits are still paid; clearing them first removes this warning.
+                    </p>
+                    <label>
+                      <input type="checkbox" data-testid="ack-flags" checked={ackFlags} onChange={(e) => setAckFlags(e.target.checked)} />{' '}
+                      Approve with {approveTarget.unclearedHardFlagCount} uncleared flagged visit{approveTarget.unclearedHardFlagCount === 1 ? '' : 's'}
+                    </label>
+                  </div>
+                </div>
+              )}
 
               <label className="pr-override-toggle">
                 <input type="checkbox" checked={overrideOn} onChange={(e) => setOverrideOn(e.target.checked)} />

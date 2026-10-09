@@ -16,7 +16,11 @@ const HARD = new Set(['distance_far', 'geocoded_far']);
 const PackageVisits = () => {
   const [searchParams] = useSearchParams();
   const focusId = searchParams.get('checkin');
-  const [filters, setFilters] = useState({ flagged: 'any', unclearedOnly: false, from: '', to: '', caregiverId: '' });
+  const [filters, setFilters] = useState({
+    flagged: searchParams.get('flagged') || 'any',
+    unclearedOnly: searchParams.get('unclearedOnly') === '1' || searchParams.get('unclearedOnly') === 'true',
+    from: '', to: '', caregiverId: searchParams.get('caregiverId') || '',
+  });
   const [rows, setRows] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);

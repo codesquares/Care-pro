@@ -433,3 +433,5 @@
   .form-actions { flex-direction: column; }
   .payroll-btn-primary, .payroll-btn-secondary, .payroll-btn-danger { width: 100%; justify-content: center; }
 }
+.pr-flag-warning { display: inline-block; margin-left: 0.5rem; padding: 1px 8px; border-radius: 999px; background: #fde68a; color: #78350f; font-size: 0.75rem; text-decoration: none; }
+.pr-flag-warning--ack { background: #e5e7eb; color: #374151; }
