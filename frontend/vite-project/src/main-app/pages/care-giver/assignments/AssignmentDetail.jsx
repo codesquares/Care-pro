@@ -2,6 +2,7 @@ import { useState, useEffect, useCallback } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import CaregiverAssignmentService from "../../../services/caregiverAssignmentService";
 import CareBriefCard from "./CareBriefCard";
+import { formatLagos } from "../../../utils/lagosTime";
 import AssignmentDeclineDialog from "./AssignmentDeclineDialog";
 import Modal from "../../../components/modal/Modal";
 import TaskSheetTabs from "../../../components/task-sheets/TaskSheetTabs";
@@ -303,7 +304,7 @@ const AssignmentDetail = () => {
               <h2>Visits</h2>
               {contract?.cancellationWindowOpen && (
                 <p className="asn-brief-note" data-testid="care-begin-banner">
-                  Care can begin after {new Date(contract.cancellationWindowEndsAt).toLocaleString()}. The client has a cancellation period until then.
+                  Care can begin after {formatLagos(contract.cancellationWindowEndsAt)}. The client has a cancellation period until then.
                 </p>
               )}
               <p className="asn-visits-note">

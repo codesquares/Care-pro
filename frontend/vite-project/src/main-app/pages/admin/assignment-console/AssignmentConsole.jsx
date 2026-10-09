@@ -1,4 +1,5 @@
 import { useState, useEffect, useCallback, useMemo } from 'react';
+import { formatLagos } from '../../../utils/lagosTime';
 import AdminAssignmentService from '../../../services/adminAssignmentService';
 import adminService from '../../../services/adminService';
 import './assignment-console.css';
@@ -287,15 +288,15 @@ const AssignmentConsole = () => {
                       <div className="asc-request-contract" data-testid="admin-contract-state">
                         <strong>Contract:</strong>{' '}
                         {r.contract.cancelledAt
-                          ? `Cancelled by client ${new Date(r.contract.cancelledAt).toLocaleString()}`
+                          ? `Cancelled by client ${formatLagos(r.contract.cancelledAt)}`
                           : r.contract.acceptedByNonCancellationAt
-                            ? `Window closed ${new Date(r.contract.acceptedByNonCancellationAt).toLocaleString()} — agreed by non-cancellation`
+                            ? `Window closed ${formatLagos(r.contract.acceptedByNonCancellationAt)} — agreed by non-cancellation`
                             : r.contract.cancellationWindowEndsAt
-                              ? `Cancellation window open until ${new Date(r.contract.cancellationWindowEndsAt).toLocaleString()}`
+                              ? `Cancellation window open until ${formatLagos(r.contract.cancellationWindowEndsAt)}`
                               : 'No cancellation window'}
                         {' · '}
                         {r.contract.clientAgreedAt
-                          ? `Client agreed ${new Date(r.contract.clientAgreedAt).toLocaleString()}`
+                          ? `Client agreed ${formatLagos(r.contract.clientAgreedAt)}`
                           : 'Client has not ticked "I agree"'}
                       </div>
                     )}

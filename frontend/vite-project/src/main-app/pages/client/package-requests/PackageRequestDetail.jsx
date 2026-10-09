@@ -1,5 +1,6 @@
 import { useState, useEffect, useCallback } from "react";
 import Modal from "../../../components/modal/Modal";
+import { formatLagos } from "../../../utils/lagosTime";
 import { useParams, useNavigate } from "react-router-dom";
 import { toast } from "react-toastify";
 import ClientPackageRequestService from "../../../services/clientPackageRequestService";
@@ -281,7 +282,7 @@ const PackageRequestDetail = () => {
             <p>{statusInfo.body}</p>
             {request.status === "cancelled" && contract?.cancelledAt && (
               <p data-testid="cancelled-at">
-                You cancelled this order on {new Date(contract.cancelledAt).toLocaleString()}. Our team will contact you about any refund due.
+                You cancelled this order on {formatLagos(contract.cancelledAt)}. Our team will contact you about any refund due.
               </p>
             )}
           </div>
@@ -365,11 +366,10 @@ const PackageRequestDetail = () => {
                   {contract.cancellationAcknowledgement && (
                     <div className="pr-cancel-panel" data-testid="cancel-window">
                       <p className="pr-cancel-ack">{contract.cancellationAcknowledgement}</p>
+                      {contract.cancellationClosesLine && <p className="pr-cancel-closes" data-testid="closes-line">{contract.cancellationClosesLine}</p>}
                       {contract.cancellationWindowOpen ? (
                         <>
-                          <p className="pr-cancel-ends">
-                            Cancellation window closes {new Date(contract.cancellationWindowEndsAt).toLocaleString()}.
-                          </p>
+{/* the draft 'closes on' line above already states when the window ends */}
                           <p className="pr-cancel-ends" data-testid="care-begin-client">
                             Care will begin after the window closes, so your caregiver won't start visits before then.
                           </p>
@@ -380,7 +380,7 @@ const PackageRequestDetail = () => {
                       ) : (
                         <p className="pr-cancel-ends" data-testid="window-closed">
                           {contract.acceptedByNonCancellationAt
-                            ? `The cancellation window closed on ${new Date(contract.cancellationWindowEndsAt).toLocaleString()}. You are treated as having agreed to the terms of this agreement.`
+                            ? `The cancellation window closed on ${formatLagos(contract.cancellationWindowEndsAt)}. You are treated as having agreed to the terms of this agreement.`
                             : "The cancellation window has closed."}
                         </p>
                       )}
@@ -392,7 +392,7 @@ const PackageRequestDetail = () => {
                     <div className="pr-agree-panel" data-testid="agree-panel">
                       {contract.clientAgreedAt ? (
                         <p className="pr-agree-done" data-testid="agreed-state">
-                          ✓ Agreed on {new Date(contract.clientAgreedAt).toLocaleString()}
+                          ✓ Agreed on {formatLagos(contract.clientAgreedAt)}
                         </p>
                       ) : (
                         <>
