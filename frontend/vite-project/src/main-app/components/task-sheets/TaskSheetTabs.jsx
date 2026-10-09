@@ -1,6 +1,7 @@
 import { useState, useEffect, useCallback, useRef } from "react";
 import { useSelector } from "react-redux";
 import { toast } from "react-toastify";
+import { formatLagos } from "../../utils/lagosTime";
 import TaskSheetService from "../../services/taskSheetService";
 import CaregiverAssignmentService from "../../services/caregiverAssignmentService";
 import TaskSheetPage from "./TaskSheetPage";
@@ -31,7 +32,7 @@ const TaskSheetTabs = ({ order, assignmentId = null, contract = null }) => {
   const [windowEndsAt, setWindowEndsAt] = useState(null);
   const windowOpen = isAssignmentMode && (!!windowEndsAt || contract?.cancellationWindowOpen === true);
   const windowEndLabel = (windowEndsAt || contract?.cancellationWindowEndsAt)
-    ? new Date(windowEndsAt || contract.cancellationWindowEndsAt).toLocaleString()
+    ? formatLagos(windowEndsAt || contract.cancellationWindowEndsAt)
     : null;
   const [sheets, setSheets] = useState([]);
   const [maxSheets, setMaxSheets] = useState(isAssignmentMode ? Infinity : 1);
@@ -381,6 +382,7 @@ const TaskSheetTabs = ({ order, assignmentId = null, contract = null }) => {
           serviceLocationSetByClient={contract?.serviceLocationSetByClient}
           serviceLocationSetAt={contract?.serviceLocationSetAt}
           serviceAddress={contract?.serviceAddress}
+          careBeginsAfter={isAssignmentMode && contract?.cancellationWindowOpen ? contract.cancellationWindowEndsAt : null}
           onSheetUpdated={handleSheetUpdated}
           onActivateSheet={handleActivateSheet}
           activating={activating}

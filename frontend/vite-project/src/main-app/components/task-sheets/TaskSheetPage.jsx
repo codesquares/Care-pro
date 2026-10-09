@@ -38,6 +38,7 @@ const TaskSheetPage = ({
   serviceLocationSetByClient,
   serviceLocationSetAt,
   serviceAddress,
+  careBeginsAfter = null,
   onSheetUpdated,
   onActivateSheet,
   activating,
@@ -291,6 +292,7 @@ const TaskSheetPage = ({
           serviceLocationSetByClient={serviceLocationSetByClient}
           serviceLocationSetAt={serviceLocationSetAt}
           serviceAddress={serviceAddress}
+          careBeginsAfter={careBeginsAfter}
           onCheckedIn={handleCheckedIn}
           disabled={isSubmitted || isCancelled || orderCompleted}
         />
