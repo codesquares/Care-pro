@@ -1318,7 +1318,7 @@ const AssessmentPage = () => {
                     {!isVerified && (
                       <button 
                         className="ma-proceed-btn outline"
-                        onClick={() => navigate('/app/caregiver/verification')}
+                        onClick={() => navigate('/app/caregiver/vetting')}
                       >
                         Get Verified
                         <i className="fas fa-id-card" style={{ marginLeft: '6px' }}></i>

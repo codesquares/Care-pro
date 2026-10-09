@@ -4,6 +4,7 @@ import caregiverVettingService, {
   REQUIRED_GUARANTOR_COUNT,
   READINESS_REASON_INFO,
 } from '../../../services/caregiverVettingService';
+import professionalProfileService from '../../../services/professionalProfileService';
 import './vetting.css';
 
 const VettingHub = () => {
@@ -17,16 +18,27 @@ const VettingHub = () => {
   const [socialHandles, setSocialHandles] = useState([]);
   const [readiness, setReadiness] = useState(null);
   const [readinessError, setReadinessError] = useState(null);
+  const [profileCounts, setProfileCounts] = useState(null);
 
   const loadAll = async () => {
     setLoading(true);
-    const [c, g, cov, s, r] = await Promise.all([
+    const [c, g, cov, s, r, edu, cert, work] = await Promise.all([
       caregiverVettingService.getClassification(),
       caregiverVettingService.getGuarantors(),
       caregiverVettingService.getAddressHistoryCoverage(),
       caregiverVettingService.getSocialMediaHandles(),
       caregiverVettingService.getReadiness(),
+      professionalProfileService.getEducation(),
+      professionalProfileService.getCertifications(),
+      professionalProfileService.getWorkExperience(),
     ]);
+    if (edu.success && cert.success && work.success) {
+      setProfileCounts({
+        education: (edu.data || []).length,
+        certifications: (cert.data || []).length,
+        work: (work.data || []).length,
+      });
+    }
     if (c.success) setClassification(c.data);
     if (g.success) setGuarantors(g.data || []);
     if (cov.success) setCoverage(cov.data);
@@ -52,7 +64,99 @@ const VettingHub = () => {
   const cardState = (done, attentionCondition) =>
     done ? 'vet-card--done' : attentionCondition ? 'vet-card--attention' : '';
 
-  const completedCount = [classificationDone, guarantorsDone, addressDone, socialDone].filter(Boolean).length;
+  const identityDone = !!readiness?.isIdentityVerified;
+  const profileTotal = profileCounts ? profileCounts.education + profileCounts.certifications + profileCounts.work : 0;
+  const profileDone = profileTotal > 0;
+
+  const badge = (done, text) => (
+    <span className={`vet-pkg-badge ${done ? 'vet-pkg-badge--active' : 'vet-pkg-badge--inactive'}`}>{text}</span>
+  );
+
+  // One entry per step card. To add a step (e.g. police clearance), append an
+  // entry here — nothing else in the page needs to change. `core` marks the
+  // original four vetting sections used by the fallback "x of 4" summary;
+  // identity verification and the professional profile are NOT lockout criteria.
+  const steps = [
+    {
+      key: 'identity',
+      title: 'Identity Verification',
+      icon: 'fa-fingerprint',
+      path: '/app/caregiver/verification',
+      done: identityDone,
+      status: readiness
+        ? badge(identityDone, identityDone ? 'Verified' : 'Not verified yet')
+        : badge(false, 'Status unavailable'),
+    },
+    {
+      key: 'professional-profile',
+      title: 'Professional Profile',
+      icon: 'fa-user-graduate',
+      path: `${basePath}/professional-profile`,
+      done: profileDone,
+      status: profileCounts
+        ? badge(profileDone, profileDone
+            ? `${profileCounts.education} education · ${profileCounts.certifications} certification${profileCounts.certifications === 1 ? '' : 's'} · ${profileCounts.work} work`
+            : 'Not started')
+        : badge(false, 'Status unavailable'),
+    },
+    {
+      key: 'classification',
+      core: true,
+      title: 'Classification',
+      icon: 'fa-id-badge',
+      path: `${basePath}/classification`,
+      done: classificationDone,
+      status: classificationDone
+        ? <span className="vet-pkg-badge vet-pkg-badge--active">Set: {classification.caregiverType}{classification.specialty ? ` · ${classification.specialty}` : ''}</span>
+        : <span className="vet-pkg-badge vet-pkg-badge--inactive">Not set yet</span>,
+    },
+    {
+      key: 'guarantors',
+      core: true,
+      title: 'Guarantors',
+      icon: 'fa-user-shield',
+      path: `${basePath}/guarantors`,
+      done: guarantorsDone,
+      status: guarantors.length === 0 ? (
+        <span className="vet-pkg-badge vet-pkg-badge--inactive">None added</span>
+      ) : (
+        <>
+          <span className={`vet-pkg-badge ${guarantorsDone ? 'vet-pkg-badge--active' : 'vet-pkg-badge--inactive'}`}>
+            {guarantors.length} of {REQUIRED_GUARANTOR_COUNT} added
+          </span>{' '}
+          <span className="vet-pkg-badge vet-pkg-badge--type">{confirmedGuarantors} confirmed</span>
+        </>
+      ),
+    },
+    {
+      key: 'address-history',
+      core: true,
+      title: 'Address History',
+      icon: 'fa-home',
+      path: `${basePath}/address-history`,
+      done: addressDone,
+      status: coverage ? (
+        <span className={`vet-pkg-badge ${addressDone ? 'vet-pkg-badge--active' : 'vet-pkg-badge--inactive'}`}>
+          {addressDone ? '5-year coverage complete' : `${coverage.recordCount} record${coverage.recordCount === 1 ? '' : 's'} · coverage incomplete`}
+        </span>
+      ) : (
+        <span className="vet-pkg-badge vet-pkg-badge--inactive">Not started</span>
+      ),
+    },
+    {
+      key: 'social-media',
+      core: true,
+      title: 'Social Media',
+      icon: 'fa-share-alt',
+      path: `${basePath}/social-media`,
+      done: socialDone,
+      status: socialDone
+        ? <span className="vet-pkg-badge vet-pkg-badge--active">{socialHandles.length} handle{socialHandles.length === 1 ? '' : 's'} added</span>
+        : <span className="vet-pkg-badge vet-pkg-badge--inactive">None added</span>,
+    },
+  ];
+
+  const completedCount = steps.filter((x) => x.core && x.done).length;
   const reasons = readiness?.ineligibilityReasons || [];
 
   return (
@@ -125,80 +229,21 @@ const VettingHub = () => {
         <div className="vet-pkg-loading"><div className="vet-spinner"></div><p>Loading your vetting status…</p></div>
       ) : (
         <div className="vet-cards">
-          <div
-            className={`vet-card ${cardState(classificationDone)}`}
-            onClick={() => navigate(`${basePath}/classification`)}
-          >
-            <div className="vet-card-top">
-              <div className="vet-card-icon"><i className="fas fa-id-badge"></i></div>
-              <i className="fas fa-chevron-right vet-card-arrow"></i>
+          {steps.map((step) => (
+            <div
+              key={step.key}
+              data-step={step.key}
+              className={`vet-card ${cardState(step.done)}`}
+              onClick={() => navigate(step.path)}
+            >
+              <div className="vet-card-top">
+                <div className="vet-card-icon"><i className={`fas ${step.icon}`}></i></div>
+                <i className="fas fa-chevron-right vet-card-arrow"></i>
+              </div>
+              <h3>{step.title}</h3>
+              <p className="vet-card-status">{step.status}</p>
             </div>
-            <h3>Classification</h3>
-            <p className="vet-card-status">
-              {classificationDone
-                ? <span className="vet-pkg-badge vet-pkg-badge--active">Set: {classification.caregiverType}{classification.specialty ? ` · ${classification.specialty}` : ''}</span>
-                : <span className="vet-pkg-badge vet-pkg-badge--inactive">Not set yet</span>}
-            </p>
-          </div>
-
-          <div
-            className={`vet-card ${cardState(guarantorsDone)}`}
-            onClick={() => navigate(`${basePath}/guarantors`)}
-          >
-            <div className="vet-card-top">
-              <div className="vet-card-icon"><i className="fas fa-user-shield"></i></div>
-              <i className="fas fa-chevron-right vet-card-arrow"></i>
-            </div>
-            <h3>Guarantors</h3>
-            <p className="vet-card-status">
-              {guarantors.length === 0 ? (
-                <span className="vet-pkg-badge vet-pkg-badge--inactive">None added</span>
-              ) : (
-                <>
-                  <span className={`vet-pkg-badge ${guarantorsDone ? 'vet-pkg-badge--active' : 'vet-pkg-badge--inactive'}`}>
-                    {guarantors.length} of {REQUIRED_GUARANTOR_COUNT} added
-                  </span>{' '}
-                  <span className="vet-pkg-badge vet-pkg-badge--type">{confirmedGuarantors} confirmed</span>
-                </>
-              )}
-            </p>
-          </div>
-
-          <div
-            className={`vet-card ${cardState(addressDone)}`}
-            onClick={() => navigate(`${basePath}/address-history`)}
-          >
-            <div className="vet-card-top">
-              <div className="vet-card-icon"><i className="fas fa-home"></i></div>
-              <i className="fas fa-chevron-right vet-card-arrow"></i>
-            </div>
-            <h3>Address History</h3>
-            <p className="vet-card-status">
-              {coverage ? (
-                <span className={`vet-pkg-badge ${addressDone ? 'vet-pkg-badge--active' : 'vet-pkg-badge--inactive'}`}>
-                  {addressDone ? '5-year coverage complete' : `${coverage.recordCount} record${coverage.recordCount === 1 ? '' : 's'} · coverage incomplete`}
-                </span>
-              ) : (
-                <span className="vet-pkg-badge vet-pkg-badge--inactive">Not started</span>
-              )}
-            </p>
-          </div>
-
-          <div
-            className={`vet-card ${cardState(socialDone)}`}
-            onClick={() => navigate(`${basePath}/social-media`)}
-          >
-            <div className="vet-card-top">
-              <div className="vet-card-icon"><i className="fas fa-share-alt"></i></div>
-              <i className="fas fa-chevron-right vet-card-arrow"></i>
-            </div>
-            <h3>Social Media</h3>
-            <p className="vet-card-status">
-              {socialDone
-                ? <span className="vet-pkg-badge vet-pkg-badge--active">{socialHandles.length} handle{socialHandles.length === 1 ? '' : 's'} added</span>
-                : <span className="vet-pkg-badge vet-pkg-badge--inactive">None added</span>}
-            </p>
-          </div>
+          ))}
         </div>
       )}
     </div>

@@ -8,12 +8,15 @@ import StatisticsCard from './StatisticsCard';
 import './CaregiverDashboard.css';
 import setting from '../../../../assets/setting.png';
 import config from '../../../config';
+import AssignmentsSummaryList from '../assignments/AssignmentsSummaryList';
+import useCaregiverAssignments from '../assignments/useCaregiverAssignments';
 import accountDeletionService from '../../../services/accountDeletionService';
 
 const CaregiverDashboard = () => {
   // RETIRED — legacy order list/count, replaced by My Assignments. Preserved for restore.
   // const [orders, setOrders] = useState([]);
   // const [totalOrders, setTotalOrders] = useState(0);
+  const { pending: pendingAssignments, active: activeAssignments, loading: assignmentsLoading, error: assignmentsError, reload: reloadAssignments } = useCaregiverAssignments();
   const [loading] = useState(false);
   const [error, setError] = useState(null);
   const [totalEarnings, setTotalEarnings] = useState(0);
@@ -279,7 +282,11 @@ const CaregiverDashboard = () => {
         <div className="leftbar">
           <ProfileCard />
           {/* totalOrders is no longer tracked here now that legacy orders are retired. */}
-          <StatisticsCard totalOrders={0} totalEarnings={totalEarnings} />
+          <StatisticsCard
+            activeCount={activeAssignments.length}
+            pendingCount={pendingAssignments.length}
+            totalEarnings={totalEarnings}
+          />
           <div 
             className="setting-container" 
             role="button"
@@ -306,6 +313,13 @@ const CaregiverDashboard = () => {
               View All Assignments →
             </button>
           </div>
+          <AssignmentsSummaryList
+            pending={pendingAssignments}
+            active={activeAssignments}
+            loading={assignmentsLoading}
+            error={assignmentsError}
+            onRetry={reloadAssignments}
+          />
           {/* RETIRED — legacy Recent Orders widget, replaced by the button above
               pointing to My Assignments. Preserved for restore.
           <OrderList filter="All Orders" orders={orders.slice(0, 5)} loading={loading} error={error} />

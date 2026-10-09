@@ -4,7 +4,7 @@ import { toast } from "react-toastify";
 import ProfileHeader from "../../pages/care-giver/care-giver-profile/ProfileHeader";
 import config from "../../config";
 import caregiverBankAccountService from "../../services/caregiverBankAccountService";
-import ProfessionalProfileForms from "./ProfessionalProfileForms";
+// MOVED to Vetting Hub: import ProfessionalProfileForms from "./ProfessionalProfileForms";
 import accountDeletionService from "../../services/accountDeletionService";
 import { useAuth } from "../../context/AuthContext";
 import { subscribeForPush, unsubscribeFromPush, getSubscriptionState } from "../../services/pushService";
@@ -473,10 +473,13 @@ const CaregiverSettings = () => {
             )}
           </div>
 
+          {/* MOVED — "Complete your Professional Profile" now lives in the Vetting Hub
+              (/app/caregiver/vetting/professional-profile). Preserved for restore.
           <div className="cgs-settings-card">
             <h3>Complete your Professional Profile</h3>
             <ProfessionalProfileForms />
           </div>
+          */}
 
           <div className="cgs-settings-card">
             <h3>Notification Preferences</h3>

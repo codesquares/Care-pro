@@ -4,7 +4,7 @@ import StatisticCard1 from "../../../../assets/statisticCard1.png";
 import StatisticCard2 from "../../../../assets/statisticCard2.png";
 import StatisticCard3 from "../../../../assets/statisticCard3.png";
 
-const StatisticsCard = ({totalOrders, totalEarnings}) => {
+const StatisticsCard = ({activeCount = 0, pendingCount = 0, totalEarnings}) => {
   return (
     <div className="statistics-card">
       <div className="stat">
@@ -14,11 +14,27 @@ const StatisticsCard = ({totalOrders, totalEarnings}) => {
           <h4 className="stat-value earnings-value">₦{Number(totalEarnings).toLocaleString('en-NG', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</h4>
         </div>
       </div>
+      {/* RETIRED — placeholder "No. of Orders" stat (always 0), replaced by assignment counts. Preserved for restore.
       <div className="stat">
-        <img src={StatisticCard2} alt="card2" className="stat-icon" />  
+        <img src={StatisticCard2} alt="card2" className="stat-icon" />
         <div className="stat-details">
           <p className="stat-title">No. of Orders</p>
           <h4 className="stat-value">{totalOrders}</h4>
+        </div>
+      </div>
+      */}
+      <div className="stat">
+        <img src={StatisticCard2} alt="card2" className="stat-icon" />
+        <div className="stat-details">
+          <p className="stat-title">Active Assignments</p>
+          <h4 className="stat-value" data-testid="stat-active">{activeCount}</h4>
+        </div>
+      </div>
+      <div className="stat">
+        <img src={StatisticCard2} alt="card2" className="stat-icon" />
+        <div className="stat-details">
+          <p className="stat-title">Pending Offers</p>
+          <h4 className="stat-value" data-testid="stat-pending">{pendingCount}</h4>
         </div>
       </div>
       {/* <div className="stat">

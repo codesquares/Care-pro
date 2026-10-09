@@ -574,7 +574,7 @@ const CaregiverVerificationPage = () => {
   const handleModalProceed = () => {
     setIsModalOpen(false);
     if (modalTitle === 'Account Already Verified!' || modalTitle === 'Verification Successful!') {
-      navigate("/app/caregiver/assessments");
+      navigate("/app/caregiver/vetting");
     } else if (modalTitle === 'Verification Processing' || modalTitle === 'Verification In Progress') {
       navigate("/app/caregiver/profile", { state: { verificationStatus: 'pending' } });
     } else if (modalTitle === 'Verification Error' || modalTitle === 'Verification Failed') {
@@ -683,10 +683,10 @@ const CaregiverVerificationPage = () => {
                     gate={gate}
                     onProceed={
                       gate.reason === 'already_verified'
-                        ? () => navigate("/app/caregiver/assessments")
+                        ? () => navigate("/app/caregiver/vetting")
                         : undefined
                     }
-                    proceedLabel="Start Assessment"
+                    proceedLabel="Back to Vetting"
                     onCooldownExpire={refreshGate}
                   />
                 )}

@@ -38,6 +38,7 @@ import ClassificationForm from './vetting/ClassificationForm';
 import GuarantorsForm from './vetting/GuarantorsForm';
 import AddressHistoryForm from './vetting/AddressHistoryForm';
 import SocialMediaForm from './vetting/SocialMediaForm';
+import ProfessionalProfileStep from './vetting/ProfessionalProfileStep';
 
 function CareGiverRoutes() {
     return (
@@ -77,6 +78,7 @@ function CareGiverRoutes() {
                 <Route path="/vetting/guarantors" element={<GuarantorsForm />} />
                 <Route path="/vetting/address-history" element={<AddressHistoryForm />} />
                 <Route path="/vetting/social-media" element={<SocialMediaForm />} />
+                <Route path="/vetting/professional-profile" element={<ProfessionalProfileStep />} />
                 {/* Tier A: the competitive care-request flow is retired pending the
                     package-request + internal-assignment rebuild (Tier D). */}
                 <Route path="/client-requests" element={<FeatureMovedNotice title="Care requests are being rebuilt" message="Client requests are moving to guided care packages. This will be back soon." />} />

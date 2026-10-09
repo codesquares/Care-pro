@@ -133,7 +133,7 @@ const ProfileCard = () => {
           <div
             className="profile-card-action-btn"
             style={{ cursor: "pointer" }}
-            onClick={() => navigate(`${basePath}/verification`)}
+            onClick={() => navigate(`${basePath}/vetting`)} /* was ${basePath}/verification — identity verification now lives in the Vetting Hub */
           >
             Get Verified
           </div>

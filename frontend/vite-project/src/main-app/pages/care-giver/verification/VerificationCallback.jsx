@@ -55,7 +55,7 @@ const VerificationCallback = () => {
           } else {
             // Not in popup, navigate directly after delay
             setTimeout(() => {
-              navigate('/app/caregiver/profile');
+              navigate('/app/caregiver/vetting');
             }, 3000);
           }
           

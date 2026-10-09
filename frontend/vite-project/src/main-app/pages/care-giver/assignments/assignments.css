@@ -466,3 +466,10 @@
 .asn-dialog-btn--danger:hover:not(:disabled) {
   background: #a92121;
 }
+
+/* Compact summary list used on the dashboard and profile */
+.asn-list--compact { margin: 0; }
+.asn-summary-note { color: #6b7280; font-size: 0.9rem; margin: 0.5rem 0; }
+.asn-summary-link { background: none; border: none; color: inherit; text-decoration: underline; cursor: pointer; padding: 0; }
+.asn-profile-section { margin: 1rem 0; padding: 1rem; background: #fff; border-radius: 12px; border: 1px solid #e5e7eb; }
+.asn-profile-section h3 { margin: 0 0 0.5rem; font-size: 1.05rem; }

@@ -715,7 +715,7 @@ export const getNotificationRoute = (notification, userRole) => {
 
     // ── Verification notifications ───────────────────────
     case 'VerificationUpdate':
-      if (isCaregiver) return `/app/caregiver/verification`;
+      if (isCaregiver) return `/app/caregiver/vetting`;
       return null;
 
     // ── System / generic ─────────────────────────────────

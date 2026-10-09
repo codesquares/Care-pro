@@ -887,7 +887,7 @@ const ProfileHeader = () => {
                     Close
                   </button>
                   <button
-                    onClick={() => { setShowVerificationLandingModal(false); navigate('/app/caregiver/verification'); }}
+                    onClick={() => { setShowVerificationLandingModal(false); navigate('/app/caregiver/vetting'); }}
                     className="caregiver-modal-btn caregiver-modal-save"
                   >
                     Retry Verification
