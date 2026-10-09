@@ -1,6 +1,6 @@
 
 import ProfileHeader from "./ProfileHeader";
-import GigsSection from "./GigsSection";
+// RETIRED (gigs): import GigsSection from "./GigsSection";
 import Reviews from "./Reviews";
 import AssignmentsSummaryList from "../assignments/AssignmentsSummaryList";
 import useCaregiverAssignments from "../assignments/useCaregiverAssignments";
@@ -18,7 +18,8 @@ const UserProfile = () => {
           <h3>Assignments</h3>
           <AssignmentsSummaryList pending={pending} active={active} loading={loading} error={error} onRetry={reload} />
         </section>
-        <GigsSection />
+        {/* RETIRED — gigs section (Manage Gigs) removed for caregivers; preserved for restore.
+        <GigsSection /> */}
         <Reviews />
       </main>
     </div>

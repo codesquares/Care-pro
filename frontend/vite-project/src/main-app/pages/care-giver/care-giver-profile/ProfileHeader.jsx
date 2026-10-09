@@ -864,11 +864,18 @@ const ProfileHeader = () => {
                   >
                     Stay on Profile
                   </button>
+                  {/* RETIRED — "Create a Gig" (gigs retired); replaced by the Vetting Hub.
                   <button
                     onClick={() => { setShowVerificationLandingModal(false); navigate('/app/caregiver/create-gigs'); }}
                     className="caregiver-modal-btn caregiver-modal-save"
                   >
                     Create a Gig
+                  </button> */}
+                  <button
+                    onClick={() => { setShowVerificationLandingModal(false); navigate('/app/caregiver/vetting'); }}
+                    className="caregiver-modal-btn caregiver-modal-save"
+                  >
+                    Go to Vetting
                   </button>
                 </div>
               </>
@@ -918,11 +925,12 @@ const ProfileHeader = () => {
                       Take Assessment
                     </button>
                   ) : (
+                    /* RETIRED — "Create a Gig" (gigs retired); replaced by the Vetting Hub. */
                     <button
-                      onClick={() => { setShowVerificationLandingModal(false); navigate('/app/caregiver/create-gigs'); }}
+                      onClick={() => { setShowVerificationLandingModal(false); navigate('/app/caregiver/vetting'); }}
                       className="caregiver-modal-btn caregiver-modal-save"
                     >
-                      Create a Gig
+                      Go to Vetting
                     </button>
                   )}
                 </div>

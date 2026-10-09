@@ -124,6 +124,7 @@ const NavigationBar = () => {
                   <span>Dashboard</span>
                 </div>
               </li>
+              {/* RETIRED — gigs are retired for caregivers; Create Gig / Manage Gigs links preserved for restore.
               <li onClick={() => { navigate(`${basePath}/create-gigs`); setMobileMenuOpen(false); }}>
                 <div className="menu-item-content">
                   <FaPlusCircle className="mobile-menu-icon" />
@@ -136,6 +137,7 @@ const NavigationBar = () => {
                   <span>Manage Gigs</span>
                 </div>
               </li>
+              */}
               <li onClick={() => { navigate(`${basePath}/assignments`); setMobileMenuOpen(false); }}>
                 <div className="menu-item-content">
                   <FaTasks className="mobile-menu-icon" />
@@ -226,6 +228,7 @@ const NavigationBar = () => {
               <span className="asn-nav-badge">{pendingOfferCount > 9 ? "9+" : pendingOfferCount}</span>
             )}
           </li>
+          {/* RETIRED — gigs are retired for caregivers; Create Gig / Manage Gigs links preserved for restore.
           <li className="nav-link text-link" onClick={() => navigate(`${basePath}/create-gigs`)}>
             <FaPlusCircle className="nav-link-icon" />
             Create Gig
@@ -234,6 +237,7 @@ const NavigationBar = () => {
             <FaBriefcase className="nav-link-icon" />
             Manage Gigs
           </li>
+          */}
           <li className="nav-link text-link" onClick={() => navigate(`${basePath}/wallet`)}>
             <FaWallet className="nav-link-icon" />
             Wallet

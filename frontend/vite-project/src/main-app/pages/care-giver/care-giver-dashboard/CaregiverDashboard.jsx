@@ -187,7 +187,7 @@ const CaregiverDashboard = () => {
               {pendingDeletionDate.toLocaleDateString('en-GB', { day: 'numeric', month: 'long', year: 'numeric' })}.
             </p>
             <p style={{ margin: '0.25rem 0 0', fontSize: '0.875rem', color: '#c2410c' }}>
-              Cancel this request before that date to restore your account and gigs.
+              Cancel this request before that date to restore your account.
             </p>
           </div>
           <div style={{ display: 'flex', gap: '0.5rem', alignItems: 'center' }}>
@@ -232,7 +232,7 @@ const CaregiverDashboard = () => {
             onClick={(e) => e.stopPropagation()}
           >
             <h3 style={{ marginTop: 0 }}>Cancel Account Deletion?</h3>
-            <p>Are you sure you want to cancel your deletion request? Your account and all your gigs will be fully restored immediately.</p>
+            <p>Are you sure you want to cancel your deletion request? Your account will be fully restored immediately.</p>
             <div style={{ display: 'flex', gap: '0.75rem', justifyContent: 'flex-end', marginTop: '1rem' }}>
               <button
                 onClick={() => setShowCancelDeletionConfirm(false)}

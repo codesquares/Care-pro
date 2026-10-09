@@ -1336,9 +1336,9 @@ const AssessmentPage = () => {
                     {isVerified && hasCertificates ? (
                       <button 
                         className="ma-proceed-btn success"
-                        onClick={() => navigate('/app/caregiver/create-gigs')}
+                        onClick={() => navigate('/app/caregiver/vetting')} /* was create-gigs — gigs retired */
                       >
-                        Create a Gig
+                        Go to Vetting
                         <i className="fas fa-arrow-right"></i>
                       </button>
                     ) : (

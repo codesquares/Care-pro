@@ -44,12 +44,13 @@ export const READINESS_REASON_INFO = {
     actionLabel: 'Take assessment',
     actionPath: '/app/caregiver/assessment',
   },
-  no_active_gig: {
-    label: 'Create an active gig',
-    description: "You don't have an active gig listed yet.",
-    actionLabel: 'Create a gig',
-    actionPath: '/app/caregiver/create-gigs',
-  },
+  // RETIRED — gigs are retired for caregivers; no_active_gig is no longer a readiness blocker.
+  // no_active_gig: {
+  //   label: 'Create an active gig',
+  //   description: "You don't have an active gig listed yet.",
+  //   actionLabel: 'Create a gig',
+  //   actionPath: '/app/caregiver/create-gigs',
+  // },
   certificate_missing: {
     label: 'Upload a required certificate',
     description: 'A required professional certificate is missing from your profile.',

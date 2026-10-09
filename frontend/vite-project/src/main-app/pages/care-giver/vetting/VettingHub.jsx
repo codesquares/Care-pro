@@ -157,7 +157,8 @@ const VettingHub = () => {
   ];
 
   const completedCount = steps.filter((x) => x.core && x.done).length;
-  const reasons = readiness?.ineligibilityReasons || [];
+  // Defensive: gigs are retired, so never surface no_active_gig even if an older API still emits it.
+  const reasons = (readiness?.ineligibilityReasons || []).filter((r) => r !== 'no_active_gig');
 
   return (
     <div className="vet-page">
@@ -165,7 +166,7 @@ const VettingHub = () => {
         <h1><i className="fas fa-clipboard-check"></i> Caregiver Vetting</h1>
         <p>
           Your overall readiness to work on CarePro depends on identity verification, your
-          assessment, an active gig, and the vetting sections below (classification, guarantors,
+          assessment, and the vetting sections below (classification, guarantors,
           address history, social media). This page shows where you stand on all of it.
         </p>
       </div>

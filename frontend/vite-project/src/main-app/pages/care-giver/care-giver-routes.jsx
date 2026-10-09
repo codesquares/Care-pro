@@ -12,7 +12,7 @@ import WithdrawPage from './WithdrawPage';
 // import CaregiverOrders from './orders/CaregiverOrders';
 import MyAssignments from './assignments/MyAssignments';
 import AssignmentDetail from './assignments/AssignmentDetail';
-import CreateGig from './CreateGig';
+// RETIRED (gigs): import CreateGig from './CreateGig';
 import CreateOffer from '../CreateOffer';
 import Messages from '../Messages';
 import DirectMessage from '../../components/messages/DirectMessage';
@@ -56,7 +56,9 @@ function CareGiverRoutes() {
                 <Route path='/orders' element={<FeatureMovedNotice title="Orders have moved" message="Your orders are now under My Assignments." homePath="/app/caregiver/assignments" homeLabel="Go to My Assignments" />} />
                 <Route path='/assignments' element={<MyAssignments />} />
                 <Route path='/assignments/:id' element={<AssignmentDetail />} />
-                <Route path='/create-gigs' element={<CreateGig/>} />
+                {/* RETIRED — gigs are retired for caregivers. Preserved for restore:
+                <Route path='/create-gigs' element={<CreateGig/>} /> */}
+                <Route path='/create-gigs' element={<FeatureMovedNotice title="Gigs have been retired" message="Caregivers are now matched to clients by CarePro through care packages, so you no longer need to create gigs." homePath="/app/caregiver/dashboard" homeLabel="Go to my dashboard" />} />
                 <Route path='/create-offer' element={<CreateOffer/>} />
                 <Route path='/settings' element={<CaregiverSettings />} />
                 <Route path="/CaregiverProfile" element={<CaregiverProfile />} />
