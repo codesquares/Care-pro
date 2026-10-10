@@ -21,6 +21,10 @@ import PackageVisits from './package-visits/PackageVisits';
 import GuarantorOverride from './guarantor-override/GuarantorOverride';
 import PoliceClearances from './police-clearances/PoliceClearances';
 import PaymentLinkGenerator from './payment-links/PaymentLinkGenerator';
+import AdminAlerts from './alerts/AdminAlerts';
+import NotificationBell from '../../components/notifications/NotificationBell';
+import { FaBell } from 'react-icons/fa';
+import './alerts/admin-alerts.css';
 // Retired: Care Matching (admin gig -> client recommendation emails). Superseded by the Assignment Console;
 // source preserved commented out at ./care-matching/CareMatching.jsx.
 // import CareMatching from './care-matching/CareMatching';
@@ -85,10 +89,19 @@ function AdminRoutes() {
                         <i className="fas fa-shield-alt"></i>
                         CarePro Admin
                     </a>
+                    {/* A2: alert bell for every approved admin (not policy-gated) */}
+                    <div className="admin-mobile-topbar-bell" data-testid="admin-bell-mobile">
+                        <NotificationBell navigateTo={(path) => navigate(path)} bellIcon={FaBell} />
+                    </div>
                 </header>
+                <div className="admin-alert-bar" data-testid="admin-bell-desktop">
+                    <NotificationBell navigateTo={(path) => navigate(path)} bellIcon={FaBell} />
+                </div>
 
                 <Routes>
                     <Route path='/dashboard' element={<AdminDashboard />} />
+                    {/* A2: personal alert inbox — open to every approved admin (distinct from the SuperAdmin broadcast console at /notifications) */}
+                    <Route path='/alerts' element={<AdminAlerts />} />
                     <Route path='/question-bank' element={<QuestionBankManager />} />
                     <Route
                         path='/withdrawals'

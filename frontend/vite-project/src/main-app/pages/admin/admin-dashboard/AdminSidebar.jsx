@@ -1,4 +1,5 @@
 import { useState, useMemo, useEffect, useCallback } from 'react';
+import { useSelector } from 'react-redux';
 import { Link, useLocation, useNavigate } from 'react-router-dom';
 import { useAuth } from '../../../context/AuthContext';
 import { getInitials } from '../../../utils/avatarHelpers';
@@ -13,6 +14,8 @@ const ALL_NAV_GROUPS = [
     label: 'Overview',
     items: [
       { to: '/app/admin/dashboard', icon: 'fa-chart-line', label: 'Dashboard' },
+      // A2: personal alert inbox for every approved admin (no policy). Not the SuperAdmin broadcast console ("Notifications").
+      { to: '/app/admin/alerts', icon: 'fa-exclamation-circle', label: 'Alerts', badgeKey: 'alerts' },
       { to: '/app/admin/analytics', icon: 'fa-chart-bar',  label: 'Analytics', policy: 'analytics' },
     ],
   },
@@ -51,7 +54,7 @@ const ALL_NAV_GROUPS = [
     items: [
       { to: '/app/admin/certificates',  icon: 'fa-certificate',    label: 'Certificates',  policy: 'operations' },
       // Police clearance review queue. Operations/Policy admins only (mirrors the backend OperationsPolicy); the badge is the
-      // number of caregivers whose latest submission is waiting for review (admins have no notification bell yet).
+      // number of caregivers whose latest submission is waiting for review.
       { to: '/app/admin/police-clearances', icon: 'fa-shield-alt', label: 'Police Clearances', policy: 'operations', badgeKey: 'policeClearances' },
       { to: '/app/admin/dojah-admin',   icon: 'fa-id-badge',       label: 'Verifications', policy: 'operations' },
       { to: '/app/admin/question-bank', icon: 'fa-clipboard-list', label: 'Question Bank', policy: 'operations' },
@@ -116,7 +119,8 @@ const AdminSidebar = ({ isOpen, onClose }) => {
     window.addEventListener('police-clearance-count-changed', refreshClearanceCount);
     return () => { clearInterval(timer); window.removeEventListener('police-clearance-count-changed', refreshClearanceCount); };
   }, [canSeeClearances, refreshClearanceCount]);
-  const badgeCounts = { policeClearances: pendingClearances };
+  const unreadAlerts = useSelector((st) => st.notifications?.unreadCount || 0);
+  const badgeCounts = { policeClearances: pendingClearances, alerts: unreadAlerts };
 
   const userName = user?.firstName ? `${user.firstName} ${user.lastName || ''}`.trim() : 'Admin';
   const userInitials = getInitials(userName);
@@ -183,7 +187,7 @@ const AdminSidebar = ({ isOpen, onClose }) => {
                       {!collapsed && <span className="sidebar-nav-label">{label}</span>}
                       {badgeKey && badgeCounts[badgeKey] > 0 && (
                         <span className={`sidebar-badge${collapsed ? ' sidebar-badge--dot' : ''}`} data-testid={`sidebar-badge-${badgeKey}`}
-                          aria-label={`${badgeCounts[badgeKey]} waiting for review`}>{collapsed ? '' : badgeCounts[badgeKey]}</span>
+                          aria-label={`${badgeCounts[badgeKey]} ${badgeKey === 'alerts' ? 'unread' : 'waiting for review'}`}>{collapsed ? '' : badgeCounts[badgeKey]}</span>
                       )}
                     </Link>
                   </li>

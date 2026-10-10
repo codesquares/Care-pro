@@ -567,7 +567,8 @@ export const getNotificationRoute = (notification, userRole) => {
   const role = (userRole || '').toLowerCase();
   const isClient = role === 'client';
   const isCaregiver = role === 'caregiver';
-  const isAdmin = role === 'admin';
+  // const isAdmin = role === 'admin';   // A2: SuperAdmin got no admin deep links at all (role 'superadmin' never matched)
+  const isAdmin = role === 'admin' || role === 'superadmin';
 
   const getSubscriptionRoute = () => {
     if (relatedEntityId && isClient) return `/app/client/subscriptions/${relatedEntityId}`;
@@ -812,10 +813,16 @@ export const getNotificationRoute = (notification, userRole) => {
     // Ops alerts (admin only): a new request awaiting assignment, or a charged-but-unfulfilled /
     // undelivered-contract failure — all land on the Assignment Console where staff act.
     case 'PackageRequestReceived':
-    case 'PackagePaymentRequestFailed':
+    case 'PackageAssignmentDeclined': // A2: previously unmapped for admins (resolved to null)
     case 'PackageContractDeliveryFailed':
     case 'PackageRequestCancelledByClient': {
       if (isAdmin) return `/app/admin/assignments`;
+      return null;
+    }
+    // A2: the related id of a charged-but-no-request failure is a CLIENT id (not an assignment/request),
+    // so link to that client's record (Client Management opens the detail modal for ?clientId=).
+    case 'PackagePaymentRequestFailed': {
+      if (isAdmin) return relatedEntityId ? `/app/admin/clients?clientId=${relatedEntityId}` : `/app/admin/clients`;
       return null;
     }
 
@@ -898,15 +905,16 @@ export const getNotificationRoute = (notification, userRole) => {
 
     // ── Disputes ─────────────────────────────────────────
     case 'DisputeRaised': {
+      // A2: for admins, relatedEntityId is the DISPUTE id (never an order id) — only a real orderId may be
+      // used for the legacy order link; package disputes (no order) land on the Disputes console.
       const disputeOrderId = notification.orderId || relatedEntityId;
+      if (isAdmin) return notification.orderId ? `/app/admin/orders/${notification.orderId}` : `/app/admin/disputes`;
       if (disputeOrderId) {
         if (isClient) return `/app/client/my-order/${disputeOrderId}`;
         if (isCaregiver) return `/app/caregiver/order-details/${disputeOrderId}`;
-        if (isAdmin) return `/app/admin/orders/${disputeOrderId}`;
       }
       if (isClient) return `/app/client/my-orders`;
       if (isCaregiver) return `/app/caregiver/orders`;
-      if (isAdmin) return `/app/admin/orders`;
       return null;
     }
 
@@ -1130,10 +1138,12 @@ export const getNotificationActionLabel = (rawType) => {
     case 'PackageAssignmentConfirmed':
       return 'View Request';
     case 'PackageRequestReceived':
-    case 'PackagePaymentRequestFailed':
+    case 'PackageAssignmentDeclined':
     case 'PackageContractDeliveryFailed':
     case 'PackageRequestCancelledByClient':
       return 'Open Assignments';
+    case 'PackagePaymentRequestFailed':
+      return 'Open Client';
     case 'PackageVisitFlagged':
       return 'Review Visit';
     case 'VettingEnforcementNotice':
