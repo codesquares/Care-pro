@@ -370,4 +370,18 @@ const caregiverVettingService = {
   },
 };
 
+// Tell the lockout context to re-evaluate after any successful write (set/add/update/delete), so the lock lifts without a
+// fresh login. Equivalent to each form calling refresh() itself, in one place.
+export const VETTING_DATA_CHANGED_EVENT = 'vetting-data-changed';
+Object.keys(caregiverVettingService)
+  .filter((name) => /^(set|add|update|delete)/.test(name))
+  .forEach((name) => {
+    const original = caregiverVettingService[name];
+    caregiverVettingService[name] = async (...args) => {
+      const result = await original.apply(caregiverVettingService, args);
+      if (result?.success && typeof window !== 'undefined') window.dispatchEvent(new Event(VETTING_DATA_CHANGED_EVENT));
+      return result;
+    };
+  });
+
 export default caregiverVettingService;

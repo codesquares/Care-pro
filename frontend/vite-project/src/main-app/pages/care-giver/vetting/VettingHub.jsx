@@ -7,12 +7,15 @@ import caregiverVettingService, {
 import professionalProfileService from '../../../services/professionalProfileService';
 import policeClearanceService from '../../../services/policeClearanceService';
 import { formatLagos } from '../../../utils/lagosTime';
+import { useVettingLockout } from '../../../contexts/VettingLockoutContext';
+import { MISSING_LABELS } from '../../../utils/vettingLockout';
 import './vetting.css';
 
 const VettingHub = () => {
   const navigate = useNavigate();
   const basePath = '/app/caregiver/vetting';
 
+  const lock = useVettingLockout();
   const [loading, setLoading] = useState(true);
   const [classification, setClassification] = useState(null);
   const [guarantors, setGuarantors] = useState([]);
@@ -205,6 +208,24 @@ const VettingHub = () => {
           address history, police clearance, social media). This page shows where you stand on all of it.
         </p>
       </div>
+
+      {lock.locked && (
+        <div className="vet-alert vet-alert-error" data-testid="hub-lock-notice" role="alert">
+          <i className="fas fa-lock"></i>
+          <div>
+            <p><strong>Your account is limited until you finish {lock.missing.length === 1 ? 'one step' : `${lock.missing.length} steps`}.</strong>{' '}
+              Until then you can use this Vetting page, your wallet, settings, messages and notifications.</p>
+            <ul style={{ margin: '0.3rem 0 0.5rem 1.1rem', padding: 0 }}>
+              {lock.missing.map((m) => <li key={m} data-lock-missing={m}>{MISSING_LABELS[m]}</li>)}
+            </ul>
+            <p style={{ fontSize: '0.85rem', margin: 0 }}>
+              <strong>Not needed to unlock:</strong> your guarantors confirming, identity verification, your assessment, certificates, or staff
+              approval of anything{lock.clearance?.enforced ? ' (including your police clearance)' : ''}. Those can still decide whether you can
+              be assigned to clients.
+            </p>
+          </div>
+        </div>
+      )}
 
       {!loading && readiness && (
         readiness.isReady ? (

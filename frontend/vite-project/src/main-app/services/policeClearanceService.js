@@ -64,6 +64,7 @@ const policeClearanceService = {
       form.append('referenceNumber', referenceNumber);
       files.forEach((f) => form.append('files', f, f.name));
       const response = await api.post(BASE, form, { headers: { 'Content-Type': 'multipart/form-data' }, timeout: 180000 });
+      if (typeof window !== 'undefined') window.dispatchEvent(new Event('vetting-data-changed')); // lockout re-evaluates
       return { success: true, data: response.data };
     } catch (error) {
       console.error('Error submitting police clearance:', error);

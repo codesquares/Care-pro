@@ -40,11 +40,17 @@ import AddressHistoryForm from './vetting/AddressHistoryForm';
 import SocialMediaForm from './vetting/SocialMediaForm';
 import ProfessionalProfileStep from './vetting/ProfessionalProfileStep';
 import PoliceClearanceStep from './vetting/PoliceClearanceStep';
+import { VettingLockoutProvider } from '../../contexts/VettingLockoutContext';
+import VettingLockGuard from '../../components/VettingLockGuard';
+import VettingNoticeBanner from '../../components/VettingNoticeBanner';
 
 function CareGiverRoutes() {
     return (
         <GigEditProvider>
+          <VettingLockoutProvider>
             <NavigationBar />
+            <VettingNoticeBanner />
+            <VettingLockGuard>
             <Routes>
                 <Route path='/dashboard' element={
                     <ErrorBoundary>
@@ -92,6 +98,8 @@ function CareGiverRoutes() {
                 <Route path="/price-negotiation/:negotiationId" element={<FeatureMovedNotice title="Care requests are being rebuilt" message="Price negotiation is moving to guided care packages. This will be back soon." />} />
                 <Route path="*" element={<NotFoundPage />} />
             </Routes>
+            </VettingLockGuard>
+          </VettingLockoutProvider>
         </GigEditProvider>
     );
 }
