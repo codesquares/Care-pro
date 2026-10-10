@@ -489,6 +489,8 @@ const KNOWN_CANONICAL = new Set([
   // Police clearance (vetting step)
   'PoliceClearanceSubmitted', 'PoliceClearanceApproved', 'PoliceClearanceRejected',
   'PoliceClearanceRevoked', 'PoliceClearanceAssignmentsAtRisk',
+  // Vetting enforcement notice (caregiver)
+  'VettingEnforcementNotice',
   // Payroll (Phase 9.7)
   'PayrollApproved', 'PayrollPaid',
 ]);
@@ -818,6 +820,11 @@ export const getNotificationRoute = (notification, userRole) => {
     }
 
     // Police clearance: the caregiver's decision notices open the Vetting Hub step; the admin alerts open the review queue.
+    // Vetting enforcement notice: open the Vetting Hub.
+    case 'VettingEnforcementNotice': {
+      if (isCaregiver) return `/app/caregiver/vetting`;
+      return null;
+    }
     case 'PoliceClearanceApproved':
     case 'PoliceClearanceRejected':
     case 'PoliceClearanceRevoked': {
@@ -1129,6 +1136,8 @@ export const getNotificationActionLabel = (rawType) => {
       return 'Open Assignments';
     case 'PackageVisitFlagged':
       return 'Review Visit';
+    case 'VettingEnforcementNotice':
+      return 'Open Vetting';
     case 'PoliceClearanceSubmitted':
     case 'PoliceClearanceAssignmentsAtRisk':
       return 'Review Clearance';
@@ -1348,6 +1357,8 @@ export const getNotificationTypeIcon = (rawType) => {
       return '✅';
     case 'PackageAssignmentCancelled':
       return '❌';
+    case 'VettingEnforcementNotice':
+      return '📋';
     case 'PoliceClearanceApproved':
       return '✅';
     case 'PoliceClearanceRejected':
