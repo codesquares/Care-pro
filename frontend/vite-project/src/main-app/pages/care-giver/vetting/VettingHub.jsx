@@ -5,6 +5,8 @@ import caregiverVettingService, {
   READINESS_REASON_INFO,
 } from '../../../services/caregiverVettingService';
 import professionalProfileService from '../../../services/professionalProfileService';
+import policeClearanceService from '../../../services/policeClearanceService';
+import { formatLagos } from '../../../utils/lagosTime';
 import './vetting.css';
 
 const VettingHub = () => {
@@ -19,10 +21,11 @@ const VettingHub = () => {
   const [readiness, setReadiness] = useState(null);
   const [readinessError, setReadinessError] = useState(null);
   const [profileCounts, setProfileCounts] = useState(null);
+  const [clearance, setClearance] = useState(null);
 
   const loadAll = async () => {
     setLoading(true);
-    const [c, g, cov, s, r, edu, cert, work] = await Promise.all([
+    const [c, g, cov, s, r, edu, cert, work, pc] = await Promise.all([
       caregiverVettingService.getClassification(),
       caregiverVettingService.getGuarantors(),
       caregiverVettingService.getAddressHistoryCoverage(),
@@ -31,7 +34,9 @@ const VettingHub = () => {
       professionalProfileService.getEducation(),
       professionalProfileService.getCertifications(),
       professionalProfileService.getWorkExperience(),
+      policeClearanceService.getStatus(),
     ]);
+    setClearance(pc.success ? pc.data : null);
     if (edu.success && cert.success && work.success) {
       setProfileCounts({
         education: (edu.data || []).length,
@@ -68,9 +73,29 @@ const VettingHub = () => {
   const profileTotal = profileCounts ? profileCounts.education + profileCounts.certifications + profileCounts.work : 0;
   const profileDone = profileTotal > 0;
 
+  // Police clearance card state: none | pending | approved | rejected | revoked (server-computed from the latest record).
+  const clearanceStatus = clearance?.status || null;
+  const clearanceDone = clearanceStatus === 'approved';
+  const requiredFrom = clearance && !clearance.enforced && clearance.enforcementDate
+    ? formatLagos(clearance.enforcementDate).replace(/ at .*$/, '')
+    : null;
+
   const badge = (done, text) => (
     <span className={`vet-pkg-badge ${done ? 'vet-pkg-badge--active' : 'vet-pkg-badge--inactive'}`}>{text}</span>
   );
+
+  const clearanceStatusNode = (() => {
+    if (!clearance) return badge(false, 'Status unavailable');
+    const dangerBadge = (text) => <span className="vet-pkg-badge vet-pkg-badge--danger">{text}</span>;
+    const reqNote = requiredFrom ? <> <span className="vet-pkg-badge vet-pkg-badge--type">Required from {requiredFrom}</span></> : null;
+    switch (clearanceStatus) {
+      case 'approved': return badge(true, 'Approved');
+      case 'pending': return <>{badge(false, 'Under review')}{reqNote}</>;
+      case 'rejected': return <>{dangerBadge('Rejected')}<span className="vet-item-sub" data-testid="hub-clearance-reason"> {clearance.rejectionReason}</span></>;
+      case 'revoked': return <>{dangerBadge('Approval withdrawn')}<span className="vet-item-sub" data-testid="hub-clearance-reason"> {clearance.revokedReason}</span></>;
+      default: return <>{badge(false, 'Not submitted')}{reqNote}</>;
+    }
+  })();
 
   // One entry per step card. To add a step (e.g. police clearance), append an
   // entry here — nothing else in the page needs to change. `core` marks the
@@ -144,6 +169,16 @@ const VettingHub = () => {
       ),
     },
     {
+      // Police clearance — uploaded document reviewed by staff. NOT `core`. `done` only when staff have APPROVED it
+      // (submitted/under review is not done).
+      key: 'police-clearance',
+      title: 'Police Clearance',
+      icon: 'fa-shield-alt',
+      path: `${basePath}/police-clearance`,
+      done: clearanceDone,
+      status: clearanceStatusNode,
+    },
+    {
       key: 'social-media',
       core: true,
       title: 'Social Media',
@@ -167,7 +202,7 @@ const VettingHub = () => {
         <p>
           Your overall readiness to work on CarePro depends on identity verification, your
           assessment, and the vetting sections below (classification, guarantors,
-          address history, social media). This page shows where you stand on all of it.
+          address history, police clearance, social media). This page shows where you stand on all of it.
         </p>
       </div>
 
@@ -194,19 +229,21 @@ const VettingHub = () => {
                     actionPath: basePath,
                   };
                   return (
-                    <li key={reasonCode} className="vet-item">
+                    <li key={reasonCode} className="vet-item" data-reason={reasonCode}>
                       <div className="vet-item-top">
                         <div>
                           <strong>{info.label}</strong>
                           {info.description && <span className="vet-item-sub">{info.description}</span>}
                         </div>
-                        <span className="vet-pkg-badge vet-pkg-badge--inactive">Not complete</span>
+                        <span className="vet-pkg-badge vet-pkg-badge--inactive">{info.nonActionable ? 'Under review' : 'Not complete'}</span>
                       </div>
-                      <div className="vet-item-actions">
-                        <button className="vet-btn-secondary vet-btn-sm" onClick={() => navigate(info.actionPath)}>
-                          {info.actionLabel} <i className="fas fa-arrow-right"></i>
-                        </button>
-                      </div>
+                      {!info.nonActionable && (
+                        <div className="vet-item-actions">
+                          <button className="vet-btn-secondary vet-btn-sm" onClick={() => navigate(info.actionPath)}>
+                            {info.actionLabel} <i className="fas fa-arrow-right"></i>
+                          </button>
+                        </div>
+                      )}
                     </li>
                   );
                 })}
@@ -214,6 +251,27 @@ const VettingHub = () => {
             )}
           </div>
         )
+      )}
+
+      {!loading && readiness && (readiness.informationalReasons || []).length > 0 && (
+        <div className="vet-alert vet-alert-info" data-testid="hub-informational">
+          <i className="fas fa-info-circle"></i>
+          <div>
+            {(readiness.informationalReasons || []).map((code) => {
+              const info = READINESS_REASON_INFO[code];
+              if (!info) return null;
+              return (
+                <p key={code}>
+                  <strong>{info.label}.</strong>{' '}
+                  {requiredFrom ? `Required from ${requiredFrom}. ` : 'This will become required soon. '}
+                  {info.nonActionable ? 'Our team is reviewing it.' : (
+                    <button className="vet-back-link" onClick={() => navigate(info.actionPath)}>{info.actionLabel} <i className="fas fa-arrow-right"></i></button>
+                  )}
+                </p>
+              );
+            })}
+          </div>
+        </div>
       )}
 
       {!loading && !readiness && (

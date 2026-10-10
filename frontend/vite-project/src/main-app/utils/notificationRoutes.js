@@ -486,6 +486,9 @@ const KNOWN_CANONICAL = new Set([
   'PackageContractGenerated',
   'PackageRequestReceived', 'PackagePaymentRequestFailed', 'PackageContractDeliveryFailed',
   'PackageRequestCancelledByClient', 'PackageVisitFlagged',
+  // Police clearance (vetting step)
+  'PoliceClearanceSubmitted', 'PoliceClearanceApproved', 'PoliceClearanceRejected',
+  'PoliceClearanceRevoked', 'PoliceClearanceAssignmentsAtRisk',
   // Payroll (Phase 9.7)
   'PayrollApproved', 'PayrollPaid',
 ]);
@@ -814,6 +817,19 @@ export const getNotificationRoute = (notification, userRole) => {
       return null;
     }
 
+    // Police clearance: the caregiver's decision notices open the Vetting Hub step; the admin alerts open the review queue.
+    case 'PoliceClearanceApproved':
+    case 'PoliceClearanceRejected':
+    case 'PoliceClearanceRevoked': {
+      if (isCaregiver) return `/app/caregiver/vetting/police-clearance`;
+      return null;
+    }
+    case 'PoliceClearanceSubmitted':
+    case 'PoliceClearanceAssignmentsAtRisk': {
+      if (isAdmin) return relatedEntityId ? `/app/admin/police-clearances?clearance=${relatedEntityId}` : `/app/admin/police-clearances`;
+      return null;
+    }
+
     // A package-visit check-in was flagged (HARD reason) — deep-link to that visit in the admin review screen.
     case 'PackageVisitFlagged': {
       if (isAdmin) return relatedEntityId ? `/app/admin/package-visits?checkin=${relatedEntityId}` : `/app/admin/package-visits`;
@@ -1113,6 +1129,13 @@ export const getNotificationActionLabel = (rawType) => {
       return 'Open Assignments';
     case 'PackageVisitFlagged':
       return 'Review Visit';
+    case 'PoliceClearanceSubmitted':
+    case 'PoliceClearanceAssignmentsAtRisk':
+      return 'Review Clearance';
+    case 'PoliceClearanceApproved':
+    case 'PoliceClearanceRejected':
+    case 'PoliceClearanceRevoked':
+      return 'View Status';
     case 'NewMessage':
       return 'Open Conversation';
     case 'Payment':
@@ -1325,6 +1348,14 @@ export const getNotificationTypeIcon = (rawType) => {
       return '✅';
     case 'PackageAssignmentCancelled':
       return '❌';
+    case 'PoliceClearanceApproved':
+      return '✅';
+    case 'PoliceClearanceRejected':
+    case 'PoliceClearanceRevoked':
+      return '❌';
+    case 'PoliceClearanceSubmitted':
+    case 'PoliceClearanceAssignmentsAtRisk':
+      return '🛡️';
     case 'OrderNotification':
     case 'OrderConfirmation':
     case 'BookingConfirmed':
