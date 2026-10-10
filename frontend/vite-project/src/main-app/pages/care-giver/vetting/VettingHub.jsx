@@ -1,4 +1,5 @@
 import { useEffect, useState } from 'react';
+import { isProfessionalProfileDone } from '../../../utils/professionalProfileRule';
 import { useNavigate } from 'react-router-dom';
 import caregiverVettingService, {
   REQUIRED_GUARANTOR_COUNT,
@@ -73,8 +74,9 @@ const VettingHub = () => {
     done ? 'vet-card--done' : attentionCondition ? 'vet-card--attention' : '';
 
   const identityDone = !!readiness?.isIdentityVerified;
-  const profileTotal = profileCounts ? profileCounts.education + profileCounts.certifications + profileCounts.work : 0;
-  const profileDone = profileTotal > 0;
+  // const profileTotal = profileCounts ? profileCounts.education + profileCounts.certifications + profileCounts.work : 0;
+  // const profileDone = profileTotal > 0;   // now: isProfessionalProfileDone (provisional rule, display only)
+  const profileDone = isProfessionalProfileDone(profileCounts);
 
   // Police clearance card state: none | pending | approved | rejected | revoked (server-computed from the latest record).
   const clearanceStatus = clearance?.status || null;
