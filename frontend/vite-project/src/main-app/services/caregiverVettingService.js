@@ -78,7 +78,7 @@ export const READINESS_REASON_INFO = {
   // Police clearance: _missing = none/rejected/revoked (actionable); _pending = awaiting staff review (nothing to do but wait).
   police_clearance_missing: {
     label: 'Submit your police clearance',
-    description: 'Upload a police clearance issued in the last 6 months so our team can review it.',
+    description: 'Upload a recent police clearance so our team can review it.',
     actionLabel: 'Submit clearance',
     actionPath: '/app/caregiver/vetting/police-clearance',
   },
