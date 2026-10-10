@@ -19,6 +19,7 @@ import PayRatesManagement from './pay-rates/PayRatesManagement';
 import PayrollManagement from './payroll/PayrollManagement';
 import PackageVisits from './package-visits/PackageVisits';
 import GuarantorOverride from './guarantor-override/GuarantorOverride';
+import PoliceClearances from './police-clearances/PoliceClearances';
 import PaymentLinkGenerator from './payment-links/PaymentLinkGenerator';
 // Retired: Care Matching (admin gig -> client recommendation emails). Superseded by the Assignment Console;
 // source preserved commented out at ./care-matching/CareMatching.jsx.
@@ -168,6 +169,14 @@ function AdminRoutes() {
                         element={
                             canUseOperationsTools
                                 ? <GuarantorOverride />
+                                : <NotFoundPage />
+                        }
+                    />
+                    <Route
+                        path='/police-clearances'
+                        element={
+                            canUseOperationsTools
+                                ? <PoliceClearances />
                                 : <NotFoundPage />
                         }
                     />

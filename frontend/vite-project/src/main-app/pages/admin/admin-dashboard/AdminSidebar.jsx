@@ -1,8 +1,9 @@
-import { useState, useMemo } from 'react';
+import { useState, useMemo, useEffect, useCallback } from 'react';
 import { Link, useLocation, useNavigate } from 'react-router-dom';
 import { useAuth } from '../../../context/AuthContext';
 import { getInitials } from '../../../utils/avatarHelpers';
 import { hasPolicy } from '../../../utils/adminPermissions';
+import adminPoliceClearanceService from '../../../services/adminPoliceClearanceService';
 import './admin-sidebar.css';
 
 // policy values match adminPermissions.js hasPolicy() keys
@@ -49,6 +50,9 @@ const ALL_NAV_GROUPS = [
     label: 'Compliance',
     items: [
       { to: '/app/admin/certificates',  icon: 'fa-certificate',    label: 'Certificates',  policy: 'operations' },
+      // Police clearance review queue. Operations/Policy admins only (mirrors the backend OperationsPolicy); the badge is the
+      // number of caregivers whose latest submission is waiting for review (admins have no notification bell yet).
+      { to: '/app/admin/police-clearances', icon: 'fa-shield-alt', label: 'Police Clearances', policy: 'operations', badgeKey: 'policeClearances' },
       { to: '/app/admin/dojah-admin',   icon: 'fa-id-badge',       label: 'Verifications', policy: 'operations' },
       { to: '/app/admin/question-bank', icon: 'fa-clipboard-list', label: 'Question Bank', policy: 'operations' },
       { to: '/app/admin/chat-compliance',icon: 'fa-shield-virus',  label: 'Chat Compliance',policy: 'operations' },
@@ -95,6 +99,24 @@ const AdminSidebar = ({ isOpen, onClose }) => {
       }))
       .filter(group => group.items.length > 0);
   }, [role, department]);
+
+  // Pending police-clearance count for the sidebar badge. Only fetched for admins who can see the item (everyone else
+  // would get 403), refreshed on navigation, every minute, and right after a decision on the review page.
+  const canSeeClearances = hasPolicy('operations', role, department);
+  const [pendingClearances, setPendingClearances] = useState(0);
+  const refreshClearanceCount = useCallback(async () => {
+    if (!canSeeClearances) return;
+    const result = await adminPoliceClearanceService.pendingCount();
+    if (result.success) setPendingClearances(result.data);
+  }, [canSeeClearances]);
+  useEffect(() => { refreshClearanceCount(); }, [refreshClearanceCount, location.pathname]);
+  useEffect(() => {
+    if (!canSeeClearances) return undefined;
+    const timer = setInterval(refreshClearanceCount, 60000);
+    window.addEventListener('police-clearance-count-changed', refreshClearanceCount);
+    return () => { clearInterval(timer); window.removeEventListener('police-clearance-count-changed', refreshClearanceCount); };
+  }, [canSeeClearances, refreshClearanceCount]);
+  const badgeCounts = { policeClearances: pendingClearances };
 
   const userName = user?.firstName ? `${user.firstName} ${user.lastName || ''}`.trim() : 'Admin';
   const userInitials = getInitials(userName);
@@ -149,7 +171,7 @@ const AdminSidebar = ({ isOpen, onClose }) => {
                 <span className="sidebar-group-label">{group.label}</span>
               )}
               <ul className="sidebar-group-items">
-                {group.items.map(({ to, icon, label }) => (
+                {group.items.map(({ to, icon, label, badgeKey }) => (
                   <li key={to}>
                     <Link
                       to={to}
@@ -159,6 +181,10 @@ const AdminSidebar = ({ isOpen, onClose }) => {
                     >
                       <i className={`fas ${icon} sidebar-nav-icon`}></i>
                       {!collapsed && <span className="sidebar-nav-label">{label}</span>}
+                      {badgeKey && badgeCounts[badgeKey] > 0 && (
+                        <span className={`sidebar-badge${collapsed ? ' sidebar-badge--dot' : ''}`} data-testid={`sidebar-badge-${badgeKey}`}
+                          aria-label={`${badgeCounts[badgeKey]} waiting for review`}>{collapsed ? '' : badgeCounts[badgeKey]}</span>
+                      )}
                     </Link>
                   </li>
                 ))}
