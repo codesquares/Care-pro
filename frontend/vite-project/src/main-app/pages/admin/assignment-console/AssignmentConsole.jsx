@@ -108,6 +108,12 @@ const AssignmentConsole = () => {
       setActiveTab('pending');
     } else if (result.reasons && result.reasons.length > 0) {
       setAssignBlockers({ caregiverId: candidate.caregiverId, reasons: result.reasons });
+    } else if (result.errorCode === 'ASSIGNMENT_CONFLICT') {
+      // Someone else (another staff member) assigned this request first: say so plainly and refresh the list.
+      showToast('error', 'This request was just assigned by someone else. Refresh to see the current assignment.');
+      setSelectedRequest(null);
+      setCandidates([]);
+      loadRequests();
     } else {
       showToast('error', result.error || 'Failed to assign caregiver');
     }

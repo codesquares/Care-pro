@@ -81,6 +81,7 @@ const AdminAssignmentService = {
       return {
         success: false,
         error: extractError(error, 'Failed to assign caregiver'),
+        status: error.response?.status,
         errorCode: error.response?.data?.errorCode,
         reasons: error.response?.data?.reasons,
       };

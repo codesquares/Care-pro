@@ -1,6 +1,9 @@
-import { useState, useEffect, useCallback } from "react";
+import { useRef, useState, useEffect, useCallback } from "react";
 import { useNavigate } from "react-router-dom";
-import CaregiverAssignmentService from "../../../services/caregiverAssignmentService";
+import CaregiverAssignmentService, {
+  isBenignOfferConflict,
+  OFFER_ALREADY_UPDATED_MESSAGE,
+} from "../../../services/caregiverAssignmentService";
 import CareBriefCard from "./CareBriefCard";
 import AssignmentDeclineDialog from "./AssignmentDeclineDialog";
 import Modal from "../../../components/modal/Modal";
@@ -33,6 +36,8 @@ const MyAssignments = () => {
   const [declineDialogId, setDeclineDialogId] = useState(null);
   const [actionSubmittingId, setActionSubmittingId] = useState(null);
   const [actionError, setActionError] = useState(null);
+  const [actionNotice, setActionNotice] = useState(null);
+  const submittingRef = useRef(false);   // synchronous guard: state is batched, two same-tick clicks would both pass the state check
 
   const load = useCallback(async () => {
     setLoading(true);
@@ -62,24 +67,36 @@ const MyAssignments = () => {
   const acceptTarget = assignments.find((a) => a.id === acceptConfirmId);
 
   const handleAccept = async (assignmentId) => {
-    if (actionSubmittingId) return;
+    if (actionSubmittingId || submittingRef.current) return;
+    submittingRef.current = true;
     setActionSubmittingId(assignmentId);
     setActionError(null);
+    setActionNotice(null);
     const result = await CaregiverAssignmentService.acceptAssignment(assignmentId);
+    submittingRef.current = false;
     setActionSubmittingId(null);
     setAcceptConfirmId(null);
-    if (!result.success) setActionError(result.error);
+    if (!result.success) {
+      if (isBenignOfferConflict(result)) setActionNotice(OFFER_ALREADY_UPDATED_MESSAGE);
+      else setActionError(result.error);
+    }
     await load();
   };
 
   const handleDecline = async (assignmentId, reason) => {
-    if (actionSubmittingId) return;
+    if (actionSubmittingId || submittingRef.current) return;
+    submittingRef.current = true;
     setActionSubmittingId(assignmentId);
     setActionError(null);
+    setActionNotice(null);
     const result = await CaregiverAssignmentService.declineAssignment(assignmentId, reason);
+    submittingRef.current = false;
     setActionSubmittingId(null);
     setDeclineDialogId(null);
-    if (!result.success) setActionError(result.error);
+    if (!result.success) {
+      if (isBenignOfferConflict(result)) setActionNotice(OFFER_ALREADY_UPDATED_MESSAGE);
+      else setActionError(result.error);
+    }
     await load();
   };
 
@@ -125,6 +142,7 @@ const MyAssignments = () => {
         )}
 
         {actionError && <p className="asn-inline-error">{actionError}</p>}
+        {actionNotice && <p className="asn-brief-note" role="status" data-testid="offer-updated-note">{actionNotice}</p>}
 
         {!loading && !error && assignments.length > 0 && (
           <ul className="asn-list">
