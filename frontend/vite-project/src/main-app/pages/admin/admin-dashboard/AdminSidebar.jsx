@@ -56,6 +56,8 @@ const ALL_NAV_GROUPS = [
       // Police clearance review queue. Operations/Policy admins only (mirrors the backend OperationsPolicy); the badge is the
       // number of caregivers whose latest submission is waiting for review.
       { to: '/app/admin/police-clearances', icon: 'fa-shield-alt', label: 'Police Clearances', policy: 'operations', badgeKey: 'policeClearances' },
+      // Caregiver "can't attend" notices awaiting a staff decision. Operations/Policy admins only (mirrors the backend OperationsPolicy).
+      { to: '/app/admin/absence-notices', icon: 'fa-calendar-times', label: 'Absence Notices', policy: 'operations' },
       { to: '/app/admin/dojah-admin',   icon: 'fa-id-badge',       label: 'Verifications', policy: 'operations' },
       { to: '/app/admin/question-bank', icon: 'fa-clipboard-list', label: 'Question Bank', policy: 'operations' },
       { to: '/app/admin/chat-compliance',icon: 'fa-shield-virus',  label: 'Chat Compliance',policy: 'operations' },

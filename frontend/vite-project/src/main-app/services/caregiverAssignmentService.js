@@ -120,14 +120,25 @@ const CaregiverAssignmentService = {
    * Endpoint: POST /api/caregiver/assignments/{id}/absence-notices
    * Tells the client and CarePro the caregiver cannot attend a day (informational — no money moves).
    * @param {string} id assignment id
-   * @param {{date: string, reason: string}} body date is yyyy-MM-dd (Lagos day)
+   * @param {{date: string, category: string, note?: string}} body date is yyyy-MM-dd (Lagos day); category is required
+   *   (illness | family_emergency | transport | other); note is optional, staff-only — the client never sees it.
    */
-  async createAbsenceNotice(id, { date, reason }) {
+  async createAbsenceNotice(id, { date, category, note }) {
     try {
-      const response = await api.post(`${BASE}/${id}/absence-notices`, { date, reason });
+      const response = await api.post(`${BASE}/${id}/absence-notices`, { date, category, note: note || null });
       return { success: true, data: response.data };
     } catch (error) {
       return { success: false, error: extractError(error, 'Failed to send your notice') };
+    }
+  },
+
+  /** Endpoint: POST /api/caregiver/assignments/{id}/absence-notices/{noticeId}/withdraw — 409 once staff acted, on/after the day, or already withdrawn. */
+  async withdrawAbsenceNotice(id, noticeId) {
+    try {
+      const response = await api.post(`${BASE}/${id}/absence-notices/${noticeId}/withdraw`);
+      return { success: true, data: response.data };
+    } catch (error) {
+      return { success: false, error: extractError(error, 'Failed to withdraw your notice') };
     }
   },
 

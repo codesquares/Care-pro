@@ -19,8 +19,8 @@ describe('visit_absence_notified (package caregiver "can\'t attend")', () => {
   test('client -> the package request', () => {
     expect(getNotificationRoute({ type: 'visit_absence_notified', relatedEntityId: 'PR1' }, 'Client')).toBe('/app/client/requests/PR1');
   });
-  test.each(['Admin', 'SuperAdmin'])('%s -> alerts inbox, with and without a related id', (role) => {
-    expect(getNotificationRoute({ type: 'visit_absence_notified', relatedEntityId: 'PR1' }, role)).toBe('/app/admin/alerts');
-    expect(getNotificationRoute({ type: 'visit_absence_notified' }, role)).toBe('/app/admin/alerts');
+  test.each(['Admin', 'SuperAdmin'])('%s -> the absence-notices screen, deep-linked to the notice when an id is present', (role) => {
+    expect(getNotificationRoute({ type: 'visit_absence_notified', relatedEntityId: 'N1' }, role)).toBe('/app/admin/absence-notices?notice=N1');
+    expect(getNotificationRoute({ type: 'visit_absence_notified' }, role)).toBe('/app/admin/absence-notices');
   });
 });

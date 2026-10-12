@@ -7,6 +7,12 @@ const fmtDay = (iso) =>
   });
 
 /** The client's list of "can't attend" notices from their caregiver. Renders nothing when there are none. */
+const OUTCOME_TEXT = {
+  cover_arranged: "CarePro is arranging cover for this day.",
+  credited: "CarePro has noted a credit for this day.",
+  withdrawn: "Withdrawn — your care for this day goes ahead as normal.",
+};
+
 const ClientAbsenceNotices = ({ packageRequestId }) => {
   const [notices, setNotices] = useState([]);
   useEffect(() => {
@@ -24,12 +30,13 @@ const ClientAbsenceNotices = ({ packageRequestId }) => {
       <ul className="pr-visit-list">
         {notices.map((n) => (
           <li key={n.id} className="pr-visit-item">
-            <strong>{fmtDay(n.date)}</strong>{n.shortNotice ? " — short notice, CarePro is reviewing" : ""}
-            <div>{n.reason}</div>
+            <strong>{fmtDay(n.date)}</strong>{n.shortNotice && n.outcome !== "withdrawn" ? " — short notice, CarePro is reviewing" : ""}
+            <div data-testid="client-absence-category">Reason: {n.categoryLabel}</div>
+            {n.outcome && <div data-testid="client-absence-outcome">{OUTCOME_TEXT[n.outcome]}</div>}
           </li>
         ))}
       </ul>
-      <p className="pr-visit-meta">No charge or refund results from these notices.</p>
+      <p className="pr-visit-meta">Our team will be in touch if anything needs arranging.</p>
     </div>
   );
 };

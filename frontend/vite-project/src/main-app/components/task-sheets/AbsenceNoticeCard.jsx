@@ -1,6 +1,22 @@
 import { useState, useEffect, useCallback } from "react";
 import CaregiverAssignmentService from "../../services/caregiverAssignmentService";
 
+const ABSENCE_CATEGORIES = [
+  { value: "illness", label: "Illness" },
+  { value: "family_emergency", label: "Family emergency" },
+  { value: "transport", label: "Transport problem" },
+  { value: "other", label: "Other" },
+];
+
+const STATUS_TEXT = {
+  open: "Sent — CarePro will look at it",
+  cover_arranged: "CarePro is arranging cover",
+  credited: "CarePro has noted a credit",
+  no_action_needed: "Noted by CarePro",
+  closed: "Closed by CarePro",
+  withdrawn: "Withdrawn",
+};
+
 const todayLagos = () =>
   new Intl.DateTimeFormat("en-CA", { timeZone: "Africa/Lagos" }).format(new Date());
 
@@ -11,17 +27,20 @@ const fmtDay = (iso) =>
 
 /**
  * Caregiver "I can't attend a day" notice for a package assignment. Informational: tells the client and
- * CarePro; no money moves and nothing is cancelled. Same-day / next-morning notices are marked short notice
- * (CarePro reviews those).
+ * CarePro; no money moves and nothing is cancelled. A required reason CATEGORY is all the client sees —
+ * the optional note is for CarePro staff only. Same-day / next-morning notices are marked short notice
+ * (CarePro reviews those; it is only a flag).
  */
 const AbsenceNoticeCard = ({ assignmentId }) => {
   const [notices, setNotices] = useState([]);
   const [open, setOpen] = useState(false);
   const [date, setDate] = useState(todayLagos());
-  const [reason, setReason] = useState("");
+  const [category, setCategory] = useState("");
+  const [note, setNote] = useState("");
   const [sending, setSending] = useState(false);
   const [error, setError] = useState(null);
   const [sent, setSent] = useState(null);
+  const [withdrawingId, setWithdrawingId] = useState(null);
 
   const load = useCallback(async () => {
     const r = await CaregiverAssignmentService.getAbsenceNotices(assignmentId);
@@ -31,15 +50,25 @@ const AbsenceNoticeCard = ({ assignmentId }) => {
 
   const submit = async () => {
     if (sending) return;
-    if (!reason.trim()) { setError("Please give a reason."); return; }
+    if (!category) { setError("Please choose a reason."); return; }
     setSending(true); setError(null); setSent(null);
-    const r = await CaregiverAssignmentService.createAbsenceNotice(assignmentId, { date, reason: reason.trim() });
+    const r = await CaregiverAssignmentService.createAbsenceNotice(assignmentId, { date, category, note: note.trim() });
     setSending(false);
     if (!r.success) { setError(r.error); return; }
     setSent(r.data?.shortNotice
       ? "Notice sent. It was short notice, so CarePro will review it and be in touch."
       : "Notice sent. Your client and CarePro have been told.");
-    setReason(""); setOpen(false); load();
+    setCategory(""); setNote(""); setOpen(false); load();
+  };
+
+  const withdraw = async (id) => {
+    if (withdrawingId) return;
+    setWithdrawingId(id); setError(null); setSent(null);
+    const r = await CaregiverAssignmentService.withdrawAbsenceNotice(assignmentId, id);
+    setWithdrawingId(null);
+    if (!r.success) { setError(r.error); load(); return; }
+    setSent("Notice withdrawn. Your client and CarePro have been told.");
+    load();
   };
 
   return (
@@ -47,10 +76,12 @@ const AbsenceNoticeCard = ({ assignmentId }) => {
       <h3>Can't attend a day?</h3>
       <p className="asn-visits-note">
         Tell your client and CarePro in advance. This is a notice only — nothing is charged, refunded or paid because of it.
+        Your client sees the day and the reason category, not your note.
       </p>
       {sent && <p className="asn-brief-note" data-testid="absence-sent">{sent}</p>}
+      {error && !open && <p className="error-message" data-testid="absence-error">{error}</p>}
       {!open ? (
-        <button type="button" className="asn-btn" onClick={() => { setOpen(true); setSent(null); }} data-testid="absence-open">
+        <button type="button" className="asn-btn" onClick={() => { setOpen(true); setSent(null); setError(null); }} data-testid="absence-open">
           I can't attend a day
         </button>
       ) : (
@@ -61,7 +92,14 @@ const AbsenceNoticeCard = ({ assignmentId }) => {
           </label>
           <label>
             Reason
-            <textarea rows="3" maxLength={500} value={reason} onChange={(e) => setReason(e.target.value)} data-testid="absence-reason" />
+            <select value={category} onChange={(e) => setCategory(e.target.value)} data-testid="absence-category">
+              <option value="">Choose a reason…</option>
+              {ABSENCE_CATEGORIES.map((c) => <option key={c.value} value={c.value}>{c.label}</option>)}
+            </select>
+          </label>
+          <label>
+            Note for CarePro (optional — your client won't see this)
+            <textarea rows="3" maxLength={500} value={note} onChange={(e) => setNote(e.target.value)} data-testid="absence-note" />
           </label>
           {error && <p className="error-message" data-testid="absence-error">{error}</p>}
           <div>
@@ -75,8 +113,16 @@ const AbsenceNoticeCard = ({ assignmentId }) => {
       {notices.length > 0 && (
         <ul className="asn-absence-list" data-testid="absence-list">
           {notices.map((n) => (
-            <li key={n.id}>
-              <strong>{fmtDay(n.date)}</strong>{n.shortNotice ? " (short notice)" : ""} — {n.reason}
+            <li key={n.id} data-testid="absence-item">
+              <strong>{fmtDay(n.date)}</strong>{n.shortNotice ? " (short notice)" : ""} — {n.categoryLabel}
+              {" · "}<span data-testid="absence-item-status">{STATUS_TEXT[n.status] || n.status}</span>
+              {n.canWithdraw && (
+                <>{" "}
+                  <button type="button" className="asn-btn" onClick={() => withdraw(n.id)} disabled={withdrawingId === n.id} data-testid="absence-withdraw">
+                    {withdrawingId === n.id ? "Withdrawing…" : "Withdraw"}
+                  </button>
+                </>
+              )}
             </li>
           ))}
         </ul>

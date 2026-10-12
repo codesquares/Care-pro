@@ -1039,7 +1039,8 @@ export const getNotificationRoute = (notification, userRole) => {
 
     // ── Caregiver can't attend (package): client -> the request page; admins -> the alerts inbox ──
     case 'VisitAbsenceNotified': {
-      if (isAdmin) return `/app/admin/alerts`;
+      // Admin alerts carry the NOTICE id; the client's carries the PackageRequestId.
+      if (isAdmin) return relatedEntityId ? `/app/admin/absence-notices?notice=${relatedEntityId}` : `/app/admin/absence-notices`;
       if (isClient && relatedEntityId) return `/app/client/requests/${relatedEntityId}`;
       if (isClient) return `/app/client/my-orders`;
       return null;
