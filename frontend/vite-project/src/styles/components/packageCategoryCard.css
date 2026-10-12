@@ -294,3 +294,9 @@
 .suggested-services-section .pkg-cat-grid {
   --pkg-cat-card-height: 500px;
 }
+
+/* Priced variant for any grid outside .suggested-services-section (the signed-in marketplace): same extra room the
+   dashboard gives its cards for the price line. The dashboard keeps its own selector above, unchanged. */
+.pkg-cat-grid--priced {
+  --pkg-cat-card-height: 500px;
+}
