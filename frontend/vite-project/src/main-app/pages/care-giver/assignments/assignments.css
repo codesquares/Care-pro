@@ -489,3 +489,16 @@
 .asn-absence-form label { display: flex; flex-direction: column; gap: 4px; font-size: 0.875rem; }
 .asn-absence-form textarea, .asn-absence-form input { padding: 8px; border: 1px solid #ccc; border-radius: 6px; font: inherit; }
 .asn-absence-list { margin: 12px 0 0; padding-left: 18px; font-size: 0.875rem; }
+
+/* Dashboard/profile summary list: "N active" count on a client row, and the "Showing 10 of N clients" line */
+.asn-count-badge { display: inline-block; margin-left: 6px; padding: 1px 8px; border-radius: 999px; font-size: 0.8rem; font-weight: 600; background: #eef2f7; color: #1e3a5f; white-space: nowrap; }
+.asn-list-item-meta { flex-wrap: wrap; }
+.asn-summary-cap { text-align: right; margin: 0.5rem 0 0; }
+.asn-header-cap { margin: 0 12px 0 auto; font-size: 0.8rem; color: #6b7280; }
+
+/* All Assignments page: status filter + Load more */
+.asn-filter-bar { display: flex; flex-wrap: wrap; gap: 8px; align-items: center; margin: 0 0 12px; }
+.asn-filter-btn { border: 1px solid #cbd5e1; background: #fff; color: #1e3a5f; border-radius: 999px; padding: 4px 14px; font-size: 0.85rem; cursor: pointer; }
+.asn-filter-btn--active { background: #1e3a5f; color: #fff; border-color: #1e3a5f; }
+.asn-filter-count { margin-left: auto; font-size: 0.8rem; color: #6b7280; }
+.asn-load-more { display: block; margin: 16px auto; }

@@ -16,7 +16,7 @@ const CaregiverDashboard = () => {
   // RETIRED — legacy order list/count, replaced by My Assignments. Preserved for restore.
   // const [orders, setOrders] = useState([]);
   // const [totalOrders, setTotalOrders] = useState(0);
-  const { pending: pendingAssignments, active: activeAssignments, loading: assignmentsLoading, error: assignmentsError, reload: reloadAssignments } = useCaregiverAssignments();
+  const { pending: pendingAssignments, active: activeAssignments, grouped: groupedAssignments, loading: assignmentsLoading, error: assignmentsError, reload: reloadAssignments } = useCaregiverAssignments();
   const [loading] = useState(false);
   const [error, setError] = useState(null);
   const [totalEarnings, setTotalEarnings] = useState(0);
@@ -284,6 +284,7 @@ const CaregiverDashboard = () => {
           {/* totalOrders is no longer tracked here now that legacy orders are retired. */}
           <StatisticsCard
             activeCount={activeAssignments.length}
+            activeClientCount={groupedAssignments.totals.activeClientCount}
             pendingCount={pendingAssignments.length}
             totalEarnings={totalEarnings}
           />
@@ -306,6 +307,9 @@ const CaregiverDashboard = () => {
         <div className="rightbar">
           <div className="rightbar-header">
             <h3 className="rightbar-title">My Assignments</h3>
+            {!assignmentsLoading && !assignmentsError && groupedAssignments.label && (
+              <span className="asn-header-cap" data-testid="assignments-cap-label">{groupedAssignments.label}</span>
+            )}
             <button
               className="view-all-orders-btn"
               onClick={() => navigate(`${basePath}/assignments`)}
@@ -314,6 +318,8 @@ const CaregiverDashboard = () => {
             </button>
           </div>
           <AssignmentsSummaryList
+            grouped={groupedAssignments}
+            showSummaryLine={false}
             pending={pendingAssignments}
             active={activeAssignments}
             loading={assignmentsLoading}

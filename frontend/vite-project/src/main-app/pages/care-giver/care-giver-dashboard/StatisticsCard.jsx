@@ -4,7 +4,7 @@ import StatisticCard1 from "../../../../assets/statisticCard1.png";
 import StatisticCard2 from "../../../../assets/statisticCard2.png";
 import StatisticCard3 from "../../../../assets/statisticCard3.png";
 
-const StatisticsCard = ({activeCount = 0, pendingCount = 0, totalEarnings}) => {
+const StatisticsCard = ({activeCount = 0, activeClientCount = null, pendingCount = 0, totalEarnings}) => {
   return (
     <div className="statistics-card">
       <div className="stat">
@@ -28,6 +28,12 @@ const StatisticsCard = ({activeCount = 0, pendingCount = 0, totalEarnings}) => {
         <div className="stat-details">
           <p className="stat-title">Active Assignments</p>
           <h4 className="stat-value" data-testid="stat-active">{activeCount}</h4>
+          {/* The number above counts real assignments; the list on this page is one row per client, so say how many clients that is. */}
+          {activeClientCount != null && activeCount > 0 && (
+            <small className="stat-sub" data-testid="stat-active-clients">
+              across {activeClientCount} {activeClientCount === 1 ? 'client' : 'clients'}
+            </small>
+          )}
         </div>
       </div>
       <div className="stat">

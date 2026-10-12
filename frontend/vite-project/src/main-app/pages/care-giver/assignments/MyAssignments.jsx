@@ -18,6 +18,13 @@ const STATUS_LABEL = {
   Cancelled: "Cancelled",
 };
 
+const PAGE_SIZE = 20;
+const FILTERS = [
+  { key: "all", label: "All" },
+  { key: "pending", label: "Pending" },
+  { key: "active", label: "Active" },
+];
+
 const StatusBadge = ({ status }) => (
   <span className={`asn-status-badge asn-status-badge--${status}`}>
     {STATUS_LABEL[status] || status}
@@ -63,6 +70,17 @@ const MyAssignments = () => {
     const bPending = b.status === "PendingAcceptance" ? 0 : 1;
     return aPending - bPending;
   });
+
+  // Status filter (All / Pending / Active) and a 20-per-page "Load more". Previously every assignment rendered at once
+  // (sortedAssignments.map below) — a long-running caregiver's list ran to thousands of pixels.
+  const [filter, setFilter] = useState("all");
+  const [visibleCount, setVisibleCount] = useState(PAGE_SIZE);
+  const filteredAssignments = sortedAssignments.filter((a) =>
+    filter === "pending" ? a.status === "PendingAcceptance" : filter === "active" ? a.status === "Accepted" : true
+  );
+  const visibleAssignments = filteredAssignments.slice(0, visibleCount);
+  const remaining = filteredAssignments.length - visibleAssignments.length;
+  const changeFilter = (key) => { setFilter(key); setVisibleCount(PAGE_SIZE); };
 
   const acceptTarget = assignments.find((a) => a.id === acceptConfirmId);
 
@@ -145,8 +163,33 @@ const MyAssignments = () => {
         {actionNotice && <p className="asn-brief-note" role="status" data-testid="offer-updated-note">{actionNotice}</p>}
 
         {!loading && !error && assignments.length > 0 && (
+          <div className="asn-filter-bar" role="group" aria-label="Filter assignments" data-testid="asn-filter-bar">
+            {FILTERS.map((f) => (
+              <button
+                key={f.key}
+                type="button"
+                className={`asn-filter-btn${filter === f.key ? " asn-filter-btn--active" : ""}`}
+                aria-pressed={filter === f.key}
+                onClick={() => changeFilter(f.key)}
+                data-testid={`asn-filter-${f.key}`}
+              >
+                {f.label}
+              </button>
+            ))}
+            <span className="asn-filter-count" data-testid="asn-filter-count">
+              Showing {visibleAssignments.length} of {filteredAssignments.length}
+            </span>
+          </div>
+        )}
+
+        {!loading && !error && assignments.length > 0 && filteredAssignments.length === 0 && (
+          <p className="asn-summary-note" data-testid="asn-filter-empty">No assignments match this filter.</p>
+        )}
+
+        {!loading && !error && assignments.length > 0 && (
           <ul className="asn-list">
-            {sortedAssignments.map((a) => {
+            {/* was: sortedAssignments.map((a) => { — now paged + filtered */}
+            {visibleAssignments.map((a) => {
               const isOffer = a.status === "PendingAcceptance";
               const submitting = actionSubmittingId === a.id;
               return (
@@ -198,6 +241,12 @@ const MyAssignments = () => {
               );
             })}
           </ul>
+        )}
+
+        {!loading && !error && remaining > 0 && (
+          <button type="button" className="asn-refresh-btn asn-load-more" onClick={() => setVisibleCount((c) => c + PAGE_SIZE)} data-testid="asn-load-more">
+            Load more ({remaining} more)
+          </button>
         )}
       </div>
 
