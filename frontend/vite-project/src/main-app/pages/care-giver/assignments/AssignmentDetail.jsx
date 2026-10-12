@@ -9,6 +9,7 @@ import { formatLagos } from "../../../utils/lagosTime";
 import AssignmentDeclineDialog from "./AssignmentDeclineDialog";
 import Modal from "../../../components/modal/Modal";
 import TaskSheetTabs from "../../../components/task-sheets/TaskSheetTabs";
+import AbsenceNoticeCard from "../../../components/task-sheets/AbsenceNoticeCard";
 import "../../client/client-dashboard/clientDashboard.css";
 import "./assignments.css";
 
@@ -329,6 +330,9 @@ const AssignmentDetail = () => {
                 assignments — start each visit yourself when you arrive.
               </p>
               <TaskSheetTabs assignmentId={id} contract={contract} />
+            </div>
+            <div className="asn-visits-card">
+              <AbsenceNoticeCard assignmentId={id} />
             </div>
           </>
         )}

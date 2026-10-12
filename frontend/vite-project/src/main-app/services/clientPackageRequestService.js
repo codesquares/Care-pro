@@ -113,6 +113,17 @@ const ClientPackageRequestService = {
     }
   },
 
+  /** Endpoint: GET /api/client/package-requests/{id}/absence-notices — caregiver "can't attend" notices, newest day first. */
+  async getAbsenceNotices(id) {
+    try {
+      const response = await api.get(`${BASE}/${id}/absence-notices`);
+      const payload = response.data || {};
+      return { success: true, data: Array.isArray(payload.data) ? payload.data : [] };
+    } catch (error) {
+      return { success: false, error: extractError(error, 'Failed to load caregiver notices') };
+    }
+  },
+
   /**
    * Endpoint: GET /api/client/package-requests/{id}/contract/pdf
    * Downloads the PDF directly (not JSON), so this bypasses the axios instance

@@ -354,6 +354,10 @@ const TYPE_MAP = {
   'disputeunderreview':            'DisputeUnderReview',
   'dispute under review':          'DisputeUnderReview',
 
+  // Package caregiver "can't attend" notice (client + admins)
+  'visit_absence_notified':        'VisitAbsenceNotified',
+  'visitabsencenotified':          'VisitAbsenceNotified',
+
   // Incident Reported
   'incident_reported':             'IncidentReported',
   'incidentreported':              'IncidentReported',
@@ -465,6 +469,7 @@ const KNOWN_CANONICAL = new Set([
   'DisputeUnderReview',
   'IncidentReported',
   'ObservationReportFiled',
+  'VisitAbsenceNotified',
   'CareRequestCreated', 'CareRequestPaused', 'CareRequestReopened', 'CareRequestClosed',
   'ShortlistRemoved',
   'CaregiverBecameIneligible',
@@ -1022,6 +1027,8 @@ export const getNotificationRoute = (notification, userRole) => {
     case 'IncidentReported': {
       if (isAdmin && relatedEntityId) return `/app/admin/incidents/${relatedEntityId}`;
       if (isAdmin) return `/app/admin/disputes`;
+      // Package visits send no orderId; the client's relatedEntityId is then the PackageRequestId.
+      if (isClient && !notification.orderId && relatedEntityId) return `/app/client/requests/${relatedEntityId}`;
       const incidentOrderId = notification.orderId || relatedEntityId;
       if (incidentOrderId) {
         if (isClient) return `/app/client/my-order/${incidentOrderId}`;
@@ -1030,8 +1037,17 @@ export const getNotificationRoute = (notification, userRole) => {
       return null;
     }
 
+    // ── Caregiver can't attend (package): client -> the request page; admins -> the alerts inbox ──
+    case 'VisitAbsenceNotified': {
+      if (isAdmin) return `/app/admin/alerts`;
+      if (isClient && relatedEntityId) return `/app/client/requests/${relatedEntityId}`;
+      if (isClient) return `/app/client/my-orders`;
+      return null;
+    }
+
     // ── Observation Report Filed ─────────────────────────
     case 'ObservationReportFiled': {
+      if (isClient && !notification.orderId && relatedEntityId) return `/app/client/requests/${relatedEntityId}`;
       const obsOrderId = notification.orderId || relatedEntityId;
       if (obsOrderId && isClient) return `/app/client/my-order/${obsOrderId}`;
       if (isClient) return `/app/client/my-order`;
@@ -1272,6 +1288,8 @@ export const getNotificationActionLabel = (rawType) => {
       return 'View Dispute';
     case 'IncidentReported':
       return 'View Incident';
+    case 'VisitAbsenceNotified':
+      return 'View Notice';
     case 'ObservationReportFiled':
       return 'View Report';
     case 'CareRequestCreated':
@@ -1501,6 +1519,8 @@ export const getNotificationTypeIcon = (rawType) => {
       return '⚖️';
     case 'IncidentReported':
       return '🚨';
+    case 'VisitAbsenceNotified':
+      return '📅';
     case 'ObservationReportFiled':
       return '📋';
     case 'CareRequestCreated':

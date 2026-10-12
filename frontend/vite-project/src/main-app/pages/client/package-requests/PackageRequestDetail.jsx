@@ -7,6 +7,8 @@ import ClientPackageRequestService from "../../../services/clientPackageRequestS
 import DisputeService from "../../../services/disputeService";
 import ContractService from "../../../services/contractService";
 import VisitCheckinService from "../../../services/visitCheckinService";
+import ClientAbsenceNotices from "../../../components/task-sheets/ClientAbsenceNotices";
+import PackageVisitReports from "../../../components/task-sheets/PackageVisitReports";
 import { getInitials } from "../../../utils/avatarHelpers";
 import "../client-dashboard/clientDashboard.css";
 import "./packageRequests.css";
@@ -470,6 +472,8 @@ const PackageRequestDetail = () => {
               )}
             </div>
 
+            <ClientAbsenceNotices packageRequestId={id} />
+
             <div className="pr-visits-card">
               <h2>Visits</h2>
               {visitsLoading && <p>Loading visits…</p>}
@@ -514,6 +518,8 @@ const PackageRequestDetail = () => {
                             <span>Submitted {new Date(v.submittedAt).toLocaleString()}</span>
                           )}
                         </div>
+
+                        <PackageVisitReports packageRequestId={id} sheet={v} />
 
                         {v.clientReviewStatus === "Approved" && (
                           <div className="pr-visit-review pr-visit-review--approved">✓ You approved this visit</div>

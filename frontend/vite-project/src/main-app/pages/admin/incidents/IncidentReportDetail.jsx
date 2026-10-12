@@ -89,6 +89,8 @@ const IncidentReportDetail = () => {
       <div style={{ background: '#fff', borderRadius: 10, border: '1px solid #e0e0e0', padding: '1.5rem', boxShadow: '0 1px 4px rgba(0,0,0,0.05)' }}>
         {field('Report ID', report.id || report.Id)}
         {field('Order ID', report.orderId || report.OrderId)}
+        {field('Assignment ID', report.assignmentId)}
+        {field('Package Request ID', report.packageRequestId)}
         {field('Task Sheet ID', report.taskSheetId || report.TaskSheetId)}
         {field('Reported By', report.reportedBy || report.ReportedBy || report.reportedByName)}
         {field('Report Type', report.reportType || report.ReportType || report.type)}
@@ -117,7 +119,7 @@ const IncidentReportDetail = () => {
         {/* Render any additional unknown fields */}
         {Object.entries(report)
           .filter(([k]) => ![
-            'id','Id','orderId','OrderId','taskSheetId','TaskSheetId',
+            'id','Id','orderId','OrderId','assignmentId','packageRequestId','taskSheetId','TaskSheetId',
             'reportedBy','ReportedBy','reportedByName','reportType','ReportType','type',
             'status','Status','severity','Severity','createdAt','CreatedAt',
             'updatedAt','UpdatedAt','description','Description','adminNotes','AdminNotes',

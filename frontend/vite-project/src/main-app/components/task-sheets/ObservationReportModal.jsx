@@ -8,11 +8,11 @@ import ObservationReportService from "../../services/observationReportService";
  * Props:
  *  - isOpen: boolean
  *  - onClose(): close the modal
- *  - orderId: string
+ *  - orderId: string (legacy order visit) — or assignmentId for a package-assignment visit
  *  - taskSheetId: string
  *  - onReportCreated(report): callback after successful creation
  */
-const ObservationReportModal = ({ isOpen, onClose, orderId, taskSheetId, onReportCreated }) => {
+const ObservationReportModal = ({ isOpen, onClose, orderId, assignmentId = null, taskSheetId, onReportCreated }) => {
   const [category, setCategory] = useState("health_observation");
   const [description, setDescription] = useState("");
   const [severity, setSeverity] = useState("low");
@@ -61,7 +61,7 @@ const ObservationReportModal = ({ isOpen, onClose, orderId, taskSheetId, onRepor
 
     setSubmitting(true);
     const result = await ObservationReportService.create({
-      orderId,
+      ...(assignmentId ? { assignmentId } : { orderId }),
       taskSheetId,
       category,
       description,

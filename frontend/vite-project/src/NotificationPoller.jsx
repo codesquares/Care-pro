@@ -28,7 +28,7 @@ const WARN_TYPES = new Set([
 
 // Notification types that fire an info toast
 const INFO_TYPES = new Set([
-  'CaregiverCheckedIn', 'ObservationReportFiled', 'IncidentReported',
+  'CaregiverCheckedIn', 'ObservationReportFiled', 'IncidentReported', 'VisitAbsenceNotified',
   'VisitRescheduled', 'WithdrawalVerified',
   'CareRequestCreated', 'CareRequestPaused', 'CareRequestReopened', 'CareRequestClosed',
   'CareRequestMatched', 'CareRequestNewResponder',

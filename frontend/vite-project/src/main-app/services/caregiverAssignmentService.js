@@ -117,6 +117,32 @@ const CaregiverAssignmentService = {
   },
 
   /**
+   * Endpoint: POST /api/caregiver/assignments/{id}/absence-notices
+   * Tells the client and CarePro the caregiver cannot attend a day (informational — no money moves).
+   * @param {string} id assignment id
+   * @param {{date: string, reason: string}} body date is yyyy-MM-dd (Lagos day)
+   */
+  async createAbsenceNotice(id, { date, reason }) {
+    try {
+      const response = await api.post(`${BASE}/${id}/absence-notices`, { date, reason });
+      return { success: true, data: response.data };
+    } catch (error) {
+      return { success: false, error: extractError(error, 'Failed to send your notice') };
+    }
+  },
+
+  /** Endpoint: GET /api/caregiver/assignments/{id}/absence-notices */
+  async getAbsenceNotices(id) {
+    try {
+      const response = await api.get(`${BASE}/${id}/absence-notices`);
+      const payload = response.data || {};
+      return { success: true, data: Array.isArray(payload.data) ? payload.data : [] };
+    } catch (error) {
+      return { success: false, error: extractError(error, 'Failed to load your notices') };
+    }
+  },
+
+  /**
    * Endpoint: POST /api/caregiver/assignments/{id}/accept
    * Idempotent server-side — accepting an already-fully-Accepted assignment returns
    * success with the same status rather than an error. 409 if the assignment is no longer
