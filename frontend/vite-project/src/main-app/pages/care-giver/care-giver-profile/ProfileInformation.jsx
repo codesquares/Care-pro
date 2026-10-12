@@ -406,7 +406,32 @@ const ProfileInformation = ({ aboutMe, onUpdate, services = [] }) => {
                     </div>
                   )}
                   
-                  {needsSupport && (
+                  {/* Rejected with a reason from the reviewer: show WHY (was a bare "contact support" for every rejection). */}
+                  {statusName === 'Invalid' && cert.adminReviewNotes && (
+                    <div
+                      data-testid="cert-rejection-reason"
+                      style={{
+                        marginTop: '8px',
+                        padding: '8px',
+                        backgroundColor: '#fef2f2',
+                        borderRadius: '4px',
+                        borderLeft: '3px solid #ef4444'
+                      }}
+                    >
+                      <p style={{ margin: '0 0 4px 0', fontSize: '12px', fontWeight: '600', color: '#991b1b' }}>
+                        Why it was not approved:
+                      </p>
+                      <p style={{ margin: 0, fontSize: '12px', color: '#991b1b', whiteSpace: 'pre-line' }}>
+                        {cert.adminReviewNotes}
+                      </p>
+                      <p style={{ margin: '6px 0 0 0', fontSize: '12px', color: '#991b1b' }}>
+                        Need to replace it? Please contact CarePro support.
+                      </p>
+                    </div>
+                  )}
+
+                  {/* was: shown for every Invalid / VerificationFailed certificate. Now only when there is no reviewer reason to show. */}
+                  {needsSupport && !(statusName === 'Invalid' && cert.adminReviewNotes) && (
                     <div style={{
                       marginTop: '8px',
                       padding: '8px',
@@ -569,6 +594,11 @@ const ProfileInformation = ({ aboutMe, onUpdate, services = [] }) => {
                       {confidence && (
                         <p style={{ margin: '8px 0', fontSize: '13px', color: '#4b5563' }}>
                           Verification Confidence: <strong>{confidence}%</strong>
+                        </p>
+                      )}
+                      {getVerificationStatusName(selectedCertificate) === 'Invalid' && selectedCertificate.adminReviewNotes && (
+                        <p data-testid="cert-modal-rejection-reason" style={{ margin: '8px 0', fontSize: '13px', color: '#991b1b', whiteSpace: 'pre-line' }}>
+                          <strong>Why it was not approved:</strong> {selectedCertificate.adminReviewNotes}
                         </p>
                       )}
                     </div>
