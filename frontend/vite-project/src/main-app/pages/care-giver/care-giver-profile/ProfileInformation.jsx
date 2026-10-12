@@ -31,6 +31,8 @@ const ProfileInformation = ({ aboutMe, onUpdate, services = [] }) => {
   const [loading, setLoading] = useState(false);
 
   const [showCertModal, setShowCertModal] = useState(false);
+  // Set when the modal is opened from "Upload a replacement" on a rejected certificate (pre-selects its type).
+  const [replacementType, setReplacementType] = useState('');
   
   // State for certificate viewing modal
   const [showViewModal, setShowViewModal] = useState(false);
@@ -157,6 +159,7 @@ const ProfileInformation = ({ aboutMe, onUpdate, services = [] }) => {
   // Called when the shared CertificateUploadModal finishes uploading
   const handleCertUploadDone = async () => {
     setShowCertModal(false);
+    setReplacementType('');
     await fetchCertificates();
     await updateCertificates();
   };
@@ -406,8 +409,8 @@ const ProfileInformation = ({ aboutMe, onUpdate, services = [] }) => {
                     </div>
                   )}
                   
-                  {/* Rejected with a reason from the reviewer: show WHY (was a bare "contact support" for every rejection). */}
-                  {statusName === 'Invalid' && cert.adminReviewNotes && (
+                  {/* Rejected: show the reviewer's reason (if any) and let the caregiver replace the certificate. */}
+                  {statusName === 'Invalid' && (
                     <div
                       data-testid="cert-rejection-reason"
                       style={{
@@ -418,20 +421,35 @@ const ProfileInformation = ({ aboutMe, onUpdate, services = [] }) => {
                         borderLeft: '3px solid #ef4444'
                       }}
                     >
-                      <p style={{ margin: '0 0 4px 0', fontSize: '12px', fontWeight: '600', color: '#991b1b' }}>
-                        Why it was not approved:
-                      </p>
                       <p style={{ margin: 0, fontSize: '12px', color: '#991b1b', whiteSpace: 'pre-line' }}>
-                        {cert.adminReviewNotes}
+                        <strong>Rejected:</strong> {cert.adminReviewNotes || 'This certificate was not approved.'}
                       </p>
-                      <p style={{ margin: '6px 0 0 0', fontSize: '12px', color: '#991b1b' }}>
-                        Need to replace it? Please contact CarePro support.
-                      </p>
+                      <button
+                        type="button"
+                        data-testid="cert-upload-replacement"
+                        onClick={() => {
+                          setReplacementType(cert.certificateName);
+                          setShowCertModal(true);
+                        }}
+                        style={{
+                          marginTop: '8px',
+                          padding: '6px 12px',
+                          fontSize: '12px',
+                          fontWeight: 600,
+                          color: '#991b1b',
+                          backgroundColor: '#fff',
+                          border: '1px solid #ef4444',
+                          borderRadius: '4px',
+                          cursor: 'pointer'
+                        }}
+                      >
+                        Upload a replacement
+                      </button>
                     </div>
                   )}
 
                   {/* was: shown for every Invalid / VerificationFailed certificate. Now only when there is no reviewer reason to show. */}
-                  {needsSupport && !(statusName === 'Invalid' && cert.adminReviewNotes) && (
+                  {needsSupport && statusName !== 'Invalid' && (
                     <div style={{
                       marginTop: '8px',
                       padding: '8px',
@@ -495,7 +513,7 @@ const ProfileInformation = ({ aboutMe, onUpdate, services = [] }) => {
             </div>
           )}
           <button 
-            onClick={() => setShowCertModal(true)}
+            onClick={() => { setReplacementType(''); setShowCertModal(true); }}
             className="pi-add-certification-btn"
           >
             + Add Certificate
@@ -538,8 +556,9 @@ const ProfileInformation = ({ aboutMe, onUpdate, services = [] }) => {
       {/* Certificate Upload Modal (shared component) */}
       <CertificateUploadModal
         isOpen={showCertModal}
-        onClose={() => setShowCertModal(false)}
+        onClose={() => { setShowCertModal(false); setReplacementType(''); }}
         caregiverId={userDetails?.id}
+        initialCertificateType={replacementType || undefined}
         onUploadDone={handleCertUploadDone}
       />
 
@@ -598,7 +617,7 @@ const ProfileInformation = ({ aboutMe, onUpdate, services = [] }) => {
                       )}
                       {getVerificationStatusName(selectedCertificate) === 'Invalid' && selectedCertificate.adminReviewNotes && (
                         <p data-testid="cert-modal-rejection-reason" style={{ margin: '8px 0', fontSize: '13px', color: '#991b1b', whiteSpace: 'pre-line' }}>
-                          <strong>Why it was not approved:</strong> {selectedCertificate.adminReviewNotes}
+                          <strong>Rejected:</strong> {selectedCertificate.adminReviewNotes}
                         </p>
                       )}
                     </div>
