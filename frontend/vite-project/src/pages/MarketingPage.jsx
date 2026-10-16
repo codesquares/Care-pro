@@ -2,7 +2,7 @@ import { useNavigate } from "react-router-dom";
 import { useEffect, useState } from "react";
 import { useAuth } from "../main-app/context/AuthContext";
 import "./MarketingPage.css";
-import PricingModal from "../components/PricingModal/PricingModal";
+// import PricingModal from "../components/PricingModal/PricingModal"; // pricing modal retired
 import PackageCategoryCard from "../components/category/PackageCategoryCard";
 import { PACKAGE_CATEGORIES } from "../main-app/constants/categoryBrowseData";
 import PublicPackageService from "../main-app/services/publicPackageService";
@@ -24,7 +24,7 @@ const POPULAR_PACKAGE_CATEGORIES = [
 const MarketingPage = () => {
   const navigate = useNavigate();
   const [searchQuery, setSearchQuery] = useState("");
-  const [isPricingModalOpen, setIsPricingModalOpen] = useState(false);
+  // const [isPricingModalOpen, setIsPricingModalOpen] = useState(false); // pricing modal retired
   const { isAuthenticated } = useAuth();
   const [packageSummaries, setPackageSummaries] = useState([]);
 
@@ -228,7 +228,7 @@ const MarketingPage = () => {
                 CarePro stands behind the work from day one.
               </p>
               <div className="how-actions">
-                <button className="how-btn fill wide" onClick={() => setIsPricingModalOpen(true)}>View Pricing</button>
+                <button className="how-btn fill wide" onClick={() => navigate("/register")}>Start Now</button>
               </div>
             </div>
           </div>
@@ -236,7 +236,9 @@ const MarketingPage = () => {
       </section>
 
       {/* Pricing Modal */}
+      {/* pricing modal retired
       <PricingModal isOpen={isPricingModalOpen} onClose={() => setIsPricingModalOpen(false)} />
+      */}
 
       {/* Trust Section */}
       <section className="trust-section">

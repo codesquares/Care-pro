@@ -10,14 +10,13 @@ const footerSections = [
     links: [
       { to: "/marketplace", label: "Browse Care Packages" },
       { to: "/start-assessment", label: "Get a Free Care Assessment" },
-      { to: "/plans", label: "Pricing" },
+      // { to: "/plans", label: "Pricing" }, // /plans retired
     ],
   },
   {
     title: "For Care Professionals",
     links: [
-      { to: "/become-caregiver", label: "Become a Care Professional" },
-      { to: "/become-caregiver", label: "How it Works" },
+      // { to: "/become-caregiver", label: "Become a Care Professional" }, // retired
       { to: "/become-a-referrer", label: "Become a Referrer" },
     ],
   },

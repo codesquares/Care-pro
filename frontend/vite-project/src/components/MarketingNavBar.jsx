@@ -82,11 +82,13 @@ const MarketingNavBar = () => {
           <Link to={dashboardPath} onClick={closeMobileMenu}>
             Dashboard
           </Link>
+          {/* retired: /become-caregiver
           {!isCaregiver && (
             <Link to="/become-caregiver" onClick={closeMobileMenu}>
               Become a Caregiver
             </Link>
           )}
+          */}
           <button className="nav-logout-btn" onClick={handleLogout}>
             Logout
           </button>
@@ -99,9 +101,11 @@ const MarketingNavBar = () => {
           <Link to="/marketplace" onClick={closeMobileMenu}>
             Browse Care Packages
           </Link>
+          {/* retired: /become-caregiver
           <Link to="/become-caregiver" onClick={closeMobileMenu}>
             Become a caregiver
           </Link>
+          */}
           <Link
             to="/register"
             className="nav-join-btn"

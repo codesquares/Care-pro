@@ -94,7 +94,7 @@ const Team = () => {
                             <p>Over 300+ care professionals are waiting for you.</p>
                             <div className="cta-buttons">
                                 <Link to="/marketplace" className="btn-primary">Hire a Caregiver</Link>
-                                <Link to="/become-caregiver" className="btn-secondary">Become a Caregiver</Link>
+                                {/* retired: <Link to="/become-caregiver" className="btn-secondary">Become a Caregiver</Link> */}
                             </div>
                         </div>
                     </div>

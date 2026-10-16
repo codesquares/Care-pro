@@ -11,7 +11,7 @@ import AboutUs from './pages/AboutUs';
 import Blog from './pages/Blog';
 import CareFacts from './pages/CareFacts';
 import OurProcess from './pages/OurProcess';
-import Plans from './pages/Plans';
+// import Plans from './pages/Plans'; // /plans retired
 // /book-caregiver — retired. Described the old individual-caregiver
 // hire/negotiate/contract flow, which no longer exists (clients now use
 // guided care packages). Component preserved (fully commented out, not
@@ -19,7 +19,7 @@ import Plans from './pages/Plans';
 // import BookCaregiver from './pages/BookCaregiver';
 import MarketingPage from './pages/MarketingPage';
 import StartAssessmentRedirect from './pages/StartAssessmentRedirect';
-import BecomeCaregiver from './pages/BecomeCaregiver';
+// import BecomeCaregiver from './pages/BecomeCaregiver'; // /become-caregiver retired
 import BecomeReferrer from './pages/BecomeReferrer';
 import PrivacyPolicy from './pages/PrivacyPolicy';
 import TermsAndConditions from './pages/TermsAndConditions';
@@ -182,9 +182,9 @@ function AppContent() {
     '/contentful-blog',
     '/care-facts',
     '/our-process',
-    '/plans',
+    // '/plans', // retired
     '/book-caregiver',
-    '/become-caregiver',
+    // '/become-caregiver', // retired
     '/become-a-referrer',
     '/privacy-policy',
     '/terms-and-conditions',
@@ -287,9 +287,9 @@ function AppContent() {
         <Route path="/care-facts" element={<CareFacts />} />
         <Route path="/our-process" element={<OurProcess />} />
         {/* <Route path="/messages" element={<Messages />} /> */}
-        <Route path="/plans" element={<Plans />} />
+        {/* <Route path="/plans" element={<Plans />} /> retired */}
         <Route path="/book-caregiver" element={<FeatureMovedNotice title="This page has moved" message="Care is now arranged through guided care packages, and we match you with the right caregiver for you. Browse the packages to get started." homePath="/marketplace" homeLabel="Browse care packages" />} />
-        <Route path="/become-caregiver" element={<BecomeCaregiver />} />
+        {/* <Route path="/become-caregiver" element={<BecomeCaregiver />} /> retired */}
         <Route path="/become-a-referrer" element={<BecomeReferrer />} />
         <Route path="/privacy-policy" element={<PrivacyPolicy />} />
         <Route path="/terms-and-conditions" element={<TermsAndConditions />} />
