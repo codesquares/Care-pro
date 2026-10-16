@@ -16,9 +16,11 @@ const BottomBanner = () => {
               <button className='btn-primary' onClick={() => navigate('/marketplace')}>
                 Hire a Caregiver
               </button>
+              {/* retired: /become-caregiver
               <button className='btn-secondary' onClick={() => navigate('/become-caregiver')}>
                 Become a Caregiver
               </button>
+              */}
             </div>
           </div>
           {/* Decorative arc/gradient background handled in CSS */}

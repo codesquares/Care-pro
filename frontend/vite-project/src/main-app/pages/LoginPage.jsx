@@ -47,14 +47,7 @@ const LoginPage = () => {
       const navigationTimer = setTimeout(() => {
         try {
           toast.dismiss();
-          if (returnTo) {
-            navigate(decodeURIComponent(returnTo), { replace: true });
-          } else {
-            const dashboardPath = userRole === "Admin" || userRole === "SuperAdmin" ? "/app/admin/dashboard" :
-              userRole === "Client" ? "/app/client/dashboard" :
-                "/app/caregiver/profile";
-            navigate(dashboardPath, { replace: true });
-          }
+          navigate(GoogleAuthService.getPostAuthRedirect(userRole, returnTo), { replace: true });
         } catch (error) {
           console.error('Navigation error:', error);
           setRedirecting(false);

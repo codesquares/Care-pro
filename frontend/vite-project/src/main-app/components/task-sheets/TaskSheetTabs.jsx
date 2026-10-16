@@ -1,6 +1,7 @@
 import { useState, useEffect, useCallback, useRef } from "react";
 import { useSelector } from "react-redux";
 import { toast } from "react-toastify";
+import { formatLagos } from "../../utils/lagosTime";
 import TaskSheetService from "../../services/taskSheetService";
 import CaregiverAssignmentService from "../../services/caregiverAssignmentService";
 import TaskSheetPage from "./TaskSheetPage";
@@ -27,6 +28,12 @@ import "./TaskSheets.css";
  */
 const TaskSheetTabs = ({ order, assignmentId = null, contract = null }) => {
   const isAssignmentMode = !!assignmentId;
+  // Care can't begin while the client's cancellation window is open (enforced by the API too).
+  const [windowEndsAt, setWindowEndsAt] = useState(null);
+  const windowOpen = isAssignmentMode && (!!windowEndsAt || contract?.cancellationWindowOpen === true);
+  const windowEndLabel = (windowEndsAt || contract?.cancellationWindowEndsAt)
+    ? formatLagos(windowEndsAt || contract.cancellationWindowEndsAt)
+    : null;
   const [sheets, setSheets] = useState([]);
   const [maxSheets, setMaxSheets] = useState(isAssignmentMode ? Infinity : 1);
   const [activeIndex, setActiveIndex] = useState(0);
@@ -161,6 +168,7 @@ const TaskSheetTabs = ({ order, assignmentId = null, contract = null }) => {
   // ------ assignment path has no cap, just the sequential review gate. ------
   const handleCreateSheet = async (isAutoFirst = false) => {
     if (creating || orderCompleted) return;
+    if (windowOpen) return; // button is disabled too; the API would refuse anyway
     if (!isAssignmentMode && !isAutoFirst && sheets.length >= maxSheets) {
       toast.info("All visit sheets have been created for this order.");
       return;
@@ -192,6 +200,9 @@ const TaskSheetTabs = ({ order, assignmentId = null, contract = null }) => {
       if (!isAutoFirst) {
         toast.success(`Visit ${sheets.length + 1} started.`);
       }
+    } else if (result.errorCode === "cancellation_window_open") {
+      // Friendly state instead of a raw error.
+      setWindowEndsAt(result.windowEndsAt || contract?.cancellationWindowEndsAt || null);
     } else {
       const isDailyDuplicate =
         result.statusCode === 400 &&
@@ -320,12 +331,18 @@ const TaskSheetTabs = ({ order, assignmentId = null, contract = null }) => {
           </button>
         ))}
 
+        {windowOpen && (
+          <p className="ts-window-note" data-testid="care-window-note">
+            Care can begin after {windowEndLabel || "the cancellation period ends"}. The client has a cancellation period until then.
+          </p>
+        )}
+
         {canAddMore && (
           <button
-            className={`ts-tab ts-tab--add ${!prevApproved ? 'ts-tab--locked' : ''}`}
+            className={`ts-tab ts-tab--add ${!prevApproved || windowOpen ? 'ts-tab--locked' : ''}`}
             onClick={() => handleCreateSheet(false)}
-            disabled={creating}
-            title={!prevApproved ? 'Previous visit must be submitted and reviewed by client first' : (isAssignmentMode ? 'Start next visit' : 'Add another visit sheet')}
+            disabled={creating || windowOpen}
+            title={windowOpen ? 'Care can begin after the client’s cancellation period ends' : !prevApproved ? 'Previous visit must be submitted and reviewed by client first' : (isAssignmentMode ? 'Start next visit' : 'Add another visit sheet')}
           >
             {creating ? "..." : (isAssignmentMode && sheets.length === 0 ? "+ Start Visit" : "+")}
           </button>
@@ -365,6 +382,7 @@ const TaskSheetTabs = ({ order, assignmentId = null, contract = null }) => {
           serviceLocationSetByClient={contract?.serviceLocationSetByClient}
           serviceLocationSetAt={contract?.serviceLocationSetAt}
           serviceAddress={contract?.serviceAddress}
+          careBeginsAfter={isAssignmentMode && contract?.cancellationWindowOpen ? contract.cancellationWindowEndsAt : null}
           onSheetUpdated={handleSheetUpdated}
           onActivateSheet={handleActivateSheet}
           activating={activating}

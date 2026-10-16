@@ -11,7 +11,8 @@ const VerifyButton = ({ verificationStatus }) => {
 
   // Redirect to verification page when clicked
   const handleVerifyClick = () => {
-    navigate("/app/caregiver/verification");
+    // Identity verification now starts from the Vetting Hub (was /app/caregiver/verification).
+    navigate("/app/caregiver/vetting");
   };
 
   // Normalize status to lowercase for comparison

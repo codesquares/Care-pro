@@ -466,3 +466,39 @@
 .asn-dialog-btn--danger:hover:not(:disabled) {
   background: #a92121;
 }
+
+/* Compact summary list used on the dashboard and profile */
+.asn-list--compact { margin: 0; }
+.asn-summary-note { color: #6b7280; font-size: 0.9rem; margin: 0.5rem 0; }
+.asn-summary-link { background: none; border: none; color: inherit; text-decoration: underline; cursor: pointer; padding: 0; }
+.asn-profile-section { margin: 1rem 0; padding: 1rem; background: #fff; border-radius: 12px; border: 1px solid #e5e7eb; }
+.asn-profile-section h3 { margin: 0 0 0.5rem; font-size: 1.05rem; }
+
+/* Care brief */
+.asn-brief { margin: 1rem 0; padding: 1rem; background: #f8fafc; border: 1px solid #e5e7eb; border-radius: 10px; }
+.asn-brief h2 { margin: 0 0 0.5rem; font-size: 1.05rem; }
+.asn-brief--compact { margin: 0.5rem 0 0; padding: 0.6rem 0.75rem; font-size: 0.85rem; }
+.asn-brief-needs { margin: 0 0 0.5rem; white-space: pre-wrap; }
+.asn-brief-row { display: flex; gap: 0.75rem; font-size: 0.9rem; padding: 2px 0; }
+.asn-brief-label { min-width: 90px; color: #6b7280; }
+.asn-brief-note { color: #6b7280; font-size: 0.85rem; margin: 0.25rem 0 0.75rem; }
+.asn-service-address { margin: 0.5rem 0; padding: 0.6rem 0.8rem; background: #f0fdf4; border: 1px solid #bbf7d0; border-radius: 8px; }
+
+.asn-absence h3 { margin: 0 0 6px; font-size: 1rem; }
+.asn-absence-form { display: flex; flex-direction: column; gap: 10px; margin-top: 10px; max-width: 420px; }
+.asn-absence-form label { display: flex; flex-direction: column; gap: 4px; font-size: 0.875rem; }
+.asn-absence-form textarea, .asn-absence-form input { padding: 8px; border: 1px solid #ccc; border-radius: 6px; font: inherit; }
+.asn-absence-list { margin: 12px 0 0; padding-left: 18px; font-size: 0.875rem; }
+
+/* Dashboard/profile summary list: "N active" count on a client row, and the "Showing 10 of N clients" line */
+.asn-count-badge { display: inline-block; margin-left: 6px; padding: 1px 8px; border-radius: 999px; font-size: 0.8rem; font-weight: 600; background: #eef2f7; color: #1e3a5f; white-space: nowrap; }
+.asn-list-item-meta { flex-wrap: wrap; }
+.asn-summary-cap { text-align: right; margin: 0.5rem 0 0; }
+.asn-header-cap { margin: 0 12px 0 auto; font-size: 0.8rem; color: #6b7280; }
+
+/* All Assignments page: status filter + Load more */
+.asn-filter-bar { display: flex; flex-wrap: wrap; gap: 8px; align-items: center; margin: 0 0 12px; }
+.asn-filter-btn { border: 1px solid #cbd5e1; background: #fff; color: #1e3a5f; border-radius: 999px; padding: 4px 14px; font-size: 0.85rem; cursor: pointer; }
+.asn-filter-btn--active { background: #1e3a5f; color: #fff; border-color: #1e3a5f; }
+.asn-filter-count { margin-left: auto; font-size: 0.8rem; color: #6b7280; }
+.asn-load-more { display: block; margin: 16px auto; }

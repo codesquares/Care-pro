@@ -1,10 +1,14 @@
 import { useState, useEffect, useCallback } from "react";
+import Modal from "../../../components/modal/Modal";
+import { formatLagos } from "../../../utils/lagosTime";
 import { useParams, useNavigate } from "react-router-dom";
 import { toast } from "react-toastify";
 import ClientPackageRequestService from "../../../services/clientPackageRequestService";
 import DisputeService from "../../../services/disputeService";
 import ContractService from "../../../services/contractService";
 import VisitCheckinService from "../../../services/visitCheckinService";
+import ClientAbsenceNotices from "../../../components/task-sheets/ClientAbsenceNotices";
+import PackageVisitReports from "../../../components/task-sheets/PackageVisitReports";
 import { getInitials } from "../../../utils/avatarHelpers";
 import "../client-dashboard/clientDashboard.css";
 import "./packageRequests.css";
@@ -100,8 +104,43 @@ const PackageRequestDetail = () => {
     if (request?.status === "confirmed") {
       loadContract();
       loadVisits();
+    } else if (request?.status === "cancelled") {
+      loadContract(); // so the cancellation time can be shown
     }
   }, [request?.status, loadContract, loadVisits]);
+
+  // ── Cancellation window ──
+  const [cancelConfirmOpen, setCancelConfirmOpen] = useState(false);
+  const [cancelling, setCancelling] = useState(false);
+  const [cancelError, setCancelError] = useState(null);
+
+  const [agreeChecked, setAgreeChecked] = useState(false);
+  const [agreeing, setAgreeing] = useState(false);
+  const [agreeError, setAgreeError] = useState(null);
+
+  const handleAgree = async () => {
+    setAgreeing(true);
+    setAgreeError(null);
+    const result = await ClientPackageRequestService.agreeToContract(id);
+    setAgreeing(false);
+    if (result.success) setContract(result.data);
+    else setAgreeError(result.error);
+  };
+
+  const handleCancelOrder = async () => {
+    setCancelling(true);
+    setCancelError(null);
+    const result = await ClientPackageRequestService.cancelRequest(id);
+    setCancelling(false);
+    if (result.success) {
+      setCancelConfirmOpen(false);
+      setContract(result.data);
+      await loadRequest();
+    } else {
+      setCancelError(result.error);
+      await loadContract(); // window may have just closed — refresh what we show
+    }
+  };
 
   const handleDownloadPdf = async () => {
     setPdfDownloading(true);
@@ -243,6 +282,11 @@ const PackageRequestDetail = () => {
           <div className="pr-status-panel">
             <h2>{statusInfo.title}</h2>
             <p>{statusInfo.body}</p>
+            {request.status === "cancelled" && contract?.cancelledAt && (
+              <p data-testid="cancelled-at">
+                You cancelled this order on {formatLagos(contract.cancelledAt)}. Our team will contact you about any refund due.
+              </p>
+            )}
           </div>
         )}
 
@@ -321,7 +365,55 @@ const PackageRequestDetail = () => {
                     )}
                   </div>
 
-                  <div className="pr-location-panel">
+                  {contract.cancellationAcknowledgement && (
+                    <div className="pr-cancel-panel" data-testid="cancel-window">
+                      <p className="pr-cancel-ack">{contract.cancellationAcknowledgement}</p>
+                      {contract.cancellationClosesLine && <p className="pr-cancel-closes" data-testid="closes-line">{contract.cancellationClosesLine}</p>}
+                      {contract.cancellationWindowOpen ? (
+                        <>
+{/* the draft 'closes on' line above already states when the window ends */}
+                          <p className="pr-cancel-ends" data-testid="care-begin-client">
+                            Care will begin after the window closes, so your caregiver won't start visits before then.
+                          </p>
+                          <button type="button" className="pr-cancel-btn" onClick={() => setCancelConfirmOpen(true)} disabled={cancelling}>
+                            Cancel order
+                          </button>
+                        </>
+                      ) : (
+                        <p className="pr-cancel-ends" data-testid="window-closed">
+                          {contract.acceptedByNonCancellationAt
+                            ? `The cancellation window closed on ${formatLagos(contract.cancellationWindowEndsAt)}. You are treated as having agreed to the terms of this agreement.`
+                            : "The cancellation window has closed."}
+                        </p>
+                      )}
+                      {cancelError && <p className="error-message">{cancelError}</p>}
+                    </div>
+                  )}
+
+                  {contract.cancellationAcknowledgement && request.status !== "cancelled" && (
+                    <div className="pr-agree-panel" data-testid="agree-panel">
+                      {contract.clientAgreedAt ? (
+                        <p className="pr-agree-done" data-testid="agreed-state">
+                          ✓ Agreed on {formatLagos(contract.clientAgreedAt)}
+                        </p>
+                      ) : (
+                        <>
+                          <p className="pr-agree-state" data-testid="agreed-state">Not yet confirmed</p>
+                          <label className="pr-agree-label">
+                            <input type="checkbox" checked={agreeChecked} onChange={(e) => setAgreeChecked(e.target.checked)} />
+                            {" "}I have read and agree to the terms of this agreement.
+                          </label>
+                          <button type="button" className="pr-agree-btn" onClick={handleAgree} disabled={!agreeChecked || agreeing}>
+                            {agreeing ? "Saving…" : "Confirm"}
+                          </button>
+                          <p className="pr-cancel-ends">Optional — your care is not affected if you don't confirm.</p>
+                          {agreeError && <p className="error-message">{agreeError}</p>}
+                        </>
+                      )}
+                    </div>
+                  )}
+
+                  <div className={`pr-location-panel${contract.serviceLocationSetByClient ? "" : " pr-location-panel--needed"}`} data-testid="location-panel" data-confirmed={contract.serviceLocationSetByClient ? "true" : "false"}>
                     {contract.serviceLocationSetByClient ? (
                       <p className="pr-location-confirmed">
                         ✓ Precise location confirmed
@@ -380,6 +472,8 @@ const PackageRequestDetail = () => {
               )}
             </div>
 
+            <ClientAbsenceNotices packageRequestId={id} />
+
             <div className="pr-visits-card">
               <h2>Visits</h2>
               {visitsLoading && <p>Loading visits…</p>}
@@ -424,6 +518,8 @@ const PackageRequestDetail = () => {
                             <span>Submitted {new Date(v.submittedAt).toLocaleString()}</span>
                           )}
                         </div>
+
+                        <PackageVisitReports packageRequestId={id} sheet={v} />
 
                         {v.clientReviewStatus === "Approved" && (
                           <div className="pr-visit-review pr-visit-review--approved">✓ You approved this visit</div>
@@ -503,6 +599,18 @@ const PackageRequestDetail = () => {
           </>
         )}
       </div>
+
+      <Modal
+        isOpen={cancelConfirmOpen}
+        onClose={() => setCancelConfirmOpen(false)}
+        onProceed={handleCancelOrder}
+        title="Cancel this order?"
+        description="Your order will be cancelled. Our team will contact you about any refund due."
+        buttonText={cancelling ? "Cancelling…" : "Yes, cancel order"}
+        buttonBgColor="#b91c1c"
+        secondaryButtonText="Keep order"
+        onSecondaryAction={() => setCancelConfirmOpen(false)}
+      />
     </div>
   );
 };

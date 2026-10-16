@@ -44,12 +44,13 @@ export const READINESS_REASON_INFO = {
     actionLabel: 'Take assessment',
     actionPath: '/app/caregiver/assessment',
   },
-  no_active_gig: {
-    label: 'Create an active gig',
-    description: "You don't have an active gig listed yet.",
-    actionLabel: 'Create a gig',
-    actionPath: '/app/caregiver/create-gigs',
-  },
+  // RETIRED — gigs are retired for caregivers; no_active_gig is no longer a readiness blocker.
+  // no_active_gig: {
+  //   label: 'Create an active gig',
+  //   description: "You don't have an active gig listed yet.",
+  //   actionLabel: 'Create a gig',
+  //   actionPath: '/app/caregiver/create-gigs',
+  // },
   certificate_missing: {
     label: 'Upload a required certificate',
     description: 'A required professional certificate is missing from your profile.',
@@ -73,6 +74,20 @@ export const READINESS_REASON_INFO = {
     description: "You haven't set your caregiver type yet.",
     actionLabel: 'Set classification',
     actionPath: '/app/caregiver/vetting/classification',
+  },
+  // Police clearance: _missing = none/rejected/revoked (actionable); _pending = awaiting staff review (nothing to do but wait).
+  police_clearance_missing: {
+    label: 'Submit your police clearance',
+    description: 'Upload a recent police clearance so our team can review it.',
+    actionLabel: 'Submit clearance',
+    actionPath: '/app/caregiver/vetting/police-clearance',
+  },
+  police_clearance_pending: {
+    label: 'Police clearance under review',
+    description: "Our team is reviewing your clearance. You'll be notified when there's a decision.",
+    nonActionable: true,
+    actionLabel: 'View status',
+    actionPath: '/app/caregiver/vetting/police-clearance',
   },
 };
 
@@ -354,5 +369,19 @@ const caregiverVettingService = {
     }
   },
 };
+
+// Tell the lockout context to re-evaluate after any successful write (set/add/update/delete), so the lock lifts without a
+// fresh login. Equivalent to each form calling refresh() itself, in one place.
+export const VETTING_DATA_CHANGED_EVENT = 'vetting-data-changed';
+Object.keys(caregiverVettingService)
+  .filter((name) => /^(set|add|update|delete)/.test(name))
+  .forEach((name) => {
+    const original = caregiverVettingService[name];
+    caregiverVettingService[name] = async (...args) => {
+      const result = await original.apply(caregiverVettingService, args);
+      if (result?.success && typeof window !== 'undefined') window.dispatchEvent(new Event(VETTING_DATA_CHANGED_EVENT));
+      return result;
+    };
+  });
 
 export default caregiverVettingService;

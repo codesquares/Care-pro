@@ -365,3 +365,18 @@
   font-weight: 700;
   font-size: 1rem;
 }
+
+/* Pending-review count next to a nav item (police clearances). */
+.sidebar-badge {
+  margin-left: auto;
+  min-width: 20px;
+  padding: 1px 7px;
+  border-radius: 999px;
+  background: #c9a227;
+  color: #10223b;
+  font-size: 0.72rem;
+  font-weight: 700;
+  text-align: center;
+  line-height: 1.5;
+}
+.sidebar-badge--dot { min-width: 8px; width: 8px; height: 8px; padding: 0; margin-left: 0; }

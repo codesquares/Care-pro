@@ -141,7 +141,10 @@ const TaskSheetService = {
       if (!response.ok) {
         const errorData = await response.json().catch(() => ({}));
         const errorMsg = errorData.error || `Failed to create visit: ${response.status}`;
-        return { success: false, error: errorMsg, statusCode: response.status };
+        return {
+          success: false, error: errorMsg, statusCode: response.status,
+          errorCode: errorData.errorCode, windowEndsAt: errorData.windowEndsAt,
+        };
       }
 
       const data = await response.json();

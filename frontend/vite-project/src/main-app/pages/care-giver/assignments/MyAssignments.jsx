@@ -1,6 +1,10 @@
-import { useState, useEffect, useCallback } from "react";
+import { useRef, useState, useEffect, useCallback } from "react";
 import { useNavigate } from "react-router-dom";
-import CaregiverAssignmentService from "../../../services/caregiverAssignmentService";
+import CaregiverAssignmentService, {
+  isBenignOfferConflict,
+  OFFER_ALREADY_UPDATED_MESSAGE,
+} from "../../../services/caregiverAssignmentService";
+import CareBriefCard from "./CareBriefCard";
 import AssignmentDeclineDialog from "./AssignmentDeclineDialog";
 import Modal from "../../../components/modal/Modal";
 import "../../client/client-dashboard/clientDashboard.css";
@@ -13,6 +17,13 @@ const STATUS_LABEL = {
   Declined: "Declined",
   Cancelled: "Cancelled",
 };
+
+const PAGE_SIZE = 20;
+const FILTERS = [
+  { key: "all", label: "All" },
+  { key: "pending", label: "Pending" },
+  { key: "active", label: "Active" },
+];
 
 const StatusBadge = ({ status }) => (
   <span className={`asn-status-badge asn-status-badge--${status}`}>
@@ -32,6 +43,8 @@ const MyAssignments = () => {
   const [declineDialogId, setDeclineDialogId] = useState(null);
   const [actionSubmittingId, setActionSubmittingId] = useState(null);
   const [actionError, setActionError] = useState(null);
+  const [actionNotice, setActionNotice] = useState(null);
+  const submittingRef = useRef(false);   // synchronous guard: state is batched, two same-tick clicks would both pass the state check
 
   const load = useCallback(async () => {
     setLoading(true);
@@ -58,27 +71,50 @@ const MyAssignments = () => {
     return aPending - bPending;
   });
 
+  // Status filter (All / Pending / Active) and a 20-per-page "Load more". Previously every assignment rendered at once
+  // (sortedAssignments.map below) — a long-running caregiver's list ran to thousands of pixels.
+  const [filter, setFilter] = useState("all");
+  const [visibleCount, setVisibleCount] = useState(PAGE_SIZE);
+  const filteredAssignments = sortedAssignments.filter((a) =>
+    filter === "pending" ? a.status === "PendingAcceptance" : filter === "active" ? a.status === "Accepted" : true
+  );
+  const visibleAssignments = filteredAssignments.slice(0, visibleCount);
+  const remaining = filteredAssignments.length - visibleAssignments.length;
+  const changeFilter = (key) => { setFilter(key); setVisibleCount(PAGE_SIZE); };
+
   const acceptTarget = assignments.find((a) => a.id === acceptConfirmId);
 
   const handleAccept = async (assignmentId) => {
-    if (actionSubmittingId) return;
+    if (actionSubmittingId || submittingRef.current) return;
+    submittingRef.current = true;
     setActionSubmittingId(assignmentId);
     setActionError(null);
+    setActionNotice(null);
     const result = await CaregiverAssignmentService.acceptAssignment(assignmentId);
+    submittingRef.current = false;
     setActionSubmittingId(null);
     setAcceptConfirmId(null);
-    if (!result.success) setActionError(result.error);
+    if (!result.success) {
+      if (isBenignOfferConflict(result)) setActionNotice(OFFER_ALREADY_UPDATED_MESSAGE);
+      else setActionError(result.error);
+    }
     await load();
   };
 
   const handleDecline = async (assignmentId, reason) => {
-    if (actionSubmittingId) return;
+    if (actionSubmittingId || submittingRef.current) return;
+    submittingRef.current = true;
     setActionSubmittingId(assignmentId);
     setActionError(null);
+    setActionNotice(null);
     const result = await CaregiverAssignmentService.declineAssignment(assignmentId, reason);
+    submittingRef.current = false;
     setActionSubmittingId(null);
     setDeclineDialogId(null);
-    if (!result.success) setActionError(result.error);
+    if (!result.success) {
+      if (isBenignOfferConflict(result)) setActionNotice(OFFER_ALREADY_UPDATED_MESSAGE);
+      else setActionError(result.error);
+    }
     await load();
   };
 
@@ -124,10 +160,36 @@ const MyAssignments = () => {
         )}
 
         {actionError && <p className="asn-inline-error">{actionError}</p>}
+        {actionNotice && <p className="asn-brief-note" role="status" data-testid="offer-updated-note">{actionNotice}</p>}
+
+        {!loading && !error && assignments.length > 0 && (
+          <div className="asn-filter-bar" role="group" aria-label="Filter assignments" data-testid="asn-filter-bar">
+            {FILTERS.map((f) => (
+              <button
+                key={f.key}
+                type="button"
+                className={`asn-filter-btn${filter === f.key ? " asn-filter-btn--active" : ""}`}
+                aria-pressed={filter === f.key}
+                onClick={() => changeFilter(f.key)}
+                data-testid={`asn-filter-${f.key}`}
+              >
+                {f.label}
+              </button>
+            ))}
+            <span className="asn-filter-count" data-testid="asn-filter-count">
+              Showing {visibleAssignments.length} of {filteredAssignments.length}
+            </span>
+          </div>
+        )}
+
+        {!loading && !error && assignments.length > 0 && filteredAssignments.length === 0 && (
+          <p className="asn-summary-note" data-testid="asn-filter-empty">No assignments match this filter.</p>
+        )}
 
         {!loading && !error && assignments.length > 0 && (
           <ul className="asn-list">
-            {sortedAssignments.map((a) => {
+            {/* was: sortedAssignments.map((a) => { — now paged + filtered */}
+            {visibleAssignments.map((a) => {
               const isOffer = a.status === "PendingAcceptance";
               const submitting = actionSubmittingId === a.id;
               return (
@@ -147,6 +209,7 @@ const MyAssignments = () => {
                         Pay basis: {a.payCalculationType}
                       </span>
                     )}
+                    {isOffer && <CareBriefCard brief={a.careBrief} compact />}
                     {isOffer && (
                       <div className="asn-offer-actions" onClick={(e) => e.stopPropagation()}>
                         <button
@@ -178,6 +241,12 @@ const MyAssignments = () => {
               );
             })}
           </ul>
+        )}
+
+        {!loading && !error && remaining > 0 && (
+          <button type="button" className="asn-refresh-btn asn-load-more" onClick={() => setVisibleCount((c) => c + PAGE_SIZE)} data-testid="asn-load-more">
+            Load more ({remaining} more)
+          </button>
         )}
       </div>
 

@@ -354,6 +354,10 @@ const TYPE_MAP = {
   'disputeunderreview':            'DisputeUnderReview',
   'dispute under review':          'DisputeUnderReview',
 
+  // Package caregiver "can't attend" notice (client + admins)
+  'visit_absence_notified':        'VisitAbsenceNotified',
+  'visitabsencenotified':          'VisitAbsenceNotified',
+
   // Incident Reported
   'incident_reported':             'IncidentReported',
   'incidentreported':              'IncidentReported',
@@ -465,6 +469,7 @@ const KNOWN_CANONICAL = new Set([
   'DisputeUnderReview',
   'IncidentReported',
   'ObservationReportFiled',
+  'VisitAbsenceNotified',
   'CareRequestCreated', 'CareRequestPaused', 'CareRequestReopened', 'CareRequestClosed',
   'ShortlistRemoved',
   'CaregiverBecameIneligible',
@@ -485,6 +490,12 @@ const KNOWN_CANONICAL = new Set([
   'PackageAssignmentDeclined', 'PackageAssignmentCancelled',
   'PackageContractGenerated',
   'PackageRequestReceived', 'PackagePaymentRequestFailed', 'PackageContractDeliveryFailed',
+  'PackageRequestCancelledByClient', 'PackageVisitFlagged',
+  // Police clearance (vetting step)
+  'PoliceClearanceSubmitted', 'PoliceClearanceApproved', 'PoliceClearanceRejected',
+  'PoliceClearanceRevoked', 'PoliceClearanceAssignmentsAtRisk',
+  // Vetting enforcement notice (caregiver)
+  'VettingEnforcementNotice',
   // Payroll (Phase 9.7)
   'PayrollApproved', 'PayrollPaid',
 ]);
@@ -561,7 +572,8 @@ export const getNotificationRoute = (notification, userRole) => {
   const role = (userRole || '').toLowerCase();
   const isClient = role === 'client';
   const isCaregiver = role === 'caregiver';
-  const isAdmin = role === 'admin';
+  // const isAdmin = role === 'admin';   // A2: SuperAdmin got no admin deep links at all (role 'superadmin' never matched)
+  const isAdmin = role === 'admin' || role === 'superadmin';
 
   const getSubscriptionRoute = () => {
     if (relatedEntityId && isClient) return `/app/client/subscriptions/${relatedEntityId}`;
@@ -715,7 +727,7 @@ export const getNotificationRoute = (notification, userRole) => {
 
     // ── Verification notifications ───────────────────────
     case 'VerificationUpdate':
-      if (isCaregiver) return `/app/caregiver/verification`;
+      if (isCaregiver) return `/app/caregiver/vetting`;
       return null;
 
     // ── System / generic ─────────────────────────────────
@@ -806,9 +818,40 @@ export const getNotificationRoute = (notification, userRole) => {
     // Ops alerts (admin only): a new request awaiting assignment, or a charged-but-unfulfilled /
     // undelivered-contract failure — all land on the Assignment Console where staff act.
     case 'PackageRequestReceived':
-    case 'PackagePaymentRequestFailed':
-    case 'PackageContractDeliveryFailed': {
+    case 'PackageAssignmentDeclined': // A2: previously unmapped for admins (resolved to null)
+    case 'PackageContractDeliveryFailed':
+    case 'PackageRequestCancelledByClient': {
       if (isAdmin) return `/app/admin/assignments`;
+      return null;
+    }
+    // A2: the related id of a charged-but-no-request failure is a CLIENT id (not an assignment/request),
+    // so link to that client's record (Client Management opens the detail modal for ?clientId=).
+    case 'PackagePaymentRequestFailed': {
+      if (isAdmin) return relatedEntityId ? `/app/admin/clients?clientId=${relatedEntityId}` : `/app/admin/clients`;
+      return null;
+    }
+
+    // Police clearance: the caregiver's decision notices open the Vetting Hub step; the admin alerts open the review queue.
+    // Vetting enforcement notice: open the Vetting Hub.
+    case 'VettingEnforcementNotice': {
+      if (isCaregiver) return `/app/caregiver/vetting`;
+      return null;
+    }
+    case 'PoliceClearanceApproved':
+    case 'PoliceClearanceRejected':
+    case 'PoliceClearanceRevoked': {
+      if (isCaregiver) return `/app/caregiver/vetting/police-clearance`;
+      return null;
+    }
+    case 'PoliceClearanceSubmitted':
+    case 'PoliceClearanceAssignmentsAtRisk': {
+      if (isAdmin) return relatedEntityId ? `/app/admin/police-clearances?clearance=${relatedEntityId}` : `/app/admin/police-clearances`;
+      return null;
+    }
+
+    // A package-visit check-in was flagged (HARD reason) — deep-link to that visit in the admin review screen.
+    case 'PackageVisitFlagged': {
+      if (isAdmin) return relatedEntityId ? `/app/admin/package-visits?checkin=${relatedEntityId}` : `/app/admin/package-visits`;
       return null;
     }
 
@@ -867,15 +910,16 @@ export const getNotificationRoute = (notification, userRole) => {
 
     // ── Disputes ─────────────────────────────────────────
     case 'DisputeRaised': {
+      // A2: for admins, relatedEntityId is the DISPUTE id (never an order id) — only a real orderId may be
+      // used for the legacy order link; package disputes (no order) land on the Disputes console.
       const disputeOrderId = notification.orderId || relatedEntityId;
+      if (isAdmin) return notification.orderId ? `/app/admin/orders/${notification.orderId}` : `/app/admin/disputes`;
       if (disputeOrderId) {
         if (isClient) return `/app/client/my-order/${disputeOrderId}`;
         if (isCaregiver) return `/app/caregiver/order-details/${disputeOrderId}`;
-        if (isAdmin) return `/app/admin/orders/${disputeOrderId}`;
       }
       if (isClient) return `/app/client/my-orders`;
       if (isCaregiver) return `/app/caregiver/orders`;
-      if (isAdmin) return `/app/admin/orders`;
       return null;
     }
 
@@ -983,6 +1027,8 @@ export const getNotificationRoute = (notification, userRole) => {
     case 'IncidentReported': {
       if (isAdmin && relatedEntityId) return `/app/admin/incidents/${relatedEntityId}`;
       if (isAdmin) return `/app/admin/disputes`;
+      // Package visits send no orderId; the client's relatedEntityId is then the PackageRequestId.
+      if (isClient && !notification.orderId && relatedEntityId) return `/app/client/requests/${relatedEntityId}`;
       const incidentOrderId = notification.orderId || relatedEntityId;
       if (incidentOrderId) {
         if (isClient) return `/app/client/my-order/${incidentOrderId}`;
@@ -991,8 +1037,18 @@ export const getNotificationRoute = (notification, userRole) => {
       return null;
     }
 
+    // ── Caregiver can't attend (package): client -> the request page; admins -> the alerts inbox ──
+    case 'VisitAbsenceNotified': {
+      // Admin alerts carry the NOTICE id; the client's carries the PackageRequestId.
+      if (isAdmin) return relatedEntityId ? `/app/admin/absence-notices?notice=${relatedEntityId}` : `/app/admin/absence-notices`;
+      if (isClient && relatedEntityId) return `/app/client/requests/${relatedEntityId}`;
+      if (isClient) return `/app/client/my-orders`;
+      return null;
+    }
+
     // ── Observation Report Filed ─────────────────────────
     case 'ObservationReportFiled': {
+      if (isClient && !notification.orderId && relatedEntityId) return `/app/client/requests/${relatedEntityId}`;
       const obsOrderId = notification.orderId || relatedEntityId;
       if (obsOrderId && isClient) return `/app/client/my-order/${obsOrderId}`;
       if (isClient) return `/app/client/my-order`;
@@ -1099,9 +1155,23 @@ export const getNotificationActionLabel = (rawType) => {
     case 'PackageAssignmentConfirmed':
       return 'View Request';
     case 'PackageRequestReceived':
-    case 'PackagePaymentRequestFailed':
+    case 'PackageAssignmentDeclined':
     case 'PackageContractDeliveryFailed':
+    case 'PackageRequestCancelledByClient':
       return 'Open Assignments';
+    case 'PackagePaymentRequestFailed':
+      return 'Open Client';
+    case 'PackageVisitFlagged':
+      return 'Review Visit';
+    case 'VettingEnforcementNotice':
+      return 'Open Vetting';
+    case 'PoliceClearanceSubmitted':
+    case 'PoliceClearanceAssignmentsAtRisk':
+      return 'Review Clearance';
+    case 'PoliceClearanceApproved':
+    case 'PoliceClearanceRejected':
+    case 'PoliceClearanceRevoked':
+      return 'View Status';
     case 'NewMessage':
       return 'Open Conversation';
     case 'Payment':
@@ -1219,6 +1289,8 @@ export const getNotificationActionLabel = (rawType) => {
       return 'View Dispute';
     case 'IncidentReported':
       return 'View Incident';
+    case 'VisitAbsenceNotified':
+      return 'View Notice';
     case 'ObservationReportFiled':
       return 'View Report';
     case 'CareRequestCreated':
@@ -1314,6 +1386,16 @@ export const getNotificationTypeIcon = (rawType) => {
       return '✅';
     case 'PackageAssignmentCancelled':
       return '❌';
+    case 'VettingEnforcementNotice':
+      return '📋';
+    case 'PoliceClearanceApproved':
+      return '✅';
+    case 'PoliceClearanceRejected':
+    case 'PoliceClearanceRevoked':
+      return '❌';
+    case 'PoliceClearanceSubmitted':
+    case 'PoliceClearanceAssignmentsAtRisk':
+      return '🛡️';
     case 'OrderNotification':
     case 'OrderConfirmation':
     case 'BookingConfirmed':
@@ -1438,6 +1520,8 @@ export const getNotificationTypeIcon = (rawType) => {
       return '⚖️';
     case 'IncidentReported':
       return '🚨';
+    case 'VisitAbsenceNotified':
+      return '📅';
     case 'ObservationReportFiled':
       return '📋';
     case 'CareRequestCreated':

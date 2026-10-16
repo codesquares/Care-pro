@@ -117,11 +117,50 @@ const CaregiverAssignmentService = {
   },
 
   /**
+   * Endpoint: POST /api/caregiver/assignments/{id}/absence-notices
+   * Tells the client and CarePro the caregiver cannot attend a day (informational — no money moves).
+   * @param {string} id assignment id
+   * @param {{date: string, category: string, note?: string}} body date is yyyy-MM-dd (Lagos day); category is required
+   *   (illness | family_emergency | transport | other); note is optional, staff-only — the client never sees it.
+   */
+  async createAbsenceNotice(id, { date, category, note }) {
+    try {
+      const response = await api.post(`${BASE}/${id}/absence-notices`, { date, category, note: note || null });
+      return { success: true, data: response.data };
+    } catch (error) {
+      return { success: false, error: extractError(error, 'Failed to send your notice') };
+    }
+  },
+
+  /** Endpoint: POST /api/caregiver/assignments/{id}/absence-notices/{noticeId}/withdraw — 409 once staff acted, on/after the day, or already withdrawn. */
+  async withdrawAbsenceNotice(id, noticeId) {
+    try {
+      const response = await api.post(`${BASE}/${id}/absence-notices/${noticeId}/withdraw`);
+      return { success: true, data: response.data };
+    } catch (error) {
+      return { success: false, error: extractError(error, 'Failed to withdraw your notice') };
+    }
+  },
+
+  /** Endpoint: GET /api/caregiver/assignments/{id}/absence-notices */
+  async getAbsenceNotices(id) {
+    try {
+      const response = await api.get(`${BASE}/${id}/absence-notices`);
+      const payload = response.data || {};
+      return { success: true, data: Array.isArray(payload.data) ? payload.data : [] };
+    } catch (error) {
+      return { success: false, error: extractError(error, 'Failed to load your notices') };
+    }
+  },
+
+  /**
    * Endpoint: POST /api/caregiver/assignments/{id}/accept
-   * Idempotent server-side — accepting an already-Accepted assignment returns
-   * success with the same status rather than an error, so a double-click/double
-   * submit is safe. 409 if the assignment is no longer PendingAcceptance
-   * (already responded, or cancelled by staff); 403 if it isn't this caregiver's.
+   * Idempotent server-side — accepting an already-fully-Accepted assignment returns
+   * success with the same status rather than an error. 409 if the assignment is no longer
+   * PendingAcceptance, or another request (double click, second tab, staff cancel) won the race
+   * (errorCode ASSIGNMENT_CONFLICT) — the UI treats that as benign: refetch and show the true state.
+   * A 409 with errorCode CAREGIVER_NOT_READY (e.g. police clearance) is a REAL refusal, not benign.
+   * 403 if it isn't this caregiver's.
    * Uses the shared error mapper (uiErrorMapper) rather than the plain
    * message-only extractError above, so field-level validation reasons surface.
    * @param {string} id
@@ -137,6 +176,7 @@ const CaregiverAssignmentService = {
         success: false,
         error: extractApiErrorMessage(error, 'Failed to accept this assignment'),
         status: error.response?.status,
+        errorCode: error.response?.data?.errorCode,
       };
     }
   },
@@ -160,9 +200,20 @@ const CaregiverAssignmentService = {
         success: false,
         error: extractApiErrorMessage(error, 'Failed to decline this assignment'),
         status: error.response?.status,
+        errorCode: error.response?.data?.errorCode,
       };
     }
   },
 };
 
 export default CaregiverAssignmentService;
+
+/**
+ * A 409 on accept/decline normally just means "this offer has already been updated" (double click, another tab,
+ * staff cancelled it): refetch and show the real state, no red error. The one exception is CAREGIVER_NOT_READY,
+ * which is a genuine refusal the caregiver must see.
+ */
+export const isBenignOfferConflict = (result) =>
+  result?.status === 409 && result?.errorCode !== 'CAREGIVER_NOT_READY';
+
+export const OFFER_ALREADY_UPDATED_MESSAGE = 'This offer has already been updated.';

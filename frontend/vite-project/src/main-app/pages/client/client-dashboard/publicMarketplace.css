@@ -28,3 +28,20 @@
     margin: 20px 4.5rem 0;
   }
 }
+
+/* Dashboard-pattern package grid: same side margins as the header/filters above it. */
+.marketplace-pkg-section {
+  margin: 20px 18px 0;
+}
+.marketplace-pkg-note {
+  margin: 20px 18px 0;
+}
+@media (min-width: 768px) {
+  .marketplace-pkg-section, .marketplace-pkg-note { margin-left: 2.5rem; margin-right: 2.5rem; }
+}
+@media (min-width: 1024px) {
+  .marketplace-pkg-section, .marketplace-pkg-note { margin-left: 3.5rem; margin-right: 3.5rem; }
+}
+@media (min-width: 1280px) {
+  .marketplace-pkg-section, .marketplace-pkg-note { margin-left: 4.5rem; margin-right: 4.5rem; }
+}

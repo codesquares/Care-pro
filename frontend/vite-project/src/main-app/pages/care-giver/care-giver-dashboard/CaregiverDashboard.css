@@ -304,3 +304,6 @@
     width: 340px;
   }
 }
+
+/* Let the header wrap on narrow screens now that it can also carry the "Showing 10 of N clients" line. */
+.rightbar-header { flex-wrap: wrap; gap: 8px; }

@@ -497,9 +497,9 @@ const SpecializedAssessment = ({
             {passed ? (
               <button
                 className="sa-btn sa-btn-primary"
-                onClick={() => navigate('/app/caregiver/create-gigs')}
+                onClick={() => navigate('/app/caregiver/vetting')} /* was create-gigs — gigs retired */
               >
-                Create a Gig
+                Go to Vetting
               </button>
             ) : (
               <button

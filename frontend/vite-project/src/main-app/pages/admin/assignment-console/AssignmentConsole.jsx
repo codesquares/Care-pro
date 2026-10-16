@@ -1,4 +1,5 @@
 import { useState, useEffect, useCallback, useMemo } from 'react';
+import { formatLagos } from '../../../utils/lagosTime';
 import AdminAssignmentService from '../../../services/adminAssignmentService';
 import adminService from '../../../services/adminService';
 import './assignment-console.css';
@@ -58,12 +59,20 @@ const AssignmentConsole = () => {
   const [candidatesError, setCandidatesError] = useState(null);
   const [assigningId, setAssigningId] = useState(null);
   const [assignBlockers, setAssignBlockers] = useState(null); // { caregiverId, reasons }
+  // Care brief shown to the caregiver BEFORE they accept. Staff-written; never put a phone number or street address here.
+  const EMPTY_BRIEF = { careNeedsSummary: '', schedule: '', startDate: '', duration: '', area: '' };
+  const [careBrief, setCareBrief] = useState(EMPTY_BRIEF);
+  const setBriefField = (k, v) => setCareBrief((b) => ({ ...b, [k]: v }));
+  // FULL service address — separate from the area-only brief; released to the caregiver only after acceptance.
+  const [serviceAddress, setServiceAddress] = useState('');
 
   const selectRequest = async (req) => {
     setSelectedRequest(req);
     setCandidates([]);
     setCandidatesError(null);
     setAssignBlockers(null);
+    setCareBrief(EMPTY_BRIEF);
+    setServiceAddress('');
     setLoadingCandidates(true);
     const result = await AdminAssignmentService.getCandidates(req.id);
     if (result.success) {
@@ -82,6 +91,14 @@ const AssignmentConsole = () => {
       packageRequestId: selectedRequest.id,
       caregiverId: candidate.caregiverId,
       matchScore: candidate.matchScore,
+      serviceAddress: serviceAddress.trim() || null,
+      careBrief: {
+        careNeedsSummary: careBrief.careNeedsSummary.trim() || null,
+        schedule: careBrief.schedule.trim() || null,
+        startDate: careBrief.startDate ? new Date(careBrief.startDate).toISOString() : null,
+        duration: careBrief.duration.trim() || null,
+        area: careBrief.area.trim() || null,
+      },
     });
     if (result.success) {
       showToast('success', `${candidate.caregiverName} assigned — awaiting their acceptance.`);
@@ -91,6 +108,12 @@ const AssignmentConsole = () => {
       setActiveTab('pending');
     } else if (result.reasons && result.reasons.length > 0) {
       setAssignBlockers({ caregiverId: candidate.caregiverId, reasons: result.reasons });
+    } else if (result.errorCode === 'ASSIGNMENT_CONFLICT') {
+      // Someone else (another staff member) assigned this request first: say so plainly and refresh the list.
+      showToast('error', 'This request was just assigned by someone else. Refresh to see the current assignment.');
+      setSelectedRequest(null);
+      setCandidates([]);
+      loadRequests();
     } else {
       showToast('error', result.error || 'Failed to assign caregiver');
     }
@@ -271,6 +294,22 @@ const AssignmentConsole = () => {
                       {r.packageCategory} — {r.packageTierLabel}
                       <small>{r.requiredCaregiverType}{r.requiredSpecialty ? ` · ${r.requiredSpecialty}` : ''}</small>
                     </div>
+                    {r.contract && (
+                      <div className="asc-request-contract" data-testid="admin-contract-state">
+                        <strong>Contract:</strong>{' '}
+                        {r.contract.cancelledAt
+                          ? `Cancelled by client ${formatLagos(r.contract.cancelledAt)}`
+                          : r.contract.acceptedByNonCancellationAt
+                            ? `Window closed ${formatLagos(r.contract.acceptedByNonCancellationAt)} — agreed by non-cancellation`
+                            : r.contract.cancellationWindowEndsAt
+                              ? `Cancellation window open until ${formatLagos(r.contract.cancellationWindowEndsAt)}`
+                              : 'No cancellation window'}
+                        {' · '}
+                        {r.contract.clientAgreedAt
+                          ? `Client agreed ${formatLagos(r.contract.clientAgreedAt)}`
+                          : 'Client has not ticked "I agree"'}
+                      </div>
+                    )}
                     <div className="asc-request-meta">
                       {r.location && <span><i className="fas fa-map-marker-alt"></i> {r.location}</span>}
                       {r.budget != null && <span>{fmtNaira(r.budget)}</span>}
@@ -309,6 +348,36 @@ const AssignmentConsole = () => {
                     <div><p>This request is "{selectedRequest.status}" — it can't be assigned unless it's back to "pending".</p></div>
                   </div>
                 )}
+
+                <fieldset className="asc-brief" data-testid="care-brief-form">
+                  <legend>Care brief (shown to the caregiver before they accept)</legend>
+                  <p className="asc-brief-warning">
+                    Do <strong>not</strong> include the client's phone number, street address or surname — those are released after acceptance.
+                  </p>
+                  <label>Care needs summary
+                    <textarea rows={3} maxLength={2000} value={careBrief.careNeedsSummary} onChange={(e) => setBriefField('careNeedsSummary', e.target.value)} />
+                  </label>
+                  <label>Schedule / hours
+                    <input type="text" maxLength={300} placeholder="e.g. Mon–Fri, 8am–4pm" value={careBrief.schedule} onChange={(e) => setBriefField('schedule', e.target.value)} />
+                  </label>
+                  <label>Start date
+                    <input type="date" value={careBrief.startDate} onChange={(e) => setBriefField('startDate', e.target.value)} />
+                  </label>
+                  <label>Duration
+                    <input type="text" maxLength={100} placeholder="e.g. 4 weeks" value={careBrief.duration} onChange={(e) => setBriefField('duration', e.target.value)} />
+                  </label>
+                  <label>Area (city / neighborhood only)
+                    <input type="text" maxLength={120} placeholder="e.g. Lekki, Lagos" value={careBrief.area} onChange={(e) => setBriefField('area', e.target.value)} />
+                  </label>
+                </fieldset>
+
+                <fieldset className="asc-brief" data-testid="service-address-form">
+                  <legend>Service address (full — shared with the caregiver only after they accept)</legend>
+                  <label>Full address where care is delivered
+                    <input type="text" maxLength={300} placeholder="e.g. 12 Admiralty Way, Lekki Phase 1, Lagos" value={serviceAddress} onChange={(e) => setServiceAddress(e.target.value)} />
+                  </label>
+                  <p className="asc-brief-warning">Used to verify check-ins by location. The client is asked to confirm their precise GPS location too.</p>
+                </fieldset>
 
                 {candidatesError && (
                   <div className="alert alert-error">

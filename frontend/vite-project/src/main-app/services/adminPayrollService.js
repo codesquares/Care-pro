@@ -88,12 +88,19 @@ const AdminPayrollService = {
         body.FinalAmount = Number(overrides.finalAmount);
       }
       if (overrides.overrideReason) body.OverrideReason = overrides.overrideReason;
+      // Soft gate: the admin's explicit "approve with N uncleared flagged visits" confirmation (must equal the current count).
+      if (overrides.acknowledgeUnclearedFlaggedVisits != null) body.AcknowledgeUnclearedFlaggedVisits = Number(overrides.acknowledgeUnclearedFlaggedVisits);
       const response = await api.post(`${BASE}/${id}/approve`, body);
       const payload = response.data || {};
       return { success: true, data: payload.data, message: payload.message || 'Payroll record approved and wallet credited' };
     } catch (error) {
       console.error('Error approving payroll record:', error);
-      return { success: false, error: extractError(error, 'Failed to approve payroll record') };
+      return {
+        success: false,
+        error: extractError(error, 'Failed to approve payroll record'),
+        errorCode: error.response?.data?.errorCode,
+        flaggedCount: error.response?.data?.count,
+      };
     }
   },
 

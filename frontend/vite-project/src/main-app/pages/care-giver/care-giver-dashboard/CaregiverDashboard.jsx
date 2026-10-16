@@ -8,12 +8,15 @@ import StatisticsCard from './StatisticsCard';
 import './CaregiverDashboard.css';
 import setting from '../../../../assets/setting.png';
 import config from '../../../config';
+import AssignmentsSummaryList from '../assignments/AssignmentsSummaryList';
+import useCaregiverAssignments from '../assignments/useCaregiverAssignments';
 import accountDeletionService from '../../../services/accountDeletionService';
 
 const CaregiverDashboard = () => {
   // RETIRED — legacy order list/count, replaced by My Assignments. Preserved for restore.
   // const [orders, setOrders] = useState([]);
   // const [totalOrders, setTotalOrders] = useState(0);
+  const { pending: pendingAssignments, active: activeAssignments, grouped: groupedAssignments, loading: assignmentsLoading, error: assignmentsError, reload: reloadAssignments } = useCaregiverAssignments();
   const [loading] = useState(false);
   const [error, setError] = useState(null);
   const [totalEarnings, setTotalEarnings] = useState(0);
@@ -184,7 +187,7 @@ const CaregiverDashboard = () => {
               {pendingDeletionDate.toLocaleDateString('en-GB', { day: 'numeric', month: 'long', year: 'numeric' })}.
             </p>
             <p style={{ margin: '0.25rem 0 0', fontSize: '0.875rem', color: '#c2410c' }}>
-              Cancel this request before that date to restore your account and gigs.
+              Cancel this request before that date to restore your account.
             </p>
           </div>
           <div style={{ display: 'flex', gap: '0.5rem', alignItems: 'center' }}>
@@ -229,7 +232,7 @@ const CaregiverDashboard = () => {
             onClick={(e) => e.stopPropagation()}
           >
             <h3 style={{ marginTop: 0 }}>Cancel Account Deletion?</h3>
-            <p>Are you sure you want to cancel your deletion request? Your account and all your gigs will be fully restored immediately.</p>
+            <p>Are you sure you want to cancel your deletion request? Your account will be fully restored immediately.</p>
             <div style={{ display: 'flex', gap: '0.75rem', justifyContent: 'flex-end', marginTop: '1rem' }}>
               <button
                 onClick={() => setShowCancelDeletionConfirm(false)}
@@ -279,7 +282,12 @@ const CaregiverDashboard = () => {
         <div className="leftbar">
           <ProfileCard />
           {/* totalOrders is no longer tracked here now that legacy orders are retired. */}
-          <StatisticsCard totalOrders={0} totalEarnings={totalEarnings} />
+          <StatisticsCard
+            activeCount={activeAssignments.length}
+            activeClientCount={groupedAssignments.totals.activeClientCount}
+            pendingCount={pendingAssignments.length}
+            totalEarnings={totalEarnings}
+          />
           <div 
             className="setting-container" 
             role="button"
@@ -299,6 +307,9 @@ const CaregiverDashboard = () => {
         <div className="rightbar">
           <div className="rightbar-header">
             <h3 className="rightbar-title">My Assignments</h3>
+            {!assignmentsLoading && !assignmentsError && groupedAssignments.label && (
+              <span className="asn-header-cap" data-testid="assignments-cap-label">{groupedAssignments.label}</span>
+            )}
             <button
               className="view-all-orders-btn"
               onClick={() => navigate(`${basePath}/assignments`)}
@@ -306,6 +317,15 @@ const CaregiverDashboard = () => {
               View All Assignments →
             </button>
           </div>
+          <AssignmentsSummaryList
+            grouped={groupedAssignments}
+            showSummaryLine={false}
+            pending={pendingAssignments}
+            active={activeAssignments}
+            loading={assignmentsLoading}
+            error={assignmentsError}
+            onRetry={reloadAssignments}
+          />
           {/* RETIRED — legacy Recent Orders widget, replaced by the button above
               pointing to My Assignments. Preserved for restore.
           <OrderList filter="All Orders" orders={orders.slice(0, 5)} loading={loading} error={error} />

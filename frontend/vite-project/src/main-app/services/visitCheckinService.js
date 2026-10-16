@@ -126,6 +126,8 @@ const VisitCheckinService = {
           scheduledStartTime: errorData.scheduledStartTime ?? null,
           scheduledEndTime: errorData.scheduledEndTime ?? null,
           currentTimeNigeria: errorData.currentTimeNigeria ?? null,
+          // cancellation_window_open: care can't begin until the client's cancellation period ends
+          windowEndsAt: errorData.windowEndsAt ?? null,
         };
       }
 

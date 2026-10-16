@@ -69,6 +69,10 @@ const AdminAssignmentService = {
         CaregiverId: payload.caregiverId,
         MatchScore: payload.matchScore,
         AssignedBy: 'staff',
+        // Optional staff-written brief shown to the caregiver before they accept (no phone/street address).
+        CareBrief: payload.careBrief || null,
+        // Full service address (staff-entered). Shared with the caregiver only after they accept.
+        ServiceAddress: payload.serviceAddress || null,
       });
       const body = response.data || {};
       return { success: true, data: body.data };
@@ -77,6 +81,7 @@ const AdminAssignmentService = {
       return {
         success: false,
         error: extractError(error, 'Failed to assign caregiver'),
+        status: error.response?.status,
         errorCode: error.response?.data?.errorCode,
         reasons: error.response?.data?.reasons,
       };

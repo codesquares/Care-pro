@@ -4,7 +4,7 @@ import { toast } from "react-toastify";
 import ProfileHeader from "../../pages/care-giver/care-giver-profile/ProfileHeader";
 import config from "../../config";
 import caregiverBankAccountService from "../../services/caregiverBankAccountService";
-import ProfessionalProfileForms from "./ProfessionalProfileForms";
+// MOVED to Vetting Hub: import ProfessionalProfileForms from "./ProfessionalProfileForms";
 import accountDeletionService from "../../services/accountDeletionService";
 import { useAuth } from "../../context/AuthContext";
 import { subscribeForPush, unsubscribeFromPush, getSubscriptionState } from "../../services/pushService";
@@ -473,10 +473,13 @@ const CaregiverSettings = () => {
             )}
           </div>
 
+          {/* MOVED — "Complete your Professional Profile" now lives in the Vetting Hub
+              (/app/caregiver/vetting/professional-profile). Preserved for restore.
           <div className="cgs-settings-card">
             <h3>Complete your Professional Profile</h3>
             <ProfessionalProfileForms />
           </div>
+          */}
 
           <div className="cgs-settings-card">
             <h3>Notification Preferences</h3>
@@ -518,6 +521,7 @@ const CaregiverSettings = () => {
                   onClick={() => handleNotificationToggle('marketingEmails')}
                 />
               </div>
+              {/* RETIRED — gigs are retired for caregivers; New Gig Opportunities toggle preserved for restore.
               <div className="cgs-notification-item">
                 <div className="cgs-notification-info">
                   <span className="cgs-notification-title">New Gig Opportunities</span>
@@ -529,6 +533,7 @@ const CaregiverSettings = () => {
                   onClick={() => handleNotificationToggle('newGig')}
                 />
               </div>
+              */}
               <div className="cgs-notification-item">
                 <div className="cgs-notification-info">
                   <span className="cgs-notification-title">Care Request Updates</span>
@@ -618,7 +623,8 @@ const CaregiverSettings = () => {
                   Requesting deletion will:
                 </p>
                 <ul className="cgs-deactivation-list">
-                  <li>Immediately hide your profile and all active gigs.</li>
+                  {/* RETIRED (gigs): <li>Immediately hide your profile and all active gigs.</li> */}
+                  <li>Immediately hide your profile.</li>
                   <li>Permanently and irreversibly erase all your data after 30 days.</li>
                   <li>You cannot delete if you have active orders, a pending withdrawal, or an outstanding wallet balance.</li>
                   <li>You have 30 days to cancel — after that the deletion cannot be undone.</li>

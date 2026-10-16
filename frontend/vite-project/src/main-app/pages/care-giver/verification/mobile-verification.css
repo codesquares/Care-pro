@@ -1,6 +1,42 @@
 /* Mobile-First Verification Page Styles */
 
 /* Global Mobile Verification Container */
+/* A1 fix (Batch 1 follow-up): page was height-locked + overflow hidden, which clipped content
+   taller than the viewport. Now min-height + visible overflow so the page can scroll. */
+.mv-mobile-verification-page {
+  min-height: calc(100vh - 64px);
+  background: linear-gradient(135deg, #f8fafc 0%, #e2e8f0 50%, #f1f5f9 100%);
+  padding: 0;
+  margin: 0;
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', sans-serif;
+  display: flex;
+  align-items: flex-start;
+  justify-content: center;
+  overflow-y: visible;
+}
+
+.mv-mobile-verification-container {
+  max-width: 420px;
+  width: 100%;
+  padding: 20px;
+  background: transparent;
+  display: flex;
+  flex-direction: column;
+  justify-content: flex-start;
+  gap: 20px;
+  box-sizing: border-box;
+  overflow: visible;
+}
+
+/* Mobile navbar adjustment */
+@media (max-width: 1023px) {
+  .mv-mobile-verification-page {
+    min-height: calc(100vh - 56px);
+  }
+}
+
+/* --- A1: ORIGINAL RULES (preserved, disabled) ---
+/* Global Mobile Verification Container * /
 .mv-mobile-verification-page {
   height: calc(100vh - 64px);
   background: linear-gradient(135deg, #f8fafc 0%, #e2e8f0 50%, #f1f5f9 100%);
@@ -27,7 +63,7 @@
   overflow: hidden;
 }
 
-/* Mobile navbar adjustment */
+/* Mobile navbar adjustment * /
 @media (max-width: 1023px) {
   .mv-mobile-verification-page {
     height: calc(100vh - 56px);
@@ -36,6 +72,8 @@
     max-height: calc(100vh - 56px);
   }
 }
+
+*/
 
 /* Desktop scaling for larger screens */
 @media (min-width: 1024px) {

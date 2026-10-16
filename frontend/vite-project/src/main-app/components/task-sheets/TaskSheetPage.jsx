@@ -26,9 +26,9 @@ const formatTimeStr = (t) => {
  *  - orderId: the order ID (needed for check-in and reports); null in assignment mode
  *  - mode: "order" (default) or "assignment" — package-assignment visits always
  *    start with an empty task list (no proposed tasks from a package contract),
- *    so submitting with zero tasks is allowed; cancellation requests and
- *    observation/incident reports are order-only on the backend today, so
- *    those sections are hidden rather than exposing a broken action.
+ *    so submitting with zero tasks is allowed; cancellation requests are
+ *    order-only on the backend today, so that section is hidden rather than
+ *    exposing a broken action. Observation/incident reports work in both modes.
  *  - onSheetUpdated: callback(updatedSheet) after a save/submit
  */
 const TaskSheetPage = ({
@@ -38,6 +38,7 @@ const TaskSheetPage = ({
   serviceLocationSetByClient,
   serviceLocationSetAt,
   serviceAddress,
+  careBeginsAfter = null,
   onSheetUpdated,
   onActivateSheet,
   activating,
@@ -291,6 +292,7 @@ const TaskSheetPage = ({
           serviceLocationSetByClient={serviceLocationSetByClient}
           serviceLocationSetAt={serviceLocationSetAt}
           serviceAddress={serviceAddress}
+          careBeginsAfter={careBeginsAfter}
           onCheckedIn={handleCheckedIn}
           disabled={isSubmitted || isCancelled || orderCompleted}
         />
@@ -400,8 +402,8 @@ const TaskSheetPage = ({
         </div>
       )}
 
-      {/* Report action buttons — order-only on the backend today, so hidden in assignment mode */}
-      {!orderCompleted && !isAssignmentMode && (
+      {/* Report action buttons — both order visits and package-assignment visits */}
+      {!orderCompleted && (
         <div className="ts-report-actions">
           <button
             className="ts-report-btn ts-report-btn--observation"
@@ -500,25 +502,23 @@ const TaskSheetPage = ({
         </div>
       )}
 
-      {/* Observation/incident report modals — order-only on the backend today */}
-      {!isAssignmentMode && (
-        <>
-          <ObservationReportModal
-            isOpen={showObservation}
-            onClose={() => setShowObservation(false)}
-            orderId={orderId}
-            taskSheetId={sheet.id}
-            onReportCreated={handleObservationCreated}
-          />
-          <IncidentReportModal
-            isOpen={showIncident}
-            onClose={() => setShowIncident(false)}
-            orderId={orderId}
-            taskSheetId={sheet.id}
-            onReportCreated={handleIncidentCreated}
-          />
-        </>
-      )}
+      {/* Observation/incident report modals — assignment mode keys the report off the sheet's AssignmentId */}
+      <ObservationReportModal
+        isOpen={showObservation}
+        onClose={() => setShowObservation(false)}
+        orderId={isAssignmentMode ? null : orderId}
+        assignmentId={isAssignmentMode ? sheet.assignmentId : null}
+        taskSheetId={sheet.id}
+        onReportCreated={handleObservationCreated}
+      />
+      <IncidentReportModal
+        isOpen={showIncident}
+        onClose={() => setShowIncident(false)}
+        orderId={isAssignmentMode ? null : orderId}
+        assignmentId={isAssignmentMode ? sheet.assignmentId : null}
+        taskSheetId={sheet.id}
+        onReportCreated={handleIncidentCreated}
+      />
     </div>
   );
 };

@@ -12,7 +12,7 @@ import WithdrawPage from './WithdrawPage';
 // import CaregiverOrders from './orders/CaregiverOrders';
 import MyAssignments from './assignments/MyAssignments';
 import AssignmentDetail from './assignments/AssignmentDetail';
-import CreateGig from './CreateGig';
+// RETIRED (gigs): import CreateGig from './CreateGig';
 import CreateOffer from '../CreateOffer';
 import Messages from '../Messages';
 import DirectMessage from '../../components/messages/DirectMessage';
@@ -38,11 +38,19 @@ import ClassificationForm from './vetting/ClassificationForm';
 import GuarantorsForm from './vetting/GuarantorsForm';
 import AddressHistoryForm from './vetting/AddressHistoryForm';
 import SocialMediaForm from './vetting/SocialMediaForm';
+import ProfessionalProfileStep from './vetting/ProfessionalProfileStep';
+import PoliceClearanceStep from './vetting/PoliceClearanceStep';
+import { VettingLockoutProvider } from '../../contexts/VettingLockoutContext';
+import VettingLockGuard from '../../components/VettingLockGuard';
+import VettingNoticeBanner from '../../components/VettingNoticeBanner';
 
 function CareGiverRoutes() {
     return (
         <GigEditProvider>
+          <VettingLockoutProvider>
             <NavigationBar />
+            <VettingNoticeBanner />
+            <VettingLockGuard>
             <Routes>
                 <Route path='/dashboard' element={
                     <ErrorBoundary>
@@ -55,7 +63,9 @@ function CareGiverRoutes() {
                 <Route path='/orders' element={<FeatureMovedNotice title="Orders have moved" message="Your orders are now under My Assignments." homePath="/app/caregiver/assignments" homeLabel="Go to My Assignments" />} />
                 <Route path='/assignments' element={<MyAssignments />} />
                 <Route path='/assignments/:id' element={<AssignmentDetail />} />
-                <Route path='/create-gigs' element={<CreateGig/>} />
+                {/* RETIRED — gigs are retired for caregivers. Preserved for restore:
+                <Route path='/create-gigs' element={<CreateGig/>} /> */}
+                <Route path='/create-gigs' element={<FeatureMovedNotice title="Gigs have been retired" message="Caregivers are now matched to clients by CarePro through care packages, so you no longer need to create gigs." homePath="/app/caregiver/dashboard" homeLabel="Go to my dashboard" />} />
                 <Route path='/create-offer' element={<CreateOffer/>} />
                 <Route path='/settings' element={<CaregiverSettings />} />
                 <Route path="/CaregiverProfile" element={<CaregiverProfile />} />
@@ -77,6 +87,8 @@ function CareGiverRoutes() {
                 <Route path="/vetting/guarantors" element={<GuarantorsForm />} />
                 <Route path="/vetting/address-history" element={<AddressHistoryForm />} />
                 <Route path="/vetting/social-media" element={<SocialMediaForm />} />
+                <Route path="/vetting/professional-profile" element={<ProfessionalProfileStep />} />
+                <Route path="/vetting/police-clearance" element={<PoliceClearanceStep />} />
                 {/* Tier A: the competitive care-request flow is retired pending the
                     package-request + internal-assignment rebuild (Tier D). */}
                 <Route path="/client-requests" element={<FeatureMovedNotice title="Care requests are being rebuilt" message="Client requests are moving to guided care packages. This will be back soon." />} />
@@ -86,6 +98,8 @@ function CareGiverRoutes() {
                 <Route path="/price-negotiation/:negotiationId" element={<FeatureMovedNotice title="Care requests are being rebuilt" message="Price negotiation is moving to guided care packages. This will be back soon." />} />
                 <Route path="*" element={<NotFoundPage />} />
             </Routes>
+            </VettingLockGuard>
+          </VettingLockoutProvider>
         </GigEditProvider>
     );
 }

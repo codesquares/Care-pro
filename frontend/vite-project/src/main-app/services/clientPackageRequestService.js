@@ -68,6 +68,34 @@ const ClientPackageRequestService = {
   },
 
   /**
+   * Endpoint: POST /api/client/package-requests/{id}/agree
+   * The client's optional explicit "I agree" tick (idempotent; identity from the JWT).
+   */
+  async agreeToContract(id) {
+    try {
+      const response = await api.post(`${BASE}/${id}/agree`);
+      return { success: true, data: response.data?.data };
+    } catch (error) {
+      return { success: false, error: extractError(error, 'Could not record your confirmation'), status: error.response?.status };
+    }
+  },
+
+  /**
+   * Endpoint: POST /api/client/package-requests/{id}/cancel
+   * Cancels the order inside the contract's cancellation window (default 48h). 409 once the window has ended.
+   * @param {string} id
+   * @returns {Promise<{success: boolean, data?: Object, error?: string, status?: number}>}
+   */
+  async cancelRequest(id) {
+    try {
+      const response = await api.post(`${BASE}/${id}/cancel`);
+      return { success: true, data: response.data?.data };
+    } catch (error) {
+      return { success: false, error: extractError(error, 'Could not cancel this order'), status: error.response?.status };
+    }
+  },
+
+  /**
    * Endpoint: GET /api/client/package-requests/{id}/visits
    * The client's own view of visits (task sheets) submitted under this request.
    * @param {string} id
@@ -82,6 +110,17 @@ const ClientPackageRequestService = {
     } catch (error) {
       console.error('Error fetching request visits:', error);
       return { success: false, error: extractError(error, 'Failed to load visit history') };
+    }
+  },
+
+  /** Endpoint: GET /api/client/package-requests/{id}/absence-notices — caregiver "can't attend" notices, newest day first. */
+  async getAbsenceNotices(id) {
+    try {
+      const response = await api.get(`${BASE}/${id}/absence-notices`);
+      const payload = response.data || {};
+      return { success: true, data: Array.isArray(payload.data) ? payload.data : [] };
+    } catch (error) {
+      return { success: false, error: extractError(error, 'Failed to load caregiver notices') };
     }
   },
 

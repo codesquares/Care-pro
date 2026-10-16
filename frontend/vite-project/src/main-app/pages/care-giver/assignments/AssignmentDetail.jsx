@@ -1,9 +1,15 @@
-import { useState, useEffect, useCallback } from "react";
+import { useState, useEffect, useCallback, useRef } from "react";
 import { useParams, useNavigate } from "react-router-dom";
-import CaregiverAssignmentService from "../../../services/caregiverAssignmentService";
+import CaregiverAssignmentService, {
+  isBenignOfferConflict,
+  OFFER_ALREADY_UPDATED_MESSAGE,
+} from "../../../services/caregiverAssignmentService";
+import CareBriefCard from "./CareBriefCard";
+import { formatLagos } from "../../../utils/lagosTime";
 import AssignmentDeclineDialog from "./AssignmentDeclineDialog";
 import Modal from "../../../components/modal/Modal";
 import TaskSheetTabs from "../../../components/task-sheets/TaskSheetTabs";
+import AbsenceNoticeCard from "../../../components/task-sheets/AbsenceNoticeCard";
 import "../../client/client-dashboard/clientDashboard.css";
 import "./assignments.css";
 
@@ -39,6 +45,9 @@ const AssignmentDetail = () => {
   const [showDeclineDialog, setShowDeclineDialog] = useState(false);
   const [actionSubmitting, setActionSubmitting] = useState(false);
   const [actionError, setActionError] = useState(null);
+  const [actionNotice, setActionNotice] = useState(null);
+  // Synchronous in-flight guard: React state updates are batched, so two clicks in the same tick both see actionSubmitting === false.
+  const submittingRef = useRef(false);
 
   const loadAssignment = useCallback(async () => {
     setLoading(true);
@@ -88,34 +97,41 @@ const AssignmentDetail = () => {
     // Guard at the handler level, not just via a disabled button — Modal
     // doesn't expose a disabled/loading prop for its own buttons, so a fast
     // double-click could otherwise fire this twice before the re-render lands.
-    if (actionSubmitting) return;
+    if (actionSubmitting || submittingRef.current) return;
+    submittingRef.current = true;
     setActionSubmitting(true);
     setActionError(null);
+    setActionNotice(null);
     const result = await CaregiverAssignmentService.acceptAssignment(id);
+    submittingRef.current = false;
     setActionSubmitting(false);
     setShowAcceptConfirm(false);
     if (result.success) {
       await loadAssignment();
     } else {
-      // 403 (not your assignment) or 409 (already responded / cancelled by
-      // staff) both land here — show the message, then reload so the status
-      // badge and buttons reflect whatever actually happened server-side.
-      setActionError(result.error);
+      // A 409 is normally benign (double click / another tab / staff got there first): neutral note, then refetch so the
+      // badge and buttons show the true state. 403 and a "not ready" 409 are real refusals and stay as errors.
+      if (isBenignOfferConflict(result)) setActionNotice(OFFER_ALREADY_UPDATED_MESSAGE);
+      else setActionError(result.error);
       await loadAssignment();
     }
   };
 
   const handleDeclineConfirmed = async (reason) => {
-    if (actionSubmitting) return;
+    if (actionSubmitting || submittingRef.current) return;
+    submittingRef.current = true;
     setActionSubmitting(true);
     setActionError(null);
+    setActionNotice(null);
     const result = await CaregiverAssignmentService.declineAssignment(id, reason);
+    submittingRef.current = false;
     setActionSubmitting(false);
     setShowDeclineDialog(false);
     if (result.success) {
       await loadAssignment();
     } else {
-      setActionError(result.error);
+      if (isBenignOfferConflict(result)) setActionNotice(OFFER_ALREADY_UPDATED_MESSAGE);
+      else setActionError(result.error);
       await loadAssignment();
     }
   };
@@ -179,7 +195,18 @@ const AssignmentDetail = () => {
           <p className="asn-pay-basis">Pay basis: {assignment.payCalculationType}</p>
         )}
 
+        <CareBriefCard brief={assignment.careBrief} />
+        {assignment.clientDetailsReleased && assignment.serviceAddress && (
+          <p className="asn-service-address" data-testid="service-address"><strong>Service address:</strong> {assignment.serviceAddress}</p>
+        )}
+        {assignment.status === "PendingAcceptance" && (
+          <p className="asn-brief-note">
+            The client's full name, contact details and address are shared once you accept.
+          </p>
+        )}
+
         {actionError && <p className="asn-inline-error">{actionError}</p>}
+        {actionNotice && <p className="asn-brief-note" role="status" data-testid="offer-updated-note">{actionNotice}</p>}
 
         {assignment.status === "PendingAcceptance" && (
           <div className="asn-offer-actions">
@@ -293,11 +320,19 @@ const AssignmentDetail = () => {
 
             <div className="asn-visits-card">
               <h2>Visits</h2>
+              {contract?.cancellationWindowOpen && (
+                <p className="asn-brief-note" data-testid="care-begin-banner">
+                  Care can begin after {formatLagos(contract.cancellationWindowEndsAt)}. The client has a cancellation period until then.
+                </p>
+              )}
               <p className="asn-visits-note">
                 There's no pre-generated future schedule for package
                 assignments — start each visit yourself when you arrive.
               </p>
               <TaskSheetTabs assignmentId={id} contract={contract} />
+            </div>
+            <div className="asn-visits-card">
+              <AbsenceNoticeCard assignmentId={id} />
             </div>
           </>
         )}

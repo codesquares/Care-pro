@@ -9,6 +9,7 @@ import { useAuth } from "../../../context/AuthContext";
 import { getInitials } from "../../../utils/avatarHelpers";
 import config from "../../../config"; // Import centralized config for API URLs
 import CaregiverAssignmentService from "../../../services/caregiverAssignmentService";
+import { useVettingLockout } from "../../../contexts/VettingLockoutContext";
 
 
 const NavigationBar = () => {
@@ -16,6 +17,8 @@ const NavigationBar = () => {
   const basePath = "/app/caregiver";
   const dropdownRef = useRef(null);
   const { user, handleLogout } = useAuth();
+  // While vetting-locked only the open destinations are shown (Vetting, Wallet, Messages, Settings, Notifications, logout).
+  const { locked } = useVettingLockout();
 
   const [showDropdown, setShowDropdown] = useState(false);
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
@@ -118,24 +121,31 @@ const NavigationBar = () => {
             </div>
             
             <ul className="mobile-menu-links">
+              {!locked && (
               <li onClick={() => { navigate(`${basePath}/dashboard`); setMobileMenuOpen(false); }}>
                 <div className="menu-item-content">
                   <FaHome className="mobile-menu-icon" />
                   <span>Dashboard</span>
                 </div>
               </li>
+              )}
+              {/* RETIRED — gigs are retired for caregivers; Create Gig / Manage Gigs links preserved for restore.
               <li onClick={() => { navigate(`${basePath}/create-gigs`); setMobileMenuOpen(false); }}>
                 <div className="menu-item-content">
                   <FaPlusCircle className="mobile-menu-icon" />
                   <span>Create Gig</span>
                 </div>
               </li>
+              {!locked && (
               <li onClick={() => { navigate(`${basePath}/profile`); setMobileMenuOpen(false); }}>
                 <div className="menu-item-content">
                   <FaBriefcase className="mobile-menu-icon" />
                   <span>Manage Gigs</span>
                 </div>
               </li>
+              )}
+              */}
+              {!locked && (
               <li onClick={() => { navigate(`${basePath}/assignments`); setMobileMenuOpen(false); }}>
                 <div className="menu-item-content">
                   <FaTasks className="mobile-menu-icon" />
@@ -145,6 +155,7 @@ const NavigationBar = () => {
                   )}
                 </div>
               </li>
+              )}
               <li onClick={() => { navigate(`${basePath}/wallet`); setMobileMenuOpen(false); }}>
                 <div className="menu-item-content">
                   <FaWallet className="mobile-menu-icon" />
@@ -157,12 +168,14 @@ const NavigationBar = () => {
                   <span>Vetting</span>
                 </div>
               </li>
+              {!locked && (
               <li onClick={() => { navigate(`${basePath}/subscriptions`); setMobileMenuOpen(false); }}>
                 <div className="menu-item-content">
                   <span className="mobile-menu-icon" style={{ fontSize: '16px' }}>🔄</span>
                   <span>Subscriptions</span>
                 </div>
               </li>
+              )}
               <li onClick={() => { navigate(`${basePath}/message`); setMobileMenuOpen(false); }}>
                 <div className="menu-item-content">
                   <FaEnvelope className="mobile-menu-icon" />
@@ -175,12 +188,14 @@ const NavigationBar = () => {
                   <span>Settings</span>
                 </div>
               </li>
+              {!locked && (
               <li onClick={() => { navigate('/marketplace'); setMobileMenuOpen(false); }}>
                 <div className="menu-item-content">
                   <FaStore className="mobile-menu-icon" />
                   <span>Browse Marketplace</span>
                 </div>
               </li>
+              )}
               <li onClick={() => { navigate(`${basePath}/profile`); setMobileMenuOpen(false); }}>
                 <div className="menu-item-content">
                   <div className="avatar small-avatar">
@@ -215,10 +230,13 @@ const NavigationBar = () => {
         </div>
 
         <ul className="nav-links">
+          {!locked && (
           <li className="nav-link text-link" onClick={() => navigate(`${basePath}/dashboard`)}>
             <FaHome className="nav-link-icon" />
             Dashboard
           </li>
+          )}
+          {!locked && (
           <li className="nav-link text-link" onClick={() => navigate(`${basePath}/assignments`)}>
             <FaTasks className="nav-link-icon" />
             Assignments
@@ -226,6 +244,8 @@ const NavigationBar = () => {
               <span className="asn-nav-badge">{pendingOfferCount > 9 ? "9+" : pendingOfferCount}</span>
             )}
           </li>
+          )}
+          {/* RETIRED — gigs are retired for caregivers; Create Gig / Manage Gigs links preserved for restore.
           <li className="nav-link text-link" onClick={() => navigate(`${basePath}/create-gigs`)}>
             <FaPlusCircle className="nav-link-icon" />
             Create Gig
@@ -234,6 +254,7 @@ const NavigationBar = () => {
             <FaBriefcase className="nav-link-icon" />
             Manage Gigs
           </li>
+          */}
           <li className="nav-link text-link" onClick={() => navigate(`${basePath}/wallet`)}>
             <FaWallet className="nav-link-icon" />
             Wallet
@@ -265,18 +286,22 @@ const NavigationBar = () => {
 
             {showDropdown && (
               <div className="nav-dropdown-menu dropdown-menu">
+                {!locked && (
                 <div className="nav-dropdown-item dropdown-item" onClick={() => {
                   setShowDropdown(false);
                   navigate(`${basePath}/profile`);
                 }}>
                   View Profile
                 </div>
+                )}
+                {!locked && (
                 <div className="nav-dropdown-item dropdown-item" onClick={() => {
                   setShowDropdown(false);
                   navigate(`${basePath}/subscriptions`);
                 }}>
                   Subscriptions
                 </div>
+                )}
                 <div className="nav-dropdown-item dropdown-item" onClick={() => {
                   setShowDropdown(false);
                   handleSignOut();

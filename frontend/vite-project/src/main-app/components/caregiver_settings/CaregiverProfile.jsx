@@ -75,12 +75,14 @@ const ProfilePage = () => {
                     <img src={profileCardImage} alt="Profile" className="cgp-profile-image" />
                     <h2 className="cgp-profile-name">{profile.name}</h2>
                     {/* <p className="cgp-profile-email">{profile.username}</p> */} {/* TODO: Backend persistence not implemented yet */}
-                    <div className="cgp-profile-rating">★★★★☆ (29 reviews)</div>
+                    {/* RETIRED — hardcoded placeholder rating "★★★★☆ (29 reviews)", not real data.
+                    <div className="cgp-profile-rating">★★★★☆ (29 reviews)</div> */}
                     {/*I know the spaces arent the cleanest solution but they seemed the easiest if you need me to change it please let me know*/}
                     <p className="cgp-profile-location">Location                             {profile.location}</p>
                     <p className="cgp-profile-membership">Member since               {profile.memberSince ? new Date(profile.memberSince).toLocaleDateString('en-GB', { day: 'numeric', month: 'long', year: 'numeric' }) : 'N/A'}</p>
                 </div>
 
+                {/* RETIRED — hardcoded placeholder figures (Total Spent ₦50,500 / 11 orders), not real data. Preserved for restore.
                 <div className="cgp-stats-section">
                     <div className="cgp-stats-item">
                         <img src="https://via.placeholder.com/20" alt="icon" className="cgp-stats-icon" />
@@ -93,6 +95,7 @@ const ProfilePage = () => {
                         <p className="cgp-stats-value">11</p>
                     </div>
                 </div>
+                */}
 
                 <div className="cgp-settings-section">
                     <button className="cgp-account-settings">⚙️ Account settings</button>

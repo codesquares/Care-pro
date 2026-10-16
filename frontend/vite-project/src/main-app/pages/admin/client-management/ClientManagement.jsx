@@ -1,4 +1,5 @@
 import { useState, useEffect } from 'react';
+import { useSearchParams } from 'react-router-dom';
 import adminService from '../../../services/adminService';
 import './client-management.css';
 
@@ -14,6 +15,9 @@ const ClientManagement = () => {
   const [exportDates, setExportDates] = useState({ startDate: '', endDate: '' });
   const [exporting, setExporting] = useState(false);
   const [exportError, setExportError] = useState(null);
+  // A2: deep link from the admin alert 'package_payment_request_failed' (related id is a CLIENT id).
+  const [searchParams] = useSearchParams();
+  const deepLinkClientId = searchParams.get('clientId');
 
   // Admin account deletion state
   const [deleteReason, setDeleteReason] = useState('');
@@ -24,6 +28,12 @@ const ClientManagement = () => {
   useEffect(() => {
     fetchClients();
   }, []);
+
+  // Open the linked client's detail modal once (handleViewDetails is defined below; called after mount).
+  useEffect(() => {
+    if (deepLinkClientId) handleViewDetails(deepLinkClientId);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [deepLinkClientId]);
 
   useEffect(() => {
     applyFilters();

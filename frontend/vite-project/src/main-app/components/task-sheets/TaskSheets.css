@@ -1658,3 +1658,6 @@
   opacity: 0.6;
   cursor: not-allowed;
 }
+
+.ts-window-note { flex-basis: 100%; margin: 0.5rem 0; padding: 0.6rem 0.8rem; background: #fffbeb; border: 1px solid #fcd34d; border-radius: 8px; font-size: 0.9rem; }
+.checkin-section--window { background: #fffbeb; border: 1px solid #fcd34d; }

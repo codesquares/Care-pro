@@ -4,7 +4,7 @@ import './ClientProfile.css';
 import defaultAvatar from '../../../../assets/profilecard1.png';
 import ClientProfileService from '../../../services/clientProfileService';
 import OrderMetrics from '../../../components/client/OrderMetrics';
-import ClientOrderService from '../../../services/clientOrderService';
+// RETIRED (Services History removed): import ClientOrderService from '../../../services/clientOrderService';
 import AddressInput from '../../../components/AddressInput';
 import { toast } from 'react-toastify';
 import { generateUsername } from '../../../utils/usernameGenerator';
@@ -37,8 +37,8 @@ const ClientProfile = () => {
 
   // Care needs state
 
-  // Service history counts
-  const [serviceHistoryCounts, setServiceHistoryCounts] = useState({ active: 0, completed: 0 });
+  // RETIRED — Services History counts (state preserved):
+  // const [serviceHistoryCounts, setServiceHistoryCounts] = useState({ active: 0, completed: 0 });
 
   // Service category icons mapping
   const categoryIcons = {
@@ -58,23 +58,23 @@ const ClientProfile = () => {
   const userDetails = JSON.parse(localStorage.getItem("userDetails") || "{}");
   const clientId = userDetails?.id;
 
-  // Fetch service history counts
-  useEffect(() => {
-    const fetchServiceCounts = async () => {
-      if (!clientId) return;
-      try {
-        const orders = await ClientOrderService.getOrderHistory(clientId);
-        const completed = orders.filter(o => o.clientOrderStatus === 'Completed').length;
-        const active = orders.filter(o =>
-          o.clientOrderStatus === 'In Progress' || o.clientOrderStatus === 'Pending'
-        ).length;
-        setServiceHistoryCounts({ active, completed });
-      } catch (err) {
-        console.error('Error fetching service history counts:', err);
-      }
-    };
-    fetchServiceCounts();
-  }, [clientId]);
+  // RETIRED — service history fetch, preserved for restore:
+  // useEffect(() => {
+  //   const fetchServiceCounts = async () => {
+  //     if (!clientId) return;
+  //     try {
+  //       const orders = await ClientOrderService.getOrderHistory(clientId);
+  //       const completed = orders.filter(o => o.clientOrderStatus === 'Completed').length;
+  //       const active = orders.filter(o =>
+  //         o.clientOrderStatus === 'In Progress' || o.clientOrderStatus === 'Pending'
+  //       ).length;
+  //       setServiceHistoryCounts({ active, completed });
+  //     } catch (err) {
+  //       console.error('Error fetching service history counts:', err);
+  //     }
+  //   };
+  //   fetchServiceCounts();
+  // }, [clientId]);
 
   // Fetch profile data
   useEffect(() => {
@@ -692,6 +692,7 @@ const ClientProfile = () => {
             )}
           </div>
           
+          {/* RETIRED — Services History section, preserved for restore.
           <div className="profile-section">
             <h2>Services History</h2>
             <div className="services-summary">
@@ -707,6 +708,8 @@ const ClientProfile = () => {
             </div>
           </div>
           
+          */}
+
           <div className="profile-section">
             <h2>Spending Overview</h2>
             {/* OrderMetrics component to display spending data */}
