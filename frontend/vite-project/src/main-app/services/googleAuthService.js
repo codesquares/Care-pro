@@ -551,18 +551,36 @@ const GoogleAuthService = {
    * @returns {string} - Path to redirect to
    */
   getPostAuthRedirect(role, returnTo) {
-    if (returnTo) {
-      let decoded;
-      try {
-        decoded = decodeURIComponent(returnTo);
-      } catch {
-        decoded = null;
-      }
-      if (this.isSafeReturnTo(decoded)) {
-        return decoded;
-      }
+    return this.resolveReturnTo(role, returnTo) || this.getDashboardPath(role);
+  },
+
+  /**
+   * The returnTo path to honor for this role, or null if it is missing,
+   * unsafe, or belongs to another role's area (e.g. a caregiver who signed up
+   * via the client-only "free care assessment" CTA must land on their own
+   * dashboard, not the WhatsApp assessment redirect).
+   * @param {string} role
+   * @param {string} [returnTo] - Raw (possibly encoded) returnTo value
+   * @returns {string|null}
+   */
+  resolveReturnTo(role, returnTo) {
+    if (!returnTo) return null;
+    let decoded;
+    try {
+      decoded = decodeURIComponent(returnTo);
+    } catch {
+      return null;
     }
-    return this.getDashboardPath(role);
+    if (!this.isSafeReturnTo(decoded)) return null;
+
+    const isAdmin = role === "Admin" || role === "SuperAdmin";
+    const clientOnly = /^\/(start-assessment|app\/client)(?![\w-])/.test(decoded);
+    const caregiverOnly = /^\/app\/caregiver(?![\w-])/.test(decoded);
+    const adminOnly = /^\/app\/admin(?![\w-])/.test(decoded);
+    if (clientOnly && role !== "Client") return null;
+    if (caregiverOnly && role !== "Caregiver") return null;
+    if (adminOnly && !isAdmin) return null;
+    return decoded;
   },
 };
 
