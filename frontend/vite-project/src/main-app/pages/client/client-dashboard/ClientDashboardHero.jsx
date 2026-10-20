@@ -2,19 +2,6 @@ import { useNavigate } from "react-router-dom";
 import "./clientDashboardHero.css";
 import CareGetStartedCards from "./CareGetStartedCards";
 import SuggestedServices from "./SuggestedServices";
-import { marketplaceLinkForCategorySlug } from "../../../constants/categoryBrowseData";
-
-// Category navigation items
-const categories = [
-  { name: "Home Care", slug: "home-care" },
-  { name: "Adult & Elderly Care", slug: "adult-care" },
-  { name: "Child Care", slug: "child-care" },
-  { name: "Pet Care", slug: "pet-care" },
-  { name: "Post Surgery Care", slug: "post-surgery-care" },
-  { name: "Special Needs Care", slug: "special-needs-care" },
-  { name: "Mobility Support", slug: "mobility-support" },
-  { name: "Home Medical Support", slug: "medical-support" },
-];
 
 const ClientDashboardHero = ({
   userName, // TODO: Backend persistence not implemented yet - keeping prop for now
@@ -22,10 +9,6 @@ const ClientDashboardHero = ({
   remindersCount = 3,
 }) => {
   const navigate = useNavigate();
-
-  const handleCategoryClick = (slug) => {
-    navigate(marketplaceLinkForCategorySlug(slug));
-  };
 
   const handleSetupProfile = () => {
     navigate("/app/client/profile");
@@ -45,21 +28,6 @@ const ClientDashboardHero = ({
 
   return (
     <div className="client-dashboard-hero">
-      {/* Categories Navigation */}
-      <div className="categories-nav">
-        <div className="categories-scroll">
-          {categories.map((category) => (
-            <button
-              key={category.slug}
-              className="category-nav-item"
-              onClick={() => handleCategoryClick(category.slug)}
-            >
-              {category.name}
-            </button>
-          ))}
-        </div>
-      </div>
-
       {/* Welcome Banner */}
       <div className="welcome-banner">
         <div className="welcome-content">
