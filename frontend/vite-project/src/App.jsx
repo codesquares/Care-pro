@@ -138,9 +138,51 @@ function AppContent() {
       return;
     }
 
+    let reloading = false;
+    const onControllerChange = () => {
+      if (reloading) return;
+      reloading = true;
+      window.location.reload();
+    };
+
+    const showUpdateToast = (worker) => {
+      toast.info(
+        <span>
+          Update available!{' '}
+          <button
+            style={{ marginLeft: 8, padding: '2px 10px', cursor: 'pointer', borderRadius: 4, border: 'none', background: '#00B4A6', color: '#fff' }}
+            onClick={() => {
+              // Ask the waiting worker to activate; the page reloads on controllerchange.
+              worker.postMessage({ type: 'SKIP_WAITING' });
+              // Fallback in case the worker never takes over.
+              setTimeout(() => window.location.reload(), 3000);
+            }}
+          >
+            Refresh
+          </button>
+        </span>,
+        {
+          autoClose: false,
+          closeOnClick: false,
+          toastId: 'sw-update',
+          containerId: 'main-toast-container',
+        }
+      );
+    };
+
+    let updateInterval;
+    let onVisible;
+
+    navigator.serviceWorker.addEventListener('controllerchange', onControllerChange);
+
     navigator.serviceWorker
       .register('/sw.js', { updateViaCache: 'none' })
       .then((reg) => {
+        // A new version may already be waiting from an earlier visit.
+        if (reg.waiting && navigator.serviceWorker.controller) {
+          showUpdateToast(reg.waiting);
+        }
+
         reg.addEventListener('updatefound', () => {
           const newWorker = reg.installing;
           if (!newWorker) return;
@@ -149,28 +191,26 @@ function AppContent() {
               newWorker.state === 'installed' &&
               navigator.serviceWorker.controller
             ) {
-              toast.info(
-                <span>
-                  Update available!{' '}
-                  <button
-                    style={{ marginLeft: 8, padding: '2px 10px', cursor: 'pointer', borderRadius: 4, border: 'none', background: '#00B4A6', color: '#fff' }}
-                    onClick={() => window.location.reload()}
-                  >
-                    Refresh
-                  </button>
-                </span>,
-                {
-                  autoClose: false,
-                  closeOnClick: false,
-                  toastId: 'sw-update',
-                  containerId: 'main-toast-container',
-                }
-              );
+              showUpdateToast(newWorker);
             }
           });
         });
+
+        // Long-lived tabs/PWAs only re-check on navigation otherwise.
+        const checkForUpdate = () => reg.update().catch(() => {});
+        updateInterval = setInterval(checkForUpdate, 60 * 60 * 1000);
+        onVisible = () => {
+          if (document.visibilityState === 'visible') checkForUpdate();
+        };
+        document.addEventListener('visibilitychange', onVisible);
       })
       .catch((err) => console.warn('[SW] Registration failed:', err));
+
+    return () => {
+      navigator.serviceWorker.removeEventListener('controllerchange', onControllerChange);
+      clearInterval(updateInterval);
+      if (onVisible) document.removeEventListener('visibilitychange', onVisible);
+    };
   }, []);
 
   // Define unprotected routes
