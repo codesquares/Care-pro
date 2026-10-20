@@ -52,7 +52,6 @@ import { BlogProvider } from './main-app/context/BlogContext';
 import PaymentSuccess from './main-app/pages/client/home-care-service/PaymentSuccess';
 import CommitmentSuccess from './main-app/pages/client/home-care-service/CommitmentSuccess';
 import FeatureMovedNotice from './main-app/components/shared/FeatureMovedNotice';
-import SubscriptionPaymentConfirmed from './main-app/pages/client/subscriptions/SubscriptionPaymentConfirmed';
 import { MessageProvider } from './main-app/context/MessageContext';
 import { CaregiverStatusProvider } from './main-app/contexts/CaregiverStatusContext';
 import { ClientOnboardingProvider } from './main-app/context/ClientOnboardingContext';
@@ -363,18 +362,6 @@ function AppContent() {
 
         <Route path="/app/client/payment-success" element={<PaymentSuccess />} />
         <Route path="/app/client/commitment-success" element={<CommitmentSuccess />} />
-        <Route
-          path="/subscription/payment-confirmed"
-          element={
-            <ProtectedRoute>
-              {user?.role?.toLowerCase() === 'client' ? (
-                <SubscriptionPaymentConfirmed />
-              ) : (
-                <Navigate to="/unauthorized" replace />
-              )}
-            </ProtectedRoute>
-          }
-        />
         <Route path="/unauthorized" element={<UnauthorizedPage />} />
         <Route
           path="/app/*"
