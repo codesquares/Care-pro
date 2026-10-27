@@ -85,7 +85,7 @@
     width: 120px;
     height: 120px;
     border-radius: 50%;
-    background-color: #3b82f6;
+    background-color: var(--color-brand-deep);
     display: flex;
     align-items: center;
     justify-content: center;
@@ -134,7 +134,7 @@
     width: 32px;
     height: 32px;
     border-radius: 50%;
-    background-color: #3b82f6;
+    background-color: var(--color-brand-deep);
     border: 2px solid white;
     color: white;
     cursor: pointer;
@@ -148,7 +148,7 @@
   }
 
   .caregiver-profile-img-upload-btn:hover:not(:disabled) {
-    background-color: #2563eb;
+    background-color: var(--color-brand-deep-2);
     transform: scale(1.05);
   }
 
@@ -313,14 +313,14 @@
 
   /* Clickable location item */
   .caregiver-detail-item-clickable:hover {
-    background-color: #e3f2fd !important;
+    background-color: var(--surface-subtle) !important;
     transform: translateY(-1px);
-    box-shadow: 0 2px 4px rgba(59, 130, 246, 0.15);
+    box-shadow: 0 2px 4px rgba(43, 57, 95, 0.15);
   }
 
   .caregiver-detail-item-clickable:active {
     transform: translateY(0);
-    box-shadow: 0 1px 2px rgba(59, 130, 246, 0.1);
+    box-shadow: 0 1px 2px rgba(43, 57, 95, 0.1);
   }
   .caregiver-detail-button{
     display:flex;
@@ -402,17 +402,17 @@
 
   /* Active Button - Blue (Current State) */
   .caregiver-availability-btn.active {
-    background-color: #0f3f8b;
-    border-color: #0f3f8b;
+    background-color: var(--color-brand-deep);
+    border-color: var(--color-brand-deep);
     color: white;
-    box-shadow: 0 2px 8px rgba(15, 63, 139, 0.3);
+    box-shadow: 0 2px 8px rgba(43, 57, 95, 0.3);
   }
 
   .caregiver-availability-btn.active:hover:not(:disabled) {
-    background-color: #0a2c63;
-    border-color: #0a2c63;
+    background-color: var(--color-brand-deep-2);
+    border-color: var(--color-brand-deep-2);
     transform: translateY(-1px);
-    box-shadow: 0 4px 12px rgba(15, 63, 139, 0.4);
+    box-shadow: 0 4px 12px rgba(43, 57, 95, 0.4);
   }
 
   /* Inactive Button - Gray (Alternative Option) */
@@ -441,9 +441,9 @@
   }
   .caregiver-detail-button .caregiver-edit-location-btn {
     padding: 6px 12px;
-    border: 1px solid #0f3f8b;
+    border: 1px solid var(--color-brand-deep);
     border-radius: 6px;
-    background-color: #0f3f8b;
+    background-color: var(--color-brand-deep);
     color: white;
     cursor: pointer;
     font-size: 12px;
@@ -456,7 +456,7 @@
   }
   .caregiver-detail-button .caregiver-edit-location-btn:last-child {
     background-color: transparent;
-    border-color: #0f3f8b;
+    border-color: var(--color-brand-deep);
     color: rgb(65, 56, 56);
   }
 
@@ -548,9 +548,9 @@
 
   .caregiver-edit-location-btn {
     padding: 8px 16px;
-    border: 1px solid #3b82f6;
+    border: 1px solid var(--color-brand-deep);
     border-radius: 6px;
-    background-color: #3b82f6;
+    background-color: var(--color-brand-deep);
     color: white;
     cursor: pointer;
     font-size: 14px;
@@ -563,8 +563,8 @@
   }
 
   .caregiver-edit-location-btn:hover {
-    background-color: #2563eb;
-    border-color: #2563eb;
+    background-color: var(--color-brand-deep-2);
+    border-color: var(--color-brand-deep-2);
   }
 
   .caregiver-availability-status {
@@ -679,8 +679,8 @@
 
   .caregiver-location-modal input:focus {
     outline: none;
-    border-color: #3b82f6;
-    box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
+    border-color: var(--color-brand-deep);
+    box-shadow: 0 0 0 3px rgba(43, 57, 95, 0.1);
   }
 
   .caregiver-modal-buttons {
@@ -713,14 +713,14 @@
   }
 
   .caregiver-modal-btn.caregiver-modal-save {
-    background: #3b82f6;
+    background: var(--color-brand-deep);
     color: white;
-    border-color: #3b82f6;
+    border-color: var(--color-brand-deep);
   }
 
   .caregiver-modal-btn.caregiver-modal-save:hover:not(:disabled) {
-    background: #2563eb;
-    border-color: #2563eb;
+    background: var(--color-brand-deep-2);
+    border-color: var(--color-brand-deep-2);
   }
 
 .caregiver-modal-btn.caregiver-modal-save:disabled {
@@ -875,122 +875,13 @@
   .caregiver-profile-header-card .caregiver-username {
     font-size: 18px;
   }
-  
-  .profile-header-card .bio {
-    font-size: 18px;
-  }
-  
-  .profile-header-card .rating {
-    font-size: 20px;
-  }
-  
-  .profile-header-card .rating .rating-text {
-    font-size: 18px;
-  }
-  
-  .profile-details .detail-item {
-    font-size: 18px;
-    gap: 12px;
-  }
-  
-  .availability-status {
-    font-size: 18px;
-    padding: 12px 24px;
-  }
-  
-  .edit-location-btn {
-    font-size: 18px;
-    padding: 12px 24px;
-  }
-}
-
-@media (min-width: 1280px) {
-  .profile-header-card {
-    padding: 40px;
-  }
-  
-  .profile-header-card .profile-img {
-    width: 180px;
-    height: 180px;
-    margin-bottom: 20px;
-  }
-  
-  .profile-header-card h2 {
-    font-size: 32px;
-    margin-bottom: 12px;
-  }
-  
-  .profile-header-card .username {
-    font-size: 20px;
-    margin-bottom: 16px;
-  }
-  
-  .profile-header-card .bio {
-    font-size: 20px;
-  }
-  
-  .profile-header-card .rating {
-    font-size: 22px;
-    margin: 20px 0;
-  }
-  
-  .profile-header-card .rating .rating-text {
-    font-size: 20px;
-  }
-  
-  .profile-details {
-    gap: 16px;
-    margin: 24px 0;
-  }
-  
-  .profile-details .detail-item {
-    font-size: 20px;
-    gap: 16px;
-  }
-  
-  .availability-status {
-    font-size: 20px;
-    padding: 14px 28px;
-    margin: 20px 0;
-  }
-  
-  .edit-location-btn {
-    font-size: 20px;
-    padding: 14px 28px;
-  }
 }
 
 @media (max-width: 768px) {
-  .profile-header {
-    gap: 16px;
-  }
-  
-  .profile-header-card {
-    padding: 16px;
-  }
-  
-  .profile-header-card .profile-img {
-    width: 100px;
-    height: 100px;
-    display: block;
-  }
-
   .caregiver-profile-initials-avatar {
     width: 100px !important;
     height: 100px !important;
     font-size: 40px !important;
-  }
-  
-  .profile-header-card h2 {
-    font-size: 20px;
-  }
-  
-  .section-card {
-    padding: 16px;
-  }
-  
-  .section-card h3 {
-    font-size: 16px;
   }
 
   /* Mobile styles for image upload button */
@@ -1016,29 +907,10 @@
 }
 
 @media (max-width: 480px) {
-  .profile-header-card {
-    padding: 12px;
-  }
-  
-  .profile-header-card .profile-img {
-    width: 80px;
-    height: 80px;
-    display: block;
-  }
-
   .caregiver-profile-initials-avatar {
     width: 80px !important;
     height: 80px !important;
     font-size: 32px !important;
-  }
-  
-  .profile-header-card h2 {
-    font-size: 18px;
-  }
-  
-  .edit-location-btn,
-  .availability-status {
-    font-size: 13px;
   }
 
   /* Smaller mobile styles for image upload button */

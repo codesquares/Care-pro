@@ -1,12 +1,12 @@
 /* Question Bank Manager Styles */
-.question-bank-manager {
+.qbm-question-bank-manager {
   padding: 20px;
   max-width: 1200px;
   margin: 0 auto;
   font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, 'Open Sans', 'Helvetica Neue', sans-serif;
 }
 
-.question-bank-manager h1 {
+.qbm-question-bank-manager h1 {
   font-size: 2rem;
   color: #333;
   margin-bottom: 20px;
@@ -14,15 +14,15 @@
   padding-bottom: 15px;
 }
 
-.question-bank-actions {
+.qbm-question-bank-actions {
   display: flex;
   gap: 10px;
   margin-bottom: 20px;
 }
 
 /* Common Button Styles */
-.primary-button {
-  background-color: #4a90e2;
+.qbm-primary-button {
+  background-color: var(--color-brand-deep);
   color: white;
   border: none;
   border-radius: 4px;
@@ -35,16 +35,16 @@
   gap: 5px;
 }
 
-.primary-button:hover {
-  background-color: #357bd8;
+.qbm-primary-button:hover {
+  background-color: var(--color-brand-deep-2);
 }
 
-.primary-button:disabled {
-  background-color: #a0c3ed;
+.qbm-primary-button:disabled {
+  background-color: color-mix(in srgb, var(--color-brand-deep) 40%, white);
   cursor: not-allowed;
 }
 
-.secondary-button {
+.qbm-secondary-button {
   background-color: #e4e4e4;
   color: #333;
   border: none;
@@ -58,18 +58,18 @@
   gap: 5px;
 }
 
-.secondary-button:hover {
+.qbm-secondary-button:hover {
   background-color: #d1d1d1;
 }
 
-.secondary-button:disabled {
+.qbm-secondary-button:disabled {
   background-color: #f0f0f0;
   color: #999;
   cursor: not-allowed;
 }
 
 /* Error and Success Messages */
-.error-message {
+.qbm-error-message {
   color: #e74c3c;
   background-color: rgba(231, 76, 60, 0.1);
   padding: 12px;
@@ -78,7 +78,7 @@
   border-left: 4px solid #e74c3c;
 }
 
-.success-message {
+.qbm-success-message {
   color: #27ae60;
   background-color: rgba(46, 204, 113, 0.1);
   padding: 12px;
@@ -88,7 +88,7 @@
 }
 
 /* Modal Styling */
-.modal {
+.qbm-modal {
   position: fixed;
   top: 0;
   left: 0;
@@ -101,7 +101,7 @@
   z-index: 1000;
 }
 
-.modal-content {
+.qbm-modal-content {
   background-color: white;
   padding: 20px;
   border-radius: 8px;
@@ -111,18 +111,18 @@
   overflow-y: auto;
 }
 
-.modal-content h2 {
+.qbm-modal-content h2 {
   margin-bottom: 15px;
   color: #333;
   border-bottom: 1px solid #eee;
   padding-bottom: 10px;
 }
 
-.modal-instruction {
+.qbm-modal-instruction {
   margin-bottom: 10px;
 }
 
-.code-example {
+.qbm-code-example {
   background-color: #f5f5f5;
   border: 1px solid #ddd;
   border-radius: 4px;
@@ -134,7 +134,7 @@
   font-size: 0.9rem;
 }
 
-.import-textarea {
+.qbm-import-textarea {
   width: 100%;
   padding: 10px;
   border: 1px solid #ddd;
@@ -144,14 +144,14 @@
   resize: vertical;
 }
 
-.modal-actions {
+.qbm-modal-actions {
   display: flex;
   justify-content: flex-end;
   gap: 10px;
 }
 
 /* Form Styling */
-.question-form {
+.qbm-question-form {
   background-color: #f9f9f9;
   border-radius: 8px;
   padding: 20px;
@@ -159,34 +159,34 @@
   border: 1px solid #eee;
 }
 
-.question-form h2 {
+.qbm-question-form h2 {
   margin-bottom: 15px;
   color: #333;
   border-bottom: 1px solid #eee;
   padding-bottom: 10px;
 }
 
-.form-row {
+.qbm-form-row {
   display: flex;
   gap: 15px;
   margin-bottom: 15px;
 }
 
-.form-group {
+.qbm-form-group {
   flex: 1;
   margin-bottom: 15px;
 }
 
-.form-group label {
+.qbm-form-group label {
   display: block;
   margin-bottom: 5px;
   color: #555;
   font-weight: 500;
 }
 
-.form-group input,
-.form-group select,
-.form-group textarea {
+.qbm-form-group input,
+.qbm-form-group select,
+.qbm-form-group textarea {
   width: 100%;
   padding: 8px 10px;
   border: 1px solid #ddd;
@@ -194,47 +194,47 @@
   font-size: 0.95rem;
 }
 
-.form-group textarea {
+.qbm-form-group textarea {
   resize: vertical;
   min-height: 80px;
 }
 
-.options-container {
+.qbm-options-container {
   margin-bottom: 15px;
 }
 
-.options-container > label {
+.qbm-options-container > label {
   display: block;
   margin-bottom: 5px;
   color: #555;
   font-weight: 500;
 }
 
-.option-row {
+.qbm-option-row {
   display: flex;
   align-items: center;
   margin-bottom: 10px;
   gap: 10px;
 }
 
-.option-label {
+.qbm-option-label {
   font-weight: bold;
-  color: #4a90e2;
+  color: var(--color-brand-deep);
   width: 20px;
 }
 
-.option-row input[type="text"] {
+.qbm-option-row input[type="text"] {
   flex: 1;
   padding: 8px 10px;
   border: 1px solid #ddd;
   border-radius: 4px;
 }
 
-.option-row input[type="radio"] {
+.qbm-option-row input[type="radio"] {
   margin: 0;
 }
 
-.form-actions {
+.qbm-form-actions {
   display: flex;
   justify-content: flex-end;
   gap: 10px;
@@ -242,7 +242,7 @@
 }
 
 /* Filters */
-.filters {
+.qbm-filters {
   background-color: #f9f9f9;
   border-radius: 8px;
   padding: 15px;
@@ -250,32 +250,32 @@
   border: 1px solid #eee;
 }
 
-.filters h3 {
+.qbm-filters h3 {
   margin-bottom: 15px;
   color: #333;
   font-size: 1.1rem;
 }
 
-.filter-row {
+.qbm-filter-row {
   display: flex;
   gap: 15px;
   align-items: flex-end;
   flex-wrap: wrap;
 }
 
-.filter-group {
+.qbm-filter-group {
   flex: 1;
   min-width: 200px;
 }
 
-.filter-group label {
+.qbm-filter-group label {
   display: block;
   margin-bottom: 5px;
   color: #555;
   font-weight: 500;
 }
 
-.filter-group select {
+.qbm-filter-group select {
   width: 100%;
   padding: 8px 10px;
   border: 1px solid #ddd;
@@ -283,23 +283,23 @@
 }
 
 /* Questions List */
-.questions-list {
+.qbm-questions-list {
   margin-top: 20px;
 }
 
-.questions-list h3 {
+.qbm-questions-list h3 {
   margin-bottom: 15px;
   color: #333;
   font-size: 1.1rem;
 }
 
-.loading {
+.qbm-loading {
   text-align: center;
   padding: 30px;
   color: #666;
 }
 
-.no-questions {
+.qbm-no-questions {
   text-align: center;
   padding: 30px;
   color: #666;
@@ -307,24 +307,24 @@
   border-radius: 8px;
 }
 
-.question-table-container {
+.qbm-question-table-container {
   overflow-x: auto;
 }
 
-.question-table {
+.qbm-question-table {
   width: 100%;
   border-collapse: collapse;
   margin-bottom: 20px;
 }
 
-.question-table th,
-.question-table td {
+.qbm-question-table th,
+.qbm-question-table td {
   padding: 12px 15px;
   text-align: left;
   border-bottom: 1px solid #eee;
 }
 
-.question-table th {
+.qbm-question-table th {
   background-color: #f5f5f5;
   color: #333;
   font-weight: 500;
@@ -332,64 +332,64 @@
   top: 0;
 }
 
-.question-table tr:hover {
+.qbm-question-table tr:hover {
   background-color: #f9f9f9;
 }
 
-.question-table tr.inactive {
+.qbm-question-table tr.inactive {
   opacity: 0.7;
   background-color: #f9f9f9;
 }
 
-.question-text-cell {
+.qbm-question-text-cell {
   max-width: 400px;
 }
 
-.question-content p {
+.qbm-question-content p {
   margin-bottom: 10px;
   font-weight: 500;
 }
 
-.question-options {
+.qbm-question-options {
   display: flex;
   flex-direction: column;
   gap: 5px;
   font-size: 0.9rem;
 }
 
-.question-option {
+.qbm-question-option {
   padding: 3px;
   border-radius: 3px;
 }
 
-.question-option.correct {
+.qbm-question-option.correct {
   background-color: rgba(46, 204, 113, 0.1);
 }
 
-.status-badge {
+.qbm-status-badge {
   display: inline-block;
   padding: 3px 8px;
   border-radius: 12px;
   font-size: 0.8rem;
 }
 
-.status-badge.active {
+.qbm-status-badge.active {
   background-color: rgba(46, 204, 113, 0.1);
   color: #27ae60;
 }
 
-.status-badge.inactive {
+.qbm-status-badge.inactive {
   background-color: rgba(231, 76, 60, 0.1);
   color: #e74c3c;
 }
 
-.action-buttons {
+.qbm-action-buttons {
   display: flex;
   gap: 5px;
 }
 
-.edit-button,
-.delete-button {
+.qbm-edit-button,
+.qbm-delete-button {
   border: none;
   background-color: transparent;
   cursor: pointer;
@@ -398,45 +398,45 @@
   transition: background-color 0.2s ease;
 }
 
-.edit-button {
-  color: #4a90e2;
+.qbm-edit-button {
+  color: var(--color-brand-deep);
 }
 
-.delete-button {
+.qbm-delete-button {
   color: #e74c3c;
 }
 
-.edit-button:hover {
-  background-color: rgba(74, 144, 226, 0.1);
+.qbm-edit-button:hover {
+  background-color: color-mix(in srgb, var(--color-brand-deep) 10%, transparent);
 }
 
-.delete-button:hover {
+.qbm-delete-button:hover {
   background-color: rgba(231, 76, 60, 0.1);
 }
 
-.edit-button:disabled,
-.delete-button:disabled {
+.qbm-edit-button:disabled,
+.qbm-delete-button:disabled {
   color: #ccc;
   cursor: not-allowed;
 }
 
 /* Responsive Adjustments */
 @media screen and (max-width: 768px) {
-  .form-row {
+  .qbm-form-row {
     flex-direction: column;
     gap: 0;
   }
   
-  .question-text-cell {
+  .qbm-question-text-cell {
     max-width: 200px;
   }
   
-  .filter-row {
+  .qbm-filter-row {
     flex-direction: column;
     gap: 10px;
   }
   
-  .filter-group {
+  .qbm-filter-group {
     min-width: 100%;
   }
 }

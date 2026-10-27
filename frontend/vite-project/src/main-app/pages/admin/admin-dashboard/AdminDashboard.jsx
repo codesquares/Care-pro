@@ -89,14 +89,14 @@ const AdminDashboard = () => {
 
           {loading ? (
             <div className="loading-container">
-              <div className="spinner"></div>
+              <div className="ad-spinner"></div>
               <p>Loading dashboard data...</p>
             </div>
           ) : stats && (
             <div className="stats-grid">
-              <div className="stat-card">
-                <div className="stat-icon"><i className="fas fa-users"></i></div>
-                <div className="stat-content">
+              <div className="ad-stat-card">
+                <div className="ad-stat-icon"><i className="fas fa-users"></i></div>
+                <div className="ad-stat-content">
                   <h3>Total Users</h3>
                   <p className="stat-number">{(stats.totalCaregivers || 0) + (stats.totalClients || 0)}</p>
                   <div className="stat-breakdown">
@@ -106,45 +106,45 @@ const AdminDashboard = () => {
                 </div>
               </div>
 
-              <div className="stat-card">
-                <div className="stat-icon"><i className="fas fa-shopping-cart"></i></div>
-                <div className="stat-content">
+              <div className="ad-stat-card">
+                <div className="ad-stat-icon"><i className="fas fa-shopping-cart"></i></div>
+                <div className="ad-stat-content">
                   <h3>Orders</h3>
                   <p className="stat-number">{stats.totalOrders || 0}</p>
                   <div className="stat-breakdown"><span>Total Orders</span></div>
                 </div>
               </div>
 
-              <div className="stat-card">
-                <div className="stat-icon"><i className="fas fa-briefcase"></i></div>
-                <div className="stat-content">
+              <div className="ad-stat-card">
+                <div className="ad-stat-icon"><i className="fas fa-briefcase"></i></div>
+                <div className="ad-stat-content">
                   <h3>Gigs</h3>
                   <p className="stat-number">{stats.totalGigs || 0}</p>
                   <div className="stat-breakdown"><span>Total Gigs</span></div>
                 </div>
               </div>
 
-              <div className="stat-card">
-                <div className="stat-icon"><i className="fas fa-certificate"></i></div>
-                <div className="stat-content">
+              <div className="ad-stat-card">
+                <div className="ad-stat-icon"><i className="fas fa-certificate"></i></div>
+                <div className="ad-stat-content">
                   <h3>Pending Certificates</h3>
                   <p className="stat-number">{stats.pendingCertificates || 0}</p>
                   <div className="stat-breakdown"><span>Awaiting Review</span></div>
                 </div>
               </div>
 
-              <div className="stat-card">
-                <div className="stat-icon"><i className="fas fa-credit-card"></i></div>
-                <div className="stat-content">
+              <div className="ad-stat-card">
+                <div className="ad-stat-icon"><i className="fas fa-credit-card"></i></div>
+                <div className="ad-stat-content">
                   <h3>Subscriptions</h3>
                   <p className="stat-number">{stats.activeSubscriptions || 0}</p>
                   <div className="stat-breakdown"><span>Active</span></div>
                 </div>
               </div>
 
-              <div className="stat-card">
-                <div className="stat-icon"><i className="fas fa-money-bill-wave"></i></div>
-                <div className="stat-content">
+              <div className="ad-stat-card">
+                <div className="ad-stat-icon"><i className="fas fa-money-bill-wave"></i></div>
+                <div className="ad-stat-content">
                   <h3>Pending Withdrawals</h3>
                   <p className="stat-number">{stats.pendingWithdrawals || 0}</p>
                   <div className="stat-breakdown">
@@ -167,7 +167,7 @@ const AdminDashboard = () => {
         ) : (
           <div className="actions-grid">
             {visibleActions.map(({ to, icon, title, desc }) => (
-              <Link key={to} to={to} className="action-card">
+              <Link key={to} to={to} className="ad-action-card">
                 <div className="action-icon">
                   <i className={`fas ${icon}`}></i>
                 </div>

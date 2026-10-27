@@ -48,7 +48,7 @@
 .ppf-section-title { flex: 1; }
 
 .ppf-section-count {
-  background: #004e98;
+  background: var(--color-brand-deep);
   color: #fff;
   font-size: 11px;
   font-weight: 700;
@@ -127,7 +127,7 @@
   cursor: pointer;
   transition: background 0.12s;
 }
-.ppf-entry-edit { color: #004e98; }
+.ppf-entry-edit { color: var(--color-brand-deep); }
 .ppf-entry-edit:hover { background: #eff6ff; border-color: #93c5fd; }
 .ppf-entry-delete { color: #dc2626; }
 .ppf-entry-delete:hover { background: #fef2f2; border-color: #fca5a5; }
@@ -136,8 +136,8 @@
 /* ─── Add button ─── */
 .ppf-add-btn {
   background: none;
-  border: 1px dashed #004e98;
-  color: #004e98;
+  border: 1px dashed var(--color-brand-deep);
+  color: var(--color-brand-deep);
   border-radius: 8px;
   padding: 9px;
   font-size: 13px;
@@ -190,7 +190,7 @@
 }
 .ppf-field input:focus,
 .ppf-field select:focus,
-.ppf-field textarea:focus { border-color: #004e98; }
+.ppf-field textarea:focus { border-color: var(--color-brand-deep); }
 .ppf-field textarea { resize: vertical; }
 
 .ppf-month-year {
@@ -210,7 +210,7 @@
 .ppf-checkbox-label input[type="checkbox"] {
   width: 15px;
   height: 15px;
-  accent-color: #004e98;
+  accent-color: var(--color-brand-deep);
   cursor: pointer;
 }
 
@@ -221,7 +221,7 @@
 }
 
 .ppf-save-btn {
-  background: #004e98;
+  background: var(--color-brand-deep);
   color: #fff;
   border: none;
   border-radius: 7px;
@@ -231,7 +231,7 @@
   cursor: pointer;
   transition: background 0.15s;
 }
-.ppf-save-btn:hover:not(:disabled) { background: #003a74; }
+.ppf-save-btn:hover:not(:disabled) { background: var(--color-brand-deep-2); }
 .ppf-save-btn:disabled { opacity: 0.6; cursor: not-allowed; }
 
 .ppf-cancel-btn {

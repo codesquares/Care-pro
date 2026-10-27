@@ -4,6 +4,7 @@
  * Consumes the /api/WithdrawalRequests endpoints.
  */
 import api from './api';
+import { formatValidationErrors } from '../utils/uiErrorMapper';
 
 const PERMISSION_ERROR_MESSAGE = 'You do not have permission to access this resource.';
 
@@ -15,6 +16,8 @@ const getApiErrorMessage = (error, fallbackMessage) => {
   if (typeof data === 'string' && data.trim()) return data;
   if (data?.errorMessage) return data.errorMessage;
   if (data?.message) return data.message;
+  const validationMessage = formatValidationErrors(data?.errors);
+  if (validationMessage) return validationMessage;
   if (data?.title) return data.title;
   return fallbackMessage;
 };

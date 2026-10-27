@@ -1014,16 +1014,16 @@ const CaregiverVerificationPage = () => {
         <meta name="description" content="Verify your identity to become a trusted caregiver on Care Pro" />
       </Helmet>
 
-      <div className="mobile-verification-page">
+      <div className="mv-mobile-verification-page">
         {!showDojahWidget ? (
-          <div className="mobile-verification-container fade-in">
+          <div className="mv-mobile-verification-container mv-fade-in">
             {/* User Profile Card */}
-            <div className="profile-header-card">
+            <div className="mv-profile-header-card">
               {isLoading ? (
-                <div className="loading-profile">
-                  <div className="profile-img skeleton"></div>
-                  <div className="skeleton-text"></div>
-                  <div className="skeleton-text short"></div>
+                <div className="mv-loading-profile">
+                  <div className="profile-img mv-skeleton"></div>
+                  <div className="mv-skeleton-text"></div>
+                  <div className="mv-skeleton-text short"></div>
                 </div>
               ) : (
                 <>
@@ -1048,7 +1048,7 @@ const CaregiverVerificationPage = () => {
 
                   {/* Rating Section */}
                   <div className="profile-rating-section">
-                    <div className="rating">
+                    <div className="mv-rating">
                       <span className="stars">
                         {renderStars(userRating)}
                       </span>
@@ -1060,15 +1060,15 @@ const CaregiverVerificationPage = () => {
 
                   {/* Profile Details */}
                   <div className="profile-details">
-                    <div className="detail-item">
+                    <div className="mv-detail-item">
                       <i className="fas fa-map-marker-alt"></i>
                       <span>{location}</span>
                     </div>
-                    <div className="detail-item">
+                    <div className="mv-detail-item">
                       <i className="fas fa-calendar"></i>
                       <span>Member since {memberSince}</span>
                     </div>
-                    <div className="detail-item">
+                    <div className="mv-detail-item">
                       <i className="fas fa-truck"></i>
                       <span>Last delivery: {lastDelivery}</span>
                     </div>
@@ -1083,41 +1083,41 @@ const CaregiverVerificationPage = () => {
             </div>
 
             {/* Account Verification Card */}
-            <div className="verification-card">
-              <div className="verification-content">
+            <div className="vp-verification-card">
+              <div className="mv-verification-content">
                 <h2>Account Verification</h2>
-                <p className="verification-subtitle">
+                <p className="mv-verification-subtitle">
                   To ensure the safety of our clients and maintain high-quality services, we require all 
                   caregivers to verify their identity. Please choose a verification method below.
                 </p>
 
                 {/* Verification Instructions */}
-                <div className="verification-instructions">
-                  <div className="instruction-item">
-                    <div className="instruction-icon">
+                <div className="mv-verification-instructions">
+                  <div className="mv-instruction-item">
+                    <div className="mv-instruction-icon">
                       <i className="fas fa-id-card"></i>
                     </div>
-                    <div className="instruction-content">
+                    <div className="mv-instruction-content">
                       <h4>Government ID verification</h4>
                       <p>Get verified with your Bank verification Number</p>
                     </div>
                   </div>
 
-                  <div className="instruction-item">
-                    <div className="instruction-icon">
+                  <div className="mv-instruction-item">
+                    <div className="mv-instruction-icon">
                       <i className="fas fa-mobile-alt"></i>
                     </div>
-                    <div className="instruction-content">
+                    <div className="mv-instruction-content">
                       <h4>NIN Verification</h4>
                       <p>Get verified with your National Identification Number</p>
                     </div>
                   </div>
 
-                  <div className="instruction-item">
-                    <div className="instruction-icon">
+                  <div className="mv-instruction-item">
+                    <div className="mv-instruction-icon">
                       <i className="fas fa-camera"></i>
                     </div>
-                    <div className="instruction-content">
+                    <div className="mv-instruction-content">
                       <h4>E-Selfie</h4>
                       <p>Get verified by uploading your Photo on accompanying selfie</p>
                     </div>
@@ -1126,34 +1126,34 @@ const CaregiverVerificationPage = () => {
 
                 {/* Progress Bar */}
                 {progress > 0 && (
-                  <div className="progress-container">
-                    <div className="progress-bar">
+                  <div className="vp-progress-container">
+                    <div className="vp-progress-bar">
                       <div 
-                        className="progress-fill" 
+                        className="vp-progress-fill" 
                         style={{ width: `${progress}%` }}
                       ></div>
                     </div>
-                    <p className="progress-message">{progressMessage}</p>
+                    <p className="vp-progress-message">{progressMessage}</p>
                   </div>
                 )}
 
                 {/* Error Display */}
                 {error && (
-                  <div className="error-message">
+                  <div className="vp-error-message">
                     <p>{error}</p>
                   </div>
                 )}
 
                 {/* Success Display */}
                 {success && (
-                  <div className="success-message">
+                  <div className="vp-success-message">
                     <p>{success}</p>
                   </div>
                 )}
 
                 {/* Enhanced Verification Status Display */}
                 {verificationStatus?.hasSuccess && (
-                  <div className="verification-status verified">
+                  <div className="vp-verification-status verified">
                     <h3>✅ Account Verified</h3>
                     <p>Your identity has been successfully verified!</p>
                     <button
@@ -1168,7 +1168,7 @@ const CaregiverVerificationPage = () => {
                 )}
 
                 {verificationStatus?.hasPending && !verificationStatus?.hasSuccess && (
-                  <div className="verification-status pending">
+                  <div className="vp-verification-status pending">
                     <h3>⏳ Verification Pending</h3>
                     <p>Your verification is being processed. You will be notified when complete.</p>
                     <div className="pending-info">
@@ -1184,11 +1184,11 @@ const CaregiverVerificationPage = () => {
                 {!verificationStatus?.hasSuccess && !verificationStatus?.hasPending && (
                   <div>
                     {/* User Info Notice */}
-                    <div className="user-info-notice">
-                      <div className="notice-icon">
+                    <div className="mv-user-info-notice">
+                      <div className="mv-notice-icon">
                         <i className="fas fa-info-circle"></i>
                       </div>
-                      <div className="notice-content">
+                      <div className="mv-notice-content">
                         <p>
                           <strong>Verification Process:</strong> You will be taken to our verification partner in a new tab, 
                           where your information 
@@ -1261,7 +1261,7 @@ const CaregiverVerificationPage = () => {
                       type="button"
                       onClick={handleStartVerification}
                       disabled={isSubmitting}
-                      className="proceed-btn start-verification"
+                      className="mv-start-verification"
                     >
                       {isSubmitting ? "Processing..." : (verificationStatus?.hasFailed ? "Retry Verification" : "Start Verification")}
                       <i className="fas fa-arrow-right"></i>
@@ -1270,8 +1270,8 @@ const CaregiverVerificationPage = () => {
                 )}
 
                 {/* Additional Info */}
-                <div className="verification-info">
-                  <p className="privacy-note">
+                <div className="vp-verification-info">
+                  <p className="vp-privacy-note">
                     🔒 Your data is protected with bank-level security and encryption.
                     We comply with all data protection regulations.
                   </p>
@@ -1281,28 +1281,28 @@ const CaregiverVerificationPage = () => {
           </div>
         ) : (
           /* Dojah Widget Container */
-          <div className="dojah-widget-container">
-            <div className="dojah-widget-header">
+          <div className="vp-dojah-widget-container">
+            <div className="mv-dojah-widget-header">
               <h2>Identity Verification</h2>
               <p>Please complete all steps to verify your identity</p>
               
               {/* Progress Bar */}
               {progress > 0 && (
-                <div className="progress-container">
-                  <div className="progress-bar">
+                <div className="vp-progress-container">
+                  <div className="vp-progress-bar">
                     <div 
-                      className="progress-fill" 
+                      className="vp-progress-fill" 
                       style={{ width: `${progress}%` }}
                     ></div>
                   </div>
-                  <p className="progress-message">{progressMessage}</p>
+                  <p className="vp-progress-message">{progressMessage}</p>
                 </div>
               )}
             </div>
 
             {/* Dojah SDK Widget */}
             {dojahConfig.appID && dojahConfig.publicKey ? (
-              <div className="dojah-sdk-wrapper">
+              <div className="mv-dojah-sdk-wrapper">
                 {console.log('🚀 RENDERING DOJAH WIDGET:', {
                   appID: dojahConfig.appID,
                   publicKey: dojahConfig.publicKey.substring(0, 10) + '...',
@@ -1338,7 +1338,7 @@ const CaregiverVerificationPage = () => {
                     safeSetShowDojahWidget(false);
                     setError("Configuration error. Please contact support.");
                   }}
-                  className="back-btn"
+                  className="vp-back-btn"
                 >
                   Back to Verification Options
                 </button>
@@ -1347,13 +1347,13 @@ const CaregiverVerificationPage = () => {
 
             {/* Success/Error Messages */}
             {success && (
-              <div className="success-message">
+              <div className="vp-success-message">
                 <p>{success}</p>
               </div>
             )}
 
             {error && (
-              <div className="error-message">
+              <div className="vp-error-message">
                 <p>{error}</p>
                 <button
                   type="button"
@@ -1363,7 +1363,7 @@ const CaregiverVerificationPage = () => {
                     safeSetProgress(0);
                     safeSetProgressMessage("");
                   }}
-                  className="back-btn"
+                  className="vp-back-btn"
                 >
                   Back to Verification Options
                 </button>

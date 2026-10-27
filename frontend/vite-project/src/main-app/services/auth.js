@@ -18,11 +18,22 @@ export const refreshToken = async () => {
         }
 
         const data = await response.json();
-        
+
         // Store both new tokens (rotating refresh tokens)
         localStorage.setItem('authToken', data.token);
         localStorage.setItem('refreshToken', data.refreshToken);
-        
+
+        // Keep userDetails.department in sync — a department reassignment
+        // shouldn't require a full logout/login to take effect mid-session.
+        if (data.department !== undefined) {
+            try {
+                const storedUser = JSON.parse(localStorage.getItem('userDetails') || '{}');
+                localStorage.setItem('userDetails', JSON.stringify({ ...storedUser, department: data.department }));
+            } catch (error) {
+                console.warn('Failed to sync department from refreshed token:', error);
+            }
+        }
+
         return data.token;
     } catch (error) {
         console.error('Refresh token failed:', error);

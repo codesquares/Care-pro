@@ -93,8 +93,8 @@ const Team = () => {
                             <h2>Start your journey on Carepro</h2>
                             <p>Over 300+ care professionals are waiting for you.</p>
                             <div className="cta-buttons">
-                                <Link to="/book-caregiver" className="btn-primary">Hire a Caregiver</Link>
-                                <Link to="/become-caregiver" className="btn-secondary">Become a Caregiver</Link>
+                                <Link to="/marketplace" className="btn-primary">Hire a Caregiver</Link>
+                                {/* retired: <Link to="/become-caregiver" className="btn-secondary">Become a Caregiver</Link> */}
                             </div>
                         </div>
                     </div>

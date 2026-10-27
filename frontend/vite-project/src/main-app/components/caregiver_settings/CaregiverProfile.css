@@ -1,24 +1,18 @@
-.profile-page-container {
+.cgp-page-container {
   display: flex;
   gap: 20px;
   padding: 20px;
   background-color: #f8f8f8;
 }
 
-.profile-card {
-  padding: 20px;
-  width: 35%;
-  text-align: center;
-}
-
-.profile-info-section, .reviews-section {
+.cgp-info-section, .cgp-reviews-section {
   background: #fff;
   padding: 20px;
   border-radius: 10px;
   box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
 }
 
-.profile-stats-section, .profile-settings-section {
+.cgp-stats-section, .cgp-settings-section {
   background: #fff;
   margin-top: 50px;
   padding: 20px;
@@ -26,7 +20,7 @@
   box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
 }
 
-.profile-messages-section {
+.cgp-messages-section {
   background: #fff;
   padding: 20px;
   border-radius: 10px;
@@ -34,7 +28,7 @@
   margin-top: 20px;
 }
 
-.profile-messages-section h2 {
+.cgp-messages-section h2 {
   color: #333;
   font-size: 1.5rem;
   margin-bottom: 15px;
@@ -42,20 +36,20 @@
   padding-bottom: 10px;
 }
 
-.messages-preview {
+.cgp-messages-preview {
   display: flex;
   flex-direction: column;
   align-items: center;
   padding: 15px 0;
 }
 
-.messages-preview p {
+.cgp-messages-preview p {
   margin-bottom: 15px;
   color: #666;
 }
 
-.view-messages-btn {
-  background-color: #4a90e2;
+.cgp-view-messages-btn {
+  background-color: var(--color-brand-deep);
   color: white;
   border: none;
   border-radius: 5px;
@@ -65,37 +59,37 @@
   transition: background-color 0.3s;
 }
 
-.view-messages-btn:hover {
-  background-color: #3a7bc8;
+.cgp-view-messages-btn:hover {
+  background-color: var(--color-brand-deep-2);
 }
 
-.profile-image {
+.cgp-profile-image {
   width: 100px;
   height: 100px;
   border-radius: 50%;
   margin-bottom: 10px;
 }
 
-.profile-name {
+.cgp-profile-name {
   font-size: 20px;
   font-weight: bold;
   margin-bottom: 5px;
 }
 
-.profile-email {
+.cgp-profile-email {
   font-size: 14px;
   color: #777;
   margin-bottom: 10px;
 }
 
-.profile-rating {
+.cgp-profile-rating {
   font-size: 14px;
   color: #ff9900;
   margin-bottom: 10px;
 }
 
-.profile-location,
-.profile-membership {
+.cgp-profile-location,
+.cgp-profile-membership {
   font-size: 14px;
   color: #555;
   margin-bottom: 5px;
@@ -103,7 +97,7 @@
   white-space: pre;
 }
 
-.stats-item {
+.cgp-stats-item {
   display: flex;
   justify-content: space-between;
   align-items: center;
@@ -111,13 +105,13 @@
   margin-bottom: 10px;
 }
 
-.stats-icon {
+.cgp-stats-icon {
   width: 20px;
   height: 20px;
   flex-shrink: 0;
 }
 
-.stats-label {
+.cgp-stats-label {
   font-size: 12px;
   color: #777;
   margin: 0;
@@ -125,14 +119,14 @@
   text-align: left;
 }
 
-.stats-value {
+.cgp-stats-value {
   font-size: 16px;
   font-weight: bold;
   margin: 0;
   flex-shrink: 0;
 }
 
-.account-settings {
+.cgp-account-settings {
   background-color: white;
   color: black;
   border: 1px solid #ccc;
@@ -146,17 +140,17 @@
   gap: 5px;
 }
 
-.reviews-section {
+.cgp-reviews-section {
   width: 65%;
 }
 
-.reviews-section h2 {
+.cgp-reviews-section h2 {
   font-size: 18px;
   font-weight: bold;
   margin-bottom: 15px;
 }
 
-.review-card {
+.cgp-review-card {
   background-color: white;
   display: flex;
   gap: 15px;
@@ -164,28 +158,28 @@
   border-bottom: 1px solid #eee;
 }
 
-.reviewer-image {
+.cgp-reviewer-image {
   width: 50px;
   height: 50px;
   border-radius: 50%;
 }
 
-.review-content {
+.cgp-review-content {
   flex: 1;
 }
 
-.reviewer-name {
+.cgp-reviewer-name {
   font-size: 16px;
   font-weight: bold;
   margin-bottom: 5px;
 }
 
-.review-rating {
+.cgp-review-rating {
   color: #ffcc00;
   margin-bottom: 5px;
 }
 
-.review-text {
+.cgp-review-text {
   font-size: 14px;
   color: #555;
 }

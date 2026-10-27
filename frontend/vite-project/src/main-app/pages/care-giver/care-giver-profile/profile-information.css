@@ -1,5 +1,5 @@
 /* Profile Information Section Styles */
-.profile-information-section {
+.pi-information-section {
   background: #ffffff;
   border-radius: 12px;
   box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
@@ -12,22 +12,22 @@
   min-width: 0;
 }
 
-.profile-information-section h3 {
+.pi-information-section h3 {
   margin: 0 0 16px 0;
   font-size: 18px;
   font-weight: 600;
   color: #1a1a1a;
 }
 
-.profile-information-section p {
+.pi-information-section p {
   font-size: 14px;
   color: #4b5563;
   margin: 0 0 16px 0;
   line-height: 1.5;
 }
 
-.edit-description-btn {
-  background-color: #3b82f6;
+.pi-edit-description-btn {
+  background-color: var(--color-brand-deep);
   color: white;
   font-size: 14px;
   padding: 8px 16px;
@@ -38,12 +38,12 @@
   transition: all 0.2s ease;
 }
 
-.edit-description-btn:hover {
-  background-color: #2563eb;
+.pi-edit-description-btn:hover {
+  background-color: var(--color-brand-deep-2);
 }
 
 /* Services Section */
-.services-section {
+.pi-services-section {
   background: #ffffff;
   border-radius: 12px;
   box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
@@ -56,21 +56,21 @@
   min-width: 0;
 }
 
-.services-section h3 {
+.pi-services-section h3 {
   margin: 0 0 16px 0;
   font-size: 18px;
   font-weight: 600;
   color: #1a1a1a;
 }
 
-.services-list {
+.pi-services-list {
   display: flex;
   flex-wrap: wrap;
   gap: 8px;
   margin-top: 0;
 }
 
-.service-tag {
+.pi-service-tag {
   background: #f3f4f6;
   color: #374151;
   padding: 6px 12px;
@@ -82,7 +82,7 @@
 }
 
 /* Certifications Section */
-.certifications-section {
+.pi-certifications-section {
   background: #ffffff;
   border-radius: 12px;
   box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
@@ -95,50 +95,50 @@
   min-width: 0;
 }
 
-.certifications-section h3 {
+.pi-certifications-section h3 {
   margin: 0 0 16px 0;
   font-size: 18px;
   font-weight: 600;
   color: #1a1a1a;
 }
 
-.certifications-list {
+.pi-certifications-list {
   display: flex;
   flex-direction: column;
   gap: 12px;
 }
 
-.certification-item {
+.pi-certification-item {
   padding: 12px 16px;
   background: #f8f9fa;
   border-radius: 8px;
-  border-left: 4px solid #3b82f6;
+  border-left: 4px solid var(--color-brand-deep);
 }
 
-.certification-item h4 {
+.pi-certification-item h4 {
   margin: 0 0 4px 0;
   font-size: 14px;
   font-weight: 600;
   color: #1a1a1a;
 }
 
-.certification-item p {
+.pi-certification-item p {
   margin: 0;
   font-size: 13px;
   color: #6b7280;
 }
 
-.certification-item a {
-  color: #3b82f6;
+.pi-certification-item a {
+  color: var(--color-brand-deep);
   text-decoration: none;
   font-size: 13px;
 }
 
-.certification-item a:hover {
+.pi-certification-item a:hover {
   text-decoration: underline;
 }
 
-.add-certification-btn {
+.pi-add-certification-btn {
   background: #f3f4f6;
   color: #374151;
   border: 2px dashed #d1d5db;
@@ -150,14 +150,14 @@
   transition: all 0.2s ease;
 }
 
-.add-certification-btn:hover {
-  border-color: #3b82f6;
-  color: #3b82f6;
+.pi-add-certification-btn:hover {
+  border-color: var(--color-brand-deep);
+  color: var(--color-brand-deep);
   background: #eff6ff;
 }
 
 /* Modal Styles */
-.modal-overlay {
+.pi-modal-overlay {
   position: fixed;
   top: 0;
   left: 0;
@@ -170,7 +170,7 @@
   z-index: 1000;
 }
 
-.modal-content {
+.pi-modal-content {
   background: white !important;
   border-radius: 8px !important;
   padding: 16px !important;
@@ -181,7 +181,7 @@
   box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15) !important;
 }
 
-.modal-content h3 {
+.pi-modal-content h3 {
   margin: 0 0 12px 0;
   font-size: 16px;
   font-weight: 600;
@@ -189,7 +189,7 @@
   text-align: center;
 }
 
-.modal-content textarea {
+.pi-modal-content textarea {
   width: 100% !important;
   min-height: 80px !important;
   padding: 10px !important;
@@ -202,13 +202,13 @@
   box-sizing: border-box;
 }
 
-.modal-content textarea:focus {
+.pi-modal-content textarea:focus {
   outline: none;
-  border-color: #3b82f6;
-  box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
+  border-color: var(--color-brand-deep);
+  box-shadow: 0 0 0 3px rgba(43, 57, 95, 0.1);
 }
 
-.modal-content input {
+.pi-modal-content input {
   width: 100%;
   padding: 12px;
   border: 1px solid #d1d5db;
@@ -218,13 +218,13 @@
   box-sizing: border-box;
 }
 
-.modal-content input:focus {
+.pi-modal-content input:focus {
   outline: none;
-  border-color: #3b82f6;
-  box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
+  border-color: var(--color-brand-deep);
+  box-shadow: 0 0 0 3px rgba(43, 57, 95, 0.1);
 }
 
-.modal-actions {
+.pi-modal-actions {
   display: flex !important;
   flex-direction: row !important;
   gap: 8px !important;
@@ -232,7 +232,7 @@
   margin-top: 16px !important;
 }
 
-.modal-btn {
+.pi-modal-btn {
   padding: 8px 16px !important;
   border-radius: 4px !important;
   font-size: 13px !important;
@@ -243,28 +243,28 @@
   flex: 1 !important;
 }
 
-.modal-btn.cancel {
+.pi-modal-btn.cancel {
   background: #f3f4f6 !important;
   color: #374151 !important;
   border-color: #d1d5db !important;
 }
 
-.modal-btn.cancel:hover {
+.pi-modal-btn.cancel:hover {
   background: #e5e7eb;
   border-color: #9ca3af;
 }
 
-.modal-btn.save {
-  background: linear-gradient(135deg, #06b6d4, #0891b2) !important;
+.pi-modal-btn.save {
+  background: linear-gradient(135deg, var(--color-brand-deep), var(--color-brand-deep-2)) !important;
   color: white !important;
   border-color: transparent !important;
 }
 
-.modal-btn.save:hover:not(:disabled) {
-  background: linear-gradient(135deg, #0891b2, #0e7490);
+.pi-modal-btn.save:hover:not(:disabled) {
+  background: var(--color-brand-deep-2);
 }
 
-.modal-btn.save:disabled {
+.pi-modal-btn.save:disabled {
   background: #9ca3af;
   border-color: #9ca3af;
   cursor: not-allowed;
@@ -273,7 +273,7 @@
 /* Responsive Styles */
 /* Collapsible section header (chevron) — visual styling shared across breakpoints,
    but the collapse behaviour is mobile-only (see <=768px block below). */
-.profile-collapsible .profile-section-header {
+.pi-collapsible .pi-section-header {
   display: flex;
   align-items: center;
   justify-content: space-between;
@@ -283,12 +283,12 @@
   -webkit-tap-highlight-color: transparent;
 }
 
-.profile-collapsible .profile-section-header > span {
+.pi-collapsible .pi-section-header > span {
   flex: 1;
   min-width: 0;
 }
 
-.profile-collapsible .profile-section-chevron {
+.pi-collapsible .pi-section-chevron {
   display: none; /* hidden on desktop — sections are always open there */
   color: #6b7280;
   transition: transform 0.3s ease;
@@ -296,41 +296,41 @@
 }
 
 @media (max-width: 768px) {
-  .profile-information-section,
-  .services-section,
-  .certifications-section {
+  .pi-information-section,
+  .pi-services-section,
+  .pi-certifications-section {
     padding: 16px;
   }
   
-  .services-list {
+  .pi-services-list {
     gap: 6px;
   }
   
-  .service-tag {
+  .pi-service-tag {
     font-size: 12px;
     padding: 5px 10px;
   }
 
   /* Collapsible behaviour: mobile only */
-  .profile-collapsible .profile-section-header {
+  .pi-collapsible .pi-section-header {
     cursor: pointer;
     margin: 0;
   }
 
-  .profile-collapsible .profile-section-header h3,
-  .profile-collapsible h3.profile-section-header {
+  .pi-collapsible .pi-section-header h3,
+  .pi-collapsible h3.pi-section-header {
     margin: 0;
   }
 
-  .profile-collapsible .profile-section-chevron {
+  .pi-collapsible .pi-section-chevron {
     display: block;
   }
 
-  .profile-collapsible.open .profile-section-chevron {
+  .pi-collapsible.open .pi-section-chevron {
     transform: rotate(180deg);
   }
 
-  .profile-collapsible .profile-section-body {
+  .pi-collapsible .pi-section-body {
     max-height: 0;
     overflow: hidden;
     opacity: 0;
@@ -338,7 +338,7 @@
     margin-top: 0;
   }
 
-  .profile-collapsible.open .profile-section-body {
+  .pi-collapsible.open .pi-section-body {
     max-height: 4000px;
     opacity: 1;
     margin-top: 16px;
@@ -346,24 +346,24 @@
 }
 
 @media (max-width: 480px) {
-  .profile-information-section,
-  .services-section,
-  .certifications-section {
+  .pi-information-section,
+  .pi-services-section,
+  .pi-certifications-section {
     padding: 12px;
   }
   
-  .modal-content {
+  .pi-modal-content {
     padding: 16px;
   }
   
-  .modal-actions {
+  .pi-modal-actions {
     flex-direction: column;
     gap: 8px;
   }
 }
 
 /* Success Modal Styles */
-.success-modal-content {
+.pi-success-modal-content {
   background: white !important;
   border-radius: 12px !important;
   padding: 32px 24px !important;
@@ -373,13 +373,13 @@
   box-shadow: 0 10px 25px rgba(0, 0, 0, 0.2) !important;
 }
 
-.success-icon-container {
+.pi-success-icon-container {
   margin-bottom: 20px;
   display: flex;
   justify-content: center;
 }
 
-.success-checkmark {
+.pi-success-checkmark {
   width: 48px;
   height: 48px;
   display: flex;
@@ -387,7 +387,7 @@
   justify-content: center;
 }
 
-.success-modal-content h3 {
+.pi-success-modal-content h3 {
   font-size: 16px !important;
   font-weight: 500 !important;
   color: #374151 !important;
@@ -396,8 +396,8 @@
   text-align: center !important;
 }
 
-.success-modal-btn {
-  background: linear-gradient(135deg, #06b6d4, #0891b2) !important;
+.pi-success-modal-btn {
+  background: linear-gradient(135deg, var(--color-brand-deep), var(--color-brand-deep-2)) !important;
   color: white !important;
   border: none !important;
   padding: 12px 24px !important;
@@ -409,7 +409,7 @@
   width: 100%;
 }
 
-.success-modal-btn:hover {
-  background: linear-gradient(135deg, #0891b2, #0e7490) !important;
+.pi-success-modal-btn:hover {
+  background: var(--color-brand-deep-2) !important;
 }
 

@@ -122,9 +122,9 @@ const CaregiverManagement = () => {
 
   if (loading) {
     return (
-      <div className="caregiver-management">
-        <div className="loading-container">
-          <div className="spinner"></div>
+      <div className="cgm-caregiver-management">
+        <div className="cgm-loading-container">
+          <div className="cgm-spinner"></div>
           <p>Loading caregivers...</p>
         </div>
       </div>
@@ -132,28 +132,28 @@ const CaregiverManagement = () => {
   }
 
   return (
-    <div className="caregiver-management">
-      <div className="page-header">
+    <div className="cgm-caregiver-management">
+      <div className="cgm-page-header">
         <div>
           <h1>Caregiver Management</h1>
           <p>Manage and monitor all caregivers in the system</p>
         </div>
-        <div className="export-bar">
+        <div className="cgm-export-bar">
           <input
             type="date"
-            className="export-date-input"
+            className="cgm-export-date-input"
             value={exportDates.startDate}
             onChange={(e) => setExportDates(p => ({ ...p, startDate: e.target.value }))}
             title="Export start date (optional)"
           />
           <input
             type="date"
-            className="export-date-input"
+            className="cgm-export-date-input"
             value={exportDates.endDate}
             onChange={(e) => setExportDates(p => ({ ...p, endDate: e.target.value }))}
             title="Export end date (optional)"
           />
-          <button className="btn-export" onClick={handleExport} disabled={exporting}>
+          <button className="cgm-btn-export" onClick={handleExport} disabled={exporting}>
             <i className="fas fa-file-excel"></i>
             {exporting ? 'Exporting…' : 'Export Excel'}
           </button>
@@ -161,7 +161,7 @@ const CaregiverManagement = () => {
       </div>
 
       {exportError && (
-        <div className="error-message">
+        <div className="cgm-error-message">
           <i className="fas fa-exclamation-triangle"></i>
           <p>{exportError}</p>
           <button onClick={() => setExportError(null)}>Dismiss</button>
@@ -169,36 +169,36 @@ const CaregiverManagement = () => {
       )}
 
       {error && (
-        <div className="error-message">
+        <div className="cgm-error-message">
           <i className="fas fa-exclamation-triangle"></i>
           <p>{error}</p>
           <button onClick={fetchCaregivers}>Retry</button>
         </div>
       )}
 
-      <div className="stats-summary">
-        <div className="stat-box">
+      <div className="cgm-stats-summary">
+        <div className="cgm-stat-box">
           <h3>Total Caregivers</h3>
-          <p className="stat-value">{caregivers.length}</p>
+          <p className="cgm-stat-value">{caregivers.length}</p>
         </div>
-        <div className="stat-box">
+        <div className="cgm-stat-box">
           <h3>Active</h3>
-          <p className="stat-value">{caregivers.filter(cg => cg.status).length}</p>
+          <p className="cgm-stat-value">{caregivers.filter(cg => cg.status).length}</p>
         </div>
-        <div className="stat-box">
+        <div className="cgm-stat-box">
           <h3>Available</h3>
-          <p className="stat-value">{caregivers.filter(cg => cg.isAvailable).length}</p>
+          <p className="cgm-stat-value">{caregivers.filter(cg => cg.isAvailable).length}</p>
         </div>
-        <div className="stat-box">
+        <div className="cgm-stat-box">
           <h3>Total Earnings</h3>
-          <p className="stat-value">
+          <p className="cgm-stat-value">
             ${caregivers.reduce((sum, cg) => sum + (cg.totalEarning || 0), 0).toFixed(2)}
           </p>
         </div>
       </div>
 
-      <div className="filters-section">
-        <div className="search-box">
+      <div className="cgm-filters-section">
+        <div className="cgm-search-box">
           <i className="fas fa-search"></i>
           <input
             type="text"
@@ -208,7 +208,7 @@ const CaregiverManagement = () => {
           />
         </div>
 
-        <div className="filter-controls">
+        <div className="cgm-filter-controls">
           <select
             value={filters.status}
             onChange={(e) => setFilters({ ...filters, status: e.target.value })}
@@ -235,7 +235,7 @@ const CaregiverManagement = () => {
           />
 
           <button
-            className="btn-reset"
+            className="cgm-btn-reset"
             onClick={() => {
               setSearchTerm('');
               setFilters({ status: 'all', availability: 'all', location: '' });
@@ -246,8 +246,8 @@ const CaregiverManagement = () => {
         </div>
       </div>
 
-      <div className="caregivers-table-container">
-        <table className="caregivers-table">
+      <div className="cgm-caregivers-table-container">
+        <table className="cgm-caregivers-table">
           <thead>
             <tr>
               <th>Profile</th>
@@ -276,7 +276,7 @@ const CaregiverManagement = () => {
                     <img
                       src={caregiver.profileImage || '/default-avatar.png'}
                       alt={`${caregiver.firstName} ${caregiver.lastName}`}
-                      className="profile-image"
+                      className="cgm-profile-image"
                     />
                   </td>
                   <td>{`${caregiver.firstName} ${caregiver.lastName}`}</td>
@@ -284,12 +284,12 @@ const CaregiverManagement = () => {
                   <td>{caregiver.phoneNo}</td>
                   <td>{caregiver.location || 'N/A'}</td>
                   <td>
-                    <span className={`status-badge ${caregiver.status ? 'active' : 'inactive'}`}>
+                    <span className={`cgm-status-badge ${caregiver.status ? 'active' : 'inactive'}`}>
                       {caregiver.status ? 'Active' : 'Inactive'}
                     </span>
                   </td>
                   <td>
-                    <span className={`availability-badge ${caregiver.isAvailable ? 'available' : 'unavailable'}`}>
+                    <span className={`cgm-availability-badge ${caregiver.isAvailable ? 'available' : 'unavailable'}`}>
                       {caregiver.isAvailable ? 'Available' : 'Unavailable'}
                     </span>
                   </td>
@@ -297,7 +297,7 @@ const CaregiverManagement = () => {
                   <td>${(caregiver.totalEarning || 0).toFixed(2)}</td>
                   <td>
                     <button
-                      className="btn-view"
+                      className="cgm-btn-view"
                       onClick={() => handleViewDetails(caregiver.id)}
                     >
                       View Details
@@ -312,26 +312,26 @@ const CaregiverManagement = () => {
 
       {/* Modal for viewing caregiver details */}
       {showModal && selectedCaregiver && (
-        <div className="modal-overlay" onClick={closeModal}>
-          <div className="modal-content caregiver-details-modal" onClick={(e) => e.stopPropagation()}>
-            <button className="modal-close" onClick={closeModal}>
+        <div className="cgm-modal-overlay" onClick={closeModal}>
+          <div className="cgm-modal-content cgm-caregiver-details-modal" onClick={(e) => e.stopPropagation()}>
+            <button className="cgm-modal-close" onClick={closeModal}>
               <i className="fas fa-times"></i>
             </button>
             
-            <div className="modal-header">
+            <div className="cgm-modal-header">
               <img
                 src={selectedCaregiver.profileImage || '/default-avatar.png'}
                 alt={`${selectedCaregiver.firstName} ${selectedCaregiver.lastName}`}
-                className="modal-profile-image"
+                className="cgm-modal-profile-image"
               />
               <div>
                 <h2>{`${selectedCaregiver.firstName} ${selectedCaregiver.middleName || ''} ${selectedCaregiver.lastName}`}</h2>
-                <p className="modal-email">{selectedCaregiver.email}</p>
+                <p className="cgm-modal-email">{selectedCaregiver.email}</p>
               </div>
             </div>
 
-            <div className="modal-body">
-              <div className="detail-section">
+            <div className="cgm-modal-body">
+              <div className="cgm-detail-section">
                 <h3>Contact Information</h3>
                 <p><strong>Phone:</strong> {selectedCaregiver.phoneNo}</p>
                 <p><strong>Email:</strong> {selectedCaregiver.email}</p>
@@ -339,33 +339,33 @@ const CaregiverManagement = () => {
                 <p><strong>Location:</strong> {selectedCaregiver.location || 'N/A'}</p>
               </div>
 
-              <div className="detail-section">
+              <div className="cgm-detail-section">
                 <h3>Status & Availability</h3>
                 <p><strong>Status:</strong> 
-                  <span className={`status-badge ${selectedCaregiver.status ? 'active' : 'inactive'}`}>
+                  <span className={`cgm-status-badge ${selectedCaregiver.status ? 'active' : 'inactive'}`}>
                     {selectedCaregiver.status ? 'Active' : 'Inactive'}
                   </span>
                 </p>
                 <p><strong>Available:</strong> 
-                  <span className={`availability-badge ${selectedCaregiver.isAvailable ? 'available' : 'unavailable'}`}>
+                  <span className={`cgm-availability-badge ${selectedCaregiver.isAvailable ? 'available' : 'unavailable'}`}>
                     {selectedCaregiver.isAvailable ? 'Available' : 'Unavailable'}
                   </span>
                 </p>
               </div>
 
-              <div className="detail-section">
+              <div className="cgm-detail-section">
                 <h3>Performance Metrics</h3>
                 <p><strong>Total Earnings:</strong> ${(selectedCaregiver.totalEarning || 0).toFixed(2)}</p>
                 <p><strong>Number of Orders:</strong> {selectedCaregiver.noOfOrders || 0}</p>
                 <p><strong>Hours Spent:</strong> {selectedCaregiver.noOfHoursSpent || 0}</p>
               </div>
 
-              <div className="detail-section">
+              <div className="cgm-detail-section">
                 <h3>Services</h3>
-                <div className="services-list">
+                <div className="cgm-services-list">
                   {selectedCaregiver.services && selectedCaregiver.services.length > 0 ? (
                     selectedCaregiver.services.map((service, index) => (
-                      <span key={index} className="service-tag">{service}</span>
+                      <span key={index} className="cgm-service-tag">{service}</span>
                     ))
                   ) : (
                     <p>No services listed</p>
@@ -373,14 +373,14 @@ const CaregiverManagement = () => {
                 </div>
               </div>
 
-              <div className="detail-section">
+              <div className="cgm-detail-section">
                 <h3>About</h3>
                 <p><strong>Intro:</strong> {selectedCaregiver.aboutMeIntro || 'N/A'}</p>
                 <p><strong>About Me:</strong> {selectedCaregiver.aboutMe || 'N/A'}</p>
               </div>
 
               {selectedCaregiver.introVideo && (
-                <div className="detail-section">
+                <div className="cgm-detail-section">
                   <h3>Introduction Video</h3>
                   <video controls width="100%">
                     <source src={selectedCaregiver.introVideo} />
@@ -389,14 +389,14 @@ const CaregiverManagement = () => {
                 </div>
               )}
 
-              <div className="detail-section">
+              <div className="cgm-detail-section">
                 <h3>Account Information</h3>
                 <p><strong>Created At:</strong> {new Date(selectedCaregiver.createdAt).toLocaleString()}</p>
                 <p><strong>Role:</strong> {selectedCaregiver.role}</p>
               </div>
 
               {/* Danger Zone */}
-              <div className="detail-section" style={{ border: '1px solid #fca5a5', borderRadius: '8px', padding: '1rem', background: '#fef2f2' }}>
+              <div className="cgm-detail-section" style={{ border: '1px solid #fca5a5', borderRadius: '8px', padding: '1rem', background: '#fef2f2' }}>
                 <h3 style={{ color: '#b91c1c', marginTop: 0 }}>Danger Zone — Delete Account</h3>
                 {deleteResult?.success ? (
                   <div style={{ color: '#166534', background: '#dcfce7', borderRadius: '6px', padding: '0.75rem' }}>

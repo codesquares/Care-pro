@@ -127,9 +127,9 @@ const YourRequests = () => {
           </p>
           <button
             className="yr-create-btn"
-            onClick={() => navigate('/app/client/post-project')}
+            onClick={() => navigate('/marketplace')}
           >
-            Create Request
+            Browse Care Packages
           </button>
         </div>
       </div>
@@ -155,9 +155,9 @@ const YourRequests = () => {
               </p>
               <button
                 className="your-requests-cta"
-                onClick={() => navigate('/app/client/post-project')}
+                onClick={() => navigate('/marketplace')}
               >
-                Write your Request
+                Browse Care Packages
               </button>
             </div>
           </>

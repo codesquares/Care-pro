@@ -154,7 +154,7 @@ const AdminUserManagement = () => {
           </div>
         </div>
         {isSuperAdmin && (
-          <button className="btn-primary" onClick={() => { setShowCreate(true); setCreateError(null); }}>
+          <button className="aum-btn-primary" onClick={() => { setShowCreate(true); setCreateError(null); }}>
             <i className="fas fa-plus"></i> Create Admin
           </button>
         )}
@@ -187,13 +187,13 @@ const AdminUserManagement = () => {
             onChange={e => setSearchQuery(e.target.value)}
           />
         </div>
-        <button className="btn-secondary btn-sm" onClick={loadAdmins} disabled={loading}>
+        <button className="aum-btn-secondary aum-btn-sm" onClick={loadAdmins} disabled={loading}>
           <i className="fas fa-sync-alt"></i> Refresh
         </button>
       </div>
 
       {error && (
-        <div className="alert alert-error" style={{ marginBottom: '1rem' }}>
+        <div className="aum-alert aum-alert-error" style={{ marginBottom: '1rem' }}>
           <i className="fas fa-exclamation-circle"></i>
           <div><p>{error}</p></div>
         </div>
@@ -201,7 +201,7 @@ const AdminUserManagement = () => {
 
       {/* Table */}
       {loading ? (
-        <div className="aum-loading"><div className="spinner"></div><p>Loading admins…</p></div>
+        <div className="aum-loading"><div className="aum-spinner"></div><p>Loading admins…</p></div>
       ) : filtered.length === 0 ? (
         <div className="aum-empty">
           <i className="fas fa-user-slash"></i>
@@ -251,7 +251,7 @@ const AdminUserManagement = () => {
                     <td>{fmtDate(cd)}</td>
                     <td>
                       <button
-                        className="btn-icon btn-icon--view"
+                        className="aum-btn-icon aum-btn-icon--view"
                         title="View profile"
                         onClick={() => openProfile(admin)}
                         disabled={profileLoading}
@@ -315,32 +315,32 @@ const AdminUserManagement = () => {
             </div>
             <div className="aum-modal-body">
               {createError && (
-                <div className="alert alert-error" style={{ marginBottom: '1rem' }}>
+                <div className="aum-alert aum-alert-error" style={{ marginBottom: '1rem' }}>
                   <i className="fas fa-exclamation-circle"></i>
                   <div><p>{createError}</p></div>
                 </div>
               )}
               <form onSubmit={handleCreateSubmit} className="aum-create-form">
                 <div className="aum-form-row">
-                  <div className="form-group">
-                    <label>First Name <span className="required">*</span></label>
+                  <div className="aum-form-group">
+                    <label>First Name <span className="aum-required">*</span></label>
                     <input type="text" name="FirstName" value={createForm.FirstName} onChange={handleCreateChange} required />
                   </div>
-                  <div className="form-group">
-                    <label>Last Name <span className="required">*</span></label>
+                  <div className="aum-form-group">
+                    <label>Last Name <span className="aum-required">*</span></label>
                     <input type="text" name="LastName" value={createForm.LastName} onChange={handleCreateChange} required />
                   </div>
                 </div>
-                <div className="form-group">
-                  <label>Middle Name <span className="optional">(Optional)</span></label>
+                <div className="aum-form-group">
+                  <label>Middle Name <span className="aum-optional">(Optional)</span></label>
                   <input type="text" name="MiddleName" value={createForm.MiddleName} onChange={handleCreateChange} />
                 </div>
-                <div className="form-group">
-                  <label>Email <span className="required">*</span></label>
+                <div className="aum-form-group">
+                  <label>Email <span className="aum-required">*</span></label>
                   <input type="email" name="Email" value={createForm.Email} onChange={handleCreateChange} required />
                 </div>
-                <div className="form-group">
-                  <label>Password <span className="required">*</span></label>
+                <div className="aum-form-group">
+                  <label>Password <span className="aum-required">*</span></label>
                   <div className="aum-password-wrap">
                     <input
                       type={showPassword ? 'text' : 'password'}
@@ -355,32 +355,32 @@ const AdminUserManagement = () => {
                   </div>
                 </div>
                 <div className="aum-form-row">
-                  <div className="form-group">
-                    <label>Role <span className="required">*</span></label>
+                  <div className="aum-form-group">
+                    <label>Role <span className="aum-required">*</span></label>
                     <select name="Role" value={createForm.Role} onChange={handleCreateChange} required>
                       {ROLES.map(r => <option key={r} value={r}>{r}</option>)}
                     </select>
                   </div>
-                  <div className="form-group">
-                    <label>Department <span className="optional">(Optional)</span></label>
+                  <div className="aum-form-group">
+                    <label>Department <span className="aum-optional">(Optional)</span></label>
                     <input type="text" name="Department" value={createForm.Department} onChange={handleCreateChange} />
                   </div>
                 </div>
                 <div className="aum-form-row">
-                  <div className="form-group">
-                    <label>Phone <span className="optional">(Optional)</span></label>
+                  <div className="aum-form-group">
+                    <label>Phone <span className="aum-optional">(Optional)</span></label>
                     <input type="tel" name="PhoneNo" value={createForm.PhoneNo} onChange={handleCreateChange} />
                   </div>
-                  <div className="form-group">
-                    <label>Status <span className="optional">(Optional)</span></label>
+                  <div className="aum-form-group">
+                    <label>Status <span className="aum-optional">(Optional)</span></label>
                     <input type="text" name="Status" value={createForm.Status} onChange={handleCreateChange} placeholder="e.g. Active" />
                   </div>
                 </div>
-                <div className="form-actions">
-                  <button type="button" className="btn-secondary" onClick={() => setShowCreate(false)} disabled={createLoading}>
+                <div className="aum-form-actions">
+                  <button type="button" className="aum-btn-secondary" onClick={() => setShowCreate(false)} disabled={createLoading}>
                     Cancel
                   </button>
-                  <button type="submit" className="btn-primary" disabled={createLoading}>
+                  <button type="submit" className="aum-btn-primary" disabled={createLoading}>
                     {createLoading
                       ? <><i className="fas fa-spinner fa-spin"></i> Creating…</>
                       : <><i className="fas fa-user-plus"></i> Create Admin</>}

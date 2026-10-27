@@ -31,7 +31,7 @@
 .cg-sub-widget__view-all {
   background: none;
   border: none;
-  color: #00B4A6;
+  color: var(--color-brand-deep);
   font-size: 0.85rem;
   font-weight: 500;
   cursor: pointer;
@@ -41,7 +41,7 @@
 }
 
 .cg-sub-widget__view-all:hover {
-  background-color: #e6f9f7;
+  background-color: var(--surface-subtle);
 }
 
 /* Stats row */
@@ -96,7 +96,7 @@
 }
 
 .cg-sub-widget__item:hover {
-  background: #e6f9f7;
+  background: var(--surface-subtle);
 }
 
 .cg-sub-widget__item-info {

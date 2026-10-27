@@ -151,12 +151,15 @@ const buildUploadErrorMessage = (err) => {
  *  - onClose       {function} Called when the modal is dismissed
  *  - onUploadDone  {function} Called after a successful upload (optional)
  *  - caregiverId   {string}   Optional — falls back to localStorage
+ *  - initialCertificateType {string} Optional — pre-selects this certificate type when the modal opens
+ *                                    (used by "Upload a replacement" for a rejected certificate)
  */
 const CertificateUploadModal = ({
   isOpen,
   onClose,
   onUploadDone,
   caregiverId: propCaregiverId,
+  initialCertificateType,
 }) => {
   const [certificateFile, setCertificateFile] = useState(null);
   const [selectedCertificateType, setSelectedCertificateType] = useState('');
@@ -189,6 +192,11 @@ const CertificateUploadModal = ({
       cancelled = true;
     };
   }, [isOpen]);
+
+  // Opened from "Upload a replacement": start on the rejected certificate's type.
+  useEffect(() => {
+    if (isOpen && initialCertificateType) setSelectedCertificateType(initialCertificateType);
+  }, [isOpen, initialCertificateType]);
 
   const selectedCert = certificateTypes.find(
     (c) => c.name === selectedCertificateType,

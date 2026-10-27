@@ -11,10 +11,15 @@ import AboutUs from './pages/AboutUs';
 import Blog from './pages/Blog';
 import CareFacts from './pages/CareFacts';
 import OurProcess from './pages/OurProcess';
-import Plans from './pages/Plans';
-import BookCaregiver from './pages/BookCaregiver';
+// import Plans from './pages/Plans'; // /plans retired
+// /book-caregiver — retired. Described the old individual-caregiver
+// hire/negotiate/contract flow, which no longer exists (clients now use
+// guided care packages). Component preserved (fully commented out, not
+// deleted) at ./pages/BookCaregiver.jsx; its import below is retired too.
+// import BookCaregiver from './pages/BookCaregiver';
 import MarketingPage from './pages/MarketingPage';
-import BecomeCaregiver from './pages/BecomeCaregiver';
+import StartAssessmentRedirect from './pages/StartAssessmentRedirect';
+// import BecomeCaregiver from './pages/BecomeCaregiver'; // /become-caregiver retired
 import BecomeReferrer from './pages/BecomeReferrer';
 import PrivacyPolicy from './pages/PrivacyPolicy';
 import TermsAndConditions from './pages/TermsAndConditions';
@@ -31,6 +36,7 @@ import ResendConfirmationPage from './main-app/pages/ResendConfirmationPage';
 import EmailUnsubscribePage from './main-app/pages/EmailUnsubscribePage';
 import UnauthorizedPage from './main-app/pages/UnauthorizedPage';
 import CancelAccountDeletion from './main-app/pages/CancelAccountDeletion';
+import GuarantorConfirmationPage from './main-app/pages/GuarantorConfirmationPage';
 import { ToastContainer, toast } from 'react-toastify';
 import 'react-toastify/dist/ReactToastify.css';
 import ProtectedRoute from './main-app/components/auth/ProtectedRoute';
@@ -45,8 +51,7 @@ import ContentBlogPost from './components/ContentfulBlog/BlogPost';
 import { BlogProvider } from './main-app/context/BlogContext';
 import PaymentSuccess from './main-app/pages/client/home-care-service/PaymentSuccess';
 import CommitmentSuccess from './main-app/pages/client/home-care-service/CommitmentSuccess';
-import HomeCareService from './main-app/pages/client/home-care-service/HomeCareService';
-import SubscriptionPaymentConfirmed from './main-app/pages/client/subscriptions/SubscriptionPaymentConfirmed';
+import FeatureMovedNotice from './main-app/components/shared/FeatureMovedNotice';
 import { MessageProvider } from './main-app/context/MessageContext';
 import { CaregiverStatusProvider } from './main-app/contexts/CaregiverStatusContext';
 import { ClientOnboardingProvider } from './main-app/context/ClientOnboardingContext';
@@ -132,9 +137,51 @@ function AppContent() {
       return;
     }
 
+    let reloading = false;
+    const onControllerChange = () => {
+      if (reloading) return;
+      reloading = true;
+      window.location.reload();
+    };
+
+    const showUpdateToast = (worker) => {
+      toast.info(
+        <span>
+          Update available!{' '}
+          <button
+            style={{ marginLeft: 8, padding: '2px 10px', cursor: 'pointer', borderRadius: 4, border: 'none', background: '#00B4A6', color: '#fff' }}
+            onClick={() => {
+              // Ask the waiting worker to activate; the page reloads on controllerchange.
+              worker.postMessage({ type: 'SKIP_WAITING' });
+              // Fallback in case the worker never takes over.
+              setTimeout(() => window.location.reload(), 3000);
+            }}
+          >
+            Refresh
+          </button>
+        </span>,
+        {
+          autoClose: false,
+          closeOnClick: false,
+          toastId: 'sw-update',
+          containerId: 'main-toast-container',
+        }
+      );
+    };
+
+    let updateInterval;
+    let onVisible;
+
+    navigator.serviceWorker.addEventListener('controllerchange', onControllerChange);
+
     navigator.serviceWorker
       .register('/sw.js', { updateViaCache: 'none' })
       .then((reg) => {
+        // A new version may already be waiting from an earlier visit.
+        if (reg.waiting && navigator.serviceWorker.controller) {
+          showUpdateToast(reg.waiting);
+        }
+
         reg.addEventListener('updatefound', () => {
           const newWorker = reg.installing;
           if (!newWorker) return;
@@ -143,28 +190,26 @@ function AppContent() {
               newWorker.state === 'installed' &&
               navigator.serviceWorker.controller
             ) {
-              toast.info(
-                <span>
-                  Update available!{' '}
-                  <button
-                    style={{ marginLeft: 8, padding: '2px 10px', cursor: 'pointer', borderRadius: 4, border: 'none', background: '#00B4A6', color: '#fff' }}
-                    onClick={() => window.location.reload()}
-                  >
-                    Refresh
-                  </button>
-                </span>,
-                {
-                  autoClose: false,
-                  closeOnClick: false,
-                  toastId: 'sw-update',
-                  containerId: 'main-toast-container',
-                }
-              );
+              showUpdateToast(newWorker);
             }
           });
         });
+
+        // Long-lived tabs/PWAs only re-check on navigation otherwise.
+        const checkForUpdate = () => reg.update().catch(() => {});
+        updateInterval = setInterval(checkForUpdate, 60 * 60 * 1000);
+        onVisible = () => {
+          if (document.visibilityState === 'visible') checkForUpdate();
+        };
+        document.addEventListener('visibilitychange', onVisible);
       })
       .catch((err) => console.warn('[SW] Registration failed:', err));
+
+    return () => {
+      navigator.serviceWorker.removeEventListener('controllerchange', onControllerChange);
+      clearInterval(updateInterval);
+      if (onVisible) document.removeEventListener('visibilitychange', onVisible);
+    };
   }, []);
 
   // Define unprotected routes
@@ -176,9 +221,9 @@ function AppContent() {
     '/contentful-blog',
     '/care-facts',
     '/our-process',
-    '/plans',
+    // '/plans', // retired
     '/book-caregiver',
-    '/become-caregiver',
+    // '/become-caregiver', // retired
     '/become-a-referrer',
     '/privacy-policy',
     '/terms-and-conditions',
@@ -193,6 +238,7 @@ function AppContent() {
     '/unauthorized',
     '/splash',
     '/cancel-account-deletion',
+    '/guarantor-confirmation',
     '/Caregivergigpage',
     '/MyOrders',
     '/OrderTasks&Details',
@@ -228,7 +274,10 @@ function AppContent() {
     !routesWithoutNavbar.includes(location.pathname) &&
     !isRootRoute &&
     !isMarketplaceRoute;
-  const shouldShowFooter = !routesWithoutFooter.includes(location.pathname);
+  // The admin/caregiver/client dashboards (everything under /app/*) have their
+  // own chrome and are never meant to show the public marketing footer.
+  const shouldShowFooter = !routesWithoutFooter.includes(location.pathname) &&
+    !location.pathname.startsWith('/app/');
 
 
 
@@ -277,9 +326,9 @@ function AppContent() {
         <Route path="/care-facts" element={<CareFacts />} />
         <Route path="/our-process" element={<OurProcess />} />
         {/* <Route path="/messages" element={<Messages />} /> */}
-        <Route path="/plans" element={<Plans />} />
-        <Route path="/book-caregiver" element={<BookCaregiver />} />
-        <Route path="/become-caregiver" element={<BecomeCaregiver />} />
+        {/* <Route path="/plans" element={<Plans />} /> retired */}
+        <Route path="/book-caregiver" element={<FeatureMovedNotice title="This page has moved" message="Care is now arranged through guided care packages, and we match you with the right caregiver for you. Browse the packages to get started." homePath="/marketplace" homeLabel="Browse care packages" />} />
+        {/* <Route path="/become-caregiver" element={<BecomeCaregiver />} /> retired */}
         <Route path="/become-a-referrer" element={<BecomeReferrer />} />
         <Route path="/privacy-policy" element={<PrivacyPolicy />} />
         <Route path="/terms-and-conditions" element={<TermsAndConditions />} />
@@ -288,12 +337,17 @@ function AppContent() {
         <Route path="/login" element={<LoginPage />} />
         <Route path="/register" element={<RoleSelectionPage />} />
         <Route path="/register/form" element={<RegisterFormPage />} />
+        <Route path="/start-assessment" element={<StartAssessmentRedirect />} />
         <Route path="/forgot-password" element={<ForgotPasswordPage />} />
         <Route path="/confirm-email" element={<ConfirmEmailPage />} />
         <Route path="/resend-confirmation" element={<ResendConfirmationPage />} />
         <Route path="/email-preferences/unsubscribe" element={<EmailUnsubscribePage />} />
         <Route path="/cancel-account-deletion" element={<CancelAccountDeletion />} />
-        <Route path="/service/:id" element={<HomeCareService />} />
+        <Route path="/guarantor-confirmation" element={<GuarantorConfirmationPage />} />
+        {/* Retired: gigs are no longer client-purchasable (care is requested as packages and the caregiver
+            is assigned internally). Kept as a deliberate notice so old shared links and notification
+            deep links land somewhere sensible instead of a 404. */}
+        <Route path="/service/:id" element={<FeatureMovedNotice title="This service page has moved" message="Care is now arranged through guided care packages, and we match you with the right caregiver for you. Browse the packages to get started." homePath="/marketplace" homeLabel="Browse care packages" />} />
         <Route path="/splash" element={<SplashScreen />} />
 
         {/* <Route path="/Caregivergigpage" element={<Caregivergigpage />} /> */}
@@ -308,18 +362,6 @@ function AppContent() {
 
         <Route path="/app/client/payment-success" element={<PaymentSuccess />} />
         <Route path="/app/client/commitment-success" element={<CommitmentSuccess />} />
-        <Route
-          path="/subscription/payment-confirmed"
-          element={
-            <ProtectedRoute>
-              {user?.role?.toLowerCase() === 'client' ? (
-                <SubscriptionPaymentConfirmed />
-              ) : (
-                <Navigate to="/unauthorized" replace />
-              )}
-            </ProtectedRoute>
-          }
-        />
         <Route path="/unauthorized" element={<UnauthorizedPage />} />
         <Route
           path="/app/*"

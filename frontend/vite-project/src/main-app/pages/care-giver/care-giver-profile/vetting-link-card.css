@@ -1,0 +1,42 @@
+.vlc-card {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  margin-top: 16px;
+  padding: 16px;
+  background: var(--color-brand-cream);
+  border: 1px solid var(--color-brand-mint);
+  border-left: 4px solid var(--color-brand-accent);
+  border-radius: 10px;
+}
+
+.vlc-title {
+  margin: 0 0 4px;
+  font-size: 1rem;
+  font-weight: 600;
+  color: var(--color-brand-deep);
+}
+
+.vlc-description {
+  margin: 0;
+  font-size: 0.85rem;
+  line-height: 1.4;
+  color: #475569;
+}
+
+.vlc-button {
+  align-self: flex-start;
+  padding: 8px 18px;
+  background: var(--color-brand-deep);
+  color: #fff;
+  border: none;
+  border-radius: 6px;
+  font-size: 0.9rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: background-color 0.2s ease;
+}
+
+.vlc-button:hover {
+  background: var(--color-brand-deep-2);
+}

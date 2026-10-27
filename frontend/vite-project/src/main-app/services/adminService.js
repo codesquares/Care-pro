@@ -1045,6 +1045,47 @@ const adminService = {
     }
   },
 
+  // RETIRED with the Care Matching admin tool: POST /Admins/RecommendGig no longer exists on the backend.
+  // Preserved commented out for reference.
+  // /**
+  //  * Send a client a recommendation email for a specific gig, with live gig/caregiver
+  //  * details and a direct link to the gig's public profile page.
+  //  * @param {Object} params
+  //  * @param {string} params.clientId - The client to recommend the gig to
+  //  * @param {string} params.gigId - The gig to recommend
+  //  * @returns {Promise<{success: boolean, message?: string, error?: string}>}
+  //  */
+  // recommendGigToClient: async ({ clientId, gigId }) => {
+  //   try {
+  //     if (!clientId || !gigId) {
+  //       return { success: false, error: 'Client and gig are both required' };
+  //     }
+  //
+  //     const response = await api.post('/Admins/RecommendGig', {
+  //       ClientId: clientId,
+  //       GigId: gigId
+  //     });
+  //
+  //     if (response.data && response.data.success) {
+  //       return {
+  //         success: true,
+  //         message: response.data.message || 'Recommendation sent'
+  //       };
+  //     }
+  //
+  //     return {
+  //       success: false,
+  //       error: response.data?.message || 'Failed to send recommendation'
+  //     };
+  //   } catch (error) {
+  //     console.error('Error sending gig recommendation:', error);
+  //     return {
+  //       success: false,
+  //       error: error.response?.data?.message || error.message || 'Failed to send recommendation'
+  //     };
+  //   }
+  // },
+
   /**
    * Get paused gigs by caregiver
    * @param {string} caregiverId - The caregiver ID

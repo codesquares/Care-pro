@@ -90,10 +90,11 @@ const Navbar = () => {
 
             <ul ref={menuRef} className={`navbar-links ${isMenuOpen ? 'active' : ''}`}>
                 <li>
-                    <Link to="/book-caregiver" onClick={handleLinkClick}>
+                    <Link to="/marketplace" onClick={handleLinkClick}>
                         Hire Caregiver
                     </Link>
                 </li>
+                {/* retired: /become-caregiver
                 {(!isAuthenticated || user?.role?.toLowerCase() !== 'caregiver') && (
                     <li>
                         <Link to="/become-caregiver" onClick={handleLinkClick}>
@@ -101,6 +102,7 @@ const Navbar = () => {
                         </Link>
                     </li>
                 )}
+                */}
                 <li>
                     <Link to="/about-us" onClick={handleLinkClick}>
                         About us

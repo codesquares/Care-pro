@@ -18,7 +18,7 @@
   margin: 20px 0;
 }
 
-.tab-btn {
+.ref-tab-btn {
   border: 1px solid #d1d5db;
   background: #fff;
   color: #374151;
@@ -28,7 +28,7 @@
   font-weight: 600;
 }
 
-.tab-btn.active {
+.ref-tab-btn.active {
   background: #111827;
   color: #fff;
   border-color: #111827;
@@ -127,8 +127,8 @@
   align-items: center;
 }
 
-.btn-primary,
-.btn-secondary {
+.ref-btn-primary,
+.ref-btn-secondary {
   border-radius: 8px;
   padding: 8px 12px;
   border: 1px solid transparent;
@@ -136,23 +136,23 @@
   cursor: pointer;
 }
 
-.btn-primary {
-  background: #0f766e;
+.ref-btn-primary {
+  background: var(--color-brand-deep);
   color: #fff;
 }
 
-.btn-secondary {
+.ref-btn-secondary {
   background: #fff;
   color: #374151;
   border-color: #d1d5db;
 }
 
-.btn-small {
+.ref-btn-small {
   font-size: 0.8rem;
   padding: 6px 8px;
 }
 
-.btn-danger {
+.ref-btn-danger {
   border-radius: 8px;
   padding: 8px 12px;
   border: 1px solid transparent;
@@ -162,20 +162,20 @@
   color: #fff;
 }
 
-.btn-primary:disabled,
-.btn-secondary:disabled,
-.btn-danger:disabled {
+.ref-btn-primary:disabled,
+.ref-btn-secondary:disabled,
+.ref-btn-danger:disabled {
   opacity: 0.6;
   cursor: not-allowed;
 }
 
-.ref-filter-row .btn-secondary.active {
+.ref-filter-row .ref-btn-secondary.active {
   background: #111827;
   color: #fff;
   border-color: #111827;
 }
 
-.status-badge {
+.ref-status-badge {
   display: inline-block;
   padding: 4px 10px;
   border-radius: 999px;
@@ -183,22 +183,22 @@
   font-weight: 600;
 }
 
-.status-badge--pendingapproval {
+.ref-status-badge--pendingapproval {
   background: #fff7e4;
   color: #92600a;
 }
 
-.status-badge--approved {
+.ref-status-badge--approved {
   background: #ecfdf5;
   color: #065f46;
 }
 
-.status-badge--rejected {
+.ref-status-badge--rejected {
   background: #fef2f2;
   color: #991b1b;
 }
 
-.status-badge--unknown {
+.ref-status-badge--unknown {
   background: #f3f4f6;
   color: #4b5563;
 }
@@ -253,7 +253,7 @@
   text-transform: uppercase;
 }
 
-.status-paid {
+.ref-status-paid {
   color: #059669;
   font-weight: 700;
 }

@@ -10,7 +10,7 @@ const renderStars = (rating) => {
   const numStars = Math.max(1, Math.min(5, rating || 5));
   
   for (let i = 0; i < numStars; i++) {
-    stars.push(<FaStar key={i} className="review-star" />);
+    stars.push(<FaStar key={i} className="rv-review-star" />);
   }
   
   return stars;
@@ -26,7 +26,7 @@ const Reviews = () => {
 
   const SectionChevron = () => (
     <svg
-      className="profile-section-chevron"
+      className="pi-section-chevron"
       width="16"
       height="16"
       viewBox="0 0 24 24"
@@ -43,7 +43,7 @@ const Reviews = () => {
 
   const ReviewsHeader = () => (
     <h3
-      className="profile-section-header"
+      className="pi-section-header"
       onClick={() => setIsOpen((v) => !v)}
       role="button"
       tabIndex={0}
@@ -55,9 +55,9 @@ const Reviews = () => {
     </h3>
   );
 
-  // Fetch caregiver's gigs with reviews using the new service
+  // Fetch the caregiver's reviews
   useEffect(() => {
-    const fetchGigsWithReviews = async () => {
+    const fetchReviews = async () => {
       try {
         setIsLoading(true);
         setError("");
@@ -67,7 +67,7 @@ const Reviews = () => {
           throw new Error("Caregiver ID not found in local storage.");
         }
 
-        const enrichedReviews = await CaregiverReviewService.getGigsWithReviews(userDetails.id);
+        const enrichedReviews = await CaregiverReviewService.getCaregiverReviews(userDetails.id);
         const stats = CaregiverReviewService.calculateReviewStats(enrichedReviews);
         
         setReviewsFromApi(enrichedReviews);
@@ -82,7 +82,7 @@ const Reviews = () => {
       }
     };
 
-    fetchGigsWithReviews();
+    fetchReviews();
     
     // Cleanup cache when component unmounts
     return () => {
@@ -102,11 +102,11 @@ const Reviews = () => {
   // Loading state
   if (isLoading) {
     return (
-      <div className={`reviews profile-collapsible ${isOpen ? 'open' : ''}`}>
+      <div className={`rv-reviews pi-collapsible ${isOpen ? 'open' : ''}`}>
         <ReviewsHeader />
-        <div className="profile-section-body">
-          <div className="spinner-container">
-            <div className="spinner" />
+        <div className="pi-section-body">
+          <div className="rv-spinner-container">
+            <div className="rv-spinner" />
             <p>Loading reviews...</p>
           </div>
         </div>
@@ -117,9 +117,9 @@ const Reviews = () => {
   // Error state
   if (error) {
     return (
-      <div className={`reviews reviews-empty profile-collapsible ${isOpen ? 'open' : ''}`}>
+      <div className={`rv-reviews rv-reviews-empty pi-collapsible ${isOpen ? 'open' : ''}`}>
         <ReviewsHeader />
-        <div className="profile-section-body">
+        <div className="pi-section-body">
           <p className="error-message">Error: {error}</p>
         </div>
       </div>
@@ -129,10 +129,10 @@ const Reviews = () => {
   // No reviews state
   if (reviewsFromApi.length === 0) {
     return (
-      <div className={`reviews reviews-empty profile-collapsible ${isOpen ? 'open' : ''}`}>
+      <div className={`rv-reviews rv-reviews-empty pi-collapsible ${isOpen ? 'open' : ''}`}>
         <ReviewsHeader />
-        <div className="profile-section-body">
-          <span className="empty-icon">💬</span>
+        <div className="pi-section-body">
+          <span className="rv-empty-icon">💬</span>
           <p>No reviews yet. Keep providing great service to receive your first review!</p>
         </div>
       </div>
@@ -140,25 +140,25 @@ const Reviews = () => {
   }
 
   return (
-    <div className={`reviews profile-collapsible ${isOpen ? 'open' : ''}`}>
+    <div className={`rv-reviews pi-collapsible ${isOpen ? 'open' : ''}`}>
       <ReviewsHeader />
-      <div className="profile-section-body">
+      <div className="pi-section-body">
       {/* Review Statistics */}
       {reviewStats && reviewStats.totalReviews > 0 && (
-        <div className="review-stats">
-          <div className="stats-summary">
-            <span className="total-reviews">
+        <div className="rv-review-stats">
+          <div className="rv-stats-summary">
+            <span className="rv-total-reviews">
               {reviewStats.totalReviews} review{reviewStats.totalReviews !== 1 ? 's' : ''}
             </span>
-            <span className="average-rating">
-              {reviewStats.averageRating}/5 <FaStar className="rating-star" />
+            <span className="rv-average-rating">
+              {reviewStats.averageRating}/5 <FaStar className="rv-rating-star" />
             </span>
           </div>
           
           {/* Rating Filter Buttons */}
-          <div className="rating-filters">
+          <div className="rv-rating-filters">
             <button 
-              className="filter-btn"
+              className="rv-filter-btn"
               onClick={() => handleFilter(null)}
             >
               All Reviews
@@ -167,10 +167,10 @@ const Reviews = () => {
               reviewStats.ratingDistribution[rating] > 0 && (
                 <button
                   key={rating}
-                  className="filter-btn"
+                  className="rv-filter-btn"
                   onClick={() => handleFilter(rating)}
                 >
-                  {rating}<FaStar className="filter-star" /> ({reviewStats.ratingDistribution[rating]})
+                  {rating}<FaStar className="rv-filter-star" /> ({reviewStats.ratingDistribution[rating]})
                 </button>
               )
             ))}
@@ -178,41 +178,31 @@ const Reviews = () => {
         </div>
       )}
 
-      <div className="review-list">
+      <div className="rv-review-list">
         {filteredReviews.map((review, index) => (
-          <div key={review.id || index} className="review-card">
+          <div key={review.id || index} className="rv-review-card">
             <img 
               src={review.client?.profileImage || `https://ui-avatars.com/api/?name=${encodeURIComponent(review.client?.name || 'Client')}&background=3b82f6&color=ffffff&size=48`}
               alt={review.client?.name || 'Client'}
-              className="review-avatar"
+              className="rv-review-avatar"
             />
-            <div className="review-content">
-              <div className="review-header">
-                <h4 className="review-author">{review.client?.name || "Anonymous Client"}</h4>
-                <div className="review-rating">
-                  <span className="review-stars">
+            <div className="rv-review-content">
+              <div className="rv-review-header">
+                <h4 className="rv-review-author">{review.client?.name || "Anonymous Client"}</h4>
+                <div className="rv-review-rating">
+                  <span className="rv-review-stars">
                     {renderStars(review.rating)}
                   </span>
-                  <span className="review-rating-text">
+                  <span className="rv-review-rating-text">
                     {review.rating || 5}/5
                   </span>
                 </div>
               </div>
               
-              {/* Gig Information */}
-              {review.gig && (
-                <div className="review-gig-info">
-                  <span className="review-gig-title">Service: {review.gig.title}</span>
-                  {review.gig.category && (
-                    <span className="review-gig-category"> • {review.gig.category}</span>
-                  )}
-                </div>
-              )}
-              
-              <p className="review-text">{review.comment || "Great service!"}</p>
+              <p className="rv-review-text">{review.comment || "Great service!"}</p>
               
               {review.createdAt && (
-                <p className="review-date">
+                <p className="rv-review-date">
                   {new Date(review.createdAt).toLocaleDateString('en-US', {
                     year: 'numeric',
                     month: 'long',

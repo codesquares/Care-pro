@@ -131,7 +131,7 @@ const BookingCommitments = () => {
               rows={4}
               disabled={loading}
             />
-            <small className="char-hint">{reason.length} characters {reason.length < 10 && reason.length > 0 ? '— needs at least 10' : ''}</small>
+            <small className="bc-char-hint">{reason.length} characters {reason.length < 10 && reason.length > 0 ? '— needs at least 10' : ''}</small>
           </div>
 
           {adminId && (
@@ -144,7 +144,7 @@ const BookingCommitments = () => {
           <div className="bc-form-actions">
             <button
               type="submit"
-              className="btn-primary"
+              className="bc-btn-primary"
               disabled={loading || !gigId.trim() || !clientId.trim() || !reason.trim()}
             >
               {loading
@@ -154,7 +154,7 @@ const BookingCommitments = () => {
             </button>
             <button
               type="button"
-              className="btn-secondary"
+              className="bc-btn-secondary"
               onClick={handleReset}
               disabled={loading}
             >

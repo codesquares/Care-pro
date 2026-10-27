@@ -55,6 +55,12 @@ const LEDGER_ENTRY_TYPES = {
     icon: '✅',
     isCredit: true,
   },
+  PayrollCredit: {
+    label: 'Payroll',
+    color: '#2ecc71',
+    icon: '🧾',
+    isCredit: true,
+  },
 };
 
 /**

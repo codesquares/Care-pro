@@ -13,11 +13,27 @@ import AdminUserManagement from './users-management/AdminUserManagement';
 import ChatCompliance from './chat-compliance/ChatCompliance';
 import BookingCommitments from './booking-commitments/BookingCommitments';
 import GigsManagement from './gigs-management/GigsManagement';
+import PackagesManagement from './packages-management/PackagesManagement';
+import AssignmentConsole from './assignment-console/AssignmentConsole';
+import PayRatesManagement from './pay-rates/PayRatesManagement';
+import PayrollManagement from './payroll/PayrollManagement';
+import PackageVisits from './package-visits/PackageVisits';
+import GuarantorOverride from './guarantor-override/GuarantorOverride';
+import PoliceClearances from './police-clearances/PoliceClearances';
+import AddressProofs from './address-proofs/AddressProofs';
+import AbsenceNotices from './absence-notices/AbsenceNotices';
+import PaymentLinkGenerator from './payment-links/PaymentLinkGenerator';
+import AdminAlerts from './alerts/AdminAlerts';
+import NotificationBell from '../../components/notifications/NotificationBell';
+import { FaBell } from 'react-icons/fa';
+import './alerts/admin-alerts.css';
+// Retired: Care Matching (admin gig -> client recommendation emails). Superseded by the Assignment Console;
+// source preserved commented out at ./care-matching/CareMatching.jsx.
+// import CareMatching from './care-matching/CareMatching';
 import OrdersManagement from './orders-management/OrdersManagement';
 import EmailComposer from './email-composer/EmailComposer';
 import CertificateManagement from './certificate-management/CertificateManagement';
 import VerificationManagement from './verification-management/VerificationManagement';
-import AdminCareRequestDetail from './care-requests/AdminCareRequestDetail';
 import SubscriptionAdmin from './subscriptions/SubscriptionAdmin';
 import DisputesManagement from './disputes-management/DisputesManagement';
 import IncidentReportDetail from './incidents/IncidentReportDetail';
@@ -35,6 +51,7 @@ import NotFoundPage from '../../../pages/NotFoundPage';
 import { hasPolicy } from '../../utils/adminPermissions';
 import WithdrawalTokenLookup from './withdrawal-management/WithdrawalTokenLookup';
 import ReferralsManagement from './referrals-management/ReferralsManagement';
+import FeatureMovedNotice from '../../components/shared/FeatureMovedNotice';
 import './admin-dashboard/admin-sidebar.css';
 
 function AdminRoutes() {
@@ -44,6 +61,7 @@ function AdminRoutes() {
     const role = userDetails?.role || '';
     const department = userDetails?.department || '';
     const canUseFinanceTools = hasPolicy('finance', role, department);
+    const canUseOperationsTools = hasPolicy('operations', role, department);
     
     useEffect(() => {
         // Check if user has admin role
@@ -73,10 +91,19 @@ function AdminRoutes() {
                         <i className="fas fa-shield-alt"></i>
                         CarePro Admin
                     </a>
+                    {/* A2: alert bell for every approved admin (not policy-gated) */}
+                    <div className="admin-mobile-topbar-bell" data-testid="admin-bell-mobile">
+                        <NotificationBell navigateTo={(path) => navigate(path)} bellIcon={FaBell} />
+                    </div>
                 </header>
+                <div className="admin-alert-bar" data-testid="admin-bell-desktop">
+                    <NotificationBell navigateTo={(path) => navigate(path)} bellIcon={FaBell} />
+                </div>
 
                 <Routes>
                     <Route path='/dashboard' element={<AdminDashboard />} />
+                    {/* A2: personal alert inbox — open to every approved admin (distinct from the SuperAdmin broadcast console at /notifications) */}
+                    <Route path='/alerts' element={<AdminAlerts />} />
                     <Route path='/question-bank' element={<QuestionBankManager />} />
                     <Route
                         path='/withdrawals'
@@ -111,6 +138,87 @@ function AdminRoutes() {
                     <Route path='/chat-compliance' element={<ChatCompliance />} />
                     <Route path='/booking-commitments' element={<BookingCommitments />} />
                     <Route path='/gigs' element={<GigsManagement />} />
+                    <Route
+                        path='/packages'
+                        element={
+                            canUseOperationsTools
+                                ? <PackagesManagement />
+                                : <NotFoundPage />
+                        }
+                    />
+                    <Route path='/care-matching' element={<FeatureMovedNotice title="Care Matching has been retired" message="Caregivers are now matched to package requests in the Assignment Console. Recommending a specific caregiver's gig to a client is no longer supported." homePath="/app/admin/assignments" homeLabel="Go to Assignments" />} />
+                    <Route
+                        path='/assignments'
+                        element={
+                            canUseOperationsTools
+                                ? <AssignmentConsole />
+                                : <NotFoundPage />
+                        }
+                    />
+                    <Route
+                        path='/package-visits'
+                        element={
+                            canUseOperationsTools
+                                ? <PackageVisits />
+                                : <NotFoundPage />
+                        }
+                    />
+                    <Route
+                        path='/pay-rates'
+                        element={
+                            canUseOperationsTools
+                                ? <PayRatesManagement />
+                                : <NotFoundPage />
+                        }
+                    />
+                    <Route
+                        path='/payroll'
+                        element={
+                            canUseOperationsTools
+                                ? <PayrollManagement />
+                                : <NotFoundPage />
+                        }
+                    />
+                    <Route
+                        path='/guarantors'
+                        element={
+                            canUseOperationsTools
+                                ? <GuarantorOverride />
+                                : <NotFoundPage />
+                        }
+                    />
+                    <Route
+                        path='/police-clearances'
+                        element={
+                            canUseOperationsTools
+                                ? <PoliceClearances />
+                                : <NotFoundPage />
+                        }
+                    />
+                    <Route
+                        path='/address-proofs'
+                        element={
+                            canUseOperationsTools
+                                ? <AddressProofs />
+                                : <NotFoundPage />
+                        }
+                    />
+                    <Route
+                        path='/absence-notices'
+                        element={
+                            canUseOperationsTools
+                                ? <AbsenceNotices />
+                                : <NotFoundPage />
+                        }
+                    />
+                    <Route
+                        path='/payment-links'
+                        element={
+                            canUseOperationsTools
+                                ? <PaymentLinkGenerator />
+                                : <NotFoundPage />
+                        }
+                    />
                     <Route path='/orders' element={<OrdersManagement />} />
                     <Route path='/emails' element={<EmailComposer />} />
                     <Route path='/certificates' element={<CertificateManagement />} />
@@ -125,7 +233,9 @@ function AdminRoutes() {
                     <Route path="analytics" element={<AnalyticsDashboard />} />
                     <Route path="data-tools/middle-name-fix" element={<MiddleNameFix />} />
                     <Route path="data-tools/default-address-cleanup" element={<DefaultAddressCleanup />} />
-                    <Route path="care-requests/:requestId" element={<AdminCareRequestDetail />} />
+                    {/* Tier A: the competitive care-request flow is retired pending the
+                        package-request + internal-assignment rebuild (Tier D). */}
+                    <Route path="care-requests/:requestId" element={<FeatureMovedNotice title="Care requests are being rebuilt" message="Care request details are moving to guided care packages. This will be back soon." homePath="/app/admin/dashboard" homeLabel="Go to admin home" />} />
                     <Route path="*" element={<NotFoundPage />} />
                 </Routes>
             </div>

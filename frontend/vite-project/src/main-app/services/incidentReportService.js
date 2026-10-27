@@ -45,7 +45,8 @@ const IncidentReportService = {
    * @returns {Promise<Object>} { success, data, error }
    */
   async create({
-    orderId,
+    orderId = null,
+    assignmentId = null,
     taskSheetId = null,
     incidentType,
     dateTime,
@@ -56,7 +57,8 @@ const IncidentReportService = {
     photos = [],
   }) {
     try {
-      if (!orderId) {
+      // Exactly one scope: a legacy order, or a package assignment.
+      if (!orderId && !assignmentId) {
         return { success: false, error: "Order ID is required" };
       }
       if (!description || description.trim().length === 0) {
@@ -90,7 +92,7 @@ const IncidentReportService = {
           Authorization: `Bearer ${authToken}`,
         },
         body: JSON.stringify({
-          orderId,
+          ...(assignmentId ? { assignmentId } : { orderId }),
           taskSheetId,
           incidentType,
           dateTime: dateTime || new Date().toISOString(),
@@ -154,6 +156,43 @@ const IncidentReportService = {
         };
       }
 
+      const data = await response.json();
+      return { success: true, data: Array.isArray(data) ? data : [] };
+    } catch (error) {
+      console.error("Error fetching incident reports:", error);
+      return { success: false, error: error.message || "Network error" };
+    }
+  },
+
+  /**
+   * Get incident reports for a package request, across all of its assignments.
+   * Client-only on the backend (403 for anyone but the owning client).
+   * @param {string} packageRequestId
+   * @returns {Promise<Object>} { success, data, error }
+   */
+  async getByPackageRequest(packageRequestId) {
+    try {
+      if (!packageRequestId) {
+        return { success: false, error: "Package request ID is required" };
+      }
+      const authToken = localStorage.getItem("authToken");
+      if (!authToken) {
+        return { success: false, error: "Authentication required" };
+      }
+      const response = await fetch(
+        `${config.BASE_URL}/incident-reports?packageRequestId=${encodeURIComponent(packageRequestId)}`,
+        {
+          method: "GET",
+          headers: { "Content-Type": "application/json", Authorization: `Bearer ${authToken}` },
+        }
+      );
+      if (!response.ok) {
+        const errorData = await response.json().catch(() => ({}));
+        return {
+          success: false,
+          error: errorData.error || `Failed to fetch incident reports (${response.status})`,
+        };
+      }
       const data = await response.json();
       return { success: true, data: Array.isArray(data) ? data : [] };
     } catch (error) {

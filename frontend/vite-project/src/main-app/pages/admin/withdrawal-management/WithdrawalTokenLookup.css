@@ -28,7 +28,7 @@
   padding: 10px 14px;
   border: none;
   border-radius: 8px;
-  background: #0ea5e9;
+  background: var(--color-brand-deep);
   color: white;
   cursor: pointer;
 }

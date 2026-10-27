@@ -27,9 +27,14 @@ const ProfileCard = () => {
 
     const fetchProfile = async () => {
       try {
-        // Use centralized config instead of hardcoded URL for consistent API routing
+        const token = localStorage.getItem("authToken");
         const response = await fetch(
-          `${config.BASE_URL}/CareGivers/${caregiverId}`
+          `${config.BASE_URL}/CareGivers/me`,
+          {
+            headers: {
+              Authorization: `Bearer ${token}`,
+            },
+          }
         );
 
         if (!response.ok) {
@@ -128,7 +133,7 @@ const ProfileCard = () => {
           <div
             className="profile-card-action-btn"
             style={{ cursor: "pointer" }}
-            onClick={() => navigate(`${basePath}/verification`)}
+            onClick={() => navigate(`${basePath}/vetting`)} /* was ${basePath}/verification — identity verification now lives in the Vetting Hub */
           >
             Get Verified
           </div>

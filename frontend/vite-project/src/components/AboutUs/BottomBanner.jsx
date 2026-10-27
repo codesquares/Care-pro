@@ -13,12 +13,14 @@ const BottomBanner = () => {
             <h2>Looking for the perfect care professional or are you a care professional looking for work?</h2>
             <p>Over 300+ care professionals are waiting for you.</p>
             <div className='cta-buttons'>
-              <button className='btn-primary' onClick={() => navigate('/book-caregiver')}>
+              <button className='btn-primary' onClick={() => navigate('/marketplace')}>
                 Hire a Caregiver
               </button>
+              {/* retired: /become-caregiver
               <button className='btn-secondary' onClick={() => navigate('/become-caregiver')}>
                 Become a Caregiver
               </button>
+              */}
             </div>
           </div>
           {/* Decorative arc/gradient background handled in CSS */}

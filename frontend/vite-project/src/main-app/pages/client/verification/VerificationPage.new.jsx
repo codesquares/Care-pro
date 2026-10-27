@@ -440,7 +440,7 @@ const ClientVerificationPage = () => {
   };
 
   return (
-    <div className="verification-container">
+    <div className="vp-verification-container">
       <Helmet>
         <link
           rel="stylesheet"
@@ -451,9 +451,9 @@ const ClientVerificationPage = () => {
         />
       </Helmet>
 
-      <div className="verification-card">
+      <div className="vp-verification-card">
         <h2>Account Verification</h2>
-        <p className="verification-intro">
+        <p className="vp-verification-intro">
           To ensure the safety and security of our platform,
           we require all clients to verify their identity. Please choose a
           verification method below.
@@ -461,15 +461,15 @@ const ClientVerificationPage = () => {
 
         {/* Progress indicator */}
         {progress > 0 && (
-          <div className="progress-container">
-            <div className="progress-bar" style={{ width: `${progress}%` }}></div>
-            <div className="progress-message">{progressMessage}</div>
+          <div className="vp-progress-container">
+            <div className="vp-progress-bar" style={{ width: `${progress}%` }}></div>
+            <div className="vp-progress-message">{progressMessage}</div>
           </div>
         )}
 
         <form onSubmit={handleSubmit}>
-          <div className="verification-methods">
-            <div className="method-selection">
+          <div className="vp-verification-methods">
+            <div className="vp-method-selection">
               <input
                 type="radio"
                 id="bvn-method"
@@ -478,11 +478,11 @@ const ClientVerificationPage = () => {
                 onChange={handleVerificationMethodChange}
               />
               <label htmlFor="bvn-method" className={verificationMethod === "bvn" ? "selected" : ""}>
-                <div className="method-icon bvn-icon">
+                <div className="vp-method-icon vp-bvn-icon">
                   <i className="fas fa-university"></i>
                 </div>
-                <div className="method-title">BVN Verification</div>
-                <div className="method-description">Verify with your Bank Verification Number</div>
+                <div className="vp-method-title">BVN Verification</div>
+                <div className="vp-method-description">Verify with your Bank Verification Number</div>
               </label>
 
               <input
@@ -493,11 +493,11 @@ const ClientVerificationPage = () => {
                 onChange={handleVerificationMethodChange}
               />
               <label htmlFor="nin-method" className={verificationMethod === "nin" ? "selected" : ""}>
-                <div className="method-icon nin-icon">
+                <div className="vp-method-icon vp-nin-icon">
                   <i className="fas fa-id-card"></i>
                 </div>
-                <div className="method-title">NIN Verification</div>
-                <div className="method-description">Verify with your National ID Number</div>
+                <div className="vp-method-title">NIN Verification</div>
+                <div className="vp-method-description">Verify with your National ID Number</div>
               </label>
 
               <input
@@ -508,18 +508,18 @@ const ClientVerificationPage = () => {
                 onChange={handleVerificationMethodChange}
               />
               <label htmlFor="id-method" className={verificationMethod === "id" ? "selected" : ""}>
-                <div className="method-icon id-icon">
+                <div className="vp-method-icon vp-id-icon">
                   <i className="fas fa-camera"></i>
                 </div>
-                <div className="method-title">ID & Selfie</div>
-                <div className="method-description">Upload your ID and a selfie with it</div>
+                <div className="vp-method-title">ID & Selfie</div>
+                <div className="vp-method-description">Upload your ID and a selfie with it</div>
               </label>
             </div>
 
             {/* BVN Verification Form */}
             {verificationMethod === "bvn" && (
-              <div className="verification-form">
-                <div className="form-group">
+              <div className="vp-verification-form">
+                <div className="vp-form-group">
                   <label htmlFor="bvn">
                     <i className="fas fa-university"></i>
                     Bank Verification Number (BVN)
@@ -540,13 +540,13 @@ const ClientVerificationPage = () => {
                   </small>
                 </div>
 
-                <div className="form-group">
+                <div className="vp-form-group">
                   <label htmlFor="selfie-image">
                     <i className="fas fa-camera"></i>
                     Upload a selfie for verification
                   </label>
-                  <div className="file-input-wrapper">
-                    <div className="file-input-button">Choose File</div>
+                  <div className="vp-file-input-wrapper">
+                    <div className="vp-file-input-button">Choose File</div>
                     <input
                       type="file"
                       id="selfie-image"
@@ -555,7 +555,7 @@ const ClientVerificationPage = () => {
                       required
                     />
                   </div>
-                  {selfieImage && <div className="file-name">{selfieImage.name}</div>}
+                  {selfieImage && <div className="vp-file-name">{selfieImage.name}</div>}
                   <small>
                     <i className="fas fa-info-circle"></i>
                     Take a clear selfie in good lighting for verification
@@ -566,8 +566,8 @@ const ClientVerificationPage = () => {
 
             {/* NIN Verification Form */}
             {verificationMethod === "nin" && (
-              <div className="verification-form">
-                <div className="form-group">
+              <div className="vp-verification-form">
+                <div className="vp-form-group">
                   <label htmlFor="nin">
                     <i className="fas fa-id-card"></i>
                     National Identification Number (NIN)
@@ -588,13 +588,13 @@ const ClientVerificationPage = () => {
                   </small>
                 </div>
 
-                <div className="form-group">
+                <div className="vp-form-group">
                   <label htmlFor="selfie-image">
                     <i className="fas fa-camera"></i>
                     Upload a selfie for verification
                   </label>
-                  <div className="file-input-wrapper">
-                    <div className="file-input-button">Choose File</div>
+                  <div className="vp-file-input-wrapper">
+                    <div className="vp-file-input-button">Choose File</div>
                     <input
                       type="file"
                       id="selfie-image"
@@ -603,7 +603,7 @@ const ClientVerificationPage = () => {
                       required
                     />
                   </div>
-                  {selfieImage && <div className="file-name">{selfieImage.name}</div>}
+                  {selfieImage && <div className="vp-file-name">{selfieImage.name}</div>}
                   <small>
                     <i className="fas fa-info-circle"></i>
                     Take a clear selfie in good lighting for verification
@@ -614,8 +614,8 @@ const ClientVerificationPage = () => {
 
             {/* ID Document Verification Form */}
             {verificationMethod === "id" && (
-              <div className="verification-form">
-                <div className="form-group">
+              <div className="vp-verification-form">
+                <div className="vp-form-group">
                   <label htmlFor="id-type">
                     <i className="fas fa-id-card"></i>
                     ID Document Type
@@ -634,13 +634,13 @@ const ClientVerificationPage = () => {
                   </select>
                 </div>
 
-                <div className="form-group">
+                <div className="vp-form-group">
                   <label htmlFor="id-image">
                     <i className="fas fa-id-card"></i>
                     Upload your ID Document
                   </label>
-                  <div className="file-input-wrapper">
-                    <div className="file-input-button">Choose File</div>
+                  <div className="vp-file-input-wrapper">
+                    <div className="vp-file-input-button">Choose File</div>
                     <input
                       type="file"
                       id="id-image"
@@ -649,20 +649,20 @@ const ClientVerificationPage = () => {
                       required
                     />
                   </div>
-                  {idImage && <div className="file-name">{idImage.name}</div>}
+                  {idImage && <div className="vp-file-name">{idImage.name}</div>}
                   <small>
                     <i className="fas fa-info-circle"></i>
                     Supported formats: JPG, PNG, PDF. Max size: 5MB
                   </small>
                 </div>
 
-                <div className="form-group">
+                <div className="vp-form-group">
                   <label htmlFor="selfie-image">
                     <i className="fas fa-camera"></i>
                     Upload a selfie with your ID document
                   </label>
-                  <div className="file-input-wrapper">
-                    <div className="file-input-button">Choose File</div>
+                  <div className="vp-file-input-wrapper">
+                    <div className="vp-file-input-button">Choose File</div>
                     <input
                       type="file"
                       id="selfie-image"
@@ -671,7 +671,7 @@ const ClientVerificationPage = () => {
                       required
                     />
                   </div>
-                  {selfieImage && <div className="file-name">{selfieImage.name}</div>}
+                  {selfieImage && <div className="vp-file-name">{selfieImage.name}</div>}
                   <small>
                     <i className="fas fa-info-circle"></i>
                     Hold your ID next to your face for verification
@@ -682,7 +682,7 @@ const ClientVerificationPage = () => {
 
             <button
               type="submit"
-              className="submit-btn"
+              className="vp-submit-btn"
               disabled={isSubmitting}
             >
               {isSubmitting ? (
@@ -698,14 +698,14 @@ const ClientVerificationPage = () => {
           </div>
         </form>
 
-        <div className="verification-footer">
+        <div className="vp-verification-footer">
           <p>
             Your information is securely processed and will only be used for verification purposes.
             For more details on how we handle your data, please see our <a href="/privacy-policy">Privacy Policy</a>.
           </p>
           <div className="footer-buttons">
             <button
-              className="back-btn"
+              className="vp-back-btn"
               onClick={() => navigate("/app/client/dashboard")}
             >
               <i className="fas fa-arrow-left"></i> Back to Dashboard

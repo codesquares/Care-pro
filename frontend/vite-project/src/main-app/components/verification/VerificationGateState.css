@@ -1,0 +1,55 @@
+/* VerificationGateState — shared by the caregiver and client verification
+   pages. Previously had no CSS file of its own and relied on bare
+   `.verification-status`/`.proceed-btn` bleeding in globally from whichever
+   sibling verification CSS file happened to be bundled by the parent page —
+   the same unscoped-class collision risk this whole re-theme pass targets
+   elsewhere. Given its own scoped stylesheet here instead. */
+
+.vgs-status.verified {
+  background: linear-gradient(135deg, #dcfce7, #bbf7d0);
+  border: 2px solid #10b981;
+  border-radius: 12px;
+  padding: 20px;
+  text-align: center;
+  margin-bottom: 20px;
+}
+
+.vgs-status.verified h3 {
+  color: #166534;
+  margin: 0 0 8px 0;
+  font-size: 16px;
+}
+
+.vgs-status.verified p {
+  color: #166534;
+  margin: 0;
+  font-size: 14px;
+}
+
+.vgs-status.pending {
+  background: linear-gradient(135deg, #fff3cd 0%, #ffeaa7 100%);
+  border: 1px solid #ffc107;
+  border-radius: 10px;
+  padding: 1.5rem;
+  margin: 1rem 0;
+}
+
+.vgs-proceed-btn {
+  background: linear-gradient(135deg, var(--color-brand-deep), var(--color-brand-accent));
+  color: white;
+  border: none;
+  padding: 0.75rem 1.75rem;
+  border-radius: 8px;
+  font-size: 0.95rem;
+  font-weight: 600;
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+  margin-top: 0.75rem;
+  transition: opacity 0.2s;
+}
+
+.vgs-proceed-btn:hover {
+  opacity: 0.9;
+}

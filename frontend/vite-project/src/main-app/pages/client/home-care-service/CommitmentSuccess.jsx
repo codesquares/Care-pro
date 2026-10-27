@@ -1,7 +1,6 @@
 import { useEffect, useRef, useState } from "react";
 import { useSearchParams, useNavigate } from "react-router-dom";
 import bookingCommitmentService from '../../../services/bookingCommitmentService';
-import api from '../../../services/api';
 import paymentReceiptService from '../../../services/paymentReceiptService';
 import { toast } from 'react-toastify';
 import './CommitmentSuccess.css';
@@ -16,7 +15,6 @@ const CommitmentSuccess = () => {
   const [searchParams] = useSearchParams();
   const navigate = useNavigate();
   const intervalRef = useRef(null);
-  const autoMessageSentRef = useRef(false);
   const [statusMessage, setStatusMessage] = useState('Verifying payment...');
   const [paymentData, setPaymentData] = useState(null);
   const [error, setError] = useState(null);
@@ -37,51 +35,6 @@ const CommitmentSuccess = () => {
   // Get transaction reference from URL or localStorage
   const txRef = searchParams.get("tx_ref") || localStorage.getItem("commitmentTxRef");
   const status = searchParams.get("status");
-
-  const user = JSON.parse(localStorage.getItem("userDetails") || "{}");
-
-  const buildUnlockContext = (gigId, caregiverId, transactionReference) => ({
-    source: 'commitment_success',
-    gigId: gigId || null,
-    caregiverId: caregiverId || null,
-    transactionReference: transactionReference || null,
-    issuedAt: new Date().toISOString(),
-  });
-
-  // Send the automatic first message after unlock — fires silently in the background
-  // to open the chat thread and notify the caregiver (they cannot message first).
-  // The client is navigated straight to chat so the gig banner is shown immediately.
-  const sendAutoFirstMessage = async (caregiverId, caregiverName) => {
-    if (autoMessageSentRef.current) return; // Only send once
-    autoMessageSentRef.current = true;
-
-    const greeting = `Hello ${caregiverName || 'there'}, can we discuss my care needs now?`;
-    const gigId = localStorage.getItem('commitmentGigId');
-    const unlockContext = buildUnlockContext(gigId, caregiverId, txRef);
-
-    // Navigate immediately so the client sees the chat banner right away
-    navigate(`/app/client/message/${caregiverId}`, {
-      state: {
-        recipientName: caregiverName,
-        autoUnlocked: true,
-        serviceId: gigId || undefined,
-        unlockContext,
-      },
-    });
-
-    // Fire the thread-opener silently after navigation (best-effort)
-    try {
-      const token = localStorage.getItem('authToken');
-      if (!token || !user?.id) return;
-      await api.post('/Chat/send', {
-          receiverId: caregiverId,
-          message: greeting,
-      });
-    } catch (err) {
-      console.error('Failed to auto-send thread-opener message:', err);
-      // Non-critical — client is already in chat and can message manually
-    }
-  };
 
   useEffect(() => {
     if (!txRef) {
@@ -121,13 +74,7 @@ const CommitmentSuccess = () => {
         if (data.success && isSuccessfulPaymentStatus(data.status)) {
           stopPolling();
           setPaymentData(data);
-          setStatusMessage('Payment verified! Chat access unlocked.');
-
-          // Read gigId BEFORE cleanupLocalStorage removes it — needed for the chat banner
-          const caregiverName = localStorage.getItem('commitmentCaregiverName') || '';
-          if (data.caregiverId) {
-            sendAutoFirstMessage(data.caregiverId, caregiverName);
-          }
+          setStatusMessage('Payment verified.');
           cleanupLocalStorage();
 
         } else if (normalizePaymentStatus(data.status) === "pending") {
@@ -180,20 +127,6 @@ const CommitmentSuccess = () => {
     };
   }, []);
 
-  const handleGoToChat = () => {
-    const caregiverId = paymentData?.caregiverId;
-    const gigId = paymentData?.gigId || localStorage.getItem('commitmentGigId');
-    const txReference = paymentData?.transactionReference || txRef;
-    const unlockContext = buildUnlockContext(gigId, caregiverId, txReference);
-    if (caregiverId) {
-      navigate(`/app/client/message/${caregiverId}`, {
-        state: { serviceId: gigId || undefined, unlockContext },
-      });
-    } else {
-      navigate('/app/client/message');
-    }
-  };
-
   const handleRetry = () => {
     const gigId = paymentData?.gigId || localStorage.getItem('commitmentGigId');
     if (gigId) {
@@ -216,13 +149,14 @@ const CommitmentSuccess = () => {
                 </svg>
               </div>
               <h1 className="commitment-success-title commitment-success-title--success">
-                Chat Access Unlocked!
+                Payment Confirmed
               </h1>
 
               <p className="commitment-success-subtitle">
-                You can now message this caregiver to discuss your care needs.
-                When you hire this caregiver, the ₦5,000 fee will be deducted from your order total.
-                Please note: this fee is non-refundable if you choose not to hire.
+                Your ₦5,000 payment has been received. Please note that chat is no longer
+                unlocked by a fee — you can message your caregiver once they accept your care
+                package request. If you have questions about this payment, please contact
+                CarePro support.
               </p>
 
               {/* Payment details */}
@@ -255,18 +189,15 @@ const CommitmentSuccess = () => {
 
               {/* Action */}
               <div className="commitment-actions">
-                <button className="commitment-btn commitment-btn--primary" onClick={handleGoToChat}>
-                  💬 Go to Chat
-                </button>
                 <button
-                  className="commitment-btn commitment-btn--secondary"
+                  className="commitment-btn commitment-btn--primary"
                   onClick={handleDownloadReceipt}
                   disabled={receiptDownloading}
                 >
                   {receiptDownloading ? 'Downloading…' : '⬇ Download Receipt'}
                 </button>
-                <button className="commitment-btn commitment-btn--secondary" onClick={() => navigate('/app/client/dashboard')}>
-                  Browse More Services
+                <button className="commitment-btn commitment-btn--secondary" onClick={() => navigate('/app/client/requests')}>
+                  View My Requests
                 </button>
               </div>
             </>

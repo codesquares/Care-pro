@@ -402,7 +402,7 @@ const VerificationManagement = () => {
     return (
       <div className="verification-management">
         <div className="loading-container">
-          <div className="spinner"></div>
+          <div className="vm-spinner"></div>
           <p>Loading verifications...</p>
         </div>
       </div>
@@ -468,8 +468,8 @@ const VerificationManagement = () => {
 
       {/* Statistics Summary */}
       <div className="verify-stats">
-        <div className="stat-card">
-          <div className="stat-icon verified">
+        <div className="vm-stat-card">
+          <div className="vm-stat-icon verified">
             <i className="fas fa-check-circle"></i>
           </div>
           <div className="stat-info">
@@ -479,8 +479,8 @@ const VerificationManagement = () => {
             </span>
           </div>
         </div>
-        <div className="stat-card">
-          <div className="stat-icon pending">
+        <div className="vm-stat-card">
+          <div className="vm-stat-icon pending">
             <i className="fas fa-clock"></i>
           </div>
           <div className="stat-info">
@@ -490,8 +490,8 @@ const VerificationManagement = () => {
             </span>
           </div>
         </div>
-        <div className="stat-card">
-          <div className="stat-icon failed">
+        <div className="vm-stat-card">
+          <div className="vm-stat-icon failed">
             <i className="fas fa-times-circle"></i>
           </div>
           <div className="stat-info">
@@ -501,8 +501,8 @@ const VerificationManagement = () => {
             </span>
           </div>
         </div>
-        <div className="stat-card">
-          <div className="stat-icon total">
+        <div className="vm-stat-card">
+          <div className="vm-stat-icon total">
             <i className="fas fa-list"></i>
           </div>
           <div className="stat-info">
@@ -549,7 +549,7 @@ const VerificationManagement = () => {
                     </span>
                   </td>
                   <td>
-                    <span className={`status-badge ${getStatusBadgeClass(verification.verificationStatus)}`}>
+                    <span className={`vm-status-badge ${getStatusBadgeClass(verification.verificationStatus)}`}>
                       {verification.isVerified ? 'Verified' : verification.verificationStatus}
                     </span>
                   </td>
@@ -595,9 +595,9 @@ const VerificationManagement = () => {
 
       {/* Review Modal */}
       {showReviewModal && selectedVerification && webhookDetails && (
-        <div className="modal-overlay" onClick={closeReviewModal}>
+        <div className="vm-modal-overlay" onClick={closeReviewModal}>
           <div className="modal-content verify-review-modal" onClick={(e) => e.stopPropagation()}>
-            <div className="modal-header">
+            <div className="vm-modal-header">
               <h2>
                 <i className="fas fa-user-check"></i>
                 Verification Review
@@ -607,7 +607,7 @@ const VerificationManagement = () => {
               </button>
             </div>
 
-            <div className="modal-body">
+            <div className="vm-modal-body">
               <div className="verification-summary">
                 <div className="summary-item">
                   <span className="label">Verification ID:</span>
@@ -619,7 +619,7 @@ const VerificationManagement = () => {
                 </div>
                 <div className="summary-item">
                   <span className="label">Status:</span>
-                  <span className={`status-badge ${getStatusBadgeClass(selectedVerification.verificationStatus)}`}>
+                  <span className={`vm-status-badge ${getStatusBadgeClass(selectedVerification.verificationStatus)}`}>
                     {selectedVerification.verificationStatus}
                   </span>
                 </div>
@@ -834,9 +834,9 @@ const VerificationManagement = () => {
 
       {/* Webhook History Modal */}
       {showHistoryModal && (
-        <div className="modal-overlay" onClick={closeHistoryModal}>
+        <div className="vm-modal-overlay" onClick={closeHistoryModal}>
           <div className="modal-content verify-review-modal" onClick={(e) => e.stopPropagation()}>
-            <div className="modal-header">
+            <div className="vm-modal-header">
               <h2>
                 <i className="fas fa-history"></i>
                 Webhook History — {historySubject}
@@ -845,7 +845,7 @@ const VerificationManagement = () => {
                 <i className="fas fa-times"></i>
               </button>
             </div>
-            <div className="modal-body">
+            <div className="vm-modal-body">
               {historyLoading && (
                 <div style={{ textAlign: 'center', padding: '2rem', color: '#666' }}>
                   <i className="fas fa-spinner fa-spin" style={{ fontSize: '1.5rem', marginBottom: '0.5rem' }}></i>
@@ -872,7 +872,7 @@ const VerificationManagement = () => {
                       <div key={logId} className="history-log-entry">
                         <div className="history-log-header">
                           <span className="history-log-idx">#{historyLogs.length - idx}</span>
-                          <span className={`status-badge ${getStatusBadgeClass(status)}`}>{status}</span>
+                          <span className={`vm-status-badge ${getStatusBadgeClass(status)}`}>{status}</span>
                           <span className="history-log-date">
                             {recvAt ? new Date(recvAt).toLocaleString() : '—'}
                           </span>
@@ -902,9 +902,9 @@ const VerificationManagement = () => {
 
       {/* Override Status Modal */}
       {showOverrideModal && selectedVerification && (
-        <div className="modal-overlay" onClick={closeOverrideModal}>
+        <div className="vm-modal-overlay" onClick={closeOverrideModal}>
           <div className="modal-content override-modal" onClick={(e) => e.stopPropagation()}>
-            <div className="modal-header">
+            <div className="vm-modal-header">
               <h2>
                 <i className="fas fa-bolt"></i>
                 Override Verification Status
@@ -913,10 +913,10 @@ const VerificationManagement = () => {
                 <i className="fas fa-times"></i>
               </button>
             </div>
-            <div className="modal-body">
+            <div className="vm-modal-body">
               <p className="override-context">
                 Current status:{' '}
-                <span className={`status-badge ${getStatusBadgeClass(selectedVerification.verificationStatus)}`}>
+                <span className={`vm-status-badge ${getStatusBadgeClass(selectedVerification.verificationStatus)}`}>
                   {selectedVerification.verificationStatus}
                 </span>
               </p>
@@ -995,9 +995,9 @@ const VerificationManagement = () => {
 
       {/* Edit Caregiver Name Modal */}
       {showNameModal && selectedVerification && (
-        <div className="modal-overlay" onClick={closeNameModal}>
+        <div className="vm-modal-overlay" onClick={closeNameModal}>
           <div className="modal-content name-edit-modal" onClick={(e) => e.stopPropagation()}>
-            <div className="modal-header">
+            <div className="vm-modal-header">
               <h2>
                 <i className="fas fa-id-card"></i>
                 Correct Caregiver Name
@@ -1006,7 +1006,7 @@ const VerificationManagement = () => {
                 <i className="fas fa-times"></i>
               </button>
             </div>
-            <div className="modal-body">
+            <div className="vm-modal-body">
               <p className="name-context">
                 Pre-filled from Dojah-returned data. Edit only if needed, then confirm.
               </p>

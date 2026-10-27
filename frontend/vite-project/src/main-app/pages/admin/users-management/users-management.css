@@ -67,9 +67,9 @@
 }
 
 .role-filters button.active {
-  background: #007bff;
+  background: var(--color-brand-deep);
   color: white;
-  border-color: #0069d9;
+  border-color: var(--color-brand-deep-2);
 }
 
 .loading-container,
@@ -80,9 +80,9 @@
   border-radius: 8px;
 }
 
-.spinner {
+.um-spinner {
   border: 4px solid rgba(0, 0, 0, 0.1);
-  border-left-color: #007bff;
+  border-left-color: var(--color-brand-deep);
   border-radius: 50%;
   width: 40px;
   height: 40px;
@@ -132,7 +132,7 @@
 .user-avatar {
   width: 36px;
   height: 36px;
-  background: #007bff;
+  background: var(--color-brand-deep);
   color: white;
   border-radius: 50%;
   display: flex;
@@ -222,7 +222,7 @@
 }
 
 .action-btn.view:hover {
-  color: #007bff;
+  color: var(--color-brand-deep);
 }
 
 .action-btn.message:hover {
@@ -262,7 +262,7 @@
 }
 
 /* Modal Styles */
-.modal-overlay {
+.um-modal-overlay {
   position: fixed;
   top: 0;
   left: 0;
@@ -275,7 +275,7 @@
   z-index: 1000;
 }
 
-.modal-content {
+.um-modal-content {
   background: white;
   border-radius: 8px;
   max-width: 600px;
@@ -285,7 +285,7 @@
   box-shadow: 0 10px 25px rgba(0,0,0,0.2);
 }
 
-.modal-header {
+.um-modal-header {
   display: flex;
   justify-content: space-between;
   align-items: center;
@@ -293,12 +293,12 @@
   border-bottom: 1px solid #eee;
 }
 
-.modal-header h2 {
+.um-modal-header h2 {
   margin: 0;
   font-size: 1.5rem;
 }
 
-.close-btn {
+.um-close-btn {
   background: none;
   border: none;
   font-size: 1.5rem;
@@ -306,11 +306,11 @@
   color: #6c757d;
 }
 
-.close-btn:hover {
+.um-close-btn:hover {
   color: #343a40;
 }
 
-.modal-body {
+.um-modal-body {
   padding: 1.5rem;
 }
 
@@ -326,7 +326,7 @@
   width: 80px;
   height: 80px;
   font-size: 1.75rem;
-  background: #007bff;
+  background: var(--color-brand-deep);
   color: white;
   border-radius: 50%;
   display: flex;
@@ -368,7 +368,7 @@
   flex-wrap: wrap;
 }
 
-.btn {
+.um-btn {
   padding: 0.75rem 1.5rem;
   border-radius: 4px;
   border: none;
@@ -381,21 +381,21 @@
   transition: all 0.2s ease;
 }
 
-.primary-btn {
-  background: #007bff;
+.um-primary-btn {
+  background: var(--color-brand-deep);
   color: white;
 }
 
-.primary-btn:hover {
-  background: #0069d9;
+.um-primary-btn:hover {
+  background: var(--color-brand-deep-2);
 }
 
-.secondary-btn {
+.um-secondary-btn {
   background: #6c757d;
   color: white;
 }
 
-.secondary-btn:hover {
+.um-secondary-btn:hover {
   background: #5a6268;
 }
 

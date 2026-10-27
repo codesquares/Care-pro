@@ -68,51 +68,51 @@ const AdminCareRequestDetail = () => {
 
       {careRequest && (
         <div className="admin-care-info">
-          <div className="info-grid">
-            <div className="info-item">
-              <span className="info-label">Title</span>
-              <span className="info-value">{careRequest.title}</span>
+          <div className="acrd-info-grid">
+            <div className="acrd-info-item">
+              <span className="acrd-info-label">Title</span>
+              <span className="acrd-info-value">{careRequest.title}</span>
             </div>
-            <div className="info-item">
-              <span className="info-label">Category</span>
-              <span className="info-value">{careRequest.serviceCategory}</span>
+            <div className="acrd-info-item">
+              <span className="acrd-info-label">Category</span>
+              <span className="acrd-info-value">{careRequest.serviceCategory}</span>
             </div>
-            <div className="info-item">
-              <span className="info-label">Client ID</span>
-              <span className="info-value">{careRequest.clientId}</span>
+            <div className="acrd-info-item">
+              <span className="acrd-info-label">Client ID</span>
+              <span className="acrd-info-value">{careRequest.clientId}</span>
             </div>
-            <div className="info-item">
-              <span className="info-label">Urgency</span>
-              <span className="info-value">{careRequest.urgency}</span>
+            <div className="acrd-info-item">
+              <span className="acrd-info-label">Urgency</span>
+              <span className="acrd-info-value">{careRequest.urgency}</span>
             </div>
             {careRequest.location && (
-              <div className="info-item">
-                <span className="info-label">Location</span>
-                <span className="info-value">{careRequest.location}</span>
+              <div className="acrd-info-item">
+                <span className="acrd-info-label">Location</span>
+                <span className="acrd-info-value">{careRequest.location}</span>
               </div>
             )}
             {careRequest.budget && (
-              <div className="info-item">
-                <span className="info-label">Budget</span>
-                <span className="info-value">{careRequest.budget}</span>
+              <div className="acrd-info-item">
+                <span className="acrd-info-label">Budget</span>
+                <span className="acrd-info-value">{careRequest.budget}</span>
               </div>
             )}
-            <div className="info-item">
-              <span className="info-label">Match Count</span>
-              <span className="info-value">{careRequest.matchCount ?? 0}</span>
+            <div className="acrd-info-item">
+              <span className="acrd-info-label">Match Count</span>
+              <span className="acrd-info-value">{careRequest.matchCount ?? 0}</span>
             </div>
             {careRequest.matchedAt && (
-              <div className="info-item">
-                <span className="info-label">Matched At</span>
-                <span className="info-value">
+              <div className="acrd-info-item">
+                <span className="acrd-info-label">Matched At</span>
+                <span className="acrd-info-value">
                   {new Date(careRequest.matchedAt).toLocaleString()}
                 </span>
               </div>
             )}
           </div>
           {careRequest.description && (
-            <div className="info-description">
-              <span className="info-label">Description</span>
+            <div className="acrd-info-description">
+              <span className="acrd-info-label">Description</span>
               <p>{careRequest.description}</p>
             </div>
           )}
@@ -122,7 +122,7 @@ const AdminCareRequestDetail = () => {
       {/* Admin Actions */}
       <div className="admin-actions">
         <button
-          className="btn-rerun"
+          className="acrd-btn-rerun"
           onClick={handleRerunMatch}
           disabled={rerunning}
         >
@@ -135,7 +135,7 @@ const AdminCareRequestDetail = () => {
         <h2>
           Matches ({matchData?.totalMatches ?? 0})
           {matchData?.hasAlternatives && (
-            <span className="alternatives-badge">Includes alternatives</span>
+            <span className="acrd-alternatives-badge">Includes alternatives</span>
           )}
         </h2>
 

@@ -1,7 +1,7 @@
 /* Dojah Inline Widget Styles */
 
 /* Inline widget container — replaces the verification card when active */
-.dojah-widget-inline-container {
+.dwf-dojah-widget-inline-container {
   background: #fff;
   border-radius: 12px;
   box-shadow: 0 2px 12px rgba(0, 0, 0, 0.08);
@@ -14,7 +14,7 @@
   flex-direction: column;
 }
 
-.dojah-widget-header {
+.dwf-dojah-widget-header {
   display: flex;
   align-items: center;
   justify-content: space-between;
@@ -23,14 +23,14 @@
   background: #f9fafb;
 }
 
-.dojah-widget-header h3 {
+.dwf-dojah-widget-header h3 {
   margin: 0;
   font-size: 16px;
   font-weight: 600;
   color: #1f2937;
 }
 
-.dojah-widget-close-btn {
+.dwf-dojah-widget-close-btn {
   display: flex;
   align-items: center;
   justify-content: center;
@@ -45,32 +45,32 @@
   transition: background 0.15s ease, color 0.15s ease;
 }
 
-.dojah-widget-close-btn:hover {
+.dwf-dojah-widget-close-btn:hover {
   background: #f3f4f6;
   color: #1f2937;
 }
 
-.dojah-widget-body {
+.dwf-dojah-widget-body {
   flex: 1;
   min-height: 450px;
   position: relative;
 }
 
 /* Ensure the Dojah SDK iframe/content fills the container */
-.dojah-widget-body > div {
+.dwf-dojah-widget-body > div {
   width: 100% !important;
   height: 100% !important;
   min-height: 450px;
 }
 
-.dojah-widget-body iframe {
+.dwf-dojah-widget-body iframe {
   width: 100% !important;
   min-height: 450px;
   border: none;
 }
 
 /* Legacy: simple web SDK container */
-.web-sdk-container {
+.dwf-web-sdk-container {
   width: 100%;
   position: static;
   z-index: 1;
@@ -85,12 +85,12 @@ dojah-button {
 }
 
 /* Prevent any layout shifts */
-.mobile-verification-page {
+.dwf-mobile-verification-page {
   position: relative;
 }
 
 /* Polling / loading state — displayed inside the verification card */
-.verification-polling-state {
+.dwf-verification-polling-state {
   display: flex;
   flex-direction: column;
   align-items: center;
@@ -101,39 +101,24 @@ dojah-button {
   min-height: 300px;
 }
 
-.verification-polling-state h2 {
+.dwf-verification-polling-state h2 {
   font-size: 20px;
   font-weight: 600;
   color: #1f2937;
   margin: 0;
 }
 
-.verification-polling-state .progress-spinner-icon {
+.dwf-verification-polling-state .dwf-progress-spinner-icon {
   font-size: 44px;
-  color: #00B4A6;
+  color: var(--color-brand-deep);
 }
 
-.verification-polling-state .progress-circle {
+.dwf-verification-polling-state .dwf-progress-circle {
   width: 100%;
   max-width: 320px;
 }
 
-.verification-polling-state .progress-bar {
-  width: 100%;
-  height: 8px;
-  background: #e5e7eb;
-  border-radius: 4px;
-  overflow: hidden;
-}
-
-.verification-polling-state .progress-fill {
-  height: 100%;
-  background: #00B4A6;
-  border-radius: 4px;
-  transition: width 0.4s ease;
-}
-
-.verification-polling-state .progress-text {
+.dwf-verification-polling-state .dwf-progress-text {
   display: block;
   margin-top: 8px;
   font-size: 14px;
@@ -141,21 +126,14 @@ dojah-button {
   color: #374151;
 }
 
-.verification-polling-state .progress-message {
-  font-size: 16px;
-  font-weight: 500;
-  color: #1f2937;
-  margin: 0;
-}
-
-.verification-polling-state .progress-sub-message {
+.dwf-verification-polling-state .dwf-progress-sub-message {
   font-size: 13px;
   color: #6b7280;
   margin: 0;
 }
 
 /* Success message styling */
-.success-message {
+.dwf-success-message {
   background: #f0fdf4;
   border: 1px solid #bbf7d0;
   border-radius: 8px;
@@ -166,18 +144,18 @@ dojah-button {
 
 /* Responsive adjustments */
 @media (max-width: 640px) {
-  .dojah-widget-inline-container {
+  .dwf-dojah-widget-inline-container {
     border-radius: 0;
     box-shadow: none;
     min-height: 400px;
   }
 
-  .dojah-widget-body {
+  .dwf-dojah-widget-body {
     min-height: 380px;
   }
 
-  .dojah-widget-body > div,
-  .dojah-widget-body iframe {
+  .dwf-dojah-widget-body > div,
+  .dwf-dojah-widget-body iframe {
     min-height: 380px;
   }
 }

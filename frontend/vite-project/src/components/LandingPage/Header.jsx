@@ -17,7 +17,7 @@ const Header = () => {
                     <Link to="/book-caregiver" className="btn-main">
                         Hire a Caregiver
                     </Link>
-                    <Link to="/become-caregiver" className="btn-secondary" >Become a Caregiver</Link>
+                    {/* retired: <Link to="/become-caregiver" className="btn-secondary" >Become a Caregiver</Link> */}
                 </div>
             <div className="header-video">
                 <img src={video} alt="Caregiver helping elderly" className="video-thumbnail" />

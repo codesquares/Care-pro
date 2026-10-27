@@ -13,83 +13,47 @@ const clientProfileCache = new Map();
 
 const CaregiverReviewService = {
   /**
-   * Get all gigs for a caregiver with their associated reviews and enriched data
+   * Get the authenticated caregiver's reviews with enriched client/caregiver data.
+   * Reviews are keyed to an AssignmentId (not a gig), so they come from the
+   * caregiver-scoped reviews endpoint. The caregiver profile is taken from the
+   * self-service /CareGivers/me endpoint, so this only works for the signed-in caregiver.
    * @param {string} caregiverId - The caregiver's ID
    * @returns {Promise<Array>} Array of review objects with enriched data
    */
-  async getGigsWithReviews(caregiverId) {
+  async getCaregiverReviews(caregiverId) {
     try {
       if (!caregiverId) {
         throw new Error('Caregiver ID is required');
       }
 
-      // Step 1: Fetch caregiver's gigs and caregiver profile in parallel
-      const [gigsResponse, caregiverResponse] = await Promise.allSettled([
-        api.get(`/Gigs/caregiver/${caregiverId}`),
-        api.get(`/CareGivers/${caregiverId}`)
+      // Step 1: Fetch reviews and the caregiver's own profile in parallel
+      const [reviewsResponse, caregiverResponse] = await Promise.allSettled([
+        api.get(`/Reviews/caregiver/${caregiverId}`),
+        api.get('/CareGivers/me')
       ]);
 
-      // Handle potential failures
-      const gigs = gigsResponse.status === 'fulfilled' && gigsResponse.value.status === 200 
-        ? gigsResponse.value.data 
-        : [];
-      const caregiverProfile = caregiverResponse.status === 'fulfilled' && caregiverResponse.value.status === 200 
-        ? caregiverResponse.value.data 
+      if (reviewsResponse.status !== 'fulfilled') {
+        throw reviewsResponse.reason;
+      }
+      const reviews = reviewsResponse.value.data || [];
+      const caregiverProfile = caregiverResponse.status === 'fulfilled' && caregiverResponse.value.status === 200
+        ? caregiverResponse.value.data
         : null;
 
-      if (!gigs || gigs.length === 0) {
+      if (reviews.length === 0) {
         return [];
       }
 
-      // Step 2: Fetch reviews for all gigs in parallel
-      const reviewPromises = gigs.map(gig =>
-        api.get(`/Reviews?gigId=${gig.id}`)
-          .then(response => {
-            if (response.status === 200) {
-              return {
-                gigId: gig.id,
-                gig: gig,
-                reviews: response.data || []
-              };
-            }
-            throw new Error(`API returned status ${response.status}`);
-          })
-          .catch(error => {
-            console.warn(`Failed to fetch reviews for gig ${gig.id}:`, error);
-            return {
-              gigId: gig.id,
-              gig: gig,
-              reviews: []
-            };
-          })
+      // Collect unique client IDs
+      const allReviews = reviews;
+      const uniqueClientIds = new Set(
+        allReviews.map(review => review.clientId).filter(Boolean)
       );
 
-      const gigReviewsData = await Promise.allSettled(reviewPromises);
-      const validGigReviews = gigReviewsData
-        .filter(result => result.status === 'fulfilled')
-        .map(result => result.value);
-
-      // Flatten all reviews and collect unique client IDs
-      const allReviews = [];
-      const uniqueClientIds = new Set();
-
-      validGigReviews.forEach(({ gig, reviews }) => {
-        reviews.forEach(review => {
-          allReviews.push({ ...review, gig });
-          if (review.clientId) {
-            uniqueClientIds.add(review.clientId);
-          }
-        });
-      });
-
-      if (allReviews.length === 0) {
-        return [];
-      }
-
-      // Step 3: Fetch client profiles for unique client IDs
+      // Fetch client profiles for unique client IDs
       const clientProfiles = await this.fetchClientProfiles(Array.from(uniqueClientIds));
 
-      // Step 4: Enrich reviews with complete data
+      // Enrich reviews with complete data
       const enrichedReviews = allReviews.map(review => {
         const clientProfile = clientProfiles.get(review.clientId);
         
@@ -100,16 +64,8 @@ const CaregiverReviewService = {
           comment: review.message || review.comment || '',
           createdAt: review.reviewedOn,
           
-          // Gig information
-          gig: {
-            id: review.gig.id,
-            title: review.gig.title,
-            category: review.gig.category,
-            packageType: review.gig.packageType,
-            packageName: review.gig.packageName,
-            price: review.gig.price
-          },
-          
+          assignmentId: review.assignmentId,
+
           // Client information (with fallbacks)
           client: {
             id: review.clientId,

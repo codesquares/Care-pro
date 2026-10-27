@@ -212,8 +212,8 @@ const WebhookDataAdmin = () => {
 
   if (loading) {
     return (
-      <div className="webhook-admin-dashboard">
-        <div className="loading-spinner">
+      <div className="wda-dashboard">
+        <div className="wda-loading-spinner">
           Loading webhook data from .NET backend...
         </div>
       </div>
@@ -221,24 +221,24 @@ const WebhookDataAdmin = () => {
   }
 
   return (
-    <div className="webhook-admin-dashboard">
-      <div className="dashboard-header">
+    <div className="wda-dashboard">
+      <div className="wda-dashboard-header">
         <h2>Webhook Data Administration</h2>
-        <div className="header-actions">
+        <div className="wda-header-actions">
           <button 
             onClick={() => setShowFilters(!showFilters)} 
-            className="filter-btn"
+            className="wda-filter-btn"
           >
             {showFilters ? 'Hide Filters' : 'Show Filters'}
           </button>
           <button 
             onClick={testConnection} 
-            className="test-btn"
+            className="wda-test-btn"
             disabled={isTestingConnection}
           >
             {isTestingConnection ? 'Testing...' : 'Test All Endpoints'}
           </button>
-          <button onClick={loadData} className="refresh-btn">
+          <button onClick={loadData} className="wda-refresh-btn">
             Refresh Data
           </button>
         </div>
@@ -246,42 +246,42 @@ const WebhookDataAdmin = () => {
 
       {/* Filters Section */}
       {showFilters && (
-        <div className="filters-section">
+        <div className="wda-filters-section">
           <h4>Filter Webhook Data</h4>
-          <div className="filter-controls">
-            <div className="filter-row">
+          <div className="wda-filter-controls">
+            <div className="wda-filter-row">
               <label>Search Term:</label>
               <input
                 type="text"
                 value={filters.term}
                 onChange={(e) => handleFilterChange('term', e.target.value)}
                 placeholder="Search by user ID, name, or verification number..."
-                className="filter-input"
+                className="wda-filter-input"
               />
             </div>
-            <div className="filter-row">
+            <div className="wda-filter-row">
               <label>Start Date:</label>
               <input
                 type="date"
                 value={filters.start}
                 onChange={(e) => handleFilterChange('start', e.target.value)}
-                className="filter-input"
+                className="wda-filter-input"
               />
             </div>
-            <div className="filter-row">
+            <div className="wda-filter-row">
               <label>End Date:</label>
               <input
                 type="date"
                 value={filters.end}
                 onChange={(e) => handleFilterChange('end', e.target.value)}
-                className="filter-input"
+                className="wda-filter-input"
               />
             </div>
-            <div className="filter-actions">
-              <button onClick={applyFilters} className="apply-btn">
+            <div className="wda-filter-actions">
+              <button onClick={applyFilters} className="wda-apply-btn">
                 Apply Filters
               </button>
-              <button onClick={clearFilters} className="clear-btn">
+              <button onClick={clearFilters} className="wda-clear-btn">
                 Clear Filters
               </button>
             </div>
@@ -291,14 +291,14 @@ const WebhookDataAdmin = () => {
 
       {/* Connection Status */}
       {connectionStatus && (
-        <div className={`connection-status ${connectionStatus.success ? 'success' : 'error'}`}>
+        <div className={`wda-connection-status ${connectionStatus.success ? 'success' : 'error'}`}>
           <strong>Connection Status:</strong> {connectionStatus.message}
           {connectionStatus.statusCode && <span> (Status: {connectionStatus.statusCode})</span>}
         </div>
       )}
 
       {/* API Endpoint Information */}
-      <div className="api-info">
+      <div className="wda-api-info">
         <h4>Available Backend Endpoints</h4>
         <code>GET {config.BASE_URL}/Dojah/webhook</code>
         <code>GET {config.BASE_URL}/Dojah/admin/statistics</code>
@@ -309,33 +309,33 @@ const WebhookDataAdmin = () => {
 
       {/* Endpoint Test Results */}
       {endpointTests && (
-        <div className="endpoint-tests">
+        <div className="wda-endpoint-tests">
           <h4>Endpoint Test Results</h4>
-          <div className="test-grid">
-            <div className={`test-card ${endpointTests.webhook.success ? 'success' : 'error'}`}>
+          <div className="wda-test-grid">
+            <div className={`wda-test-card ${endpointTests.webhook.success ? 'success' : 'error'}`}>
               <h5>Webhook Status</h5>
-              <div className="test-status">{endpointTests.webhook.success ? '✅ Pass' : '❌ Fail'}</div>
+              <div className="wda-test-status">{endpointTests.webhook.success ? '✅ Pass' : '❌ Fail'}</div>
               <p>{endpointTests.webhook.message}</p>
               {endpointTests.webhook.data && (
                 <small>Response: {JSON.stringify(endpointTests.webhook.data)}</small>
               )}
             </div>
 
-            <div className={`test-card ${endpointTests.statistics.success ? 'success' : 'error'}`}>
+            <div className={`wda-test-card ${endpointTests.statistics.success ? 'success' : 'error'}`}>
               <h5>Statistics API</h5>
-              <div className="test-status">{endpointTests.statistics.success ? '✅ Pass' : '❌ Fail'}</div>
+              <div className="wda-test-status">{endpointTests.statistics.success ? '✅ Pass' : '❌ Fail'}</div>
               <p>{endpointTests.statistics.message}</p>
             </div>
 
-            <div className={`test-card ${endpointTests.allData.success ? 'success' : 'error'}`}>
+            <div className={`wda-test-card ${endpointTests.allData.success ? 'success' : 'error'}`}>
               <h5>All Data API</h5>
-              <div className="test-status">{endpointTests.allData.success ? '✅ Pass' : '❌ Fail'}</div>
+              <div className="wda-test-status">{endpointTests.allData.success ? '✅ Pass' : '❌ Fail'}</div>
               <p>{endpointTests.allData.message}</p>
             </div>
 
-            <div className={`test-card ${endpointTests.status.success ? 'success' : 'error'}`}>
+            <div className={`wda-test-card ${endpointTests.status.success ? 'success' : 'error'}`}>
               <h5>Status Check API</h5>
-              <div className="test-status">{endpointTests.status.success ? '✅ Pass' : '❌ Fail'}</div>
+              <div className="wda-test-status">{endpointTests.status.success ? '✅ Pass' : '❌ Fail'}</div>
               <p>{endpointTests.status.message}</p>
               <div style={{ marginTop: '10px' }}>
                 <label>Test User ID: </label>
@@ -358,7 +358,7 @@ const WebhookDataAdmin = () => {
       )}
 
       {error && (
-        <div className="error-message">
+        <div className="wda-error-message">
           <strong>Error:</strong> {error}
           <br />
           <small>Make sure your .NET backend is running on the correct port and the endpoints are accessible.</small>
@@ -367,43 +367,43 @@ const WebhookDataAdmin = () => {
 
       {/* Statistics Section */}
       {statistics && (
-        <div className="statistics-grid">
-          <div className="stat-card">
+        <div className="wda-statistics-grid">
+          <div className="wda-stat-card">
             <h3>Total Records</h3>
-            <div className="stat-value">{statistics.totalRecords || 0}</div>
+            <div className="wda-stat-value">{statistics.totalRecords || 0}</div>
           </div>
-          <div className="stat-card">
+          <div className="wda-stat-card">
             <h3>Active Records</h3>
-            <div className="stat-value">{statistics.activeRecords || 0}</div>
+            <div className="wda-stat-value">{statistics.activeRecords || 0}</div>
           </div>
-          <div className="stat-card">
+          <div className="wda-stat-card">
             <h3>Successful Verifications</h3>
-            <div className="stat-value success">
+            <div className="wda-stat-value success">
               {statistics.successfulVerifications || 0}
             </div>
           </div>
-          <div className="stat-card">
+          <div className="wda-stat-card">
             <h3>Failed Verifications</h3>
-            <div className="stat-value error">
+            <div className="wda-stat-value error">
               {statistics.failedVerifications || 0}
             </div>
           </div>
-          <div className="stat-card">
+          <div className="wda-stat-card">
             <h3>Success Rate</h3>
-            <div className="stat-value">{statistics.successRate || 0}%</div>
+            <div className="wda-stat-value">{statistics.successRate || 0}%</div>
           </div>
-          <div className="stat-card">
+          <div className="wda-stat-card">
             <h3>Recent (24h)</h3>
-            <div className="stat-value">{statistics.recentVerifications || 0}</div>
+            <div className="wda-stat-value">{statistics.recentVerifications || 0}</div>
           </div>
         </div>
       )}
 
       {/* Webhook Data Table */}
       {webhookData && webhookData.length > 0 ? (
-        <div className="webhook-table-container">
+        <div className="wda-webhook-table-container">
           <h3>Webhook Data Records ({webhookData.length})</h3>
-          <table className="webhook-table">
+          <table className="wda-webhook-table">
             <thead>
               <tr>
                 <th>User ID</th>
@@ -423,7 +423,7 @@ const WebhookDataAdmin = () => {
                     <td>{webhook.userId || webhook.user_id || 'N/A'}</td>
                     <td>{formatTimestamp(webhook.timestamp || webhook.created_at)}</td>
                     <td>
-                      <span className={`status-badge ${getStatusColor(verificationData.status)}`}>
+                      <span className={`wda-status-badge ${getStatusColor(verificationData.status)}`}>
                         {verificationData.status}
                       </span>
                     </td>
@@ -433,7 +433,7 @@ const WebhookDataAdmin = () => {
                     <td>
                       <button 
                         onClick={() => setSelectedWebhook(webhook)}
-                        className="view-btn"
+                        className="wda-view-btn"
                       >
                         View Details
                       </button>
@@ -446,7 +446,7 @@ const WebhookDataAdmin = () => {
         </div>
       ) : (
         !loading && (
-          <div className="no-data">
+          <div className="wda-no-data">
             <h3>No webhook data available</h3>
             <p>No webhook records were found with the current filters.</p>
             <p>Try adjusting your filters or check that the backend has processed some Dojah verifications.</p>
@@ -456,21 +456,21 @@ const WebhookDataAdmin = () => {
 
       {/* Webhook Details Modal */}
       {selectedWebhook && (
-        <div className="webhook-modal-overlay" onClick={() => setSelectedWebhook(null)}>
-          <div className="webhook-modal" onClick={(e) => e.stopPropagation()}>
-            <div className="modal-header">
+        <div className="wda-modal-overlay" onClick={() => setSelectedWebhook(null)}>
+          <div className="wda-modal" onClick={(e) => e.stopPropagation()}>
+            <div className="wda-modal-header">
               <h3>Webhook Details - {selectedWebhook.userId || selectedWebhook.user_id}</h3>
               <button 
                 onClick={() => setSelectedWebhook(null)} 
-                className="close-btn"
+                className="wda-close-btn"
               >
                 ×
               </button>
             </div>
-            <div className="modal-content">
+            <div className="wda-modal-content">
               <div style={{ marginBottom: '20px' }}>
                 <h4>Verification Information</h4>
-                <div className="verification-info">
+                <div className="wda-verification-info">
                   {(() => {
                     const verificationData = formatVerificationData(selectedWebhook);
                     return (
@@ -491,7 +491,7 @@ const WebhookDataAdmin = () => {
               </div>
               <div>
                 <h4>Raw Webhook Data</h4>
-                <pre className="json-display">
+                <pre className="wda-json-display">
                   {JSON.stringify(selectedWebhook, null, 2)}
                 </pre>
               </div>
@@ -502,7 +502,7 @@ const WebhookDataAdmin = () => {
 
       {/* Debug Information */}
       {import.meta.env.MODE === 'development' && (
-        <div className="debug-info">
+        <div className="wda-debug-info">
           <h4>Debug Information</h4>
           <p><strong>Token:</strong> {token ? 'Present' : 'Missing'}</p>
           <p><strong>User Role:</strong> {user?.role || 'Unknown'}</p>
@@ -513,17 +513,17 @@ const WebhookDataAdmin = () => {
       )}
 
       {/* Individual Endpoint Testing */}
-      <div className="individual-tests">
+      <div className="wda-individual-tests">
         <h4>Individual Endpoint Tests</h4>
-        <div className="test-controls">
-          <div className="test-row">
+        <div className="wda-test-controls">
+          <div className="wda-test-row">
             <label>Test User Status Check:</label>
             <input 
               type="text" 
               placeholder="Enter User ID" 
               value={testUserId}
               onChange={(e) => setTestUserId(e.target.value)}
-              className="test-input"
+              className="wda-test-input"
             />
             <button 
               onClick={async () => {
@@ -534,14 +534,14 @@ const WebhookDataAdmin = () => {
                   alert(`Error: ${error.message}`);
                 }
               }}
-              className="test-btn-small"
+              className="wda-test-btn-small"
               disabled={!testUserId || !token}
             >
               Test Status
             </button>
           </div>
           
-          <div className="test-row">
+          <div className="wda-test-row">
             <label>Test Webhook Connectivity:</label>
             <button 
               onClick={async () => {
@@ -552,7 +552,7 @@ const WebhookDataAdmin = () => {
                   alert(`Error: ${error.message}`);
                 }
               }}
-              className="test-btn-small"
+              className="wda-test-btn-small"
               disabled={!token}
             >
               Test Webhook

@@ -162,7 +162,7 @@
 .cr-btn-read-more {
   padding: 8px 20px;
   background: #fff;
-  color: #1f2e5a;
+  color: var(--color-brand-deep);
   border: 1.5px solid #d1d5db;
   border-radius: 8px;
   font-size: 0.82rem;
@@ -172,13 +172,13 @@
 }
 
 .cr-btn-read-more:hover {
-  border-color: #1f2e5a;
+  border-color: var(--color-brand-deep);
   background: #f8f7f3;
 }
 
 .cr-btn-respond {
   padding: 8px 20px;
-  background: #f5a623;
+  background: var(--color-brand-deep);
   color: #fff;
   border: none;
   border-radius: 8px;
@@ -189,8 +189,8 @@
 }
 
 .cr-btn-respond:hover {
-  background: #e09500;
-  box-shadow: 0 2px 8px rgba(245, 166, 35, 0.35);
+  background: var(--color-brand-deep-2);
+  box-shadow: 0 2px 8px rgba(43, 57, 95, 0.35);
 }
 
 .cr-btn-responded {

@@ -1,5 +1,5 @@
 /* Footer buttons styles - add to the end of the file */
-.footer-buttons {
+.vpf-footer-buttons {
   display: flex;
   justify-content: space-between;
   align-items: center;
@@ -8,8 +8,8 @@
   margin-top: 1rem;
 }
 
-.assessment-btn {
-  background-color: #28a745;
+.vpf-assessment-btn {
+  background-color: var(--color-brand-deep);
   color: white;
   border: none;
   border-radius: 5px;
@@ -22,6 +22,6 @@
   gap: 0.5rem;
 }
 
-.assessment-btn:hover {
-  background-color: #218838;
+.vpf-assessment-btn:hover {
+  background-color: var(--color-brand-deep-2);
 }

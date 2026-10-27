@@ -1,0 +1,46 @@
+.start-assessment-redirect {
+  min-height: 100vh;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 2rem;
+  background: var(--color-brand-deep, #1a2b4a);
+}
+
+.start-assessment-redirect__card {
+  background: #ffffff;
+  border-radius: 16px;
+  padding: 2.5rem 2rem;
+  max-width: 420px;
+  width: 100%;
+  text-align: center;
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.25);
+}
+
+.start-assessment-redirect__card h1 {
+  font-size: 1.3rem;
+  margin: 0 0 0.75rem;
+  color: var(--ink, #1a1a1a);
+}
+
+.start-assessment-redirect__card p {
+  color: #666;
+  font-size: 0.95rem;
+  line-height: 1.5;
+  margin: 0 0 1.5rem;
+}
+
+.start-assessment-redirect__button {
+  display: inline-block;
+  background-color: #25d366;
+  color: #ffffff;
+  font-weight: 600;
+  text-decoration: none;
+  padding: 0.85rem 1.75rem;
+  border-radius: 999px;
+  transition: background-color 0.2s ease;
+}
+
+.start-assessment-redirect__button:hover {
+  background-color: #1fb959;
+}

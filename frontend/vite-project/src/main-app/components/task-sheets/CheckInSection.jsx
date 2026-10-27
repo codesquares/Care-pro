@@ -1,5 +1,6 @@
 import { useState, useEffect } from "react";
 import { toast } from "react-toastify";
+import { formatLagos } from "../../utils/lagosTime";
 import VisitCheckinService from "../../services/visitCheckinService";
 
 /**
@@ -22,10 +23,13 @@ const CheckInSection = ({
   serviceAddress,
   onCheckedIn,
   disabled = false,
+  careBeginsAfter = null,
 }) => {
   const [loading, setLoading] = useState(false);
   const [showPermissionGuide, setShowPermissionGuide] = useState(false);
   const [scheduleError, setScheduleError] = useState(null);
+  // Set when the API says the client's cancellation period is still running (also passed in up-front from the contract).
+  const [windowEndsAt, setWindowEndsAt] = useState(null);
   const checkin = sheet?.checkin || null;
   const isCheckedIn = !!checkin;
   const hasClientGpsLocation = serviceLocationSetByClient === true;
@@ -139,6 +143,9 @@ const CheckInSection = ({
         case "NO_GEOCODED_ADDRESS":
           toast.error("The service address has not been set up yet. Please ask the client to update their address.");
           break;
+        case "cancellation_window_open":
+          setWindowEndsAt(result.windowEndsAt || careBeginsAfter || true);
+          break;
         case "TASKSHEET_CANCELLED":
           toast.error("This visit has been cancelled by the client.");
           break;
@@ -183,6 +190,24 @@ const CheckInSection = ({
             </span>
           </div>
         )}
+      </div>
+    );
+  }
+
+  // Client's cancellation period still running — friendly state, no GPS prompt, no check-in button.
+  if (!isCheckedIn && !disabled && (careBeginsAfter || windowEndsAt)) {
+    const when = formatLagos(windowEndsAt && windowEndsAt !== true ? windowEndsAt : careBeginsAfter);
+    return (
+      <div className="checkin-section checkin-section--window" data-testid="checkin-window-notice">
+        <div className="checkin-status">
+          <span className="checkin-icon">⏳</span>
+          <div className="checkin-info">
+            <span className="checkin-label">Check-in opens after the cancellation period</span>
+            <span className="checkin-hint">
+              Care can begin after {when || "the cancellation period ends"}. The client has a cancellation period until then.
+            </span>
+          </div>
+        </div>
       </div>
     );
   }

@@ -215,6 +215,11 @@ const Sidebar = ({ conversations, selectedChatId, onSelectChat, unreadMessages, 
                             {partnerRole}
                           </span>
                         )}
+                        {chat.canSend === false && (
+                          <span className={`chat-readonly-badge chat-readonly-badge--${(chat.accessState || 'archived').toLowerCase()}`}>
+                            {chat.accessState === 'Ended' ? 'Ended' : 'Archived'}
+                          </span>
+                        )}
                       </div>
                       <span className="chat-time">
                         {chat.lastMessage?.timestamp ? 

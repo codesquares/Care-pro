@@ -90,7 +90,6 @@ const RegisterFormPage = () => {
 
   // Google auth state
   const [googleLoading, setGoogleLoading] = useState(false);
-  const [department, setDepartment] = useState(""); // Admin department
   const [signupAddress, setSignupAddress] = useState("");
   const [addressValidation, setAddressValidation] = useState(null);
   const [marketingConsent, setMarketingConsent] = useState(false);
@@ -182,7 +181,6 @@ const RegisterFormPage = () => {
     }
     if (formValues.password !== formValues.confirmPassword)
       newErrors.confirmPassword = "Passwords do not match.";
-    if (selectedRole === "Admin" && !department) newErrors.department = "Please select a department.";
     const addressError = validateSignupAddress();
     if (addressError) newErrors.address = addressError;
     return newErrors;
@@ -247,7 +245,6 @@ Please log in to your existing account instead of creating a new one.`);
       role: selectedRole,
       marketingConsent,
       ...(requiresAddress ? buildAddressPayload() : {}),
-      ...(selectedRole === "Admin" && department ? { department } : {})
     };
 
     if (requiresAddress && addressValidation?.isValid && !addressValidation?.isGoogleValidated) {
@@ -257,24 +254,13 @@ Please log in to your existing account instead of creating a new one.`);
     try {
       const endpoint = selectedRole === "Caregiver"
         ? "/CareGivers/AddCaregiverUser"
-        : selectedRole === "Client"
-          ? "/Clients/AddClientUser"
-          : "/Admins";
+        : "/Clients/AddClientUser";
 
-      // Only the four signup endpoints support Idempotency-Key. /Admins does not.
-      const useIdempotency =
-        endpoint === "/CareGivers/AddCaregiverUser" ||
-        endpoint === "/Clients/AddClientUser";
-
-      if (useIdempotency) {
-        await submitSignupWithIdempotency(idempotencyKeyRef, (key) =>
-          fetchData(payload, endpoint, {
-            headers: { "Idempotency-Key": key },
-          })
-        );
-      } else {
-        await fetchData(payload, endpoint);
-      }
+      await submitSignupWithIdempotency(idempotencyKeyRef, (key) =>
+        fetchData(payload, endpoint, {
+          headers: { "Idempotency-Key": key },
+        })
+      );
 
       idempotencyKeyRef.current = null;
 
@@ -344,22 +330,12 @@ You won't be able to log in until your email is verified.`);
         GoogleAuthService.storeAuthData(signInResult);
 
         // Update AuthContext
-        // Backend returns 'id' not 'userId'
-        const userData = {
-          id: signInResult.id || signInResult.userId,
-          email: signInResult.email,
-          firstName: signInResult.firstName,
-          lastName: signInResult.lastName,
-          role: signInResult.role,
-          profilePicture: signInResult.profilePicture,
-          authProvider: signInResult.authProvider || 'Google',
-        };
+        const userData = GoogleAuthService.buildUserData(signInResult);
         login(userData, accessToken, signInResult.refreshToken, signInResult.isFirstLogin);
 
         toast.success("Welcome back! You already have an account.");
         setTimeout(() => {
-          const dashboardPath = GoogleAuthService.getDashboardPath(signInResult.role);
-          window.location.href = dashboardPath;
+          window.location.href = GoogleAuthService.getPostAuthRedirect(signInResult.role, returnTo);
         }, 1000);
 
       } else if (signInResult.requiresLinking) {
@@ -438,16 +414,7 @@ You won't be able to log in until your email is verified.`);
           GoogleAuthService.storeAuthData(signUpResult);
 
           // Update AuthContext
-          // Backend returns 'id' not 'userId'
-          const userData = {
-            id: signUpResult.id || signUpResult.userId,
-            email: signUpResult.email,
-            firstName: signUpResult.firstName,
-            lastName: signUpResult.lastName,
-            role: signUpResult.role || selectedRole,
-            profilePicture: signUpResult.profilePicture,
-            authProvider: signUpResult.authProvider || 'Google',
-          };
+          const userData = GoogleAuthService.buildUserData(signUpResult, selectedRole);
           login(userData, signUpToken, signUpResult.refreshToken, signUpResult.isFirstLogin);
 
           toast.success("Account created successfully!");
@@ -461,8 +428,7 @@ You won't be able to log in until your email is verified.`);
           setIsModalOpen(true);
 
           setTimeout(() => {
-            const dashboardPath = GoogleAuthService.getDashboardPath(selectedRole);
-            window.location.href = dashboardPath;
+            window.location.href = GoogleAuthService.getPostAuthRedirect(selectedRole, returnTo);
           }, 2000);
         } else {
           toast.error(signUpResult.error || "Google sign up failed");
@@ -741,28 +707,6 @@ You won't be able to log in until your email is verified.`);
               </div>
               {errors.confirmPassword && <p className="regform-error">{errors.confirmPassword}</p>}
             </div>
-
-            {/* Department (Admin only) */}
-            {selectedRole === "Admin" && (
-              <div className="regform-field">
-                <label htmlFor="department">Department</label>
-                <select
-                  id="department"
-                  name="department"
-                  value={department}
-                  onChange={(e) => setDepartment(e.target.value)}
-                  required
-                >
-                  <option value="">-- Select Department --</option>
-                  <option value="Finance">Finance</option>
-                  <option value="HR">HR</option>
-                  <option value="ComplianceAndLegal">Compliance & Legal</option>
-                  <option value="CareLeads">Care Leads</option>
-                  <option value="MarketingAndSales">Marketing & Sales</option>
-                </select>
-                {errors.department && <p className="regform-error">{errors.department}</p>}
-              </div>
-            )}
 
             {/* Marketing consent */}
             <div className="regform-consent">

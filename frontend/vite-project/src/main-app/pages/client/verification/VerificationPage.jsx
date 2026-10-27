@@ -445,7 +445,7 @@ const ClientVerificationPage = () => {
   const currentUser = userData || userDetails;
 
   return (
-    <div className="mobile-verification-page">
+    <div className="mv-mobile-verification-page">
       <Helmet>
         <title>Account Verification - Client | CarePro</title>
         <meta
@@ -454,25 +454,25 @@ const ClientVerificationPage = () => {
         />
       </Helmet>
 
-      <div className="mobile-verification-container fade-in">
+      <div className="mv-mobile-verification-container mv-fade-in">
         <div className="content-wrapper">
           {(progress > 0 || progressMessage) ? (
-            <div className="verification-card">
-              <div className="verification-content">
-                <div className="verification-polling-state">
-                  <div className="progress-spinner-icon">
+            <div className="vp-verification-card">
+              <div className="mv-verification-content">
+                <div className="dwf-verification-polling-state">
+                  <div className="dwf-progress-spinner-icon">
                     <i className="fas fa-circle-notch fa-spin"></i>
                   </div>
                   <h2>{widgetCompleted ? "Confirming Verification" : "Verification In Progress"}</h2>
-                  <div className="progress-circle">
-                    <div className="progress-bar">
-                      <div className="progress-fill" style={{ width: `${progress}%` }}></div>
+                  <div className="dwf-progress-circle">
+                    <div className="vp-progress-bar">
+                      <div className="vp-progress-fill" style={{ width: `${progress}%` }}></div>
                     </div>
-                    <span className="progress-text">{progress}%</span>
+                    <span className="dwf-progress-text">{progress}%</span>
                   </div>
-                  {progressMessage && <p className="progress-message">{progressMessage}</p>}
+                  {progressMessage && <p className="vp-progress-message">{progressMessage}</p>}
                   {widgetCompleted && (
-                    <p className="progress-sub-message">
+                    <p className="dwf-progress-sub-message">
                       Confirming your verification — this should only take a moment.
                     </p>
                   )}
@@ -480,33 +480,33 @@ const ClientVerificationPage = () => {
               </div>
             </div>
           ) : (
-            <div className="verification-card">
-              <div className="verification-content">
+            <div className="vp-verification-card">
+              <div className="mv-verification-content">
                 <h2>Account Verification</h2>
-                <p className="verification-subtitle">
+                <p className="mv-verification-subtitle">
                   We verify the identity of all clients to protect the care professionals on our platform.
                   Every caregiver who works through CarePro is a real person — and they deserve to know the
                   clients they serve are too. This step keeps our community safe and trustworthy for everyone.
                 </p>
 
-                <div className="verification-instructions">
-                  <div className="instruction-item">
-                    <div className="instruction-icon"><i className="fas fa-id-card"></i></div>
-                    <div className="instruction-content">
+                <div className="mv-verification-instructions">
+                  <div className="mv-instruction-item">
+                    <div className="mv-instruction-icon"><i className="fas fa-id-card"></i></div>
+                    <div className="mv-instruction-content">
                       <h4>Government ID verification</h4>
                       <p>Get verified with your Bank Verification Number</p>
                     </div>
                   </div>
-                  <div className="instruction-item">
-                    <div className="instruction-icon"><i className="fas fa-mobile-alt"></i></div>
-                    <div className="instruction-content">
+                  <div className="mv-instruction-item">
+                    <div className="mv-instruction-icon"><i className="fas fa-mobile-alt"></i></div>
+                    <div className="mv-instruction-content">
                       <h4>NIN Verification</h4>
                       <p>Get verified with your National Identification Number</p>
                     </div>
                   </div>
-                  <div className="instruction-item">
-                    <div className="instruction-icon"><i className="fas fa-camera"></i></div>
-                    <div className="instruction-content">
+                  <div className="mv-instruction-item">
+                    <div className="mv-instruction-icon"><i className="fas fa-camera"></i></div>
+                    <div className="mv-instruction-content">
                       <h4>Selfie Verification</h4>
                       <p>Take a selfie to confirm your identity</p>
                     </div>
@@ -529,9 +529,9 @@ const ClientVerificationPage = () => {
 
                 {gate?.isEligible && !isSubmitting && (
                   <div>
-                    <div className="user-info-notice">
-                      <div className="notice-icon"><i className="fas fa-info-circle"></i></div>
-                      <div className="notice-content">
+                    <div className="mv-user-info-notice">
+                      <div className="mv-notice-icon"><i className="fas fa-info-circle"></i></div>
+                      <div className="mv-notice-content">
                         <p>
                           <strong>Verification Process:</strong> Complete your identity verification
                           right here — no need to leave this page. Your information
@@ -552,7 +552,7 @@ const ClientVerificationPage = () => {
                       type="button"
                       onClick={handleStartVerification}
                       disabled={isSubmitting || isLoading || gateLoading}
-                      className="proceed-btn start-verification"
+                      className="mv-start-verification"
                     >
                       {isSubmitting
                         ? "Processing..."
@@ -562,8 +562,8 @@ const ClientVerificationPage = () => {
                   </div>
                 )}
 
-                <div className="verification-info">
-                  <p className="privacy-note">
+                <div className="vp-verification-info">
+                  <p className="vp-privacy-note">
                     🔒 Your data is protected with bank-level security and encryption.
                   </p>
                   <p className="time-note">

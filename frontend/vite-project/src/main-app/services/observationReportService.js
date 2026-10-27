@@ -39,9 +39,9 @@ const ObservationReportService = {
    * @param {Object} data
    * @returns {Promise<Object>} { success, data, error }
    */
-  async create({ orderId, taskSheetId, category, description, severity, photos = [] }) {
+  async create({ orderId = null, assignmentId = null, taskSheetId, category, description, severity, photos = [] }) {
     try {
-      if (!orderId || !taskSheetId) {
+      if ((!orderId && !assignmentId) || !taskSheetId) {
         return { success: false, error: "Order and task sheet IDs are required" };
       }
       if (!description || description.trim().length === 0) {
@@ -72,7 +72,7 @@ const ObservationReportService = {
           Authorization: `Bearer ${authToken}`,
         },
         body: JSON.stringify({
-          orderId,
+          ...(assignmentId ? { assignmentId } : { orderId }),
           taskSheetId,
           category,
           description: description.trim(),
@@ -137,6 +137,43 @@ const ObservationReportService = {
         };
       }
 
+      const data = await response.json();
+      return { success: true, data: Array.isArray(data) ? data : [] };
+    } catch (error) {
+      console.error("Error fetching observation reports:", error);
+      return { success: false, error: error.message || "Network error" };
+    }
+  },
+
+  /**
+   * Get observation reports for a package request, across all of its assignments.
+   * Client-only on the backend (403 for anyone but the owning client).
+   * @param {string} packageRequestId
+   * @param {string} [taskSheetId]
+   * @returns {Promise<Object>} { success, data, error }
+   */
+  async getByPackageRequest(packageRequestId, taskSheetId) {
+    try {
+      if (!packageRequestId) {
+        return { success: false, error: "Package request ID is required" };
+      }
+      const authToken = localStorage.getItem("authToken");
+      if (!authToken) {
+        return { success: false, error: "Authentication required" };
+      }
+      let url = `${config.BASE_URL}/observation-reports?packageRequestId=${encodeURIComponent(packageRequestId)}`;
+      if (taskSheetId) url += `&taskSheetId=${encodeURIComponent(taskSheetId)}`;
+      const response = await fetch(url, {
+        method: "GET",
+        headers: { "Content-Type": "application/json", Authorization: `Bearer ${authToken}` },
+      });
+      if (!response.ok) {
+        const errorData = await response.json().catch(() => ({}));
+        return {
+          success: false,
+          error: errorData.error || `Failed to fetch observation reports (${response.status})`,
+        };
+      }
       const data = await response.json();
       return { success: true, data: Array.isArray(data) ? data : [] };
     } catch (error) {

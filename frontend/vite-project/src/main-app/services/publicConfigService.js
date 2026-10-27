@@ -49,8 +49,29 @@ export const getCommitmentGateEnabled = async ({ forceRefresh = false } = {}) =>
   return inFlightPromise;
 };
 
+// ── Caregiver vetting lockout date ──────────────────────────────────────────
+// One global ISO date. Unset, unparseable or a failed request => null => NOT enforced. This is deliberately FAIL-OPEN, the
+// opposite of the commitment gate above (which fails closed): wrongly locking caregivers out on a network error is worse.
+let cachedLockoutDate = null;
+let lockoutCacheExpiresAt = 0;
+
+export const getVettingLockoutEnforcementDate = async ({ forceRefresh = false } = {}) => {
+  if (!forceRefresh && Date.now() < lockoutCacheExpiresAt) return cachedLockoutDate;
+  try {
+    const response = await api.get('/public-config', { timeout: 5000 });
+    const raw = response?.data?.vettingLockoutEnforcementDate ?? response?.data?.data?.vettingLockoutEnforcementDate ?? null;
+    cachedLockoutDate = raw && !Number.isNaN(new Date(raw).getTime()) ? raw : null;
+    lockoutCacheExpiresAt = Date.now() + PUBLIC_CONFIG_CACHE_TTL_MS;
+  } catch {
+    cachedLockoutDate = null;
+    lockoutCacheExpiresAt = 0; // don't cache a failure; retry next time
+  }
+  return cachedLockoutDate;
+};
+
 const publicConfigService = {
   getCommitmentGateEnabled,
+  getVettingLockoutEnforcementDate,
 };
 
 export default publicConfigService;

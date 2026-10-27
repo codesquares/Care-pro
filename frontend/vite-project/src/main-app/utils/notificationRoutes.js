@@ -65,6 +65,10 @@ const TYPE_MAP = {
   'refundrejected':              'RefundRejected',
   'earnings_added':              'EarningsAdded',
   'earningsadded':               'EarningsAdded',
+  'payroll_approved':            'PayrollApproved',
+  'payrollapproved':             'PayrollApproved',
+  'payroll_paid':                'PayrollPaid',
+  'payrollpaid':                 'PayrollPaid',
 
   // Order / Booking
   'order_notification':          'OrderNotification',
@@ -350,6 +354,10 @@ const TYPE_MAP = {
   'disputeunderreview':            'DisputeUnderReview',
   'dispute under review':          'DisputeUnderReview',
 
+  // Package caregiver "can't attend" notice (client + admins)
+  'visit_absence_notified':        'VisitAbsenceNotified',
+  'visitabsencenotified':          'VisitAbsenceNotified',
+
   // Incident Reported
   'incident_reported':             'IncidentReported',
   'incidentreported':              'IncidentReported',
@@ -461,6 +469,7 @@ const KNOWN_CANONICAL = new Set([
   'DisputeUnderReview',
   'IncidentReported',
   'ObservationReportFiled',
+  'VisitAbsenceNotified',
   'CareRequestCreated', 'CareRequestPaused', 'CareRequestReopened', 'CareRequestClosed',
   'ShortlistRemoved',
   'CaregiverBecameIneligible',
@@ -476,6 +485,23 @@ const KNOWN_CANONICAL = new Set([
   'PriceNegotiationAgreed',
   'PriceNegotiationRejected',
   'PriceNegotiationExpired',
+  // Package assignment (Phase 4/6)
+  'PackageAssignmentOffered', 'PackageAssignmentConfirmed',
+  'PackageAssignmentDeclined', 'PackageAssignmentCancelled',
+  'PackageContractGenerated',
+  'PackageRequestReceived', 'PackagePaymentRequestFailed', 'PackageContractDeliveryFailed',
+  'PackageRequestCancelledByClient', 'PackageVisitFlagged',
+  // Police clearance (vetting step)
+  'PoliceClearanceSubmitted', 'PoliceClearanceApproved', 'PoliceClearanceRejected',
+  'PoliceClearanceRevoked', 'PoliceClearanceAssignmentsAtRisk',
+  // Address proof (utility bill for the current address)
+  'AddressProofSubmitted', 'AddressProofApproved', 'AddressProofRejected',
+  // Vetting enforcement notice (caregiver)
+  'VettingEnforcementNotice',
+  // Guarantor questionnaire (admin review queue / caregiver rejection notice)
+  'GuarantorNeedsReview', 'GuarantorRejected',
+  // Payroll (Phase 9.7)
+  'PayrollApproved', 'PayrollPaid',
 ]);
 
 /**
@@ -550,7 +576,8 @@ export const getNotificationRoute = (notification, userRole) => {
   const role = (userRole || '').toLowerCase();
   const isClient = role === 'client';
   const isCaregiver = role === 'caregiver';
-  const isAdmin = role === 'admin';
+  // const isAdmin = role === 'admin';   // A2: SuperAdmin got no admin deep links at all (role 'superadmin' never matched)
+  const isAdmin = role === 'admin' || role === 'superadmin';
 
   const getSubscriptionRoute = () => {
     if (relatedEntityId && isClient) return `/app/client/subscriptions/${relatedEntityId}`;
@@ -616,28 +643,26 @@ export const getNotificationRoute = (notification, userRole) => {
       if (isAdmin) return `/app/admin/orders`;
       return null;
 
-    // ── Commitment fee confirmed ──────────────────────────
-    // senderId = the other party in the conversation
-    // relatedEntityId = gigId (fallback only)
+    // ── Payroll (Phase 9.7, package assignments) ─────────
+    case 'PayrollApproved':
+    case 'PayrollPaid':
+      if (isCaregiver) return `/app/caregiver/earnings`;
+      if (isAdmin) return `/app/admin/payroll`;
+      return null;
+
+    // ── Commitment fee confirmed (legacy) ─────────────────
+    // Chat is no longer unlocked by a fee — conversations are tied to assignments — so this
+    // resolves to the plain conversation with the other party (senderId), same as NewMessage.
+    // That page reads its access/identity from the assignment, not from any gig.
     case 'CommitmentConfirmed':
       if (isClient) {
-        // Client paid — CTA is to chat with the caregiver (senderId = caregiver)
-        if (senderId && relatedEntityId) {
-          return `/app/client/message/${senderId}?gigId=${encodeURIComponent(relatedEntityId)}`;
-        }
         if (senderId) return `/app/client/message/${senderId}`;
         return `/app/client/message`;
       }
       if (isCaregiver) {
-        // Caregiver notified — CTA is to open the conversation with the client (senderId = client)
-        if (senderId && relatedEntityId) {
-          return `/app/caregiver/message/${senderId}?gigId=${encodeURIComponent(relatedEntityId)}`;
-        }
         if (senderId) return `/app/caregiver/message/${senderId}`;
         return `/app/caregiver/message`;
       }
-      // Last-resort deep link to the gig page
-      if (relatedEntityId) return `/service/${relatedEntityId}`;
       return null;
 
     // ── Certificate notifications ────────────────────────
@@ -684,15 +709,11 @@ export const getNotificationRoute = (notification, userRole) => {
       return null;
 
     // ── Gig notifications ────────────────────────────────
+    // The public gig page (/service/:id) is retired — gigs are no longer client-purchasable — so gig
+    // notifications only make sense for the owning caregiver, who manages gigs from their profile.
     case 'NewGig':
-      if (relatedEntityId) return `/service/${relatedEntityId}`;
-      if (isCaregiver) return `/app/caregiver/create-gigs`;
-      return null;
-
-    // relatedEntityId = gig ID for all gig lifecycle types
     case 'GigPublished':
     case 'GigShared': // reserved — handle gracefully when it ships
-      if (relatedEntityId && isCaregiver) return `/service/${relatedEntityId}`;
       if (isCaregiver) return `/app/caregiver/profile`;
       return null;
 
@@ -710,7 +731,7 @@ export const getNotificationRoute = (notification, userRole) => {
 
     // ── Verification notifications ───────────────────────
     case 'VerificationUpdate':
-      if (isCaregiver) return `/app/caregiver/verification`;
+      if (isCaregiver) return `/app/caregiver/vetting`;
       return null;
 
     // ── System / generic ─────────────────────────────────
@@ -733,30 +754,16 @@ export const getNotificationRoute = (notification, userRole) => {
       if (isAdmin) return `/app/admin/notifications`;
       return null;
 
-    // ── Care Request Matching ─────────────────────────
-    case 'CareRequestMatched':
-      if (isClient && relatedEntityId) return `/app/client/care-requests/${relatedEntityId}/matches`;
-      if (isClient) return `/app/client/care-requests`;
-      return null;
-
-    case 'CareRequestNoMatch':
-      if (isClient && relatedEntityId) return `/app/client/care-requests/${relatedEntityId}/matches`;
-      if (isClient) return `/app/client/care-requests`;
-      return null;
-
-    case 'CareRequestAdminMatchUpdate':
-    case 'CareRequestAdminNoMatch':
-      if (isAdmin && relatedEntityId) return `/app/admin/care-requests/${relatedEntityId}`;
-      if (isAdmin) return `/app/admin/care-requests`;
-      return null;
-
-    // ── Care Request: New Responder (caregiver responded to a request) ─
-    case 'CareRequestNewResponder':
-      if (isClient && relatedEntityId) return `/app/client/care-requests/${relatedEntityId}/matches`;
-      if (isClient) return `/app/client/care-requests`;
-      if (isAdmin && relatedEntityId) return `/app/admin/care-requests/${relatedEntityId}`;
-      if (isAdmin) return `/app/admin/care-requests`;
-      return null;
+    // ── Care Request Matching (retired backend flow — see note below) ──
+    // CareRequestMatched, CareRequestNoMatch, CareRequestAdminMatchUpdate,
+    // CareRequestAdminNoMatch and CareRequestNewResponder have no backend
+    // trigger left (confirmed against CarePro-Api: the competitive
+    // care-request/matching flow was fully retired, no code path creates
+    // these notification types anymore — CareRequestMatched never even
+    // existed as a backend constant). Intentionally left unhandled so they
+    // fall through to `default`: a legacy/in-flight notification of one of
+    // these types still displays (icon/label), it just isn't clickable,
+    // rather than sending the user to a dead or placeholder route.
 
     // ── Negotiation notifications ─────────────────────────
     case 'NegotiationStarted':
@@ -793,14 +800,105 @@ export const getNotificationRoute = (notification, userRole) => {
       return null;
     }
 
+    // ── Package assignment (Phase 4/6) ───────────────────
+    // Caregiver: an offer to review, or one withdrawn before they responded —
+    // both point at the assignment itself.
+    case 'PackageAssignmentOffered':
+    case 'PackageAssignmentCancelled': {
+      if (isCaregiver && relatedEntityId) return `/app/caregiver/assignments/${relatedEntityId}`;
+      if (isCaregiver) return `/app/caregiver/assignments`;
+      return null;
+    }
+
+    // Client: their caregiver is now confirmed, or the auto-generated contract
+    // is ready — both carry the package request id (not an order/contract id).
+    case 'PackageAssignmentConfirmed':
+    case 'PackageContractGenerated': {
+      if (isClient && relatedEntityId) return `/app/client/requests/${relatedEntityId}`;
+      if (isClient) return `/app/client/requests`;
+      return null;
+    }
+
+    // Ops alerts (admin only): a new request awaiting assignment, or a charged-but-unfulfilled /
+    // undelivered-contract failure — all land on the Assignment Console where staff act.
+    case 'PackageRequestReceived':
+    case 'PackageAssignmentDeclined': // A2: previously unmapped for admins (resolved to null)
+    case 'PackageContractDeliveryFailed':
+    case 'PackageRequestCancelledByClient': {
+      if (isAdmin) return `/app/admin/assignments`;
+      return null;
+    }
+    // A2: the related id of a charged-but-no-request failure is a CLIENT id (not an assignment/request),
+    // so link to that client's record (Client Management opens the detail modal for ?clientId=).
+    case 'PackagePaymentRequestFailed': {
+      if (isAdmin) return relatedEntityId ? `/app/admin/clients?clientId=${relatedEntityId}` : `/app/admin/clients`;
+      return null;
+    }
+
+    // Police clearance: the caregiver's decision notices open the Vetting Hub step; the admin alerts open the review queue.
+    // Vetting enforcement notice: open the Vetting Hub.
+    case 'VettingEnforcementNotice': {
+      if (isCaregiver) return `/app/caregiver/vetting`;
+      return null;
+    }
+    case 'PoliceClearanceApproved':
+    case 'PoliceClearanceRejected':
+    case 'PoliceClearanceRevoked': {
+      if (isCaregiver) return `/app/caregiver/vetting/police-clearance`;
+      return null;
+    }
+    case 'PoliceClearanceSubmitted':
+    case 'PoliceClearanceAssignmentsAtRisk': {
+      if (isAdmin) return relatedEntityId ? `/app/admin/police-clearances?clearance=${relatedEntityId}` : `/app/admin/police-clearances`;
+      return null;
+    }
+
+    // Address proof: the caregiver's decision notices open the address-history page; the admin alert opens the review queue
+    // (relatedEntityId = the address-history record id).
+    case 'AddressProofApproved':
+    case 'AddressProofRejected': {
+      if (isCaregiver) return `/app/caregiver/vetting/address-history`;
+      return null;
+    }
+    case 'AddressProofSubmitted': {
+      if (isAdmin) return relatedEntityId ? `/app/admin/address-proofs?proof=${relatedEntityId}` : `/app/admin/address-proofs`;
+      return null;
+    }
+
+    // Guarantor questionnaire: admins land on the review queue (relatedEntityId = guarantorId);
+    // a caregiver whose guarantor was rejected goes to the guarantors page to replace them.
+    case 'GuarantorNeedsReview': {
+      if (isAdmin) return relatedEntityId ? `/app/admin/guarantors?guarantor=${relatedEntityId}` : `/app/admin/guarantors`;
+      return null;
+    }
+    case 'GuarantorRejected': {
+      if (isCaregiver) return `/app/caregiver/vetting/guarantors`;
+      return null;
+    }
+
+    // A package-visit check-in was flagged (HARD reason) — deep-link to that visit in the admin review screen.
+    case 'PackageVisitFlagged': {
+      if (isAdmin) return relatedEntityId ? `/app/admin/package-visits?checkin=${relatedEntityId}` : `/app/admin/package-visits`;
+      return null;
+    }
+
     // ── Visit / Task Sheet notifications ─────────────────
+    // A package-assignment visit has no ClientOrder, so orderId is empty for these —
+    // the backend sends the AssignmentId/PackageRequestId as relatedEntityId instead
+    // in that case (never a bare TaskSheetId, which neither side could resolve to a
+    // page). Order-flow visits keep sending a real orderId, so that branch is checked
+    // first and unaffected.
     case 'VisitApproved': {
-      // Caregiver goes to wallet (payment just arrived).
-      // Client goes to the order details page.
-      if (isCaregiver) return `/app/caregiver/wallet`;
+      // Caregiver goes to wallet (payment just arrived) for order-flow visits, where
+      // approval releases a per-visit wallet credit; package visits have no such
+      // credit (paid via payroll instead), so route to the assignment there.
+      if (isCaregiver) {
+        if (!notification.orderId && relatedEntityId) return `/app/caregiver/assignments/${relatedEntityId}`;
+        return `/app/caregiver/wallet`;
+      }
       if (isClient) {
-        const visitOrderId = notification.orderId || relatedEntityId;
-        if (visitOrderId) return `/app/client/my-order/${visitOrderId}`;
+        if (notification.orderId) return `/app/client/my-order/${notification.orderId}`;
+        if (relatedEntityId) return `/app/client/requests/${relatedEntityId}`;
         return `/app/client/my-orders`;
       }
       return null;
@@ -809,10 +907,12 @@ export const getNotificationRoute = (notification, userRole) => {
     case 'VisitSubmitted':
     case 'VisitCancelledByClient':
     case 'VisitCancellationRequested': {
-      const visitOrderId = notification.orderId || relatedEntityId;
-      if (visitOrderId) {
-        if (isClient) return `/app/client/my-order/${visitOrderId}`;
-        if (isCaregiver) return `/app/caregiver/order-details/${visitOrderId}`;
+      if (notification.orderId) {
+        if (isClient) return `/app/client/my-order/${notification.orderId}`;
+        if (isCaregiver) return `/app/caregiver/order-details/${notification.orderId}`;
+      } else if (relatedEntityId) {
+        if (isClient) return `/app/client/requests/${relatedEntityId}`;
+        if (isCaregiver) return `/app/caregiver/assignments/${relatedEntityId}`;
       }
       if (isClient) return `/app/client/my-orders`;
       if (isCaregiver) return `/app/caregiver/orders`;
@@ -837,15 +937,16 @@ export const getNotificationRoute = (notification, userRole) => {
 
     // ── Disputes ─────────────────────────────────────────
     case 'DisputeRaised': {
+      // A2: for admins, relatedEntityId is the DISPUTE id (never an order id) — only a real orderId may be
+      // used for the legacy order link; package disputes (no order) land on the Disputes console.
       const disputeOrderId = notification.orderId || relatedEntityId;
+      if (isAdmin) return notification.orderId ? `/app/admin/orders/${notification.orderId}` : `/app/admin/disputes`;
       if (disputeOrderId) {
         if (isClient) return `/app/client/my-order/${disputeOrderId}`;
         if (isCaregiver) return `/app/caregiver/order-details/${disputeOrderId}`;
-        if (isAdmin) return `/app/admin/orders/${disputeOrderId}`;
       }
       if (isClient) return `/app/client/my-orders`;
       if (isCaregiver) return `/app/caregiver/orders`;
-      if (isAdmin) return `/app/admin/orders`;
       return null;
     }
 
@@ -927,9 +1028,12 @@ export const getNotificationRoute = (notification, userRole) => {
 
     // ── Caregiver Checked In ─────────────────────────────
     case 'CaregiverCheckedIn': {
-      const checkinOrderId = notification.orderId || relatedEntityId;
-      if (checkinOrderId && isClient) return `/app/client/my-order/${checkinOrderId}`;
-      if (isClient) return `/app/client/my-order`;
+      // Package assignment: orderId is empty, relatedEntityId is the PackageRequestId.
+      if (isClient) {
+        if (notification.orderId) return `/app/client/my-order/${notification.orderId}`;
+        if (relatedEntityId) return `/app/client/requests/${relatedEntityId}`;
+        return `/app/client/my-order`;
+      }
       return null;
     }
 
@@ -950,6 +1054,8 @@ export const getNotificationRoute = (notification, userRole) => {
     case 'IncidentReported': {
       if (isAdmin && relatedEntityId) return `/app/admin/incidents/${relatedEntityId}`;
       if (isAdmin) return `/app/admin/disputes`;
+      // Package visits send no orderId; the client's relatedEntityId is then the PackageRequestId.
+      if (isClient && !notification.orderId && relatedEntityId) return `/app/client/requests/${relatedEntityId}`;
       const incidentOrderId = notification.orderId || relatedEntityId;
       if (incidentOrderId) {
         if (isClient) return `/app/client/my-order/${incidentOrderId}`;
@@ -958,39 +1064,46 @@ export const getNotificationRoute = (notification, userRole) => {
       return null;
     }
 
+    // ── Caregiver can't attend (package): client -> the request page; admins -> the alerts inbox ──
+    case 'VisitAbsenceNotified': {
+      // Admin alerts carry the NOTICE id; the client's carries the PackageRequestId.
+      if (isAdmin) return relatedEntityId ? `/app/admin/absence-notices?notice=${relatedEntityId}` : `/app/admin/absence-notices`;
+      if (isClient && relatedEntityId) return `/app/client/requests/${relatedEntityId}`;
+      if (isClient) return `/app/client/my-orders`;
+      return null;
+    }
+
     // ── Observation Report Filed ─────────────────────────
     case 'ObservationReportFiled': {
+      if (isClient && !notification.orderId && relatedEntityId) return `/app/client/requests/${relatedEntityId}`;
       const obsOrderId = notification.orderId || relatedEntityId;
       if (obsOrderId && isClient) return `/app/client/my-order/${obsOrderId}`;
       if (isClient) return `/app/client/my-order`;
       return null;
     }
 
-    // ── Care Request Lifecycle (client) ──────────────────
-    case 'CareRequestCreated':
-    case 'CareRequestPaused':
-    case 'CareRequestReopened':
-    case 'CareRequestClosed':
-      if (isClient && relatedEntityId) return `/app/client/care-requests/${relatedEntityId}/detail`;
-      if (isClient) return `/app/client/your-requests`;
-      return null;
+    // ── Care Request Lifecycle (client) — retired backend flow ───
+    // CareRequestCreated/Paused/Reopened/Closed have no backend trigger left
+    // (see note above CareRequestMatched) — falls through to `default`.
 
-    // ── Shortlist Removed (caregiver) ────────────────────
-    case 'ShortlistRemoved':
-      if (isCaregiver) return `/app/caregiver/my-responses`;
-      return null;
+    // ── Shortlist Removed (caregiver) — retired backend flow ─────
+    // Defined on the backend but never dispatched via SendNotificationCommand
+    // anywhere — falls through to `default`.
 
     // ── Caregiver Became Ineligible (client) ─────────────
-    // Two distinct backend triggers share this type:
+    // Two distinct backend triggers share this type (confirmed still live —
+    // PendingPaymentService.cs actually dispatches this one, unlike the
+    // retired care-request/negotiation types above):
     //   Post-payment (money already captured, order flagged): notification.orderId is set.
     //   Pre-payment (negotiation blocked, nothing charged): orderId is absent,
-    //     relatedEntityId is the CareRequestId — send them back to browse other caregivers.
+    //     relatedEntityId is the CareRequestId — the old "browse other caregivers
+    //     for this request" page is retired, so send them to the marketplace
+    //     (the real, working browse-caregivers destination) instead.
     // Mirrors the PaymentFailed/SubscriptionSuspended pattern above: check orderId in
     // isolation, do NOT fall back to relatedEntityId for it (that would blend the two cases).
     case 'CaregiverBecameIneligible': {
       if (isClient && notification.orderId) return `/app/client/my-order/${notification.orderId}`;
-      if (isClient && relatedEntityId) return `/app/client/care-requests/${relatedEntityId}/matches`;
-      if (isClient) return `/app/client/your-requests`;
+      if (isClient) return `/marketplace`;
       return null;
     }
 
@@ -1036,52 +1149,12 @@ export const getNotificationRoute = (notification, userRole) => {
       return null;
     }
 
-    // ── Gig Price Negotiation ───────────────────────────────────
-    // Offer received → caregiver; relatedEntityId = negotiationId
-    case 'PriceNegotiationOfferReceived':
-      if (isCaregiver && relatedEntityId)
-        return `/app/caregiver/price-negotiation/${relatedEntityId}`;
-      if (isCaregiver) return `/app/caregiver/notifications`;
-      return null;
-
-    // Counter received → client; relatedEntityId = negotiationId
-    case 'PriceNegotiationCounterReceived':
-      if (isClient && relatedEntityId)
-        return `/app/client/price-negotiation/${relatedEntityId}`;
-      if (isClient) return `/app/client/notifications`;
-      return null;
-
-    // Agreed → different relatedEntityId per role (backend sends separate notifications):
-    //   Client:    relatedEntityId = GigIdForPayment → go to cart
-    //   Caregiver: relatedEntityId = NegotiationId   → go to negotiation summary
-    case 'PriceNegotiationAgreed':
-      if (isClient && relatedEntityId)
-        return `/app/client/cart/${relatedEntityId}`;
-      if (isCaregiver && relatedEntityId)
-        return `/app/caregiver/price-negotiation/${relatedEntityId}`;
-      if (isClient) return `/app/client/notifications`;
-      if (isCaregiver) return `/app/caregiver/notifications`;
-      return null;
-
-    // Rejected → sent to the OTHER party; relatedEntityId = negotiationId
-    case 'PriceNegotiationRejected':
-      if (isClient && relatedEntityId)
-        return `/app/client/price-negotiation/${relatedEntityId}`;
-      if (isCaregiver && relatedEntityId)
-        return `/app/caregiver/price-negotiation/${relatedEntityId}`;
-      if (isClient) return `/app/client/notifications`;
-      if (isCaregiver) return `/app/caregiver/notifications`;
-      return null;
-
-    // Expired → sent to both; relatedEntityId = negotiationId
-    case 'PriceNegotiationExpired':
-      if (isClient && relatedEntityId)
-        return `/app/client/price-negotiation/${relatedEntityId}`;
-      if (isCaregiver && relatedEntityId)
-        return `/app/caregiver/price-negotiation/${relatedEntityId}`;
-      if (isClient) return `/app/client/notifications`;
-      if (isCaregiver) return `/app/caregiver/notifications`;
-      return null;
+    // ── Gig Price Negotiation — retired backend flow ─────────────
+    // PriceNegotiationOfferReceived/CounterReceived/Agreed/Rejected/Expired
+    // have no backend trigger left: no PriceNegotiation service, controller,
+    // or command exists anywhere in CarePro-Api anymore — only the
+    // notification-type constants themselves remain (unused). Intentionally
+    // left unhandled so they fall through to `default`.
 
     default:
       console.warn(`[NotificationRoutes] No route for type: "${type}" (raw: "${notification.type}")`, notification);
@@ -1100,7 +1173,41 @@ export const getNotificationActionLabel = (rawType) => {
     case 'ContractApproved':
     case 'ContractRejected':
     case 'ContractRevisionRequested':
+    case 'PackageContractGenerated':
       return 'View Contract';
+    case 'PackageAssignmentOffered':
+      return 'Review Offer';
+    case 'PackageAssignmentCancelled':
+      return 'View Assignment';
+    case 'PackageAssignmentConfirmed':
+      return 'View Request';
+    case 'PackageRequestReceived':
+    case 'PackageAssignmentDeclined':
+    case 'PackageContractDeliveryFailed':
+    case 'PackageRequestCancelledByClient':
+      return 'Open Assignments';
+    case 'PackagePaymentRequestFailed':
+      return 'Open Client';
+    case 'PackageVisitFlagged':
+      return 'Review Visit';
+    case 'VettingEnforcementNotice':
+      return 'Open Vetting';
+    case 'PoliceClearanceSubmitted':
+    case 'PoliceClearanceAssignmentsAtRisk':
+      return 'Review Clearance';
+    case 'AddressProofSubmitted':
+      return 'Review Bill';
+    case 'AddressProofApproved':
+    case 'AddressProofRejected':
+      return 'View Status';
+    case 'GuarantorNeedsReview':
+      return 'Review Guarantor';
+    case 'GuarantorRejected':
+      return 'Open Guarantors';
+    case 'PoliceClearanceApproved':
+    case 'PoliceClearanceRejected':
+    case 'PoliceClearanceRevoked':
+      return 'View Status';
     case 'NewMessage':
       return 'Open Conversation';
     case 'Payment':
@@ -1109,6 +1216,9 @@ export const getNotificationActionLabel = (rawType) => {
     case 'OrderPayment':
     case 'EarningsAdded':
       return 'View Payment';
+    case 'PayrollApproved':
+    case 'PayrollPaid':
+      return 'View Earnings';
     case 'RefundRequested':
     case 'RefundApproved':
     case 'RefundRejected':
@@ -1215,6 +1325,8 @@ export const getNotificationActionLabel = (rawType) => {
       return 'View Dispute';
     case 'IncidentReported':
       return 'View Incident';
+    case 'VisitAbsenceNotified':
+      return 'View Notice';
     case 'ObservationReportFiled':
       return 'View Report';
     case 'CareRequestCreated':
@@ -1272,6 +1384,9 @@ export const getNotificationTypeIcon = (rawType) => {
       return '💰';
     case 'EarningsAdded':
       return '💵';
+    case 'PayrollApproved':
+    case 'PayrollPaid':
+      return '💰';
     case 'RefundProcessed':
       return '🔄';
     case 'SystemNotice':
@@ -1299,6 +1414,32 @@ export const getNotificationTypeIcon = (rawType) => {
       return '❌';
     case 'ContractRevisionRequested':
       return '📝';
+    case 'PackageContractGenerated':
+      return '📋';
+    case 'PackageAssignmentOffered':
+      return '🙋';
+    case 'PackageAssignmentConfirmed':
+      return '✅';
+    case 'PackageAssignmentCancelled':
+      return '❌';
+    case 'VettingEnforcementNotice':
+      return '📋';
+    case 'PoliceClearanceApproved':
+    case 'AddressProofApproved':
+      return '✅';
+    case 'PoliceClearanceRejected':
+    case 'PoliceClearanceRevoked':
+    case 'AddressProofRejected':
+      return '❌';
+    case 'PoliceClearanceSubmitted':
+    case 'PoliceClearanceAssignmentsAtRisk':
+      return '🛡️';
+    case 'AddressProofSubmitted':
+      return '🏠';
+    case 'GuarantorNeedsReview':
+      return '🤝';
+    case 'GuarantorRejected':
+      return '❌';
     case 'OrderNotification':
     case 'OrderConfirmation':
     case 'BookingConfirmed':
@@ -1423,6 +1564,8 @@ export const getNotificationTypeIcon = (rawType) => {
       return '⚖️';
     case 'IncidentReported':
       return '🚨';
+    case 'VisitAbsenceNotified':
+      return '📅';
     case 'ObservationReportFiled':
       return '📋';
     case 'CareRequestCreated':

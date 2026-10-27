@@ -1,4 +1,4 @@
-.reviews {
+.rv-reviews {
   background: #ffffff;
   border-radius: 12px;
   box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
@@ -7,7 +7,7 @@
   margin-top: 24px;
 }
 
-.reviews h3 {
+.rv-reviews h3 {
   margin: 0 0 20px 0;
   font-size: 20px;
   font-weight: 600;
@@ -15,7 +15,7 @@
 }
 
 /* Review Statistics */
-.review-stats {
+.rv-review-stats {
   background: #f9fafb;
   border-radius: 8px;
   padding: 16px;
@@ -23,33 +23,33 @@
   border: 1px solid #f3f4f6;
 }
 
-.stats-summary {
+.rv-stats-summary {
   display: flex;
   align-items: center;
   gap: 16px;
   margin-bottom: 12px;
 }
 
-.total-reviews {
+.rv-total-reviews {
   font-weight: 600;
   color: #374151;
   font-size: 16px;
 }
 
-.average-rating {
+.rv-average-rating {
   font-weight: 600;
   color: #059669;
   font-size: 16px;
 }
 
 /* Rating Filter Buttons */
-.rating-filters {
+.rv-rating-filters {
   display: flex;
   flex-wrap: wrap;
   gap: 8px;
 }
 
-.filter-btn {
+.rv-filter-btn {
   background: #ffffff;
   border: 1px solid #d1d5db;
   border-radius: 6px;
@@ -61,31 +61,31 @@
   transition: all 0.2s ease;
 }
 
-.filter-btn:hover {
+.rv-filter-btn:hover {
   background: #f3f4f6;
   border-color: #9ca3af;
 }
 
-.filter-btn:focus {
+.rv-filter-btn:focus {
   outline: none;
-  box-shadow: 0 0 0 2px rgba(59, 130, 246, 0.3);
+  box-shadow: 0 0 0 2px rgba(43, 57, 95, 0.3);
 }
 
-.filter-btn.active {
-  background: #3b82f6;
+.rv-filter-btn.active {
+  background: var(--color-brand-deep);
   color: #ffffff;
-  border-color: #3b82f6;
+  border-color: var(--color-brand-deep);
 }
 
 /* Review List Styling */
-.review-list {
+.rv-review-list {
   display: flex;
   flex-direction: column;
   gap: 16px;
 }
 
 /* Individual Review Card */
-.review-card {
+.rv-review-card {
   display: flex;
   align-items: flex-start;
   gap: 16px;
@@ -97,13 +97,13 @@
   box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
 }
 
-.review-card:hover {
+.rv-review-card:hover {
   box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
   border-color: #e5e7eb;
 }
 
 /* Avatar */
-.review-avatar {
+.rv-review-avatar {
   width: 48px;
   height: 48px;
   border-radius: 50%;
@@ -113,13 +113,13 @@
 }
 
 /* Review Content */
-.review-content {
+.rv-review-content {
   flex: 1;
   min-width: 0;
 }
 
 /* Review Header */
-.review-header {
+.rv-review-header {
   display: flex;
   align-items: center;
   justify-content: space-between;
@@ -127,103 +127,107 @@
   gap: 12px;
 }
 
-.review-author {
+.rv-review-author {
   font-size: 16px;
   font-weight: 600;
   color: #1a1a1a;
   margin: 0;
 }
 
-.review-rating {
+.rv-review-rating {
   display: flex;
   align-items: center;
   gap: 4px;
   font-size: 14px;
 }
 
-.review-stars {
+.rv-review-stars {
   color: #fbbf24;
   display: flex;
   align-items: center;
   gap: 2px;
 }
 
-.review-star {
+.rv-review-star {
   width: 14px;
   height: 14px;
   color: #fbbf24;
 }
 
-.rating-star {
+.rv-rating-star {
   width: 16px;
   height: 16px;
   color: #fbbf24;
   margin-left: 4px;
 }
 
-.filter-star {
+.rv-filter-star {
   width: 14px;
   height: 14px;
   color: #fbbf24;
   margin-left: 2px;
 }
 
-.review-rating-text {
+.rv-review-rating-text {
   color: #6b7280;
   font-weight: 500;
 }
 
 /* Gig Information */
-.review-gig-info {
+.rv-review-gig-info {
   margin: 8px 0;
   font-size: 13px;
   color: #6b7280;
 }
 
-.review-gig-title {
+.rv-review-gig-title {
   font-weight: 500;
   color: #374151;
 }
 
-.review-gig-category {
+.rv-review-gig-category {
   opacity: 0.8;
 }
 
 /* Review Text */
-.review-text {
+.rv-review-text {
   font-size: 14px;
   line-height: 1.6;
   color: #374151;
   margin: 0;
 }
 
-.review-date {
+.rv-review-date {
   font-size: 12px;
   color: #9ca3af;
   margin-top: 8px;
 }
 
 /* Empty State */
-.reviews-empty {
+.rv-reviews-empty {
   text-align: center;
   padding: 40px 20px;
+  background: none;
+  box-shadow: none;
+  border-radius: 0;
+  margin-top: 20px;
 }
 
-.reviews-empty h3 {
+.rv-reviews-empty h3 {
   margin: 0 0 16px 0;
   font-size: 20px;
   font-weight: 600;
   color: #1a1a1a;
 }
 
-.reviews-empty .empty-icon {
+.rv-reviews-empty .rv-empty-icon {
   font-size: 48px;
   margin-bottom: 16px;
   display: block;
   opacity: 0.5;
 }
 
-.reviews-empty p {
+.rv-reviews-empty p {
   font-size: 14px;
   color: #6b7280;
   margin: 0;
@@ -231,18 +235,18 @@
 }
 
 /* Loading State */
-.spinner-container {
+.rv-spinner-container {
   display: flex;
   flex-direction: column;
   align-items: center;
   padding: 40px 20px;
 }
 
-.spinner {
+.rv-spinner {
   width: 32px;
   height: 32px;
   border: 3px solid #e5e7eb;
-  border-top: 3px solid #3b82f6;
+  border-top: 3px solid var(--color-brand-deep);
   border-radius: 50%;
   animation: spin 1s linear infinite;
   margin-bottom: 12px;
@@ -253,7 +257,7 @@
   100% { transform: rotate(360deg); }
 }
 
-.spinner-container p {
+.rv-spinner-container p {
   font-size: 14px;
   color: #6b7280;
   margin: 0;
@@ -261,75 +265,42 @@
 
 /* Responsive Styles */
 @media (max-width: 768px) {
-  .reviews {
+  .rv-reviews {
     padding: 20px;
     margin-top: 20px;
   }
   
-  .review-card {
+  .rv-review-card {
     padding: 16px;
     gap: 12px;
   }
   
-  .review-avatar {
+  .rv-review-avatar {
     width: 40px;
     height: 40px;
   }
   
-  .reviews h3 {
+  .rv-reviews h3 {
     font-size: 18px;
   }
 }
 
 @media (max-width: 480px) {
-  .reviews {
+  .rv-reviews {
     padding: 16px;
   }
   
-  .review-header {
+  .rv-review-header {
     flex-direction: column;
     align-items: flex-start;
     gap: 8px;
   }
   
-  .review-card {
+  .rv-review-card {
     padding: 12px;
   }
   
-  .review-text {
+  .rv-review-text {
     font-size: 13px;
   }
 }
-  .review-header {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    margin-bottom: 5px;
-  }
-  
-  .review-name {
-    font-size: 1rem;
-    font-weight: bold;
-    color: #333;
-  }
-  
-  .review-rating {
-    font-size: 0.9rem;
-    color: #f5a623;
-  }
-  
-  /* Review Text */
-  .review-text {
-    font-size: 0.9rem;
-    color: #666;
-    line-height: 1.4;
-  }
-  
-  /* Empty state styling - remove background to match gigs section */
-  .reviews-empty {
-    background: none !important;
-    box-shadow: none !important;
-    border-radius: 0 !important;
-    margin-top: 20px;
-  }
-  

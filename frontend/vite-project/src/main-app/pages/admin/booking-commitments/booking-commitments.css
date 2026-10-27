@@ -15,14 +15,14 @@
 .bc-header-icon {
   width: 56px;
   height: 56px;
-  background: linear-gradient(135deg, #6366f1, #4f46e5);
+  background: linear-gradient(135deg, var(--color-brand-deep), var(--color-brand-accent));
   border-radius: 14px;
   display: flex;
   align-items: center;
   justify-content: center;
   font-size: 1.5rem;
   color: white;
-  box-shadow: 0 4px 12px rgba(99,102,241,0.35);
+  box-shadow: 0 4px 12px color-mix(in srgb, var(--color-brand-deep) 35%, transparent);
   flex-shrink: 0;
 }
 
@@ -69,7 +69,7 @@
   background: #f9fafb;
 }
 
-.bc-card-header i { color: #6366f1; font-size: 1.1rem; }
+.bc-card-header i { color: var(--color-brand-deep); font-size: 1.1rem; }
 .bc-card-header h2 { margin: 0; font-size: 1.1rem; color: #1a1a1a; }
 
 /* ─── Form ───────────────────────────────────────────── */
@@ -122,7 +122,7 @@
 .bc-form-group input:focus,
 .bc-form-group textarea:focus {
   outline: none;
-  border-color: #6366f1;
+  border-color: var(--color-brand-deep);
 }
 
 .bc-form-group input:disabled,
@@ -136,7 +136,7 @@
   color: #9ca3af;
 }
 
-.char-hint { color: #6b7280 !important; }
+.bc-char-hint { color: #6b7280 !important; }
 
 .bc-admin-info {
   display: flex;
@@ -193,9 +193,9 @@
 .bc-result--err > i { color: #dc2626; }
 
 /* ─── Shared buttons ─────────────────────────────────── */
-.btn-primary {
+.bc-btn-primary {
   padding: 0.75rem 1.75rem;
-  background: linear-gradient(135deg, #6366f1, #4f46e5);
+  background: linear-gradient(135deg, var(--color-brand-deep), var(--color-brand-accent));
   color: white;
   border: none;
   border-radius: 10px;
@@ -208,10 +208,10 @@
   transition: opacity 0.2s;
 }
 
-.btn-primary:hover:not(:disabled) { opacity: 0.9; }
-.btn-primary:disabled { opacity: 0.5; cursor: not-allowed; }
+.bc-btn-primary:hover:not(:disabled) { opacity: 0.9; }
+.bc-btn-primary:disabled { opacity: 0.5; cursor: not-allowed; }
 
-.btn-secondary {
+.bc-btn-secondary {
   padding: 0.75rem 1.5rem;
   background: white;
   color: #555;
@@ -226,5 +226,5 @@
   transition: all 0.2s;
 }
 
-.btn-secondary:hover:not(:disabled) { border-color: #6366f1; color: #6366f1; }
-.btn-secondary:disabled { opacity: 0.6; cursor: not-allowed; }
+.bc-btn-secondary:hover:not(:disabled) { border-color: var(--color-brand-deep); color: var(--color-brand-deep); }
+.bc-btn-secondary:disabled { opacity: 0.6; cursor: not-allowed; }

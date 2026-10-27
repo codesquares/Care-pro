@@ -316,12 +316,6 @@ const CareRequestMatches = () => {
             )}
             <div className="empty-actions">
               <button
-                className="btn-secondary"
-                onClick={() => navigate('/app/client/post-project')}
-              >
-                Adjust Requirements
-              </button>
-              <button
                 className="btn-primary"
                 onClick={() => navigate('/app/client/dashboard')}
               >

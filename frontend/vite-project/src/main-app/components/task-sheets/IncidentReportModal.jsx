@@ -8,11 +8,11 @@ import IncidentReportService from "../../services/incidentReportService";
  * Props:
  *  - isOpen: boolean
  *  - onClose(): close the modal
- *  - orderId: string
+ *  - orderId: string (legacy order visit) — or assignmentId for a package-assignment visit
  *  - taskSheetId: string (optional)
  *  - onReportCreated(report): callback after successful creation
  */
-const IncidentReportModal = ({ isOpen, onClose, orderId, taskSheetId, onReportCreated }) => {
+const IncidentReportModal = ({ isOpen, onClose, orderId, assignmentId = null, taskSheetId, onReportCreated }) => {
   const [incidentType, setIncidentType] = useState("fall");
   const [dateTime, setDateTime] = useState(() => {
     // Default to current local datetime string for the input
@@ -68,7 +68,7 @@ const IncidentReportModal = ({ isOpen, onClose, orderId, taskSheetId, onReportCr
 
     setSubmitting(true);
     const result = await IncidentReportService.create({
-      orderId,
+      ...(assignmentId ? { assignmentId } : { orderId }),
       taskSheetId: taskSheetId || null,
       incidentType,
       dateTime: new Date(dateTime).toISOString(),

@@ -263,23 +263,6 @@ const GigsSection = () => {
     [regularActiveGigsCount, canPublishGigs, statusLoading]
   );
 
-  const handleShareGig = async (gig) => {
-    const url = `${window.location.origin}/service/${gig.id}`;
-    if (navigator.share) {
-      try {
-        await navigator.share({ title: gig.title, url });
-      } catch (err) {
-        if (err.name !== 'AbortError') {
-          await navigator.clipboard.writeText(url);
-          showSuccess('Link copied to clipboard!');
-        }
-      }
-    } else {
-      await navigator.clipboard.writeText(url);
-      showSuccess('Link copied to clipboard!');
-    }
-  };
-
   // Extract fetchGigs as a reusable function
   const fetchGigs = async (silent = false) => {
     try {
@@ -435,7 +418,6 @@ const GigsSection = () => {
         {/* ── Table header ── */}
         <div className="gigs-table-header">
           <span className="gigs-th gigs-th--gig">Gig</span>
-          <span className="gigs-th gigs-th--orders">Orders</span>
           <span className="gigs-th gigs-th--action">Action</span>
         </div>
 
@@ -470,9 +452,6 @@ const GigsSection = () => {
                           {isExpired ? 'Permanently deleted' : `${daysLeft} day${daysLeft !== 1 ? 's' : ''} to restore`}
                         </span>
                       </div>
-                    </div>
-                    <div className="gigs-cell gigs-cell--orders">
-                      <span className="gigs-order-count">{gig.orderCount ?? 0}</span>
                     </div>
                     <div className="gigs-cell gigs-cell--action">
                       {!isExpired && (
@@ -513,18 +492,11 @@ const GigsSection = () => {
                     {gig.isSpecialGig && <span className="gigs-badge gigs-badge--care-request">Care Request</span>}
                   </div>
                 </div>
-                <div className="gigs-cell gigs-cell--orders">
-                  <span className="gigs-order-count">{gig.orderCount ?? 0}</span>
-                </div>
                 <div className="gigs-cell gigs-cell--action">
-                  {gig.isSpecialGig ? (
-                    <button className="gigs-link" onClick={() => navigate(`/service/${gig.id}`)}>Preview</button>
-                  ) : (
+                  {gig.isSpecialGig ? null : (
                     <>
                       {activeTab === 'active' && (
                         <>
-                          <button className="gigs-link" onClick={() => navigate(`/service/${gig.id}`)}>Preview</button>
-                          <button className="gigs-link" onClick={() => handleShareGig(gig)}>Share</button>
                           <button className="gigs-link" onClick={() => handlePauseGig(gig)} disabled={pausingGigs.has(gig.id)}>
                             {pausingGigs.has(gig.id) ? 'Pausing...' : 'Pause'}
                           </button>

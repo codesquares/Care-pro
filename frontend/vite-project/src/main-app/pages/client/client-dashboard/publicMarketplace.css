@@ -1,0 +1,47 @@
+/* Page-specific tweaks so the shared marketplace-filters/service-category
+   styles (built for the old hero-banner marketplace) line up with this
+   page's category-page-header instead, and its cards get the same
+   responsive side margins as the header/filters above them. */
+
+.marketplace-filters--packages {
+  margin-top: 0;
+}
+
+.service-category {
+  margin: 20px 18px 0;
+}
+
+@media (min-width: 768px) {
+  .service-category {
+    margin: 20px 2.5rem 0;
+  }
+}
+
+@media (min-width: 1024px) {
+  .service-category {
+    margin: 20px 3.5rem 0;
+  }
+}
+
+@media (min-width: 1280px) {
+  .service-category {
+    margin: 20px 4.5rem 0;
+  }
+}
+
+/* Dashboard-pattern package grid: same side margins as the header/filters above it. */
+.marketplace-pkg-section {
+  margin: 20px 18px 0;
+}
+.marketplace-pkg-note {
+  margin: 20px 18px 0;
+}
+@media (min-width: 768px) {
+  .marketplace-pkg-section, .marketplace-pkg-note { margin-left: 2.5rem; margin-right: 2.5rem; }
+}
+@media (min-width: 1024px) {
+  .marketplace-pkg-section, .marketplace-pkg-note { margin-left: 3.5rem; margin-right: 3.5rem; }
+}
+@media (min-width: 1280px) {
+  .marketplace-pkg-section, .marketplace-pkg-note { margin-left: 4.5rem; margin-right: 4.5rem; }
+}

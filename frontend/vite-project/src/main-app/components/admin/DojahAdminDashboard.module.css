@@ -12,7 +12,7 @@
 }
 
 .refreshBtn {
-  background: #007bff;
+  background: var(--color-brand-deep);
   color: white;
   border: none;
   padding: 10px 15px;
@@ -86,7 +86,7 @@
   padding: 15px;
   border-radius: 5px;
   margin-bottom: 20px;
-  border-left: 4px solid #007bff;
+  border-left: 4px solid var(--color-brand-deep);
 }
 
 .apiInfo h4 {

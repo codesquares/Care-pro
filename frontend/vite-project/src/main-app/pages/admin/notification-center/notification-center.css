@@ -1,25 +1,25 @@
-.notification-center {
+.nc-notification-center {
   padding: 2rem;
   max-width: 1200px;
   margin: 0 auto;
 }
 
-.page-header {
+.nc-page-header {
   margin-bottom: 2rem;
 }
 
-.page-header h1 {
+.nc-page-header h1 {
   font-size: 2rem;
   color: #1a1a1a;
   margin-bottom: 0.5rem;
 }
 
-.page-header p {
+.nc-page-header p {
   color: #666;
   font-size: 1rem;
 }
 
-.alert {
+.nc-alert {
   padding: 1rem 1.5rem;
   border-radius: 8px;
   margin-bottom: 1.5rem;
@@ -28,12 +28,12 @@
   gap: 1rem;
 }
 
-.alert i {
+.nc-alert i {
   font-size: 1.5rem;
   margin-top: 0.25rem;
 }
 
-.alert button {
+.nc-alert button {
   margin-left: auto;
   background: none;
   border: none;
@@ -42,32 +42,32 @@
   opacity: 0.7;
 }
 
-.alert button:hover {
+.nc-alert button:hover {
   opacity: 1;
 }
 
-.alert-error {
+.nc-alert-error {
   background-color: #fee;
   border: 1px solid #fcc;
   color: #c62828;
 }
 
-.alert-success {
+.nc-alert-success {
   background-color: #e8f5e9;
   border: 1px solid #c8e6c9;
   color: #2e7d32;
 }
 
-.result-details {
+.nc-result-details {
   margin-top: 0.5rem;
   font-size: 0.9rem;
 }
 
-.result-details p {
+.nc-result-details p {
   margin: 0.25rem 0;
 }
 
-.notification-form-container {
+.nc-notification-form-container {
   background: white;
   border-radius: 12px;
   box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
@@ -75,31 +75,31 @@
   margin-bottom: 2rem;
 }
 
-.recipient-selector {
+.nc-recipient-selector {
   margin-bottom: 2rem;
 }
 
-.recipient-selector h3 {
+.nc-recipient-selector h3 {
   font-size: 1.2rem;
   color: #333;
   margin-bottom: 1rem;
 }
 
-.recipient-options {
+.nc-recipient-options {
   display: grid;
   grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
   gap: 1rem;
 }
 
-.recipient-options label {
+.nc-recipient-options label {
   cursor: pointer;
 }
 
-.recipient-options input[type="radio"] {
+.nc-recipient-options input[type="radio"] {
   display: none;
 }
 
-.option-card {
+.nc-option-card {
   border: 2px solid #e0e0e0;
   border-radius: 12px;
   padding: 1.5rem;
@@ -111,57 +111,57 @@
   gap: 0.5rem;
 }
 
-.option-card i {
+.nc-option-card i {
   font-size: 2rem;
   color: #666;
 }
 
-.option-card span {
+.nc-option-card span {
   font-weight: 600;
   color: #333;
 }
 
-.option-card small {
+.nc-option-card small {
   color: #999;
   font-size: 0.85rem;
 }
 
-.recipient-options label.active .option-card {
-  border-color: #4a90e2;
+.nc-recipient-options label.active .nc-option-card {
+  border-color: var(--color-brand-deep);
   background-color: #f0f7ff;
 }
 
-.recipient-options label.active .option-card i {
-  color: #4a90e2;
+.nc-recipient-options label.active .nc-option-card i {
+  color: var(--color-brand-deep);
 }
 
-.option-card:hover {
-  border-color: #4a90e2;
+.nc-option-card:hover {
+  border-color: var(--color-brand-deep);
   transform: translateY(-2px);
-  box-shadow: 0 4px 12px rgba(74, 144, 226, 0.2);
+  box-shadow: 0 4px 12px color-mix(in srgb, var(--color-brand-deep) 20%, transparent);
 }
 
-.notification-form {
+.nc-notification-form {
   display: flex;
   flex-direction: column;
   gap: 1.5rem;
 }
 
-.form-group {
+.nc-form-group {
   display: flex;
   flex-direction: column;
   gap: 0.5rem;
 }
 
-.form-group label {
+.nc-form-group label {
   font-weight: 600;
   color: #333;
   font-size: 0.95rem;
 }
 
-.form-group input,
-.form-group select,
-.form-group textarea {
+.nc-form-group input,
+.nc-form-group select,
+.nc-form-group textarea {
   padding: 0.75rem;
   border: 1px solid #ddd;
   border-radius: 8px;
@@ -170,33 +170,33 @@
   transition: border-color 0.3s;
 }
 
-.form-group input:focus,
-.form-group select:focus,
-.form-group textarea:focus {
+.nc-form-group input:focus,
+.nc-form-group select:focus,
+.nc-form-group textarea:focus {
   outline: none;
-  border-color: #4a90e2;
+  border-color: var(--color-brand-deep);
 }
 
-.form-group textarea {
+.nc-form-group textarea {
   resize: vertical;
   min-height: 120px;
 }
 
-.char-count {
+.nc-char-count {
   color: #999;
   font-size: 0.85rem;
   text-align: right;
 }
 
-.form-actions {
+.nc-form-actions {
   display: flex;
   gap: 1rem;
   justify-content: flex-end;
   margin-top: 1rem;
 }
 
-.btn-primary,
-.btn-secondary {
+.nc-btn-primary,
+.nc-btn-secondary {
   padding: 0.75rem 2rem;
   border: none;
   border-radius: 8px;
@@ -209,31 +209,31 @@
   transition: all 0.3s;
 }
 
-.btn-primary {
-  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+.nc-btn-primary {
+  background: linear-gradient(135deg, var(--color-brand-deep) 0%, var(--color-brand-accent) 100%);
   color: white;
 }
 
-.btn-primary:hover:not(:disabled) {
+.nc-btn-primary:hover:not(:disabled) {
   transform: translateY(-2px);
-  box-shadow: 0 4px 12px rgba(102, 126, 234, 0.4);
+  box-shadow: 0 4px 12px color-mix(in srgb, var(--color-brand-deep) 40%, transparent);
 }
 
-.btn-primary:disabled {
+.nc-btn-primary:disabled {
   opacity: 0.6;
   cursor: not-allowed;
 }
 
-.btn-secondary {
+.nc-btn-secondary {
   background-color: #f5f5f5;
   color: #333;
 }
 
-.btn-secondary:hover {
+.nc-btn-secondary:hover {
   background-color: #e0e0e0;
 }
 
-.spinner-small {
+.nc-spinner-small {
   width: 16px;
   height: 16px;
   border: 2px solid #ffffff;
@@ -247,67 +247,67 @@
   100% { transform: rotate(360deg); }
 }
 
-.notification-info {
+.nc-notification-info {
   background: white;
   border-radius: 12px;
   box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
   padding: 2rem;
 }
 
-.notification-info h3 {
+.nc-notification-info h3 {
   font-size: 1.2rem;
   color: #333;
   margin-bottom: 1rem;
 }
 
-.info-grid {
+.nc-info-grid {
   display: grid;
   grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
   gap: 1rem;
 }
 
-.info-card {
+.nc-info-card {
   background: linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%);
   border-radius: 8px;
   padding: 1.5rem;
 }
 
-.info-card h4 {
+.nc-info-card h4 {
   font-size: 1rem;
   color: #333;
   margin-bottom: 0.5rem;
 }
 
-.info-card p {
+.nc-info-card p {
   font-size: 0.9rem;
   color: #666;
   margin: 0;
 }
 
 @media (max-width: 768px) {
-  .notification-center {
+  .nc-notification-center {
     padding: 1rem;
   }
 
-  .notification-form-container {
+  .nc-notification-form-container {
     padding: 1.5rem;
   }
 
-  .recipient-options {
+  .nc-recipient-options {
     grid-template-columns: 1fr;
   }
 
-  .form-actions {
+  .nc-form-actions {
     flex-direction: column;
   }
 
-  .btn-primary,
-  .btn-secondary {
+  .nc-btn-primary,
+  .nc-btn-secondary {
     width: 100%;
     justify-content: center;
   }
 
-  .info-grid {
+  .nc-info-grid {
     grid-template-columns: 1fr;
   }
 }

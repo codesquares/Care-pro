@@ -4,23 +4,23 @@ import { useClientOnboarding } from '../../context/ClientOnboardingContext';
 const STEP_CONTENT = {
   step_1_dashboard_orientation: {
     title: 'Dashboard orientation',
-    body: 'Start here: your dashboard gives you access to messages, orders, and quick hiring actions.',
+    body: 'Start here: your dashboard gives you quick access to care packages, your care requests, and your wallet.',
   },
   step_2_marketplace_search: {
-    title: 'Marketplace search',
-    body: 'Use search, category, and filters to quickly find caregivers that match your care needs.',
+    title: 'Browse care packages',
+    body: 'Browse care packages by category. You choose the package; CarePro assigns a vetted caregiver for you.',
   },
   step_3_service_detail_actions: {
-    title: 'Service detail actions',
-    body: 'On service detail pages, compare options, read reviews, and use Message or Hire actions.',
+    title: 'Start with a free assessment',
+    body: 'Pick a package to chat with our care team about a free care assessment. They arrange everything from there.',
   },
   step_4_checkout_basics: {
-    title: 'Checkout basics',
-    body: 'Review your service configuration, payment breakdown, and proceed to secure checkout.',
+    title: 'Payment basics',
+    body: 'When your package is confirmed, you will see a clear payment breakdown and pay securely.',
   },
   step_5_commitment_explainer_conditional: {
-    title: 'Commitment explainer',
-    body: 'Some chats may require commitment payment before full access. This step appears only when active.',
+    title: 'Messaging your caregiver',
+    body: 'Once a caregiver accepts your request you can message them from that request. There is no payment needed to chat.',
   },
 };
 

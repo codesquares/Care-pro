@@ -402,8 +402,8 @@
 
 .ats-form-input:focus {
   outline: none;
-  border-color: #2980b9;
-  box-shadow: 0 0 0 2px rgba(41, 128, 185, 0.15);
+  border-color: var(--color-brand-deep);
+  box-shadow: 0 0 0 2px color-mix(in srgb, var(--color-brand-deep) 15%, transparent);
 }
 
 .ats-form-row {

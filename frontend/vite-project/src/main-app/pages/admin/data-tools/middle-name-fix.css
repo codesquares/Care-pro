@@ -23,7 +23,7 @@
   width: 48px;
   height: 48px;
   border-radius: 12px;
-  background: linear-gradient(135deg, #f59e0b, #d97706);
+  background: linear-gradient(135deg, var(--color-brand-deep), var(--color-brand-accent));
   display: flex;
   align-items: center;
   justify-content: center;
@@ -115,8 +115,8 @@
 }
 
 .mnf-stat--selected {
-  border-color: #3b82f6;
-  background: #eff6ff;
+  border-color: var(--color-brand-deep);
+  background: var(--surface-subtle);
 }
 
 .mnf-stat-num {
@@ -126,7 +126,7 @@
 }
 
 .mnf-stat--selected .mnf-stat-num {
-  color: #2563eb;
+  color: var(--color-brand-deep);
 }
 
 .mnf-stat-lbl {
@@ -242,7 +242,7 @@
 }
 
 .mnf-row--selected {
-  background: #eff6ff !important;
+  background: var(--surface-subtle) !important;
 }
 
 .mnf-table td {
@@ -299,13 +299,13 @@
   color: #1e40af;
 }
 
-/* ─── Button helpers (re-use global .btn-primary / .btn-secondary if available) ─── */
-.btn-primary {
+/* ─── Button helpers (re-use global .mnf-btn-primary / .mnf-btn-secondary if available) ─── */
+.mnf-btn-primary {
   display: inline-flex;
   align-items: center;
   gap: 0.4rem;
   padding: 0.55rem 1.1rem;
-  background: linear-gradient(135deg, #3b82f6, #2563eb);
+  background: linear-gradient(135deg, var(--color-brand-deep), var(--color-brand-accent));
   color: #fff;
   border: none;
   border-radius: 8px;
@@ -315,12 +315,12 @@
   transition: opacity 0.15s;
 }
 
-.btn-primary:disabled {
+.mnf-btn-primary:disabled {
   opacity: 0.55;
   cursor: not-allowed;
 }
 
-.btn-secondary {
+.mnf-btn-secondary {
   display: inline-flex;
   align-items: center;
   gap: 0.4rem;
@@ -335,22 +335,22 @@
   transition: background 0.12s;
 }
 
-.btn-secondary:disabled {
+.mnf-btn-secondary:disabled {
   opacity: 0.55;
   cursor: not-allowed;
 }
 
-.btn-sm {
+.mnf-btn-sm {
   padding: 0.4rem 0.85rem;
   font-size: 0.8rem;
 }
 
 /* ─── Spinner ─── */
-.spinner {
+.mnf-spinner {
   width: 36px;
   height: 36px;
   border: 3px solid #e2e8f0;
-  border-top-color: #3b82f6;
+  border-top-color: var(--color-brand-deep);
   border-radius: 50%;
   animation: mnf-spin 0.8s linear infinite;
 }
@@ -360,7 +360,7 @@
 }
 
 /* ─── Alert ─── */
-.alert {
+.mnf-alert {
   display: flex;
   align-items: flex-start;
   gap: 0.75rem;
@@ -369,7 +369,7 @@
   font-size: 0.875rem;
 }
 
-.alert-error {
+.mnf-alert-error {
   background: #fef2f2;
   color: #b91c1c;
   border: 1px solid #fecaca;

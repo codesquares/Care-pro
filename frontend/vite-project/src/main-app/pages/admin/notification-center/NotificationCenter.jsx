@@ -123,14 +123,14 @@ const NotificationCenter = () => {
   const notificationTypes = adminService.getNotificationTypes();
 
   return (
-    <div className="notification-center">
-      <div className="page-header">
+    <div className="nc-notification-center">
+      <div className="nc-page-header">
         <h1>Notification Center</h1>
         <p>Send notifications to users in the system</p>
       </div>
 
       {error && (
-        <div className="alert alert-error">
+        <div className="nc-alert nc-alert-error">
           <i className="fas fa-exclamation-circle"></i>
           <p>{error}</p>
           <button onClick={() => setError(null)}>×</button>
@@ -138,12 +138,12 @@ const NotificationCenter = () => {
       )}
 
       {result && (
-        <div className="alert alert-success">
+        <div className="nc-alert nc-alert-success">
           <i className="fas fa-check-circle"></i>
           <div>
             <p><strong>{result.message}</strong></p>
             {result.details && (result.details.successCount !== undefined || result.details.totalSuccessCount !== undefined) && (
-              <div className="result-details">
+              <div className="nc-result-details">
                 {result.details.totalSuccessCount !== undefined ? (
                   <>
                     <p>Successfully sent: {result.details.totalSuccessCount}</p>
@@ -163,10 +163,10 @@ const NotificationCenter = () => {
         </div>
       )}
 
-      <div className="notification-form-container">
-        <div className="recipient-selector">
+      <div className="nc-notification-form-container">
+        <div className="nc-recipient-selector">
           <h3>Select Recipients</h3>
-          <div className="recipient-options">
+          <div className="nc-recipient-options">
             <label className={sendingTo === 'individual' ? 'active' : ''}>
               <input
                 type="radio"
@@ -175,7 +175,7 @@ const NotificationCenter = () => {
                 checked={sendingTo === 'individual'}
                 onChange={(e) => setSendingTo(e.target.value)}
               />
-              <div className="option-card">
+              <div className="nc-option-card">
                 <i className="fas fa-user"></i>
                 <span>Individual User</span>
               </div>
@@ -189,7 +189,7 @@ const NotificationCenter = () => {
                 checked={sendingTo === 'caregivers'}
                 onChange={(e) => setSendingTo(e.target.value)}
               />
-              <div className="option-card">
+              <div className="nc-option-card">
                 <i className="fas fa-user-nurse"></i>
                 <span>All Caregivers</span>
                 <small>{caregivers.length} users</small>
@@ -204,7 +204,7 @@ const NotificationCenter = () => {
                 checked={sendingTo === 'clients'}
                 onChange={(e) => setSendingTo(e.target.value)}
               />
-              <div className="option-card">
+              <div className="nc-option-card">
                 <i className="fas fa-user-friends"></i>
                 <span>All Clients</span>
                 <small>{clients.length} users</small>
@@ -219,7 +219,7 @@ const NotificationCenter = () => {
                 checked={sendingTo === 'all'}
                 onChange={(e) => setSendingTo(e.target.value)}
               />
-              <div className="option-card">
+              <div className="nc-option-card">
                 <i className="fas fa-users"></i>
                 <span>All Users</span>
                 <small>{caregivers.length + clients.length} users</small>
@@ -228,9 +228,9 @@ const NotificationCenter = () => {
           </div>
         </div>
 
-        <form onSubmit={handleSendNotification} className="notification-form">
+        <form onSubmit={handleSendNotification} className="nc-notification-form">
           {sendingTo === 'individual' && (
-            <div className="form-group">
+            <div className="nc-form-group">
               <label htmlFor="recipientId">Select Recipient *</label>
               <select
                 id="recipientId"
@@ -258,7 +258,7 @@ const NotificationCenter = () => {
             </div>
           )}
 
-          <div className="form-group">
+          <div className="nc-form-group">
             <label htmlFor="type">Notification Type *</label>
             <select
               id="type"
@@ -273,7 +273,7 @@ const NotificationCenter = () => {
             </select>
           </div>
 
-          <div className="form-group">
+          <div className="nc-form-group">
             <label htmlFor="title">Title (Optional)</label>
             <input
               type="text"
@@ -285,7 +285,7 @@ const NotificationCenter = () => {
             />
           </div>
 
-          <div className="form-group">
+          <div className="nc-form-group">
             <label htmlFor="content">Message Content *</label>
             <textarea
               id="content"
@@ -296,15 +296,15 @@ const NotificationCenter = () => {
               rows="6"
               required
             />
-            <small className="char-count">
+            <small className="nc-char-count">
               {notificationData.content.length} characters
             </small>
           </div>
 
-          <div className="form-actions">
+          <div className="nc-form-actions">
             <button
               type="button"
-              className="btn-secondary"
+              className="nc-btn-secondary"
               onClick={() => {
                 setNotificationData({
                   recipientId: '',
@@ -320,12 +320,12 @@ const NotificationCenter = () => {
             </button>
             <button
               type="submit"
-              className="btn-primary"
+              className="nc-btn-primary"
               disabled={loading}
             >
               {loading ? (
                 <>
-                  <span className="spinner-small"></span>
+                  <span className="nc-spinner-small"></span>
                   Sending...
                 </>
               ) : (
@@ -339,26 +339,26 @@ const NotificationCenter = () => {
         </form>
       </div>
 
-      <div className="notification-info">
+      <div className="nc-notification-info">
         <h3>Available Notification Types</h3>
-        <div className="info-grid">
-          <div className="info-card">
+        <div className="nc-info-grid">
+          <div className="nc-info-card">
             <h4>Broadcast</h4>
             <p>Broadcast notifications to all users or specific groups</p>
           </div>
-          <div className="info-card">
+          <div className="nc-info-card">
             <h4>SystemAlert</h4>
             <p>System-wide alerts and announcements</p>
           </div>
-          <div className="info-card">
+          <div className="nc-info-card">
             <h4>OrderNotification</h4>
             <p>Notifications related to orders and bookings</p>
           </div>
-          <div className="info-card">
+          <div className="nc-info-card">
             <h4>MessageNotification</h4>
             <p>Chat and message-related notifications</p>
           </div>
-          <div className="info-card">
+          <div className="nc-info-card">
             <h4>WithdrawalRequest</h4>
             <p>Withdrawal and payment notifications</p>
           </div>
