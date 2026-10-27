@@ -34,6 +34,38 @@ const AdminGuarantorService = {
   },
 
   /**
+   * Every guarantor whose questionnaire was flagged and who is waiting on a staff decision.
+   * Endpoint: GET /api/Admin/Caregivers/Vetting/guarantors/needs-review
+   * @returns {Promise<{success: boolean, data?: Array, error?: string}>}
+   */
+  async getNeedsReview() {
+    try {
+      const response = await api.get(`${BASE}/guarantors/needs-review`);
+      return { success: true, data: response.data };
+    } catch (error) {
+      console.error('Error fetching guarantors needing review:', error);
+      return { success: false, error: extractError(error, 'Failed to fetch guarantors awaiting review') };
+    }
+  },
+
+  /**
+   * Approve or reject a needs_review guarantor after reading their answers.
+   * Endpoint: PUT /api/Admin/Caregivers/Vetting/guarantors/{guarantorId}/review
+   * @param {string} guarantorId
+   * @param {'approve'|'reject'} decision
+   * @param {string} note  required, min 5 chars (audit trail)
+   */
+  async reviewGuarantor(guarantorId, decision, note) {
+    try {
+      const response = await api.put(`${BASE}/guarantors/${guarantorId}/review`, { Decision: decision, Note: note });
+      return { success: true, data: response.data };
+    } catch (error) {
+      console.error('Error reviewing guarantor:', error);
+      return { success: false, error: extractError(error, 'Failed to record the review decision') };
+    }
+  },
+
+  /**
    * Manually confirm a guarantor (email bounced / verified by phone / etc.), bypassing
    * the self-serve link. Requires a reason (min 5 chars, enforced server-side too).
    * Idempotent — a safe no-op if the guarantor is already confirmed (self-serve or a

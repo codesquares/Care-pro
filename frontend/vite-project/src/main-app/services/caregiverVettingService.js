@@ -29,6 +29,38 @@ export const CAREGIVER_TYPES = [
 
 export const REQUIRED_GUARANTOR_COUNT = 2;
 
+// A guarantor must have known the caregiver at least this long (mirrors backend GuarantorResponseEvaluator).
+export const MIN_GUARANTOR_YEARS_KNOWN = 2;
+// Shortest "how do you know them" answer on the guarantor questionnaire, in words (mirrors backend).
+export const MIN_HOW_THEY_KNOW_WORDS = 25;
+
+// Values mirror the backend GuarantorRelationshipCategories / GuarantorLastContact / GuarantorTrustAnswers.
+export const GUARANTOR_RELATIONSHIP_CATEGORIES = [
+  { value: 'relative', label: 'Relative (family member)' },
+  { value: 'friend', label: 'Friend' },
+  { value: 'former_employer_or_client', label: 'Former employer or client' },
+  { value: 'neighbour', label: 'Neighbour' },
+  { value: 'religious_leader', label: 'Religious leader' },
+  { value: 'colleague', label: 'Colleague' },
+  { value: 'other', label: 'Other' },
+];
+
+export const GUARANTOR_LAST_CONTACT_OPTIONS = [
+  { value: 'this_week', label: 'This week' },
+  { value: 'this_month', label: 'This month' },
+  { value: 'within_6_months', label: 'Within the last 6 months' },
+  { value: 'within_year', label: 'Within the last year' },
+  { value: 'over_year', label: 'More than a year ago' },
+];
+
+export const GUARANTOR_TRUST_OPTIONS = [
+  { value: 'yes', label: 'Yes, without reservation' },
+  { value: 'yes_with_reservations', label: 'Yes, but with some reservations' },
+  { value: 'no', label: 'No' },
+];
+
+export const countWords = (text) => (text || '').trim().split(/\s+/).filter(Boolean).length;
+
 // Plain-language copy for each IneligibilityReasons code returned by
 // GET /caregiver/vetting/readiness, plus where the caregiver can act on it.
 export const READINESS_REASON_INFO = {
@@ -65,8 +97,16 @@ export const READINESS_REASON_INFO = {
   },
   address_history_incomplete: {
     label: 'Complete your address history',
-    description: 'Your address history needs to cover the last 5 years with no gaps.',
+    description: 'Your address history needs to cover the last 5 years with no gaps, and your current address needs an approved power-holding (NEPA) bill.',
     actionLabel: 'Manage address history',
+    actionPath: '/app/caregiver/vetting/address-history',
+  },
+  // Address bill: _incomplete covers gaps in the dates AND a missing/rejected bill; _pending = bill awaiting staff review (just wait).
+  address_proof_pending: {
+    label: 'Address bill under review',
+    description: "Our team is reviewing the power-holding bill you uploaded for your current address. You'll be notified when there's a decision.",
+    nonActionable: true,
+    actionLabel: 'View status',
     actionPath: '/app/caregiver/vetting/address-history',
   },
   caregiver_type_not_set: {
@@ -96,6 +136,24 @@ const extractError = (error, fallback) => {
   if (typeof data === 'string' && data.trim()) return data;
   return data?.message || error?.message || fallback;
 };
+
+// Plain fetch (no auth header) for the guarantor-facing, token-authorised endpoints. Pulls the first
+// validation message out of a model-state 400 as well as the usual { message } shape.
+async function anonymousGuarantorRequest(path, init) {
+  try {
+    const response = await fetch(`${config.BASE_URL}${BASE}${path}`, init);
+    const data = await response.json().catch(() => ({}));
+    if (!response.ok) {
+      const firstValidation = data?.errors ? Object.values(data.errors).flat()[0] : null;
+      const err = new Error(data?.message || firstValidation || 'Request failed');
+      err.status = response.status;
+      throw err;
+    }
+    return { success: true, data };
+  } catch (error) {
+    return { success: false, error: error?.message || 'Something went wrong. Please try again.' };
+  }
+}
 
 const caregiverVettingService = {
   // ── Readiness ────────────────────────────────────────────────────────────
@@ -220,29 +278,28 @@ const caregiverVettingService = {
   },
 
   /**
-   * POST /api/caregiver/vetting/guarantors/confirm?token=... — AllowAnonymous.
-   * Called by the guarantor from the emailed link, not by the logged-in caregiver.
+   * GET /api/caregiver/vetting/guarantors/quiz?token=... — AllowAnonymous.
+   * What the guarantor questionnaire page needs to render: { guarantorName, alreadyResponded }.
    * Uses plain fetch: no auth token should be attached.
    * @param {string} token
    */
-  async confirmGuarantorByToken(token) {
-    try {
-      const url = `${config.BASE_URL}${BASE}/guarantors/confirm?token=${encodeURIComponent(token)}`;
-      const response = await fetch(url, { method: 'POST' });
-      const data = await response.json().catch(() => ({}));
-      if (!response.ok) {
-        const err = new Error(data?.message || 'Request failed');
-        err.status = response.status;
-        err.data = data;
-        throw err;
-      }
-      return { success: true, data };
-    } catch (error) {
-      return {
-        success: false,
-        error: error?.data?.message || error?.message || 'Failed to confirm guarantor',
-      };
-    }
+  async getGuarantorQuiz(token) {
+    return anonymousGuarantorRequest(`/guarantors/quiz?token=${encodeURIComponent(token)}`, { method: 'GET' });
+  },
+
+  /**
+   * POST /api/caregiver/vetting/guarantors/confirm?token=... — AllowAnonymous.
+   * The guarantor submits their questionnaire answers from the emailed link. The response never says
+   * whether the answers were auto-accepted or sent to staff review.
+   * @param {string} token
+   * @param {object} answers  see SubmitGuarantorResponsesRequest
+   */
+  async confirmGuarantorByToken(token, answers) {
+    return anonymousGuarantorRequest(`/guarantors/confirm?token=${encodeURIComponent(token)}`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(answers),
+    });
   },
 
   // ── Address history ─────────────────────────────────────────────────────

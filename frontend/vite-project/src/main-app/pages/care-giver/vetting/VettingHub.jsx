@@ -167,7 +167,10 @@ const VettingHub = () => {
       done: addressDone,
       status: coverage ? (
         <span className={`vet-pkg-badge ${addressDone ? 'vet-pkg-badge--active' : 'vet-pkg-badge--inactive'}`}>
-          {addressDone ? '5-year coverage complete' : `${coverage.recordCount} record${coverage.recordCount === 1 ? '' : 's'} · coverage incomplete`}
+          {addressDone ? '5-year coverage complete'
+            : coverage.state === 'awaiting_review' ? 'Bill under review'
+            : coverage.datesCovered ? 'Upload your power-holding bill'
+            : `${coverage.recordCount} record${coverage.recordCount === 1 ? '' : 's'} · coverage incomplete`}
         </span>
       ) : (
         <span className="vet-pkg-badge vet-pkg-badge--inactive">Not started</span>

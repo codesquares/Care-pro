@@ -494,8 +494,12 @@ const KNOWN_CANONICAL = new Set([
   // Police clearance (vetting step)
   'PoliceClearanceSubmitted', 'PoliceClearanceApproved', 'PoliceClearanceRejected',
   'PoliceClearanceRevoked', 'PoliceClearanceAssignmentsAtRisk',
+  // Address proof (utility bill for the current address)
+  'AddressProofSubmitted', 'AddressProofApproved', 'AddressProofRejected',
   // Vetting enforcement notice (caregiver)
   'VettingEnforcementNotice',
+  // Guarantor questionnaire (admin review queue / caregiver rejection notice)
+  'GuarantorNeedsReview', 'GuarantorRejected',
   // Payroll (Phase 9.7)
   'PayrollApproved', 'PayrollPaid',
 ]);
@@ -849,6 +853,29 @@ export const getNotificationRoute = (notification, userRole) => {
       return null;
     }
 
+    // Address proof: the caregiver's decision notices open the address-history page; the admin alert opens the review queue
+    // (relatedEntityId = the address-history record id).
+    case 'AddressProofApproved':
+    case 'AddressProofRejected': {
+      if (isCaregiver) return `/app/caregiver/vetting/address-history`;
+      return null;
+    }
+    case 'AddressProofSubmitted': {
+      if (isAdmin) return relatedEntityId ? `/app/admin/address-proofs?proof=${relatedEntityId}` : `/app/admin/address-proofs`;
+      return null;
+    }
+
+    // Guarantor questionnaire: admins land on the review queue (relatedEntityId = guarantorId);
+    // a caregiver whose guarantor was rejected goes to the guarantors page to replace them.
+    case 'GuarantorNeedsReview': {
+      if (isAdmin) return relatedEntityId ? `/app/admin/guarantors?guarantor=${relatedEntityId}` : `/app/admin/guarantors`;
+      return null;
+    }
+    case 'GuarantorRejected': {
+      if (isCaregiver) return `/app/caregiver/vetting/guarantors`;
+      return null;
+    }
+
     // A package-visit check-in was flagged (HARD reason) — deep-link to that visit in the admin review screen.
     case 'PackageVisitFlagged': {
       if (isAdmin) return relatedEntityId ? `/app/admin/package-visits?checkin=${relatedEntityId}` : `/app/admin/package-visits`;
@@ -1168,6 +1195,15 @@ export const getNotificationActionLabel = (rawType) => {
     case 'PoliceClearanceSubmitted':
     case 'PoliceClearanceAssignmentsAtRisk':
       return 'Review Clearance';
+    case 'AddressProofSubmitted':
+      return 'Review Bill';
+    case 'AddressProofApproved':
+    case 'AddressProofRejected':
+      return 'View Status';
+    case 'GuarantorNeedsReview':
+      return 'Review Guarantor';
+    case 'GuarantorRejected':
+      return 'Open Guarantors';
     case 'PoliceClearanceApproved':
     case 'PoliceClearanceRejected':
     case 'PoliceClearanceRevoked':
@@ -1389,13 +1425,21 @@ export const getNotificationTypeIcon = (rawType) => {
     case 'VettingEnforcementNotice':
       return '📋';
     case 'PoliceClearanceApproved':
+    case 'AddressProofApproved':
       return '✅';
     case 'PoliceClearanceRejected':
     case 'PoliceClearanceRevoked':
+    case 'AddressProofRejected':
       return '❌';
     case 'PoliceClearanceSubmitted':
     case 'PoliceClearanceAssignmentsAtRisk':
       return '🛡️';
+    case 'AddressProofSubmitted':
+      return '🏠';
+    case 'GuarantorNeedsReview':
+      return '🤝';
+    case 'GuarantorRejected':
+      return '❌';
     case 'OrderNotification':
     case 'OrderConfirmation':
     case 'BookingConfirmed':

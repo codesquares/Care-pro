@@ -4,7 +4,8 @@
   align-items: center;
   justify-content: center;
   background: var(--surface-subtle);
-  padding: 1rem;
+  /* Clears the fixed site header, which would otherwise cover the top of the taller questionnaire card. */
+  padding: 6rem 1rem 2rem;
 }
 
 .gcp-card {
@@ -109,4 +110,78 @@
 
 .gcp-footer-link {
   color: var(--muted);
+}
+
+.gcp-card--wide {
+  max-width: 560px;
+}
+
+.gcp-form {
+  text-align: left;
+}
+
+.gcp-field {
+  margin-top: 1rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.35rem;
+}
+
+.gcp-field label {
+  font-size: 0.9rem;
+  font-weight: var(--font-weight-semibold);
+  color: var(--ink-strong);
+}
+
+.gcp-field input,
+.gcp-field select,
+.gcp-field textarea {
+  width: 100%;
+  box-sizing: border-box;
+  padding: 0.6rem 0.75rem;
+  border: 1px solid var(--border, #d4d4d8);
+  border-radius: var(--radius-sm);
+  font: inherit;
+  color: var(--ink);
+  background: var(--surface);
+}
+
+.gcp-field textarea {
+  resize: vertical;
+}
+
+.gcp-hint {
+  margin: 0;
+  font-size: 0.8rem;
+  color: var(--muted);
+}
+
+.gcp-hint--ok {
+  color: var(--success);
+}
+
+.gcp-optional {
+  font-weight: normal;
+  color: var(--muted);
+}
+
+.gcp-declaration {
+  display: flex;
+  gap: 0.6rem;
+  align-items: flex-start;
+  margin-top: 1.25rem;
+  font-size: 0.9rem;
+  color: var(--ink);
+}
+
+.gcp-declaration input {
+  margin-top: 0.2rem;
+}
+
+.gcp-form .gcp-error-box {
+  margin-top: 1rem;
+}
+
+.gcp-form .gcp-confirm-btn {
+  width: 100%;
 }

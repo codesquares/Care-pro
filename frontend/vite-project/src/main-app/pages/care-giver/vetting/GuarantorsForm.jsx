@@ -1,9 +1,28 @@
 import { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import caregiverVettingService, { REQUIRED_GUARANTOR_COUNT } from '../../../services/caregiverVettingService';
+import caregiverVettingService, {
+  REQUIRED_GUARANTOR_COUNT,
+  MIN_GUARANTOR_YEARS_KNOWN,
+  GUARANTOR_RELATIONSHIP_CATEGORIES,
+} from '../../../services/caregiverVettingService';
 import './vetting.css';
 
-const EMPTY_FORM = { name: '', relationshipToCaregiver: '', phoneNo: '', email: '', address: '' };
+const EMPTY_FORM = {
+  name: '', relationshipCategory: '', relationshipToCaregiver: '', yearsKnown: '', phoneNo: '', email: '', address: '',
+};
+
+// pending: waiting on the guarantor. needs_review: they answered and staff are checking. rejected: staff declined.
+const STATUS_BADGE = {
+  pending: { label: 'Pending', cls: 'vet-pkg-badge--inactive' },
+  needs_review: { label: 'Under review', cls: 'vet-pkg-badge--inactive' },
+  confirmed: { label: 'Confirmed', cls: 'vet-pkg-badge--active' },
+  rejected: { label: 'Not accepted', cls: 'vet-pkg-badge--inactive' },
+};
+
+const CONFIRMATION_METHOD_LABEL = {
+  staff_override: 'Staff override',
+  staff_review: 'Approved by staff',
+};
 const fmtDate = (iso) => (iso ? new Date(iso).toLocaleString() : '—');
 
 const GuarantorsForm = () => {
@@ -50,7 +69,9 @@ const GuarantorsForm = () => {
     if (g.status !== 'pending') return;
     setForm({
       name: g.name || '',
+      relationshipCategory: g.relationshipCategory || '',
       relationshipToCaregiver: g.relationshipToCaregiver || '',
+      yearsKnown: g.yearsKnown != null ? String(g.yearsKnown) : '',
       phoneNo: g.phoneNo || '',
       email: g.email || '',
       address: g.address || '',
@@ -64,7 +85,9 @@ const GuarantorsForm = () => {
     setEditTarget(null);
   };
 
-  const canSubmitForm = Object.values(form).every((v) => v.trim().length > 0);
+  const yearsKnownNumber = Number(form.yearsKnown);
+  const yearsKnownValid = Number.isInteger(yearsKnownNumber) && yearsKnownNumber >= MIN_GUARANTOR_YEARS_KNOWN && yearsKnownNumber <= 80;
+  const canSubmitForm = Object.values(form).every((v) => v.trim().length > 0) && yearsKnownValid;
 
   const handleFormSubmit = async (e) => {
     e.preventDefault();
@@ -73,7 +96,9 @@ const GuarantorsForm = () => {
     setFormError(null);
     const payload = {
       name: form.name.trim(),
+      relationshipCategory: form.relationshipCategory,
       relationshipToCaregiver: form.relationshipToCaregiver.trim(),
+      yearsKnown: yearsKnownNumber,
       phoneNo: form.phoneNo.trim(),
       email: form.email.trim(),
       address: form.address.trim(),
@@ -129,9 +154,11 @@ const GuarantorsForm = () => {
         </button>
         <h1><i className="fas fa-user-shield"></i> Guarantors</h1>
         <p>
-          Add exactly {REQUIRED_GUARANTOR_COUNT} guarantors who can vouch for you. Each one gets a confirmation
-          email with a link they must click before they count toward your vetting — trigger or resend that
-          email from here.
+          Add exactly {REQUIRED_GUARANTOR_COUNT} guarantors who can vouch for you. They must have known you for at
+          least {MIN_GUARANTOR_YEARS_KNOWN} years. Each one gets an email with a link where they answer a few short
+          questions about you (how they know you, how long, and so on). Their answers are compared with what you
+          enter here, so please be accurate — if anything does not match, our team will review it before the
+          guarantor counts toward your vetting. Send or resend that email from here.
         </p>
       </div>
 
@@ -166,16 +193,18 @@ const GuarantorsForm = () => {
           <ul className="vet-list">
             {guarantors.map((g) => {
               const isConfirmed = g.status === 'confirmed';
+              const isPending = g.status === 'pending';
+              const badge = STATUS_BADGE[g.status] || STATUS_BADGE.pending;
               return (
                 <li key={g.id} className="vet-item">
                   <div className="vet-item-top">
                     <div>
                       <strong>{g.name}</strong>
-                      <span className="vet-item-sub">{g.relationshipToCaregiver}</span>
+                      <span className="vet-item-sub">
+                        {g.relationshipToCaregiver}{g.yearsKnown != null ? ` · known ${g.yearsKnown} yr${g.yearsKnown === 1 ? '' : 's'}` : ''}
+                      </span>
                     </div>
-                    <span className={`vet-pkg-badge ${isConfirmed ? 'vet-pkg-badge--active' : 'vet-pkg-badge--inactive'}`}>
-                      {isConfirmed ? 'Confirmed' : 'Pending'}
-                    </span>
+                    <span className={`vet-pkg-badge ${badge.cls}`}>{badge.label}</span>
                   </div>
 
                   <div className="vet-item-detail">
@@ -187,7 +216,15 @@ const GuarantorsForm = () => {
                   {isConfirmed ? (
                     <div className="vet-item-meta">
                       <span>Confirmed {fmtDate(g.verifiedAt)}</span>
-                      {g.confirmationMethod && <span className="vet-pkg-badge vet-pkg-badge--type">{g.confirmationMethod === 'staff_override' ? 'Staff override' : 'Self-confirmed'}</span>}
+                      {g.confirmationMethod && <span className="vet-pkg-badge vet-pkg-badge--type">{CONFIRMATION_METHOD_LABEL[g.confirmationMethod] || 'Self-confirmed'}</span>}
+                    </div>
+                  ) : g.status === 'needs_review' ? (
+                    <div className="vet-item-meta">
+                      <span>Your guarantor has answered. Our team is reviewing their answers — nothing more for you to do.</span>
+                    </div>
+                  ) : g.status === 'rejected' ? (
+                    <div className="vet-item-meta">
+                      <span>We couldn't accept this guarantor. Remove them and add someone else who knows you well.</span>
                     </div>
                   ) : (
                     <div className="vet-item-meta">
@@ -197,7 +234,7 @@ const GuarantorsForm = () => {
                   )}
 
                   <div className="vet-item-actions">
-                    {!isConfirmed && (
+                    {isPending && (
                       <>
                         <button
                           className="vet-btn-secondary vet-btn-sm"
@@ -244,8 +281,26 @@ const GuarantorsForm = () => {
                   <input id="g-name" type="text" value={form.name} onChange={(e) => setForm({ ...form, name: e.target.value })} required />
                 </div>
                 <div className="vet-form-group">
-                  <label htmlFor="g-relationship">Relationship to You <span className="vet-required">*</span></label>
-                  <input id="g-relationship" type="text" placeholder="e.g. Uncle, Employer, Pastor" value={form.relationshipToCaregiver} onChange={(e) => setForm({ ...form, relationshipToCaregiver: e.target.value })} required />
+                  <label htmlFor="g-category">How do they know you? <span className="vet-required">*</span></label>
+                  <select id="g-category" value={form.relationshipCategory} onChange={(e) => setForm({ ...form, relationshipCategory: e.target.value })} required>
+                    <option value="">Select…</option>
+                    {GUARANTOR_RELATIONSHIP_CATEGORIES.map((o) => (
+                      <option key={o.value} value={o.value}>{o.label}</option>
+                    ))}
+                  </select>
+                </div>
+                <div className="vet-form-row">
+                  <div className="vet-form-group">
+                    <label htmlFor="g-relationship">Relationship to You <span className="vet-required">*</span></label>
+                    <input id="g-relationship" type="text" placeholder="e.g. Uncle, Employer, Pastor" value={form.relationshipToCaregiver} onChange={(e) => setForm({ ...form, relationshipToCaregiver: e.target.value })} required />
+                  </div>
+                  <div className="vet-form-group">
+                    <label htmlFor="g-years">Years they've known you <span className="vet-required">*</span></label>
+                    <input id="g-years" type="number" min={MIN_GUARANTOR_YEARS_KNOWN} max="80" step="1" value={form.yearsKnown} onChange={(e) => setForm({ ...form, yearsKnown: e.target.value })} required />
+                    {form.yearsKnown !== '' && !yearsKnownValid && (
+                      <small className="vet-field-error">At least {MIN_GUARANTOR_YEARS_KNOWN} years.</small>
+                    )}
+                  </div>
                 </div>
                 <div className="vet-form-row">
                   <div className="vet-form-group">
