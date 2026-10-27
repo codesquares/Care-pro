@@ -38,7 +38,9 @@ export function VettingLockoutProvider({ children }) {
         enforcementDate: date,
         classificationSet: !!cls.data?.caregiverType,
         guarantorCount: (guarantors.data || []).length,
-        addressComplete: !!coverage.data?.isComplete,
+        // Like guarantors and police clearance, the lockout only needs the step SUBMITTED: dates covered and the current-address
+        // bill uploaded (awaiting review counts). Staff approval is not required to lift it. Older servers send no `state`.
+        addressComplete: coverage.data?.state ? coverage.data.state !== 'incomplete' : !!coverage.data?.isComplete,
         clearance: { status: readiness.data?.policeClearanceStatus || 'none', enforced: readiness.data?.policeClearanceEnforced === true },
       });
       setStatus('ready');

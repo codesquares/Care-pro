@@ -23,7 +23,6 @@ const POPULAR_PACKAGE_CATEGORIES = [
 
 const MarketingPage = () => {
   const navigate = useNavigate();
-  const [searchQuery, setSearchQuery] = useState("");
   // const [isPricingModalOpen, setIsPricingModalOpen] = useState(false); // pricing modal retired
   const { isAuthenticated } = useAuth();
   const [packageSummaries, setPackageSummaries] = useState([]);
@@ -36,21 +35,6 @@ const MarketingPage = () => {
     });
     return () => { cancelled = true; };
   }, []);
-
-  const handleSearch = (e) => {
-    e.preventDefault();
-    if (searchQuery.trim()) {
-      navigate(`/marketplace?q=${encodeURIComponent(searchQuery.trim())}`);
-    } else {
-      navigate("/marketplace");
-    }
-  };
-
-  const handleQuickSearch = (e) => {
-    if (e.key === "Enter") {
-      handleSearch(e);
-    }
-  };
 
   const handlePackageCategoryClick = (categoryValue) => {
     navigate(`/marketplace?category=${encodeURIComponent(categoryValue)}`);
@@ -90,23 +74,6 @@ const MarketingPage = () => {
             You contract with CarePro, not a stranger. We vet every caregiver,
             assign the right one for your needs, and stand behind every visit.
           </p>
-
-          {/* Search Bar */}
-          <form className="mk-hero__search" data-animate="search" onSubmit={handleSearch}>
-            <input
-              type="text"
-              placeholder="Search care packages"
-              value={searchQuery}
-              onChange={(e) => setSearchQuery(e.target.value)}
-              onKeyUp={handleQuickSearch}
-            />
-            <button type="submit">
-              <span className="mk-hero__search-icon" aria-hidden="true">
-                &#128269;
-              </span>
-              Search
-            </button>
-          </form>
 
           {/* Real package categories */}
           <div className="mk-hero__popular-block" data-animate="popular">

@@ -1,10 +1,26 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useMemo, useRef, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import caregiverVettingService from '../../../services/caregiverVettingService';
+import addressProofService, { BILL_ACCEPT, validateBillFile } from '../../../services/addressProofService';
 import './vetting.css';
 
 const EMPTY_FORM = { address: '', movedIn: '', movedOut: '', isCurrent: false };
 const fmtDate = (iso) => (iso ? new Date(iso).toLocaleDateString() : '—');
+
+// Today's calendar date in Lagos as yyyy-mm-dd (the server applies the bill-age rule on the Lagos date too).
+const lagosToday = () => new Intl.DateTimeFormat('en-CA', { timeZone: 'Africa/Lagos' }).format(new Date());
+
+// yyyy-mm-dd minus N calendar months, clamping the day like the server's AddMonths does.
+const monthsBefore = (iso, n) => {
+  const [y, m, d] = iso.split('-').map(Number);
+  const total = y * 12 + (m - 1) - n;
+  const ty = Math.floor(total / 12);
+  const tm = total % 12;
+  const last = new Date(Date.UTC(ty, tm + 1, 0)).getUTCDate();
+  return `${ty}-${String(tm + 1).padStart(2, '0')}-${String(Math.min(d, last)).padStart(2, '0')}`;
+};
+
+const PROOF_LABEL = { none: 'Bill needed', pending: 'Bill under review', approved: 'Bill approved', rejected: 'Bill rejected' };
 
 const AddressHistoryForm = () => {
   const navigate = useNavigate();
@@ -61,7 +77,6 @@ const AddressHistoryForm = () => {
     setEditTarget(null);
   };
 
-  const today = new Date().toISOString().slice(0, 10);
   const dateOrderInvalid = !form.isCurrent && form.movedOut && form.movedIn && form.movedOut < form.movedIn;
   const canSubmitForm = form.address.trim().length >= 2 && !!form.movedIn && !dateOrderInvalid;
 
@@ -89,6 +104,68 @@ const AddressHistoryForm = () => {
     setSaving(false);
   };
 
+  // ── Proof of current address (power-holding / NEPA bill) ───────────
+  const fileInput = useRef(null);
+  const [proofTarget, setProofTarget] = useState(null); // address record being proven
+  const [billDate, setBillDate] = useState('');
+  const [nameOnBill, setNameOnBill] = useState('');
+  const [billFile, setBillFile] = useState(null);
+  const [proofSubmitting, setProofSubmitting] = useState(false);
+  const [proofError, setProofError] = useState(null);
+  const [preview, setPreview] = useState(null); // { url, type, name }
+  const previewUrlRef = useRef(null);
+  // Revoke the blob URL only on close/unmount (an effect keyed on `preview` would revoke it straight away under StrictMode).
+  useEffect(() => () => { if (previewUrlRef.current) URL.revokeObjectURL(previewUrlRef.current); }, []);
+
+  const today = new Date().toISOString().slice(0, 10);
+  const lagosDay = lagosToday();
+  const maxBillAge = proofTarget?.proof?.maxBillAgeMonths || 3;
+  const oldestBill = useMemo(() => monthsBefore(lagosDay, maxBillAge), [lagosDay, maxBillAge]);
+
+  const openProof = (r) => {
+    setProofTarget(r);
+    setBillDate('');
+    setNameOnBill('');
+    setBillFile(null);
+    setProofError(null);
+  };
+  const closeProof = () => { if (!proofSubmitting) setProofTarget(null); };
+
+  const billFileError = billFile ? validateBillFile(billFile) : null;
+  const billTooOld = billDate && billDate < oldestBill;
+  const billInFuture = billDate && billDate > lagosDay;
+  const canSubmitProof = !!proofTarget && !proofSubmitting && billDate && !billTooOld && !billInFuture
+    && nameOnBill.trim().length >= 2 && !!billFile && !billFileError;
+
+  const handleProofSubmit = async (e) => {
+    e.preventDefault();
+    if (!canSubmitProof) return;
+    setProofSubmitting(true);
+    setProofError(null);
+    const result = await addressProofService.submit(proofTarget.id, { billDate, nameOnBill: nameOnBill.trim(), file: billFile });
+    setProofSubmitting(false);
+    if (result.success) {
+      setProofTarget(null);
+      showToast('success', 'Bill submitted. Our team will review it and let you know.');
+      loadAll();
+    } else {
+      setProofError(result.error);
+    }
+  };
+
+  const openBill = async (r) => {
+    const result = await addressProofService.fetchFile(r.id);
+    if (!result.success) { showToast('error', result.error); return; }
+    if (previewUrlRef.current) URL.revokeObjectURL(previewUrlRef.current);
+    previewUrlRef.current = URL.createObjectURL(result.data);
+    setPreview({ url: previewUrlRef.current, type: result.data.type, name: 'Your bill' });
+  };
+  const closePreview = () => {
+    if (previewUrlRef.current) URL.revokeObjectURL(previewUrlRef.current);
+    previewUrlRef.current = null;
+    setPreview(null);
+  };
+
   // ── Delete ──────────────────────────────────────────────────────
   const [deletingId, setDeletingId] = useState(null);
   const handleDelete = async (r) => {
@@ -105,10 +182,18 @@ const AddressHistoryForm = () => {
   };
 
   const isComplete = !!coverage?.isComplete;
+  const awaitingReview = coverage?.state === 'awaiting_review';
+  const datesCovered = !!coverage?.datesCovered;
+  const hasCurrent = records.some((r) => !r.movedOut);
+  const proofRequired = !!coverage?.proofRequired;
+  const currentApproved = records.some((r) => !r.movedOut && r.proof?.status === 'approved');
+  const requiredFrom = coverage?.proofEnforcementDate
+    ? new Date(coverage.proofEnforcementDate).toLocaleDateString('en-GB', { timeZone: 'Africa/Lagos', day: 'numeric', month: 'long', year: 'numeric' })
+    : null;
   const requiredCount = coverage?.requiredCount ?? 2;
   const requiredYears = coverage?.requiredYears ?? 5;
   const recordCount = coverage?.recordCount ?? records.length;
-  const progressPct = Math.min(100, Math.round((recordCount / requiredCount) * 100));
+  const progressPct = datesCovered && !isComplete ? 90 : Math.min(100, Math.round((recordCount / requiredCount) * 100));
 
   return (
     <div className="vet-page">
@@ -117,7 +202,7 @@ const AddressHistoryForm = () => {
           <i className="fas fa-arrow-left"></i> Back to Vetting
         </button>
         <h1><i className="fas fa-home"></i> Address History</h1>
-        <p>Submit where you've lived, covering the last {requiredYears} years.</p>
+        <p>Submit where you've lived, covering the last {requiredYears} years, and upload a recent power-holding (NEPA) bill for the address you live at now{coverage && !coverage.proofRequired ? ' (optional for now)' : ''}.</p>
       </div>
 
       {toast && (
@@ -133,8 +218,8 @@ const AddressHistoryForm = () => {
           <div className="vet-panel-header">
             <h2>
               Coverage status:{' '}
-              <span className={`vet-pkg-badge ${isComplete ? 'vet-pkg-badge--active' : 'vet-pkg-badge--inactive'}`}>
-                {isComplete ? 'Complete' : 'Incomplete'}
+              <span className={`vet-pkg-badge ${isComplete ? 'vet-pkg-badge--active' : 'vet-pkg-badge--inactive'}`} data-testid="ah-coverage-badge">
+                {isComplete ? 'Complete' : awaitingReview ? 'Under review' : 'Incomplete'}
               </span>
             </h2>
           </div>
@@ -146,7 +231,31 @@ const AddressHistoryForm = () => {
               <>
                 <i className="fas fa-check-circle" style={{ color: '#2e7d32' }}></i>{' '}
                 Your {recordCount} address record{recordCount === 1 ? '' : 's'} give{recordCount === 1 ? 's' : ''} contiguous coverage
-                for the last {requiredYears} years. Nothing more needed here.
+                for the last {requiredYears} years{proofRequired ? ' and your current address has been confirmed' : ''}. Nothing more needed here.
+                {!proofRequired && !currentApproved && (
+                  <span data-testid="ah-upcoming-note">
+                    {' '}Heads up: a power-holding (NEPA) bill for your current address will be required{requiredFrom ? ` from ${requiredFrom}` : ' soon'} —
+                    you can upload yours now so you're ready.
+                  </span>
+                )}
+              </>
+            ) : awaitingReview ? (
+              <>
+                <i className="fas fa-hourglass-half"></i>{' '}
+                Your addresses cover the last {requiredYears} years. We're reviewing the bill you uploaded for your current address —
+                you'll be notified as soon as there's a decision.
+              </>
+            ) : datesCovered && !hasCurrent ? (
+              <>
+                <i className="fas fa-info-circle"></i>{' '}
+                Your addresses cover the last {requiredYears} years, but none is marked as where you live now. Edit your latest address and tick
+                "I currently live here", then upload a power-holding (NEPA) bill for it.
+              </>
+            ) : datesCovered ? (
+              <>
+                <i className="fas fa-info-circle"></i>{' '}
+                Your addresses cover the last {requiredYears} years. One more step: upload a recent power-holding (NEPA) bill for the
+                address you live at now so our team can confirm it.
               </>
             ) : (
               <>
@@ -189,6 +298,43 @@ const AddressHistoryForm = () => {
                     </div>
                     {!r.movedOut && <span className="vet-pkg-badge vet-pkg-badge--active">Current</span>}
                   </div>
+                  {r.proof?.required && (
+                    <div className={`ap-proof ap-proof--${r.proof.status}`} data-testid="ah-proof" data-status={r.proof.status}>
+                      <div className="ap-proof-head">
+                        <strong><i className="fas fa-bolt"></i> Proof of address</strong>
+                        <span className={`vet-pkg-badge ${r.proof.status === 'approved' ? 'vet-pkg-badge--active' : r.proof.status === 'rejected' ? 'vet-pkg-badge--danger' : 'vet-pkg-badge--inactive'}`}>
+                          {r.proof.status === 'none' && !r.proof.enforced ? 'Optional for now' : (PROOF_LABEL[r.proof.status] || r.proof.status)}
+                        </span>
+                      </div>
+                      {r.proof.status === 'none' && (
+                        <p>
+                          Upload a recent power-holding (NEPA) bill showing this address so our team can confirm you live here.
+                          {!r.proof.enforced && ' This is optional for now.'}
+                        </p>
+                      )}
+                      {r.proof.status === 'pending' && (
+                        <p data-testid="ah-proof-pending">Submitted {fmtDate(r.proof.submittedAt)} — under review. We'll notify you of the decision.</p>
+                      )}
+                      {r.proof.status === 'approved' && (
+                        <p data-testid="ah-proof-approved">Approved{r.proof.reviewedAt ? ` on ${fmtDate(r.proof.reviewedAt)}` : ''}. Changing this address or the move-in date will remove the approval.</p>
+                      )}
+                      {r.proof.status === 'rejected' && (
+                        <p className="ap-proof-reason" data-testid="ah-proof-rejected">Not approved: {r.proof.rejectionReason || 'please upload a clearer, recent bill.'}</p>
+                      )}
+                      <div className="ap-proof-actions">
+                        {r.proof.canSubmit && (
+                          <button className="vet-btn-primary vet-btn-sm" onClick={() => openProof(r)} data-testid="ah-proof-upload">
+                            <i className="fas fa-upload"></i> {r.proof.status === 'rejected' ? 'Upload a new bill' : 'Upload bill'}
+                          </button>
+                        )}
+                        {r.proof.status !== 'none' && (
+                          <button className="vet-btn-secondary vet-btn-sm" onClick={() => openBill(r)} data-testid="ah-proof-view">
+                            <i className="fas fa-eye"></i> View bill
+                          </button>
+                        )}
+                      </div>
+                    </div>
+                  )}
                   <div className="vet-item-actions">
                     <button className="vet-btn-secondary vet-btn-sm" onClick={() => openEdit(r)}>
                       <i className="fas fa-pen"></i> Edit
@@ -250,6 +396,12 @@ const AddressHistoryForm = () => {
                     I currently live here
                   </label>
                 </div>
+                {editTarget && editTarget !== 'new' && editTarget.proof?.status && editTarget.proof.status !== 'none' && (
+                  <p className="vet-form-hint" data-testid="ah-edit-warning">
+                    <i className="fas fa-exclamation-triangle"></i> Changing the address or move-in date will remove the bill you uploaded for it,
+                    and you'll need to upload it again.
+                  </p>
+                )}
                 {dateOrderInvalid && (
                   <p className="vet-field-error">Move-out date can't be before the move-in date.</p>
                 )}
@@ -270,6 +422,77 @@ const AddressHistoryForm = () => {
                   </button>
                 </div>
               </form>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {proofTarget && (
+        <div className="vet-pkg-modal-overlay" onClick={closeProof}>
+          <div className="vet-pkg-modal vet-pkg-modal--sm" onClick={(e) => e.stopPropagation()} data-testid="ah-proof-modal">
+            <div className="vet-pkg-modal-header">
+              <h2><i className="fas fa-bolt"></i> Upload your power-holding bill</h2>
+              <button className="vet-pkg-modal-close" onClick={closeProof}><i className="fas fa-times"></i></button>
+            </div>
+            <div className="vet-pkg-modal-body">
+              <ul className="ap-guidance">
+                <li>Use a NEPA / electricity bill (or prepaid token receipt) for <strong>{proofTarget.address}</strong>.</li>
+                <li>It must be dated within the last {maxBillAge} months.</li>
+                <li>The address and account holder name must be clearly visible. Photos must not be cropped or edited.</li>
+              </ul>
+              <form onSubmit={handleProofSubmit}>
+                <div className="vet-form-row">
+                  <div className="vet-form-group">
+                    <label htmlFor="ap-date">Date on the bill <span className="vet-required">*</span></label>
+                    <input id="ap-date" type="date" min={oldestBill} max={lagosDay} value={billDate} onChange={(e) => setBillDate(e.target.value)} required />
+                    {billTooOld && <p className="vet-field-error" data-testid="ah-bill-old">This bill is older than {maxBillAge} months. Please upload a recent one.</p>}
+                    {billInFuture && <p className="vet-field-error">The bill date can't be in the future.</p>}
+                  </div>
+                  <div className="vet-form-group">
+                    <label htmlFor="ap-name">Account holder name on the bill <span className="vet-required">*</span></label>
+                    <input id="ap-name" type="text" maxLength={150} value={nameOnBill} onChange={(e) => setNameOnBill(e.target.value)} required />
+                  </div>
+                </div>
+                <div className="vet-form-group">
+                  <label htmlFor="ap-file">Bill file <span className="vet-required">*</span></label>
+                  <input id="ap-file" ref={fileInput} type="file" accept={BILL_ACCEPT}
+                    onChange={(e) => { setBillFile(e.target.files?.[0] || null); setProofError(null); }} data-testid="ah-bill-file" />
+                  <p className="vet-form-hint">PDF, JPG or PNG, up to {proofTarget.proof?.maxFileSizeMB || 10} MB.</p>
+                  {billFileError && <p className="vet-field-error" data-testid="ah-bill-file-error">{billFileError}</p>}
+                </div>
+
+                {proofError && (
+                  <div className="vet-alert vet-alert-error" data-testid="ah-proof-error">
+                    <i className="fas fa-exclamation-circle"></i>
+                    <div><p>{proofError}</p></div>
+                  </div>
+                )}
+
+                <div className="vet-form-actions">
+                  <button type="button" className="vet-btn-secondary" onClick={closeProof} disabled={proofSubmitting}>Cancel</button>
+                  <button type="submit" className="vet-btn-primary" disabled={!canSubmitProof} data-testid="ah-proof-submit">
+                    {proofSubmitting
+                      ? <><i className="fas fa-vet-spinner fa-spin"></i> Uploading…</>
+                      : <><i className="fas fa-check"></i> Submit for review</>}
+                  </button>
+                </div>
+              </form>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {preview && (
+        <div className="vet-pkg-modal-overlay" onClick={closePreview} role="dialog" data-testid="ah-preview">
+          <div className="vet-pkg-modal ap-preview" onClick={(e) => e.stopPropagation()}>
+            <div className="vet-pkg-modal-header">
+              <h2>{preview.name}</h2>
+              <button className="vet-pkg-modal-close" onClick={closePreview}>×</button>
+            </div>
+            <div className="vet-pkg-modal-body">
+              {String(preview.type).startsWith('image/')
+                ? <img src={preview.url} alt="Your bill" />
+                : <iframe src={preview.url} title="Your bill" />}
             </div>
           </div>
         </div>

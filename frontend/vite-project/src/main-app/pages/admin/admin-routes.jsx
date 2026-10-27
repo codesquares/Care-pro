@@ -20,6 +20,7 @@ import PayrollManagement from './payroll/PayrollManagement';
 import PackageVisits from './package-visits/PackageVisits';
 import GuarantorOverride from './guarantor-override/GuarantorOverride';
 import PoliceClearances from './police-clearances/PoliceClearances';
+import AddressProofs from './address-proofs/AddressProofs';
 import AbsenceNotices from './absence-notices/AbsenceNotices';
 import PaymentLinkGenerator from './payment-links/PaymentLinkGenerator';
 import AdminAlerts from './alerts/AdminAlerts';
@@ -191,6 +192,14 @@ function AdminRoutes() {
                         element={
                             canUseOperationsTools
                                 ? <PoliceClearances />
+                                : <NotFoundPage />
+                        }
+                    />
+                    <Route
+                        path='/address-proofs'
+                        element={
+                            canUseOperationsTools
+                                ? <AddressProofs />
                                 : <NotFoundPage />
                         }
                     />

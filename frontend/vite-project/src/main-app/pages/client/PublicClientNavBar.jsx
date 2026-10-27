@@ -374,12 +374,6 @@ const PublicClientNavBar = () => {
             <>
               {/* Public navigation */}
               <div className="public-nav-links">
-                <button
-                  className="nav-link-btn"
-                  onClick={() => navigate('/marketplace')}
-                >
-                  Hire a caregiver
-                </button>
                 {/* retired: /become-caregiver
                 {(!isAuthenticated || user?.role?.toLowerCase() !== 'caregiver') && (
                   <button

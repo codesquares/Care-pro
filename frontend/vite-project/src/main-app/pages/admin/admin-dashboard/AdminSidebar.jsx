@@ -5,6 +5,7 @@ import { useAuth } from '../../../context/AuthContext';
 import { getInitials } from '../../../utils/avatarHelpers';
 import { hasPolicy } from '../../../utils/adminPermissions';
 import adminPoliceClearanceService from '../../../services/adminPoliceClearanceService';
+import adminAddressProofService from '../../../services/adminAddressProofService';
 import './admin-sidebar.css';
 
 // policy values match adminPermissions.js hasPolicy() keys
@@ -56,6 +57,8 @@ const ALL_NAV_GROUPS = [
       // Police clearance review queue. Operations/Policy admins only (mirrors the backend OperationsPolicy); the badge is the
       // number of caregivers whose latest submission is waiting for review.
       { to: '/app/admin/police-clearances', icon: 'fa-shield-alt', label: 'Police Clearances', policy: 'operations', badgeKey: 'policeClearances' },
+      // Power-holding (NEPA) bills awaiting review for caregivers' current address. Same staff as police clearances.
+      { to: '/app/admin/address-proofs', icon: 'fa-home', label: 'Address Proofs', policy: 'operations', badgeKey: 'addressProofs' },
       // Caregiver "can't attend" notices awaiting a staff decision. Operations/Policy admins only (mirrors the backend OperationsPolicy).
       { to: '/app/admin/absence-notices', icon: 'fa-calendar-times', label: 'Absence Notices', policy: 'operations' },
       { to: '/app/admin/dojah-admin',   icon: 'fa-id-badge',       label: 'Verifications', policy: 'operations' },
@@ -121,8 +124,21 @@ const AdminSidebar = ({ isOpen, onClose }) => {
     window.addEventListener('police-clearance-count-changed', refreshClearanceCount);
     return () => { clearInterval(timer); window.removeEventListener('police-clearance-count-changed', refreshClearanceCount); };
   }, [canSeeClearances, refreshClearanceCount]);
+  const [pendingAddressProofs, setPendingAddressProofs] = useState(0);
+  const refreshAddressProofCount = useCallback(async () => {
+    if (!canSeeClearances) return;
+    const result = await adminAddressProofService.pendingCount();
+    if (result.success) setPendingAddressProofs(result.data);
+  }, [canSeeClearances]);
+  useEffect(() => { refreshAddressProofCount(); }, [refreshAddressProofCount, location.pathname]);
+  useEffect(() => {
+    if (!canSeeClearances) return undefined;
+    const timer = setInterval(refreshAddressProofCount, 60000);
+    window.addEventListener('address-proof-count-changed', refreshAddressProofCount);
+    return () => { clearInterval(timer); window.removeEventListener('address-proof-count-changed', refreshAddressProofCount); };
+  }, [canSeeClearances, refreshAddressProofCount]);
   const unreadAlerts = useSelector((st) => st.notifications?.unreadCount || 0);
-  const badgeCounts = { policeClearances: pendingClearances, alerts: unreadAlerts };
+  const badgeCounts = { policeClearances: pendingClearances, addressProofs: pendingAddressProofs, alerts: unreadAlerts };
 
   const userName = user?.firstName ? `${user.firstName} ${user.lastName || ''}`.trim() : 'Admin';
   const userInitials = getInitials(userName);
