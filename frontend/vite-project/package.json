@@ -25,7 +25,7 @@
     "@microsoft/signalr": "^8.0.7",
     "@react-oauth/google": "^0.13.4",
     "@reduxjs/toolkit": "^2.8.2",
-    "axios": "^1.18.1",
+    "axios": "^1.20.0",
     "contentful": "^11.4.6",
     "date-fns": "^4.1.0",
     "dojah-kyc-sdk-react": "^0.0.5",
@@ -37,7 +37,7 @@
     "react-icons": "^5.4.0",
     "react-markdown": "^9.0.3",
     "react-redux": "^9.2.0",
-    "react-router-dom": "^7.18.1",
+    "react-router-dom": "^7.18.4",
     "react-toastify": "^10.0.6"
   },
   "devDependencies": {
@@ -95,7 +95,7 @@
     "lodash": "^4.18.1",
     "flatted": "^3.4.2",
     "picomatch": ">=2.3.2",
-    "follow-redirects": "^1.16.0",
+    "follow-redirects": "^1.16.2",
     "path-to-regexp": ">=0.1.13",
     "@eslint/config-array": {
       "minimatch": "^10.2.5"
